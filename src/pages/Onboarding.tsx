@@ -6,7 +6,6 @@ import { GradientButton } from "@/components/ui/gradient-button";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import StarField from "@/components/ui/star-field";
 import MainLayout from "@/components/Layout/MainLayout";
 import { useToast } from "@/hooks/use-toast";
 import { SoulOrb } from "@/components/ui/soul-orb";
@@ -14,20 +13,13 @@ import { SpeechBubble } from "@/components/ui/speech-bubble";
 import { BlueprintGenerator } from "@/components/ui/blueprint-generator";
 import { useSoulOrb } from "@/contexts/SoulOrbContext";
 import { motion } from "@/lib/framer-motion";
-
-const steps = [
-  "Welcome",
-  "Birth Date",
-  "Birth Time",
-  "Birth Location",
-  "Personality",
-  "Generating",
-];
+import { Onboarding3DScene } from "@/components/ui/onboarding-3d-scene";
+import { useOnboarding3D } from "@/hooks/use-onboarding-3d";
 
 const Onboarding = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [currentStep, setCurrentStep] = useState(0);
+  const { currentMessage } = useSoulOrb();
   const [formData, setFormData] = useState({
     name: "",
     birthDate: "",
@@ -36,128 +28,42 @@ const Onboarding = () => {
     personality: "",
   });
   
-  // Soul orb state
-  const { 
-    startSpeaking, 
-    stopSpeaking, 
-    speaking, 
-    messages, 
-    currentMessage,
-    stage, 
-    setStage 
-  } = useSoulOrb();
-  
-  const [showSpeechBubble, setShowSpeechBubble] = useState(true);
-  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
+  
+  // Use our custom hook for 3D onboarding
+  const {
+    is3DMode,
+    currentStep,
+    steps,
+    showSpeechBubble,
+    sceneControls,
+    stage,
+    speaking,
+    goToNextStep,
+    goToPrevStep,
+    handleOrbClick,
+    transitionTo2D,
+  } = useOnboarding3D();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
-
-  const goToNextStep = () => {
-    stopSpeaking();
-    
-    if (currentStep === steps.length - 1) {
-      // Complete the generation and navigate
-      setIsGenerating(true);
-    } else if (currentStep === steps.length - 2) {
-      // Start the generation process
-      setStage('generating');
-      setCurrentStep((prev) => prev + 1);
-      setCurrentMessageIndex(0);
-    } else {
-      setCurrentStep((prev) => prev + 1);
-      setCurrentMessageIndex(0);
-    }
-  };
-
-  const goToPrevStep = () => {
-    stopSpeaking();
-    setCurrentStep((prev) => Math.max(0, prev - 1));
-    setCurrentMessageIndex(0);
-  };
-  
-  // Handle orb interaction
-  const handleOrbClick = async () => {
-    if (speaking) {
-      stopSpeaking();
-      return;
-    }
-    
-    // Get the correct message key for the current step
-    let stepKey = steps[currentStep].toLowerCase().replace(/\s+/g, '');
-    const messageKeyMap: Record<string, string> = {
-      'welcome': 'welcome',
-      'birthdate': 'birthDate',
-      'birthtime': 'birthTime',
-      'birthlocation': 'birthLocation',
-      'personality': 'personality',
-      'generating': 'generating'
-    };
-    const messageKey = messageKeyMap[stepKey] || 'welcome';
-    
-    // Get messages for this step
-    const stepMessages = messages[messageKey] || messages['welcome'];
-    
-    if (stepMessages && stepMessages[currentMessageIndex]) {
-      await startSpeaking(stepMessages[currentMessageIndex]);
-      
-      // Move to next message if available
-      if (currentMessageIndex < stepMessages.length - 1) {
-        setCurrentMessageIndex(prev => prev + 1);
-      } else {
-        // Reset to first message when we've gone through all messages
-        setCurrentMessageIndex(0);
-      }
-    }
-  };
-  
-  // Update stage based on current step
-  useEffect(() => {
-    let stepKey = steps[currentStep].toLowerCase().replace(/\s+/g, '');
-    
-    // Map the step keys to message keys
-    const messageKeyMap: Record<string, string> = {
-      'welcome': 'welcome',
-      'birthdate': 'birthDate',
-      'birthtime': 'birthTime',
-      'birthlocation': 'birthLocation',
-      'personality': 'personality',
-      'generating': 'generating'
-    };
-    
-    // Get the correct message key from our map
-    const messageKey = messageKeyMap[stepKey] || 'welcome';
-    
-    if (messageKey === 'generating') {
-      setStage('generating');
-    } else if (messageKey === 'welcome') {
-      setStage('welcome');
-    } else {
-      setStage('collecting');
-    }
-    
-    // Auto-start speaking when changing steps
-    const stepMessages = messages[messageKey] || messages['welcome'];
-    if (stepMessages && stepMessages[0]) {
-      startSpeaking(stepMessages[0]);
-    }
-    
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentStep]);
   
   // Handle blueprint generation completion
   const handleBlueprintComplete = () => {
-    setStage('complete');
-    startSpeaking(messages.complete[0]).then(() => {
-      toast({
-        title: "Blueprint generated!",
-        description: "Your Soul Blueprint has been created successfully.",
-      });
-      navigate("/blueprint");
+    toast({
+      title: "Blueprint generated!",
+      description: "Your Soul Blueprint has been created successfully. Transitioning to 2D view...",
     });
+    
+    // Transition to 2D view
+    transitionTo2D();
+    
+    // Navigate to blueprint page after transition
+    setTimeout(() => {
+      navigate("/blueprint");
+    }, 2000);
   };
 
   const renderStepContent = () => {
@@ -305,9 +211,79 @@ const Onboarding = () => {
     }
   };
 
+  // Render 3D experience
+  if (is3DMode) {
+    return (
+      <MainLayout hideNav>
+        {/* 3D Scene */}
+        <motion.div 
+          className="fixed inset-0 z-0"
+          animate={sceneControls}
+        >
+          <Onboarding3DScene 
+            speaking={speaking}
+            stage={stage}
+          >
+            {/* Center aligned content */}
+            <div className="relative w-20 h-20">
+              {currentMessage && showSpeechBubble && (
+                <SpeechBubble position="bottom" className="w-80" is3D={true}>
+                  {currentMessage}
+                </SpeechBubble>
+              )}
+            </div>
+          </Onboarding3DScene>
+        </motion.div>
+        
+        {/* Interaction area - floating cosmic card */}
+        <div className="h-screen p-6 flex flex-col justify-center items-center relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.8 }}
+            className="w-full max-w-md"
+          >
+            <CosmicCard className="backdrop-blur-lg bg-opacity-30" floating>
+              <div className="space-y-6">{renderStepContent()}</div>
+              
+              {currentStep !== steps.length - 1 && (
+                <div className="mt-8 flex justify-between">
+                  <Button
+                    variant="ghost"
+                    onClick={goToPrevStep}
+                    disabled={currentStep === 0}
+                    className="flex items-center"
+                  >
+                    <ChevronLeft className="mr-2 h-4 w-4" />
+                    Back
+                  </Button>
+                  <GradientButton onClick={goToNextStep} className="flex items-center">
+                    {currentStep === steps.length - 2 ? "Generate Blueprint" : "Continue"}
+                    <ChevronRight className="ml-2 h-4 w-4" />
+                  </GradientButton>
+                </div>
+              )}
+            </CosmicCard>
+            
+            {/* Tap to continue hint */}
+            <div className="text-center mt-4 text-white text-sm opacity-80">
+              <p>Tap the Soul Orb to hear guidance</p>
+            </div>
+          </motion.div>
+        </div>
+        
+        {/* Interactive orb that floats in 3D space but is actually a 2D overlay for better touch interaction */}
+        <div 
+          className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-20 h-20 cursor-pointer z-20"
+          onClick={handleOrbClick}
+        />
+      </MainLayout>
+    );
+  }
+  
+  // Regular 2D experience (this will be shown after onboarding)
   return (
     <MainLayout hideNav>
-      <StarField />
       <div className="min-h-screen p-6 flex flex-col">
         {/* Header */}
         <div className="mb-6 text-center">
@@ -329,61 +305,24 @@ const Onboarding = () => {
             ))}
           </div>
         </div>
-
-        {/* Soul Orb (floating above content) */}
-        <div className="relative z-10 mb-4">
-          <div className="flex justify-center">
-            <div className="relative">
-              <motion.div
-                animate={{ 
-                  y: [0, -10, 0],
-                }}
-                transition={{ 
-                  duration: 3,
-                  repeat: Infinity,
-                  ease: "easeInOut" 
-                }}
-              >
-                <SoulOrb 
-                  size="md" 
-                  speaking={speaking}
-                  stage={stage}
-                  onClick={handleOrbClick}
-                />
-              </motion.div>
-              
-              {currentMessage && showSpeechBubble && (
-                <SpeechBubble position="bottom" className="w-80">
-                  {currentMessage}
-                </SpeechBubble>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Main content */}
+        
+        {/* Transitioning content */}
         <div className="flex-1 flex items-center justify-center">
-          <CosmicCard className="w-full max-w-md" floating>
-            <div className="space-y-6">{renderStepContent()}</div>
-
-            {currentStep !== steps.length - 1 && (
-              <div className="mt-8 flex justify-between">
-                <Button
-                  variant="ghost"
-                  onClick={goToPrevStep}
-                  disabled={currentStep === 0}
-                  className="flex items-center"
-                >
-                  <ChevronLeft className="mr-2 h-4 w-4" />
-                  Back
-                </Button>
-                <GradientButton onClick={goToNextStep} className="flex items-center">
-                  {currentStep === steps.length - 2 ? "Generate Blueprint" : "Continue"}
-                  <ChevronRight className="ml-2 h-4 w-4" />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+          >
+            <CosmicCard className="w-full max-w-md" floating>
+              <div className="text-center p-8">
+                <h2 className="text-2xl font-display font-bold mb-4">Welcome to SoulSync</h2>
+                <p className="mb-6">Your Soul Blueprint has been created successfully!</p>
+                <GradientButton onClick={() => navigate("/blueprint")} className="w-full">
+                  View My Soul Blueprint
                 </GradientButton>
               </div>
-            )}
-          </CosmicCard>
+            </CosmicCard>
+          </motion.div>
         </div>
       </div>
     </MainLayout>

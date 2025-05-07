@@ -8,6 +8,7 @@ interface SpeechBubbleProps {
   className?: string;
   position?: "top" | "bottom" | "left" | "right";
   isVisible?: boolean;
+  is3D?: boolean;
 }
 
 const SpeechBubble: React.FC<SpeechBubbleProps> = ({
@@ -15,6 +16,7 @@ const SpeechBubble: React.FC<SpeechBubbleProps> = ({
   className,
   position = "bottom",
   isVisible = true,
+  is3D = false,
 }) => {
   const positionClasses = {
     top: "bottom-full mb-2",
@@ -35,7 +37,8 @@ const SpeechBubble: React.FC<SpeechBubbleProps> = ({
   return (
     <motion.div
       className={cn(
-        "absolute z-10 w-64 max-w-sm px-4 py-3 cosmic-card",
+        "absolute z-10 w-64 max-w-sm px-4 py-3",
+        is3D ? "bg-black bg-opacity-50 backdrop-blur-md border border-white border-opacity-40 text-white" : "cosmic-card",
         positionClasses[position],
         className
       )}
@@ -43,14 +46,24 @@ const SpeechBubble: React.FC<SpeechBubbleProps> = ({
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.9 }}
       transition={{ duration: 0.3 }}
+      style={{
+        borderRadius: is3D ? "1rem" : undefined,
+        boxShadow: is3D ? "0 0 20px rgba(255, 255, 255, 0.2)" : undefined
+      }}
     >
       <div
         className={cn(
-          "absolute w-0 h-0 border-[8px] border-white border-opacity-20",
+          "absolute w-0 h-0",
+          is3D ? "border-[8px] border-white border-opacity-40" : "border-[8px] border-white border-opacity-20",
           arrowClasses[position]
         )}
       />
-      <div className="text-sm text-foreground leading-relaxed">{children}</div>
+      <div className={cn(
+        "text-sm leading-relaxed", 
+        is3D ? "text-white" : "text-foreground"
+      )}>
+        {children}
+      </div>
     </motion.div>
   );
 };
