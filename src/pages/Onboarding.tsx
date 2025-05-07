@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight, ChevronLeft, Calendar, Clock, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,11 @@ import { Label } from "@/components/ui/label";
 import StarField from "@/components/ui/star-field";
 import MainLayout from "@/components/Layout/MainLayout";
 import { useToast } from "@/hooks/use-toast";
+import { SoulOrb } from "@/components/ui/soul-orb";
+import { SpeechBubble } from "@/components/ui/speech-bubble";
+import { BlueprintGenerator } from "@/components/ui/blueprint-generator";
+import { useSoulOrb } from "@/contexts/SoulOrbContext";
+import { motion } from "@/lib/framer-motion";
 
 const steps = [
   "Welcome",
@@ -17,6 +22,7 @@ const steps = [
   "Birth Time",
   "Birth Location",
   "Personality",
+  "Generating",
 ];
 
 const Onboarding = () => {
@@ -30,6 +36,21 @@ const Onboarding = () => {
     birthLocation: "",
     personality: "",
   });
+  
+  // Soul orb state
+  const { 
+    startSpeaking, 
+    stopSpeaking, 
+    speaking, 
+    messages, 
+    currentMessage,
+    stage, 
+    setStage 
+  } = useSoulOrb();
+  
+  const [showSpeechBubble, setShowSpeechBubble] = useState(true);
+  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -37,20 +58,80 @@ const Onboarding = () => {
   };
 
   const goToNextStep = () => {
+    stopSpeaking();
+    
     if (currentStep === steps.length - 1) {
-      // Submit the form and navigate to the blueprint page
+      // Complete the generation and navigate
+      setIsGenerating(true);
+    } else if (currentStep === steps.length - 2) {
+      // Start the generation process
+      setStage('generating');
+      setCurrentStep((prev) => prev + 1);
+      setCurrentMessageIndex(0);
+    } else {
+      setCurrentStep((prev) => prev + 1);
+      setCurrentMessageIndex(0);
+    }
+  };
+
+  const goToPrevStep = () => {
+    stopSpeaking();
+    setCurrentStep((prev) => Math.max(0, prev - 1));
+    setCurrentMessageIndex(0);
+  };
+  
+  // Handle orb interaction
+  const handleOrbClick = async () => {
+    // If not speaking, start speaking the current message for this step
+    if (!speaking) {
+      const stepKey = steps[currentStep].toLowerCase();
+      const stepMessages = messages[stepKey] || messages['welcome'];
+      
+      if (stepMessages && stepMessages[currentMessageIndex]) {
+        await startSpeaking(stepMessages[currentMessageIndex]);
+        
+        // Move to next message if available
+        if (currentMessageIndex < stepMessages.length - 1) {
+          setCurrentMessageIndex(prev => prev + 1);
+        }
+      }
+    } else {
+      // If already speaking, stop
+      stopSpeaking();
+    }
+  };
+  
+  // Update stage based on current step
+  useEffect(() => {
+    const stepKey = steps[currentStep].toLowerCase();
+    
+    if (stepKey === 'welcome') {
+      setStage('welcome');
+    } else if (stepKey === 'generating') {
+      setStage('generating');
+    } else {
+      setStage('collecting');
+    }
+    
+    // Auto-start speaking when changing steps
+    const stepMessages = messages[stepKey] || messages['welcome'];
+    if (stepMessages && stepMessages[0]) {
+      startSpeaking(stepMessages[0]);
+    }
+    
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentStep]);
+  
+  // Handle blueprint generation completion
+  const handleBlueprintComplete = () => {
+    setStage('complete');
+    startSpeaking(messages.complete[0]).then(() => {
       toast({
         title: "Blueprint generated!",
         description: "Your Soul Blueprint has been created successfully.",
       });
       navigate("/blueprint");
-    } else {
-      setCurrentStep((prev) => prev + 1);
-    }
-  };
-
-  const goToPrevStep = () => {
-    setCurrentStep((prev) => Math.max(0, prev - 1));
+    });
   };
 
   const renderStepContent = () => {
@@ -182,6 +263,17 @@ const Onboarding = () => {
             </div>
           </div>
         );
+      case 5:
+        return (
+          <div className="space-y-6 text-center">
+            <h2 className="text-2xl font-display font-bold">Generating Your Soul Blueprint</h2>
+            <BlueprintGenerator 
+              formData={formData}
+              onComplete={handleBlueprintComplete}
+              className="mt-4"
+            />
+          </div>
+        );
       default:
         return null;
     }
@@ -212,26 +304,59 @@ const Onboarding = () => {
           </div>
         </div>
 
+        {/* Soul Orb (floating above content) */}
+        <div className="relative z-10 mb-4">
+          <div className="flex justify-center">
+            <div className="relative">
+              <motion.div
+                animate={{ 
+                  y: [0, -10, 0],
+                }}
+                transition={{ 
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut" 
+                }}
+              >
+                <SoulOrb 
+                  size="md" 
+                  speaking={speaking}
+                  stage={stage}
+                  onClick={handleOrbClick}
+                />
+              </motion.div>
+              
+              {currentMessage && showSpeechBubble && (
+                <SpeechBubble position="bottom" className="w-72">
+                  {currentMessage}
+                </SpeechBubble>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* Main content */}
         <div className="flex-1 flex items-center justify-center">
           <CosmicCard className="w-full max-w-md" floating>
             <div className="space-y-6">{renderStepContent()}</div>
 
-            <div className="mt-8 flex justify-between">
-              <Button
-                variant="ghost"
-                onClick={goToPrevStep}
-                disabled={currentStep === 0}
-                className="flex items-center"
-              >
-                <ChevronLeft className="mr-2 h-4 w-4" />
-                Back
-              </Button>
-              <GradientButton onClick={goToNextStep} className="flex items-center">
-                {currentStep === steps.length - 1 ? "Create Blueprint" : "Continue"}
-                <ChevronRight className="ml-2 h-4 w-4" />
-              </GradientButton>
-            </div>
+            {currentStep !== steps.length - 1 && (
+              <div className="mt-8 flex justify-between">
+                <Button
+                  variant="ghost"
+                  onClick={goToPrevStep}
+                  disabled={currentStep === 0}
+                  className="flex items-center"
+                >
+                  <ChevronLeft className="mr-2 h-4 w-4" />
+                  Back
+                </Button>
+                <GradientButton onClick={goToNextStep} className="flex items-center">
+                  {currentStep === steps.length - 2 ? "Generate Blueprint" : "Continue"}
+                  <ChevronRight className="ml-2 h-4 w-4" />
+                </GradientButton>
+              </div>
+            )}
           </CosmicCard>
         </div>
       </div>
