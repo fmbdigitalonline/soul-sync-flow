@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.43.3';
@@ -195,7 +196,7 @@ Safety Note: Avoid giving medical, legal, or financial advice. Focus on emotiona
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",  // Using a more efficient model, change as needed
+        model: "gpt-4.1-mini",  // Updated to use GPT-4.1-mini model
         messages: messages,
         max_tokens: 500,
         temperature: 0.7,
