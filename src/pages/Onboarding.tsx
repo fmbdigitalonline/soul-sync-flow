@@ -41,6 +41,8 @@ const Onboarding = () => {
     stage,
     speaking,
     interactionStage,
+    isTransitioning,
+    cardOpacity,
     goToNextStep,
     goToPrevStep,
     handleOrbClick,
@@ -249,28 +251,31 @@ const Onboarding = () => {
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             animate={{ 
-              opacity: interactionStage === 'input' ? 1 : 0.7, 
+              opacity: cardOpacity, 
               y: interactionStage === 'input' ? 0 : 20,
               scale: interactionStage === 'input' ? 1.05 : 0.95
             }}
             transition={{ duration: 0.5 }}
-            className={`w-full max-w-md ${interactionStage === 'listening' ? 'pointer-events-none' : 'pointer-events-auto'}`}
+            className={`w-full max-w-md ${
+              interactionStage === 'listening' || isTransitioning ? 'pointer-events-none' : 'pointer-events-auto'
+            }`}
           >
             <CosmicCard 
               className={`backdrop-blur-lg transition-all duration-500 ${
                 interactionStage === 'listening' ? 'bg-opacity-20' : 'bg-opacity-40'
               }`} 
-              floating={interactionStage === 'input'}
+              floating={interactionStage === 'input' && !isTransitioning}
             >
               <div className="space-y-6">{renderStepContent()}</div>
               
               {/* "Listen Again" button when in input mode except for the generating step */}
-              {interactionStage === 'input' && currentStep !== steps.length - 1 && (
+              {interactionStage === 'input' && currentStep !== steps.length - 1 && !isTransitioning && (
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={listenAgain}
                   className="flex items-center mt-2 mx-auto"
+                  disabled={isTransitioning}
                 >
                   <Volume2 className="mr-1 h-4 w-4" />
                   Listen Again
@@ -279,19 +284,19 @@ const Onboarding = () => {
               
               {currentStep !== steps.length - 1 && (
                 <div className={`mt-8 flex justify-between transition-opacity duration-300 ${
-                  interactionStage === 'listening' ? 'opacity-0' : 'opacity-100'
+                  interactionStage === 'listening' || isTransitioning ? 'opacity-0' : 'opacity-100'
                 }`}>
                   <Button
                     variant="ghost"
                     onClick={goToPrevStep}
-                    disabled={currentStep === 0 || interactionStage === 'listening'}
+                    disabled={currentStep === 0 || interactionStage === 'listening' || isTransitioning}
                   >
                     <ChevronLeft className="mr-2 h-4 w-4" />
                     Back
                   </Button>
                   <GradientButton 
                     onClick={goToNextStep} 
-                    disabled={interactionStage === 'listening'}
+                    disabled={interactionStage === 'listening' || isTransitioning}
                   >
                     {currentStep === steps.length - 2 ? "Generate Blueprint" : "Continue"}
                     <ChevronRight className="ml-2 h-4 w-4" />
@@ -302,7 +307,9 @@ const Onboarding = () => {
             
             {/* Tap to continue hint with different messages based on stage */}
             <div className="text-center mt-4 text-white text-sm opacity-80">
-              {interactionStage === 'listening' ? (
+              {isTransitioning ? (
+                <p>Transitioning...</p>
+              ) : interactionStage === 'listening' ? (
                 <p>Soul Orb is speaking. Click anywhere to continue...</p>
               ) : (
                 <p>Please enter your information</p>
@@ -312,14 +319,14 @@ const Onboarding = () => {
         </div>
         
         {/* Interactive area for clicking - covers the entire screen during listening phase */}
-        {interactionStage === 'listening' && (
+        {interactionStage === 'listening' && !isTransitioning && (
           <div 
             className="fixed inset-0 cursor-pointer z-20"
             onClick={handleOrbClick}
           />
         )}
         {/* Smaller interactive area for the orb during input phase */}
-        {interactionStage === 'input' && (
+        {interactionStage === 'input' && !isTransitioning && (
           <div 
             className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-20 h-20 cursor-pointer z-20"
             onClick={handleOrbClick}

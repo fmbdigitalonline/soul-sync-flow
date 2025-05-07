@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { useSoulOrb } from '@/contexts/SoulOrbContext';
-import { motion, animations } from '@/lib/framer-motion';
 import { useAnimate } from 'framer-motion';
 
 export const useOnboarding3D = () => {
@@ -11,6 +10,10 @@ export const useOnboarding3D = () => {
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [showSpeechBubble, setShowSpeechBubble] = useState(true);
   const [interactionStage, setInteractionStage] = useState<'listening' | 'input'>('listening');
+  
+  // Add transition states to prevent overlapping
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [cardOpacity, setCardOpacity] = useState(0);
   
   // Animation controls - replacing useAnimation with useAnimate
   const [sceneRef, animate] = useAnimate();
@@ -25,10 +28,18 @@ export const useOnboarding3D = () => {
     "Generating",
   ];
   
-  // Transition to next step
+  // Transition to next step with proper timing
   const goToNextStep = () => {
+    // Prevent multiple clicks during transition
+    if (isTransitioning) return;
+    
+    setIsTransitioning(true);
+    
     // Stop any current speech
     stopSpeaking();
+    
+    // Fade out the card first
+    setCardOpacity(0);
     
     // Animate transition
     animate(sceneRef.current, {
@@ -53,12 +64,26 @@ export const useOnboarding3D = () => {
         setCurrentMessageIndex(0);
         setInteractionStage('listening'); // Reset to listening stage for the new step
       }
-    }, 400);
+      
+      // Prevent flickering by waiting until content changes before showing bubble
+      setTimeout(() => {
+        setShowSpeechBubble(true);
+      }, 200);
+      
+      setIsTransitioning(false);
+    }, 600);
   };
   
-  // Go to previous step
+  // Go to previous step with proper timing
   const goToPrevStep = () => {
+    // Prevent multiple clicks during transition
+    if (isTransitioning) return;
+    
+    setIsTransitioning(true);
     stopSpeaking();
+    
+    // Fade out the card first
+    setCardOpacity(0);
     
     // Animate transition
     animate(sceneRef.current, {
@@ -71,54 +96,76 @@ export const useOnboarding3D = () => {
       setCurrentStep((prev) => Math.max(0, prev - 1));
       setCurrentMessageIndex(0);
       setInteractionStage('listening'); // Reset to listening stage for the new step
-    }, 400);
+      
+      // Prevent flickering by waiting until content changes before showing bubble
+      setTimeout(() => {
+        setShowSpeechBubble(true);
+      }, 200);
+      
+      setIsTransitioning(false);
+    }, 600);
   };
   
   // Switch to input stage after orb finishes speaking or user clicks
   const switchToInputStage = () => {
-    if (interactionStage === 'listening') {
+    if (interactionStage === 'listening' && !isTransitioning) {
+      setIsTransitioning(true);
+      
+      // Hide speech bubble first
+      setShowSpeechBubble(false);
+      
       // Animate transition to input stage
       animate(sceneRef.current, {
         opacity: [1, 0.9, 1],
       }, { duration: 0.5 });
       
-      setInteractionStage('input');
-      
-      // Hide speech bubble with slight delay for smooth transition
+      // Wait for animation to complete before showing the input card
       setTimeout(() => {
-        setShowSpeechBubble(false);
-      }, 300);
+        setInteractionStage('input');
+        setCardOpacity(1);
+        setIsTransitioning(false);
+      }, 500);
     }
   };
   
-  // Listen again - return to listening stage
+  // Listen again - return to listening stage with proper timing
   const listenAgain = async () => {
-    setInteractionStage('listening');
-    setShowSpeechBubble(true);
+    if (isTransitioning) return;
     
-    // Get the correct message key for the current step
-    let stepKey = steps[currentStep].toLowerCase().replace(/\s+/g, '');
-    const messageKeyMap: Record<string, string> = {
-      'welcome': 'welcome',
-      'birthdate': 'birthDate',
-      'birthtime': 'birthTime',
-      'birthlocation': 'birthLocation',
-      'personality': 'personality',
-      'generating': 'generating'
-    };
-    const messageKey = messageKeyMap[stepKey] || 'welcome';
+    setIsTransitioning(true);
+    setCardOpacity(0);
     
-    // Get messages for this step
-    const stepMessages = messages[messageKey] || messages['welcome'];
-    
-    if (stepMessages && stepMessages[0]) {
-      await startSpeaking(stepMessages[0]);
-      // Will automatically switch to input stage when done speaking
-    }
+    setTimeout(() => {
+      setInteractionStage('listening');
+      setShowSpeechBubble(true);
+      
+      // Get the correct message key for the current step
+      let stepKey = steps[currentStep].toLowerCase().replace(/\s+/g, '');
+      const messageKeyMap: Record<string, string> = {
+        'welcome': 'welcome',
+        'birthdate': 'birthDate',
+        'birthtime': 'birthTime',
+        'birthlocation': 'birthLocation',
+        'personality': 'personality',
+        'generating': 'generating'
+      };
+      const messageKey = messageKeyMap[stepKey] || 'welcome';
+      
+      // Get messages for this step
+      const stepMessages = messages[messageKey] || messages['welcome'];
+      
+      if (stepMessages && stepMessages[0]) {
+        startSpeaking(stepMessages[0]);
+      }
+      
+      setIsTransitioning(false);
+    }, 400);
   };
   
-  // Handle orb interaction
+  // Handle orb interaction with proper timing
   const handleOrbClick = async () => {
+    if (isTransitioning) return;
+    
     // If speaking, stop speech and move to input stage
     if (speaking) {
       stopSpeaking();
@@ -128,8 +175,14 @@ export const useOnboarding3D = () => {
     
     // If already in input stage, cycle back to listening
     if (interactionStage === 'input') {
-      setInteractionStage('listening');
-      setShowSpeechBubble(true);
+      setIsTransitioning(true);
+      setCardOpacity(0);
+      
+      setTimeout(() => {
+        setInteractionStage('listening');
+        setShowSpeechBubble(true);
+        setIsTransitioning(false);
+      }, 400);
     }
     
     // If in listening stage and not currently speaking, advance to input stage
@@ -204,6 +257,7 @@ export const useOnboarding3D = () => {
     }
     
     // Auto-start speaking when changing steps
+    setCardOpacity(0);
     setShowSpeechBubble(true);
     const stepMessages = messages[messageKey] || messages['welcome'];
     if (stepMessages && stepMessages[0]) {
@@ -213,17 +267,17 @@ export const useOnboarding3D = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStep]);
   
-  // Auto-switch to input stage when orb stops speaking
+  // Auto-switch to input stage when orb stops speaking with delay
   useEffect(() => {
-    if (!speaking && interactionStage === 'listening') {
-      // Add a small delay to make the transition feel more natural
+    if (!speaking && interactionStage === 'listening' && !isTransitioning) {
+      // Add a delay to make the transition feel more natural
       const timer = setTimeout(() => {
         switchToInputStage();
-      }, 500);
+      }, 800); // Longer delay for better user experience
       
       return () => clearTimeout(timer);
     }
-  }, [speaking, interactionStage]);
+  }, [speaking, interactionStage, isTransitioning]);
   
   return {
     is3DMode,
@@ -235,6 +289,8 @@ export const useOnboarding3D = () => {
     stage,
     speaking,
     interactionStage,
+    isTransitioning,
+    cardOpacity,
     goToNextStep,
     goToPrevStep,
     handleOrbClick,
