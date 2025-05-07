@@ -119,6 +119,9 @@ export default {
 				'cosmic-gradient': 'linear-gradient(to right, #9b87f5, #4f74e3, #6366f1)',
 				'cosmic-radial': 'radial-gradient(circle, rgba(155, 135, 245, 0.15) 0%, rgba(214, 188, 250, 0.05) 70%, rgba(255, 255, 255, 0) 100%)'
 			},
+			backgroundSize: {
+				'200': '200%'
+			},
 			fontFamily: {
 				sans: ['Inter', 'sans-serif'],
 				display: ['Montserrat', 'sans-serif']
