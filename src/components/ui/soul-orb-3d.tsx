@@ -1,5 +1,5 @@
 
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -18,7 +18,8 @@ const SoulOrb3D: React.FC<SoulOrb3DProps> = ({
 }) => {
   // References for animations
   const orbRef = useRef<THREE.Mesh>(null);
-  const starRef = useRef<THREE.Mesh>(null);
+  const starVideoRef = useRef<THREE.Mesh>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   
   // Use the correct type for Three.js line objects
   const ring1Ref = useRef<THREE.Line>(null);
@@ -46,11 +47,70 @@ const SoulOrb3D: React.FC<SoulOrb3DProps> = ({
     return new THREE.BufferGeometry().setFromPoints(curve.getPoints(50));
   }, [size]);
   
-  // Create a texture for the star burst
-  const starBurstTexture = useMemo(() => {
-    // Use the uploaded image for the star burst
+  // Create video texture for the star burst effect
+  const videoTexture = useMemo(() => {
+    // Create video element
+    const video = document.createElement('video');
+    video.src = '/lovable-uploads/8951ad75-3386-46ac-9b0e-99dbe6c84f7c.png'; // Fallback to static image initially
+    video.crossOrigin = 'anonymous';
+    video.loop = true;
+    video.muted = true;
+    video.playsInline = true;
+    
+    // Store video reference
+    videoRef.current = video;
+    
+    // Create texture from video
+    const texture = new THREE.VideoTexture(video);
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.format = THREE.RGBAFormat;
+    
+    return texture;
+  }, []);
+  
+  // Fallback texture in case video fails
+  const fallbackTexture = useMemo(() => {
     return new THREE.TextureLoader().load('/lovable-uploads/8951ad75-3386-46ac-9b0e-99dbe6c84f7c.png');
   }, []);
+  
+  // Handle video playback
+  useEffect(() => {
+    const video = videoRef.current;
+    
+    if (video) {
+      // Try to play the video - browsers might block autoplay
+      const playPromise = video.play();
+      
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.error('Video autoplay failed:', error);
+          // If autoplay fails, we'll fall back to the static image texture
+          if (starVideoRef.current) {
+            const material = starVideoRef.current.material as THREE.MeshBasicMaterial;
+            material.map = fallbackTexture;
+            material.needsUpdate = true;
+          }
+        });
+      }
+      
+      // Update video playback state based on speaking prop
+      if (speaking) {
+        video.playbackRate = 1.2; // Speed up slightly when speaking
+      } else {
+        video.playbackRate = 1.0;
+      }
+    }
+    
+    // Clean up video on component unmount
+    return () => {
+      if (video) {
+        video.pause();
+        video.src = '';
+        video.load();
+      }
+    };
+  }, [speaking, fallbackTexture]);
   
   // Animation
   useFrame((state) => {
@@ -64,12 +124,12 @@ const SoulOrb3D: React.FC<SoulOrb3DProps> = ({
       orbRef.current.scale.y = size * pulse;
       orbRef.current.scale.z = size * pulse;
       
-      // Star burst animation
-      if (starRef.current) {
-        starRef.current.rotation.z += 0.005; // Subtle rotation
+      // Star video animation
+      if (starVideoRef.current) {
+        starVideoRef.current.rotation.z += 0.005; // Subtle rotation
         
         // Pulse the star brightness
-        const starMaterial = starRef.current.material as THREE.MeshBasicMaterial;
+        const starMaterial = starVideoRef.current.material as THREE.MeshBasicMaterial;
         starMaterial.opacity = speaking ? 
           0.95 + Math.sin(state.clock.elapsedTime * 8) * 0.05 : 
           0.9 + Math.sin(state.clock.elapsedTime * 4) * 0.05;
@@ -112,15 +172,15 @@ const SoulOrb3D: React.FC<SoulOrb3DProps> = ({
         />
       </mesh>
       
-      {/* Star/burst effect in the center - now using the provided image */}
-      <mesh ref={starRef}>
+      {/* Star/burst effect in the center - now using video texture */}
+      <mesh ref={starVideoRef}>
         <planeGeometry args={[size * 0.65, size * 0.65]} />
         <meshBasicMaterial 
           color="#FFFFFF" 
           transparent 
           opacity={1}
           side={THREE.DoubleSide}
-          map={starBurstTexture}
+          map={videoTexture}
         />
       </mesh>
       
