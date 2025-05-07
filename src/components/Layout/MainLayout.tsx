@@ -1,8 +1,10 @@
 
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Home, Star, MessageCircle, ListTodo, User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -36,9 +38,30 @@ const NavItem = ({
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) => {
   const path = window.location.pathname;
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  
+  const handleSignIn = () => {
+    navigate('/auth');
+  };
   
   return (
     <div className="flex flex-col min-h-screen cosmic-bg">
+      {/* Simple header with auth actions */}
+      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
+        <div className="container mx-auto flex justify-between items-center h-16 px-4">
+          <Link to="/" className="text-xl font-bold font-display gradient-text">
+            Soul Guide
+          </Link>
+          
+          {user ? (
+            <Button variant="ghost" onClick={signOut}>Sign Out</Button>
+          ) : (
+            <Button onClick={handleSignIn}>Sign In</Button>
+          )}
+        </div>
+      </header>
+      
       <main className="flex-1 pb-16">{children}</main>
       
       {!hideNav && (
