@@ -1,16 +1,17 @@
 
-import React, { useRef, useMemo, useEffect } from 'react';
+import React, { useRef, useMemo, useEffect, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { supabase } from '@/integrations/supabase/client';
 
-interface SoulOrb3DProps {
+interface SoulOrbProps {
   speaking?: boolean;
   stage?: "welcome" | "collecting" | "generating" | "complete";
   size?: number;
   position?: [number, number, number];
 }
 
-const SoulOrb3D: React.FC<SoulOrb3DProps> = ({
+const SoulOrb3D: React.FC<SoulOrbProps> = ({
   speaking = false,
   stage = "welcome",
   size = 1,
@@ -20,6 +21,9 @@ const SoulOrb3D: React.FC<SoulOrb3DProps> = ({
   const orbRef = useRef<THREE.Mesh>(null);
   const starVideoRef = useRef<THREE.Mesh>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [videoLoaded, setVideoLoaded] = useState(false);
+  const [videoError, setVideoError] = useState(false);
   
   // Use the correct type for Three.js line objects
   const ring1Ref = useRef<THREE.Line>(null);
@@ -30,6 +34,32 @@ const SoulOrb3D: React.FC<SoulOrb3DProps> = ({
   const getOrbColor = () => {
     return new THREE.Color("#00E5FF"); // Bright cyan like in the image
   };
+  
+  // Fetch video URL from Supabase
+  useEffect(() => {
+    const fetchOrbVideo = async () => {
+      try {
+        const { data, error } = await supabase.storage
+          .from('orb-videos')
+          .getPublicUrl('soul-orb-core.mp4');
+        
+        if (error) {
+          console.error('Error fetching video:', error);
+          setVideoError(true);
+          return;
+        }
+        
+        if (data) {
+          setVideoUrl(data.publicUrl);
+        }
+      } catch (err) {
+        console.error('Error in fetching video:', err);
+        setVideoError(true);
+      }
+    };
+    
+    fetchOrbVideo();
+  }, []);
   
   // Ring curves for the orbital rings - adjusted to match the image more closely
   const curve1 = useMemo(() => {
@@ -48,14 +78,14 @@ const SoulOrb3D: React.FC<SoulOrb3DProps> = ({
   }, [size]);
   
   // Create video texture for the star burst effect
-  const videoTexture = useMemo(() => {
+  const { videoTexture, fallbackTexture } = useMemo(() => {
     // Create video element
     const video = document.createElement('video');
-    video.src = '/lovable-uploads/8951ad75-3386-46ac-9b0e-99dbe6c84f7c.png'; // Fallback to static image initially
     video.crossOrigin = 'anonymous';
     video.loop = true;
     video.muted = true;
     video.playsInline = true;
+    video.autoplay = true;
     
     // Store video reference
     videoRef.current = video;
@@ -66,26 +96,42 @@ const SoulOrb3D: React.FC<SoulOrb3DProps> = ({
     texture.magFilter = THREE.LinearFilter;
     texture.format = THREE.RGBAFormat;
     
-    return texture;
+    // Fallback texture in case video fails
+    const fallback = new THREE.TextureLoader().load('/lovable-uploads/8951ad75-3386-46ac-9b0e-99dbe6c84f7c.png');
+    
+    return { videoTexture: texture, fallbackTexture: fallback };
   }, []);
   
-  // Fallback texture in case video fails
-  const fallbackTexture = useMemo(() => {
-    return new THREE.TextureLoader().load('/lovable-uploads/8951ad75-3386-46ac-9b0e-99dbe6c84f7c.png');
-  }, []);
-  
-  // Handle video playback
+  // Handle video loading and setup
   useEffect(() => {
     const video = videoRef.current;
     
-    if (video) {
+    if (video && videoUrl) {
+      // Set the video source once we have the URL
+      video.src = videoUrl;
+      
+      // Handle video loaded event
+      const handleVideoLoaded = () => {
+        console.log('Video loaded successfully');
+        setVideoLoaded(true);
+      };
+      
+      // Handle video error event
+      const handleVideoError = () => {
+        console.error('Video failed to load');
+        setVideoError(true);
+      };
+      
+      video.addEventListener('loadeddata', handleVideoLoaded);
+      video.addEventListener('error', handleVideoError);
+      
       // Try to play the video - browsers might block autoplay
       const playPromise = video.play();
       
       if (playPromise !== undefined) {
         playPromise.catch(error => {
           console.error('Video autoplay failed:', error);
-          // If autoplay fails, we'll fall back to the static image texture
+          // We'll fall back to the static image texture
           if (starVideoRef.current) {
             const material = starVideoRef.current.material as THREE.MeshBasicMaterial;
             material.map = fallbackTexture;
@@ -94,23 +140,26 @@ const SoulOrb3D: React.FC<SoulOrb3DProps> = ({
         });
       }
       
-      // Update video playback state based on speaking prop
-      if (speaking) {
-        video.playbackRate = 1.2; // Speed up slightly when speaking
-      } else {
-        video.playbackRate = 1.0;
-      }
-    }
-    
-    // Clean up video on component unmount
-    return () => {
-      if (video) {
+      return () => {
+        video.removeEventListener('loadeddata', handleVideoLoaded);
+        video.removeEventListener('error', handleVideoError);
         video.pause();
         video.src = '';
         video.load();
+      };
+    }
+  }, [videoUrl, fallbackTexture]);
+  
+  // Update video playback state based on speaking prop
+  useEffect(() => {
+    if (videoRef.current && videoLoaded) {
+      if (speaking) {
+        videoRef.current.playbackRate = 1.2; // Speed up slightly when speaking
+      } else {
+        videoRef.current.playbackRate = 1.0;
       }
-    };
-  }, [speaking, fallbackTexture]);
+    }
+  }, [speaking, videoLoaded]);
   
   // Animation
   useFrame((state) => {
@@ -180,11 +229,11 @@ const SoulOrb3D: React.FC<SoulOrb3DProps> = ({
           transparent 
           opacity={1}
           side={THREE.DoubleSide}
-          map={videoTexture}
+          map={videoLoaded && !videoError ? videoTexture : fallbackTexture}
         />
       </mesh>
       
-      {/* Orbital rings - use 'primitive' for proper typing */}
+      {/* Orbital rings */}
       <primitive object={new THREE.Line(curve1, new THREE.LineBasicMaterial({
         color: '#FFFFFF',
         transparent: true,
