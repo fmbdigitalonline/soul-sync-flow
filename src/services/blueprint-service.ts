@@ -177,9 +177,11 @@ export const blueprintService = {
         });
         
       if (error) {
+        console.error("Error saving blueprint:", error);
         return { success: false, error: error.message };
       }
       
+      console.log("Blueprint saved successfully");
       return { success: true };
     } catch (err) {
       console.error("Error saving blueprint:", err);

@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 interface BlueprintGeneratorProps {
   onComplete: () => void;
-  formData: any;
+  formData?: any;
   className?: string;
 }
 
@@ -18,6 +18,7 @@ const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
   const [progress, setProgress] = useState(0);
   const [stage, setStage] = useState<'preparing' | 'assembling' | 'finalizing' | 'complete'>('preparing');
   const [particles, setParticles] = useState<Array<{id: number, x: number, y: number, size: number, speed: number}>>([]);
+  const [isCompleted, setIsCompleted] = useState(false);
 
   // Generate random particles
   useEffect(() => {
@@ -35,7 +36,7 @@ const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
   useEffect(() => {
     let interval: NodeJS.Timeout;
     
-    if (progress < 100) {
+    if (progress < 100 && !isCompleted) {
       interval = setInterval(() => {
         setProgress(prev => {
           const increment = Math.random() * 3 + 1;
@@ -48,7 +49,12 @@ const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
             setStage('finalizing');
           } else if (newProgress === 100 && stage === 'finalizing') {
             setStage('complete');
-            setTimeout(onComplete, 1500);
+            // Mark as completed to prevent looping
+            setIsCompleted(true);
+            // Use setTimeout to ensure animation completes before redirecting
+            setTimeout(() => {
+              onComplete();
+            }, 1500);
           }
           
           return newProgress;
@@ -59,7 +65,7 @@ const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [progress, stage, onComplete]);
+  }, [progress, stage, onComplete, isCompleted]);
 
   return (
     <div className={cn("relative w-full h-64 overflow-hidden rounded-xl", className)}>

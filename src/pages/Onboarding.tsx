@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight, ChevronLeft, Calendar, Clock, MapPin, Volume2 } from "lucide-react";
@@ -29,7 +28,8 @@ const Onboarding = () => {
     personality: "",
   });
   
-  const [isGenerating, setIsGenerating] = useState(false);
+  // Add a state to track if blueprint has been generated
+  const [blueprintGenerated, setBlueprintGenerated] = useState(false);
   
   // Use our custom hook for 3D onboarding
   const {
@@ -57,6 +57,9 @@ const Onboarding = () => {
   
   // Handle blueprint generation completion
   const handleBlueprintComplete = () => {
+    // Set flag to prevent looping
+    setBlueprintGenerated(true);
+    
     toast({
       title: "Blueprint generated!",
       description: "Your Soul Blueprint has been created successfully. Transitioning to 2D view...",
@@ -67,9 +70,17 @@ const Onboarding = () => {
     
     // Navigate to blueprint page after transition
     setTimeout(() => {
+      console.log("Navigating to blueprint page after blueprint generation");
       navigate("/blueprint");
     }, 2000);
   };
+
+  // Add an effect to prevent looping if blueprint was generated
+  useEffect(() => {
+    if (blueprintGenerated) {
+      console.log("Blueprint was generated, should redirect soon");
+    }
+  }, [blueprintGenerated]);
 
   const renderStepContent = () => {
     switch (currentStep) {
