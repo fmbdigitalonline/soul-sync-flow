@@ -20,7 +20,7 @@ const SoulOrb3D: React.FC<SoulOrbProps> = ({
   // References for animations
   const orbRef = useRef<THREE.Mesh>(null);
   const starVideoRef = useRef<THREE.Mesh>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [videoError, setVideoError] = useState(false);
@@ -60,7 +60,7 @@ const SoulOrb3D: React.FC<SoulOrbProps> = ({
   
   // Create video texture for the star burst effect
   const { videoTexture, fallbackTexture } = useMemo(() => {
-    // Create video element
+    // Create video element programmatically
     const video = document.createElement('video');
     video.crossOrigin = 'anonymous';
     video.loop = true;
@@ -90,6 +90,7 @@ const SoulOrb3D: React.FC<SoulOrbProps> = ({
     if (video && videoUrl) {
       // Set the video source once we have the URL
       video.src = videoUrl;
+      console.log("Setting video source:", videoUrl);
       
       // Handle video loaded event
       const handleVideoLoaded = () => {
@@ -98,19 +99,20 @@ const SoulOrb3D: React.FC<SoulOrbProps> = ({
       };
       
       // Handle video error event
-      const handleVideoError = () => {
-        console.error('Video failed to load');
+      const handleVideoError = (e: ErrorEvent) => {
+        console.error('Video failed to load:', e);
         setVideoError(true);
       };
       
       video.addEventListener('loadeddata', handleVideoLoaded);
-      video.addEventListener('error', handleVideoError);
+      video.addEventListener('error', handleVideoError as EventListener);
       
       // Try to play the video - browsers might block autoplay
-      const playPromise = video.play();
-      
-      if (playPromise !== undefined) {
-        playPromise.catch(error => {
+      const tryPlay = async () => {
+        try {
+          await video.play();
+          console.log("Video playing successfully");
+        } catch (error) {
           console.error('Video autoplay failed:', error);
           // We'll fall back to the static image texture
           if (starVideoRef.current) {
@@ -118,12 +120,14 @@ const SoulOrb3D: React.FC<SoulOrbProps> = ({
             material.map = fallbackTexture;
             material.needsUpdate = true;
           }
-        });
-      }
+        }
+      };
+      
+      tryPlay();
       
       return () => {
         video.removeEventListener('loadeddata', handleVideoLoaded);
-        video.removeEventListener('error', handleVideoError);
+        video.removeEventListener('error', handleVideoError as EventListener);
         video.pause();
         video.src = '';
         video.load();
@@ -141,6 +145,16 @@ const SoulOrb3D: React.FC<SoulOrbProps> = ({
       }
     }
   }, [speaking, videoLoaded]);
+  
+  // Make sure the texture stays updated
+  useEffect(() => {
+    if (videoLoaded && starVideoRef.current) {
+      const material = starVideoRef.current.material as THREE.MeshBasicMaterial;
+      material.map = videoTexture;
+      material.transparent = true;
+      material.needsUpdate = true;
+    }
+  }, [videoLoaded, videoTexture]);
   
   // Animation
   useFrame((state) => {
@@ -164,6 +178,11 @@ const SoulOrb3D: React.FC<SoulOrbProps> = ({
           0.95 + Math.sin(state.clock.elapsedTime * 8) * 0.05 : 
           0.9 + Math.sin(state.clock.elapsedTime * 4) * 0.05;
       }
+    }
+    
+    // Update video texture every frame if needed
+    if (videoLoaded && videoTexture) {
+      videoTexture.needsUpdate = true;
     }
     
     // Animate the orbital rings - slower and more subtle movement
