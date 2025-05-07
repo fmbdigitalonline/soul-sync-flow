@@ -1,7 +1,6 @@
 
 import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Sphere } from '@react-three/drei';
 import * as THREE from 'three';
 
 interface SoulOrb3DProps {
@@ -19,65 +18,62 @@ const SoulOrb3D: React.FC<SoulOrb3DProps> = ({
 }) => {
   const orbRef = useRef<THREE.Mesh>(null);
   
-  // Color mapping based on stage
-  const getColor = () => {
+  // Get color based on stage
+  const getOrbColor = () => {
     switch (stage) {
-      case "welcome":
-        return "#9b87f5";
-      case "collecting":
-        return "#d6bcfa";
-      case "generating":
-        return "#6366f1";
-      case "complete":
-        return "#fad161";
-      default:
-        return "#9b87f5";
+      case "welcome": return new THREE.Color("#9b87f5");
+      case "collecting": return new THREE.Color("#d6bcfa");
+      case "generating": return new THREE.Color("#6366f1");
+      case "complete": return new THREE.Color("#fad161");
+      default: return new THREE.Color("#9b87f5");
     }
   };
   
-  // Animation for the orb
+  // Animation
   useFrame((state) => {
     if (orbRef.current) {
-      // Rotate the orb
+      // Simple rotation
       orbRef.current.rotation.y += 0.01;
       
-      // Pulsating effect with scale
-      const pulseFactor = speaking
+      // Simple pulse effect
+      const pulse = speaking 
         ? Math.sin(state.clock.elapsedTime * 5) * 0.05 + 1.05
         : Math.sin(state.clock.elapsedTime * 2) * 0.03 + 1;
       
-      orbRef.current.scale.set(pulseFactor, pulseFactor, pulseFactor);
+      orbRef.current.scale.x = pulse;
+      orbRef.current.scale.y = pulse;
+      orbRef.current.scale.z = pulse;
     }
   });
 
-  const orbColor = getColor();
-
   return (
     <group position={position}>
-      {/* Main orb */}
-      <Sphere ref={orbRef} args={[size, 32, 32]}>
-        <meshStandardMaterial
-          color={orbColor}
+      {/* Basic sphere for the orb */}
+      <mesh ref={orbRef}>
+        <sphereGeometry args={[size, 32, 32]} />
+        <meshStandardMaterial 
+          color={getOrbColor()} 
+          emissive={getOrbColor()}
+          emissiveIntensity={0.2}
           roughness={0.3}
           metalness={0.2}
-          emissive={orbColor}
-          emissiveIntensity={0.2}
         />
-      </Sphere>
+      </mesh>
       
-      {/* Glow effect */}
-      <Sphere args={[size * 1.2, 16, 16]}>
-        <meshBasicMaterial
-          color={orbColor}
-          transparent={true}
+      {/* Simple glow effect */}
+      <mesh>
+        <sphereGeometry args={[size * 1.2, 16, 16]} />
+        <meshBasicMaterial 
+          color={getOrbColor()}
+          transparent
           opacity={0.1}
         />
-      </Sphere>
+      </mesh>
       
-      {/* Light emanating from the orb */}
+      {/* Simple point light */}
       <pointLight 
-        color={orbColor} 
-        intensity={1} 
+        color={getOrbColor()} 
+        intensity={1}
         distance={4}
       />
     </group>
