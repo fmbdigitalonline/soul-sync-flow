@@ -24,15 +24,15 @@ const SoulOrb3D: React.FC<SoulOrb3DProps> = ({
   const getColor = () => {
     switch (stage) {
       case "welcome":
-        return new THREE.Color("#9b87f5");
+        return "#9b87f5";
       case "collecting":
-        return new THREE.Color("#d6bcfa");
+        return "#d6bcfa";
       case "generating":
-        return new THREE.Color("#6366f1");
+        return "#6366f1";
       case "complete":
-        return new THREE.Color("#fad161");
+        return "#fad161";
       default:
-        return new THREE.Color("#9b87f5");
+        return "#9b87f5";
     }
   };
   

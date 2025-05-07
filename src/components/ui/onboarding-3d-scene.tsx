@@ -23,17 +23,12 @@ const Onboarding3DScene: React.FC<Onboarding3DSceneProps> = ({
           <ambientLight intensity={0.2} />
           
           {/* Directional light */}
-          <directionalLight 
-            position={[10, 10, 5]} 
-            intensity={1} 
-          />
+          <directionalLight position={[10, 10, 5]} intensity={1} />
           
           {/* Soul Orb */}
           <SoulOrb3D 
             speaking={speaking}
             stage={stage}
-            position={[0, 0, 0]}
-            size={1}
           />
           
           {/* Background stars */}
