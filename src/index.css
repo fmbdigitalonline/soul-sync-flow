@@ -107,6 +107,6 @@
   }
   
   .gradient-text {
-    @apply bg-cosmic-gradient bg-clip-text text-transparent bg-size-200 animate-gradient-shift;
+    @apply bg-cosmic-gradient bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient-shift;
   }
 }
