@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { Check, Plus, Clock, Trash2, Calendar, Star, MoreVertical, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { SpeechBubble } from "@/components/ui/speech-bubble";
+import { ProductivityDashboard } from "@/components/productivity/ProductivityDashboard";
 
 // Define task types
 type TaskStatus = "todo" | "in-progress" | "stuck" | "completed";
@@ -69,6 +70,7 @@ const Tasks = () => {
   const [activeView, setActiveView] = useState<"list" | "kanban">("list");
   const [activeTab, setActiveTab] = useState("all");
   const [helpVisible, setHelpVisible] = useState(false);
+  const [showProductivityTools, setShowProductivityTools] = useState(true);
   const { toast } = useToast();
 
   const handleAddTask = () => {
@@ -191,6 +193,12 @@ const Tasks = () => {
             Tasks personalized to your Soul Blueprint
           </p>
         </div>
+
+        {showProductivityTools && (
+          <div className="mb-6">
+            <ProductivityDashboard />
+          </div>
+        )}
 
         <CosmicCard className="mb-6">
           <div className="flex items-center space-x-2">
