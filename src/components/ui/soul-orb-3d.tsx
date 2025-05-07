@@ -1,7 +1,7 @@
 
 import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Sphere, MeshDistortMaterial } from '@react-three/drei';
+import { Sphere } from '@react-three/drei';
 import * as THREE from 'three';
 
 interface SoulOrb3DProps {
@@ -18,7 +18,6 @@ const SoulOrb3D: React.FC<SoulOrb3DProps> = ({
   position = [0, 0, 0],
 }) => {
   const orbRef = useRef<THREE.Mesh>(null);
-  const particlesRef = useRef<THREE.Points>(null);
   
   // Color mapping based on stage
   const getColor = () => {
@@ -37,10 +36,10 @@ const SoulOrb3D: React.FC<SoulOrb3DProps> = ({
   };
   
   // Animation for the orb
-  useFrame((state, delta) => {
+  useFrame((state) => {
     if (orbRef.current) {
       // Rotate the orb
-      orbRef.current.rotation.y += delta * 0.2;
+      orbRef.current.rotation.y += 0.01;
       
       // Pulsating effect with scale
       const pulseFactor = speaking
@@ -49,81 +48,38 @@ const SoulOrb3D: React.FC<SoulOrb3DProps> = ({
       
       orbRef.current.scale.set(pulseFactor, pulseFactor, pulseFactor);
     }
-    
-    // Animate particles around the orb
-    if (particlesRef.current) {
-      particlesRef.current.rotation.y += delta * 0.1;
-      particlesRef.current.rotation.x += delta * 0.05;
-    }
   });
-  
-  // Create particles around the orb
-  const particleCount = 100;
-  const particlePositions = React.useMemo(() => {
-    const positions = new Float32Array(particleCount * 3);
-    const radius = 1.5;
-    
-    for (let i = 0; i < particleCount; i++) {
-      const theta = 2 * Math.PI * Math.random();
-      const phi = Math.acos(2 * Math.random() - 1);
-      
-      const x = radius * Math.sin(phi) * Math.cos(theta);
-      const y = radius * Math.sin(phi) * Math.sin(theta);
-      const z = radius * Math.cos(phi);
-      
-      positions[i * 3] = x;
-      positions[i * 3 + 1] = y;
-      positions[i * 3 + 2] = z;
-    }
-    
-    return positions;
-  }, []);
 
   const orbColor = getColor();
 
   return (
     <group position={position}>
       {/* Main orb */}
-      <Sphere ref={orbRef} args={[size, 64, 64]}>
-        <MeshDistortMaterial
+      <Sphere ref={orbRef} args={[size, 32, 32]}>
+        <meshStandardMaterial
           color={orbColor}
-          attach="material"
-          distort={0.3}
-          speed={2}
-          roughness={0}
+          roughness={0.3}
           metalness={0.2}
-          opacity={0.9}
-          transparent
+          emissive={orbColor}
+          emissiveIntensity={0.2}
         />
       </Sphere>
       
-      {/* Particles around the orb */}
-      <points ref={particlesRef}>
-        <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            count={particleCount}
-            array={particlePositions}
-            itemSize={3}
-          />
-        </bufferGeometry>
-        <pointsMaterial
-          size={0.05}
-          sizeAttenuation
-          transparent
-          opacity={0.8}
-          color={orbColor}
-        />
-      </points>
-      
       {/* Glow effect */}
-      <Sphere args={[size * 1.2, 32, 32]}>
+      <Sphere args={[size * 1.2, 16, 16]}>
         <meshBasicMaterial
           color={orbColor}
-          transparent
+          transparent={true}
           opacity={0.1}
         />
       </Sphere>
+      
+      {/* Light emanating from the orb */}
+      <pointLight 
+        color={orbColor} 
+        intensity={1} 
+        distance={4}
+      />
     </group>
   );
 };

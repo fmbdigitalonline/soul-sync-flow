@@ -36,8 +36,7 @@ const Onboarding3DScene: React.FC<Onboarding3DSceneProps> = ({
             radius={100} 
             depth={50} 
             count={5000} 
-            factor={4} 
-            saturation={0}
+            factor={4}
           />
           
           {/* Ambient environment */}
