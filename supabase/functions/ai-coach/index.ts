@@ -1,7 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.43.3';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 // CORS headers for browser requests
 const corsHeaders = {
@@ -69,7 +69,7 @@ serve(async (req) => {
       );
     }
 
-    // Initialize Supabase client - Fixed version that works with Deno
+    // Initialize Supabase client - Using v2 with proper Deno configuration
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || 'https://qxaajirrqrcnmvtowjbg.supabase.co';
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
     
