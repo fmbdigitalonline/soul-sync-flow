@@ -26,7 +26,6 @@ const Onboarding3DScene: React.FC<Onboarding3DSceneProps> = ({
           <directionalLight 
             position={[10, 10, 5]} 
             intensity={1} 
-            color="#ffffff" 
           />
           
           {/* Soul Orb */}

@@ -79,12 +79,14 @@ const SoulOrb3D: React.FC<SoulOrb3DProps> = ({
     return positions;
   }, []);
 
+  const orbColor = getColor();
+
   return (
     <group position={position}>
       {/* Main orb */}
       <Sphere ref={orbRef} args={[size, 64, 64]}>
         <MeshDistortMaterial
-          color={getColor()}
+          color={orbColor}
           attach="material"
           distort={0.3}
           speed={2}
@@ -110,14 +112,14 @@ const SoulOrb3D: React.FC<SoulOrb3DProps> = ({
           sizeAttenuation
           transparent
           opacity={0.8}
-          color={getColor()}
+          color={orbColor}
         />
       </points>
       
       {/* Glow effect */}
       <Sphere args={[size * 1.2, 32, 32]}>
         <meshBasicMaterial
-          color={getColor()}
+          color={orbColor}
           transparent
           opacity={0.1}
         />
