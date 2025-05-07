@@ -1,5 +1,7 @@
+
 import * as React from "react"
 import * as AvatarPrimitive from "@radix-ui/react-avatar"
+import { SoulOrb } from "@/components/ui/soul-orb"
 
 import { cn } from "@/lib/utils"
 
@@ -45,4 +47,23 @@ const AvatarFallback = React.forwardRef<
 ))
 AvatarFallback.displayName = AvatarPrimitive.Fallback.displayName
 
-export { Avatar, AvatarImage, AvatarFallback }
+// New SoulOrbAvatar component that uses our SoulOrb component
+const SoulOrbAvatar = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement> & {
+    speaking?: boolean;
+    size?: "sm" | "md" | "lg";
+    stage?: "welcome" | "collecting" | "generating" | "complete";
+  }
+>(({ className, speaking = false, size = "sm", stage = "welcome", ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("relative overflow-hidden rounded-full", className)}
+    {...props}
+  >
+    <SoulOrb speaking={speaking} size={size} stage={stage} />
+  </div>
+))
+SoulOrbAvatar.displayName = "SoulOrbAvatar"
+
+export { Avatar, AvatarImage, AvatarFallback, SoulOrbAvatar }

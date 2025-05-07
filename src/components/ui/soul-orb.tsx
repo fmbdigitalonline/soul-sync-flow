@@ -29,12 +29,12 @@ const SoulOrb: React.FC<SoulOrbProps> = ({
     lg: "w-32 h-32",
   };
 
-  // Color mapping based on stage
+  // Color mapping - changed to bright cyan for all stages to match the provided image
   const stageColorMap = {
-    welcome: "from-soul-purple via-soul-indigo to-soul-blue",
-    collecting: "from-soul-purple via-soul-lavender to-soul-indigo",
-    generating: "from-soul-gold via-soul-indigo to-soul-purple",
-    complete: "from-soul-gold via-soul-purple to-soul-lavender",
+    welcome: "from-cyan-400 via-cyan-300 to-cyan-200",
+    collecting: "from-cyan-400 via-cyan-300 to-cyan-200",
+    generating: "from-cyan-400 via-cyan-300 to-cyan-200",
+    complete: "from-cyan-400 via-cyan-300 to-cyan-200",
   };
 
   // Initialize particles
@@ -89,7 +89,7 @@ const SoulOrb: React.FC<SoulOrbProps> = ({
         className
       )}
     >
-      {/* Core orb */}
+      {/* Core orb - updated to bright cyan/turquoise */}
       <div 
         className={cn(
           "absolute inset-0 rounded-full bg-gradient-to-r", 
@@ -99,10 +99,19 @@ const SoulOrb: React.FC<SoulOrbProps> = ({
         )}
       />
       
-      {/* Glow effect */}
-      <div className="absolute inset-0 rounded-full bg-soul-purple opacity-20 blur-md" />
+      {/* Glow effect - updated color */}
+      <div className="absolute inset-0 rounded-full bg-cyan-400 opacity-20 blur-md" />
       
-      {/* Particles */}
+      {/* Star in the center */}
+      <div className="absolute w-1/2 h-1/2 bg-white rounded-full blur-[1px]" />
+      <div className="absolute w-[40%] h-[40%]">
+        <div className="absolute left-[45%] top-0 w-[10%] h-[100%] bg-white transform rotate-0" />
+        <div className="absolute left-[45%] top-0 w-[10%] h-[100%] bg-white transform rotate-90" />
+        <div className="absolute left-[45%] top-0 w-[10%] h-[100%] bg-white transform rotate-45" />
+        <div className="absolute left-[45%] top-0 w-[10%] h-[100%] bg-white transform rotate-[135deg]" />
+      </div>
+      
+      {/* Orbital rings */}
       {particles.map((particle, index) => {
         const x = 50 + Math.cos(particle.angle) * 40;
         const y = 50 + Math.sin(particle.angle) * 40;
@@ -122,6 +131,13 @@ const SoulOrb: React.FC<SoulOrbProps> = ({
           />
         );
       })}
+      
+      {/* Orbital lines - new addition to match the image */}
+      <div className="absolute w-full h-full">
+        <div className="absolute inset-0 rounded-full border border-white opacity-70 rotate-45" />
+        <div className="absolute inset-0 rounded-full border border-white opacity-70 rotate-90" />
+        <div className="absolute inset-0 rounded-full border border-white opacity-70" />
+      </div>
       
       {/* Speaking indicator */}
       {speaking && (
