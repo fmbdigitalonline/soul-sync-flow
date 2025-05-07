@@ -96,6 +96,11 @@ const SoulOrb3D: React.FC<SoulOrbProps> = ({
       const handleVideoLoaded = () => {
         console.log('Video loaded successfully');
         setVideoLoaded(true);
+        
+        // Force an update of the video texture
+        if (videoTexture) {
+          videoTexture.needsUpdate = true;
+        }
       };
       
       // Handle video error event
@@ -133,7 +138,7 @@ const SoulOrb3D: React.FC<SoulOrbProps> = ({
         video.load();
       };
     }
-  }, [videoUrl, fallbackTexture]);
+  }, [videoUrl, fallbackTexture, videoTexture]);
   
   // Update video playback state based on speaking prop
   useEffect(() => {
@@ -152,6 +157,7 @@ const SoulOrb3D: React.FC<SoulOrbProps> = ({
       const material = starVideoRef.current.material as THREE.MeshBasicMaterial;
       material.map = videoTexture;
       material.transparent = true;
+      material.opacity = 0.9;
       material.needsUpdate = true;
     }
   }, [videoLoaded, videoTexture]);
@@ -170,6 +176,8 @@ const SoulOrb3D: React.FC<SoulOrbProps> = ({
       
       // Star video animation
       if (starVideoRef.current) {
+        // Ensure the video mesh is properly centered inside the orb
+        starVideoRef.current.lookAt(state.camera.position);
         starVideoRef.current.rotation.z += 0.005; // Subtle rotation
         
         // Pulse the star brightness
@@ -222,14 +230,15 @@ const SoulOrb3D: React.FC<SoulOrbProps> = ({
       </mesh>
       
       {/* Star/burst effect in the center - now using video texture */}
-      <mesh ref={starVideoRef}>
-        <planeGeometry args={[size * 0.65, size * 0.65]} />
+      <mesh ref={starVideoRef} scale={[0.75, 0.75, 0.75]}>
+        <boxGeometry args={[size * 0.8, size * 0.8, 0.01]} />
         <meshBasicMaterial 
           color="#FFFFFF" 
-          transparent 
+          transparent={true}
           opacity={1}
           side={THREE.DoubleSide}
           map={videoLoaded && !videoError ? videoTexture : fallbackTexture}
+          alphaTest={0.1}
         />
       </mesh>
       
