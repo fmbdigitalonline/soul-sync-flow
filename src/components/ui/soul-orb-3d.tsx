@@ -18,10 +18,12 @@ const SoulOrb3D: React.FC<SoulOrb3DProps> = ({
 }) => {
   // References for animations
   const orbRef = useRef<THREE.Mesh>(null);
-  const ring1Ref = useRef<THREE.Mesh>(null);
-  const ring2Ref = useRef<THREE.Mesh>(null);
-  const ring3Ref = useRef<THREE.Mesh>(null);
   const starRef = useRef<THREE.Mesh>(null);
+  
+  // Use the correct type for Three.js line objects
+  const ring1Ref = useRef<THREE.Line>(null);
+  const ring2Ref = useRef<THREE.Line>(null);
+  const ring3Ref = useRef<THREE.Line>(null);
   
   // Get orb color based on stage
   const getOrbColor = () => {
@@ -122,39 +124,24 @@ const SoulOrb3D: React.FC<SoulOrb3DProps> = ({
         />
       </mesh>
       
-      {/* Orbital rings */}
-      <line ref={ring1Ref}>
-        <bufferGeometry attach="geometry" {...curve1} />
-        <lineBasicMaterial 
-          attach="material" 
-          color="#FFFFFF" 
-          transparent 
-          opacity={0.8}
-          linewidth={1}
-        />
-      </line>
+      {/* Orbital rings - use 'primitive' with ref to make TypeScript happy */}
+      <primitive object={new THREE.Line(curve1, new THREE.LineBasicMaterial({
+        color: '#FFFFFF',
+        transparent: true,
+        opacity: 0.8,
+      }))} ref={ring1Ref} />
       
-      <line ref={ring2Ref}>
-        <bufferGeometry attach="geometry" {...curve2} />
-        <lineBasicMaterial 
-          attach="material" 
-          color="#FFFFFF" 
-          transparent 
-          opacity={0.8}
-          linewidth={1}
-        />
-      </line>
+      <primitive object={new THREE.Line(curve2, new THREE.LineBasicMaterial({
+        color: '#FFFFFF',
+        transparent: true,
+        opacity: 0.8,
+      }))} ref={ring2Ref} />
       
-      <line ref={ring3Ref}>
-        <bufferGeometry attach="geometry" {...curve3} />
-        <lineBasicMaterial 
-          attach="material" 
-          color="#FFFFFF" 
-          transparent 
-          opacity={0.8}
-          linewidth={1}
-        />
-      </line>
+      <primitive object={new THREE.Line(curve3, new THREE.LineBasicMaterial({
+        color: '#FFFFFF',
+        transparent: true,
+        opacity: 0.8,
+      }))} ref={ring3Ref} />
       
       {/* Enhanced glow effect - more pronounced when speaking */}
       <mesh>
