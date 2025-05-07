@@ -7,7 +7,7 @@ interface SoulOrb3DProps {
   speaking?: boolean;
   stage?: "welcome" | "collecting" | "generating" | "complete";
   size?: number;
-  position?: [number, number, number];
+  position?: [number, number, number]; // Explicitly typed as a tuple
 }
 
 const SoulOrb3D: React.FC<SoulOrb3DProps> = ({

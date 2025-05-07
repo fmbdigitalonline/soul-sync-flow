@@ -18,7 +18,8 @@ const Onboarding3DScene: React.FC<Onboarding3DSceneProps> = ({
   children 
 }) => {
   // Set the orb position based on interaction stage
-  const orbPosition = interactionStage === 'listening' ? [0, 0, 0] : [0, -1, -2];
+  // Explicitly define the tuple type [number, number, number] to ensure exactly 3 elements
+  const orbPosition: [number, number, number] = interactionStage === 'listening' ? [0, 0, 0] : [0, -1, -2];
   
   return (
     <div className="absolute inset-0 z-0">
