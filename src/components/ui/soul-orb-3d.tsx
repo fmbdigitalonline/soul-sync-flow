@@ -35,30 +35,11 @@ const SoulOrb3D: React.FC<SoulOrbProps> = ({
     return new THREE.Color("#00E5FF"); // Bright cyan like in the image
   };
   
-  // Fetch video URL from Supabase
+  // Set direct video URL from Supabase storage
   useEffect(() => {
-    const fetchOrbVideo = async () => {
-      try {
-        const { data, error } = await supabase.storage
-          .from('orb-videos')
-          .getPublicUrl('soul-orb-core.mp4');
-        
-        if (error) {
-          console.error('Error fetching video:', error);
-          setVideoError(true);
-          return;
-        }
-        
-        if (data) {
-          setVideoUrl(data.publicUrl);
-        }
-      } catch (err) {
-        console.error('Error in fetching video:', err);
-        setVideoError(true);
-      }
-    };
-    
-    fetchOrbVideo();
+    // Use the provided direct URL for the video instead of fetching
+    const directVideoUrl = "https://qxaajirrqrcnmvtowjbg.supabase.co/storage/v1/object/sign/soul-orb-core/soul-orb-core.mp4?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InN0b3JhZ2UtdXJsLXNpZ25pbmcta2V5XzYxYmNkYWUyLTVmMTUtNGRkMS1iMzkzLThiNTZjZDcwMWY5NiJ9.eyJ1cmwiOiJzb3VsLW9yYi1jb3JlL3NvdWwtb3JiLWNvcmUubXA0IiwiaWF0IjoxNzQ2NjE0MDEzLCJleHAiOjE4NDEyMjIwMTN9.u4D0UrNff4OgseQYxv1YfUvpI9CmFr_9xdlDTvFdAUU";
+    setVideoUrl(directVideoUrl);
   }, []);
   
   // Ring curves for the orbital rings - adjusted to match the image more closely
