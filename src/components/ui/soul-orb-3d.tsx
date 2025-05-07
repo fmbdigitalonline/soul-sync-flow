@@ -40,9 +40,9 @@ const SoulOrb3D: React.FC<SoulOrb3DProps> = ({
         ? Math.sin(state.clock.elapsedTime * 5) * 0.05 + 1.05
         : Math.sin(state.clock.elapsedTime * 2) * 0.03 + 1;
       
-      orbRef.current.scale.x = pulse;
-      orbRef.current.scale.y = pulse;
-      orbRef.current.scale.z = pulse;
+      orbRef.current.scale.x = size * pulse;
+      orbRef.current.scale.y = size * pulse;
+      orbRef.current.scale.z = size * pulse;
     }
   });
 

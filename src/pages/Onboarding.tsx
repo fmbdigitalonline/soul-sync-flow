@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronRight, ChevronLeft, Calendar, Clock, MapPin } from "lucide-react";
+import { ChevronRight, ChevronLeft, Calendar, Clock, MapPin, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GradientButton } from "@/components/ui/gradient-button";
 import { CosmicCard } from "@/components/ui/cosmic-card";
@@ -40,10 +40,12 @@ const Onboarding = () => {
     sceneRef,
     stage,
     speaking,
+    interactionStage,
     goToNextStep,
     goToPrevStep,
     handleOrbClick,
     transitionTo2D,
+    listenAgain
   } = useOnboarding3D();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -86,6 +88,7 @@ const Onboarding = () => {
                 value={formData.name}
                 onChange={handleInputChange}
                 className="mt-1"
+                disabled={interactionStage === 'listening'}
               />
             </div>
           </div>
@@ -108,6 +111,7 @@ const Onboarding = () => {
                   value={formData.birthDate}
                   onChange={handleInputChange}
                   className="mt-1"
+                  disabled={interactionStage === 'listening'}
                 />
               </div>
             </div>
@@ -131,6 +135,7 @@ const Onboarding = () => {
                   value={formData.birthTime}
                   onChange={handleInputChange}
                   className="mt-1"
+                  disabled={interactionStage === 'listening'}
                 />
               </div>
             </div>
@@ -154,6 +159,7 @@ const Onboarding = () => {
                   value={formData.birthLocation}
                   onChange={handleInputChange}
                   className="mt-1"
+                  disabled={interactionStage === 'listening'}
                 />
               </div>
             </div>
@@ -173,6 +179,7 @@ const Onboarding = () => {
                 name="personality"
                 value={formData.personality}
                 onChange={handleInputChange}
+                disabled={interactionStage === 'listening'}
                 className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
                 <option value="">Select personality type</option>
@@ -224,6 +231,7 @@ const Onboarding = () => {
           <Onboarding3DScene 
             speaking={speaking}
             stage={stage}
+            interactionStage={interactionStage}
           >
             {/* Center aligned content */}
             <div className="relative w-20 h-20">
@@ -236,29 +244,55 @@ const Onboarding = () => {
           </Onboarding3DScene>
         </motion.div>
         
-        {/* Interaction area - floating cosmic card */}
+        {/* Interaction area - floating cosmic card with visual differentiation based on interaction stage */}
         <div className="h-screen p-6 flex flex-col justify-center items-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
+            animate={{ 
+              opacity: 1, 
+              y: 0,
+              scale: interactionStage === 'input' ? 1.05 : 1
+            }}
             transition={{ delay: 0.5, duration: 0.8 }}
             className="w-full max-w-md"
           >
-            <CosmicCard className="backdrop-blur-lg bg-opacity-30" floating>
+            <CosmicCard 
+              className={`backdrop-blur-lg bg-opacity-30 transition-all duration-500 ${
+                interactionStage === 'listening' ? 'opacity-70 scale-95' : 'opacity-100 scale-100'
+              }`} 
+              floating
+            >
               <div className="space-y-6">{renderStepContent()}</div>
+              
+              {/* "Listen Again" button when in input mode except for the generating step */}
+              {interactionStage === 'input' && currentStep !== steps.length - 1 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={listenAgain}
+                  className="flex items-center mt-2 mx-auto"
+                >
+                  <Volume2 className="mr-1 h-4 w-4" />
+                  Listen Again
+                </Button>
+              )}
               
               {currentStep !== steps.length - 1 && (
                 <div className="mt-8 flex justify-between">
                   <Button
                     variant="ghost"
                     onClick={goToPrevStep}
-                    disabled={currentStep === 0}
-                    className="flex items-center"
+                    disabled={currentStep === 0 || interactionStage === 'listening'}
+                    className={`flex items-center ${interactionStage === 'listening' ? 'opacity-50' : 'opacity-100'}`}
                   >
                     <ChevronLeft className="mr-2 h-4 w-4" />
                     Back
                   </Button>
-                  <GradientButton onClick={goToNextStep} className="flex items-center">
+                  <GradientButton 
+                    onClick={goToNextStep} 
+                    className={`flex items-center ${interactionStage === 'listening' ? 'opacity-50' : 'opacity-100'}`}
+                    disabled={interactionStage === 'listening'}
+                  >
                     {currentStep === steps.length - 2 ? "Generate Blueprint" : "Continue"}
                     <ChevronRight className="ml-2 h-4 w-4" />
                   </GradientButton>
@@ -266,9 +300,13 @@ const Onboarding = () => {
               )}
             </CosmicCard>
             
-            {/* Tap to continue hint */}
+            {/* Tap to continue hint with different messages based on stage */}
             <div className="text-center mt-4 text-white text-sm opacity-80">
-              <p>Tap the Soul Orb to hear guidance</p>
+              {interactionStage === 'listening' ? (
+                <p>Soul Orb is speaking, tap it to continue to input</p>
+              ) : (
+                <p>Now you can input your information</p>
+              )}
             </div>
           </motion.div>
         </div>

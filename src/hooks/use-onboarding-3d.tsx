@@ -10,6 +10,7 @@ export const useOnboarding3D = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [showSpeechBubble, setShowSpeechBubble] = useState(true);
+  const [interactionStage, setInteractionStage] = useState<'listening' | 'input'>('listening');
   
   // Animation controls - replacing useAnimation with useAnimate
   const [sceneRef, animate] = useAnimate();
@@ -45,10 +46,12 @@ export const useOnboarding3D = () => {
         setStage('generating');
         setCurrentStep((prev) => prev + 1);
         setCurrentMessageIndex(0);
+        setInteractionStage('listening');
       } else {
         // Go to next step
         setCurrentStep((prev) => prev + 1);
         setCurrentMessageIndex(0);
+        setInteractionStage('listening'); // Reset to listening stage for the new step
       }
     }, 400);
   };
@@ -67,14 +70,53 @@ export const useOnboarding3D = () => {
     setTimeout(() => {
       setCurrentStep((prev) => Math.max(0, prev - 1));
       setCurrentMessageIndex(0);
+      setInteractionStage('listening'); // Reset to listening stage for the new step
     }, 400);
+  };
+  
+  // Switch to input stage after orb finishes speaking or user clicks
+  const switchToInputStage = () => {
+    if (interactionStage === 'listening') {
+      setInteractionStage('input');
+    }
+  };
+  
+  // Listen again - return to listening stage
+  const listenAgain = async () => {
+    setInteractionStage('listening');
+    
+    // Get the correct message key for the current step
+    let stepKey = steps[currentStep].toLowerCase().replace(/\s+/g, '');
+    const messageKeyMap: Record<string, string> = {
+      'welcome': 'welcome',
+      'birthdate': 'birthDate',
+      'birthtime': 'birthTime',
+      'birthlocation': 'birthLocation',
+      'personality': 'personality',
+      'generating': 'generating'
+    };
+    const messageKey = messageKeyMap[stepKey] || 'welcome';
+    
+    // Get messages for this step
+    const stepMessages = messages[messageKey] || messages['welcome'];
+    
+    if (stepMessages && stepMessages[0]) {
+      await startSpeaking(stepMessages[0]);
+      // Don't automatically switch to input stage
+    }
   };
   
   // Handle orb interaction
   const handleOrbClick = async () => {
     if (speaking) {
       stopSpeaking();
+      switchToInputStage(); // When stopping speech, immediately go to input stage
       return;
+    }
+    
+    // If already in input stage, cycle back to listening
+    if (interactionStage === 'input') {
+      setInteractionStage('listening');
     }
     
     // Get the correct message key for the current step
@@ -102,6 +144,8 @@ export const useOnboarding3D = () => {
         // Reset to first message when we've gone through all messages
         setCurrentMessageIndex(0);
       }
+      
+      // Don't immediately switch to input stage when starting to speak
     }
   };
   
@@ -151,6 +195,18 @@ export const useOnboarding3D = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStep]);
   
+  // Auto-switch to input stage when orb stops speaking
+  useEffect(() => {
+    if (!speaking && interactionStage === 'listening') {
+      // Add a small delay to make the transition feel more natural
+      const timer = setTimeout(() => {
+        switchToInputStage();
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [speaking, interactionStage]);
+  
   return {
     is3DMode,
     currentStep,
@@ -160,10 +216,13 @@ export const useOnboarding3D = () => {
     animate,
     stage,
     speaking,
+    interactionStage,
     goToNextStep,
     goToPrevStep,
     handleOrbClick,
     transitionTo2D,
-    setShowSpeechBubble
+    setShowSpeechBubble,
+    switchToInputStage,
+    listenAgain
   };
 };
