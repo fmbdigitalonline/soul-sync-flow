@@ -27,30 +27,30 @@ const SoulOrb3D: React.FC<SoulOrb3DProps> = ({
   
   // Get orb color based on stage
   const getOrbColor = () => {
-    switch (stage) {
-      case "welcome": return new THREE.Color("#0EA5E9"); // Bright cyan like in the image
-      case "collecting": return new THREE.Color("#0EA5E9");
-      case "generating": return new THREE.Color("#0EA5E9");
-      case "complete": return new THREE.Color("#0EA5E9"); 
-      default: return new THREE.Color("#0EA5E9");
-    }
+    return new THREE.Color("#00E5FF"); // Bright cyan like in the image
   };
   
-  // Ring curves for the orbital rings
+  // Ring curves for the orbital rings - adjusted to match the image more closely
   const curve1 = useMemo(() => {
     const curve = new THREE.EllipseCurve(0, 0, 1.3 * size, 1.3 * size, 0, 2 * Math.PI, false);
     return new THREE.BufferGeometry().setFromPoints(curve.getPoints(50));
   }, [size]);
   
   const curve2 = useMemo(() => {
-    const curve = new THREE.EllipseCurve(0, 0, 1.3 * size, 1.3 * size, 0, 2 * Math.PI, false);
+    const curve = new THREE.EllipseCurve(0, 0, 1.2 * size, 1.4 * size, 0, 2 * Math.PI, false);
     return new THREE.BufferGeometry().setFromPoints(curve.getPoints(50));
   }, [size]);
   
   const curve3 = useMemo(() => {
-    const curve = new THREE.EllipseCurve(0, 0, 1.3 * size, 1.3 * size, 0, 2 * Math.PI, false);
+    const curve = new THREE.EllipseCurve(0, 0, 1.4 * size, 1.2 * size, 0, 2 * Math.PI, false);
     return new THREE.BufferGeometry().setFromPoints(curve.getPoints(50));
   }, [size]);
+  
+  // Create a texture for the star burst
+  const starBurstTexture = useMemo(() => {
+    // Use the uploaded image for the star burst
+    return new THREE.TextureLoader().load('/lovable-uploads/8951ad75-3386-46ac-9b0e-99dbe6c84f7c.png');
+  }, []);
   
   // Animation
   useFrame((state) => {
@@ -66,30 +66,30 @@ const SoulOrb3D: React.FC<SoulOrb3DProps> = ({
       
       // Star burst animation
       if (starRef.current) {
-        starRef.current.rotation.z += 0.01;
+        starRef.current.rotation.z += 0.005; // Subtle rotation
         
         // Pulse the star brightness
         const starMaterial = starRef.current.material as THREE.MeshBasicMaterial;
         starMaterial.opacity = speaking ? 
-          0.9 + Math.sin(state.clock.elapsedTime * 8) * 0.1 : 
-          0.7 + Math.sin(state.clock.elapsedTime * 4) * 0.1;
+          0.95 + Math.sin(state.clock.elapsedTime * 8) * 0.05 : 
+          0.9 + Math.sin(state.clock.elapsedTime * 4) * 0.05;
       }
     }
     
-    // Animate the orbital rings
+    // Animate the orbital rings - slower and more subtle movement
     if (ring1Ref.current) {
-      ring1Ref.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.3) * 0.5 + Math.PI * 0.5;
-      ring1Ref.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.2) * 0.5 + Math.PI * 0.25;
+      ring1Ref.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.2) * 0.3 + Math.PI * 0.5;
+      ring1Ref.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.15) * 0.3 + Math.PI * 0.25;
     }
     
     if (ring2Ref.current) {
-      ring2Ref.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.25) * 0.5;
-      ring2Ref.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.15) * 0.5 + Math.PI * 0.5;
+      ring2Ref.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.15) * 0.3;
+      ring2Ref.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.1) * 0.3 + Math.PI * 0.5;
     }
     
     if (ring3Ref.current) {
-      ring3Ref.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.2) * 0.5 - Math.PI * 0.25;
-      ring3Ref.current.rotation.z = Math.sin(state.clock.elapsedTime * 0.1) * 0.5 + Math.PI * 0.5;
+      ring3Ref.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.1) * 0.3 - Math.PI * 0.25;
+      ring3Ref.current.rotation.z = Math.sin(state.clock.elapsedTime * 0.05) * 0.3 + Math.PI * 0.5;
     }
   });
   
@@ -104,58 +104,61 @@ const SoulOrb3D: React.FC<SoulOrb3DProps> = ({
         <meshStandardMaterial 
           color={orbColor} 
           emissive={orbColor}
-          emissiveIntensity={speaking ? 0.8 : 0.6}
+          emissiveIntensity={speaking ? 1.2 : 0.8}
           transparent
-          opacity={0.8}
+          opacity={0.9}
           roughness={0.1}
           metalness={0.1}
         />
       </mesh>
       
-      {/* Star/burst effect in the center */}
+      {/* Star/burst effect in the center - now using the provided image */}
       <mesh ref={starRef}>
-        <planeGeometry args={[size * 0.8, size * 0.8]} />
+        <planeGeometry args={[size * 0.65, size * 0.65]} />
         <meshBasicMaterial 
           color="#FFFFFF" 
           transparent 
-          opacity={0.8}
+          opacity={1}
           side={THREE.DoubleSide}
-          map={new THREE.TextureLoader().load('/lovable-uploads/a863f3d0-f01f-46f7-9a90-ab24a1b1eacc.png')}
+          map={starBurstTexture}
         />
       </mesh>
       
-      {/* Orbital rings - use 'primitive' with ref to make TypeScript happy */}
+      {/* Orbital rings - use 'primitive' for proper typing */}
       <primitive object={new THREE.Line(curve1, new THREE.LineBasicMaterial({
         color: '#FFFFFF',
         transparent: true,
         opacity: 0.8,
+        linewidth: 2
       }))} ref={ring1Ref} />
       
       <primitive object={new THREE.Line(curve2, new THREE.LineBasicMaterial({
         color: '#FFFFFF',
         transparent: true,
         opacity: 0.8,
+        linewidth: 2
       }))} ref={ring2Ref} />
       
       <primitive object={new THREE.Line(curve3, new THREE.LineBasicMaterial({
         color: '#FFFFFF',
         transparent: true,
         opacity: 0.8,
+        linewidth: 2
       }))} ref={ring3Ref} />
       
-      {/* Enhanced glow effect - more pronounced when speaking */}
+      {/* Enhanced glow effect - more pronounced to match the image */}
       <mesh>
-        <sphereGeometry args={[size * (speaking ? 1.5 : 1.3), 16, 16]} />
+        <sphereGeometry args={[size * (speaking ? 1.6 : 1.4), 16, 16]} />
         <meshBasicMaterial 
           color={orbColor}
           transparent
-          opacity={speaking ? 0.15 : 0.1}
+          opacity={speaking ? 0.2 : 0.15}
         />
       </mesh>
       
-      {/* Outer glow */}
+      {/* Outer glow - matches the fade in the image */}
       <mesh>
-        <sphereGeometry args={[size * 1.8, 16, 16]} />
+        <sphereGeometry args={[size * 2, 16, 16]} />
         <meshBasicMaterial 
           color={orbColor}
           transparent
@@ -163,10 +166,10 @@ const SoulOrb3D: React.FC<SoulOrb3DProps> = ({
         />
       </mesh>
       
-      {/* Enhanced point light - brighter when speaking */}
+      {/* Enhanced point light - brighter to match the glow in the image */}
       <pointLight 
         color={orbColor} 
-        intensity={speaking ? 1.8 : 1.2}
+        intensity={speaking ? 2 : 1.5}
         distance={speaking ? 8 : 6}
       />
     </group>
