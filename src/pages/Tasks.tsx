@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
@@ -80,7 +79,7 @@ const Tasks = () => {
       id: Date.now().toString(),
       title: newTaskTitle,
       completed: false,
-      status: "todo",
+      status: "todo", // This is now properly typed as TaskStatus
       priority: "medium",
       alignedWith: ["Leo Sun", "INFJ"], // Default alignment for demo
     };
@@ -107,7 +106,7 @@ const Tasks = () => {
           const updatedTask = { 
             ...task, 
             completed: !task.completed,
-            status: !task.completed ? "completed" : "todo"
+            status: !task.completed ? "completed" as TaskStatus : "todo" as TaskStatus
           };
           return updatedTask;
         }
