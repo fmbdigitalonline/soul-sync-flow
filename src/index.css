@@ -1,6 +1,5 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
-/* Note: Satoshi font would need to be imported as a variable font from a CDN or local file */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;700&family=Poppins:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=Lexend:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -8,83 +7,83 @@
 
 @layer base {
   :root {
-    --background: 35 18% 97%; /* Stone #F7F5F2 */
-    --foreground: 200 8% 30%; /* Dark text color */
+    --background: 30 30% 98%;
+    --foreground: 260 10% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 200 8% 30%;
+    --card-foreground: 260 10% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 200 8% 30%;
+    --popover-foreground: 260 10% 10%;
 
-    --primary: 160 18% 52%; /* Sage #6D9C8A */
+    --primary: 186 100% 41%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 27 19% 84%; /* Clay #DFD6CE */
-    --secondary-foreground: 200 12% 32%;
+    --secondary: 200 10% 95%;
+    --secondary-foreground: 260 30% 30%;
 
-    --muted: 27 19% 90%;
-    --muted-foreground: 200 8% 45%;
+    --muted: 196 15% 90%;
+    --muted-foreground: 260 10% 50%;
 
-    --accent: 27 19% 84%; /* Clay #DFD6CE */
-    --accent-foreground: 200 12% 32%;
+    --accent: 196 15% 92%;
+    --accent-foreground: 260 30% 30%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 27 19% 84%; /* Clay #DFD6CE */
-    --input: 27 19% 84%; /* Clay #DFD6CE */
-    --ring: 160 18% 52%; /* Sage #6D9C8A */
+    --border: 196 15% 90%;
+    --input: 196 15% 90%;
+    --ring: 186 100% 41%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 35 18% 97%;
-    --sidebar-foreground: 200 8% 30%;
-    --sidebar-primary: 160 18% 52%;
+    --sidebar-background: 30 30% 98%;
+    --sidebar-foreground: 260 10% 30%;
+    --sidebar-primary: 186 100% 41%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 27 19% 84%;
-    --sidebar-accent-foreground: 200 12% 32%;
-    --sidebar-border: 27 19% 84%;
-    --sidebar-ring: 160 18% 52%;
+    --sidebar-accent: 200 10% 95%;
+    --sidebar-accent-foreground: 260 30% 30%;
+    --sidebar-border: 196 15% 90%;
+    --sidebar-ring: 186 100% 41%;
   }
 
   .dark {
-    --background: 200 12% 10%;
-    --foreground: 210 10% 98%;
+    --background: 260 25% 10%;
+    --foreground: 260 10% 98%;
 
-    --card: 200 12% 15%;
-    --card-foreground: 210 10% 98%;
+    --card: 260 25% 12%;
+    --card-foreground: 260 10% 98%;
 
-    --popover: 200 12% 15%;
-    --popover-foreground: 210 10% 98%;
+    --popover: 260 25% 12%;
+    --popover-foreground: 260 10% 98%;
 
-    --primary: 160 18% 42%; /* Darker Sage */
-    --primary-foreground: 0 0% 100%;
+    --primary: 186 90% 40%;
+    --primary-foreground: 260 10% 10%;
 
-    --secondary: 200 12% 25%;
-    --secondary-foreground: 210 10% 90%;
+    --secondary: 260 30% 20%;
+    --secondary-foreground: 260 10% 90%;
 
-    --muted: 200 12% 25%;
-    --muted-foreground: 210 10% 70%;
+    --muted: 260 25% 20%;
+    --muted-foreground: 260 10% 70%;
 
-    --accent: 200 12% 25%;
-    --accent-foreground: 210 10% 90%;
+    --accent: 260 30% 25%;
+    --accent-foreground: 260 10% 90%;
 
     --destructive: 0 62.8% 40.6%;
-    --destructive-foreground: 210 10% 98%;
+    --destructive-foreground: 260 10% 98%;
 
-    --border: 200 12% 25%;
-    --input: 200 12% 25%;
-    --ring: 160 18% 42%;
+    --border: 260 25% 25%;
+    --input: 260 25% 25%;
+    --ring: 186 90% 40%;
 
-    --sidebar-background: 200 12% 15%;
-    --sidebar-foreground: 210 10% 90%;
-    --sidebar-primary: 160 18% 42%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 200 12% 25%;
-    --sidebar-accent-foreground: 210 10% 90%;
-    --sidebar-border: 200 12% 20%;
-    --sidebar-ring: 160 18% 42%;
+    --sidebar-background: 260 25% 12%;
+    --sidebar-foreground: 260 10% 90%;
+    --sidebar-primary: 186 90% 40%;
+    --sidebar-primary-foreground: 260 10% 10%;
+    --sidebar-accent: 260 30% 20%;
+    --sidebar-accent-foreground: 260 10% 90%;
+    --sidebar-border: 260 25% 20%;
+    --sidebar-ring: 186 90% 40%;
   }
 }
 
@@ -97,29 +96,25 @@
     @apply bg-background text-foreground font-sans text-base leading-relaxed;
   }
   
-  /* Typography scale based on the new design brief */
+  /* Typography scale based on Apple HIG (≥17pt body) on a 4pt modular scale */
   h1 {
-    @apply text-2xl font-display font-semibold;
+    @apply text-4xl font-heading font-bold;
   }
   
   h2 {
-    @apply text-xl font-display font-medium;
+    @apply text-3xl font-heading font-semibold;
   }
   
   h3 {
-    @apply text-lg font-display font-medium;
+    @apply text-2xl font-heading font-medium;
   }
   
   h4 {
-    @apply text-base font-display font-medium;
+    @apply text-xl font-heading font-medium;
   }
   
-  p, li {
-    @apply text-base font-sans; /* 16px */
-  }
-  
-  input, textarea, button {
-    @apply text-base font-ui; /* 16px */
+  p, li, input, textarea {
+    @apply text-base; /* 16px */
   }
   
   small {
@@ -141,21 +136,12 @@
   }
   
   .focus-mode {
-    @apply font-focus text-lg tracking-focus;
+    @apply font-focus;
   }
   
   /* Interactive elements with appropriate sizing */
   .interactive-element {
-    @apply min-h-[48px] min-w-[48px] cursor-pointer transition-all duration-150;
-  }
-  
-  /* Bento grid layout */
-  .bento-grid {
-    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6;
-  }
-  
-  .bento-tile {
-    @apply bg-card rounded-xl p-4 md:p-6 shadow-soft-ui border border-secondary/20;
+    @apply min-h-[48px] min-w-[48px] cursor-pointer transition-all duration-200;
   }
 }
 
@@ -180,5 +166,5 @@
 }
 
 .rounded-spacious {
-  border-radius: 12px;
+  border-radius: 16px;
 }

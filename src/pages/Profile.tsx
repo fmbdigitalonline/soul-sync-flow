@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
@@ -42,6 +43,7 @@ const Profile = () => {
     toast({
       title: "Task completed!",
       description: "Great job on completing your task.",
+      icon: <Check className="h-4 w-4 text-green-500" />,
       duration: 2000,
     });
   };
