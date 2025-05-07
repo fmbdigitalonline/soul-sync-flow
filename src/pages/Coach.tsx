@@ -4,8 +4,11 @@ import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Sparkles, SendHorizontal, User, Loader2 } from "lucide-react";
+import { Sparkles, SendHorizontal, User, Loader2, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+import { blueprintService, BlueprintData, defaultBlueprintData } from "@/services/blueprint-service";
+import { supabase } from "@/integrations/supabase/client";
 
 type Message = {
   id: string;
@@ -14,20 +17,82 @@ type Message = {
   timestamp: Date;
 };
 
-const initialMessages: Message[] = [
-  {
-    id: "1",
-    content: "Hello Sarah! I'm your SoulSync AI coach. Based on your Soul Blueprint (Leo Sun, Pisces Moon, Virgo Rising, INFJ, Life Path 7, Projector), I'm here to provide guidance aligned with your unique design. How can I assist you today?",
-    sender: "ai",
-    timestamp: new Date(),
-  },
-];
-
 const Coach = () => {
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [blueprint, setBlueprint] = useState<BlueprintData | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isLoadingBlueprint, setIsLoadingBlueprint] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
+
+  // Check authentication status
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data } = await supabase.auth.getSession();
+      setIsAuthenticated(!!data.session);
+    };
+    
+    checkAuth();
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session);
+    });
+    
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  // Fetch blueprint data
+  useEffect(() => {
+    const fetchBlueprintData = async () => {
+      if (isAuthenticated) {
+        setIsLoadingBlueprint(true);
+        const { data, error } = await blueprintService.getActiveBlueprintData();
+        
+        if (error) {
+          toast({
+            title: "Error loading blueprint data",
+            description: error,
+            variant: "destructive"
+          });
+        }
+        
+        // Use default data if no blueprint exists
+        setBlueprint(data || defaultBlueprintData);
+        setIsLoadingBlueprint(false);
+      }
+    };
+    
+    if (isAuthenticated) {
+      fetchBlueprintData();
+    }
+  }, [isAuthenticated, toast]);
+
+  // Initialize welcome message when blueprint loads
+  useEffect(() => {
+    if (blueprint && messages.length === 0 && !isLoadingBlueprint) {
+      // Create personalized welcome message based on blueprint data
+      const mbtiType = blueprint.cognition_mbti.type;
+      const hdType = blueprint.energy_strategy_human_design.type;
+      const preferredName = blueprint.user_meta.preferred_name || "there";
+      const sunSign = blueprint.archetype_western.sun_sign.split(" ")[0];
+      const moonSign = blueprint.archetype_western.moon_sign.split(" ")[0];
+      const rising = blueprint.archetype_western.rising_sign || "Virgo";
+      const lifePathNumber = blueprint.values_life_path.life_path_number;
+      
+      const welcomeMessage: Message = {
+        id: "welcome",
+        content: `Hello ${preferredName}! I'm your SoulSync AI coach. Based on your Soul Blueprint (${sunSign} Sun, ${moonSign} Moon, ${rising} Rising, ${mbtiType}, Life Path ${lifePathNumber}, ${hdType}), I'm here to provide guidance aligned with your unique design. How can I assist you today?`,
+        sender: "ai",
+        timestamp: new Date(),
+      };
+      
+      setMessages([welcomeMessage]);
+    }
+  }, [blueprint, messages.length, isLoadingBlueprint]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -51,32 +116,56 @@ const Coach = () => {
     setInputValue("");
     setIsLoading(true);
 
-    // Simulate AI response after a delay
-    setTimeout(() => {
-      const aiResponses: { [key: string]: string } = {
-        "goal": "Based on your Leo Sun and INFJ personality, I sense you're drawn to goals with meaning and impact. Your Projector energy works best when you're recognized for your guidance and insights. What specific area are you looking to make progress in?",
-        "stuck": "I see that you're feeling stuck. With your Pisces Moon, you might be absorbing surrounding energies that aren't yours. Your Life Path 7 suggests you need quiet reflection time. Try taking a break to meditate for 10 minutes, then approach your task with fresh eyes.",
-        "motivation": "As a Projector with Leo energy, your motivation comes when you're recognized and invited to share your gifts. Your INFJ nature needs meaningful work aligned with your values. Consider how your current goals connect to your deeper purpose - or if they need adjustment to better match your authentic design.",
-        "tired": "Your Projector design isn't meant for constant action - you're designed to guide energy, not generate it. Your Pisces Moon also makes you sensitive to energy depletion. Try scheduling focused work during your natural energy peaks, followed by true rest. Your Blueprint suggests mornings might be your optimal time.",
-      };
+    // Generate AI response using blueprint data
+    generateAIResponse(inputValue, blueprint);
+  };
 
-      let responseText = "I understand. With your unique blueprint, I recommend focusing on activities that align with your natural gifts while honoring your sensitivity and need for meaningful work. Would you like more specific guidance on this topic?";
+  const generateAIResponse = (userInput: string, blueprint: BlueprintData | null) => {
+    // In a real implementation, this would call an AI service with the blueprint data
+    // For now, we'll simulate responses based on keywords and blueprint properties
+    
+    setTimeout(() => {
+      let responseText = "I understand. Based on your unique blueprint, I recommend focusing on activities that align with your natural gifts while honoring your sensitivity and need for meaningful work. Would you like more specific guidance on this topic?";
       
-      for (const [keyword, response] of Object.entries(aiResponses)) {
-        if (inputValue.toLowerCase().includes(keyword)) {
-          responseText = response;
-          break;
+      if (!blueprint) {
+        responseText = "I don't seem to have access to your complete Soul Blueprint. Let me provide some general guidance instead.";
+      } else {
+        // Generate more personalized responses based on blueprint data and user input
+        const mbtiType = blueprint.cognition_mbti.type;
+        const hdType = blueprint.energy_strategy_human_design.type;
+        const strategy = blueprint.energy_strategy_human_design.strategy;
+        const authority = blueprint.energy_strategy_human_design.authority;
+        
+        const keywords = {
+          "goal": `Based on your ${mbtiType} personality and ${hdType} energy, I sense you're drawn to goals with meaning and impact. Your ${hdType} energy works best when you're ${strategy.toLowerCase()}. What specific area are you looking to make progress in?`,
+          
+          "stuck": `I see that you're feeling stuck. With your ${blueprint.archetype_western.moon_sign} Moon, you might be absorbing surrounding energies that aren't yours. Your Life Path ${blueprint.values_life_path.life_path_number} suggests you need ${blueprint.values_life_path.life_path_number === 7 ? "quiet reflection time" : "creative expression"}. Try taking a break to meditate for 10 minutes, then approach your task with fresh eyes.`,
+          
+          "motivation": `As a ${hdType} with ${blueprint.archetype_western.sun_sign} energy, your motivation comes when you're ${strategy.toLowerCase()}. Your ${mbtiType} nature needs meaningful work aligned with your values. Consider how your current goals connect to your deeper purpose - or if they need adjustment to better match your authentic design.`,
+          
+          "tired": `Your ${hdType} design isn't meant for constant action - ${hdType === "Projector" ? "you're designed to guide energy, not generate it" : hdType === "Manifesting Generator" ? "you need to respond to what lights you up" : "you need to wait for clarity before acting"}. Your ${blueprint.archetype_western.moon_sign} Moon also makes you sensitive to energy depletion. Try scheduling focused work during your natural energy peaks, followed by true rest.`,
+          
+          "advice": `With your ${authority} Authority, decisions are best made by ${authority === "Emotional" ? "waiting through your emotional wave" : authority === "Splenic" ? "listening to your intuitive hits" : "consulting with others then feeling into it"}. Given your ${mbtiType} cognition style, you'll want to ${mbtiType.includes("N") ? "consider the big picture implications" : "focus on practical, tangible outcomes"}.`,
+          
+          "purpose": `Your Life Path ${blueprint.values_life_path.life_path_number} as a ${blueprint.values_life_path.life_path_keyword} combined with your ${hdType} energy suggests your purpose involves ${hdType === "Projector" ? "guiding others with your insights" : hdType === "Generator" ? "finding satisfaction in your work" : "initiating transformative changes"}. How does that resonate with you?`
+        };
+        
+        for (const [keyword, response] of Object.entries(keywords)) {
+          if (userInput.toLowerCase().includes(keyword)) {
+            responseText = response;
+            break;
+          }
         }
       }
 
-      const newAiMessage: Message = {
+      const newAIMessage: Message = {
         id: Date.now().toString(),
         content: responseText,
         sender: "ai",
         timestamp: new Date(),
       };
 
-      setMessages((prev) => [...prev, newAiMessage]);
+      setMessages((prev) => [...prev, newAIMessage]);
       setIsLoading(false);
     }, 1500);
   };
@@ -87,16 +176,50 @@ const Coach = () => {
     }
   };
 
+  if (!isAuthenticated) {
+    return (
+      <MainLayout>
+        <div className="flex flex-col h-[calc(100vh-5rem)] max-w-md mx-auto p-4 items-center justify-center">
+          <CosmicCard className="p-6 text-center">
+            <Sparkles className="h-8 w-8 text-soul-purple mx-auto mb-4" />
+            <h1 className="text-2xl font-bold font-display mb-2">
+              <span className="gradient-text">Soul Coach</span>
+            </h1>
+            <p className="mb-6">You need to sign in to access your personalized AI coach</p>
+            <Button 
+              className="bg-soul-purple hover:bg-soul-purple/90"
+              onClick={() => window.location.href = '/auth'}
+            >
+              Sign In
+            </Button>
+          </CosmicCard>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (isLoadingBlueprint) {
+    return (
+      <MainLayout>
+        <div className="flex flex-col h-[calc(100vh-5rem)] max-w-md mx-auto p-4 items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-soul-purple" />
+          <p className="mt-2">Loading your Soul Blueprint...</p>
+        </div>
+      </MainLayout>
+    );
+  }
+
   return (
     <MainLayout>
       <div className="flex flex-col h-[calc(100vh-5rem)] max-w-md mx-auto p-4">
-        <div className="text-center mb-4">
+        <div className="text-center mb-4 flex justify-between items-center">
+          <div></div> {/* Empty div for spacing */}
           <h1 className="text-2xl font-bold font-display">
             <span className="gradient-text">Soul Coach</span>
           </h1>
-          <p className="text-sm text-muted-foreground">
-            Your AI guide aligned with your Soul Blueprint
-          </p>
+          <Button variant="ghost" size="icon" onClick={() => window.location.href = '/blueprint'}>
+            <Settings className="h-5 w-5" />
+          </Button>
         </div>
 
         <div className="flex-1 overflow-y-auto mb-4 space-y-4 pb-4">

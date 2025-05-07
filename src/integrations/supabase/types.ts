@@ -183,6 +183,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_blueprints: {
+        Row: {
+          blueprint: Json
+          created_at: string
+          id: string
+          is_active: boolean | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          blueprint: Json
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          blueprint?: Json
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       waitlist_entries: {
         Row: {
           created_at: string
@@ -242,6 +269,10 @@ export type Database = {
       check_admin_status: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      get_active_user_blueprint: {
+        Args: { user_uuid: string }
+        Returns: Json
       }
       handle_admin_check: {
         Args: Record<PropertyKey, never>
