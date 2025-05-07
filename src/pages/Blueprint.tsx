@@ -11,38 +11,22 @@ import { BlueprintData, blueprintService, defaultBlueprintData } from "@/service
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { BlueprintGenerator } from "@/components/blueprint/BlueprintGenerationFlow";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Blueprint = () => {
   const [activeTab, setActiveTab] = useState("view");
   const [blueprint, setBlueprint] = useState<BlueprintData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isNewUser, setIsNewUser] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
-  // Check authentication status
+  // Check if user has any blueprints
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data } = await supabase.auth.getSession();
-      setIsAuthenticated(!!data.session);
-    };
-    
-    checkAuth();
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setIsAuthenticated(!!session);
-    });
-    
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  // Load blueprint data
-  useEffect(() => {
-    const loadBlueprintData = async () => {
-      if (isAuthenticated) {
+    const checkUserBlueprints = async () => {
+      if (user) {
         setIsLoading(true);
         const { data, error } = await blueprintService.getActiveBlueprintData();
         
@@ -54,15 +38,26 @@ const Blueprint = () => {
           });
         }
         
-        setBlueprint(data || defaultBlueprintData);
+        // If no blueprint exists, mark as new user and redirect to onboarding
+        if (!data) {
+          setIsNewUser(true);
+          toast({
+            title: "Welcome to SoulSync!",
+            description: "Let's create your Soul Blueprint through our onboarding process.",
+          });
+          navigate('/onboarding');
+          return;
+        }
+        
+        setBlueprint(data);
         setIsLoading(false);
       }
     };
     
-    if (isAuthenticated) {
-      loadBlueprintData();
+    if (user) {
+      checkUserBlueprints();
     }
-  }, [isAuthenticated, toast]);
+  }, [user, navigate, toast]);
 
   const handleSaveBlueprint = async (updatedBlueprint: BlueprintData) => {
     return await blueprintService.saveBlueprintData(updatedBlueprint);
@@ -84,7 +79,7 @@ const Blueprint = () => {
     });
   };
 
-  if (!isAuthenticated) {
+  if (!user) {
     return (
       <MainLayout>
         <div className="container mx-auto p-6 flex flex-col items-center justify-center min-h-[80vh]">
@@ -114,6 +109,12 @@ const Blueprint = () => {
         </div>
       </MainLayout>
     );
+  }
+
+  // Redirect to onboarding if new user (this is a fallback in case the earlier navigation doesn't work)
+  if (isNewUser) {
+    navigate('/onboarding');
+    return null;
   }
 
   return (
