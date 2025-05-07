@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight, ChevronLeft, Calendar, Clock, MapPin, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,8 @@ const Onboarding = () => {
   
   // Add a state to track if blueprint has been generated
   const [blueprintGenerated, setBlueprintGenerated] = useState(false);
+  // Use a ref to track if navigation has been triggered
+  const navigationTriggeredRef = useRef(false);
   
   // Use our custom hook for 3D onboarding
   const {
@@ -57,6 +59,10 @@ const Onboarding = () => {
   
   // Handle blueprint generation completion
   const handleBlueprintComplete = () => {
+    // Prevent multiple executions
+    if (navigationTriggeredRef.current) return;
+    navigationTriggeredRef.current = true;
+    
     // Set flag to prevent looping
     setBlueprintGenerated(true);
     
@@ -75,12 +81,33 @@ const Onboarding = () => {
     }, 2000);
   };
 
+  // Clean up effect - when component unmounts, make sure we're not caught in a loop
+  useEffect(() => {
+    return () => {
+      // If we're unmounting and blueprint was generated, set the ref to true to avoid loops
+      if (blueprintGenerated) {
+        navigationTriggeredRef.current = true;
+      }
+    };
+  }, [blueprintGenerated]);
+
   // Add an effect to prevent looping if blueprint was generated
   useEffect(() => {
-    if (blueprintGenerated) {
+    if (blueprintGenerated && !navigationTriggeredRef.current) {
       console.log("Blueprint was generated, should redirect soon");
+      navigationTriggeredRef.current = true;
+      
+      // Safety fallback - if we haven't navigated after 5 seconds, force navigation
+      const safetyTimeout = setTimeout(() => {
+        if (window.location.pathname === "/onboarding") {
+          console.log("Safety fallback: forcing navigation to blueprint page");
+          navigate("/blueprint");
+        }
+      }, 5000);
+      
+      return () => clearTimeout(safetyTimeout);
     }
-  }, [blueprintGenerated]);
+  }, [blueprintGenerated, navigate]);
 
   const renderStepContent = () => {
     switch (currentStep) {

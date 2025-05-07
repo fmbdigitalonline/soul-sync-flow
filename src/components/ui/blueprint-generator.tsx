@@ -3,6 +3,8 @@ import React, { useState, useEffect } from "react";
 import { motion } from "@/lib/framer-motion";
 import { SoulOrb } from "./soul-orb";
 import { cn } from "@/lib/utils";
+import { blueprintService, defaultBlueprintData } from "@/services/blueprint-service";
+import { useToast } from "@/hooks/use-toast";
 
 interface BlueprintGeneratorProps {
   onComplete: () => void;
@@ -19,6 +21,8 @@ const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
   const [stage, setStage] = useState<'preparing' | 'assembling' | 'finalizing' | 'complete'>('preparing');
   const [particles, setParticles] = useState<Array<{id: number, x: number, y: number, size: number, speed: number}>>([]);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
 
   // Generate random particles
   useEffect(() => {
@@ -32,11 +36,69 @@ const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
     setParticles(newParticles);
   }, []);
 
+  // Handle the completion and blueprint saving
+  const handleCompletion = async () => {
+    if (isSaving || isCompleted) return; // Prevent multiple executions
+    
+    setIsSaving(true);
+    console.log("Saving blueprint data to database...");
+    
+    try {
+      // Create blueprint data from form inputs or use default
+      const blueprintData = {
+        ...defaultBlueprintData,
+        user_meta: {
+          ...defaultBlueprintData.user_meta,
+          full_name: formData?.name || defaultBlueprintData.user_meta.full_name,
+          preferred_name: formData?.name?.split(' ')[0] || defaultBlueprintData.user_meta.preferred_name,
+          birth_date: formData?.birthDate || defaultBlueprintData.user_meta.birth_date,
+          birth_time_local: formData?.birthTime || defaultBlueprintData.user_meta.birth_time_local,
+          birth_location: formData?.birthLocation || defaultBlueprintData.user_meta.birth_location,
+        },
+        cognition_mbti: {
+          ...defaultBlueprintData.cognition_mbti,
+          type: formData?.personality || defaultBlueprintData.cognition_mbti.type,
+        }
+      };
+      
+      // Save blueprint to database
+      const result = await blueprintService.saveBlueprintData(blueprintData);
+      
+      if (!result.success) {
+        console.error("Error saving blueprint:", result.error);
+        toast({
+          title: "Error",
+          description: "Failed to save your blueprint. Please try again.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      console.log("Blueprint saved successfully, proceeding with completion");
+      setIsCompleted(true);
+      
+      // Use a short timeout to ensure UI is updated before redirecting
+      setTimeout(() => {
+        onComplete();
+      }, 1000);
+      
+    } catch (error) {
+      console.error("Error during blueprint generation:", error);
+      toast({
+        title: "Error",
+        description: "Something went wrong during blueprint generation",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   // Animation progress
   useEffect(() => {
     let interval: NodeJS.Timeout;
     
-    if (progress < 100 && !isCompleted) {
+    if (progress < 100 && !isCompleted && !isSaving) {
       interval = setInterval(() => {
         setProgress(prev => {
           const increment = Math.random() * 3 + 1;
@@ -49,12 +111,8 @@ const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
             setStage('finalizing');
           } else if (newProgress === 100 && stage === 'finalizing') {
             setStage('complete');
-            // Mark as completed to prevent looping
-            setIsCompleted(true);
-            // Use setTimeout to ensure animation completes before redirecting
-            setTimeout(() => {
-              onComplete();
-            }, 1500);
+            // Call the completion handler when reaching 100%
+            handleCompletion();
           }
           
           return newProgress;
@@ -65,7 +123,7 @@ const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [progress, stage, onComplete, isCompleted]);
+  }, [progress, stage, isCompleted, isSaving]);
 
   return (
     <div className={cn("relative w-full h-64 overflow-hidden rounded-xl", className)}>
