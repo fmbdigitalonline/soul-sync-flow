@@ -15,10 +15,6 @@ if (!OPENAI_API_KEY) {
   console.error("Missing OPENAI_API_KEY environment variable");
 }
 
-// Initialize Supabase client
-const supabaseUrl = Deno.env.get('SUPABASE_URL') || 'https://qxaajirrqrcnmvtowjbg.supabase.co';
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
-
 // Define conversation memory interface
 interface ConversationMemory {
   id?: string;
@@ -73,16 +69,24 @@ serve(async (req) => {
       );
     }
 
-    // Initialize Supabase client
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    // Initialize Supabase client - Fixed version that works with Deno
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') || 'https://qxaajirrqrcnmvtowjbg.supabase.co';
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+    
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    });
 
     // Step 1: Retrieve conversation history
-    let { data: conversationData, error: conversationError } = await supabase
+    const { data: conversationData, error: conversationError } = await supabase
       .from('conversation_memory')
       .select('*')
       .eq('user_id', userId)
       .eq('session_id', sessionId)
-      .single();
+      .maybeSingle();
 
     if (conversationError && conversationError.code !== 'PGRST116') {
       console.error("Error retrieving conversation:", conversationError);
