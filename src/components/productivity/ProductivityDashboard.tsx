@@ -141,6 +141,18 @@ export const ProductivityDashboard: React.FC = () => {
           </CosmicCard>
         </TabsContent>
       </Tabs>
+
+      {/* Highlight Blueprint Integration */}
+      <div className="mt-6 border-t border-white/10 pt-4">
+        <div className="text-sm text-white/70">
+          <p><span className="text-soul-purple font-medium">Productivity Suite:</span> Tailored to your unique Soul Blueprint</p>
+          <ul className="list-disc list-inside mt-1 text-xs opacity-80 pl-2">
+            <li>Focus timer adjusts to your cognitive patterns</li>
+            <li>Habits aligned with your energy cycles</li>
+            <li>Goals framed around your natural strengths</li>
+          </ul>
+        </div>
+      </div>
     </CosmicCard>
   );
 };

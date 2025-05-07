@@ -5,16 +5,18 @@ import MainLayout from "@/components/Layout/MainLayout";
 import BlueprintViewer from "@/components/blueprint/BlueprintViewer";
 import BlueprintEditor from "@/components/blueprint/BlueprintEditor";
 import { Button } from "@/components/ui/button";
-import { Loader2, MessageCircle } from "lucide-react";
+import { Loader2, MessageCircle, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { BlueprintData, blueprintService, defaultBlueprintData } from "@/services/blueprint-service";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { BlueprintGenerator } from "@/components/blueprint/BlueprintGenerationFlow";
 
 const Blueprint = () => {
   const [activeTab, setActiveTab] = useState("view");
   const [blueprint, setBlueprint] = useState<BlueprintData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -66,6 +68,22 @@ const Blueprint = () => {
     return await blueprintService.saveBlueprintData(updatedBlueprint);
   };
 
+  const handleRegenerateBlueprint = () => {
+    setIsGenerating(true);
+    setActiveTab("generating");
+  };
+
+  const handleGenerationComplete = (newBlueprint: BlueprintData) => {
+    setBlueprint(newBlueprint);
+    setIsGenerating(false);
+    setActiveTab("view");
+    
+    toast({
+      title: "Blueprint generated",
+      description: "Your Soul Blueprint has been successfully updated",
+    });
+  };
+
   if (!isAuthenticated) {
     return (
       <MainLayout>
@@ -105,19 +123,32 @@ const Blueprint = () => {
           <h1 className="text-3xl font-bold font-display">
             <span className="gradient-text">Soul Blueprint</span>
           </h1>
-          <Button 
-            className="bg-soul-purple hover:bg-soul-purple/90 flex items-center"
-            onClick={() => navigate('/coach')}
-          >
-            <MessageCircle className="mr-2 h-4 w-4" />
-            Chat with Soul Coach
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline"
+              className="flex items-center"
+              onClick={handleRegenerateBlueprint}
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Regenerate Blueprint
+            </Button>
+            <Button 
+              className="bg-soul-purple hover:bg-soul-purple/90 flex items-center"
+              onClick={() => navigate('/coach')}
+            >
+              <MessageCircle className="mr-2 h-4 w-4" />
+              Chat with Soul Coach
+            </Button>
+          </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
-          <TabsList className="grid grid-cols-2 w-[400px] mx-auto">
+          <TabsList className="grid grid-cols-3 w-[600px] mx-auto">
             <TabsTrigger value="view">View Blueprint</TabsTrigger>
             <TabsTrigger value="edit">Edit Blueprint</TabsTrigger>
+            <TabsTrigger value="generating" disabled={!isGenerating}>
+              Generating
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="view" className="mt-6">
@@ -126,6 +157,13 @@ const Blueprint = () => {
           
           <TabsContent value="edit" className="mt-6">
             <BlueprintEditor onSave={handleSaveBlueprint} initialBlueprint={blueprint || undefined} />
+          </TabsContent>
+
+          <TabsContent value="generating" className="mt-6">
+            <BlueprintGenerator 
+              userProfile={blueprint?.user_meta || defaultBlueprintData.user_meta}
+              onComplete={handleGenerationComplete}
+            />
           </TabsContent>
         </Tabs>
       </div>
