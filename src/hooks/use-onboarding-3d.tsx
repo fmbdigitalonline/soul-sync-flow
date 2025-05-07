@@ -77,13 +77,24 @@ export const useOnboarding3D = () => {
   // Switch to input stage after orb finishes speaking or user clicks
   const switchToInputStage = () => {
     if (interactionStage === 'listening') {
+      // Animate transition to input stage
+      animate(sceneRef.current, {
+        opacity: [1, 0.9, 1],
+      }, { duration: 0.5 });
+      
       setInteractionStage('input');
+      
+      // Hide speech bubble with slight delay for smooth transition
+      setTimeout(() => {
+        setShowSpeechBubble(false);
+      }, 300);
     }
   };
   
   // Listen again - return to listening stage
   const listenAgain = async () => {
     setInteractionStage('listening');
+    setShowSpeechBubble(true);
     
     // Get the correct message key for the current step
     let stepKey = steps[currentStep].toLowerCase().replace(/\s+/g, '');
@@ -102,21 +113,29 @@ export const useOnboarding3D = () => {
     
     if (stepMessages && stepMessages[0]) {
       await startSpeaking(stepMessages[0]);
-      // Don't automatically switch to input stage
+      // Will automatically switch to input stage when done speaking
     }
   };
   
   // Handle orb interaction
   const handleOrbClick = async () => {
+    // If speaking, stop speech and move to input stage
     if (speaking) {
       stopSpeaking();
-      switchToInputStage(); // When stopping speech, immediately go to input stage
+      switchToInputStage();
       return;
     }
     
     // If already in input stage, cycle back to listening
     if (interactionStage === 'input') {
       setInteractionStage('listening');
+      setShowSpeechBubble(true);
+    }
+    
+    // If in listening stage and not currently speaking, advance to input stage
+    if (interactionStage === 'listening' && !speaking) {
+      switchToInputStage();
+      return;
     }
     
     // Get the correct message key for the current step
@@ -144,8 +163,6 @@ export const useOnboarding3D = () => {
         // Reset to first message when we've gone through all messages
         setCurrentMessageIndex(0);
       }
-      
-      // Don't immediately switch to input stage when starting to speak
     }
   };
   
@@ -187,6 +204,7 @@ export const useOnboarding3D = () => {
     }
     
     // Auto-start speaking when changing steps
+    setShowSpeechBubble(true);
     const stepMessages = messages[messageKey] || messages['welcome'];
     if (stepMessages && stepMessages[0]) {
       startSpeaking(stepMessages[0]);

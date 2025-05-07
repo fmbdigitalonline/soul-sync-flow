@@ -35,7 +35,7 @@ const SoulOrb3D: React.FC<SoulOrb3DProps> = ({
       // Simple rotation
       orbRef.current.rotation.y += 0.01;
       
-      // Simple pulse effect
+      // Simple pulse effect - more pronounced when speaking
       const pulse = speaking 
         ? Math.sin(state.clock.elapsedTime * 5) * 0.05 + 1.05
         : Math.sin(state.clock.elapsedTime * 2) * 0.03 + 1;
@@ -54,27 +54,27 @@ const SoulOrb3D: React.FC<SoulOrb3DProps> = ({
         <meshStandardMaterial 
           color={getOrbColor()} 
           emissive={getOrbColor()}
-          emissiveIntensity={0.2}
+          emissiveIntensity={speaking ? 0.4 : 0.2}
           roughness={0.3}
           metalness={0.2}
         />
       </mesh>
       
-      {/* Simple glow effect */}
+      {/* Enhanced glow effect - more pronounced when speaking */}
       <mesh>
-        <sphereGeometry args={[size * 1.2, 16, 16]} />
+        <sphereGeometry args={[size * (speaking ? 1.3 : 1.2), 16, 16]} />
         <meshBasicMaterial 
           color={getOrbColor()}
           transparent
-          opacity={0.1}
+          opacity={speaking ? 0.15 : 0.1}
         />
       </mesh>
       
-      {/* Simple point light */}
+      {/* Enhanced point light - brighter when speaking */}
       <pointLight 
         color={getOrbColor()} 
-        intensity={1}
-        distance={4}
+        intensity={speaking ? 1.5 : 1}
+        distance={speaking ? 5 : 4}
       />
     </group>
   );

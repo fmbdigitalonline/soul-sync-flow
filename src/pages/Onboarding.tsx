@@ -235,7 +235,7 @@ const Onboarding = () => {
           >
             {/* Center aligned content */}
             <div className="relative w-20 h-20">
-              {currentMessage && showSpeechBubble && (
+              {currentMessage && showSpeechBubble && interactionStage === 'listening' && (
                 <SpeechBubble position="bottom" className="w-80" is3D={true}>
                   {currentMessage}
                 </SpeechBubble>
@@ -249,18 +249,18 @@ const Onboarding = () => {
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             animate={{ 
-              opacity: 1, 
-              y: 0,
-              scale: interactionStage === 'input' ? 1.05 : 1
+              opacity: interactionStage === 'input' ? 1 : 0.7, 
+              y: interactionStage === 'input' ? 0 : 20,
+              scale: interactionStage === 'input' ? 1.05 : 0.95
             }}
-            transition={{ delay: 0.5, duration: 0.8 }}
-            className="w-full max-w-md"
+            transition={{ duration: 0.5 }}
+            className={`w-full max-w-md ${interactionStage === 'listening' ? 'pointer-events-none' : 'pointer-events-auto'}`}
           >
             <CosmicCard 
-              className={`backdrop-blur-lg bg-opacity-30 transition-all duration-500 ${
-                interactionStage === 'listening' ? 'opacity-70 scale-95' : 'opacity-100 scale-100'
+              className={`backdrop-blur-lg transition-all duration-500 ${
+                interactionStage === 'listening' ? 'bg-opacity-20' : 'bg-opacity-40'
               }`} 
-              floating
+              floating={interactionStage === 'input'}
             >
               <div className="space-y-6">{renderStepContent()}</div>
               
@@ -278,19 +278,19 @@ const Onboarding = () => {
               )}
               
               {currentStep !== steps.length - 1 && (
-                <div className="mt-8 flex justify-between">
+                <div className={`mt-8 flex justify-between transition-opacity duration-300 ${
+                  interactionStage === 'listening' ? 'opacity-0' : 'opacity-100'
+                }`}>
                   <Button
                     variant="ghost"
                     onClick={goToPrevStep}
                     disabled={currentStep === 0 || interactionStage === 'listening'}
-                    className={`flex items-center ${interactionStage === 'listening' ? 'opacity-50' : 'opacity-100'}`}
                   >
                     <ChevronLeft className="mr-2 h-4 w-4" />
                     Back
                   </Button>
                   <GradientButton 
                     onClick={goToNextStep} 
-                    className={`flex items-center ${interactionStage === 'listening' ? 'opacity-50' : 'opacity-100'}`}
                     disabled={interactionStage === 'listening'}
                   >
                     {currentStep === steps.length - 2 ? "Generate Blueprint" : "Continue"}
@@ -303,19 +303,28 @@ const Onboarding = () => {
             {/* Tap to continue hint with different messages based on stage */}
             <div className="text-center mt-4 text-white text-sm opacity-80">
               {interactionStage === 'listening' ? (
-                <p>Soul Orb is speaking, tap it to continue to input</p>
+                <p>Soul Orb is speaking. Click anywhere to continue...</p>
               ) : (
-                <p>Now you can input your information</p>
+                <p>Please enter your information</p>
               )}
             </div>
           </motion.div>
         </div>
         
-        {/* Interactive orb that floats in 3D space but is actually a 2D overlay for better touch interaction */}
-        <div 
-          className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-20 h-20 cursor-pointer z-20"
-          onClick={handleOrbClick}
-        />
+        {/* Interactive area for clicking - covers the entire screen during listening phase */}
+        {interactionStage === 'listening' && (
+          <div 
+            className="fixed inset-0 cursor-pointer z-20"
+            onClick={handleOrbClick}
+          />
+        )}
+        {/* Smaller interactive area for the orb during input phase */}
+        {interactionStage === 'input' && (
+          <div 
+            className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-20 h-20 cursor-pointer z-20"
+            onClick={handleOrbClick}
+          />
+        )}
       </MainLayout>
     );
   }
