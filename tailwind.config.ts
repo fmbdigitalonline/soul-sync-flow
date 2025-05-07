@@ -64,6 +64,10 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				},
 				soul: {
+					// Updated nature-inspired palette
+					ivory: '#FCF8F6',
+					teal: '#00BBD1',
+					pewter: '#96A1A8',
 					purple: '#9b87f5',
 					indigo: '#6366f1',
 					blue: '#4f74e3',
@@ -106,6 +110,10 @@ export default {
 					'0%': { backgroundPosition: '0% 50%' },
 					'50%': { backgroundPosition: '100% 50%' },
 					'100%': { backgroundPosition: '0% 50%' }
+				},
+				'micro-bounce': {
+					'0%, 100%': { transform: 'scale(1)' },
+					'50%': { transform: 'scale(1.05)' }
 				}
 			},
 			animation: {
@@ -113,19 +121,30 @@ export default {
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'float': 'float 6s ease-in-out infinite',
 				'pulse-soft': 'pulse-soft 3s ease-in-out infinite',
-				'gradient-shift': 'gradient-shift 15s ease infinite'
+				'gradient-shift': 'gradient-shift 15s ease infinite',
+				'micro-bounce': 'micro-bounce 0.2s ease-in-out'
 			},
 			backgroundImage: {
-				'cosmic-gradient': 'linear-gradient(to right, #9b87f5, #4f74e3, #6366f1)',
+				'cosmic-gradient': 'linear-gradient(to right, #00BBD1, #d6bcfa)',
 				'cosmic-radial': 'radial-gradient(circle, rgba(155, 135, 245, 0.15) 0%, rgba(214, 188, 250, 0.05) 70%, rgba(255, 255, 255, 0) 100%)'
 			},
 			backgroundSize: {
 				'200': '200%'
 			},
 			fontFamily: {
-				sans: ['Inter', 'sans-serif'],
-				display: ['Montserrat', 'sans-serif']
-			}
+				sans: ['Inter', 'DM Sans', 'sans-serif'],
+				display: ['Poppins', 'sans-serif'],
+				heading: ['Manrope', 'sans-serif'],
+				focus: ['Lexend', 'sans-serif']
+			},
+			spacing: {
+				'grid-8': '8px',
+				'grid-16': '16px',
+				'grid-24': '24px',
+			},
+			boxShadow: {
+				'soft-ui': '4px 4px 10px rgba(0, 0, 0, 0.1)'
+			},
 		}
 	},
 	plugins: [require("tailwindcss-animate")],

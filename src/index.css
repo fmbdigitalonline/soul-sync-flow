@@ -1,5 +1,5 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;700&family=Poppins:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=Lexend:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -7,7 +7,7 @@
 
 @layer base {
   :root {
-    --background: 260 30% 98%;
+    --background: 30 30% 98%;
     --foreground: 260 10% 10%;
 
     --card: 0 0% 100%;
@@ -16,35 +16,35 @@
     --popover: 0 0% 100%;
     --popover-foreground: 260 10% 10%;
 
-    --primary: 260 80% 74%;
+    --primary: 186 100% 41%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 260 25% 95%;
+    --secondary: 200 10% 95%;
     --secondary-foreground: 260 30% 30%;
 
-    --muted: 260 20% 96%;
+    --muted: 196 15% 90%;
     --muted-foreground: 260 10% 50%;
 
-    --accent: 260 30% 92%;
+    --accent: 196 15% 92%;
     --accent-foreground: 260 30% 30%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 260 20% 90%;
-    --input: 260 20% 90%;
-    --ring: 260 80% 74%;
+    --border: 196 15% 90%;
+    --input: 196 15% 90%;
+    --ring: 186 100% 41%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 260 30% 98%;
+    --sidebar-background: 30 30% 98%;
     --sidebar-foreground: 260 10% 30%;
-    --sidebar-primary: 260 80% 74%;
+    --sidebar-primary: 186 100% 41%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 260 25% 95%;
+    --sidebar-accent: 200 10% 95%;
     --sidebar-accent-foreground: 260 30% 30%;
-    --sidebar-border: 260 20% 90%;
-    --sidebar-ring: 260 80% 74%;
+    --sidebar-border: 196 15% 90%;
+    --sidebar-ring: 186 100% 41%;
   }
 
   .dark {
@@ -57,7 +57,7 @@
     --popover: 260 25% 12%;
     --popover-foreground: 260 10% 98%;
 
-    --primary: 260 70% 70%;
+    --primary: 186 90% 40%;
     --primary-foreground: 260 10% 10%;
 
     --secondary: 260 30% 20%;
@@ -74,16 +74,16 @@
 
     --border: 260 25% 25%;
     --input: 260 25% 25%;
-    --ring: 260 70% 70%;
+    --ring: 186 90% 40%;
 
     --sidebar-background: 260 25% 12%;
     --sidebar-foreground: 260 10% 90%;
-    --sidebar-primary: 260 70% 70%;
+    --sidebar-primary: 186 90% 40%;
     --sidebar-primary-foreground: 260 10% 10%;
     --sidebar-accent: 260 30% 20%;
     --sidebar-accent-foreground: 260 10% 90%;
     --sidebar-border: 260 25% 20%;
-    --sidebar-ring: 260 70% 70%;
+    --sidebar-ring: 186 90% 40%;
   }
 }
 
@@ -93,13 +93,38 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans text-base leading-relaxed;
+  }
+  
+  /* Typography scale based on Apple HIG (≥17pt body) on a 4pt modular scale */
+  h1 {
+    @apply text-4xl font-heading font-bold;
+  }
+  
+  h2 {
+    @apply text-3xl font-heading font-semibold;
+  }
+  
+  h3 {
+    @apply text-2xl font-heading font-medium;
+  }
+  
+  h4 {
+    @apply text-xl font-heading font-medium;
+  }
+  
+  p, li, input, textarea {
+    @apply text-base; /* 16px */
+  }
+  
+  small {
+    @apply text-sm; /* 14px */
   }
 }
 
 @layer components {
   .cosmic-card {
-    @apply bg-white bg-opacity-70 backdrop-blur-sm border border-white border-opacity-20 shadow-lg rounded-2xl;
+    @apply bg-white bg-opacity-70 backdrop-blur-sm border border-white border-opacity-20 shadow-soft-ui rounded-xl;
   }
   
   .cosmic-bg {
@@ -109,4 +134,37 @@
   .gradient-text {
     @apply bg-cosmic-gradient bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient-shift;
   }
+  
+  .focus-mode {
+    @apply font-focus;
+  }
+  
+  /* Interactive elements with appropriate sizing */
+  .interactive-element {
+    @apply min-h-[48px] min-w-[48px] cursor-pointer transition-all duration-200;
+  }
+}
+
+/* Accessibility: support prefers-reduced-motion */
+@media (prefers-reduced-motion) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Update spacious grid system */
+.grid-8 { gap: 8px; }
+.grid-16 { gap: 16px; }
+.grid-24 { gap: 24px; }
+
+/* Adjust corner radii */
+.rounded-comfort {
+  border-radius: 12px;
+}
+
+.rounded-spacious {
+  border-radius: 16px;
 }
