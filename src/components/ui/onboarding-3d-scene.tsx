@@ -1,7 +1,7 @@
 
 import React, { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
+import { OrbitControls, Environment } from '@react-three/drei';
 import { SoulOrb3D } from './soul-orb-3d';
 
 interface Onboarding3DSceneProps {
@@ -18,18 +18,17 @@ const Onboarding3DScene: React.FC<Onboarding3DSceneProps> = ({
   children 
 }) => {
   // Set the orb position based on interaction stage
-  // Explicitly define the tuple type [number, number, number] to ensure exactly 3 elements
   const orbPosition: [number, number, number] = interactionStage === 'listening' ? [0, 0, 0] : [0, -1, -2];
   
   return (
     <div className="absolute inset-0 z-0">
       <Canvas camera={{ position: [0, 0, 5], fov: 75 }}>
         <Suspense fallback={null}>
-          {/* Simple ambient light */}
-          <ambientLight intensity={0.5} />
+          {/* Ambient light for base illumination */}
+          <ambientLight intensity={0.2} />
           
-          {/* Simple directional light */}
-          <directionalLight position={[5, 5, 5]} intensity={0.5} />
+          {/* Main directional light */}
+          <directionalLight position={[5, 5, 5]} intensity={0.3} />
           
           {/* Soul Orb with position based on interaction stage */}
           <SoulOrb3D 
@@ -39,16 +38,19 @@ const Onboarding3DScene: React.FC<Onboarding3DSceneProps> = ({
             size={interactionStage === 'listening' ? 1 : 0.7}
           />
           
-          {/* Simple background color */}
+          {/* Dark background color */}
           <color attach="background" args={['#0a0a1a']} />
           
-          {/* Simple controls - more restricted when in input mode */}
+          {/* Orbit controls - more restricted when in input mode */}
           <OrbitControls 
             enableZoom={false}
             enablePan={false}
             rotateSpeed={interactionStage === 'listening' ? 0.5 : 0.2}
             enableRotate={interactionStage === 'listening'}
           />
+          
+          {/* Environment to add some ambient reflection */}
+          <Environment preset="night" />
         </Suspense>
       </Canvas>
       
