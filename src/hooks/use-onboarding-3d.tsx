@@ -1,7 +1,8 @@
 
 import { useState, useEffect } from 'react';
 import { useSoulOrb } from '@/contexts/SoulOrbContext';
-import { motion, useAnimation } from '@/lib/framer-motion';
+import { motion, animations } from '@/lib/framer-motion';
+import { useAnimate } from 'framer-motion';
 
 export const useOnboarding3D = () => {
   const { stage, setStage, startSpeaking, stopSpeaking, speaking, messages } = useSoulOrb();
@@ -10,8 +11,8 @@ export const useOnboarding3D = () => {
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [showSpeechBubble, setShowSpeechBubble] = useState(true);
   
-  // Animation controls
-  const sceneControls = useAnimation();
+  // Animation controls - replacing useAnimation with useAnimate
+  const [sceneRef, animate] = useAnimate();
   
   // Steps mapping
   const steps = [
@@ -29,11 +30,10 @@ export const useOnboarding3D = () => {
     stopSpeaking();
     
     // Animate transition
-    sceneControls.start({
+    animate(sceneRef.current, {
       opacity: [1, 0.5, 1],
-      scale: [1, 1.05, 1],
-      transition: { duration: 0.8 }
-    });
+      scale: [1, 1.05, 1]
+    }, { duration: 0.8 });
     
     // Update step after animation
     setTimeout(() => {
@@ -58,11 +58,10 @@ export const useOnboarding3D = () => {
     stopSpeaking();
     
     // Animate transition
-    sceneControls.start({
+    animate(sceneRef.current, {
       opacity: [1, 0.5, 1],
-      scale: [1, 0.95, 1],
-      transition: { duration: 0.8 }
-    });
+      scale: [1, 0.95, 1]
+    }, { duration: 0.8 });
     
     // Update step after animation
     setTimeout(() => {
@@ -108,11 +107,10 @@ export const useOnboarding3D = () => {
   
   // Transition to 2D view after onboarding completion
   const transitionTo2D = () => {
-    sceneControls.start({
+    animate(sceneRef.current, {
       opacity: 0,
-      scale: 1.5,
-      transition: { duration: 1.5 }
-    });
+      scale: 1.5
+    }, { duration: 1.5 });
     
     setTimeout(() => {
       setIs3DMode(false);
@@ -158,7 +156,8 @@ export const useOnboarding3D = () => {
     currentStep,
     steps,
     showSpeechBubble,
-    sceneControls,
+    sceneRef,
+    animate,
     stage,
     speaking,
     goToNextStep,

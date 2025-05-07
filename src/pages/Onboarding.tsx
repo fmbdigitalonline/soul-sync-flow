@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight, ChevronLeft, Calendar, Clock, MapPin } from "lucide-react";
@@ -36,7 +37,7 @@ const Onboarding = () => {
     currentStep,
     steps,
     showSpeechBubble,
-    sceneControls,
+    sceneRef,
     stage,
     speaking,
     goToNextStep,
@@ -218,7 +219,7 @@ const Onboarding = () => {
         {/* 3D Scene */}
         <motion.div 
           className="fixed inset-0 z-0"
-          animate={sceneControls}
+          ref={sceneRef}
         >
           <Onboarding3DScene 
             speaking={speaking}
