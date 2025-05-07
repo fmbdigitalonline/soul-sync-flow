@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight, ChevronLeft, Calendar, Clock, MapPin } from "lucide-react";
@@ -82,39 +81,66 @@ const Onboarding = () => {
   
   // Handle orb interaction
   const handleOrbClick = async () => {
-    // If not speaking, start speaking the current message for this step
-    if (!speaking) {
-      const stepKey = steps[currentStep].toLowerCase();
-      const stepMessages = messages[stepKey] || messages['welcome'];
-      
-      if (stepMessages && stepMessages[currentMessageIndex]) {
-        await startSpeaking(stepMessages[currentMessageIndex]);
-        
-        // Move to next message if available
-        if (currentMessageIndex < stepMessages.length - 1) {
-          setCurrentMessageIndex(prev => prev + 1);
-        }
-      }
-    } else {
-      // If already speaking, stop
+    if (speaking) {
       stopSpeaking();
+      return;
+    }
+    
+    // Get the correct message key for the current step
+    let stepKey = steps[currentStep].toLowerCase().replace(/\s+/g, '');
+    const messageKeyMap: Record<string, string> = {
+      'welcome': 'welcome',
+      'birthdate': 'birthDate',
+      'birthtime': 'birthTime',
+      'birthlocation': 'birthLocation',
+      'personality': 'personality',
+      'generating': 'generating'
+    };
+    const messageKey = messageKeyMap[stepKey] || 'welcome';
+    
+    // Get messages for this step
+    const stepMessages = messages[messageKey] || messages['welcome'];
+    
+    if (stepMessages && stepMessages[currentMessageIndex]) {
+      await startSpeaking(stepMessages[currentMessageIndex]);
+      
+      // Move to next message if available
+      if (currentMessageIndex < stepMessages.length - 1) {
+        setCurrentMessageIndex(prev => prev + 1);
+      } else {
+        // Reset to first message when we've gone through all messages
+        setCurrentMessageIndex(0);
+      }
     }
   };
   
   // Update stage based on current step
   useEffect(() => {
-    const stepKey = steps[currentStep].toLowerCase();
+    let stepKey = steps[currentStep].toLowerCase().replace(/\s+/g, '');
     
-    if (stepKey === 'welcome') {
-      setStage('welcome');
-    } else if (stepKey === 'generating') {
+    // Map the step keys to message keys
+    const messageKeyMap: Record<string, string> = {
+      'welcome': 'welcome',
+      'birthdate': 'birthDate',
+      'birthtime': 'birthTime',
+      'birthlocation': 'birthLocation',
+      'personality': 'personality',
+      'generating': 'generating'
+    };
+    
+    // Get the correct message key from our map
+    const messageKey = messageKeyMap[stepKey] || 'welcome';
+    
+    if (messageKey === 'generating') {
       setStage('generating');
+    } else if (messageKey === 'welcome') {
+      setStage('welcome');
     } else {
       setStage('collecting');
     }
     
     // Auto-start speaking when changing steps
-    const stepMessages = messages[stepKey] || messages['welcome'];
+    const stepMessages = messages[messageKey] || messages['welcome'];
     if (stepMessages && stepMessages[0]) {
       startSpeaking(stepMessages[0]);
     }
@@ -327,7 +353,7 @@ const Onboarding = () => {
               </motion.div>
               
               {currentMessage && showSpeechBubble && (
-                <SpeechBubble position="bottom" className="w-72">
+                <SpeechBubble position="bottom" className="w-80">
                   {currentMessage}
                 </SpeechBubble>
               )}

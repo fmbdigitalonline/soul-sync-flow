@@ -18,28 +18,32 @@ const defaultMessages: Record<string, string[]> = {
   welcome: [
     "Welcome to SoulSync! I'm your Soul Guide. I'll help you discover your unique spiritual design.",
     "I'll guide you through creating your Soul Blueprint, which will reveal your inner potential and life path.",
-    "Let's start by learning about you. What's your name?"
+    "Let's start by learning about you. Please enter your name so I can address you personally throughout your journey."
   ],
   birthDate: [
-    "Great! Now I need to know when you were born. Your birth date reveals important numerological and astrological patterns.",
-    "Your birth date contains the cosmic imprint of planetary alignments that shape your core traits."
+    "Your birth date reveals essential cosmic patterns that shaped your core being.",
+    "The position of celestial bodies on the day you were born influences your life path number and zodiac sign.",
+    "Please enter your birth date so I can analyze these cosmic influences in your Soul Blueprint."
   ],
   birthTime: [
-    "If you know your birth time, that will help me calculate your rising sign and moon position.",
-    "The exact time you were born determines the precise positions of celestial bodies in your chart."
+    "The exact time of your birth allows me to calculate your rising sign and moon position with precision.",
+    "Your rising sign reveals how others perceive you, while your moon position shows your emotional landscape.",
+    "If you know your birth time, please enter it now. If not, don't worry - we can still create a valuable blueprint."
   ],
   birthLocation: [
-    "Where were you born? Your birth location is essential for accurate astrological calculations.",
-    "The geographical coordinates of your birth place help determine the houses in your chart."
+    "Your birth location determines the exact angle of planetary influences at the moment you entered this world.",
+    "This geographical data helps me calculate your house placements, which reveal different life areas where your energies express themselves.",
+    "Please enter the city and country where you were born to enhance the accuracy of your Soul Blueprint."
   ],
   personality: [
-    "If you know your personality type, that gives me additional insights to integrate with your cosmic blueprint.",
-    "This helps me understand how your conscious mind interacts with your subconscious patterns."
+    "Your personality type provides valuable insights into how your conscious mind processes information and makes decisions.",
+    "When combined with astrological data, this helps me understand how your innate traits interact with cosmic influences.",
+    "If you know your MBTI type, please select it. This helps me provide more personalized guidance aligned with your thought patterns."
   ],
   generating: [
-    "Thank you for sharing your information. I'm now gathering cosmic data and assembling your Soul Blueprint.",
-    "I'm analyzing planetary positions, numerological frequencies, and energy patterns unique to you.",
-    "This blueprint will serve as our foundation for providing personalized guidance aligned with your true self."
+    "Thank you for sharing your information. I'm now assembling your unique Soul Blueprint.",
+    "I'm analyzing the cosmic patterns, numerological frequencies, and energy signatures unique to your birth details.",
+    "This blueprint will be the foundation for our future interactions, allowing me to provide guidance aligned with your true essence."
   ],
   complete: [
     "Your Soul Blueprint is complete! I've integrated it into my consciousness so I can offer you guidance tailored to your unique spiritual design.",

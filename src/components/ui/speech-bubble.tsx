@@ -1,6 +1,7 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
+import { motion } from "@/lib/framer-motion";
 
 interface SpeechBubbleProps {
   children: React.ReactNode;
@@ -32,12 +33,16 @@ const SpeechBubble: React.FC<SpeechBubbleProps> = ({
   if (!isVisible) return null;
 
   return (
-    <div
+    <motion.div
       className={cn(
-        "absolute z-10 w-64 px-4 py-2 cosmic-card animate-fade-in",
+        "absolute z-10 w-64 max-w-sm px-4 py-3 cosmic-card",
         positionClasses[position],
         className
       )}
+      initial={{ opacity: 0, scale: 0.9, y: position === "bottom" ? -10 : position === "top" ? 10 : 0 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      transition={{ duration: 0.3 }}
     >
       <div
         className={cn(
@@ -45,8 +50,8 @@ const SpeechBubble: React.FC<SpeechBubbleProps> = ({
           arrowClasses[position]
         )}
       />
-      <div className="text-sm text-foreground">{children}</div>
-    </div>
+      <div className="text-sm text-foreground leading-relaxed">{children}</div>
+    </motion.div>
   );
 };
 
