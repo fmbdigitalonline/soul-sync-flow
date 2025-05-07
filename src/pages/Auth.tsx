@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { SoulOrb } from "@/components/ui/soul-orb";
+import { SoulOrbAvatar } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 
 const Auth = () => {
