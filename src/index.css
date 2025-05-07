@@ -1,5 +1,6 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;700&family=Poppins:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=Lexend:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+@import url('https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -93,16 +94,16 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans text-base leading-relaxed;
+    @apply bg-background text-foreground font-body text-base leading-relaxed;
   }
   
-  /* Typography scale based on Apple HIG (≥17pt body) on a 4pt modular scale */
+  /* Typography scale based on a 4pt modular scale (16 / 20 / 24 / 32 px) */
   h1 {
-    @apply text-4xl font-heading font-bold;
+    @apply text-4xl font-heading font-semibold;
   }
   
   h2 {
-    @apply text-3xl font-heading font-semibold;
+    @apply text-3xl font-heading font-medium;
   }
   
   h3 {
@@ -114,7 +115,7 @@
   }
   
   p, li, input, textarea {
-    @apply text-base; /* 16px */
+    @apply text-base leading-normal; /* 16px with 1.5 line height */
   }
   
   small {

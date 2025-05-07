@@ -132,10 +132,11 @@ export default {
 				'200': '200%'
 			},
 			fontFamily: {
-				sans: ['Inter', 'DM Sans', 'sans-serif'],
-				display: ['Poppins', 'sans-serif'],
-				heading: ['Manrope', 'sans-serif'],
-				focus: ['Lexend', 'sans-serif']
+				body: ['Nunito Sans', 'sans-serif'],
+				ui: ['IBM Plex Sans', 'sans-serif'],
+				heading: ['Satoshi', 'sans-serif'],
+				focus: ['Lexend', 'sans-serif'],
+				sans: ['Nunito Sans', 'sans-serif'] // Keeping 'sans' for compatibility with existing code
 			},
 			spacing: {
 				'grid-8': '8px',
@@ -144,6 +145,17 @@ export default {
 			},
 			boxShadow: {
 				'soft-ui': '4px 4px 10px rgba(0, 0, 0, 0.1)'
+			},
+			lineHeight: {
+				'normal': '1.5',
+			},
+			fontSize: {
+				'base': '16px',
+				'lg': '20px',
+				'xl': '24px',
+				'2xl': '24px',
+				'3xl': '32px',
+				'4xl': '32px',
 			},
 		}
 	},

@@ -33,7 +33,7 @@ export const FocusToggle = ({ className }: FocusToggleProps) => {
         checked={focusMode}
         onCheckedChange={toggleFocusMode}
       />
-      <Label htmlFor="focus-mode" className="flex items-center gap-1.5 cursor-pointer">
+      <Label htmlFor="focus-mode" className="flex items-center gap-1.5 cursor-pointer font-ui">
         <BookOpen className="h-4 w-4" />
         <span>Focus Mode</span>
       </Label>
