@@ -204,6 +204,75 @@ export const blueprintService = {
     try {
       console.log('Generating blueprint from birth data:', userData);
       
+      // Call the new research-based Blueprint Generator Edge Function
+      const { data: researchData, error: researchError } = await supabase.functions.invoke('research-blueprint-generator', {
+        body: {
+          birthData: {
+            date: userData.birth_date,
+            time: userData.birth_time_local,
+            location: userData.birth_location,
+            timezone: userData.timezone,
+            name: userData.full_name
+          }
+        }
+      });
+      
+      if (researchError) {
+        console.error('Error calling research-based blueprint generator:', researchError);
+        
+        // Fall back to the calculation-based approach if research-based fails
+        console.log('Falling back to calculation-based blueprint generator');
+        return await fallbackToCalculationBasedGenerator(userData);
+      }
+      
+      if (!researchData || !researchData.data) {
+        console.error('No data received from research-based blueprint generator');
+        return { data: null, error: 'Failed to generate blueprint data' };
+      }
+      
+      console.log('Received research-based blueprint data');
+      
+      // Use the research-generated blueprint
+      const blueprint = researchData.data;
+      
+      // Ensure the user_meta data is correctly set
+      blueprint.user_meta = userData;
+      
+      // Ensure we have bashar_suite data
+      if (!blueprint.bashar_suite) {
+        blueprint.bashar_suite = {
+          belief_interface: {
+            principle: "What you believe is what you experience as reality",
+            reframe_prompt: "What would I have to believe to experience this?"
+          },
+          excitement_compass: {
+            principle: "Follow your highest excitement in the moment to the best of your ability"
+          },
+          frequency_alignment: {
+            quick_ritual: "Visualize feeling the way you want to feel for 17 seconds"
+          }
+        };
+      }
+      
+      // Initialize empty arrays for tracking data if not present
+      blueprint.goal_stack = blueprint.goal_stack || [];
+      blueprint.task_graph = blueprint.task_graph || {};
+      blueprint.belief_logs = blueprint.belief_logs || [];
+      blueprint.excitement_scores = blueprint.excitement_scores || [];
+      blueprint.vibration_check_ins = blueprint.vibration_check_ins || [];
+      
+      return { data: blueprint };
+    } catch (err) {
+      console.error("Error generating blueprint:", err);
+      return { data: null, error: err instanceof Error ? err.message : String(err) };
+    }
+  },
+  
+  /**
+   * Fallback to the original calculation-based generator if research-based fails
+   */
+  async fallbackToCalculationBasedGenerator(userData) {
+    try {
       // Call the Edge Function to calculate the astrological data
       const { data: calcData, error: calcError } = await supabase.functions.invoke('blueprint-calculator', {
         body: {
@@ -268,7 +337,7 @@ export const blueprintService = {
         archetype_chinese: calcData.chineseZodiac,
         timing_overlays: {
           current_transits: [],
-          notes: "Generated using real astronomical calculations"
+          notes: "Generated using astronomical calculations"
         },
         goal_stack: [],
         task_graph: {},
@@ -279,7 +348,7 @@ export const blueprintService = {
       
       return { data: blueprint };
     } catch (err) {
-      console.error("Error generating blueprint:", err);
+      console.error("Error in fallback blueprint generation:", err);
       return { data: null, error: err instanceof Error ? err.message : String(err) };
     }
   },

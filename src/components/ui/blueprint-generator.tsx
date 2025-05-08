@@ -22,6 +22,7 @@ const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
   const [particles, setParticles] = useState<Array<{id: number, x: number, y: number, size: number, speed: number}>>([]);
   const [isCompleted, setIsCompleted] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [statusMessage, setStatusMessage] = useState('Preparing Soul Blueprint...');
   const { toast } = useToast();
 
   // Generate random particles
@@ -94,30 +95,34 @@ const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
     }
   };
 
-  // Animation progress
+  // Animation progress with research-based timing
   useEffect(() => {
     let interval: NodeJS.Timeout;
     
     if (progress < 100 && !isCompleted && !isSaving) {
       interval = setInterval(() => {
         setProgress(prev => {
-          const increment = Math.random() * 3 + 1;
+          // Slower advancement to account for longer processing time with research-based approach
+          const increment = Math.random() * 2 + 0.5;
           const newProgress = Math.min(prev + increment, 100);
           
           // Update stages based on progress
-          if (newProgress > 30 && stage === 'preparing') {
+          if (newProgress > 20 && stage === 'preparing') {
             setStage('assembling');
-          } else if (newProgress > 70 && stage === 'assembling') {
+            setStatusMessage('Researching Cosmic Patterns...');
+          } else if (newProgress > 60 && stage === 'assembling') {
             setStage('finalizing');
+            setStatusMessage('Generating Soul Blueprint Insights...');
           } else if (newProgress === 100 && stage === 'finalizing') {
             setStage('complete');
+            setStatusMessage('Soul Blueprint Complete!');
             // Call the completion handler when reaching 100%
             handleCompletion();
           }
           
           return newProgress;
         });
-      }, 300);
+      }, 400); // Slightly slower intervals for research-based approach
     }
     
     return () => {
@@ -201,13 +206,38 @@ const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
         ))}
       </div>
       
+      {/* Research glow pulses - specific to research-based approach */}
+      <div className="absolute inset-0">
+        {progress < 100 && progress > 20 && stage !== 'complete' && Array.from({ length: 4 }).map((_, i) => (
+          <motion.div
+            key={`research-${i}`}
+            className="absolute rounded-full bg-soul-purple/20"
+            style={{
+              width: 100,
+              height: 100,
+              left: '50%',
+              top: '50%',
+              translateX: '-50%',
+              translateY: '-50%',
+            }}
+            animate={{
+              scale: [1, 3, 1],
+              opacity: [0.2, 0, 0.2],
+            }}
+            transition={{
+              duration: 4,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: i * 1
+            }}
+          />
+        ))}
+      </div>
+      
       {/* Status text */}
       <div className="absolute bottom-6 left-0 right-0 text-center text-white">
         <p className="font-medium text-lg">
-          {stage === 'preparing' && 'Preparing Soul Blueprint...'}
-          {stage === 'assembling' && 'Assembling Cosmic Patterns...'}
-          {stage === 'finalizing' && 'Connecting Energy Pathways...'}
-          {stage === 'complete' && 'Soul Blueprint Complete!'}
+          {statusMessage}
         </p>
         
         {/* Progress bar */}
