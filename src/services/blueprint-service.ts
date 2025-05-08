@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 // Blueprint template type definition
@@ -145,12 +146,12 @@ export const defaultBlueprintData: BlueprintData = {
   archetype_western: {
     sun_sign: "Taurus ♉︎",
     sun_keyword: "Grounded Provider",
-    sun_dates?: "2023-01-01",
-    sun_element?: "Earth",
-    sun_qualities?: "Stable, Reliable",
+    sun_dates: "2023-01-01",
+    sun_element: "Earth",
+    sun_qualities: "Stable, Reliable",
     moon_sign: "Pisces ♓︎",
     moon_keyword: "Intuitive Empath",
-    moon_element?: "Water",
+    moon_element: "Water",
     rising_sign: "Virgo ♍︎",
     aspects: [
       { planet: "Mercury", sign: "Taurus", aspect: "Conjunction" },
@@ -178,7 +179,7 @@ export const defaultBlueprintData: BlueprintData = {
     yin_yang: "Yang",
     keyword: "Free-spirited Explorer",
     element_characteristic: "Metal is associated with strength, stability, and the ability to withstand challenges.",
-    personality_profile?: "A strong and confident individual with a sense of purpose.",
+    personality_profile: "A strong and confident individual with a sense of purpose.",
     compatibility: {
       best: ["Dragon", "Horse", "Snake"],
       worst: ["Monkey", "Rooster", "Dog"]
