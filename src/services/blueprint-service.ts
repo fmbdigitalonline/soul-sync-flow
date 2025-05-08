@@ -222,7 +222,7 @@ export const blueprintService = {
         
         // Fall back to the calculation-based approach if research-based fails
         console.log('Falling back to calculation-based blueprint generator');
-        return await fallbackToCalculationBasedGenerator(userData);
+        return await this.fallbackToCalculationBasedGenerator(userData);
       }
       
       if (!researchData || !researchData.data) {
