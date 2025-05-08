@@ -7,7 +7,7 @@ import BlueprintEditor from "@/components/blueprint/BlueprintEditor";
 import { Button } from "@/components/ui/button";
 import { Loader2, MessageCircle, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { BlueprintData, blueprintService, defaultBlueprintData } from "@/services/blueprint-service";
+import { BlueprintData, blueprintService } from "@/services/blueprint-service";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { BlueprintGenerator } from "@/components/blueprint/BlueprintGenerationFlow";
@@ -60,23 +60,65 @@ const Blueprint = () => {
   }, [user, navigate, toast]);
 
   const handleSaveBlueprint = async (updatedBlueprint: BlueprintData) => {
-    return await blueprintService.saveBlueprintData(updatedBlueprint);
+    const result = await blueprintService.saveBlueprintData(updatedBlueprint);
+    if (result.success) {
+      toast({
+        title: "Blueprint saved",
+        description: "Your Soul Blueprint has been successfully updated",
+      });
+      setBlueprint(updatedBlueprint);
+      setActiveTab("view");
+    } else {
+      toast({
+        title: "Error saving blueprint",
+        description: result.error || "Failed to save blueprint",
+        variant: "destructive"
+      });
+    }
+    return result;
   };
 
   const handleRegenerateBlueprint = () => {
-    setIsGenerating(true);
-    setActiveTab("generating");
+    if (blueprint) {
+      setIsGenerating(true);
+      setActiveTab("generating");
+    } else {
+      toast({
+        title: "Error",
+        description: "No blueprint data available to regenerate",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleGenerationComplete = (newBlueprint: BlueprintData) => {
-    setBlueprint(newBlueprint);
+  const handleGenerationComplete = async (newBlueprint: BlueprintData) => {
+    try {
+      const result = await blueprintService.saveBlueprintData(newBlueprint);
+      
+      if (result.success) {
+        setBlueprint(newBlueprint);
+        toast({
+          title: "Blueprint generated",
+          description: "Your Soul Blueprint has been successfully regenerated and saved",
+        });
+      } else {
+        toast({
+          title: "Error saving generated blueprint",
+          description: result.error || "Failed to save the generated blueprint",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error("Error handling generation completion:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred while saving the blueprint",
+        variant: "destructive"
+      });
+    }
+    
     setIsGenerating(false);
     setActiveTab("view");
-    
-    toast({
-      title: "Blueprint generated",
-      description: "Your Soul Blueprint has been successfully updated",
-    });
   };
 
   if (!user) {
@@ -129,9 +171,10 @@ const Blueprint = () => {
               variant="outline"
               className="flex items-center"
               onClick={handleRegenerateBlueprint}
+              disabled={isGenerating}
             >
               <RefreshCw className="mr-2 h-4 w-4" />
-              Regenerate Blueprint
+              {isGenerating ? 'Generating...' : 'Regenerate Blueprint'}
             </Button>
             <Button 
               className="bg-soul-purple hover:bg-soul-purple/90 flex items-center"
@@ -162,7 +205,14 @@ const Blueprint = () => {
 
           <TabsContent value="generating" className="mt-6">
             <BlueprintGenerator 
-              userProfile={blueprint?.user_meta || defaultBlueprintData.user_meta}
+              userProfile={blueprint?.user_meta || {
+                full_name: "",
+                preferred_name: "",
+                birth_date: "",
+                birth_time_local: "",
+                birth_location: "",
+                timezone: ""
+              }}
               onComplete={handleGenerationComplete}
             />
           </TabsContent>

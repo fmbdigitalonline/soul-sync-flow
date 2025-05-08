@@ -3,7 +3,8 @@ import React, { useState, useEffect } from "react";
 import { motion } from "@/lib/framer-motion";
 import { SoulOrb } from "@/components/ui/soul-orb";
 import { cn } from "@/lib/utils";
-import { BlueprintData, defaultBlueprintData } from "@/services/blueprint-service";
+import { BlueprintData, blueprintService } from "@/services/blueprint-service";
+import { useToast } from "@/hooks/use-toast";
 
 interface BlueprintGeneratorProps {
   userProfile: BlueprintData['user_meta'];
@@ -32,6 +33,9 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
   const [progress, setProgress] = useState(0);
   const [particles, setParticles] = useState<Array<{id: number, x: number, y: number, size: number, speed: number}>>([]);
   const [generatedBlueprint, setGeneratedBlueprint] = useState<BlueprintData | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   // Generate random particles for visual effect
   useEffect(() => {
@@ -45,35 +49,96 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
     setParticles(newParticles);
   }, []);
 
-  // Simulation of the blueprint generation process
+  // Generate the blueprint using the actual calculation service
   useEffect(() => {
-    if (currentStep >= steps.length) {
-      // Process complete, return the generated blueprint
-      if (generatedBlueprint) {
-        setTimeout(() => onComplete(generatedBlueprint), 1000);
-      }
-      return;
-    }
-
-    // Simulate API call and processing time
-    const timer = setTimeout(() => {
-      // Move to next step
-      setCurrentStep(prev => prev + 1);
-      setProgress((currentStep + 1) / steps.length * 100);
+    const generateBlueprint = async () => {
+      // Only start if we haven't already
+      if (isGenerating || generatedBlueprint) return;
       
-      // When reaching the final step, create the finished blueprint
-      if (currentStep === steps.length - 1) {
-        // In a real implementation, this would be the result from the API
-        // We're simulating it for now
-        setGeneratedBlueprint({
-          ...defaultBlueprintData,
-          user_meta: userProfile
+      setIsGenerating(true);
+      setError(null);
+      
+      try {
+        console.log("Starting blueprint generation with user data:", userProfile);
+        
+        // Step 1: Processing birth data
+        setCurrentStep(0);
+        setProgress(12);
+        await simulateProcessingDelay();
+        
+        // Step 2: Calculating celestial positions
+        setCurrentStep(1);
+        setProgress(25);
+        await simulateProcessingDelay();
+        
+        // Step 3-7: Run the actual generation process
+        setProgress(40);
+        
+        // Call the blueprint service to generate a blueprint
+        const { data: blueprint, error } = await blueprintService.generateBlueprintFromBirthData(userProfile);
+        
+        if (error) {
+          console.error("Blueprint generation error:", error);
+          setError(error);
+          toast({
+            title: "Generation Error",
+            description: "There was an error generating your blueprint. Please try again.",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        if (!blueprint) {
+          setError("No blueprint data received");
+          toast({
+            title: "Generation Error",
+            description: "No blueprint data was generated. Please try again.",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        // Progress through the remaining steps visually
+        for (let step = 2; step < steps.length - 1; step++) {
+          setCurrentStep(step);
+          setProgress(40 + (step * 10));
+          await simulateProcessingDelay(500); // slightly faster now that we have data
+        }
+        
+        // Final step: Storing
+        setCurrentStep(steps.length - 1);
+        setProgress(95);
+        await simulateProcessingDelay(500);
+        
+        // Store the generated blueprint
+        setGeneratedBlueprint(blueprint);
+        setProgress(100);
+        
+        // Complete the process and pass blueprint to parent
+        setTimeout(() => {
+          onComplete(blueprint);
+        }, 1000);
+      } catch (err) {
+        console.error("Unexpected error during blueprint generation:", err);
+        setError(err instanceof Error ? err.message : String(err));
+        toast({
+          title: "Generation Error",
+          description: "An unexpected error occurred. Please try again later.",
+          variant: "destructive"
         });
+      } finally {
+        setIsGenerating(false);
       }
-    }, Math.random() * 1000 + 1500);
+    };
     
-    return () => clearTimeout(timer);
-  }, [currentStep, steps.length, onComplete, userProfile]);
+    // Start the generation process
+    generateBlueprint();
+  }, [userProfile, onComplete, toast]);
+
+  // Helper function to simulate processing delay
+  const simulateProcessingDelay = (ms = 1200) => {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  };
 
   // Get the stage for the SoulOrb component
   const getSoulOrbStage = () => {
@@ -124,7 +189,10 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
         <div className="absolute inset-0 flex items-center justify-between px-6">
           {/* User */}
           <div className="w-24 h-32 flex flex-col items-center justify-center">
-            <div className="bg-white/10 backdrop-blur-sm p-3 rounded-lg border border-white/20 shadow-glow mb-2">
+            <div className={cn(
+              "bg-white/10 backdrop-blur-sm p-3 rounded-lg border border-white/20 shadow-glow mb-2",
+              currentStep === 0 && "border-soul-purple animate-pulse"
+            )}>
               <div className="w-10 h-10 flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-soul-purple">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -137,7 +205,10 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
 
           {/* API Gateway */}
           <div className="w-24 h-32 flex flex-col items-center justify-center">
-            <div className="bg-white/10 backdrop-blur-sm p-3 rounded-lg border border-white/20 shadow-glow mb-2">
+            <div className={cn(
+              "bg-white/10 backdrop-blur-sm p-3 rounded-lg border border-white/20 shadow-glow mb-2",
+              currentStep === 1 && "border-soul-purple animate-pulse"
+            )}>
               <div className="w-10 h-10 flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-soul-purple">
                   <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
@@ -151,7 +222,10 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
 
           {/* Blueprint Service */}
           <div className="w-24 h-32 flex flex-col items-center justify-center">
-            <div className="bg-white/10 backdrop-blur-sm p-3 rounded-lg border border-white/20 shadow-glow mb-2">
+            <div className={cn(
+              "bg-white/10 backdrop-blur-sm p-3 rounded-lg border border-white/20 shadow-glow mb-2", 
+              currentStep >= 2 && currentStep <= 6 && "border-soul-purple animate-pulse"
+            )}>
               <div className="w-10 h-10 flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-soul-purple">
                   <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
@@ -164,7 +238,10 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
 
           {/* Swiss Ephemeris */}
           <div className="w-24 h-32 flex flex-col items-center justify-center">
-            <div className="bg-white/10 backdrop-blur-sm p-3 rounded-lg border border-white/20 shadow-glow mb-2">
+            <div className={cn(
+              "bg-white/10 backdrop-blur-sm p-3 rounded-lg border border-white/20 shadow-glow mb-2",
+              currentStep === 1 && "border-soul-purple animate-pulse"
+            )}>
               <div className="w-10 h-10 flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-soul-purple">
                   <circle cx="12" cy="12" r="10"></circle>
@@ -183,9 +260,12 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
             <span className="text-xs text-center text-white/80">Swiss Ephemeris</span>
           </div>
 
-          {/* MongoDB */}
+          {/* Database */}
           <div className="w-24 h-32 flex flex-col items-center justify-center">
-            <div className="bg-white/10 backdrop-blur-sm p-3 rounded-lg border border-white/20 shadow-glow mb-2">
+            <div className={cn(
+              "bg-white/10 backdrop-blur-sm p-3 rounded-lg border border-white/20 shadow-glow mb-2",
+              currentStep === 7 && "border-soul-purple animate-pulse"
+            )}>
               <div className="w-10 h-10 flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-soul-purple">
                   <path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2z"></path>
@@ -195,7 +275,7 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
                 </svg>
               </div>
             </div>
-            <span className="text-xs text-center text-white/80">MongoDB</span>
+            <span className="text-xs text-center text-white/80">Database</span>
           </div>
         </div>
 
@@ -220,6 +300,13 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
             />
           </motion.div>
         </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 translate-y-16 bg-red-900/80 text-white px-4 py-2 rounded-md text-sm">
+            Error: {error}
+          </div>
+        )}
 
         {/* Current Step Display */}
         <div className="absolute bottom-6 left-0 right-0 text-center">

@@ -151,6 +151,93 @@ export const defaultBlueprintData: BlueprintData = {
 
 export const blueprintService = {
   /**
+   * Generate a blueprint from birth data
+   */
+  async generateBlueprintFromBirthData(userData: BlueprintData['user_meta']): Promise<{ data: BlueprintData | null; error?: string }> {
+    try {
+      console.log('Generating blueprint from birth data:', userData);
+      
+      // Call the Edge Function to calculate the astrological data
+      const { data: calcData, error: calcError } = await supabase.functions.invoke('blueprint-calculator', {
+        body: {
+          birthData: {
+            date: userData.birth_date,
+            time: userData.birth_time_local,
+            location: userData.birth_location,
+            timezone: userData.timezone
+          }
+        }
+      });
+      
+      if (calcError) {
+        console.error('Error calling blueprint calculator:', calcError);
+        return { data: null, error: `Calculation service error: ${calcError.message}` };
+      }
+      
+      console.log('Received calculation data:', calcData);
+      
+      // Create the blueprint using the calculation results
+      const blueprint: BlueprintData = {
+        user_meta: userData,
+        cognition_mbti: {
+          // For now, use default MBTI data or an API could be added later
+          type: "INFJ",
+          core_keywords: ["Insightful", "Counselor", "Advocate"],
+          dominant_function: "Introverted Intuition (Ni)",
+          auxiliary_function: "Extraverted Feeling (Fe)"
+        },
+        energy_strategy_human_design: {
+          // This would come from a Human Design calculation API
+          type: "Projector",
+          profile: "4/6 (Opportunist/Role Model)",
+          authority: "Emotional",
+          strategy: "Wait for the invitation",
+          definition: "Split",
+          not_self_theme: "Frustration",
+          life_purpose: "Guide others with emotional wisdom",
+          gates: {
+            unconscious_design: ["16.5", "20.3", "57.2", "34.6"],
+            conscious_personality: ["11.4", "48.3", "39.5", "41.1"]
+          }
+        },
+        bashar_suite: {
+          // Static data for now
+          belief_interface: {
+            principle: "What you believe is what you experience as reality",
+            reframe_prompt: "What would I have to believe to experience this?"
+          },
+          excitement_compass: {
+            principle: "Follow your highest excitement in the moment to the best of your ability"
+          },
+          frequency_alignment: {
+            quick_ritual: "Visualize feeling the way you want to feel for 17 seconds"
+          }
+        },
+        // Use the calculated numerology data
+        values_life_path: calcData.numerology,
+        // Use the calculated Western astrology data
+        archetype_western: calcData.westernProfile,
+        // Use the calculated Chinese zodiac data
+        archetype_chinese: calcData.chineseZodiac,
+        timing_overlays: {
+          current_transits: [],
+          notes: "Generated using real astronomical calculations"
+        },
+        goal_stack: [],
+        task_graph: {},
+        belief_logs: [],
+        excitement_scores: [],
+        vibration_check_ins: []
+      };
+      
+      return { data: blueprint };
+    } catch (err) {
+      console.error("Error generating blueprint:", err);
+      return { data: null, error: err instanceof Error ? err.message : String(err) };
+    }
+  },
+  
+  /**
    * Save a blueprint to Supabase for the current user
    */
   async saveBlueprintData(blueprint: BlueprintData): Promise<{ success: boolean; error?: string }> {
