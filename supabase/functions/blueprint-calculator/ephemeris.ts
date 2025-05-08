@@ -1,6 +1,4 @@
 
-import { load as loadJsonFetch } from "https://deno.land/x/json_fetch@1.0.0/mod.ts";
-
 interface GeoCoordinates {
   latitude: number;
   longitude: number;
