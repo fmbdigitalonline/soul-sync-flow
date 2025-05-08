@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 // Blueprint template type definition
@@ -25,6 +24,7 @@ export type BlueprintData = {
     definition: string;
     not_self_theme: string;
     life_purpose: string;
+    centers?: Record<string, boolean>; // New: defined centers
     gates: {
       unconscious_design: string[];
       conscious_personality: string[];
@@ -45,6 +45,10 @@ export type BlueprintData = {
   values_life_path: {
     life_path_number: number;
     life_path_keyword: string;
+    life_path_description?: string; // New: more detailed description
+    birth_day_number?: number; // New: day number meaning
+    birth_day_meaning?: string; // New: meaning of birth day
+    personal_year?: number; // New: personal year calculation
     expression_number: number;
     expression_keyword: string;
     soul_urge_number: number;
@@ -57,12 +61,16 @@ export type BlueprintData = {
     moon_sign: string;
     moon_keyword: string;
     rising_sign: string;
+    aspects?: any[]; // New: planetary aspects
+    houses?: Record<string, any>; // New: house placements
   };
   archetype_chinese: {
     animal: string;
     element: string;
     yin_yang: string;
     keyword: string;
+    element_characteristic?: string; // New: element characteristics
+    compatibility?: {best: string[], worst: string[]}; // New: compatibility info
   };
   timing_overlays: {
     current_transits: any[];
@@ -119,6 +127,10 @@ export const defaultBlueprintData: BlueprintData = {
   values_life_path: {
     life_path_number: 7,
     life_path_keyword: "Seeker of Truth",
+    life_path_description: "A seeker of truth and wisdom, always seeking to understand the world around them.",
+    birth_day_number: 15,
+    birth_day_meaning: "The number 15 represents balance, harmony, and the ability to see the big picture.",
+    personal_year: 2023,
     expression_number: 9,
     expression_keyword: "Humanitarian",
     soul_urge_number: 5,
@@ -130,13 +142,37 @@ export const defaultBlueprintData: BlueprintData = {
     sun_keyword: "Grounded Provider",
     moon_sign: "Pisces ♓︎",
     moon_keyword: "Intuitive Empath",
-    rising_sign: "Virgo ♍︎"
+    rising_sign: "Virgo ♍︎",
+    aspects: [
+      { planet: "Mercury", sign: "Taurus", aspect: "Conjunction" },
+      { planet: "Venus", sign: "Pisces", aspect: "Trine" },
+      { planet: "Mars", sign: "Virgo", aspect: "Square" }
+    ],
+    houses: {
+      1: { sign: "Taurus", house: "1st House" },
+      2: { sign: "Gemini", house: "2nd House" },
+      3: { sign: "Cancer", house: "3rd House" },
+      4: { sign: "Leo", house: "4th House" },
+      5: { sign: "Virgo", house: "5th House" },
+      6: { sign: "Libra", house: "6th House" },
+      7: { sign: "Scorpio", house: "7th House" },
+      8: { sign: "Sagittarius", house: "8th House" },
+      9: { sign: "Capricorn", house: "9th House" },
+      10: { sign: "Aquarius", house: "10th House" },
+      11: { sign: "Pisces", house: "11th House" },
+      12: { sign: "Aries", house: "12th House" }
+    }
   },
   archetype_chinese: {
     animal: "Horse",
     element: "Metal",
     yin_yang: "Yang",
-    keyword: "Free-spirited Explorer"
+    keyword: "Free-spirited Explorer",
+    element_characteristic: "Metal is associated with strength, stability, and the ability to withstand challenges.",
+    compatibility: {
+      best: ["Dragon", "Horse", "Snake"],
+      worst: ["Monkey", "Rooster", "Dog"]
+    }
   },
   timing_overlays: {
     current_transits: [],
@@ -186,8 +222,8 @@ export const blueprintService = {
           dominant_function: "Introverted Intuition (Ni)",
           auxiliary_function: "Extraverted Feeling (Fe)"
         },
-        energy_strategy_human_design: {
-          // This would come from a Human Design calculation API
+        // Use calculated Human Design data if available, otherwise use template
+        energy_strategy_human_design: calcData.humanDesign || {
           type: "Projector",
           profile: "4/6 (Opportunist/Role Model)",
           authority: "Emotional",

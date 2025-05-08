@@ -1,4 +1,3 @@
-
 interface GeoCoordinates {
   latitude: number;
   longitude: number;
@@ -41,11 +40,31 @@ async function getGeoCoordinates(location: string): Promise<GeoCoordinates> {
       'London, UK': { latitude: 51.5074, longitude: -0.1278 },
       'Tokyo, Japan': { latitude: 35.6762, longitude: 139.6503 },
       'Sydney, Australia': { latitude: -33.8688, longitude: 151.2093 },
-      'San Francisco, USA': { latitude: 37.7749, longitude: -122.4194 }
+      'San Francisco, USA': { latitude: 37.7749, longitude: -122.4194 },
+      'Chicago, USA': { latitude: 41.8781, longitude: -87.6298 },
+      'Miami, USA': { latitude: 25.7617, longitude: -80.1918 },
+      'Paris, France': { latitude: 48.8566, longitude: 2.3522 },
+      'Berlin, Germany': { latitude: 52.5200, longitude: 13.4050 },
+      'Rome, Italy': { latitude: 41.9028, longitude: 12.4964 },
+      'Madrid, Spain': { latitude: 40.4168, longitude: -3.7038 },
+      'Toronto, Canada': { latitude: 43.6532, longitude: -79.3832 },
+      'Mumbai, India': { latitude: 19.0760, longitude: 72.8777 },
+      'Shanghai, China': { latitude: 31.2304, longitude: 121.4737 },
+      'Moscow, Russia': { latitude: 55.7558, longitude: 37.6173 },
+      'Dubai, UAE': { latitude: 25.2048, longitude: 55.2708 }
     };
     
     if (location in commonLocations) {
       return commonLocations[location];
+    }
+    
+    // Try to parse coordinates if given in format "lat,long"
+    const coordMatch = location.match(/(-?\d+\.\d+),\s*(-?\d+\.\d+)/);
+    if (coordMatch) {
+      return {
+        latitude: parseFloat(coordMatch[1]),
+        longitude: parseFloat(coordMatch[2])
+      };
     }
     
     // Fallback to default coordinates if location not recognized
@@ -58,23 +77,52 @@ async function getGeoCoordinates(location: string): Promise<GeoCoordinates> {
   }
 }
 
-// Function to convert timezone string to offset in hours
+// Function to convert timezone string to offset in hours with improved accuracy
 function getTimezoneOffset(timezone: string, date: string): number {
   // For actual implementation, we would use a timezone database
-  // For this demo, we'll use hardcoded offsets for common timezones
+  // This implementation has been expanded with more timezone entries
   const timezoneOffsets: Record<string, number> = {
-    'America/New_York': -5,
-    'America/Los_Angeles': -8,
-    'Europe/London': 0,
-    'Asia/Tokyo': 9,
-    'Australia/Sydney': 10
+    'America/New_York': -5, // EST, -4 during DST
+    'America/Chicago': -6, // CST, -5 during DST
+    'America/Denver': -7, // MST, -6 during DST
+    'America/Los_Angeles': -8, // PST, -7 during DST
+    'America/Anchorage': -9, // AKST, -8 during DST
+    'America/Honolulu': -10, // HST, no DST
+    'America/Toronto': -5, // EST, -4 during DST
+    'America/Vancouver': -8, // PST, -7 during DST
+    'Europe/London': 0, // GMT/UTC, +1 during DST
+    'Europe/Berlin': 1, // CET, +2 during DST
+    'Europe/Paris': 1, // CET, +2 during DST
+    'Europe/Rome': 1, // CET, +2 during DST
+    'Europe/Madrid': 1, // CET, +2 during DST
+    'Europe/Athens': 2, // EET, +3 during DST
+    'Europe/Moscow': 3, // MSK, no DST
+    'Asia/Tokyo': 9, // JST, no DST
+    'Asia/Shanghai': 8, // CST, no DST
+    'Asia/Kolkata': 5.5, // IST, no DST
+    'Asia/Dubai': 4, // GST, no DST
+    'Australia/Sydney': 10, // AEST, +11 during DST
+    'Australia/Perth': 8, // AWST, no DST
+    'Pacific/Auckland': 12, // NZST, +13 during DST
+    'UTC': 0 // Universal Time Coordinated
   };
   
+  // Check if timezone is directly in our database
   if (timezone in timezoneOffsets) {
     return timezoneOffsets[timezone];
   }
   
+  // Try to parse UTC+/- format
+  const utcMatch = timezone.match(/^UTC([+-])(\d+)(?::(\d+))?$/i);
+  if (utcMatch) {
+    const hours = parseInt(utcMatch[2], 10);
+    const minutes = utcMatch[3] ? parseInt(utcMatch[3], 10) / 60 : 0;
+    const offset = hours + minutes;
+    return utcMatch[1] === '+' ? offset : -offset;
+  }
+  
   // Default to UTC
+  console.log(`Timezone not recognized: ${timezone}, defaulting to UTC`);
   return 0;
 }
 

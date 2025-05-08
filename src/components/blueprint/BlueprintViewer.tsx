@@ -60,6 +60,10 @@ const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint, className 
             <span className="text-muted-foreground">Keywords:</span>
             <span>{blueprint.cognition_mbti.core_keywords.join(", ")}</span>
           </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Dominant Function:</span>
+            <span>{blueprint.cognition_mbti.dominant_function}</span>
+          </div>
         </div>
       ))}
 
@@ -81,6 +85,10 @@ const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint, className 
             <span className="text-muted-foreground">Strategy:</span>
             <span>{blueprint.energy_strategy_human_design.strategy}</span>
           </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Life Purpose:</span>
+            <span>{blueprint.energy_strategy_human_design.life_purpose}</span>
+          </div>
         </div>
       ))}
 
@@ -91,13 +99,66 @@ const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint, className 
             <span>{blueprint.archetype_western.sun_sign}</span>
           </div>
           <div className="flex justify-between">
+            <span className="text-muted-foreground">Sun Keyword:</span>
+            <span>{blueprint.archetype_western.sun_keyword}</span>
+          </div>
+          <div className="flex justify-between">
             <span className="text-muted-foreground">Moon Sign:</span>
             <span>{blueprint.archetype_western.moon_sign}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Moon Keyword:</span>
+            <span>{blueprint.archetype_western.moon_keyword}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Rising Sign:</span>
             <span>{blueprint.archetype_western.rising_sign}</span>
           </div>
+          {blueprint.archetype_western.aspects && blueprint.archetype_western.aspects.length > 0 && (
+            <div className="mt-2">
+              <span className="text-muted-foreground block mb-1">Key Aspects:</span>
+              <ul className="text-sm pl-4">
+                {blueprint.archetype_western.aspects.slice(0, 3).map((aspect, i) => (
+                  <li key={i}>
+                    {aspect.planet1} {aspect.type} {aspect.planet2}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      ))}
+
+      {renderSection("Chinese Zodiac", (
+        <div className="grid grid-cols-1 gap-2">
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Animal:</span>
+            <span>{blueprint.archetype_chinese.animal}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Element:</span>
+            <span>{blueprint.archetype_chinese.element}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Yin/Yang:</span>
+            <span>{blueprint.archetype_chinese.yin_yang}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Keyword:</span>
+            <span>{blueprint.archetype_chinese.keyword}</span>
+          </div>
+          {blueprint.archetype_chinese.element_characteristic && (
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Element Trait:</span>
+              <span>{blueprint.archetype_chinese.element_characteristic}</span>
+            </div>
+          )}
+          {blueprint.archetype_chinese.compatibility && (
+            <div className="mt-2">
+              <span className="text-muted-foreground block mb-1">Compatible With:</span>
+              <span>{blueprint.archetype_chinese.compatibility.best.join(", ")}</span>
+            </div>
+          )}
         </div>
       ))}
 
@@ -107,10 +168,26 @@ const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint, className 
             <span className="text-muted-foreground">Life Path Number:</span>
             <span>{blueprint.values_life_path.life_path_number} - {blueprint.values_life_path.life_path_keyword}</span>
           </div>
+          {blueprint.values_life_path.life_path_description && (
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Meaning:</span>
+              <span className="text-right">{blueprint.values_life_path.life_path_description}</span>
+            </div>
+          )}
           <div className="flex justify-between">
             <span className="text-muted-foreground">Expression Number:</span>
             <span>{blueprint.values_life_path.expression_number} - {blueprint.values_life_path.expression_keyword}</span>
           </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Soul Urge Number:</span>
+            <span>{blueprint.values_life_path.soul_urge_number} - {blueprint.values_life_path.soul_urge_keyword}</span>
+          </div>
+          {blueprint.values_life_path.personal_year && (
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Personal Year:</span>
+              <span>{blueprint.values_life_path.personal_year}</span>
+            </div>
+          )}
         </div>
       ))}
     </CosmicCard>
