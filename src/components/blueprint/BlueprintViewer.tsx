@@ -1,9 +1,10 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { BlueprintData } from "@/services/blueprint-service";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { cn } from "@/lib/utils";
-import { Sparkles } from "lucide-react";
+import { ChevronDown, ChevronUp, Info, Sparkles } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface BlueprintViewerProps {
   blueprint: BlueprintData;
@@ -11,13 +12,60 @@ interface BlueprintViewerProps {
 }
 
 const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint, className }) => {
-  const renderSection = (title: string, content: React.ReactNode) => (
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    personal: true,
+    mbti: true,
+    humanDesign: true,
+    astrology: true,
+    chinese: true,
+    numerology: true
+  });
+
+  const toggleSection = (section: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  const renderSection = (id: string, title: string, content: React.ReactNode, showExpandIcon = true) => (
     <div className="mb-6">
-      <h3 className="text-lg font-semibold mb-2 flex items-center">
-        <Sparkles className="h-4 w-4 mr-2 text-soul-purple" />
-        {title}
-      </h3>
-      {content}
+      <div 
+        className={cn(
+          "flex items-center justify-between mb-2 cursor-pointer",
+          showExpandIcon && "cursor-pointer"
+        )}
+        onClick={() => showExpandIcon && toggleSection(id)}
+      >
+        <h3 className="text-lg font-semibold flex items-center">
+          <Sparkles className="h-4 w-4 mr-2 text-soul-purple" />
+          {title}
+        </h3>
+        {showExpandIcon && (
+          expandedSections[id] ? 
+            <ChevronUp className="h-4 w-4 text-soul-purple" /> : 
+            <ChevronDown className="h-4 w-4 text-soul-purple" />
+        )}
+      </div>
+      {(!showExpandIcon || expandedSections[id]) && content}
+    </div>
+  );
+
+  const renderLabelWithTooltip = (label: string, tooltipContent?: string) => (
+    <div className="flex items-center">
+      <span className="text-muted-foreground">{label}:</span>
+      {tooltipContent && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Info className="h-3 w-3 ml-1 text-muted-foreground cursor-help" />
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs">
+              <p>{tooltipContent}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
     </div>
   );
 
@@ -29,7 +77,7 @@ const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint, className 
         </h2>
       </div>
 
-      {renderSection("Personal Information", (
+      {renderSection("personal", "Personal Information", (
         <div className="grid grid-cols-1 gap-2">
           <div className="flex justify-between">
             <span className="text-muted-foreground">Full Name:</span>
@@ -50,7 +98,7 @@ const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint, className 
         </div>
       ))}
 
-      {renderSection("MBTI Profile", (
+      {renderSection("mbti", "MBTI Profile", (
         <div className="grid grid-cols-1 gap-2">
           <div className="flex justify-between">
             <span className="text-muted-foreground">Type:</span>
@@ -67,7 +115,7 @@ const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint, className 
         </div>
       ))}
 
-      {renderSection("Human Design", (
+      {renderSection("humanDesign", "Human Design", (
         <div className="grid grid-cols-1 gap-2">
           <div className="flex justify-between">
             <span className="text-muted-foreground">Type:</span>
@@ -92,27 +140,33 @@ const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint, className 
         </div>
       ))}
 
-      {renderSection("Astrological Profile", (
+      {renderSection("astrology", "Astrological Profile", (
         <div className="grid grid-cols-1 gap-2">
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Sun Sign:</span>
-            <span>{blueprint.archetype_western.sun_sign}</span>
+            <div className="flex items-center">
+              {renderLabelWithTooltip("Sun Sign", "The sign the Sun was in at the time of your birth, representing your core identity")}
+            </div>
+            <span className="text-right">{blueprint.archetype_western.sun_sign}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Sun Keyword:</span>
-            <span>{blueprint.archetype_western.sun_keyword}</span>
+            <span className="text-right">{blueprint.archetype_western.sun_keyword}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Moon Sign:</span>
-            <span>{blueprint.archetype_western.moon_sign}</span>
+            <div className="flex items-center">
+              {renderLabelWithTooltip("Moon Sign", "The sign the Moon was in when you were born, representing your emotional nature")}
+            </div>
+            <span className="text-right">{blueprint.archetype_western.moon_sign}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Moon Keyword:</span>
-            <span>{blueprint.archetype_western.moon_keyword}</span>
+            <span className="text-right">{blueprint.archetype_western.moon_keyword}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Rising Sign:</span>
-            <span>{blueprint.archetype_western.rising_sign}</span>
+            <div className="flex items-center">
+              {renderLabelWithTooltip("Rising Sign", "The sign that was rising on the eastern horizon at your birth, representing your outer personality")}
+            </div>
+            <span className="text-right">{blueprint.archetype_western.rising_sign}</span>
           </div>
           {blueprint.archetype_western.aspects && blueprint.archetype_western.aspects.length > 0 && (
             <div className="mt-2">
@@ -120,7 +174,7 @@ const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint, className 
               <ul className="text-sm pl-4">
                 {blueprint.archetype_western.aspects.slice(0, 3).map((aspect, i) => (
                   <li key={i}>
-                    {aspect.planet1} {aspect.type} {aspect.planet2}
+                    {aspect.planet1} {aspect.type} {aspect.planet2} (orb: {aspect.orb})
                   </li>
                 ))}
               </ul>
@@ -129,7 +183,7 @@ const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint, className 
         </div>
       ))}
 
-      {renderSection("Chinese Zodiac", (
+      {renderSection("chinese", "Chinese Zodiac", (
         <div className="grid grid-cols-1 gap-2">
           <div className="flex justify-between">
             <span className="text-muted-foreground">Animal:</span>
@@ -162,11 +216,15 @@ const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint, className 
         </div>
       ))}
 
-      {renderSection("Numerology", (
+      {renderSection("numerology", "Numerology", (
         <div className="grid grid-cols-1 gap-2">
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Life Path Number:</span>
-            <span>{blueprint.values_life_path.life_path_number} - {blueprint.values_life_path.life_path_keyword}</span>
+            <div className="flex items-center">
+              {renderLabelWithTooltip("Life Path Number", "Calculated from your birth date, represents your life purpose and journey")}
+            </div>
+            <span>
+              {blueprint.values_life_path.life_path_number} - {blueprint.values_life_path.life_path_keyword}
+            </span>
           </div>
           {blueprint.values_life_path.life_path_description && (
             <div className="flex justify-between">
@@ -175,16 +233,26 @@ const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint, className 
             </div>
           )}
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Expression Number:</span>
-            <span>{blueprint.values_life_path.expression_number} - {blueprint.values_life_path.expression_keyword}</span>
+            <div className="flex items-center">
+              {renderLabelWithTooltip("Expression Number", "Based on the letters in your full birth name, represents your talents and abilities")}
+            </div>
+            <span>
+              {blueprint.values_life_path.expression_number} - {blueprint.values_life_path.expression_keyword}
+            </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Soul Urge Number:</span>
-            <span>{blueprint.values_life_path.soul_urge_number} - {blueprint.values_life_path.soul_urge_keyword}</span>
+            <div className="flex items-center">
+              {renderLabelWithTooltip("Soul Urge Number", "Calculated from the vowels in your name, represents your inner desires")}
+            </div>
+            <span>
+              {blueprint.values_life_path.soul_urge_number} - {blueprint.values_life_path.soul_urge_keyword}
+            </span>
           </div>
           {blueprint.values_life_path.personal_year && (
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Personal Year:</span>
+              <div className="flex items-center">
+                {renderLabelWithTooltip("Personal Year", "Indicates the energy and themes you'll experience in the current year")}
+              </div>
               <span>{blueprint.values_life_path.personal_year}</span>
             </div>
           )}
