@@ -58,8 +58,12 @@ export type BlueprintData = {
   archetype_western: {
     sun_sign: string;
     sun_keyword: string;
+    sun_dates?: string; // Add this property
+    sun_element?: string; // Add this property
+    sun_qualities?: string; // Add this property
     moon_sign: string;
     moon_keyword: string;
+    moon_element?: string; // Add this property
     rising_sign: string;
     aspects?: any[]; // New: planetary aspects
     houses?: Record<string, any>; // New: house placements
@@ -70,6 +74,7 @@ export type BlueprintData = {
     yin_yang: string;
     keyword: string;
     element_characteristic?: string; // New: element characteristics
+    personality_profile?: string; // Add this property
     compatibility?: {best: string[], worst: string[]}; // New: compatibility info
   };
   timing_overlays: {
@@ -140,8 +145,12 @@ export const defaultBlueprintData: BlueprintData = {
   archetype_western: {
     sun_sign: "Taurus ♉︎",
     sun_keyword: "Grounded Provider",
+    sun_dates?: "2023-01-01",
+    sun_element?: "Earth",
+    sun_qualities?: "Stable, Reliable",
     moon_sign: "Pisces ♓︎",
     moon_keyword: "Intuitive Empath",
+    moon_element?: "Water",
     rising_sign: "Virgo ♍︎",
     aspects: [
       { planet: "Mercury", sign: "Taurus", aspect: "Conjunction" },
@@ -169,6 +178,7 @@ export const defaultBlueprintData: BlueprintData = {
     yin_yang: "Yang",
     keyword: "Free-spirited Explorer",
     element_characteristic: "Metal is associated with strength, stability, and the ability to withstand challenges.",
+    personality_profile?: "A strong and confident individual with a sense of purpose.",
     compatibility: {
       best: ["Dragon", "Horse", "Snake"],
       worst: ["Monkey", "Rooster", "Dog"]
