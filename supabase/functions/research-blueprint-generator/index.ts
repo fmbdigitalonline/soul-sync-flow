@@ -112,6 +112,9 @@ async function generateResearchBasedBlueprint(birthData) {
   // Parse the generated content into structured blueprint data
   const parsedBlueprint = parseGeneratedContent(generatedContent);
   
+  // Initialize empty sections if they don't exist to avoid validation errors
+  ensureBlueprintStructure(parsedBlueprint);
+  
   // Apply mechanical validation to ensure factual accuracy
   const validatedBlueprint = validateBlueprintData(parsedBlueprint, birthData);
   
@@ -125,6 +128,40 @@ async function generateResearchBasedBlueprint(birthData) {
   };
   
   return validatedBlueprint;
+}
+
+/**
+ * Ensures all required structure exists in the blueprint to prevent validation errors
+ */
+function ensureBlueprintStructure(blueprint) {
+  // Make sure all required sections exist
+  blueprint.user_meta = blueprint.user_meta || {};
+  blueprint.cognition_mbti = blueprint.cognition_mbti || { core_keywords: [] };
+  blueprint.energy_strategy_human_design = blueprint.energy_strategy_human_design || { 
+    gates: {
+      unconscious_design: [],
+      conscious_personality: []
+    }
+  };
+  blueprint.bashar_suite = blueprint.bashar_suite || {
+    belief_interface: {},
+    excitement_compass: {},
+    frequency_alignment: {}
+  };
+  blueprint.values_life_path = blueprint.values_life_path || {};
+  blueprint.archetype_western = blueprint.archetype_western || { aspects: [], houses: {} };
+  blueprint.archetype_chinese = blueprint.archetype_chinese || { compatibility: { best: [], worst: [] } };
+  blueprint.timing_overlays = blueprint.timing_overlays || { current_transits: [], notes: "" };
+  blueprint.goal_stack = blueprint.goal_stack || [];
+  blueprint.task_graph = blueprint.task_graph || {};
+  blueprint.belief_logs = blueprint.belief_logs || [];
+  blueprint.excitement_scores = blueprint.excitement_scores || [];
+  blueprint.vibration_check_ins = blueprint.vibration_check_ins || [];
+  
+  // Ensure we have the required fields for validation
+  if (!blueprint.archetype_western.sun_sign) {
+    blueprint.archetype_western.sun_sign = "";
+  }
 }
 
 /**
@@ -341,6 +378,12 @@ function validateBlueprintData(blueprint, birthData) {
  * Validate Western Astrology data against birth date
  */
 function validateWesternAstrology(blueprint, birthDate) {
+  // Skip validation if western astrology data is missing or incomplete
+  if (!blueprint.archetype_western || !blueprint.archetype_western.sun_sign) {
+    console.log("Western astrology data is incomplete, skipping validation");
+    return;
+  }
+  
   // Parse birth date
   const [year, month, day] = birthDate.split('-').map(Number);
   const birthMonth = month - 1; // JavaScript months are 0-based
@@ -377,8 +420,8 @@ function validateWesternAstrology(blueprint, birthDate) {
   
   if (correctSunSign) {
     // Validate and correct sun sign if needed
-    if (!blueprint.archetype_western.sun_sign || 
-        !blueprint.archetype_western.sun_sign.includes(correctSunSign.name)) {
+    if (!blueprint.archetype_western.sun_sign.includes(correctSunSign.name)) {
+      console.log(`Correcting sun sign from ${blueprint.archetype_western.sun_sign} to ${correctSunSign.name} ${correctSunSign.symbol}`);
       blueprint.archetype_western.sun_sign = `${correctSunSign.name} ${correctSunSign.symbol}`;
       // Set a validation flag
       if (!blueprint._validation) blueprint._validation = {};
@@ -391,6 +434,12 @@ function validateWesternAstrology(blueprint, birthDate) {
  * Validate Chinese Zodiac data against birth year
  */
 function validateChineseZodiac(blueprint, birthDate) {
+  // Skip validation if Chinese zodiac data is missing
+  if (!blueprint.archetype_chinese) {
+    console.log("Chinese zodiac data is missing, skipping validation");
+    return;
+  }
+  
   const birthYear = parseInt(birthDate.split('-')[0]);
   
   // Chinese zodiac animals in order
@@ -410,7 +459,8 @@ function validateChineseZodiac(blueprint, birthDate) {
   const correctElement = elements[elementIndex];
   
   // Validate and correct animal if needed
-  if (blueprint.archetype_chinese.animal !== correctAnimal) {
+  if (!blueprint.archetype_chinese.animal || blueprint.archetype_chinese.animal !== correctAnimal) {
+    console.log(`Setting or correcting Chinese zodiac animal to: ${correctAnimal}`);
     blueprint.archetype_chinese.animal = correctAnimal;
     // Set a validation flag
     if (!blueprint._validation) blueprint._validation = {};
@@ -418,7 +468,8 @@ function validateChineseZodiac(blueprint, birthDate) {
   }
   
   // Validate and correct element if needed
-  if (blueprint.archetype_chinese.element !== correctElement) {
+  if (!blueprint.archetype_chinese.element || blueprint.archetype_chinese.element !== correctElement) {
+    console.log(`Setting or correcting Chinese zodiac element to: ${correctElement}`);
     blueprint.archetype_chinese.element = correctElement;
     // Set a validation flag
     if (!blueprint._validation) blueprint._validation = {};
@@ -430,7 +481,19 @@ function validateChineseZodiac(blueprint, birthDate) {
  * Validate Numerology data against birth date and name
  */
 function validateNumerology(blueprint, birthData) {
+  // Skip validation if numerology data is missing
+  if (!blueprint.values_life_path) {
+    console.log("Numerology data is missing, skipping validation");
+    return;
+  }
+  
   const { date, name } = birthData;
+  
+  if (!date) {
+    console.log("Birth date is missing, skipping numerology validation");
+    return;
+  }
+  
   const [year, month, day] = date.split('-').map(Number);
   
   // Calculate life path number
@@ -456,7 +519,8 @@ function validateNumerology(blueprint, birthData) {
   }
   
   // Validate and correct life path number if needed
-  if (blueprint.values_life_path.life_path_number !== lifePathNumber) {
+  if (!blueprint.values_life_path.life_path_number || blueprint.values_life_path.life_path_number !== lifePathNumber) {
+    console.log(`Setting or correcting life path number to: ${lifePathNumber}`);
     blueprint.values_life_path.life_path_number = lifePathNumber;
     // Set a validation flag
     if (!blueprint._validation) blueprint._validation = {};
