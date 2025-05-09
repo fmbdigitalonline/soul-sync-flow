@@ -12,6 +12,12 @@ const MBTIProfileSection: React.FC<MBTIProfileSectionProps> = ({ mbtiData }) => 
   // Safely check if type exists to avoid "undefined" errors
   const mbtiType = mbtiData?.type || "";
   
+  // Determine personality traits safely even if type is empty
+  const isIntroverted = mbtiType && mbtiType.startsWith('I');
+  const isIntuitive = mbtiType && mbtiType.includes('N');
+  const isFeeling = mbtiType && mbtiType.includes('F');
+  const isJudging = mbtiType && mbtiType.includes('J');
+  
   return (
     <BlueprintSection id="mbti" title="MBTI Profile" defaultExpanded={true}>
       <div className="grid grid-cols-1 gap-2">
@@ -34,10 +40,10 @@ const MBTIProfileSection: React.FC<MBTIProfileSectionProps> = ({ mbtiData }) => 
         <div className="mt-2 text-sm">
           <p className="text-muted-foreground">Your MBTI type indicates you're likely:</p>
           <ul className="list-disc pl-5 mt-1">
-            <li>Drawn to {mbtiType.startsWith('I') ? 'inner reflection' : 'external interaction'}</li>
-            <li>Processing information through {mbtiType.includes('N') ? 'patterns and possibilities' : 'concrete details'}</li>
-            <li>Making decisions based on {mbtiType.includes('F') ? 'personal values and harmony' : 'logical analysis'}</li>
-            <li>{mbtiType.includes('J') ? 'Structured and organized' : 'Flexible and spontaneous'} in approach</li>
+            <li>Drawn to {isIntroverted ? 'inner reflection' : 'external interaction'}</li>
+            <li>Processing information through {isIntuitive ? 'patterns and possibilities' : 'concrete details'}</li>
+            <li>Making decisions based on {isFeeling ? 'personal values and harmony' : 'logical analysis'}</li>
+            <li>{isJudging ? 'Structured and organized' : 'Flexible and spontaneous'} in approach</li>
           </ul>
         </div>
       </div>
