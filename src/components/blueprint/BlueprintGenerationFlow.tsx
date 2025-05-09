@@ -1,20 +1,25 @@
-import React, { useState, useEffect } from "react";
-import { motion } from "@/lib/framer-motion";
-import { SoulOrb } from "@/components/ui/soul-orb";
-import { cn } from "@/lib/utils";
-import { BlueprintData, blueprintService } from "@/services/blueprint-service";
-import { useToast } from "@/hooks/use-toast";
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import blueprintService from '@/services/blueprint-service';
 
-interface BlueprintGeneratorProps {
-  userProfile: BlueprintData['user_meta'];
-  onComplete: (blueprint: BlueprintData) => void;
+interface BlueprintGenerationFlowProps {
+  userMeta: {
+    full_name: string;
+    birth_date: string;
+    birth_time_local?: string;
+    birth_location?: string;
+    mbti?: string;
+  };
+  onComplete?: () => void;
   className?: string;
 }
 
-export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({ 
-  userProfile, 
+export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = ({ 
+  userMeta, 
   onComplete,
   className 
 }) => {
@@ -38,6 +43,10 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [debugMode, setDebugMode] = useState(false);
   const [rawResponse, setRawResponse] = useState<any>(null);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [isError, setIsError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [stage, setStage] = useState('initial');
   const { toast } = useToast();
 
   // Generate random particles for visual effect
@@ -54,97 +63,74 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
 
   // Generate the blueprint using the actual calculation service
   useEffect(() => {
-    const generateBlueprint = async () => {
-      // Only start if we haven't already
-      if (isGenerating || generatedBlueprint) return;
-      
-      setIsGenerating(true);
-      setError(null);
-      setRawResponse(null);
-      
-      try {
-        console.log("Starting blueprint generation with user data:", userProfile);
-        
-        // Step 1: Processing birth data
-        setCurrentStep(0);
-        setProgress(12);
-        await simulateProcessingDelay();
-        
-        // Step 2: Calculating celestial positions
-        setCurrentStep(1);
-        setProgress(25);
-        await simulateProcessingDelay();
-        
-        // Step 3-7: Run the actual generation process
-        setProgress(40);
-        
-        // Call the blueprint service to generate a blueprint
-        const { data: blueprint, error, rawResponse } = await blueprintService.generateBlueprintFromBirthData(
-          userProfile, 
-          debugMode // Pass debug mode flag
-        );
-        
-        if (rawResponse) {
-          setRawResponse(rawResponse);
-        }
-        
-        if (error) {
-          console.error("Blueprint generation error:", error);
-          setError(error);
-          toast({
-            title: "Generation Error",
-            description: "There was an error generating your blueprint. Please try again.",
-            variant: "destructive"
-          });
-          return;
-        }
-        
-        if (!blueprint) {
-          setError("No blueprint data received");
-          toast({
-            title: "Generation Error",
-            description: "No blueprint data was generated. Please try again.",
-            variant: "destructive"
-          });
-          return;
-        }
-        
-        // Progress through the remaining steps visually
-        for (let step = 2; step < steps.length - 1; step++) {
-          setCurrentStep(step);
-          setProgress(40 + (step * 10));
-          await simulateProcessingDelay(500); // slightly faster now that we have data
-        }
-        
-        // Final step: Storing
-        setCurrentStep(steps.length - 1);
-        setProgress(95);
-        await simulateProcessingDelay(500);
-        
-        // Store the generated blueprint
-        setGeneratedBlueprint(blueprint);
-        setProgress(100);
-        
-        // Complete the process and pass blueprint to parent
-        setTimeout(() => {
-          onComplete(blueprint);
-        }, 1000);
-      } catch (err) {
-        console.error("Unexpected error during blueprint generation:", err);
-        setError(err instanceof Error ? err.message : String(err));
-        toast({
-          title: "Generation Error",
-          description: "An unexpected error occurred. Please try again later.",
-          variant: "destructive"
-        });
-      } finally {
-        setIsGenerating(false);
-      }
-    };
+    let mounted = true;
     
-    // Start the generation process
-    generateBlueprint();
-  }, [userProfile, onComplete, toast, debugMode]);
+    if (isGenerating) {
+      const generateBlueprint = async () => {
+        try {
+          setStage('preparing');
+          setProgress(10);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          // Update user meta with preferred name if not provided
+          const updatedUserMeta = {
+            ...userMeta,
+            preferred_name: userMeta.preferred_name || userMeta.full_name.split(' ')[0],
+          };
+          
+          // Generate blueprint
+          setStage('generating');
+          setProgress(30);
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          
+          // Use the generate function instead of calculate
+          const blueprint = await blueprintService.generateBlueprintFromBirthData(updatedUserMeta);
+          
+          if (!mounted) return;
+          
+          setProgress(70);
+          setStage('saving');
+          
+          // Save blueprint to database
+          await blueprintService.saveBlueprintToDatabase(blueprint);
+          
+          if (!mounted) return;
+          
+          // Complete the generation process
+          setProgress(100);
+          setStage('complete');
+          setIsSuccess(true);
+          
+          // Call onComplete callback if provided
+          if (onComplete) {
+            setTimeout(() => {
+              if (mounted) {
+                onComplete();
+              }
+            }, 2000);
+          }
+        } catch (error) {
+          console.error('Error generating blueprint:', error);
+          if (mounted) {
+            setIsError(true);
+            setErrorMessage('Failed to generate blueprint. Please try again.');
+            setStage('error');
+            toast({
+              variant: "destructive",
+              title: "Blueprint Generation Failed",
+              description: "There was an error generating your blueprint. Please try again."
+            });
+          }
+        }
+      };
+      
+      generateBlueprint();
+    }
+    
+    return () => {
+      mounted = false;
+    };
+  }, [isGenerating, userMeta, onComplete, toast]);
 
   // Helper function to simulate processing delay
   const simulateProcessingDelay = (ms = 1200) => {

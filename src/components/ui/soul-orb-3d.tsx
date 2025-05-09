@@ -28,7 +28,7 @@ const SoulOrb3D: React.FC<SoulOrbProps> = ({
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [videoError, setVideoError] = useState(false);
   
-  // Fix the type for THREE.Line objects with proper type assertion
+  // Fix the type for THREE.Line objects with proper THREE.Line type
   const ring1Ref = useRef<THREE.Line>(null);
   const ring2Ref = useRef<THREE.Line>(null);
   const ring3Ref = useRef<THREE.Line>(null);
@@ -61,7 +61,7 @@ const SoulOrb3D: React.FC<SoulOrbProps> = ({
     return new THREE.BufferGeometry().setFromPoints(curve.getPoints(50));
   }, [size]);
   
-  // Star shape geometry for the center - new addition to match the provided image
+  // Star shape geometry for the center
   const starGeometry = useMemo(() => {
     const geo = new THREE.BufferGeometry();
     
