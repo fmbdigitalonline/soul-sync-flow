@@ -252,14 +252,7 @@ const Blueprint = () => {
 
           <TabsContent value="generating" className="mt-6">
             <BlueprintGenerator 
-              userProfile={blueprint?.user_meta || {
-                full_name: "",
-                preferred_name: "",
-                birth_date: "",
-                birth_time_local: "",
-                birth_location: "",
-                timezone: ""
-              }}
+              userProfile={blueprint?.user_meta}
               onComplete={handleGenerationComplete}
             />
           </TabsContent>

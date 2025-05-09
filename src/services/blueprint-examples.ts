@@ -33,15 +33,15 @@ export const exampleFeurionBlueprint: BlueprintData = {
     not_self_theme: "Bitterness",
     life_purpose: "Guide others; share wisdom through lived experience",
     centers: {
-      root: false,
-      sacral: false,
-      spleen: true,
-      solar_plexus: false,
-      heart: false,
-      throat: false,
-      ajna: false,
-      head: false,
-      g: false,
+      root: { defined: false, description: "Undefined root center" },
+      sacral: { defined: false, description: "Undefined sacral center" },
+      spleen: { defined: true, description: "Defined spleen center" },
+      solar_plexus: { defined: false, description: "Undefined solar plexus center" },
+      heart: { defined: false, description: "Undefined heart center" },
+      throat: { defined: false, description: "Undefined throat center" },
+      ajna: { defined: false, description: "Undefined ajna center" },
+      head: { defined: false, description: "Undefined head center" },
+      g: { defined: false, description: "Undefined g center" }
     },
     gates: {
       unconscious_design: [
@@ -132,14 +132,17 @@ export const exampleFeurionBlueprint: BlueprintData = {
 };
 
 // Add more example blueprints as needed
-export const blueprintExamples = {
-  feurion: exampleFeurionBlueprint,
-  // Add more examples as needed
-};
+export const sampleBlueprints: BlueprintData[] = [exampleFeurionBlueprint];
 
 // Function to load an example blueprint
 export const loadExampleBlueprint = (name: keyof typeof blueprintExamples) => {
   return blueprintExamples[name];
+};
+
+// Blueprint examples object
+export const blueprintExamples = {
+  feurion: exampleFeurionBlueprint,
+  // Add more examples as needed
 };
 
 // Function to import a blueprint from JSON

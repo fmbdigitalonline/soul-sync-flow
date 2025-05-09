@@ -13,6 +13,7 @@ export interface UserMetaData {
   birth_time_local?: string;
   birth_location?: string;
   profile_image_url?: string;
+  timezone?: string;
 }
 
 export interface CognitionMBTI {
@@ -138,6 +139,13 @@ export interface BlueprintData {
   archetype_western: WesternAstrology;
   archetype_chinese: ChineseAstrology;
   values_life_path: LifePathNumerology;
+  bashar_suite?: any;
+  timing_overlays?: any;
+  goal_stack?: any[];
+  task_graph?: any;
+  belief_logs?: any[];
+  excitement_scores?: any[];
+  vibration_check_ins?: any[];
 }
 
 // Helper function to create an empty blueprint
@@ -355,8 +363,9 @@ export const getActiveBlueprintData = async (): Promise<{
     
     // Extract raw response if available
     let rawResponse = null;
-    if (data.blueprint && typeof data.blueprint === 'object') {
-      const meta = data.blueprint._meta;
+    const blueprint = data.blueprint;
+    if (blueprint && typeof blueprint === 'object' && '_meta' in blueprint) {
+      const meta = blueprint._meta;
       if (meta && meta.raw_response) {
         try {
           rawResponse = typeof meta.raw_response === 'string' ? 
@@ -368,7 +377,7 @@ export const getActiveBlueprintData = async (): Promise<{
     }
 
     return { 
-      data: data.blueprint as BlueprintData, 
+      data: blueprint as BlueprintData, 
       error: null,
       rawResponse
     };
@@ -436,4 +445,16 @@ export const saveBlueprintData = async (blueprint: BlueprintData): Promise<{
       error: `Failed to save blueprint: ${error instanceof Error ? error.message : String(error)}` 
     };
   }
+};
+
+// Export the blueprint service object with all functions
+export const blueprintService = {
+  calculateBlueprint,
+  createEmptyBlueprint,
+  getActiveBlueprintData,
+  getBlueprintById,
+  getLatestBlueprint,
+  getUserBlueprints,
+  saveBlueprintData,
+  saveBlueprintToDatabase
 };

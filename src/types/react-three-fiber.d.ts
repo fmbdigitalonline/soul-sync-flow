@@ -17,6 +17,9 @@ declare global {
       primitive: ReactThreeFiber.Object3DNode<THREE.Object3D, typeof THREE.Object3D>;
       pointLight: ReactThreeFiber.Object3DNode<THREE.PointLight, typeof THREE.PointLight>;
       color: ReactThreeFiber.Node<THREE.Color, typeof THREE.Color>;
+      line: ReactThreeFiber.Object3DNode<THREE.Line, typeof THREE.Line>;
+      bufferGeometry: ReactThreeFiber.BufferGeometryNode<THREE.BufferGeometry, typeof THREE.BufferGeometry>;
+      lineBasicMaterial: ReactThreeFiber.MaterialNode<THREE.LineBasicMaterial, typeof THREE.LineBasicMaterial>;
     }
   }
 }

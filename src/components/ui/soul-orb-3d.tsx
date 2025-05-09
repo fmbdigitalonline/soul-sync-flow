@@ -209,17 +209,17 @@ const SoulOrb3D: React.FC<SoulOrbProps> = ({
       </mesh>
       
       {/* Orbital rings - properly typed for THREE.Line */}
-      <line ref={ring1Ref as React.RefObject<THREE.Line>}>
+      <line ref={ring1Ref}>
         <bufferGeometry attach="geometry" {...curve1} />
         <lineBasicMaterial attach="material" color="#FFFFFF" transparent opacity={0.8} />
       </line>
       
-      <line ref={ring2Ref as React.RefObject<THREE.Line>}>
+      <line ref={ring2Ref}>
         <bufferGeometry attach="geometry" {...curve2} />
         <lineBasicMaterial attach="material" color="#FFFFFF" transparent opacity={0.8} />
       </line>
       
-      <line ref={ring3Ref as React.RefObject<THREE.Line>}>
+      <line ref={ring3Ref}>
         <bufferGeometry attach="geometry" {...curve3} />
         <lineBasicMaterial attach="material" color="#FFFFFF" transparent opacity={0.8} />
       </line>
