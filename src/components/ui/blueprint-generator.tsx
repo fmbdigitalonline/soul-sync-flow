@@ -23,6 +23,7 @@ const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
   const [isCompleted, setIsCompleted] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [statusMessage, setStatusMessage] = useState('Preparing Soul Blueprint...');
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   // Generate random particles
@@ -37,36 +38,65 @@ const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
     setParticles(newParticles);
   }, []);
 
-  // Handle the completion and blueprint saving
+  // Handle the completion and blueprint generation using the research-based service
   const handleCompletion = async () => {
     if (isSaving || isCompleted) return; // Prevent multiple executions
     
     setIsSaving(true);
-    console.log("Saving blueprint data to database...");
+    console.log("Starting the research-based blueprint generation process...");
     
     try {
-      // Create blueprint data from form inputs or use default
-      const blueprintData = {
-        ...defaultBlueprintData,
-        user_meta: {
-          ...defaultBlueprintData.user_meta,
-          full_name: formData?.name || defaultBlueprintData.user_meta.full_name,
-          preferred_name: formData?.name?.split(' ')[0] || defaultBlueprintData.user_meta.preferred_name,
-          birth_date: formData?.birthDate || defaultBlueprintData.user_meta.birth_date,
-          birth_time_local: formData?.birthTime || defaultBlueprintData.user_meta.birth_time_local,
-          birth_location: formData?.birthLocation || defaultBlueprintData.user_meta.birth_location,
-        },
-        cognition_mbti: {
-          ...defaultBlueprintData.cognition_mbti,
-          type: formData?.personality || defaultBlueprintData.cognition_mbti.type,
-        }
+      // Create user profile from form data
+      const userProfile = {
+        full_name: formData?.name || "Anonymous User",
+        preferred_name: formData?.name?.split(' ')[0] || "User",
+        birth_date: formData?.birthDate || "",
+        birth_time_local: formData?.birthTime || "",
+        birth_location: formData?.birthLocation || "",
+        timezone: "auto" // Auto-detect timezone if not provided
       };
       
-      // Save blueprint to database
-      const result = await blueprintService.saveBlueprintData(blueprintData);
+      // Log the data being sent to the research-based generator
+      console.log("Sending data to research-based generator:", userProfile);
       
-      if (!result.success) {
-        console.error("Error saving blueprint:", result.error);
+      // Use the research-based blueprint generation service
+      const { data: generatedBlueprint, error: generationError } = await blueprintService.generateBlueprintFromBirthData(userProfile);
+      
+      if (generationError) {
+        console.error("Blueprint generation error:", generationError);
+        setError(generationError);
+        toast({
+          title: "Generation Error",
+          description: "There was an error generating your blueprint. Using default data instead.",
+          variant: "destructive"
+        });
+        
+        // Fall back to default blueprint data if generation fails
+        await saveFallbackBlueprint(userProfile);
+        return;
+      }
+      
+      if (!generatedBlueprint) {
+        console.error("No blueprint data received");
+        setError("No blueprint data was generated");
+        toast({
+          title: "Generation Warning",
+          description: "Could not generate a complete blueprint. Using default data instead.",
+          variant: "destructive"
+        });
+        
+        // Fall back to default blueprint data
+        await saveFallbackBlueprint(userProfile);
+        return;
+      }
+      
+      console.log("Research-based blueprint generated successfully");
+      
+      // Save the research-generated blueprint to database
+      const saveResult = await blueprintService.saveBlueprintData(generatedBlueprint);
+      
+      if (!saveResult.success) {
+        console.error("Error saving blueprint:", saveResult.error);
         toast({
           title: "Error",
           description: "Failed to save your blueprint. Please try again.",
@@ -84,14 +114,58 @@ const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
       }, 1000);
       
     } catch (error) {
-      console.error("Error during blueprint generation:", error);
+      console.error("Unexpected error during blueprint generation:", error);
       toast({
         title: "Error",
         description: "Something went wrong during blueprint generation",
         variant: "destructive"
       });
+      
+      // Try to fall back to default data
+      await saveFallbackBlueprint();
     } finally {
       setIsSaving(false);
+    }
+  };
+  
+  // Helper function to save a fallback blueprint when research generation fails
+  const saveFallbackBlueprint = async (userProfile?: any) => {
+    try {
+      console.log("Falling back to default blueprint data");
+      
+      // Create blueprint data from form inputs or use default
+      const blueprintData = {
+        ...defaultBlueprintData,
+        user_meta: {
+          ...defaultBlueprintData.user_meta,
+          full_name: userProfile?.full_name || formData?.name || defaultBlueprintData.user_meta.full_name,
+          preferred_name: userProfile?.preferred_name || formData?.name?.split(' ')[0] || defaultBlueprintData.user_meta.preferred_name,
+          birth_date: userProfile?.birth_date || formData?.birthDate || defaultBlueprintData.user_meta.birth_date,
+          birth_time_local: userProfile?.birth_time_local || formData?.birthTime || defaultBlueprintData.user_meta.birth_time_local,
+          birth_location: userProfile?.birth_location || formData?.birthLocation || defaultBlueprintData.user_meta.birth_location,
+        },
+        cognition_mbti: {
+          ...defaultBlueprintData.cognition_mbti,
+          type: formData?.personality || defaultBlueprintData.cognition_mbti.type,
+        }
+      };
+      
+      // Save fallback blueprint to database
+      const result = await blueprintService.saveBlueprintData(blueprintData);
+      
+      if (!result.success) {
+        console.error("Error saving fallback blueprint:", result.error);
+        return;
+      }
+      
+      setIsCompleted(true);
+      
+      // Use a short timeout to ensure UI is updated before redirecting
+      setTimeout(() => {
+        onComplete();
+      }, 1000);
+    } catch (fallbackError) {
+      console.error("Error saving fallback blueprint:", fallbackError);
     }
   };
 
@@ -102,18 +176,27 @@ const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
     if (progress < 100 && !isCompleted && !isSaving) {
       interval = setInterval(() => {
         setProgress(prev => {
-          // Slower advancement to account for longer processing time with research-based approach
-          const increment = Math.random() * 2 + 0.5;
+          // Adjust speed based on stage to account for API call time
+          let increment = 0.5; // Default slow progression
+          
+          if (stage === 'preparing') {
+            increment = 0.8; // Faster at the beginning
+          } else if (stage === 'assembling') {
+            increment = 0.3; // Slower during "research" phase (when API is likely being called)
+          } else if (stage === 'finalizing') {
+            increment = 1.0; // Faster at the end
+          }
+          
           const newProgress = Math.min(prev + increment, 100);
           
           // Update stages based on progress
-          if (newProgress > 20 && stage === 'preparing') {
+          if (newProgress > 15 && stage === 'preparing') {
             setStage('assembling');
             setStatusMessage('Researching Cosmic Patterns...');
           } else if (newProgress > 60 && stage === 'assembling') {
             setStage('finalizing');
             setStatusMessage('Generating Soul Blueprint Insights...');
-          } else if (newProgress === 100 && stage === 'finalizing') {
+          } else if (newProgress >= 98 && stage === 'finalizing') {
             setStage('complete');
             setStatusMessage('Soul Blueprint Complete!');
             // Call the completion handler when reaching 100%
@@ -233,6 +316,15 @@ const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
           />
         ))}
       </div>
+      
+      {/* Error message if there is one */}
+      {error && (
+        <div className="absolute top-4 left-0 right-0 mx-auto text-center">
+          <div className="inline-block bg-red-500/80 text-white text-xs px-2 py-1 rounded">
+            {error.length > 50 ? error.substring(0, 50) + '...' : error}
+          </div>
+        </div>
+      )}
       
       {/* Status text */}
       <div className="absolute bottom-6 left-0 right-0 text-center text-white">
