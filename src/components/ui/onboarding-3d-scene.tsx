@@ -3,6 +3,7 @@ import React, { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment } from '@react-three/drei';
 import { SoulOrb3D } from './soul-orb-3d';
+import * as THREE from 'three';
 
 interface Onboarding3DSceneProps {
   speaking?: boolean;
@@ -41,8 +42,8 @@ const Onboarding3DScene: React.FC<Onboarding3DSceneProps> = ({
             size={orbSize}
           />
           
-          {/* Dark background color */}
-          <color attach="background" args={['#0a0a1a']} />
+          {/* Dark background color - fixed to use proper THREE.Color */}
+          <color attach="background" args={[new THREE.Color("#0a0a1a")]} />
           
           {/* Orbit controls - more restricted when in input mode */}
           <OrbitControls 
