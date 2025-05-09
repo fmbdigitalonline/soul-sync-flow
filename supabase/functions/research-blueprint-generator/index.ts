@@ -37,7 +37,7 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true, 
         data: blueprint,
-        rawResponse: debugMode ? rawResponse : undefined // Only include raw response in debug mode
+        rawResponse: rawResponse // Include raw response for all requests
       }),
       { 
         headers: { 
@@ -124,18 +124,19 @@ async function generateResearchBasedBlueprint(birthData, debugMode = false) {
     // Apply mechanical validation to ensure factual accuracy
     const validatedBlueprint = validateBlueprintData(completeBlueprint, birthData);
     
-    // Add metadata for internal use
+    // Add metadata for internal use and store the raw response
     validatedBlueprint._meta = {
       generation_method: "enhanced-research-based",
       model_version: "gpt-4o",
       generation_date: new Date().toISOString(),
       birth_data: birthData,
-      schema_version: "2.0"
+      schema_version: "2.0",
+      raw_response: generatedContent // Store raw response in the blueprint metadata
     };
     
     return { 
       blueprint: validatedBlueprint,
-      rawResponse: debugMode ? data : undefined // Include raw OpenAI response if debug mode is enabled
+      rawResponse: data // Include raw OpenAI response
     };
   } catch (error) {
     console.error("Error during blueprint generation:", error);
@@ -152,7 +153,7 @@ async function generateResearchBasedBlueprint(birthData, debugMode = false) {
     };
     
     console.log("Using fallback blueprint due to error");
-    return { blueprint: fallbackBlueprint };
+    return { blueprint: fallbackBlueprint, rawResponse: null };
   }
 }
 
@@ -218,9 +219,9 @@ Your response MUST be a JSON object with EXACTLY this structure (with all fields
       "spleen": true/false,
       "solar_plexus": true/false,
       "heart": true/false,
-      "throat": true/false,
-      "ajna": true/false,
-      "head": true/false,
+      "throat": false,
+      "ajna": false,
+      "head": false,
       "g": true/false
     },
     "gates": {

@@ -1,7 +1,15 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export type BlueprintData = {
-  _meta: any;
+  _meta: {
+    generation_method: string;
+    model_version: string;
+    generation_date: string;
+    birth_data: any;
+    schema_version: string;
+    raw_response?: string; // Add raw response field to metadata
+  };
   user_meta: {
     full_name: string;
     preferred_name: string;
@@ -222,7 +230,7 @@ export const defaultBlueprintData: BlueprintData = {
 };
 
 export const blueprintService = {
-  async getActiveBlueprintData(): Promise<{ data: BlueprintData | null; error: string | null }> {
+  async getActiveBlueprintData(): Promise<{ data: BlueprintData | null; error: string | null; rawResponse?: any }> {
     try {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData?.user) {
@@ -245,7 +253,11 @@ export const blueprintService = {
         return { data: null, error: "No active blueprint found" };
       }
 
-      return { data: data as BlueprintData, error: null };
+      return { 
+        data: data.blueprint as BlueprintData, 
+        error: null,
+        rawResponse: data.blueprint._meta?.raw_response || null  // Return raw response if available
+      };
     } catch (error) {
       console.error("Error in getActiveBlueprintData:", error);
       return { data: null, error: error instanceof Error ? error.message : String(error) };
@@ -276,7 +288,10 @@ export const blueprintService = {
         // Update existing blueprint
         const { error: updateError } = await supabase
           .from("user_blueprints")
-          .update({ ...blueprintData, updated_at: new Date().toISOString() })
+          .update({ 
+            blueprint: blueprintData, 
+            updated_at: new Date().toISOString() 
+          })
           .eq("user_id", userData.user.id)
           .eq("is_active", true);
 
@@ -286,13 +301,13 @@ export const blueprintService = {
         }
       } else {
         // Create new blueprint
-        const { error: insertError } = await supabase.from("user_blueprints").insert([
-          {
-            ...blueprintData,
+        const { error: insertError } = await supabase
+          .from("user_blueprints")
+          .insert([{
             user_id: userData.user.id,
             is_active: true,
-          },
-        ]);
+            blueprint: blueprintData
+          }]);
 
         if (insertError) {
           console.error("Error creating blueprint:", insertError);
@@ -326,7 +341,7 @@ export const blueprintService = {
         {
           body: { 
             birthData,
-            debugMode // Pass debug mode flag
+            debugMode: true  // Always request raw response
           }
         }
       );
@@ -336,7 +351,7 @@ export const blueprintService = {
         return { 
           data: null, 
           error: `Generation error: ${error.message || error}`,
-          rawResponse: debugMode ? data?.rawResponse : undefined 
+          rawResponse: data?.rawResponse 
         };
       }
 
@@ -345,15 +360,23 @@ export const blueprintService = {
         return { 
           data: null, 
           error: data?.error || "Invalid response from generator",
-          rawResponse: debugMode ? data?.rawResponse : undefined
+          rawResponse: data?.rawResponse
         };
+      }
+
+      // Ensure the raw response is stored in the blueprint's metadata
+      if (data.rawResponse && data.data) {
+        if (!data.data._meta) {
+          data.data._meta = {};
+        }
+        data.data._meta.raw_response = data.rawResponse;
       }
 
       console.log("Blueprint successfully generated");
       return { 
         data: data.data as BlueprintData, 
         error: null,
-        rawResponse: debugMode ? data?.rawResponse : undefined
+        rawResponse: data.rawResponse 
       };
     } catch (error) {
       console.error("Error generating blueprint:", error);

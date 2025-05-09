@@ -5,13 +5,14 @@ import MainLayout from "@/components/Layout/MainLayout";
 import BlueprintViewer from "@/components/blueprint/BlueprintViewer";
 import BlueprintEditor from "@/components/blueprint/BlueprintEditor";
 import { Button } from "@/components/ui/button";
-import { Loader2, MessageCircle, RefreshCw } from "lucide-react";
+import { Loader2, MessageCircle, RefreshCw, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { BlueprintData, blueprintService } from "@/services/blueprint-service";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { BlueprintGenerator } from "@/components/blueprint/BlueprintGenerationFlow";
 import { useAuth } from "@/contexts/AuthContext";
+import { BlueprintRawDataViewer } from "@/components/ui/blueprint-raw-data-viewer";
 
 const Blueprint = () => {
   const [activeTab, setActiveTab] = useState("view");
@@ -19,6 +20,8 @@ const Blueprint = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isNewUser, setIsNewUser] = useState(false);
+  const [rawResponse, setRawResponse] = useState<any>(null);
+  const [showRawData, setShowRawData] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -28,7 +31,7 @@ const Blueprint = () => {
     const checkUserBlueprints = async () => {
       if (user) {
         setIsLoading(true);
-        const { data, error } = await blueprintService.getActiveBlueprintData();
+        const { data, error, rawResponse } = await blueprintService.getActiveBlueprintData();
         
         if (error) {
           toast({
@@ -50,6 +53,7 @@ const Blueprint = () => {
         }
         
         setBlueprint(data);
+        setRawResponse(rawResponse || data?._meta?.raw_response);
         setIsLoading(false);
       }
     };
@@ -60,6 +64,11 @@ const Blueprint = () => {
   }, [user, navigate, toast]);
 
   const handleSaveBlueprint = async (updatedBlueprint: BlueprintData) => {
+    // Preserve raw response in metadata if it exists
+    if (rawResponse && updatedBlueprint && updatedBlueprint._meta) {
+      updatedBlueprint._meta.raw_response = rawResponse;
+    }
+    
     const result = await blueprintService.saveBlueprintData(updatedBlueprint);
     if (result.success) {
       toast({
@@ -91,12 +100,24 @@ const Blueprint = () => {
     }
   };
 
-  const handleGenerationComplete = async (newBlueprint: BlueprintData) => {
+  const handleGenerationComplete = async (newBlueprint: BlueprintData, generatedRawResponse?: any) => {
     try {
+      // Store raw response in blueprint metadata
+      if (generatedRawResponse && newBlueprint) {
+        if (!newBlueprint._meta) {
+          newBlueprint._meta = {} as any;
+        }
+        newBlueprint._meta.raw_response = 
+          typeof generatedRawResponse === 'string' 
+            ? generatedRawResponse 
+            : JSON.stringify(generatedRawResponse);
+      }
+      
       const result = await blueprintService.saveBlueprintData(newBlueprint);
       
       if (result.success) {
         setBlueprint(newBlueprint);
+        setRawResponse(generatedRawResponse);
         toast({
           title: "Blueprint generated",
           description: "Your Soul Blueprint has been successfully regenerated and saved",
@@ -170,6 +191,23 @@ const Blueprint = () => {
             <Button 
               variant="outline"
               className="flex items-center"
+              onClick={() => setShowRawData(!showRawData)}
+            >
+              {showRawData ? (
+                <>
+                  <EyeOff className="mr-2 h-4 w-4" />
+                  Hide Raw Data
+                </>
+              ) : (
+                <>
+                  <Eye className="mr-2 h-4 w-4" />
+                  Show Raw Data
+                </>
+              )}
+            </Button>
+            <Button 
+              variant="outline"
+              className="flex items-center"
               onClick={handleRegenerateBlueprint}
               disabled={isGenerating}
             >
@@ -185,6 +223,15 @@ const Blueprint = () => {
             </Button>
           </div>
         </div>
+
+        {showRawData && (
+          <div className="mb-6">
+            <BlueprintRawDataViewer 
+              rawData={rawResponse || blueprint?._meta?.raw_response} 
+              className="w-full"
+            />
+          </div>
+        )}
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
           <TabsList className="grid grid-cols-3 w-[600px] mx-auto">

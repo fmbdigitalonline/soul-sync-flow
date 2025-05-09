@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { motion } from "@/lib/framer-motion";
 import { SoulOrb } from "./soul-orb";
@@ -7,7 +6,7 @@ import { blueprintService, defaultBlueprintData } from "@/services/blueprint-ser
 import { useToast } from "@/hooks/use-toast";
 
 interface BlueprintGeneratorProps {
-  onComplete: () => void;
+  onComplete: (blueprint: any, rawResponse?: any) => void;
   formData?: any;
   className?: string;
 }
@@ -59,8 +58,9 @@ const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
       // Log the data being sent to the research-based generator
       console.log("Sending data to research-based generator:", userProfile);
       
-      // Use the research-based blueprint generation service
-      const { data: generatedBlueprint, error: generationError } = await blueprintService.generateBlueprintFromBirthData(userProfile);
+      // Always enable debug mode to get raw responses
+      const { data: generatedBlueprint, error: generationError, rawResponse } = 
+        await blueprintService.generateBlueprintFromBirthData(userProfile, true);
       
       if (generationError) {
         console.error("Blueprint generation error:", generationError);
@@ -97,17 +97,10 @@ const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
         generatedBlueprint.cognition_mbti.type = formData.personality;
       }
       
-      // Save the research-generated blueprint to database
-      const saveResult = await blueprintService.saveBlueprintData(generatedBlueprint);
-      
-      if (!saveResult.success) {
-        console.error("Error saving blueprint:", saveResult.error);
-        toast({
-          title: "Error",
-          description: "Failed to save your blueprint. Please try again.",
-          variant: "destructive"
-        });
-        return;
+      // Store raw response in blueprint metadata
+      if (rawResponse && !generatedBlueprint._meta.raw_response) {
+        generatedBlueprint._meta.raw_response = 
+          typeof rawResponse === 'string' ? rawResponse : JSON.stringify(rawResponse);
       }
       
       console.log("Blueprint saved successfully, proceeding with completion");
@@ -115,7 +108,7 @@ const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
       
       // Use a short timeout to ensure UI is updated before redirecting
       setTimeout(() => {
-        onComplete();
+        onComplete(generatedBlueprint, rawResponse);
       }, 1000);
       
     } catch (error: any) {
@@ -155,19 +148,11 @@ const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
         }
       };
       
-      // Save fallback blueprint to database
-      const result = await blueprintService.saveBlueprintData(blueprintData);
-      
-      if (!result.success) {
-        console.error("Error saving fallback blueprint:", result.error);
-        return;
-      }
-      
       setIsCompleted(true);
       
       // Use a short timeout to ensure UI is updated before redirecting
       setTimeout(() => {
-        onComplete();
+        onComplete(blueprintData);
       }, 1000);
     } catch (fallbackError) {
       console.error("Error saving fallback blueprint:", fallbackError);
