@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -266,7 +265,6 @@ const Blueprint = () => {
                     
                     <BlueprintRawDataViewer 
                       rawData={blueprint} 
-                      data={blueprint} 
                       rawResponse={blueprint?._meta?.raw_response}
                     />
                   </div>

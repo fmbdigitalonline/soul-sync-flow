@@ -10,7 +10,7 @@ import AstrologySection from "./sections/AstrologySection";
 import ChineseZodiacSection from "./sections/ChineseZodiacSection";
 import NumerologySection from "./sections/NumerologySection";
 
-interface BlueprintViewerProps {
+export interface BlueprintViewerProps {
   data?: BlueprintData; // Changed from blueprint to data to match usage
   blueprint?: BlueprintData; // Added for backward compatibility
   className?: string;
