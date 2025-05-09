@@ -92,6 +92,11 @@ const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
       
       console.log("Research-based blueprint generated successfully");
       
+      // Add MBTI type from form data if provided and blueprint doesn't have it
+      if (formData?.personality && (!generatedBlueprint.cognition_mbti.type || generatedBlueprint.cognition_mbti.type === "")) {
+        generatedBlueprint.cognition_mbti.type = formData.personality;
+      }
+      
       // Save the research-generated blueprint to database
       const saveResult = await blueprintService.saveBlueprintData(generatedBlueprint);
       
@@ -113,7 +118,7 @@ const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
         onComplete();
       }, 1000);
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Unexpected error during blueprint generation:", error);
       toast({
         title: "Error",

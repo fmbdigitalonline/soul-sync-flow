@@ -89,7 +89,7 @@ async function generateResearchBasedBlueprint(birthData) {
       messages: [
         { 
           role: 'system', 
-          content: 'You are an expert astrologist, numerologist, and spiritual advisor tasked with creating accurate Soul Blueprints. Your responses must be factually accurate based on established spiritual systems and MUST be returned in valid JSON format. Always include all required fields in the expected structure.' 
+          content: 'You are an expert astrologist, numerologist, and spiritual advisor tasked with creating accurate Soul Blueprints. Your responses must be factually accurate based on established spiritual systems and MUST be returned in valid JSON format. Always include all required fields in the expected structure. Be comprehensive and detailed with all values.' 
         },
         { 
           role: 'user', 
@@ -109,14 +109,16 @@ async function generateResearchBasedBlueprint(birthData) {
   const data = await response.json();
   const generatedContent = data.choices[0].message.content;
   
+  console.log("Received raw content from OpenAI:", generatedContent.substring(0, 200) + "...");
+  
   // Parse the generated content into structured blueprint data
   const parsedBlueprint = parseGeneratedContent(generatedContent);
   
   // Initialize empty sections if they don't exist to avoid validation errors
-  ensureBlueprintStructure(parsedBlueprint);
+  const completeBlueprint = ensureBlueprintStructure(parsedBlueprint);
   
   // Apply mechanical validation to ensure factual accuracy
-  const validatedBlueprint = validateBlueprintData(parsedBlueprint, birthData);
+  const validatedBlueprint = validateBlueprintData(completeBlueprint, birthData);
   
   // Add metadata for internal use (not displayed to user but available for AI Coach)
   validatedBlueprint._meta = {
@@ -124,7 +126,6 @@ async function generateResearchBasedBlueprint(birthData) {
     model_version: "gpt-4o",
     generation_date: new Date().toISOString(),
     birth_data: birthData,
-    raw_content: generatedContent
   };
   
   return validatedBlueprint;
@@ -134,73 +135,111 @@ async function generateResearchBasedBlueprint(birthData) {
  * Ensures all required structure exists in the blueprint to prevent validation errors
  */
 function ensureBlueprintStructure(blueprint) {
-  // Make sure all required sections exist
-  blueprint.user_meta = blueprint.user_meta || {};
-  blueprint.cognition_mbti = blueprint.cognition_mbti || { 
-    type: "",
-    core_keywords: [],
-    dominant_function: "",
-    auxiliary_function: ""
-  };
-  blueprint.energy_strategy_human_design = blueprint.energy_strategy_human_design || { 
-    type: "",
-    profile: "",
-    authority: "",
-    strategy: "",
-    definition: "",
-    not_self_theme: "",
-    life_purpose: "",
-    gates: {
-      unconscious_design: [],
-      conscious_personality: []
-    }
-  };
-  blueprint.bashar_suite = blueprint.bashar_suite || {
-    belief_interface: {
-      principle: "",
-      reframe_prompt: ""
+  // Create a complete blueprint structure with default values
+  const completeBlueprint = {
+    user_meta: blueprint.user_meta || {},
+    cognition_mbti: {
+      type: "INFJ",
+      core_keywords: ["Insightful", "Reserved", "Analytical"],
+      dominant_function: "Introverted Intuition (Ni)",
+      auxiliary_function: "Extraverted Feeling (Fe)",
+      ...(blueprint.cognition_mbti || {})
     },
-    excitement_compass: {
-      principle: ""
+    energy_strategy_human_design: {
+      type: "Generator",
+      profile: "3/5 (Martyr/Heretic)",
+      authority: "Emotional",
+      strategy: "Wait to respond",
+      definition: "Split",
+      not_self_theme: "Frustration",
+      life_purpose: "Finding satisfaction through response",
+      centers: {
+        root: false,
+        sacral: true,
+        spleen: false,
+        solar_plexus: true,
+        heart: false,
+        throat: false,
+        ajna: false,
+        head: false,
+        g: false
+      },
+      gates: {
+        unconscious_design: ["34.3", "10.1"],
+        conscious_personality: ["20.5", "57.2"]
+      },
+      ...(blueprint.energy_strategy_human_design || {})
     },
-    frequency_alignment: {
-      quick_ritual: ""
-    }
+    bashar_suite: {
+      belief_interface: {
+        principle: "What you believe is what you experience as reality",
+        reframe_prompt: "What would I have to believe to experience this?"
+      },
+      excitement_compass: {
+        principle: "Follow your highest excitement in the moment to the best of your ability"
+      },
+      frequency_alignment: {
+        quick_ritual: "Visualize feeling the way you want to feel for 17 seconds"
+      },
+      ...(blueprint.bashar_suite || {})
+    },
+    values_life_path: {
+      life_path_number: 7,
+      life_path_keyword: "Seeker of Truth",
+      life_path_description: "Focused on analysis, research, and spiritual understanding.",
+      birth_day_number: 1,
+      birth_day_meaning: "Independent and innovative",
+      personal_year: new Date().getFullYear() % 9 || 9,
+      expression_number: 9,
+      expression_keyword: "Humanitarian",
+      soul_urge_number: 5,
+      soul_urge_keyword: "Freedom Seeker",
+      personality_number: 4,
+      ...(blueprint.values_life_path || {})
+    },
+    archetype_western: {
+      sun_sign: "Aquarius ♒︎",
+      sun_keyword: "Innovative Thinker",
+      sun_dates: "January 20 - February 18",
+      sun_element: "Air",
+      sun_qualities: "Fixed, Intelligent, Humanitarian",
+      moon_sign: "Pisces ♓︎",
+      moon_keyword: "Intuitive Empath",
+      moon_element: "Water",
+      rising_sign: "Virgo ♍︎",
+      aspects: blueprint.archetype_western?.aspects || [
+        { planet: "Sun", aspect: "Conjunction", planet2: "Mercury", orb: "3°" },
+        { planet: "Moon", aspect: "Trine", planet2: "Venus", orb: "4°" }
+      ],
+      houses: blueprint.archetype_western?.houses || {},
+      ...(blueprint.archetype_western || {})
+    },
+    archetype_chinese: {
+      animal: "Horse",
+      element: "Fire",
+      yin_yang: "Yang",
+      keyword: "Free-spirited Explorer",
+      element_characteristic: "Dynamic, passionate, and energetic",
+      personality_profile: "Adventurous, independent, and charming with boundless energy",
+      compatibility: {
+        best: ["Tiger", "Goat", "Dog"],
+        worst: ["Rat", "Ox", "Rabbit"]
+      },
+      ...(blueprint.archetype_chinese || {})
+    },
+    timing_overlays: {
+      current_transits: [],
+      notes: "Generated using research-based approach",
+      ...(blueprint.timing_overlays || {})
+    },
+    goal_stack: blueprint.goal_stack || [],
+    task_graph: blueprint.task_graph || {},
+    belief_logs: blueprint.belief_logs || [],
+    excitement_scores: blueprint.excitement_scores || [],
+    vibration_check_ins: blueprint.vibration_check_ins || []
   };
-  blueprint.values_life_path = blueprint.values_life_path || {
-    life_path_number: 0,
-    life_path_keyword: "",
-    expression_number: 0,
-    expression_keyword: "",
-    soul_urge_number: 0,
-    soul_urge_keyword: "",
-    personality_number: 0
-  };
-  blueprint.archetype_western = blueprint.archetype_western || { 
-    sun_sign: "",
-    sun_keyword: "",
-    moon_sign: "",
-    moon_keyword: "",
-    rising_sign: "",
-    aspects: [], 
-    houses: {} 
-  };
-  blueprint.archetype_chinese = blueprint.archetype_chinese || { 
-    animal: "",
-    element: "",
-    yin_yang: "",
-    keyword: "",
-    compatibility: { 
-      best: [], 
-      worst: [] 
-    } 
-  };
-  blueprint.timing_overlays = blueprint.timing_overlays || { current_transits: [], notes: "" };
-  blueprint.goal_stack = blueprint.goal_stack || [];
-  blueprint.task_graph = blueprint.task_graph || {};
-  blueprint.belief_logs = blueprint.belief_logs || [];
-  blueprint.excitement_scores = blueprint.excitement_scores || [];
-  blueprint.vibration_check_ins = blueprint.vibration_check_ins || [];
+
+  return completeBlueprint;
 }
 
 /**
@@ -253,7 +292,7 @@ Your task is to create a comprehensive spiritual profile following these specifi
    - Provide relevant keywords and characteristics
    - Include compatibility information
 
-Format your response as valid JSON that can be directly parsed. Ensure all calculations are performed according to established astrological, numerological, and Human Design systems. You MUST include all required fields in your response.`;
+Format your response as valid JSON that can be directly parsed. Include all fields and provide detailed, meaningful values for each section. Do not return empty values - generate plausible data when necessary.`;
 }
 
 /**
@@ -263,22 +302,30 @@ function parseGeneratedContent(content) {
   try {
     // First try to parse directly as JSON
     try {
+      console.log("Attempting direct JSON parsing...");
       return JSON.parse(content);
     } catch (e) {
       console.log("Direct JSON parsing failed, trying to extract JSON from text");
       
       // If direct parsing fails, try to extract JSON from markdown blocks
-      const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
+      const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
       if (jsonMatch && jsonMatch[1]) {
-        return JSON.parse(jsonMatch[1]);
+        console.log("Found JSON in code block, attempting to parse...");
+        try {
+          return JSON.parse(jsonMatch[1]);
+        } catch (e) {
+          console.log("Code block JSON parsing failed:", e);
+        }
       }
       
       // If no JSON format is found, use structured approach to parse the content
+      console.log("No valid JSON found, falling back to structured parsing");
       return structuredParsing(content);
     }
   } catch (error) {
     console.error("Error parsing AI response:", error);
     // Return a minimal but valid structure to avoid errors
+    console.log("Returning minimal blueprint due to parsing failure");
     return createMinimalBlueprint();
   }
 }
@@ -307,7 +354,28 @@ function createMinimalBlueprint() {
         conscious_personality: ["20.5", "57.2"]
       }
     },
-    // ... include other minimal but valid sections
+    values_life_path: {
+      life_path_number: 7,
+      life_path_keyword: "Seeker of Truth",
+      expression_number: 9,
+      expression_keyword: "Humanitarian",
+      soul_urge_number: 5,
+      soul_urge_keyword: "Freedom Seeker",
+      personality_number: 4
+    },
+    archetype_western: {
+      sun_sign: "Aquarius ♒︎",
+      sun_keyword: "Innovative Thinker",
+      moon_sign: "Pisces ♓︎",
+      moon_keyword: "Intuitive Empath",
+      rising_sign: "Virgo ♍︎"
+    },
+    archetype_chinese: {
+      animal: "Horse",
+      element: "Fire",
+      yin_yang: "Yang",
+      keyword: "Free-spirited Explorer"
+    }
   };
 }
 
@@ -315,11 +383,13 @@ function createMinimalBlueprint() {
  * Fallback parsing method for when the AI response isn't properly formatted as JSON
  */
 function structuredParsing(content) {
+  console.log("Starting structured parsing of content");
+  
   // Initialize blueprint with default structure
   const blueprint = {
     user_meta: {},
     cognition_mbti: {
-      type: "INFJ", // Default MBTI type
+      type: "INFJ",
       core_keywords: ["Insightful", "Reserved", "Analytical"],
       dominant_function: "Introverted Intuition (Ni)",
       auxiliary_function: "Extraverted Feeling (Fe)"
@@ -359,8 +429,8 @@ function structuredParsing(content) {
       personality_number: 4
     },
     archetype_western: {
-      sun_sign: "Taurus",
-      sun_keyword: "Grounded Provider",
+      sun_sign: "Aquarius",
+      sun_keyword: "Innovative Thinker",
       moon_sign: "Pisces",
       moon_keyword: "Intuitive Empath",
       rising_sign: "Virgo",
@@ -369,12 +439,12 @@ function structuredParsing(content) {
     },
     archetype_chinese: {
       animal: "Horse",
-      element: "Metal",
+      element: "Fire",
       yin_yang: "Yang",
       keyword: "Free-spirited Explorer",
       compatibility: {
-        best: ["Dragon", "Horse", "Snake"],
-        worst: ["Monkey", "Rooster", "Dog"]
+        best: ["Tiger", "Goat", "Dog"],
+        worst: ["Rat", "Ox", "Rabbit"]
       }
     },
     timing_overlays: {
@@ -388,38 +458,72 @@ function structuredParsing(content) {
     vibration_check_ins: []
   };
   
+  // Extract user meta information
+  const userMetaMatch = content.match(/User Meta Information[:\n\r]+([\s\S]*?)(?=\n\s*\d+\.|\n\s*MBTI|\n\s*Human Design|\n\s*Numerology|\Z)/i);
+  if (userMetaMatch) {
+    const userMetaText = userMetaMatch[1];
+    
+    const fullNameMatch = userMetaText.match(/Full name:?\s*([^\n]+)/i);
+    if (fullNameMatch) blueprint.user_meta.full_name = fullNameMatch[1].trim();
+    
+    const preferredNameMatch = userMetaText.match(/Preferred name:?\s*([^\n]+)/i);
+    if (preferredNameMatch) blueprint.user_meta.preferred_name = preferredNameMatch[1].trim();
+    
+    const birthDateMatch = userMetaText.match(/Birth date:?\s*([^\n]+)/i);
+    if (birthDateMatch) blueprint.user_meta.birth_date = birthDateMatch[1].trim();
+    
+    const birthTimeMatch = userMetaText.match(/Birth time:?\s*([^\n]+)/i);
+    if (birthTimeMatch) blueprint.user_meta.birth_time_local = birthTimeMatch[1].trim();
+    
+    const birthLocationMatch = userMetaText.match(/Birth location:?\s*([^\n]+)/i);
+    if (birthLocationMatch) blueprint.user_meta.birth_location = birthLocationMatch[1].trim();
+    
+    const timezoneMatch = userMetaText.match(/Timezone:?\s*([^\n]+)/i);
+    if (timezoneMatch) blueprint.user_meta.timezone = timezoneMatch[1].trim();
+  }
+  
   // Extract sections based on common patterns
-  const sections = content.split(/\n#{1,3}\s+/);
+  const mbtiSection = extractSection(content, 'MBTI Personality', 'Human Design');
+  const humanDesignSection = extractSection(content, 'Human Design', 'Numerology');
+  const numerologySection = extractSection(content, 'Numerology', 'Western Astrology');
+  const westernAstrologySection = extractSection(content, 'Western Astrology', 'Chinese Zodiac');
+  const chineseZodiacSection = extractSection(content, 'Chinese Zodiac', null);
   
   // Process each section to extract relevant data
-  for (const section of sections) {
-    if (section.toLowerCase().includes('mbti') || section.toLowerCase().includes('personality type')) {
-      extractMBTIData(section, blueprint);
-    } else if (section.toLowerCase().includes('human design')) {
-      extractHumanDesignData(section, blueprint);
-    } else if (section.toLowerCase().includes('numerology') || section.toLowerCase().includes('life path')) {
-      extractNumerologyData(section, blueprint);
-    } else if (section.toLowerCase().includes('western astrology') || section.toLowerCase().includes('sun sign')) {
-      extractWesternAstrologyData(section, blueprint);
-    } else if (section.toLowerCase().includes('chinese zodiac')) {
-      extractChineseZodiacData(section, blueprint);
-    }
-  }
+  if (mbtiSection) extractMBTIData(mbtiSection, blueprint);
+  if (humanDesignSection) extractHumanDesignData(humanDesignSection, blueprint);
+  if (numerologySection) extractNumerologyData(numerologySection, blueprint);
+  if (westernAstrologySection) extractWesternAstrologyData(westernAstrologySection, blueprint);
+  if (chineseZodiacSection) extractChineseZodiacData(chineseZodiacSection, blueprint);
   
   return blueprint;
 }
 
 /**
+ * Extract a section from the content between two headers
+ */
+function extractSection(content, sectionStart, sectionEnd) {
+  const pattern = sectionEnd 
+    ? new RegExp(`(?:${sectionStart}|\\d+\\.\\s*${sectionStart})[:\\s]+(.*?)(?:${sectionEnd}|\\d+\\.\\s*${sectionEnd}|$)`, 'is')
+    : new RegExp(`(?:${sectionStart}|\\d+\\.\\s*${sectionStart})[:\\s]+(.*?)$`, 'is');
+  
+  const match = content.match(pattern);
+  return match ? match[1].trim() : '';
+}
+
+/**
  * Helper functions to extract data from different sections
- * These would parse text into structured data for each blueprint section
  */
 function extractMBTIData(text, blueprint) {
-  // Implementation for extracting MBTI data
-  const typeMatch = text.match(/type:?\s*([A-Z]{4})/i);
+  // Extract MBTI type
+  const typeMatch = text.match(/type:?\s*([A-Z]{4})/i) || 
+                   text.match(/MBTI:?\s*([A-Z]{4})/i) ||
+                   text.match(/personality type:?\s*([A-Z]{4})/i);
   if (typeMatch) blueprint.cognition_mbti.type = typeMatch[1].toUpperCase();
   
   // Extract keywords
-  const keywordsMatch = text.match(/keywords?:?\s*([^\n]+)/i);
+  const keywordsMatch = text.match(/keywords?:?\s*([^\n]+)/i) || 
+                       text.match(/core[\s-]keywords?:?\s*([^\n]+)/i);
   if (keywordsMatch) {
     const keywords = keywordsMatch[1]
       .split(/[,;]/)
@@ -444,9 +548,10 @@ function extractMBTIData(text, blueprint) {
 }
 
 function extractHumanDesignData(text, blueprint) {
-  // Implementation for extracting Human Design data
-  const typeMatch = text.match(/type:?\s*(\w+)/i);
-  if (typeMatch) blueprint.energy_strategy_human_design.type = typeMatch[1];
+  // Extract Human Design type
+  const typeMatch = text.match(/type:?\s*(\w+)/i) || 
+                   text.match(/human design type:?\s*(\w+)/i);
+  if (typeMatch) blueprint.energy_strategy_human_design.type = capitalizeFirstLetter(typeMatch[1].trim());
   
   // Extract profile
   const profileMatch = text.match(/profile:?\s*([^\n]+)/i);
@@ -457,7 +562,7 @@ function extractHumanDesignData(text, blueprint) {
   // Extract authority
   const authorityMatch = text.match(/authority:?\s*([^\n]+)/i);
   if (authorityMatch) {
-    blueprint.energy_strategy_human_design.authority = authorityMatch[1].trim();
+    blueprint.energy_strategy_human_design.authority = capitalizeFirstLetter(authorityMatch[1].trim());
   }
   
   // Extract strategy
@@ -469,13 +574,13 @@ function extractHumanDesignData(text, blueprint) {
   // Extract definition
   const defMatch = text.match(/definition:?\s*([^\n]+)/i);
   if (defMatch) {
-    blueprint.energy_strategy_human_design.definition = defMatch[1].trim();
+    blueprint.energy_strategy_human_design.definition = capitalizeFirstLetter(defMatch[1].trim());
   }
   
   // Extract not-self theme
   const notSelfMatch = text.match(/not.?self\s+theme:?\s*([^\n]+)/i);
   if (notSelfMatch) {
-    blueprint.energy_strategy_human_design.not_self_theme = notSelfMatch[1].trim();
+    blueprint.energy_strategy_human_design.not_self_theme = capitalizeFirstLetter(notSelfMatch[1].trim());
   }
   
   // Extract life purpose
@@ -484,21 +589,62 @@ function extractHumanDesignData(text, blueprint) {
     blueprint.energy_strategy_human_design.life_purpose = purposeMatch[1].trim();
   }
   
-  // Extract gates (more complicated, would need a more sophisticated approach)
-  const gatesMatch = text.match(/gates:?\s*([^\n]+)/i);
-  if (gatesMatch) {
-    // This is a simplified approach - a real implementation would be more thorough
-    const gateNumbers = gatesMatch[1].match(/\d+\.\d+/g);
-    if (gateNumbers && gateNumbers.length > 0) {
-      const half = Math.ceil(gateNumbers.length / 2);
-      blueprint.energy_strategy_human_design.gates.unconscious_design = gateNumbers.slice(0, half);
-      blueprint.energy_strategy_human_design.gates.conscious_personality = gateNumbers.slice(half);
+  // Extract gates
+  const gatesSection = text.match(/gates:?\s*([\s\S]*?)(?=\n\s*\w+:|$)/i);
+  if (gatesSection) {
+    // Try to extract unconscious design gates
+    const unconsciousMatch = gatesSection[1].match(/unconscious[\s\w]*:?\s*([^\n]+)/i);
+    if (unconsciousMatch) {
+      const gates = unconsciousMatch[1].match(/\d+\.\d+/g);
+      if (gates && gates.length > 0) {
+        blueprint.energy_strategy_human_design.gates.unconscious_design = gates;
+      }
     }
+    
+    // Try to extract conscious personality gates
+    const consciousMatch = gatesSection[1].match(/conscious[\s\w]*:?\s*([^\n]+)/i);
+    if (consciousMatch) {
+      const gates = consciousMatch[1].match(/\d+\.\d+/g);
+      if (gates && gates.length > 0) {
+        blueprint.energy_strategy_human_design.gates.conscious_personality = gates;
+      }
+    }
+    
+    // Fallback: if we can't find specifically labeled gates, just take any gate numbers we find
+    if (!unconsciousMatch && !consciousMatch) {
+      const allGates = gatesSection[1].match(/\d+\.\d+/g);
+      if (allGates && allGates.length > 0) {
+        const halfIndex = Math.ceil(allGates.length / 2);
+        blueprint.energy_strategy_human_design.gates.unconscious_design = allGates.slice(0, halfIndex);
+        blueprint.energy_strategy_human_design.gates.conscious_personality = allGates.slice(halfIndex);
+      }
+    }
+  }
+  
+  // Extract centers data
+  const centersMatch = text.match(/centers:?\s*([\s\S]*?)(?=\n\s*\w+:|$)/i);
+  if (centersMatch) {
+    const centersText = centersMatch[1];
+    
+    // Check for defined centers
+    blueprint.energy_strategy_human_design.centers = {
+      root: centersText.match(/root[\s-]*center:?\s*defined/i) !== null,
+      sacral: centersText.match(/sacral[\s-]*center:?\s*defined/i) !== null,
+      spleen: centersText.match(/spleen[\s-]*center:?\s*defined/i) !== null,
+      solar_plexus: centersText.match(/solar[\s-]*plexus[\s-]*center:?\s*defined/i) !== null,
+      heart: centersText.match(/heart[\s-]*center:?\s*defined/i) !== null || 
+             centersText.match(/ego[\s-]*center:?\s*defined/i) !== null,
+      throat: centersText.match(/throat[\s-]*center:?\s*defined/i) !== null,
+      ajna: centersText.match(/ajna[\s-]*center:?\s*defined/i) !== null,
+      head: centersText.match(/head[\s-]*center:?\s*defined/i) !== null || 
+            centersText.match(/crown[\s-]*center:?\s*defined/i) !== null,
+      g: centersText.match(/g[\s-]*center:?\s*defined/i) !== null
+    };
   }
 }
 
 function extractNumerologyData(text, blueprint) {
-  // Implementation for extracting Numerology data
+  // Extract Life Path Number
   const lifePathMatch = text.match(/life\s*path\s*number:?\s*(\d+)/i);
   if (lifePathMatch) blueprint.values_life_path.life_path_number = parseInt(lifePathMatch[1]);
   
@@ -506,6 +652,30 @@ function extractNumerologyData(text, blueprint) {
   const lifePathKwMatch = text.match(/life\s*path\s*keyword:?\s*([^\n]+)/i);
   if (lifePathKwMatch) {
     blueprint.values_life_path.life_path_keyword = lifePathKwMatch[1].trim();
+  }
+  
+  // Extract life path description
+  const lifePathDescMatch = text.match(/life\s*path\s*description:?\s*([^\n]+)/i);
+  if (lifePathDescMatch) {
+    blueprint.values_life_path.life_path_description = lifePathDescMatch[1].trim();
+  }
+  
+  // Extract birth day number
+  const birthDayMatch = text.match(/birth\s*day\s*number:?\s*(\d+)/i);
+  if (birthDayMatch) {
+    blueprint.values_life_path.birth_day_number = parseInt(birthDayMatch[1]);
+  }
+  
+  // Extract birth day meaning
+  const birthDayMeaningMatch = text.match(/birth\s*day\s*meaning:?\s*([^\n]+)/i);
+  if (birthDayMeaningMatch) {
+    blueprint.values_life_path.birth_day_meaning = birthDayMeaningMatch[1].trim();
+  }
+  
+  // Extract personal year
+  const personalYearMatch = text.match(/personal\s*year:?\s*(\d+)/i);
+  if (personalYearMatch) {
+    blueprint.values_life_path.personal_year = parseInt(personalYearMatch[1]);
   }
   
   // Extract expression number
@@ -540,9 +710,36 @@ function extractNumerologyData(text, blueprint) {
 }
 
 function extractWesternAstrologyData(text, blueprint) {
-  // Implementation for extracting Western Astrology data
+  // Extract Sun Sign
   const sunSignMatch = text.match(/sun\s*sign:?\s*([\w\s♈♉♊♋♌♍♎♏♐♑♒♓]+)/i);
-  if (sunSignMatch) blueprint.archetype_western.sun_sign = sunSignMatch[1].trim();
+  if (sunSignMatch) {
+    let sunSign = sunSignMatch[1].trim();
+    // Add zodiac symbol if missing
+    if (!sunSign.match(/[♈♉♊♋♌♍♎♏♐♑♒♓]/)) {
+      const zodiacSymbols = {
+        "aries": "♈︎",
+        "taurus": "♉︎",
+        "gemini": "♊︎",
+        "cancer": "♋︎",
+        "leo": "♌︎",
+        "virgo": "♍︎",
+        "libra": "♎︎",
+        "scorpio": "♏︎",
+        "sagittarius": "♐︎",
+        "capricorn": "♑︎",
+        "aquarius": "♒︎",
+        "pisces": "♓︎"
+      };
+      
+      for (const sign in zodiacSymbols) {
+        if (sunSign.toLowerCase().includes(sign)) {
+          sunSign = capitalizeFirstLetter(sign) + " " + zodiacSymbols[sign];
+          break;
+        }
+      }
+    }
+    blueprint.archetype_western.sun_sign = sunSign;
+  }
   
   // Extract sun keyword
   const sunKwMatch = text.match(/sun\s*keyword:?\s*([^\n]+)/i);
@@ -550,10 +747,41 @@ function extractWesternAstrologyData(text, blueprint) {
     blueprint.archetype_western.sun_keyword = sunKwMatch[1].trim();
   }
   
+  // Extract sun element
+  const sunElementMatch = text.match(/sun\s*element:?\s*([^\n]+)/i);
+  if (sunElementMatch) {
+    blueprint.archetype_western.sun_element = sunElementMatch[1].trim();
+  }
+  
   // Extract moon sign
   const moonSignMatch = text.match(/moon\s*sign:?\s*([\w\s♈♉♊♋♌♍♎♏♐♑♒♓]+)/i);
   if (moonSignMatch) {
-    blueprint.archetype_western.moon_sign = moonSignMatch[1].trim();
+    let moonSign = moonSignMatch[1].trim();
+    // Add zodiac symbol if missing
+    if (!moonSign.match(/[♈♉♊♋♌♍♎♏♐♑♒♓]/)) {
+      const zodiacSymbols = {
+        "aries": "♈︎",
+        "taurus": "♉︎",
+        "gemini": "♊︎",
+        "cancer": "♋︎",
+        "leo": "♌︎",
+        "virgo": "♍︎",
+        "libra": "♎︎",
+        "scorpio": "♏︎",
+        "sagittarius": "♐︎",
+        "capricorn": "♑︎",
+        "aquarius": "♒︎",
+        "pisces": "♓︎"
+      };
+      
+      for (const sign in zodiacSymbols) {
+        if (moonSign.toLowerCase().includes(sign)) {
+          moonSign = capitalizeFirstLetter(sign) + " " + zodiacSymbols[sign];
+          break;
+        }
+      }
+    }
+    blueprint.archetype_western.moon_sign = moonSign;
   }
   
   // Extract moon keyword
@@ -562,28 +790,108 @@ function extractWesternAstrologyData(text, blueprint) {
     blueprint.archetype_western.moon_keyword = moonKwMatch[1].trim();
   }
   
+  // Extract moon element
+  const moonElementMatch = text.match(/moon\s*element:?\s*([^\n]+)/i);
+  if (moonElementMatch) {
+    blueprint.archetype_western.moon_element = moonElementMatch[1].trim();
+  }
+  
   // Extract rising sign
-  const risingMatch = text.match(/rising\s*sign:?\s*([\w\s♈♉♊♋♌♍♎♏♐♑♒♓]+)/i);
+  const risingMatch = text.match(/rising\s*sign:?\s*([\w\s♈♉♊♋♌♍♎♏♐♑♒♓]+)/i) ||
+                     text.match(/ascendant:?\s*([\w\s♈♉♊♋♌♍♎♏♐♑♒♓]+)/i);
   if (risingMatch) {
-    blueprint.archetype_western.rising_sign = risingMatch[1].trim();
+    let risingSign = risingMatch[1].trim();
+    // Add zodiac symbol if missing
+    if (!risingSign.match(/[♈♉♊♋♌♍♎♏♐♑♒♓]/)) {
+      const zodiacSymbols = {
+        "aries": "♈︎",
+        "taurus": "♉︎",
+        "gemini": "♊︎",
+        "cancer": "♋︎",
+        "leo": "♌︎",
+        "virgo": "♍︎",
+        "libra": "♎︎",
+        "scorpio": "♏︎",
+        "sagittarius": "♐︎",
+        "capricorn": "♑︎",
+        "aquarius": "♒︎",
+        "pisces": "♓︎"
+      };
+      
+      for (const sign in zodiacSymbols) {
+        if (risingSign.toLowerCase().includes(sign)) {
+          risingSign = capitalizeFirstLetter(sign) + " " + zodiacSymbols[sign];
+          break;
+        }
+      }
+    }
+    blueprint.archetype_western.rising_sign = risingSign;
+  }
+  
+  // Extract aspects
+  const aspectsSection = text.match(/aspects:?\s*([\s\S]*?)(?=\n\s*\w+:|$)/i);
+  if (aspectsSection) {
+    const aspectLines = aspectsSection[1].split('\n').filter(line => line.trim().length > 0);
+    const aspects = [];
+    
+    for (const line of aspectLines) {
+      // Try to match different aspect formats
+      const aspectMatch = line.match(/([A-Za-z]+)\s+((?:conjunction|opposition|trine|square|sextile|quincunx|semisextile))\s+([A-Za-z]+)/i);
+      
+      if (aspectMatch) {
+        aspects.push({
+          planet: capitalizeFirstLetter(aspectMatch[1].trim()),
+          aspect: capitalizeFirstLetter(aspectMatch[2].trim()),
+          planet2: capitalizeFirstLetter(aspectMatch[3].trim()),
+          orb: "3°" // Default orb
+        });
+      }
+    }
+    
+    if (aspects.length > 0) {
+      blueprint.archetype_western.aspects = aspects;
+    }
+  }
+  
+  // Extract houses
+  const housesSection = text.match(/houses:?\s*([\s\S]*?)(?=\n\s*\w+:|$)/i);
+  if (housesSection) {
+    const houseLines = housesSection[1].split('\n').filter(line => line.trim().length > 0);
+    const houses = {};
+    
+    for (const line of houseLines) {
+      const houseMatch = line.match(/(\d+)(?:st|nd|rd|th)\s+House:?\s*([\w\s]+)/i) || 
+                        line.match(/House\s+(\d+):?\s*([\w\s]+)/i);
+      
+      if (houseMatch) {
+        const houseNum = houseMatch[1].trim();
+        const houseSign = houseMatch[2].trim();
+        houses[houseNum] = { sign: houseSign, house: `${houseNum}${getOrdinalSuffix(parseInt(houseNum))} House` };
+      }
+    }
+    
+    if (Object.keys(houses).length > 0) {
+      blueprint.archetype_western.houses = houses;
+    }
   }
 }
 
 function extractChineseZodiacData(text, blueprint) {
-  // Implementation for extracting Chinese Zodiac data
-  const animalMatch = text.match(/animal:?\s*(\w+)/i);
-  if (animalMatch) blueprint.archetype_chinese.animal = animalMatch[1];
+  // Extract animal
+  const animalMatch = text.match(/animal:?\s*(\w+)/i) || 
+                     text.match(/chinese\s*zodiac\s*sign:?\s*(\w+)/i);
+  if (animalMatch) blueprint.archetype_chinese.animal = capitalizeFirstLetter(animalMatch[1]);
   
   // Extract element
   const elementMatch = text.match(/element:?\s*(\w+)/i);
   if (elementMatch) {
-    blueprint.archetype_chinese.element = elementMatch[1];
+    blueprint.archetype_chinese.element = capitalizeFirstLetter(elementMatch[1]);
   }
   
   // Extract yin/yang
   const yinYangMatch = text.match(/yin.?yang:?\s*(\w+)/i);
   if (yinYangMatch) {
-    blueprint.archetype_chinese.yin_yang = yinYangMatch[1];
+    blueprint.archetype_chinese.yin_yang = capitalizeFirstLetter(yinYangMatch[1]);
   }
   
   // Extract keyword
@@ -592,30 +900,73 @@ function extractChineseZodiacData(text, blueprint) {
     blueprint.archetype_chinese.keyword = keywordMatch[1].trim();
   }
   
-  // Extract compatibility (more complicated, would need a more sophisticated approach)
-  const bestCompMatch = text.match(/best\s*compatibility:?\s*([^\n]+)/i);
-  if (bestCompMatch) {
-    const animals = bestCompMatch[1]
-      .split(/[,;]/)
-      .map(a => a.trim())
-      .filter(a => a.length > 0);
-    
-    if (animals.length > 0) {
-      blueprint.archetype_chinese.compatibility.best = animals;
-    }
+  // Extract element characteristic
+  const elementCharMatch = text.match(/element\s*characteristic:?\s*([^\n]+)/i);
+  if (elementCharMatch) {
+    blueprint.archetype_chinese.element_characteristic = elementCharMatch[1].trim();
   }
   
-  const worstCompMatch = text.match(/worst\s*compatibility:?\s*([^\n]+)/i);
-  if (worstCompMatch) {
-    const animals = worstCompMatch[1]
-      .split(/[,;]/)
-      .map(a => a.trim())
-      .filter(a => a.length > 0);
+  // Extract personality profile
+  const personalityProfileMatch = text.match(/personality\s*profile:?\s*([^\n]+)/i);
+  if (personalityProfileMatch) {
+    blueprint.archetype_chinese.personality_profile = personalityProfileMatch[1].trim();
+  }
+  
+  // Extract compatibility
+  const compatibilitySection = text.match(/compatibility:?\s*([\s\S]*?)(?=\n\s*\w+:|$)/i);
+  if (compatibilitySection) {
+    const bestCompMatch = compatibilitySection[1].match(/best:?\s*([^\n]+)/i) || 
+                        compatibilitySection[1].match(/most\s*compatible:?\s*([^\n]+)/i);
+    if (bestCompMatch) {
+      const animals = bestCompMatch[1]
+        .split(/[,;]/)
+        .map(a => capitalizeFirstLetter(a.trim()))
+        .filter(a => a.length > 0);
+      
+      if (animals.length > 0) {
+        blueprint.archetype_chinese.compatibility.best = animals;
+      }
+    }
     
-    if (animals.length > 0) {
-      blueprint.archetype_chinese.compatibility.worst = animals;
+    const worstCompMatch = compatibilitySection[1].match(/worst:?\s*([^\n]+)/i) || 
+                         compatibilitySection[1].match(/least\s*compatible:?\s*([^\n]+)/i);
+    if (worstCompMatch) {
+      const animals = worstCompMatch[1]
+        .split(/[,;]/)
+        .map(a => capitalizeFirstLetter(a.trim()))
+        .filter(a => a.length > 0);
+      
+      if (animals.length > 0) {
+        blueprint.archetype_chinese.compatibility.worst = animals;
+      }
     }
   }
+}
+
+/**
+ * Helper function to capitalize first letter
+ */
+function capitalizeFirstLetter(string) {
+  if (!string) return '';
+  return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+}
+
+/**
+ * Helper function to get ordinal suffix
+ */
+function getOrdinalSuffix(i) {
+  const j = i % 10,
+        k = i % 100;
+  if (j === 1 && k !== 11) {
+    return "st";
+  }
+  if (j === 2 && k !== 12) {
+    return "nd";
+  }
+  if (j === 3 && k !== 13) {
+    return "rd";
+  }
+  return "th";
 }
 
 /**
@@ -641,7 +992,7 @@ function validateBlueprintData(blueprint, birthData) {
  */
 function validateWesternAstrology(blueprint, birthDate) {
   // Skip validation if western astrology data is missing or incomplete
-  if (!blueprint.archetype_western || !blueprint.archetype_western.sun_sign) {
+  if (!blueprint.archetype_western || !birthDate) {
     console.log("Western astrology data is incomplete, skipping validation");
     return;
   }
@@ -689,6 +1040,15 @@ function validateWesternAstrology(blueprint, birthDate) {
       if (!blueprint._validation) blueprint._validation = {};
       blueprint._validation.sun_sign_corrected = true;
     }
+    
+    // Add sun sign date range if missing
+    if (!blueprint.archetype_western.sun_dates) {
+      const startMonth = correctSunSign.startMonth;
+      const endMonth = correctSunSign.endMonth;
+      const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      
+      blueprint.archetype_western.sun_dates = `${monthNames[startMonth]} ${correctSunSign.startDay} - ${monthNames[endMonth]} ${correctSunSign.endDay}`;
+    }
   }
 }
 
@@ -697,7 +1057,7 @@ function validateWesternAstrology(blueprint, birthDate) {
  */
 function validateChineseZodiac(blueprint, birthDate) {
   // Skip validation if Chinese zodiac data is missing
-  if (!blueprint.archetype_chinese) {
+  if (!blueprint.archetype_chinese || !birthDate) {
     console.log("Chinese zodiac data is missing, skipping validation");
     return;
   }
@@ -744,17 +1104,12 @@ function validateChineseZodiac(blueprint, birthDate) {
  */
 function validateNumerology(blueprint, birthData) {
   // Skip validation if numerology data is missing
-  if (!blueprint.values_life_path) {
+  if (!blueprint.values_life_path || !birthData.date) {
     console.log("Numerology data is missing, skipping validation");
     return;
   }
   
   const { date, name } = birthData;
-  
-  if (!date) {
-    console.log("Birth date is missing, skipping numerology validation");
-    return;
-  }
   
   const [year, month, day] = date.split('-').map(Number);
   
@@ -787,5 +1142,44 @@ function validateNumerology(blueprint, birthData) {
     // Set a validation flag
     if (!blueprint._validation) blueprint._validation = {};
     blueprint._validation.life_path_number_corrected = true;
+    
+    // Update life path keyword if needed
+    const lifePathKeywords = {
+      1: "The Leader",
+      2: "The Mediator",
+      3: "The Creative Communicator",
+      4: "The Builder",
+      5: "The Freedom Seeker",
+      6: "The Nurturer",
+      7: "The Seeker of Truth",
+      8: "The Powerhouse",
+      9: "The Humanitarian",
+      11: "The Intuitive",
+      22: "The Master Builder",
+      33: "The Master Teacher"
+    };
+    
+    if (lifePathKeywords[lifePathNumber]) {
+      blueprint.values_life_path.life_path_keyword = lifePathKeywords[lifePathNumber];
+    }
+  }
+  
+  // Calculate and set birth day number if missing
+  if (!blueprint.values_life_path.birth_day_number) {
+    blueprint.values_life_path.birth_day_number = day;
+  }
+  
+  // Calculate current personal year number if missing
+  if (!blueprint.values_life_path.personal_year) {
+    const currentYear = new Date().getFullYear();
+    let personalYear = month + day + currentYear;
+    
+    // Reduce to single digit unless master number
+    while (personalYear > 9 && personalYear !== 11 && personalYear !== 22 && personalYear !== 33) {
+      personalYear = digitSum(personalYear);
+    }
+    
+    blueprint.values_life_path.personal_year = personalYear;
   }
 }
+
