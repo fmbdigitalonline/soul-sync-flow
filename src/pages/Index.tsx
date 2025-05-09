@@ -1,3 +1,4 @@
+
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { SoulOrbAvatar } from "@/components/ui/avatar";
@@ -6,7 +7,7 @@ import { ArrowRight, LogIn } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Index = () => {
-  const { user } = useAuth();
+  const { user, isNewUser } = useAuth();
   
   return (
     <MainLayout hideNav>
@@ -27,12 +28,21 @@ const Index = () => {
           <div className="flex flex-col md:flex-row justify-center gap-4">
             {user ? (
               <>
-                <Link to="/blueprint">
-                  <Button size="lg" className="bg-soul-purple hover:bg-soul-purple/90">
-                    View Your Soul Blueprint
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
+                {isNewUser ? (
+                  <Link to="/onboarding">
+                    <Button size="lg" className="bg-soul-purple hover:bg-soul-purple/90">
+                      Start Onboarding
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </Link>
+                ) : (
+                  <Link to="/blueprint">
+                    <Button size="lg" className="bg-soul-purple hover:bg-soul-purple/90">
+                      View Your Soul Blueprint
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </Link>
+                )}
                 
                 <Link to="/coach">
                   <Button size="lg" variant="outline">
