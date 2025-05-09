@@ -173,7 +173,7 @@ const SoulOrb3D: React.FC<SoulOrbProps> = ({
   // Orb color as a THREE.Color object
   const orbColor = getOrbColor();
   
-  // Create LineSegments instances outside the return statement to fix type issues
+  // Create LineSegments instances with their materials
   const lineSegments1 = useMemo(() => {
     return new THREE.LineSegments(
       curve1,
@@ -227,11 +227,36 @@ const SoulOrb3D: React.FC<SoulOrbProps> = ({
         />
       </mesh>
       
-      {/* Orbital rings - using manual object creation instead of JSX for lineSegments */}
+      {/* Custom solution for the orbital rings to fix TypeScript errors */}
+      {/* Instead of using primitive with lineSegments objects, create them directly */}
       <group>
-        <primitive object={lineSegments1} ref={ring1Ref} />
-        <primitive object={lineSegments2} ref={ring2Ref} />
-        <primitive object={lineSegments3} ref={ring3Ref} />
+        <object3D ref={ring1Ref}>
+          {React.createElement(
+            'lineSegments',
+            {
+              geometry: curve1,
+              material: new THREE.LineBasicMaterial({ color: "#FFFFFF", transparent: true, opacity: 0.8 })
+            }
+          )}
+        </object3D>
+        <object3D ref={ring2Ref}>
+          {React.createElement(
+            'lineSegments',
+            {
+              geometry: curve2,
+              material: new THREE.LineBasicMaterial({ color: "#FFFFFF", transparent: true, opacity: 0.8 })
+            }
+          )}
+        </object3D>
+        <object3D ref={ring3Ref}>
+          {React.createElement(
+            'lineSegments',
+            {
+              geometry: curve3,
+              material: new THREE.LineBasicMaterial({ color: "#FFFFFF", transparent: true, opacity: 0.8 })
+            }
+          )}
+        </object3D>
       </group>
       
       {/* Enhanced glow effect - more pronounced to match the image */}

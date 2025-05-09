@@ -35,7 +35,7 @@ const Onboarding3DScene: React.FC<Onboarding3DSceneProps> = ({
             speaking={speaking}
             stage={stage}
             position={orbPosition}
-            // Convert string to number to fix the type error
+            // Fix the type error by explicitly using number type
             size={interactionStage === 'listening' ? 1 : 0.7}
           />
           

@@ -20,6 +20,7 @@ declare global {
       lineSegments: ReactThreeFiber.Object3DNode<THREE.LineSegments, typeof THREE.LineSegments>;
       bufferGeometry: ReactThreeFiber.BufferGeometryNode<THREE.BufferGeometry, typeof THREE.BufferGeometry>;
       lineBasicMaterial: ReactThreeFiber.MaterialNode<THREE.LineBasicMaterial, typeof THREE.LineBasicMaterial>;
+      object3D: ReactThreeFiber.Object3DNode<THREE.Object3D, typeof THREE.Object3D>;
     }
   }
 }
