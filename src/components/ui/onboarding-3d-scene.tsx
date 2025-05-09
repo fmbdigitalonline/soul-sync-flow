@@ -21,7 +21,7 @@ const Onboarding3DScene: React.FC<Onboarding3DSceneProps> = ({
   const orbPosition: [number, number, number] = interactionStage === 'listening' ? [0, 0, 0] : [0, -1, -2];
   
   // Define the size explicitly as a number to avoid type issues
-  const orbSize: number = interactionStage === 'listening' ? 1 : 0.7;
+  const orbSize = interactionStage === 'listening' ? 1 : 0.7;
   
   return (
     <div className="absolute inset-0 z-0">
