@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
@@ -74,61 +73,98 @@ serve(async (req) => {
 async function generateResearchBasedBlueprint(birthData) {
   const { date, time, location, timezone, name } = birthData;
   
-  // Get the base prompt for blueprint generation
-  const prompt = getBlueprintPrompt(birthData);
+  // Get the improved prompt for blueprint generation
+  const prompt = getImprovedBlueprintPrompt(birthData);
   
-  // Call OpenAI with structured prompt
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${OPENAI_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o',
-      messages: [
-        { 
-          role: 'system', 
-          content: 'You are an expert astrologist, numerologist, and spiritual advisor tasked with creating accurate Soul Blueprints. Your responses must be factually accurate based on established spiritual systems and MUST be returned in valid JSON format. Always include all required fields in the expected structure. Be comprehensive and detailed with all values.' 
-        },
-        { 
-          role: 'user', 
-          content: prompt 
-        }
-      ],
-      temperature: 0.7,
-      max_tokens: 4000,
-    }),
-  });
+  try {
+    console.log("Calling OpenAI with prompt...");
+    
+    // Call OpenAI with structured prompt
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: [
+          { 
+            role: 'system', 
+            content: 'You are an expert astrologist, numerologist, and spiritual advisor tasked with creating accurate Soul Blueprints. Your responses MUST be in valid JSON format without any markdown formatting or text outside the JSON. Include ALL required fields in the expected structure. Your output must be ONLY the JSON object, nothing else.' 
+          },
+          { 
+            role: 'user', 
+            content: prompt 
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 4000,
+      }),
+    });
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(`OpenAI API error: ${errorData.error?.message || response.statusText}`);
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("OpenAI API error:", errorData);
+      throw new Error(`OpenAI API error: ${errorData.error?.message || response.statusText}`);
+    }
+
+    const data = await response.json();
+    const generatedContent = data.choices[0].message.content;
+    
+    console.log("Received raw content from OpenAI:", generatedContent.substring(0, 200) + "...");
+    
+    // Log exact format of the response for debugging
+    console.log("Raw response type:", typeof generatedContent);
+    console.log("Is response JSON?", isValidJSON(generatedContent));
+    
+    // Parse the generated content into structured blueprint data
+    const parsedBlueprint = parseGeneratedContent(generatedContent);
+    
+    // Initialize empty sections if they don't exist to avoid validation errors
+    const completeBlueprint = ensureBlueprintStructure(parsedBlueprint);
+    
+    // Apply mechanical validation to ensure factual accuracy
+    const validatedBlueprint = validateBlueprintData(completeBlueprint, birthData);
+    
+    // Add metadata for internal use (not displayed to user but available for AI Coach)
+    validatedBlueprint._meta = {
+      generation_method: "research-based",
+      model_version: "gpt-4o",
+      generation_date: new Date().toISOString(),
+      birth_data: birthData,
+    };
+    
+    return validatedBlueprint;
+  } catch (error) {
+    console.error("Error during blueprint generation:", error);
+    
+    // Create a minimal fallback blueprint with debug info
+    const fallbackBlueprint = createMinimalBlueprint();
+    
+    // Add error details to the debugging metadata
+    fallbackBlueprint._meta = {
+      generation_method: "fallback",
+      error: error.message,
+      error_time: new Date().toISOString(),
+      birth_data: birthData,
+    };
+    
+    console.log("Using fallback blueprint due to error");
+    return fallbackBlueprint;
   }
+}
 
-  const data = await response.json();
-  const generatedContent = data.choices[0].message.content;
-  
-  console.log("Received raw content from OpenAI:", generatedContent.substring(0, 200) + "...");
-  
-  // Parse the generated content into structured blueprint data
-  const parsedBlueprint = parseGeneratedContent(generatedContent);
-  
-  // Initialize empty sections if they don't exist to avoid validation errors
-  const completeBlueprint = ensureBlueprintStructure(parsedBlueprint);
-  
-  // Apply mechanical validation to ensure factual accuracy
-  const validatedBlueprint = validateBlueprintData(completeBlueprint, birthData);
-  
-  // Add metadata for internal use (not displayed to user but available for AI Coach)
-  validatedBlueprint._meta = {
-    generation_method: "research-based",
-    model_version: "gpt-4o",
-    generation_date: new Date().toISOString(),
-    birth_data: birthData,
-  };
-  
-  return validatedBlueprint;
+/**
+ * Helper function to check if a string is valid JSON
+ */
+function isValidJSON(str) {
+  try {
+    JSON.parse(str);
+    return true;
+  } catch (e) {
+    return false;
+  }
 }
 
 /**
@@ -243,56 +279,102 @@ function ensureBlueprintStructure(blueprint) {
 }
 
 /**
- * Creates a structured prompt for the AI to generate a complete blueprint
+ * Creates an improved structured prompt for the AI to generate a complete blueprint
  */
-function getBlueprintPrompt(birthData) {
+function getImprovedBlueprintPrompt(birthData) {
   const { date, time, location, timezone, name } = birthData;
   const preferredName = name.split(' ')[0] || name;
   
   return `Generate a complete Soul Blueprint for ${name} (preferred name: ${preferredName}) born on ${date} at ${time} in ${location}, timezone ${timezone}.
 
-Your task is to create a comprehensive spiritual profile following these specific sections:
+Your task is to create a comprehensive spiritual profile following EXACTLY this JSON structure:
+{
+  "user_meta": {
+    "full_name": "${name}",
+    "preferred_name": "${preferredName}",
+    "birth_date": "${date}",
+    "birth_time_local": "${time}",
+    "birth_location": "${location}",
+    "timezone": "${timezone}"
+  },
+  "cognition_mbti": {
+    "type": "XXXX",
+    "core_keywords": ["Keyword1", "Keyword2", "Keyword3"],
+    "dominant_function": "Function description",
+    "auxiliary_function": "Function description"
+  },
+  "energy_strategy_human_design": {
+    "type": "Type name",
+    "profile": "X/X (Name/Name)",
+    "authority": "Authority name",
+    "strategy": "Strategy description",
+    "definition": "Definition type",
+    "not_self_theme": "Theme description",
+    "life_purpose": "Purpose description",
+    "centers": {
+      "root": true/false,
+      "sacral": true/false,
+      "spleen": true/false,
+      "solar_plexus": true/false,
+      "heart": true/false,
+      "throat": true/false,
+      "ajna": true/false,
+      "head": true/false,
+      "g": true/false
+    },
+    "gates": {
+      "unconscious_design": ["XX.X", "XX.X"],
+      "conscious_personality": ["XX.X", "XX.X"]
+    }
+  },
+  "values_life_path": {
+    "life_path_number": X,
+    "life_path_keyword": "Keyword",
+    "life_path_description": "Description",
+    "birth_day_number": XX,
+    "birth_day_meaning": "Meaning",
+    "personal_year": XXXX,
+    "expression_number": X,
+    "expression_keyword": "Keyword",
+    "soul_urge_number": X,
+    "soul_urge_keyword": "Keyword",
+    "personality_number": X
+  },
+  "archetype_western": {
+    "sun_sign": "Sign ♈︎",
+    "sun_keyword": "Keyword",
+    "sun_dates": "Month Day - Month Day",
+    "sun_element": "Element",
+    "sun_qualities": "Quality1, Quality2",
+    "moon_sign": "Sign ♈︎",
+    "moon_keyword": "Keyword",
+    "moon_element": "Element",
+    "rising_sign": "Sign ♈︎",
+    "aspects": [
+      {
+        "planet": "Planet1",
+        "aspect": "Aspect",
+        "planet2": "Planet2",
+        "orb": "X°"
+      }
+    ],
+    "houses": {}
+  },
+  "archetype_chinese": {
+    "animal": "Animal",
+    "element": "Element",
+    "yin_yang": "Yin/Yang",
+    "keyword": "Keyword",
+    "element_characteristic": "Characteristic",
+    "personality_profile": "Profile description",
+    "compatibility": {
+      "best": ["Animal1", "Animal2", "Animal3"],
+      "worst": ["Animal1", "Animal2", "Animal3"]
+    }
+  }
+}
 
-1. User Meta Information:
-   - Full name: ${name}
-   - Preferred name: ${preferredName}
-   - Birth date: ${date}
-   - Birth time: ${time}
-   - Birth location: ${location}
-   - Timezone: ${timezone}
-
-2. MBTI Personality:
-   - Based on the birth data, determine the most likely MBTI type
-   - Include core keywords, dominant function, and auxiliary function
-   - Provide an explanation for this determination based on astrological influences
-
-3. Human Design:
-   - Calculate the exact Human Design type (Generator, Projector, Manifestor, etc.)
-   - Determine profile (e.g., "4/6 (Opportunist/Role Model)")
-   - Include authority, strategy, definition, not-self theme, and life purpose
-   - Generate realistic gate activations in the format number.line (e.g., "16.5")
-   - Ensure centers data is properly calculated
-
-4. Numerology:
-   - Calculate the life path number based on the full birth date
-   - Determine expression number, soul urge number, and personality number
-   - Include detailed descriptions and keywords for each number
-   - Calculate current personal year number
-
-5. Western Astrology:
-   - Determine Sun sign with exact degree and minutes
-   - Calculate Moon sign with exact degree and minutes
-   - Find Rising sign/Ascendant based on birth time and location
-   - Generate realistic aspects between planets
-   - Calculate house placements
-
-6. Chinese Zodiac:
-   - Determine Chinese zodiac sign (animal)
-   - Include element, yin/yang balance
-   - Provide relevant keywords and characteristics
-   - Include compatibility information
-
-Format your response as valid JSON that can be directly parsed. Include all fields and provide detailed, meaningful values for each section. Do not return empty values - generate plausible data when necessary.`;
+IMPORTANT: Your output MUST be only valid JSON with no other text. All fields must be included exactly as shown, with accurate values calculated from the birth data. I will parse your response as JSON, so ensure it conforms to JSON syntax rules.`;
 }
 
 /**
@@ -300,25 +382,36 @@ Format your response as valid JSON that can be directly parsed. Include all fiel
  */
 function parseGeneratedContent(content) {
   try {
+    // Log for debugging
+    console.log("Attempting to parse content...");
+    
     // First try to parse directly as JSON
     try {
-      console.log("Attempting direct JSON parsing...");
       return JSON.parse(content);
-    } catch (e) {
-      console.log("Direct JSON parsing failed, trying to extract JSON from text");
+    } catch (error) {
+      console.log("Direct JSON parsing failed:", error.message);
       
-      // If direct parsing fails, try to extract JSON from markdown blocks
+      // Try to extract JSON from markdown blocks
       const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
       if (jsonMatch && jsonMatch[1]) {
         console.log("Found JSON in code block, attempting to parse...");
         try {
           return JSON.parse(jsonMatch[1]);
         } catch (e) {
-          console.log("Code block JSON parsing failed:", e);
+          console.log("Code block JSON parsing failed:", e.message);
         }
       }
       
-      // If no JSON format is found, use structured approach to parse the content
+      // If no valid JSON is found, try cleaning the content
+      console.log("Attempting to clean and parse content...");
+      const cleaned = cleanJsonContent(content);
+      try {
+        return JSON.parse(cleaned);
+      } catch (e) {
+        console.log("Cleaned JSON parsing failed:", e.message);
+      }
+      
+      // Finally, fall back to structured parsing
       console.log("No valid JSON found, falling back to structured parsing");
       return structuredParsing(content);
     }
@@ -331,10 +424,45 @@ function parseGeneratedContent(content) {
 }
 
 /**
+ * Attempt to clean and fix common JSON formatting issues
+ */
+function cleanJsonContent(content) {
+  // Remove any non-JSON text before or after JSON block
+  let cleaned = content.trim();
+  
+  // Look for JSON-like start
+  const jsonStart = cleaned.indexOf('{');
+  const jsonEnd = cleaned.lastIndexOf('}');
+  
+  if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+    cleaned = cleaned.substring(jsonStart, jsonEnd + 1);
+  }
+  
+  // Replace common formatting issues
+  cleaned = cleaned
+    // Fix unquoted keys
+    .replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":')
+    // Fix single quotes to double quotes
+    .replace(/'/g, '"')
+    // Remove trailing commas in arrays and objects
+    .replace(/,\s*([}\]])/g, '$1');
+    
+  return cleaned;
+}
+
+/**
  * Creates a minimal but valid blueprint structure when parsing fails
  */
 function createMinimalBlueprint() {
   return {
+    user_meta: {
+      full_name: "User",
+      preferred_name: "User",
+      birth_date: "",
+      birth_time_local: "",
+      birth_location: "",
+      timezone: ""
+    },
     cognition_mbti: {
       type: "INFJ",
       core_keywords: ["Insightful", "Intuitive", "Reserved"],
@@ -375,6 +503,18 @@ function createMinimalBlueprint() {
       element: "Fire",
       yin_yang: "Yang",
       keyword: "Free-spirited Explorer"
+    },
+    bashar_suite: {
+      belief_interface: {
+        principle: "What you believe is what you experience as reality",
+        reframe_prompt: "What would I have to believe to experience this?"
+      },
+      excitement_compass: {
+        principle: "Follow your highest excitement in the moment to the best of your ability"
+      },
+      frequency_alignment: {
+        quick_ritual: "Visualize feeling the way you want to feel for 17 seconds"
+      }
     }
   };
 }
@@ -975,14 +1115,25 @@ function getOrdinalSuffix(i) {
 function validateBlueprintData(blueprint, birthData) {
   const { date } = birthData;
   
-  // Validate Western Astrology
-  validateWesternAstrology(blueprint, date);
+  // If date is valid, validate western and chinese astrology 
+  if (date) {
+    validateWesternAstrology(blueprint, date);
+    validateChineseZodiac(blueprint, date);
+    validateNumerology(blueprint, birthData);
+  } else {
+    console.log("Skipping astrological validation due to missing birth date");
+  }
   
-  // Validate Chinese Zodiac
-  validateChineseZodiac(blueprint, date);
-  
-  // Validate Numerology
-  validateNumerology(blueprint, birthData);
+  // Ensure MBTI type is valid if present
+  if (blueprint.cognition_mbti && blueprint.cognition_mbti.type) {
+    const mbtiType = blueprint.cognition_mbti.type;
+    const validMBTI = /^[EI][NS][FT][JP]$/.test(mbtiType);
+    
+    if (!validMBTI) {
+      console.log(`Invalid MBTI type detected: ${mbtiType}, resetting to INFJ`);
+      blueprint.cognition_mbti.type = "INFJ";
+    }
+  }
   
   return blueprint;
 }
@@ -1182,4 +1333,3 @@ function validateNumerology(blueprint, birthData) {
     blueprint.values_life_path.personal_year = personalYear;
   }
 }
-

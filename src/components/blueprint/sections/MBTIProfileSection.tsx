@@ -9,26 +9,41 @@ interface MBTIProfileSectionProps {
 }
 
 const MBTIProfileSection: React.FC<MBTIProfileSectionProps> = ({ mbtiData }) => {
-  // Safely check if type exists to avoid "undefined" errors
-  const mbtiType = mbtiData?.type || "";
+  // Early return with placeholder if mbtiData is completely missing
+  if (!mbtiData) {
+    return (
+      <BlueprintSection id="mbti" title="MBTI Profile" defaultExpanded={true}>
+        <div className="text-center py-4 text-muted-foreground">
+          <p>MBTI profile data is not available.</p>
+          <p className="text-sm mt-2">Please update your profile settings.</p>
+        </div>
+      </BlueprintSection>
+    );
+  }
+
+  // Create safe references with fallbacks
+  const mbtiType = mbtiData.type || "Unknown";
+  const keywords = Array.isArray(mbtiData.core_keywords) 
+    ? mbtiData.core_keywords.join(", ") 
+    : "Not specified";
+  const dominantFunction = mbtiData.dominant_function || "Not specified";
+  const auxiliaryFunction = mbtiData.auxiliary_function || "Not specified";
   
-  // Determine personality traits safely even if type is empty
-  const isIntroverted = mbtiType && mbtiType.startsWith('I');
-  const isIntuitive = mbtiType && mbtiType.includes('N');
-  const isFeeling = mbtiType && mbtiType.includes('F');
-  const isJudging = mbtiType && mbtiType.includes('J');
+  // Determine personality traits safely with explicit string checks
+  const isIntroverted = typeof mbtiType === 'string' && mbtiType.startsWith('I');
+  const isIntuitive = typeof mbtiType === 'string' && mbtiType.includes('N');
+  const isFeeling = typeof mbtiType === 'string' && mbtiType.includes('F');
+  const isJudging = typeof mbtiType === 'string' && mbtiType.includes('J');
   
-  // Create safe fallbacks for all values
-  const keywords = mbtiData?.core_keywords?.join(", ") || "Not specified";
-  const dominantFunction = mbtiData?.dominant_function || "Not specified";
-  const auxiliaryFunction = mbtiData?.auxiliary_function || "Not specified";
+  // Check if we have a valid MBTI type (should be 4 letters)
+  const hasValidType = typeof mbtiType === 'string' && /^[EI][NS][FT][JP]$/.test(mbtiType);
   
   return (
     <BlueprintSection id="mbti" title="MBTI Profile" defaultExpanded={true}>
       <div className="grid grid-cols-1 gap-2">
         <div className="flex justify-between items-center">
           <span className="text-muted-foreground">Type:</span>
-          <Badge variant="outline" className="bg-soul-purple/10">{mbtiType || "Unknown"}</Badge>
+          <Badge variant="outline" className="bg-soul-purple/10">{mbtiType}</Badge>
         </div>
         <div className="flex justify-between">
           <span className="text-muted-foreground">Keywords:</span>
@@ -43,7 +58,7 @@ const MBTIProfileSection: React.FC<MBTIProfileSectionProps> = ({ mbtiData }) => 
           <span>{auxiliaryFunction}</span>
         </div>
         <div className="mt-2 text-sm">
-          {mbtiType ? (
+          {hasValidType ? (
             <>
               <p className="text-muted-foreground">Your MBTI type indicates you're likely:</p>
               <ul className="list-disc pl-5 mt-1">

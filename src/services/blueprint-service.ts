@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 // Blueprint template type definition
@@ -87,6 +86,7 @@ export type BlueprintData = {
   belief_logs: any[];
   excitement_scores: any[];
   vibration_check_ins: any[];
+  _meta?: Record<string, any>; // Added metadata field for debugging
 };
 
 // Default blueprint data as example
@@ -204,7 +204,7 @@ export const blueprintService = {
     try {
       console.log('Generating blueprint from birth data:', userData);
       
-      // Call the new research-based Blueprint Generator Edge Function
+      // Call the research-based Blueprint Generator Edge Function
       const { data: researchData, error: researchError } = await supabase.functions.invoke('research-blueprint-generator', {
         body: {
           birthData: {
@@ -227,7 +227,15 @@ export const blueprintService = {
       
       if (!researchData || !researchData.data) {
         console.error('No data received from research-based blueprint generator');
-        return { data: null, error: 'Failed to generate blueprint data' };
+        console.log('Using default blueprint with user data');
+        
+        // Create a default blueprint with the user's data
+        const defaultBlueprint = {
+          ...defaultBlueprintData,
+          user_meta: userData
+        };
+        
+        return { data: defaultBlueprint };
       }
       
       console.log('Received research-based blueprint data');
@@ -238,34 +246,91 @@ export const blueprintService = {
       // Ensure the user_meta data is correctly set
       blueprint.user_meta = userData;
       
-      // Ensure we have bashar_suite data
-      if (!blueprint.bashar_suite) {
-        blueprint.bashar_suite = {
-          belief_interface: {
-            principle: "What you believe is what you experience as reality",
-            reframe_prompt: "What would I have to believe to experience this?"
-          },
-          excitement_compass: {
-            principle: "Follow your highest excitement in the moment to the best of your ability"
-          },
-          frequency_alignment: {
-            quick_ritual: "Visualize feeling the way you want to feel for 17 seconds"
-          }
-        };
-      }
-      
-      // Initialize empty arrays for tracking data if not present
-      blueprint.goal_stack = blueprint.goal_stack || [];
-      blueprint.task_graph = blueprint.task_graph || {};
-      blueprint.belief_logs = blueprint.belief_logs || [];
-      blueprint.excitement_scores = blueprint.excitement_scores || [];
-      blueprint.vibration_check_ins = blueprint.vibration_check_ins || [];
+      // Validate and ensure all required sections exist with reasonable values
+      this.validateBlueprintCompleteness(blueprint);
       
       return { data: blueprint };
     } catch (err) {
       console.error("Error generating blueprint:", err);
-      return { data: null, error: err instanceof Error ? err.message : String(err) };
+      
+      // Create a default blueprint with the user's data
+      const defaultBlueprint = {
+        ...defaultBlueprintData,
+        user_meta: userData
+      };
+      
+      return { 
+        data: defaultBlueprint, 
+        error: `Error generating blueprint: ${err instanceof Error ? err.message : String(err)}. Using default data instead.` 
+      };
     }
+  },
+  
+  /**
+   * Validate and ensure all required sections of the blueprint are present
+   */
+  validateBlueprintCompleteness(blueprint: any) {
+    if (!blueprint) return;
+    
+    // Check and ensure MBTI data is present
+    if (!blueprint.cognition_mbti || typeof blueprint.cognition_mbti !== 'object') {
+      blueprint.cognition_mbti = defaultBlueprintData.cognition_mbti;
+    } else {
+      // Ensure required MBTI fields
+      if (!blueprint.cognition_mbti.type) blueprint.cognition_mbti.type = defaultBlueprintData.cognition_mbti.type;
+      if (!Array.isArray(blueprint.cognition_mbti.core_keywords)) {
+        blueprint.cognition_mbti.core_keywords = defaultBlueprintData.cognition_mbti.core_keywords;
+      }
+      if (!blueprint.cognition_mbti.dominant_function) {
+        blueprint.cognition_mbti.dominant_function = defaultBlueprintData.cognition_mbti.dominant_function;
+      }
+      if (!blueprint.cognition_mbti.auxiliary_function) {
+        blueprint.cognition_mbti.auxiliary_function = defaultBlueprintData.cognition_mbti.auxiliary_function;
+      }
+    }
+    
+    // Check and ensure Human Design data is present
+    if (!blueprint.energy_strategy_human_design || typeof blueprint.energy_strategy_human_design !== 'object') {
+      blueprint.energy_strategy_human_design = defaultBlueprintData.energy_strategy_human_design;
+    } else {
+      // Ensure gates are arrays
+      if (!blueprint.energy_strategy_human_design.gates || typeof blueprint.energy_strategy_human_design.gates !== 'object') {
+        blueprint.energy_strategy_human_design.gates = defaultBlueprintData.energy_strategy_human_design.gates;
+      } else {
+        if (!Array.isArray(blueprint.energy_strategy_human_design.gates.unconscious_design)) {
+          blueprint.energy_strategy_human_design.gates.unconscious_design = 
+            defaultBlueprintData.energy_strategy_human_design.gates.unconscious_design;
+        }
+        if (!Array.isArray(blueprint.energy_strategy_human_design.gates.conscious_personality)) {
+          blueprint.energy_strategy_human_design.gates.conscious_personality = 
+            defaultBlueprintData.energy_strategy_human_design.gates.conscious_personality;
+        }
+      }
+    }
+    
+    // Ensure other sections exist
+    if (!blueprint.bashar_suite || typeof blueprint.bashar_suite !== 'object') {
+      blueprint.bashar_suite = defaultBlueprintData.bashar_suite;
+    }
+    
+    if (!blueprint.values_life_path || typeof blueprint.values_life_path !== 'object') {
+      blueprint.values_life_path = defaultBlueprintData.values_life_path;
+    }
+    
+    if (!blueprint.archetype_western || typeof blueprint.archetype_western !== 'object') {
+      blueprint.archetype_western = defaultBlueprintData.archetype_western;
+    }
+    
+    if (!blueprint.archetype_chinese || typeof blueprint.archetype_chinese !== 'object') {
+      blueprint.archetype_chinese = defaultBlueprintData.archetype_chinese;
+    }
+    
+    // Ensure arrays and objects for tracking data
+    blueprint.goal_stack = blueprint.goal_stack || [];
+    blueprint.task_graph = blueprint.task_graph || {};
+    blueprint.belief_logs = blueprint.belief_logs || [];
+    blueprint.excitement_scores = blueprint.excitement_scores || [];
+    blueprint.vibration_check_ins = blueprint.vibration_check_ins || [];
   },
   
   /**
