@@ -1,4 +1,6 @@
 
+// This file already exists, we just need to make sure it's properly imported in the components
+
 import * as THREE from 'three';
 import { ReactThreeFiber } from '@react-three/fiber';
 

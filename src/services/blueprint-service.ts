@@ -366,10 +366,13 @@ export const blueprintService = {
 
       // Ensure the raw response is stored in the blueprint's metadata
       if (data.rawResponse && data.data) {
-        if (!data.data._meta) {
-          data.data._meta = {};
+        // Fix: Check if data.data is an object and then check/create _meta property
+        if (typeof data.data === 'object' && data.data !== null) {
+          if (!data.data._meta) {
+            data.data._meta = {};
+          }
+          data.data._meta.raw_response = data.rawResponse;
         }
-        data.data._meta.raw_response = data.rawResponse;
       }
 
       console.log("Blueprint successfully generated");

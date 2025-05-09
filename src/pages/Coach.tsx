@@ -107,11 +107,9 @@ const Coach = () => {
               ) : (
                 messages.map((message) => (
                   <div key={message.id} className="flex flex-col">
-                    <SpeechBubble 
-                      message={message.content}
-                      role={message.sender}
-                      time={format(message.timestamp, 'h:mm a')}
-                    />
+                    <SpeechBubble role={message.sender} time={format(message.timestamp, 'h:mm a')}>
+                      {message.content}
+                    </SpeechBubble>
                     
                     {/* Debug Raw Response */}
                     {debugMode && message.sender === "ai" && message.rawResponse && (
@@ -132,7 +130,7 @@ const Coach = () => {
               )}
               {isLoading && (
                 <div className="flex items-center space-x-2 animate-pulse">
-                  <SoulOrb size="md" stage="welcome" pulse={false} speaking={true} />
+                  <SoulOrb size="sm" stage="welcome" pulse={false} speaking={true} />
                   <span className="text-muted-foreground">Thinking...</span>
                 </div>
               )}
