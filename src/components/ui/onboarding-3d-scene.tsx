@@ -20,6 +20,9 @@ const Onboarding3DScene: React.FC<Onboarding3DSceneProps> = ({
   // Set the orb position based on interaction stage
   const orbPosition: [number, number, number] = interactionStage === 'listening' ? [0, 0, 0] : [0, -1, -2];
   
+  // Define the size explicitly as a number to avoid type issues
+  const orbSize: number = interactionStage === 'listening' ? 1 : 0.7;
+  
   return (
     <div className="absolute inset-0 z-0">
       <Canvas camera={{ position: [0, 0, 5], fov: 75 }}>
@@ -35,8 +38,7 @@ const Onboarding3DScene: React.FC<Onboarding3DSceneProps> = ({
             speaking={speaking}
             stage={stage}
             position={orbPosition}
-            // Ensure size is explicitly a number
-            size={interactionStage === 'listening' ? 1 : 0.7 as number}
+            size={orbSize}
           />
           
           {/* Dark background color */}
