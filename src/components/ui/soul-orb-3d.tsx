@@ -227,7 +227,7 @@ const SoulOrb3D: React.FC<SoulOrbProps> = ({
         />
       </mesh>
       
-      {/* Orbital rings - fixed to use proper React Three Fiber syntax */}
+      {/* Orbital rings - fixed to use proper primitive syntax for React Three Fiber */}
       <primitive object={lineSegments1} ref={ring1Ref} />
       <primitive object={lineSegments2} ref={ring2Ref} />
       <primitive object={lineSegments3} ref={ring3Ref} />
