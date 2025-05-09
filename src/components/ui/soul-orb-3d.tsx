@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { supabase } from '@/integrations/supabase/client';
 
 // Import the React Three Fiber type declarations
-import '../../../src/types/react-three-fiber';
+import '@/types/react-three-fiber';
 
 interface SoulOrbProps {
   speaking?: boolean;
@@ -28,7 +28,7 @@ const SoulOrb3D: React.FC<SoulOrbProps> = ({
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [videoError, setVideoError] = useState(false);
   
-  // Fix the type for THREE.Line objects
+  // Fix the type for THREE.Line objects with proper type assertion
   const ring1Ref = useRef<THREE.Line>(null);
   const ring2Ref = useRef<THREE.Line>(null);
   const ring3Ref = useRef<THREE.Line>(null);
@@ -208,18 +208,18 @@ const SoulOrb3D: React.FC<SoulOrbProps> = ({
         />
       </mesh>
       
-      {/* Orbital rings - Fix the ref types to work with THREE.Line */}
-      <line ref={ring1Ref}>
+      {/* Orbital rings - properly typed for THREE.Line */}
+      <line ref={ring1Ref as React.RefObject<THREE.Line>}>
         <bufferGeometry attach="geometry" {...curve1} />
         <lineBasicMaterial attach="material" color="#FFFFFF" transparent opacity={0.8} />
       </line>
       
-      <line ref={ring2Ref}>
+      <line ref={ring2Ref as React.RefObject<THREE.Line>}>
         <bufferGeometry attach="geometry" {...curve2} />
         <lineBasicMaterial attach="material" color="#FFFFFF" transparent opacity={0.8} />
       </line>
       
-      <line ref={ring3Ref}>
+      <line ref={ring3Ref as React.RefObject<THREE.Line>}>
         <bufferGeometry attach="geometry" {...curve3} />
         <lineBasicMaterial attach="material" color="#FFFFFF" transparent opacity={0.8} />
       </line>
