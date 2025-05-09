@@ -4,9 +4,6 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment } from '@react-three/drei';
 import { SoulOrb3D } from './soul-orb-3d';
 
-// Import the React Three Fiber type declarations
-import '@/types/react-three-fiber';
-
 interface Onboarding3DSceneProps {
   speaking?: boolean;
   stage?: "welcome" | "collecting" | "generating" | "complete";

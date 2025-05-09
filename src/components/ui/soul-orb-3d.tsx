@@ -4,9 +4,6 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { supabase } from '@/integrations/supabase/client';
 
-// Import the React Three Fiber type declarations
-import '@/types/react-three-fiber';
-
 interface SoulOrbProps {
   speaking?: boolean;
   stage?: "welcome" | "collecting" | "generating" | "complete";
@@ -28,7 +25,7 @@ const SoulOrb3D: React.FC<SoulOrbProps> = ({
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [videoError, setVideoError] = useState(false);
   
-  // Fix the type for THREE.Line objects with proper THREE.Line type
+  // Properly type the refs for THREE.Line objects
   const ring1Ref = useRef<THREE.Line>(null);
   const ring2Ref = useRef<THREE.Line>(null);
   const ring3Ref = useRef<THREE.Line>(null);

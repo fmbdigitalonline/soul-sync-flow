@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { sampleBlueprints } from './blueprint-examples';
@@ -20,6 +21,7 @@ export interface BlueprintMeta {
   generation_date: string;
   birth_data: Record<string, any>;
   schema_version: string;
+  raw_response?: any;
 }
 
 // Define complete BlueprintData interface based on structure
@@ -377,4 +379,6 @@ const blueprintService = {
   }
 };
 
+// Export both the default object and the types
+export { calculateBlueprint, saveBlueprintToDatabase } from '@/services/blueprint-service';
 export default blueprintService;

@@ -1,10 +1,14 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { Loader2, CheckCircle2, XCircle, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import blueprintService from '@/services/blueprint-service';
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
+import { SoulOrb } from "@/components/ui/soul-orb";
+import blueprintService, { BlueprintData } from '@/services/blueprint-service';
 
 interface BlueprintGenerationFlowProps {
   userMeta: {
@@ -12,6 +16,7 @@ interface BlueprintGenerationFlowProps {
     birth_date: string;
     birth_time_local?: string;
     birth_location?: string;
+    preferred_name?: string;
     mbti?: string;
   };
   onComplete?: () => void;
