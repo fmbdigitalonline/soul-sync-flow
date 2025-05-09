@@ -10,6 +10,30 @@ interface NumerologySectionProps {
 }
 
 const NumerologySection: React.FC<NumerologySectionProps> = ({ numerology }) => {
+  // Early return with placeholder if numerology is completely missing
+  if (!numerology) {
+    return (
+      <BlueprintSection id="numerology" title="Numerology" defaultExpanded={true}>
+        <div className="text-center py-4 text-muted-foreground">
+          <p>Numerology data is not available.</p>
+          <p className="text-sm mt-2">Please update your profile settings.</p>
+        </div>
+      </BlueprintSection>
+    );
+  }
+
+  // Create safe references with fallbacks
+  const lifePathNumber = numerology.life_path_number || "N/A";
+  const lifePathKeyword = numerology.life_path_keyword || "Unknown";
+  const lifePathDescription = numerology.life_path_description || "No description available.";
+  const birthDayNumber = numerology.birth_day_number;
+  const birthDayMeaning = numerology.birth_day_meaning || "No meaning available.";
+  const personalYear = numerology.personal_year;
+  const expressionNumber = numerology.expression_number || "N/A";
+  const expressionKeyword = numerology.expression_keyword || "Unknown";
+  const soulUrgeNumber = numerology.soul_urge_number || "N/A";
+  const soulUrgeKeyword = numerology.soul_urge_keyword || "Unknown";
+
   return (
     <BlueprintSection id="numerology" title="Numerology" defaultExpanded={true}>
       <div className="grid grid-cols-1 gap-3">
@@ -22,18 +46,18 @@ const NumerologySection: React.FC<NumerologySectionProps> = ({ numerology }) => 
               />
             </div>
             <Badge variant="outline" className="bg-soul-purple/10">
-              {numerology.life_path_number}
+              {lifePathNumber}
             </Badge>
           </div>
           <div className="ml-4">
             <div className="flex gap-1 text-sm">
               <span className="text-muted-foreground">Keyword:</span>
-              <span>{numerology.life_path_keyword}</span>
+              <span>{lifePathKeyword}</span>
             </div>
-            {numerology.life_path_description && (
+            {lifePathDescription && (
               <div className="text-sm mt-1">
                 <span className="text-muted-foreground">Meaning:</span>
-                <p className="mt-1">{numerology.life_path_description}</p>
+                <p className="mt-1">{lifePathDescription}</p>
               </div>
             )}
           </div>
@@ -48,11 +72,11 @@ const NumerologySection: React.FC<NumerologySectionProps> = ({ numerology }) => 
                   tooltipContent="Based on the letters in your full birth name" 
                 />
               </div>
-              <span>{numerology.expression_number}</span>
+              <span>{expressionNumber}</span>
             </div>
             <div className="text-sm">
               <span className="text-muted-foreground">Keyword: </span>
-              <span>{numerology.expression_keyword}</span>
+              <span>{expressionKeyword}</span>
             </div>
           </div>
 
@@ -64,17 +88,17 @@ const NumerologySection: React.FC<NumerologySectionProps> = ({ numerology }) => 
                   tooltipContent="Calculated from the vowels in your name" 
                 />
               </div>
-              <span>{numerology.soul_urge_number}</span>
+              <span>{soulUrgeNumber}</span>
             </div>
             <div className="text-sm">
               <span className="text-muted-foreground">Keyword: </span>
-              <span>{numerology.soul_urge_keyword}</span>
+              <span>{soulUrgeKeyword}</span>
             </div>
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          {numerology.birth_day_number && (
+          {birthDayNumber !== undefined && birthDayNumber !== null && (
             <div className="bg-soul-purple/5 p-3 rounded-md">
               <div className="flex justify-between items-center mb-1">
                 <div className="flex items-center">
@@ -83,18 +107,18 @@ const NumerologySection: React.FC<NumerologySectionProps> = ({ numerology }) => 
                     tooltipContent="The specific day of your birth" 
                   />
                 </div>
-                <span>{numerology.birth_day_number}</span>
+                <span>{birthDayNumber}</span>
               </div>
-              {numerology.birth_day_meaning && (
+              {birthDayMeaning && (
                 <div className="text-sm">
                   <span className="text-muted-foreground">Meaning: </span>
-                  <span>{numerology.birth_day_meaning}</span>
+                  <span>{birthDayMeaning}</span>
                 </div>
               )}
             </div>
           )}
 
-          {numerology.personal_year && (
+          {personalYear !== undefined && personalYear !== null && (
             <div className="bg-soul-purple/5 p-3 rounded-md">
               <div className="flex justify-between items-center mb-1">
                 <div className="flex items-center">
@@ -103,7 +127,7 @@ const NumerologySection: React.FC<NumerologySectionProps> = ({ numerology }) => 
                     tooltipContent="Your annual cycle" 
                   />
                 </div>
-                <span>{numerology.personal_year}</span>
+                <span>{personalYear}</span>
               </div>
             </div>
           )}
