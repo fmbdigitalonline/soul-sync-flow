@@ -5,33 +5,37 @@ import { useToast } from "@/hooks/use-toast";
 
 interface BlueprintRawDataViewerProps {
   rawData?: string | any;
+  data?: any; // Add this property to match usage in Blueprint.tsx
+  rawResponse?: any; // Add this property to match usage in Blueprint.tsx
   className?: string;
 }
 
-export function BlueprintRawDataViewer({ rawData, className }: BlueprintRawDataViewerProps) {
+export function BlueprintRawDataViewer({ rawData, data, rawResponse, className }: BlueprintRawDataViewerProps) {
   const [showRawData, setShowRawData] = useState(false);
   const { toast } = useToast();
   
-  // Handle data that might be a string or object
+  // Use data or rawData, depending on which is provided
   const processedData = React.useMemo(() => {
-    if (!rawData) return null;
+    const dataToProcess = data || rawData || rawResponse;
+    
+    if (!dataToProcess) return null;
     
     try {
       // If it's already a string, check if it's JSON
-      if (typeof rawData === 'string') {
+      if (typeof dataToProcess === 'string') {
         try {
-          return JSON.stringify(JSON.parse(rawData), null, 2);
+          return JSON.stringify(JSON.parse(dataToProcess), null, 2);
         } catch {
-          return rawData;
+          return dataToProcess;
         }
       }
       // Otherwise, stringify the object
-      return JSON.stringify(rawData, null, 2);
+      return JSON.stringify(dataToProcess, null, 2);
     } catch (error) {
       console.error("Error processing raw data:", error);
-      return typeof rawData === 'string' ? rawData : 'Error: Could not parse raw data';
+      return typeof dataToProcess === 'string' ? dataToProcess : 'Error: Could not parse raw data';
     }
-  }, [rawData]);
+  }, [rawData, data, rawResponse]);
   
   // Copy data to clipboard
   const copyToClipboard = () => {

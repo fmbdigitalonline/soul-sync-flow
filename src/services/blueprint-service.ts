@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { sampleBlueprints } from './blueprint-examples';
@@ -380,5 +379,5 @@ const blueprintService = {
 };
 
 // Export both the default object and the types
-export { calculateBlueprint, saveBlueprintToDatabase } from '@/services/blueprint-service';
+export { BlueprintData, UserMetaData, BlueprintMeta };
 export default blueprintService;
