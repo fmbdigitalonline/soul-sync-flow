@@ -32,10 +32,13 @@ const HumanDesignSection: React.FC<HumanDesignSectionProps> = ({ humanDesign }) 
   
   // Safely check if gates exist and have the expected structure
   const hasGates = humanDesign.gates && 
-                   humanDesign.gates.unconscious_design && 
                    Array.isArray(humanDesign.gates.unconscious_design) &&
-                   humanDesign.gates.conscious_personality && 
-                   Array.isArray(humanDesign.gates.conscious_personality);
+                   humanDesign.gates.unconscious_design.length > 0 &&
+                   Array.isArray(humanDesign.gates.conscious_personality) &&
+                   humanDesign.gates.conscious_personality.length > 0;
+  
+  // Check if centers data exists
+  const hasCenters = humanDesign.centers && typeof humanDesign.centers === 'object';
 
   return (
     <BlueprintSection id="humanDesign" title="Human Design" defaultExpanded={false}>
@@ -64,23 +67,53 @@ const HumanDesignSection: React.FC<HumanDesignSectionProps> = ({ humanDesign }) 
           <span className="text-muted-foreground">Not-Self Theme:</span>
           <span>{notSelfTheme}</span>
         </div>
+        
+        {/* Centers visualization if available */}
+        {hasCenters && (
+          <div className="mt-3 bg-soul-purple/5 p-3 rounded-md">
+            <p className="text-muted-foreground mb-2">Defined Centers:</p>
+            <div className="grid grid-cols-3 gap-2 text-xs">
+              {Object.entries(humanDesign.centers).map(([center, isDefined]) => (
+                <div key={center} className={`p-1.5 rounded ${isDefined ? 'bg-soul-purple/20' : 'bg-gray-500/10'}`}>
+                  <span className={isDefined ? 'text-soul-purple' : 'text-muted-foreground'}>
+                    {center.charAt(0).toUpperCase() + center.slice(1)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        
         <div className="mt-3">
           <p className="text-muted-foreground mb-2">Life Purpose:</p>
           <p className="text-sm bg-soul-purple/5 p-3 rounded-md">
             {lifePurpose}
           </p>
         </div>
+        
         {hasGates && (
           <div className="mt-2">
             <p className="text-muted-foreground mb-1">Key Active Gates:</p>
-            <div className="grid grid-cols-2 gap-1 text-xs">
-              <div>
-                <span className="text-muted-foreground">Design: </span>
-                {humanDesign.gates.unconscious_design.slice(0, 3).join(", ")}
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="bg-soul-purple/5 p-2 rounded-md">
+                <span className="text-muted-foreground block mb-1">Design: </span>
+                <div className="flex flex-wrap gap-1">
+                  {humanDesign.gates.unconscious_design.slice(0, 4).map((gate, idx) => (
+                    <Badge key={`design-${idx}`} variant="outline" className="bg-soul-purple/10">
+                      {gate}
+                    </Badge>
+                  ))}
+                </div>
               </div>
-              <div>
-                <span className="text-muted-foreground">Personality: </span>
-                {humanDesign.gates.conscious_personality.slice(0, 3).join(", ")}
+              <div className="bg-soul-purple/5 p-2 rounded-md">
+                <span className="text-muted-foreground block mb-1">Personality: </span>
+                <div className="flex flex-wrap gap-1">
+                  {humanDesign.gates.conscious_personality.slice(0, 4).map((gate, idx) => (
+                    <Badge key={`personality-${idx}`} variant="outline" className="bg-soul-purple/10">
+                      {gate}
+                    </Badge>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
