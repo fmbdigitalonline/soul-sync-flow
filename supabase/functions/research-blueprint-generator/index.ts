@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
@@ -21,7 +20,7 @@ serve(async (req) => {
   }
 
   try {
-    const { birthData } = await req.json();
+    const { birthData, debugMode } = await req.json();
     const { date, time, location, timezone, name } = birthData;
 
     console.log(`Processing blueprint for: ${name}, born on ${date} at ${time} in ${location}`);
@@ -31,13 +30,14 @@ serve(async (req) => {
     }
 
     // Generate the blueprint using OpenAI
-    const blueprint = await generateResearchBasedBlueprint(birthData);
+    const { blueprint, rawResponse } = await generateResearchBasedBlueprint(birthData, debugMode);
     
     // Return the generated blueprint
     return new Response(
       JSON.stringify({ 
         success: true, 
-        data: blueprint 
+        data: blueprint,
+        rawResponse: debugMode ? rawResponse : undefined // Only include raw response in debug mode
       }),
       { 
         headers: { 
@@ -69,9 +69,10 @@ serve(async (req) => {
 /**
  * Generate a research-based blueprint using OpenAI's GPT-4o
  * @param birthData The user's birth information
+ * @param debugMode Whether to include raw API response
  * @returns A complete blueprint object with detailed spiritual and personality insights
  */
-async function generateResearchBasedBlueprint(birthData) {
+async function generateResearchBasedBlueprint(birthData, debugMode = false) {
   const { date, time, location, timezone, name } = birthData;
   
   try {
@@ -132,7 +133,10 @@ async function generateResearchBasedBlueprint(birthData) {
       schema_version: "2.0"
     };
     
-    return validatedBlueprint;
+    return { 
+      blueprint: validatedBlueprint,
+      rawResponse: debugMode ? data : undefined // Include raw OpenAI response if debug mode is enabled
+    };
   } catch (error) {
     console.error("Error during blueprint generation:", error);
     
@@ -148,7 +152,7 @@ async function generateResearchBasedBlueprint(birthData) {
     };
     
     console.log("Using fallback blueprint due to error");
-    return fallbackBlueprint;
+    return { blueprint: fallbackBlueprint };
   }
 }
 
@@ -350,9 +354,9 @@ function ensureBlueprintStructure(blueprint) {
     values_life_path: {
       life_path_number: 7,
       life_path_keyword: "Seeker of Truth",
-      life_path_description: "Focused on analysis, research, and spiritual understanding.",
-      birth_day_number: 1,
-      birth_day_meaning: "Independent and innovative",
+      life_path_description: "Focused on spiritual growth and inner wisdom",
+      birth_day_number: 15,
+      birth_day_meaning: "Adaptable and versatile energy",
       personal_year: new Date().getFullYear() % 9 || 9,
       expression_number: 9,
       expression_keyword: "Humanitarian",

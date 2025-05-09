@@ -1,10 +1,11 @@
-
 import React, { useState, useEffect } from "react";
 import { motion } from "@/lib/framer-motion";
 import { SoulOrb } from "@/components/ui/soul-orb";
 import { cn } from "@/lib/utils";
 import { BlueprintData, blueprintService } from "@/services/blueprint-service";
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { Eye, EyeOff } from "lucide-react";
 
 interface BlueprintGeneratorProps {
   userProfile: BlueprintData['user_meta'];
@@ -35,6 +36,8 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
   const [generatedBlueprint, setGeneratedBlueprint] = useState<BlueprintData | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [debugMode, setDebugMode] = useState(false);
+  const [rawResponse, setRawResponse] = useState<any>(null);
   const { toast } = useToast();
 
   // Generate random particles for visual effect
@@ -57,6 +60,7 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
       
       setIsGenerating(true);
       setError(null);
+      setRawResponse(null);
       
       try {
         console.log("Starting blueprint generation with user data:", userProfile);
@@ -75,7 +79,14 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
         setProgress(40);
         
         // Call the blueprint service to generate a blueprint
-        const { data: blueprint, error } = await blueprintService.generateBlueprintFromBirthData(userProfile);
+        const { data: blueprint, error, rawResponse } = await blueprintService.generateBlueprintFromBirthData(
+          userProfile, 
+          debugMode // Pass debug mode flag
+        );
+        
+        if (rawResponse) {
+          setRawResponse(rawResponse);
+        }
         
         if (error) {
           console.error("Blueprint generation error:", error);
@@ -133,11 +144,16 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
     
     // Start the generation process
     generateBlueprint();
-  }, [userProfile, onComplete, toast]);
+  }, [userProfile, onComplete, toast, debugMode]);
 
   // Helper function to simulate processing delay
   const simulateProcessingDelay = (ms = 1200) => {
     return new Promise(resolve => setTimeout(resolve, ms));
+  };
+
+  // Toggle debug mode
+  const toggleDebugMode = () => {
+    setDebugMode(prev => !prev);
   };
 
   // Get the stage for the SoulOrb component
@@ -156,6 +172,26 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
         <p className="text-muted-foreground">
           Please wait while we analyze cosmic patterns and generate your personalized blueprint
         </p>
+        
+        {/* Debug Mode Toggle */}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="mt-2"
+          onClick={toggleDebugMode}
+        >
+          {debugMode ? (
+            <>
+              <EyeOff className="h-4 w-4 mr-2" />
+              Hide Raw Response
+            </>
+          ) : (
+            <>
+              <Eye className="h-4 w-4 mr-2" />
+              Show Raw Response
+            </>
+          )}
+        </Button>
       </div>
 
       {/* Main visualization area */}
@@ -427,6 +463,20 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
           </p>
         </div>
       </div>
+
+      {/* Debug Output Section */}
+      {debugMode && (
+        <div className="mt-8">
+          <h3 className="text-xl font-bold mb-2">Raw Response Data</h3>
+          <div className="bg-black/60 rounded-md p-4 overflow-auto max-h-[400px] text-sm">
+            {rawResponse ? (
+              <pre className="text-green-400 whitespace-pre-wrap">{JSON.stringify(rawResponse, null, 2)}</pre>
+            ) : (
+              <p className="text-gray-400">No raw response data available yet...</p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

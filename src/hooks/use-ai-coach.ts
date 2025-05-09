@@ -9,12 +9,14 @@ export interface Message {
   content: string;
   sender: "user" | "ai";
   timestamp: Date;
+  rawResponse?: any; // Add raw response for debug mode
 }
 
 export function useAICoach() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState<string>("");
+  const [debugMode, setDebugMode] = useState(false); // Add debug mode state
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -25,12 +27,6 @@ export function useAICoach() {
     }
   }, [sessionId]);
 
-  // Create a new session
-  const resetConversation = useCallback(() => {
-    setMessages([]);
-    setSessionId(aiCoachService.createNewSession());
-  }, []);
-
   // Save messages to conversation memory
   useEffect(() => {
     const saveConversationMemory = async () => {
@@ -39,7 +35,8 @@ export function useAICoach() {
         const messageData = messages.map(msg => ({
           content: msg.content,
           sender: msg.sender,
-          timestamp: msg.timestamp.toISOString()
+          timestamp: msg.timestamp.toISOString(),
+          rawResponse: msg.rawResponse
         }));
         
         await aiCoachService.saveConversation(sessionId, messageData);
@@ -48,6 +45,11 @@ export function useAICoach() {
     
     saveConversationMemory();
   }, [messages, user, sessionId]);
+
+  // Toggle debug mode
+  const toggleDebugMode = useCallback(() => {
+    setDebugMode(prev => !prev);
+  }, []);
 
   // Send a message to the AI Coach
   const sendMessage = useCallback(
@@ -67,7 +69,7 @@ export function useAICoach() {
         setIsLoading(true);
 
         // Call the AI Coach service with blueprint context
-        const response = await aiCoachService.sendMessage(content, sessionId, true);
+        const response = await aiCoachService.sendMessage(content, sessionId, true, debugMode);
 
         // Add AI response to state
         const aiMessage: Message = {
@@ -75,6 +77,7 @@ export function useAICoach() {
           content: response.response,
           sender: "ai",
           timestamp: new Date(),
+          rawResponse: response.rawResponse, // Include raw response in debug mode
         };
 
         setMessages((prev) => [...prev, aiMessage]);
@@ -92,8 +95,14 @@ export function useAICoach() {
         setIsLoading(false);
       }
     },
-    [sessionId, user, toast]
+    [sessionId, user, toast, debugMode]
   );
+
+  // Create a new session
+  const resetConversation = useCallback(() => {
+    setMessages([]);
+    setSessionId(aiCoachService.createNewSession());
+  }, []);
 
   // Load a specific conversation from memory
   const loadConversation = useCallback(async (conversationSessionId: string) => {
@@ -147,5 +156,7 @@ export function useAICoach() {
     resetConversation,
     loadConversation,
     sessionId,
+    debugMode,
+    toggleDebugMode,
   };
 }

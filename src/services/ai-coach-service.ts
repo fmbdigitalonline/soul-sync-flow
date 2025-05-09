@@ -5,6 +5,7 @@ export type AICoachResponse = {
   response: string;
   context?: any;
   error?: string;
+  rawResponse?: any; // Added for debug mode
 };
 
 export const aiCoachService = {
@@ -15,7 +16,8 @@ export const aiCoachService = {
   async sendMessage(
     message: string,
     sessionId: string,
-    includeBlueprintContext: boolean = false
+    includeBlueprintContext: boolean = false,
+    debugMode: boolean = false // New debug mode parameter
   ): Promise<AICoachResponse> {
     try {
       // Get user blueprint if available and requested
@@ -51,6 +53,7 @@ export const aiCoachService = {
             message,
             sessionId,
             blueprintContext: blueprintContext || null,
+            debugMode, // Pass debug mode flag to edge function
           },
         }
       );
@@ -63,9 +66,11 @@ export const aiCoachService = {
         throw new Error("No response data received from AI Coach");
       }
 
+      // Return the response with raw data if debug mode is enabled
       return {
         response: data.response,
         context: data.context,
+        rawResponse: debugMode ? data.rawResponse : undefined, // Include raw response in debug mode
       };
     } catch (error) {
       console.error("Error in AI Coach service:", error);
