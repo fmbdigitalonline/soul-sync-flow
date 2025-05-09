@@ -101,7 +101,10 @@ export const aiCoachService = {
         // Update existing conversation
         const { error } = await supabase
           .from("conversation_memory")
-          .update({ messages, updated_at: new Date() })
+          .update({ 
+            messages, 
+            updated_at: new Date().toISOString() // Fix: Convert Date to string
+          })
           .eq("session_id", sessionId);
 
         if (error) {
@@ -177,7 +180,9 @@ export const aiCoachService = {
         return { messages: [], error: error.message };
       }
 
-      return { messages: data?.messages || [] };
+      // Ensure messages is always an array, even if the data type might not match
+      const messages = Array.isArray(data?.messages) ? data.messages : [];
+      return { messages };
     } catch (error) {
       console.error("Error in loadConversation:", error);
       return {

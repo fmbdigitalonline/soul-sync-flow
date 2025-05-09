@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
@@ -795,5 +796,13 @@ function validateNumerology(blueprint, birthData) {
     const currentYear = new Date().getFullYear();
     let personalYear = digitSum(monthSum + daySum + digitSum(currentYear));
     
-    // Handle master numbers
-    if (personalYear !== 11 && personalYear !== 22 && personalYear
+    // Handle master numbers for personal year
+    if (personalYear !== 11 && personalYear !== 22 && personalYear !== 33) {
+      personalYear = digitSum(personalYear);
+    }
+    
+    blueprint.values_life_path.personal_year = personalYear;
+  }
+  
+  return blueprint;
+}
