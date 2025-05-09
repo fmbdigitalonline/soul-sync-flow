@@ -1,3 +1,4 @@
+
 import React, { useRef, useMemo, useEffect, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -205,10 +206,19 @@ const SoulOrb3D: React.FC<SoulOrbProps> = ({
         />
       </mesh>
       
-      {/* Orbital rings - fixed to use primitive instead of line */}
-      <primitive object={new THREE.LineSegments(curve1, new THREE.LineBasicMaterial({ color: "#FFFFFF", transparent: true, opacity: 0.8 }))} ref={ring1Ref} />
-      <primitive object={new THREE.LineSegments(curve2, new THREE.LineBasicMaterial({ color: "#FFFFFF", transparent: true, opacity: 0.8 }))} ref={ring2Ref} />
-      <primitive object={new THREE.LineSegments(curve3, new THREE.LineBasicMaterial({ color: "#FFFFFF", transparent: true, opacity: 0.8 }))} ref={ring3Ref} />
+      {/* Orbital rings - fixed to use primitive elements properly */}
+      <primitive 
+        object={new THREE.LineSegments(curve1, new THREE.LineBasicMaterial({ color: "#FFFFFF", transparent: true, opacity: 0.8 }))} 
+        ref={ring1Ref} 
+      />
+      <primitive 
+        object={new THREE.LineSegments(curve2, new THREE.LineBasicMaterial({ color: "#FFFFFF", transparent: true, opacity: 0.8 }))} 
+        ref={ring2Ref} 
+      />
+      <primitive 
+        object={new THREE.LineSegments(curve3, new THREE.LineBasicMaterial({ color: "#FFFFFF", transparent: true, opacity: 0.8 }))} 
+        ref={ring3Ref} 
+      />
       
       {/* Enhanced glow effect - more pronounced to match the image */}
       <mesh>

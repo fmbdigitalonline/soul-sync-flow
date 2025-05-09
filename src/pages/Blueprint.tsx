@@ -10,7 +10,7 @@ import { BlueprintRawDataViewer } from "@/components/ui/blueprint-raw-data-viewe
 import { useToast } from "@/hooks/use-toast";
 import { BlueprintGenerationFlow } from '@/components/blueprint/BlueprintGenerationFlow';
 import { Eye, EyeOff, Download } from "lucide-react";
-import blueprintService from '@/services/blueprint-service';
+import blueprintService, { BlueprintData } from '@/services/blueprint-service';
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -233,12 +233,16 @@ const Blueprint = () => {
                 <TabsContent value="editor">
                   <BlueprintEditor 
                     data={blueprint} 
-                    onSave={(updatedData) => {
+                    onSave={async (updatedData) => {
+                      // Update local state
                       setBlueprint(updatedData);
+                      // Save to database
+                      await blueprintService.saveBlueprintToDatabase(updatedData);
                       toast({
                         title: "Blueprint Updated",
                         description: "Your changes have been saved."
                       });
+                      return { success: true };
                     }}
                   />
                 </TabsContent>
@@ -261,6 +265,7 @@ const Blueprint = () => {
                     </p>
                     
                     <BlueprintRawDataViewer 
+                      rawData={blueprint} 
                       data={blueprint} 
                       rawResponse={blueprint?._meta?.raw_response}
                     />

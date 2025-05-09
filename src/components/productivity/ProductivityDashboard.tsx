@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -38,7 +37,8 @@ export const ProductivityDashboard: React.FC = () => {
     const fetchBlueprintData = async () => {
       if (isAuthenticated) {
         setIsLoading(true);
-        const { data } = await blueprintService.getActiveBlueprintData();
+        // Use getDefaultBlueprint instead of getActiveBlueprintData
+        const data = await blueprintService.getDefaultBlueprint();
         setBlueprint(data);
         setIsLoading(false);
       } else {
