@@ -42,8 +42,8 @@ const Onboarding3DScene: React.FC<Onboarding3DSceneProps> = ({
             size={orbSize}
           />
           
-          {/* Dark background color - fixed to use proper THREE.Color */}
-          <color attach="background" args={[new THREE.Color("#0a0a1a")]} />
+          {/* Dark background color - properly typed as array of number values */}
+          <color attach="background" args={[0.04, 0.04, 0.1]} />
           
           {/* Orbit controls - more restricted when in input mode */}
           <OrbitControls 
