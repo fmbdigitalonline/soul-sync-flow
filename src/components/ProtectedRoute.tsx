@@ -1,6 +1,8 @@
+
 import { useEffect } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { SoulOrb } from "@/components/ui/soul-orb";
 
 const ProtectedRoute = ({
   children,
