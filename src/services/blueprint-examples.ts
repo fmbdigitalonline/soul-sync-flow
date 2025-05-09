@@ -3,6 +3,13 @@ import { BlueprintData } from "./blueprint-service";
 
 // Example blueprint for Feurion
 export const exampleFeurionBlueprint: BlueprintData = {
+  _meta: {
+    generation_method: "example",
+    model_version: "1.0",
+    generation_date: "2023-01-01",
+    birth_data: {},
+    schema_version: "1.0",
+  },
   user_meta: {
     full_name: "Feurion Michael Banel",
     preferred_name: "Feurion",
@@ -25,6 +32,17 @@ export const exampleFeurionBlueprint: BlueprintData = {
     definition: "Split",
     not_self_theme: "Bitterness",
     life_purpose: "Guide others; share wisdom through lived experience",
+    centers: {
+      root: false,
+      sacral: false,
+      spleen: true,
+      solar_plexus: false,
+      heart: false,
+      throat: false,
+      ajna: false,
+      head: false,
+      g: false,
+    },
     gates: {
       unconscious_design: [
         "14.2","8.2","55.3","48.6","21.6","20.2",
@@ -51,6 +69,10 @@ export const exampleFeurionBlueprint: BlueprintData = {
   values_life_path: {
     life_path_number: 3,
     life_path_keyword: "Creative Communicator",
+    life_path_description: "Express joy and creativity through communication",
+    birth_day_number: 12,
+    birth_day_meaning: "Detail-oriented and analytical",
+    personal_year: 5,
     expression_number: 11,
     expression_keyword: "Inspirational Visionary (Master)",
     soul_urge_number: 8,
@@ -60,15 +82,43 @@ export const exampleFeurionBlueprint: BlueprintData = {
   archetype_western: {
     sun_sign: "Aquarius ♒︎",
     sun_keyword: "Innovative Humanitarian",
+    sun_dates: "January 20 - February 18",
+    sun_element: "Air",
+    sun_qualities: "Fixed, Progressive, Intellectual",
     moon_sign: "Taurus ♉︎ (early degree, 01°)",
     moon_keyword: "Grounded Sensuality",
-    rising_sign: "Virgo ♍︎"
+    moon_element: "Earth",
+    rising_sign: "Virgo ♍︎",
+    aspects: [
+      {
+        planet: "Sun",
+        aspect: "Conjunction",
+        planet2: "Mercury",
+        orb: "2°"
+      },
+      {
+        planet: "Moon",
+        aspect: "Trine",
+        planet2: "Venus",
+        orb: "3°"
+      }
+    ],
+    houses: {
+      "1": { sign: "Virgo", house: "1st House" },
+      "2": { sign: "Libra", house: "2nd House" }
+    }
   },
   archetype_chinese: {
     animal: "Horse",
     element: "Earth",
     yin_yang: "Yang",
-    keyword: "Energetic Trailblazer"
+    keyword: "Energetic Trailblazer",
+    element_characteristic: "Stable, nurturing, and reliable",
+    personality_profile: "Confident, enthusiastic, and natural leaders",
+    compatibility: {
+      best: ["Tiger", "Goat", "Dog"],
+      worst: ["Rat", "Ox", "Rooster"]
+    }
   },
   timing_overlays: {
     current_transits: [],

@@ -93,7 +93,7 @@ const AstrologySection: React.FC<AstrologySectionProps> = ({ astrology }) => {
             <ul className="text-sm pl-4 list-disc">
               {astrology.aspects.slice(0, 3).map((aspect, i) => (
                 <li key={i}>
-                  {aspect.planet1} {aspect.type} {aspect.planet2} (orb: {aspect.orb})
+                  {aspect.planet} {aspect.aspect} {aspect.planet2} (orb: {aspect.orb})
                 </li>
               ))}
             </ul>

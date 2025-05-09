@@ -206,26 +206,20 @@ const SoulOrb3D: React.FC<SoulOrbProps> = ({
       </mesh>
       
       {/* Orbital rings */}
-      <primitive object={new THREE.Line(curve1, new THREE.LineBasicMaterial({
-        color: '#FFFFFF',
-        transparent: true,
-        opacity: 0.8,
-        linewidth: 2
-      }))} ref={ring1Ref} />
+      <line ref={ring1Ref}>
+        <bufferGeometry attach="geometry" {...curve1} />
+        <lineBasicMaterial attach="material" color="#FFFFFF" transparent opacity={0.8} />
+      </line>
       
-      <primitive object={new THREE.Line(curve2, new THREE.LineBasicMaterial({
-        color: '#FFFFFF',
-        transparent: true,
-        opacity: 0.8,
-        linewidth: 2
-      }))} ref={ring2Ref} />
+      <line ref={ring2Ref}>
+        <bufferGeometry attach="geometry" {...curve2} />
+        <lineBasicMaterial attach="material" color="#FFFFFF" transparent opacity={0.8} />
+      </line>
       
-      <primitive object={new THREE.Line(curve3, new THREE.LineBasicMaterial({
-        color: '#FFFFFF',
-        transparent: true,
-        opacity: 0.8,
-        linewidth: 2
-      }))} ref={ring3Ref} />
+      <line ref={ring3Ref}>
+        <bufferGeometry attach="geometry" {...curve3} />
+        <lineBasicMaterial attach="material" color="#FFFFFF" transparent opacity={0.8} />
+      </line>
       
       {/* Enhanced glow effect - more pronounced to match the image */}
       <mesh>

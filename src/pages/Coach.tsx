@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { useAICoach } from "@/hooks/use-ai-coach";
@@ -107,9 +108,9 @@ const Coach = () => {
                 messages.map((message) => (
                   <div key={message.id} className="flex flex-col">
                     <SpeechBubble 
-                      content={message.content} 
-                      sender={message.sender} 
-                      timestamp={format(message.timestamp, 'h:mm a')}
+                      message={message.content}
+                      role={message.sender}
+                      time={format(message.timestamp, 'h:mm a')}
                     />
                     
                     {/* Debug Raw Response */}
@@ -131,7 +132,7 @@ const Coach = () => {
               )}
               {isLoading && (
                 <div className="flex items-center space-x-2 animate-pulse">
-                  <SoulOrb size="xs" stage="speaking" pulse={false} speaking={true} />
+                  <SoulOrb size="md" stage="welcome" pulse={false} speaking={true} />
                   <span className="text-muted-foreground">Thinking...</span>
                 </div>
               )}
