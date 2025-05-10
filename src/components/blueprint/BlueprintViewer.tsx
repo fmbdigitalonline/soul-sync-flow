@@ -34,7 +34,7 @@ const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ data, blueprint, clas
   }
 
   // Check if there was an error in generation
-  const error = blueprintData._meta?.error;
+  const error = blueprintData._meta?.error || null;
 
   return (
     <CosmicCard className={cn("p-6", className)}>
@@ -87,7 +87,7 @@ const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ data, blueprint, clas
       {/* Always show raw data viewer for debugging and transparency */}
       <BlueprintRawDataViewer
         data={blueprintData}
-        rawResponse={blueprintData._meta?.raw_response}
+        rawResponse={blueprintData._meta?.raw_response || blueprintData._meta?.tool_calls}
         className="mt-6 border-t pt-6"
       />
     </CosmicCard>

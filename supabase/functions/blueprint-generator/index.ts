@@ -168,7 +168,8 @@ Include these sections in your response:
         generation_date: new Date().toISOString(),
         birth_data: userMeta,
         schema_version: "1.0",
-        tool_calls: data.choices[0].message.tool_calls || []
+        tool_calls: data.choices[0].message.tool_calls || [],
+        error: null  // Add explicit null for error field
       },
       user_meta: {
         ...userMeta
@@ -187,6 +188,29 @@ Include these sections in your response:
     // If there's an error parsing the blueprint, include the error and raw response
     console.error("Error parsing blueprint:", error);
     
-    throw new Error(`Failed to parse blueprint: ${error.message}. Raw content: ${generatedContent.substring(0, 500)}...`);
+    // Create an error blueprint with proper structure for error handling
+    const errorBlueprint = {
+      _meta: {
+        generation_method: "gpt-4o-search-preview",
+        model_version: "gpt-4o-search-preview",
+        generation_date: new Date().toISOString(),
+        birth_data: userMeta,
+        schema_version: "1.0",
+        error: `Failed to parse blueprint: ${error.message}`,
+        raw_content: generatedContent.substring(0, 1000) + "..." // Truncated for readability
+      },
+      user_meta: {
+        ...userMeta
+      },
+      // Empty objects for the required structure
+      cognition_mbti: {},
+      energy_strategy_human_design: {},
+      values_life_path: {},
+      archetype_western: {},
+      archetype_chinese: {},
+      bashar_suite: {}
+    };
+    
+    return { blueprint: errorBlueprint, rawResponse: data };
   }
 }

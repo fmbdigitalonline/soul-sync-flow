@@ -21,7 +21,7 @@ export interface BlueprintMeta {
   birth_data: Record<string, any>;
   schema_version: string;
   raw_response?: any;
-  error?: string;
+  error?: string | null;
   tool_calls?: Array<any>;
 }
 

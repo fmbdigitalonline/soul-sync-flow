@@ -27,6 +27,7 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
   const [status, setStatus] = useState<'initial' | 'loading' | 'success' | 'error'>('initial');
   const [errorMessage, setErrorMessage] = useState('');
   const [debugInfo, setDebugInfo] = useState<any>(null);
+  const [toolCalls, setToolCalls] = useState<any[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -52,6 +53,11 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
         // Store raw response for debugging
         if (result.rawResponse) {
           setDebugInfo(result.rawResponse);
+          
+          // Extract tool calls if available
+          if (result.rawResponse.choices?.[0]?.message?.tool_calls) {
+            setToolCalls(result.rawResponse.choices[0].message.tool_calls);
+          }
         }
         
         // If there's an error in the result, handle it
@@ -78,7 +84,7 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
 
         toast({
           title: "Blueprint Generated",
-          description: "Your soul blueprint has been created successfully!",
+          description: "Your soul blueprint has been created successfully with GPT-4o Search Preview!",
         });
 
         // Call the onComplete callback after a delay
@@ -112,7 +118,7 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>Collecting data</span>
             <span>Processing</span>
-            <span>Generating</span>
+            <span>Web search</span>
             <span>Saving</span>
           </div>
         </div>
@@ -124,7 +130,7 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
               <p className="text-sm text-muted-foreground">
                 {progress < 25 && "Connecting to OpenAI..."}
                 {progress >= 25 && progress < 50 && "Generating blueprint with GPT-4o Search Preview..."}
-                {progress >= 50 && progress < 75 && "Processing AI response..."}
+                {progress >= 50 && progress < 75 && "Processing search results and AI response..."}
                 {progress >= 75 && "Saving your blueprint..."}
               </p>
             </div>
@@ -155,6 +161,29 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
                   {errorMessage || "Failed to generate your blueprint. Please try again."}
                 </p>
               </div>
+              
+              {/* Display web search calls if available */}
+              {toolCalls && toolCalls.length > 0 && (
+                <div className="w-full mt-4">
+                  <details className="text-xs">
+                    <summary className="cursor-pointer text-muted-foreground">
+                      Show Web Search Queries ({toolCalls.length})
+                    </summary>
+                    <div className="mt-2 p-2 bg-black/10 rounded overflow-auto max-h-[200px]">
+                      {toolCalls.map((call, index) => (
+                        <div key={index} className="mb-2 p-1 border-b border-gray-200">
+                          <p className="font-semibold">Search #{index + 1}:</p>
+                          <p className="text-xs text-green-700">
+                            {call.function?.arguments ? 
+                              JSON.parse(call.function.arguments).query || "No query found" 
+                              : "No search data"}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+                </div>
+              )}
               
               {/* Display technical details for debugging */}
               {debugInfo && (

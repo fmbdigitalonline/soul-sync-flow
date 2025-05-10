@@ -38,12 +38,12 @@ enabled = false
 [realtime]
 enabled = false
 
-# Add configuration for the research-blueprint-generator function
-[functions.research-blueprint-generator]
+# Configuration for the blueprint-generator function
+[functions.blueprint-generator]
 verify_jwt = true
 
-# Configuration for the updated blueprint-generator function
-[functions.blueprint-generator]
+# Add configuration for the research-blueprint-generator function
+[functions.research-blueprint-generator]
 verify_jwt = true
 
 # Configuration for the existing ai-coach function
