@@ -14,12 +14,14 @@ const ProtectedRoute = ({
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && !user) {
-      // Redirect to login if not authenticated
-      navigate("/auth", { state: { from: location.pathname } });
-    } else if (!loading && user && isNewUser && location.pathname !== "/onboarding") {
-      // Redirect new users to onboarding if they try to access other protected routes
-      navigate("/onboarding");
+    if (!loading) {
+      if (!user) {
+        // Redirect to login if not authenticated
+        navigate("/auth", { state: { from: location.pathname }, replace: true });
+      } else if (isNewUser && location.pathname !== "/onboarding") {
+        // Redirect new users to onboarding if they try to access other protected routes
+        navigate("/onboarding", { replace: true });
+      }
     }
   }, [user, loading, navigate, location.pathname, isNewUser]);
 

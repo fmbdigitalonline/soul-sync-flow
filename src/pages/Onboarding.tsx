@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight, ChevronLeft, Calendar, Clock, MapPin, Volume2 } from "lucide-react";
@@ -15,11 +16,13 @@ import { useSoulOrb } from "@/contexts/SoulOrbContext";
 import { motion } from "@/lib/framer-motion";
 import { Onboarding3DScene } from "@/components/ui/onboarding-3d-scene";
 import { useOnboarding3D } from "@/hooks/use-onboarding-3d";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Onboarding = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { currentMessage } = useSoulOrb();
+  const { setIsNewUser } = useAuth();
   const [formData, setFormData] = useState({
     name: "",
     birthDate: "",
@@ -66,6 +69,9 @@ const Onboarding = () => {
     // Set flag to prevent looping
     setBlueprintGenerated(true);
     
+    // Mark the user as no longer new after successful blueprint generation
+    setIsNewUser(false);
+    
     toast({
       title: "Blueprint generated!",
       description: "Your Soul Blueprint has been created successfully. Transitioning to 2D view...",
@@ -77,7 +83,7 @@ const Onboarding = () => {
     // Navigate to blueprint page after transition
     setTimeout(() => {
       console.log("Navigating to blueprint page after blueprint generation");
-      navigate("/blueprint");
+      navigate("/blueprint", { replace: true });
     }, 2000);
   };
 
@@ -101,7 +107,7 @@ const Onboarding = () => {
       const safetyTimeout = setTimeout(() => {
         if (window.location.pathname === "/onboarding") {
           console.log("Safety fallback: forcing navigation to blueprint page");
-          navigate("/blueprint");
+          navigate("/blueprint", { replace: true });
         }
       }, 5000);
       
@@ -410,7 +416,7 @@ const Onboarding = () => {
               <div className="text-center p-8">
                 <h2 className="text-2xl font-display font-bold mb-4">Welcome to SoulSync</h2>
                 <p className="mb-6">Your Soul Blueprint has been created successfully!</p>
-                <GradientButton onClick={() => navigate("/blueprint")} className="w-full">
+                <GradientButton onClick={() => navigate("/blueprint", { replace: true })} className="w-full">
                   View My Soul Blueprint
                 </GradientButton>
               </div>

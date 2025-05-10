@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,10 +25,10 @@ const Auth = () => {
     if (user) {
       if (isNewUser) {
         // New users should go through onboarding
-        navigate("/onboarding");
+        navigate("/onboarding", { replace: true });
       } else {
         // Existing users go to blueprint
-        navigate("/blueprint");
+        navigate("/blueprint", { replace: true });
       }
     }
   }, [user, isNewUser, navigate]);
