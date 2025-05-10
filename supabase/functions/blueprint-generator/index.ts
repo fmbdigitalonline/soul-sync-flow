@@ -135,7 +135,7 @@ Include these sections in your response:
       ],
       temperature: 0.7,
       max_tokens: 16000,
-      tools: "auto",
+      tools: [{ "type": "search" }], // FIX: Properly format tools as an array of objects
       tool_choice: "auto",
       response_format: { type: "json_object" }
     })
