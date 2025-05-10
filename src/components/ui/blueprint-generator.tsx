@@ -27,10 +27,10 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
   const [status, setStatus] = useState<'initial' | 'loading' | 'success' | 'error'>('initial');
   const [errorMessage, setErrorMessage] = useState('');
   const [debugInfo, setDebugInfo] = useState<any>(null);
-  const [toolCalls, setToolCalls] = useState<any[]>([]);
-  const [queueInfo, setQueueInfo] = useState({ position: 0, length: 0 });
+  const [queueInfo, setQueueInfo] = useState({ position: 0, length: 0, estimatedTimeSeconds: 0 });
   const [retryCount, setRetryCount] = useState(0);
   const { toast } = useToast();
+  const [progressInterval, setProgressInterval] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const generateBlueprint = async () => {
@@ -39,7 +39,6 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
         setProgress(10);
         setErrorMessage('');
         setDebugInfo(null);
-        setToolCalls([]);
 
         // Format the user data for the blueprint service
         const userData = {
@@ -50,6 +49,16 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
           mbti: formData.personality || undefined,
         };
 
+        // Set up a progress animation that slowly increases while we wait
+        let currentProgress = 10;
+        const interval = setInterval(() => {
+          // Gradually increase progress to simulate ongoing work
+          // Max out at 75% until we get a real response
+          currentProgress = Math.min(75, currentProgress + 0.5);
+          setProgress(currentProgress);
+        }, 1000);
+        
+        setProgressInterval(interval);
         setProgress(25);
 
         // Generate the blueprint
@@ -58,19 +67,22 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
         // Store raw response for debugging
         if (result.rawResponse) {
           setDebugInfo(result.rawResponse);
-          
-          // Extract tool calls if available
-          if (result.rawResponse.choices?.[0]?.message?.tool_calls) {
-            setToolCalls(result.rawResponse.choices[0].message.tool_calls);
-          }
         }
         
         // Update queue information if available
         if (result.queueLength !== undefined) {
+          const estimatedTimeSeconds = result.queueLength * 10; // Rough estimate: 10 seconds per request
           setQueueInfo({ 
             position: 0, 
-            length: result.queueLength 
+            length: result.queueLength,
+            estimatedTimeSeconds
           });
+        }
+        
+        // Clear the progress interval
+        if (interval) {
+          clearInterval(interval);
+          setProgressInterval(null);
         }
         
         // If there's an error in the result, handle it
@@ -97,7 +109,7 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
 
         toast({
           title: "Blueprint Generated",
-          description: "Your soul blueprint has been created successfully with enhanced web search!",
+          description: "Your soul blueprint has been created successfully!",
         });
 
         // Call the onComplete callback after a delay
@@ -111,6 +123,12 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
         setErrorMessage(error instanceof Error ? error.message : 'An unknown error occurred');
         setDebugInfo(error);
         
+        // Clear the progress interval if it exists
+        if (progressInterval) {
+          clearInterval(progressInterval);
+          setProgressInterval(null);
+        }
+        
         toast({
           variant: "destructive",
           title: "Blueprint Generation Failed",
@@ -121,7 +139,14 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
 
     // Start the generation process automatically
     generateBlueprint();
-  }, [formData, onComplete, toast, retryCount]);
+    
+    // Clean up interval on unmount
+    return () => {
+      if (progressInterval) {
+        clearInterval(progressInterval);
+      }
+    };
+  }, [formData, onComplete, toast, retryCount, progressInterval]);
 
   const handleRetry = () => {
     setRetryCount(prev => prev + 1);
@@ -129,9 +154,12 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
 
   // Function to render queue position message
   const getQueueMessage = () => {
-    if (queueInfo.position === 0) return "";
-    if (queueInfo.length === 0) return "Waiting in queue...";
-    return `Queue position: ${queueInfo.position} of ${queueInfo.length + 1}`;
+    if (queueInfo.position === 0 && queueInfo.length === 0) return "";
+    if (queueInfo.length > 0) {
+      const waitTime = Math.ceil(queueInfo.estimatedTimeSeconds / 60);
+      return `${queueInfo.length} ${queueInfo.length === 1 ? 'person' : 'people'} ahead of you (est. wait: ~${waitTime} ${waitTime === 1 ? 'minute' : 'minutes'})`;
+    }
+    return "Waiting in queue...";
   };
 
   return (
@@ -142,7 +170,7 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>Collecting data</span>
             <span>Processing</span>
-            <span>Web search</span>
+            <span>Research</span>
             <span>Saving</span>
           </div>
         </div>
@@ -152,9 +180,9 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
             <div className="flex flex-col items-center space-y-4">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
               <p className="text-sm text-muted-foreground">
-                {progress < 25 && "Connecting to OpenAI..."}
-                {progress >= 25 && progress < 50 && "Generating blueprint with enhanced search..."}
-                {progress >= 50 && progress < 75 && "Processing search results and AI response..."}
+                {progress < 25 && "Connecting to AI..."}
+                {progress >= 25 && progress < 50 && "Generating comprehensive blueprint..."}
+                {progress >= 50 && progress < 75 && "Analyzing astrological and numerological data..."}
                 {progress >= 75 && "Saving your blueprint..."}
               </p>
               {getQueueMessage() && (
@@ -171,7 +199,7 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
               <div className="text-center">
                 <p className="font-medium">Blueprint Generated!</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Your soul blueprint is ready to explore with enhanced web search.
+                  Your soul blueprint is ready to explore.
                 </p>
               </div>
             </div>
@@ -190,48 +218,25 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
               </div>
               
               {/* Display rate limit info specifically */}
-              {errorMessage && errorMessage.includes("rate limit") && (
+              {errorMessage && errorMessage.toLowerCase().includes("rate limit") && (
                 <div className="w-full mt-2 p-4 bg-amber-50 border border-amber-200 rounded-md">
                   <div className="flex gap-2 items-start">
                     <Info className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
                     <div>
-                      <h4 className="font-medium text-sm text-amber-800">Rate Limit Detected</h4>
+                      <h4 className="font-medium text-sm text-amber-800">High Demand</h4>
                       <p className="text-xs text-amber-700 mt-1">
-                        The OpenAI API has reached its rate limit. This typically happens when there are
-                        too many requests in a short period of time. Please try again in a few minutes.
+                        We're experiencing unusually high demand right now. 
+                        Please wait a moment and try again in a few minutes.
                       </p>
                     </div>
                   </div>
                 </div>
               )}
               
-              {/* Display web search calls if available */}
-              {toolCalls && toolCalls.length > 0 && (
-                <div className="w-full mt-4">
-                  <details className="text-xs">
-                    <summary className="cursor-pointer text-muted-foreground">
-                      Show Web Search Queries ({toolCalls.length})
-                    </summary>
-                    <div className="mt-2 p-2 bg-black/10 rounded overflow-auto max-h-[200px]">
-                      {toolCalls.map((call, index) => (
-                        <div key={index} className="mb-2 p-1 border-b border-gray-200">
-                          <p className="font-semibold">Search #{index + 1}:</p>
-                          <p className="text-xs text-green-700">
-                            {call.function?.arguments ? 
-                              JSON.parse(call.function.arguments).query || "No query found" 
-                              : "No search data"}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </details>
-                </div>
-              )}
-              
               {/* Display technical details for debugging */}
               {debugInfo && (
                 <div className="w-full mt-4">
-                  <details className="text-xs" open>
+                  <details className="text-xs">
                     <summary className="cursor-pointer text-muted-foreground">
                       Technical Error Details
                     </summary>

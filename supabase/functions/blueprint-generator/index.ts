@@ -14,6 +14,14 @@ const corsHeaders = {
 const requestQueue = [];
 let isProcessing = false;
 
+// Rate limit tracking
+const rateLimitInfo = {
+  isRateLimited: false,
+  resetTime: null,
+  consecutiveErrors: 0,
+  cooldownMs: 5000, // Initial cooldown of 5 seconds
+};
+
 /**
  * Edge function to handle blueprint generation requests
  */
@@ -110,8 +118,32 @@ async function processQueue() {
     console.log(`Processing request for ${nextRequest.userMeta.full_name} (waited ${Date.now() - nextRequest.addedAt}ms)`);
     console.log(`Queue length: ${requestQueue.length}`);
     
-    // Generate the blueprint with search preview model only
+    // Check if we're currently rate limited
+    if (rateLimitInfo.isRateLimited) {
+      const now = Date.now();
+      if (now < rateLimitInfo.resetTime) {
+        const waitTime = Math.ceil((rateLimitInfo.resetTime - now) / 1000);
+        console.log(`Rate limited, waiting ${waitTime} seconds before retry`);
+        
+        // Re-add the request to the front of the queue with a delay
+        setTimeout(() => {
+          requestQueue.unshift(nextRequest);
+          processQueue();
+        }, Math.min(30000, rateLimitInfo.cooldownMs)); // Cap maximum delay at 30 seconds
+        
+        return;
+      } else {
+        // Reset rate limit if the cooldown period has passed
+        console.log("Rate limit cooldown period has passed, attempting to process");
+        rateLimitInfo.isRateLimited = false;
+      }
+    }
+    
+    // Generate the blueprint with search preview model
     const result = await generateBlueprintWithSearchPreview(nextRequest.userMeta);
+    
+    // Reset consecutive error count on success
+    rateLimitInfo.consecutiveErrors = 0;
     
     // Resolve the promise with the result
     nextRequest.resolve({
@@ -128,8 +160,29 @@ async function processQueue() {
   } catch (error) {
     console.error("Error in queue processing:", error);
     
-    // Return the detailed error
-    nextRequest.reject(error);
+    // Check if this is a rate limit error
+    if (error.message && (
+      error.message.includes("rate limit") || 
+      error.message.includes("too many requests") || 
+      error.message.includes("429") || 
+      error.message.includes("quota exceeded")
+    )) {
+      // Increase the rate limit tracking
+      rateLimitInfo.isRateLimited = true;
+      rateLimitInfo.consecutiveErrors++;
+      
+      // Exponential backoff based on consecutive errors
+      rateLimitInfo.cooldownMs = Math.min(120000, rateLimitInfo.cooldownMs * (1.5 + (rateLimitInfo.consecutiveErrors * 0.5)));
+      rateLimitInfo.resetTime = Date.now() + rateLimitInfo.cooldownMs;
+      
+      console.log(`Rate limit detected. Backing off for ${rateLimitInfo.cooldownMs/1000} seconds`);
+      
+      // Re-add the request to the queue for retry later
+      requestQueue.unshift(nextRequest);
+    } else {
+      // Return the detailed error for non-rate limit errors
+      nextRequest.reject(error);
+    }
     
     // Continue processing the queue after a delay
     setTimeout(() => {
@@ -139,7 +192,7 @@ async function processQueue() {
 }
 
 /**
- * Generate a blueprint using GPT-4o Search Preview only, no fallbacks
+ * Generate a blueprint using GPT-4o Search Preview with web search capabilities
  */
 async function generateBlueprintWithSearchPreview(userMeta) {
   const systemPrompt = `You are an expert astrologer, numerologist, Human Design reader, Chinese metaphysics interpreter, and personality psychologist. 
@@ -174,8 +227,10 @@ Include these sections in your response:
   console.log("Calling OpenAI with GPT-4o Search Preview");
   
   try {
-    // Call OpenAI API with GPT-4o search preview - ONLY VERSION
-    // Fixed the tools parameter to include the required function property
+    // Determine the birth location for better location-specific search
+    const locationInfo = parseLocationForSearch(userMeta.birth_location);
+    
+    // Call OpenAI API with GPT-4o search preview using the proper web_search_options
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -191,23 +246,10 @@ Include these sections in your response:
         temperature: 0.7,
         max_tokens: 1500,
         response_format: { type: "json_object" },
-        tools: [{
-          type: "web_search",
-          function: {
-            name: "search",
-            description: "Search the web for relevant information related to astrology, human design, numerology, etc.",
-            parameters: {
-              type: "object",
-              properties: {
-                query: {
-                  type: "string",
-                  description: "The search query to look up information"
-                }
-              },
-              required: ["query"]
-            }
-          }
-        }]
+        web_search_options: {
+          search_context_size: "medium", // Balanced approach for depth vs speed
+          user_location: locationInfo
+        }
       })
     });
 
@@ -215,6 +257,12 @@ Include these sections in your response:
     if (!response.ok) {
       const errorData = await response.json();
       console.error("OpenAI API error:", JSON.stringify(errorData));
+      
+      // Enhanced error handling for rate limits
+      if (errorData.error && errorData.error.type === "rate_limit_exceeded") {
+        throw new Error(`OpenAI rate limit exceeded. Please try again in ${errorData.error.retry_after || 'a few'} seconds.`);
+      }
+      
       throw new Error(`OpenAI API error: ${JSON.stringify(errorData)}`);
     }
 
@@ -228,6 +276,9 @@ Include these sections in your response:
       // Parse the generated content into a JSON object
       const parsedBlueprint = JSON.parse(generatedContent);
       
+      // Save any citation information but don't display them to the user
+      const citations = data.choices[0].message.annotations || [];
+      
       // Create a complete blueprint object with the required structure
       const completeBlueprint = {
         _meta: {
@@ -236,7 +287,9 @@ Include these sections in your response:
           generation_date: new Date().toISOString(),
           birth_data: userMeta,
           schema_version: "1.0",
-          error: null
+          error: null,
+          // Store citations internally but don't expose them in the UI
+          _citations: citations.length > 0 ? citations : null
         },
         user_meta: {
           ...userMeta
@@ -260,5 +313,57 @@ Include these sections in your response:
   } catch (error) {
     console.error("Error calling OpenAI:", error);
     throw error; // Propagate the error for detailed debugging
+  }
+}
+
+/**
+ * Parse location string to extract potential country/city information for search context
+ */
+function parseLocationForSearch(locationString) {
+  if (!locationString || locationString === "Unknown") {
+    return { type: "approximate", approximate: {} };
+  }
+  
+  try {
+    // Basic parsing of common location formats like "City, Country" or "City, State, Country"
+    const parts = locationString.split(',').map(part => part.trim());
+    
+    const locationData = {
+      type: "approximate",
+      approximate: {}
+    };
+    
+    // Very simplified location parsing
+    if (parts.length >= 1) {
+      locationData.approximate.city = parts[0];
+    }
+    
+    if (parts.length >= 2) {
+      // If we have two parts, assume the second part is either state/region or country
+      locationData.approximate.region = parts[1];
+      
+      // Try to detect if the last part is a country
+      const possibleCountry = parts[parts.length - 1];
+      
+      // Simple mapping of some common country names to ISO codes
+      const countryCodes = {
+        "USA": "US", "United States": "US", "US": "US",
+        "UK": "GB", "United Kingdom": "GB",
+        "Canada": "CA", "Australia": "AU",
+        "India": "IN", "Japan": "JP",
+        "Germany": "DE", "France": "FR",
+        "Italy": "IT", "Spain": "ES"
+      };
+      
+      // Set the country code if we can map it
+      if (countryCodes[possibleCountry]) {
+        locationData.approximate.country = countryCodes[possibleCountry];
+      }
+    }
+    
+    return locationData;
+  } catch (e) {
+    // Return empty object if parsing fails
+    return { type: "approximate", approximate: {} };
   }
 }
