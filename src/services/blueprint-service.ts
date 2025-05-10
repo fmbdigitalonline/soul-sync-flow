@@ -21,7 +21,8 @@ export interface BlueprintMeta {
   birth_data: Record<string, any>;
   schema_version: string;
   raw_response?: any;
-  error?: string; // Added error property to the BlueprintMeta interface
+  error?: string;
+  tool_calls?: Array<any>;
 }
 
 // Define complete BlueprintData interface based on structure
@@ -43,7 +44,7 @@ export interface BlueprintData {
     definition: string;
     not_self_theme: string;
     life_purpose: string;
-    centers: Record<string, { defined: boolean; description: string }>;
+    centers: Record<string, boolean | { defined: boolean; description: string }>;
     gates: {
       unconscious_design: string[];
       conscious_personality: string[];
@@ -112,16 +113,16 @@ export interface BlueprintData {
     };
     [key: string]: any;
   };
-  timing_overlays: {
+  timing_overlays?: {
     current_transits: any[];
     notes: string;
     [key: string]: any;
   };
-  goal_stack: any[];
-  task_graph: Record<string, any>;
-  belief_logs: any[];
-  excitement_scores: any[];
-  vibration_check_ins: any[];
+  goal_stack?: any[];
+  task_graph?: Record<string, any>;
+  belief_logs?: any[];
+  excitement_scores?: any[];
+  vibration_check_ins?: any[];
   [key: string]: any;
 }
 
@@ -240,8 +241,13 @@ const blueprintService = {
     }
   },
 
-  // This function will use the GPT-4o API to generate a blueprint
-  generateBlueprintFromBirthData: async (userMeta: UserMetaData): Promise<{ success: boolean; blueprint?: BlueprintData; error?: string }> => {
+  // Generate a blueprint using the GPT-4o search preview edge function
+  generateBlueprintFromBirthData: async (userMeta: UserMetaData): Promise<{ 
+    success: boolean; 
+    blueprint?: BlueprintData; 
+    error?: string;
+    rawResponse?: any;
+  }> => {
     try {
       console.log('Calling blueprint-generator with user meta:', userMeta);
       const { data, error } = await supabase.functions.invoke('blueprint-generator', {
@@ -252,10 +258,20 @@ const blueprintService = {
       
       if (data && data.blueprint) {
         console.log('Blueprint generated via Supabase function');
-        return { success: true, blueprint: data.blueprint as BlueprintData };
+        
+        // Include raw response for debugging
+        return { 
+          success: true, 
+          blueprint: data.blueprint as BlueprintData,
+          rawResponse: data.rawResponse
+        };
       } else if (data && data.error) {
         console.error('Error from blueprint generator:', data.error);
-        return { success: false, error: data.error };
+        return { 
+          success: false, 
+          error: data.error,
+          rawResponse: data.rawResponse
+        };
       }
       
       throw new Error('No blueprint or error returned from generator function');

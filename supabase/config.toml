@@ -42,8 +42,8 @@ enabled = false
 [functions.research-blueprint-generator]
 verify_jwt = true
 
-# Configuration for the existing blueprint-calculator function
-[functions.blueprint-calculator]
+# Configuration for the updated blueprint-generator function
+[functions.blueprint-generator]
 verify_jwt = true
 
 # Configuration for the existing ai-coach function

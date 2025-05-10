@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Loader2, CheckCircle2, XCircle } from "lucide-react";
-import blueprintService from '@/services/blueprint-service';
+import blueprintService, { BlueprintData } from '@/services/blueprint-service';
 import { useToast } from "@/hooks/use-toast";
 
 interface BlueprintGeneratorProps {
@@ -49,12 +49,21 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
         // Generate the blueprint
         const result = await blueprintService.generateBlueprintFromBirthData(userData);
         
+        // Store raw response for debugging
+        if (result.rawResponse) {
+          setDebugInfo(result.rawResponse);
+        }
+        
         // If there's an error in the result, handle it
-        if (!result.success && result.error) {
-          throw new Error(result.error);
+        if (!result.success) {
+          throw new Error(result.error || "Unknown error");
         }
 
         const blueprint = result.blueprint;
+        if (!blueprint) {
+          throw new Error("No blueprint data returned from service");
+        }
+        
         setProgress(75);
 
         // Save the blueprint to the database
@@ -114,7 +123,7 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
               <p className="text-sm text-muted-foreground">
                 {progress < 25 && "Connecting to OpenAI..."}
-                {progress >= 25 && progress < 50 && "Generating blueprint with GPT-4o..."}
+                {progress >= 25 && progress < 50 && "Generating blueprint with GPT-4o Search Preview..."}
                 {progress >= 50 && progress < 75 && "Processing AI response..."}
                 {progress >= 75 && "Saving your blueprint..."}
               </p>

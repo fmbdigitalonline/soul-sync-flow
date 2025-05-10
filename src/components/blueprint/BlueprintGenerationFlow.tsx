@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -36,21 +37,21 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
     { id: "chinese", label: "Calculating Chinese Zodiac" },
     { id: "mbti", label: "Integrating MBTI data" },
     { id: "insights", label: "Generating integrated insights" },
+    { id: "search", label: "Performing web searches" },
     { id: "store", label: "Storing complete blueprint" },
   ];
   
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
   const [particles, setParticles] = useState<Array<{id: number, x: number, y: number, size: number, speed: number}>>([]);
-  const [generatedBlueprint, setGeneratedBlueprint] = useState<BlueprintData | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [debugMode, setDebugMode] = useState(false);
   const [rawResponse, setRawResponse] = useState<any>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [debugMode, setDebugMode] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isError, setIsError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [stage, setStage] = useState('initial');
+  const [toolCalls, setToolCalls] = useState<any[]>([]);
   const { toast } = useToast();
 
   // Generate random particles for visual effect
@@ -65,7 +66,28 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
     setParticles(newParticles);
   }, []);
 
-  // Generate the blueprint using the actual calculation service
+  // Step progression for the UI
+  useEffect(() => {
+    if (isGenerating && !isSuccess && !isError) {
+      const totalSteps = steps.length;
+      let stepIndex = 0;
+      
+      const progressInterval = setInterval(() => {
+        if (stepIndex >= totalSteps) {
+          clearInterval(progressInterval);
+          return;
+        }
+        
+        setCurrentStep(stepIndex);
+        setProgress(Math.min(Math.floor((stepIndex / totalSteps) * 100), 70)); // Cap at 70% until actual completion
+        stepIndex++;
+      }, 3000); // Show a new step every 3 seconds
+      
+      return () => clearInterval(progressInterval);
+    }
+  }, [isGenerating, isSuccess, isError, steps.length]);
+
+  // Generate the blueprint using the actual service
   useEffect(() => {
     let mounted = true;
     
@@ -82,15 +104,24 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
             preferred_name: userMeta.preferred_name || userMeta.full_name.split(' ')[0],
           };
           
-          // Generate blueprint
-          setStage('generating');
+          // Generate blueprint with web search
+          setStage('searching');
           setProgress(30);
-          await new Promise(resolve => setTimeout(resolve, 2000));
           
-          // Use the generate function instead of calculate
+          // Use the generate function
           const result = await blueprintService.generateBlueprintFromBirthData(updatedUserMeta);
           
           if (!mounted) return;
+          
+          // Store raw response for debugging
+          if (result.rawResponse) {
+            setRawResponse(result.rawResponse);
+            
+            // Extract tool calls if available
+            if (result.rawResponse.choices?.[0]?.message?.tool_calls) {
+              setToolCalls(result.rawResponse.choices[0].message.tool_calls);
+            }
+          }
           
           if (result.success && result.blueprint) {
             setProgress(70);
@@ -105,6 +136,12 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
             setProgress(100);
             setStage('complete');
             setIsSuccess(true);
+            
+            toast({
+              title: "Blueprint Generated Successfully",
+              description: "Your soul blueprint has been created with web search enhanced data",
+              variant: "default"
+            });
             
             // Call onComplete callback if provided
             if (onComplete) {
@@ -123,10 +160,12 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
             setIsError(true);
             setErrorMessage(error instanceof Error ? error.message : 'Failed to generate blueprint. Please try again.');
             setStage('error');
+            setProgress(100); // Complete the progress bar even on error
+            
             toast({
               variant: "destructive",
               title: "Blueprint Generation Failed",
-              description: "There was an error generating your blueprint. Please try again."
+              description: "There was an error generating your blueprint. View technical details for more information."
             });
           }
         }
@@ -139,11 +178,6 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
       mounted = false;
     };
   }, [isGenerating, userMeta, onComplete, toast]);
-
-  // Helper function to simulate processing delay
-  const simulateProcessingDelay = (ms = 1200) => {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  };
 
   // Toggle debug mode
   const toggleDebugMode = () => {
@@ -169,7 +203,7 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
           <span className="gradient-text">Generating Your Soul Blueprint</span>
         </h2>
         <p className="text-muted-foreground">
-          Please wait while we analyze cosmic patterns and generate your personalized blueprint
+          Using GPT-4o Search Preview to analyze cosmic patterns and web search for accurate data
         </p>
         
         {/* Debug Mode Toggle */}
@@ -182,12 +216,12 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
           {debugMode ? (
             <>
               <EyeOff className="h-4 w-4 mr-2" />
-              Hide Raw Response
+              Hide Technical Details
             </>
           ) : (
             <>
               <Eye className="h-4 w-4 mr-2" />
-              Show Raw Response
+              View Technical Details
             </>
           )}
         </Button>
@@ -271,35 +305,29 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
             <span className="text-xs text-center text-white/80">Blueprint Service</span>
           </div>
 
-          {/* Swiss Ephemeris */}
+          {/* Web Search */}
           <div className="w-24 h-32 flex flex-col items-center justify-center">
             <div className={cn(
               "bg-white/10 backdrop-blur-sm p-3 rounded-lg border border-white/20 shadow-glow mb-2",
-              currentStep === 1 && "border-soul-purple animate-pulse"
+              currentStep === 7 && "border-soul-purple animate-pulse"
             )}>
               <div className="w-10 h-10 flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-soul-purple">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <path d="M12 6a2 2 0 0 0 0 12 2 2 0 0 0 0-12"></path>
-                  <path d="M12 2v4"></path>
-                  <path d="M12 18v4"></path>
-                  <path d="M4.9 4.9l2.8 2.8"></path>
-                  <path d="M16.3 16.3l2.8 2.8"></path>
-                  <path d="M2 12h4"></path>
-                  <path d="M18 12h4"></path>
-                  <path d="M4.9 19.1l2.8-2.8"></path>
-                  <path d="M16.3 7.7l2.8-2.8"></path>
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  <line x1="11" y1="8" x2="11" y2="14"></line>
+                  <line x1="8" y1="11" x2="14" y2="11"></line>
                 </svg>
               </div>
             </div>
-            <span className="text-xs text-center text-white/80">Swiss Ephemeris</span>
+            <span className="text-xs text-center text-white/80">Web Search</span>
           </div>
 
           {/* Database */}
           <div className="w-24 h-32 flex flex-col items-center justify-center">
             <div className={cn(
               "bg-white/10 backdrop-blur-sm p-3 rounded-lg border border-white/20 shadow-glow mb-2",
-              currentStep === 7 && "border-soul-purple animate-pulse"
+              currentStep === 8 && "border-soul-purple animate-pulse"
             )}>
               <div className="w-10 h-10 flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-soul-purple">
@@ -337,9 +365,9 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
         </div>
 
         {/* Error Message */}
-        {error && (
+        {isError && (
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 translate-y-16 bg-red-900/80 text-white px-4 py-2 rounded-md text-sm">
-            Error: {error}
+            Error: {errorMessage}
           </div>
         )}
 
@@ -356,18 +384,24 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
             </motion.p>
           ) : (
             <motion.p 
-              className="text-soul-purple font-medium text-lg"
+              className={cn(
+                "font-medium text-lg",
+                isSuccess ? "text-soul-purple" : "text-red-500"
+              )}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
             >
-              Blueprint Generation Complete!
+              {isSuccess ? "Blueprint Generation Complete!" : "Blueprint Generation Failed"}
             </motion.p>
           )}
           
           {/* Progress bar */}
           <div className="mt-2 mx-auto w-64 h-1 bg-white/20 rounded-full overflow-hidden">
             <motion.div 
-              className="h-full bg-soul-purple"
+              className={cn(
+                "h-full",
+                isSuccess ? "bg-soul-purple" : isError ? "bg-red-500" : "bg-soul-purple"
+              )}
               style={{ width: `${progress}%` }}
               initial={{ width: '0%' }}
               animate={{ width: `${progress}%` }}
@@ -425,7 +459,7 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
             className={cn(
               "w-3 h-3 rounded-full transition-colors",
               currentStep >= steps.length
-                ? "bg-soul-purple"
+                ? isSuccess ? "bg-soul-purple" : "bg-red-500"
                 : "bg-soul-purple/30"
             )}
           />
@@ -435,16 +469,16 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
       {/* Key features section */}
       <div className="mt-12 grid grid-cols-2 gap-6">
         <div className="bg-white/5 backdrop-blur-sm p-4 rounded-lg border border-white/10">
-          <h3 className="text-lg font-medium mb-2 text-soul-purple">Accurate Astrological Calculations</h3>
+          <h3 className="text-lg font-medium mb-2 text-soul-purple">Web Search Integration</h3>
           <p className="text-sm text-white/70">
-            Powered by Swiss Ephemeris for precise planetary positions at the time of birth
+            Utilizes OpenAI's search capabilities to find accurate astrological and birth data
           </p>
         </div>
         
         <div className="bg-white/5 backdrop-blur-sm p-4 rounded-lg border border-white/10">
-          <h3 className="text-lg font-medium mb-2 text-soul-purple">Optimized Performance</h3>
+          <h3 className="text-lg font-medium mb-2 text-soul-purple">Enhanced Accuracy</h3>
           <p className="text-sm text-white/70">
-            Complex calculations are cached to improve response times and system efficiency
+            Planetary positions and time zone adjustments calculated using real-time web data
           </p>
         </div>
         
@@ -458,21 +492,43 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
         <div className="bg-white/5 backdrop-blur-sm p-4 rounded-lg border border-white/10">
           <h3 className="text-lg font-medium mb-2 text-soul-purple">Personalized Insights</h3>
           <p className="text-sm text-white/70">
-            Pattern recognition algorithms generate custom guidance based on your unique blueprint
+            GPT-4o Search Preview processes research results to generate your unique blueprint
           </p>
         </div>
       </div>
 
       {/* Debug Output Section */}
       {debugMode && (
-        <div className="mt-8">
-          <h3 className="text-xl font-bold mb-2">Raw Response Data</h3>
-          <div className="bg-black/60 rounded-md p-4 overflow-auto max-h-[400px] text-sm">
-            {rawResponse ? (
-              <pre className="text-green-400 whitespace-pre-wrap">{JSON.stringify(rawResponse, null, 2)}</pre>
-            ) : (
-              <p className="text-gray-400">No raw response data available yet...</p>
-            )}
+        <div className="mt-8 space-y-6">
+          <div>
+            <h3 className="text-xl font-bold mb-2">Web Search Calls</h3>
+            <div className="bg-black/60 rounded-md p-4 overflow-auto max-h-[200px] text-sm">
+              {toolCalls && toolCalls.length > 0 ? (
+                <div className="space-y-2">
+                  {toolCalls.map((call, index) => (
+                    <div key={index} className="p-2 border border-soul-purple/30 rounded">
+                      <p className="text-soul-purple font-medium">Search #{index + 1}</p>
+                      <p className="text-green-400 whitespace-pre-wrap mt-1">
+                        {call.function?.arguments ? JSON.parse(call.function.arguments).query || "No query found" : "No search data"}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-400">No web searches performed yet...</p>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-xl font-bold mb-2">Raw API Response</h3>
+            <div className="bg-black/60 rounded-md p-4 overflow-auto max-h-[400px] text-sm">
+              {rawResponse ? (
+                <pre className="text-green-400 whitespace-pre-wrap">{JSON.stringify(rawResponse, null, 2)}</pre>
+              ) : (
+                <p className="text-gray-400">No raw API response data available yet...</p>
+              )}
+            </div>
           </div>
         </div>
       )}
