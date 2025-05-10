@@ -291,7 +291,15 @@ Include these sections in your response:
       ],
       temperature: 0.7,
       max_tokens: 4000,  // Reduced token limit to help avoid rate limits
-      tools: [{ type: "search" }],  // Corrected format for the search tool
+      tools: [
+        {
+          type: "search",
+          function: {
+            name: "search",
+            description: "Search the web for information"
+          }
+        }
+      ],
       tool_choice: "auto",
       response_format: { type: "json_object" }
     })
@@ -370,4 +378,3 @@ Include these sections in your response:
     return { blueprint: errorBlueprint, rawResponse: data };
   }
 }
-
