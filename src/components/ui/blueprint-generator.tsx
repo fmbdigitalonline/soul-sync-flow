@@ -29,6 +29,7 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
   const [debugInfo, setDebugInfo] = useState<any>(null);
   const [toolCalls, setToolCalls] = useState<any[]>([]);
   const [usedFallback, setUsedFallback] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -122,7 +123,17 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
 
     // Start the generation process automatically
     generateBlueprint();
-  }, [formData, onComplete, toast]);
+  }, [formData, onComplete, toast, retryCount]);
+
+  const handleRetry = () => {
+    setRetryCount(prev => prev + 1);
+    setErrorMessage('');
+    setDebugInfo(null);
+    setToolCalls([]);
+    setUsedFallback(false);
+    setStatus('initial');
+    setProgress(0);
+  };
 
   return (
     <div className={className}>
@@ -215,7 +226,7 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
                 </div>
               )}
               
-              <Button onClick={() => window.location.reload()}>
+              <Button onClick={handleRetry}>
                 Try Again
               </Button>
             </div>

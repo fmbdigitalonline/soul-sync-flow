@@ -37,9 +37,9 @@ serve(async (req) => {
       throw new Error("Missing OpenAI API key. Please add OPENAI_API_KEY to your Supabase secrets.");
     }
 
-    // Try to generate the blueprint with GPT-4o search preview, with fallback to regular GPT-4o
     try {
-      // First attempt with search preview
+      // First attempt with search preview with proper error handling
+      console.log("Attempting to generate blueprint with GPT-4o search preview...");
       const { blueprint, rawResponse } = await generateBlueprintWithAIAndSearch(userMeta);
       
       // Return success response with the blueprint and raw response for debugging
@@ -57,7 +57,7 @@ serve(async (req) => {
         }
       );
     } catch (searchError) {
-      console.warn("Failed to generate with search, error:", searchError.message);
+      console.error("Failed to generate with search, error:", searchError.message);
       
       if (searchError.message.includes("rate limit")) {
         console.log("Rate limit hit, falling back to GPT-4o without search");
@@ -157,7 +157,7 @@ Include these sections in your response:
         { role: "user", content: userPrompt }
       ],
       temperature: 0.7,
-      max_tokens: 8000,
+      max_tokens: 4000,  // Reduced token limit to help avoid rate limits
       response_format: { type: "json_object" }
     })
   });
@@ -290,8 +290,8 @@ Include these sections in your response:
         { role: "user", content: userPrompt }
       ],
       temperature: 0.7,
-      max_tokens: 8000, // Adjusted token limit to avoid hitting rate limits
-      tools: [{ type: "search" }], // Properly format tools as an array of objects
+      max_tokens: 4000,  // Reduced token limit to help avoid rate limits
+      tools: [{ type: "search" }],  // Corrected format for the search tool
       tool_choice: "auto",
       response_format: { type: "json_object" }
     })
@@ -370,3 +370,4 @@ Include these sections in your response:
     return { blueprint: errorBlueprint, rawResponse: data };
   }
 }
+
