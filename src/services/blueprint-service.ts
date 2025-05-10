@@ -248,7 +248,7 @@ const blueprintService = {
     blueprint?: BlueprintData; 
     error?: string;
     rawResponse?: any;
-    notice?: string;
+    queueLength?: number;
   }> => {
     try {
       console.log('Calling blueprint-generator with user meta:', userMeta);
@@ -261,15 +261,15 @@ const blueprintService = {
       if (data && data.blueprint) {
         console.log('Blueprint generated via Supabase function');
         
-        // Check if notice was included (fallback model used)
-        const notice = data.notice || null;
+        // Get queue length if available
+        const queueLength = data.queueLength || 0;
         
         // Include raw response for debugging
         return { 
           success: true, 
           blueprint: data.blueprint as BlueprintData,
           rawResponse: data.rawResponse,
-          notice
+          queueLength
         };
       } else if (data && data.error) {
         console.error('Error from blueprint generator:', data.error);

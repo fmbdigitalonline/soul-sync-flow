@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { Loader2, CheckCircle2, XCircle, Info } from "lucide-react";
 import blueprintService, { BlueprintData } from '@/services/blueprint-service';
 import { useToast } from "@/hooks/use-toast";
 
@@ -28,7 +28,7 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
   const [errorMessage, setErrorMessage] = useState('');
   const [debugInfo, setDebugInfo] = useState<any>(null);
   const [toolCalls, setToolCalls] = useState<any[]>([]);
-  const [usedFallback, setUsedFallback] = useState(false);
+  const [queueInfo, setQueueInfo] = useState({ position: 0, length: 0 });
   const [retryCount, setRetryCount] = useState(0);
   const { toast } = useToast();
 
@@ -37,6 +37,9 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
       try {
         setStatus('loading');
         setProgress(10);
+        setErrorMessage('');
+        setDebugInfo(null);
+        setToolCalls([]);
 
         // Format the user data for the blueprint service
         const userData = {
@@ -62,9 +65,12 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
           }
         }
         
-        // Check if we used the fallback (non-search) model
-        if (result.notice && result.notice.includes("fallback")) {
-          setUsedFallback(true);
+        // Update queue information if available
+        if (result.queueLength !== undefined) {
+          setQueueInfo({ 
+            position: 0, 
+            length: result.queueLength 
+          });
         }
         
         // If there's an error in the result, handle it
@@ -89,18 +95,10 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
         setProgress(100);
         setStatus('success');
 
-        // Show appropriate toast based on whether we used the fallback or not
-        if (usedFallback) {
-          toast({
-            title: "Blueprint Generated (Fallback Mode)",
-            description: "Your soul blueprint has been created successfully using our fallback model due to rate limits.",
-          });
-        } else {
-          toast({
-            title: "Blueprint Generated",
-            description: "Your soul blueprint has been created successfully with GPT-4o Search Preview!",
-          });
-        }
+        toast({
+          title: "Blueprint Generated",
+          description: "Your soul blueprint has been created successfully with enhanced web search!",
+        });
 
         // Call the onComplete callback after a delay
         if (onComplete) {
@@ -127,12 +125,13 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
 
   const handleRetry = () => {
     setRetryCount(prev => prev + 1);
-    setErrorMessage('');
-    setDebugInfo(null);
-    setToolCalls([]);
-    setUsedFallback(false);
-    setStatus('initial');
-    setProgress(0);
+  };
+
+  // Function to render queue position message
+  const getQueueMessage = () => {
+    if (queueInfo.position === 0) return "";
+    if (queueInfo.length === 0) return "Waiting in queue...";
+    return `Queue position: ${queueInfo.position} of ${queueInfo.length + 1}`;
   };
 
   return (
@@ -154,10 +153,13 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
               <p className="text-sm text-muted-foreground">
                 {progress < 25 && "Connecting to OpenAI..."}
-                {progress >= 25 && progress < 50 && "Generating blueprint with AI..."}
+                {progress >= 25 && progress < 50 && "Generating blueprint with enhanced search..."}
                 {progress >= 50 && progress < 75 && "Processing search results and AI response..."}
                 {progress >= 75 && "Saving your blueprint..."}
               </p>
+              {getQueueMessage() && (
+                <p className="text-xs text-amber-600">{getQueueMessage()}</p>
+              )}
             </div>
           )}
 
@@ -169,9 +171,7 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
               <div className="text-center">
                 <p className="font-medium">Blueprint Generated!</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {usedFallback 
-                    ? "Your soul blueprint is ready to explore (created with fallback model due to rate limits)." 
-                    : "Your soul blueprint is ready to explore with enhanced web search."}
+                  Your soul blueprint is ready to explore with enhanced web search.
                 </p>
               </div>
             </div>
@@ -188,6 +188,22 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
                   {errorMessage || "Failed to generate your blueprint. Please try again."}
                 </p>
               </div>
+              
+              {/* Display rate limit info specifically */}
+              {errorMessage && errorMessage.includes("rate limit") && (
+                <div className="w-full mt-2 p-4 bg-amber-50 border border-amber-200 rounded-md">
+                  <div className="flex gap-2 items-start">
+                    <Info className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-medium text-sm text-amber-800">Rate Limit Detected</h4>
+                      <p className="text-xs text-amber-700 mt-1">
+                        The OpenAI API has reached its rate limit. This typically happens when there are
+                        too many requests in a short period of time. Please try again in a few minutes.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
               
               {/* Display web search calls if available */}
               {toolCalls && toolCalls.length > 0 && (
@@ -215,12 +231,12 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
               {/* Display technical details for debugging */}
               {debugInfo && (
                 <div className="w-full mt-4">
-                  <details className="text-xs">
+                  <details className="text-xs" open>
                     <summary className="cursor-pointer text-muted-foreground">
-                      Show Technical Details
+                      Technical Error Details
                     </summary>
                     <pre className="mt-2 p-2 bg-black/10 rounded overflow-auto max-h-[200px] text-red-600">
-                      {JSON.stringify(debugInfo, null, 2)}
+                      {typeof debugInfo === 'object' ? JSON.stringify(debugInfo, null, 2) : debugInfo}
                     </pre>
                   </details>
                 </div>
