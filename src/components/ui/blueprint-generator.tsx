@@ -71,9 +71,9 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
         
         // Update queue information if available
         if (result.queueLength !== undefined) {
-          const estimatedTimeSeconds = result.queueLength * 10; // Rough estimate: 10 seconds per request
+          const estimatedTimeSeconds = result.queueLength * 20; // Updated estimate: 20 seconds per request
           setQueueInfo({ 
-            position: 0, 
+            position: result.queuePosition || 0, 
             length: result.queueLength,
             estimatedTimeSeconds
           });
@@ -162,6 +162,47 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
     return "Waiting in queue...";
   };
 
+  // Function to handle API-specific errors
+  const renderApiErrorMessage = () => {
+    if (!errorMessage) return null;
+    
+    if (errorMessage.toLowerCase().includes("model incompatible request argument")) {
+      return (
+        <div className="w-full mt-2 p-4 bg-amber-50 border border-amber-200 rounded-md">
+          <div className="flex gap-2 items-start">
+            <Info className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+            <div>
+              <h4 className="font-medium text-sm text-amber-800">API Configuration Error</h4>
+              <p className="text-xs text-amber-700 mt-1">
+                There was an issue with our AI service configuration. 
+                This is a temporary technical error. Please try again or contact support if the issue persists.
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
+    if (errorMessage.toLowerCase().includes("rate limit")) {
+      return (
+        <div className="w-full mt-2 p-4 bg-amber-50 border border-amber-200 rounded-md">
+          <div className="flex gap-2 items-start">
+            <Info className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+            <div>
+              <h4 className="font-medium text-sm text-amber-800">High Demand</h4>
+              <p className="text-xs text-amber-700 mt-1">
+                We're experiencing unusually high demand right now. 
+                Please wait a moment and try again in a few minutes.
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
+    return null;
+  };
+
   return (
     <div className={className}>
       <div className="space-y-6">
@@ -217,21 +258,8 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
                 </p>
               </div>
               
-              {/* Display rate limit info specifically */}
-              {errorMessage && errorMessage.toLowerCase().includes("rate limit") && (
-                <div className="w-full mt-2 p-4 bg-amber-50 border border-amber-200 rounded-md">
-                  <div className="flex gap-2 items-start">
-                    <Info className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <h4 className="font-medium text-sm text-amber-800">High Demand</h4>
-                      <p className="text-xs text-amber-700 mt-1">
-                        We're experiencing unusually high demand right now. 
-                        Please wait a moment and try again in a few minutes.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
+              {/* Display API-specific error information */}
+              {renderApiErrorMessage()}
               
               {/* Display technical details for debugging */}
               {debugInfo && (
