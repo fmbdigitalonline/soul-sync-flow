@@ -244,6 +244,7 @@ const blueprintService = {
     try {
       // First try to use the Supabase function if available
       try {
+        console.log('Calling blueprint-generator with user meta:', userMeta);
         const { data, error } = await supabase.functions.invoke('blueprint-generator', {
           body: { userMeta }
         });
