@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -89,36 +88,40 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
           await new Promise(resolve => setTimeout(resolve, 2000));
           
           // Use the generate function instead of calculate
-          const blueprint = await blueprintService.generateBlueprintFromBirthData(updatedUserMeta);
+          const result = await blueprintService.generateBlueprintFromBirthData(updatedUserMeta);
           
           if (!mounted) return;
           
-          setProgress(70);
-          setStage('saving');
-          
-          // Save blueprint to database
-          await blueprintService.saveBlueprintToDatabase(blueprint);
-          
-          if (!mounted) return;
-          
-          // Complete the generation process
-          setProgress(100);
-          setStage('complete');
-          setIsSuccess(true);
-          
-          // Call onComplete callback if provided
-          if (onComplete) {
-            setTimeout(() => {
-              if (mounted) {
-                onComplete();
-              }
-            }, 2000);
+          if (result.success && result.blueprint) {
+            setProgress(70);
+            setStage('saving');
+            
+            // Save blueprint to database
+            await blueprintService.saveBlueprintToDatabase(result.blueprint);
+            
+            if (!mounted) return;
+            
+            // Complete the generation process
+            setProgress(100);
+            setStage('complete');
+            setIsSuccess(true);
+            
+            // Call onComplete callback if provided
+            if (onComplete) {
+              setTimeout(() => {
+                if (mounted) {
+                  onComplete();
+                }
+              }, 2000);
+            }
+          } else {
+            throw new Error(result.error || 'Unknown error during blueprint generation');
           }
         } catch (error) {
           console.error('Error generating blueprint:', error);
           if (mounted) {
             setIsError(true);
-            setErrorMessage('Failed to generate blueprint. Please try again.');
+            setErrorMessage(error instanceof Error ? error.message : 'Failed to generate blueprint. Please try again.');
             setStage('error');
             toast({
               variant: "destructive",
@@ -154,6 +157,11 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
     return "generating";
   };
 
+  // Trigger generation on component mount
+  useEffect(() => {
+    setIsGenerating(true);
+  }, []);
+
   return (
     <div className={cn("w-full max-w-4xl mx-auto", className)}>
       <div className="text-center mb-8">
@@ -185,7 +193,7 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
         </Button>
       </div>
 
-      {/* Main visualization area */}
+      {/* Main visualization area with particles, service boxes, and error displays */}
       <div className="relative h-96 w-full rounded-xl overflow-hidden border border-soul-purple/20 bg-gradient-to-b from-soul-black to-soul-black/80">
         {/* Cosmic background with stars */}
         <div className="absolute inset-0">

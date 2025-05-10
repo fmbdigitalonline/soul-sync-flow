@@ -138,30 +138,58 @@ Return ONLY a valid JSON object with no additional text.`;
   
   console.log("Received blueprint from OpenAI");
   
-  // Parse the generated content into a proper blueprint structure
-  const parsedBlueprint = JSON.parse(generatedContent);
-  
-  // Create a complete blueprint object with the required structure
-  const completeBlueprint = {
-    _meta: {
-      generation_method: "gpt-4o",
-      model_version: "gpt-4o",
-      generation_date: new Date().toISOString(),
-      birth_data: userMeta,
-      schema_version: "1.0",
-      raw_response: generatedContent // Include the raw response for debugging
-    },
-    user_meta: {
-      ...userMeta
-    },
-    // Use the AI-generated data directly
-    cognition_mbti: parsedBlueprint.cognition_mbti || {},
-    energy_strategy_human_design: parsedBlueprint.energy_strategy_human_design || {},
-    values_life_path: parsedBlueprint.values_life_path || {},
-    archetype_western: parsedBlueprint.archetype_western || {},
-    archetype_chinese: parsedBlueprint.archetype_chinese || {},
-    bashar_suite: parsedBlueprint.bashar_suite || {}
-  };
+  try {
+    // Parse the generated content into a JSON object
+    const parsedBlueprint = JSON.parse(generatedContent);
+    
+    // Create a complete blueprint object with the required structure
+    const completeBlueprint = {
+      _meta: {
+        generation_method: "gpt-4o",
+        model_version: "gpt-4o",
+        generation_date: new Date().toISOString(),
+        birth_data: userMeta,
+        schema_version: "1.0",
+        raw_response: generatedContent // Include the raw response for debugging
+      },
+      user_meta: {
+        ...userMeta
+      },
+      // Use the AI-generated data directly
+      cognition_mbti: parsedBlueprint.cognition_mbti || {},
+      energy_strategy_human_design: parsedBlueprint.energy_strategy_human_design || {},
+      values_life_path: parsedBlueprint.values_life_path || {},
+      archetype_western: parsedBlueprint.archetype_western || {},
+      archetype_chinese: parsedBlueprint.archetype_chinese || {},
+      bashar_suite: parsedBlueprint.bashar_suite || {}
+    };
 
-  return completeBlueprint;
+    return completeBlueprint;
+  } catch (error) {
+    // If there's an error parsing the blueprint, include the error in the response
+    console.error("Error parsing blueprint:", error);
+    
+    // Return a structured blueprint with error information
+    return {
+      _meta: {
+        generation_method: "gpt-4o",
+        model_version: "gpt-4o",
+        generation_date: new Date().toISOString(),
+        birth_data: userMeta,
+        schema_version: "1.0",
+        raw_response: generatedContent, // Include the raw response for debugging
+        error: `Failed to parse blueprint: ${error.message}`
+      },
+      user_meta: {
+        ...userMeta
+      },
+      // Include empty objects for required fields to maintain structure
+      cognition_mbti: {},
+      energy_strategy_human_design: {},
+      values_life_path: {},
+      archetype_western: {},
+      archetype_chinese: {},
+      bashar_suite: {}
+    };
+  }
 }
