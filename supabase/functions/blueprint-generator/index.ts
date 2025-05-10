@@ -175,6 +175,7 @@ Include these sections in your response:
   
   try {
     // Call OpenAI API with GPT-4o search preview - ONLY VERSION
+    // Fixed the tools parameter to include the required function property
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -188,10 +189,24 @@ Include these sections in your response:
           { role: "user", content: userPrompt }
         ],
         temperature: 0.7,
-        max_tokens: 1500,  // Reduced token limit to help with rate limits
+        max_tokens: 1500,
         response_format: { type: "json_object" },
         tools: [{
-          type: "web_search"
+          type: "web_search",
+          function: {
+            name: "search",
+            description: "Search the web for relevant information related to astrology, human design, numerology, etc.",
+            parameters: {
+              type: "object",
+              properties: {
+                query: {
+                  type: "string",
+                  description: "The search query to look up information"
+                }
+              },
+              required: ["query"]
+            }
+          }
         }]
       })
     });
