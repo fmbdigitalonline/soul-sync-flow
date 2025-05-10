@@ -293,7 +293,7 @@ Include these sections in your response:
       max_tokens: 4000,  // Reduced token limit to help avoid rate limits
       tools: [
         {
-          type: "search",
+          type: "function",
           function: {
             name: "search",
             description: "Search the web for information"
