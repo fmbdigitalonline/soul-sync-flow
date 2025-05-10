@@ -28,6 +28,7 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
   const [errorMessage, setErrorMessage] = useState('');
   const [debugInfo, setDebugInfo] = useState<any>(null);
   const [toolCalls, setToolCalls] = useState<any[]>([]);
+  const [usedFallback, setUsedFallback] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -60,6 +61,11 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
           }
         }
         
+        // Check if we used the fallback (non-search) model
+        if (result.notice && result.notice.includes("fallback")) {
+          setUsedFallback(true);
+        }
+        
         // If there's an error in the result, handle it
         if (!result.success) {
           throw new Error(result.error || "Unknown error");
@@ -82,10 +88,18 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
         setProgress(100);
         setStatus('success');
 
-        toast({
-          title: "Blueprint Generated",
-          description: "Your soul blueprint has been created successfully with GPT-4o Search Preview!",
-        });
+        // Show appropriate toast based on whether we used the fallback or not
+        if (usedFallback) {
+          toast({
+            title: "Blueprint Generated (Fallback Mode)",
+            description: "Your soul blueprint has been created successfully using our fallback model due to rate limits.",
+          });
+        } else {
+          toast({
+            title: "Blueprint Generated",
+            description: "Your soul blueprint has been created successfully with GPT-4o Search Preview!",
+          });
+        }
 
         // Call the onComplete callback after a delay
         if (onComplete) {
@@ -129,7 +143,7 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
               <p className="text-sm text-muted-foreground">
                 {progress < 25 && "Connecting to OpenAI..."}
-                {progress >= 25 && progress < 50 && "Generating blueprint with GPT-4o Search Preview..."}
+                {progress >= 25 && progress < 50 && "Generating blueprint with AI..."}
                 {progress >= 50 && progress < 75 && "Processing search results and AI response..."}
                 {progress >= 75 && "Saving your blueprint..."}
               </p>
@@ -144,7 +158,9 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
               <div className="text-center">
                 <p className="font-medium">Blueprint Generated!</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Your soul blueprint is ready to explore.
+                  {usedFallback 
+                    ? "Your soul blueprint is ready to explore (created with fallback model due to rate limits)." 
+                    : "Your soul blueprint is ready to explore with enhanced web search."}
                 </p>
               </div>
             </div>

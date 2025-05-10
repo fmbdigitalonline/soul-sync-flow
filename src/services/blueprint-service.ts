@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { sampleBlueprints } from './blueprint-examples';
@@ -247,6 +248,7 @@ const blueprintService = {
     blueprint?: BlueprintData; 
     error?: string;
     rawResponse?: any;
+    notice?: string;
   }> => {
     try {
       console.log('Calling blueprint-generator with user meta:', userMeta);
@@ -259,11 +261,15 @@ const blueprintService = {
       if (data && data.blueprint) {
         console.log('Blueprint generated via Supabase function');
         
+        // Check if notice was included (fallback model used)
+        const notice = data.notice || null;
+        
         // Include raw response for debugging
         return { 
           success: true, 
           blueprint: data.blueprint as BlueprintData,
-          rawResponse: data.rawResponse
+          rawResponse: data.rawResponse,
+          notice
         };
       } else if (data && data.error) {
         console.error('Error from blueprint generator:', data.error);
