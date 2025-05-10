@@ -239,46 +239,36 @@ const blueprintService = {
     }
   },
 
-  // This function will use the new GPT-4o-search-preview API to generate a blueprint
-  generateBlueprintFromBirthData: async (userMeta: UserMetaData): Promise<BlueprintData> => {
+  // This function will use the GPT-4o API to generate a blueprint
+  generateBlueprintFromBirthData: async (userMeta: UserMetaData): Promise<{ success: boolean; blueprint?: BlueprintData; error?: string }> => {
     try {
-      // First try to use the Supabase function if available
-      try {
-        console.log('Calling blueprint-generator with user meta:', userMeta);
-        const { data, error } = await supabase.functions.invoke('blueprint-generator', {
-          body: { userMeta }
-        });
-        
-        if (error) throw error;
-        if (data && data.blueprint) {
-          console.log('Blueprint generated via Supabase function');
-          return data.blueprint as BlueprintData;
-        }
-      } catch (supabaseError) {
-        console.warn('Supabase function failed, falling back to sample data', supabaseError);
+      console.log('Calling blueprint-generator with user meta:', userMeta);
+      const { data, error } = await supabase.functions.invoke('blueprint-generator', {
+        body: { userMeta }
+      });
+      
+      if (error) throw error;
+      
+      if (data && data.blueprint) {
+        console.log('Blueprint generated via Supabase function');
+        return { success: true, blueprint: data.blueprint as BlueprintData };
+      } else if (data && data.error) {
+        console.error('Error from blueprint generator:', data.error);
+        return { success: false, error: data.error };
       }
       
-      // Fallback to sample data with user meta information
-      console.log('Generating blueprint from sample with user meta:', userMeta);
-      const blueprint = structuredClone(sampleBlueprints[0]) as BlueprintData;
-      
-      // Update user meta information
-      blueprint.user_meta = {
-        ...blueprint.user_meta,
-        ...userMeta,
-      };
-      
-      // Update meta information
-      blueprint._meta = {
-        ...blueprint._meta,
-        generation_date: new Date().toISOString(),
-        generation_method: 'sample_data_fallback',
-      };
-      
-      return blueprint;
+      throw new Error('No blueprint or error returned from generator function');
     } catch (error) {
       console.error('Error generating blueprint:', error);
-      throw error;
+      
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Unknown error generating blueprint';
+      
+      return { 
+        success: false, 
+        error: errorMessage
+      };
     }
   },
 

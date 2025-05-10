@@ -10,6 +10,8 @@ import AstrologySection from "./sections/AstrologySection";
 import ChineseZodiacSection from "./sections/ChineseZodiacSection";
 import NumerologySection from "./sections/NumerologySection";
 import { BlueprintRawDataViewer } from "@/components/ui/blueprint-raw-data-viewer";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 export interface BlueprintViewerProps {
   data?: BlueprintData; // Changed from blueprint to data to match usage
@@ -31,6 +33,9 @@ const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ data, blueprint, clas
     );
   }
 
+  // Check if there was an error in generation
+  const error = blueprintData._meta?.error;
+
   return (
     <CosmicCard className={cn("p-6", className)}>
       <div className="text-center mb-6">
@@ -45,16 +50,44 @@ const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ data, blueprint, clas
         </p>
       </div>
 
+      {/* Display error message if present */}
+      {error && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Generation Error</AlertTitle>
+          <AlertDescription>
+            {error}
+          </AlertDescription>
+        </Alert>
+      )}
+
       <PersonalInfoSection userMeta={blueprintData.user_meta} />
-      <MBTIProfileSection mbtiData={blueprintData.cognition_mbti} />
-      <HumanDesignSection humanDesign={blueprintData.energy_strategy_human_design} />
-      <AstrologySection astrology={blueprintData.archetype_western} />
-      <ChineseZodiacSection chinese={blueprintData.archetype_chinese} />
-      <NumerologySection numerology={blueprintData.values_life_path} />
       
-      {/* Add raw data viewer for debugging and transparency */}
+      {/* Only show these sections if we have data */}
+      {blueprintData.cognition_mbti?.type && (
+        <MBTIProfileSection mbtiData={blueprintData.cognition_mbti} />
+      )}
+      
+      {blueprintData.energy_strategy_human_design?.type && (
+        <HumanDesignSection humanDesign={blueprintData.energy_strategy_human_design} />
+      )}
+      
+      {blueprintData.archetype_western?.sun_sign && (
+        <AstrologySection astrology={blueprintData.archetype_western} />
+      )}
+      
+      {blueprintData.archetype_chinese?.animal && (
+        <ChineseZodiacSection chinese={blueprintData.archetype_chinese} />
+      )}
+      
+      {blueprintData.values_life_path?.life_path_number && (
+        <NumerologySection numerology={blueprintData.values_life_path} />
+      )}
+      
+      {/* Always show raw data viewer for debugging and transparency */}
       <BlueprintRawDataViewer
         data={blueprintData}
+        rawResponse={blueprintData._meta?.raw_response}
         className="mt-6 border-t pt-6"
       />
     </CosmicCard>

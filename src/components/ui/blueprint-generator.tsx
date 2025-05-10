@@ -26,6 +26,7 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState<'initial' | 'loading' | 'success' | 'error'>('initial');
   const [errorMessage, setErrorMessage] = useState('');
+  const [debugInfo, setDebugInfo] = useState<any>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -33,10 +34,6 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
       try {
         setStatus('loading');
         setProgress(10);
-
-        // Artificial delay for UX
-        await new Promise(resolve => setTimeout(resolve, 500));
-        setProgress(25);
 
         // Format the user data for the blueprint service
         const userData = {
@@ -47,14 +44,18 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
           mbti: formData.personality || undefined,
         };
 
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setProgress(50);
+        setProgress(25);
 
         // Generate the blueprint
-        const blueprint = await blueprintService.generateBlueprintFromBirthData(userData);
+        const result = await blueprintService.generateBlueprintFromBirthData(userData);
+        
+        // If there's an error in the result, handle it
+        if (!result.success && result.error) {
+          throw new Error(result.error);
+        }
 
+        const blueprint = result.blueprint;
         setProgress(75);
-        await new Promise(resolve => setTimeout(resolve, 700));
 
         // Save the blueprint to the database
         const saveResult = await blueprintService.saveBlueprintToDatabase(blueprint);
@@ -80,11 +81,12 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
         console.error('Error generating blueprint:', error);
         setStatus('error');
         setErrorMessage(error instanceof Error ? error.message : 'An unknown error occurred');
+        setDebugInfo(error);
         
         toast({
           variant: "destructive",
           title: "Blueprint Generation Failed",
-          description: "There was an error generating your blueprint. Please try again."
+          description: "There was an error generating your blueprint. Please check the error details."
         });
       }
     };
@@ -111,10 +113,10 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
             <div className="flex flex-col items-center space-y-4">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
               <p className="text-sm text-muted-foreground">
-                {progress < 25 && "Connecting to cosmic databases..."}
-                {progress >= 25 && progress < 50 && "Calculating celestial positions..."}
-                {progress >= 50 && progress < 75 && "Generating insights..."}
-                {progress >= 75 && "Finalizing your blueprint..."}
+                {progress < 25 && "Connecting to OpenAI..."}
+                {progress >= 25 && progress < 50 && "Generating blueprint with GPT-4o..."}
+                {progress >= 50 && progress < 75 && "Processing AI response..."}
+                {progress >= 75 && "Saving your blueprint..."}
               </p>
             </div>
           )}
@@ -144,6 +146,21 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
                   {errorMessage || "Failed to generate your blueprint. Please try again."}
                 </p>
               </div>
+              
+              {/* Display technical details for debugging */}
+              {debugInfo && (
+                <div className="w-full mt-4">
+                  <details className="text-xs">
+                    <summary className="cursor-pointer text-muted-foreground">
+                      Show Technical Details
+                    </summary>
+                    <pre className="mt-2 p-2 bg-black/10 rounded overflow-auto max-h-[200px] text-red-600">
+                      {JSON.stringify(debugInfo, null, 2)}
+                    </pre>
+                  </details>
+                </div>
+              )}
+              
               <Button onClick={() => window.location.reload()}>
                 Try Again
               </Button>
