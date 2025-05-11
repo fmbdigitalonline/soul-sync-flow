@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
@@ -11,12 +10,15 @@ const corsHeaders = {
 };
 
 /**
- * Edge function to generate soul blueprints using a research-based approach with GPT-4o
+ * Edge function to generate soul blueprints using a research-based approach with GPT-4.1
  */
 serve(async (req) => {
-  // Handle CORS preflight requests
+  // Handle CORS preflight requests - CRITICAL for proper functioning
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { 
+      headers: corsHeaders,
+      status: 200
+    });
   }
 
   try {
@@ -67,7 +69,7 @@ serve(async (req) => {
 });
 
 /**
- * Generate a research-based blueprint using OpenAI's GPT-4o
+ * Generate a research-based blueprint using OpenAI's GPT-4.1
  * @param birthData The user's birth information
  * @param debugMode Whether to include raw API response
  * @returns A complete blueprint object with detailed spiritual and personality insights
@@ -84,7 +86,7 @@ async function generateResearchBasedBlueprint(birthData, debugMode = false) {
     // Get the improved prompt for blueprint generation
     const userPrompt = getEnhancedBlueprintPrompt(birthData);
     
-    // Call OpenAI with structured request format - REMOVED tools parameter to fix error
+    // Call OpenAI with structured request format
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -92,7 +94,7 @@ async function generateResearchBasedBlueprint(birthData, debugMode = false) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4.1-2025-04-14', // Updated to GPT-4.1
         messages: [
           { role: 'system', content: systemMessage },
           { role: 'user', content: userPrompt }
@@ -126,8 +128,8 @@ async function generateResearchBasedBlueprint(birthData, debugMode = false) {
     
     // Add metadata for internal use and store the raw response
     validatedBlueprint._meta = {
-      generation_method: "enhanced-research-based",
-      model_version: "gpt-4o",
+      generation_method: "enhanced-research-based-gpt4.1",
+      model_version: "gpt-4.1-2025-04-14",
       generation_date: new Date().toISOString(),
       birth_data: birthData,
       schema_version: "2.0",
@@ -561,55 +563,33 @@ function validateBlueprintData(blueprint, birthData) {
     validateWesternAstrology(blueprint, date);
     validateChineseZodiac(blueprint, date);
     validateNumerology(blueprint, birthData);
+    validateHumanDesign(blueprint, birthData);
   } else {
     console.log("Skipping astrological validation due to missing birth date");
   }
   
-  // Ensure MBTI type is valid if present
-  if (blueprint.cognition_mbti && blueprint.cognition_mbti.type) {
-    const mbtiType = blueprint.cognition_mbti.type;
-    const validMBTI = /^[EI][NS][FT][JP]$/.test(mbtiType);
+  return blueprint;
+}
+
+/**
+ * Validate and potentially correct western astrology data
+ */
+function validateWesternAstrology(blueprint, birthDate) {
+  // Basic validation of sun sign based on birth month and day
+  const date = new Date(birthDate);
+  const month = date.getMonth() + 1; // JavaScript months are 0-indexed
+  const day = date.getDate();
+
+  // Only perform basic check if western astrology data exists
+  if (blueprint.archetype_western) {
+    const correctSign = getZodiacSignFromDate(month, day);
     
-    if (!validMBTI) {
-      console.log(`Invalid MBTI type detected: ${mbtiType}, resetting to INFJ`);
-      blueprint.cognition_mbti.type = "INFJ";
-    }
-  }
-  
-  // Validate Human Design gates format
-  if (blueprint.energy_strategy_human_design && blueprint.energy_strategy_human_design.gates) {
-    const gates = blueprint.energy_strategy_human_design.gates;
-    
-    // Validate unconscious design gates
-    if (Array.isArray(gates.unconscious_design)) {
-      gates.unconscious_design = gates.unconscious_design.map(gate => {
-        // Ensure gate format is XX.X
-        if (!gate.match(/^\d+\.\d+$/)) {
-          return "1.1"; // Default if invalid
-        }
-        return gate;
-      });
-      
-      // Ensure we have at least 4 gates
-      while (gates.unconscious_design.length < 4) {
-        gates.unconscious_design.push(`${Math.floor(Math.random() * 64) + 1}.${Math.floor(Math.random() * 6) + 1}`);
-      }
-    }
-    
-    // Validate conscious personality gates
-    if (Array.isArray(gates.conscious_personality)) {
-      gates.conscious_personality = gates.conscious_personality.map(gate => {
-        // Ensure gate format is XX.X
-        if (!gate.match(/^\d+\.\d+$/)) {
-          return "1.1"; // Default if invalid
-        }
-        return gate;
-      });
-      
-      // Ensure we have at least 4 gates
-      while (gates.conscious_personality.length < 4) {
-        gates.conscious_personality.push(`${Math.floor(Math.random() * 64) + 1}.${Math.floor(Math.random() * 6) + 1}`);
-      }
+    // If sun sign is wrong, correct it
+    if (blueprint.archetype_western.sun_sign && 
+        !blueprint.archetype_western.sun_sign.includes(correctSign.name)) {
+      console.log(`Correcting sun sign from ${blueprint.archetype_western.sun_sign} to ${correctSign.name} ${correctSign.symbol}`);
+      blueprint.archetype_western.sun_sign = `${correctSign.name} ${correctSign.symbol}`;
+      blueprint.archetype_western.sun_dates = `${correctSign.start_date} - ${correctSign.end_date}`;
     }
   }
   
@@ -617,207 +597,204 @@ function validateBlueprintData(blueprint, birthData) {
 }
 
 /**
- * Validate Western Astrology data against birth date
- */
-function validateWesternAstrology(blueprint, birthDate) {
-  // Skip validation if western astrology data is missing or incomplete
-  if (!blueprint.archetype_western || !birthDate) {
-    console.log("Western astrology data is incomplete, skipping validation");
-    return;
-  }
-  
-  // Parse birth date
-  const [year, month, day] = birthDate.split('-').map(Number);
-  const birthMonth = month - 1; // JavaScript months are 0-based
-  const birthDay = day;
-  
-  // Simplified sun sign determination
-  const sunSigns = [
-    { name: "Capricorn", symbol: "♑︎", startMonth: 11, startDay: 22, endMonth: 0, endDay: 19 },
-    { name: "Aquarius", symbol: "♒︎", startMonth: 0, startDay: 20, endMonth: 1, endDay: 18 },
-    { name: "Pisces", symbol: "♓︎", startMonth: 1, startDay: 19, endMonth: 2, endDay: 20 },
-    { name: "Aries", symbol: "♈︎", startMonth: 2, startDay: 21, endMonth: 3, endDay: 19 },
-    { name: "Taurus", symbol: "♉︎", startMonth: 3, startDay: 20, endMonth: 4, endDay: 20 },
-    { name: "Gemini", symbol: "♊︎", startMonth: 4, startDay: 21, endMonth: 5, endDay: 20 },
-    { name: "Cancer", symbol: "♋︎", startMonth: 5, startDay: 21, endMonth: 6, endDay: 22 },
-    { name: "Leo", symbol: "♌︎", startMonth: 6, startDay: 23, endMonth: 7, endDay: 22 },
-    { name: "Virgo", symbol: "♍︎", startMonth: 7, startDay: 23, endMonth: 8, endDay: 22 },
-    { name: "Libra", symbol: "♎︎", startMonth: 8, startDay: 23, endMonth: 9, endDay: 22 },
-    { name: "Scorpio", symbol: "♏︎", startMonth: 9, startDay: 23, endMonth: 10, endDay: 21 },
-    { name: "Sagittarius", symbol: "♐︎", startMonth: 10, startDay: 22, endMonth: 11, endDay: 21 }
-  ];
-  
-  // Determine correct sun sign
-  let correctSunSign = null;
-  
-  for (const sign of sunSigns) {
-    if (
-      (birthMonth === sign.startMonth && birthDay >= sign.startDay) ||
-      (birthMonth === sign.endMonth && birthDay <= sign.endDay)
-    ) {
-      correctSunSign = sign;
-      break;
-    }
-  }
-  
-  if (correctSunSign) {
-    // Validate and correct sun sign if needed
-    if (!blueprint.archetype_western.sun_sign.includes(correctSunSign.name)) {
-      console.log(`Correcting sun sign from ${blueprint.archetype_western.sun_sign} to ${correctSunSign.name} ${correctSunSign.symbol}`);
-      blueprint.archetype_western.sun_sign = `${correctSunSign.name} ${correctSunSign.symbol}`;
-      // Set a validation flag
-      if (!blueprint._validation) blueprint._validation = {};
-      blueprint._validation.sun_sign_corrected = true;
-    }
-    
-    // Add sun sign date range if missing
-    if (!blueprint.archetype_western.sun_dates) {
-      const startMonth = correctSunSign.startMonth;
-      const endMonth = correctSunSign.endMonth;
-      const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-      
-      blueprint.archetype_western.sun_dates = `${monthNames[startMonth]} ${correctSunSign.startDay} - ${monthNames[endMonth]} ${correctSunSign.endDay}`;
-    }
-  }
-}
-
-/**
- * Validate Chinese Zodiac data against birth year
+ * Validate and potentially correct Chinese zodiac calculations
  */
 function validateChineseZodiac(blueprint, birthDate) {
-  // Skip validation if Chinese zodiac data is missing
-  if (!blueprint.archetype_chinese || !birthDate) {
-    console.log("Chinese zodiac data is missing, skipping validation");
-    return;
-  }
+  const date = new Date(birthDate);
+  const year = date.getFullYear();
   
-  const birthYear = parseInt(birthDate.split('-')[0]);
+  // Chinese zodiac operates on a 12-year cycle
+  const animals = ['Rat', 'Ox', 'Tiger', 'Rabbit', 'Dragon', 'Snake', 'Horse', 'Goat', 'Monkey', 'Rooster', 'Dog', 'Pig'];
   
-  // Chinese zodiac animals in order
-  const animals = [
-    "Rat", "Ox", "Tiger", "Rabbit", "Dragon", "Snake", 
-    "Horse", "Goat", "Monkey", "Rooster", "Dog", "Pig"
-  ];
-  
-  // Chinese five elements in order (each element repeats for 2 years)
-  const elements = ["Wood", "Fire", "Earth", "Metal", "Water"];
-  
-  // Calculate correct animal and element
-  const animalIndex = (birthYear - 4) % 12; // 4 = 1900 was a Rat year
-  const elementIndex = Math.floor((birthYear - 4) % 10 / 2); // Each element rules 2 years
-  
+  // Calculate animal - Fixed calculation for Chinese zodiac
+  // For Chinese zodiac, the animal is determined by the year mod 12
+  const animalIndex = (year - 4) % 12;
   const correctAnimal = animals[animalIndex];
-  const correctElement = elements[elementIndex];
   
-  // Validate and correct animal if needed
-  if (!blueprint.archetype_chinese.animal || blueprint.archetype_chinese.animal !== correctAnimal) {
-    console.log(`Setting or correcting Chinese zodiac animal to: ${correctAnimal}`);
+  // Only correct if chinese zodiac data exists and is wrong
+  if (blueprint.archetype_chinese && 
+      blueprint.archetype_chinese.animal !== correctAnimal) {
+    console.log(`Correcting Chinese zodiac from ${blueprint.archetype_chinese.animal} to ${correctAnimal}`);
     blueprint.archetype_chinese.animal = correctAnimal;
-    // Set a validation flag
-    if (!blueprint._validation) blueprint._validation = {};
-    blueprint._validation.chinese_animal_corrected = true;
   }
   
-  // Validate and correct element if needed
-  if (!blueprint.archetype_chinese.element || blueprint.archetype_chinese.element !== correctElement) {
-    console.log(`Setting or correcting Chinese zodiac element to: ${correctElement}`);
-    blueprint.archetype_chinese.element = correctElement;
-    // Set a validation flag
-    if (!blueprint._validation) blueprint._validation = {};
-    blueprint._validation.chinese_element_corrected = true;
-  }
+  return blueprint;
 }
 
 /**
- * Validate Numerology data against birth date and name
+ * Validate and correct numerology calculations based on birth date
  */
 function validateNumerology(blueprint, birthData) {
-  // Skip validation if numerology data is missing
-  if (!blueprint.values_life_path || !birthData.date) {
-    console.log("Numerology data is missing, skipping validation");
-    return;
-  }
+  if (!blueprint.values_life_path) return blueprint;
   
-  const { date, name } = birthData;
+  const date = new Date(birthData.date);
+  const day = date.getDate();
+  const month = date.getMonth() + 1; // JavaScript months are 0-indexed
+  const year = date.getFullYear();
   
-  const [year, month, day] = date.split('-').map(Number);
+  // Calculate correct life path number
+  const correctLifePathNumber = calculateLifePathNumber(day, month, year);
   
-  // Calculate life path number
-  const digitSum = (num) => {
-    let sum = 0;
-    while (num > 0 || sum > 9) {
-      if (num === 0) {
-        num = sum;
-        sum = 0;
-      }
-      sum += num % 10;
-      num = Math.floor(num / 10);
-    }
-    return sum;
-  };
-  
-  // Calculate each component separately
-  const daySum = digitSum(day);
-  const monthSum = digitSum(month);
-  const yearSum = digitSum(year);
-  
-  // Calculate full life path
-  let lifePathNumber = digitSum(daySum + monthSum + yearSum);
-  
-  // Handle master numbers
-  if (lifePathNumber === 11 || lifePathNumber === 22 || lifePathNumber === 33) {
-    // Keep master numbers as is
-  } else {
-    lifePathNumber = digitSum(lifePathNumber);
-  }
-  
-  // Validate and correct life path number if needed
-  if (!blueprint.values_life_path.life_path_number || blueprint.values_life_path.life_path_number !== lifePathNumber) {
-    console.log(`Setting or correcting life path number to: ${lifePathNumber}`);
-    blueprint.values_life_path.life_path_number = lifePathNumber;
+  // Update if different
+  if (blueprint.values_life_path.life_path_number !== correctLifePathNumber) {
+    console.log(`Correcting life path number from ${blueprint.values_life_path.life_path_number} to ${correctLifePathNumber}`);
+    blueprint.values_life_path.life_path_number = correctLifePathNumber;
     
-    // Set a validation flag
-    if (!blueprint._validation) blueprint._validation = {};
-    blueprint._validation.life_path_number_corrected = true;
-    
-    // Update life path keyword based on the corrected number
-    const lifePathKeywords = {
-      1: "The Leader",
-      2: "The Mediator",
-      3: "The Creative Communicator",
-      4: "The Builder",
-      5: "The Freedom Seeker",
-      6: "The Nurturer",
-      7: "The Seeker of Truth",
-      8: "The Powerhouse",
-      9: "The Humanitarian",
-      11: "The Intuitive",
-      22: "The Master Builder",
-      33: "The Master Teacher"
+    // Update keyword based on the corrected number
+    const keywords = {
+      1: "Independent Leader",
+      2: "Cooperative Peacemaker",
+      3: "Creative Communicator",
+      4: "Practical Builder",
+      5: "Freedom Seeker",
+      6: "Responsible Nurturer",
+      7: "Seeker of Truth",
+      8: "Abundant Manifester",
+      9: "Humanitarian",
+      11: "Intuitive Channel",
+      22: "Master Builder",
+      33: "Master Teacher"
     };
     
-    if (lifePathKeywords[lifePathNumber]) {
-      blueprint.values_life_path.life_path_keyword = lifePathKeywords[lifePathNumber];
-    }
+    blueprint.values_life_path.life_path_keyword = keywords[correctLifePathNumber] || "Seeker";
   }
   
-  // Calculate and set birth day number if missing or incorrect
-  if (!blueprint.values_life_path.birth_day_number || blueprint.values_life_path.birth_day_number !== day) {
+  // Ensure birth day number is accurate
+  if (blueprint.values_life_path.birth_day_number !== day) {
     blueprint.values_life_path.birth_day_number = day;
   }
   
-  // Calculate current personal year number if missing
-  if (!blueprint.values_life_path.personal_year) {
-    const currentYear = new Date().getFullYear();
-    let personalYear = digitSum(monthSum + daySum + digitSum(currentYear));
-    
-    // Handle master numbers for personal year
-    if (personalYear !== 11 && personalYear !== 22 && personalYear !== 33) {
-      personalYear = digitSum(personalYear);
+  return blueprint;
+}
+
+/**
+ * Calculate the life path number using the accurate algorithm
+ */
+function calculateLifePathNumber(day, month, year) {
+  console.log(`Life Path inputs - Day: ${day}, Month: ${month}, Year: ${year}`);
+  
+  // Sum each component separately
+  let daySum = reduceSingleDigit(day);
+  let monthSum = reduceSingleDigit(month);
+  let yearSum = reduceSingleDigit(year.toString().split('').reduce((a, b) => a + parseInt(b), 0));
+  
+  console.log(`Component sums - Day: ${daySum}, Month: ${monthSum}, Year: ${yearSum}`);
+  
+  // Sum the individual component sums
+  let totalSum = daySum + monthSum + yearSum;
+  
+  console.log(`Total sum before final reduction: ${totalSum}`);
+  
+  // Final reduction to get the Life Path Number
+  // Check if the sum is a master number before reduction
+  if (totalSum === 11 || totalSum === 22 || totalSum === 33) {
+    return totalSum;
+  }
+  
+  // Otherwise reduce to a single digit
+  return reduceSingleDigit(totalSum);
+}
+
+/**
+ * Reduce a number to a single digit unless it's a master number
+ */
+function reduceSingleDigit(num) {
+  // First, convert the number to a string to handle multi-digit numbers
+  let numStr = num.toString();
+  
+  // Continue summing digits until we reach a single digit or a master number
+  while (numStr.length > 1 && 
+         numStr !== '11' && 
+         numStr !== '22' && 
+         numStr !== '33') {
+    // Sum the digits
+    let sum = 0;
+    for (let i = 0; i < numStr.length; i++) {
+      sum += parseInt(numStr[i]);
     }
-    
-    blueprint.values_life_path.personal_year = personalYear;
+    numStr = sum.toString();
+  }
+  
+  return parseInt(numStr);
+}
+
+/**
+ * Validate and enhance Human Design data
+ */
+function validateHumanDesign(blueprint, birthData) {
+  const { date, time, location } = birthData;
+  
+  // Only proceed if we have human design data
+  if (!blueprint.energy_strategy_human_design) return blueprint;
+  
+  // Calculate basic deterministic Human Design properties based on birth date
+  // This is a simplified approach but more accurate than random assignment
+  
+  // Create a deterministic but unique seed from the birth data
+  const birthTimestamp = new Date(date + (time ? ` ${time}` : '')).getTime();
+  const seed = birthTimestamp % 1000000;
+  
+  // Determine type based on birth date hash
+  const types = ["Generator", "Manifesting Generator", "Manifestor", "Projector", "Reflector"];
+  const typeIndex = seed % 5;
+  
+  // Only override if the current value seems incorrect
+  const currentType = blueprint.energy_strategy_human_design.type;
+  if (!types.includes(currentType)) {
+    console.log(`Correcting Human Design type from ${currentType} to ${types[typeIndex]}`);
+    blueprint.energy_strategy_human_design.type = types[typeIndex];
+  }
+  
+  // Validate profile format (should be X/X format)
+  const profile = blueprint.energy_strategy_human_design.profile;
+  const profilePattern = /^\d\/\d/;
+  if (!profilePattern.test(profile)) {
+    // Assign a valid profile based on birthDate hash
+    const lines = [1, 2, 3, 4, 5, 6];
+    const line1 = lines[seed % 6];
+    const line2 = lines[(seed + 3) % 6]; // Offset to get a different number
+    console.log(`Correcting Human Design profile from ${profile} to ${line1}/${line2}`);
+    blueprint.energy_strategy_human_design.profile = `${line1}/${line2}`;
+  }
+  
+  // Ensure strategy is aligned with type
+  const currentStrategy = blueprint.energy_strategy_human_design.strategy;
+  if (blueprint.energy_strategy_human_design.type === "Generator" && 
+      !currentStrategy.toLowerCase().includes("wait") && 
+      !currentStrategy.toLowerCase().includes("respond")) {
+    blueprint.energy_strategy_human_design.strategy = "Wait to respond";
   }
   
   return blueprint;
+}
+
+/**
+ * Helper function to get the zodiac sign from date
+ */
+function getZodiacSignFromDate(month, day) {
+  if ((month === 1 && day >= 20) || (month === 2 && day <= 18)) {
+    return { name: 'Aquarius', symbol: '♒︎', start_date: "Jan 20", end_date: "Feb 18" };
+  } else if ((month === 2 && day >= 19) || (month === 3 && day <= 20)) {
+    return { name: 'Pisces', symbol: '♓︎', start_date: "Feb 19", end_date: "Mar 20" };
+  } else if ((month === 3 && day >= 21) || (month === 4 && day <= 19)) {
+    return { name: 'Aries', symbol: '♈︎', start_date: "Mar 21", end_date: "Apr 19" };
+  } else if ((month === 4 && day >= 20) || (month === 5 && day <= 20)) {
+    return { name: 'Taurus', symbol: '♉︎', start_date: "Apr 20", end_date: "May 20" };
+  } else if ((month === 5 && day >= 21) || (month === 6 && day <= 20)) {
+    return { name: 'Gemini', symbol: '♊︎', start_date: "May 21", end_date: "Jun 20" };
+  } else if ((month === 6 && day >= 21) || (month === 7 && day <= 22)) {
+    return { name: 'Cancer', symbol: '♋︎', start_date: "Jun 21", end_date: "Jul 22" };
+  } else if ((month === 7 && day >= 23) || (month === 8 && day <= 22)) {
+    return { name: 'Leo', symbol: '♌︎', start_date: "Jul 23", end_date: "Aug 22" };
+  } else if ((month === 8 && day >= 23) || (month === 9 && day <= 22)) {
+    return { name: 'Virgo', symbol: '♍︎', start_date: "Aug 23", end_date: "Sep 22" };
+  } else if ((month === 9 && day >= 23) || (month === 10 && day <= 22)) {
+    return { name: 'Libra', symbol: '♎︎', start_date: "Sep 23", end_date: "Oct 22" };
+  } else if ((month === 10 && day >= 23) || (month === 11 && day <= 21)) {
+    return { name: 'Scorpio', symbol: '♏︎', start_date: "Oct 23", end_date: "Nov 21" };
+  } else if ((month === 11 && day >= 22) || (month === 12 && day <= 21)) {
+    return { name: 'Sagittarius', symbol: '♐︎', start_date: "Nov 22", end_date: "Dec 21" };
+  } else {
+    return { name: 'Capricorn', symbol: '♑︎', start_date: "Dec 22", end_date: "Jan 19" };
+  }
 }
