@@ -39,6 +39,9 @@ const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ data, blueprint, clas
 
   // Check if we have raw content that needs to be parsed
   const hasRawContent = blueprintData.raw_content && blueprintData.needs_parsing;
+  
+  // Get raw response from meta if available
+  const rawResponse = blueprintData._meta?.raw_response;
 
   // Check if we have citations from web search
   const hasCitations = blueprintData._meta?._citations && blueprintData._meta._citations.length > 0;
@@ -78,9 +81,13 @@ const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ data, blueprint, clas
 
       <PersonalInfoSection userMeta={blueprintData.user_meta} />
       
-      {/* If we have raw content, use the RawContentRenderer */}
-      {hasRawContent ? (
-        <RawContentRenderer content={blueprintData.raw_content || ""} className="mt-6" />
+      {/* If we have raw content or a raw response, use the RawContentRenderer */}
+      {(hasRawContent || rawResponse) ? (
+        <RawContentRenderer 
+          content={blueprintData.raw_content || ""} 
+          rawResponse={rawResponse}
+          className="mt-6" 
+        />
       ) : (
         <>
           {/* Only show these sections if we have data */}

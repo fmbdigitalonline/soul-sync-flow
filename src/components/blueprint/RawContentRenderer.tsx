@@ -5,6 +5,7 @@ import BlueprintSection from "@/components/blueprint/BlueprintSection";
 interface RawContentRendererProps {
   content: string;
   className?: string;
+  rawResponse?: any; // Add prop for direct access to raw API response
 }
 
 /**
@@ -13,10 +14,16 @@ interface RawContentRendererProps {
 export const RawContentRenderer: React.FC<RawContentRendererProps> = ({
   content,
   className,
+  rawResponse, // Accept the raw response directly
 }) => {
   // Try to extract JSON if content appears to be in JSON format
   const processedContent = React.useMemo(() => {
-    if (!content) return null;
+    if (!content && !rawResponse) return null;
+    
+    // If we have the raw response, prioritize that
+    if (rawResponse) {
+      return rawResponse;
+    }
     
     try {
       // Check if content is already in a code block and extract it
@@ -43,7 +50,7 @@ export const RawContentRenderer: React.FC<RawContentRendererProps> = ({
     } catch {
       return content;
     }
-  }, [content]);
+  }, [content, rawResponse]);
   
   // Helper to render a JSON object section
   const renderJsonSection = (sectionName: string, data: any) => {
@@ -58,15 +65,17 @@ export const RawContentRenderer: React.FC<RawContentRendererProps> = ({
       >
         <div className="space-y-2">
           {Object.entries(data).map(([key, value]) => {
-            // Don't recursively render nested objects, just convert them to string
+            // For nested objects or arrays, stringify with indentation for better readability
             const displayValue = typeof value === 'object' && value !== null
-              ? JSON.stringify(value)
+              ? JSON.stringify(value, null, 2)
               : String(value);
               
             return (
               <div key={key} className="grid grid-cols-3 gap-2">
                 <div className="font-medium">{formatKey(key)}:</div>
-                <div className="col-span-2">{displayValue}</div>
+                <div className="col-span-2 whitespace-pre-wrap font-mono text-xs bg-black/10 p-1 rounded">
+                  {displayValue}
+                </div>
               </div>
             );
           })}
@@ -91,6 +100,40 @@ export const RawContentRenderer: React.FC<RawContentRendererProps> = ({
       .trim();
   };
   
+  // If we have raw API response data, show that first
+  if (rawResponse) {
+    return (
+      <div className={className}>
+        <BlueprintSection 
+          id="raw-api-response"
+          title="Raw API Response Data"
+          showExpandIcon={true}
+          defaultExpanded={true}
+        >
+          <div className="text-xs font-mono whitespace-pre-wrap overflow-auto max-h-[600px] bg-black/5 p-2 rounded">
+            {typeof rawResponse === 'object' 
+              ? JSON.stringify(rawResponse, null, 2)
+              : String(rawResponse)}
+          </div>
+        </BlueprintSection>
+        
+        {/* If there's also processed content from the text, show both */}
+        {content && (
+          <BlueprintSection 
+            id="raw-content-text"
+            title="Raw Content Text"
+            showExpandIcon={true}
+            defaultExpanded={false}
+          >
+            <div className="whitespace-pre-wrap text-sm bg-black/5 p-2 rounded">
+              {content}
+            </div>
+          </BlueprintSection>
+        )}
+      </div>
+    );
+  }
+  
   // If content is a string (not parsed as JSON)
   if (typeof processedContent === 'string') {
     return (
@@ -101,7 +144,9 @@ export const RawContentRenderer: React.FC<RawContentRendererProps> = ({
           showExpandIcon={true}
           defaultExpanded={true}
         >
-          <div className="whitespace-pre-wrap text-sm">{processedContent}</div>
+          <div className="whitespace-pre-wrap text-sm bg-black/5 p-2 rounded">
+            {processedContent}
+          </div>
         </BlueprintSection>
       </div>
     );
