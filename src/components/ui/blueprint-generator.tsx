@@ -3,7 +3,8 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Loader2, CheckCircle2, XCircle, Info } from "lucide-react";
-import blueprintService, { BlueprintData } from '@/services/blueprint-service';
+import blueprintService from '@/services/blueprint-service';
+import { pythonBlueprintService } from '@/services/python-blueprint-service';
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { BlueprintRawDataViewer } from "@/components/ui/blueprint-raw-data-viewer";
@@ -97,8 +98,8 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
       setProgress(25);
       console.log('[GENERATOR] Making SINGLE API call with data:', userData);
 
-      // Generate the blueprint - ONE SINGLE ATTEMPT, NO RETRY, NO ADDITIONAL CALLS
-      const result = await blueprintService.generateBlueprintFromBirthData(userData);
+      // Use the Python blueprint service instead of the standard one
+      const result = await pythonBlueprintService.generateBlueprint(userData);
       
       console.log('[GENERATOR] Blueprint generation result:', result);
       
