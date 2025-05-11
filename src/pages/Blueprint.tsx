@@ -8,10 +8,13 @@ import BlueprintEditor from "@/components/blueprint/BlueprintEditor";
 import { BlueprintRawDataViewer } from "@/components/ui/blueprint-raw-data-viewer";
 import { useToast } from "@/hooks/use-toast";
 import { BlueprintGenerationFlow } from '@/components/blueprint/BlueprintGenerationFlow';
-import { Eye, EyeOff, Download } from "lucide-react";
+import { Eye, EyeOff, Download, Settings } from "lucide-react";
 import blueprintService, { BlueprintData } from '@/services/blueprint-service';
+import { pythonBlueprintService } from '@/services/python-blueprint-service';
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 const Blueprint = () => {
   const [blueprint, setBlueprint] = useState<any>(null);
@@ -20,6 +23,7 @@ const Blueprint = () => {
   const [showRawData, setShowRawData] = useState(false);
   const [activeTab, setActiveTab] = useState("viewer");
   const [showGenerationFlow, setShowGenerationFlow] = useState(false);
+  const [usePythonEngine, setUsePythonEngine] = useState(false);
   const { toast } = useToast();
 
   // Load the user's blueprint
@@ -60,12 +64,42 @@ const Blueprint = () => {
   }, []);
   
   // Function to handle blueprint generation completion
-  const handleGenerationComplete = async () => {
+  const handleGenerationComplete = async (userData?: any) => {
     try {
       // Clear the generation status
       sessionStorage.removeItem('blueprintGenerationStatus');
       
-      // Get the updated blueprint
+      // If using Python engine and we have user data, generate directly
+      if (usePythonEngine && userData) {
+        setLoading(true);
+        
+        toast({
+          title: "Using Python Engine",
+          description: "Generating your blueprint with our deterministic Python engine...",
+        });
+        
+        // Use the Python blueprint service
+        const result = await pythonBlueprintService.generateBlueprint(userData);
+        
+        if (result.success && result.blueprint) {
+          // Save the blueprint to the database
+          await blueprintService.saveBlueprintToDatabase(result.blueprint);
+          
+          setBlueprint(result.blueprint);
+          setShowGenerationFlow(false);
+          setLoading(false);
+          
+          toast({
+            title: "Blueprint Ready!",
+            description: "Your soul blueprint is now ready to explore.",
+          });
+          return;
+        } else {
+          throw new Error(result.error || "Failed to generate blueprint with Python engine");
+        }
+      }
+      
+      // Otherwise use the default blueprint service
       const data = await blueprintService.getDefaultBlueprint();
       
       if (data) {
@@ -82,6 +116,7 @@ const Blueprint = () => {
     } catch (err) {
       console.error("Error after generation:", err);
       setError("Failed to load your generated blueprint. Please try again.");
+      setLoading(false);
       
       toast({
         variant: "destructive",
@@ -137,9 +172,23 @@ const Blueprint = () => {
     return (
       <MainLayout>
         <div className="container mx-auto p-6">
-          <h1 className="text-3xl font-bold font-display text-center mb-6">
-            <span className="gradient-text">Your Soul Blueprint</span>
-          </h1>
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-bold font-display">
+              <span className="gradient-text">Your Soul Blueprint</span>
+            </h1>
+            
+            <div className="flex items-center space-x-2 bg-secondary/40 p-2 rounded-md">
+              <Switch
+                id="python-engine"
+                checked={usePythonEngine}
+                onCheckedChange={setUsePythonEngine}
+              />
+              <Label htmlFor="python-engine" className="text-sm">
+                Use Python Engine <span className="text-xs text-muted-foreground">(Deterministic)</span>
+              </Label>
+              <Settings className="h-4 w-4 text-muted-foreground" />
+            </div>
+          </div>
           
           <BlueprintGenerationFlow 
             userMeta={{
