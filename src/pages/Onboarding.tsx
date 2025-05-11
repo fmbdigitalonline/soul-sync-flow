@@ -2,11 +2,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight, ChevronLeft, Calendar, Clock, MapPin, Volume2 } from "lucide-react";
+import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { GradientButton } from "@/components/ui/gradient-button";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DatePickerWithYear } from "@/components/ui/date-picker-with-year";
 import MainLayout from "@/components/Layout/MainLayout";
 import { useToast } from "@/hooks/use-toast";
 import { SoulOrb } from "@/components/ui/soul-orb";
