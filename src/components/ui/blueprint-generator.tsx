@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -8,6 +7,7 @@ import { pythonBlueprintService } from '@/services/python-blueprint-service';
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { BlueprintRawDataViewer } from "@/components/ui/blueprint-raw-data-viewer";
+import { supabase } from "@/integrations/supabase/client";
 
 interface BlueprintGeneratorProps {
   formData: {

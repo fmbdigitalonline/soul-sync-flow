@@ -139,6 +139,126 @@ export const pythonBlueprintService = {
         // Fall through to try the Python engine
       }
       
+      // Try making a direct fetch to the Python engine with proper CORS handling
+      try {
+        console.log("Trying direct fetch to Python engine with CORS handling");
+        
+        const response = await fetch("https://qxaajirrqrcnmvtowjbg.supabase.co/functions/v1/python-blueprint-engine", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${supabase.auth.session()?.access_token || ""}`,
+            "apikey": supabase.supabaseKey
+          },
+          body: JSON.stringify(userData)
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log("Direct fetch to Python engine successful:", data);
+        
+        if (!data || data.error) {
+          throw new Error(data?.error || "Unknown error");
+        }
+        
+        // Transform the Python engine output to match our blueprint structure
+        const blueprint: BlueprintData = {
+          user_meta: {
+            full_name: userData.full_name,
+            preferred_name: userData.preferred_name || userData.full_name.split(" ")[0],
+            birth_date: userData.birth_date,
+            birth_time_local: userData.birth_time_local,
+            birth_location: userData.birth_location
+          },
+          // Map the Python facts to our blueprint structure
+          cognition_mbti: {
+            type: data.facts.mbti || "Unknown",
+            description: "",
+            core_keywords: [],
+            dominant_function: "",
+            auxiliary_function: ""
+          },
+          energy_strategy_human_design: {
+            type: data.facts.human_design.type,
+            strategy: data.facts.human_design.strategy,
+            authority: data.facts.human_design.authority,
+            profile: data.facts.human_design.profile,
+            definition: data.facts.human_design.definition,
+            incarnation_cross: data.facts.human_design.incarnation_cross,
+            not_self_theme: "",
+            life_purpose: "",
+            centers: {},
+            gates: {
+              unconscious_design: [],
+              conscious_personality: []
+            }
+          },
+          archetype_western: {
+            sun_sign: data.facts.western.sun_sign,
+            moon_sign: data.facts.western.moon_sign,
+            rising_sign: data.facts.western.ascendant_sign,
+            sun_keyword: "",
+            sun_dates: "",
+            sun_element: "",
+            sun_qualities: "",
+            moon_keyword: "",
+            moon_element: "",
+            aspects: [],
+            houses: {}
+          },
+          archetype_chinese: {
+            animal: data.facts.chinese.animal,
+            element: data.facts.chinese.element,
+            yin_yang: data.facts.chinese.yin_yang,
+            keyword: "",
+            element_characteristic: "",
+            personality_profile: "",
+            compatibility: {
+              best: [],
+              worst: []
+            }
+          },
+          values_life_path: {
+            life_path_number: data.facts.numerology.life_path,
+            life_path_keyword: "",
+            life_path_description: "",
+            birth_day_number: 0,
+            birth_day_meaning: "",
+            personal_year: 0,
+            expression_number: 0,
+            expression_keyword: "",
+            soul_urge_number: 0,
+            soul_urge_keyword: "",
+            personality_number: 0
+          },
+          // Add the narrative from GPT
+          raw_content: data.narrative,
+          needs_parsing: true,
+          // Store metadata
+          _meta: {
+            generation_method: "python-engine-direct-fetch",
+            generation_date: new Date().toISOString(),
+            model_version: "1.0",
+            birth_data: {},
+            schema_version: "1.0",
+            raw_response: data,
+            error: data.error || null
+          }
+        };
+        
+        return {
+          success: true,
+          blueprint,
+          rawResponse: data
+        };
+      } catch (directFetchError) {
+        console.warn("Direct fetch to Python engine failed:", directFetchError);
+        // Fall through to try the standard Supabase invoke method
+      }
+      
       // Call the Supabase Edge Function that wraps our Python code
       console.log("Calling Supabase function: python-blueprint-engine");
       const { data, error } = await supabase.functions.invoke("python-blueprint-engine", {

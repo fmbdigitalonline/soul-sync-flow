@@ -7,9 +7,9 @@ from http.server import BaseHTTPRequestHandler
 from .get_facts import build_fact_json
 from .compose_story import generate_blueprint_narrative
 
-# Define CORS headers with proper configuration
+# Define CORS headers with proper configuration for preview and production
 cors_headers = {
-    'Access-Control-Allow-Origin': '*',  # For production, you could limit this to specific origins
+    'Access-Control-Allow-Origin': '*',  # For production, use specific origins
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Authorization, Content-Type, x-client-info, apikey, content-type',
     'Access-Control-Max-Age': '86400'  # Cache preflight response for 24 hours
@@ -79,7 +79,7 @@ class handler(BaseHTTPRequestHandler):
 
 # Function for use with Supabase Edge Functions runtime
 async def handler(request):
-    # Handle OPTIONS preflight request
+    # Handle OPTIONS preflight request with 204 No Content status
     if request.method == "OPTIONS":
         return Response("", status=204, headers=cors_headers)
     
