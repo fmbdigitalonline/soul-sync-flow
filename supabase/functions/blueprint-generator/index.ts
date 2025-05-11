@@ -107,45 +107,61 @@ Include these sections in your response:
     console.log("OpenAI API response received - ONE TIME ONLY"); // Add clear logging
     
     const generatedContent = data.choices[0].message.content;
+    console.log("Raw content received:", generatedContent.substring(0, 100) + "..."); // Log the start of raw content
     
     console.log("Received blueprint from OpenAI");
     
     try {
       // Parse the generated content - note that it might not be valid JSON directly
       let parsedBlueprint = {};
+      let needsParsing = false;
+      let rawContent = null;
       
       // Try to extract JSON data from the content
       try {
         // First attempt: Try to parse the entire response as JSON
         parsedBlueprint = JSON.parse(generatedContent);
+        console.log("Successfully parsed response as direct JSON");
       } catch (parseError) {
         console.log("Response is not directly parseable as JSON, attempting to extract JSON portion");
         
-        // Second attempt: Try to find JSON-like content within the text
-        const jsonMatch = generatedContent.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
+        // Second attempt: Look for a JSON code block (starts with ```json and ends with ```)
+        const jsonCodeBlockMatch = generatedContent.match(/```json\s*([\s\S]*?)\s*```/);
+        if (jsonCodeBlockMatch) {
           try {
-            parsedBlueprint = JSON.parse(jsonMatch[0]);
+            parsedBlueprint = JSON.parse(jsonCodeBlockMatch[1]);
+            console.log("Successfully extracted JSON from code block");
           } catch (nestedParseError) {
-            console.error("Failed to extract JSON from response:", nestedParseError);
-            
-            // If we can't parse JSON, create a basic structure using the text content
-            parsedBlueprint = {
-              rawContent: generatedContent,
-              parsed: false
-            };
+            console.error("Failed to parse JSON from code block:", nestedParseError);
+            needsParsing = true;
+            rawContent = generatedContent;
           }
         } else {
-          // If no JSON-like content found, create sections manually
-          parsedBlueprint = {
-            rawContent: generatedContent,
-            parsed: false
-          };
+          // Third attempt: Try to find JSON-like content within the text (between { and })
+          const jsonMatch = generatedContent.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            try {
+              parsedBlueprint = JSON.parse(jsonMatch[0]);
+              console.log("Successfully extracted JSON from content");
+            } catch (nestedParseError) {
+              console.error("Failed to extract JSON from response:", nestedParseError);
+              needsParsing = true;
+              rawContent = generatedContent;
+            }
+          } else {
+            // If no JSON-like content found, flag it for manual parsing
+            console.log("No JSON structure found in response");
+            needsParsing = true;
+            rawContent = generatedContent;
+          }
         }
       }
       
-      // Save any citation information but don't display them to the user
+      // Save any citation information from the API response
       const citations = data.choices[0].message.annotations || [];
+      if (citations.length > 0) {
+        console.log(`Found ${citations.length} citations in the response`);
+      }
       
       // Create a complete blueprint object with the required structure
       const completeBlueprint = {
@@ -156,6 +172,7 @@ Include these sections in your response:
           birth_data: userMeta,
           schema_version: "1.0",
           error: null,
+          raw_response: data, // Store full API response for debugging
           // Store citations internally but don't expose them in the UI
           _citations: citations.length > 0 ? citations : null
         },
@@ -164,18 +181,195 @@ Include these sections in your response:
         }
       };
       
-      // If we have successfully parsed JSON, use the structure directly
-      if (parsedBlueprint.parsed !== false) {
-        // Use the AI-generated data directly if it exists in expected format
-        completeBlueprint.cognition_mbti = parsedBlueprint.cognition_mbti || {};
-        completeBlueprint.energy_strategy_human_design = parsedBlueprint.energy_strategy_human_design || {};
-        completeBlueprint.values_life_path = parsedBlueprint.values_life_path || {};
-        completeBlueprint.archetype_western = parsedBlueprint.archetype_western || {};
-        completeBlueprint.archetype_chinese = parsedBlueprint.archetype_chinese || {};
-        completeBlueprint.bashar_suite = parsedBlueprint.bashar_suite || {};
-      } else {
-        // For non-JSON responses, store the raw content
-        completeBlueprint.raw_content = parsedBlueprint.rawContent;
+      // If we have successfully parsed JSON without issues
+      if (!needsParsing) {
+        console.log("Using structured JSON data for blueprint");
+        
+        // Map the parsed data to our expected blueprint format
+        try {
+          // Extract western astrology data
+          if (parsedBlueprint.WesternAstrology || parsedBlueprint.archetype_western || parsedBlueprint.westernAstrology) {
+            const astroData = parsedBlueprint.WesternAstrology || parsedBlueprint.archetype_western || parsedBlueprint.westernAstrology;
+            completeBlueprint.archetype_western = {
+              sun_sign: astroData.SunSign || astroData.sun_sign || "",
+              sun_keyword: astroData.SunKeyword || astroData.sun_keyword || "",
+              sun_dates: astroData.SunDates || astroData.sun_dates || "",
+              sun_element: astroData.Element || astroData.sun_element || "",
+              sun_qualities: astroData.Qualities || astroData.sun_qualities || "",
+              moon_sign: astroData.MoonSign || astroData.moon_sign || "",
+              moon_keyword: astroData.MoonKeyword || astroData.moon_keyword || "",
+              moon_element: astroData.MoonElement || astroData.moon_element || "",
+              rising_sign: astroData.RisingSign || astroData.rising_sign || "",
+              aspects: [],
+              houses: {}
+            };
+            
+            // Extract aspects if available
+            if (astroData.Aspects || astroData.aspects) {
+              const aspects = astroData.Aspects || astroData.aspects;
+              if (Array.isArray(aspects)) {
+                completeBlueprint.archetype_western.aspects = aspects;
+              } else {
+                // Convert object format to array format if needed
+                completeBlueprint.archetype_western.aspects = Object.entries(aspects).map(([key, value]) => {
+                  return { 
+                    planet: key.split(/(?=[A-Z])/)[0] || "Planet", 
+                    aspect: key.match(/(?=[A-Z])(.*)$/)?.[1] || "Aspect",
+                    planet2: "Other", 
+                    orb: "0°",
+                    active: value
+                  };
+                });
+              }
+            }
+          }
+          
+          // Extract human design data
+          if (parsedBlueprint.HumanDesign || parsedBlueprint.energy_strategy_human_design || parsedBlueprint.humanDesign) {
+            const hdData = parsedBlueprint.HumanDesign || parsedBlueprint.energy_strategy_human_design || parsedBlueprint.humanDesign;
+            completeBlueprint.energy_strategy_human_design = {
+              type: hdData.Type || hdData.type || "",
+              profile: hdData.Profile || hdData.profile || "",
+              authority: hdData.Authority || hdData.authority || "",
+              strategy: hdData.Strategy || hdData.strategy || "",
+              definition: hdData.Definition || hdData.definition || "",
+              not_self_theme: hdData.NotSelf || hdData.not_self_theme || "",
+              life_purpose: hdData.LifePurpose || hdData.life_purpose || "",
+              centers: {},
+              gates: {
+                unconscious_design: [],
+                conscious_personality: []
+              }
+            };
+            
+            // Process centers
+            if (hdData.Centers || hdData.centers) {
+              const centers = hdData.Centers || hdData.centers;
+              
+              // Handle different formats of centers data
+              if (centers.Defined && centers.Undefined) {
+                // Format: { "Defined": ["Center1", "Center2"], "Undefined": ["Center3"] }
+                const definedCenters = centers.Defined.map(c => c.toLowerCase());
+                
+                completeBlueprint.energy_strategy_human_design.centers = {
+                  root: definedCenters.includes("root"),
+                  sacral: definedCenters.includes("sacral"),
+                  spleen: definedCenters.includes("spleen"),
+                  solar_plexus: definedCenters.includes("solar plexus") || definedCenters.includes("solarplexus"),
+                  heart: definedCenters.includes("heart") || definedCenters.includes("ego"),
+                  throat: definedCenters.includes("throat"),
+                  ajna: definedCenters.includes("ajna"),
+                  head: definedCenters.includes("head") || definedCenters.includes("crown"),
+                  g: definedCenters.includes("g") || definedCenters.includes("g center")
+                };
+              } else {
+                // Direct mapping format: { "root": true, "sacral": false }
+                completeBlueprint.energy_strategy_human_design.centers = centers;
+              }
+            }
+            
+            // Process gates
+            if (hdData.Gates || hdData.gates) {
+              const gates = hdData.Gates || hdData.gates;
+              
+              if (gates.Defined && Array.isArray(gates.Defined)) {
+                // Convert number gates to string format: 34 -> "34.1"
+                completeBlueprint.energy_strategy_human_design.gates.unconscious_design = 
+                  gates.Defined.map(g => typeof g === 'number' ? `${g}.1` : g);
+              }
+              
+              if (gates.unconscious_design && Array.isArray(gates.unconscious_design)) {
+                completeBlueprint.energy_strategy_human_design.gates.unconscious_design = gates.unconscious_design;
+              }
+              
+              if (gates.conscious_personality && Array.isArray(gates.conscious_personality)) {
+                completeBlueprint.energy_strategy_human_design.gates.conscious_personality = gates.conscious_personality;
+              }
+            }
+          }
+          
+          // Extract numerology data
+          if (parsedBlueprint.Numerology || parsedBlueprint.values_life_path || parsedBlueprint.numerology) {
+            const numData = parsedBlueprint.Numerology || parsedBlueprint.values_life_path || parsedBlueprint.numerology;
+            completeBlueprint.values_life_path = {
+              life_path_number: numData.LifePathNumber || numData.life_path_number || 0,
+              life_path_keyword: numData.LifePathKeyword || numData.life_path_keyword || "",
+              life_path_description: numData.LifePathDescription || numData.life_path_description || "",
+              birth_day_number: parseInt(userMeta.birth_date.split("-")[2]) || 0,
+              birth_day_meaning: numData.BirthDayMeaning || numData.birth_day_meaning || "",
+              personal_year: numData.PersonalYear || numData.personal_year || new Date().getFullYear() % 9 || 9,
+              expression_number: numData.ExpressionNumber || numData.expression_number || 0,
+              expression_keyword: numData.ExpressionKeyword || numData.expression_keyword || "",
+              soul_urge_number: numData.SoulUrgeNumber || numData.soul_urge_number || 0,
+              soul_urge_keyword: numData.SoulUrgeKeyword || numData.soul_urge_keyword || "",
+              personality_number: numData.PersonalityNumber || numData.personality_number || 0
+            };
+          }
+          
+          // Extract Chinese zodiac data
+          if (parsedBlueprint.ChineseZodiac || parsedBlueprint.archetype_chinese || parsedBlueprint.chineseZodiac) {
+            const czData = parsedBlueprint.ChineseZodiac || parsedBlueprint.archetype_chinese || parsedBlueprint.chineseZodiac;
+            completeBlueprint.archetype_chinese = {
+              animal: czData.Sign || czData.animal || "",
+              element: czData.Element || czData.element || "",
+              yin_yang: czData.YinYang || czData.yin_yang || "",
+              keyword: czData.Keyword || czData.keyword || "",
+              element_characteristic: czData.ElementCharacteristic || czData.element_characteristic || "",
+              personality_profile: czData.PersonalityProfile || czData.personality_profile || "",
+              compatibility: czData.Compatibility || czData.compatibility || {
+                best: [],
+                worst: []
+              }
+            };
+          }
+          
+          // Extract MBTI data
+          if (parsedBlueprint.MBTI || parsedBlueprint.cognition_mbti || parsedBlueprint.mbti) {
+            const mbtiData = parsedBlueprint.MBTI || parsedBlueprint.cognition_mbti || parsedBlueprint.mbti;
+            completeBlueprint.cognition_mbti = {
+              type: mbtiData.Type || mbtiData.type || userMeta.mbti || "",
+              core_keywords: mbtiData.Keywords || mbtiData.core_keywords || [],
+              dominant_function: 
+                (mbtiData.CognitiveFunctions && mbtiData.CognitiveFunctions.Dominant) || 
+                mbtiData.dominant_function || "",
+              auxiliary_function: 
+                (mbtiData.CognitiveFunctions && mbtiData.CognitiveFunctions.Auxiliary) || 
+                mbtiData.auxiliary_function || ""
+            };
+          }
+          
+          // Extract Bashar principles
+          if (parsedBlueprint.BasharBeliefInterface || parsedBlueprint.bashar_suite || parsedBlueprint.basharBeliefInterface) {
+            const basharData = parsedBlueprint.BasharBeliefInterface || parsedBlueprint.bashar_suite || parsedBlueprint.basharBeliefInterface;
+            completeBlueprint.bashar_suite = {
+              belief_interface: {
+                principle: "What you believe is what you experience as reality",
+                reframe_prompt: "What would I have to believe to experience this?"
+              },
+              excitement_compass: {
+                principle: "Follow your highest excitement in the moment to the best of your ability"
+              },
+              frequency_alignment: {
+                quick_ritual: "Visualize feeling the way you want to feel for 17 seconds"
+              },
+              core_beliefs: basharData.CoreBeliefs || [],
+              limiting_beliefs: basharData.LimitingBeliefs || [],
+              empowering_beliefs: basharData.EmpoweringBeliefs || []
+            };
+          }
+          
+        } catch (mappingError) {
+          console.error("Error mapping parsed data to blueprint format:", mappingError);
+          // If mapping fails, fall back to raw content approach
+          needsParsing = true;
+          rawContent = generatedContent;
+        }
+      }
+      
+      // If we couldn't parse or map the data properly, store the raw content
+      if (needsParsing) {
+        console.log("Using raw content approach for blueprint");
+        completeBlueprint.raw_content = rawContent;
         completeBlueprint.needs_parsing = true;
       }
 

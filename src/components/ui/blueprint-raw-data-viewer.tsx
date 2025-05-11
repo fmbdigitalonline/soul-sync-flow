@@ -14,8 +14,9 @@ export function BlueprintRawDataViewer({ rawData, data, rawResponse, className }
   const [showRawData, setShowRawData] = useState(false);
   const { toast } = useToast();
   
-  // Use data or rawData, depending on which is provided
+  // Process data for display - either use data, rawData, or rawResponse, in that order
   const processedData = React.useMemo(() => {
+    // Determine which data source to use
     const dataToProcess = data || rawData || rawResponse;
     
     if (!dataToProcess) return null;
@@ -29,6 +30,34 @@ export function BlueprintRawDataViewer({ rawData, data, rawResponse, className }
           return dataToProcess;
         }
       }
+      
+      // If it's an error object
+      if (dataToProcess instanceof Error) {
+        return dataToProcess.toString();
+      }
+      
+      // If it has a .message property (common for errors)
+      if (dataToProcess.message) {
+        return typeof dataToProcess.message === 'string'
+          ? dataToProcess.message
+          : JSON.stringify(dataToProcess, null, 2);
+      }
+      
+      // Handle OpenAI API responses specifically
+      if (dataToProcess.choices && Array.isArray(dataToProcess.choices)) {
+        // Extract the message content from the OpenAI API response
+        const content = dataToProcess.choices[0]?.message?.content;
+        if (content) {
+          return JSON.stringify({
+            model: dataToProcess.model,
+            content: content,
+            finish_reason: dataToProcess.choices[0]?.finish_reason,
+            created: dataToProcess.created,
+            total_tokens: dataToProcess.usage?.total_tokens
+          }, null, 2);
+        }
+      }
+      
       // Otherwise, stringify the object
       return JSON.stringify(dataToProcess, null, 2);
     } catch (error) {
@@ -48,7 +77,7 @@ export function BlueprintRawDataViewer({ rawData, data, rawResponse, className }
     }
   };
   
-  if (!rawData) {
+  if (!processedData) {
     return null;
   }
   
