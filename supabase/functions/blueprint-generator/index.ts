@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
@@ -93,7 +92,7 @@ serve(async (req) => {
     const locationInfo = parseLocationForSearch(userMeta.birth_location);
     
     // Make ONE SINGLE API call to OpenAI - no retry mechanism whatsoever
-    console.log("Calling OpenAI with GPT-4o Search Preview and function calling - ONE TIME ONLY");
+    console.log("Calling OpenAI with GPT-4.1-2025-04-14 and function calling - ONE TIME ONLY");
     
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -102,7 +101,7 @@ serve(async (req) => {
         "Authorization": `Bearer ${OPENAI_API_KEY}`
       },
       body: JSON.stringify({
-        model: "gpt-4o-search-preview",
+        model: "gpt-4.1-2025-04-14",
         messages: [
           { 
             role: "system", 
@@ -138,11 +137,7 @@ Only after having these accurate calculations, integrate them with Western astro
         tools: tools,
         tool_choice: "auto", // Let the model decide when to use tools
         max_tokens: 1500,
-        temperature: 0.7,
-        web_search_options: {
-          search_context_size: "medium",
-          user_location: locationInfo
-        }
+        temperature: 0.7
       })
     });
 
@@ -214,7 +209,7 @@ Only after having these accurate calculations, integrate them with Western astro
           "Authorization": `Bearer ${OPENAI_API_KEY}`
         },
         body: JSON.stringify({
-          model: "gpt-4o-search-preview",
+          model: "gpt-4.1-2025-04-14",
           messages: [
             { 
               role: "system", 
@@ -247,11 +242,7 @@ Only after having these accurate calculations, integrate them with Western astro
             ...toolCallResults
           ],
           temperature: 0.7,
-          max_tokens: 1500,
-          web_search_options: {
-            search_context_size: "medium",
-            user_location: locationInfo
-          }
+          max_tokens: 1500
         })
       });
       
@@ -326,8 +317,8 @@ Only after having these accurate calculations, integrate them with Western astro
       // Create a complete blueprint object with the required structure
       const completeBlueprint = {
         _meta: {
-          generation_method: "gpt-4o-search-preview-with-tools",
-          model_version: "gpt-4o-search-preview",
+          generation_method: "gpt-4.1-2025-04-14-with-tools",
+          model_version: "gpt-4.1-2025-04-14",
           generation_date: new Date().toISOString(),
           birth_data: userMeta,
           schema_version: "1.0",

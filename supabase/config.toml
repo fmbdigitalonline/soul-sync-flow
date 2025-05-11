@@ -58,4 +58,3 @@ verify_jwt = false
 runtime = "python3.11"
 # Explicitly configuring CORS for the Python function
 cors = ["*"]
-
