@@ -7,11 +7,11 @@ from http.server import BaseHTTPRequestHandler
 from .get_facts import build_fact_json
 from .compose_story import generate_blueprint_narrative
 
-# Define CORS headers
+# Define CORS headers - make sure these are applied to ALL responses
 cors_headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Authorization, Content-Type, x-client-info, apikey'
+    'Access-Control-Allow-Headers': 'Authorization, Content-Type, x-client-info, apikey, content-type'
 }
 
 class handler(BaseHTTPRequestHandler):

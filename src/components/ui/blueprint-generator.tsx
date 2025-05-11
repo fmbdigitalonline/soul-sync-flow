@@ -40,7 +40,8 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
     
     if (errorStr.toLowerCase().includes('failed to send a request') || 
         errorStr.toLowerCase().includes('network') ||
-        errorStr.toLowerCase().includes('fetch')) {
+        errorStr.toLowerCase().includes('fetch') ||
+        errorStr.toLowerCase().includes('cors')) {
       return 'connection';
     }
     
@@ -98,24 +99,69 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
       setProgress(25);
       console.log('[GENERATOR] Making SINGLE API call with data:', userData);
 
-      // Use the Python blueprint service instead of the standard one
-      const result = await pythonBlueprintService.generateBlueprint(userData);
-      
-      console.log('[GENERATOR] Blueprint generation result:', result);
-      
-      // Store raw response for debugging
-      if (result.rawResponse) {
-        setDebugInfo(result.rawResponse);
+      // Try to use the Python blueprint service first
+      try {
+        const result = await pythonBlueprintService.generateBlueprint(userData);
+        console.log('[GENERATOR] Python Blueprint generation result:', result);
+        
+        // Store raw response for debugging
+        if (result.rawResponse) {
+          setDebugInfo(result.rawResponse);
+        }
+        
+        // If there's an error in the result, we'll try the standard blueprint service as fallback
+        if (!result.success) {
+          throw new Error(result.error || "Python engine failed, trying standard engine");
+        }
+
+        const blueprint = result.blueprint;
+        if (!blueprint) {
+          throw new Error("No blueprint data returned from Python service");
+        }
+        
+        setProgress(75);
+
+        // Save the blueprint to the database
+        const saveResult = await blueprintService.saveBlueprintToDatabase(blueprint);
+        
+        if (!saveResult.success) {
+          throw new Error(saveResult.error || 'Failed to save blueprint');
+        }
+
+        setProgress(100);
+        setStatus('success');
+
+        toast({
+          title: "Blueprint Generated",
+          description: "Your soul blueprint has been created successfully!",
+        });
+
+        // Call the onComplete callback after a delay
+        if (onComplete) {
+          setTimeout(onComplete, 2000);
+        }
+        
+        return; // Early return if Python engine succeeded
+      } catch (pythonError) {
+        console.warn('[GENERATOR] Python engine failed, falling back to standard engine:', pythonError);
+        // Continue to fallback method below
       }
       
-      // If there's an error in the result, handle it
-      if (!result.success) {
-        throw new Error(result.error || "Unknown error");
+      // Fallback to standard blueprint service if Python service failed
+      console.log('[GENERATOR] Trying standard blueprint service as fallback');
+      const fallbackResult = await blueprintService.generateBlueprintFromBirthData(userData);
+      
+      if (fallbackResult.rawResponse) {
+        setDebugInfo(fallbackResult.rawResponse);
+      }
+      
+      if (!fallbackResult.success) {
+        throw new Error(fallbackResult.error || "Both engines failed to generate blueprint");
       }
 
-      const blueprint = result.blueprint;
+      const blueprint = fallbackResult.blueprint;
       if (!blueprint) {
-        throw new Error("No blueprint data returned from service");
+        throw new Error("No blueprint data returned from either service");
       }
       
       setProgress(75);
