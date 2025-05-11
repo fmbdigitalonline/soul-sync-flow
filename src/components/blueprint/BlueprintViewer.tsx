@@ -80,7 +80,7 @@ const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ data, blueprint, clas
       
       {/* If we have raw content, use the RawContentRenderer */}
       {hasRawContent ? (
-        <RawContentRenderer content={blueprintData.raw_content} className="mt-6" />
+        <RawContentRenderer content={blueprintData.raw_content || ""} className="mt-6" />
       ) : (
         <>
           {/* Only show these sections if we have data */}
@@ -111,7 +111,7 @@ const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ data, blueprint, clas
         <div className="mt-6 border-t pt-6">
           <h3 className="text-lg font-medium mb-2">Research Sources</h3>
           <div className="text-sm text-muted-foreground space-y-2">
-            {blueprintData._meta._citations.map((citation: any, index: number) => (
+            {blueprintData._meta._citations?.map((citation, index) => (
               <div key={index} className="p-2 bg-secondary/40 rounded">
                 <div><strong>Source {index + 1}:</strong> {citation.text}</div>
                 {citation.url && <div className="text-xs">URL: {citation.url}</div>}

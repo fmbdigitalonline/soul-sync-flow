@@ -24,6 +24,10 @@ export interface BlueprintMeta {
   raw_response?: any;
   error?: string | null;
   tool_calls?: Array<any>;
+  _citations?: Array<{
+    text: string;
+    url?: string;
+  }> | null;
 }
 
 // Define complete BlueprintData interface based on structure
@@ -124,6 +128,8 @@ export interface BlueprintData {
   belief_logs?: any[];
   excitement_scores?: any[];
   vibration_check_ins?: any[];
+  raw_content?: string;
+  needs_parsing?: boolean;
   [key: string]: any;
 }
 

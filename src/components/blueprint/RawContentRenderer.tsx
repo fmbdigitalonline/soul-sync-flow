@@ -1,6 +1,6 @@
 
 import React from "react";
-import { BlueprintSection } from "@/components/blueprint/BlueprintSection";
+import BlueprintSection from "@/components/blueprint/BlueprintSection";
 
 interface RawContentRendererProps {
   content: string;
@@ -50,7 +50,13 @@ export const RawContentRenderer: React.FC<RawContentRendererProps> = ({
     if (!data) return null;
     
     return (
-      <BlueprintSection title={formatSectionName(sectionName)} className="mt-6">
+      <BlueprintSection 
+        id={`section-${sectionName}`}
+        title={formatSectionName(sectionName)} 
+        className="mt-6"
+        showExpandIcon={true}
+        defaultExpanded={true}
+      >
         <div className="space-y-2">
           {Object.entries(data).map(([key, value]) => {
             // Don't recursively render nested objects, just convert them to string
@@ -90,7 +96,12 @@ export const RawContentRenderer: React.FC<RawContentRendererProps> = ({
   if (typeof processedContent === 'string') {
     return (
       <div className={className}>
-        <BlueprintSection title="Generated Blueprint Content">
+        <BlueprintSection 
+          id="raw-content"
+          title="Generated Blueprint Content"
+          showExpandIcon={true}
+          defaultExpanded={true}
+        >
           <div className="whitespace-pre-wrap text-sm">{processedContent}</div>
         </BlueprintSection>
       </div>
@@ -113,7 +124,12 @@ export const RawContentRenderer: React.FC<RawContentRendererProps> = ({
   // Fallback if no content could be processed
   return (
     <div className={className}>
-      <BlueprintSection title="Blueprint Content">
+      <BlueprintSection 
+        id="no-content"
+        title="Blueprint Content"
+        showExpandIcon={true}
+        defaultExpanded={true}
+      >
         <div className="text-muted-foreground">
           No readable content was found in the response.
         </div>
