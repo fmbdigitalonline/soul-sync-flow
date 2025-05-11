@@ -30,9 +30,8 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
   const [errorMessage, setErrorMessage] = useState('');
   const [errorType, setErrorType] = useState<'connection' | 'api' | 'quota' | 'parse' | 'unknown'>('unknown');
   const [debugInfo, setDebugInfo] = useState<any>(null);
-  const [queueInfo, setQueueInfo] = useState({ position: 0, length: 0, estimatedTimeSeconds: 0 });
+  const [apiCallMade, setApiCallMade] = useState(false); // Track if API call has been made
   const { toast } = useToast();
-  const [progressInterval, setProgressInterval] = useState<NodeJS.Timeout | null>(null);
 
   // Function to determine error type from the error message
   const determineErrorType = useCallback((error: Error | string): 'connection' | 'api' | 'quota' | 'parse' | 'unknown' => {
@@ -64,21 +63,20 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
     return 'unknown';
   }, []);
 
-  // Cleanup function to clear intervals
-  const cleanupIntervals = useCallback(() => {
-    if (progressInterval) {
-      clearInterval(progressInterval);
-      setProgressInterval(null);
-    }
-  }, [progressInterval]);
-
-  // Generate blueprint function - CRITICALLY MODIFIED TO MAKE ONLY ONE ATTEMPT
+  // Generate blueprint function - STRICTLY ONE ATTEMPT
   const generateBlueprint = useCallback(async () => {
+    // If an API call has already been made, do not proceed
+    if (apiCallMade) {
+      console.log("API call was already made. Not making another request.");
+      return;
+    }
+
     try {
       setStatus('loading');
       setProgress(10);
       setErrorMessage('');
       setDebugInfo(null);
+      setApiCallMade(true); // Mark that we've made the API call
 
       // Format the user data for the blueprint service
       const userData = {
@@ -89,18 +87,8 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
         mbti: formData.personality || undefined,
       };
 
-      // Set up a progress animation that slowly increases while we wait
-      let currentProgress = 10;
-      const interval = setInterval(() => {
-        // Gradually increase progress to simulate ongoing work
-        // Max out at 75% until we get a real response
-        currentProgress = Math.min(75, currentProgress + 0.5);
-        setProgress(currentProgress);
-      }, 1000);
-      
-      setProgressInterval(interval);
+      // Simple progress animation
       setProgress(25);
-
       console.log('Generating blueprint with data:', userData);
 
       // Generate the blueprint - SINGLE ATTEMPT, NO RETRY
@@ -112,9 +100,6 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
       if (result.rawResponse) {
         setDebugInfo(result.rawResponse);
       }
-      
-      // Clear the progress interval
-      cleanupIntervals();
       
       // If there's an error in the result, handle it
       if (!result.success) {
@@ -161,16 +146,18 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
       
       setDebugInfo(error);
       
-      // Clear the progress interval
-      cleanupIntervals();
-      
       toast({
         variant: "destructive",
         title: "Blueprint Generation Failed",
         description: getErrorToastMessage(type),
       });
+
+      // Call the onComplete callback after a delay even on error
+      if (onComplete) {
+        setTimeout(onComplete, 5000);
+      }
     }
-  }, [formData, onComplete, toast, progressInterval, cleanupIntervals, determineErrorType]);
+  }, [formData, onComplete, toast, determineErrorType, apiCallMade]);
 
   // Get error message based on error type
   const getErrorToastMessage = (type: 'connection' | 'api' | 'quota' | 'parse' | 'unknown'): string => {
@@ -191,21 +178,15 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
 
   // Run generate blueprint on mount - SINGLE ATTEMPT ONLY
   useEffect(() => {
-    generateBlueprint();
-    return () => {
-      cleanupIntervals();
-    };
-  }, [generateBlueprint, cleanupIntervals]);
-
-  // Function to render queue position message
-  const getQueueMessage = () => {
-    if (queueInfo.position === 0 && queueInfo.length === 0) return "";
-    if (queueInfo.length > 0) {
-      const waitTime = Math.ceil(queueInfo.estimatedTimeSeconds / 60);
-      return `${queueInfo.length} ${queueInfo.length === 1 ? 'person' : 'people'} ahead of you (est. wait: ~${waitTime} ${waitTime === 1 ? 'minute' : 'minutes'})`;
+    if (!apiCallMade) {
+      generateBlueprint();
     }
-    return "Waiting in queue...";
-  };
+    
+    // Clean up function
+    return () => {
+      // Anything that needs cleanup
+    };
+  }, [generateBlueprint, apiCallMade]);
 
   // Function to get error display content based on error type
   const getErrorDisplay = () => {
@@ -295,9 +276,6 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
                 {progress >= 50 && progress < 75 && "Analyzing astrological and numerological data..."}
                 {progress >= 75 && "Saving your blueprint..."}
               </p>
-              {getQueueMessage() && (
-                <p className="text-xs text-amber-600">{getQueueMessage()}</p>
-              )}
             </div>
           )}
 

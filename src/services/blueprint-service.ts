@@ -243,7 +243,7 @@ const blueprintService = {
   },
 
   // Generate a blueprint using the GPT-4o search preview edge function
-  // MODIFIED: Always make exactly one request - no retries, no queue
+  // STRICTLY ONE REQUEST - no retries, no queue system
   generateBlueprintFromBirthData: async (userMeta: UserMetaData): Promise<{ 
     success: boolean; 
     blueprint?: BlueprintData; 
@@ -252,16 +252,22 @@ const blueprintService = {
   }> => {
     try {
       console.log('Calling blueprint-generator with user meta:', userMeta);
+      
+      // Make a single API call to the edge function - NO RETRIES
       const { data, error } = await supabase.functions.invoke('blueprint-generator', {
         body: { userMeta }
       });
       
-      if (error) throw error;
+      // Handle errors from the API call
+      if (error) {
+        console.error('Error from Supabase function:', error);
+        throw error;
+      }
       
+      // Process successful response
       if (data && data.blueprint) {
         console.log('Blueprint generated via Supabase function');
         
-        // Include raw response for debugging
         return { 
           success: true, 
           blueprint: data.blueprint as BlueprintData,
