@@ -3,6 +3,8 @@ import React from "react";
 import BlueprintSection from "../BlueprintSection";
 import { Badge } from "@/components/ui/badge";
 import { BlueprintData } from "@/services/blueprint-service";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { InfoCircle } from "lucide-react";
 
 interface HumanDesignSectionProps {
   humanDesign: BlueprintData["energy_strategy_human_design"];
@@ -40,6 +42,35 @@ const HumanDesignSection: React.FC<HumanDesignSectionProps> = ({ humanDesign }) 
   // Check if centers data exists
   const hasCenters = humanDesign.centers && typeof humanDesign.centers === 'object';
 
+  // Format center name for display
+  const formatCenterName = (centerName: string): string => {
+    return centerName.split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
+  // Get center description if available
+  const getCenterDescription = (centerName: string, centerData: any): string => {
+    if (typeof centerData === 'object' && centerData.description) {
+      return centerData.description;
+    }
+    
+    // Default descriptions for common centers
+    const defaultDescriptions: Record<string, string> = {
+      head: "Inspiration and mental pressure",
+      ajna: "Conceptualization and mental certainty",
+      throat: "Manifestation and communication",
+      g: "Identity, direction and love",
+      heart_ego: "Willpower and proving oneself",
+      solar_plexus: "Emotional clarity and awareness",
+      sacral: "Life force energy and response",
+      spleen: "Intuition and survival",
+      root: "Pressure and adrenaline"
+    };
+    
+    return defaultDescriptions[centerName] || "Energy center";
+  };
+
   return (
     <BlueprintSection id="humanDesign" title="Human Design" defaultExpanded={false}>
       <div className="grid grid-cols-1 gap-2">
@@ -68,18 +99,42 @@ const HumanDesignSection: React.FC<HumanDesignSectionProps> = ({ humanDesign }) 
           <span>{notSelfTheme}</span>
         </div>
         
-        {/* Centers visualization if available */}
+        {/* Centers visualization with tooltips */}
         {hasCenters && (
           <div className="mt-3 bg-soul-purple/5 p-3 rounded-md">
             <p className="text-muted-foreground mb-2">Defined Centers:</p>
             <div className="grid grid-cols-3 gap-2 text-xs">
-              {Object.entries(humanDesign.centers).map(([center, isDefined]) => (
-                <div key={center} className={`p-1.5 rounded ${isDefined ? 'bg-soul-purple/20' : 'bg-gray-500/10'}`}>
-                  <span className={isDefined ? 'text-soul-purple' : 'text-muted-foreground'}>
-                    {center.charAt(0).toUpperCase() + center.slice(1)}
-                  </span>
-                </div>
-              ))}
+              <TooltipProvider>
+                {Object.entries(humanDesign.centers).map(([center, data]) => {
+                  const isDefined = typeof data === 'boolean' ? data : 
+                                   typeof data === 'object' && 'defined' in data ? data.defined : false;
+                  const description = typeof data === 'object' ? 
+                                     getCenterDescription(center, data) : 
+                                     getCenterDescription(center, null);
+                  
+                  return (
+                    <Tooltip key={center}>
+                      <TooltipTrigger asChild>
+                        <div className={`p-1.5 rounded flex items-center justify-between ${isDefined ? 'bg-soul-purple/20' : 'bg-gray-500/10'}`}>
+                          <span className={isDefined ? 'text-soul-purple' : 'text-muted-foreground'}>
+                            {formatCenterName(center)}
+                          </span>
+                          <InfoCircle className="h-3 w-3 ml-1" />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="max-w-[200px] text-xs">
+                          {description}
+                          {isDefined ? 
+                            <span className="block mt-1 text-soul-purple font-medium">Defined</span> : 
+                            <span className="block mt-1 text-muted-foreground">Undefined</span>
+                          }
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                })}
+              </TooltipProvider>
             </div>
           </div>
         )}
@@ -98,7 +153,7 @@ const HumanDesignSection: React.FC<HumanDesignSectionProps> = ({ humanDesign }) 
               <div className="bg-soul-purple/5 p-2 rounded-md">
                 <span className="text-muted-foreground block mb-1">Design: </span>
                 <div className="flex flex-wrap gap-1">
-                  {humanDesign.gates.unconscious_design.slice(0, 4).map((gate, idx) => (
+                  {humanDesign.gates.unconscious_design.slice(0, 6).map((gate, idx) => (
                     <Badge key={`design-${idx}`} variant="outline" className="bg-soul-purple/10">
                       {gate}
                     </Badge>
@@ -108,13 +163,27 @@ const HumanDesignSection: React.FC<HumanDesignSectionProps> = ({ humanDesign }) 
               <div className="bg-soul-purple/5 p-2 rounded-md">
                 <span className="text-muted-foreground block mb-1">Personality: </span>
                 <div className="flex flex-wrap gap-1">
-                  {humanDesign.gates.conscious_personality.slice(0, 4).map((gate, idx) => (
+                  {humanDesign.gates.conscious_personality.slice(0, 6).map((gate, idx) => (
                     <Badge key={`personality-${idx}`} variant="outline" className="bg-soul-purple/10">
                       {gate}
                     </Badge>
                   ))}
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Show channels if available */}
+        {humanDesign.channels && Array.isArray(humanDesign.channels) && humanDesign.channels.length > 0 && (
+          <div className="mt-3">
+            <p className="text-muted-foreground mb-2">Active Channels:</p>
+            <div className="flex flex-wrap gap-1">
+              {humanDesign.channels.slice(0, 8).map((channel, idx) => (
+                <Badge key={`channel-${idx}`} variant="outline" className="bg-soul-purple/20">
+                  {channel}
+                </Badge>
+              ))}
             </div>
           </div>
         )}
