@@ -18,6 +18,10 @@ export const pythonBlueprintService = {
     try {
       console.log("Generating blueprint with Python engine...", userData);
       
+      // Add detailed diagnostic info
+      console.log("Blueprint engine URL:", `https://qxaajirrqrcnmvtowjbg.supabase.co/functions/v1/python-blueprint-engine`);
+      console.log("Request payload:", JSON.stringify(userData, null, 2));
+      
       // Call the Supabase Edge Function that wraps our Python code
       console.log("Calling Supabase function: python-blueprint-engine");
       const { data, error } = await supabase.functions.invoke("python-blueprint-engine", {

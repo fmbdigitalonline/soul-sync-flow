@@ -7,12 +7,19 @@ from http.server import BaseHTTPRequestHandler
 from .get_facts import build_fact_json
 from .compose_story import generate_blueprint_narrative
 
+# Define CORS headers
+cors_headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Authorization, Content-Type, x-client-info, apikey'
+}
+
 class handler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(200)
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Authorization, Content-Type')
+        # Add CORS headers to OPTIONS response
+        for key, value in cors_headers.items():
+            self.send_header(key, value)
         self.end_headers()
         
     def do_POST(self):
@@ -49,7 +56,9 @@ class handler(BaseHTTPRequestHandler):
             # Return the complete blueprint
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')
+            # Add CORS headers to POST response
+            for key, value in cors_headers.items():
+                self.send_header(key, value)
             self.end_headers()
             self.wfile.write(json.dumps(result).encode())
             
@@ -61,12 +70,22 @@ class handler(BaseHTTPRequestHandler):
             }
             self.send_response(500)
             self.send_header('Content-Type', 'application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')
+            # Add CORS headers even to error responses
+            for key, value in cors_headers.items():
+                self.send_header(key, value)
             self.end_headers()
             self.wfile.write(json.dumps(error_message).encode())
 
 def handle_request(event):
     try:
+        # Check if this is a preflight OPTIONS request
+        if event.get('method', '').upper() == 'OPTIONS':
+            return {
+                "statusCode": 200,
+                "headers": cors_headers,
+                "body": ""
+            }
+            
         # Parse the request body
         request_data = json.loads(event.get("body", "{}"))
         
@@ -100,7 +119,7 @@ def handle_request(event):
             "statusCode": 200,
             "headers": {
                 "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*"
+                **cors_headers
             },
             "body": json.dumps(result)
         }
@@ -109,7 +128,7 @@ def handle_request(event):
             "statusCode": 500,
             "headers": {
                 "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*"
+                **cors_headers
             },
             "body": json.dumps({
                 "success": False,
