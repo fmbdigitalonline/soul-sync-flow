@@ -101,6 +101,7 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
 
       // Try to use the Python blueprint service first
       try {
+        setProgress(35);
         const result = await pythonBlueprintService.generateBlueprint(userData);
         console.log('[GENERATOR] Python Blueprint generation result:', result);
         
@@ -109,8 +110,9 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
           setDebugInfo(result.rawResponse);
         }
         
-        // If there's an error in the result, we'll try the standard blueprint service as fallback
+        // If there's an error in the result, we'll try the research blueprint generator
         if (!result.success) {
+          setProgress(40);
           throw new Error(result.error || "Python engine failed, trying standard engine");
         }
 
@@ -147,8 +149,91 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
         // Continue to fallback method below
       }
       
-      // Fallback to standard blueprint service if Python service failed
-      console.log('[GENERATOR] Trying standard blueprint service as fallback');
+      // Try the direct fallback to the research blueprint generator
+      try {
+        console.log('[GENERATOR] Trying research blueprint generator directly');
+        setProgress(50);
+        
+        // Format the data for the research blueprint generator
+        const directResult = await supabase.functions.invoke("research-blueprint-generator", {
+          body: {
+            birthData: {
+              name: formData.name,
+              date: formData.birthDate,
+              time: formData.birthTime || "00:00",
+              location: formData.birthLocation || "",
+              timezone: "local", // Default to local timezone
+            },
+            debugMode: true
+          }
+        });
+        
+        if (directResult.error) {
+          throw new Error(`Research blueprint generator error: ${directResult.error.message}`);
+        }
+        
+        if (!directResult.data) {
+          throw new Error("No data returned from research blueprint generator");
+        }
+        
+        // Store raw response for debugging
+        setDebugInfo(directResult.data);
+        
+        // Transform the research data to our blueprint format
+        const blueprint = {
+          user_meta: {
+            full_name: formData.name,
+            preferred_name: formData.name.split(' ')[0],
+            birth_date: formData.birthDate,
+            birth_time_local: formData.birthTime,
+            birth_location: formData.birthLocation
+          },
+          // Copy the rest from the research generator response
+          ...directResult.data.data,
+          raw_content: directResult.data.data._meta?.raw_response || "",
+          needs_parsing: true,
+          _meta: {
+            generation_method: "research-direct",
+            generation_date: new Date().toISOString(),
+            model_version: "2.0",
+            birth_data: {},
+            schema_version: "2.0",
+            raw_response: directResult.data,
+            error: null
+          }
+        };
+        
+        setProgress(75);
+        
+        // Save the blueprint to the database
+        const saveResult = await blueprintService.saveBlueprintToDatabase(blueprint);
+        
+        if (!saveResult.success) {
+          throw new Error(saveResult.error || 'Failed to save blueprint');
+        }
+        
+        setProgress(100);
+        setStatus('success');
+        
+        toast({
+          title: "Blueprint Generated",
+          description: "Your soul blueprint has been created successfully using our research engine!",
+        });
+        
+        // Call the onComplete callback after a delay
+        if (onComplete) {
+          setTimeout(onComplete, 2000);
+        }
+        
+        return; // Early return if direct research engine succeeded
+      } catch (directError) {
+        console.warn('[GENERATOR] Direct research engine failed, falling back to standard engine:', directError);
+        // Continue to standard blueprint service as final fallback
+      }
+      
+      // Fallback to standard blueprint service as last resort
+      console.log('[GENERATOR] Trying standard blueprint service as final fallback');
+      setProgress(60);
       const fallbackResult = await blueprintService.generateBlueprintFromBirthData(userData);
       
       if (fallbackResult.rawResponse) {
@@ -156,12 +241,12 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
       }
       
       if (!fallbackResult.success) {
-        throw new Error(fallbackResult.error || "Both engines failed to generate blueprint");
+        throw new Error(fallbackResult.error || "All engines failed to generate blueprint");
       }
 
       const blueprint = fallbackResult.blueprint;
       if (!blueprint) {
-        throw new Error("No blueprint data returned from either service");
+        throw new Error("No blueprint data returned from any service");
       }
       
       setProgress(75);
@@ -216,7 +301,7 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
   const getErrorToastMessage = (type: 'connection' | 'api' | 'quota' | 'parse' | 'unknown'): string => {
     switch (type) {
       case 'connection':
-        return "Connection issue. Please check your internet connection and try again.";
+        return "Connection issue. Please try again or check with support.";
       case 'api':
         return "API configuration issue. Our team has been notified.";
       case 'quota':
@@ -329,8 +414,9 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
               <p className="text-sm text-muted-foreground">
                 {progress < 25 && "Connecting to AI..."}
-                {progress >= 25 && progress < 50 && "Generating comprehensive blueprint..."}
-                {progress >= 50 && progress < 75 && "Analyzing astrological and numerological data..."}
+                {progress >= 25 && progress < 40 && "Trying Python blueprint engine..."}
+                {progress >= 40 && progress < 60 && "Trying research blueprint generator..."}
+                {progress >= 60 && progress < 75 && "Falling back to standard engine..."}
                 {progress >= 75 && "Saving your blueprint..."}
               </p>
             </div>
