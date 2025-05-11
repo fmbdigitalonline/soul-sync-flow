@@ -29,7 +29,7 @@ serve(async (req) => {
     // Process the message with OpenAI
     const systemMessage = getSystemMessage(blueprintContext);
     
-    // Call OpenAI API
+    // Call OpenAI API with the updated model
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -37,7 +37,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4.1-2025-04-14', // Updated to use GPT-4.1
         messages: [
           { role: 'system', content: systemMessage },
           { role: 'user', content: message }

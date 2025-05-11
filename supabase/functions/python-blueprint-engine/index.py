@@ -18,8 +18,8 @@ def handle_request(event):
         birth_location = request_data.get("birth_location", "")
         mbti = request_data.get("mbti", "")
         
-        # Default model is gpt-4o-mini, but can be overridden
-        model = request_data.get("model", "gpt-4o-mini")
+        # Allow model selection with GPT-4.1 as an option
+        model = request_data.get("model", "gpt-4.1-2025-04-14")
         
         # Split location into city and country
         if "," in birth_location:

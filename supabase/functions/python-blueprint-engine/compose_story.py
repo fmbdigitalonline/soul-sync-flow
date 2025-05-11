@@ -18,10 +18,9 @@ SYSTEM_PROMPT = textwrap.dedent("""
 def generate_blueprint_narrative(facts_json):
     """Generate a narrative soul blueprint from verified facts."""
     try:
-        # Call GPT-4o mini by default (more cost-effective)
-        # Can be upgraded to GPT-4o or GPT-4.1 for premium users
+        # Update to use GPT-4.1 model which supports function calling
         chat = openai.chat.completions.create(
-            model="gpt-4o-mini",  # Default to cost-effective model
+            model="gpt-4.1-2025-04-14",  # Using the specified model with function calling support
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": json.dumps(facts_json, indent=2)}
