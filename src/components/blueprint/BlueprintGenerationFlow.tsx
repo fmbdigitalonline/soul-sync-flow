@@ -87,7 +87,7 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
     }
   }, [isGenerating, isSuccess, isError, steps.length]);
 
-  // Generate the blueprint using the actual service
+  // Generate the blueprint using the actual service - SINGLE ATTEMPT ONLY, NO RETRIES
   useEffect(() => {
     let mounted = true;
     
@@ -108,7 +108,7 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
           setStage('searching');
           setProgress(30);
           
-          // Use the generate function
+          // Use the generate function - SINGLE ATTEMPT
           const result = await blueprintService.generateBlueprintFromBirthData(updatedUserMeta);
           
           if (!mounted) return;
@@ -165,8 +165,15 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
             toast({
               variant: "destructive",
               title: "Blueprint Generation Failed",
-              description: "There was an error generating your blueprint. View technical details for more information."
+              description: "There was an error generating your blueprint. You can try again later or use sample data."
             });
+            
+            // Add an option to proceed with sample data
+            setTimeout(() => {
+              if (mounted && onComplete) {
+                onComplete();
+              }
+            }, 5000); // Auto-proceed after error with sample data
           }
         }
       };
@@ -195,6 +202,13 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
   useEffect(() => {
     setIsGenerating(true);
   }, []);
+
+  // Handle using sample data
+  const handleUseSampleData = () => {
+    if (onComplete) {
+      onComplete();
+    }
+  };
 
   return (
     <div className={cn("w-full max-w-4xl mx-auto", className)}>
@@ -368,6 +382,14 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
         {isError && (
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 translate-y-16 bg-red-900/80 text-white px-4 py-2 rounded-md text-sm">
             Error: {errorMessage}
+            
+            <Button
+              onClick={handleUseSampleData}
+              className="mt-2 bg-white/20 hover:bg-white/30 text-white text-xs"
+              size="sm"
+            >
+              Use Sample Data Instead
+            </Button>
           </div>
         )}
 
@@ -409,34 +431,6 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
             />
           </div>
         </div>
-
-        {/* Flowing data particles */}
-        {currentStep > 0 && currentStep < steps.length && (
-          <div className="absolute inset-0">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <motion.div
-                key={`flow-${i}`}
-                className="absolute w-2 h-2 rounded-full bg-soul-purple"
-                initial={{ 
-                  x: 150 + (i * 40), 
-                  y: 300,
-                  opacity: 0
-                }}
-                animate={{ 
-                  x: [150 + (i * 40), 500 - (i * 30)],
-                  y: [300, 150],
-                  opacity: [0, 1, 0]
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  delay: i * 0.5,
-                  ease: "easeInOut"
-                }}
-              />
-            ))}
-          </div>
-        )}
       </div>
 
       {/* Step indicator */}
@@ -466,35 +460,15 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
         </div>
       </div>
 
-      {/* Key features section */}
-      <div className="mt-12 grid grid-cols-2 gap-6">
-        <div className="bg-white/5 backdrop-blur-sm p-4 rounded-lg border border-white/10">
-          <h3 className="text-lg font-medium mb-2 text-soul-purple">Web Search Integration</h3>
-          <p className="text-sm text-white/70">
-            Utilizes OpenAI's search capabilities to find accurate astrological and birth data
-          </p>
-        </div>
-        
-        <div className="bg-white/5 backdrop-blur-sm p-4 rounded-lg border border-white/10">
-          <h3 className="text-lg font-medium mb-2 text-soul-purple">Enhanced Accuracy</h3>
-          <p className="text-sm text-white/70">
-            Planetary positions and time zone adjustments calculated using real-time web data
-          </p>
-        </div>
-        
-        <div className="bg-white/5 backdrop-blur-sm p-4 rounded-lg border border-white/10">
-          <h3 className="text-lg font-medium mb-2 text-soul-purple">Integrated Spiritual Systems</h3>
-          <p className="text-sm text-white/70">
-            Combines astrology, numerology, Human Design, and MBTI into a cohesive profile
-          </p>
-        </div>
-        
-        <div className="bg-white/5 backdrop-blur-sm p-4 rounded-lg border border-white/10">
-          <h3 className="text-lg font-medium mb-2 text-soul-purple">Personalized Insights</h3>
-          <p className="text-sm text-white/70">
-            GPT-4o Search Preview processes research results to generate your unique blueprint
-          </p>
-        </div>
+      {/* Use Sample Data Button - always visible */}
+      <div className="mt-6 flex justify-center">
+        <Button 
+          onClick={handleUseSampleData} 
+          variant="outline" 
+          className="border-soul-purple text-soul-purple hover:bg-soul-purple/10"
+        >
+          Skip API Call and Use Sample Data
+        </Button>
       </div>
 
       {/* Debug Output Section */}

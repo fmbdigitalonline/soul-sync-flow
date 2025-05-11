@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, CheckCircle2, XCircle, Info, RefreshCw } from "lucide-react";
+import { Loader2, CheckCircle2, XCircle, Info } from "lucide-react";
 import blueprintService, { BlueprintData } from '@/services/blueprint-service';
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
@@ -26,14 +26,11 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
   className
 }) => {
   const [progress, setProgress] = useState(0);
-  const [status, setStatus] = useState<'initial' | 'loading' | 'success' | 'error' | 'retrying'>('initial');
+  const [status, setStatus] = useState<'initial' | 'loading' | 'success' | 'error'>('initial');
   const [errorMessage, setErrorMessage] = useState('');
   const [errorType, setErrorType] = useState<'connection' | 'api' | 'quota' | 'parse' | 'unknown'>('unknown');
   const [debugInfo, setDebugInfo] = useState<any>(null);
   const [queueInfo, setQueueInfo] = useState({ position: 0, length: 0, estimatedTimeSeconds: 0 });
-  const [retryCount, setRetryCount] = useState(0);
-  const [autoRetry, setAutoRetry] = useState(false);
-  const [maxRetries] = useState(3);
   const { toast } = useToast();
   const [progressInterval, setProgressInterval] = useState<NodeJS.Timeout | null>(null);
 
@@ -49,7 +46,8 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
     
     if (errorStr.toLowerCase().includes('quota') || 
         errorStr.toLowerCase().includes('exceeded') || 
-        errorStr.toLowerCase().includes('billing')) {
+        errorStr.toLowerCase().includes('billing') ||
+        errorStr.toLowerCase().includes('insufficient_quota')) {
       return 'quota';
     }
     
@@ -74,7 +72,7 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
     }
   }, [progressInterval]);
 
-  // Generate blueprint function
+  // Generate blueprint function - CRITICALLY MODIFIED TO MAKE ONLY ONE ATTEMPT
   const generateBlueprint = useCallback(async () => {
     try {
       setStatus('loading');
@@ -105,7 +103,7 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
 
       console.log('Generating blueprint with data:', userData);
 
-      // Generate the blueprint
+      // Generate the blueprint - SINGLE ATTEMPT, NO RETRY
       const result = await blueprintService.generateBlueprintFromBirthData(userData);
       
       console.log('Blueprint generation result:', result);
@@ -113,16 +111,6 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
       // Store raw response for debugging
       if (result.rawResponse) {
         setDebugInfo(result.rawResponse);
-      }
-      
-      // Update queue information if available
-      if (result.queueLength !== undefined) {
-        const estimatedTimeSeconds = result.queueLength * 20; // Updated estimate: 20 seconds per request
-        setQueueInfo({ 
-          position: result.queuePosition || 0, 
-          length: result.queueLength,
-          estimatedTimeSeconds
-        });
       }
       
       // Clear the progress interval
@@ -138,12 +126,6 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
         throw new Error("No blueprint data returned from service");
       }
       
-      // Handle case where we received raw content that needs parsing
-      if (blueprint.needs_parsing && blueprint.raw_content) {
-        console.log("Received content that needs manual parsing");
-        // We still continue with this content and handle it during the save process
-      }
-      
       setProgress(75);
 
       // Save the blueprint to the database
@@ -155,7 +137,6 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
 
       setProgress(100);
       setStatus('success');
-      setAutoRetry(false);
 
       toast({
         title: "Blueprint Generated",
@@ -188,16 +169,8 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
         title: "Blueprint Generation Failed",
         description: getErrorToastMessage(type),
       });
-
-      // If it's a connection error, consider auto-retry after a delay
-      if (type === 'connection' && retryCount < maxRetries) {
-        setAutoRetry(true);
-        setTimeout(() => {
-          handleRetry();
-        }, 5000); // Wait 5 seconds before retrying
-      }
     }
-  }, [formData, onComplete, toast, retryCount, maxRetries, progressInterval, cleanupIntervals, determineErrorType]);
+  }, [formData, onComplete, toast, progressInterval, cleanupIntervals, determineErrorType]);
 
   // Get error message based on error type
   const getErrorToastMessage = (type: 'connection' | 'api' | 'quota' | 'parse' | 'unknown'): string => {
@@ -216,24 +189,13 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
     }
   };
 
-  // Run generate blueprint on mount and when retry count changes
+  // Run generate blueprint on mount - SINGLE ATTEMPT ONLY
   useEffect(() => {
     generateBlueprint();
     return () => {
       cleanupIntervals();
     };
-  }, [generateBlueprint, cleanupIntervals, retryCount]);
-
-  const handleRetry = () => {
-    setRetryCount(prev => prev + 1);
-    setStatus('retrying');
-    setAutoRetry(false);
-    
-    toast({
-      title: "Retrying",
-      description: `Attempt ${retryCount + 1} of ${maxRetries}`,
-    });
-  };
+  }, [generateBlueprint, cleanupIntervals]);
 
   // Function to render queue position message
   const getQueueMessage = () => {
@@ -255,10 +217,7 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
             <AlertTitle>Connection Error</AlertTitle>
             <AlertDescription>
               We're having trouble connecting to our AI service.
-              {retryCount < maxRetries && 
-                (autoRetry ? 
-                  " Automatically retrying..." : 
-                  " Please try again or check your internet connection.")}
+              Please check your internet connection.
             </AlertDescription>
           </Alert>
         );
@@ -270,8 +229,14 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
             <AlertTitle className="text-amber-800">Service Busy</AlertTitle>
             <AlertDescription className="text-amber-700">
               Our AI service is experiencing high demand right now. 
-              Please try again in a few minutes.
+              Please try again later or use sample data.
             </AlertDescription>
+            <Button
+              onClick={() => onComplete && onComplete()}
+              className="mt-2 bg-amber-600 hover:bg-amber-700"
+            >
+              Use Sample Data Instead
+            </Button>
           </Alert>
         );
       
@@ -282,8 +247,14 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
             <AlertTitle className="text-amber-800">API Configuration Issue</AlertTitle>
             <AlertDescription className="text-amber-700">
               There's a temporary issue with our AI service configuration.
-              Our team has been notified and is working on a fix.
+              Please try again later or use sample data.
             </AlertDescription>
+            <Button
+              onClick={() => onComplete && onComplete()}
+              className="mt-2 bg-amber-600 hover:bg-amber-700"
+            >
+              Use Sample Data Instead
+            </Button>
           </Alert>
         );
       
@@ -294,8 +265,14 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
             <AlertTitle className="text-amber-800">Processing Error</AlertTitle>
             <AlertDescription className="text-amber-700">
               There was an error processing the AI's response.
-              Our team has been notified. Please try again shortly.
+              Please try again later or use sample data.
             </AlertDescription>
+            <Button
+              onClick={() => onComplete && onComplete()}
+              className="mt-2 bg-amber-600 hover:bg-amber-700"
+            >
+              Use Sample Data Instead
+            </Button>
           </Alert>
         );
       
@@ -306,8 +283,14 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
             <Info className="h-4 w-4" />
             <AlertTitle>Unexpected Error</AlertTitle>
             <AlertDescription>
-              {errorMessage || "An unknown error occurred. Please try again."}
+              {errorMessage || "An unknown error occurred. Please try again later or use sample data."}
             </AlertDescription>
+            <Button
+              onClick={() => onComplete && onComplete()}
+              className="mt-2 bg-red-700 hover:bg-red-800 text-white"
+            >
+              Use Sample Data Instead
+            </Button>
           </Alert>
         );
     }
@@ -327,17 +310,9 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
         </div>
 
         <div className="flex flex-col items-center justify-center pt-4">
-          {(status === 'loading' || status === 'retrying') && (
+          {status === 'loading' && (
             <div className="flex flex-col items-center space-y-4">
-              {status === 'retrying' ? (
-                <div className="flex items-center space-x-2">
-                  <RefreshCw className="h-8 w-8 animate-spin text-amber-500" />
-                  <span className="text-amber-500 font-medium">Retrying...</span>
-                </div>
-              ) : (
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              )}
-              
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
               <p className="text-sm text-muted-foreground">
                 {progress < 25 && "Connecting to AI..."}
                 {progress >= 25 && progress < 50 && "Generating comprehensive blueprint..."}
@@ -386,24 +361,6 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
                   className="w-full mt-4"
                 />
               )}
-              
-              <Button 
-                onClick={handleRetry}
-                disabled={retryCount >= maxRetries || autoRetry}
-                className="flex items-center gap-2"
-              >
-                {autoRetry ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 animate-spin" />
-                    Auto-retrying...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="h-4 w-4" />
-                    Try Again {retryCount > 0 && `(${retryCount}/${maxRetries})`}
-                  </>
-                )}
-              </Button>
             </div>
           )}
         </div>

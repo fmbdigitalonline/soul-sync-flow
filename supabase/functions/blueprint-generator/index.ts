@@ -10,17 +10,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Queue for processing requests sequentially
-const requestQueue = [];
-let isProcessing = false;
-
-// Rate limit tracking
-const rateLimitInfo = {
-  isRateLimited: false,
-  resetTime: null,
-  consecutiveErrors: 0,
-  cooldownMs: 5000, // Initial cooldown of 5 seconds
-};
+// IMPORTANT: No more queue to prevent multiple requests
+// Each request is handled once with no retries
 
 /**
  * Edge function to handle blueprint generation requests
@@ -50,28 +41,17 @@ serve(async (req) => {
       throw new Error("Missing OpenAI API key. Please add OPENAI_API_KEY to your Supabase secrets.");
     }
 
-    // Add request to queue and process
-    const blueprintPromise = new Promise((resolve, reject) => {
-      requestQueue.push({
-        userMeta,
-        resolve,
-        reject,
-        queuePosition: requestQueue.length + 1,
-        addedAt: Date.now()
-      });
-
-      // Start processing the queue if not already
-      if (!isProcessing) {
-        processQueue();
-      }
-    });
-
-    // Wait for the request to be processed
-    const result = await blueprintPromise;
+    // Call OpenAI API with a SINGLE attempt, no retry logic
+    console.log("Calling OpenAI with GPT-4o Search Preview");
+    const result = await generateBlueprintWithSearchPreview(userMeta);
     
     // Return the result
     return new Response(
-      JSON.stringify(result),
+      JSON.stringify({
+        success: true,
+        blueprint: result.blueprint,
+        rawResponse: result.rawResponse
+      }),
       { 
         headers: { 
           ...corsHeaders, 
@@ -83,7 +63,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("Error generating blueprint:", error);
     
-    // Return detailed error for debugging
+    // Return detailed error for debugging - NO RETRY
     return new Response(
       JSON.stringify({ 
         success: false, 
@@ -103,96 +83,8 @@ serve(async (req) => {
 });
 
 /**
- * Process queue items sequentially
- */
-async function processQueue() {
-  if (requestQueue.length === 0) {
-    isProcessing = false;
-    return;
-  }
-
-  isProcessing = true;
-  const nextRequest = requestQueue.shift();
-
-  try {
-    console.log(`Processing request for ${nextRequest.userMeta.full_name} (waited ${Date.now() - nextRequest.addedAt}ms)`);
-    console.log(`Queue length: ${requestQueue.length}`);
-    
-    // Check if we're currently rate limited
-    if (rateLimitInfo.isRateLimited) {
-      const now = Date.now();
-      if (now < rateLimitInfo.resetTime) {
-        const waitTime = Math.ceil((rateLimitInfo.resetTime - now) / 1000);
-        console.log(`Rate limited, waiting ${waitTime} seconds before retry`);
-        
-        // Re-add the request to the front of the queue with a delay
-        setTimeout(() => {
-          requestQueue.unshift(nextRequest);
-          processQueue();
-        }, Math.min(30000, rateLimitInfo.cooldownMs)); // Cap maximum delay at 30 seconds
-        
-        return;
-      } else {
-        // Reset rate limit if the cooldown period has passed
-        console.log("Rate limit cooldown period has passed, attempting to process");
-        rateLimitInfo.isRateLimited = false;
-      }
-    }
-    
-    // Generate the blueprint with search preview model
-    const result = await generateBlueprintWithSearchPreview(nextRequest.userMeta);
-    
-    // Reset consecutive error count on success
-    rateLimitInfo.consecutiveErrors = 0;
-    
-    // Resolve the promise with the result
-    nextRequest.resolve({
-      success: true,
-      blueprint: result.blueprint,
-      rawResponse: result.rawResponse,
-      queueLength: requestQueue.length
-    });
-    
-    // Add a small delay before processing the next request to avoid rate limits
-    setTimeout(() => {
-      processQueue();
-    }, 2000); // 2 seconds between requests
-  } catch (error) {
-    console.error("Error in queue processing:", error);
-    
-    // Check if this is a rate limit error
-    if (error.message && (
-      error.message.includes("rate limit") || 
-      error.message.includes("too many requests") || 
-      error.message.includes("429") || 
-      error.message.includes("quota exceeded")
-    )) {
-      // Increase the rate limit tracking
-      rateLimitInfo.isRateLimited = true;
-      rateLimitInfo.consecutiveErrors++;
-      
-      // Exponential backoff based on consecutive errors
-      rateLimitInfo.cooldownMs = Math.min(120000, rateLimitInfo.cooldownMs * (1.5 + (rateLimitInfo.consecutiveErrors * 0.5)));
-      rateLimitInfo.resetTime = Date.now() + rateLimitInfo.cooldownMs;
-      
-      console.log(`Rate limit detected. Backing off for ${rateLimitInfo.cooldownMs/1000} seconds`);
-      
-      // Re-add the request to the queue for retry later
-      requestQueue.unshift(nextRequest);
-    } else {
-      // Return the detailed error for non-rate limit errors
-      nextRequest.reject(error);
-    }
-    
-    // Continue processing the queue after a delay
-    setTimeout(() => {
-      processQueue();
-    }, 3000); // Slight longer delay after errors
-  }
-}
-
-/**
  * Generate a blueprint using GPT-4o Search Preview with web search capabilities
+ * No retry logic at all - one attempt only
  */
 async function generateBlueprintWithSearchPreview(userMeta) {
   const systemPrompt = `You are an expert astrologer, numerologist, Human Design reader, Chinese metaphysics interpreter, and personality psychologist. 
@@ -222,7 +114,7 @@ Include these sections in your response:
 5. MBTI cognitive functions
 6. Bashar spiritual principles`;
 
-  console.log("Calling OpenAI with GPT-4o Search Preview");
+  console.log("Calling OpenAI with GPT-4o Search Preview - SINGLE ATTEMPT");
   
   try {
     // Determine the birth location for better location-specific search
@@ -253,12 +145,6 @@ Include these sections in your response:
     if (!response.ok) {
       const errorData = await response.json();
       console.error("OpenAI API error:", JSON.stringify(errorData));
-      
-      // Enhanced error handling for rate limits
-      if (errorData.error && errorData.error.type === "rate_limit_exceeded") {
-        throw new Error(`OpenAI rate limit exceeded. Please try again in ${errorData.error.retry_after || 'a few'} seconds.`);
-      }
-      
       throw new Error(`OpenAI API error: ${JSON.stringify(errorData)}`);
     }
 
@@ -342,7 +228,6 @@ Include these sections in your response:
     } catch (error) {
       // If there's an error parsing the blueprint, include the error and raw response
       console.error("Error processing blueprint:", error);
-      
       throw new Error(`Failed to process blueprint: ${error.message}`);
     }
   } catch (error) {
