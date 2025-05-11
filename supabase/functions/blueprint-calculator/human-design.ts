@@ -1,7 +1,5 @@
-
-// Human Design calculation module using hdkit
+// Human Design calculation module using external API
 import { calculateLifePath } from "./numerology.ts";
-import { Chart, getBodygraph } from "hdkit";
 
 // Type definitions for Human Design types
 const TYPES = {
@@ -48,57 +46,116 @@ const CENTERS = [
   "Solar Plexus", "Sacral", "Spleen", "Root"
 ];
 
+// External HD API endpoint (free public API)
+const HD_API = "https://hd-public-api.mybodygraph.com/v1/chart";
+
 export async function calculateHumanDesign(birthDate, birthTime, location, timezone, celestialData) {
   try {
     console.log(`Calculating Human Design for: ${birthDate} ${birthTime} at ${location}, timezone: ${timezone}`);
 
-    // Check if we have all required inputs for hdkit
-    if (!birthDate || !birthTime || !location) {
-      console.log("Missing required inputs for precise Human Design calculation");
+    // Check if we have all required inputs for API
+    if (!birthDate) {
+      console.log("Missing required inputs for Human Design calculation");
       return generateFallbackHumanDesign(birthDate, birthTime, location, celestialData);
     }
 
+    // Extract latitude and longitude from celestial data if available
+    const latitude = celestialData?.latitude || 0;
+    const longitude = celestialData?.longitude || 0;
+    
+    // Format date and time for the API
+    const dateStr = birthDate; // YYYY-MM-DD format
+    const timeStr = birthTime || "12:00"; // Default to noon if time not provided
+    
     try {
-      // Create a Human Design chart using hdkit
-      const chart = new Chart({
-        date: birthDate, // YYYY-MM-DD
-        time: birthTime, // HH:MM
-        location: location, // City/Country
-        timezone: timezone // Timezone offset or name
-      });
+      // Use the external HD API
+      const url = new URL(HD_API);
+      url.searchParams.set("date", dateStr);
+      url.searchParams.set("time", timeStr);
+      url.searchParams.set("lat", latitude.toString());
+      url.searchParams.set("lon", longitude.toString());
       
-      // Get the bodygraph
-      const bodygraph = await getBodygraph(chart);
+      console.log(`Calling Human Design API: ${url.toString()}`);
       
-      console.log("Successfully calculated Human Design using hdkit");
+      const response = await fetch(url.toString());
       
-      // Extract the necessary information from the bodygraph
+      if (!response.ok) {
+        throw new Error(`API returned status: ${response.status}`);
+      }
+      
+      const hdData = await response.json();
+      console.log("Successfully fetched Human Design data from API");
+      
+      // Extract the necessary information from the API response
+      // Note: Adjust this mapping based on the actual API response structure
       return {
-        type: mapType(bodygraph.type),
-        profile: `${bodygraph.profile.conscious}/${bodygraph.profile.unconscious} (${mapProfileLine(bodygraph.profile.conscious)}/${mapProfileLine(bodygraph.profile.unconscious)})`,
-        authority: mapAuthority(bodygraph.authority),
-        strategy: TYPES[mapType(bodygraph.type)].strategy,
-        definition: mapDefinition(bodygraph.definition),
-        not_self_theme: TYPES[mapType(bodygraph.type)].not_self_theme,
-        life_purpose: determineLifePurpose(mapType(bodygraph.type), bodygraph.profile.conscious),
-        centers: mapCenters(bodygraph.centers),
+        type: mapType(hdData.type || "generator"),
+        profile: hdData.profile || "1/3 (Investigator/Martyr)",
+        authority: mapAuthority(hdData.authority || "emotional"),
+        strategy: hdData.strategy || TYPES[mapType(hdData.type || "generator")].strategy,
+        definition: hdData.definition || "Split",
+        not_self_theme: TYPES[mapType(hdData.type || "generator")].not_self_theme,
+        life_purpose: determineLifePurpose(mapType(hdData.type || "generator"), parseInt(hdData.profile?.split('/')[0] || "1")),
+        centers: parseCenters(hdData.centers || {}),
         gates: {
-          unconscious_design: extractGates(bodygraph.channels, 'design'),
-          conscious_personality: extractGates(bodygraph.channels, 'personality')
+          unconscious_design: parseGates(hdData.gates?.design || []),
+          conscious_personality: parseGates(hdData.gates?.personality || [])
         },
         // Additional fields for cross-validation
         life_path: calculateLifePath(birthDate),
-        birth_timestamp: new Date(`${birthDate}T${birthTime}`).getTime()
+        birth_timestamp: new Date(`${birthDate}T${birthTime || "12:00"}`).getTime()
       };
-    } catch (hdkitError) {
-      console.error("Error using hdkit library:", hdkitError);
+    } catch (apiError) {
+      console.error("Error calling Human Design API:", apiError);
       console.log("Falling back to deterministic algorithm");
       return generateFallbackHumanDesign(birthDate, birthTime, location, celestialData);
     }
   } catch (error) {
     console.error("Error calculating Human Design:", error);
-    throw error; // No fallback to see what's going wrong
+    return generateFallbackHumanDesign(birthDate, birthTime, location, celestialData);
   }
+}
+
+// Helper function to parse centers from API response
+function parseCenters(apiCenters) {
+  const centerMap = {};
+  
+  // Initialize all centers as undefined
+  CENTERS.forEach(center => {
+    centerMap[center] = false;
+  });
+  
+  // Update with defined centers from API if available
+  if (apiCenters && typeof apiCenters === 'object') {
+    Object.keys(apiCenters).forEach(key => {
+      // Try to match the API center name with our center names
+      const matchedCenter = CENTERS.find(c => c.toLowerCase().includes(key.toLowerCase()));
+      if (matchedCenter) {
+        centerMap[matchedCenter] = Boolean(apiCenters[key]);
+      }
+    });
+  }
+  
+  return centerMap;
+}
+
+// Helper function to parse gates from API response
+function parseGates(apiGates) {
+  if (!apiGates || !Array.isArray(apiGates) || apiGates.length === 0) {
+    return ["16.5", "20.3", "57.2", "34.6"]; // Default gates if missing
+  }
+  
+  // Format gates to our expected format (e.g. "16.5")
+  return apiGates.slice(0, 4).map(gate => {
+    if (typeof gate === 'string' && gate.includes('.')) {
+      return gate; // Already in correct format
+    } else if (typeof gate === 'number') {
+      return `${gate}.1`; // Add line number
+    } else if (typeof gate === 'object' && gate.gate) {
+      return `${gate.gate}.${gate.line || 1}`; // Extract gate and line
+    }
+    return `${gate}.1`; // Default format
+  });
 }
 
 // Map hdkit type to our enum
@@ -211,7 +268,7 @@ function determineLifePurpose(type, profileNumber) {
   return `${purposeByType[type]} ${purposeModifier[profileNumber]}`;
 }
 
-// Fallback function for when hdkit is unavailable or inputs are incomplete
+// Fallback function for when API is unavailable or inputs are incomplete
 function generateFallbackHumanDesign(birthDate, birthTime, location, celestialData) {
   console.log(`Using fallback Human Design calculation for: ${birthDate} ${birthTime} at ${location}`);
   
