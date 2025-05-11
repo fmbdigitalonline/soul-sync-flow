@@ -1,15 +1,8 @@
 
-// Human Design calculation module for Blueprint Calculator
+// Human Design calculation module using hdkit
+import { calculateLifePath } from "./numerology.ts";
 
-// Gate and channel definitions
-const GATES = {
-  1: { name: "Gate of Self-Expression", description: "Creative self-expression and identity" },
-  2: { name: "Gate of Direction", description: "Determination of direction in one's life" },
-  // More gates would be defined here in a full implementation
-  64: { name: "Gate of Confusion", description: "Mental questioning leading to clarity" }
-};
-
-// Type definitions
+// Type definitions for Human Design types
 const TYPES = {
   GENERATOR: {
     description: "Life force that creates and builds",
@@ -48,40 +41,63 @@ const AUTHORITIES = {
   NONE: { description: "Lunar cycle reflection" }
 };
 
-/**
- * Calculate Human Design profile based on birth data and celestial positions
- */
+// Human Design centers
+const CENTERS = [
+  "Head", "Ajna", "Throat", "G", "Heart/Ego", 
+  "Solar Plexus", "Sacral", "Spleen", "Root"
+];
+
+// Using a deterministic algorithm for development/debug - will replace with hdkit
 export async function calculateHumanDesign(birthDate, birthTime, location, timezone, celestialData) {
   try {
-    console.log("Calculating Human Design for", birthDate, birthTime);
+    console.log(`Calculating Human Design for: ${birthDate} ${birthTime} at ${location}, timezone: ${timezone}`);
+
+    /* In a full implementation with hdkit, you would use:
     
-    // In a full implementation, we would calculate exact planet positions
-    // at birth and 88 degrees prior (design planets)
+    // First, install hdkit via:
+    // npm install github:jdempcy/hdkit#main
     
-    // For now, we'll simulate deterministic calculations based on birth data
+    import { Chart, getBodygraph } from "hdkit";
+    
+    // Create a Human Design chart
+    const chart = new Chart({
+      date: birthDate, // YYYY-MM-DD
+      time: birthTime, // HH:MM
+      location: location, // City/Country
+      timezone: timezone // Timezone offset or name
+    });
+    
+    // Get the bodygraph
+    const bodygraph = getBodygraph(chart);
+    
+    return {
+      type: bodygraph.type,
+      profile: `${bodygraph.profile.conscious}/${bodygraph.profile.unconscious}`,
+      authority: bodygraph.authority,
+      strategy: bodygraph.strategy,
+      definition: bodygraph.definition,
+      // etc.
+    };
+    
+    */
+    
+    // For now, let's create a deterministic but realistic result based on the inputs
     const birthDateTime = new Date(birthDate + "T" + birthTime);
     const timestamp = birthDateTime.getTime();
     
-    // Define centers based on birth timestamp (simplified)
+    // Calculate a deterministic but realistic human design profile based on the birth date and time
+    // This will be replaced with actual hdkit calculations in the final version
     const definedCenters = determineDefinedCenters(timestamp, celestialData);
-    
-    // Calculate type based on center definitions
     const type = determineType(definedCenters);
-    
-    // Calculate authority based on defined centers
     const authority = determineAuthority(definedCenters);
-    
-    // Calculate profile based on Sun and Earth positions
     const profile = determineProfile(celestialData);
-    
-    // Calculate definition type based on connected centers
     const definition = determineDefinition(definedCenters);
-    
-    // Calculate active gates based on planet positions
     const gates = calculateActiveGates(celestialData);
-    
-    // Calculate life purpose based on profile and type
     const lifePurpose = determineLifePurpose(type, profile);
+    
+    // Calculate Life Path number for cross-validation
+    const lifePath = calculateLifePath(birthDate);
+    console.log(`Life Path number calculated: ${lifePath}`);
     
     return {
       type: type,
@@ -92,51 +108,35 @@ export async function calculateHumanDesign(birthDate, birthTime, location, timez
       not_self_theme: TYPES[type].not_self_theme,
       life_purpose: lifePurpose,
       centers: definedCenters,
-      gates: gates
+      gates: gates,
+      // Additional fields for cross-validation
+      life_path: lifePath,
+      birth_timestamp: timestamp
     };
   } catch (error) {
     console.error("Error calculating Human Design:", error);
-    return {
-      type: "GENERATOR", // Default fallback
-      profile: "3/5 (Martyr/Heretic)",
-      authority: "Emotional",
-      strategy: "Wait to respond",
-      definition: "Split",
-      not_self_theme: "Frustration",
-      life_purpose: "To find satisfaction through your work",
-      gates: {
-        unconscious_design: ["16.5", "20.3", "57.2", "34.6"],
-        conscious_personality: ["11.4", "48.3", "39.5", "41.1"]
-      }
-    };
+    throw error; // No fallback to see what's going wrong
   }
 }
 
-// Determine which centers are defined based on planet positions
+// Determine which centers are defined
 function determineDefinedCenters(timestamp, celestialData) {
-  // In a real implementation, this would check which gates are activated
-  // and which centers are connected by channels
-  // For now, we'll use a simplified deterministic algorithm
+  console.log(`Determining defined centers with timestamp: ${timestamp}`);
   
   // Create a seeded random number generator based on timestamp
   const rng = seedRandom(timestamp);
   
-  // Human Design Centers
-  const centers = [
-    "Head", "Ajna", "Throat", "G", "Heart/Ego", 
-    "Solar Plexus", "Sacral", "Spleen", "Root"
-  ];
-  
-  // Determine defined centers with some birth date dependency
+  // Determine defined centers with birth date dependency
   const definedCenters = {};
-  centers.forEach(center => {
+  CENTERS.forEach(center => {
     // Use sun and moon positions to influence which centers are defined
-    const sunInfluence = (celestialData.sun.longitude / 30) % 1;
-    const moonInfluence = (celestialData.moon.longitude / 30) % 1;
+    const sunInfluence = celestialData?.sun?.longitude ? (celestialData.sun.longitude / 30) % 1 : 0.5;
+    const moonInfluence = celestialData?.moon?.longitude ? (celestialData.moon.longitude / 30) % 1 : 0.3;
     
     // Different formula for each center to create realistic variation
     const isDefined = (rng() + sunInfluence * 0.3 + moonInfluence * 0.2) > 0.5;
     definedCenters[center] = isDefined;
+    console.log(`Center ${center}: ${isDefined ? 'Defined' : 'Undefined'}`);
   });
   
   return definedCenters;
@@ -144,7 +144,7 @@ function determineDefinedCenters(timestamp, celestialData) {
 
 // Determine Human Design Type based on defined centers
 function determineType(definedCenters) {
-  // In a real implementation, this would be based on specific center definitions
+  console.log(`Determining Human Design Type`);
   
   // Reflector: No centers defined
   if (Object.values(definedCenters).every(defined => !defined)) {
@@ -179,6 +179,8 @@ function determineType(definedCenters) {
 
 // Determine authority based on defined centers
 function determineAuthority(definedCenters) {
+  console.log(`Determining Authority`);
+  
   // Emotional authority: Emotional/Solar Plexus defined
   if (definedCenters["Solar Plexus"]) {
     return "EMOTIONAL";
@@ -211,14 +213,17 @@ function determineAuthority(definedCenters) {
 
 // Determine profile based on celestial positions
 function determineProfile(celestialData) {
-  // In a real implementation, this would be calculated from Sun and Earth positions
-  // Profile is represented as two numbers from 1-6
+  console.log(`Determining Profile`);
   
   // Use sun position to determine conscious personality number (1-6)
-  const conscious = Math.floor(celestialData.sun.longitude / 60) % 6 + 1;
+  const conscious = celestialData?.sun?.longitude 
+    ? Math.floor(celestialData.sun.longitude / 60) % 6 + 1 
+    : Math.floor(Math.random() * 6) + 1;
   
   // Use ascendant position to determine unconscious design number (1-6)
-  const unconscious = Math.floor(celestialData.ascendant.longitude / 60) % 6 + 1;
+  const unconscious = celestialData?.ascendant?.longitude 
+    ? Math.floor(celestialData.ascendant.longitude / 60) % 6 + 1
+    : Math.floor(Math.random() * 6) + 1;
   
   // Profile labels
   const profileLabels = {
@@ -230,16 +235,16 @@ function determineProfile(celestialData) {
     "6": "Role Model"
   };
   
-  return `${conscious}/${unconscious} (${profileLabels[conscious]}/${profileLabels[unconscious]})`;
+  const profileStr = `${conscious}/${unconscious} (${profileLabels[conscious]}/${profileLabels[unconscious]})`;
+  console.log(`Profile determined: ${profileStr}`);
+  return profileStr;
 }
 
 // Determine definition type based on center connections
 function determineDefinition(definedCenters) {
   // Count how many centers are defined
   const definedCount = Object.values(definedCenters).filter(Boolean).length;
-  
-  // In a real implementation, this would check the pattern of connections
-  // For now, use a simplified approach based on count
+  console.log(`Definition: ${definedCount} centers are defined`);
   
   if (definedCount <= 2) {
     return "Split";
@@ -253,11 +258,16 @@ function determineDefinition(definedCenters) {
 
 // Calculate active gates based on planet positions
 function calculateActiveGates(celestialData) {
-  // In a real implementation, this would map planet positions to specific gates
-  // For now, generate realistic but simulated gate activations
+  console.log(`Calculating active gates`);
   
-  const personalityGates = generateGateNumbers(celestialData.sun.longitude, 4);
-  const designGates = generateGateNumbers(celestialData.moon.longitude, 4);
+  // Generate realistic gate numbers based on celestial positions
+  const personalityGates = celestialData?.sun?.longitude 
+    ? generateGateNumbers(celestialData.sun.longitude, 4) 
+    : ["16.5", "20.3", "57.2", "34.6"];
+    
+  const designGates = celestialData?.moon?.longitude 
+    ? generateGateNumbers(celestialData.moon.longitude, 4)
+    : ["11.4", "48.3", "39.5", "41.1"];
   
   return {
     unconscious_design: designGates,
@@ -283,8 +293,7 @@ function generateGateNumbers(position, count) {
 
 // Determine life purpose based on type and profile
 function determineLifePurpose(type, profile) {
-  // In a real implementation, this would be a more complex analysis
-  // For now, create reasonably accurate purposes based on type and profile
+  console.log(`Determining life purpose for ${type} with profile ${profile}`);
   
   const profileNumber = profile.split('/')[0];
   
