@@ -19,9 +19,14 @@ export const pythonBlueprintService = {
       console.log("Generating blueprint with Python engine...", userData);
       
       // Call the Supabase Edge Function that wraps our Python code
+      console.log("Calling Supabase function: python-blueprint-engine");
       const { data, error } = await supabase.functions.invoke("python-blueprint-engine", {
-        body: userData
+        body: userData,
+        // Log responses to help with debugging
+        responseType: "json"
       });
+      
+      console.log("Supabase function response:", { data, error });
       
       if (error) {
         console.error("Error calling Python blueprint engine:", error);
@@ -133,10 +138,19 @@ export const pythonBlueprintService = {
       };
     } catch (error) {
       console.error("Exception in Python blueprint service:", error);
+      // Include detailed error info for debugging
+      const errorDetails = {
+        message: error instanceof Error ? error.message : String(error),
+        name: error instanceof Error ? error.name : "Unknown",
+        stack: error instanceof Error ? error.stack : undefined,
+        originalError: error
+      };
+      console.error("Detailed error:", errorDetails);
+      
       return {
         success: false,
         error: error instanceof Error ? error.message : String(error),
-        rawResponse: error
+        rawResponse: errorDetails
       };
     }
   },
