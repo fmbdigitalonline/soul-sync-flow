@@ -3,6 +3,7 @@ import React from "react";
 import BlueprintSection from "../BlueprintSection";
 import { Badge } from "@/components/ui/badge";
 import { BlueprintData } from "@/services/blueprint-service";
+import { Info } from "lucide-react";
 
 interface HumanDesignSectionProps {
   humanDesign: BlueprintData["energy_strategy_human_design"];
