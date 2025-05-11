@@ -4,7 +4,7 @@ import BlueprintSection from "../BlueprintSection";
 import { Badge } from "@/components/ui/badge";
 import { BlueprintData } from "@/services/blueprint-service";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { InfoCircle } from "lucide-react";
+import { Info } from "lucide-react";
 
 interface HumanDesignSectionProps {
   humanDesign: BlueprintData["energy_strategy_human_design"];
@@ -119,7 +119,7 @@ const HumanDesignSection: React.FC<HumanDesignSectionProps> = ({ humanDesign }) 
                           <span className={isDefined ? 'text-soul-purple' : 'text-muted-foreground'}>
                             {formatCenterName(center)}
                           </span>
-                          <InfoCircle className="h-3 w-3 ml-1" />
+                          <Info className="h-3 w-3 ml-1" />
                         </div>
                       </TooltipTrigger>
                       <TooltipContent>

@@ -1,6 +1,5 @@
-
 // Human Design calculation module for Blueprint Calculator
-import { seedRandom } from "./utils";
+import { seedRandom } from "./utils.ts";
 
 // Gate and channel definitions
 const GATES = {
