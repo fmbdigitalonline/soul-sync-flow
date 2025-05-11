@@ -7,17 +7,18 @@ from http.server import BaseHTTPRequestHandler
 from .get_facts import build_fact_json
 from .compose_story import generate_blueprint_narrative
 
-# Define CORS headers - make sure these are applied to ALL responses
+# Define CORS headers with proper configuration
 cors_headers = {
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': '*',  # For production, you could limit this to specific origins
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Authorization, Content-Type, x-client-info, apikey, content-type'
+    'Access-Control-Allow-Headers': 'Authorization, Content-Type, x-client-info, apikey, content-type',
+    'Access-Control-Max-Age': '86400'  # Cache preflight response for 24 hours
 }
 
 class handler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
+        # Handle OPTIONS preflight request properly with 200 status
         self.send_response(200)
-        # Add CORS headers to OPTIONS response
         for key, value in cors_headers.items():
             self.send_header(key, value)
         self.end_headers()
@@ -76,12 +77,58 @@ class handler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps(error_message).encode())
 
+# Function for use with Supabase Edge Functions runtime
+async def handler(request):
+    # Handle OPTIONS preflight request
+    if request.method == "OPTIONS":
+        return Response("", status=204, headers=cors_headers)
+    
+    try:
+        # Parse request data
+        data = await request.json()
+        
+        # Extract parameters
+        name = data.get("full_name", "")
+        birth_date = data.get("birth_date", "")
+        birth_time = data.get("birth_time_local", "00:00")
+        birth_location = data.get("birth_location", "")
+        mbti = data.get("mbti", "")
+        
+        # Split location into city and country
+        if "," in birth_location:
+            city, country = birth_location.rsplit(",", 1)
+            city = city.strip()
+            country = country.strip()
+        else:
+            city = birth_location
+            country = ""
+        
+        # Generate the facts
+        facts = build_fact_json(name, birth_date, birth_time, city, country, mbti)
+        
+        # Generate the narrative
+        result = generate_blueprint_narrative(facts)
+        
+        # Return success response with CORS headers
+        headers = {**cors_headers, "Content-Type": "application/json"}
+        return Response(json.dumps(result), headers=headers)
+    
+    except Exception as e:
+        # Return error response with CORS headers
+        error_message = {
+            "success": False,
+            "error": str(e),
+            "traceback": str(sys.exc_info())
+        }
+        headers = {**cors_headers, "Content-Type": "application/json"}
+        return Response(json.dumps(error_message), status=500, headers=headers)
+
 def handle_request(event):
     try:
         # Check if this is a preflight OPTIONS request
         if event.get('method', '').upper() == 'OPTIONS':
             return {
-                "statusCode": 200,
+                "statusCode": 204,
                 "headers": cors_headers,
                 "body": ""
             }
@@ -136,6 +183,16 @@ def handle_request(event):
                 "traceback": str(sys.exc_info())
             })
         }
+
+# For the Supabase Edge Runtime format
+from http.server import BaseHTTPRequestHandler
+from urllib.parse import parse_qs
+
+class Response:
+    def __init__(self, body, status=200, headers=None):
+        self.body = body
+        self.status = status
+        self.headers = headers or {}
 
 # Example of running this as a serverless function entry point
 if __name__ == "__main__":
