@@ -229,14 +229,8 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
             <AlertTitle className="text-amber-800">Service Busy</AlertTitle>
             <AlertDescription className="text-amber-700">
               Our AI service is experiencing high demand right now. 
-              Please try again later or use sample data.
+              Please try again later or contact support.
             </AlertDescription>
-            <Button
-              onClick={() => onComplete && onComplete()}
-              className="mt-2 bg-amber-600 hover:bg-amber-700"
-            >
-              Use Sample Data Instead
-            </Button>
           </Alert>
         );
       
@@ -247,14 +241,8 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
             <AlertTitle className="text-amber-800">API Configuration Issue</AlertTitle>
             <AlertDescription className="text-amber-700">
               There's a temporary issue with our AI service configuration.
-              Please try again later or use sample data.
+              Please try again later.
             </AlertDescription>
-            <Button
-              onClick={() => onComplete && onComplete()}
-              className="mt-2 bg-amber-600 hover:bg-amber-700"
-            >
-              Use Sample Data Instead
-            </Button>
           </Alert>
         );
       
@@ -265,14 +253,8 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
             <AlertTitle className="text-amber-800">Processing Error</AlertTitle>
             <AlertDescription className="text-amber-700">
               There was an error processing the AI's response.
-              Please try again later or use sample data.
+              Please try again later.
             </AlertDescription>
-            <Button
-              onClick={() => onComplete && onComplete()}
-              className="mt-2 bg-amber-600 hover:bg-amber-700"
-            >
-              Use Sample Data Instead
-            </Button>
           </Alert>
         );
       
@@ -283,14 +265,8 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
             <Info className="h-4 w-4" />
             <AlertTitle>Unexpected Error</AlertTitle>
             <AlertDescription>
-              {errorMessage || "An unknown error occurred. Please try again later or use sample data."}
+              {errorMessage || "An unknown error occurred. Please try again later."}
             </AlertDescription>
-            <Button
-              onClick={() => onComplete && onComplete()}
-              className="mt-2 bg-red-700 hover:bg-red-800 text-white"
-            >
-              Use Sample Data Instead
-            </Button>
           </Alert>
         );
     }

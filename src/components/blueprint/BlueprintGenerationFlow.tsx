@@ -165,15 +165,15 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
             toast({
               variant: "destructive",
               title: "Blueprint Generation Failed",
-              description: "There was an error generating your blueprint. You can try again later or use sample data."
+              description: "There was an error generating your blueprint."
             });
             
-            // Add an option to proceed with sample data
+            // Auto-proceed after error with sample data
             setTimeout(() => {
               if (mounted && onComplete) {
                 onComplete();
               }
-            }, 5000); // Auto-proceed after error with sample data
+            }, 5000);
           }
         }
       };
@@ -203,8 +203,8 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
     setIsGenerating(true);
   }, []);
 
-  // Handle using sample data
-  const handleUseSampleData = () => {
+  // Handle error case when proceeding with sample data if needed
+  const handleErrorProceed = () => {
     if (onComplete) {
       onComplete();
     }
@@ -382,14 +382,6 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
         {isError && (
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 translate-y-16 bg-red-900/80 text-white px-4 py-2 rounded-md text-sm">
             Error: {errorMessage}
-            
-            <Button
-              onClick={handleUseSampleData}
-              className="mt-2 bg-white/20 hover:bg-white/30 text-white text-xs"
-              size="sm"
-            >
-              Use Sample Data Instead
-            </Button>
           </div>
         )}
 
@@ -459,18 +451,7 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
           />
         </div>
       </div>
-
-      {/* Use Sample Data Button - always visible */}
-      <div className="mt-6 flex justify-center">
-        <Button 
-          onClick={handleUseSampleData} 
-          variant="outline" 
-          className="border-soul-purple text-soul-purple hover:bg-soul-purple/10"
-        >
-          Skip API Call and Use Sample Data
-        </Button>
-      </div>
-
+      
       {/* Debug Output Section */}
       {debugMode && (
         <div className="mt-8 space-y-6">
