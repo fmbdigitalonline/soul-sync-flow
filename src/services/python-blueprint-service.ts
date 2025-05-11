@@ -22,7 +22,6 @@ export const pythonBlueprintService = {
       console.log("Calling Supabase function: python-blueprint-engine");
       const { data, error } = await supabase.functions.invoke("python-blueprint-engine", {
         body: userData,
-        // Removed the unsupported 'responseType' property
       });
       
       console.log("Supabase function response:", { data, error });
