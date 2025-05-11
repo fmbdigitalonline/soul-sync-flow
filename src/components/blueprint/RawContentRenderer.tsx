@@ -53,7 +53,6 @@ export const RawContentRenderer: React.FC<RawContentRendererProps> = ({
       <BlueprintSection 
         id={`section-${sectionName}`}
         title={formatSectionName(sectionName)} 
-        className="mt-6"
         showExpandIcon={true}
         defaultExpanded={true}
       >
