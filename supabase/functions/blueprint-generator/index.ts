@@ -205,7 +205,7 @@ Your response should be a well-structured JSON object containing these component
 - MBTI-style cognitive profile
 - Bashar's belief interface principles
 
-Format all calculations accurately and return ONLY valid JSON with detailed sections.`;
+Format all calculations accurately and return a detailed structured response with all sections.`;
 
   const userPrompt = `Generate a complete Soul Blueprint for this person:
 Full name: ${userMeta.full_name}
@@ -213,8 +213,6 @@ Birth date: ${userMeta.birth_date}
 Birth time: ${userMeta.birth_time_local || "Unknown"}
 Birth location: ${userMeta.birth_location || "Unknown"}
 MBTI (if known): ${userMeta.mbti || "Unknown"}
-
-Return ONLY a valid JSON object with no additional text.
 
 Include these sections in your response:
 1. Western astrology with planetary positions
@@ -244,7 +242,6 @@ Include these sections in your response:
           { role: "user", content: userPrompt }
         ],
         max_tokens: 1500,
-        response_format: { type: "json_object" },
         web_search_options: {
           search_context_size: "medium", // Balanced approach for depth vs speed
           user_location: locationInfo
@@ -272,8 +269,39 @@ Include these sections in your response:
     console.log("Received blueprint from OpenAI");
     
     try {
-      // Parse the generated content into a JSON object
-      const parsedBlueprint = JSON.parse(generatedContent);
+      // Parse the generated content - note that it might not be valid JSON directly
+      // since we're not using response_format: "json_object"
+      let parsedBlueprint = {};
+      
+      // Try to extract JSON data from the content
+      try {
+        // First attempt: Try to parse the entire response as JSON
+        parsedBlueprint = JSON.parse(generatedContent);
+      } catch (parseError) {
+        console.log("Response is not directly parseable as JSON, attempting to extract JSON portion");
+        
+        // Second attempt: Try to find JSON-like content within the text
+        const jsonMatch = generatedContent.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          try {
+            parsedBlueprint = JSON.parse(jsonMatch[0]);
+          } catch (nestedParseError) {
+            console.error("Failed to extract JSON from response:", nestedParseError);
+            
+            // If we can't parse JSON, create a basic structure using the text content
+            parsedBlueprint = {
+              rawContent: generatedContent,
+              parsed: false
+            };
+          }
+        } else {
+          // If no JSON-like content found, create sections manually
+          parsedBlueprint = {
+            rawContent: generatedContent,
+            parsed: false
+          };
+        }
+      }
       
       // Save any citation information but don't display them to the user
       const citations = data.choices[0].message.annotations || [];
@@ -292,22 +320,30 @@ Include these sections in your response:
         },
         user_meta: {
           ...userMeta
-        },
-        // Use the AI-generated data directly
-        cognition_mbti: parsedBlueprint.cognition_mbti || {},
-        energy_strategy_human_design: parsedBlueprint.energy_strategy_human_design || {},
-        values_life_path: parsedBlueprint.values_life_path || {},
-        archetype_western: parsedBlueprint.archetype_western || {},
-        archetype_chinese: parsedBlueprint.archetype_chinese || {},
-        bashar_suite: parsedBlueprint.bashar_suite || {}
+        }
       };
+      
+      // If we have successfully parsed JSON, use the structure directly
+      if (parsedBlueprint.parsed !== false) {
+        // Use the AI-generated data directly if it exists in expected format
+        completeBlueprint.cognition_mbti = parsedBlueprint.cognition_mbti || {};
+        completeBlueprint.energy_strategy_human_design = parsedBlueprint.energy_strategy_human_design || {};
+        completeBlueprint.values_life_path = parsedBlueprint.values_life_path || {};
+        completeBlueprint.archetype_western = parsedBlueprint.archetype_western || {};
+        completeBlueprint.archetype_chinese = parsedBlueprint.archetype_chinese || {};
+        completeBlueprint.bashar_suite = parsedBlueprint.bashar_suite || {};
+      } else {
+        // For non-JSON responses, store the raw content
+        completeBlueprint.raw_content = parsedBlueprint.rawContent;
+        completeBlueprint.needs_parsing = true;
+      }
 
       return { blueprint: completeBlueprint, rawResponse: data };
     } catch (error) {
       // If there's an error parsing the blueprint, include the error and raw response
-      console.error("Error parsing blueprint:", error);
+      console.error("Error processing blueprint:", error);
       
-      throw new Error(`Failed to parse blueprint: ${error.message}. Raw content: ${generatedContent.substring(0, 200)}...`);
+      throw new Error(`Failed to process blueprint: ${error.message}`);
     }
   } catch (error) {
     console.error("Error calling OpenAI:", error);

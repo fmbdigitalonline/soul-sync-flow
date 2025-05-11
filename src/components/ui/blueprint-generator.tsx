@@ -95,6 +95,12 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
           throw new Error("No blueprint data returned from service");
         }
         
+        // Handle case where we received raw content that needs parsing
+        if (blueprint.needs_parsing && blueprint.raw_content) {
+          console.log("Received content that needs manual parsing");
+          // We still continue with this content and handle it during the save process
+        }
+        
         setProgress(75);
 
         // Save the blueprint to the database
@@ -193,6 +199,23 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
               <p className="text-xs text-amber-700 mt-1">
                 We're experiencing unusually high demand right now. 
                 Please wait a moment and try again in a few minutes.
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
+    if (errorMessage.toLowerCase().includes("response format") && errorMessage.toLowerCase().includes("not supported")) {
+      return (
+        <div className="w-full mt-2 p-4 bg-amber-50 border border-amber-200 rounded-md">
+          <div className="flex gap-2 items-start">
+            <Info className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+            <div>
+              <h4 className="font-medium text-sm text-amber-800">API Configuration Error</h4>
+              <p className="text-xs text-amber-700 mt-1">
+                There was an issue with our AI service configuration.
+                We're working on fixing this issue. Please try again shortly.
               </p>
             </div>
           </div>
