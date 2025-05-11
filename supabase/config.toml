@@ -47,7 +47,7 @@ node_version = 18
 [functions.blueprint-calculator]
 verify_jwt = true
 node_version = 18
-install_dependencies = ["npm install github:jdempcy/hdkit#9ac09e89596677c9f752ae8b8472cf574e4d5356"]
+import_map = "supabase/functions/blueprint-calculator/import_map.json"
 
 [functions.research-blueprint-generator]
 verify_jwt = true

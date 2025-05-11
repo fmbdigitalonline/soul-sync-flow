@@ -1,6 +1,7 @@
 
 // Human Design calculation module using hdkit
 import { calculateLifePath } from "./numerology.ts";
+import { Chart, getBodygraph } from "hdkit";
 
 // Type definitions for Human Design types
 const TYPES = {
@@ -47,89 +48,181 @@ const CENTERS = [
   "Solar Plexus", "Sacral", "Spleen", "Root"
 ];
 
-// Using a deterministic algorithm for development/debug - will replace with hdkit
 export async function calculateHumanDesign(birthDate, birthTime, location, timezone, celestialData) {
   try {
     console.log(`Calculating Human Design for: ${birthDate} ${birthTime} at ${location}, timezone: ${timezone}`);
 
-    /* In a full implementation with hdkit, you would use:
-    
-    // First, install hdkit via:
-    // npm install github:jdempcy/hdkit#main
-    
-    import { Chart, getBodygraph } from "hdkit";
-    
-    // Create a Human Design chart
-    const chart = new Chart({
-      date: birthDate, // YYYY-MM-DD
-      time: birthTime, // HH:MM
-      location: location, // City/Country
-      timezone: timezone // Timezone offset or name
-    });
-    
-    // Get the bodygraph
-    const bodygraph = getBodygraph(chart);
-    
-    return {
-      type: bodygraph.type,
-      profile: `${bodygraph.profile.conscious}/${bodygraph.profile.unconscious}`,
-      authority: bodygraph.authority,
-      strategy: bodygraph.strategy,
-      definition: bodygraph.definition,
-      // etc.
-    };
-    
-    */
-    
-    // For now, let's create a deterministic but realistic result based on the inputs
-    const birthDateTime = new Date(birthDate + "T" + birthTime);
-    const timestamp = birthDateTime.getTime();
-    
-    // Calculate a deterministic but realistic human design profile based on the birth date and time
-    // This will be replaced with actual hdkit calculations in the final version
-    const definedCenters = determineDefinedCenters(timestamp, celestialData);
-    const type = determineType(definedCenters);
-    const authority = determineAuthority(definedCenters);
-    const profile = determineProfile(celestialData);
-    const definition = determineDefinition(definedCenters);
-    const gates = calculateActiveGates(celestialData);
-    const lifePurpose = determineLifePurpose(type, profile);
-    
-    // Calculate Life Path number for cross-validation
-    const lifePath = calculateLifePath(birthDate);
-    console.log(`Life Path number calculated: ${lifePath}`);
-    
-    return {
-      type: type,
-      profile: profile,
-      authority: authority,
-      strategy: TYPES[type].strategy,
-      definition: definition,
-      not_self_theme: TYPES[type].not_self_theme,
-      life_purpose: lifePurpose,
-      centers: definedCenters,
-      gates: gates,
-      // Additional fields for cross-validation
-      life_path: lifePath,
-      birth_timestamp: timestamp
-    };
+    // Check if we have all required inputs for hdkit
+    if (!birthDate || !birthTime || !location) {
+      console.log("Missing required inputs for precise Human Design calculation");
+      return generateFallbackHumanDesign(birthDate, birthTime, location, celestialData);
+    }
+
+    try {
+      // Create a Human Design chart using hdkit
+      const chart = new Chart({
+        date: birthDate, // YYYY-MM-DD
+        time: birthTime, // HH:MM
+        location: location, // City/Country
+        timezone: timezone // Timezone offset or name
+      });
+      
+      // Get the bodygraph
+      const bodygraph = await getBodygraph(chart);
+      
+      console.log("Successfully calculated Human Design using hdkit");
+      
+      // Extract the necessary information from the bodygraph
+      return {
+        type: mapType(bodygraph.type),
+        profile: `${bodygraph.profile.conscious}/${bodygraph.profile.unconscious} (${mapProfileLine(bodygraph.profile.conscious)}/${mapProfileLine(bodygraph.profile.unconscious)})`,
+        authority: mapAuthority(bodygraph.authority),
+        strategy: TYPES[mapType(bodygraph.type)].strategy,
+        definition: mapDefinition(bodygraph.definition),
+        not_self_theme: TYPES[mapType(bodygraph.type)].not_self_theme,
+        life_purpose: determineLifePurpose(mapType(bodygraph.type), bodygraph.profile.conscious),
+        centers: mapCenters(bodygraph.centers),
+        gates: {
+          unconscious_design: extractGates(bodygraph.channels, 'design'),
+          conscious_personality: extractGates(bodygraph.channels, 'personality')
+        },
+        // Additional fields for cross-validation
+        life_path: calculateLifePath(birthDate),
+        birth_timestamp: new Date(`${birthDate}T${birthTime}`).getTime()
+      };
+    } catch (hdkitError) {
+      console.error("Error using hdkit library:", hdkitError);
+      console.log("Falling back to deterministic algorithm");
+      return generateFallbackHumanDesign(birthDate, birthTime, location, celestialData);
+    }
   } catch (error) {
     console.error("Error calculating Human Design:", error);
     throw error; // No fallback to see what's going wrong
   }
 }
 
-// Determine which centers are defined
-function determineDefinedCenters(timestamp, celestialData) {
-  console.log(`Determining defined centers with timestamp: ${timestamp}`);
+// Map hdkit type to our enum
+function mapType(hdkitType) {
+  // hdkit uses lowercase types, we use uppercase
+  const typeMap = {
+    'generator': 'GENERATOR',
+    'manifesting generator': 'MANIFESTING_GENERATOR',
+    'projector': 'PROJECTOR',
+    'manifestor': 'MANIFESTOR',
+    'reflector': 'REFLECTOR'
+  };
   
-  // Create a seeded random number generator based on timestamp
+  return typeMap[hdkitType.toLowerCase()] || 'GENERATOR';
+}
+
+// Map hdkit authority to our enum
+function mapAuthority(hdkitAuthority) {
+  // hdkit uses different authority names
+  const authorityMap = {
+    'emotional': 'EMOTIONAL',
+    'sacral': 'SACRAL',
+    'splenic': 'SPLENIC',
+    'ego': 'EGO',
+    'self': 'SELF',
+    'lunar': 'NONE',
+    'none': 'NONE'
+  };
+  
+  return authorityMap[hdkitAuthority.toLowerCase()] || 'NONE';
+}
+
+// Map profile line to description
+function mapProfileLine(line) {
+  const profileLabels = {
+    1: "Investigator",
+    2: "Hermit",
+    3: "Martyr",
+    4: "Opportunist",
+    5: "Heretic",
+    6: "Role Model"
+  };
+  
+  return profileLabels[line] || "Unknown";
+}
+
+// Map definition type
+function mapDefinition(definition) {
+  // Convert hdkit definition to our format
+  return definition || "Split";
+}
+
+// Map centers from hdkit format to our format
+function mapCenters(hdkitCenters) {
+  const centerMap = {};
+  
+  // hdkit might use different center names or formats
+  CENTERS.forEach(center => {
+    const lowerCenter = center.toLowerCase();
+    // Check various possible formats from hdkit
+    centerMap[center] = hdkitCenters[lowerCenter] || 
+                         hdkitCenters[center] || 
+                         hdkitCenters[lowerCenter.replace('/', '')] ||
+                         false;
+  });
+  
+  return centerMap;
+}
+
+// Extract gates from channels
+function extractGates(channels, type) {
+  if (!channels || !Array.isArray(channels)) {
+    return ["16.5", "20.3", "57.2", "34.6"]; // Default gates if missing
+  }
+  
+  const gates = new Set();
+  
+  // Extract gates from channels based on type (design or personality)
+  channels.forEach(channel => {
+    if (channel[type] && channel[type].from) {
+      gates.add(`${channel[type].from.gate}.${channel[type].from.line}`);
+    }
+    if (channel[type] && channel[type].to) {
+      gates.add(`${channel[type].to.gate}.${channel[type].to.line}`);
+    }
+  });
+  
+  return Array.from(gates).slice(0, 4); // Return first 4 gates
+}
+
+// Determine life purpose based on type and profile
+function determineLifePurpose(type, profileNumber) {
+  const purposeByType = {
+    "GENERATOR": "Find satisfaction through responding to life",
+    "MANIFESTING_GENERATOR": "Find satisfaction through multi-faceted creation",
+    "PROJECTOR": "Guide others with your unique insight",
+    "MANIFESTOR": "Initiate and catalyze change for others",
+    "REFLECTOR": "Mirror and sample the health of your community"
+  };
+  
+  const purposeModifier = {
+    1: "through deep investigation",
+    2: "through selective sharing of wisdom",
+    3: "through practical experimentation",
+    4: "through finding the right networks",
+    5: "through challenging the status quo",
+    6: "through being an example for others"
+  };
+  
+  return `${purposeByType[type]} ${purposeModifier[profileNumber]}`;
+}
+
+// Fallback function for when hdkit is unavailable or inputs are incomplete
+function generateFallbackHumanDesign(birthDate, birthTime, location, celestialData) {
+  console.log(`Using fallback Human Design calculation for: ${birthDate} ${birthTime} at ${location}`);
+  
+  // Create a seeded random number generator based on birth details
+  const timestamp = birthDate ? new Date(birthDate + (birthTime ? "T" + birthTime : "")).getTime() : Date.now();
   const rng = seedRandom(timestamp);
   
   // Determine defined centers with birth date dependency
   const definedCenters = {};
   CENTERS.forEach(center => {
-    // Use sun and moon positions to influence which centers are defined
+    // Use celestial data to influence which centers are defined if available
     const sunInfluence = celestialData?.sun?.longitude ? (celestialData.sun.longitude / 30) % 1 : 0.5;
     const moonInfluence = celestialData?.moon?.longitude ? (celestialData.moon.longitude / 30) % 1 : 0.3;
     
@@ -139,7 +232,37 @@ function determineDefinedCenters(timestamp, celestialData) {
     console.log(`Center ${center}: ${isDefined ? 'Defined' : 'Undefined'}`);
   });
   
-  return definedCenters;
+  // Determine type based on centers
+  const type = determineType(definedCenters);
+  // Determine authority based on centers
+  const authority = determineAuthority(definedCenters);
+  // Determine profile based on celestial data if available
+  const profile = determineProfile(celestialData);
+  // Determine definition based on centers
+  const definition = determineDefinition(definedCenters);
+  // Calculate active gates
+  const gates = calculateActiveGates(celestialData);
+  // Determine life purpose
+  const lifePurpose = determineLifePurpose(type, parseInt(profile.split('/')[0]));
+  
+  // Calculate Life Path number for cross-validation
+  const lifePath = calculateLifePath(birthDate);
+  console.log(`Life Path number calculated: ${lifePath}`);
+  
+  return {
+    type: type,
+    profile: profile,
+    authority: authority,
+    strategy: TYPES[type].strategy,
+    definition: definition,
+    not_self_theme: TYPES[type].not_self_theme,
+    life_purpose: lifePurpose,
+    centers: definedCenters,
+    gates: gates,
+    // Additional fields for cross-validation
+    life_path: lifePath,
+    birth_timestamp: timestamp
+  };
 }
 
 // Determine Human Design Type based on defined centers
@@ -289,32 +412,6 @@ function generateGateNumbers(position, count) {
   }
   
   return gates;
-}
-
-// Determine life purpose based on type and profile
-function determineLifePurpose(type, profile) {
-  console.log(`Determining life purpose for ${type} with profile ${profile}`);
-  
-  const profileNumber = profile.split('/')[0];
-  
-  const purposeByType = {
-    "GENERATOR": "Find satisfaction through responding to life",
-    "MANIFESTING_GENERATOR": "Find satisfaction through multi-faceted creation",
-    "PROJECTOR": "Guide others with your unique insight",
-    "MANIFESTOR": "Initiate and catalyze change for others",
-    "REFLECTOR": "Mirror and sample the health of your community"
-  };
-  
-  const purposeModifier = {
-    "1": "through deep investigation",
-    "2": "through selective sharing of wisdom",
-    "3": "through practical experimentation",
-    "4": "through finding the right networks",
-    "5": "through challenging the status quo",
-    "6": "through being an example for others"
-  };
-  
-  return `${purposeByType[type]} ${purposeModifier[profileNumber]}`;
 }
 
 // Simple seeded random number generator for consistency

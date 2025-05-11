@@ -1,0 +1,6 @@
+
+{
+  "imports": {
+    "hdkit": "https://raw.githubusercontent.com/jdempcy/hdkit/9ac09e89596677c9f752ae8b8472cf574e4d5356/dist/hdkit.mjs"
+  }
+}

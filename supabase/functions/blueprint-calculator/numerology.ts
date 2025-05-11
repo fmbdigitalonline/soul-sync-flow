@@ -1,31 +1,55 @@
-
 /**
  * Numerology calculation module for Blueprint Calculator
+ * Implementing deterministic calculations for Life Path and other numbers
  */
 
 /**
  * Calculate Life Path number from birth date
- * Implementation based on the reference provided
+ * This is a deterministic implementation that correctly handles master numbers
  * @param dateStr Date string in format YYYY-MM-DD 
  * @returns Life Path number (single digit or master number 11, 22, 33)
  */
 export function calculateLifePath(dateStr: string): number {
   try {
     console.log(`Calculating Life Path for date: ${dateStr}`);
-    // Extract only digits from the date string
-    const digits = dateStr.split('').filter(char => /\d/.test(char)).map(d => parseInt(d, 10));
     
-    // Sum all digits
-    let total = digits.reduce((sum, digit) => sum + digit, 0);
-    console.log(`Initial sum of all digits: ${total}`);
-    
-    // Reduce to single digit or master number
-    while (total > 9 && total !== 11 && total !== 22 && total !== 33) {
-      total = String(total).split('').map(d => parseInt(d, 10)).reduce((sum, digit) => sum + digit, 0);
-      console.log(`Reduced to: ${total}`);
+    if (!dateStr || dateStr.length !== 10) {
+      throw new Error(`Invalid date format: ${dateStr}. Expected YYYY-MM-DD`);
     }
     
-    return total;
+    // Split the date into components
+    const [year, month, day] = dateStr.split('-').map(part => parseInt(part, 10));
+    
+    // Validate date parts
+    if (isNaN(year) || isNaN(month) || isNaN(day)) {
+      throw new Error(`Invalid date components: ${year}, ${month}, ${day}`);
+    }
+    
+    console.log(`Date components: Year=${year}, Month=${month}, Day=${day}`);
+    
+    // Calculate sum for each component separately
+    const daySum = reduceSingleDigit(day);
+    const monthSum = reduceSingleDigit(month);
+    const yearSum = reduceSingleDigit(year.toString().split('').reduce((sum, digit) => sum + parseInt(digit, 10), 0));
+    
+    console.log(`Component sums - Day: ${daySum}, Month: ${monthSum}, Year: ${yearSum}`);
+    
+    // Sum the individual component sums
+    let totalSum = daySum + monthSum + yearSum;
+    
+    console.log(`Total sum before final reduction: ${totalSum}`);
+    
+    // Check if the sum is a master number before final reduction
+    if (totalSum === 11 || totalSum === 22 || totalSum === 33) {
+      console.log(`Master number ${totalSum} found, not reducing further`);
+      return totalSum;
+    }
+    
+    // Otherwise, reduce to a single digit
+    const finalDigit = reduceSingleDigit(totalSum);
+    console.log(`Final Life Path number: ${finalDigit}`);
+    
+    return finalDigit;
   } catch (error) {
     console.error("Error calculating Life Path number:", error);
     return 0; // Return 0 in case of error to make debugging obvious
@@ -185,4 +209,22 @@ export function calculateBirthDay(dateStr: string): number {
     console.error("Error calculating Birth Day number:", error);
     return 0;
   }
+}
+
+/**
+ * Helper function to reduce a number to a single digit
+ * unless it's a master number (11, 22, 33)
+ * @param num Number to reduce
+ * @returns Single digit or master number
+ */
+function reduceSingleDigit(num: number): number {
+  let result = num;
+  
+  // Continue reducing until we reach a single digit, unless it's a master number
+  while (result > 9 && result !== 11 && result !== 22 && result !== 33) {
+    // Convert to string and sum the digits
+    result = String(result).split('').reduce((sum, digit) => sum + parseInt(digit, 10), 0);
+  }
+  
+  return result;
 }
