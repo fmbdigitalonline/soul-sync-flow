@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight, ChevronLeft, Calendar, Clock, MapPin, Volume2 } from "lucide-react";
@@ -148,19 +147,25 @@ const Onboarding = () => {
             <p className="text-center">
               Your birth date helps us calculate your astrological signs and numerology.
             </p>
-            <div className="flex items-center space-x-4">
-              <Calendar className="text-soul-purple h-8 w-8 flex-shrink-0" />
-              <div className="space-y-1 w-full">
-                <Label htmlFor="birthDate">Birth Date</Label>
-                <Input
-                  id="birthDate"
-                  name="birthDate"
-                  type="date"
-                  value={formData.birthDate}
-                  onChange={handleInputChange}
-                  className="mt-1"
-                  disabled={interactionStage === 'listening'}
-                />
+            <div className="flex flex-col space-y-4">
+              <div className="flex items-center space-x-4">
+                <Calendar className="text-soul-purple h-8 w-8 flex-shrink-0" />
+                <div className="space-y-1 w-full">
+                  <Label htmlFor="birthDate">Birth Date</Label>
+                  <DatePickerWithYear
+                    date={formData.birthDate ? new Date(formData.birthDate) : undefined}
+                    onDateChange={(date) => {
+                      if (date) {
+                        const formattedDate = format(date, "yyyy-MM-dd");
+                        setFormData(prev => ({ ...prev, birthDate: formattedDate }));
+                      } else {
+                        setFormData(prev => ({ ...prev, birthDate: "" }));
+                      }
+                    }}
+                    placeholder="Select your birth date"
+                    disabled={interactionStage === 'listening'}
+                  />
+                </div>
               </div>
             </div>
           </div>

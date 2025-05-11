@@ -43,11 +43,11 @@ export function DatePickerWithYear({
     date ? (date.getMonth() + 1).toString() : (new Date().getMonth() + 1).toString()
   );
 
-  // Generate year options (current year down to 100 years ago)
+  // Generate year options (current year down to 150 years ago for birth dates)
   const currentYear = new Date().getFullYear();
   const years = React.useMemo(() => {
     const yearsArray = [];
-    for (let year = currentYear; year >= currentYear - 120; year--) {
+    for (let year = currentYear; year >= currentYear - 150; year--) {
       yearsArray.push(year.toString());
     }
     return yearsArray;
@@ -106,7 +106,7 @@ export function DatePickerWithYear({
     }
   }, [date]);
 
-  // Handle native date input for mobile
+  // Handle native date input for mobile - improved for birth date selection
   const handleNativeDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.value) {
       onDateChange(undefined);
@@ -117,22 +117,132 @@ export function DatePickerWithYear({
     onDateChange(selectedDate);
   };
 
-  // Mobile-friendly native date input
+  // Mobile-friendly native date input with special handling for birth dates
   if (isMobile) {
     return (
-      <div className={cn("relative w-full", className)}>
+      <div className="space-y-2 w-full">
+        {/* Custom Year Selector for Mobile */}
+        <div className="flex gap-2 w-full">
+          <div className="flex-1">
+            <select
+              value={selectedMonth}
+              onChange={(e) => {
+                setSelectedMonth(e.target.value);
+                
+                // Create a new date with the selected month and year
+                if (date) {
+                  const newDate = new Date(date);
+                  newDate.setMonth(parseInt(e.target.value) - 1);
+                  
+                  // Check if the day is valid in the new month
+                  const daysInMonth = new Date(
+                    parseInt(selectedYear), 
+                    parseInt(e.target.value), 
+                    0
+                  ).getDate();
+                  
+                  if (date.getDate() > daysInMonth) {
+                    newDate.setDate(daysInMonth);
+                  }
+                  
+                  onDateChange(newDate);
+                } else {
+                  // If no date is selected yet, create one with today's day
+                  const newDate = new Date();
+                  newDate.setFullYear(parseInt(selectedYear));
+                  newDate.setMonth(parseInt(e.target.value) - 1);
+                  onDateChange(newDate);
+                }
+              }}
+              className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              disabled={disabled}
+            >
+              {months.map((month) => (
+                <option key={month.value} value={month.value}>
+                  {month.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex-1">
+            <select
+              value={selectedYear}
+              onChange={(e) => {
+                setSelectedYear(e.target.value);
+                
+                // Create a new date with the selected year
+                if (date) {
+                  const newDate = new Date(date);
+                  newDate.setFullYear(parseInt(e.target.value));
+                  onDateChange(newDate);
+                } else {
+                  // If no date is selected yet, create one
+                  const newDate = new Date();
+                  newDate.setFullYear(parseInt(e.target.value));
+                  newDate.setMonth(parseInt(selectedMonth) - 1);
+                  onDateChange(newDate);
+                }
+              }}
+              className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              disabled={disabled}
+            >
+              {years.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        
+        {/* Day selector */}
+        <div className="w-full">
+          {date && (
+            <select
+              value={date.getDate().toString()}
+              onChange={(e) => {
+                if (date) {
+                  const newDate = new Date(date);
+                  newDate.setDate(parseInt(e.target.value));
+                  onDateChange(newDate);
+                }
+              }}
+              className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              disabled={disabled}
+            >
+              {Array.from(
+                { length: new Date(parseInt(selectedYear), parseInt(selectedMonth), 0).getDate() },
+                (_, i) => i + 1
+              ).map((day) => (
+                <option key={day} value={day}>
+                  {day}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+        
+        {/* Hidden native input for form submission compatibility */}
         <input 
           type="date" 
           value={date ? format(date, "yyyy-MM-dd") : ""} 
           onChange={handleNativeDateChange}
-          className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="hidden"
           disabled={disabled}
           max={format(new Date(), "yyyy-MM-dd")}
         />
+        
+        {/* Display selected date in a nice format */}
+        {date && (
+          <div className="text-center text-sm text-muted-foreground">
+            Selected: {format(date, "MMMM d, yyyy")}
+          </div>
+        )}
       </div>
     );
   }
 
+  // Desktop version with improved year selection
   return (
     <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
       <PopoverTrigger asChild>
