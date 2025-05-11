@@ -243,7 +243,7 @@ const blueprintService = {
   },
 
   // Generate a blueprint using the GPT-4o search preview edge function
-  // STRICTLY ONE REQUEST - no retries, no queue system
+  // STRICTLY ONE REQUEST - absolutely no retries, no queue system
   generateBlueprintFromBirthData: async (userMeta: UserMetaData): Promise<{ 
     success: boolean; 
     blueprint?: BlueprintData; 
@@ -251,22 +251,25 @@ const blueprintService = {
     rawResponse?: any;
   }> => {
     try {
-      console.log('Calling blueprint-generator with user meta:', userMeta);
+      console.log('[SERVICE] Making SINGLE API call to blueprint-generator with user meta:', userMeta);
       
-      // Make a single API call to the edge function - NO RETRIES
+      // Make ONE SINGLE API call to the edge function - ABSOLUTELY NO RETRIES
       const { data, error } = await supabase.functions.invoke('blueprint-generator', {
         body: { userMeta }
       });
       
       // Handle errors from the API call
       if (error) {
-        console.error('Error from Supabase function:', error);
-        throw error;
+        console.error('[SERVICE] Error from Supabase function:', error);
+        return {
+          success: false,
+          error: error.message || 'Error calling blueprint generator'
+        };
       }
       
       // Process successful response
       if (data && data.blueprint) {
-        console.log('Blueprint generated via Supabase function');
+        console.log('[SERVICE] Blueprint generated via Supabase function - SINGLE CALL SUCCESS');
         
         return { 
           success: true, 
@@ -274,7 +277,7 @@ const blueprintService = {
           rawResponse: data.rawResponse
         };
       } else if (data && data.error) {
-        console.error('Error from blueprint generator:', data.error);
+        console.error('[SERVICE] Error from blueprint generator:', data.error);
         return { 
           success: false, 
           error: data.error,
@@ -282,9 +285,12 @@ const blueprintService = {
         };
       }
       
-      throw new Error('No blueprint or error returned from generator function');
+      return {
+        success: false,
+        error: 'No blueprint or error returned from generator function'
+      };
     } catch (error) {
-      console.error('Error generating blueprint:', error);
+      console.error('[SERVICE] Error generating blueprint:', error);
       
       const errorMessage = error instanceof Error 
         ? error.message 

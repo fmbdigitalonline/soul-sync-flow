@@ -10,11 +10,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// IMPORTANT: No more queue to prevent multiple requests
-// Each request is handled once with no retries
-
 /**
  * Edge function to handle blueprint generation requests
+ * STRICTLY ONE REQUEST - absolutely no retries under any circumstances
  */
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -42,52 +40,24 @@ serve(async (req) => {
     }
 
     // Call OpenAI API with a SINGLE attempt, no retry logic
-    console.log("Calling OpenAI with GPT-4o Search Preview");
-    const result = await generateBlueprintWithSearchPreview(userMeta);
+    console.log("Calling OpenAI with GPT-4o Search Preview - ONE TIME ONLY");
     
-    // Return the result
-    return new Response(
-      JSON.stringify({
-        success: true,
-        blueprint: result.blueprint,
-        rawResponse: result.rawResponse
-      }),
-      { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        } 
-      }
-    );
+    // Determine the birth location for better location-specific search
+    const locationInfo = parseLocationForSearch(userMeta.birth_location);
     
-  } catch (error) {
-    console.error("Error generating blueprint:", error);
-    
-    // Return detailed error for debugging - NO RETRY
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: error.message || "Failed to generate blueprint",
-        errorDetails: error.toString(),
-        timestamp: new Date().toISOString()
-      }),
-      { 
-        status: 500, 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        } 
-      }
-    );
-  }
-});
-
-/**
- * Generate a blueprint using GPT-4o Search Preview with web search capabilities
- * No retry logic at all - one attempt only
- */
-async function generateBlueprintWithSearchPreview(userMeta) {
-  const systemPrompt = `You are an expert astrologer, numerologist, Human Design reader, Chinese metaphysics interpreter, and personality psychologist. 
+    // Make exactly one call to OpenAI - no retry mechanism whatsoever
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-search-preview",
+        messages: [
+          { 
+            role: "system", 
+            content: `You are an expert astrologer, numerologist, Human Design reader, Chinese metaphysics interpreter, and personality psychologist. 
 Generate a complete Soul Blueprint based on the following birth details.
 Your response should be a well-structured JSON object containing these components:
 - Western astrology (sun sign, moon sign, rising sign, aspects, etc.)
@@ -97,9 +67,11 @@ Your response should be a well-structured JSON object containing these component
 - MBTI-style cognitive profile
 - Bashar's belief interface principles
 
-Format all calculations accurately and return a detailed structured response with all sections.`;
-
-  const userPrompt = `Generate a complete Soul Blueprint for this person:
+Format all calculations accurately and return a detailed structured response with all sections.`
+          },
+          { 
+            role: "user", 
+            content: `Generate a complete Soul Blueprint for this person:
 Full name: ${userMeta.full_name}
 Birth date: ${userMeta.birth_date}
 Birth time: ${userMeta.birth_time_local || "Unknown"}
@@ -112,30 +84,12 @@ Include these sections in your response:
 3. Numerology calculations
 4. Chinese zodiac sign and element
 5. MBTI cognitive functions
-6. Bashar spiritual principles`;
-
-  console.log("Calling OpenAI with GPT-4o Search Preview - SINGLE ATTEMPT");
-  
-  try {
-    // Determine the birth location for better location-specific search
-    const locationInfo = parseLocationForSearch(userMeta.birth_location);
-    
-    // Call OpenAI API with GPT-4o search preview using the proper web_search_options
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${OPENAI_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-search-preview",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt }
+6. Bashar spiritual principles`
+          }
         ],
         max_tokens: 1500,
         web_search_options: {
-          search_context_size: "medium", // Balanced approach for depth vs speed
+          search_context_size: "medium",
           user_location: locationInfo
         }
       })
@@ -150,13 +104,14 @@ Include these sections in your response:
 
     // Parse the API response
     const data = await response.json();
+    console.log("OpenAI API response received - ONE TIME ONLY"); // Add clear logging
+    
     const generatedContent = data.choices[0].message.content;
     
     console.log("Received blueprint from OpenAI");
     
     try {
       // Parse the generated content - note that it might not be valid JSON directly
-      // since we're not using response_format: "json_object"
       let parsedBlueprint = {};
       
       // Try to extract JSON data from the content
@@ -224,17 +179,45 @@ Include these sections in your response:
         completeBlueprint.needs_parsing = true;
       }
 
-      return { blueprint: completeBlueprint, rawResponse: data };
+      // Return the result - ONE CALL ONLY
+      return new Response(
+        JSON.stringify({
+          success: true,
+          blueprint: completeBlueprint,
+          rawResponse: data
+        }),
+        { 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json' 
+          } 
+        }
+      );
     } catch (error) {
-      // If there's an error parsing the blueprint, include the error and raw response
       console.error("Error processing blueprint:", error);
       throw new Error(`Failed to process blueprint: ${error.message}`);
     }
   } catch (error) {
-    console.error("Error calling OpenAI:", error);
-    throw error; // Propagate the error for detailed debugging
+    console.error("Error generating blueprint:", error);
+    
+    // Return detailed error - no retry attempts
+    return new Response(
+      JSON.stringify({ 
+        success: false, 
+        error: error.message || "Failed to generate blueprint",
+        errorDetails: error.toString(),
+        timestamp: new Date().toISOString()
+      }),
+      { 
+        status: 500, 
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        } 
+      }
+    );
   }
-}
+});
 
 /**
  * Parse location string to extract potential country/city information for search context

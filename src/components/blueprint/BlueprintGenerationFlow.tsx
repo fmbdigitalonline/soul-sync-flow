@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -52,6 +52,7 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
   const [errorMessage, setErrorMessage] = useState('');
   const [stage, setStage] = useState('initial');
   const [toolCalls, setToolCalls] = useState<any[]>([]);
+  const apiCallMadeRef = useRef(false); // Track API call with a ref
   const { toast } = useToast();
 
   // Generate random particles for visual effect
@@ -91,9 +92,14 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
   useEffect(() => {
     let mounted = true;
     
-    if (isGenerating) {
+    // Check if we haven't already made an API call - STRICTLY ONE CALL ONLY
+    console.log('[FLOW] Starting effect, checking if API call made:', apiCallMadeRef.current);
+    if (isGenerating && !apiCallMadeRef.current) {
       const generateBlueprint = async () => {
         try {
+          console.log('[FLOW] Setting API call flag to prevent multiple calls');
+          apiCallMadeRef.current = true; // Mark API call as made to prevent multiple calls
+          
           setStage('preparing');
           setProgress(10);
           await new Promise(resolve => setTimeout(resolve, 1000));
@@ -108,6 +114,7 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
           setStage('searching');
           setProgress(30);
           
+          console.log('[FLOW] Making SINGLE API CALL to generate blueprint');
           // Use the generate function - SINGLE ATTEMPT
           const result = await blueprintService.generateBlueprintFromBirthData(updatedUserMeta);
           
@@ -155,7 +162,7 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
             throw new Error(result.error || 'Unknown error during blueprint generation');
           }
         } catch (error) {
-          console.error('Error generating blueprint:', error);
+          console.error('[FLOW] Error generating blueprint:', error);
           if (mounted) {
             setIsError(true);
             setErrorMessage(error instanceof Error ? error.message : 'Failed to generate blueprint. Please try again.');
@@ -168,7 +175,7 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
               description: "There was an error generating your blueprint."
             });
             
-            // Auto-proceed after error with sample data
+            // Auto-proceed after error
             setTimeout(() => {
               if (mounted && onComplete) {
                 onComplete();
@@ -179,6 +186,8 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
       };
       
       generateBlueprint();
+    } else {
+      console.log('[FLOW] API call has already been made or generation not started');
     }
     
     return () => {
@@ -198,12 +207,13 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
     return "generating";
   };
 
-  // Trigger generation on component mount
+  // Trigger generation on component mount - but ensure we set isGenerating only once
   useEffect(() => {
+    console.log('[FLOW] Component mounted, starting generation');
     setIsGenerating(true);
   }, []);
 
-  // Handle error case when proceeding with sample data if needed
+  // Handle error case
   const handleErrorProceed = () => {
     if (onComplete) {
       onComplete();

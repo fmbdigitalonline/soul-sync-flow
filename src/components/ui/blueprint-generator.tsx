@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Loader2, CheckCircle2, XCircle, Info } from "lucide-react";
@@ -30,7 +30,7 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
   const [errorMessage, setErrorMessage] = useState('');
   const [errorType, setErrorType] = useState<'connection' | 'api' | 'quota' | 'parse' | 'unknown'>('unknown');
   const [debugInfo, setDebugInfo] = useState<any>(null);
-  const [apiCallMade, setApiCallMade] = useState(false); // Track if API call has been made
+  const apiCallMadeRef = useRef(false); // Use ref to track API call across renders
   const { toast } = useToast();
 
   // Function to determine error type from the error message
@@ -65,18 +65,24 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
 
   // Generate blueprint function - STRICTLY ONE ATTEMPT
   const generateBlueprint = useCallback(async () => {
-    // If an API call has already been made, do not proceed
-    if (apiCallMade) {
-      console.log("API call was already made. Not making another request.");
+    // Add protective guard to ENSURE a single API call
+    // Check both state and ref for added security
+    console.log('[GENERATOR] Checking if API call was already made:', apiCallMadeRef.current);
+    if (apiCallMadeRef.current === true) {
+      console.log('[GENERATOR] API call was ALREADY MADE. STRICTLY preventing another request.');
       return;
     }
 
     try {
+      console.log('[GENERATOR] Starting blueprint generation - FIRST AND ONLY ATTEMPT');
+      
+      // Immediately mark that we've attempted the API call to prevent additional calls
+      apiCallMadeRef.current = true;
+      
       setStatus('loading');
       setProgress(10);
       setErrorMessage('');
       setDebugInfo(null);
-      setApiCallMade(true); // Mark that we've made the API call
 
       // Format the user data for the blueprint service
       const userData = {
@@ -89,12 +95,12 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
 
       // Simple progress animation
       setProgress(25);
-      console.log('Generating blueprint with data:', userData);
+      console.log('[GENERATOR] Making SINGLE API call with data:', userData);
 
-      // Generate the blueprint - SINGLE ATTEMPT, NO RETRY
+      // Generate the blueprint - ONE SINGLE ATTEMPT, NO RETRY, NO ADDITIONAL CALLS
       const result = await blueprintService.generateBlueprintFromBirthData(userData);
       
-      console.log('Blueprint generation result:', result);
+      console.log('[GENERATOR] Blueprint generation result:', result);
       
       // Store raw response for debugging
       if (result.rawResponse) {
@@ -134,7 +140,7 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
       }
 
     } catch (error) {
-      console.error('Error generating blueprint:', error);
+      console.error('[GENERATOR] Error generating blueprint:', error);
       setStatus('error');
       
       const errorMsg = error instanceof Error ? error.message : 'An unknown error occurred';
@@ -157,7 +163,7 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
         setTimeout(onComplete, 5000);
       }
     }
-  }, [formData, onComplete, toast, determineErrorType, apiCallMade]);
+  }, [formData, onComplete, toast, determineErrorType]);
 
   // Get error message based on error type
   const getErrorToastMessage = (type: 'connection' | 'api' | 'quota' | 'parse' | 'unknown'): string => {
@@ -178,15 +184,19 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
 
   // Run generate blueprint on mount - SINGLE ATTEMPT ONLY
   useEffect(() => {
-    if (!apiCallMade) {
+    console.log('[GENERATOR] Initial mount, checking if API call was made:', apiCallMadeRef.current);
+    if (apiCallMadeRef.current === false) {
+      console.log('[GENERATOR] No API call made yet, proceeding with SINGLE attempt');
       generateBlueprint();
+    } else {
+      console.log('[GENERATOR] API call was already attempted, not calling again');
     }
     
     // Clean up function
     return () => {
-      // Anything that needs cleanup
+      console.log('[GENERATOR] Component unmounting');
     };
-  }, [generateBlueprint, apiCallMade]);
+  }, [generateBlueprint]);
 
   // Function to get error display content based on error type
   const getErrorDisplay = () => {
