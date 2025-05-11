@@ -1,396 +1,91 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { BlueprintData, UserMetaData } from "./blueprint-service";
+import { supabase } from '@/integrations/supabase/client';
+
+interface GenerateBlueprintParams {
+  full_name: string;
+  birth_date: string;
+  birth_time_local?: string;
+  birth_location?: string;
+  mbti?: string;
+  preferred_name?: string;
+}
+
+interface BlueprintResult {
+  success: boolean;
+  blueprint?: any;
+  error?: string;
+  rawResponse?: any;
+}
 
 /**
- * Service to interact with the Python-based Blueprint Engine
+ * Python Blueprint Service
+ * 
+ * A service that connects to a Supabase Edge Function running Python code
+ * for more accurate astrological calculations and blueprint generation.
  */
 export const pythonBlueprintService = {
   /**
-   * Generate a blueprint using the Python-based engine
+   * Generate a blueprint using the Python edge function
+   * @param userData User birth data for blueprint generation
+   * @returns Generated blueprint and success status
    */
-  async generateBlueprint(userData: UserMetaData): Promise<{
-    success: boolean;
-    blueprint?: BlueprintData;
-    error?: string;
-    rawResponse?: any;
-  }> {
+  async generateBlueprint(userData: GenerateBlueprintParams): Promise<BlueprintResult> {
     try {
-      console.log("Generating blueprint with Python engine...", userData);
-      
-      // Add detailed diagnostic info
-      console.log("Blueprint engine URL:", `https://qxaajirrqrcnmvtowjbg.supabase.co/functions/v1/python-blueprint-engine`);
-      console.log("Request payload:", JSON.stringify(userData, null, 2));
-      
-      // Try the research blueprint generator first as it may be more reliable
-      try {
-        console.log("Trying research blueprint generator first...");
-        const researchResult = await supabase.functions.invoke("research-blueprint-generator", {
-          body: {
-            birthData: {
-              name: userData.full_name,
-              date: userData.birth_date,
-              time: userData.birth_time_local || "00:00",
-              location: userData.birth_location || "",
-              timezone: "local", // Default to local timezone if not provided
-            },
-            debugMode: true
-          }
-        });
-        
-        console.log("Research blueprint generator response:", researchResult);
-        
-        if (researchResult.data && !researchResult.error) {
-          console.log("Research blueprint generation succeeded, processing result");
-          
-          // Transform research engine output to match our blueprint structure
-          const blueprint: BlueprintData = {
-            user_meta: {
-              full_name: userData.full_name,
-              preferred_name: userData.preferred_name || userData.full_name.split(" ")[0],
-              birth_date: userData.birth_date,
-              birth_time_local: userData.birth_time_local,
-              birth_location: userData.birth_location
-            },
-            // Map the research blueprint data to our blueprint structure
-            cognition_mbti: researchResult.data.data.cognition_mbti || {
-              type: userData.mbti || "Unknown",
-              description: "",
-              core_keywords: [],
-              dominant_function: "",
-              auxiliary_function: ""
-            },
-            energy_strategy_human_design: researchResult.data.data.energy_strategy_human_design || {
-              type: "Generator",
-              strategy: "Wait to respond",
-              authority: "Emotional",
-              profile: "3/5",
-              definition: "Split",
-              incarnation_cross: "Cross of Planning",
-              not_self_theme: "",
-              life_purpose: "",
-              centers: {},
-              gates: {
-                unconscious_design: [],
-                conscious_personality: []
-              }
-            },
-            archetype_western: researchResult.data.data.archetype_western || {
-              sun_sign: "Aquarius ♒︎",
-              moon_sign: "Pisces ♓︎",
-              rising_sign: "Virgo ♍︎",
-              sun_keyword: "",
-              sun_dates: "",
-              sun_element: "",
-              sun_qualities: "",
-              moon_keyword: "",
-              moon_element: "",
-              aspects: [],
-              houses: {}
-            },
-            archetype_chinese: researchResult.data.data.archetype_chinese || {
-              animal: "Horse",
-              element: "Earth",
-              yin_yang: "Yang",
-              keyword: "",
-              element_characteristic: "",
-              personality_profile: "",
-              compatibility: {
-                best: [],
-                worst: []
-              }
-            },
-            values_life_path: researchResult.data.data.values_life_path || {
-              life_path_number: 7,
-              life_path_keyword: "",
-              life_path_description: "",
-              birth_day_number: 0,
-              birth_day_meaning: "",
-              personal_year: 0,
-              expression_number: 0,
-              expression_keyword: "",
-              soul_urge_number: 0,
-              soul_urge_keyword: "",
-              personality_number: 0
-            },
-            // Add the narrative from GPT
-            raw_content: researchResult.data.data._meta?.raw_response || "",
-            needs_parsing: true,
-            // Store metadata
-            _meta: {
-              generation_method: "research-engine",
-              generation_date: new Date().toISOString(),
-              model_version: "2.0",
-              birth_data: {},
-              schema_version: "2.0",
-              raw_response: researchResult.data,
-              error: null
-            }
-          };
-          
-          return {
-            success: true,
-            blueprint,
-            rawResponse: researchResult.data
-          };
-        }
-      } catch (researchError) {
-        console.warn("Research blueprint generator failed, trying Python engine:", researchError);
-        // Fall through to try the Python engine
-      }
-      
-      // Try making a direct fetch to the Python engine with proper CORS handling
-      try {
-        console.log("Trying direct fetch to Python engine with CORS handling");
-        
-        const response = await fetch("https://qxaajirrqrcnmvtowjbg.supabase.co/functions/v1/python-blueprint-engine", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${supabase.auth.session()?.access_token || ""}`,
-            "apikey": supabase.supabaseKey
-          },
-          body: JSON.stringify(userData)
-        });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        console.log("Direct fetch to Python engine successful:", data);
-        
-        if (!data || data.error) {
-          throw new Error(data?.error || "Unknown error");
-        }
-        
-        // Transform the Python engine output to match our blueprint structure
-        const blueprint: BlueprintData = {
-          user_meta: {
-            full_name: userData.full_name,
-            preferred_name: userData.preferred_name || userData.full_name.split(" ")[0],
-            birth_date: userData.birth_date,
-            birth_time_local: userData.birth_time_local,
-            birth_location: userData.birth_location
-          },
-          // Map the Python facts to our blueprint structure
-          cognition_mbti: {
-            type: data.facts.mbti || "Unknown",
-            description: "",
-            core_keywords: [],
-            dominant_function: "",
-            auxiliary_function: ""
-          },
-          energy_strategy_human_design: {
-            type: data.facts.human_design.type,
-            strategy: data.facts.human_design.strategy,
-            authority: data.facts.human_design.authority,
-            profile: data.facts.human_design.profile,
-            definition: data.facts.human_design.definition,
-            incarnation_cross: data.facts.human_design.incarnation_cross,
-            not_self_theme: "",
-            life_purpose: "",
-            centers: {},
-            gates: {
-              unconscious_design: [],
-              conscious_personality: []
-            }
-          },
-          archetype_western: {
-            sun_sign: data.facts.western.sun_sign,
-            moon_sign: data.facts.western.moon_sign,
-            rising_sign: data.facts.western.ascendant_sign,
-            sun_keyword: "",
-            sun_dates: "",
-            sun_element: "",
-            sun_qualities: "",
-            moon_keyword: "",
-            moon_element: "",
-            aspects: [],
-            houses: {}
-          },
-          archetype_chinese: {
-            animal: data.facts.chinese.animal,
-            element: data.facts.chinese.element,
-            yin_yang: data.facts.chinese.yin_yang,
-            keyword: "",
-            element_characteristic: "",
-            personality_profile: "",
-            compatibility: {
-              best: [],
-              worst: []
-            }
-          },
-          values_life_path: {
-            life_path_number: data.facts.numerology.life_path,
-            life_path_keyword: "",
-            life_path_description: "",
-            birth_day_number: 0,
-            birth_day_meaning: "",
-            personal_year: 0,
-            expression_number: 0,
-            expression_keyword: "",
-            soul_urge_number: 0,
-            soul_urge_keyword: "",
-            personality_number: 0
-          },
-          // Add the narrative from GPT
-          raw_content: data.narrative,
-          needs_parsing: true,
-          // Store metadata
-          _meta: {
-            generation_method: "python-engine-direct-fetch",
-            generation_date: new Date().toISOString(),
-            model_version: "1.0",
-            birth_data: {},
-            schema_version: "1.0",
-            raw_response: data,
-            error: data.error || null
-          }
-        };
-        
-        return {
-          success: true,
-          blueprint,
-          rawResponse: data
-        };
-      } catch (directFetchError) {
-        console.warn("Direct fetch to Python engine failed:", directFetchError);
-        // Fall through to try the standard Supabase invoke method
-      }
-      
-      // Call the Supabase Edge Function that wraps our Python code
-      console.log("Calling Supabase function: python-blueprint-engine");
-      const { data, error } = await supabase.functions.invoke("python-blueprint-engine", {
-        body: userData,
-      });
-      
-      console.log("Supabase function response:", { data, error });
-      
-      if (error) {
-        console.error("Error calling Python blueprint engine:", error);
-        return {
-          success: false,
-          error: error.message,
-          rawResponse: error
-        };
-      }
-      
-      if (!data || data.error) {
-        console.error("Python blueprint engine returned an error:", data?.error);
-        return {
-          success: false,
-          error: data?.error || "Unknown error",
-          rawResponse: data
-        };
-      }
-      
-      // Transform the Python engine output to match our blueprint structure
-      const blueprint: BlueprintData = {
-        user_meta: {
+      console.log('[PYTHON SERVICE] Calling Python Blueprint Engine with data:', userData);
+
+      const requestData = {
+        userData: {
           full_name: userData.full_name,
-          preferred_name: userData.preferred_name || userData.full_name.split(" ")[0],
           birth_date: userData.birth_date,
-          birth_time_local: userData.birth_time_local,
-          birth_location: userData.birth_location
-        },
-        // Map the Python facts to our blueprint structure
-        cognition_mbti: {
-          type: data.facts.mbti || "Unknown",
-          description: "",
-          core_keywords: [],
-          dominant_function: "",
-          auxiliary_function: ""
-        },
-        energy_strategy_human_design: {
-          type: data.facts.human_design.type,
-          strategy: data.facts.human_design.strategy,
-          authority: data.facts.human_design.authority,
-          profile: data.facts.human_design.profile,
-          definition: data.facts.human_design.definition,
-          incarnation_cross: data.facts.human_design.incarnation_cross,
-          not_self_theme: "",
-          life_purpose: "",
-          centers: {},
-          gates: {
-            unconscious_design: [],
-            conscious_personality: []
-          }
-        },
-        archetype_western: {
-          sun_sign: data.facts.western.sun_sign,
-          moon_sign: data.facts.western.moon_sign,
-          rising_sign: data.facts.western.ascendant_sign,
-          sun_keyword: "",
-          sun_dates: "",
-          sun_element: "",
-          sun_qualities: "",
-          moon_keyword: "",
-          moon_element: "",
-          aspects: [],
-          houses: {}
-        },
-        archetype_chinese: {
-          animal: data.facts.chinese.animal,
-          element: data.facts.chinese.element,
-          yin_yang: data.facts.chinese.yin_yang,
-          keyword: "",
-          element_characteristic: "",
-          personality_profile: "",
-          compatibility: {
-            best: [],
-            worst: []
-          }
-        },
-        values_life_path: {
-          life_path_number: data.facts.numerology.life_path,
-          life_path_keyword: "",
-          life_path_description: "",
-          birth_day_number: 0,
-          birth_day_meaning: "",
-          personal_year: 0,
-          expression_number: 0,
-          expression_keyword: "",
-          soul_urge_number: 0,
-          soul_urge_keyword: "",
-          personality_number: 0
-        },
-        // Add the narrative from GPT
-        raw_content: data.narrative,
-        needs_parsing: true,
-        // Store metadata
-        _meta: {
-          generation_method: "python-engine",
-          generation_date: new Date().toISOString(),
-          model_version: "1.0",
-          birth_data: {},
-          schema_version: "1.0",
-          raw_response: data,
-          error: data.error || null
+          birth_time: userData.birth_time_local || "00:00",
+          birth_location: userData.birth_location || "Unknown",
+          mbti: userData.mbti || "",
+          preferred_name: userData.preferred_name || userData.full_name.split(' ')[0]
         }
       };
-      
+
+      // Call the Edge Function with proper headers and error handling
+      const response = await supabase.functions.invoke('python-blueprint-engine', {
+        method: 'POST',
+        body: requestData,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      // Check for Supabase function errors
+      if (response.error) {
+        console.error('[PYTHON SERVICE] Error calling Python blueprint engine:', response.error);
+        return {
+          success: false,
+          error: response.error.message || 'Failed to communicate with Python blueprint engine',
+          rawResponse: response.error
+        };
+      }
+
+      // Check if we have valid data from the Python engine
+      if (!response.data) {
+        return {
+          success: false,
+          error: 'Python engine returned no data',
+          rawResponse: response
+        };
+      }
+
+      // Successfully received blueprint data
+      console.log('[PYTHON SERVICE] Python blueprint engine response:', response.data);
       return {
         success: true,
-        blueprint,
-        rawResponse: data
+        blueprint: response.data,
+        rawResponse: response.data
       };
     } catch (error) {
-      console.error("Exception in Python blueprint service:", error);
-      // Include detailed error info for debugging
-      const errorDetails = {
-        message: error instanceof Error ? error.message : String(error),
-        name: error instanceof Error ? error.name : "Unknown",
-        stack: error instanceof Error ? error.stack : undefined,
-        originalError: error
-      };
-      console.error("Detailed error:", errorDetails);
-      
+      console.error('[PYTHON SERVICE] Exception in Python blueprint service:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : String(error),
-        rawResponse: errorDetails
+        error: error instanceof Error ? error.message : 'Unknown error in Python blueprint service',
+        rawResponse: error
       };
     }
-  },
+  }
 };

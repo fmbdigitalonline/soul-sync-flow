@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
@@ -11,7 +12,6 @@ const corsHeaders = {
 
 /**
  * Edge function to generate soul blueprints using a research-based approach with GPT-4o
- * This replaces the previous calculation-based approach with a more accurate research-based system
  */
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -84,7 +84,7 @@ async function generateResearchBasedBlueprint(birthData, debugMode = false) {
     // Get the improved prompt for blueprint generation
     const userPrompt = getEnhancedBlueprintPrompt(birthData);
     
-    // Call OpenAI with structured request format
+    // Call OpenAI with structured request format - REMOVED tools parameter to fix error
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -107,7 +107,7 @@ async function generateResearchBasedBlueprint(birthData, debugMode = false) {
     if (!response.ok) {
       const errorData = await response.json();
       console.error("OpenAI API error:", errorData);
-      throw new Error(`OpenAI API error: ${errorData.error?.message || response.statusText}`);
+      throw new Error(`OpenAI API error: ${JSON.stringify(errorData)}`);
     }
 
     const data = await response.json();

@@ -56,5 +56,6 @@ node_version = 18
 [functions.python-blueprint-engine]
 verify_jwt = false
 runtime = "python3.11"
-# Added explicit cors configuration
+# Explicitly configuring CORS for the Python function
 cors = ["*"]
+
