@@ -3,8 +3,8 @@
 import os
 import json
 import sys
-from get_facts import build_fact_json
-from compose_story import generate_blueprint_narrative
+from .get_facts import build_fact_json
+from .compose_story import generate_blueprint_narrative
 
 def handle_request(event):
     try:
