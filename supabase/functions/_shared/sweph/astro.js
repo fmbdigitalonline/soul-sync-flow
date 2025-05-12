@@ -1,4 +1,3 @@
-
 // This file is a copy of https://cdn.jsdelivr.net/gh/u-blusky/sweph-wasm@0.11.3/js/astro.js
 // It's included directly in the repo to avoid external dependencies
 // The original source is from https://github.com/u-blusky/sweph-wasm
@@ -535,5 +534,11 @@ const SwissEphGlobals = {
 
 })(typeof exports !== 'undefined' ? exports : this);
 
+// Fix the problematic export statement
 export default SwissEphGlobals.SwissEph;
-export { JulDay, Bodies, Houses, HouseSystems, Flags } from this;
+// Export the required components directly rather than from 'this'
+export const JulDay = (typeof exports !== 'undefined' ? exports : this).JulDay;
+export const Bodies = (typeof exports !== 'undefined' ? exports : this).Bodies;
+export const Houses = (typeof exports !== 'undefined' ? exports : this).Houses;
+export const HouseSystems = (typeof exports !== 'undefined' ? exports : this).HouseSystems;
+export const Flags = (typeof exports !== 'undefined' ? exports : this).Flags;
