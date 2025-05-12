@@ -1,4 +1,5 @@
-import { SwissEph, JulDay, Bodies, Houses, HouseSystems, Flags } from "npm:sweph-wasm@0.11.3";
+
+import initSweph, { JulDay, Bodies, Houses, HouseSystems, Flags } from "../_shared/sweph/astro.js";
 import { DateTime } from "npm:luxon@3.4.4";
 
 // Interfaces reused from ephemeris.ts
@@ -32,15 +33,16 @@ interface CelestialData {
 }
 
 // Global instance of SwissEph (initialize once, use many times)
-let sweph: SwissEph | null = null;
+let sweph: any = null;
 let swephInitializing = false;
-let swephInitPromise: Promise<SwissEph> | null = null;
+let swephInitPromise: Promise<any> | null = null;
+let SwissEph: any; // Will be populated after initialization
 
 /**
  * Initialize the Swiss Ephemeris library
  * This should be called before any calculations
  */
-async function initializeSweph(): Promise<SwissEph> {
+async function initializeSweph(): Promise<any> {
   if (sweph) {
     return sweph;
   }
@@ -52,12 +54,13 @@ async function initializeSweph(): Promise<SwissEph> {
   console.log("Initializing Swiss Ephemeris...");
   swephInitializing = true;
   
-  swephInitPromise = SwissEph.create()
-    .then(instance => {
+  swephInitPromise = initSweph()
+    .then(() => {
       console.log("Swiss Ephemeris initialized successfully");
-      sweph = instance;
+      SwissEph = (globalThis as any).SwissEph;
+      sweph = new SwissEph();
       swephInitializing = false;
-      return instance;
+      return sweph;
     })
     .catch(error => {
       console.error("Error initializing Swiss Ephemeris:", error);
