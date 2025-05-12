@@ -1,3 +1,4 @@
+
 import React, { useRef, useMemo, useEffect, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -24,10 +25,10 @@ const SoulOrb3D: React.FC<SoulOrbProps> = ({
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [videoError, setVideoError] = useState(false);
   
-  // Use the correct type for Three.js line objects
-  const ring1Ref = useRef<THREE.Line>(null);
-  const ring2Ref = useRef<THREE.Line>(null);
-  const ring3Ref = useRef<THREE.Line>(null);
+  // Use refs for rotation groups instead of direct line references
+  const ring1Ref = useRef<THREE.Group>(null);
+  const ring2Ref = useRef<THREE.Group>(null);
+  const ring3Ref = useRef<THREE.Group>(null);
   
   // Get orb color based on stage - now unified to bright cyan
   const getOrbColor = () => {
@@ -204,33 +205,42 @@ const SoulOrb3D: React.FC<SoulOrbProps> = ({
         />
       </mesh>
       
-      {/* Orbital rings - Using line component directly */}
-      <line geometry={curve1}>
-        <lineBasicMaterial 
-          color="#FFFFFF" 
-          transparent 
-          opacity={0.8}
-        />
-        <primitive object={ring1Ref.current} attach="ref" />
-      </line>
+      {/* Orbital rings - using groups with lines as children */}
+      <group ref={ring1Ref}>
+        <line>
+          <bufferGeometry attach="geometry" {...curve1} />
+          <lineBasicMaterial 
+            attach="material"
+            color="#FFFFFF" 
+            transparent 
+            opacity={0.8}
+          />
+        </line>
+      </group>
       
-      <line geometry={curve2}>
-        <lineBasicMaterial 
-          color="#FFFFFF" 
-          transparent 
-          opacity={0.8}
-        />
-        <primitive object={ring2Ref.current} attach="ref" />
-      </line>
+      <group ref={ring2Ref}>
+        <line>
+          <bufferGeometry attach="geometry" {...curve2} />
+          <lineBasicMaterial 
+            attach="material"
+            color="#FFFFFF" 
+            transparent 
+            opacity={0.8}
+          />
+        </line>
+      </group>
       
-      <line geometry={curve3}>
-        <lineBasicMaterial 
-          color="#FFFFFF" 
-          transparent 
-          opacity={0.8}
-        />
-        <primitive object={ring3Ref.current} attach="ref" />
-      </line>
+      <group ref={ring3Ref}>
+        <line>
+          <bufferGeometry attach="geometry" {...curve3} />
+          <lineBasicMaterial 
+            attach="material"
+            color="#FFFFFF" 
+            transparent 
+            opacity={0.8}
+          />
+        </line>
+      </group>
       
       {/* Enhanced glow effect - more pronounced to match the image */}
       <mesh>
