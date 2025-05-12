@@ -1,6 +1,8 @@
+
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 // Swiss Ephemeris wrapper for Deno
 import { calculatePlanetaryPositions } from './ephemeris.ts';
+import { calculatePlanetaryPositionsWithSweph } from './ephemeris-sweph.ts';
 import { calculateHumanDesign } from './human-design.ts';
 
 // CORS headers for browser requests
@@ -23,7 +25,19 @@ interface CalculationResults {
   chineseZodiac: any;
   numerology: any;
   humanDesign: any;
+  calculation_metadata?: {
+    success: boolean;
+    partial: boolean;
+    errors?: Record<string, string>;
+    calculated_at: string;
+    input: any;
+    engine?: string;
+  };
 }
+
+// Feature flag for Swiss Ephemeris calculations
+// Set to false initially for a gradual rollout
+const USE_SWEPH = Deno.env.get("USE_SWEPH") === "true";
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -74,15 +88,52 @@ serve(async (req) => {
     let results: Partial<CalculationResults> = {};
     let errors: Record<string, string> = {};
     
-    // Attempt to calculate planetary positions
+    // Force parameter to override feature flag for testing
+    const forceEngine = new URL(req.url).searchParams.get("engine");
+    const useSweph = forceEngine === "sweph" ? true : 
+                    forceEngine === "legacy" ? false : 
+                    USE_SWEPH;
+    
+    // Attempt to calculate planetary positions using the selected engine
     try {
-      console.log("Starting celestial calculations...");
-      const celestialData = await calculatePlanetaryPositions(date, time, location, timezone || "UTC");
+      console.log(`Starting celestial calculations using ${useSweph ? "Swiss Ephemeris" : "legacy"} engine...`);
+      
+      const celestialData = useSweph ? 
+        await calculatePlanetaryPositionsWithSweph(date, time, location, timezone || "UTC") :
+        await calculatePlanetaryPositions(date, time, location, timezone || "UTC");
+      
+      // If SwEph is selected, also calculate with legacy for comparison logging
+      if (useSweph) {
+        try {
+          const legacyData = await calculatePlanetaryPositions(date, time, location, timezone || "UTC");
+          
+          // Log comparison for key celestial bodies (uncomment for detailed logs)
+          console.log("Calculation comparison (SwEph vs Legacy):");
+          console.log(`Sun longitude: SwEph = ${celestialData.sun.longitude.toFixed(4)}° | Legacy = ${legacyData.sun.longitude.toFixed(4)}° | Delta = ${Math.abs(celestialData.sun.longitude - legacyData.sun.longitude).toFixed(4)}°`);
+          console.log(`Moon longitude: SwEph = ${celestialData.moon.longitude.toFixed(4)}° | Legacy = ${legacyData.moon.longitude.toFixed(4)}° | Delta = ${Math.abs(celestialData.moon.longitude - legacyData.moon.longitude).toFixed(4)}°`);
+          console.log(`Ascendant: SwEph = ${celestialData.ascendant.longitude.toFixed(4)}° | Legacy = ${legacyData.ascendant.longitude.toFixed(4)}° | Delta = ${Math.abs(celestialData.ascendant.longitude - legacyData.ascendant.longitude).toFixed(4)}°`);
+        } catch (legacyError) {
+          console.error("Error in legacy calculation (comparison only):", legacyError);
+        }
+      }
+      
       results.celestialData = celestialData;
       console.log("Celestial calculations completed successfully");
     } catch (celestialError) {
       console.error("Error in celestial calculations:", celestialError);
       errors.celestial = celestialError.message;
+      
+      // If SwEph fails, try falling back to legacy calculation
+      if (useSweph) {
+        console.log("Falling back to legacy calculation engine...");
+        try {
+          results.celestialData = await calculatePlanetaryPositions(date, time, location, timezone || "UTC");
+          console.log("Legacy fallback calculation successful");
+        } catch (fallbackError) {
+          console.error("Legacy fallback calculation also failed:", fallbackError);
+          errors.celestialFallback = fallbackError.message;
+        }
+      }
     }
 
     // Calculate Western astrological profile if celestial data is available
@@ -144,7 +195,8 @@ serve(async (req) => {
           partial: Object.keys(errors).length > 0,
           errors: Object.keys(errors).length > 0 ? errors : undefined,
           calculated_at: new Date().toISOString(),
-          input: { date, time, location, timezone: timezone || "UTC" }
+          input: { date, time, location, timezone: timezone || "UTC" },
+          engine: useSweph ? "swiss_ephemeris" : "legacy"
         }
       }),
       { 

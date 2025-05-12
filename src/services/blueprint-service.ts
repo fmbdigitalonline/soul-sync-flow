@@ -88,6 +88,7 @@ export type BlueprintData = {
     partial_calculation: boolean;
     calculation_errors?: Record<string, string>;
     calculation_date?: string;
+    engine?: string;
     data_sources?: Record<string, string>;
   };
 };
@@ -340,12 +341,13 @@ export const blueprintService = {
         belief_logs: [],
         excitement_scores: [],
         vibration_check_ins: [],
-        // Add metadata to track calculation quality
+        // Add metadata to track calculation quality and engine used
         metadata: {
           calculation_success: calcData.calculation_metadata?.success || false,
           partial_calculation: calcData.calculation_metadata?.partial || false,
           calculation_errors: calcData.calculation_metadata?.errors,
           calculation_date: calcData.calculation_metadata?.calculated_at || new Date().toISOString(),
+          engine: calcData.calculation_metadata?.engine || "legacy",
           data_sources: {
             western: calcData.westernProfile ? "calculated" : "default",
             chinese: calcData.chineseZodiac ? "calculated" : "default",
