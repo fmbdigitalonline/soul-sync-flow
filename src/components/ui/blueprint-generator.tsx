@@ -67,7 +67,6 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
   // Generate blueprint function - STRICTLY ONE ATTEMPT with Python engine only
   const generateBlueprint = useCallback(async () => {
     // Add protective guard to ENSURE a single API call
-    // Check both state and ref for added security
     console.log('[GENERATOR] Checking if API call was already made:', apiCallMadeRef.current);
     if (apiCallMadeRef.current === true) {
       console.log('[GENERATOR] API call was ALREADY MADE. STRICTLY preventing another request.');
@@ -75,7 +74,7 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
     }
 
     try {
-      console.log('[GENERATOR] Starting blueprint generation with Python Engine ONLY');
+      console.log('[GENERATOR] Starting blueprint generation with TypeScript Engine');
       
       // Immediately mark that we've attempted the API call to prevent additional calls
       apiCallMadeRef.current = true;
@@ -94,16 +93,23 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
         mbti: formData.personality || undefined,
       };
 
+      // Add expanded logging of the request data
+      console.log('[GENERATOR] Making SINGLE API call to Blueprint Engine with data:');
+      console.log('[GENERATOR] Name:', userData.full_name);
+      console.log('[GENERATOR] Birth date:', userData.birth_date);
+      console.log('[GENERATOR] Birth date components:', userData.birth_date.split('-').join(', '));
+      console.log('[GENERATOR] Birth time:', userData.birth_time_local);
+      console.log('[GENERATOR] Birth location:', userData.birth_location);
+      console.log('[GENERATOR] MBTI:', userData.mbti);
+
       // Simple progress animation
       setProgress(25);
-      console.log('[GENERATOR] Making SINGLE API call to Python Engine with data:', userData);
-      console.log('[GENERATOR] Birth date components:', formData.birthDate.split('-').join(', '));
 
       // Use the Python blueprint service
       setProgress(35);
       const result = await pythonBlueprintService.generateBlueprint(userData);
       
-      console.log('[GENERATOR] Python Blueprint generation result status:', result.success);
+      console.log('[GENERATOR] Blueprint generation result status:', result.success);
       
       // Store raw response for debugging
       if (result.rawResponse) {
@@ -113,16 +119,16 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
       
       // If there's an error in the result
       if (!result.success) {
-        throw new Error(result.error || "Python engine failed to generate blueprint");
+        throw new Error(result.error || "Blueprint engine failed to generate blueprint");
       }
 
       const blueprint = result.blueprint;
       if (!blueprint) {
-        throw new Error("No blueprint data returned from Python service");
+        throw new Error("No blueprint data returned from service");
       }
       
       // Log calculation results for validation
-      console.log('[GENERATOR] Blueprint received from Python engine with key calculations:');
+      console.log('[GENERATOR] Blueprint received from engine with key calculations:');
       
       if (blueprint.values_life_path && blueprint.values_life_path.life_path_number) {
         console.log('[GENERATOR] Life Path Number:', blueprint.values_life_path.life_path_number);
@@ -185,16 +191,16 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
   const getErrorToastMessage = (type: 'connection' | 'api' | 'quota' | 'parse' | 'unknown'): string => {
     switch (type) {
       case 'connection':
-        return "Connection issue with Python engine. Please check Edge Function logs.";
+        return "Connection issue with blueprint engine. Please check Edge Function logs.";
       case 'api':
-        return "Python API configuration issue. Check Edge Function settings.";
+        return "API configuration issue. Check Edge Function settings.";
       case 'quota':
         return "Service temporarily unavailable due to high demand.";
       case 'parse':
-        return "Error processing the Python engine response. Check logs for details.";
+        return "Error processing the blueprint engine response. Check logs for details.";
       case 'unknown':
       default:
-        return "An unexpected error occurred in the Python blueprint engine.";
+        return "An unexpected error occurred in the blueprint engine.";
     }
   };
 
@@ -221,9 +227,9 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
         return (
           <Alert variant="destructive" className="mt-4">
             <Info className="h-4 w-4" />
-            <AlertTitle>Python Engine Connection Error</AlertTitle>
+            <AlertTitle>Blueprint Engine Connection Error</AlertTitle>
             <AlertDescription>
-              We're having trouble connecting to our Python blueprint engine.
+              We're having trouble connecting to our blueprint engine.
               Please check the Edge Function logs and status.
             </AlertDescription>
           </Alert>
@@ -233,9 +239,9 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
         return (
           <Alert className="mt-4 border-amber-200 bg-amber-50">
             <Info className="h-4 w-4 text-amber-600" />
-            <AlertTitle className="text-amber-800">Python Response Error</AlertTitle>
+            <AlertTitle className="text-amber-800">Response Processing Error</AlertTitle>
             <AlertDescription className="text-amber-700">
-              There was an error processing the Python engine's response.
+              There was an error processing the blueprint engine's response.
               Check the detailed logs below for more information.
             </AlertDescription>
           </Alert>
@@ -246,9 +252,9 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
         return (
           <Alert variant="destructive" className="mt-4">
             <Info className="h-4 w-4" />
-            <AlertTitle>Python Engine Error</AlertTitle>
+            <AlertTitle>Blueprint Engine Error</AlertTitle>
             <AlertDescription>
-              {errorMessage || "An unknown error occurred in the Python blueprint engine."}
+              {errorMessage || "An unknown error occurred in the blueprint engine."}
             </AlertDescription>
           </Alert>
         );
@@ -262,7 +268,7 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
           <Progress value={progress} className="h-2" />
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>Initializing</span>
-            <span>Python Engine</span>
+            <span>Blueprint Engine</span>
             <span>Calculating</span>
             <span>Complete</span>
           </div>
@@ -273,8 +279,8 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
             <div className="flex flex-col items-center space-y-4">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
               <p className="text-sm text-muted-foreground">
-                {progress < 25 && "Connecting to Python blueprint engine..."}
-                {progress >= 25 && progress < 50 && "Python engine processing birth data..."}
+                {progress < 25 && "Connecting to blueprint engine..."}
+                {progress >= 25 && progress < 50 && "Engine processing birth data..."}
                 {progress >= 50 && progress < 75 && "Calculating numerology and Human Design..."}
                 {progress >= 75 && "Finalizing blueprint data..."}
               </p>
@@ -289,7 +295,7 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
               <div className="text-center">
                 <p className="font-medium">Blueprint Generated!</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Your soul blueprint has been created successfully with our Python engine.
+                  Your soul blueprint has been created successfully with our blueprint engine.
                 </p>
               </div>
               
@@ -312,7 +318,7 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
                 <XCircle className="h-8 w-8 text-red-600" />
               </div>
               <div className="text-center">
-                <p className="font-medium">Python Engine Error</p>
+                <p className="font-medium">Blueprint Engine Error</p>
                 <p className="text-sm text-muted-foreground mt-1">
                   {getErrorToastMessage(errorType)}
                 </p>

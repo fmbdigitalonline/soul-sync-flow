@@ -1,8 +1,9 @@
+
 // Supabase Edge Function - Blueprint Engine (TypeScript implementation)
-// Replaces the Python implementation with a compatible TypeScript version
+// This is a TypeScript implementation that replaces the Python version
 
 import { serve } from "std/http/server.ts";
-import { DateTime } from "luxon";
+import { DateTime } from "npm:luxon@3.4.4";
 
 // CORS headers for browser requests
 const corsHeaders = {
@@ -10,6 +11,15 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS'
 };
+
+// Debug mode for detailed logging
+const DEBUG_MODE = true;
+
+function log(message: string, data?: any): void {
+  if (DEBUG_MODE) {
+    console.log(`[Python-Blueprint-Engine] ${message}`, data ? JSON.stringify(data) : '');
+  }
+}
 
 // Basic numerology utility functions
 function reduceSingleDigit(num: number): number {
@@ -43,7 +53,7 @@ function reduceSingleDigit(num: number): number {
 // Calculate life path number using the proper numerology methodology
 function calculateLifePath(birthDate: string): number {
   try {
-    console.log(`Calculating Life Path for date: ${birthDate}`);
+    log(`Calculating Life Path for date: ${birthDate}`);
     
     // Split the date into components
     const [year, month, day] = birthDate.split('-').map(part => parseInt(part, 10));
@@ -53,29 +63,29 @@ function calculateLifePath(birthDate: string): number {
       throw new Error(`Invalid date components: ${year}, ${month}, ${day}`);
     }
     
-    console.log(`Date components: Year=${year}, Month=${month}, Day=${day}`);
+    log(`Date components: Year=${year}, Month=${month}, Day=${day}`);
     
     // Sum each component separately
     const daySum = reduceSingleDigit(day);
     const monthSum = reduceSingleDigit(month);
     const yearSum = reduceSingleDigit(year.toString().split('').reduce((a, b) => a + parseInt(b), 0));
     
-    console.log(`Component sums - Day: ${daySum}, Month: ${monthSum}, Year: ${yearSum}`);
+    log(`Component sums - Day: ${daySum}, Month: ${monthSum}, Year: ${yearSum}`);
     
     // Sum the individual component sums
     let totalSum = daySum + monthSum + yearSum;
     
-    console.log(`Total sum before final reduction: ${totalSum}`);
+    log(`Total sum before final reduction: ${totalSum}`);
     
     // Check if the sum is a master number before final reduction
     if (totalSum === 11 || totalSum === 22 || totalSum === 33) {
-      console.log(`Master number ${totalSum} found, not reducing further`);
+      log(`Master number ${totalSum} found, not reducing further`);
       return totalSum;
     }
     
     // Otherwise reduce to a single digit
     const finalDigit = reduceSingleDigit(totalSum);
-    console.log(`Final Life Path number: ${finalDigit}`);
+    log(`Final Life Path number: ${finalDigit}`);
     
     return finalDigit;
   } catch (error) {
@@ -155,8 +165,8 @@ function calculateChineseZodiac(birthDate: string): any {
   const yinYang = year % 2 === 0 ? 'Yang' : 'Yin';
   
   return {
-    animal: animal,
-    element: element,
+    animal,
+    element,
     yin_yang: yinYang,
     keyword: `${animal} ${element}`,
     element_characteristic: `${element} brings ${element === 'Fire' ? 'passion and creativity' : 
@@ -261,7 +271,7 @@ function calculateHumanDesign(birthDate: string): any {
 
 // Calculate the full blueprint
 function calculateBlueprint(userData: any): any {
-  console.log("Generating blueprint for:", userData);
+  log("Generating blueprint for:", userData);
   
   try {
     const birthDate = userData.birth_date;
@@ -277,23 +287,23 @@ function calculateBlueprint(userData: any): any {
     const day = date.getDate();
     const year = date.getFullYear();
     
-    console.log(`Processing birth date: ${month}/${day}/${year}`);
+    log(`Processing birth date: ${month}/${day}/${year}`);
     
     // Calculate life path number
     const lifePathNumber = calculateLifePath(birthDate);
-    console.log(`Life Path Number: ${lifePathNumber}`);
+    log(`Life Path Number: ${lifePathNumber}`);
     
     // Get Western astrology sun sign
     const sunSign = getZodiacSignFromDate(month, day);
-    console.log(`Sun Sign: ${sunSign.name}`);
+    log(`Sun Sign: ${sunSign.name}`);
     
     // Get Chinese zodiac
     const chineseZodiac = calculateChineseZodiac(birthDate);
-    console.log(`Chinese Zodiac: ${chineseZodiac.animal} ${chineseZodiac.element}`);
+    log(`Chinese Zodiac: ${chineseZodiac.animal} ${chineseZodiac.element}`);
     
     // Calculate Human Design
     const humanDesign = calculateHumanDesign(birthDate);
-    console.log(`Human Design Type: ${humanDesign.type}`);
+    log(`Human Design Type: ${humanDesign.type}`);
     
     // Define life path keywords
     const lifePathKeywords: Record<number, { keyword: string, description: string }> = {
@@ -423,7 +433,7 @@ function calculateBlueprint(userData: any): any {
       archetype_chinese: chineseZodiac
     };
     
-    console.log("Blueprint generation complete");
+    log("Blueprint generation complete");
     return blueprint;
   } catch (error) {
     console.error("Error generating blueprint:", error);
@@ -431,7 +441,7 @@ function calculateBlueprint(userData: any): any {
   }
 }
 
-// Serve the HTTP requests
+// Main handler function for the Supabase Edge Function
 serve(async (req) => {
   console.log(`Received ${req.method} request to ${req.url}`);
   

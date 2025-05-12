@@ -53,6 +53,9 @@ export const pythonBlueprintService = {
         }
       });
 
+      // Add more detailed logging to diagnose issues
+      console.log('[PYTHON SERVICE] Response received:', response);
+
       // Check for Supabase function errors
       if (response.error) {
         console.error('[PYTHON SERVICE] Error calling Python blueprint engine:', response.error);
