@@ -3,7 +3,6 @@ import React, { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment } from '@react-three/drei';
 import { SoulOrb3D } from './soul-orb-3d';
-import * as THREE from 'three';
 
 interface Onboarding3DSceneProps {
   speaking?: boolean;
@@ -21,9 +20,6 @@ const Onboarding3DScene: React.FC<Onboarding3DSceneProps> = ({
   // Set the orb position based on interaction stage
   const orbPosition: [number, number, number] = interactionStage === 'listening' ? [0, 0, 0] : [0, -1, -2];
   
-  // Define the size explicitly as a number to avoid type issues
-  const orbSize = interactionStage === 'listening' ? 1 : 0.7;
-  
   return (
     <div className="absolute inset-0 z-0">
       <Canvas camera={{ position: [0, 0, 5], fov: 75 }}>
@@ -39,11 +35,11 @@ const Onboarding3DScene: React.FC<Onboarding3DSceneProps> = ({
             speaking={speaking}
             stage={stage}
             position={orbPosition}
-            size={orbSize}
+            size={interactionStage === 'listening' ? 1 : 0.7}
           />
           
-          {/* Dark background color - properly typed as array of number values */}
-          <color attach="background" args={[0.04, 0.04, 0.1]} />
+          {/* Dark background color */}
+          <color attach="background" args={['#0a0a1a']} />
           
           {/* Orbit controls - more restricted when in input mode */}
           <OrbitControls 

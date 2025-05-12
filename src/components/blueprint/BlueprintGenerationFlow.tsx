@@ -1,30 +1,19 @@
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Loader2, CheckCircle2, XCircle, Eye, EyeOff } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import React, { useState, useEffect } from "react";
+import { motion } from "@/lib/framer-motion";
 import { SoulOrb } from "@/components/ui/soul-orb";
-import blueprintService, { BlueprintData } from '@/services/blueprint-service';
+import { cn } from "@/lib/utils";
+import { BlueprintData, blueprintService } from "@/services/blueprint-service";
+import { useToast } from "@/hooks/use-toast";
 
-interface BlueprintGenerationFlowProps {
-  userMeta: {
-    full_name: string;
-    birth_date: string;
-    birth_time_local?: string;
-    birth_location?: string;
-    preferred_name?: string;
-    mbti?: string;
-  };
-  onComplete?: () => void;
+interface BlueprintGeneratorProps {
+  userProfile: BlueprintData['user_meta'];
+  onComplete: (blueprint: BlueprintData) => void;
   className?: string;
 }
 
-export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = ({ 
-  userMeta, 
+export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({ 
+  userProfile, 
   onComplete,
   className 
 }) => {
@@ -37,22 +26,15 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
     { id: "chinese", label: "Calculating Chinese Zodiac" },
     { id: "mbti", label: "Integrating MBTI data" },
     { id: "insights", label: "Generating integrated insights" },
-    { id: "search", label: "Performing web searches" },
     { id: "store", label: "Storing complete blueprint" },
   ];
   
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
   const [particles, setParticles] = useState<Array<{id: number, x: number, y: number, size: number, speed: number}>>([]);
-  const [rawResponse, setRawResponse] = useState<any>(null);
+  const [generatedBlueprint, setGeneratedBlueprint] = useState<BlueprintData | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [debugMode, setDebugMode] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [isError, setIsError] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
-  const [stage, setStage] = useState('initial');
-  const [toolCalls, setToolCalls] = useState<any[]>([]);
-  const apiCallMadeRef = useRef(false); // Track API call with a ref
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   // Generate random particles for visual effect
@@ -67,137 +49,95 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
     setParticles(newParticles);
   }, []);
 
-  // Step progression for the UI
+  // Generate the blueprint using the actual calculation service
   useEffect(() => {
-    if (isGenerating && !isSuccess && !isError) {
-      const totalSteps = steps.length;
-      let stepIndex = 0;
+    const generateBlueprint = async () => {
+      // Only start if we haven't already
+      if (isGenerating || generatedBlueprint) return;
       
-      const progressInterval = setInterval(() => {
-        if (stepIndex >= totalSteps) {
-          clearInterval(progressInterval);
+      setIsGenerating(true);
+      setError(null);
+      
+      try {
+        console.log("Starting blueprint generation with user data:", userProfile);
+        
+        // Step 1: Processing birth data
+        setCurrentStep(0);
+        setProgress(12);
+        await simulateProcessingDelay();
+        
+        // Step 2: Calculating celestial positions
+        setCurrentStep(1);
+        setProgress(25);
+        await simulateProcessingDelay();
+        
+        // Step 3-7: Run the actual generation process
+        setProgress(40);
+        
+        // Call the blueprint service to generate a blueprint
+        const { data: blueprint, error } = await blueprintService.generateBlueprintFromBirthData(userProfile);
+        
+        if (error) {
+          console.error("Blueprint generation error:", error);
+          setError(error);
+          toast({
+            title: "Generation Error",
+            description: "There was an error generating your blueprint. Please try again.",
+            variant: "destructive"
+          });
           return;
         }
         
-        setCurrentStep(stepIndex);
-        setProgress(Math.min(Math.floor((stepIndex / totalSteps) * 100), 70)); // Cap at 70% until actual completion
-        stepIndex++;
-      }, 3000); // Show a new step every 3 seconds
-      
-      return () => clearInterval(progressInterval);
-    }
-  }, [isGenerating, isSuccess, isError, steps.length]);
-
-  // Generate the blueprint using the actual service - SINGLE ATTEMPT ONLY, NO RETRIES
-  useEffect(() => {
-    let mounted = true;
-    
-    // Check if we haven't already made an API call - STRICTLY ONE CALL ONLY
-    console.log('[FLOW] Starting effect, checking if API call made:', apiCallMadeRef.current);
-    if (isGenerating && !apiCallMadeRef.current) {
-      const generateBlueprint = async () => {
-        try {
-          console.log('[FLOW] Setting API call flag to prevent multiple calls');
-          apiCallMadeRef.current = true; // Mark API call as made to prevent multiple calls
-          
-          setStage('preparing');
-          setProgress(10);
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          
-          // Update user meta with preferred name if not provided
-          const updatedUserMeta = {
-            ...userMeta,
-            preferred_name: userMeta.preferred_name || userMeta.full_name.split(' ')[0],
-          };
-          
-          // Generate blueprint with web search
-          setStage('searching');
-          setProgress(30);
-          
-          console.log('[FLOW] Making SINGLE API CALL to generate blueprint');
-          // Use the generate function - SINGLE ATTEMPT
-          const result = await blueprintService.generateBlueprintFromBirthData(updatedUserMeta);
-          
-          if (!mounted) return;
-          
-          // Store raw response for debugging
-          if (result.rawResponse) {
-            setRawResponse(result.rawResponse);
-            
-            // Extract tool calls if available
-            if (result.rawResponse.choices?.[0]?.message?.tool_calls) {
-              setToolCalls(result.rawResponse.choices[0].message.tool_calls);
-            }
-          }
-          
-          if (result.success && result.blueprint) {
-            setProgress(70);
-            setStage('saving');
-            
-            // Save blueprint to database
-            await blueprintService.saveBlueprintToDatabase(result.blueprint);
-            
-            if (!mounted) return;
-            
-            // Complete the generation process
-            setProgress(100);
-            setStage('complete');
-            setIsSuccess(true);
-            
-            toast({
-              title: "Blueprint Generated Successfully",
-              description: "Your soul blueprint has been created with web search enhanced data",
-              variant: "default"
-            });
-            
-            // Call onComplete callback if provided
-            if (onComplete) {
-              setTimeout(() => {
-                if (mounted) {
-                  onComplete();
-                }
-              }, 2000);
-            }
-          } else {
-            throw new Error(result.error || 'Unknown error during blueprint generation');
-          }
-        } catch (error) {
-          console.error('[FLOW] Error generating blueprint:', error);
-          if (mounted) {
-            setIsError(true);
-            setErrorMessage(error instanceof Error ? error.message : 'Failed to generate blueprint. Please try again.');
-            setStage('error');
-            setProgress(100); // Complete the progress bar even on error
-            
-            toast({
-              variant: "destructive",
-              title: "Blueprint Generation Failed",
-              description: "There was an error generating your blueprint."
-            });
-            
-            // Auto-proceed after error
-            setTimeout(() => {
-              if (mounted && onComplete) {
-                onComplete();
-              }
-            }, 5000);
-          }
+        if (!blueprint) {
+          setError("No blueprint data received");
+          toast({
+            title: "Generation Error",
+            description: "No blueprint data was generated. Please try again.",
+            variant: "destructive"
+          });
+          return;
         }
-      };
-      
-      generateBlueprint();
-    } else {
-      console.log('[FLOW] API call has already been made or generation not started');
-    }
-    
-    return () => {
-      mounted = false;
+        
+        // Progress through the remaining steps visually
+        for (let step = 2; step < steps.length - 1; step++) {
+          setCurrentStep(step);
+          setProgress(40 + (step * 10));
+          await simulateProcessingDelay(500); // slightly faster now that we have data
+        }
+        
+        // Final step: Storing
+        setCurrentStep(steps.length - 1);
+        setProgress(95);
+        await simulateProcessingDelay(500);
+        
+        // Store the generated blueprint
+        setGeneratedBlueprint(blueprint);
+        setProgress(100);
+        
+        // Complete the process and pass blueprint to parent
+        setTimeout(() => {
+          onComplete(blueprint);
+        }, 1000);
+      } catch (err) {
+        console.error("Unexpected error during blueprint generation:", err);
+        setError(err instanceof Error ? err.message : String(err));
+        toast({
+          title: "Generation Error",
+          description: "An unexpected error occurred. Please try again later.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsGenerating(false);
+      }
     };
-  }, [isGenerating, userMeta, onComplete, toast]);
+    
+    // Start the generation process
+    generateBlueprint();
+  }, [userProfile, onComplete, toast]);
 
-  // Toggle debug mode
-  const toggleDebugMode = () => {
-    setDebugMode(prev => !prev);
+  // Helper function to simulate processing delay
+  const simulateProcessingDelay = (ms = 1200) => {
+    return new Promise(resolve => setTimeout(resolve, ms));
   };
 
   // Get the stage for the SoulOrb component
@@ -207,19 +147,6 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
     return "generating";
   };
 
-  // Trigger generation on component mount - but ensure we set isGenerating only once
-  useEffect(() => {
-    console.log('[FLOW] Component mounted, starting generation');
-    setIsGenerating(true);
-  }, []);
-
-  // Handle error case
-  const handleErrorProceed = () => {
-    if (onComplete) {
-      onComplete();
-    }
-  };
-
   return (
     <div className={cn("w-full max-w-4xl mx-auto", className)}>
       <div className="text-center mb-8">
@@ -227,31 +154,11 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
           <span className="gradient-text">Generating Your Soul Blueprint</span>
         </h2>
         <p className="text-muted-foreground">
-          Using GPT-4o Search Preview to analyze cosmic patterns and web search for accurate data
+          Please wait while we analyze cosmic patterns and generate your personalized blueprint
         </p>
-        
-        {/* Debug Mode Toggle */}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="mt-2"
-          onClick={toggleDebugMode}
-        >
-          {debugMode ? (
-            <>
-              <EyeOff className="h-4 w-4 mr-2" />
-              Hide Technical Details
-            </>
-          ) : (
-            <>
-              <Eye className="h-4 w-4 mr-2" />
-              View Technical Details
-            </>
-          )}
-        </Button>
       </div>
 
-      {/* Main visualization area with particles, service boxes, and error displays */}
+      {/* Main visualization area */}
       <div className="relative h-96 w-full rounded-xl overflow-hidden border border-soul-purple/20 bg-gradient-to-b from-soul-black to-soul-black/80">
         {/* Cosmic background with stars */}
         <div className="absolute inset-0">
@@ -329,29 +236,35 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
             <span className="text-xs text-center text-white/80">Blueprint Service</span>
           </div>
 
-          {/* Web Search */}
+          {/* Swiss Ephemeris */}
           <div className="w-24 h-32 flex flex-col items-center justify-center">
             <div className={cn(
               "bg-white/10 backdrop-blur-sm p-3 rounded-lg border border-white/20 shadow-glow mb-2",
-              currentStep === 7 && "border-soul-purple animate-pulse"
+              currentStep === 1 && "border-soul-purple animate-pulse"
             )}>
               <div className="w-10 h-10 flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-soul-purple">
-                  <circle cx="11" cy="11" r="8"></circle>
-                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                  <line x1="11" y1="8" x2="11" y2="14"></line>
-                  <line x1="8" y1="11" x2="14" y2="11"></line>
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path d="M12 6a2 2 0 0 0 0 12 2 2 0 0 0 0-12"></path>
+                  <path d="M12 2v4"></path>
+                  <path d="M12 18v4"></path>
+                  <path d="M4.9 4.9l2.8 2.8"></path>
+                  <path d="M16.3 16.3l2.8 2.8"></path>
+                  <path d="M2 12h4"></path>
+                  <path d="M18 12h4"></path>
+                  <path d="M4.9 19.1l2.8-2.8"></path>
+                  <path d="M16.3 7.7l2.8-2.8"></path>
                 </svg>
               </div>
             </div>
-            <span className="text-xs text-center text-white/80">Web Search</span>
+            <span className="text-xs text-center text-white/80">Swiss Ephemeris</span>
           </div>
 
           {/* Database */}
           <div className="w-24 h-32 flex flex-col items-center justify-center">
             <div className={cn(
               "bg-white/10 backdrop-blur-sm p-3 rounded-lg border border-white/20 shadow-glow mb-2",
-              currentStep === 8 && "border-soul-purple animate-pulse"
+              currentStep === 7 && "border-soul-purple animate-pulse"
             )}>
               <div className="w-10 h-10 flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-soul-purple">
@@ -389,9 +302,9 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
         </div>
 
         {/* Error Message */}
-        {isError && (
+        {error && (
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 translate-y-16 bg-red-900/80 text-white px-4 py-2 rounded-md text-sm">
-            Error: {errorMessage}
+            Error: {error}
           </div>
         )}
 
@@ -408,24 +321,18 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
             </motion.p>
           ) : (
             <motion.p 
-              className={cn(
-                "font-medium text-lg",
-                isSuccess ? "text-soul-purple" : "text-red-500"
-              )}
+              className="text-soul-purple font-medium text-lg"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
             >
-              {isSuccess ? "Blueprint Generation Complete!" : "Blueprint Generation Failed"}
+              Blueprint Generation Complete!
             </motion.p>
           )}
           
           {/* Progress bar */}
           <div className="mt-2 mx-auto w-64 h-1 bg-white/20 rounded-full overflow-hidden">
             <motion.div 
-              className={cn(
-                "h-full",
-                isSuccess ? "bg-soul-purple" : isError ? "bg-red-500" : "bg-soul-purple"
-              )}
+              className="h-full bg-soul-purple"
               style={{ width: `${progress}%` }}
               initial={{ width: '0%' }}
               animate={{ width: `${progress}%` }}
@@ -433,6 +340,34 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
             />
           </div>
         </div>
+
+        {/* Flowing data particles */}
+        {currentStep > 0 && currentStep < steps.length && (
+          <div className="absolute inset-0">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <motion.div
+                key={`flow-${i}`}
+                className="absolute w-2 h-2 rounded-full bg-soul-purple"
+                initial={{ 
+                  x: 150 + (i * 40), 
+                  y: 300,
+                  opacity: 0
+                }}
+                animate={{ 
+                  x: [150 + (i * 40), 500 - (i * 30)],
+                  y: [300, 150],
+                  opacity: [0, 1, 0]
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  delay: i * 0.5,
+                  ease: "easeInOut"
+                }}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Step indicator */}
@@ -455,48 +390,43 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
             className={cn(
               "w-3 h-3 rounded-full transition-colors",
               currentStep >= steps.length
-                ? isSuccess ? "bg-soul-purple" : "bg-red-500"
+                ? "bg-soul-purple"
                 : "bg-soul-purple/30"
             )}
           />
         </div>
       </div>
-      
-      {/* Debug Output Section */}
-      {debugMode && (
-        <div className="mt-8 space-y-6">
-          <div>
-            <h3 className="text-xl font-bold mb-2">Web Search Calls</h3>
-            <div className="bg-black/60 rounded-md p-4 overflow-auto max-h-[200px] text-sm">
-              {toolCalls && toolCalls.length > 0 ? (
-                <div className="space-y-2">
-                  {toolCalls.map((call, index) => (
-                    <div key={index} className="p-2 border border-soul-purple/30 rounded">
-                      <p className="text-soul-purple font-medium">Search #{index + 1}</p>
-                      <p className="text-green-400 whitespace-pre-wrap mt-1">
-                        {call.function?.arguments ? JSON.parse(call.function.arguments).query || "No query found" : "No search data"}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-400">No web searches performed yet...</p>
-              )}
-            </div>
-          </div>
 
-          <div>
-            <h3 className="text-xl font-bold mb-2">Raw API Response</h3>
-            <div className="bg-black/60 rounded-md p-4 overflow-auto max-h-[400px] text-sm">
-              {rawResponse ? (
-                <pre className="text-green-400 whitespace-pre-wrap">{JSON.stringify(rawResponse, null, 2)}</pre>
-              ) : (
-                <p className="text-gray-400">No raw API response data available yet...</p>
-              )}
-            </div>
-          </div>
+      {/* Key features section */}
+      <div className="mt-12 grid grid-cols-2 gap-6">
+        <div className="bg-white/5 backdrop-blur-sm p-4 rounded-lg border border-white/10">
+          <h3 className="text-lg font-medium mb-2 text-soul-purple">Accurate Astrological Calculations</h3>
+          <p className="text-sm text-white/70">
+            Powered by Swiss Ephemeris for precise planetary positions at the time of birth
+          </p>
         </div>
-      )}
+        
+        <div className="bg-white/5 backdrop-blur-sm p-4 rounded-lg border border-white/10">
+          <h3 className="text-lg font-medium mb-2 text-soul-purple">Optimized Performance</h3>
+          <p className="text-sm text-white/70">
+            Complex calculations are cached to improve response times and system efficiency
+          </p>
+        </div>
+        
+        <div className="bg-white/5 backdrop-blur-sm p-4 rounded-lg border border-white/10">
+          <h3 className="text-lg font-medium mb-2 text-soul-purple">Integrated Spiritual Systems</h3>
+          <p className="text-sm text-white/70">
+            Combines astrology, numerology, Human Design, and MBTI into a cohesive profile
+          </p>
+        </div>
+        
+        <div className="bg-white/5 backdrop-blur-sm p-4 rounded-lg border border-white/10">
+          <h3 className="text-lg font-medium mb-2 text-soul-purple">Personalized Insights</h3>
+          <p className="text-sm text-white/70">
+            Pattern recognition algorithms generate custom guidance based on your unique blueprint
+          </p>
+        </div>
+      </div>
     </div>
   );
 };

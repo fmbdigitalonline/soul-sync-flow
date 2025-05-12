@@ -25,10 +25,10 @@ const SoulOrb3D: React.FC<SoulOrbProps> = ({
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [videoError, setVideoError] = useState(false);
   
-  // Properly type the refs for THREE objects
-  const ring1Ref = useRef<THREE.LineSegments>(null);
-  const ring2Ref = useRef<THREE.LineSegments>(null);
-  const ring3Ref = useRef<THREE.LineSegments>(null);
+  // Use the correct type for Three.js line objects
+  const ring1Ref = useRef<THREE.Line>(null);
+  const ring2Ref = useRef<THREE.Line>(null);
+  const ring3Ref = useRef<THREE.Line>(null);
   
   // Get orb color based on stage - now unified to bright cyan
   const getOrbColor = () => {
@@ -58,7 +58,7 @@ const SoulOrb3D: React.FC<SoulOrbProps> = ({
     return new THREE.BufferGeometry().setFromPoints(curve.getPoints(50));
   }, [size]);
   
-  // Star shape geometry for the center
+  // Star shape geometry for the center - new addition to match the provided image
   const starGeometry = useMemo(() => {
     const geo = new THREE.BufferGeometry();
     
@@ -173,28 +173,6 @@ const SoulOrb3D: React.FC<SoulOrbProps> = ({
   // Orb color as a THREE.Color object
   const orbColor = getOrbColor();
   
-  // Create LineSegments instances with their materials
-  const lineSegments1 = useMemo(() => {
-    return new THREE.LineSegments(
-      curve1,
-      new THREE.LineBasicMaterial({ color: "#FFFFFF", transparent: true, opacity: 0.8 })
-    );
-  }, [curve1]);
-
-  const lineSegments2 = useMemo(() => {
-    return new THREE.LineSegments(
-      curve2,
-      new THREE.LineBasicMaterial({ color: "#FFFFFF", transparent: true, opacity: 0.8 })
-    );
-  }, [curve2]);
-
-  const lineSegments3 = useMemo(() => {
-    return new THREE.LineSegments(
-      curve3,
-      new THREE.LineBasicMaterial({ color: "#FFFFFF", transparent: true, opacity: 0.8 })
-    );
-  }, [curve3]);
-  
   return (
     <group position={position}>
       {/* Main orb sphere */}
@@ -227,37 +205,27 @@ const SoulOrb3D: React.FC<SoulOrbProps> = ({
         />
       </mesh>
       
-      {/* Custom solution for the orbital rings to fix TypeScript errors */}
-      {/* Instead of using primitive with lineSegments objects, create them directly */}
-      <group>
-        <object3D ref={ring1Ref}>
-          {React.createElement(
-            'lineSegments',
-            {
-              geometry: curve1,
-              material: new THREE.LineBasicMaterial({ color: "#FFFFFF", transparent: true, opacity: 0.8 })
-            }
-          )}
-        </object3D>
-        <object3D ref={ring2Ref}>
-          {React.createElement(
-            'lineSegments',
-            {
-              geometry: curve2,
-              material: new THREE.LineBasicMaterial({ color: "#FFFFFF", transparent: true, opacity: 0.8 })
-            }
-          )}
-        </object3D>
-        <object3D ref={ring3Ref}>
-          {React.createElement(
-            'lineSegments',
-            {
-              geometry: curve3,
-              material: new THREE.LineBasicMaterial({ color: "#FFFFFF", transparent: true, opacity: 0.8 })
-            }
-          )}
-        </object3D>
-      </group>
+      {/* Orbital rings */}
+      <primitive object={new THREE.Line(curve1, new THREE.LineBasicMaterial({
+        color: '#FFFFFF',
+        transparent: true,
+        opacity: 0.8,
+        linewidth: 2
+      }))} ref={ring1Ref} />
+      
+      <primitive object={new THREE.Line(curve2, new THREE.LineBasicMaterial({
+        color: '#FFFFFF',
+        transparent: true,
+        opacity: 0.8,
+        linewidth: 2
+      }))} ref={ring2Ref} />
+      
+      <primitive object={new THREE.Line(curve3, new THREE.LineBasicMaterial({
+        color: '#FFFFFF',
+        transparent: true,
+        opacity: 0.8,
+        linewidth: 2
+      }))} ref={ring3Ref} />
       
       {/* Enhanced glow effect - more pronounced to match the image */}
       <mesh>

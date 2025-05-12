@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -5,7 +6,7 @@ import { PomodoroTimer } from "./PomodoroTimer";
 import { HabitTracker } from "./HabitTracker";
 import { GoalSetting } from "./GoalSetting";
 import { Clock, Calendar, Target, ListChecks } from "lucide-react";
-import blueprintService, { BlueprintData } from "@/services/blueprint-service";
+import { blueprintService, BlueprintData } from "@/services/blueprint-service";
 import { supabase } from "@/integrations/supabase/client";
 
 export const ProductivityDashboard: React.FC = () => {
@@ -37,8 +38,7 @@ export const ProductivityDashboard: React.FC = () => {
     const fetchBlueprintData = async () => {
       if (isAuthenticated) {
         setIsLoading(true);
-        // Use getDefaultBlueprint instead of getActiveBlueprintData
-        const data = await blueprintService.getDefaultBlueprint();
+        const { data } = await blueprintService.getActiveBlueprintData();
         setBlueprint(data);
         setIsLoading(false);
       } else {

@@ -1,17 +1,14 @@
 
 import React, { useEffect, useRef } from "react";
-import { cn } from "@/lib/utils";
 
 interface StarFieldProps {
   starsCount?: number;
   speed?: number;
-  className?: string;
 }
 
 const StarField: React.FC<StarFieldProps> = ({ 
   starsCount = 100,
-  speed = 0.05,
-  className
+  speed = 0.05
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
@@ -83,7 +80,7 @@ const StarField: React.FC<StarFieldProps> = ({
   return (
     <canvas 
       ref={canvasRef} 
-      className={cn("fixed inset-0 pointer-events-none z-0", className)}
+      className="fixed inset-0 pointer-events-none z-0"
     />
   );
 };

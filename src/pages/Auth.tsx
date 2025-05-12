@@ -1,154 +1,229 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { GradientButton } from "@/components/ui/gradient-button";
-import MainLayout from "@/components/Layout/MainLayout";
-import StarField from "@/components/ui/star-field";
-import { supabase } from "@/integrations/supabase/client";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
+import { Loader2 } from "lucide-react";
+import { SoulOrb } from "@/components/ui/soul-orb";
+import { SoulOrbAvatar } from "@/components/ui/avatar";
+import { supabase } from "@/integrations/supabase/client";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
-  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("login");
   const { toast } = useToast();
-  const { user, isNewUser, setIsNewUser } = useAuth();
-
-  // Redirect if already logged in
+  const navigate = useNavigate();
+  
+  // Check if user is already logged in
   useEffect(() => {
-    if (user) {
-      if (isNewUser) {
-        // New users should go through onboarding
-        navigate("/onboarding", { replace: true });
-      } else {
-        // Existing users go to blueprint
-        navigate("/blueprint", { replace: true });
+    const checkAuth = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        navigate("/");
       }
-    }
-  }, [user, isNewUser, navigate]);
+    };
+    
+    checkAuth();
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        navigate("/");
+      }
+    });
+    
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
 
-  const handleAuth = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
+    
     try {
-      if (isSignUp) {
-        // Sign up flow
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-        });
-
-        if (error) {
-          throw error;
-        }
-        
-        // New user - mark for onboarding
-        setIsNewUser(true);
-        toast({
-          title: "Account created!",
-          description: "Please check your email for a confirmation link",
-        });
-      } else {
-        // Sign in flow
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (error) {
-          throw error;
-        }
-        
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      if (data.session) {
         toast({
           title: "Welcome back!",
-          description: "You have been successfully logged in.",
+          description: "You have successfully signed in.",
         });
+        navigate("/");
       }
     } catch (error: any) {
       toast({
+        title: "Error signing in",
+        description: error.message || "Please check your credentials and try again.",
         variant: "destructive",
-        title: "Authentication error",
-        description: error.message || "Failed to authenticate",
       });
-      console.error("Authentication error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name,
+          },
+        },
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      toast({
+        title: "Account created",
+        description: "Please check your email to confirm your registration.",
+      });
+      setActiveTab("login");
+    } catch (error: any) {
+      toast({
+        title: "Error signing up",
+        description: error.message || "Please check your information and try again.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <MainLayout hideNav>
-      <div className="relative min-h-screen flex items-center justify-center p-4">
-        <StarField className="absolute inset-0 z-0" />
-        
-        <Card className="w-full max-w-md z-10 bg-background/80 backdrop-blur-md border-soul-dark">
-          <CardHeader>
-            <CardTitle className="text-2xl font-display text-center">
-              {isSignUp ? "Create Your Account" : "Welcome Back"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleAuth} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  placeholder="your@email.com"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  placeholder="••••••••"
-                />
-              </div>
+    <div className="flex flex-col min-h-screen cosmic-bg">
+      <div className="flex-1 flex flex-col items-center justify-center p-4">
+        <div className="w-full max-w-md space-y-8">
+          <div className="flex flex-col items-center text-center">
+            <SoulOrbAvatar size="lg" className="mb-6" />
+            <h1 className="text-3xl font-bold font-display mb-2">
+              <span className="gradient-text">Soul Guide</span>
+            </h1>
+            <p className="text-muted-foreground">Sign in to continue your soul journey</p>
+          </div>
+          
+          <div className="bg-background/80 backdrop-blur-sm p-6 rounded-lg shadow-lg border border-border">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid grid-cols-2 w-full mb-6">
+                <TabsTrigger value="login">Sign In</TabsTrigger>
+                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+              </TabsList>
               
-              <GradientButton 
-                type="submit" 
-                className="w-full" 
-                disabled={loading}
-              >
-                {loading 
-                  ? "Loading..." 
-                  : isSignUp 
-                    ? "Create Account" 
-                    : "Sign In"
-                }
-              </GradientButton>
+              <TabsContent value="login">
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input 
+                      id="email" 
+                      type="email" 
+                      placeholder="you@example.com" 
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="password">Password</Label>
+                    </div>
+                    <Input 
+                      id="password" 
+                      type="password" 
+                      placeholder="••••••••" 
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                  
+                  <Button type="submit" className="w-full bg-soul-purple hover:bg-soul-purple/90" disabled={loading}>
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Signing In...
+                      </>
+                    ) : (
+                      "Sign In"
+                    )}
+                  </Button>
+                </form>
+              </TabsContent>
               
-              <div className="text-center mt-4">
-                <Button 
-                  variant="link" 
-                  type="button"
-                  onClick={() => setIsSignUp(!isSignUp)}
-                >
-                  {isSignUp 
-                    ? "Already have an account? Sign In" 
-                    : "Need an account? Sign Up"
-                  }
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+              <TabsContent value="signup">
+                <form onSubmit={handleSignup} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Full Name</Label>
+                    <Input 
+                      id="name" 
+                      placeholder="Your Name" 
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-email">Email</Label>
+                    <Input 
+                      id="signup-email" 
+                      type="email" 
+                      placeholder="you@example.com" 
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-password">Password</Label>
+                    <Input 
+                      id="signup-password" 
+                      type="password" 
+                      placeholder="••••••••" 
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      minLength={6}
+                      required
+                    />
+                  </div>
+                  
+                  <Button type="submit" className="w-full bg-soul-purple hover:bg-soul-purple/90" disabled={loading}>
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Creating Account...
+                      </>
+                    ) : (
+                      "Create Account"
+                    )}
+                  </Button>
+                </form>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </div>
       </div>
-    </MainLayout>
+    </div>
   );
 };
 

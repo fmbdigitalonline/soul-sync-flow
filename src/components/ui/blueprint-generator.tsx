@@ -1,346 +1,228 @@
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Loader2, CheckCircle2, XCircle, Info } from "lucide-react";
-import { pythonBlueprintService } from '@/services/python-blueprint-service';
+import React, { useState, useEffect } from "react";
+import { motion } from "@/lib/framer-motion";
+import { SoulOrb } from "./soul-orb";
+import { cn } from "@/lib/utils";
+import { blueprintService, defaultBlueprintData } from "@/services/blueprint-service";
 import { useToast } from "@/hooks/use-toast";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { BlueprintRawDataViewer } from "@/components/ui/blueprint-raw-data-viewer";
 
 interface BlueprintGeneratorProps {
-  formData: {
-    name: string;
-    birthDate: string;
-    birthTime: string;
-    birthLocation: string;
-    personality: string;
-  };
-  onComplete?: () => void;
+  onComplete: () => void;
+  formData?: any;
   className?: string;
 }
 
-export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
+const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({ 
+  onComplete, 
   formData,
-  onComplete,
-  className
+  className 
 }) => {
   const [progress, setProgress] = useState(0);
-  const [status, setStatus] = useState<'initial' | 'loading' | 'success' | 'error'>('initial');
-  const [errorMessage, setErrorMessage] = useState('');
-  const [errorType, setErrorType] = useState<'connection' | 'api' | 'quota' | 'parse' | 'unknown'>('unknown');
-  const [debugInfo, setDebugInfo] = useState<any>(null);
-  const apiCallMadeRef = useRef(false); // Use ref to track API call across renders
+  const [stage, setStage] = useState<'preparing' | 'assembling' | 'finalizing' | 'complete'>('preparing');
+  const [particles, setParticles] = useState<Array<{id: number, x: number, y: number, size: number, speed: number}>>([]);
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
 
-  // Function to determine error type from the error message
-  const determineErrorType = useCallback((error: Error | string): 'connection' | 'api' | 'quota' | 'parse' | 'unknown' => {
-    const errorStr = typeof error === 'string' ? error : error.message || '';
-    
-    if (errorStr.toLowerCase().includes('failed to send a request') || 
-        errorStr.toLowerCase().includes('network') ||
-        errorStr.toLowerCase().includes('fetch') ||
-        errorStr.toLowerCase().includes('cors')) {
-      return 'connection';
-    }
-    
-    if (errorStr.toLowerCase().includes('quota') || 
-        errorStr.toLowerCase().includes('exceeded') || 
-        errorStr.toLowerCase().includes('billing') ||
-        errorStr.toLowerCase().includes('insufficient_quota')) {
-      return 'quota';
-    }
-    
-    if (errorStr.toLowerCase().includes('json') || 
-        errorStr.toLowerCase().includes('parse')) {
-      return 'parse';
-    }
-    
-    if (errorStr.toLowerCase().includes('api') || 
-        errorStr.toLowerCase().includes('openai')) {
-      return 'api';
-    }
-    
-    return 'unknown';
+  // Generate random particles
+  useEffect(() => {
+    const newParticles = Array.from({ length: 50 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      size: Math.random() * 5 + 2,
+      speed: Math.random() * 2 + 1
+    }));
+    setParticles(newParticles);
   }, []);
 
-  // Generate blueprint function - STRICTLY ONE ATTEMPT with Python engine only
-  const generateBlueprint = useCallback(async () => {
-    // Add protective guard to ENSURE a single API call
-    console.log('[GENERATOR] Checking if API call was already made:', apiCallMadeRef.current);
-    if (apiCallMadeRef.current === true) {
-      console.log('[GENERATOR] API call was ALREADY MADE. STRICTLY preventing another request.');
-      return;
-    }
-
+  // Handle the completion and blueprint saving
+  const handleCompletion = async () => {
+    if (isSaving || isCompleted) return; // Prevent multiple executions
+    
+    setIsSaving(true);
+    console.log("Saving blueprint data to database...");
+    
     try {
-      console.log('[GENERATOR] Starting blueprint generation with TypeScript Engine');
-      
-      // Immediately mark that we've attempted the API call to prevent additional calls
-      apiCallMadeRef.current = true;
-      
-      setStatus('loading');
-      setProgress(10);
-      setErrorMessage('');
-      setDebugInfo(null);
-
-      // Format the user data for the blueprint service
-      const userData = {
-        full_name: formData.name,
-        birth_date: formData.birthDate,
-        birth_time_local: formData.birthTime || undefined,
-        birth_location: formData.birthLocation || undefined,
-        mbti: formData.personality || undefined,
+      // Create blueprint data from form inputs or use default
+      const blueprintData = {
+        ...defaultBlueprintData,
+        user_meta: {
+          ...defaultBlueprintData.user_meta,
+          full_name: formData?.name || defaultBlueprintData.user_meta.full_name,
+          preferred_name: formData?.name?.split(' ')[0] || defaultBlueprintData.user_meta.preferred_name,
+          birth_date: formData?.birthDate || defaultBlueprintData.user_meta.birth_date,
+          birth_time_local: formData?.birthTime || defaultBlueprintData.user_meta.birth_time_local,
+          birth_location: formData?.birthLocation || defaultBlueprintData.user_meta.birth_location,
+        },
+        cognition_mbti: {
+          ...defaultBlueprintData.cognition_mbti,
+          type: formData?.personality || defaultBlueprintData.cognition_mbti.type,
+        }
       };
-
-      // Add expanded logging of the request data
-      console.log('[GENERATOR] Making SINGLE API call to Blueprint Engine with data:');
-      console.log('[GENERATOR] Name:', userData.full_name);
-      console.log('[GENERATOR] Birth date:', userData.birth_date);
-      console.log('[GENERATOR] Birth date components:', userData.birth_date.split('-').join(', '));
-      console.log('[GENERATOR] Birth time:', userData.birth_time_local);
-      console.log('[GENERATOR] Birth location:', userData.birth_location);
-      console.log('[GENERATOR] MBTI:', userData.mbti);
-
-      // Simple progress animation
-      setProgress(25);
-
-      // Use the Python blueprint service
-      setProgress(35);
-      const result = await pythonBlueprintService.generateBlueprint(userData);
       
-      console.log('[GENERATOR] Blueprint generation result status:', result.success);
+      // Save blueprint to database
+      const result = await blueprintService.saveBlueprintData(blueprintData);
       
-      // Store raw response for debugging
-      if (result.rawResponse) {
-        setDebugInfo(result.rawResponse);
-        console.log('[GENERATOR] Raw Response:', JSON.stringify(result.rawResponse, null, 2));
-      }
-      
-      // If there's an error in the result
       if (!result.success) {
-        throw new Error(result.error || "Blueprint engine failed to generate blueprint");
-      }
-
-      const blueprint = result.blueprint;
-      if (!blueprint) {
-        throw new Error("No blueprint data returned from service");
-      }
-      
-      // Log calculation results for validation
-      console.log('[GENERATOR] Blueprint received from engine with key calculations:');
-      
-      if (blueprint.values_life_path && blueprint.values_life_path.life_path_number) {
-        console.log('[GENERATOR] Life Path Number:', blueprint.values_life_path.life_path_number);
-      } else {
-        console.log('[GENERATOR] WARNING: No life path number in blueprint!');
+        console.error("Error saving blueprint:", result.error);
+        toast({
+          title: "Error",
+          description: "Failed to save your blueprint. Please try again.",
+          variant: "destructive"
+        });
+        return;
       }
       
-      if (blueprint.energy_strategy_human_design && blueprint.energy_strategy_human_design.type) {
-        console.log('[GENERATOR] Human Design Type:', blueprint.energy_strategy_human_design.type);
-      } else {
-        console.log('[GENERATOR] WARNING: No Human Design type in blueprint!');
-      }
+      console.log("Blueprint saved successfully, proceeding with completion");
+      setIsCompleted(true);
       
-      setProgress(75);
-
-      // Save the blueprint to the database (We'll implement this part later)
-      console.log('[GENERATOR] Blueprint successfully generated! Would save to database here.');
-      setProgress(90);
-
-      setProgress(100);
-      setStatus('success');
-
-      toast({
-        title: "Blueprint Generated",
-        description: "Your soul blueprint has been created successfully!",
-      });
-
-      // Call the onComplete callback after a delay
-      if (onComplete) {
-        setTimeout(onComplete, 2000);
-      }
-
+      // Use a short timeout to ensure UI is updated before redirecting
+      setTimeout(() => {
+        onComplete();
+      }, 1000);
+      
     } catch (error) {
-      console.error('[GENERATOR] Error generating blueprint:', error);
-      setStatus('error');
-      
-      const errorMsg = error instanceof Error ? error.message : 'An unknown error occurred';
-      setErrorMessage(errorMsg);
-      
-      // Determine error type for better UI messaging
-      const type = determineErrorType(error);
-      setErrorType(type);
-      
-      setDebugInfo(error);
-      
+      console.error("Error during blueprint generation:", error);
       toast({
-        variant: "destructive",
-        title: "Blueprint Generation Failed",
-        description: getErrorToastMessage(type),
+        title: "Error",
+        description: "Something went wrong during blueprint generation",
+        variant: "destructive"
       });
-
-      // Call the onComplete callback after a delay even on error
-      if (onComplete) {
-        setTimeout(onComplete, 5000);
-      }
-    }
-  }, [formData, onComplete, toast, determineErrorType]);
-
-  // Get error message based on error type
-  const getErrorToastMessage = (type: 'connection' | 'api' | 'quota' | 'parse' | 'unknown'): string => {
-    switch (type) {
-      case 'connection':
-        return "Connection issue with blueprint engine. Please check Edge Function logs.";
-      case 'api':
-        return "API configuration issue. Check Edge Function settings.";
-      case 'quota':
-        return "Service temporarily unavailable due to high demand.";
-      case 'parse':
-        return "Error processing the blueprint engine response. Check logs for details.";
-      case 'unknown':
-      default:
-        return "An unexpected error occurred in the blueprint engine.";
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  // Run generate blueprint on mount - SINGLE ATTEMPT ONLY
+  // Animation progress
   useEffect(() => {
-    console.log('[GENERATOR] Initial mount, checking if API call was made:', apiCallMadeRef.current);
-    if (apiCallMadeRef.current === false) {
-      console.log('[GENERATOR] No API call made yet, proceeding with SINGLE attempt');
-      generateBlueprint();
-    } else {
-      console.log('[GENERATOR] API call was already attempted, not calling again');
+    let interval: NodeJS.Timeout;
+    
+    if (progress < 100 && !isCompleted && !isSaving) {
+      interval = setInterval(() => {
+        setProgress(prev => {
+          const increment = Math.random() * 3 + 1;
+          const newProgress = Math.min(prev + increment, 100);
+          
+          // Update stages based on progress
+          if (newProgress > 30 && stage === 'preparing') {
+            setStage('assembling');
+          } else if (newProgress > 70 && stage === 'assembling') {
+            setStage('finalizing');
+          } else if (newProgress === 100 && stage === 'finalizing') {
+            setStage('complete');
+            // Call the completion handler when reaching 100%
+            handleCompletion();
+          }
+          
+          return newProgress;
+        });
+      }, 300);
     }
     
-    // Clean up function
     return () => {
-      console.log('[GENERATOR] Component unmounting');
+      if (interval) clearInterval(interval);
     };
-  }, [generateBlueprint]);
-
-  // Function to get error display content based on error type
-  const getErrorDisplay = () => {
-    switch (errorType) {
-      case 'connection':
-        return (
-          <Alert variant="destructive" className="mt-4">
-            <Info className="h-4 w-4" />
-            <AlertTitle>Blueprint Engine Connection Error</AlertTitle>
-            <AlertDescription>
-              We're having trouble connecting to our blueprint engine.
-              Please check the Edge Function logs and status.
-            </AlertDescription>
-          </Alert>
-        );
-      
-      case 'parse':
-        return (
-          <Alert className="mt-4 border-amber-200 bg-amber-50">
-            <Info className="h-4 w-4 text-amber-600" />
-            <AlertTitle className="text-amber-800">Response Processing Error</AlertTitle>
-            <AlertDescription className="text-amber-700">
-              There was an error processing the blueprint engine's response.
-              Check the detailed logs below for more information.
-            </AlertDescription>
-          </Alert>
-        );
-      
-      case 'unknown':
-      default:
-        return (
-          <Alert variant="destructive" className="mt-4">
-            <Info className="h-4 w-4" />
-            <AlertTitle>Blueprint Engine Error</AlertTitle>
-            <AlertDescription>
-              {errorMessage || "An unknown error occurred in the blueprint engine."}
-            </AlertDescription>
-          </Alert>
-        );
-    }
-  };
+  }, [progress, stage, isCompleted, isSaving]);
 
   return (
-    <div className={className}>
-      <div className="space-y-6">
-        <div className="space-y-2">
-          <Progress value={progress} className="h-2" />
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>Initializing</span>
-            <span>Blueprint Engine</span>
-            <span>Calculating</span>
-            <span>Complete</span>
-          </div>
-        </div>
-
-        <div className="flex flex-col items-center justify-center pt-4">
-          {status === 'loading' && (
-            <div className="flex flex-col items-center space-y-4">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground">
-                {progress < 25 && "Connecting to blueprint engine..."}
-                {progress >= 25 && progress < 50 && "Engine processing birth data..."}
-                {progress >= 50 && progress < 75 && "Calculating numerology and Human Design..."}
-                {progress >= 75 && "Finalizing blueprint data..."}
-              </p>
-            </div>
-          )}
-
-          {status === 'success' && (
-            <div className="flex flex-col items-center space-y-4">
-              <div className="rounded-full bg-green-100 p-3">
-                <CheckCircle2 className="h-8 w-8 text-green-600" />
-              </div>
-              <div className="text-center">
-                <p className="font-medium">Blueprint Generated!</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Your soul blueprint has been created successfully with our blueprint engine.
-                </p>
-              </div>
-              
-              {/* Always show the raw data in success state for validation */}
-              {debugInfo && (
-                <div className="w-full mt-4">
-                  <h3 className="text-sm font-medium mb-2">Blueprint Data for Validation</h3>
-                  <BlueprintRawDataViewer 
-                    rawData={debugInfo} 
-                    className="w-full"
-                  />
-                </div>
-              )}
-            </div>
-          )}
-
-          {status === 'error' && (
-            <div className="flex flex-col items-center space-y-4">
-              <div className="rounded-full bg-red-100 p-3">
-                <XCircle className="h-8 w-8 text-red-600" />
-              </div>
-              <div className="text-center">
-                <p className="font-medium">Blueprint Engine Error</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {getErrorToastMessage(errorType)}
-                </p>
-              </div>
-              
-              {/* Display error content based on error type */}
-              {getErrorDisplay()}
-              
-              {/* Display technical details for debugging */}
-              {debugInfo && (
-                <div className="w-full mt-4">
-                  <h3 className="text-sm font-medium mb-2">Detailed Error Information</h3>
-                  <BlueprintRawDataViewer 
-                    rawData={debugInfo} 
-                    className="w-full"
-                  />
-                </div>
-              )}
-            </div>
-          )}
+    <div className={cn("relative w-full h-64 overflow-hidden rounded-xl", className)}>
+      {/* Cosmic background with stars */}
+      <div className="absolute inset-0 bg-soul-black">
+        {particles.map(particle => (
+          <motion.div
+            key={particle.id}
+            className="absolute bg-white rounded-full opacity-70"
+            style={{
+              width: particle.size,
+              height: particle.size,
+              left: `${particle.x}%`,
+              top: `${particle.y}%`
+            }}
+            animate={{
+              y: [0, -20, 0],
+              opacity: [0.7, 1, 0.7]
+            }}
+            transition={{
+              duration: particle.speed,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+        ))}
+      </div>
+      
+      {/* Center orb */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <motion.div
+          initial={{ scale: 1 }}
+          animate={{ 
+            scale: stage === 'complete' ? [1, 1.5, 1] : 1,
+            rotate: progress * 5
+          }}
+          transition={{ duration: 2 }}
+        >
+          <SoulOrb 
+            size="lg" 
+            stage={stage === 'preparing' ? 'welcome' : 
+                  stage === 'assembling' ? 'collecting' :
+                  stage === 'finalizing' ? 'generating' : 'complete'}
+            pulse={true}
+            speaking={false}
+          />
+        </motion.div>
+      </div>
+      
+      {/* Energy streams flowing toward the orb */}
+      <div className="absolute inset-0">
+        {progress < 100 && Array.from({ length: 8 }).map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1 h-16 bg-gradient-to-c from-soul-purple to-transparent"
+            style={{
+              left: '50%',
+              top: '50%',
+              transformOrigin: 'center',
+              rotate: `${i * 45}deg`,
+              translateX: '-50%',
+              translateY: '-50%'
+            }}
+            animate={{
+              height: [30, 100, 30],
+              opacity: [0.3, 0.8, 0.3]
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: i * 0.2
+            }}
+          />
+        ))}
+      </div>
+      
+      {/* Status text */}
+      <div className="absolute bottom-6 left-0 right-0 text-center text-white">
+        <p className="font-medium text-lg">
+          {stage === 'preparing' && 'Preparing Soul Blueprint...'}
+          {stage === 'assembling' && 'Assembling Cosmic Patterns...'}
+          {stage === 'finalizing' && 'Connecting Energy Pathways...'}
+          {stage === 'complete' && 'Soul Blueprint Complete!'}
+        </p>
+        
+        {/* Progress bar */}
+        <div className="mt-2 mx-auto w-64 h-1 bg-white bg-opacity-20 rounded-full overflow-hidden">
+          <motion.div 
+            className="h-full bg-soul-purple"
+            style={{ width: `${progress}%` }}
+            initial={{ width: '0%' }}
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 0.3 }}
+          />
         </div>
       </div>
     </div>
   );
 };
+
+export { BlueprintGenerator };

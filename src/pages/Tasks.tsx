@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
@@ -223,7 +222,6 @@ const Tasks = () => {
           <Tabs
             defaultValue="all"
             className="w-full"
-            value={activeTab}
             onValueChange={(value) => setActiveTab(value)}
           >
             <TabsList className="grid w-full max-w-xs grid-cols-3">
@@ -231,83 +229,6 @@ const Tasks = () => {
               <TabsTrigger value="active">Active</TabsTrigger>
               <TabsTrigger value="completed">Completed</TabsTrigger>
             </TabsList>
-            
-            <TabsContent value="all" className="space-y-3">
-              {activeView === "list" ? (
-                filteredTasks.length === 0 ? (
-                  <div className="text-center py-6">
-                    <p className="text-muted-foreground">No tasks found</p>
-                  </div>
-                ) : (
-                  filteredTasks.map((task) => (
-                    <TaskCard
-                      key={task.id}
-                      task={task}
-                      onToggle={() => toggleTaskCompletion(task.id)}
-                      onDelete={() => deleteTask(task.id)}
-                      onStatusChange={(status) => updateTaskStatus(task.id, status)}
-                      priorityColor={getPriorityColor(task.priority)}
-                    />
-                  ))
-                )
-              ) : null}
-            </TabsContent>
-            
-            <TabsContent value="active" className="space-y-3">
-              {activeView === "list" ? (
-                filteredTasks.length === 0 ? (
-                  <div className="text-center py-6">
-                    <p className="text-muted-foreground">No active tasks found</p>
-                    <Button
-                      variant="link"
-                      onClick={() => setActiveTab("all")}
-                      className="mt-2"
-                    >
-                      View all tasks
-                    </Button>
-                  </div>
-                ) : (
-                  filteredTasks.map((task) => (
-                    <TaskCard
-                      key={task.id}
-                      task={task}
-                      onToggle={() => toggleTaskCompletion(task.id)}
-                      onDelete={() => deleteTask(task.id)}
-                      onStatusChange={(status) => updateTaskStatus(task.id, status)}
-                      priorityColor={getPriorityColor(task.priority)}
-                    />
-                  ))
-                )
-              ) : null}
-            </TabsContent>
-            
-            <TabsContent value="completed" className="space-y-3">
-              {activeView === "list" ? (
-                filteredTasks.length === 0 ? (
-                  <div className="text-center py-6">
-                    <p className="text-muted-foreground">No completed tasks found</p>
-                    <Button
-                      variant="link"
-                      onClick={() => setActiveTab("all")}
-                      className="mt-2"
-                    >
-                      View all tasks
-                    </Button>
-                  </div>
-                ) : (
-                  filteredTasks.map((task) => (
-                    <TaskCard
-                      key={task.id}
-                      task={task}
-                      onToggle={() => toggleTaskCompletion(task.id)}
-                      onDelete={() => deleteTask(task.id)}
-                      onStatusChange={(status) => updateTaskStatus(task.id, status)}
-                      priorityColor={getPriorityColor(task.priority)}
-                    />
-                  ))
-                )
-              ) : null}
-            </TabsContent>
           </Tabs>
           
           <div className="flex items-center space-x-2">
@@ -327,8 +248,36 @@ const Tasks = () => {
             </Button>
           </div>
         </div>
-        
-        {activeView === "kanban" && (
+
+        {activeView === "list" ? (
+          <TabsContent value={activeTab} className="space-y-3">
+            {filteredTasks.length === 0 ? (
+              <div className="text-center py-6">
+                <p className="text-muted-foreground">No tasks found</p>
+                {activeTab !== "all" && (
+                  <Button
+                    variant="link"
+                    onClick={() => setActiveTab("all")}
+                    className="mt-2"
+                  >
+                    View all tasks
+                  </Button>
+                )}
+              </div>
+            ) : (
+              filteredTasks.map((task) => (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  onToggle={() => toggleTaskCompletion(task.id)}
+                  onDelete={() => deleteTask(task.id)}
+                  onStatusChange={(status) => updateTaskStatus(task.id, status)}
+                  priorityColor={getPriorityColor(task.priority)}
+                />
+              ))
+            )}
+          </TabsContent>
+        ) : (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-2">
             <KanbanColumn 
               title="To Do" 

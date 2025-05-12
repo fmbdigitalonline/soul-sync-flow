@@ -1,38 +1,26 @@
 
 import { useEffect } from "react";
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { SoulOrb } from "@/components/ui/soul-orb";
 
 const ProtectedRoute = ({
   children,
 }: {
   children: React.ReactNode;
 }) => {
-  const { user, loading, isNewUser } = useAuth();
+  const { user, loading } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!loading) {
-      if (!user) {
-        // Redirect to login if not authenticated
-        navigate("/auth", { state: { from: location.pathname }, replace: true });
-      } else if (isNewUser && location.pathname !== "/onboarding") {
-        // Redirect new users to onboarding if they try to access other protected routes
-        navigate("/onboarding", { replace: true });
-      }
-    }
-  }, [user, loading, navigate, location.pathname, isNewUser]);
+  // If the user is not authenticated and the auth check is complete, redirect to login
+  if (!loading && !user) {
+    return <Navigate to="/auth" state={{ from: location }} replace />;
+  }
 
+  // If we're still loading, we can show a loading state here if needed
   if (loading) {
-    // Show loading state
     return (
-      <div className="h-screen flex items-center justify-center">
-        <div className="text-center">
-          <SoulOrb size="lg" stage="generating" />
-          <p className="mt-4 text-lg">Loading...</p>
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-soul-purple"></div>
       </div>
     );
   }

@@ -1,45 +1,20 @@
+import { supabase } from "@/integrations/supabase/client";
 
-import { supabase } from '@/integrations/supabase/client';
-import { v4 as uuidv4 } from 'uuid';
-import { sampleBlueprints } from './blueprint-examples';
-import { Json } from '@/integrations/supabase/types';
-
-// Blueprint data structure
-export interface UserMetaData {
-  full_name: string;
-  preferred_name?: string;
-  birth_date: string;
-  birth_time_local?: string;
-  birth_location?: string;
-  timezone?: string;
-  mbti?: string;
-}
-
-export interface BlueprintMeta {
-  generation_method: string;
-  model_version: string;
-  generation_date: string;
-  birth_data: Record<string, any>;
-  schema_version: string;
-  raw_response?: any;
-  error?: string | null;
-  tool_calls?: Array<any>;
-  _citations?: Array<{
-    text: string;
-    url?: string;
-  }> | null;
-}
-
-// Define complete BlueprintData interface based on structure
-export interface BlueprintData {
-  _meta: BlueprintMeta;
-  user_meta: UserMetaData;
+// Blueprint template type definition
+export type BlueprintData = {
+  user_meta: {
+    full_name: string;
+    preferred_name: string;
+    birth_date: string;
+    birth_time_local: string;
+    birth_location: string;
+    timezone: string;
+  };
   cognition_mbti: {
     type: string;
     core_keywords: string[];
     dominant_function: string;
     auxiliary_function: string;
-    [key: string]: any;
   };
   energy_strategy_human_design: {
     type: string;
@@ -49,15 +24,13 @@ export interface BlueprintData {
     definition: string;
     not_self_theme: string;
     life_purpose: string;
-    centers: Record<string, boolean | { defined: boolean; description: string }>;
+    centers?: Record<string, boolean>; // New: defined centers
     gates: {
       unconscious_design: string[];
       conscious_personality: string[];
-      [key: string]: any;
     };
-    [key: string]: any;
   };
-  bashar_suite?: {
+  bashar_suite: {
     belief_interface: {
       principle: string;
       reframe_prompt: string;
@@ -68,342 +41,339 @@ export interface BlueprintData {
     frequency_alignment: {
       quick_ritual: string;
     };
-    [key: string]: any;
   };
   values_life_path: {
     life_path_number: number;
     life_path_keyword: string;
-    life_path_description: string;
-    birth_day_number: number;
-    birth_day_meaning: string;
-    personal_year: number;
+    life_path_description?: string; // New: more detailed description
+    birth_day_number?: number; // New: day number meaning
+    birth_day_meaning?: string; // New: meaning of birth day
+    personal_year?: number; // New: personal year calculation
     expression_number: number;
     expression_keyword: string;
     soul_urge_number: number;
     soul_urge_keyword: string;
     personality_number: number;
-    [key: string]: any;
   };
   archetype_western: {
     sun_sign: string;
     sun_keyword: string;
-    sun_dates: string;
-    sun_element: string;
-    sun_qualities: string;
     moon_sign: string;
     moon_keyword: string;
-    moon_element: string;
     rising_sign: string;
-    aspects: Array<{
-      planet: string;
-      aspect: string;
-      planet2: string;
-      orb: string;
-      [key: string]: any;
-    }>;
-    houses: Record<string, { sign: string; house: string; [key: string]: any }>;
-    [key: string]: any;
+    aspects?: any[]; // New: planetary aspects
+    houses?: Record<string, any>; // New: house placements
   };
   archetype_chinese: {
     animal: string;
     element: string;
     yin_yang: string;
     keyword: string;
-    element_characteristic: string;
-    personality_profile: string;
-    compatibility: {
-      best: string[];
-      worst: string[];
-      [key: string]: any;
-    };
-    [key: string]: any;
+    element_characteristic?: string; // New: element characteristics
+    compatibility?: {best: string[], worst: string[]}; // New: compatibility info
   };
-  timing_overlays?: {
+  timing_overlays: {
     current_transits: any[];
     notes: string;
-    [key: string]: any;
   };
-  goal_stack?: any[];
-  task_graph?: Record<string, any>;
-  belief_logs?: any[];
-  excitement_scores?: any[];
-  vibration_check_ins?: any[];
-  raw_content?: string;
-  needs_parsing?: boolean;
-  [key: string]: any;
-}
+  goal_stack: any[];
+  task_graph: Record<string, any>;
+  belief_logs: any[];
+  excitement_scores: any[];
+  vibration_check_ins: any[];
+};
 
-// Blueprint service for calculating and managing blueprints
-const blueprintService = {
-  // Create an empty blueprint with default structure
-  createEmptyBlueprint: (name: string = 'New User'): BlueprintData => {
-    return {
-      _meta: {
-        generation_method: 'empty',
-        model_version: '1.0',
-        generation_date: new Date().toISOString(),
-        birth_data: {},
-        schema_version: '1.0',
-      },
-      user_meta: {
-        full_name: name,
-        birth_date: '',
-      },
-      cognition_mbti: {
-        type: '',
-        core_keywords: [],
-        dominant_function: '',
-        auxiliary_function: '',
-      },
-      energy_strategy_human_design: {
-        type: '',
-        profile: '',
-        authority: '',
-        strategy: '',
-        definition: '',
-        not_self_theme: '',
-        life_purpose: '',
-        centers: {},
-        gates: {
-          unconscious_design: [],
-          conscious_personality: [],
-        },
-      },
-      values_life_path: {
-        life_path_number: 0,
-        life_path_keyword: '',
-        life_path_description: '',
-        birth_day_number: 0,
-        birth_day_meaning: '',
-        personal_year: 0,
-        expression_number: 0,
-        expression_keyword: '',
-        soul_urge_number: 0,
-        soul_urge_keyword: '',
-        personality_number: 0,
-      },
-      archetype_western: {
-        sun_sign: '',
-        sun_keyword: '',
-        sun_dates: '',
-        sun_element: '',
-        sun_qualities: '',
-        moon_sign: '',
-        moon_keyword: '',
-        moon_element: '',
-        rising_sign: '',
-        aspects: [],
-        houses: {},
-      },
-      archetype_chinese: {
-        animal: '',
-        element: '',
-        yin_yang: '',
-        keyword: '',
-        element_characteristic: '',
-        personality_profile: '',
-        compatibility: {
-          best: [],
-          worst: [],
-        },
-      },
-      timing_overlays: {
-        current_transits: [],
-        notes: '',
-      },
-      goal_stack: [],
-      task_graph: {},
-      belief_logs: [],
-      excitement_scores: [],
-      vibration_check_ins: [],
-    };
+// Default blueprint data as example
+export const defaultBlueprintData: BlueprintData = {
+  user_meta: {
+    full_name: "Sarah Johnson",
+    preferred_name: "Sarah",
+    birth_date: "1990-05-15",
+    birth_time_local: "14:30",
+    birth_location: "San Francisco, USA",
+    timezone: "America/Los_Angeles"
   },
-
-  // Calculate a blueprint based on user data
-  calculateBlueprint: async (userMeta: UserMetaData): Promise<BlueprintData> => {
-    try {
-      console.log('Calculating blueprint for:', userMeta);
-      
-      // For now, return a sample blueprint but modify it with the user's data
-      // In a real implementation, we would call out to more complex calculation logic
-      const blueprint = structuredClone(sampleBlueprints[0]) as BlueprintData;
-      
-      // Update user meta information
-      blueprint.user_meta = {
-        ...blueprint.user_meta,
-        ...userMeta,
-      };
-      
-      // Update meta information
-      blueprint._meta = {
-        ...blueprint._meta,
-        generation_date: new Date().toISOString(),
-        generation_method: 'sample_data',
-      };
-      
-      return blueprint;
-    } catch (error) {
-      console.error('Error calculating blueprint:', error);
-      throw error;
+  cognition_mbti: {
+    type: "INFJ",
+    core_keywords: ["Insightful", "Counselor", "Advocate"],
+    dominant_function: "Introverted Intuition (Ni)",
+    auxiliary_function: "Extraverted Feeling (Fe)"
+  },
+  energy_strategy_human_design: {
+    type: "Projector",
+    profile: "4/6 (Opportunist/Role Model)",
+    authority: "Emotional",
+    strategy: "Wait for the invitation",
+    definition: "Split",
+    not_self_theme: "Frustration",
+    life_purpose: "Guide others with emotional wisdom",
+    gates: {
+      unconscious_design: ["16.5", "20.3", "57.2", "34.6"],
+      conscious_personality: ["11.4", "48.3", "39.5", "41.1"]
     }
   },
+  bashar_suite: {
+    belief_interface: {
+      principle: "What you believe is what you experience as reality",
+      reframe_prompt: "What would I have to believe to experience this?"
+    },
+    excitement_compass: {
+      principle: "Follow your highest excitement in the moment to the best of your ability"
+    },
+    frequency_alignment: {
+      quick_ritual: "Visualize feeling the way you want to feel for 17 seconds"
+    }
+  },
+  values_life_path: {
+    life_path_number: 7,
+    life_path_keyword: "Seeker of Truth",
+    life_path_description: "A seeker of truth and wisdom, always seeking to understand the world around them.",
+    birth_day_number: 15,
+    birth_day_meaning: "The number 15 represents balance, harmony, and the ability to see the big picture.",
+    personal_year: 2023,
+    expression_number: 9,
+    expression_keyword: "Humanitarian",
+    soul_urge_number: 5,
+    soul_urge_keyword: "Freedom Seeker",
+    personality_number: 4
+  },
+  archetype_western: {
+    sun_sign: "Taurus ♉︎",
+    sun_keyword: "Grounded Provider",
+    moon_sign: "Pisces ♓︎",
+    moon_keyword: "Intuitive Empath",
+    rising_sign: "Virgo ♍︎",
+    aspects: [
+      { planet: "Mercury", sign: "Taurus", aspect: "Conjunction" },
+      { planet: "Venus", sign: "Pisces", aspect: "Trine" },
+      { planet: "Mars", sign: "Virgo", aspect: "Square" }
+    ],
+    houses: {
+      1: { sign: "Taurus", house: "1st House" },
+      2: { sign: "Gemini", house: "2nd House" },
+      3: { sign: "Cancer", house: "3rd House" },
+      4: { sign: "Leo", house: "4th House" },
+      5: { sign: "Virgo", house: "5th House" },
+      6: { sign: "Libra", house: "6th House" },
+      7: { sign: "Scorpio", house: "7th House" },
+      8: { sign: "Sagittarius", house: "8th House" },
+      9: { sign: "Capricorn", house: "9th House" },
+      10: { sign: "Aquarius", house: "10th House" },
+      11: { sign: "Pisces", house: "11th House" },
+      12: { sign: "Aries", house: "12th House" }
+    }
+  },
+  archetype_chinese: {
+    animal: "Horse",
+    element: "Metal",
+    yin_yang: "Yang",
+    keyword: "Free-spirited Explorer",
+    element_characteristic: "Metal is associated with strength, stability, and the ability to withstand challenges.",
+    compatibility: {
+      best: ["Dragon", "Horse", "Snake"],
+      worst: ["Monkey", "Rooster", "Dog"]
+    }
+  },
+  timing_overlays: {
+    current_transits: [],
+    notes: "To be populated dynamically"
+  },
+  goal_stack: [],
+  task_graph: {},
+  belief_logs: [],
+  excitement_scores: [],
+  vibration_check_ins: []
+};
 
-  // Generate a blueprint using the GPT-4o search preview edge function
-  // STRICTLY ONE REQUEST - absolutely no retries, no queue system
-  generateBlueprintFromBirthData: async (userMeta: UserMetaData): Promise<{ 
-    success: boolean; 
-    blueprint?: BlueprintData; 
-    error?: string;
-    rawResponse?: any;
-  }> => {
+export const blueprintService = {
+  /**
+   * Generate a blueprint from birth data
+   */
+  async generateBlueprintFromBirthData(userData: BlueprintData['user_meta']): Promise<{ data: BlueprintData | null; error?: string }> {
     try {
-      console.log('[SERVICE] Making SINGLE API call to blueprint-generator with user meta:', userMeta);
+      console.log('Generating blueprint from birth data:', userData);
       
-      // Make ONE SINGLE API call to the edge function - ABSOLUTELY NO RETRIES
-      const { data, error } = await supabase.functions.invoke('blueprint-generator', {
-        body: { userMeta }
+      // Call the Edge Function to calculate the astrological data
+      const { data: calcData, error: calcError } = await supabase.functions.invoke('blueprint-calculator', {
+        body: {
+          birthData: {
+            date: userData.birth_date,
+            time: userData.birth_time_local,
+            location: userData.birth_location,
+            timezone: userData.timezone
+          }
+        }
       });
       
-      // Handle errors from the API call
-      if (error) {
-        console.error('[SERVICE] Error from Supabase function:', error);
-        return {
-          success: false,
-          error: error.message || 'Error calling blueprint generator'
-        };
+      if (calcError) {
+        console.error('Error calling blueprint calculator:', calcError);
+        return { data: null, error: `Calculation service error: ${calcError.message}` };
       }
       
-      // Process successful response
-      if (data && data.blueprint) {
-        console.log('[SERVICE] Blueprint generated via Supabase function - SINGLE CALL SUCCESS');
-        
-        return { 
-          success: true, 
-          blueprint: data.blueprint as BlueprintData,
-          rawResponse: data.rawResponse
-        };
-      } else if (data && data.error) {
-        console.error('[SERVICE] Error from blueprint generator:', data.error);
-        return { 
-          success: false, 
-          error: data.error,
-          rawResponse: data.rawResponse
-        };
-      }
+      console.log('Received calculation data:', calcData);
       
-      return {
-        success: false,
-        error: 'No blueprint or error returned from generator function'
+      // Create the blueprint using the calculation results
+      const blueprint: BlueprintData = {
+        user_meta: userData,
+        cognition_mbti: {
+          // For now, use default MBTI data or an API could be added later
+          type: "INFJ",
+          core_keywords: ["Insightful", "Counselor", "Advocate"],
+          dominant_function: "Introverted Intuition (Ni)",
+          auxiliary_function: "Extraverted Feeling (Fe)"
+        },
+        // Use calculated Human Design data if available, otherwise use template
+        energy_strategy_human_design: calcData.humanDesign || {
+          type: "Projector",
+          profile: "4/6 (Opportunist/Role Model)",
+          authority: "Emotional",
+          strategy: "Wait for the invitation",
+          definition: "Split",
+          not_self_theme: "Frustration",
+          life_purpose: "Guide others with emotional wisdom",
+          gates: {
+            unconscious_design: ["16.5", "20.3", "57.2", "34.6"],
+            conscious_personality: ["11.4", "48.3", "39.5", "41.1"]
+          }
+        },
+        bashar_suite: {
+          // Static data for now
+          belief_interface: {
+            principle: "What you believe is what you experience as reality",
+            reframe_prompt: "What would I have to believe to experience this?"
+          },
+          excitement_compass: {
+            principle: "Follow your highest excitement in the moment to the best of your ability"
+          },
+          frequency_alignment: {
+            quick_ritual: "Visualize feeling the way you want to feel for 17 seconds"
+          }
+        },
+        // Use the calculated numerology data
+        values_life_path: calcData.numerology,
+        // Use the calculated Western astrology data
+        archetype_western: calcData.westernProfile,
+        // Use the calculated Chinese zodiac data
+        archetype_chinese: calcData.chineseZodiac,
+        timing_overlays: {
+          current_transits: [],
+          notes: "Generated using real astronomical calculations"
+        },
+        goal_stack: [],
+        task_graph: {},
+        belief_logs: [],
+        excitement_scores: [],
+        vibration_check_ins: []
       };
-    } catch (error) {
-      console.error('[SERVICE] Error generating blueprint:', error);
       
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : 'Unknown error generating blueprint';
-      
-      return { 
-        success: false, 
-        error: errorMessage
-      };
+      return { data: blueprint };
+    } catch (err) {
+      console.error("Error generating blueprint:", err);
+      return { data: null, error: err instanceof Error ? err.message : String(err) };
     }
   },
-
-  // Save a blueprint to the database
-  saveBlueprintToDatabase: async (blueprint: BlueprintData): Promise<{ success: boolean; error?: string }> => {
+  
+  /**
+   * Save a blueprint to Supabase for the current user
+   */
+  async saveBlueprintData(blueprint: BlueprintData): Promise<{ success: boolean; error?: string }> {
     try {
-      console.log('Saving blueprint to database:', blueprint);
+      const { data: user } = await supabase.auth.getUser();
       
-      // Get the current user ID
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        throw new Error('User not authenticated');
+      if (!user || !user.user) {
+        return { success: false, error: "User not authenticated" };
       }
       
-      // Create a blueprint record
-      const blueprintId = uuidv4();
-      const timestamp = new Date().toISOString();
-      
-      // Blueprint needs to be typed as Json for Supabase compatibility
-      const blueprintJson = blueprint as unknown as Json;
-      
-      // Insert the blueprint record into the database
-      const { data, error } = await supabase
+      // First set all existing blueprints to inactive
+      await supabase
+        .from('user_blueprints')
+        .update({ is_active: false })
+        .eq('user_id', user.user.id);
+        
+      // Then insert the new active blueprint
+      const { error } = await supabase
         .from('user_blueprints')
         .insert({
-          id: blueprintId,
-          user_id: user.id,
-          blueprint: blueprintJson,
-          is_active: true,
-          created_at: timestamp,
-          updated_at: timestamp,
+          user_id: user.user.id,
+          blueprint: blueprint,
+          is_active: true
         });
-      
+        
       if (error) {
-        console.error('Error saving blueprint:', error);
-        throw error;
+        console.error("Error saving blueprint:", error);
+        return { success: false, error: error.message };
       }
       
-      console.log('Blueprint saved successfully:', data);
+      console.log("Blueprint saved successfully");
       return { success: true };
-    } catch (error) {
-      console.error('Error in saveBlueprintToDatabase:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error saving blueprint' 
-      };
+    } catch (err) {
+      console.error("Error saving blueprint:", err);
+      return { success: false, error: err instanceof Error ? err.message : String(err) };
     }
   },
-
-  // Fetch all blueprints for the current user
-  fetchUserBlueprints: async (): Promise<BlueprintData[]> => {
+  
+  /**
+   * Get the active blueprint for the current user
+   */
+  async getActiveBlueprintData(): Promise<{ data: BlueprintData | null; error?: string }> {
     try {
-      // Get the current user ID
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: user } = await supabase.auth.getUser();
       
-      if (!user) {
-        throw new Error('User not authenticated');
+      if (!user || !user.user) {
+        return { data: null, error: "User not authenticated" };
       }
       
-      // Fetch blueprints for this user
       const { data, error } = await supabase
         .from('user_blueprints')
         .select('blueprint')
-        .eq('user_id', user.id)
+        .eq('user_id', user.user.id)
         .eq('is_active', true)
-        .order('created_at', { ascending: false });
-      
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .single();
+        
       if (error) {
-        throw error;
+        if (error.code === 'PGRST116') { // No rows returned error
+          return { data: null };
+        }
+        return { data: null, error: error.message };
       }
       
-      // Convert and return the blueprints
-      return data?.map(item => item.blueprint as unknown as BlueprintData) || [];
-    } catch (error) {
-      console.error('Error fetching user blueprints:', error);
-      return [];
+      return { data: data.blueprint as BlueprintData };
+    } catch (err) {
+      console.error("Error getting blueprint:", err);
+      return { data: null, error: err instanceof Error ? err.message : String(err) };
     }
   },
-
-  // Get the default (latest) blueprint for a user
-  getDefaultBlueprint: async (): Promise<BlueprintData | null> => {
+  
+  /**
+   * Update an existing blueprint
+   */
+  async updateBlueprintData(id: string, blueprint: Partial<BlueprintData>): Promise<{ success: boolean; error?: string }> {
     try {
-      // First try to get from database
-      const blueprints = await blueprintService.fetchUserBlueprints();
+      const { data: user } = await supabase.auth.getUser();
       
-      if (blueprints && blueprints.length > 0) {
-        return blueprints[0] as BlueprintData;
+      if (!user || !user.user) {
+        return { success: false, error: "User not authenticated" };
       }
       
-      // If no blueprints in database, return a sample one
-      console.warn('No blueprints found in database, returning sample');
-      return sampleBlueprints[0] as BlueprintData;
-    } catch (error) {
-      console.error('Error getting default blueprint:', error);
-      return null;
+      const { error } = await supabase
+        .from('user_blueprints')
+        .update({
+          blueprint: blueprint,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .eq('user_id', user.user.id);
+        
+      if (error) {
+        return { success: false, error: error.message };
+      }
+      
+      return { success: true };
+    } catch (err) {
+      console.error("Error updating blueprint:", err);
+      return { success: false, error: err instanceof Error ? err.message : String(err) };
     }
   }
 };
-
-export default blueprintService;

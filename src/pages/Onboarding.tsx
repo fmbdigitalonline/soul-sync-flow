@@ -1,13 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight, ChevronLeft, Calendar, Clock, MapPin, Volume2 } from "lucide-react";
-import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { GradientButton } from "@/components/ui/gradient-button";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { DatePickerWithYear } from "@/components/ui/date-picker-with-year";
 import MainLayout from "@/components/Layout/MainLayout";
 import { useToast } from "@/hooks/use-toast";
 import { SoulOrb } from "@/components/ui/soul-orb";
@@ -17,13 +15,11 @@ import { useSoulOrb } from "@/contexts/SoulOrbContext";
 import { motion } from "@/lib/framer-motion";
 import { Onboarding3DScene } from "@/components/ui/onboarding-3d-scene";
 import { useOnboarding3D } from "@/hooks/use-onboarding-3d";
-import { useAuth } from "@/contexts/AuthContext";
 
 const Onboarding = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { currentMessage } = useSoulOrb();
-  const { setIsNewUser } = useAuth();
   const [formData, setFormData] = useState({
     name: "",
     birthDate: "",
@@ -70,9 +66,6 @@ const Onboarding = () => {
     // Set flag to prevent looping
     setBlueprintGenerated(true);
     
-    // Mark the user as no longer new after successful blueprint generation
-    setIsNewUser(false);
-    
     toast({
       title: "Blueprint generated!",
       description: "Your Soul Blueprint has been created successfully. Transitioning to 2D view...",
@@ -84,7 +77,7 @@ const Onboarding = () => {
     // Navigate to blueprint page after transition
     setTimeout(() => {
       console.log("Navigating to blueprint page after blueprint generation");
-      navigate("/blueprint", { replace: true });
+      navigate("/blueprint");
     }, 2000);
   };
 
@@ -108,7 +101,7 @@ const Onboarding = () => {
       const safetyTimeout = setTimeout(() => {
         if (window.location.pathname === "/onboarding") {
           console.log("Safety fallback: forcing navigation to blueprint page");
-          navigate("/blueprint", { replace: true });
+          navigate("/blueprint");
         }
       }, 5000);
       
@@ -147,25 +140,19 @@ const Onboarding = () => {
             <p className="text-center">
               Your birth date helps us calculate your astrological signs and numerology.
             </p>
-            <div className="flex flex-col space-y-4">
-              <div className="flex items-center space-x-4">
-                <Calendar className="text-soul-purple h-8 w-8 flex-shrink-0" />
-                <div className="space-y-1 w-full">
-                  <Label htmlFor="birthDate">Birth Date</Label>
-                  <DatePickerWithYear
-                    date={formData.birthDate ? new Date(formData.birthDate) : undefined}
-                    onDateChange={(date) => {
-                      if (date) {
-                        const formattedDate = format(date, "yyyy-MM-dd");
-                        setFormData(prev => ({ ...prev, birthDate: formattedDate }));
-                      } else {
-                        setFormData(prev => ({ ...prev, birthDate: "" }));
-                      }
-                    }}
-                    placeholder="Select your birth date"
-                    disabled={interactionStage === 'listening'}
-                  />
-                </div>
+            <div className="flex items-center space-x-4">
+              <Calendar className="text-soul-purple h-8 w-8 flex-shrink-0" />
+              <div className="space-y-1 w-full">
+                <Label htmlFor="birthDate">Birth Date</Label>
+                <Input
+                  id="birthDate"
+                  name="birthDate"
+                  type="date"
+                  value={formData.birthDate}
+                  onChange={handleInputChange}
+                  className="mt-1"
+                  disabled={interactionStage === 'listening'}
+                />
               </div>
             </div>
           </div>
@@ -423,7 +410,7 @@ const Onboarding = () => {
               <div className="text-center p-8">
                 <h2 className="text-2xl font-display font-bold mb-4">Welcome to SoulSync</h2>
                 <p className="mb-6">Your Soul Blueprint has been created successfully!</p>
-                <GradientButton onClick={() => navigate("/blueprint", { replace: true })} className="w-full">
+                <GradientButton onClick={() => navigate("/blueprint")} className="w-full">
                   View My Soul Blueprint
                 </GradientButton>
               </div>

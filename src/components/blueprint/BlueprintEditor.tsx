@@ -8,25 +8,24 @@ import { importBlueprintFromJson, exampleFeurionBlueprint } from "@/services/blu
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Loader2 } from "lucide-react";
 
-export interface BlueprintEditorProps {
-  data?: BlueprintData;
-  initialBlueprint?: BlueprintData;
+interface BlueprintEditorProps {
   onSave: (blueprint: BlueprintData) => Promise<{ success: boolean; error?: string }>;
+  initialBlueprint?: BlueprintData;
 }
 
-const BlueprintEditor: React.FC<BlueprintEditorProps> = ({ onSave, initialBlueprint, data }) => {
+const BlueprintEditor: React.FC<BlueprintEditorProps> = ({ onSave, initialBlueprint }) => {
   const [jsonText, setJsonText] = useState(
-    data || initialBlueprint 
-      ? JSON.stringify(data || initialBlueprint, null, 2) 
+    initialBlueprint 
+      ? JSON.stringify(initialBlueprint, null, 2) 
       : JSON.stringify(exampleFeurionBlueprint, null, 2)
   );
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   const handleSave = async () => {
-    const { data: parsedData, error } = importBlueprintFromJson(jsonText);
+    const { data, error } = importBlueprintFromJson(jsonText);
     
-    if (error || !parsedData) {
+    if (error || !data) {
       toast({
         title: "Invalid JSON",
         description: error || "Could not parse blueprint data",
@@ -36,7 +35,7 @@ const BlueprintEditor: React.FC<BlueprintEditorProps> = ({ onSave, initialBluepr
     }
     
     setIsLoading(true);
-    const result = await onSave(parsedData);
+    const result = await onSave(data);
     setIsLoading(false);
     
     if (result.success) {
