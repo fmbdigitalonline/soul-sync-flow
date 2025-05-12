@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,8 +13,15 @@ interface BlueprintViewerProps {
 const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint }) => {
   const [activeTab, setActiveTab] = useState("overview");
   
-  // Extract calculation metadata if available
-  const metadata = blueprint?.metadata || {};
+  // Extract calculation metadata with proper typing to avoid TypeScript errors
+  const metadata = blueprint?.metadata || {
+    calculation_success: false,
+    partial_calculation: false,
+    calculation_date: "",
+    engine: "",
+    data_sources: { western: "" }
+  };
+  
   const calculationDate = metadata.calculation_date || "Unknown";
   const calculationEngine = metadata.data_sources?.western === "calculated" ? 
     (metadata.engine === "swiss_ephemeris" ? "Swiss Ephemeris" : "Legacy Calculator") : 
