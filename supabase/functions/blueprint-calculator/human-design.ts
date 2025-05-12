@@ -48,6 +48,32 @@ const AUTHORITIES = {
   NONE: { description: "Lunar cycle reflection" }
 };
 
+// Map gates to centers they activate
+const GATE_TO_CENTER_MAP = {
+  // Head Center gates
+  24: "Head", 61: "Head", 63: "Head",
+  // Ajna Center gates
+  47: "Ajna", 64: "Ajna", 4: "Ajna", 11: "Ajna", 17: "Ajna", 43: "Ajna",
+  // Throat Center gates
+  8: "Throat", 20: "Throat", 16: "Throat", 35: "Throat", 12: "Throat", 45: "Throat", 
+  62: "Throat", 23: "Throat", 56: "Throat", 31: "Throat", 33: "Throat",
+  // G Center gates
+  1: "G", 13: "G", 25: "G", 10: "G", 15: "G", 7: "G",
+  // Heart/Ego Center gates
+  21: "Heart/Ego", 26: "Heart/Ego", 51: "Heart/Ego",
+  // Solar Plexus Center gates
+  30: "Solar Plexus", 36: "Solar Plexus", 55: "Solar Plexus", 37: "Solar Plexus", 
+  6: "Solar Plexus", 49: "Solar Plexus", 22: "Solar Plexus", 48: "Solar Plexus", 9: "Solar Plexus",
+  // Sacral Center gates
+  34: "Sacral", 5: "Sacral", 14: "Sacral", 29: "Sacral", 59: "Sacral", 3: "Sacral", 27: "Sacral", 
+  42: "Sacral", 53: "Sacral",
+  // Spleen Center gates
+  57: "Spleen", 18: "Spleen", 32: "Spleen", 50: "Spleen", 28: "Spleen", 44: "Spleen", 
+  48: "Spleen", 28: "Spleen", 57: "Spleen", 58: "Spleen", 44: "Spleen", 50: "Spleen",
+  // Root Center gates
+  60: "Root", 52: "Root", 19: "Root", 39: "Root", 41: "Root", 53: "Root", 38: "Root", 54: "Root", 58: "Root"
+};
+
 /**
  * Calculate Human Design profile based on birth data and celestial positions
  */
@@ -55,33 +81,54 @@ export async function calculateHumanDesign(birthDate, birthTime, location, timez
   try {
     console.log("Calculating Human Design for", birthDate, birthTime);
     
-    // In a full implementation, we would calculate exact planet positions
-    // at birth and 88 degrees prior (design planets)
-    
-    // For now, we'll simulate deterministic calculations based on birth data
+    // Calculate Julian date for both personality (birth time) and design (88.36 degrees earlier)
     const birthDateTime = new Date(birthDate + "T" + birthTime);
-    const timestamp = birthDateTime.getTime();
+    const personalityTimestamp = birthDateTime.getTime();
     
-    // Define centers based on birth timestamp (simplified)
-    const definedCenters = determineDefinedCenters(timestamp, celestialData);
+    // For design chart, we're calculating positions as if they were 88.36 degrees earlier
+    // This is approximately 88.36 days earlier based on the sun's motion
+    // In a full implementation, we would use the actual astronomical calculations
+    // to find the exact time when the sun was 88.36 degrees earlier
+    const designTimestamp = personalityTimestamp - (88.36 * 24 * 60 * 60 * 1000);
     
-    // Calculate type based on center definitions
-    const type = determineType(definedCenters);
+    console.log("Personality timestamp:", new Date(personalityTimestamp).toISOString());
+    console.log("Design timestamp:", new Date(designTimestamp).toISOString());
     
-    // Calculate authority based on defined centers
-    const authority = determineAuthority(definedCenters);
+    // Calculate gate activations for both charts
+    const personalityGates = calculateGatesFromPositions(celestialData);
+    
+    // In a real implementation, we would calculate the design positions
+    // based on celestial positions at the design time
+    // For now, we'll simulate it based on the design timestamp
+    const designCelestialData = simulateDesignCelestialData(celestialData, designTimestamp);
+    const designGates = calculateGatesFromPositions(designCelestialData);
+    
+    console.log("Personality gates:", personalityGates);
+    console.log("Design gates:", designGates);
+    
+    // Combine both charts to activate centers
+    const activatedCenters = determineCentersFromGates(personalityGates, designGates);
+    
+    // Calculate type based on activated centers
+    const type = determineTypeFromCenters(activatedCenters);
+    
+    // Calculate authority based on activated centers
+    const authority = determineAuthorityFromCenters(activatedCenters);
     
     // Calculate profile based on Sun and Earth positions
     const profile = determineProfile(celestialData);
     
     // Calculate definition type based on connected centers
-    const definition = determineDefinition(definedCenters);
-    
-    // Calculate active gates based on planet positions
-    const gates = calculateActiveGates(celestialData);
+    const definition = determineDefinition(activatedCenters);
     
     // Calculate life purpose based on profile and type
     const lifePurpose = determineLifePurpose(type, profile);
+    
+    // Combine all gate activations for return value
+    const allGates = {
+      unconscious_design: designGates.map(g => g.gate + "." + g.line),
+      conscious_personality: personalityGates.map(g => g.gate + "." + g.line)
+    };
     
     return {
       type: type,
@@ -91,8 +138,8 @@ export async function calculateHumanDesign(birthDate, birthTime, location, timez
       definition: definition,
       not_self_theme: TYPES[type].not_self_theme,
       life_purpose: lifePurpose,
-      centers: definedCenters,
-      gates: gates
+      centers: activatedCenters,
+      gates: allGates
     };
   } catch (error) {
     console.error("Error calculating Human Design:", error);
@@ -112,64 +159,122 @@ export async function calculateHumanDesign(birthDate, birthTime, location, timez
   }
 }
 
-// Determine which centers are defined based on planet positions
-function determineDefinedCenters(timestamp, celestialData) {
-  // In a real implementation, this would check which gates are activated
-  // and which centers are connected by channels
-  // For now, we'll use a simplified deterministic algorithm
+// Calculate gates from celestial positions using the 384-part wheel
+function calculateGatesFromPositions(celestialData) {
+  const gates = [];
   
-  // Create a seeded random number generator based on timestamp
-  const rng = seedRandom(timestamp);
+  // Map each planet to its corresponding gate
+  for (const [planet, position] of Object.entries(celestialData)) {
+    if (position && typeof position.longitude === 'number') {
+      // Correct formula: Math.floor((longitude / 360) * 384) to map to 64 gates * 6 lines = 384 positions
+      const position384 = Math.floor((position.longitude / 360) * 384);
+      
+      // Get gate (1-64) and line (1-6)
+      // There are 64 gates with 6 lines each = 384 total positions
+      const gate = Math.floor(position384 / 6) % 64 + 1;
+      const line = position384 % 6 + 1;
+      
+      gates.push({
+        planet,
+        gate,
+        line,
+      });
+    }
+  }
   
-  // Human Design Centers
+  return gates;
+}
+
+// Simulate design celestial data based on design timestamp
+// In a real implementation, we would calculate the actual positions
+function simulateDesignCelestialData(personalityCelestialData, designTimestamp) {
+  const designData = {};
+  
+  // Create an offset for each planet based on the design timestamp
+  for (const [planet, position] of Object.entries(personalityCelestialData)) {
+    if (position && typeof position.longitude === 'number') {
+      // Calculate a pseudo-offset based on planet speed and the time difference
+      // This is a simplified simulation - real calculations would use ephemeris
+      
+      // Different planets move at different speeds
+      const speedFactor = planet === 'sun' ? 1 : 
+                         planet === 'moon' ? 13 : 
+                         planet === 'mercury' ? 1.5 : 
+                         planet === 'venus' ? 0.8 :
+                         planet === 'mars' ? 0.5 : 
+                         planet === 'jupiter' ? 0.08 : 
+                         planet === 'saturn' ? 0.03 : 0.5;
+      
+      // Calculate a realistic offset based on timestamp difference and speed
+      const daysDifference = (personalityCelestialData.timestamp - designTimestamp) / (24 * 60 * 60 * 1000);
+      const degreeOffset = daysDifference * speedFactor;
+      
+      // Create a new position with the offset
+      designData[planet] = {
+        ...position,
+        longitude: (position.longitude - degreeOffset + 360) % 360
+      };
+    }
+  }
+  
+  return designData;
+}
+
+// Determine activated centers based on gates from both charts
+function determineCentersFromGates(personalityGates, designGates) {
+  const activatedCenters = {};
+  
+  // Initialize all centers as undefined
   const centers = [
     "Head", "Ajna", "Throat", "G", "Heart/Ego", 
     "Solar Plexus", "Sacral", "Spleen", "Root"
   ];
-  
-  // Determine defined centers with some birth date dependency
-  const definedCenters = {};
   centers.forEach(center => {
-    // Use sun and moon positions to influence which centers are defined
-    const sunInfluence = (celestialData.sun.longitude / 30) % 1;
-    const moonInfluence = (celestialData.moon.longitude / 30) % 1;
-    
-    // Different formula for each center to create realistic variation
-    const isDefined = (rng() + sunInfluence * 0.3 + moonInfluence * 0.2) > 0.5;
-    definedCenters[center] = isDefined;
+    activatedCenters[center] = false;
   });
   
-  return definedCenters;
+  // Activate centers based on gates from both charts
+  const allGates = [...personalityGates, ...designGates];
+  
+  allGates.forEach(({ gate }) => {
+    const center = GATE_TO_CENTER_MAP[gate];
+    if (center) {
+      activatedCenters[center] = true;
+    }
+  });
+  
+  return activatedCenters;
 }
 
-// Determine Human Design Type based on defined centers
-function determineType(definedCenters) {
-  // In a real implementation, this would be based on specific center definitions
+// Determine Human Design Type based on activated centers
+function determineTypeFromCenters(activatedCenters) {
+  // Reflector: No motor centers defined
+  const motorCenters = ["Sacral", "Heart/Ego", "Solar Plexus", "Root"];
+  const hasMotorCenter = motorCenters.some(center => activatedCenters[center]);
   
-  // Reflector: No centers defined
-  if (Object.values(definedCenters).every(defined => !defined)) {
+  if (!hasMotorCenter) {
     return "REFLECTOR";
   }
   
   // Manifestor: Throat connected to motor center but not sacral
-  if (definedCenters["Throat"] && 
-      (definedCenters["Heart/Ego"] || definedCenters["Solar Plexus"] || definedCenters["Root"]) && 
-      !definedCenters["Sacral"]) {
+  if (activatedCenters["Throat"] && 
+      (activatedCenters["Heart/Ego"] || activatedCenters["Solar Plexus"] || activatedCenters["Root"]) && 
+      !activatedCenters["Sacral"]) {
     return "MANIFESTOR";
   }
   
-  // Projector: No sacral and no manifestor throat connections
-  if (!definedCenters["Sacral"]) {
+  // Projector: No sacral and not a manifestor
+  if (!activatedCenters["Sacral"]) {
     return "PROJECTOR";
   }
   
   // Manifesting Generator: Sacral connected to throat
-  if (definedCenters["Sacral"] && definedCenters["Throat"]) {
+  if (activatedCenters["Sacral"] && activatedCenters["Throat"]) {
     return "MANIFESTING_GENERATOR";
   }
   
   // Generator: Sacral defined but not connected to throat
-  if (definedCenters["Sacral"]) {
+  if (activatedCenters["Sacral"]) {
     return "GENERATOR";
   }
   
@@ -177,31 +282,32 @@ function determineType(definedCenters) {
   return "GENERATOR";
 }
 
-// Determine authority based on defined centers
-function determineAuthority(definedCenters) {
-  // Emotional authority: Emotional/Solar Plexus defined
-  if (definedCenters["Solar Plexus"]) {
+// Determine authority based on activated centers
+function determineAuthorityFromCenters(activatedCenters) {
+  // Emotional authority: Solar Plexus defined
+  if (activatedCenters["Solar Plexus"]) {
     return "EMOTIONAL";
   }
   
-  // Sacral authority: Solar Plexus not defined, Sacral defined
-  if (!definedCenters["Solar Plexus"] && definedCenters["Sacral"]) {
+  // Sacral authority: No Solar Plexus, but Sacral defined
+  if (!activatedCenters["Solar Plexus"] && activatedCenters["Sacral"]) {
     return "SACRAL";
   }
   
   // Splenic authority: No Solar Plexus or Sacral, but Spleen defined
-  if (!definedCenters["Solar Plexus"] && !definedCenters["Sacral"] && definedCenters["Spleen"]) {
+  if (!activatedCenters["Solar Plexus"] && !activatedCenters["Sacral"] && activatedCenters["Spleen"]) {
     return "SPLENIC";
   }
   
   // Ego authority: No Emotional, Sacral or Splenic, but Heart/Ego defined
-  if (!definedCenters["Solar Plexus"] && !definedCenters["Sacral"] && !definedCenters["Spleen"] && definedCenters["Heart/Ego"]) {
+  if (!activatedCenters["Solar Plexus"] && !activatedCenters["Sacral"] && 
+      !activatedCenters["Spleen"] && activatedCenters["Heart/Ego"]) {
     return "EGO";
   }
   
   // Self authority: Just G Center defined of the motor centers
-  if (!definedCenters["Solar Plexus"] && !definedCenters["Sacral"] && 
-      !definedCenters["Spleen"] && !definedCenters["Heart/Ego"] && definedCenters["G"]) {
+  if (!activatedCenters["Solar Plexus"] && !activatedCenters["Sacral"] && 
+      !activatedCenters["Spleen"] && !activatedCenters["Heart/Ego"] && activatedCenters["G"]) {
     return "SELF";
   }
   
@@ -211,14 +317,14 @@ function determineAuthority(definedCenters) {
 
 // Determine profile based on celestial positions
 function determineProfile(celestialData) {
-  // In a real implementation, this would be calculated from Sun and Earth positions
+  // In a full implementation, this would be calculated from Sun and Earth positions
   // Profile is represented as two numbers from 1-6
   
   // Use sun position to determine conscious personality number (1-6)
-  const conscious = Math.floor(celestialData.sun.longitude / 60) % 6 + 1;
+  const conscious = Math.floor((celestialData.sun.longitude / 60) % 6) + 1;
   
   // Use ascendant position to determine unconscious design number (1-6)
-  const unconscious = Math.floor(celestialData.ascendant.longitude / 60) % 6 + 1;
+  const unconscious = Math.floor((celestialData.ascendant.longitude / 60) % 6) + 1;
   
   // Profile labels
   const profileLabels = {
@@ -234,9 +340,9 @@ function determineProfile(celestialData) {
 }
 
 // Determine definition type based on center connections
-function determineDefinition(definedCenters) {
+function determineDefinition(activatedCenters) {
   // Count how many centers are defined
-  const definedCount = Object.values(definedCenters).filter(Boolean).length;
+  const definedCount = Object.values(activatedCenters).filter(Boolean).length;
   
   // In a real implementation, this would check the pattern of connections
   // For now, use a simplified approach based on count
@@ -249,36 +355,6 @@ function determineDefinition(definedCenters) {
     const options = ["Split", "Triple Split", "Quad Split"];
     return options[definedCount % 3];
   }
-}
-
-// Calculate active gates based on planet positions
-function calculateActiveGates(celestialData) {
-  // In a real implementation, this would map planet positions to specific gates
-  // For now, generate realistic but simulated gate activations
-  
-  const personalityGates = generateGateNumbers(celestialData.sun.longitude, 4);
-  const designGates = generateGateNumbers(celestialData.moon.longitude, 4);
-  
-  return {
-    unconscious_design: designGates,
-    conscious_personality: personalityGates
-  };
-}
-
-// Generate realistic gate numbers based on a celestial position
-function generateGateNumbers(position, count) {
-  const gates = [];
-  const baseNumber = Math.floor(position) % 64 + 1;
-  
-  for (let i = 0; i < count; i++) {
-    // Create variation but ensure each number is 1-64
-    let gateNumber = (baseNumber + i * 13) % 64 + 1;
-    // Add a realistic line number (1-6)
-    const lineNumber = (gateNumber + i) % 6 + 1;
-    gates.push(`${gateNumber}.${lineNumber}`);
-  }
-  
-  return gates;
 }
 
 // Determine life purpose based on type and profile
@@ -306,16 +382,4 @@ function determineLifePurpose(type, profile) {
   };
   
   return `${purposeByType[type]} ${purposeModifier[profileNumber]}`;
-}
-
-// Simple seeded random number generator for consistency
-function seedRandom(seed) {
-  // Simple LCG random number generator
-  let state = seed % 2147483647;
-  if (state <= 0) state += 2147483646;
-  
-  return function() {
-    state = (state * 16807) % 2147483647;
-    return state / 2147483647;
-  };
 }
