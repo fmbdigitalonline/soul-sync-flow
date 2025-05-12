@@ -74,7 +74,7 @@ def generate_blueprint(user_data):
         # Extract user data with validation
         full_name = validate_input(user_data, 'full_name', str, "")
         birth_date = validate_input(user_data, 'birth_date', str, "")
-        birth_time = validate_input(user_data, 'birth_time_local', str, "00:00")
+        birth_time = validate_input(user_data, 'birth_time', str, "00:00")
         birth_location = validate_input(user_data, 'birth_location', str, "Unknown")
         mbti = validate_input(user_data, 'mbti', str, "")
         preferred_name = validate_input(user_data, 'preferred_name', str, full_name.split(' ')[0] if full_name else "")
@@ -259,7 +259,7 @@ def calculate_numerology(birth_date, name):
     except Exception as e:
         log_stack_trace = "".join(traceback.format_exception(type(e), e, e.__traceback__))
         log_debug(f"Error in calculate_numerology: {str(e)}", {"stack_trace": log_stack_trace})
-        return get_default_numerology()
+        raise
 
 def calculate_life_path_number(day, month, year):
     """
@@ -405,7 +405,56 @@ def get_sign_keyword(sign, position):
             'moon': 'Security-Seeking',
             'rising': 'Steady Appearance'
         },
-        # ... add other signs
+        'Gemini': {
+            'sun': 'Versatile Communicator',
+            'moon': 'Emotionally Adaptable',
+            'rising': 'Quick-Minded Presence'
+        },
+        'Cancer': {
+            'sun': 'Nurturing Protector',
+            'moon': 'Emotionally Sensitive',
+            'rising': 'Caring Demeanor'
+        },
+        'Leo': {
+            'sun': 'Creative Leader',
+            'moon': 'Emotionally Expressive',
+            'rising': 'Charismatic Presence'
+        },
+        'Virgo': {
+            'sun': 'Practical Analyst',
+            'moon': 'Emotionally Precise',
+            'rising': 'Detail-Oriented Appearance'
+        },
+        'Libra': {
+            'sun': 'Harmonious Mediator',
+            'moon': 'Emotionally Balanced',
+            'rising': 'Graceful Demeanor'
+        },
+        'Scorpio': {
+            'sun': 'Intense Transformer',
+            'moon': 'Emotionally Profound',
+            'rising': 'Magnetic Presence'
+        },
+        'Sagittarius': {
+            'sun': 'Adventurous Explorer',
+            'moon': 'Emotionally Optimistic',
+            'rising': 'Free-Spirited Appearance'
+        },
+        'Capricorn': {
+            'sun': 'Ambitious Achiever',
+            'moon': 'Emotionally Disciplined',
+            'rising': 'Authoritative Presence'
+        },
+        'Aquarius': {
+            'sun': 'Innovative Humanitarian',
+            'moon': 'Emotionally Detached',
+            'rising': 'Unique Appearance'
+        },
+        'Pisces': {
+            'sun': 'Compassionate Dreamer',
+            'moon': 'Emotionally Intuitive',
+            'rising': 'Ethereal Presence'
+        }
     }
     
     # Default values if the sign or position is not found
@@ -494,16 +543,7 @@ def calculate_human_design(birth_date, birth_time, birth_location):
     except Exception as e:
         log_stack_trace = "".join(traceback.format_exception(type(e), e, e.__traceback__))
         log_debug(f"Error in calculate_human_design: {str(e)}", {"stack_trace": log_stack_trace})
-        # Return default values on error
-        return {
-            "type": "Generator",
-            "profile": "3/5 (Martyr/Heretic)",
-            "authority": "Emotional",
-            "strategy": "Wait to respond",
-            "definition": "Split",
-            "not_self_theme": "Frustration",
-            "error": str(e)
-        }
+        raise
 
 def get_hd_strategy(hd_type):
     """Get strategy based on Human Design type"""
@@ -601,7 +641,7 @@ def calculate_chinese_zodiac(birth_date):
     except Exception as e:
         log_stack_trace = "".join(traceback.format_exception(type(e), e, e.__traceback__))
         log_debug(f"Error in calculate_chinese_zodiac: {str(e)}", {"stack_trace": log_stack_trace})
-        return get_default_chinese_zodiac()
+        raise
 
 def get_animal_keyword(animal):
     """Get keyword for Chinese zodiac animal"""
