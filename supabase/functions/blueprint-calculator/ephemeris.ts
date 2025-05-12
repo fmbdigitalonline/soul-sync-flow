@@ -372,7 +372,7 @@ function calculateMoonPosition(jd: number): PlanetPosition {
   const T = (jd - 2451545.0) / 36525;
   
   // Mean longitude of the Moon
-  let L = 218.3164477 + 481267.88123421 * T - 0.0015786 * T * T + T * T * T / 538841 - T * T * T * T / 65194000;
+  let L = 218.3164477 + 481267.88123421 * T - 0.0015786 * T * T + T * T * T / 538841 - T * T * T * T / 14712000;
   L = L % 360;
   if (L < 0) L += 360;
   
