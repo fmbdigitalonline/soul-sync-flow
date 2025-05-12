@@ -42,20 +42,53 @@ const SoulOrb3D: React.FC<SoulOrbProps> = ({
     setVideoUrl(directVideoUrl);
   }, []);
   
-  // Ring curves for the orbital rings - adjusted to match the image more closely
-  const curve1 = useMemo(() => {
-    const curve = new THREE.EllipseCurve(0, 0, 1.3 * size, 1.3 * size, 0, 2 * Math.PI, false);
-    return new THREE.BufferGeometry().setFromPoints(curve.getPoints(50));
+  // Ring points for the orbital rings - using points directly
+  const ringPoints1 = useMemo(() => {
+    const points = [];
+    const segments = 50;
+    for (let i = 0; i <= segments; i++) {
+      const theta = (i / segments) * Math.PI * 2;
+      points.push(
+        new THREE.Vector3(
+          Math.cos(theta) * 1.3 * size,
+          Math.sin(theta) * 1.3 * size,
+          0
+        )
+      );
+    }
+    return points;
   }, [size]);
   
-  const curve2 = useMemo(() => {
-    const curve = new THREE.EllipseCurve(0, 0, 1.2 * size, 1.4 * size, 0, 2 * Math.PI, false);
-    return new THREE.BufferGeometry().setFromPoints(curve.getPoints(50));
+  const ringPoints2 = useMemo(() => {
+    const points = [];
+    const segments = 50;
+    for (let i = 0; i <= segments; i++) {
+      const theta = (i / segments) * Math.PI * 2;
+      points.push(
+        new THREE.Vector3(
+          Math.cos(theta) * 1.2 * size,
+          Math.sin(theta) * 1.4 * size,
+          0
+        )
+      );
+    }
+    return points;
   }, [size]);
   
-  const curve3 = useMemo(() => {
-    const curve = new THREE.EllipseCurve(0, 0, 1.4 * size, 1.2 * size, 0, 2 * Math.PI, false);
-    return new THREE.BufferGeometry().setFromPoints(curve.getPoints(50));
+  const ringPoints3 = useMemo(() => {
+    const points = [];
+    const segments = 50;
+    for (let i = 0; i <= segments; i++) {
+      const theta = (i / segments) * Math.PI * 2;
+      points.push(
+        new THREE.Vector3(
+          Math.cos(theta) * 1.4 * size,
+          Math.sin(theta) * 1.2 * size,
+          0
+        )
+      );
+    }
+    return points;
   }, [size]);
   
   // Star shape geometry for the center - new addition to match the provided image
@@ -205,41 +238,50 @@ const SoulOrb3D: React.FC<SoulOrbProps> = ({
         />
       </mesh>
       
-      {/* Orbital rings - using groups with lines as children */}
+      {/* Orbital rings - using proper Three.js line geometry */}
       <group ref={ring1Ref}>
-        <line>
-          <bufferGeometry attach="geometry" {...curve1} />
-          <lineBasicMaterial 
-            attach="material"
-            color="#FFFFFF" 
-            transparent 
-            opacity={0.8}
+        <mesh>
+          <tubeGeometry 
+            args={[
+              new THREE.CatmullRomCurve3(ringPoints1),
+              64,    // tubular segments
+              0.015, // tube radius
+              8,     // radial segments
+              true   // closed
+            ]}
           />
-        </line>
+          <meshBasicMaterial color="#FFFFFF" transparent opacity={0.8} />
+        </mesh>
       </group>
       
       <group ref={ring2Ref}>
-        <line>
-          <bufferGeometry attach="geometry" {...curve2} />
-          <lineBasicMaterial 
-            attach="material"
-            color="#FFFFFF" 
-            transparent 
-            opacity={0.8}
+        <mesh>
+          <tubeGeometry 
+            args={[
+              new THREE.CatmullRomCurve3(ringPoints2),
+              64,    // tubular segments
+              0.015, // tube radius
+              8,     // radial segments
+              true   // closed
+            ]}
           />
-        </line>
+          <meshBasicMaterial color="#FFFFFF" transparent opacity={0.8} />
+        </mesh>
       </group>
       
       <group ref={ring3Ref}>
-        <line>
-          <bufferGeometry attach="geometry" {...curve3} />
-          <lineBasicMaterial 
-            attach="material"
-            color="#FFFFFF" 
-            transparent 
-            opacity={0.8}
+        <mesh>
+          <tubeGeometry 
+            args={[
+              new THREE.CatmullRomCurve3(ringPoints3),
+              64,    // tubular segments
+              0.015, // tube radius
+              8,     // radial segments
+              true   // closed
+            ]}
           />
-        </line>
+          <meshBasicMaterial color="#FFFFFF" transparent opacity={0.8} />
+        </mesh>
       </group>
       
       {/* Enhanced glow effect - more pronounced to match the image */}
