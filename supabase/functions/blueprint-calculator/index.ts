@@ -9,6 +9,22 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Structure for error responses
+interface ErrorResponse {
+  error: string;
+  details?: any;
+  code: string;
+}
+
+// Structure for calculation results
+interface CalculationResults {
+  celestialData: any;
+  westernProfile: any;
+  chineseZodiac: any;
+  numerology: any;
+  humanDesign: any;
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -17,49 +33,119 @@ serve(async (req) => {
 
   try {
     // Parse the request body
-    const { birthData } = await req.json();
-    const { date, time, location, timezone } = birthData;
-
-    if (!date || !time || !location || !timezone) {
-      return new Response(
-        JSON.stringify({
-          error: 'Missing required birth data parameters',
-        }),
-        { 
-          status: 400, 
-          headers: { 
-            'Content-Type': 'application/json',
-            ...corsHeaders 
-          } 
-        }
-      );
+    let birthData;
+    try {
+      const body = await req.json();
+      birthData = body.birthData;
+    } catch (parseError) {
+      console.error("Failed to parse request body:", parseError);
+      return errorResponse({
+        error: "Invalid request format", 
+        details: parseError.message,
+        code: "INVALID_REQUEST_FORMAT"
+      }, 400);
     }
 
-    console.log(`Calculating planetary positions for ${date} ${time} at ${location} in timezone ${timezone}`);
-    
-    // Calculate planetary positions using enhanced ephemeris calculations
-    const celestialData = await calculatePlanetaryPositions(date, time, location, timezone);
+    // Validate the required parameters
+    if (!birthData) {
+      return errorResponse({
+        error: "Missing birth data",
+        code: "MISSING_BIRTH_DATA"
+      }, 400);
+    }
 
-    // Calculate Western astrological profile
-    const westernProfile = calculateWesternProfile(celestialData);
+    const { date, time, location, timezone } = birthData;
     
-    // Calculate Chinese zodiac
-    const chineseZodiac = calculateChineseZodiac(date);
-    
-    // Calculate numerological values
-    const numerology = calculateNumerology(date);
-    
-    // Calculate Human Design profile using more accurate calculations
-    const humanDesign = await calculateHumanDesign(date, time, location, timezone, celestialData);
+    if (!date || !time || !location) {
+      return errorResponse({
+        error: "Missing required birth data parameters",
+        details: { 
+          date: date ? "✓" : "✗", 
+          time: time ? "✓" : "✗", 
+          location: location ? "✓" : "✗" 
+        },
+        code: "MISSING_REQUIRED_PARAMETERS"
+      }, 400);
+    }
 
-    // Return the complete astrological profile
+    console.log(`Processing blueprint calculation for ${date} ${time} at ${location} in timezone ${timezone || "unknown"}`);
+    
+    // Set up result placeholders for partial success tracking
+    let results: Partial<CalculationResults> = {};
+    let errors: Record<string, string> = {};
+    
+    // Attempt to calculate planetary positions
+    try {
+      console.log("Starting celestial calculations...");
+      const celestialData = await calculatePlanetaryPositions(date, time, location, timezone || "UTC");
+      results.celestialData = celestialData;
+      console.log("Celestial calculations completed successfully");
+    } catch (celestialError) {
+      console.error("Error in celestial calculations:", celestialError);
+      errors.celestial = celestialError.message;
+    }
+
+    // Calculate Western astrological profile if celestial data is available
+    if (results.celestialData) {
+      try {
+        results.westernProfile = calculateWesternProfile(results.celestialData);
+      } catch (westernError) {
+        console.error("Error calculating Western profile:", westernError);
+        errors.western = westernError.message;
+      }
+    } else {
+      errors.western = "Unable to calculate Western profile: celestial data not available";
+    }
+    
+    // These calculations can proceed even if celestial calculations failed
+    try {
+      results.chineseZodiac = calculateChineseZodiac(date);
+    } catch (chineseError) {
+      console.error("Error calculating Chinese zodiac:", chineseError);
+      errors.chinese = chineseError.message;
+    }
+    
+    try {
+      results.numerology = calculateNumerology(date);
+    } catch (numerologyError) {
+      console.error("Error calculating numerology:", numerologyError);
+      errors.numerology = numerologyError.message;
+    }
+    
+    // Calculate Human Design profile
+    try {
+      if (results.celestialData) {
+        results.humanDesign = await calculateHumanDesign(date, time, location, timezone, results.celestialData);
+      } else {
+        errors.humanDesign = "Unable to calculate Human Design: celestial data not available";
+      }
+    } catch (hdError) {
+      console.error("Error calculating Human Design:", hdError);
+      errors.humanDesign = hdError.message;
+    }
+
+    // Check if we have at least some data or if everything failed
+    const hasAnyResults = Object.keys(results).some(key => results[key]);
+    
+    if (!hasAnyResults) {
+      return errorResponse({
+        error: "All calculations failed",
+        details: errors,
+        code: "ALL_CALCULATIONS_FAILED"
+      }, 500);
+    }
+    
+    // Return partial or complete results
     return new Response(
       JSON.stringify({
-        celestialData,
-        westernProfile,
-        chineseZodiac,
-        numerology,
-        humanDesign
+        ...results,
+        calculation_metadata: {
+          success: Object.keys(errors).length === 0,
+          partial: Object.keys(errors).length > 0,
+          errors: Object.keys(errors).length > 0 ? errors : undefined,
+          calculated_at: new Date().toISOString(),
+          input: { date, time, location, timezone: timezone || "UTC" }
+        }
       }),
       { 
         headers: { 
@@ -69,23 +155,29 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error('Error calculating blueprint:', error);
+    console.error('Unexpected error in blueprint calculator:', error);
     
-    return new Response(
-      JSON.stringify({
-        error: 'Failed to calculate astrological blueprint',
-        details: error.message
-      }),
-      { 
-        status: 500, 
-        headers: { 
-          'Content-Type': 'application/json',
-          ...corsHeaders 
-        } 
-      }
-    );
+    return errorResponse({
+      error: 'Failed to calculate astrological blueprint',
+      details: error.message,
+      code: "UNEXPECTED_ERROR"
+    }, 500);
   }
 });
+
+// Helper function to create consistent error responses
+function errorResponse(error: ErrorResponse, status = 400) {
+  return new Response(
+    JSON.stringify(error),
+    { 
+      status, 
+      headers: { 
+        'Content-Type': 'application/json',
+        ...corsHeaders 
+      } 
+    }
+  );
+}
 
 function calculateWesternProfile(celestialData) {
   // Extract sun, moon and ascendant positions
@@ -103,8 +195,9 @@ function calculateWesternProfile(celestialData) {
     moon_sign: `${moonSign.name} ${moonSign.symbol}`,
     moon_keyword: getSignKeyword(moonSign.name, 'moon'),
     rising_sign: `${risingSign.name} ${risingSign.symbol}`,
-    aspects: calculateAspects(celestialData), // New: Calculate major aspects
-    houses: calculateHouses(celestialData)    // New: Calculate house placements
+    aspects: calculateAspects(celestialData), // Calculate major aspects
+    houses: calculateHouses(celestialData),   // Calculate house placements
+    source: "calculated"  // Flag to indicate this is calculated data
   };
 }
 

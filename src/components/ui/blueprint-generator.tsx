@@ -5,6 +5,7 @@ import { SoulOrb } from "./soul-orb";
 import { cn } from "@/lib/utils";
 import { blueprintService, defaultBlueprintData } from "@/services/blueprint-service";
 import { useToast } from "@/hooks/use-toast";
+import { AlertCircle, AlertTriangle, CheckCircle } from "lucide-react";
 
 interface BlueprintGeneratorProps {
   onComplete: () => void;
@@ -18,10 +19,12 @@ const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
   className 
 }) => {
   const [progress, setProgress] = useState(0);
-  const [stage, setStage] = useState<'preparing' | 'assembling' | 'finalizing' | 'complete'>('preparing');
+  const [stage, setStage] = useState<'preparing' | 'assembling' | 'finalizing' | 'complete' | 'error'>('preparing');
   const [particles, setParticles] = useState<Array<{id: number, x: number, y: number, size: number, speed: number}>>([]);
   const [isCompleted, setIsCompleted] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isPartialData, setIsPartialData] = useState(false);
+  const [errorDetails, setErrorDetails] = useState<string | null>(null);
   const { toast } = useToast();
 
   // Generate random particles
@@ -44,33 +47,89 @@ const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
     console.log("Saving blueprint data to database...");
     
     try {
-      // Create blueprint data from form inputs or use default
-      const blueprintData = {
-        ...defaultBlueprintData,
-        user_meta: {
-          ...defaultBlueprintData.user_meta,
-          full_name: formData?.name || defaultBlueprintData.user_meta.full_name,
-          preferred_name: formData?.name?.split(' ')[0] || defaultBlueprintData.user_meta.preferred_name,
-          birth_date: formData?.birthDate || defaultBlueprintData.user_meta.birth_date,
-          birth_time_local: formData?.birthTime || defaultBlueprintData.user_meta.birth_time_local,
-          birth_location: formData?.birthLocation || defaultBlueprintData.user_meta.birth_location,
-        },
+      if (!formData) {
+        toast({
+          title: "Error",
+          description: "No form data provided for blueprint generation",
+          variant: "destructive"
+        });
+        setStage('error');
+        setErrorDetails("Missing user data");
+        return;
+      }
+      
+      // Prepare user meta data from form inputs
+      const userMetaData = {
+        full_name: formData?.name || "User",
+        preferred_name: formData?.name?.split(' ')[0] || "User",
+        birth_date: formData?.birthDate || "",
+        birth_time_local: formData?.birthTime || "",
+        birth_location: formData?.birthLocation || "",
+        timezone: formData?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+      };
+      
+      console.log("Generating blueprint with user data:", userMetaData);
+      
+      // Generate blueprint using the blueprint service
+      const { data: generatedBlueprint, error, isPartial } = await blueprintService.generateBlueprintFromBirthData(userMetaData);
+      
+      if (error) {
+        console.error("Error generating blueprint:", error);
+        toast({
+          title: "Generation Error",
+          description: error,
+          variant: "destructive"
+        });
+        setStage('error');
+        setErrorDetails(error);
+        return;
+      }
+      
+      if (!generatedBlueprint) {
+        console.error("No blueprint generated");
+        toast({
+          title: "Error",
+          description: "Blueprint generation failed to produce data",
+          variant: "destructive"
+        });
+        setStage('error');
+        setErrorDetails("No blueprint data generated");
+        return;
+      }
+      
+      if (isPartial) {
+        setIsPartialData(true);
+        console.warn("Generated partial blueprint with some default values");
+        toast({
+          title: "Partial Blueprint Generated",
+          description: "Some data could not be calculated and default values were used",
+          variant: "warning"
+        });
+      }
+      
+      console.log("Blueprint generated successfully, saving to database");
+      
+      // Add personality type from form data
+      const finalBlueprint = {
+        ...generatedBlueprint,
         cognition_mbti: {
-          ...defaultBlueprintData.cognition_mbti,
-          type: formData?.personality || defaultBlueprintData.cognition_mbti.type,
+          ...generatedBlueprint.cognition_mbti,
+          type: formData?.personality || generatedBlueprint.cognition_mbti.type
         }
       };
       
       // Save blueprint to database
-      const result = await blueprintService.saveBlueprintData(blueprintData);
+      const result = await blueprintService.saveBlueprintData(finalBlueprint);
       
       if (!result.success) {
         console.error("Error saving blueprint:", result.error);
         toast({
           title: "Error",
-          description: "Failed to save your blueprint. Please try again.",
+          description: "Generated blueprint successfully but failed to save it.",
           variant: "destructive"
         });
+        setStage('error');
+        setErrorDetails(result.error || "Failed to save blueprint");
         return;
       }
       
@@ -89,6 +148,8 @@ const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
         description: "Something went wrong during blueprint generation",
         variant: "destructive"
       });
+      setStage('error');
+      setErrorDetails(error instanceof Error ? error.message : "Unknown error");
     } finally {
       setIsSaving(false);
     }
@@ -98,7 +159,7 @@ const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
   useEffect(() => {
     let interval: NodeJS.Timeout;
     
-    if (progress < 100 && !isCompleted && !isSaving) {
+    if (progress < 100 && !isCompleted && !isSaving && stage !== 'error') {
       interval = setInterval(() => {
         setProgress(prev => {
           const increment = Math.random() * 3 + 1;
@@ -124,6 +185,14 @@ const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
       if (interval) clearInterval(interval);
     };
   }, [progress, stage, isCompleted, isSaving]);
+
+  // Error retry handler
+  const handleRetry = () => {
+    setProgress(0);
+    setStage('preparing');
+    setErrorDetails(null);
+    setIsPartialData(false);
+  };
 
   return (
     <div className={cn("relative w-full h-64 overflow-hidden rounded-xl", className)}>
@@ -157,7 +226,8 @@ const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
         <motion.div
           initial={{ scale: 1 }}
           animate={{ 
-            scale: stage === 'complete' ? [1, 1.5, 1] : 1,
+            scale: stage === 'complete' ? [1, 1.5, 1] : 
+                   stage === 'error' ? [1, 0.8, 1] : 1,
             rotate: progress * 5
           }}
           transition={{ duration: 2 }}
@@ -166,60 +236,109 @@ const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
             size="lg" 
             stage={stage === 'preparing' ? 'welcome' : 
                   stage === 'assembling' ? 'collecting' :
-                  stage === 'finalizing' ? 'generating' : 'complete'}
-            pulse={true}
+                  stage === 'finalizing' ? 'generating' : 
+                  stage === 'error' ? 'error' : 'complete'}
+            pulse={stage !== 'error'}
             speaking={false}
           />
         </motion.div>
       </div>
       
       {/* Energy streams flowing toward the orb */}
-      <div className="absolute inset-0">
-        {progress < 100 && Array.from({ length: 8 }).map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-16 bg-gradient-to-c from-soul-purple to-transparent"
-            style={{
-              left: '50%',
-              top: '50%',
-              transformOrigin: 'center',
-              rotate: `${i * 45}deg`,
-              translateX: '-50%',
-              translateY: '-50%'
-            }}
-            animate={{
-              height: [30, 100, 30],
-              opacity: [0.3, 0.8, 0.3]
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: i * 0.2
-            }}
-          />
-        ))}
-      </div>
+      {stage !== 'error' && progress < 100 && (
+        <div className="absolute inset-0">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-16 bg-gradient-to-c from-soul-purple to-transparent"
+              style={{
+                left: '50%',
+                top: '50%',
+                transformOrigin: 'center',
+                rotate: `${i * 45}deg`,
+                translateX: '-50%',
+                translateY: '-50%'
+              }}
+              animate={{
+                height: [30, 100, 30],
+                opacity: [0.3, 0.8, 0.3]
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: i * 0.2
+              }}
+            />
+          ))}
+        </div>
+      )}
       
       {/* Status text */}
       <div className="absolute bottom-6 left-0 right-0 text-center text-white">
-        <p className="font-medium text-lg">
-          {stage === 'preparing' && 'Preparing Soul Blueprint...'}
-          {stage === 'assembling' && 'Assembling Cosmic Patterns...'}
-          {stage === 'finalizing' && 'Connecting Energy Pathways...'}
-          {stage === 'complete' && 'Soul Blueprint Complete!'}
-        </p>
-        
-        {/* Progress bar */}
-        <div className="mt-2 mx-auto w-64 h-1 bg-white bg-opacity-20 rounded-full overflow-hidden">
-          <motion.div 
-            className="h-full bg-soul-purple"
-            style={{ width: `${progress}%` }}
-            initial={{ width: '0%' }}
-            animate={{ width: `${progress}%` }}
-            transition={{ duration: 0.3 }}
-          />
-        </div>
+        {stage === 'error' ? (
+          <div className="flex flex-col items-center">
+            <div className="flex items-center mb-2">
+              <AlertCircle className="text-red-500 mr-2 h-5 w-5" />
+              <p className="font-medium text-lg text-red-500">
+                Blueprint Generation Error
+              </p>
+            </div>
+            <p className="text-sm mb-2 max-w-xs mx-auto">
+              {errorDetails || "An unexpected error occurred during blueprint generation"}
+            </p>
+            <button 
+              className="bg-soul-purple text-white px-3 py-1 text-sm rounded-full hover:bg-soul-purple/80 transition-colors"
+              onClick={handleRetry}
+            >
+              Retry
+            </button>
+          </div>
+        ) : (
+          <>
+            <p className="font-medium text-lg flex items-center justify-center">
+              {stage === 'preparing' && 'Preparing Soul Blueprint...'}
+              {stage === 'assembling' && 'Assembling Cosmic Patterns...'}
+              {stage === 'finalizing' && 'Connecting Energy Pathways...'}
+              {stage === 'complete' && (
+                <>
+                  {isPartialData ? (
+                    <>
+                      <AlertTriangle className="text-yellow-400 mr-2 h-5 w-5" />
+                      Partial Blueprint Complete
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="text-green-500 mr-2 h-5 w-5" />
+                      Soul Blueprint Complete!
+                    </>
+                  )}
+                </>
+              )}
+            </p>
+            
+            {/* Display partial data warning if applicable */}
+            {isPartialData && stage === 'complete' && (
+              <p className="text-xs text-yellow-400 mt-1 mb-2">
+                Some data could not be calculated and default values were used
+              </p>
+            )}
+            
+            {/* Progress bar */}
+            <div className="mt-2 mx-auto w-64 h-1 bg-white bg-opacity-20 rounded-full overflow-hidden">
+              <motion.div 
+                className={cn(
+                  "h-full", 
+                  isPartialData ? "bg-yellow-500" : "bg-soul-purple"
+                )}
+                style={{ width: `${progress}%` }}
+                initial={{ width: '0%' }}
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 0.3 }}
+              />
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

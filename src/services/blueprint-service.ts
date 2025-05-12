@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 // Blueprint template type definition
@@ -63,6 +64,7 @@ export type BlueprintData = {
     rising_sign: string;
     aspects?: any[]; // New: planetary aspects
     houses?: Record<string, any>; // New: house placements
+    source?: string; // New: source flag to track if data is calculated or default
   };
   archetype_chinese: {
     animal: string;
@@ -71,6 +73,7 @@ export type BlueprintData = {
     keyword: string;
     element_characteristic?: string; // New: element characteristics
     compatibility?: {best: string[], worst: string[]}; // New: compatibility info
+    source?: string; // New: source flag
   };
   timing_overlays: {
     current_transits: any[];
@@ -81,6 +84,13 @@ export type BlueprintData = {
   belief_logs: any[];
   excitement_scores: any[];
   vibration_check_ins: any[];
+  metadata?: {
+    calculation_success: boolean;
+    partial_calculation: boolean;
+    calculation_errors?: Record<string, string>;
+    calculation_date?: string;
+    data_sources?: Record<string, string>;
+  };
 };
 
 // Default blueprint data as example
@@ -189,7 +199,7 @@ export const blueprintService = {
   /**
    * Generate a blueprint from birth data
    */
-  async generateBlueprintFromBirthData(userData: BlueprintData['user_meta']): Promise<{ data: BlueprintData | null; error?: string }> {
+  async generateBlueprintFromBirthData(userData: BlueprintData['user_meta']): Promise<{ data: BlueprintData | null; error?: string; isPartial?: boolean }> {
     try {
       console.log('Generating blueprint from birth data:', userData);
       
@@ -210,14 +220,28 @@ export const blueprintService = {
         return { data: null, error: `Calculation service error: ${calcError.message}` };
       }
       
+      if (!calcData) {
+        console.error('No data returned from calculation service');
+        return { data: null, error: 'No data returned from calculation service' };
+      }
+      
       console.log('Received calculation data:', calcData);
+      
+      // Check if we got actual calculation results or just the metadata
+      const hasRealData = calcData.calculation_metadata?.success || calcData.calculation_metadata?.partial;
+      const hasAnyCalculatedData = calcData.westernProfile || calcData.humanDesign || calcData.numerology || calcData.chineseZodiac;
+      
+      if (!hasAnyCalculatedData) {
+        console.error('No calculation results returned, only metadata');
+        return { data: null, error: 'Calculation service did not return any usable data' };
+      }
       
       // Create the blueprint using the calculation results
       const blueprint: BlueprintData = {
         user_meta: userData,
         cognition_mbti: {
           // For now, use default MBTI data or an API could be added later
-          type: "INFJ",
+          type: userData.personality || "INFJ",
           core_keywords: ["Insightful", "Counselor", "Advocate"],
           dominant_function: "Introverted Intuition (Ni)",
           auxiliary_function: "Extraverted Feeling (Fe)"
@@ -234,7 +258,8 @@ export const blueprintService = {
           gates: {
             unconscious_design: ["16.5", "20.3", "57.2", "34.6"],
             conscious_personality: ["11.4", "48.3", "39.5", "41.1"]
-          }
+          },
+          source: "default"
         },
         bashar_suite: {
           // Static data for now
@@ -250,23 +275,91 @@ export const blueprintService = {
           }
         },
         // Use the calculated numerology data
-        values_life_path: calcData.numerology,
+        values_life_path: calcData.numerology || {
+          life_path_number: 7,
+          life_path_keyword: "Seeker of Truth",
+          life_path_description: "A seeker of truth and wisdom, always seeking to understand the world around them.",
+          birth_day_number: 15,
+          birth_day_meaning: "The number 15 represents balance, harmony, and the ability to see the big picture.",
+          personal_year: 2023,
+          expression_number: 9,
+          expression_keyword: "Humanitarian",
+          soul_urge_number: 5,
+          soul_urge_keyword: "Freedom Seeker",
+          personality_number: 4,
+          source: "default"
+        },
         // Use the calculated Western astrology data
-        archetype_western: calcData.westernProfile,
+        archetype_western: calcData.westernProfile || {
+          sun_sign: "Taurus ♉︎",
+          sun_keyword: "Grounded Provider",
+          moon_sign: "Pisces ♓︎",
+          moon_keyword: "Intuitive Empath",
+          rising_sign: "Virgo ♍︎",
+          aspects: [
+            { planet: "Mercury", sign: "Taurus", aspect: "Conjunction" },
+            { planet: "Venus", sign: "Pisces", aspect: "Trine" },
+            { planet: "Mars", sign: "Virgo", aspect: "Square" }
+          ],
+          houses: {
+            1: { sign: "Taurus", house: "1st House" },
+            2: { sign: "Gemini", house: "2nd House" },
+            3: { sign: "Cancer", house: "3rd House" },
+            4: { sign: "Leo", house: "4th House" },
+            5: { sign: "Virgo", house: "5th House" },
+            6: { sign: "Libra", house: "6th House" },
+            7: { sign: "Scorpio", house: "7th House" },
+            8: { sign: "Sagittarius", house: "8th House" },
+            9: { sign: "Capricorn", house: "9th House" },
+            10: { sign: "Aquarius", house: "10th House" },
+            11: { sign: "Pisces", house: "11th House" },
+            12: { sign: "Aries", house: "12th House" }
+          },
+          source: "default"
+        },
         // Use the calculated Chinese zodiac data
-        archetype_chinese: calcData.chineseZodiac,
+        archetype_chinese: calcData.chineseZodiac || {
+          animal: "Horse",
+          element: "Metal",
+          yin_yang: "Yang",
+          keyword: "Free-spirited Explorer",
+          element_characteristic: "Metal is associated with strength, stability, and the ability to withstand challenges.",
+          compatibility: {
+            best: ["Dragon", "Horse", "Snake"],
+            worst: ["Monkey", "Rooster", "Dog"]
+          },
+          source: "default"
+        },
         timing_overlays: {
           current_transits: [],
-          notes: "Generated using real astronomical calculations"
+          notes: calcData.calculation_metadata?.success ? 
+                "Generated using real astronomical calculations" : 
+                "Generated using partial calculations and defaults"
         },
         goal_stack: [],
         task_graph: {},
         belief_logs: [],
         excitement_scores: [],
-        vibration_check_ins: []
+        vibration_check_ins: [],
+        // Add metadata to track calculation quality
+        metadata: {
+          calculation_success: calcData.calculation_metadata?.success || false,
+          partial_calculation: calcData.calculation_metadata?.partial || false,
+          calculation_errors: calcData.calculation_metadata?.errors,
+          calculation_date: calcData.calculation_metadata?.calculated_at || new Date().toISOString(),
+          data_sources: {
+            western: calcData.westernProfile ? "calculated" : "default",
+            chinese: calcData.chineseZodiac ? "calculated" : "default",
+            numerology: calcData.numerology ? "calculated" : "default",
+            humanDesign: calcData.humanDesign ? "calculated" : "default"
+          }
+        }
       };
       
-      return { data: blueprint };
+      return { 
+        data: blueprint, 
+        isPartial: calcData.calculation_metadata?.partial || false
+      };
     } catch (err) {
       console.error("Error generating blueprint:", err);
       return { data: null, error: err instanceof Error ? err.message : String(err) };
