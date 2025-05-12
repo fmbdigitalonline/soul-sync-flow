@@ -37,7 +37,7 @@ export const pythonBlueprintService = {
         userData: {
           full_name: userData.full_name,
           birth_date: userData.birth_date,
-          birth_time: userData.birth_time_local || "00:00",
+          birth_time_local: userData.birth_time_local || "00:00", // Keep original parameter name for backward compatibility
           birth_location: userData.birth_location || "Unknown",
           mbti: userData.mbti || "",
           preferred_name: userData.preferred_name || userData.full_name.split(' ')[0]
@@ -76,6 +76,15 @@ export const pythonBlueprintService = {
       console.log('[PYTHON SERVICE] Python blueprint engine response received');
       console.log('[PYTHON SERVICE] Response data type:', typeof response.data);
       console.log('[PYTHON SERVICE] Response data keys:', Object.keys(response.data).join(', '));
+      
+      // Check if there's an error in the response data
+      if (response.data.error) {
+        return {
+          success: false,
+          error: response.data.error || 'Python engine returned an error',
+          rawResponse: response.data
+        };
+      }
       
       // Log critical calculation values for validation
       if (response.data.values_life_path) {

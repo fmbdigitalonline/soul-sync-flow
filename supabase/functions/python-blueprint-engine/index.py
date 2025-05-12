@@ -1,260 +1,440 @@
 
-# Python Blueprint Engine for Supabase Edge Runtime
-import os
+#!/usr/bin/env python3
 import json
+import sys
+import os
 import traceback
+import time
+import re
 from datetime import datetime
-import pytz
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
-# Configure CORS headers for proper browser access
+# Import our blueprint modules
+from get_facts import build_fact_json, geocode, utc_offset
+from compose_story import generate_blueprint_narrative
+
+# Global debug mode
+DEBUG_MODE = True
+
+# Setup CORS headers for all responses
 CORS_HEADERS = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-    "Access-Control-Max-Age": "86400"
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-client-info, apikey',
 }
 
 def log_debug(message, context=None):
-    """Enhanced logging with timestamps and optional context data"""
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-    log_entry = f"[DEBUG {timestamp}] {message}"
-    
-    if context is not None:
-        if isinstance(context, dict):
-            context_str = json.dumps(context, default=str)
-            log_entry += f" Context: {context_str}"
-        else:
-            log_entry += f" Context: {str(context)}"
-    
-    print(log_entry)
-
-def handler(req):
-    """Main entry point for the Supabase Edge Runtime request handler"""
-    try:
-        log_debug("Python Blueprint Engine received request", {"method": req.method, "url": req.url})
-        
-        # Handle CORS preflight OPTIONS request
-        if req.method == "OPTIONS":
-            log_debug("Handling CORS preflight request")
-            return Response("", status=204, headers=CORS_HEADERS)
-
-        # Parse the incoming data
-        data = req.json()
-        log_debug("Received request data", data)
-        
-        user_data = data.get('userData', {})
-        log_debug("Extracted user data", user_data)
-        
-        # Calculate the blueprint
-        result = generate_blueprint(user_data)
-        log_debug("Generated blueprint successfully", {"blueprint_keys": list(result.keys())})
-        
-        # Return the result with CORS headers
-        return Response(json.dumps(result), 
-                      headers={**CORS_HEADERS, "Content-Type": "application/json"})
-    
-    except Exception as e:
-        log_stack_trace = "".join(traceback.format_exception(type(e), e, e.__traceback__))
-        log_debug(f"Error in handler: {str(e)}", {"stack_trace": log_stack_trace})
-        error_response = {
-            "error": f"Failed to process blueprint request: {str(e)}",
-            "success": False,
-            "error_type": type(e).__name__,
-            "stack_trace": log_stack_trace
+    """Log debug information to stdout"""
+    if DEBUG_MODE:
+        timestamp = datetime.now().isoformat()
+        log_entry = {
+            "timestamp": timestamp,
+            "message": message,
+            "context": context or {}
         }
-        return Response(json.dumps(error_response), 
-                      status=500, 
-                      headers={**CORS_HEADERS, "Content-Type": "application/json"})
+        print(f"DEBUG [{timestamp}]: {json.dumps(log_entry)}", file=sys.stderr, flush=True)
 
-def generate_blueprint(user_data):
-    """Generate a complete blueprint based on user data with detailed logging"""
+def serve(req):
+    """Main entry point for the Edge Function"""
     try:
-        log_debug("Starting blueprint generation", user_data)
+        # Log request details
+        log_debug("Request received", {
+            "method": req.get("method", "UNKNOWN"),
+            "url": req.get("url", "UNKNOWN"),
+            "headers": {k: v for k, v in req.get("headers", {}).items() if k.lower() != "authorization"}
+        })
+        
+        # Handle OPTIONS requests for CORS preflight
+        if req.get("method") == "OPTIONS":
+            log_debug("Handling CORS preflight request")
+            return {
+                "status": 204,
+                "headers": CORS_HEADERS,
+                "body": ""
+            }
+        
+        # Only allow POST requests for blueprint generation
+        if req.get("method") != "POST":
+            log_debug(f"Method not allowed: {req.get('method')}")
+            return {
+                "status": 405,
+                "headers": {**CORS_HEADERS, "Content-Type": "application/json"},
+                "body": json.dumps({"error": "Method not allowed", "message": "Only POST method is supported"})
+            }
+        
+        # Parse request body
+        try:
+            body = req.get("body", "{}")
+            if isinstance(body, str):
+                data = json.loads(body)
+            else:
+                data = body
+            log_debug("Request body parsed", {"data_keys": list(data.keys())})
+        except json.JSONDecodeError as e:
+            log_debug(f"Invalid JSON in request body: {e}")
+            return {
+                "status": 400,
+                "headers": {**CORS_HEADERS, "Content-Type": "application/json"},
+                "body": json.dumps({"error": "Invalid JSON", "message": str(e)})
+            }
+        
+        # Process the request
+        result = process_blueprint_request(data)
+        
+        # Return the response
+        return {
+            "status": 200,
+            "headers": {**CORS_HEADERS, "Content-Type": "application/json"},
+            "body": json.dumps(result)
+        }
+    except Exception as e:
+        # Capture full stack trace
+        stack_trace = "".join(traceback.format_exception(type(e), e, e.__traceback__))
+        log_debug(f"Unhandled exception in serve function: {e}", {"stack_trace": stack_trace})
+        
+        # Return error response
+        return {
+            "status": 500,
+            "headers": {**CORS_HEADERS, "Content-Type": "application/json"},
+            "body": json.dumps({
+                "error": "Internal Server Error",
+                "message": str(e),
+                "stack_trace": stack_trace if DEBUG_MODE else "Enable debug mode for stack trace"
+            })
+        }
+
+def validate_input(data, key, expected_type, default=None):
+    """Validate and extract a value from input data with type checking"""
+    if key not in data or data[key] is None:
+        return default
+    
+    value = data[key]
+    
+    # For string type, ensure it's a string and not empty
+    if expected_type is str:
+        if not isinstance(value, str):
+            try:
+                value = str(value)
+            except:
+                return default
+        if value.strip() == "":
+            return default
+        return value
+    
+    # For other types, try to convert if possible
+    if not isinstance(value, expected_type):
+        try:
+            return expected_type(value)
+        except:
+            return default
+    
+    return value
+
+def process_blueprint_request(request_data):
+    """Process a blueprint generation request"""
+    start_time = time.time()
+    log_debug("Processing blueprint request", {"request_data": request_data})
+    
+    try:
+        # Validate request structure
+        if not isinstance(request_data, dict):
+            raise ValueError("Request body must be a JSON object")
+        
+        user_data = request_data.get('userData', {})
+        log_debug("Extracted user data", {"user_data": user_data})
         
         # Extract user data with validation
         full_name = validate_input(user_data, 'full_name', str, "")
         birth_date = validate_input(user_data, 'birth_date', str, "")
-        birth_time = validate_input(user_data, 'birth_time', str, "00:00")
+        
+        # Support both birth_time and birth_time_local for backwards compatibility
+        birth_time = validate_input(user_data, 'birth_time_local', str, "00:00") 
+        if birth_time == "00:00":  # If not found, try the alternate field name
+            birth_time = validate_input(user_data, 'birth_time', str, "00:00")
+        
         birth_location = validate_input(user_data, 'birth_location', str, "Unknown")
         mbti = validate_input(user_data, 'mbti', str, "")
         preferred_name = validate_input(user_data, 'preferred_name', str, full_name.split(' ')[0] if full_name else "")
         
-        log_debug("Validated input data", {
+        # Validate required fields
+        if not full_name:
+            raise ValueError("Missing required field: full_name")
+        if not birth_date:
+            raise ValueError("Missing required field: birth_date")
+        
+        # Validate date format
+        try:
+            datetime.strptime(birth_date, "%Y-%m-%d")
+        except ValueError:
+            raise ValueError("Invalid birth_date format. Required format: YYYY-MM-DD")
+        
+        # Validate time format if provided
+        if birth_time and birth_time != "00:00":
+            try:
+                datetime.strptime(birth_time, "%H:%M")
+            except ValueError:
+                raise ValueError("Invalid birth_time format. Required format: HH:MM (24-hour)")
+        
+        # Extract location components
+        location_parts = (birth_location or "Unknown").split('/')
+        
+        city = location_parts[0].strip() if len(location_parts) > 0 else "Unknown"
+        country = location_parts[1].strip() if len(location_parts) > 1 else "Unknown"
+        
+        log_debug("Parsed user inputs", {
             "full_name": full_name,
             "birth_date": birth_date,
             "birth_time": birth_time,
-            "birth_location": birth_location,
-            "mbti": mbti,
-            "preferred_name": preferred_name
+            "city": city,
+            "country": country,
+            "mbti": mbti
         })
         
-        # Calculate astrological data
-        log_debug("Calculating astrology data...")
-        astro_data = calculate_astrology(birth_date, birth_time, birth_location)
-        log_debug("Astrology calculation complete", astro_data)
+        # Step 1: Generate core facts
+        try:
+            facts = build_fact_json(full_name, birth_date, birth_time, city, country, mbti)
+            log_debug("Generated core facts successfully")
+        except Exception as e:
+            stack_trace = "".join(traceback.format_exception(type(e), e, e.__traceback__))
+            log_debug(f"Error generating facts: {e}", {"stack_trace": stack_trace})
+            raise ValueError(f"Failed to calculate blueprint facts: {str(e)}")
         
-        # Calculate numerology data
-        log_debug("Calculating numerology data...")
-        numerology = calculate_numerology(birth_date, full_name)
-        log_debug("Numerology calculation complete", numerology)
-        
-        # Calculate Human Design
-        log_debug("Calculating Human Design data...")
-        human_design = calculate_human_design(birth_date, birth_time, birth_location)
-        log_debug("Human Design calculation complete", human_design)
-        
-        # Calculate Chinese zodiac
-        log_debug("Calculating Chinese zodiac data...")
-        chinese_zodiac = calculate_chinese_zodiac(birth_date)
-        log_debug("Chinese zodiac calculation complete", chinese_zodiac)
-        
-        # Assemble the complete blueprint
-        log_debug("Assembling final blueprint...")
+        # Step 2: Calculate blueprint components
         blueprint = {
+            "_meta": {
+                "generation_date": datetime.now().isoformat(),
+                "generation_method": "python-blueprint-engine",
+                "calculation_time_ms": 0
+            },
             "user_meta": {
                 "full_name": full_name,
                 "preferred_name": preferred_name,
                 "birth_date": birth_date,
-                "birth_time_local": birth_time,
-                "birth_location": birth_location
+                "birth_time": birth_time,
+                "birth_location": birth_location,
+                "mbti": mbti
             },
-            "cognition_mbti": generate_mbti_profile(mbti),
-            "energy_strategy_human_design": human_design,
-            "values_life_path": numerology,
-            "archetype_western": astro_data,
-            "archetype_chinese": chinese_zodiac,
-            "calculation_method": "python-swiss-ephemeris-direct",
-            "engine_version": "1.0.0",
-            "calculation_timestamp": datetime.now(pytz.UTC).isoformat()
+            "cognition_mbti": calculate_mbti(facts),
+            "archetype_western": calculate_western_astrology(facts),
+            "archetype_chinese": calculate_chinese_zodiac(facts),
+            "values_life_path": calculate_numerology(facts),
+            "energy_strategy_human_design": calculate_human_design(facts)
         }
         
-        log_debug("Blueprint assembly complete")
+        # Calculate processing time
+        end_time = time.time()
+        processing_time = (end_time - start_time) * 1000  # Convert to milliseconds
+        blueprint["_meta"]["calculation_time_ms"] = round(processing_time, 2)
+        
+        log_debug("Blueprint generation complete", {
+            "processing_time_ms": blueprint["_meta"]["calculation_time_ms"],
+            "key_results": {
+                "life_path": blueprint["values_life_path"]["life_path_number"],
+                "human_design_type": blueprint["energy_strategy_human_design"]["type"],
+                "sun_sign": blueprint["archetype_western"]["sun_sign"]
+            }
+        })
+        
         return blueprint
         
+    except ValueError as e:
+        # Handle validation errors
+        log_debug(f"Validation error: {e}")
+        return {
+            "error": "Validation Error",
+            "message": str(e)
+        }
     except Exception as e:
-        log_stack_trace = "".join(traceback.format_exception(type(e), e, e.__traceback__))
-        log_debug(f"Error in generate_blueprint: {str(e)}", {"stack_trace": log_stack_trace})
-        raise
+        # Handle unexpected errors
+        stack_trace = "".join(traceback.format_exception(type(e), e, e.__traceback__))
+        log_debug(f"Unexpected error: {e}", {"stack_trace": stack_trace})
+        return {
+            "error": "Server Error",
+            "message": f"An unexpected error occurred: {str(e)}",
+            "stack_trace": stack_trace if DEBUG_MODE else "Enable debug mode for stack trace"
+        }
 
-def validate_input(data, key, expected_type, default_value):
-    """Validate and extract input values with type checking"""
-    value = data.get(key, default_value)
-    log_debug(f"Validating input '{key}'", {"value": value, "expected_type": str(expected_type)})
+def calculate_mbti(facts):
+    """Calculate MBTI profile from facts"""
+    log_debug("Calculating MBTI profile")
     
-    if value is None:
-        log_debug(f"Input '{key}' is None, using default", {"default": default_value})
-        return default_value
-        
-    if not isinstance(value, expected_type):
-        log_debug(f"Type mismatch for '{key}'", {
-            "actual_type": type(value).__name__, 
-            "expected_type": expected_type.__name__
-        })
-        
-        # Try to convert if string is expected
-        if expected_type == str and value is not None:
-            log_debug(f"Converting {key} to string", {"value": value})
-            return str(value)
-            
-        log_debug(f"Using default for '{key}'", {"default": default_value})
-        return default_value
-        
-    return value
+    mbti = facts.get("mbti", "").upper()
+    
+    # Validate MBTI format
+    if not re.match(r'^[EI][NS][FT][JP]$', mbti):
+        log_debug(f"Invalid MBTI format: {mbti}, using INFP as default")
+        mbti = "INFP"  # Default to INFP if invalid
+    
+    # Extract the four dichotomies
+    energy = "Extraverted" if mbti[0] == "E" else "Introverted"
+    information = "Intuitive" if mbti[1] == "N" else "Sensing"
+    decisions = "Thinking" if mbti[2] == "T" else "Feeling"
+    lifestyle = "Judging" if mbti[3] == "J" else "Perceiving"
+    
+    # Determine cognitive functions (simplified)
+    dom_func = ""
+    aux_func = ""
+    tert_func = ""
+    inf_func = ""
+    
+    # Simple function mapping based on type
+    functions_map = {
+        "INFP": ["Fi", "Ne", "Si", "Te"],
+        "ENFP": ["Ne", "Fi", "Te", "Si"],
+        "INFJ": ["Ni", "Fe", "Ti", "Se"],
+        "ENFJ": ["Fe", "Ni", "Se", "Ti"],
+        "INTJ": ["Ni", "Te", "Fi", "Se"],
+        "ENTJ": ["Te", "Ni", "Se", "Fi"],
+        "INTP": ["Ti", "Ne", "Si", "Fe"],
+        "ENTP": ["Ne", "Ti", "Fe", "Si"],
+        "ISFP": ["Fi", "Se", "Ni", "Te"],
+        "ESFP": ["Se", "Fi", "Te", "Ni"],
+        "ISFJ": ["Si", "Fe", "Ti", "Ne"],
+        "ESFJ": ["Fe", "Si", "Ne", "Ti"],
+        "ISTJ": ["Si", "Te", "Fi", "Ne"],
+        "ESTJ": ["Te", "Si", "Ne", "Fi"],
+        "ISTP": ["Ti", "Se", "Ni", "Fe"],
+        "ESTP": ["Se", "Ti", "Fe", "Ni"]
+    }
+    
+    if mbti in functions_map:
+        dom_func, aux_func, tert_func, inf_func = functions_map[mbti]
+    
+    # Get summary (simplified)
+    summary_map = {
+        "INFP": "Idealistic, creative dreamer",
+        "ENFP": "Enthusiastic, creative explorer",
+        "INFJ": "Insightful, principled visionary",
+        "ENFJ": "Charismatic, inspirational leader",
+        "INTJ": "Strategic, independent visionary",
+        "ENTJ": "Decisive, strategic leader",
+        "INTP": "Logical, innovative thinker",
+        "ENTP": "Innovative, versatile entrepreneur",
+        "ISFP": "Sensitive, artistic explorer",
+        "ESFP": "Enthusiastic, spontaneous performer",
+        "ISFJ": "Detailed, nurturing protector",
+        "ESFJ": "Caring, social harmonizer",
+        "ISTJ": "Responsible, practical organizer",
+        "ESTJ": "Efficient, structured manager",
+        "ISTP": "Practical, analytical problem-solver",
+        "ESTP": "Energetic, adaptable doer"
+    }
+    
+    summary = summary_map.get(mbti, "Thoughtful personality")
+    
+    # Strengths and challenges (simplified)
+    strengths_map = {
+        "INFP": ["Empathetic", "Creative", "Idealistic", "Adaptable", "Loyal"],
+        "ENFP": ["Enthusiastic", "Innovative", "Supportive", "Flexible", "Charismatic"],
+        # ... other types would be defined here
+    }
+    
+    challenges_map = {
+        "INFP": ["Overly idealistic", "Takes things personally", "Difficulty with criticism", "Impractical"],
+        "ENFP": ["Unfocused", "Disorganized", "Overthinking", "Trouble with follow-through"],
+        # ... other types would be defined here
+    }
+    
+    strengths = strengths_map.get(mbti, ["Adaptable", "Thoughtful"])
+    challenges = challenges_map.get(mbti, ["Can be stressed by uncertainty", "May need to develop more balance"])
+    
+    result = {
+        "type": mbti,
+        "summary": summary,
+        "energy_style": energy,
+        "information_gathering": information,
+        "decision_making": decisions,
+        "lifestyle_preference": lifestyle,
+        "dominant_function": dom_func,
+        "auxiliary_function": aux_func,
+        "tertiary_function": tert_func,
+        "inferior_function": inf_func,
+        "strengths": strengths,
+        "challenges": challenges
+    }
+    
+    log_debug("MBTI calculation complete", {"result": result})
+    return result
 
-def calculate_astrology(birth_date, birth_time, birth_location):
-    """Calculate astrological data with detailed logging"""
+def calculate_numerology(facts):
+    """Calculate numerology from birth facts"""
     try:
-        log_debug("Starting astrology calculation", {
-            "birth_date": birth_date,
-            "birth_time": birth_time,
-            "birth_location": birth_location
-        })
+        log_debug("Calculating numerology")
         
-        # Parse birth date
-        try:
-            year, month, day = map(int, birth_date.split('-'))
-            log_debug("Parsed birth date", {"year": year, "month": month, "day": day})
-        except Exception as e:
-            log_debug(f"Error parsing birth date: {str(e)}")
-            year, month, day = 2000, 1, 1  # Default date
-        
-        # Determine sun sign from birth date
-        log_debug("Determining sun sign...")
-        sun_sign, sun_dates = get_sun_sign(month, day)
-        log_debug("Sun sign determined", {"sign": sun_sign, "dates": sun_dates})
-        
-        # Determine moon and rising signs (simplified calculations for now)
-        log_debug("Determining moon and rising signs (simplified calculation)...")
-        moon_sign = get_moon_sign(year, month, day, birth_time)
-        rising_sign = get_rising_sign(year, month, day, birth_time, birth_location)
-        
-        log_debug("Astrology calculation complete", {
-            "sun_sign": sun_sign,
-            "moon_sign": moon_sign,
-            "rising_sign": rising_sign
-        })
-        
-        return {
-            "sun_sign": f"{sun_sign} ♈︎",  # Using placeholder symbol, would be dynamic in reality
-            "sun_keyword": get_sign_keyword(sun_sign, "sun"),
-            "sun_dates": sun_dates,
-            "sun_element": get_element_for_sign(sun_sign),
-            "sun_qualities": get_sign_qualities(sun_sign),
-            "moon_sign": f"{moon_sign} ♓︎",  # Using placeholder symbol, would be dynamic in reality
-            "moon_keyword": get_sign_keyword(moon_sign, "moon"),
-            "moon_element": get_element_for_sign(moon_sign),
-            "rising_sign": f"{rising_sign} ♍︎", # Using placeholder symbol, would be dynamic in reality
-            "calculation_method": "python-simplified"
-        }
-    except Exception as e:
-        log_stack_trace = "".join(traceback.format_exception(type(e), e, e.__traceback__))
-        log_debug(f"Error in calculate_astrology: {str(e)}", {"stack_trace": log_stack_trace})
-        # Return default values on error
-        return {
-            "sun_sign": "Unknown",
-            "moon_sign": "Unknown",
-            "rising_sign": "Unknown",
-            "error": str(e),
-            "calculation_method": "error-fallback"
-        }
-
-def calculate_numerology(birth_date, name):
-    """Calculate numerology from birth date with detailed logging"""
-    try:
-        log_debug("Starting numerology calculation", {"birth_date": birth_date, "name": name})
-        
+        # Extract birth components from facts
+        birth_date = facts.get("birth", {}).get("local", "")
         if not birth_date:
-            log_debug("Invalid birth date, returning default numerology")
-            return get_default_numerology()
+            raise ValueError("Missing birth date information")
         
-        # Parse birth date
-        try:
-            year_str, month_str, day_str = birth_date.split('-')
-            year = int(year_str)
-            month = int(month_str)
-            day = int(day_str)
-            log_debug("Parsed birth date components", {"year": year, "month": month, "day": day})
-        except Exception as e:
-            log_debug(f"Error parsing birth date: {str(e)}")
-            return get_default_numerology()
+        # Parse the date
+        match = re.search(r'(\d{4})-(\d{2})-(\d{2})', birth_date)
+        if not match:
+            raise ValueError(f"Cannot parse birth date from {birth_date}")
             
-        # Calculate life path number with detailed logging of each step
+        year = int(match.group(1))
+        month = int(match.group(2))
+        day = int(match.group(3))
+        
+        log_debug(f"Calculating life path for date: {year}-{month}-{day}")
+        
+        # Calculate life path number
         life_path = calculate_life_path_number(day, month, year)
         
-        log_debug("Numerology calculation complete", {"life_path_number": life_path})
+        log_debug(f"Life path calculation result: {life_path}")
+        
+        # Get description based on life path
+        descriptions = {
+            1: "The Pioneer: Independent, innovative, leader, self-confident",
+            2: "The Mediator: Cooperative, diplomatic, sensitive, peacemaker",
+            3: "The Communicator: Creative, expressive, optimistic, inspiring",
+            4: "The Builder: Practical, reliable, disciplined, hardworking",
+            5: "The Freedom Seeker: Adaptable, versatile, adventurous, freedom-loving",
+            6: "The Nurturer: Responsible, caring, compassionate, harmonious",
+            7: "The Seeker: Analytical, introspective, spiritual, studious",
+            8: "The Achiever: Ambitious, goal-oriented, materialistic, powerful",
+            9: "The Humanitarian: Compassionate, selfless, generous, idealistic",
+            11: "The Illuminator: Intuitive, inspirational, idealistic, visionary",
+            22: "The Master Builder: Practical visionary, powerful, capable",
+            33: "The Master Teacher: Compassionate, selfless, influential"
+        }
+        
+        # Get strengths for each life path
+        strengths_map = {
+            1: ["Leadership", "Independence", "Innovation"],
+            2: ["Diplomacy", "Sensitivity", "Cooperation"],
+            3: ["Expression", "Creativity", "Optimism"],
+            4: ["Reliability", "Hard work", "Organization"],
+            5: ["Adaptability", "Resourcefulness", "Freedom"],
+            6: ["Responsibility", "Nurturing", "Harmony"],
+            7: ["Analysis", "Intuition", "Wisdom"],
+            8: ["Ambition", "Authority", "Achievement"],
+            9: ["Compassion", "Wisdom", "Selflessness"],
+            11: ["Inspiration", "Vision", "Enlightenment"],
+            22: ["Large-scale manifestation", "Practical vision", "Power"],
+            33: ["Altruistic service", "Teaching", "Compassion"]
+        }
+        
+        # Get challenges for each life path
+        challenges_map = {
+            1: ["Arrogance", "Stubbornness", "Dominance"],
+            2: ["Oversensitivity", "Indecision", "Dependency"],
+            3: ["Superficiality", "Scattered energy", "Criticism"],
+            4: ["Rigidity", "Narrow-mindedness", "Overwork"],
+            5: ["Restlessness", "Overindulgence", "Irresponsibility"],
+            6: ["Self-sacrifice", "Interference", "Perfectionism"],
+            7: ["Isolation", "Skepticism", "Over-analysis"],
+            8: ["Workaholic", "Materialism", "Control issues"],
+            9: ["Martyrdom", "Aloofness", "Emotional detachment"],
+            11: ["Impracticality", "Nervous tension", "High standards"],
+            22: ["Overwhelming pressure", "Overexertion", "Control"],
+            33: ["Self-sacrifice", "Burnout", "Exploitation"]
+        }
         
         return {
             "life_path_number": life_path,
-            "life_path_keyword": get_life_path_keyword(life_path),
-            "life_path_description": get_life_path_description(life_path),
-            "birth_day_number": day,
-            "birth_day_meaning": get_birth_day_meaning(day),
-            "personal_year": calculate_personal_year(day, month),
-            "expression_number": calculate_expression_number(name),
-            "expression_keyword": get_expression_keyword(calculate_expression_number(name)),
-            "soul_urge_number": calculate_soul_urge_number(name),
-            "soul_urge_keyword": get_soul_urge_keyword(calculate_soul_urge_number(name)),
-            "personality_number": calculate_personality_number(name)
+            "description": descriptions.get(life_path, "A unique spiritual path"),
+            "strengths": strengths_map.get(life_path, ["Resilience", "Uniqueness"]),
+            "challenges": challenges_map.get(life_path, ["Finding balance", "Self-acceptance"])
         }
     except Exception as e:
         log_stack_trace = "".join(traceback.format_exception(type(e), e, e.__traceback__))
@@ -263,283 +443,309 @@ def calculate_numerology(birth_date, name):
 
 def calculate_life_path_number(day, month, year):
     """
-    Calculate the life path number using the proper numerology methodology
-    Sum the digits of each component (day, month, year) to a single digit first,
-    then sum those results and reduce to single digit unless it's a master number
+    Calculate life path number from birth date components
     """
-    log_debug("Calculating Life Path Number", {"day": day, "month": month, "year": year})
+    log_debug(f"Life Path Calculation - Input: day={day}, month={month}, year={year}")
     
-    # Sum each component separately
-    day_sum = reduce_single_digit(day)
-    month_sum = reduce_single_digit(month)
-    year_digits = [int(digit) for digit in str(year)]
-    year_sum = reduce_single_digit(sum(year_digits))
+    # Calculate sum of digits for day
+    day_sum = sum(int(digit) for digit in str(day))
+    log_debug(f"Day {day} sum: {day_sum}")
     
-    log_debug("Component sums", {"day_sum": day_sum, "month_sum": month_sum, "year_sum": year_sum})
+    # Calculate sum of digits for month
+    month_sum = sum(int(digit) for digit in str(month))
+    log_debug(f"Month {month} sum: {month_sum}")
     
-    # Sum the individual component sums
-    total_sum = day_sum + month_sum + year_sum
-    log_debug("Total sum before final reduction", total_sum)
+    # Calculate sum of digits for year
+    year_sum = sum(int(digit) for digit in str(year))
+    log_debug(f"Year {year} sum: {year_sum}")
     
-    # Final reduction to get the Life Path Number
-    # Check if the sum is a master number before reduction
-    if total_sum == 11 or total_sum == 22 or total_sum == 33:
-        log_debug("Found master number, not reducing further", {"master_number": total_sum})
-        return total_sum
+    # Sum the three components
+    total = day_sum + month_sum + year_sum
+    log_debug(f"Initial sum: {total}")
     
-    # Otherwise reduce to a single digit
-    result = reduce_single_digit(total_sum)
-    log_debug("Final Life Path Number", result)
-    return result
+    # Keep reducing unless it's a single digit or a master number (11, 22, 33)
+    while total > 9 and total not in (11, 22, 33):
+        total = sum(int(digit) for digit in str(total))
+        log_debug(f"Reduced to: {total}")
+    
+    return total
 
-def reduce_single_digit(num):
-    """Reduces a number to a single digit unless it's a master number (11, 22, 33)"""
-    log_debug(f"Reducing number {num} to single digit")
-    
-    # Convert the number to a string to handle multi-digit numbers
-    num_str = str(num)
-    
-    # Continue summing digits until we reach a single digit or a master number
-    while len(num_str) > 1 and num_str not in ["11", "22", "33"]:
-        log_debug(f"Number {num_str} has multiple digits, reducing...")
-        # Sum the digits
-        digit_sum = sum(int(digit) for digit in num_str)
-        num_str = str(digit_sum)
-        log_debug(f"Reduced to {num_str}")
-    
-    result = int(num_str)
-    log_debug(f"Final reduction result: {result}")
-    return result
-
-def get_sun_sign(month, day):
-    """Get sun sign based on month and day"""
-    log_debug("Getting sun sign", {"month": month, "day": day})
-    
-    if (month == 3 and day >= 21) or (month == 4 and day <= 19):
-        return "Aries", "March 21 - April 19"
-    elif (month == 4 and day >= 20) or (month == 5 and day <= 20):
-        return "Taurus", "April 20 - May 20"
-    elif (month == 5 and day >= 21) or (month == 6 and day <= 20):
-        return "Gemini", "May 21 - June 20"
-    elif (month == 6 and day >= 21) or (month == 7 and day <= 22):
-        return "Cancer", "June 21 - July 22"
-    elif (month == 7 and day >= 23) or (month == 8 and day <= 22):
-        return "Leo", "July 23 - August 22"
-    elif (month == 8 and day >= 23) or (month == 9 and day <= 22):
-        return "Virgo", "August 23 - September 22"
-    elif (month == 9 and day >= 23) or (month == 10 and day <= 22):
-        return "Libra", "September 23 - October 22"
-    elif (month == 10 and day >= 23) or (month == 11 and day <= 21):
-        return "Scorpio", "October 23 - November 21"
-    elif (month == 11 and day >= 22) or (month == 12 and day <= 21):
-        return "Sagittarius", "November 22 - December 21"
-    elif (month == 12 and day >= 22) or (month == 1 and day <= 19):
-        return "Capricorn", "December 22 - January 19"
-    elif (month == 1 and day >= 20) or (month == 2 and day <= 18):
-        return "Aquarius", "January 20 - February 18"
-    else:
-        return "Pisces", "February 19 - March 20"
-
-def get_moon_sign(year, month, day, time):
-    """Get moon sign based on birth data (simplified calculation)"""
-    log_debug("Getting moon sign", {"year": year, "month": month, "day": day, "time": time})
-    # Simplified calculation for now - would use ephemeris in production
-    moon_signs = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", 
-                 "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"]
-    # Simple algorithm for demo - not accurate
-    index = (year + month + day) % 12
-    return moon_signs[index]
-
-def get_rising_sign(year, month, day, time, location):
-    """Get rising sign based on birth data and location (simplified calculation)"""
-    log_debug("Getting rising sign", {"year": year, "month": month, "day": day, "time": time, "location": location})
-    # Simplified calculation for now - would use ephemeris in production
-    rising_signs = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", 
-                   "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"]
-    # Simple algorithm for demo - not accurate
-    # In reality, this would take into account location coordinates and exact time
-    hour = 0
-    if ":" in time:
-        hour = int(time.split(":")[0])
-    index = (hour + day + month) % 12
-    return rising_signs[index]
-
-def get_element_for_sign(sign):
-    """Get element for astrological sign"""
-    elements = {
-        'Aries': 'Fire', 'Leo': 'Fire', 'Sagittarius': 'Fire',
-        'Taurus': 'Earth', 'Virgo': 'Earth', 'Capricorn': 'Earth',
-        'Gemini': 'Air', 'Libra': 'Air', 'Aquarius': 'Air',
-        'Cancer': 'Water', 'Scorpio': 'Water', 'Pisces': 'Water'
-    }
-    return elements.get(sign, "Unknown")
-
-def get_sign_qualities(sign):
-    """Get qualities for astrological sign"""
-    qualities = {
-        'Aries': 'Cardinal, Independent, Passionate',
-        'Taurus': 'Fixed, Reliable, Sensual',
-        'Gemini': 'Mutable, Versatile, Curious',
-        'Cancer': 'Cardinal, Nurturing, Emotional',
-        'Leo': 'Fixed, Creative, Generous',
-        'Virgo': 'Mutable, Analytical, Practical',
-        'Libra': 'Cardinal, Diplomatic, Harmonious',
-        'Scorpio': 'Fixed, Intense, Transformative',
-        'Sagittarius': 'Mutable, Adventurous, Philosophical',
-        'Capricorn': 'Cardinal, Ambitious, Disciplined',
-        'Aquarius': 'Fixed, Innovative, Humanitarian',
-        'Pisces': 'Mutable, Compassionate, Intuitive'
-    }
-    return qualities.get(sign, "Unknown qualities")
-
-def get_sign_keyword(sign, position):
-    """Get keyword for zodiac sign based on position (sun, moon, rising)"""
-    keywords = {
-        'Aries': {
-            'sun': 'Courageous Pioneer',
-            'moon': 'Emotionally Direct',
-            'rising': 'Dynamic Presence'
-        },
-        'Taurus': {
-            'sun': 'Grounded Provider',
-            'moon': 'Security-Seeking',
-            'rising': 'Steady Appearance'
-        },
-        'Gemini': {
-            'sun': 'Versatile Communicator',
-            'moon': 'Emotionally Adaptable',
-            'rising': 'Quick-Minded Presence'
-        },
-        'Cancer': {
-            'sun': 'Nurturing Protector',
-            'moon': 'Emotionally Sensitive',
-            'rising': 'Caring Demeanor'
-        },
-        'Leo': {
-            'sun': 'Creative Leader',
-            'moon': 'Emotionally Expressive',
-            'rising': 'Charismatic Presence'
-        },
-        'Virgo': {
-            'sun': 'Practical Analyst',
-            'moon': 'Emotionally Precise',
-            'rising': 'Detail-Oriented Appearance'
-        },
-        'Libra': {
-            'sun': 'Harmonious Mediator',
-            'moon': 'Emotionally Balanced',
-            'rising': 'Graceful Demeanor'
-        },
-        'Scorpio': {
-            'sun': 'Intense Transformer',
-            'moon': 'Emotionally Profound',
-            'rising': 'Magnetic Presence'
-        },
-        'Sagittarius': {
-            'sun': 'Adventurous Explorer',
-            'moon': 'Emotionally Optimistic',
-            'rising': 'Free-Spirited Appearance'
-        },
-        'Capricorn': {
-            'sun': 'Ambitious Achiever',
-            'moon': 'Emotionally Disciplined',
-            'rising': 'Authoritative Presence'
-        },
-        'Aquarius': {
-            'sun': 'Innovative Humanitarian',
-            'moon': 'Emotionally Detached',
-            'rising': 'Unique Appearance'
-        },
-        'Pisces': {
-            'sun': 'Compassionate Dreamer',
-            'moon': 'Emotionally Intuitive',
-            'rising': 'Ethereal Presence'
-        }
-    }
-    
-    # Default values if the sign or position is not found
-    if sign not in keywords:
-        return f"Unique {position.capitalize()}"
-    
-    if position not in keywords[sign]:
-        return f"{sign} {position.capitalize()}"
-    
-    return keywords[sign][position]
-
-def calculate_human_design(birth_date, birth_time, birth_location):
-    """Calculate Human Design profile with detailed logging"""
+def calculate_western_astrology(facts):
+    """Calculate Western astrology from facts"""
     try:
-        log_debug("Starting Human Design calculation", {
-            "birth_date": birth_date, 
-            "birth_time": birth_time, 
-            "birth_location": birth_location
-        })
+        log_debug("Calculating Western astrology")
         
-        # This would use more accurate calculations with the HDKit library in production
-        # For now, we'll use a simplified calculation for demo purposes
+        # Extract western astrology data from facts
+        western = facts.get("western", {})
+        sun_sign = western.get("sun_sign", "Aries")
+        sun_deg = western.get("sun_deg", 0)
+        moon_sign = western.get("moon_sign", "Taurus")
+        moon_deg = western.get("moon_deg", 0)
+        ascendant_sign = western.get("ascendant_sign", "Gemini")
+        asc_deg = western.get("asc_deg", 0)
         
-        # Parse birth date for calculation
-        try:
-            year, month, day = map(int, birth_date.split('-'))
-            log_debug("Parsed birth date", {"year": year, "month": month, "day": day})
-            
-            # Simplified type determination based on birth date components
-            # This is NOT accurate - just for demo
-            types = ["Generator", "Projector", "Manifestor", "Manifesting Generator", "Reflector"]
-            type_index = (month + day) % 5
-            hd_type = types[type_index]
-            
-            # Profile calculation - simplified
-            profile_num = ((year % 6) + 1)
-            profile = f"{profile_num}/3"
-            
-            # Authority calculation - simplified
-            authorities = ["Emotional", "Sacral", "Splenic", "Ego", "Self-Projected", "Mental"]
-            authority_index = (day + month) % 6
-            authority = authorities[authority_index]
-            
-            log_debug("Human Design calculation complete", {
-                "type": hd_type, 
-                "profile": profile, 
-                "authority": authority
-            })
-            
-            # Centers calculation
-            centers = {
-                "root": (day % 2 == 0),
-                "sacral": (month % 2 == 0),
-                "solar_plexus": ((day + month) % 2 == 0),
-                "heart": ((day * month) % 2 == 0),
-                "throat": ((year % 10) % 2 == 0),
-                "ajna": ((day + year) % 2 == 0),
-                "head": ((month + year) % 2 == 0),
-                "g": ((day + month + year) % 2 == 0),
-                "spleen": ((day * month * year) % 2 == 0)
+        log_debug(f"Sun: {sun_sign} {sun_deg}°, Moon: {moon_sign} {moon_deg}°, Asc: {ascendant_sign} {asc_deg}°")
+        
+        # Get sign descriptions
+        sign_descriptions = {
+            'Aries': {
+                'sun': 'Independent Pioneer',
+                'moon': 'Emotionally Brave',
+                'rising': 'Dynamic Presence'
+            },
+            'Taurus': {
+                'sun': 'Steady Builder',
+                'moon': 'Security-Seeking',
+                'rising': 'Steady Appearance'
+            },
+            'Gemini': {
+                'sun': 'Versatile Communicator',
+                'moon': 'Emotionally Adaptable',
+                'rising': 'Quick-Minded Presence'
+            },
+            'Cancer': {
+                'sun': 'Nurturing Protector',
+                'moon': 'Emotionally Sensitive',
+                'rising': 'Caring Demeanor'
+            },
+            'Leo': {
+                'sun': 'Creative Leader',
+                'moon': 'Emotionally Expressive',
+                'rising': 'Charismatic Presence'
+            },
+            'Virgo': {
+                'sun': 'Practical Analyst',
+                'moon': 'Emotionally Precise',
+                'rising': 'Detail-Oriented Appearance'
+            },
+            'Libra': {
+                'sun': 'Harmonious Mediator',
+                'moon': 'Emotionally Balanced',
+                'rising': 'Graceful Demeanor'
+            },
+            'Scorpio': {
+                'sun': 'Intense Transformer',
+                'moon': 'Emotionally Profound',
+                'rising': 'Magnetic Presence'
+            },
+            'Sagittarius': {
+                'sun': 'Adventurous Explorer',
+                'moon': 'Emotionally Optimistic',
+                'rising': 'Free-Spirited Appearance'
+            },
+            'Capricorn': {
+                'sun': 'Ambitious Achiever',
+                'moon': 'Emotionally Disciplined',
+                'rising': 'Authoritative Presence'
+            },
+            'Aquarius': {
+                'sun': 'Innovative Humanitarian',
+                'moon': 'Emotionally Detached',
+                'rising': 'Unique Appearance'
+            },
+            'Pisces': {
+                'sun': 'Compassionate Dreamer',
+                'moon': 'Emotionally Intuitive',
+                'rising': 'Ethereal Presence'
             }
+        }
+        
+        # Default values if the sign or position is not found
+        sun_description = sign_descriptions.get(sun_sign, {}).get('sun', 'Unique Individual')
+        moon_description = sign_descriptions.get(moon_sign, {}).get('moon', 'Emotional Nature')
+        rising_description = sign_descriptions.get(ascendant_sign, {}).get('rising', 'Personal Presentation')
+        
+        # Get the element for each sign
+        element_map = {
+            'Aries': 'Fire',
+            'Leo': 'Fire',
+            'Sagittarius': 'Fire',
+            'Taurus': 'Earth',
+            'Virgo': 'Earth',
+            'Capricorn': 'Earth',
+            'Gemini': 'Air',
+            'Libra': 'Air',
+            'Aquarius': 'Air',
+            'Cancer': 'Water',
+            'Scorpio': 'Water',
+            'Pisces': 'Water'
+        }
+        
+        sun_element = element_map.get(sun_sign, 'Unknown')
+        moon_element = element_map.get(moon_sign, 'Unknown')
+        rising_element = element_map.get(ascendant_sign, 'Unknown')
+        
+        # Get modality for each sign
+        modality_map = {
+            'Aries': 'Cardinal',
+            'Cancer': 'Cardinal',
+            'Libra': 'Cardinal',
+            'Capricorn': 'Cardinal',
+            'Taurus': 'Fixed',
+            'Leo': 'Fixed',
+            'Scorpio': 'Fixed',
+            'Aquarius': 'Fixed',
+            'Gemini': 'Mutable',
+            'Virgo': 'Mutable',
+            'Sagittarius': 'Mutable',
+            'Pisces': 'Mutable'
+        }
+        
+        sun_modality = modality_map.get(sun_sign, 'Unknown')
+        
+        # Build the result
+        result = {
+            "sun_sign": f"{sun_sign} ({sun_element})",
+            "sun_description": sun_description,
+            "sun_element": sun_element,
+            "sun_modality": sun_modality,
+            "sun_degree": sun_deg,
             
-            # Generate some gates for demonstration
-            unconscious_design = [f"{(day + i) % 64}.{(month + i) % 6 + 1}" for i in range(4)]
-            conscious_personality = [f"{(month + i) % 64}.{(day + i) % 6 + 1}" for i in range(4)]
+            "moon_sign": f"{moon_sign} ({moon_element})",
+            "moon_description": moon_description,
+            "moon_element": moon_element,
+            "moon_degree": moon_deg,
             
-            return {
-                "type": hd_type,
-                "profile": profile,
-                "authority": authority,
-                "strategy": get_hd_strategy(hd_type),
-                "definition": get_hd_definition(centers),
-                "not_self_theme": get_not_self_theme(hd_type),
-                "life_purpose": get_hd_purpose(hd_type),
-                "centers": centers,
-                "gates": {
-                    "unconscious_design": unconscious_design,
-                    "conscious_personality": conscious_personality
-                }
-            }
+            "ascendant_sign": f"{ascendant_sign} ({rising_element})",
+            "ascendant_description": rising_description,
+            "ascendant_element": rising_element,
+            "ascendant_degree": asc_deg,
             
-        except Exception as e:
-            log_debug(f"Error in Human Design calculation details: {str(e)}")
-            raise
-            
+            "dominant_elements": get_dominant_elements(sun_element, moon_element, rising_element),
+            "dominant_modalities": get_dominant_modalities(sun_sign, moon_sign, ascendant_sign)
+        }
+        
+        log_debug("Western astrology calculation complete")
+        return result
+    except Exception as e:
+        log_stack_trace = "".join(traceback.format_exception(type(e), e, e.__traceback__))
+        log_debug(f"Error in calculate_western_astrology: {str(e)}", {"stack_trace": log_stack_trace})
+        raise
+
+def get_dominant_elements(sun_element, moon_element, rising_element):
+    """Get dominant elements based on sun, moon, and rising signs"""
+    elements = [sun_element, moon_element, rising_element]
+    element_counts = {
+        'Fire': elements.count('Fire'),
+        'Earth': elements.count('Earth'),
+        'Air': elements.count('Air'),
+        'Water': elements.count('Water')
+    }
+    
+    # Get elements with count > 0, sorted by count (descending)
+    dominant_elements = [e for e, count in sorted(element_counts.items(), 
+                                                 key=lambda x: x[1], 
+                                                 reverse=True) 
+                        if count > 0]
+    
+    return dominant_elements
+
+def get_dominant_modalities(sun_sign, moon_sign, rising_sign):
+    """Get dominant modalities based on sun, moon, and rising signs"""
+    modality_map = {
+        'Aries': 'Cardinal',
+        'Cancer': 'Cardinal',
+        'Libra': 'Cardinal',
+        'Capricorn': 'Cardinal',
+        'Taurus': 'Fixed',
+        'Leo': 'Fixed',
+        'Scorpio': 'Fixed',
+        'Aquarius': 'Fixed',
+        'Gemini': 'Mutable',
+        'Virgo': 'Mutable',
+        'Sagittarius': 'Mutable',
+        'Pisces': 'Mutable'
+    }
+    
+    signs = [sun_sign, moon_sign, rising_sign]
+    modalities = [modality_map.get(sign, 'Unknown') for sign in signs]
+    
+    modality_counts = {
+        'Cardinal': modalities.count('Cardinal'),
+        'Fixed': modalities.count('Fixed'),
+        'Mutable': modalities.count('Mutable')
+    }
+    
+    # Get modalities with count > 0, sorted by count (descending)
+    dominant_modalities = [m for m, count in sorted(modality_counts.items(), 
+                                                   key=lambda x: x[1], 
+                                                   reverse=True) 
+                          if count > 0]
+    
+    return dominant_modalities
+
+def calculate_human_design(facts):
+    """Calculate Human Design from facts"""
+    try:
+        log_debug("Calculating Human Design")
+        
+        # Extract Human Design data from facts
+        hd_data = facts.get("human_design", {})
+        hd_type = hd_data.get("type", "Generator")
+        authority = hd_data.get("authority", "Emotional")
+        profile = hd_data.get("profile", "3/5")
+        strategy = hd_data.get("strategy", "Wait to respond")
+        definition = hd_data.get("definition", "Split")
+        channels = hd_data.get("channels", [])
+        gates = hd_data.get("gates", [])
+        
+        log_debug(f"HD core data: Type={hd_type}, Authority={authority}, Profile={profile}")
+        
+        # Get human design type description
+        type_descriptions = {
+            "Manifestor": "Initiators who act independently",
+            "Generator": "Life force builders who respond to life",
+            "Manifesting Generator": "Multi-faceted fast builders",
+            "Projector": "Guides who see others clearly",
+            "Reflector": "Mirrors of community health"
+        }
+        
+        # Get strategy description based on type
+        strategy_descriptions = {
+            "Manifestor": "Inform before acting to reduce resistance",
+            "Generator": "Wait to respond to what lights you up",
+            "Manifesting Generator": "Wait to respond, then act quickly",
+            "Projector": "Wait for recognition and invitation",
+            "Reflector": "Wait a full moon cycle (28 days) before decisions"
+        }
+        
+        # Get not-self theme based on type
+        not_self_themes = {
+            "Manifestor": "Anger when not initiating or being controlled",
+            "Generator": "Frustration when not doing what brings satisfaction",
+            "Manifesting Generator": "Frustration and anger when not following passion",
+            "Projector": "Bitterness when not recognized for gifts",
+            "Reflector": "Disappointment when not aligned with community"
+        }
+        
+        # Get authority descriptions
+        authority_descriptions = {
+            "Emotional": "Wait for emotional clarity over time",
+            "Sacral": "Listen to your gut response",
+            "Splenic": "Trust immediate intuition",
+            "Ego": "Listen to heart and will",
+            "Self": "Wait for lunar cycle",
+            "Environmental": "Need correct environment",
+            "Mental": "Rationalize decisions"
+        }
+        
+        # Build detailed result
+        result = {
+            "type": hd_type,
+            "type_description": type_descriptions.get(hd_type, "Unique energy type"),
+            "profile": profile,
+            "authority": authority,
+            "authority_description": authority_descriptions.get(authority, "Your inner guidance system"),
+            "strategy": get_hd_strategy(hd_type),
+            "strategy_description": strategy_descriptions.get(hd_type, "Follow your unique strategy"),
+            "definition": definition,
+            "not_self_theme": not_self_themes.get(hd_type, "Resistance to natural flow"),
+            "channels": channels[:5] if channels else [],  # Limit to first 5
+            "gates": gates[:8] if gates else []  # Limit to first 8
+        }
+        
+        log_debug("Human Design calculation complete")
+        return result
     except Exception as e:
         log_stack_trace = "".join(traceback.format_exception(type(e), e, e.__traceback__))
         log_debug(f"Error in calculate_human_design: {str(e)}", {"stack_trace": log_stack_trace})
@@ -548,404 +754,141 @@ def calculate_human_design(birth_date, birth_time, birth_location):
 def get_hd_strategy(hd_type):
     """Get strategy based on Human Design type"""
     strategies = {
-        "Generator": "Wait to respond",
-        "Manifesting Generator": "Wait to respond, then inform",
-        "Projector": "Wait for the invitation",
         "Manifestor": "Inform before acting",
-        "Reflector": "Wait a lunar cycle (28 days)"
+        "Generator": "Wait to respond",
+        "Manifesting Generator": "Wait to respond, then act quickly",
+        "Projector": "Wait for invitation",
+        "Reflector": "Wait a full lunar cycle (28 days)"
     }
-    return strategies.get(hd_type, "Wait to respond")
+    return strategies.get(hd_type, "Follow your unique strategy")
 
-def get_hd_definition(centers):
-    """Determine definition type based on centers"""
-    # Simplified for demo - would be more complex in reality
-    connected_count = sum(1 for defined in centers.values() if defined)
-    
-    if connected_count >= 7:
-        return "Single"
-    elif connected_count >= 4:
-        return "Split"
-    else:
-        return "Triple Split"
-
-def get_not_self_theme(hd_type):
-    """Get not-self theme based on Human Design type"""
-    themes = {
-        "Generator": "Frustration",
-        "Manifesting Generator": "Frustration and anger",
-        "Projector": "Bitterness",
-        "Manifestor": "Anger",
-        "Reflector": "Disappointment"
-    }
-    return themes.get(hd_type, "Frustration")
-
-def get_hd_purpose(hd_type):
-    """Get life purpose based on Human Design type"""
-    purposes = {
-        "Generator": "Finding satisfaction through response",
-        "Manifesting Generator": "Finding satisfaction through efficient response",
-        "Projector": "Achieving success through recognition",
-        "Manifestor": "Finding peace through impact",
-        "Reflector": "Experiencing surprise and wonder"
-    }
-    return purposes.get(hd_type, "Finding your unique path")
-
-def calculate_chinese_zodiac(birth_date):
-    """Calculate Chinese zodiac sign with detailed logging"""
+def calculate_chinese_zodiac(facts):
+    """Calculate Chinese Zodiac from facts"""
     try:
-        log_debug("Starting Chinese zodiac calculation", {"birth_date": birth_date})
+        log_debug("Calculating Chinese Zodiac")
         
+        # Extract birth year from facts
+        birth_date = facts.get("birth", {}).get("local", "")
         if not birth_date:
-            log_debug("Invalid birth date for Chinese zodiac")
-            return get_default_chinese_zodiac()
+            raise ValueError("Missing birth date information")
         
-        try:
-            year = int(birth_date.split('-')[0])
-            log_debug("Extracted year", {"year": year})
-        except Exception as e:
-            log_debug(f"Error extracting year: {str(e)}")
-            return get_default_chinese_zodiac()
+        # Parse the year
+        match = re.search(r'(\d{4})', birth_date)
+        if not match:
+            raise ValueError(f"Cannot parse birth year from {birth_date}")
+            
+        year = int(match.group(1))
+        log_debug(f"Calculating Chinese zodiac for year: {year}")
         
-        # Calculate animal - Fixed calculation for Chinese zodiac
-        # The animal is determined by the year mod 12
-        animals = ["Rat", "Ox", "Tiger", "Rabbit", "Dragon", "Snake", 
-                  "Horse", "Goat", "Monkey", "Rooster", "Dog", "Pig"]
+        # Determine animal sign
+        animals = ["Rat", "Ox", "Tiger", "Rabbit", "Dragon", "Snake",
+                   "Horse", "Goat", "Monkey", "Rooster", "Dog", "Pig"]
+        animal = animals[(year - 4) % 12]
         
-        animal_index = (year - 4) % 12
-        animal = animals[animal_index]
-        log_debug("Determined animal", {"animal": animal, "index": animal_index})
+        # Determine element
+        elements = ["Wood", "Wood", "Fire", "Fire", "Earth", "Earth",
+                    "Metal", "Metal", "Water", "Water"]
+        element = elements[(year - 4) % 10]
         
-        # Element is determined by the year mod 10 divided by 2
-        elements = ["Wood", "Fire", "Earth", "Metal", "Water"]
-        element_index = ((year - 4) % 10) // 2
-        element = elements[element_index]
-        log_debug("Determined element", {"element": element, "index": element_index})
-        
-        # Yin/Yang is determined by the year - odd years are yang, even years are yin
+        # Determine yin/yang
         yin_yang = "Yang" if year % 2 == 0 else "Yin"
-        log_debug("Determined yin/yang", {"yin_yang": yin_yang})
         
-        compatibility = get_chinese_compatibility(animal)
-        log_debug("Determined compatibility", compatibility)
+        # Get animal traits
+        animal_traits = {
+            "Rat": ["Adaptable", "Intelligent", "Alert", "Quick-witted"],
+            "Ox": ["Diligent", "Reliable", "Strong", "Determined"],
+            "Tiger": ["Brave", "Confident", "Competitive", "Unpredictable"],
+            "Rabbit": ["Gentle", "Sensitive", "Compassionate", "Amiable"],
+            "Dragon": ["Energetic", "Charismatic", "Confident", "Inspirational"],
+            "Snake": ["Wise", "Intuitive", "Private", "Enigmatic"],
+            "Horse": ["Energetic", "Independent", "Sociable", "Impatient"],
+            "Goat": ["Gentle", "Compassionate", "Creative", "Thoughtful"],
+            "Monkey": ["Smart", "Curious", "Playful", "Versatile"],
+            "Rooster": ["Observant", "Practical", "Organized", "Confident"],
+            "Dog": ["Loyal", "Honest", "Responsible", "Vigilant"],
+            "Pig": ["Compassionate", "Generous", "Diligent", "Focused"]
+        }
         
-        return {
+        # Get element traits
+        element_traits = {
+            "Wood": ["Growth", "Vitality", "Flexibility", "Idealistic"],
+            "Fire": ["Passion", "Leadership", "Adventure", "Dynamic"],
+            "Earth": ["Stability", "Reliability", "Nurturing", "Practical"],
+            "Metal": ["Determination", "Self-reliance", "Structure", "Precise"],
+            "Water": ["Adaptability", "Intuition", "Depth", "Persuasive"]
+        }
+        
+        # Build the result
+        result = {
             "animal": animal,
             "element": element,
             "yin_yang": yin_yang,
-            "keyword": get_animal_keyword(animal),
-            "element_characteristic": get_element_characteristic(element),
-            "personality_profile": get_personality_profile(animal, element),
-            "compatibility": compatibility
+            "full_sign": f"{element} {animal}",
+            "personality_traits": animal_traits.get(animal, ["Adaptable"]),
+            "element_traits": element_traits.get(element, ["Balanced"]),
+            "polarity": "Active, expressive" if yin_yang == "Yang" else "Receptive, introspective",
+            "lucky_colors": get_lucky_colors(animal),
+            "compatible_with": get_compatible_signs(animal),
+            "least_compatible": get_incompatible_signs(animal)
         }
         
+        log_debug("Chinese Zodiac calculation complete")
+        return result
     except Exception as e:
         log_stack_trace = "".join(traceback.format_exception(type(e), e, e.__traceback__))
         log_debug(f"Error in calculate_chinese_zodiac: {str(e)}", {"stack_trace": log_stack_trace})
         raise
 
-def get_animal_keyword(animal):
-    """Get keyword for Chinese zodiac animal"""
-    keywords = {
-        'Rat': 'Clever Resourceful',
-        'Ox': 'Diligent Reliable',
-        'Tiger': 'Brave Confident',
-        'Rabbit': 'Gentle Elegant',
-        'Dragon': 'Powerful Energetic',
-        'Snake': 'Wise Intuitive',
-        'Horse': 'Free-spirited Explorer',
-        'Goat': 'Artistic Creative',
-        'Monkey': 'Intelligent Versatile',
-        'Rooster': 'Observant Practical',
-        'Dog': 'Loyal Honest',
-        'Pig': 'Compassionate Generous'
+def get_lucky_colors(animal):
+    """Get lucky colors for a Chinese zodiac animal"""
+    colors = {
+        "Rat": ["Blue", "Gold", "Green"],
+        "Ox": ["Yellow", "Green", "White"],
+        "Tiger": ["Blue", "Gray", "Orange"],
+        "Rabbit": ["Pink", "Red", "Purple", "Blue"],
+        "Dragon": ["Gold", "Silver", "Gray"],
+        "Snake": ["Black", "Red", "Yellow"],
+        "Horse": ["Green", "Yellow", "Brown"],
+        "Goat": ["Brown", "Red", "Purple"],
+        "Monkey": ["White", "Blue", "Gold"],
+        "Rooster": ["Gold", "Brown", "Yellow"],
+        "Dog": ["Green", "Red", "Purple"],
+        "Pig": ["Yellow", "Gray", "Brown", "Gold"]
     }
-    return keywords.get(animal, "Unique Spirit")
+    return colors.get(animal, ["Green", "Blue"])
 
-def get_element_characteristic(element):
-    """Get characteristic description for Chinese element"""
-    characteristics = {
-        'Metal': 'Determined, self-reliant, and precise. Metal adds strength and determination to any sign.',
-        'Water': 'Flexible, empathetic, and perceptive. Water brings emotional depth and intuition.',
-        'Wood': 'Creative, idealistic, and cooperative. Wood adds growth and vitality to the personality.',
-        'Fire': 'Passionate, adventurous, and dynamic. Fire brings enthusiasm and leadership qualities.',
-        'Earth': 'Practical, stable, and nurturing. Earth adds groundedness and reliability to any sign.'
+def get_compatible_signs(animal):
+    """Get compatible signs for a Chinese zodiac animal"""
+    compatible = {
+        "Rat": ["Dragon", "Monkey", "Ox"],
+        "Ox": ["Rat", "Snake", "Rooster"],
+        "Tiger": ["Horse", "Dog", "Pig"],
+        "Rabbit": ["Goat", "Pig", "Dog"],
+        "Dragon": ["Rat", "Monkey", "Rooster"],
+        "Snake": ["Ox", "Rooster"],
+        "Horse": ["Tiger", "Dog", "Goat"],
+        "Goat": ["Rabbit", "Horse", "Pig"],
+        "Monkey": ["Rat", "Dragon"],
+        "Rooster": ["Ox", "Snake", "Dragon"],
+        "Dog": ["Tiger", "Rabbit", "Horse"],
+        "Pig": ["Tiger", "Rabbit", "Goat"]
     }
-    return characteristics.get(element, "Balanced and harmonious.")
+    return compatible.get(animal, ["Balanced with many signs"])
 
-def get_personality_profile(animal, element):
-    """Get personality profile for Chinese zodiac animal and element combination"""
-    return f"As a {element} {animal}, you combine the natural qualities of the {animal.lower()} with the {element.lower()} element's transformative energy."
-
-def get_chinese_compatibility(animal):
-    """Get compatibility for Chinese zodiac animal"""
-    compatibility = {
-        'Rat': {'best': ['Dragon', 'Monkey'], 'worst': ['Horse', 'Rabbit']},
-        'Ox': {'best': ['Snake', 'Rooster'], 'worst': ['Goat', 'Horse']},
-        'Tiger': {'best': ['Horse', 'Dog'], 'worst': ['Monkey', 'Snake']},
-        'Rabbit': {'best': ['Goat', 'Pig'], 'worst': ['Rat', 'Rooster']},
-        'Dragon': {'best': ['Rat', 'Monkey'], 'worst': ['Dog', 'Rabbit']},
-        'Snake': {'best': ['Ox', 'Rooster'], 'worst': ['Tiger', 'Pig']},
-        'Horse': {'best': ['Tiger', 'Dog'], 'worst': ['Rat', 'Ox']},
-        'Goat': {'best': ['Rabbit', 'Pig'], 'worst': ['Ox', 'Dog']},
-        'Monkey': {'best': ['Rat', 'Dragon'], 'worst': ['Tiger', 'Pig']},
-        'Rooster': {'best': ['Ox', 'Snake'], 'worst': ['Rabbit', 'Dog']},
-        'Dog': {'best': ['Tiger', 'Horse'], 'worst': ['Dragon', 'Rooster']},
-        'Pig': {'best': ['Rabbit', 'Goat'], 'worst': ['Snake', 'Monkey']}
+def get_incompatible_signs(animal):
+    """Get incompatible signs for a Chinese zodiac animal"""
+    incompatible = {
+        "Rat": ["Horse", "Rabbit"],
+        "Ox": ["Goat", "Horse", "Dog"],
+        "Tiger": ["Monkey", "Snake"],
+        "Rabbit": ["Rat", "Rooster"],
+        "Dragon": ["Dog", "Rabbit", "Rat"],
+        "Snake": ["Tiger", "Pig"],
+        "Horse": ["Rat", "Ox"],
+        "Goat": ["Ox", "Dog"],
+        "Monkey": ["Tiger", "Pig"],
+        "Rooster": ["Rabbit", "Dog"],
+        "Dog": ["Ox", "Dragon", "Rooster"],
+        "Pig": ["Snake", "Monkey"]
     }
-    return compatibility.get(animal, {'best': [], 'worst': []})
-
-def generate_mbti_profile(mbti_type):
-    """Generate MBTI profile with detailed logging"""
-    log_debug("Generating MBTI profile", {"mbti_type": mbti_type})
-    
-    # Default to INFJ if no valid type provided
-    if not mbti_type or len(mbti_type) != 4:
-        log_debug("Invalid MBTI type, using default INFJ")
-        mbti_type = "INFJ"
-        
-    mbti_descriptions = {
-        "INFJ": {
-            "type": "INFJ",
-            "core_keywords": ["Insightful", "Visionary", "Complex"],
-            "dominant_function": "Introverted Intuition (Ni)",
-            "auxiliary_function": "Extraverted Feeling (Fe)"
-        },
-        "ENTP": {
-            "type": "ENTP",
-            "core_keywords": ["Innovative", "Debater", "Visionary"],
-            "dominant_function": "Extraverted Intuition (Ne)",
-            "auxiliary_function": "Introverted Thinking (Ti)"
-        }
-    }
-    
-    # Return the description if it exists, otherwise create a generic one
-    if mbti_type in mbti_descriptions:
-        result = mbti_descriptions[mbti_type]
-    else:
-        result = {
-            "type": mbti_type,
-            "core_keywords": ["Analytical", "Thoughtful", "Unique"],
-            "dominant_function": get_dominant_function(mbti_type),
-            "auxiliary_function": get_auxiliary_function(mbti_type)
-        }
-    
-    log_debug("MBTI profile generated", result)
-    return result
-
-def get_dominant_function(mbti_type):
-    """Get dominant function for MBTI type"""
-    if len(mbti_type) != 4:
-        return "Unknown"
-        
-    is_extraverted = mbti_type[0] == 'E'
-    judging_perceiving = mbti_type[3]
-    
-    if is_extraverted:
-        # Extraverts lead with their judging (T/F) function if they're a J type
-        # and with their perceiving (N/S) function if they're a P type
-        if judging_perceiving == 'J':
-            return f"Extraverted {'Feeling (Fe)' if mbti_type[2] == 'F' else 'Thinking (Te)'}"
-        else:
-            return f"Extraverted {'Intuition (Ne)' if mbti_type[1] == 'N' else 'Sensing (Se)'}"
-    else:
-        # Introverts lead with their perceiving function if they're a J type
-        # and with their judging function if they're a P type
-        if judging_perceiving == 'J':
-            return f"Introverted {'Intuition (Ni)' if mbti_type[1] == 'N' else 'Sensing (Si)'}"
-        else:
-            return f"Introverted {'Feeling (Fi)' if mbti_type[2] == 'F' else 'Thinking (Ti)'}"
-
-def get_auxiliary_function(mbti_type):
-    """Get auxiliary function for MBTI type"""
-    if len(mbti_type) != 4:
-        return "Unknown"
-        
-    is_extraverted = mbti_type[0] == 'E'
-    judging_perceiving = mbti_type[3]
-    
-    if is_extraverted:
-        # Extraverts have their auxiliary function as their introverted opposite category
-        if judging_perceiving == 'J':
-            return f"Introverted {'Intuition (Ni)' if mbti_type[1] == 'N' else 'Sensing (Si)'}"
-        else:
-            return f"Introverted {'Feeling (Fi)' if mbti_type[2] == 'F' else 'Thinking (Ti)'}"
-    else:
-        # Introverts have their auxiliary function as their extraverted opposite category
-        if judging_perceiving == 'J':
-            return f"Extraverted {'Feeling (Fe)' if mbti_type[2] == 'F' else 'Thinking (Te)'}"
-        else:
-            return f"Extraverted {'Intuition (Ne)' if mbti_type[1] == 'N' else 'Sensing (Se)'}"
-
-def calculate_personal_year(day, month):
-    """Calculate personal year based on birth day and month"""
-    current_year = datetime.now().year
-    current_year_sum = sum(int(digit) for digit in str(current_year))
-    birth_day_month_sum = reduce_single_digit(day) + reduce_single_digit(month)
-    
-    personal_year = reduce_single_digit(current_year_sum + birth_day_month_sum)
-    log_debug("Calculated personal year", {
-        "current_year": current_year,
-        "current_year_sum": current_year_sum,
-        "birth_day_month_sum": birth_day_month_sum,
-        "personal_year": personal_year
-    })
-    
-    return personal_year
-
-def calculate_expression_number(name):
-    """Calculate expression number from name (simplified)"""
-    if not name:
-        return 9  # Default value
-        
-    # Simple algorithm for demo purposes
-    return ((sum(ord(c.lower()) - 96 for c in name if c.isalpha()) % 9) or 9)
-
-def get_expression_keyword(number):
-    """Get keyword for expression number"""
-    keywords = {
-        1: "Leader",
-        2: "Diplomat",
-        3: "Creative Communicator",
-        4: "Builder",
-        5: "Explorer",
-        6: "Nurturer",
-        7: "Analyst",
-        8: "Manifester",
-        9: "Humanitarian"
-    }
-    return keywords.get(number, "Humanitarian")
-
-def calculate_soul_urge_number(name):
-    """Calculate soul urge number from name (simplified)"""
-    if not name:
-        return 5  # Default value
-        
-    vowels = "aeiou"
-    vowel_values = sum(ord(c.lower()) - 96 for c in name if c.lower() in vowels)
-    return (vowel_values % 9) or 9
-
-def get_soul_urge_keyword(number):
-    """Get keyword for soul urge number"""
-    keywords = {
-        1: "Independent",
-        2: "Harmonious",
-        3: "Expressive",
-        4: "Practical",
-        5: "Freedom Seeker",
-        6: "Responsible",
-        7: "Seeker of Truth",
-        8: "Abundant",
-        9: "Compassionate"
-    }
-    return keywords.get(number, "Freedom Seeker")
-
-def calculate_personality_number(name):
-    """Calculate personality number from name (simplified)"""
-    if not name:
-        return 3  # Default value
-        
-    consonants = "bcdfghjklmnpqrstvwxyz"
-    consonant_values = sum(ord(c.lower()) - 96 for c in name if c.lower() in consonants)
-    return (consonant_values % 9) or 9
-
-def get_life_path_keyword(number):
-    """Get keyword for life path number"""
-    keywords = {
-        1: "Independent Leader",
-        2: "Cooperative Peacemaker",
-        3: "Creative Communicator",
-        4: "Practical Builder",
-        5: "Freedom Seeker",
-        6: "Responsible Nurturer",
-        7: "Seeker of Truth",
-        8: "Abundant Manifester",
-        9: "Humanitarian",
-        11: "Intuitive Channel",
-        22: "Master Builder",
-        33: "Master Teacher"
-    }
-    return keywords.get(number, "Seeker")
-
-def get_life_path_description(num):
-    """Get detailed description for life path number"""
-    descriptions = {
-        1: "Independent Leader - Born to lead and pioneer new paths. You are self-reliant, ambitious, and determined.",
-        2: "Cooperative Peacemaker - Natural diplomat with intuitive understanding of others. You thrive in partnerships and create harmony.",
-        3: "Creative Communicator - Expressive, optimistic, and socially engaging. Your creativity and joy inspire others around you.",
-        4: "Practical Builder - Solid, reliable foundation creator. Your methodical approach and hard work create lasting results.",
-        5: "Freedom Seeker - Adventurous and versatile agent of change. You crave variety and experiences that expand your horizons.",
-        6: "Responsible Nurturer - Compassionate healer and caregiver. You have a natural talent for supporting and teaching others.",
-        7: "Seeker of Truth - Analytical, spiritual truth-seeker. You have a deep need to understand the mysteries of life.",
-        8: "Abundant Manifester - Natural executive with material focus. You have the ability to achieve great success and prosperity.",
-        9: "Humanitarian - Compassionate global citizen and completion energy. You serve humanity with wisdom and universal love.",
-        11: "Intuitive Channel - Highly intuitive spiritual messenger with a mission to illuminate and inspire.",
-        22: "Master Builder - Manifests grand visions into reality through practical application of spiritual wisdom.",
-        33: "Master Teacher - Selfless nurturer with profound wisdom and an ability to uplift humanity."
-    }
-    return descriptions.get(num, "Your life path leads you to seek meaning and purpose in unique ways.")
-
-def get_birth_day_meaning(day):
-    """Get meaning for birth day number"""
-    meanings = {
-        1: "Natural leader with strong willpower and independence. You initiate action and forge your own path.",
-        2: "Cooperative partner with diplomatic skills. You bring harmony and nurture relationships with sensitivity.",
-        3: "Creative expressionist with social charm. You communicate with joy and inspire others with your optimism.",
-        4: "Methodical worker with practical approach. You build solid foundations through hard work and organization.",
-        5: "Freedom lover seeking variety and change. You adapt quickly and bring excitement to every situation.",
-        6: "Responsible nurturer with artistic talents. You care deeply for others and create beauty and harmony.",
-        7: "Analytical thinker with spiritual interests. You seek knowledge and truth through research and intuition.",
-        8: "Ambitious achiever with executive skills. You manifest abundance through determination and organization.",
-        9: "Compassionate humanitarian with wisdom. You serve others with universal love and selfless giving.",
-        10: "Independent innovator with leadership qualities. You bring original ideas and direct energy effectively.",
-        11: "Intuitive visionary with heightened awareness. You serve as a bridge between the material and spiritual worlds.",
-        12: "Creative perfectionist with attention to detail. You express yourself with style while helping others."
-    }
-    
-    # For days not specifically defined, use the reduced digit meaning
-    if day not in meanings:
-        reduced_day = reduce_single_digit(day)
-        return meanings.get(reduced_day, "Complex personality with unique talents and perspectives.")
-    
-    return meanings[day]
-
-def get_default_numerology():
-    """Return default numerology values when calculation fails"""
-    log_debug("Using default numerology values")
-    return {
-        "life_path_number": 7,
-        "life_path_keyword": "Seeker of Truth",
-        "life_path_description": "Analytical, spiritual truth-seeker. You have a deep need to understand the mysteries of life.",
-        "birth_day_number": 1,
-        "birth_day_meaning": "Complex personality with unique talents and perspectives",
-        "personal_year": 1,
-        "expression_number": 9,
-        "expression_keyword": "Humanitarian",
-        "soul_urge_number": 5,
-        "soul_urge_keyword": "Freedom Seeker",
-        "personality_number": 3,
-        "calculation_method": "fallback"
-    }
-
-def get_default_chinese_zodiac():
-    """Return default Chinese zodiac values when calculation fails"""
-    log_debug("Using default Chinese zodiac values")
-    return {
-        "animal": "Horse",
-        "element": "Fire",
-        "yin_yang": "Yang",
-        "keyword": "Free-spirited Explorer",
-        "element_characteristic": "Passionate, adventurous, and dynamic. Fire brings enthusiasm and leadership qualities.",
-        "personality_profile": "As a Fire Horse, you combine the natural qualities of the horse with the fire element's transformative energy.",
-        "compatibility": {
-            "best": ["Tiger", "Dog"],
-            "worst": ["Rat", "Ox"]
-        },
-        "calculation_method": "fallback"
-    }
-
-class Response:
-    """Response class for Supabase Edge Runtime compatibility"""
-    def __init__(self, body, status=200, headers=None):
-        self.body = body
-        self.status = status
-        self.headers = headers or {}
+    return incompatible.get(animal, ["Few true incompatibilities"])
