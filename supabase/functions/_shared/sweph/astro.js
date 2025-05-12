@@ -1,3 +1,4 @@
+
 // This file is a copy of https://cdn.jsdelivr.net/gh/u-blusky/sweph-wasm@0.11.3/js/astro.js
 // It's included directly in the repo to avoid external dependencies
 // The original source is from https://github.com/u-blusky/sweph-wasm
@@ -202,6 +203,9 @@ const SwissEphGlobals = {
   SE_HOR2EQU: 1
 };
 
+// Define global exports object to prevent undefined errors
+const exportObj = {};
+
 (function(exports) {
   // JulDay constructor
   function JulDay(year, month, day, hour) {
@@ -361,184 +365,12 @@ const SwissEphGlobals = {
     SPEED: SwissEphGlobals.SEFLG_SPEED
   };
 
-  SwissEphGlobals.SEFLG_SWIEPH;
-  SwissEphGlobals.SEFLG_SPEED;
+})(exportObj);
 
-  // SWISS EPHEMERIS WRAPPER
-  async function createSwissEph() {
-    const wasmPromise = fetch(new URL('./astro.wasm', import.meta.url))
-      .then(response => response.arrayBuffer())
-      .then(arrayBuffer => WebAssembly.compile(arrayBuffer));
-
-    const wasm = await wasmPromise;
-    const wasmModule = await WebAssembly.instantiate(wasm);
-    const wasmExports = wasmModule.exports;
-
-    // Set up Memory
-    const memory = wasmExports.memory;
-    const malloc = wasmExports.malloc;
-    const free = wasmExports.free;
-    const getLastError = wasmExports.getLastErrorText;
-
-    // WASM functions
-    const wasm_swe_calc = wasmExports.swe_calc;
-    const wasm_swe_houses = wasmExports.swe_houses;
-    const wasm_swe_julday = wasmExports.swe_julday;
-    const wasm_swe_set_ephe_path = wasmExports.swe_set_ephe_path;
-    const wasm_swe_close = wasmExports.swe_close;
-
-    function processLastError() {
-      const errorPtr = getLastError();
-      if (errorPtr === 0) {
-        return null;
-      }
-
-      const memory8 = new Uint8Array(memory.buffer);
-      let result = '';
-      let i = errorPtr;
-      while (memory8[i] !== 0) {
-        result += String.fromCharCode(memory8[i]);
-        i++;
-      }
-      return result;
-    }
-
-    function arrayToPtr(array, ptr, length) {
-      const memory8 = new Uint8Array(memory.buffer);
-      for (let i = 0; i < length; i++) {
-        memory8[ptr + i] = array[i];
-      }
-    }
-
-    function ptrToArray(ptr, length) {
-      const memory8 = new Uint8Array(memory.buffer);
-      const arr = [];
-      for (let i = 0; i < length; i++) {
-        arr.push(memory8[ptr + i]);
-      }
-      return arr;
-    }
-
-    function allocateMemory(size) {
-      return malloc(size);
-    }
-
-    function freeMemory(ptr) {
-      free(ptr);
-    }
-
-    function writeStringToMemory(str, ptr) {
-      const memory8 = new Uint8Array(memory.buffer);
-      for (let i = 0; i < str.length; i++) {
-        memory8[ptr + i] = str.charCodeAt(i);
-      }
-      memory8[ptr + str.length] = 0; // Null terminator
-    }
-
-    function readStringFromMemory(ptr) {
-      const memory8 = new Uint8Array(memory.buffer);
-      let result = '';
-      while (memory8[ptr] !== 0) {
-        result += String.fromCharCode(memory8[ptr]);
-        ptr++;
-      }
-      return result;
-    }
-
-    class SwissEph {
-      constructor() {
-        this.jdUT = 0;
-      }
-
-      setPath(path) {
-        const pathPtr = allocateMemory(path.length + 1);
-        writeStringToMemory(path, pathPtr);
-        wasm_swe_set_ephe_path(pathPtr);
-        freeMemory(pathPtr);
-      }
-
-      julday(year, month, day, hour) {
-        return wasm_swe_julday(year, month, day, hour);
-      }
-
-      calc(julday, ipl, flag) {
-        const xPtr = allocateMemory(6 * 8); // 6 doubles (x, y, z, dx, dy, dz)
-        const serr = allocateMemory(256);
-        const xx = new Float64Array(memory.buffer, xPtr, 6);
-        const result = wasm_swe_calc(julday, ipl, flag, xPtr, serr);
-
-        const error = processLastError();
-        if (error) {
-          console.error('SwissEph calc error:', error);
-        }
-
-        const position = {
-          longitude: xx[0],
-          latitude: xx[1],
-          distance: xx[2],
-          longitudeSpeed: xx[3],
-          latitudeSpeed: xx[4],
-          distanceSpeed: xx[5]
-        };
-
-        freeMemory(xPtr);
-        freeMemory(serr);
-
-        return position;
-      }
-
-      houses(julday, lat, lon, hsys) {
-        const cusps = allocateMemory(37 * 8); // 37 doubles
-        const ascmc = allocateMemory(10 * 8); // 10 doubles
-        const result = wasm_swe_houses(julday, lat, lon, hsys.charCodeAt(0), cusps, ascmc);
-
-        const error = processLastError();
-        if (error) {
-          console.error('SwissEph houses error:', error);
-        }
-
-        const memory64 = new Float64Array(memory.buffer);
-        const cuspsArray = [];
-        for (let i = 1; i <= 12; i++) {
-          cuspsArray.push(memory64[(cusps / 8) + i]);
-        }
-
-        const houses = {
-          ascendant: memory64[(ascmc / 8)],
-          mc: memory64[(ascmc / 8) + 1],
-          armc: memory64[(ascmc / 8) + 2],
-          vertex: memory64[(ascmc / 8) + 3],
-          equatorialAscendant: memory64[(ascmc / 8) + 4],
-          coAscendantKoch: memory64[(ascmc / 8) + 5],
-          coAscendantMunkasey: memory64[(ascmc / 8) + 6],
-          polarAscendant: memory64[(ascmc / 8) + 7],
-          cusps: cuspsArray
-        };
-
-        freeMemory(cusps);
-        freeMemory(ascmc);
-
-        return houses;
-      }
-
-      close() {
-        wasm_swe_close();
-      }
-    }
-
-    globalThis.SwissEph = SwissEph;
-    return new SwissEph();
-  }
-
-  exports.SwissEph = createSwissEph;
-
-})(typeof exports !== 'undefined' ? exports : this);
-
-// Fix the problematic export statement
+// Fix the export issue by directly exporting the necessary components
 export default SwissEphGlobals.SwissEph;
-// Export the required components directly rather than from 'this'
-export const JulDay = (typeof exports !== 'undefined' ? exports : this).JulDay;
-export const Bodies = (typeof exports !== 'undefined' ? exports : this).Bodies;
-export const Houses = (typeof exports !== 'undefined' ? exports : this).Houses;
-export const HouseSystems = (typeof exports !== 'undefined' ? exports : this).HouseSystems;
-export const Flags = (typeof exports !== 'undefined' ? exports : this).Flags;
+export const JulDay = exportObj.JulDay;
+export const Bodies = exportObj.Bodies;
+export const Houses = exportObj.Houses;
+export const HouseSystems = exportObj.HouseSystems;
+export const Flags = exportObj.Flags;
