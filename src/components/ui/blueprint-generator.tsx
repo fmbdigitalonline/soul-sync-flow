@@ -3,9 +3,9 @@ import React, { useState, useEffect } from "react";
 import { motion } from "@/lib/framer-motion";
 import { SoulOrb } from "./soul-orb";
 import { cn } from "@/lib/utils";
-import { blueprintService, defaultBlueprintData } from "@/services/blueprint-service";
+import { blueprintService } from "@/services/blueprint-service";
 import { useToast } from "@/hooks/use-toast";
-import { AlertCircle, AlertTriangle, CheckCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 
 interface BlueprintGeneratorProps {
   onComplete: () => void;
@@ -23,7 +23,6 @@ const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
   const [particles, setParticles] = useState<Array<{id: number, x: number, y: number, size: number, speed: number}>>([]);
   const [isCompleted, setIsCompleted] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [isPartialData, setIsPartialData] = useState(false);
   const [errorDetails, setErrorDetails] = useState<string | null>(null);
   const { toast } = useToast();
 
@@ -71,7 +70,7 @@ const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
       console.log("Generating blueprint with user data:", userMetaData);
       
       // Generate blueprint using the blueprint service
-      const { data: generatedBlueprint, error, isPartial } = await blueprintService.generateBlueprintFromBirthData(userMetaData);
+      const { data: generatedBlueprint, error } = await blueprintService.generateBlueprintFromBirthData(userMetaData);
       
       if (error) {
         console.error("Error generating blueprint:", error);
@@ -95,16 +94,6 @@ const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
         setStage('error');
         setErrorDetails("No blueprint data generated");
         return;
-      }
-      
-      if (isPartial) {
-        setIsPartialData(true);
-        console.warn("Generated partial blueprint with some default values");
-        toast({
-          title: "Partial Blueprint Generated",
-          description: "Some data could not be calculated and default values were used",
-          variant: "destructive" // Fixed: changed "warning" to "destructive"
-        });
       }
       
       console.log("Blueprint generated successfully, saving to database");
@@ -191,7 +180,6 @@ const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
     setProgress(0);
     setStage('preparing');
     setErrorDetails(null);
-    setIsPartialData(false);
   };
 
   return (
@@ -237,7 +225,7 @@ const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
             stage={stage === 'preparing' ? 'welcome' : 
                   stage === 'assembling' ? 'collecting' :
                   stage === 'finalizing' ? 'generating' : 
-                  stage === 'complete' ? 'complete' : 'generating'} // Fixed: removed 'error' as it's not a valid stage type
+                  stage === 'complete' ? 'complete' : 'generating'}
             pulse={stage !== 'error'}
             speaking={false}
           />
@@ -302,35 +290,16 @@ const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
               {stage === 'finalizing' && 'Connecting Energy Pathways...'}
               {stage === 'complete' && (
                 <>
-                  {isPartialData ? (
-                    <>
-                      <AlertTriangle className="text-yellow-400 mr-2 h-5 w-5" />
-                      Partial Blueprint Complete
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle className="text-green-500 mr-2 h-5 w-5" />
-                      Soul Blueprint Complete!
-                    </>
-                  )}
+                  <AlertCircle className="text-green-500 mr-2 h-5 w-5" />
+                  Soul Blueprint Complete!
                 </>
               )}
             </p>
             
-            {/* Display partial data warning if applicable */}
-            {isPartialData && stage === 'complete' && (
-              <p className="text-xs text-yellow-400 mt-1 mb-2">
-                Some data could not be calculated and default values were used
-              </p>
-            )}
-            
             {/* Progress bar */}
             <div className="mt-2 mx-auto w-64 h-1 bg-white bg-opacity-20 rounded-full overflow-hidden">
               <motion.div 
-                className={cn(
-                  "h-full", 
-                  isPartialData ? "bg-yellow-500" : "bg-soul-purple"
-                )}
+                className="h-full bg-soul-purple"
                 style={{ width: `${progress}%` }}
                 initial={{ width: '0%' }}
                 animate={{ width: `${progress}%` }}
@@ -342,6 +311,6 @@ const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
       </div>
     </div>
   );
-};
+}
 
 export { BlueprintGenerator };

@@ -2,7 +2,7 @@
 // Swiss Ephemeris WASM wrapper for JavaScript
 // This file is adapted from the sweph-wasm project
 
-// Define container object to hold all exports
+// Define ephemeris object to hold all exports
 const ephemeris = {};
 
 // Define the components we'll be exporting
@@ -92,40 +92,23 @@ const initializeWasm = async (wasmUrl) => {
     // Houses calculation (simplified for now)
     ephemeris.Houses = {
       calculate: (julDay, latitude, longitude, system = 'P') => {
-        // Return a simplified result when WASM isn't fully initialized
-        // This is a fallback implementation
-        const ascendant = (julDay % 360);
-        const mc = ((julDay + 90) % 360);
+        // This should be implemented using actual WASM calls
+        console.log(`Calculating houses for JD ${julDay} at lat ${latitude}, long ${longitude} using system ${system}`);
         
-        // Generate house cusps (simplified)
-        const cusps = [];
-        for (let i = 0; i < 12; i++) {
-          cusps.push((ascendant + i * 30) % 360);
-        }
-        
-        return { 
-          ascendant,  
-          mc, 
-          cusps, 
-          system
-        };
+        // Generate accurate house cusps based on WASM call
+        throw new Error("Houses calculation not implemented in WASM module");
       }
     };
     
-    // Calculation method (simplified)
+    // Calculation method
     ephemeris.calculate = (julDay, bodyId) => {
-      // Simplified calculation using JulDay to simulate planetary positions
-      // This is a fallback implementation
-      const longitude = (julDay * (bodyId + 1)) % 360;
+      // This should be implemented using actual WASM calls
+      console.log(`Calculating position for body ${bodyId} at JD ${julDay}`);
       
-      return {
-        longitude,
-        latitude: (bodyId % 10) - 5,
-        distance: 1 + (bodyId % 10) / 10
-      };
+      throw new Error(`Planetary calculation not implemented in WASM module for body ${bodyId}`);
     };
 
-    console.log("Swiss Ephemeris WASM module initialized with basic functionality");
+    console.log("Swiss Ephemeris WASM module initialized");
     return true;
 
   } catch (err) {
@@ -134,13 +117,11 @@ const initializeWasm = async (wasmUrl) => {
   }
 };
 
-// Export functions and constants
-export { 
-  ephemeris as default,
-  initializeWasm
-};
+// Export the main object and initialization function
+export default ephemeris;
+export { initializeWasm };
 
-// Export individual components for compatibility
+// Export individual components for direct use
 export const JulDay = ephemeris.JulDay;
 export const Bodies = ephemeris.Bodies;
 export const Houses = ephemeris.Houses;

@@ -1,4 +1,3 @@
-
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 // Swiss Ephemeris wrapper for Deno
 import { calculatePlanetaryPositions } from './ephemeris.ts';
@@ -36,8 +35,8 @@ interface CalculationResults {
 }
 
 // Feature flag for Swiss Ephemeris calculations
-// Set to false initially for a gradual rollout
-const USE_SWEPH = Deno.env.get("USE_SWEPH") === "true";
+// Set to true to always use SwEph and see errors
+const USE_SWEPH = true;
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -102,38 +101,17 @@ serve(async (req) => {
         await calculatePlanetaryPositionsWithSweph(date, time, location, timezone || "UTC") :
         await calculatePlanetaryPositions(date, time, location, timezone || "UTC");
       
-      // If SwEph is selected, also calculate with legacy for comparison logging
-      if (useSweph) {
-        try {
-          const legacyData = await calculatePlanetaryPositions(date, time, location, timezone || "UTC");
-          
-          // Log comparison for key celestial bodies (uncomment for detailed logs)
-          console.log("Calculation comparison (SwEph vs Legacy):");
-          console.log(`Sun longitude: SwEph = ${celestialData.sun.longitude.toFixed(4)}° | Legacy = ${legacyData.sun.longitude.toFixed(4)}° | Delta = ${Math.abs(celestialData.sun.longitude - legacyData.sun.longitude).toFixed(4)}°`);
-          console.log(`Moon longitude: SwEph = ${celestialData.moon.longitude.toFixed(4)}° | Legacy = ${legacyData.moon.longitude.toFixed(4)}° | Delta = ${Math.abs(celestialData.moon.longitude - legacyData.moon.longitude).toFixed(4)}°`);
-          console.log(`Ascendant: SwEph = ${celestialData.ascendant.longitude.toFixed(4)}° | Legacy = ${legacyData.ascendant.longitude.toFixed(4)}° | Delta = ${Math.abs(celestialData.ascendant.longitude - legacyData.ascendant.longitude).toFixed(4)}°`);
-        } catch (legacyError) {
-          console.error("Error in legacy calculation (comparison only):", legacyError);
-        }
-      }
-      
       results.celestialData = celestialData;
       console.log("Celestial calculations completed successfully");
     } catch (celestialError) {
       console.error("Error in celestial calculations:", celestialError);
       errors.celestial = celestialError.message;
-      
-      // If SwEph fails, try falling back to legacy calculation
-      if (useSweph) {
-        console.log("Falling back to legacy calculation engine...");
-        try {
-          results.celestialData = await calculatePlanetaryPositions(date, time, location, timezone || "UTC");
-          console.log("Legacy fallback calculation successful");
-        } catch (fallbackError) {
-          console.error("Legacy fallback calculation also failed:", fallbackError);
-          errors.celestialFallback = fallbackError.message;
-        }
-      }
+      // No fallback - let the error propagate
+      return errorResponse({
+        error: "Celestial calculation failed",
+        details: celestialError.message,
+        code: "CELESTIAL_CALCULATION_ERROR"
+      }, 500);
     }
 
     // Calculate Western astrological profile if celestial data is available
@@ -146,6 +124,10 @@ serve(async (req) => {
       }
     } else {
       errors.western = "Unable to calculate Western profile: celestial data not available";
+      return errorResponse({
+        error: "Western profile calculation failed: missing celestial data",
+        code: "MISSING_CELESTIAL_DATA"
+      }, 500);
     }
     
     // These calculations can proceed even if celestial calculations failed
@@ -175,18 +157,16 @@ serve(async (req) => {
       errors.humanDesign = hdError.message;
     }
 
-    // Check if we have at least some data or if everything failed
-    const hasAnyResults = Object.keys(results).some(key => results[key]);
-    
-    if (!hasAnyResults) {
+    // Check if we have at least celestial data, which is required
+    if (!results.celestialData) {
       return errorResponse({
-        error: "All calculations failed",
+        error: "Essential celestial calculations failed",
         details: errors,
-        code: "ALL_CALCULATIONS_FAILED"
+        code: "ESSENTIAL_CALCULATIONS_FAILED"
       }, 500);
     }
     
-    // Return partial or complete results
+    // Return results
     return new Response(
       JSON.stringify({
         ...results,

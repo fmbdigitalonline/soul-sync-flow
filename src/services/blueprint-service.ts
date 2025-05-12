@@ -93,108 +93,6 @@ export type BlueprintData = {
   };
 };
 
-// Default blueprint data as example
-export const defaultBlueprintData: BlueprintData = {
-  user_meta: {
-    full_name: "Sarah Johnson",
-    preferred_name: "Sarah",
-    birth_date: "1990-05-15",
-    birth_time_local: "14:30",
-    birth_location: "San Francisco, USA",
-    timezone: "America/Los_Angeles"
-  },
-  cognition_mbti: {
-    type: "INFJ",
-    core_keywords: ["Insightful", "Counselor", "Advocate"],
-    dominant_function: "Introverted Intuition (Ni)",
-    auxiliary_function: "Extraverted Feeling (Fe)"
-  },
-  energy_strategy_human_design: {
-    type: "Projector",
-    profile: "4/6 (Opportunist/Role Model)",
-    authority: "Emotional",
-    strategy: "Wait for the invitation",
-    definition: "Split",
-    not_self_theme: "Frustration",
-    life_purpose: "Guide others with emotional wisdom",
-    gates: {
-      unconscious_design: ["16.5", "20.3", "57.2", "34.6"],
-      conscious_personality: ["11.4", "48.3", "39.5", "41.1"]
-    }
-  },
-  bashar_suite: {
-    belief_interface: {
-      principle: "What you believe is what you experience as reality",
-      reframe_prompt: "What would I have to believe to experience this?"
-    },
-    excitement_compass: {
-      principle: "Follow your highest excitement in the moment to the best of your ability"
-    },
-    frequency_alignment: {
-      quick_ritual: "Visualize feeling the way you want to feel for 17 seconds"
-    }
-  },
-  values_life_path: {
-    life_path_number: 7,
-    life_path_keyword: "Seeker of Truth",
-    life_path_description: "A seeker of truth and wisdom, always seeking to understand the world around them.",
-    birth_day_number: 15,
-    birth_day_meaning: "The number 15 represents balance, harmony, and the ability to see the big picture.",
-    personal_year: 2023,
-    expression_number: 9,
-    expression_keyword: "Humanitarian",
-    soul_urge_number: 5,
-    soul_urge_keyword: "Freedom Seeker",
-    personality_number: 4
-  },
-  archetype_western: {
-    sun_sign: "Taurus ♉︎",
-    sun_keyword: "Grounded Provider",
-    moon_sign: "Pisces ♓︎",
-    moon_keyword: "Intuitive Empath",
-    rising_sign: "Virgo ♍︎",
-    aspects: [
-      { planet: "Mercury", sign: "Taurus", aspect: "Conjunction" },
-      { planet: "Venus", sign: "Pisces", aspect: "Trine" },
-      { planet: "Mars", sign: "Virgo", aspect: "Square" }
-    ],
-    houses: {
-      1: { sign: "Taurus", house: "1st House" },
-      2: { sign: "Gemini", house: "2nd House" },
-      3: { sign: "Cancer", house: "3rd House" },
-      4: { sign: "Leo", house: "4th House" },
-      5: { sign: "Virgo", house: "5th House" },
-      6: { sign: "Libra", house: "6th House" },
-      7: { sign: "Scorpio", house: "7th House" },
-      8: { sign: "Sagittarius", house: "8th House" },
-      9: { sign: "Capricorn", house: "9th House" },
-      10: { sign: "Aquarius", house: "10th House" },
-      11: { sign: "Pisces", house: "11th House" },
-      12: { sign: "Aries", house: "12th House" }
-    }
-  },
-  archetype_chinese: {
-    animal: "Horse",
-    element: "Metal",
-    yin_yang: "Yang",
-    keyword: "Free-spirited Explorer",
-    element_characteristic: "Metal is associated with strength, stability, and the ability to withstand challenges.",
-    compatibility: {
-      best: ["Dragon", "Horse", "Snake"],
-      worst: ["Monkey", "Rooster", "Dog"]
-    }
-  },
-  timing_overlays: {
-    current_transits: [],
-    notes: "To be populated dynamically"
-  },
-  goal_stack: [],
-  task_graph: {},
-  belief_logs: [],
-  excitement_scores: [],
-  vibration_check_ins: []
-};
-
 export const blueprintService = {
   /**
    * Generate a blueprint from birth data
@@ -217,23 +115,20 @@ export const blueprintService = {
       
       if (calcError) {
         console.error('Error calling blueprint calculator:', calcError);
-        return { data: null, error: `Calculation service error: ${calcError.message}` };
+        throw new Error(`Calculation service error: ${calcError.message}`);
       }
       
       if (!calcData) {
         console.error('No data returned from calculation service');
-        return { data: null, error: 'No data returned from calculation service' };
+        throw new Error('No data returned from calculation service');
       }
       
       console.log('Received calculation data:', calcData);
       
       // Check if we got actual calculation results or just the metadata
-      const hasRealData = calcData.calculation_metadata?.success || calcData.calculation_metadata?.partial;
-      const hasAnyCalculatedData = calcData.westernProfile || calcData.humanDesign || calcData.numerology || calcData.chineseZodiac;
-      
-      if (!hasAnyCalculatedData) {
+      if (!calcData.westernProfile && !calcData.humanDesign && !calcData.numerology && !calcData.chineseZodiac) {
         console.error('No calculation results returned, only metadata');
-        return { data: null, error: 'Calculation service did not return any usable data' };
+        throw new Error('Calculation service did not return any usable data');
       }
       
       // Create the blueprint using the calculation results
@@ -241,25 +136,23 @@ export const blueprintService = {
         user_meta: userData,
         cognition_mbti: {
           // For now, use default MBTI data or an API could be added later
-          type: "INFJ", // Fixed: removed userData.personality reference
+          type: "INFJ",
           core_keywords: ["Insightful", "Counselor", "Advocate"],
           dominant_function: "Introverted Intuition (Ni)",
           auxiliary_function: "Extraverted Feeling (Fe)"
         },
-        // Use calculated Human Design data if available, otherwise use template
         energy_strategy_human_design: calcData.humanDesign || {
-          type: "Projector",
-          profile: "4/6 (Opportunist/Role Model)",
-          authority: "Emotional",
-          strategy: "Wait for the invitation",
-          definition: "Split",
-          not_self_theme: "Frustration",
-          life_purpose: "Guide others with emotional wisdom",
+          type: "Unknown",
+          profile: "Unknown",
+          authority: "Unknown",
+          strategy: "Unknown",
+          definition: "Unknown",
+          not_self_theme: "Unknown",
+          life_purpose: "Unknown",
           gates: {
-            unconscious_design: ["16.5", "20.3", "57.2", "34.6"],
-            conscious_personality: ["11.4", "48.3", "39.5", "41.1"]
-          },
-          source: "default"
+            unconscious_design: [],
+            conscious_personality: []
+          }
         },
         bashar_suite: {
           // Static data for now
@@ -276,65 +169,32 @@ export const blueprintService = {
         },
         // Use the calculated numerology data
         values_life_path: calcData.numerology || {
-          life_path_number: 7,
-          life_path_keyword: "Seeker of Truth",
-          life_path_description: "A seeker of truth and wisdom, always seeking to understand the world around them.",
-          birth_day_number: 15,
-          birth_day_meaning: "The number 15 represents balance, harmony, and the ability to see the big picture.",
-          personal_year: 2023,
-          expression_number: 9,
-          expression_keyword: "Humanitarian",
-          soul_urge_number: 5,
-          soul_urge_keyword: "Freedom Seeker",
-          personality_number: 4,
-          source: "default"
+          life_path_number: 0,
+          life_path_keyword: "Unknown",
+          expression_number: 0,
+          expression_keyword: "Unknown",
+          soul_urge_number: 0,
+          soul_urge_keyword: "Unknown",
+          personality_number: 0
         },
         // Use the calculated Western astrology data
         archetype_western: calcData.westernProfile || {
-          sun_sign: "Taurus ♉︎",
-          sun_keyword: "Grounded Provider",
-          moon_sign: "Pisces ♓︎",
-          moon_keyword: "Intuitive Empath",
-          rising_sign: "Virgo ♍︎",
-          aspects: [
-            { planet: "Mercury", sign: "Taurus", aspect: "Conjunction" },
-            { planet: "Venus", sign: "Pisces", aspect: "Trine" },
-            { planet: "Mars", sign: "Virgo", aspect: "Square" }
-          ],
-          houses: {
-            1: { sign: "Taurus", house: "1st House" },
-            2: { sign: "Gemini", house: "2nd House" },
-            3: { sign: "Cancer", house: "3rd House" },
-            4: { sign: "Leo", house: "4th House" },
-            5: { sign: "Virgo", house: "5th House" },
-            6: { sign: "Libra", house: "6th House" },
-            7: { sign: "Scorpio", house: "7th House" },
-            8: { sign: "Sagittarius", house: "8th House" },
-            9: { sign: "Capricorn", house: "9th House" },
-            10: { sign: "Aquarius", house: "10th House" },
-            11: { sign: "Pisces", house: "11th House" },
-            12: { sign: "Aries", house: "12th House" }
-          },
-          source: "default"
+          sun_sign: "Unknown",
+          sun_keyword: "Unknown",
+          moon_sign: "Unknown",
+          moon_keyword: "Unknown",
+          rising_sign: "Unknown"
         },
         // Use the calculated Chinese zodiac data
         archetype_chinese: calcData.chineseZodiac || {
-          animal: "Horse",
-          element: "Metal",
-          yin_yang: "Yang",
-          keyword: "Free-spirited Explorer",
-          element_characteristic: "Metal is associated with strength, stability, and the ability to withstand challenges.",
-          compatibility: {
-            best: ["Dragon", "Horse", "Snake"],
-            worst: ["Monkey", "Rooster", "Dog"]
-          },
-          source: "default"
+          animal: "Unknown",
+          element: "Unknown",
+          yin_yang: "Unknown",
+          keyword: "Unknown"
         },
         timing_overlays: {
           current_transits: [],
-          notes: calcData.calculation_metadata?.success ? 
-                "Generated using real astronomical calculations" : 
-                "Generated using partial calculations and defaults"
+          notes: "Generated using real astronomical calculations"
         },
         goal_stack: [],
         task_graph: {},
@@ -347,12 +207,12 @@ export const blueprintService = {
           partial_calculation: calcData.calculation_metadata?.partial || false,
           calculation_errors: calcData.calculation_metadata?.errors,
           calculation_date: calcData.calculation_metadata?.calculated_at || new Date().toISOString(),
-          engine: calcData.calculation_metadata?.engine || "legacy",
+          engine: calcData.calculation_metadata?.engine || "unknown",
           data_sources: {
-            western: calcData.westernProfile ? "calculated" : "default",
-            chinese: calcData.chineseZodiac ? "calculated" : "default",
-            numerology: calcData.numerology ? "calculated" : "default",
-            humanDesign: calcData.humanDesign ? "calculated" : "default"
+            western: calcData.westernProfile ? "calculated" : "unknown",
+            chinese: calcData.chineseZodiac ? "calculated" : "unknown",
+            numerology: calcData.numerology ? "calculated" : "unknown",
+            humanDesign: calcData.humanDesign ? "calculated" : "unknown"
           }
         }
       };
