@@ -1,4 +1,3 @@
-
 import React, { useRef, useMemo, useEffect, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -205,29 +204,32 @@ const SoulOrb3D: React.FC<SoulOrbProps> = ({
         />
       </mesh>
       
-      {/* Orbital rings - Using line component directly instead of primitive */}
-      <line ref={ring1Ref} geometry={curve1}>
+      {/* Orbital rings - Using line component directly */}
+      <line geometry={curve1}>
         <lineBasicMaterial 
           color="#FFFFFF" 
           transparent 
           opacity={0.8}
         />
+        <primitive object={ring1Ref.current} attach="ref" />
       </line>
       
-      <line ref={ring2Ref} geometry={curve2}>
+      <line geometry={curve2}>
         <lineBasicMaterial 
           color="#FFFFFF" 
           transparent 
           opacity={0.8}
         />
+        <primitive object={ring2Ref.current} attach="ref" />
       </line>
       
-      <line ref={ring3Ref} geometry={curve3}>
+      <line geometry={curve3}>
         <lineBasicMaterial 
           color="#FFFFFF" 
           transparent 
           opacity={0.8}
         />
+        <primitive object={ring3Ref.current} attach="ref" />
       </line>
       
       {/* Enhanced glow effect - more pronounced to match the image */}

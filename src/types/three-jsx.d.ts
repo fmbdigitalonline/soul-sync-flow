@@ -23,7 +23,7 @@ declare global {
       lineBasicMaterial: Object3DNode<THREE.LineBasicMaterial, typeof THREE.LineBasicMaterial>;
       primitive: ReactThreeFiber.Object3DNode<THREE.Object3D, typeof THREE.Object3D>;
       color: ReactThreeFiber.Object3DNode<THREE.Color, typeof THREE.Color>;
-      line: Object3DNode<THREE.Line, typeof THREE.Line>;
+      line: ReactThreeFiber.Object3DNode<THREE.Line, typeof THREE.Line>;
     }
   }
 }

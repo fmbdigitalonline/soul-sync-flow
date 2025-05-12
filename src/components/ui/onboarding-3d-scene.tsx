@@ -38,7 +38,7 @@ const Onboarding3DScene: React.FC<Onboarding3DSceneProps> = ({
             size={interactionStage === 'listening' ? 1 : 0.7}
           />
           
-          {/* Dark background color */}
+          {/* Dark background color - fixing the type issue here */}
           <color attach="background" args={['#0a0a1a']} />
           
           {/* Orbit controls - more restricted when in input mode */}
