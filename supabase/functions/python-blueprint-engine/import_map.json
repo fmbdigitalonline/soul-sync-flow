@@ -1,10 +1,11 @@
 
 {
   "imports": {
-    "python_engine": "./python_engine/",
+    "std/": "https://deno.land/std@0.177.0/",
     "datetime": "https://deno.land/std@0.177.0/datetime/mod.ts",
     "http/": "https://deno.land/std@0.177.0/http/",
-    "std/": "https://deno.land/std@0.177.0/",
-    "path": "https://deno.land/std@0.177.0/path/mod.ts"
+    "path": "https://deno.land/std@0.177.0/path/mod.ts",
+    "astronomia": "https://esm.sh/astronomia@4.1.1",
+    "luxon": "https://esm.sh/luxon@3.4.4"
   }
 }

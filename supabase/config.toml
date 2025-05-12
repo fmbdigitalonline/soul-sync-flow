@@ -55,8 +55,8 @@ node_version = 18
 
 [functions.python-blueprint-engine]
 verify_jwt = false
-runtime = "python3.11"
-# Explicitly configuring CORS for the Python function with all methods allowed
+# Changed from python3.11 to Deno (default)
+import_map = "supabase/functions/python-blueprint-engine/import_map.json"
+# Explicitly configuring CORS for the function with all methods allowed
 cors = ["*"]
 methods = ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
-import_map = "supabase/functions/python-blueprint-engine/import_map.json"
