@@ -103,13 +103,13 @@ const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
         toast({
           title: "Partial Blueprint Generated",
           description: "Some data could not be calculated and default values were used",
-          variant: "warning"
+          variant: "destructive" // Fixed: changed "warning" to "destructive"
         });
       }
       
       console.log("Blueprint generated successfully, saving to database");
       
-      // Add personality type from form data
+      // Add personality type from form data 
       const finalBlueprint = {
         ...generatedBlueprint,
         cognition_mbti: {
@@ -237,7 +237,7 @@ const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
             stage={stage === 'preparing' ? 'welcome' : 
                   stage === 'assembling' ? 'collecting' :
                   stage === 'finalizing' ? 'generating' : 
-                  stage === 'error' ? 'error' : 'complete'}
+                  stage === 'complete' ? 'complete' : 'generating'} // Fixed: removed 'error' as it's not a valid stage type
             pulse={stage !== 'error'}
             speaking={false}
           />

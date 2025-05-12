@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 // Blueprint template type definition
@@ -241,7 +240,7 @@ export const blueprintService = {
         user_meta: userData,
         cognition_mbti: {
           // For now, use default MBTI data or an API could be added later
-          type: userData.personality || "INFJ",
+          type: "INFJ", // Fixed: removed userData.personality reference
           core_keywords: ["Insightful", "Counselor", "Advocate"],
           dominant_function: "Introverted Intuition (Ni)",
           auxiliary_function: "Extraverted Feeling (Fe)"
