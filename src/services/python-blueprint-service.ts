@@ -72,8 +72,22 @@ export const pythonBlueprintService = {
         };
       }
 
+      // Log detailed information about the response for debugging
+      console.log('[PYTHON SERVICE] Python blueprint engine response received');
+      console.log('[PYTHON SERVICE] Response data type:', typeof response.data);
+      console.log('[PYTHON SERVICE] Response data keys:', Object.keys(response.data).join(', '));
+      
+      // Log critical calculation values for validation
+      if (response.data.values_life_path) {
+        console.log('[PYTHON SERVICE] Life Path Number:', response.data.values_life_path.life_path_number);
+        console.log('[PYTHON SERVICE] Birth Date Components:', userData.birth_date.split('-').join(', '));
+      }
+      
+      if (response.data.energy_strategy_human_design) {
+        console.log('[PYTHON SERVICE] Human Design Type:', response.data.energy_strategy_human_design.type);
+      }
+
       // Successfully received blueprint data
-      console.log('[PYTHON SERVICE] Python blueprint engine response:', response.data);
       return {
         success: true,
         blueprint: response.data,

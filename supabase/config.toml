@@ -59,3 +59,4 @@ runtime = "python3.11"
 # Explicitly configuring CORS for the Python function with all methods allowed
 cors = ["*"]
 methods = ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
+import_map = "supabase/functions/python-blueprint-engine/import_map.json"
