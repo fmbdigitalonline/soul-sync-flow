@@ -1,6 +1,5 @@
-
-import { SwissEph, JulDay, Bodies, Houses, HouseSystems, Flags } from "sweph-wasm";
-import { DateTime } from "luxon";
+import { SwissEph, JulDay, Bodies, Houses, HouseSystems, Flags } from "npm:sweph-wasm@0.11.3";
+import { DateTime } from "npm:luxon@3.4.4";
 
 // Interfaces reused from ephemeris.ts
 interface GeoCoordinates {
