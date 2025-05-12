@@ -33,6 +33,16 @@ async function getGeoCoordinates(location: string): Promise<GeoCoordinates> {
   try {
     console.log(`Getting coordinates for location: ${location}`);
     
+    // First try to parse coordinates if given in format "lat,long" as fallback
+    const coordMatch = location.match(/(-?\d+\.\d+),\s*(-?\d+\.\d+)/);
+    if (coordMatch) {
+      console.log("Using explicit coordinates from input string");
+      return {
+        latitude: parseFloat(coordMatch[1]),
+        longitude: parseFloat(coordMatch[2])
+      };
+    }
+    
     // Get Google Maps API key from environment
     const apiKey = Deno.env.get("GOOGLE_MAPS_API_KEY");
     
@@ -52,11 +62,27 @@ async function getGeoCoordinates(location: string): Promise<GeoCoordinates> {
     // Check if the API call was successful
     if (data.status !== "OK") {
       console.error("Geocoding error:", data.status, data.error_message);
+      
+      // If we failed, see if the location can be handled by our internal database
+      const coordinates = getDefaultCoordinates(location);
+      if (coordinates) {
+        console.log(`Using default coordinates for ${location}:`, coordinates);
+        return coordinates;
+      }
+      
       throw new Error(`Geocoding failed: ${data.status} - ${data.error_message || 'Unknown error'}`);
     }
     
     if (!data.results || data.results.length === 0) {
       console.error("No results found for location:", location);
+      
+      // Try our fallback database again
+      const coordinates = getDefaultCoordinates(location);
+      if (coordinates) {
+        console.log(`Using default coordinates for ${location}:`, coordinates);
+        return coordinates;
+      }
+      
       throw new Error("No results found for the provided location");
     }
     
@@ -71,18 +97,81 @@ async function getGeoCoordinates(location: string): Promise<GeoCoordinates> {
   } catch (error) {
     console.error('Error geocoding location:', error);
     
-    // Try to parse coordinates if given in format "lat,long" as fallback
-    const coordMatch = location.match(/(-?\d+\.\d+),\s*(-?\d+\.\d+)/);
-    if (coordMatch) {
-      console.log("Falling back to coordinate parsing from input string");
-      return {
-        latitude: parseFloat(coordMatch[1]),
-        longitude: parseFloat(coordMatch[2])
-      };
+    // Final attempt with our internal database
+    const coordinates = getDefaultCoordinates(location);
+    if (coordinates) {
+      console.log(`Fallback: Using default coordinates for ${location}:`, coordinates);
+      return coordinates;
     }
     
-    throw new Error(`Failed to geocode location: ${error.message}`);
+    // If everything fails, return a default location (UTC/Greenwich)
+    console.warn("Could not determine location, using Greenwich as default");
+    return {
+      latitude: 51.4769,
+      longitude: 0
+    };
   }
+}
+
+// Internal database of common locations for fallback
+function getDefaultCoordinates(location: string): GeoCoordinates | null {
+  // Normalize location string
+  const normalizedLocation = location.toLowerCase().trim();
+  
+  // Basic mapping of common locations
+  const locationMap: Record<string, GeoCoordinates> = {
+    "london": { latitude: 51.5074, longitude: -0.1278 },
+    "new york": { latitude: 40.7128, longitude: -74.0060 },
+    "paris": { latitude: 48.8566, longitude: 2.3522 },
+    "tokyo": { latitude: 35.6762, longitude: 139.6503 },
+    "berlin": { latitude: 52.5200, longitude: 13.4050 },
+    "los angeles": { latitude: 34.0522, longitude: -118.2437 },
+    "chicago": { latitude: 41.8781, longitude: -87.6298 },
+    "beijing": { latitude: 39.9042, longitude: 116.4074 },
+    "sydney": { latitude: -33.8688, longitude: 151.2093 },
+    "delhi": { latitude: 28.6139, longitude: 77.2090 },
+    "mexico city": { latitude: 19.4326, longitude: -99.1332 },
+    "cairo": { latitude: 30.0444, longitude: 31.2357 },
+    "moscow": { latitude: 55.7558, longitude: 37.6173 },
+    "istanbul": { latitude: 41.0082, longitude: 28.9784 },
+    "dubai": { latitude: 25.2048, longitude: 55.2708 },
+    "buenos aires": { latitude: -34.6037, longitude: -58.3816 },
+    "bangkok": { latitude: 13.7563, longitude: 100.5018 },
+    "singapore": { latitude: 1.3521, longitude: 103.8198 },
+    "johannesburg": { latitude: -26.2041, longitude: 28.0473 },
+    "toronto": { latitude: 43.6532, longitude: -79.3832 },
+  };
+  
+  // Check for direct matches
+  for (const [key, coords] of Object.entries(locationMap)) {
+    if (normalizedLocation.includes(key)) {
+      return coords;
+    }
+  }
+  
+  // Check for country matches and assign a default major city
+  const countryMap: Record<string, GeoCoordinates> = {
+    "usa": { latitude: 38.8977, longitude: -77.0365 }, // Washington DC
+    "united states": { latitude: 38.8977, longitude: -77.0365 },
+    "uk": { latitude: 51.5074, longitude: -0.1278 }, // London
+    "united kingdom": { latitude: 51.5074, longitude: -0.1278 },
+    "france": { latitude: 48.8566, longitude: 2.3522 }, // Paris
+    "germany": { latitude: 52.5200, longitude: 13.4050 }, // Berlin
+    "japan": { latitude: 35.6762, longitude: 139.6503 }, // Tokyo
+    "china": { latitude: 39.9042, longitude: 116.4074 }, // Beijing
+    "india": { latitude: 28.6139, longitude: 77.2090 }, // Delhi
+    "australia": { latitude: -33.8688, longitude: 151.2093 }, // Sydney
+    "canada": { latitude: 43.6532, longitude: -79.3832 }, // Toronto
+    "spain": { latitude: 40.4168, longitude: -3.7038 }, // Madrid
+  };
+  
+  for (const [key, coords] of Object.entries(countryMap)) {
+    if (normalizedLocation.includes(key)) {
+      return coords;
+    }
+  }
+  
+  return null;
 }
 
 // Function to get timezone data from Google Maps Timezone API
@@ -113,7 +202,8 @@ async function getTimezoneData(coordinates: GeoCoordinates, timestamp: number): 
     return totalOffsetHours;
   } catch (error) {
     console.error("Error fetching timezone data:", error);
-    throw new Error(`Failed to get timezone data: ${error.message}`);
+    // No need to throw, we'll handle this in the calling function with fallbacks
+    return null;
   }
 }
 
@@ -130,7 +220,6 @@ function getTimezoneOffset(timezone: string, date: string): number {
     }
     
     // If using named timezone, use a comprehensive mapping
-    // This is a fallback when timezone API can't be used
     const timezoneOffsets: Record<string, number> = {
       'America/New_York': -5, // EST, -4 during DST
       'America/Chicago': -6, // CST, -5 during DST
@@ -145,6 +234,7 @@ function getTimezoneOffset(timezone: string, date: string): number {
       'Europe/Paris': 1, // CET, +2 during DST
       'Europe/Rome': 1, // CET, +2 during DST
       'Europe/Madrid': 1, // CET, +2 during DST
+      'Europe/Amsterdam': 1, // CET, +2 during DST
       'Europe/Athens': 2, // EET, +3 during DST
       'Europe/Moscow': 3, // MSK, no DST
       'Asia/Tokyo': 9, // JST, no DST
@@ -154,7 +244,8 @@ function getTimezoneOffset(timezone: string, date: string): number {
       'Australia/Sydney': 10, // AEST, +11 during DST
       'Australia/Perth': 8, // AWST, no DST
       'Pacific/Auckland': 12, // NZST, +13 during DST
-      'UTC': 0 // Universal Time Coordinated
+      'UTC': 0, // Universal Time Coordinated
+      'GMT': 0, // Greenwich Mean Time
     };
     
     // Check if timezone is directly in our database
@@ -163,12 +254,139 @@ function getTimezoneOffset(timezone: string, date: string): number {
       return timezoneOffsets[timezone];
     }
     
+    // Check for common substrings to handle variations
+    for (const [key, offset] of Object.entries(timezoneOffsets)) {
+      if (timezone.includes(key) || key.includes(timezone)) {
+        console.log(`Found similar timezone match: ${key} for ${timezone}`);
+        return offset;
+      }
+    }
+    
+    // Use specific timezone offset for major cities if timezone not recognized
+    const cityTimezoneMap: Record<string, number> = {
+      'New York': -5,
+      'Los Angeles': -8,
+      'Chicago': -6,
+      'Houston': -6,
+      'Phoenix': -7,
+      'Philadelphia': -5,
+      'San Antonio': -6,
+      'San Diego': -8,
+      'Dallas': -6,
+      'San Jose': -8,
+      'London': 0,
+      'Berlin': 1,
+      'Madrid': 1,
+      'Rome': 1,
+      'Paris': 1,
+      'Vienna': 1,
+      'Amsterdam': 1,
+      'Brussels': 1,
+      'Tokyo': 9,
+      'Beijing': 8,
+      'Shanghai': 8,
+      'Hong Kong': 8,
+      'Singapore': 8,
+      'Sydney': 10,
+      'Melbourne': 10,
+      'Moscow': 3,
+      'St Petersburg': 3,
+      'Cairo': 2,
+      'Istanbul': 3,
+      'Dubai': 4,
+      'Mumbai': 5.5,
+      'Delhi': 5.5,
+      'Bangkok': 7,
+    };
+    
+    // Check if any city name in the timezone string
+    for (const [city, offset] of Object.entries(cityTimezoneMap)) {
+      if (timezone.toLowerCase().includes(city.toLowerCase())) {
+        console.log(`Using city timezone for ${city} in ${timezone}`);
+        return offset;
+      }
+    }
+    
+    // Try to extract a country or region from the timezone string
+    const countryOffset: Record<string, number> = {
+      'us': -6, // Central US as default
+      'usa': -6,
+      'uk': 0,
+      'gb': 0,
+      'de': 1,
+      'germany': 1,
+      'fr': 1,
+      'france': 1,
+      'es': 1,
+      'spain': 1,
+      'it': 1,
+      'italy': 1,
+      'jp': 9,
+      'japan': 9,
+      'cn': 8,
+      'china': 8,
+      'au': 10,
+      'australia': 10,
+      'ru': 3,
+      'russia': 3,
+      'in': 5.5,
+      'india': 5.5,
+      'br': -3,
+      'brazil': -3,
+    };
+    
+    // Check for country codes or names in the timezone string
+    for (const [country, offset] of Object.entries(countryOffset)) {
+      if (timezone.toLowerCase().includes(country.toLowerCase())) {
+        console.log(`Using country timezone for ${country} in ${timezone}`);
+        return offset;
+      }
+    }
+    
     // Default to UTC if no match found
     console.log(`Timezone not recognized: ${timezone}, defaulting to UTC`);
     return 0;
   } catch (error) {
     console.error("Error processing timezone:", error);
     return 0; // Fallback to UTC
+  }
+}
+
+// Determine timezone offset using multiple methods for resilience
+async function determineTimezoneOffset(
+  coordinates: GeoCoordinates, 
+  timestamp: number,
+  timezoneString: string,
+  date: string
+): Promise<number> {
+  console.log(`Determining timezone offset for coordinates ${coordinates.latitude},${coordinates.longitude} with timestamp ${timestamp}`);
+  
+  try {
+    // First try Google Maps Timezone API (most accurate)
+    const tzOffset = await getTimezoneData(coordinates, timestamp);
+    
+    if (tzOffset !== null) {
+      console.log(`Successfully determined timezone offset using API: ${tzOffset}h`);
+      return tzOffset;
+    }
+    
+    // If API fails, try using the timezone string
+    if (timezoneString) {
+      const stringOffset = getTimezoneOffset(timezoneString, date);
+      console.log(`Using timezone string offset: ${stringOffset}h from ${timezoneString}`);
+      return stringOffset;
+    }
+    
+    // If both methods fail, try to guess based on longitude
+    // Crude approximation: longitude / 15 gives rough timezone
+    const longitudeBasedOffset = Math.round(coordinates.longitude / 15);
+    console.log(`Falling back to longitude-based offset: ${longitudeBasedOffset}h`);
+    return longitudeBasedOffset;
+    
+  } catch (error) {
+    console.error("All timezone determination methods failed:", error);
+    // Absolute last resort - use UTC
+    return 0;
   }
 }
 
@@ -182,28 +400,22 @@ export async function calculatePlanetaryPositions(
   console.log(`Calculating positions for: ${birthDate} ${birthTime} at ${birthLocation} in timezone ${timezone}`);
   
   try {
-    // Get geographic coordinates for the birth location
-    const coordinates = await getGeoCoordinates(birthLocation);
-    
     // Parse the birth date and time
     const [year, month, day] = birthDate.split('-').map(Number);
-    const [hour, minute] = birthTime.split(':').map(Number);
+    const [hour, minute] = birthTime ? birthTime.split(':').map(Number) : [12, 0]; // Default to noon if no time
     
-    if (!year || !month || !day || isNaN(hour) || isNaN(minute)) {
-      throw new Error("Invalid date or time format");
+    if (!year || !month || !day) {
+      throw new Error("Invalid date format");
     }
     
     // Create a timestamp for timezone lookup
-    const birthTimestamp = new Date(year, month - 1, day, hour, minute).getTime() / 1000;
+    const birthTimestamp = Math.floor(new Date(year, month - 1, day, hour, minute).getTime() / 1000);
     
-    // Try to get timezone offset using Google API
-    let tzOffset: number;
-    try {
-      tzOffset = await getTimezoneData(coordinates, birthTimestamp);
-    } catch (tzError) {
-      console.warn("Failed to fetch timezone data, falling back to basic lookup:", tzError.message);
-      tzOffset = getTimezoneOffset(timezone, birthDate);
-    }
+    // Get geographic coordinates for the birth location
+    const coordinates = await getGeoCoordinates(birthLocation);
+    
+    // Determine timezone offset using our multi-method approach
+    const tzOffset = await determineTimezoneOffset(coordinates, birthTimestamp, timezone, birthDate);
     
     // Calculate Julian day number (improved algorithm)
     const jd = calculateJulianDay(year, month, day, hour, minute, tzOffset);
@@ -225,6 +437,8 @@ function calculateJulianDay(year: number, month: number, day: number, hour: numb
   // Convert local time to UTC
   let utcHour = hour - tzOffset;
   let utcDay = day;
+  let utcMonth = month;
+  let utcYear = year;
   
   // Handle day crossing due to timezone conversion
   if (utcHour < 0) {
@@ -235,16 +449,34 @@ function calculateJulianDay(year: number, month: number, day: number, hour: numb
     utcDay += 1;
   }
   
-  // Adjust month and year for January and February
-  if (month <= 2) {
-    month += 12;
-    year -= 1;
+  // Handle month/year boundary cases
+  if (utcDay < 1) {
+    utcMonth -= 1;
+    if (utcMonth < 1) {
+      utcMonth = 12;
+      utcYear -= 1;
+    }
+    // Get last day of previous month
+    utcDay = new Date(utcYear, utcMonth, 0).getDate();
+  } else if (utcDay > new Date(utcYear, utcMonth, 0).getDate()) {
+    utcDay = 1;
+    utcMonth += 1;
+    if (utcMonth > 12) {
+      utcMonth = 1;
+      utcYear += 1;
+    }
   }
   
-  // Calculate Julian day
-  const a = Math.floor(year / 100);
+  // Adjust month and year for January and February
+  if (utcMonth <= 2) {
+    utcMonth += 12;
+    utcYear -= 1;
+  }
+  
+  // Calculate Julian day using the improved algorithm
+  const a = Math.floor(utcYear / 100);
   const b = 2 - a + Math.floor(a / 4);
-  const jd = Math.floor(365.25 * (year + 4716)) + Math.floor(30.6001 * (month + 1)) + 
+  const jd = Math.floor(365.25 * (utcYear + 4716)) + Math.floor(30.6001 * (utcMonth + 1)) + 
              utcDay + b - 1524.5 + (utcHour + minute / 60) / 24;
              
   return jd;
