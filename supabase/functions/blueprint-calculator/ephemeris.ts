@@ -1,3 +1,4 @@
+import { DateTime } from "luxon";
 
 interface GeoCoordinates {
   latitude: number;
@@ -174,8 +175,8 @@ function getDefaultCoordinates(location: string): GeoCoordinates | null {
   return null;
 }
 
-// Function to get timezone data from Google Maps Timezone API
-async function getTimezoneData(coordinates: GeoCoordinates, timestamp: number): Promise<number> {
+// Get IANA timezone ID from coordinates using Google Maps Timezone API
+async function getIanaTimezoneId(coordinates: GeoCoordinates, timestamp: number): Promise<string | null> {
   try {
     const apiKey = Deno.env.get("GOOGLE_MAPS_API_KEY");
     
@@ -195,234 +196,73 @@ async function getTimezoneData(coordinates: GeoCoordinates, timestamp: number): 
       throw new Error(`Timezone API failed: ${data.status}`);
     }
     
-    // Calculate the total offset in hours
-    const totalOffsetHours = (data.rawOffset + data.dstOffset) / 3600;
-    
-    console.log(`Timezone data for ${latitude},${longitude}: offset=${totalOffsetHours}h`);
-    return totalOffsetHours;
+    // Extract the timeZoneId which is an IANA timezone identifier
+    console.log(`Retrieved IANA timezone: ${data.timeZoneId} for ${latitude},${longitude}`);
+    return data.timeZoneId; // e.g., "America/New_York"
   } catch (error) {
     console.error("Error fetching timezone data:", error);
-    // No need to throw, we'll handle this in the calling function with fallbacks
     return null;
   }
 }
 
-// Function to convert timezone string to offset in hours with improved accuracy
-function getTimezoneOffset(timezone: string, date: string): number {
-  try {
-    // If timezone string appears to be a UTC offset like "UTC+2"
-    const utcMatch = timezone.match(/^UTC([+-])(\d+)(?::(\d+))?$/i);
-    if (utcMatch) {
-      const hours = parseInt(utcMatch[2], 10);
-      const minutes = utcMatch[3] ? parseInt(utcMatch[3], 10) / 60 : 0;
-      const offset = hours + minutes;
-      return utcMatch[1] === '+' ? offset : -offset;
-    }
-    
-    // If using named timezone, use a comprehensive mapping
-    const timezoneOffsets: Record<string, number> = {
-      'America/New_York': -5, // EST, -4 during DST
-      'America/Chicago': -6, // CST, -5 during DST
-      'America/Denver': -7, // MST, -6 during DST
-      'America/Los_Angeles': -8, // PST, -7 during DST
-      'America/Anchorage': -9, // AKST, -8 during DST
-      'America/Honolulu': -10, // HST, no DST
-      'America/Toronto': -5, // EST, -4 during DST
-      'America/Vancouver': -8, // PST, -7 during DST
-      'Europe/London': 0, // GMT/UTC, +1 during DST
-      'Europe/Berlin': 1, // CET, +2 during DST
-      'Europe/Paris': 1, // CET, +2 during DST
-      'Europe/Rome': 1, // CET, +2 during DST
-      'Europe/Madrid': 1, // CET, +2 during DST
-      'Europe/Amsterdam': 1, // CET, +2 during DST
-      'Europe/Athens': 2, // EET, +3 during DST
-      'Europe/Moscow': 3, // MSK, no DST
-      'Asia/Tokyo': 9, // JST, no DST
-      'Asia/Shanghai': 8, // CST, no DST
-      'Asia/Kolkata': 5.5, // IST, no DST
-      'Asia/Dubai': 4, // GST, no DST
-      'Australia/Sydney': 10, // AEST, +11 during DST
-      'Australia/Perth': 8, // AWST, no DST
-      'Pacific/Auckland': 12, // NZST, +13 during DST
-      'UTC': 0, // Universal Time Coordinated
-      'GMT': 0, // Greenwich Mean Time
-    };
-    
-    // Check if timezone is directly in our database
-    if (timezone in timezoneOffsets) {
-      console.log(`Using predefined offset for ${timezone}`);
-      return timezoneOffsets[timezone];
-    }
-    
-    // Check for common substrings to handle variations
-    for (const [key, offset] of Object.entries(timezoneOffsets)) {
-      if (timezone.includes(key) || key.includes(timezone)) {
-        console.log(`Found similar timezone match: ${key} for ${timezone}`);
-        return offset;
-      }
-    }
-    
-    // Use specific timezone offset for major cities if timezone not recognized
-    const cityTimezoneMap: Record<string, number> = {
-      'New York': -5,
-      'Los Angeles': -8,
-      'Chicago': -6,
-      'Houston': -6,
-      'Phoenix': -7,
-      'Philadelphia': -5,
-      'San Antonio': -6,
-      'San Diego': -8,
-      'Dallas': -6,
-      'San Jose': -8,
-      'London': 0,
-      'Berlin': 1,
-      'Madrid': 1,
-      'Rome': 1,
-      'Paris': 1,
-      'Vienna': 1,
-      'Amsterdam': 1,
-      'Brussels': 1,
-      'Tokyo': 9,
-      'Beijing': 8,
-      'Shanghai': 8,
-      'Hong Kong': 8,
-      'Singapore': 8,
-      'Sydney': 10,
-      'Melbourne': 10,
-      'Moscow': 3,
-      'St Petersburg': 3,
-      'Cairo': 2,
-      'Istanbul': 3,
-      'Dubai': 4,
-      'Mumbai': 5.5,
-      'Delhi': 5.5,
-      'Bangkok': 7,
-    };
-    
-    // Check if any city name in the timezone string
-    for (const [city, offset] of Object.entries(cityTimezoneMap)) {
-      if (timezone.toLowerCase().includes(city.toLowerCase())) {
-        console.log(`Using city timezone for ${city} in ${timezone}`);
-        return offset;
-      }
-    }
-    
-    // Try to extract a country or region from the timezone string
-    const countryOffset: Record<string, number> = {
-      'us': -6, // Central US as default
-      'usa': -6,
-      'uk': 0,
-      'gb': 0,
-      'de': 1,
-      'germany': 1,
-      'fr': 1,
-      'france': 1,
-      'es': 1,
-      'spain': 1,
-      'it': 1,
-      'italy': 1,
-      'jp': 9,
-      'japan': 9,
-      'cn': 8,
-      'china': 8,
-      'au': 10,
-      'australia': 10,
-      'ru': 3,
-      'russia': 3,
-      'in': 5.5,
-      'india': 5.5,
-      'br': -3,
-      'brazil': -3,
-    };
-    
-    // Check for country codes or names in the timezone string
-    for (const [country, offset] of Object.entries(countryOffset)) {
-      if (timezone.toLowerCase().includes(country.toLowerCase())) {
-        console.log(`Using country timezone for ${country} in ${timezone}`);
-        return offset;
-      }
-    }
-    
-    // Default to UTC if no match found
-    console.log(`Timezone not recognized: ${timezone}, defaulting to UTC`);
-    return 0;
-  } catch (error) {
-    console.error("Error processing timezone:", error);
-    return 0; // Fallback to UTC
-  }
-}
-
-// Determine timezone offset using multiple methods for resilience
-async function determineTimezoneOffset(
-  coordinates: GeoCoordinates, 
-  timestamp: number,
-  timezoneString: string,
-  date: string
-): Promise<number> {
-  console.log(`Determining timezone offset for coordinates ${coordinates.latitude},${coordinates.longitude} with timestamp ${timestamp}`);
-  
-  try {
-    // First try Google Maps Timezone API (most accurate)
-    const tzOffset = await getTimezoneData(coordinates, timestamp);
-    
-    if (tzOffset !== null) {
-      console.log(`Successfully determined timezone offset using API: ${tzOffset}h`);
-      return tzOffset;
-    }
-    
-    // If API fails, try using the timezone string
-    if (timezoneString) {
-      const stringOffset = getTimezoneOffset(timezoneString, date);
-      console.log(`Using timezone string offset: ${stringOffset}h from ${timezoneString}`);
-      return stringOffset;
-    }
-    
-    // If both methods fail, try to guess based on longitude
-    // Crude approximation: longitude / 15 gives rough timezone
-    const longitudeBasedOffset = Math.round(coordinates.longitude / 15);
-    console.log(`Falling back to longitude-based offset: ${longitudeBasedOffset}h`);
-    return longitudeBasedOffset;
-    
-  } catch (error) {
-    console.error("All timezone determination methods failed:", error);
-    // Absolute last resort - use UTC
-    return 0;
-  }
-}
-
-// Main function to calculate planetary positions
+// Main function to calculate planetary positions with improved timezone handling
 export async function calculatePlanetaryPositions(
   birthDate: string, 
   birthTime: string, 
   birthLocation: string,
-  timezone: string
+  userTimezone: string
 ): Promise<CelestialData> {
-  console.log(`Calculating positions for: ${birthDate} ${birthTime} at ${birthLocation} in timezone ${timezone}`);
+  console.log(`Calculating positions for: ${birthDate} ${birthTime} at ${birthLocation} in timezone ${userTimezone}`);
   
   try {
-    // Parse the birth date and time
-    const [year, month, day] = birthDate.split('-').map(Number);
-    const [hour, minute] = birthTime ? birthTime.split(':').map(Number) : [12, 0]; // Default to noon if no time
-    
-    if (!year || !month || !day) {
-      throw new Error("Invalid date format");
-    }
-    
     // Create a timestamp for timezone lookup
-    const birthTimestamp = Math.floor(new Date(year, month - 1, day, hour, minute).getTime() / 1000);
+    let localTimestamp: number;
+    try {
+      localTimestamp = new Date(`${birthDate}T${birthTime || '12:00'}`).getTime() / 1000;
+    } catch (e) {
+      console.error("Error creating timestamp, using current time:", e);
+      localTimestamp = Math.floor(Date.now() / 1000);
+    }
     
     // Get geographic coordinates for the birth location
     const coordinates = await getGeoCoordinates(birthLocation);
     
-    // Determine timezone offset using our multi-method approach
-    const tzOffset = await determineTimezoneOffset(coordinates, birthTimestamp, timezone, birthDate);
+    // Get the IANA timezone from coordinates
+    let tzId = await getIanaTimezoneId(coordinates, localTimestamp);
     
-    // Calculate Julian day number (improved algorithm)
-    const jd = calculateJulianDay(year, month, day, hour, minute, tzOffset);
+    // If we couldn't get the IANA timezone from coordinates, try using the user-provided timezone
+    if (!tzId) {
+      console.log(`Could not determine timezone from coordinates, using user-provided timezone: ${userTimezone}`);
+      tzId = userTimezone;
+    }
     
-    console.log(`Calculated Julian day: ${jd} for date ${birthDate} ${birthTime} (TZ offset: ${tzOffset}h)`);
+    console.log(`Using IANA timezone: ${tzId}`);
     
-    // Calculate actual planetary positions using adapted algorithms
+    // Parse the birth date and time using Luxon with the timezone
+    let localDateTime: DateTime;
+    
+    if (birthTime) {
+      // If birth time is provided, use the full datetime
+      localDateTime = DateTime.fromISO(`${birthDate}T${birthTime}`, { zone: tzId });
+      if (!localDateTime.isValid) {
+        console.error(`Invalid datetime: ${localDateTime.invalidReason}, ${localDateTime.invalidExplanation}`);
+        // Fallback to noon if time parsing fails
+        localDateTime = DateTime.fromISO(`${birthDate}T12:00`, { zone: tzId });
+      }
+    } else {
+      // If no birth time, default to noon in the timezone
+      localDateTime = DateTime.fromISO(`${birthDate}T12:00`, { zone: tzId });
+    }
+    
+    // Convert local time to UTC
+    const utcDateTime = localDateTime.toUTC();
+    console.log(`Converted local time ${localDateTime.toString()} to UTC ${utcDateTime.toString()}`);
+    
+    // Calculate Julian day from UTC datetime
+    const jd = calculateJulianDayFromDateTime(utcDateTime);
+    console.log(`Calculated Julian day: ${jd}`);
+    
+    // Calculate celestial positions
     const celestialData = calculateCelestialPositions(jd, coordinates);
     
     return celestialData;
@@ -432,53 +272,38 @@ export async function calculatePlanetaryPositions(
   }
 }
 
-// Calculate Julian Day - more accurate algorithm
-function calculateJulianDay(year: number, month: number, day: number, hour: number, minute: number, tzOffset: number): number {
-  // Convert local time to UTC
-  let utcHour = hour - tzOffset;
-  let utcDay = day;
-  let utcMonth = month;
-  let utcYear = year;
+// Calculate Julian Day directly from Luxon DateTime
+function calculateJulianDayFromDateTime(dt: DateTime): number {
+  // Extract date components from Luxon DateTime
+  const y = dt.year;
+  const m = dt.month;
+  const d = dt.day;
+  const hour = dt.hour;
+  const minute = dt.minute;
+  const second = dt.second;
   
-  // Handle day crossing due to timezone conversion
-  if (utcHour < 0) {
-    utcHour += 24;
-    utcDay -= 1;
-  } else if (utcHour >= 24) {
-    utcHour -= 24;
-    utcDay += 1;
-  }
-  
-  // Handle month/year boundary cases
-  if (utcDay < 1) {
-    utcMonth -= 1;
-    if (utcMonth < 1) {
-      utcMonth = 12;
-      utcYear -= 1;
-    }
-    // Get last day of previous month
-    utcDay = new Date(utcYear, utcMonth, 0).getDate();
-  } else if (utcDay > new Date(utcYear, utcMonth, 0).getDate()) {
-    utcDay = 1;
-    utcMonth += 1;
-    if (utcMonth > 12) {
-      utcMonth = 1;
-      utcYear += 1;
-    }
-  }
-  
-  // Adjust month and year for January and February
-  if (utcMonth <= 2) {
-    utcMonth += 12;
-    utcYear -= 1;
-  }
+  // Calculate decimal day with time
+  const decimalDay = d + (hour + minute/60 + second/3600) / 24;
   
   // Calculate Julian day using the improved algorithm
-  const a = Math.floor(utcYear / 100);
-  const b = 2 - a + Math.floor(a / 4);
-  const jd = Math.floor(365.25 * (utcYear + 4716)) + Math.floor(30.6001 * (utcMonth + 1)) + 
-             utcDay + b - 1524.5 + (utcHour + minute / 60) / 24;
-             
+  let jd: number;
+  
+  if (m <= 2) {
+    // If month is January or February, adjust year and month
+    const y1 = y - 1;
+    const m1 = m + 12;
+    jd = Math.floor(365.25 * y1) + Math.floor(30.6001 * (m1 + 1)) + decimalDay + 1720981.5;
+  } else {
+    jd = Math.floor(365.25 * y) + Math.floor(30.6001 * (m + 1)) + decimalDay + 1720981.5;
+  }
+  
+  // Gregorian calendar correction
+  if (jd >= 2299160.5) {
+    const a = Math.floor(y / 100);
+    const b = 2 - a + Math.floor(a / 4);
+    jd += b;
+  }
+  
   return jd;
 }
 
