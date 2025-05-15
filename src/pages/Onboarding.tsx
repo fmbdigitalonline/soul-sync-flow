@@ -1,60 +1,73 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronRight, ChevronLeft, Calendar, Clock, MapPin, Volume2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { GradientButton } from "@/components/ui/gradient-button";
-import { CosmicCard } from "@/components/ui/cosmic-card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import MainLayout from "@/components/Layout/MainLayout";
-import { useToast } from "@/hooks/use-toast";
-import { SoulOrb } from "@/components/ui/soul-orb";
-import { SpeechBubble } from "@/components/ui/speech-bubble";
-import { BlueprintGenerator } from "@/components/ui/blueprint-generator";
-import { useSoulOrb } from "@/contexts/SoulOrbContext";
 import { motion } from "@/lib/framer-motion";
-import { Onboarding3DScene } from "@/components/ui/onboarding-3d-scene";
-import { useOnboarding3D } from "@/hooks/use-onboarding-3d";
+import { Button } from "@/components/ui/button";
+import { SoulOrb } from "@/components/ui/soul-orb";
+import { BlueprintGenerator } from "@/components/blueprint/BlueprintGenerationFlow";
+import { zodiac } from "@/components/ui/zodiac";
+import { MBTISelector } from "@/components/blueprint/MBTISelector";
+import { BirthDataForm } from "@/components/blueprint/BirthDataForm";
+import { BlueprintData } from "@/services/blueprint-service"; 
+import { useToast } from "@/hooks/use-toast";
+import { useSoulOrb } from "@/contexts/SoulOrbContext";
 
-const Onboarding = () => {
+// Onboarding step interface
+interface OnboardingStep {
+  id: string;
+  title: string;
+}
+
+export default function Onboarding() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { currentMessage } = useSoulOrb();
+  const { speak } = useSoulOrb();
+  
+  // Form data state
   const [formData, setFormData] = useState({
     name: "",
+    preferredName: "",
     birthDate: "",
     birthTime: "",
     birthLocation: "",
-    personality: "",
+    timezone: "UTC",
+    personality: "INFJ" // Default MBTI
   });
   
-  // Add a state to track if blueprint has been generated
+  // Onboarding steps
+  const steps: OnboardingStep[] = [
+    { id: "welcome", title: "Welcome" },
+    { id: "name", title: "Your Name" },
+    { id: "birth", title: "Birth Details" },
+    { id: "personality", title: "Personality Type" },
+    { id: "purpose", title: "Your Purpose" },
+    { id: "generating", title: "Generating Blueprint" }
+  ];
+  
+  // State variables
+  const [currentStep, setCurrentStep] = useState(0);
   const [blueprintGenerated, setBlueprintGenerated] = useState(false);
-  // Use a ref to track if navigation has been triggered
+  
+  // Refs to prevent navigation loops
   const navigationTriggeredRef = useRef(false);
   
-  // Use our custom hook for 3D onboarding
-  const {
-    is3DMode,
-    currentStep,
-    steps,
-    showSpeechBubble,
-    sceneRef,
-    stage,
-    speaking,
-    interactionStage,
-    isTransitioning,
-    cardOpacity,
-    goToNextStep,
-    goToPrevStep,
-    handleOrbClick,
-    transitionTo2D,
-    listenAgain
-  } = useOnboarding3D();
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  // Update form data
+  const updateFormData = (newData: Partial<typeof formData>) => {
+    setFormData(prevData => ({ ...prevData, ...newData }));
+  };
+  
+  // Move to the next step
+  const goToNextStep = () => {
+    if (currentStep < steps.length - 1) {
+      setCurrentStep(prev => prev + 1);
+    }
+  };
+  
+  // Go back to the previous step
+  const goToPreviousStep = () => {
+    if (currentStep > 0) {
+      setCurrentStep(prev => prev - 1);
+    }
   };
   
   // Handle blueprint generation completion
@@ -70,12 +83,11 @@ const Onboarding = () => {
     setBlueprintGenerated(true);
     
     toast({
-      title: "Blueprint generated!",
-      description: "Your Soul Blueprint has been created successfully. Transitioning to 2D view...",
+      title: "Blueprint Generated Successfully",
+      description: "Your soul blueprint has been created and is ready to explore!",
     });
     
-    // Transition to 2D view
-    transitionTo2D();
+    speak("Your soul blueprint has been generated! Let's explore it together.");
     
     // Navigate to blueprint page after transition
     setTimeout(() => {
@@ -85,31 +97,21 @@ const Onboarding = () => {
     }, 2000);
   };
 
-  // Clean up effect - when component unmounts, make sure we're not caught in a loop
+  // On first render
   useEffect(() => {
-    return () => {
-      // If we're unmounting and blueprint was generated, set the ref to true to avoid loops
-      if (blueprintGenerated) {
-        navigationTriggeredRef.current = true;
-      }
-    };
-  }, [blueprintGenerated]);
-
-  // Add an effect to prevent looping if blueprint was generated
+    document.title = "SoulSync - Onboarding";
+  }, []);
+  
+  // Effect to handle completion
   useEffect(() => {
     if (blueprintGenerated && !navigationTriggeredRef.current) {
-      console.log("Blueprint was generated, should redirect soon");
       navigationTriggeredRef.current = true;
+      console.log("Blueprint generated, preparing to navigate");
       
-      // Safety fallback - if we haven't navigated after 5 seconds, force navigation
-      const safetyTimeout = setTimeout(() => {
-        if (window.location.pathname === "/onboarding") {
-          console.log("Safety fallback: forcing navigation to blueprint page");
-          navigate("/blueprint");
-        }
-      }, 5000);
-      
-      return () => clearTimeout(safetyTimeout);
+      // Delay to allow animation to complete
+      setTimeout(() => {
+        navigate("/blueprint");
+      }, 1500);
     }
   }, [blueprintGenerated, navigate]);
 
@@ -122,45 +124,70 @@ const Onboarding = () => {
       case 0:
         return (
           <div className="space-y-6 text-center">
+            <div className="flex justify-center mb-8">
+              <SoulOrb size="xl" stage="welcome" pulse={true} />
+            </div>
+            
             <h2 className="text-2xl font-display font-bold">Welcome to SoulSync</h2>
-            <p>
-              Let's create your unique Soul Blueprint by collecting some key information.
-              This will help us provide personalized guidance aligned with your cosmic design.
+            <p className="text-muted-foreground max-w-md mx-auto">
+              Let's create your personalized soul blueprint to help you understand your unique cosmic design and life purpose.
             </p>
-            <div>
-              <Label htmlFor="name">Your Name</Label>
-              <Input
-                id="name"
-                name="name"
-                placeholder="Enter your name"
-                value={formData.name}
-                onChange={handleInputChange}
-                className="mt-1"
-                disabled={interactionStage === 'listening'}
-              />
+            
+            <div className="max-w-md mx-auto">
+              <Button 
+                className="w-full" 
+                onClick={goToNextStep}>
+                Begin Your Journey
+              </Button>
             </div>
           </div>
         );
       case 1:
         return (
           <div className="space-y-6">
-            <h2 className="text-2xl font-display font-bold text-center">Your Birth Date</h2>
-            <p className="text-center">
-              Your birth date helps us calculate your astrological signs and numerology.
-            </p>
-            <div className="flex items-center space-x-4">
-              <Calendar className="text-soul-purple h-8 w-8 flex-shrink-0" />
-              <div className="space-y-1 w-full">
-                <Label htmlFor="birthDate">Birth Date</Label>
-                <Input
-                  id="birthDate"
-                  name="birthDate"
-                  type="date"
-                  value={formData.birthDate}
-                  onChange={handleInputChange}
-                  className="mt-1"
-                  disabled={interactionStage === 'listening'}
+            <h2 className="text-2xl font-display font-bold text-center">What's Your Name?</h2>
+            
+            <div className="max-w-md mx-auto space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="fullName" className="block text-sm font-medium">
+                  Full Name (for calculations)
+                </label>
+                <input
+                  id="fullName"
+                  type="text"
+                  className="w-full px-4 py-2 border border-border rounded-md bg-card"
+                  value={formData.name}
+                  onChange={(e) => updateFormData({ name: e.target.value })}
+                  placeholder="Your full name"
                 />
+                <p className="text-xs text-muted-foreground">
+                  Your full legal name is used for numerological calculations
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="preferredName" className="block text-sm font-medium">
+                  What should we call you?
+                </label>
+                <input
+                  id="preferredName"
+                  type="text"
+                  className="w-full px-4 py-2 border border-border rounded-md bg-card"
+                  value={formData.preferredName}
+                  onChange={(e) => updateFormData({ preferredName: e.target.value })}
+                  placeholder="Your preferred name"
+                />
+              </div>
+              
+              <div className="flex justify-between pt-4">
+                <Button variant="outline" onClick={goToPreviousStep}>
+                  Back
+                </Button>
+                <Button 
+                  onClick={goToNextStep}
+                  disabled={!formData.name}>
+                  Continue
+                </Button>
               </div>
             </div>
           </div>
@@ -168,23 +195,36 @@ const Onboarding = () => {
       case 2:
         return (
           <div className="space-y-6">
-            <h2 className="text-2xl font-display font-bold text-center">Your Birth Time</h2>
-            <p className="text-center">
-              Your birth time helps us calculate your Rising sign and moon position.
+            <h2 className="text-2xl font-display font-bold text-center">Birth Details</h2>
+            <p className="text-center text-muted-foreground max-w-md mx-auto">
+              Your birth time and location determine your cosmic blueprint
             </p>
-            <div className="flex items-center space-x-4">
-              <Clock className="text-soul-purple h-8 w-8 flex-shrink-0" />
-              <div className="space-y-1 w-full">
-                <Label htmlFor="birthTime">Birth Time (if known)</Label>
-                <Input
-                  id="birthTime"
-                  name="birthTime"
-                  type="time"
-                  value={formData.birthTime}
-                  onChange={handleInputChange}
-                  className="mt-1"
-                  disabled={interactionStage === 'listening'}
-                />
+            
+            <div className="max-w-md mx-auto">
+              <BirthDataForm
+                birthData={{
+                  birthDate: formData.birthDate,
+                  birthTime: formData.birthTime,
+                  birthLocation: formData.birthLocation,
+                  timezone: formData.timezone
+                }}
+                onChange={(data) => updateFormData({
+                  birthDate: data.birthDate,
+                  birthTime: data.birthTime,
+                  birthLocation: data.birthLocation,
+                  timezone: data.timezone
+                })}
+              />
+              
+              <div className="flex justify-between mt-6">
+                <Button variant="outline" onClick={goToPreviousStep}>
+                  Back
+                </Button>
+                <Button 
+                  onClick={goToNextStep}
+                  disabled={!formData.birthDate || !formData.birthTime || !formData.birthLocation}>
+                  Continue
+                </Button>
               </div>
             </div>
           </div>
@@ -192,62 +232,69 @@ const Onboarding = () => {
       case 3:
         return (
           <div className="space-y-6">
-            <h2 className="text-2xl font-display font-bold text-center">Your Birth Location</h2>
-            <p className="text-center">
-              Your birth location helps us calculate your exact astrological chart.
+            <h2 className="text-2xl font-display font-bold text-center">Your Personality Type</h2>
+            <p className="text-center text-muted-foreground max-w-md mx-auto">
+              Select your Myers-Briggs (MBTI) personality type to enhance your blueprint accuracy
             </p>
-            <div className="flex items-center space-x-4">
-              <MapPin className="text-soul-purple h-8 w-8 flex-shrink-0" />
-              <div className="space-y-1 w-full">
-                <Label htmlFor="birthLocation">Birth City/Country</Label>
-                <Input
-                  id="birthLocation"
-                  name="birthLocation"
-                  placeholder="e.g., New York, USA"
-                  value={formData.birthLocation}
-                  onChange={handleInputChange}
-                  className="mt-1"
-                  disabled={interactionStage === 'listening'}
-                />
+            
+            <div className="max-w-md mx-auto">
+              <MBTISelector 
+                value={formData.personality}
+                onChange={(value) => updateFormData({ personality: value })}
+              />
+              
+              <div className="flex justify-between mt-6">
+                <Button variant="outline" onClick={goToPreviousStep}>
+                  Back
+                </Button>
+                <Button onClick={goToNextStep}>
+                  Continue
+                </Button>
               </div>
             </div>
           </div>
         );
       case 4:
         return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-display font-bold text-center">Your Personality Type</h2>
-            <p className="text-center">
-              If you know your MBTI personality type, please select it below.
+          <div className="space-y-6 text-center">
+            <motion.div 
+              className="flex justify-center"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              <SoulOrb size="lg" stage="collecting" pulse={true} />
+            </motion.div>
+            
+            <h2 className="text-2xl font-display font-bold">Discover Your Life Purpose</h2>
+            <p className="text-muted-foreground max-w-md mx-auto">
+              Your Soul Blueprint integrates multiple wisdom systems to reveal your unique gifts, challenges, and life path.
             </p>
-            <div className="space-y-1">
-              <Label htmlFor="personality">MBTI Personality Type (optional)</Label>
-              <select
-                id="personality"
-                name="personality"
-                value={formData.personality}
-                onChange={handleInputChange}
-                disabled={interactionStage === 'listening'}
-                className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              >
-                <option value="">Select personality type</option>
-                <option value="INTJ">INTJ</option>
-                <option value="INTP">INTP</option>
-                <option value="ENTJ">ENTJ</option>
-                <option value="ENTP">ENTP</option>
-                <option value="INFJ">INFJ</option>
-                <option value="INFP">INFP</option>
-                <option value="ENFJ">ENFJ</option>
-                <option value="ENFP">ENFP</option>
-                <option value="ISTJ">ISTJ</option>
-                <option value="ISFJ">ISFJ</option>
-                <option value="ESTJ">ESTJ</option>
-                <option value="ESFJ">ESFJ</option>
-                <option value="ISTP">ISTP</option>
-                <option value="ISFP">ISFP</option>
-                <option value="ESTP">ESTP</option>
-                <option value="ESFP">ESFP</option>
-              </select>
+            
+            <div className="max-w-md mx-auto">
+              <div className="grid grid-cols-4 gap-4 my-8">
+                {Object.values(zodiac).slice(0, 4).map((sign, i) => (
+                  <motion.div 
+                    key={sign.name}
+                    className="flex flex-col items-center"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                  >
+                    <div className="text-2xl mb-2">{sign.symbol}</div>
+                    <div className="text-xs text-muted-foreground">{sign.name}</div>
+                  </motion.div>
+                ))}
+              </div>
+              
+              <div className="flex justify-between mt-6">
+                <Button variant="outline" onClick={goToPreviousStep}>
+                  Back
+                </Button>
+                <Button onClick={goToNextStep}>
+                  Generate My Blueprint
+                </Button>
+              </div>
             </div>
           </div>
         );
@@ -258,178 +305,59 @@ const Onboarding = () => {
             <h2 className="text-2xl font-display font-bold">Generating Your Soul Blueprint</h2>
             <BlueprintGenerator 
               key={`blueprint-generator-${blueprintGenerated ? 'complete' : 'active'}`}
-              formData={formData}
+              userProfile={{
+                full_name: formData.name,
+                preferred_name: formData.preferredName,
+                birth_date: formData.birthDate,
+                birth_time_local: formData.birthTime,
+                birth_location: formData.birthLocation,
+                timezone: formData.timezone,
+                personality: formData.personality
+              }}
               onComplete={handleBlueprintComplete}
               className="mt-4"
             />
           </div>
         );
       default:
-        return null;
+        return <div>Unknown step</div>;
     }
   };
 
-  // Render 3D experience
-  if (is3DMode) {
-    return (
-      <MainLayout hideNav>
-        {/* 3D Scene */}
-        <motion.div 
-          className="fixed inset-0 z-0"
-          ref={sceneRef}
-        >
-          <Onboarding3DScene 
-            speaking={speaking}
-            stage={stage}
-            interactionStage={interactionStage}
-          >
-            {/* Center aligned content */}
-            <div className="relative w-20 h-20">
-              {currentMessage && showSpeechBubble && interactionStage === 'listening' && (
-                <SpeechBubble position="bottom" className="w-80" is3D={true}>
-                  {currentMessage}
-                </SpeechBubble>
-              )}
-            </div>
-          </Onboarding3DScene>
-        </motion.div>
-        
-        {/* Interaction area - floating cosmic card with visual differentiation based on interaction stage */}
-        <div className="h-screen p-6 flex flex-col justify-center items-center relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ 
-              opacity: cardOpacity, 
-              y: interactionStage === 'input' ? 0 : 20,
-              scale: interactionStage === 'input' ? 1.05 : 0.95
-            }}
-            transition={{ duration: 0.5 }}
-            className={`w-full max-w-md ${
-              interactionStage === 'listening' || isTransitioning ? 'pointer-events-none' : 'pointer-events-auto'
-            }`}
-          >
-            <CosmicCard 
-              className={`backdrop-blur-lg transition-all duration-500 ${
-                interactionStage === 'listening' ? 'bg-opacity-20' : 'bg-opacity-40'
-              }`} 
-              floating={interactionStage === 'input' && !isTransitioning}
-            >
-              <div className="space-y-6">{renderStepContent()}</div>
-              
-              {/* "Listen Again" button when in input mode except for the generating step */}
-              {interactionStage === 'input' && currentStep !== steps.length - 1 && !isTransitioning && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={listenAgain}
-                  className="flex items-center mt-2 mx-auto"
-                  disabled={isTransitioning}
-                >
-                  <Volume2 className="mr-1 h-4 w-4" />
-                  Listen Again
-                </Button>
-              )}
-              
-              {currentStep !== steps.length - 1 && (
-                <div className={`mt-8 flex justify-between transition-opacity duration-300 ${
-                  interactionStage === 'listening' || isTransitioning ? 'opacity-0' : 'opacity-100'
-                }`}>
-                  <Button
-                    variant="ghost"
-                    onClick={goToPrevStep}
-                    disabled={currentStep === 0 || interactionStage === 'listening' || isTransitioning}
-                  >
-                    <ChevronLeft className="mr-2 h-4 w-4" />
-                    Back
-                  </Button>
-                  <GradientButton 
-                    onClick={goToNextStep} 
-                    disabled={interactionStage === 'listening' || isTransitioning}
-                  >
-                    {currentStep === steps.length - 2 ? "Generate Blueprint" : "Continue"}
-                    <ChevronRight className="ml-2 h-4 w-4" />
-                  </GradientButton>
-                </div>
-              )}
-            </CosmicCard>
-            
-            {/* Tap to continue hint with different messages based on stage */}
-            <div className="text-center mt-4 text-white text-sm opacity-80">
-              {isTransitioning ? (
-                <p>Transitioning...</p>
-              ) : interactionStage === 'listening' ? (
-                <p>Soul Orb is speaking. Click anywhere to continue...</p>
-              ) : (
-                <p>Please enter your information</p>
-              )}
-            </div>
-          </motion.div>
-        </div>
-        
-        {/* Interactive area for clicking - covers the entire screen during listening phase */}
-        {interactionStage === 'listening' && !isTransitioning && (
-          <div 
-            className="fixed inset-0 cursor-pointer z-20"
-            onClick={handleOrbClick}
-          />
-        )}
-        {/* Smaller interactive area for the orb during input phase */}
-        {interactionStage === 'input' && !isTransitioning && (
-          <div 
-            className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-20 h-20 cursor-pointer z-20"
-            onClick={handleOrbClick}
-          />
-        )}
-      </MainLayout>
-    );
-  }
-  
-  // Regular 2D experience (this will be shown after onboarding)
   return (
-    <MainLayout hideNav>
-      <div className="min-h-screen p-6 flex flex-col">
-        {/* Header */}
-        <div className="mb-6 text-center">
-          <h1 className="text-3xl font-display font-bold">
-            <span className="gradient-text">SoulSync</span>
-          </h1>
-          <div className="flex justify-center items-center space-x-2 mt-4">
-            {steps.map((step, index) => (
-              <div
-                key={step}
-                className={`h-2 w-2 rounded-full ${
-                  index === currentStep
-                    ? "bg-soul-purple"
-                    : index < currentStep
-                    ? "bg-soul-lavender"
-                    : "bg-gray-300"
-                }`}
-              />
-            ))}
-          </div>
+    <div className="min-h-screen bg-gradient-to-b from-soul-black to-soul-purple/20 text-white">
+      {/* Progress indicator */}
+      <div className="w-full px-4 pt-4 pb-8 max-w-4xl mx-auto">
+        <div className="flex justify-between mb-1">
+          {steps.map((step, index) => (
+            <div key={step.id} className="text-xs text-white/60">
+              {index < currentStep ? "✓" : ""}
+            </div>
+          ))}
         </div>
-        
-        {/* Transitioning content */}
-        <div className="flex-1 flex items-center justify-center">
+        <div className="w-full bg-white/10 rounded-full h-1">
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-          >
-            <CosmicCard className="w-full max-w-md" floating>
-              <div className="text-center p-8">
-                <h2 className="text-2xl font-display font-bold mb-4">Welcome to SoulSync</h2>
-                <p className="mb-6">Your Soul Blueprint has been created successfully!</p>
-                <GradientButton onClick={() => navigate("/blueprint")} className="w-full">
-                  View My Soul Blueprint
-                </GradientButton>
-              </div>
-            </CosmicCard>
-          </motion.div>
+            className="bg-soul-purple h-1 rounded-full"
+            initial={{ width: '0%' }}
+            animate={{ width: `${(currentStep / (steps.length - 1)) * 100}%` }}
+            transition={{ duration: 0.3 }}
+          />
         </div>
       </div>
-    </MainLayout>
+    
+      {/* Main content */}
+      <div className="w-full max-w-4xl mx-auto px-4 pb-20 min-h-[60vh] flex items-center justify-center">
+        <motion.div
+          key={currentStep}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.3 }}
+          className="w-full"
+        >
+          {renderStepContent()}
+        </motion.div>
+      </div>
+    </div>
   );
-};
-
-export default Onboarding;
+}

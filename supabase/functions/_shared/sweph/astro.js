@@ -35,7 +35,11 @@ const initializeWasm = async (wasmUrl) => {
       // For Deno environments (Edge Functions)
       if (typeof Deno !== 'undefined') {
         console.log("Running in Deno environment, using Deno.readFile");
-        wasmBinary = await Deno.readFile("./astro.wasm");
+        // Use URL parsing to get the proper file path
+        const url = new URL(wasmUrl);
+        console.log(`Parsed WASM URL path: ${url.pathname}`);
+        wasmBinary = await Deno.readFile(url.pathname);
+        console.log("Successfully loaded WASM binary from local file");
       } else {
         // For browser or Node.js environments
         console.log("Fetching WASM from provided URL");

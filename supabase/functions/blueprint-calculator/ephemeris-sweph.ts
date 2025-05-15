@@ -19,9 +19,12 @@ async function initializeSwephModule() {
     // Load astro.js module
     const astroModule = await import('../_shared/sweph/astro.js');
     
-    // Initialize WASM with local path
-    // The WASM file should be in the deployed function directory
-    const wasmModule = await astroModule.initializeWasm('./astro.wasm');
+    // Initialize WASM with properly resolved path
+    // Use URL constructor with import.meta.url to get proper path resolution
+    const wasmPath = new URL('../_shared/sweph/astro.wasm', import.meta.url).href;
+    console.log(`Loading WASM from path: ${wasmPath}`);
+    
+    const wasmModule = await astroModule.initializeWasm(wasmPath);
     
     if (!wasmModule) {
       throw new Error("Swiss Ephemeris WASM module failed to initialize");

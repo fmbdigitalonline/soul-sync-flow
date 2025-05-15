@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion } from "@/lib/framer-motion";
 import { SoulOrb } from "@/components/ui/soul-orb";
 import { cn } from "@/lib/utils";
@@ -36,7 +35,12 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
-
+  
+  // Refs to prevent multiple executions and control retries
+  const generationAttemptedRef = useRef(false);
+  const retryCountRef = useRef(0);
+  const maxRetries = 1; // Limit retries to prevent excessive API calls
+  
   // Generate random particles for visual effect
   useEffect(() => {
     const newParticles = Array.from({ length: 50 }, (_, i) => ({
@@ -52,6 +56,15 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
   // Generate the blueprint using the actual calculation service
   useEffect(() => {
     const generateBlueprint = async () => {
+      // Prevent multiple generation attempts in a single component lifecycle
+      if (generationAttemptedRef.current) {
+        console.log("Blueprint generation already started, ignoring duplicate effect");
+        return;
+      }
+      
+      // Mark that we've attempted generation
+      generationAttemptedRef.current = true;
+      
       // Only start if we haven't already
       if (isGenerating || generatedBlueprint) return;
       
@@ -75,11 +88,11 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
         setProgress(40);
         
         // Call the blueprint service to generate a blueprint
-        const { data: blueprint, error } = await blueprintService.generateBlueprintFromBirthData(userProfile);
+        const { data: blueprint, error: genError, isPartial } = await blueprintService.generateBlueprintFromBirthData(userProfile);
         
-        if (error) {
-          console.error("Blueprint generation error:", error);
-          setError(error);
+        if (genError) {
+          console.error("Blueprint generation error:", genError);
+          setError(genError);
           toast({
             title: "Generation Error",
             description: "There was an error generating your blueprint. Please try again.",
@@ -96,6 +109,15 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
             variant: "destructive"
           });
           return;
+        }
+        
+        // Show toast for partial success
+        if (isPartial) {
+          toast({
+            title: "Blueprint Generated with Limited Data",
+            description: "Some calculations could not be completed with full accuracy. Your blueprint was generated with the best available data.",
+            variant: "warning"
+          });
         }
         
         // Progress through the remaining steps visually
@@ -121,13 +143,35 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
       } catch (err) {
         console.error("Unexpected error during blueprint generation:", err);
         setError(err instanceof Error ? err.message : String(err));
-        toast({
-          title: "Generation Error",
-          description: "An unexpected error occurred. Please try again later.",
-          variant: "destructive"
-        });
+        
+        // Check if we should retry
+        if (retryCountRef.current < maxRetries) {
+          console.log(`Retrying blueprint generation (attempt ${retryCountRef.current + 1} of ${maxRetries})`);
+          retryCountRef.current += 1;
+          generationAttemptedRef.current = false; // Reset to allow another attempt
+          
+          toast({
+            title: "Retrying Generation",
+            description: "Blueprint calculation encountered an issue. Retrying...",
+            variant: "default"
+          });
+          
+          // Wait a short time before retrying
+          setTimeout(() => {
+            setIsGenerating(false);
+            generateBlueprint();
+          }, 2000);
+        } else {
+          toast({
+            title: "Generation Error",
+            description: "An unexpected error occurred. Please try again later.",
+            variant: "destructive"
+          });
+        }
       } finally {
-        setIsGenerating(false);
+        if (retryCountRef.current >= maxRetries) {
+          setIsGenerating(false);
+        }
       }
     };
     
