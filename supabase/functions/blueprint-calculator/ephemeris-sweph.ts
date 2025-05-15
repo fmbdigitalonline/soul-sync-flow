@@ -1,9 +1,6 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import initializeWasm from '../_shared/sweph/astro.js';
-
-// Create a directory structure for the WASM file
-// blueprint-calculator/sweph/astro.wasm
+import initializeWasm from './sweph/astro.js';  // Import from local path
 
 /**
  * Calculate planetary positions using Swiss Ephemeris
@@ -12,13 +9,14 @@ export async function calculatePlanetaryPositionsWithSweph(date, time, location,
   try {
     console.log(`SwEph: Calculating positions for ${date} ${time} at ${location} in timezone ${timezone}`);
     
-    // Initialize the WASM module
-    const wasmUrl = new URL("./sweph/astro.wasm", import.meta.url);
-    console.log(`[path] ${wasmUrl.href}`);
-    
+    // Initialize the WASM module using our improved loader
     let sweph;
     try {
-      // Deno.readFile accepts a URL object directly
+      // Build URL exactly once - the base is this file's location
+      const wasmUrl = new URL("./sweph/astro.wasm", import.meta.url);
+      console.log(`[path] ${wasmUrl.href}`);
+      
+      // Deno.readFile accepts a URL object directly - no pathname, no "file://"
       const wasmBytes = await Deno.readFile(wasmUrl);
       console.log(`Successfully read ${wasmBytes.byteLength} bytes from WASM file`);
       
