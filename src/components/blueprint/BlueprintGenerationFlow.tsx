@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { motion } from "@/lib/framer-motion";
 import { SoulOrb } from "@/components/ui/soul-orb";
@@ -116,7 +117,7 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
           toast({
             title: "Blueprint Generated with Limited Data",
             description: "Some calculations could not be completed with full accuracy. Your blueprint was generated with the best available data.",
-            variant: "warning"
+            variant: "default" // Changed from "warning" to "default" since "warning" is not a valid variant
           });
         }
         

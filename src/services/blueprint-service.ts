@@ -10,6 +10,7 @@ export type BlueprintData = {
     birth_time_local: string;
     birth_location: string;
     timezone: string;
+    personality?: string; // Add personality as optional field
   };
   cognition_mbti: {
     type: string;

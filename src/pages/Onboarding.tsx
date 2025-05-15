@@ -125,7 +125,7 @@ export default function Onboarding() {
         return (
           <div className="space-y-6 text-center">
             <div className="flex justify-center mb-8">
-              <SoulOrb size="xl" stage="welcome" pulse={true} />
+              <SoulOrb size="lg" stage="welcome" pulse={true} />
             </div>
             
             <h2 className="text-2xl font-display font-bold">Welcome to SoulSync</h2>
