@@ -26,8 +26,8 @@ export async function calculatePlanetaryPositionsWithSweph(date, time, location,
     } catch (fsError) {
       console.warn(`Failed to load WASM from local filesystem: ${fsError.message}`);
       
-      // Try to fetch from Supabase Storage
-      const supabaseStorageUrl = "https://qxaajirrqrcnmvtowjbg.supabase.co/storage/v1/object/public/astro-wasm/astro.wasm";
+      // Try to fetch from Supabase Storage with the exact URL
+      const supabaseStorageUrl = "https://qxaajirrqrcnmvtowjbg.supabase.co/storage/v1/object/public/astro-wasm//astro.wasm";
       console.log(`Falling back to Supabase Storage URL: ${supabaseStorageUrl}`);
       
       try {
