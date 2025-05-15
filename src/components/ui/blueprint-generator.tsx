@@ -72,27 +72,24 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
         if (error) {
           console.error("Error generating blueprint:", error);
           setErrorMessage(error);
-          
-          // Show error but continue with fallback data if available
+          setStatus("error");
           toast({
-            title: "Blueprint Generation Warning",
-            description: "Some data couldn't be calculated accurately. Using fallback data.",
+            title: "Blueprint Generation Error",
+            description: error || "Failed to generate blueprint. Please try again.",
             variant: "destructive",
           });
-          
-          if (!blueprint) {
-            setStatus("error");
-            return;
-          }
-        } else if (isPartial) {
+          return;
+        } 
+        
+        if (isPartial) {
           toast({
             title: "Blueprint Generation Partial",
             description: "Some calculations were not fully accurate, but we've created your blueprint with the best available data.",
-            variant: "warning",
+            variant: "destructive",
           });
         }
 
-        // Save blueprint to database
+        // If we have a blueprint, save it
         if (blueprint) {
           const { success: saveSuccess, error: saveError } =
             await blueprintService.saveBlueprintData(blueprint);
@@ -102,17 +99,30 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
             toast({
               title: "Error Saving Blueprint",
               description:
-                "Your blueprint was generated but couldn't be saved. You can still view it.",
+                "Your blueprint was generated but couldn't be saved. Please try again.",
               variant: "destructive",
             });
+            setStatus("error");
+            setErrorMessage(saveError || "Failed to save blueprint");
+            return;
           }
+          
+          // Set progress to complete
+          setProgress(100);
+          setStatus("complete");
+          
+          // Pass the blueprint to parent component
+          onComplete(blueprint);
+        } else {
+          // This should not happen if errors are properly handled, but just in case
+          setErrorMessage("No blueprint data generated");
+          setStatus("error");
+          toast({
+            title: "Blueprint Generation Error",
+            description: "No blueprint data was generated. Please try again.",
+            variant: "destructive",
+          });
         }
-
-        setProgress(100);
-        setStatus("complete");
-        
-        // Pass the blueprint to parent component
-        onComplete(blueprint || undefined);
       } catch (err) {
         console.error("Unexpected error in blueprint generation:", err);
         setErrorMessage(
@@ -129,6 +139,101 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
 
     generateBlueprint();
   }, [formData, onComplete, toast]);
+
+  // Try again handler
+  const handleTryAgain = () => {
+    setStatus("idle");
+    setErrorMessage(null);
+    setProgress(0);
+    
+    // Restarting the generation process
+    const generateBlueprintAgain = async () => {
+      try {
+        setStatus("generating");
+        setProgress(10);
+        
+        // Create user data object for blueprint generation
+        const userData: BlueprintData["user_meta"] = {
+          full_name: formData.name,
+          preferred_name: formData.name.split(" ")[0],
+          birth_date: formData.birthDate,
+          birth_time_local: formData.birthTime,
+          birth_location: formData.birthLocation,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        };
+        
+        console.log("Retrying blueprint generation with user data:", userData);
+        setProgress(30);
+        
+        const { data: blueprint, error, isPartial } =
+          await blueprintService.generateBlueprintFromBirthData(userData);
+          
+        setProgress(70);
+        
+        if (error) {
+          console.error("Error generating blueprint on retry:", error);
+          setErrorMessage(error);
+          setStatus("error");
+          toast({
+            title: "Blueprint Generation Error",
+            description: error || "Failed to generate blueprint. Please try again.",
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        if (isPartial) {
+          toast({
+            title: "Blueprint Generation Partial",
+            description: "Some calculations were not fully accurate, but we've created your blueprint with the best available data.",
+            variant: "destructive",
+          });
+        }
+        
+        if (blueprint) {
+          const { success: saveSuccess, error: saveError } =
+            await blueprintService.saveBlueprintData(blueprint);
+            
+          if (!saveSuccess) {
+            console.error("Error saving blueprint on retry:", saveError);
+            toast({
+              title: "Error Saving Blueprint",
+              description: "Your blueprint was generated but couldn't be saved. Please try again.",
+              variant: "destructive",
+            });
+            setStatus("error");
+            setErrorMessage(saveError || "Failed to save blueprint");
+            return;
+          }
+          
+          setProgress(100);
+          setStatus("complete");
+          onComplete(blueprint);
+        } else {
+          setErrorMessage("No blueprint data generated on retry");
+          setStatus("error");
+          toast({
+            title: "Blueprint Generation Error",
+            description: "No blueprint data was generated. Please try again.",
+            variant: "destructive",
+          });
+        }
+      } catch (err) {
+        console.error("Unexpected error in blueprint generation retry:", err);
+        setErrorMessage(
+          err instanceof Error ? err.message : "Unknown error occurred"
+        );
+        setStatus("error");
+        toast({
+          title: "Blueprint Generation Error",
+          description: "There was a problem generating your blueprint. Please try again.",
+          variant: "destructive",
+        });
+      }
+    };
+    
+    generateBlueprintAgain();
+  };
 
   return (
     <div className={cn("space-y-4", className)}>
@@ -198,12 +303,7 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
           <p className="text-sm">{errorMessage || "An unknown error occurred"}</p>
           <div>
             <button
-              onClick={() => {
-                setStatus("idle");
-                setErrorMessage(null);
-                setProgress(0);
-                generateBlueprint();
-              }}
+              onClick={handleTryAgain}
               className="bg-soul-purple hover:bg-soul-purple/80 text-white px-4 py-2 rounded-md flex items-center mx-auto"
             >
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

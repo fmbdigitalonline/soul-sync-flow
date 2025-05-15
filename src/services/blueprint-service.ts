@@ -127,9 +127,6 @@ export const blueprintService = {
       
       console.log('Received calculation data:', calcData);
       
-      // Create fallback data in case calculations partially fail
-      const fallbackData = this.createFallbackBlueprintData(userData);
-      
       // Create the blueprint using the calculation results
       const blueprint: BlueprintData = {
         user_meta: userData,
@@ -140,7 +137,19 @@ export const blueprintService = {
           dominant_function: "Introverted Intuition (Ni)",
           auxiliary_function: "Extraverted Feeling (Fe)"
         },
-        energy_strategy_human_design: calcData.humanDesign || fallbackData.energy_strategy_human_design,
+        energy_strategy_human_design: calcData.humanDesign || {
+          type: "Unknown",
+          profile: "Unknown",
+          authority: "Unknown",
+          strategy: "Unknown",
+          definition: "Unknown",
+          not_self_theme: "Unknown",
+          life_purpose: "Unknown",
+          gates: {
+            unconscious_design: [],
+            conscious_personality: []
+          }
+        },
         bashar_suite: {
           // Static data for now
           belief_interface: {
@@ -155,11 +164,30 @@ export const blueprintService = {
           }
         },
         // Use the calculated numerology data
-        values_life_path: calcData.numerology || fallbackData.values_life_path,
+        values_life_path: calcData.numerology || {
+          life_path_number: 0,
+          life_path_keyword: "Unknown",
+          expression_number: 0,
+          expression_keyword: "Unknown",
+          soul_urge_number: 0,
+          soul_urge_keyword: "Unknown",
+          personality_number: 0
+        },
         // Use the calculated Western astrology data
-        archetype_western: calcData.westernProfile || fallbackData.archetype_western,
+        archetype_western: calcData.westernProfile || {
+          sun_sign: "Unknown",
+          sun_keyword: "Unknown",
+          moon_sign: "Unknown",
+          moon_keyword: "Unknown",
+          rising_sign: "Unknown"
+        },
         // Use the calculated Chinese zodiac data
-        archetype_chinese: calcData.chineseZodiac || fallbackData.archetype_chinese,
+        archetype_chinese: calcData.chineseZodiac || {
+          animal: "Unknown",
+          element: "Unknown",
+          yin_yang: "Unknown",
+          keyword: "Unknown"
+        },
         timing_overlays: {
           current_transits: [],
           notes: "Generated using real astronomical calculations"
@@ -177,10 +205,10 @@ export const blueprintService = {
           calculation_date: calcData.calculation_metadata?.calculated_at || new Date().toISOString(),
           engine: calcData.calculation_metadata?.engine || "unknown",
           data_sources: {
-            western: calcData.westernProfile ? "calculated" : "default",
-            chinese: calcData.chineseZodiac ? "calculated" : "default",
-            numerology: calcData.numerology ? "calculated" : "default",
-            humanDesign: calcData.humanDesign ? "calculated" : "default"
+            western: calcData.westernProfile ? "calculated" : "unknown",
+            chinese: calcData.chineseZodiac ? "calculated" : "unknown",
+            numerology: calcData.numerology ? "calculated" : "unknown",
+            humanDesign: calcData.humanDesign ? "calculated" : "unknown"
           }
         }
       };
@@ -191,140 +219,12 @@ export const blueprintService = {
       };
     } catch (err) {
       console.error("Error generating blueprint:", err);
-      // Create default data so the UI can still work
-      const fallbackData = this.createFallbackBlueprintData(userData);
+      // No fallback data anymore - just throw the error up
       return { 
-        data: fallbackData, 
-        error: err instanceof Error ? err.message : String(err),
-        isPartial: true
+        data: null, 
+        error: err instanceof Error ? err.message : String(err)
       };
     }
-  },
-  
-  /**
-   * Create fallback blueprint data when calculations fail
-   */
-  createFallbackBlueprintData(userData: BlueprintData['user_meta']): BlueprintData {
-    const birthDate = new Date(userData.birth_date);
-    const month = birthDate.getMonth() + 1; // JavaScript months are 0-indexed
-    const day = birthDate.getDate();
-    
-    // Simple sun sign calculation based on dates
-    const sunSign = this.getSimpleSunSign(month, day);
-    
-    return {
-      user_meta: userData,
-      cognition_mbti: {
-        type: "INFJ", // Default
-        core_keywords: ["Insightful", "Counselor", "Advocate"],
-        dominant_function: "Introverted Intuition (Ni)",
-        auxiliary_function: "Extraverted Feeling (Fe)"
-      },
-      energy_strategy_human_design: {
-        type: "Generator",
-        profile: "3/5",
-        authority: "Emotional",
-        strategy: "Wait to respond",
-        definition: "Split",
-        not_self_theme: "Frustration",
-        life_purpose: "Find satisfaction through responding to life",
-        gates: {
-          unconscious_design: [],
-          conscious_personality: []
-        }
-      },
-      bashar_suite: {
-        belief_interface: {
-          principle: "What you believe is what you experience as reality",
-          reframe_prompt: "What would I have to believe to experience this?"
-        },
-        excitement_compass: {
-          principle: "Follow your highest excitement in the moment to the best of your ability"
-        },
-        frequency_alignment: {
-          quick_ritual: "Visualize feeling the way you want to feel for 17 seconds"
-        }
-      },
-      values_life_path: {
-        life_path_number: 7,
-        life_path_keyword: "Seeker",
-        expression_number: 7,
-        expression_keyword: "Analytical Mind",
-        soul_urge_number: 7,
-        soul_urge_keyword: "Inner Wisdom",
-        personality_number: 7
-      },
-      archetype_western: {
-        sun_sign: sunSign.name,
-        sun_keyword: sunSign.keyword,
-        moon_sign: "Unknown",
-        moon_keyword: "Unknown",
-        rising_sign: "Unknown",
-        aspects: [],
-        houses: {},
-        source: "default"
-      },
-      archetype_chinese: {
-        animal: "Unknown",
-        element: "Unknown",
-        yin_yang: "Unknown",
-        keyword: "Unknown"
-      },
-      timing_overlays: {
-        current_transits: [],
-        notes: "Generated using fallback data"
-      },
-      goal_stack: [],
-      task_graph: {},
-      belief_logs: [],
-      excitement_scores: [],
-      vibration_check_ins: [],
-      metadata: {
-        calculation_success: false,
-        partial_calculation: true,
-        calculation_errors: {
-          general: "Used fallback data due to calculation error"
-        },
-        calculation_date: new Date().toISOString(),
-        engine: "fallback",
-        data_sources: {
-          western: "default",
-          chinese: "default",
-          numerology: "default",
-          humanDesign: "default"
-        }
-      }
-    };
-  },
-  
-  /**
-   * Get a simplified sun sign based on month and day
-   */
-  getSimpleSunSign(month: number, day: number) {
-    const signs = [
-      { name: "Capricorn", dates: [[1, 1], [1, 19]], keyword: "Ambitious Achiever" },
-      { name: "Aquarius", dates: [[1, 20], [2, 18]], keyword: "Revolutionary Visionary" },
-      { name: "Pisces", dates: [[2, 19], [3, 20]], keyword: "Compassionate Dreamer" },
-      { name: "Aries", dates: [[3, 21], [4, 19]], keyword: "Pioneer" },
-      { name: "Taurus", dates: [[4, 20], [5, 20]], keyword: "Grounded Provider" },
-      { name: "Gemini", dates: [[5, 21], [6, 20]], keyword: "Communicator" },
-      { name: "Cancer", dates: [[6, 21], [7, 22]], keyword: "Nurturer" },
-      { name: "Leo", dates: [[7, 23], [8, 22]], keyword: "Creative Leader" },
-      { name: "Virgo", dates: [[8, 23], [9, 22]], keyword: "Analytical Perfectionist" },
-      { name: "Libra", dates: [[9, 23], [10, 22]], keyword: "Harmonizer" },
-      { name: "Scorpio", dates: [[10, 23], [11, 21]], keyword: "Intense Transformer" },
-      { name: "Sagittarius", dates: [[11, 22], [12, 21]], keyword: "Adventurous Seeker" },
-      { name: "Capricorn", dates: [[12, 22], [12, 31]], keyword: "Ambitious Achiever" }
-    ];
-    
-    for (const sign of signs) {
-      const [[startMonth, startDay], [endMonth, endDay]] = sign.dates;
-      if ((month === startMonth && day >= startDay) || (month === endMonth && day <= endDay)) {
-        return sign;
-      }
-    }
-    
-    return { name: "Unknown", keyword: "Unknown" };
   },
   
   /**
