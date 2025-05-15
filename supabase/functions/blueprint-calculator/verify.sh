@@ -68,7 +68,7 @@ try {
   console.log("WASM URL:", wasmUrl.href);
   
   const wasmBytes = await Deno.readFile(wasmUrl);
-  console.log("Successfully read \${wasmBytes.byteLength} bytes from WASM file");
+  console.log("Successfully read ${wasmBytes.byteLength} bytes from WASM file");
   
   const sweph = await initializeWasm(wasmBytes);
   console.log("Success! Module loaded and returned:", !!sweph);
