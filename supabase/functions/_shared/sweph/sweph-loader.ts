@@ -38,8 +38,8 @@ export async function initializeSwephModule() {
     } catch (fsError) {
       console.warn(`Failed to load WASM from local filesystem: ${fsError.message}`);
       
-      // Try to fetch from Supabase Storage with the exact URL
-      const supabaseStorageUrl = "https://qxaajirrqrcnmvtowjbg.supabase.co/storage/v1/object/public/astro-wasm//astro.wasm";
+      // Try to fetch from Supabase Storage
+      const supabaseStorageUrl = "https://qxaajirrqrcnmvtowjbg.supabase.co/storage/v1/object/public/astro-wasm/astro.wasm";
       console.log(`Falling back to Supabase Storage URL: ${supabaseStorageUrl}`);
       
       try {
@@ -47,7 +47,7 @@ export async function initializeSwephModule() {
       } catch (storageError) {
         console.warn(`Failed to load WASM from Supabase Storage: ${storageError.message}`);
         
-        // Final fallback to GitHub CDN (using the Emscripten build path)
+        // Final fallback to GitHub as last resort (using the Emscripten build path)
         console.log(`Falling back to GitHub URL: ${CDN_URL}`);
         wasmModule = await initializeWasm(CDN_URL);
       }
