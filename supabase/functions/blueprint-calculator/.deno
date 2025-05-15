@@ -1,0 +1,3 @@
+
+[files]
+include = ["../_shared/sweph/astro.wasm"]

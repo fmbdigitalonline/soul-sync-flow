@@ -36,8 +36,8 @@ interface CalculationResults {
 }
 
 // Feature flag for Swiss Ephemeris calculations
-// Setting to false to fall back to legacy calculation if WASM fails
-const USE_SWEPH = false;
+// Setting to true to try our improved SwEph implementation first
+const USE_SWEPH = true;
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -68,7 +68,7 @@ serve(async (req) => {
       }, 400);
     }
 
-    const { date, time, location, timezone } = birthData;
+    const { date, time, location, timezone, fullName } = birthData;
     
     if (!date || !time || !location) {
       return errorResponse({
@@ -99,14 +99,15 @@ serve(async (req) => {
       console.log(`Starting celestial calculations using ${useSweph ? "Swiss Ephemeris" : "legacy"} engine...`);
       
       let celestialData;
-      try {
-        if (useSweph) {
+      
+      if (useSweph) {
+        try {
           celestialData = await calculatePlanetaryPositionsWithSweph(date, time, location, timezone || "UTC");
-        } else {
-          celestialData = await calculatePlanetaryPositions(date, time, location, timezone || "UTC");
+        } catch (ephemerisError) {
+          console.error("Error with Swiss Ephemeris, falling back to legacy:", ephemerisError);
+          throw ephemerisError; // No silent fallback anymore
         }
-      } catch (ephemerisError) {
-        console.error("Error with primary ephemeris, falling back to legacy:", ephemerisError);
+      } else {
         celestialData = await calculatePlanetaryPositions(date, time, location, timezone || "UTC");
       }
       
@@ -141,6 +142,7 @@ serve(async (req) => {
     
     // These calculations can proceed even if celestial calculations failed
     try {
+      // We'll use our improved Chinese zodiac calculation with Li Chun pivot
       results.chineseZodiac = calculateChineseZodiac(date);
     } catch (chineseError) {
       console.error("Error calculating Chinese zodiac:", chineseError);
@@ -149,8 +151,7 @@ serve(async (req) => {
     
     try {
       // Extract name from birth data if available, otherwise use fallback calculations
-      const fullName = birthData.fullName || "";
-      results.numerology = calculateNumerology(date, fullName);
+      results.numerology = calculateNumerology(date, fullName || "");
     } catch (numerologyError) {
       console.error("Error calculating numerology:", numerologyError);
       errors.numerology = numerologyError.message;
@@ -293,8 +294,8 @@ function calculateHouses(celestialData) {
   
   planets.forEach(planet => {
     if (celestialData[planet]) {
-      // This is a simplified house calculation - in production you would use a proper house system
-      const house = celestialData[planet].house || Math.floor(Math.random() * 12) + 1;
+      // Use the house information from celestialData if available
+      const house = celestialData[planet].house || Math.floor((celestialData[planet].longitude / 30) + 1) % 12 || 12;
       
       if (!houses[house]) houses[house] = [];
       houses[house].push({
@@ -385,16 +386,31 @@ function getSignKeyword(sign, planet) {
 
 function calculateChineseZodiac(birthDate) {
   const date = new Date(birthDate);
-  const year = date.getFullYear();
+  const birthYear = date.getFullYear();
+  const birthMonth = date.getMonth() + 1;
+  const birthDay = date.getDate();
+  
+  // Determine Chinese New Year for the birth year (approximately February 4th)
+  // Using Li Chun (beginning of spring) as the pivot point for Chinese zodiac
+  // This is more accurate than using the lunar new year which can vary widely
+  const liChunDay = 4;  // February 4th is approximate Li Chun
+  const liChunMonth = 2; // February
+  
+  // Determine if the birth date is before Li Chun
+  const isBeforeLiChun = (birthMonth < liChunMonth) || 
+                         (birthMonth === liChunMonth && birthDay < liChunDay);
+  
+  // Adjust year for Chinese zodiac calculation if before Li Chun
+  const zodiacYear = isBeforeLiChun ? birthYear - 1 : birthYear;
   
   // Chinese zodiac operates on a 12-year cycle
   const animals = ['Rat', 'Ox', 'Tiger', 'Rabbit', 'Dragon', 'Snake', 'Horse', 'Goat', 'Monkey', 'Rooster', 'Dog', 'Pig'];
   const elements = ['Metal', 'Water', 'Wood', 'Fire', 'Earth'];
   
   // Calculate animal and element based on year
-  const animalIndex = (year - 4) % 12;
-  const elementIndex = Math.floor(((year - 4) % 10) / 2);
-  const yinYang = year % 2 === 0 ? 'Yang' : 'Yin';
+  const animalIndex = (zodiacYear - 4) % 12;
+  const elementIndex = Math.floor(((zodiacYear - 4) % 10) / 2);
+  const yinYang = zodiacYear % 2 === 0 ? 'Yang' : 'Yin';
   
   // Define keywords for each animal
   const keywords = {
@@ -427,7 +443,9 @@ function calculateChineseZodiac(birthDate) {
     yin_yang: yinYang,
     keyword: keywords[animals[animalIndex]],
     element_characteristic: elementCharacteristics[elements[elementIndex]],
-    compatibility: getChineseCompatibility(animals[animalIndex])
+    compatibility: getChineseCompatibility(animals[animalIndex]),
+    year: zodiacYear, // Include the calculated zodiac year
+    source: "calculated"
   };
 }
 
@@ -494,7 +512,7 @@ function calculateNumerology(birthDate, fullName = "") {
     soulUrgeNumber = calculateSoulUrgeNumber(fullName);
     personalityNumber = calculatePersonalityNumber(fullName);
   } else {
-    // Use fallback calculations if no name provided
+    // Use fallback calculations if no name provided - but clearly mark as estimates
     expressionNumber = ((day + month) % 9) || 9;
     soulUrgeNumber = ((month + year % 100) % 9) || 9;
     personalityNumber = ((day + year % 100) % 9) || 9;
@@ -511,7 +529,8 @@ function calculateNumerology(birthDate, fullName = "") {
     expression_keyword: getNumerologyKeyword(expressionNumber),
     soul_urge_number: soulUrgeNumber,
     soul_urge_keyword: getNumerologyKeyword(soulUrgeNumber),
-    personality_number: personalityNumber
+    personality_number: personalityNumber,
+    source: fullName ? "calculated" : "estimated"
   };
 }
 
@@ -562,7 +581,9 @@ function getBirthDayMeaning(birthDayNumber) {
     6: "Responsible nurturer with artistic talents",
     7: "Analytical thinker with spiritual interests",
     8: "Ambitious achiever with executive skills",
-    9: "Compassionate humanitarian with wisdom"
+    9: "Compassionate humanitarian with wisdom",
+    11: "Inspirational visionary with heightened intuition",
+    22: "Practical visionary with extraordinary potential"
   };
   
   return meanings[birthDayNumber] || "Complex personality with unique talents";

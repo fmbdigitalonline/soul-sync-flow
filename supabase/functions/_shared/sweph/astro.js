@@ -26,103 +26,92 @@ const initializeWasm = async (wasmUrl) => {
     
     console.log("Initializing WASM module from:", wasmUrl);
     
-    // Load the WASM module
-    const wasmModule = await WebAssembly.instantiateStreaming(
-      fetch(wasmUrl),
-      { env: { memory: new WebAssembly.Memory({ initial: 10, maximum: 100 }) } }
-    );
+    // We'll use a CDN URL as a fallback if local loading fails
+    const CDN_URL = "https://cdn.jsdelivr.net/gh/u-blusky/sweph-wasm@0.11.3/js/astro.wasm";
+    
+    let wasmBinary;
+    // Try first to load from the provided URL (local file)
+    try {
+      // For Deno environments (Edge Functions)
+      if (typeof Deno !== 'undefined') {
+        console.log("Running in Deno environment, using Deno.readFile");
+        wasmBinary = await Deno.readFile("./astro.wasm");
+      } else {
+        // For browser or Node.js environments
+        console.log("Fetching WASM from provided URL");
+        const response = await fetch(wasmUrl);
+        if (!response.ok) throw new Error(`Failed to fetch WASM: ${response.status}`);
+        wasmBinary = await response.arrayBuffer();
+      }
+    } catch (error) {
+      // If local loading fails, try the CDN URL
+      console.warn(`Failed to load WASM from ${wasmUrl}: ${error.message}`);
+      console.log("Falling back to CDN URL:", CDN_URL);
+      
+      const response = await fetch(CDN_URL);
+      if (!response.ok) throw new Error(`Failed to fetch WASM from CDN: ${response.status}`);
+      wasmBinary = await response.arrayBuffer();
+    }
+    
+    // Instantiate the WASM module with the binary
+    console.log("Instantiating WASM module");
+    const wasmModule = await WebAssembly.instantiate(wasmBinary, {
+      env: { memory: new WebAssembly.Memory({ initial: 10, maximum: 100 }) }
+    });
+    
+    console.log("WASM module instantiated successfully!");
     
     // Cache the module
-    wasmModuleCache = wasmModule;
+    wasmModuleCache = wasmModule.instance.exports;
     
     // Set up the exported objects
-    ephemeris.JulDay = {
-      /** Calculate Julian day from date components */
-      fromDate: (year, month, day, hour = 0, minute = 0, second = 0) => {
-        const julDay = year * 10000 + month * 100 + day + (hour + minute/60 + second/3600)/24;
-        return julDay;
-      },
-      /** Calculate date components from Julian day */
-      toDate: (julDay) => {
-        const dateObj = new Date(julDay);
-        return {
-          year: dateObj.getFullYear(),
-          month: dateObj.getMonth() + 1,
-          day: dateObj.getDate(),
-          hour: dateObj.getHours(),
-          minute: dateObj.getMinutes(),
-          second: dateObj.getSeconds()
-        };
-      }
-    };
-
-    // Body constants
-    ephemeris.Bodies = {
-      SUN: 0,
-      MOON: 1,
-      MERCURY: 2,
-      VENUS: 3,
-      MARS: 4,
-      JUPITER: 5,
-      SATURN: 6,
-      URANUS: 7,
-      NEPTUNE: 8,
-      PLUTO: 9,
-      MEAN_NODE: 10,
-      TRUE_NODE: 11,
-      MEAN_APOG: 12,
-      OSCU_APOG: 13,
-      EARTH: 14,
-      CHIRON: 15,
-      PHOLUS: 16,
-      CERES: 17,
-      PALLAS: 18,
-      JUNO: 19,
-      VESTA: 20
-    };
-
-    // House system constants
-    ephemeris.HouseSystems = {
-      PLACIDUS: 'P',
-      KOCH: 'K',
-      PORPHYRIUS: 'O',
-      REGIOMONTANUS: 'R',
-      CAMPANUS: 'C',
-      EQUAL: 'E',
-      WHOLE_SIGN: 'W',
-      MERIDIAN: 'X',
-      MORINUS: 'M',
-      KRUSINSKI: 'U',
-      ALCABITIUS: 'B'
-    };
-
-    // Calculation flags
-    ephemeris.Flags = {
-      SWIEPH: 2,
-      SPEED: 256,
-      EQUATORIAL: 2048
-    };
-
-    // Houses calculation (simplified for now)
-    ephemeris.Houses = {
-      calculate: (julDay, latitude, longitude, system = 'P') => {
-        // This should be implemented using actual WASM calls
-        console.log(`Calculating houses for JD ${julDay} at lat ${latitude}, long ${longitude} using system ${system}`);
-        
-        // Generate accurate house cusps based on WASM call
-        throw new Error("Houses calculation not implemented in WASM module");
-      }
-    };
+    const swe = wasmModuleCache;
     
-    // Calculation method
-    ephemeris.calculate = (julDay, bodyId) => {
-      // This should be implemented using actual WASM calls
-      console.log(`Calculating position for body ${bodyId} at JD ${julDay}`);
-      
-      throw new Error(`Planetary calculation not implemented in WASM module for body ${bodyId}`);
-    };
-
-    console.log("Swiss Ephemeris WASM module initialized");
+    // Export constants
+    ephemeris.SE_GREG_CAL = swe.SE_GREG_CAL;
+    ephemeris.SE_JUL_CAL = swe.SE_JUL_CAL;
+    ephemeris.SEFLG_SPEED = swe.SEFLG_SPEED;
+    ephemeris.SEFLG_EQUATORIAL = swe.SEFLG_EQUATORIAL;
+    ephemeris.SEFLG_SIDEREAL = swe.SEFLG_SIDEREAL;
+    
+    // Planet IDs
+    ephemeris.SE_SUN = swe.SE_SUN;
+    ephemeris.SE_MOON = swe.SE_MOON;
+    ephemeris.SE_MERCURY = swe.SE_MERCURY;
+    ephemeris.SE_VENUS = swe.SE_VENUS;
+    ephemeris.SE_MARS = swe.SE_MARS;
+    ephemeris.SE_JUPITER = swe.SE_JUPITER;
+    ephemeris.SE_SATURN = swe.SE_SATURN;
+    ephemeris.SE_URANUS = swe.SE_URANUS;
+    ephemeris.SE_NEPTUNE = swe.SE_NEPTUNE;
+    ephemeris.SE_PLUTO = swe.SE_PLUTO;
+    ephemeris.SE_CHIRON = swe.SE_CHIRON;
+    ephemeris.SE_TRUE_NODE = swe.SE_TRUE_NODE;
+    ephemeris.SE_MEAN_NODE = swe.SE_MEAN_NODE;
+    
+    // House systems
+    ephemeris.SE_HSYS_PLACIDUS = swe.SE_HSYS_PLACIDUS;
+    ephemeris.SE_HSYS_KOCH = swe.SE_HSYS_KOCH;
+    ephemeris.SE_HSYS_PORPHYRIUS = swe.SE_HSYS_PORPHYRIUS;
+    ephemeris.SE_HSYS_REGIOMONTANUS = swe.SE_HSYS_REGIOMONTANUS;
+    ephemeris.SE_HSYS_CAMPANUS = swe.SE_HSYS_CAMPANUS;
+    ephemeris.SE_HSYS_EQUAL = swe.SE_HSYS_EQUAL;
+    ephemeris.SE_HSYS_WHOLE_SIGN = swe.SE_HSYS_WHOLE_SIGN;
+    
+    // House points
+    ephemeris.SE_ASC = swe.SE_ASC;
+    ephemeris.SE_MC = swe.SE_MC;
+    ephemeris.SE_ARMC = swe.SE_ARMC;
+    ephemeris.SE_VERTEX = swe.SE_VERTEX;
+    
+    // Export methods directly
+    ephemeris.swe_julday = swe.swe_julday;
+    ephemeris.swe_calc_ut = swe.swe_calc_ut;
+    ephemeris.swe_houses = swe.swe_houses;
+    ephemeris.swe_houses_ex = swe.swe_houses_ex;
+    ephemeris.swe_set_sid_mode = swe.swe_set_sid_mode;
+    
+    console.log("Swiss Ephemeris WASM module initialized successfully!");
     return wasmModuleCache;
 
   } catch (err) {
