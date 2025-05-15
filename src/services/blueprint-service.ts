@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 // Blueprint template type definition
@@ -127,7 +128,7 @@ export const blueprintService = {
       console.log('Received calculation data:', calcData);
       
       // Create fallback data in case calculations partially fail
-      const fallbackData = createFallbackBlueprintData(userData);
+      const fallbackData = this.createFallbackBlueprintData(userData);
       
       // Create the blueprint using the calculation results
       const blueprint: BlueprintData = {
@@ -191,7 +192,7 @@ export const blueprintService = {
     } catch (err) {
       console.error("Error generating blueprint:", err);
       // Create default data so the UI can still work
-      const fallbackData = createFallbackBlueprintData(userData);
+      const fallbackData = this.createFallbackBlueprintData(userData);
       return { 
         data: fallbackData, 
         error: err instanceof Error ? err.message : String(err),
@@ -203,13 +204,13 @@ export const blueprintService = {
   /**
    * Create fallback blueprint data when calculations fail
    */
-  function createFallbackBlueprintData(userData: BlueprintData['user_meta']): BlueprintData {
+  createFallbackBlueprintData(userData: BlueprintData['user_meta']): BlueprintData {
     const birthDate = new Date(userData.birth_date);
     const month = birthDate.getMonth() + 1; // JavaScript months are 0-indexed
     const day = birthDate.getDate();
     
     // Simple sun sign calculation based on dates
-    const sunSign = getSimpleSunSign(month, day);
+    const sunSign = this.getSimpleSunSign(month, day);
     
     return {
       user_meta: userData,
@@ -299,7 +300,7 @@ export const blueprintService = {
   /**
    * Get a simplified sun sign based on month and day
    */
-  function getSimpleSunSign(month, day) {
+  getSimpleSunSign(month: number, day: number) {
     const signs = [
       { name: "Capricorn", dates: [[1, 1], [1, 19]], keyword: "Ambitious Achiever" },
       { name: "Aquarius", dates: [[1, 20], [2, 18]], keyword: "Revolutionary Visionary" },
