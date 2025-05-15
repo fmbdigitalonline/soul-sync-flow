@@ -1,9 +1,8 @@
-
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-// Swiss Ephemeris wrapper for Deno
-import { calculatePlanetaryPositions as legacyCalculate } from "../ephemeris.ts";
-import { calculatePlanetaryPositionsWithSweph } from "../ephemeris-sweph.ts";
-import { calculateHumanDesign } from '../human-design.ts';
+// Fix the import path - the file is likely inside the blueprint-calculator directory
+import { calculatePlanetaryPositions as legacyCalculate } from "./ephemeris.ts";
+import { calculatePlanetaryPositionsWithSweph } from "./ephemeris-sweph.ts";
+import { calculateHumanDesign } from './human-design.ts';
 
 // CORS headers for browser requests
 const corsHeaders = {

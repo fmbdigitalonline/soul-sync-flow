@@ -24,15 +24,28 @@ async function initializeSwephModule() {
     const wasmPath = new URL('../_shared/sweph/astro.wasm', import.meta.url).href;
     console.log(`Loading WASM from path: ${wasmPath}`);
     
+    const loadStartTime = performance.now();
     const wasmModule = await astroModule.initializeWasm(wasmPath);
+    const loadEndTime = performance.now();
+    const loadDuration = loadEndTime - loadStartTime;
     
     if (!wasmModule) {
       throw new Error("Swiss Ephemeris WASM module failed to initialize");
     }
     
+    // Calculate file size (approximately)
+    let wasmSize = "unknown";
+    try {
+      const wasmFile = await Deno.stat(new URL('../_shared/sweph/astro.wasm', import.meta.url));
+      wasmSize = `${Math.round(wasmFile.size / 1024)} kB`;
+    } catch (e) {
+      console.warn("Could not determine WASM file size:", e);
+    }
+    
+    console.log(`[SwissEph] loaded astro.wasm (${wasmSize}) in ${Math.round(loadDuration)} ms`);
+    
     // Store in cache for reuse
     wasmModuleCache = wasmModule;
-    console.log("SwissEph loaded OK");
     
     return wasmModule;
   } catch (error) {
