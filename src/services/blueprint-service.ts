@@ -1,11 +1,10 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 // Blueprint template type definition
 export type BlueprintData = {
   user_meta: {
     full_name: string;
-    preferred_name: string;
+    preferred_name?: string; // Make preferred_name optional here
     birth_date: string;
     birth_time_local: string;
     birth_location: string;

@@ -10,7 +10,7 @@ import { Loader2 } from "lucide-react";
 interface BlueprintGeneratorProps {
   userProfile: {
     full_name: string;
-    preferred_name?: string;
+    preferred_name?: string; // Make preferred_name optional here
     birth_date: string;
     birth_time_local: string;
     birth_location: string;
