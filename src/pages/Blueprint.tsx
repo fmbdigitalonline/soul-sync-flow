@@ -9,9 +9,9 @@ import { Loader2, MessageCircle, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { BlueprintData, blueprintService } from "@/services/blueprint-service";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { BlueprintGenerator } from "@/components/blueprint/BlueprintGenerationFlow";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSoulOrb } from "@/contexts/SoulOrbContext";
 
 const Blueprint = () => {
   const [activeTab, setActiveTab] = useState("view");
@@ -22,35 +22,50 @@ const Blueprint = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { speak } = useSoulOrb();
 
   // Check if user has any blueprints
   useEffect(() => {
     const checkUserBlueprints = async () => {
       if (user) {
         setIsLoading(true);
-        const { data, error } = await blueprintService.getActiveBlueprintData();
-        
-        if (error) {
+        try {
+          console.log("Checking for existing blueprint...");
+          const { data, error } = await blueprintService.getActiveBlueprintData();
+          
+          if (error) {
+            console.error("Error loading blueprint:", error);
+            toast({
+              title: "Error loading blueprint",
+              description: error,
+              variant: "destructive"
+            });
+          }
+          
+          console.log("Blueprint data check result:", data ? "Found" : "Not found");
+          
+          // If no blueprint exists, mark as new user and redirect to onboarding
+          if (!data) {
+            setIsNewUser(true);
+            toast({
+              title: "Welcome to SoulSync!",
+              description: "Let's create your Soul Blueprint through our onboarding process.",
+            });
+            navigate('/onboarding');
+            return;
+          }
+          
+          setBlueprint(data);
+        } catch (err) {
+          console.error("Unexpected error loading blueprint:", err);
           toast({
-            title: "Error loading blueprint",
-            description: error,
+            title: "Error",
+            description: "Failed to load your blueprint. Please try again.",
             variant: "destructive"
           });
+        } finally {
+          setIsLoading(false);
         }
-        
-        // If no blueprint exists, mark as new user and redirect to onboarding
-        if (!data) {
-          setIsNewUser(true);
-          toast({
-            title: "Welcome to SoulSync!",
-            description: "Let's create your Soul Blueprint through our onboarding process.",
-          });
-          navigate('/onboarding');
-          return;
-        }
-        
-        setBlueprint(data);
-        setIsLoading(false);
       }
     };
     
@@ -60,28 +75,48 @@ const Blueprint = () => {
   }, [user, navigate, toast]);
 
   const handleSaveBlueprint = async (updatedBlueprint: BlueprintData) => {
-    const result = await blueprintService.saveBlueprintData(updatedBlueprint);
-    if (result.success) {
+    try {
+      console.log("Saving blueprint:", updatedBlueprint);
+      const result = await blueprintService.saveBlueprintData(updatedBlueprint);
+      
+      if (result.success) {
+        toast({
+          title: "Blueprint saved",
+          description: "Your Soul Blueprint has been successfully updated",
+        });
+        setBlueprint(updatedBlueprint);
+        setActiveTab("view");
+      } else {
+        toast({
+          title: "Error saving blueprint",
+          description: result.error || "Failed to save blueprint",
+          variant: "destructive"
+        });
+      }
+      return result;
+    } catch (err) {
+      console.error("Error in save handler:", err);
       toast({
-        title: "Blueprint saved",
-        description: "Your Soul Blueprint has been successfully updated",
-      });
-      setBlueprint(updatedBlueprint);
-      setActiveTab("view");
-    } else {
-      toast({
-        title: "Error saving blueprint",
-        description: result.error || "Failed to save blueprint",
+        title: "Error",
+        description: "An unexpected error occurred while saving",
         variant: "destructive"
       });
+      return { success: false, error: String(err) };
     }
-    return result;
   };
 
   const handleRegenerateBlueprint = () => {
     if (blueprint) {
       setIsGenerating(true);
       setActiveTab("generating");
+      
+      // Give user feedback
+      toast({
+        title: "Regenerating Blueprint",
+        description: "We're calculating your cosmic profile. This may take a moment...",
+      });
+      
+      speak("I'm regenerating your Soul Blueprint with the latest cosmic calculations.");
     } else {
       toast({
         title: "Error",
@@ -91,8 +126,20 @@ const Blueprint = () => {
     }
   };
 
-  const handleGenerationComplete = async (newBlueprint: BlueprintData) => {
+  const handleGenerationComplete = async (newBlueprint?: BlueprintData) => {
     try {
+      if (!newBlueprint) {
+        toast({
+          title: "Error",
+          description: "No blueprint data was generated",
+          variant: "destructive"
+        });
+        setIsGenerating(false);
+        setActiveTab("view");
+        return;
+      }
+      
+      console.log("Generation complete, saving new blueprint");
       const result = await blueprintService.saveBlueprintData(newBlueprint);
       
       if (result.success) {
@@ -101,6 +148,8 @@ const Blueprint = () => {
           title: "Blueprint generated",
           description: "Your Soul Blueprint has been successfully regenerated and saved",
         });
+        
+        speak("Your new Soul Blueprint is ready to explore!");
       } else {
         toast({
           title: "Error saving generated blueprint",
@@ -132,7 +181,7 @@ const Blueprint = () => {
             <p className="mb-6">You need to sign in to view and edit your Soul Blueprint</p>
             <Button 
               className="bg-soul-purple hover:bg-soul-purple/90"
-              onClick={() => window.location.href = '/auth'}
+              onClick={() => navigate('/auth')}
             >
               Sign In
             </Button>
@@ -187,7 +236,7 @@ const Blueprint = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
-          <TabsList className="grid grid-cols-3 w-[600px] mx-auto">
+          <TabsList className="grid grid-cols-3 w-[600px] max-w-full mx-auto">
             <TabsTrigger value="view">View Blueprint</TabsTrigger>
             <TabsTrigger value="edit">Edit Blueprint</TabsTrigger>
             <TabsTrigger value="generating" disabled={!isGenerating}>
@@ -204,17 +253,19 @@ const Blueprint = () => {
           </TabsContent>
 
           <TabsContent value="generating" className="mt-6">
-            <BlueprintGenerator 
-              userProfile={blueprint?.user_meta || {
-                full_name: "",
-                preferred_name: "",
-                birth_date: "",
-                birth_time_local: "",
-                birth_location: "",
-                timezone: ""
-              }}
-              onComplete={handleGenerationComplete}
-            />
+            {isGenerating && blueprint && (
+              <BlueprintGenerator 
+                userProfile={blueprint?.user_meta || {
+                  full_name: "",
+                  preferred_name: "",
+                  birth_date: "",
+                  birth_time_local: "",
+                  birth_location: "",
+                  timezone: ""
+                }}
+                onComplete={handleGenerationComplete}
+              />
+            )}
           </TabsContent>
         </Tabs>
       </div>

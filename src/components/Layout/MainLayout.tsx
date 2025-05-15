@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Home, Star, MessageCircle, ListTodo, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -37,7 +37,8 @@ const NavItem = ({
 );
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) => {
-  const path = window.location.pathname;
+  const location = useLocation();
+  const path = location.pathname;
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   

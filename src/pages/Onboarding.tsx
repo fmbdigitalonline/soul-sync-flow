@@ -51,6 +51,7 @@ export default function Onboarding() {
   
   // State variables for blueprint generation
   const [blueprintGenerated, setBlueprintGenerated] = useState(false);
+  const [blueprintData, setBlueprintData] = useState<BlueprintData | null>(null);
   
   // Refs to prevent navigation loops
   const navigationTriggeredRef = useRef(false);
@@ -61,16 +62,22 @@ export default function Onboarding() {
   };
   
   // Handle blueprint generation completion
-  const handleBlueprintComplete = () => {
+  const handleBlueprintComplete = (newBlueprint?: BlueprintData) => {
     // Prevent multiple executions
     if (navigationTriggeredRef.current || blueprintGenerated) {
       console.log("Navigation already triggered, ignoring duplicate completion");
       return;
     }
     
+    console.log("Blueprint generation completed with data:", newBlueprint);
+    
     // Set flags to prevent looping
     navigationTriggeredRef.current = true;
     setBlueprintGenerated(true);
+    
+    if (newBlueprint) {
+      setBlueprintData(newBlueprint);
+    }
     
     toast({
       title: "Blueprint Generated Successfully",
@@ -82,8 +89,10 @@ export default function Onboarding() {
     // Navigate to blueprint page after transition
     setTimeout(() => {
       console.log("Navigating to blueprint page after blueprint generation");
-      if (!navigationTriggeredRef.current) return; // Double-check flag before navigating
-      navigate("/blueprint");
+      
+      if (navigationTriggeredRef.current) {
+        navigate("/blueprint");
+      }
     }, 2000);
   };
 
@@ -174,11 +183,11 @@ export default function Onboarding() {
               <BirthDataForm
                 birthData={{
                   birthDate: formData.birthDate,
-                  birthTime: "",
-                  birthLocation: "",
+                  birthTime: formData.birthTime,
+                  birthLocation: formData.birthLocation,
                   timezone: formData.timezone
                 }}
-                hideTimeLocation={true}
+                showDateOnly={true}
                 onChange={(data) => updateFormData({
                   birthDate: data.birthDate,
                   timezone: data.timezone
@@ -203,12 +212,12 @@ export default function Onboarding() {
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
               <BirthDataForm
                 birthData={{
-                  birthDate: "",
+                  birthDate: formData.birthDate,
                   birthTime: formData.birthTime,
-                  birthLocation: "",
+                  birthLocation: formData.birthLocation,
                   timezone: formData.timezone
                 }}
-                hideDateLocation={true}
+                showTimeOnly={true}
                 onChange={(data) => updateFormData({
                   birthTime: data.birthTime,
                 })}
@@ -232,12 +241,12 @@ export default function Onboarding() {
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
               <BirthDataForm
                 birthData={{
-                  birthDate: "",
-                  birthTime: "",
+                  birthDate: formData.birthDate,
+                  birthTime: formData.birthTime,
                   birthLocation: formData.birthLocation,
                   timezone: formData.timezone
                 }}
-                hideDateTime={true}
+                showLocationOnly={true}
                 onChange={(data) => updateFormData({
                   birthLocation: data.birthLocation,
                 })}
@@ -278,7 +287,7 @@ export default function Onboarding() {
               key={`blueprint-generator-${blueprintGenerated ? 'complete' : 'active'}`}
               userProfile={{
                 full_name: formData.name || "Anonymous User",
-                preferred_name: formData.preferredName || "Friend",
+                preferred_name: formData.preferredName || formData.name.split(" ")[0],
                 birth_date: formData.birthDate,
                 birth_time_local: formData.birthTime,
                 birth_location: formData.birthLocation,
@@ -298,6 +307,39 @@ export default function Onboarding() {
   // Determine whether to show speech bubble or form input
   const showInput = interactionStage === 'input' && !isTransitioning;
   const orbAnimation = speaking ? "speaking" : isTransitioning ? "transitioning" : "idle";
+
+  // If the user has already completed the onboarding and is somehow back here with a blueprint,
+  // redirect them to the blueprint page
+  useEffect(() => {
+    // Add a delayed navigation check to handle cases where blueprint exists
+    const checkBlueprintAndNavigate = async () => {
+      try {
+        const { data: blueprint } = await import('@/services/blueprint-service').then(
+          module => module.blueprintService.getActiveBlueprintData()
+        );
+        
+        if (blueprint && currentStep === 0) {
+          console.log("Blueprint already exists, redirecting to blueprint page");
+          toast({
+            title: "Welcome Back!",
+            description: "You've already created your Soul Blueprint. Redirecting you to view it.",
+          });
+          
+          // Short delay before navigation
+          setTimeout(() => {
+            navigate("/blueprint");
+          }, 1000);
+        }
+      } catch (error) {
+        console.error("Error checking for existing blueprint:", error);
+      }
+    };
+    
+    // Run the check after a short delay to allow the component to mount properly
+    const timer = setTimeout(checkBlueprintAndNavigate, 1500);
+    
+    return () => clearTimeout(timer);
+  }, [navigate, toast, currentStep]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-soul-black to-soul-purple/20 text-white relative overflow-hidden">

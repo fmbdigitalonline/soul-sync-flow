@@ -1,196 +1,160 @@
 
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+import React from "react";
+import { format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { TimePicker } from "@/components/ui/time-picker";
+import { CalendarIcon } from "lucide-react";
 
-interface BirthDataFormProps {
+export interface BirthDataFormProps {
   birthData: {
     birthDate: string;
     birthTime: string;
     birthLocation: string;
     timezone: string;
   };
-  onChange: (data: {
-    birthDate: string;
-    birthTime: string;
-    birthLocation: string;
-    timezone: string;
-  }) => void;
-  // Add the new prop types
-  hideTimeLocation?: boolean;
-  hideDateLocation?: boolean;
-  hideDateTime?: boolean;
+  onChange: (data: BirthDataFormProps["birthData"]) => void;
+  showDateOnly?: boolean;
+  showTimeOnly?: boolean;
+  showLocationOnly?: boolean;
+  className?: string;
 }
 
-export const BirthDataForm: React.FC<BirthDataFormProps> = ({ birthData, onChange, hideTimeLocation, hideDateLocation, hideDateTime }) => {
-  const [location, setLocation] = useState(birthData.birthLocation);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+export const BirthDataForm: React.FC<BirthDataFormProps> = ({
+  birthData,
+  onChange,
+  showDateOnly = false,
+  showTimeOnly = false,
+  showLocationOnly = false,
+  className,
+}) => {
+  const handleDateChange = (date: Date | undefined) => {
+    if (date) {
+      onChange({
+        ...birthData,
+        birthDate: format(date, "yyyy-MM-dd"),
+      });
+    }
+  };
 
-  // Update form data with new values
-  const updateData = (key: string, value: string) => {
+  const handleTimeChange = (time: string) => {
     onChange({
       ...birthData,
-      [key]: value
+      birthTime: time,
     });
   };
 
-  // Function to get location suggestions
-  const getLocationSuggestions = async (input: string) => {
-    if (input.length < 3) {
-      setSuggestions([]);
-      return;
-    }
-
-    // Simulate loading suggestions - in a real app this would call an API
-    setIsLoadingSuggestions(true);
-    setTimeout(() => {
-      // Example suggestions based on input
-      const exampleCities = [
-        "New York, USA",
-        "Los Angeles, USA",
-        "London, UK",
-        "Paris, France",
-        "Tokyo, Japan",
-        "Sydney, Australia",
-        "Toronto, Canada",
-        "Berlin, Germany",
-        "Mumbai, India",
-        "Beijing, China",
-      ];
-      
-      const filteredCities = exampleCities.filter(city => 
-        city.toLowerCase().includes(input.toLowerCase())
-      );
-      
-      setSuggestions(filteredCities.length > 0 ? filteredCities : []);
-      setIsLoadingSuggestions(false);
-    }, 500);
-  };
-
-  // Handle location input change with debounce
   const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setLocation(value);
-    updateData('birthLocation', value);
-    
-    // Debounce the suggestion request
-    const timeoutId = setTimeout(() => {
-      getLocationSuggestions(value);
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
+    onChange({
+      ...birthData,
+      birthLocation: e.target.value,
+    });
   };
 
-  // Select a suggestion
-  const selectSuggestion = (suggestion: string) => {
-    setLocation(suggestion);
-    updateData('birthLocation', suggestion);
-    setSuggestions([]);
+  const handleTimezoneChange = (timezone: string) => {
+    onChange({
+      ...birthData,
+      timezone,
+    });
   };
 
-  // Format the date to ensure it uses YYYY-MM-DD format
-  const formatDate = (date: string) => {
-    if (!date) return '';
-    
-    try {
-      const [year, month, day] = date.split('-').map(Number);
-      return `${year.toString().padStart(4, '0')}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-    } catch (e) {
-      return date;
-    }
-  };
+  // If no show flags are specified, show all forms
+  const showAll = !showDateOnly && !showTimeOnly && !showLocationOnly;
 
   return (
-    <div className="space-y-4">
-      {!hideDateLocation && !hideDateTime && (
+    <div className={cn("space-y-4", className)}>
+      {/* Birth Date */}
+      {(showAll || showDateOnly) && (
         <div className="space-y-2">
           <Label htmlFor="birthDate">Birth Date</Label>
-          <Input
-            id="birthDate"
-            type="date"
-            value={birthData.birthDate}
-            onChange={(e) => updateData('birthDate', formatDate(e.target.value))}
-            required
-          />
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"outline"}
+                className={cn(
+                  "w-full justify-start text-left font-normal bg-white/5",
+                  !birthData.birthDate && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {birthData.birthDate ? (
+                  format(new Date(birthData.birthDate), "PPP")
+                ) : (
+                  <span>Select your date of birth</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                captionLayout="dropdown-buttons"
+                selected={birthData.birthDate ? new Date(birthData.birthDate) : undefined}
+                onSelect={handleDateChange}
+                initialFocus
+                fromYear={1900}
+                toYear={new Date().getFullYear()}
+              />
+            </PopoverContent>
+          </Popover>
         </div>
       )}
-      
-      {!hideTimeLocation && !hideDateTime && (
+
+      {/* Birth Time */}
+      {(showAll || showTimeOnly) && (
         <div className="space-y-2">
-          <Label htmlFor="birthTime">Birth Time (as precise as possible)</Label>
-          <Input
-            id="birthTime"
-            type="time"
+          <Label htmlFor="birthTime">Birth Time (if known)</Label>
+          <TimePicker
             value={birthData.birthTime}
-            onChange={(e) => updateData('birthTime', e.target.value)}
-            required
+            onChange={handleTimeChange}
+            className="bg-white/5"
           />
-          <p className="text-xs text-muted-foreground">
-            If you don't know your exact birth time, please use 12:00
-          </p>
         </div>
       )}
-      
-      {!hideTimeLocation && !hideDateLocation && (
-        <div className="space-y-2 relative">
+
+      {/* Birth Location */}
+      {(showAll || showLocationOnly) && (
+        <div className="space-y-2">
           <Label htmlFor="birthLocation">Birth Location (City, Country)</Label>
           <Input
             id="birthLocation"
-            type="text"
-            value={location}
+            value={birthData.birthLocation}
             onChange={handleLocationChange}
-            placeholder="e.g. New York, USA"
-            required
+            placeholder="e.g., New York, USA"
+            className="bg-white/5"
           />
-          
-          {isLoadingSuggestions && (
-            <div className="absolute right-3 top-8">
-              <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full"></div>
-            </div>
-          )}
-          
-          {suggestions.length > 0 && (
-            <div className="absolute z-10 mt-1 w-full bg-card border border-border rounded-md shadow-lg max-h-60 overflow-auto">
-              <ul className="py-1">
-                {suggestions.map((suggestion, index) => (
-                  <li
-                    key={index}
-                    className="px-4 py-2 hover:bg-accent cursor-pointer"
-                    onClick={() => selectSuggestion(suggestion)}
-                  >
-                    {suggestion}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
         </div>
       )}
-      
-      <div className="space-y-2">
-        <Label htmlFor="timezone">Timezone</Label>
-        <select
-          id="timezone"
-          className="w-full px-4 py-2 border border-border rounded-md bg-card"
-          value={birthData.timezone}
-          onChange={(e) => updateData('timezone', e.target.value)}
-        >
-          <option value="UTC">UTC (Coordinated Universal Time)</option>
-          <option value="America/New_York">Eastern Time (ET)</option>
-          <option value="America/Chicago">Central Time (CT)</option>
-          <option value="America/Denver">Mountain Time (MT)</option>
-          <option value="America/Los_Angeles">Pacific Time (PT)</option>
-          <option value="Europe/London">London (GMT/BST)</option>
-          <option value="Europe/Paris">Central European (CET/CEST)</option>
-          <option value="Asia/Tokyo">Japan (JST)</option>
-          <option value="Australia/Sydney">Sydney (AEST/AEDT)</option>
-        </select>
-        <p className="text-xs text-muted-foreground">
-          The system will automatically adjust for historical timezone changes
-        </p>
-      </div>
+
+      {/* Timezone - Only show if date or time is shown */}
+      {(showAll || showDateOnly || showTimeOnly) && (
+        <div className="space-y-2">
+          <Label htmlFor="timezone">Timezone</Label>
+          <Select
+            value={birthData.timezone}
+            onValueChange={handleTimezoneChange}
+          >
+            <SelectTrigger className="bg-white/5">
+              <SelectValue placeholder="Select timezone" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="UTC">UTC (Coordinated Universal Time)</SelectItem>
+              <SelectItem value="America/New_York">Eastern Time (US & Canada)</SelectItem>
+              <SelectItem value="America/Chicago">Central Time (US & Canada)</SelectItem>
+              <SelectItem value="America/Denver">Mountain Time (US & Canada)</SelectItem>
+              <SelectItem value="America/Los_Angeles">Pacific Time (US & Canada)</SelectItem>
+              <SelectItem value="Europe/London">London</SelectItem>
+              <SelectItem value="Europe/Paris">Paris</SelectItem>
+              <SelectItem value="Asia/Tokyo">Tokyo</SelectItem>
+              <SelectItem value="Australia/Sydney">Sydney</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,477 +1,254 @@
 
-import React, { useState, useEffect, useRef } from "react";
-import { motion } from "@/lib/framer-motion";
-import { SoulOrb } from "@/components/ui/soul-orb";
-import { cn } from "@/lib/utils";
+import React, { useState, useEffect } from "react";
 import { BlueprintData, blueprintService } from "@/services/blueprint-service";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+import { motion } from "@/lib/framer-motion";
+import { SoulOrb } from "../ui/soul-orb";
+import { Loader2 } from "lucide-react";
 
 interface BlueprintGeneratorProps {
-  userProfile: BlueprintData['user_meta'];
-  onComplete: (blueprint: BlueprintData) => void;
+  userProfile: {
+    full_name: string;
+    preferred_name?: string;
+    birth_date: string;
+    birth_time_local: string;
+    birth_location: string;
+    timezone: string;
+    personality?: string;
+  };
+  onComplete: (blueprint?: BlueprintData) => void;
   className?: string;
 }
 
-export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({ 
-  userProfile, 
+export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
+  userProfile,
   onComplete,
-  className 
+  className,
 }) => {
-  // Generation steps from the diagram
-  const steps = [
-    { id: "process", label: "Processing birth data" },
-    { id: "celestial", label: "Calculating celestial positions" },
-    { id: "numerology", label: "Calculating numerology values" },
-    { id: "humandesign", label: "Determining Human Design type" },
-    { id: "chinese", label: "Calculating Chinese Zodiac" },
-    { id: "mbti", label: "Integrating MBTI data" },
-    { id: "insights", label: "Generating integrated insights" },
-    { id: "store", label: "Storing complete blueprint" },
-  ];
-  
-  const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
-  const [particles, setParticles] = useState<Array<{id: number, x: number, y: number, size: number, speed: number}>>([]);
-  const [generatedBlueprint, setGeneratedBlueprint] = useState<BlueprintData | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState<
+    "idle" | "generating" | "complete" | "error"
+  >("idle");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { toast } = useToast();
-  
-  // Refs to prevent multiple executions and control retries
-  const generationAttemptedRef = useRef(false);
-  const retryCountRef = useRef(0);
-  const maxRetries = 1; // Limit retries to prevent excessive API calls
-  
-  // Generate random particles for visual effect
-  useEffect(() => {
-    const newParticles = Array.from({ length: 50 }, (_, i) => ({
-      id: i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      size: Math.random() * 4 + 1,
-      speed: Math.random() * 2 + 1
-    }));
-    setParticles(newParticles);
-  }, []);
+  const [retryCount, setRetryCount] = useState(0);
+  const maxRetries = 2; // Limit retries to prevent excessive API calls
+  const [hasStartedGeneration, setHasStartedGeneration] = useState(false);
 
-  // Generate the blueprint using the actual calculation service
   useEffect(() => {
     const generateBlueprint = async () => {
-      // Prevent multiple generation attempts in a single component lifecycle
-      if (generationAttemptedRef.current) {
+      // Prevent multiple generation attempts
+      if (hasStartedGeneration) {
         console.log("Blueprint generation already started, ignoring duplicate effect");
         return;
       }
-      
-      // Mark that we've attempted generation
-      generationAttemptedRef.current = true;
-      
-      // Only start if we haven't already
-      if (isGenerating || generatedBlueprint) return;
-      
-      setIsGenerating(true);
-      setError(null);
-      
+
+      if (
+        !userProfile.full_name ||
+        !userProfile.birth_date ||
+        !userProfile.birth_time_local ||
+        !userProfile.birth_location
+      ) {
+        setErrorMessage("Missing required birth information");
+        setStatus("error");
+        return;
+      }
+
       try {
-        console.log("Starting blueprint generation with user data:", userProfile);
-        
-        // Step 1: Processing birth data
-        setCurrentStep(0);
-        setProgress(12);
-        await simulateProcessingDelay();
-        
-        // Step 2: Calculating celestial positions
-        setCurrentStep(1);
-        setProgress(25);
-        await simulateProcessingDelay();
-        
-        // Step 3-7: Run the actual generation process
-        setProgress(40);
-        
-        // Call the blueprint service to generate a blueprint
-        const { data: blueprint, error: genError, isPartial } = await blueprintService.generateBlueprintFromBirthData(userProfile);
-        
-        if (genError) {
-          console.error("Blueprint generation error:", genError);
-          setError(genError);
+        setHasStartedGeneration(true);
+        setStatus("generating");
+        setProgress(10);
+
+        console.log("Generating blueprint with user data:", userProfile);
+        setProgress(30);
+
+        // Generate blueprint from birth data
+        const { data: blueprint, error, isPartial } =
+          await blueprintService.generateBlueprintFromBirthData(userProfile);
+
+        setProgress(70);
+
+        if (error) {
+          console.error("Error generating blueprint:", error);
+          setErrorMessage(error);
+          setStatus("error");
           toast({
-            title: "Generation Error",
-            description: "There was an error generating your blueprint. Please try again.",
-            variant: "destructive"
+            title: "Blueprint Generation Error",
+            description: error || "Failed to generate blueprint. Please try again.",
+            variant: "destructive",
           });
           return;
-        }
+        } 
         
-        if (!blueprint) {
-          setError("No blueprint data received");
-          toast({
-            title: "Generation Error",
-            description: "No blueprint data was generated. Please try again.",
-            variant: "destructive"
-          });
-          return;
-        }
-        
-        // Show toast for partial success
         if (isPartial) {
           toast({
-            title: "Blueprint Generated with Limited Data",
-            description: "Some calculations could not be completed with full accuracy. Your blueprint was generated with the best available data.",
-            variant: "default" // Changed from "warning" to "default" since "warning" is not a valid variant
+            title: "Blueprint Generation Partial",
+            description: "Some calculations were not fully accurate, but we've created your blueprint with the best available data.",
+            variant: "default",
           });
         }
-        
-        // Progress through the remaining steps visually
-        for (let step = 2; step < steps.length - 1; step++) {
-          setCurrentStep(step);
-          setProgress(40 + (step * 10));
-          await simulateProcessingDelay(500); // slightly faster now that we have data
-        }
-        
-        // Final step: Storing
-        setCurrentStep(steps.length - 1);
-        setProgress(95);
-        await simulateProcessingDelay(500);
-        
-        // Store the generated blueprint
-        setGeneratedBlueprint(blueprint);
-        setProgress(100);
-        
-        // Complete the process and pass blueprint to parent
-        setTimeout(() => {
+
+        // If we have a blueprint, save it
+        if (blueprint) {
+          const { success: saveSuccess, error: saveError } =
+            await blueprintService.saveBlueprintData(blueprint);
+
+          if (!saveSuccess) {
+            console.error("Error saving blueprint:", saveError);
+            toast({
+              title: "Error Saving Blueprint",
+              description:
+                "Your blueprint was generated but couldn't be saved. Please try again.",
+              variant: "destructive",
+            });
+            setStatus("error");
+            setErrorMessage(saveError || "Failed to save blueprint");
+            return;
+          }
+          
+          // Set progress to complete
+          setProgress(100);
+          setStatus("complete");
+          
+          // Pass the blueprint to parent component
           onComplete(blueprint);
-        }, 1000);
-      } catch (err) {
-        console.error("Unexpected error during blueprint generation:", err);
-        setError(err instanceof Error ? err.message : String(err));
-        
-        // Check if we should retry
-        if (retryCountRef.current < maxRetries) {
-          console.log(`Retrying blueprint generation (attempt ${retryCountRef.current + 1} of ${maxRetries})`);
-          retryCountRef.current += 1;
-          generationAttemptedRef.current = false; // Reset to allow another attempt
-          
-          toast({
-            title: "Retrying Generation",
-            description: "Blueprint calculation encountered an issue. Retrying...",
-            variant: "default"
-          });
-          
-          // Wait a short time before retrying
-          setTimeout(() => {
-            setIsGenerating(false);
-            generateBlueprint();
-          }, 2000);
         } else {
+          // This should not happen if errors are properly handled, but just in case
+          setErrorMessage("No blueprint data generated");
+          setStatus("error");
           toast({
-            title: "Generation Error",
-            description: "An unexpected error occurred. Please try again later.",
-            variant: "destructive"
+            title: "Blueprint Generation Error",
+            description: "No blueprint data was generated. Please try again.",
+            variant: "destructive",
           });
         }
-      } finally {
-        if (retryCountRef.current >= maxRetries) {
-          setIsGenerating(false);
-        }
+      } catch (err) {
+        console.error("Unexpected error in blueprint generation:", err);
+        setErrorMessage(
+          err instanceof Error ? err.message : "Unknown error occurred"
+        );
+        setStatus("error");
+        toast({
+          title: "Blueprint Generation Error",
+          description: "There was a problem generating your blueprint. Please try again.",
+          variant: "destructive",
+        });
       }
     };
-    
-    // Start the generation process
+
     generateBlueprint();
-  }, [userProfile, onComplete, toast]);
+  }, [userProfile, onComplete, toast, hasStartedGeneration]);
 
-  // Helper function to simulate processing delay
-  const simulateProcessingDelay = (ms = 1200) => {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  };
-
-  // Get the stage for the SoulOrb component
-  const getSoulOrbStage = () => {
-    if (currentStep < 2) return "welcome";
-    if (currentStep < 6) return "collecting";
-    return "generating";
+  // Try again handler with retry limits
+  const handleTryAgain = () => {
+    // Check if we've exceeded the maximum retry attempts
+    if (retryCount >= maxRetries) {
+      setErrorMessage(`Maximum retry attempts (${maxRetries}) reached. Please go back and check your information.`);
+      toast({
+        title: "Too Many Attempts",
+        description: `Failed after ${maxRetries} attempts. Please check your birth information and try again later.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Reset the generation flag to allow another attempt
+    setHasStartedGeneration(false);
+    
+    // Increment retry counter
+    setRetryCount(prev => prev + 1);
+    
+    setStatus("idle");
+    setErrorMessage(null);
+    setProgress(0);
+    
+    // The effect will trigger the generation again
   };
 
   return (
-    <div className={cn("w-full max-w-4xl mx-auto", className)}>
-      <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold font-display mb-2">
-          <span className="gradient-text">Generating Your Soul Blueprint</span>
-        </h2>
-        <p className="text-muted-foreground">
-          Please wait while we analyze cosmic patterns and generate your personalized blueprint
-        </p>
-      </div>
-
-      {/* Main visualization area */}
-      <div className="relative h-96 w-full rounded-xl overflow-hidden border border-soul-purple/20 bg-gradient-to-b from-soul-black to-soul-black/80">
-        {/* Cosmic background with stars */}
-        <div className="absolute inset-0">
-          {particles.map(particle => (
-            <motion.div
-              key={particle.id}
-              className="absolute bg-white rounded-full opacity-70"
-              style={{
-                width: particle.size,
-                height: particle.size,
-                left: `${particle.x}%`,
-                top: `${particle.y}%`
-              }}
-              animate={{
-                y: [0, -20, 0],
-                opacity: [0.7, 1, 0.7]
-              }}
-              transition={{
-                duration: particle.speed,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-            />
-          ))}
+    <div className={cn("space-y-4", className)}>
+      {status === "idle" && (
+        <div className="text-center">
+          <p>Ready to generate your personal Soul Blueprint...</p>
         </div>
+      )}
 
-        {/* Service Boxes */}
-        <div className="absolute inset-0 flex items-center justify-between px-6">
-          {/* User */}
-          <div className="w-24 h-32 flex flex-col items-center justify-center">
-            <div className={cn(
-              "bg-white/10 backdrop-blur-sm p-3 rounded-lg border border-white/20 shadow-glow mb-2",
-              currentStep === 0 && "border-soul-purple animate-pulse"
-            )}>
-              <div className="w-10 h-10 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-soul-purple">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="12" cy="7" r="4"></circle>
-                </svg>
-              </div>
-            </div>
-            <span className="text-xs text-center text-white/80">User</span>
+      {status === "generating" && (
+        <div className="text-center space-y-4">
+          <div className="flex justify-center">
+            <SoulOrb size="md" pulse={true} stage="generating" />
           </div>
-
-          {/* API Gateway */}
-          <div className="w-24 h-32 flex flex-col items-center justify-center">
-            <div className={cn(
-              "bg-white/10 backdrop-blur-sm p-3 rounded-lg border border-white/20 shadow-glow mb-2",
-              currentStep === 1 && "border-soul-purple animate-pulse"
-            )}>
-              <div className="w-10 h-10 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-soul-purple">
-                  <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
-                  <path d="M2 17l10 5 10-5"></path>
-                  <path d="M2 12l10 5 10-5"></path>
-                </svg>
-              </div>
-            </div>
-            <span className="text-xs text-center text-white/80">API Gateway</span>
-          </div>
-
-          {/* Blueprint Service */}
-          <div className="w-24 h-32 flex flex-col items-center justify-center">
-            <div className={cn(
-              "bg-white/10 backdrop-blur-sm p-3 rounded-lg border border-white/20 shadow-glow mb-2", 
-              currentStep >= 2 && currentStep <= 6 && "border-soul-purple animate-pulse"
-            )}>
-              <div className="w-10 h-10 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-soul-purple">
-                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-                </svg>
-              </div>
-            </div>
-            <span className="text-xs text-center text-white/80">Blueprint Service</span>
-          </div>
-
-          {/* Swiss Ephemeris */}
-          <div className="w-24 h-32 flex flex-col items-center justify-center">
-            <div className={cn(
-              "bg-white/10 backdrop-blur-sm p-3 rounded-lg border border-white/20 shadow-glow mb-2",
-              currentStep === 1 && "border-soul-purple animate-pulse"
-            )}>
-              <div className="w-10 h-10 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-soul-purple">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <path d="M12 6a2 2 0 0 0 0 12 2 2 0 0 0 0-12"></path>
-                  <path d="M12 2v4"></path>
-                  <path d="M12 18v4"></path>
-                  <path d="M4.9 4.9l2.8 2.8"></path>
-                  <path d="M16.3 16.3l2.8 2.8"></path>
-                  <path d="M2 12h4"></path>
-                  <path d="M18 12h4"></path>
-                  <path d="M4.9 19.1l2.8-2.8"></path>
-                  <path d="M16.3 7.7l2.8-2.8"></path>
-                </svg>
-              </div>
-            </div>
-            <span className="text-xs text-center text-white/80">Swiss Ephemeris</span>
-          </div>
-
-          {/* Database */}
-          <div className="w-24 h-32 flex flex-col items-center justify-center">
-            <div className={cn(
-              "bg-white/10 backdrop-blur-sm p-3 rounded-lg border border-white/20 shadow-glow mb-2",
-              currentStep === 7 && "border-soul-purple animate-pulse"
-            )}>
-              <div className="w-10 h-10 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-soul-purple">
-                  <path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2z"></path>
-                  <path d="M12 12h.01"></path>
-                  <path d="M17 12h.01"></path>
-                  <path d="M7 12h.01"></path>
-                </svg>
-              </div>
-            </div>
-            <span className="text-xs text-center text-white/80">Database</span>
-          </div>
-        </div>
-
-        {/* Center Soul Orb */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-          <motion.div
-            initial={{ scale: 0.8 }}
-            animate={{ 
-              scale: [0.8, 1, 0.8],
-              rotate: progress * 2
-            }}
-            transition={{ 
-              scale: { duration: 3, repeat: Infinity },
-              rotate: { duration: 20, repeat: Infinity, ease: "linear" }
-            }}
-          >
-            <SoulOrb 
-              size="lg" 
-              stage={getSoulOrbStage()}
-              pulse={true}
-              speaking={false}
-            />
-          </motion.div>
-        </div>
-
-        {/* Error Message */}
-        {error && (
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 translate-y-16 bg-red-900/80 text-white px-4 py-2 rounded-md text-sm">
-            Error: {error}
-          </div>
-        )}
-
-        {/* Current Step Display */}
-        <div className="absolute bottom-6 left-0 right-0 text-center">
-          {currentStep < steps.length ? (
-            <motion.p 
-              className="text-white font-medium text-lg"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              key={currentStep}
-            >
-              {steps[currentStep].label}...
-            </motion.p>
-          ) : (
-            <motion.p 
-              className="text-soul-purple font-medium text-lg"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-            >
-              Blueprint Generation Complete!
-            </motion.p>
-          )}
-          
-          {/* Progress bar */}
-          <div className="mt-2 mx-auto w-64 h-1 bg-white/20 rounded-full overflow-hidden">
-            <motion.div 
-              className="h-full bg-soul-purple"
+          <p>Generating your Soul Blueprint...</p>
+          <div className="w-full bg-gray-800 rounded-full h-2.5 mb-4">
+            <div
+              className="bg-soul-purple h-2.5 rounded-full"
               style={{ width: `${progress}%` }}
-              initial={{ width: '0%' }}
-              animate={{ width: `${progress}%` }}
-              transition={{ duration: 0.3 }}
-            />
+            ></div>
           </div>
+          <p className="text-sm text-gray-400">
+            {progress < 30
+              ? "Connecting to celestial database..."
+              : progress < 60
+              ? "Calculating planetary positions..."
+              : progress < 80
+              ? "Generating your unique profile..."
+              : "Finalizing your Soul Blueprint..."}
+          </p>
         </div>
+      )}
 
-        {/* Flowing data particles */}
-        {currentStep > 0 && currentStep < steps.length && (
-          <div className="absolute inset-0">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <motion.div
-                key={`flow-${i}`}
-                className="absolute w-2 h-2 rounded-full bg-soul-purple"
-                initial={{ 
-                  x: 150 + (i * 40), 
-                  y: 300,
-                  opacity: 0
-                }}
-                animate={{ 
-                  x: [150 + (i * 40), 500 - (i * 30)],
-                  y: [300, 150],
-                  opacity: [0, 1, 0]
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  delay: i * 0.5,
-                  ease: "easeInOut"
-                }}
+      {status === "complete" && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center"
+        >
+          <div className="flex justify-center">
+            <SoulOrb size="md" pulse={false} stage="complete" />
+          </div>
+          <p className="text-lg font-semibold mt-2">Blueprint Generation Complete!</p>
+          <p className="text-sm">Your Soul Blueprint has been created successfully.</p>
+        </motion.div>
+      )}
+
+      {status === "error" && (
+        <div className="text-center space-y-4">
+          <div className="text-red-500 flex items-center justify-center space-x-2">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
               />
-            ))}
+            </svg>
+            <p className="font-medium">Blueprint Generation Error</p>
           </div>
-        )}
-      </div>
-
-      {/* Step indicator */}
-      <div className="mt-8 flex justify-center">
-        <div className="flex space-x-2">
-          {steps.map((step, index) => (
-            <div 
-              key={step.id}
-              className={cn(
-                "w-3 h-3 rounded-full transition-colors",
-                index < currentStep 
-                  ? "bg-soul-purple" 
-                  : index === currentStep 
-                  ? "bg-soul-purple/80 animate-pulse" 
-                  : "bg-soul-purple/30"
-              )}
-            />
-          ))}
-          <div 
-            className={cn(
-              "w-3 h-3 rounded-full transition-colors",
-              currentStep >= steps.length
-                ? "bg-soul-purple"
-                : "bg-soul-purple/30"
+          <p className="text-sm">{errorMessage || "An unknown error occurred"}</p>
+          <div>
+            {retryCount < maxRetries ? (
+              <button
+                onClick={handleTryAgain}
+                className="bg-soul-purple hover:bg-soul-purple/80 text-white px-4 py-2 rounded-md flex items-center mx-auto"
+              >
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Try Again ({retryCount + 1}/{maxRetries + 1})
+              </button>
+            ) : (
+              <div className="text-amber-500 text-sm">
+                Maximum retry attempts reached. Please check your information and try again later.
+              </div>
             )}
-          />
+          </div>
         </div>
-      </div>
-
-      {/* Key features section */}
-      <div className="mt-12 grid grid-cols-2 gap-6">
-        <div className="bg-white/5 backdrop-blur-sm p-4 rounded-lg border border-white/10">
-          <h3 className="text-lg font-medium mb-2 text-soul-purple">Accurate Astrological Calculations</h3>
-          <p className="text-sm text-white/70">
-            Powered by Swiss Ephemeris for precise planetary positions at the time of birth
-          </p>
-        </div>
-        
-        <div className="bg-white/5 backdrop-blur-sm p-4 rounded-lg border border-white/10">
-          <h3 className="text-lg font-medium mb-2 text-soul-purple">Optimized Performance</h3>
-          <p className="text-sm text-white/70">
-            Complex calculations are cached to improve response times and system efficiency
-          </p>
-        </div>
-        
-        <div className="bg-white/5 backdrop-blur-sm p-4 rounded-lg border border-white/10">
-          <h3 className="text-lg font-medium mb-2 text-soul-purple">Integrated Spiritual Systems</h3>
-          <p className="text-sm text-white/70">
-            Combines astrology, numerology, Human Design, and MBTI into a cohesive profile
-          </p>
-        </div>
-        
-        <div className="bg-white/5 backdrop-blur-sm p-4 rounded-lg border border-white/10">
-          <h3 className="text-lg font-medium mb-2 text-soul-purple">Personalized Insights</h3>
-          <p className="text-sm text-white/70">
-            Pattern recognition algorithms generate custom guidance based on your unique blueprint
-          </p>
-        </div>
-      </div>
+      )}
     </div>
   );
 };
