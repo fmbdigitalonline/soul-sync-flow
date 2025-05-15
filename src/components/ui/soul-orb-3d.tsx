@@ -1,4 +1,3 @@
-
 import React, { useRef, useMemo, useEffect, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -6,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface SoulOrbProps {
   speaking?: boolean;
-  stage?: "welcome" | "collecting" | "generating" | "complete";
+  stage?: "welcome" | "collecting" | "generating" | "complete" | "error";
   size?: number;
   position?: [number, number, number];
 }
