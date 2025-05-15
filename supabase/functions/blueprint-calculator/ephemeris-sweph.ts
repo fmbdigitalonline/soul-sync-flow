@@ -26,9 +26,9 @@ export async function calculatePlanetaryPositionsWithSweph(date, time, location,
     } catch (fsError) {
       console.warn(`Failed to load WASM from local filesystem: ${fsError.message}`);
       
-      // Fallback to using the CDN version if local file is not accessible
-      const cdnUrl = "https://cdn.jsdelivr.net/gh/u-blusky/sweph-wasm@0.11.3/astro.wasm";
-      console.log(`Falling back to CDN URL: ${cdnUrl}`);
+      // Fallback to using the correct GitHub URL if local file is not accessible
+      const cdnUrl = "https://raw.githubusercontent.com/u-blusky/sweph-wasm/main/js/astro.wasm";
+      console.log(`Falling back to GitHub URL: ${cdnUrl}`);
       sweph = await initializeWasm(cdnUrl);
     }
     

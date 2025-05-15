@@ -1,4 +1,3 @@
-
 // Swiss Ephemeris WASM wrapper for JavaScript
 // This file is adapted from the sweph-wasm project
 
