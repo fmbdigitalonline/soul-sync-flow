@@ -1,66 +1,5 @@
-
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import * as path from "https://deno.land/std@0.168.0/path/mod.ts";
-
-// Cache for the initialized WASM module
-let wasmModuleCache: any = null;
-
-/**
- * Initialize the Swiss Ephemeris WASM module
- */
-async function initializeSwephModule() {
-  try {
-    if (wasmModuleCache) {
-      console.log("Using cached WASM module");
-      return wasmModuleCache;
-    }
-
-    console.log("Initializing Swiss Ephemeris WASM module");
-    
-    // Load astro.js module
-    const astroModule = await import('../_shared/sweph/astro.js');
-    
-    // Use proper path resolution for Deno
-    // First try to load from local filesystem using relative path
-    const wasmPath = path.join(path.dirname(path.fromFileUrl(import.meta.url)), "../_shared/sweph/astro.wasm");
-    console.log(`Attempting to load WASM from path: ${wasmPath}`);
-    
-    let wasmModule;
-    const loadStartTime = performance.now();
-    
-    try {
-      // Try to load the WASM file directly using Deno's filesystem API
-      const wasmBytes = await Deno.readFile(wasmPath);
-      console.log(`Successfully read ${wasmBytes.byteLength} bytes from WASM file`);
-      wasmModule = await astroModule.initializeWasmFromBytes(wasmBytes);
-    } catch (fsError) {
-      console.warn(`Failed to load WASM from local filesystem: ${fsError.message}`);
-      
-      // Fallback to using the CDN version if local file is not accessible
-      const cdnUrl = "https://cdn.jsdelivr.net/gh/u-blusky/sweph-wasm@0.11.3/js/astro.wasm";
-      console.log(`Falling back to CDN URL: ${cdnUrl}`);
-      wasmModule = await astroModule.initializeWasm(cdnUrl);
-    }
-    
-    const loadEndTime = performance.now();
-    const loadDuration = loadEndTime - loadStartTime;
-    
-    if (!wasmModule) {
-      throw new Error("Swiss Ephemeris WASM module failed to initialize");
-    }
-    
-    console.log(`[SwissEph] loaded WASM in ${Math.round(loadDuration)} ms`);
-    
-    // Store in cache for reuse
-    wasmModuleCache = wasmModule;
-    
-    return wasmModule;
-  } catch (error) {
-    console.error("Failed to initialize Swiss Ephemeris WASM module:", error);
-    // We'll throw the error instead of silently falling back
-    throw error;
-  }
-}
+import { initializeSwephModule } from '../_shared/sweph/sweph-loader.ts';
 
 /**
  * Calculate planetary positions using Swiss Ephemeris
@@ -69,7 +8,7 @@ export async function calculatePlanetaryPositionsWithSweph(date, time, location,
   try {
     console.log(`SwEph: Calculating positions for ${date} ${time} at ${location} in timezone ${timezone}`);
     
-    // Initialize the WASM module
+    // Initialize the WASM module using our improved loader
     const sweph = await initializeSwephModule();
     
     // Parse the date
@@ -159,7 +98,6 @@ export async function calculatePlanetaryPositionsWithSweph(date, time, location,
     return positions;
   } catch (error) {
     console.error("SwEph: Error calculating positions:", error);
-    // We no longer silently fall back - throw the error up so we can diagnose issues
     throw error;
   }
 }

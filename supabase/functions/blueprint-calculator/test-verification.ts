@@ -11,13 +11,27 @@ const corsHeaders = {
 // Check if WASM file is accessible
 async function checkWasmFile() {
   try {
-    const wasmPath = path.join(path.dirname(path.fromFileUrl(import.meta.url)), "../_shared/sweph/astro.wasm");
-    const stat = await Deno.stat(wasmPath);
-    return {
-      exists: true,
-      size: stat.size,
-      path: wasmPath
-    };
+    const wasmUrl = new URL("../_shared/sweph/astro.wasm", import.meta.url);
+    console.log(`Checking WASM file at: ${wasmUrl}`);
+    
+    try {
+      const stat = await Deno.stat(wasmUrl);
+      return {
+        exists: true,
+        size: stat.size,
+        path: wasmUrl.pathname
+      };
+    } catch (error) {
+      console.warn(`Error accessing WASM file: ${error.message}`);
+      // Try fallback to CDN
+      const response = await fetch("https://cdn.jsdelivr.net/gh/u-blusky/sweph-wasm@0.11.3/js/astro.wasm", { method: 'HEAD' });
+      return {
+        exists: response.ok,
+        size: response.headers.get('content-length') ? parseInt(response.headers.get('content-length')!) : 0,
+        path: 'CDN fallback',
+        cdn_fallback: true
+      };
+    }
   } catch (error) {
     return {
       exists: false,

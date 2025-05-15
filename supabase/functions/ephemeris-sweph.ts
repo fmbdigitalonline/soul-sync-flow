@@ -1,58 +1,5 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-
-// Cache for the initialized WASM module
-let wasmModuleCache: any = null;
-
-/**
- * Initialize the Swiss Ephemeris WASM module
- */
-async function initializeSwephModule() {
-  try {
-    if (wasmModuleCache) {
-      console.log("Using cached WASM module");
-      return wasmModuleCache;
-    }
-
-    console.log("Initializing Swiss Ephemeris WASM module");
-    
-    // Load astro.js module
-    const astroModule = await import('../_shared/sweph/astro.js');
-    
-    // Initialize WASM with properly resolved path
-    // Use URL constructor with import.meta.url to get proper path resolution
-    const wasmPath = new URL('../_shared/sweph/astro.wasm', import.meta.url).href;
-    console.log(`Loading WASM from path: ${wasmPath}`);
-    
-    const loadStartTime = performance.now();
-    const wasmModule = await astroModule.initializeWasm(wasmPath);
-    const loadEndTime = performance.now();
-    const loadDuration = loadEndTime - loadStartTime;
-    
-    if (!wasmModule) {
-      throw new Error("Swiss Ephemeris WASM module failed to initialize");
-    }
-    
-    // Calculate file size (approximately)
-    let wasmSize = "unknown";
-    try {
-      const wasmFile = await Deno.stat(new URL('../_shared/sweph/astro.wasm', import.meta.url));
-      wasmSize = `${Math.round(wasmFile.size / 1024)} kB`;
-    } catch (e) {
-      console.warn("Could not determine WASM file size:", e);
-    }
-    
-    console.log(`[SwissEph] loaded astro.wasm (${wasmSize}) in ${Math.round(loadDuration)} ms`);
-    
-    // Store in cache for reuse
-    wasmModuleCache = wasmModule;
-    
-    return wasmModule;
-  } catch (error) {
-    console.error("Failed to initialize Swiss Ephemeris WASM module:", error);
-    // We'll throw the error instead of silently falling back
-    throw error;
-  }
-}
+import { initializeSwephModule } from './_shared/sweph/sweph-loader.ts';
 
 /**
  * Calculate planetary positions using Swiss Ephemeris
@@ -61,7 +8,7 @@ export async function calculatePlanetaryPositionsWithSweph(date, time, location,
   try {
     console.log(`SwEph: Calculating positions for ${date} ${time} at ${location} in timezone ${timezone}`);
     
-    // Initialize the WASM module
+    // Initialize the WASM module using our improved loader
     const sweph = await initializeSwephModule();
     
     // Parse the date
@@ -151,7 +98,6 @@ export async function calculatePlanetaryPositionsWithSweph(date, time, location,
     return positions;
   } catch (error) {
     console.error("SwEph: Error calculating positions:", error);
-    // We no longer silently fall back - throw the error up so we can diagnose issues
     throw error;
   }
 }

@@ -1,4 +1,3 @@
-
 // Swiss Ephemeris WASM wrapper for JavaScript
 // This file is adapted from the sweph-wasm project
 
@@ -92,8 +91,8 @@ ephemeris.calculate = (julDay, bodyId, flags = ephemeris.Flags.SPEED) => {
 let wasmModuleCache = null;
 let wasmLoadStartTime = 0;
 
-// Initialize the WASM module
-const initializeWasm = async (wasmUrl) => {
+// Initialize the WASM module from bytes or URL
+const initializeWasm = async (wasmBytesOrUrl) => {
   try {
     // Return cached module if already initialized
     if (wasmModuleCache) {
@@ -101,43 +100,38 @@ const initializeWasm = async (wasmUrl) => {
       return wasmModuleCache;
     }
     
-    console.log("Initializing WASM module from:", wasmUrl);
     wasmLoadStartTime = performance.now();
     
-    // We'll use a CDN URL as a fallback if local loading fails
-    const CDN_URL = "https://cdn.jsdelivr.net/gh/u-blusky/sweph-wasm@0.11.3/js/astro.wasm";
-    
     let wasmBinary;
-    // Try first to load from the provided URL (local file)
-    try {
-      // For Deno environments (Edge Functions)
+    
+    // Check if wasmBytesOrUrl is a URL string, a URL object, or already a binary
+    if (typeof wasmBytesOrUrl === 'string') {
+      console.log("Initializing WASM module from URL string:", wasmBytesOrUrl);
+      const response = await fetch(wasmBytesOrUrl);
+      if (!response.ok) throw new Error(`Failed to fetch WASM: ${response.status}`);
+      wasmBinary = await response.arrayBuffer();
+    } 
+    else if (wasmBytesOrUrl instanceof URL) {
+      console.log("Initializing WASM module from URL object:", wasmBytesOrUrl.toString());
+      // For Deno environments
       if (typeof Deno !== 'undefined') {
-        console.log("Running in Deno environment, using Deno.readFile");
-        // Use URL parsing to get the proper file path
-        console.log(`Parsed WASM URL path: ${wasmUrl}`);
-        wasmBinary = await Deno.readFile(wasmUrl);
-        
-        // Get file size for logging
-        const fileInfo = await Deno.stat(wasmUrl);
-        console.log(`Successfully loaded WASM binary from local file (${Math.round(fileInfo.size / 1024)} kB)`);
+        wasmBinary = await Deno.readFile(wasmBytesOrUrl);
       } else {
-        // For browser or Node.js environments
-        console.log("Fetching WASM from provided URL");
-        const response = await fetch(wasmUrl);
+        const response = await fetch(wasmBytesOrUrl);
         if (!response.ok) throw new Error(`Failed to fetch WASM: ${response.status}`);
         wasmBinary = await response.arrayBuffer();
-        console.log(`Successfully fetched WASM binary (${Math.round(wasmBinary.byteLength / 1024)} kB)`);
       }
-    } catch (error) {
-      // If local loading fails, try the CDN URL
-      console.warn(`Failed to load WASM from ${wasmUrl}: ${error.message}`);
-      console.log("Falling back to CDN URL:", CDN_URL);
-      
-      const response = await fetch(CDN_URL);
-      if (!response.ok) throw new Error(`Failed to fetch WASM from CDN: ${response.status}`);
-      wasmBinary = await response.arrayBuffer();
-      console.log(`Successfully fetched WASM binary from CDN (${Math.round(wasmBinary.byteLength / 1024)} kB)`);
     }
+    else if (wasmBytesOrUrl instanceof Uint8Array) {
+      console.log(`Initializing WASM module from provided binary (${wasmBytesOrUrl.byteLength} bytes)`);
+      wasmBinary = wasmBytesOrUrl.buffer;
+    }
+    else {
+      console.log("Received unknown type for WASM initialization:", typeof wasmBytesOrUrl);
+      throw new Error("Invalid WASM source provided");
+    }
+    
+    console.log(`Successfully obtained WASM binary (${Math.round(wasmBinary.byteLength / 1024)} kB)`);
     
     // Instantiate the WASM module with the binary
     console.log("Instantiating WASM module");
@@ -154,7 +148,7 @@ const initializeWasm = async (wasmUrl) => {
     // Set up the exported objects
     const swe = wasmModuleCache;
     
-    // Export constants
+    // Export constants and methods
     ephemeris.SE_GREG_CAL = swe.SE_GREG_CAL;
     ephemeris.SE_JUL_CAL = swe.SE_JUL_CAL;
     ephemeris.SEFLG_SPEED = swe.SEFLG_SPEED;
@@ -203,7 +197,7 @@ const initializeWasm = async (wasmUrl) => {
 
   } catch (err) {
     console.error("Failed to initialize Swiss Ephemeris WASM module:", err);
-    throw err; // Bubble up the error instead of returning false
+    throw err;
   }
 };
 
