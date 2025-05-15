@@ -1,3 +1,3 @@
 
 [files]
-include = ["sweph/astro.wasm"]
+include = []

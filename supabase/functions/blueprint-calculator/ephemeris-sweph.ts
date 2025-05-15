@@ -1,9 +1,5 @@
-
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import initializeWasm from './sweph/astro.js';  // Import from local path
-
-// Define a constant for the CDN URL to ensure consistency
-const CDN_URL = "https://cdn.jsdelivr.net/gh/u-blusky/sweph-wasm/js/astro.wasm";
+import { initializeSwephModule } from '../_shared/sweph/sweph-loader.ts';
 
 /**
  * Calculate planetary positions using Swiss Ephemeris
@@ -12,37 +8,8 @@ export async function calculatePlanetaryPositionsWithSweph(date, time, location,
   try {
     console.log(`SwEph: Calculating positions for ${date} ${time} at ${location} in timezone ${timezone}`);
     
-    // Initialize the WASM module using our improved loader
-    let sweph;
-    try {
-      // Build URL exactly once - the base is this file's location
-      const wasmUrl = new URL("./sweph/astro.wasm", import.meta.url);
-      console.log(`[path] ${wasmUrl.href}`);
-      
-      // Deno.readFile accepts a URL object directly - no pathname, no "file://"
-      const wasmBytes = await Deno.readFile(wasmUrl);
-      console.log(`Successfully read ${wasmBytes.byteLength} bytes from WASM file`);
-      
-      // Initialize from bytes directly
-      sweph = await initializeWasm(wasmBytes);
-      console.log(`[SwissEph] loaded ${wasmUrl.pathname} (${Math.round(wasmBytes.byteLength / 1024)} kB)`);
-    } catch (fsError) {
-      console.warn(`Failed to load WASM from local filesystem: ${fsError.message}`);
-      
-      // Try to fetch from Supabase Storage with the exact URL
-      const supabaseStorageUrl = "https://qxaajirrqrcnmvtowjbg.supabase.co/storage/v1/object/public/astro-wasm/astro.wasm";
-      console.log(`Falling back to Supabase Storage URL: ${supabaseStorageUrl}`);
-      
-      try {
-        sweph = await initializeWasm(supabaseStorageUrl);
-      } catch (storageError) {
-        console.warn(`Failed to load WASM from Supabase Storage: ${storageError.message}`);
-        
-        // Final fallback to GitHub as last resort (using the Emscripten build)
-        console.log(`Falling back to GitHub URL: ${CDN_URL}`);
-        sweph = await initializeWasm(CDN_URL);
-      }
-    }
+    // Initialize the WASM module using our improved loader that always uses the Emscripten build
+    const sweph = await initializeSwephModule();
     
     // Parse the date
     const [year, month, day] = date.split('-').map(Number);
