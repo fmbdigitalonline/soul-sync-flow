@@ -12,14 +12,28 @@ ephemeris.Houses = {};
 ephemeris.HouseSystems = {};
 ephemeris.Flags = {};
 
+// Cache for the initialized WASM module
+let wasmModuleCache = null;
+
 // Initialize the WASM module
 const initializeWasm = async (wasmUrl) => {
   try {
+    // Return cached module if already initialized
+    if (wasmModuleCache) {
+      console.log("Using cached WASM module");
+      return wasmModuleCache;
+    }
+    
+    console.log("Initializing WASM module from:", wasmUrl);
+    
     // Load the WASM module
     const wasmModule = await WebAssembly.instantiateStreaming(
       fetch(wasmUrl),
       { env: { memory: new WebAssembly.Memory({ initial: 10, maximum: 100 }) } }
     );
+    
+    // Cache the module
+    wasmModuleCache = wasmModule;
     
     // Set up the exported objects
     ephemeris.JulDay = {
@@ -109,11 +123,11 @@ const initializeWasm = async (wasmUrl) => {
     };
 
     console.log("Swiss Ephemeris WASM module initialized");
-    return true;
+    return wasmModuleCache;
 
   } catch (err) {
     console.error("Failed to initialize Swiss Ephemeris WASM module:", err);
-    return false;
+    throw err; // Bubble up the error instead of returning false
   }
 };
 

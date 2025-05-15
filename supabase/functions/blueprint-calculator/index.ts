@@ -139,7 +139,9 @@ serve(async (req) => {
     }
     
     try {
-      results.numerology = calculateNumerology(date);
+      // Extract name from birth data if available, otherwise use fallback calculations
+      const fullName = birthData.fullName || "";
+      results.numerology = calculateNumerology(date, fullName);
     } catch (numerologyError) {
       console.error("Error calculating numerology:", numerologyError);
       errors.numerology = numerologyError.message;
@@ -440,7 +442,7 @@ function getChineseCompatibility(animal) {
   return compatibility[animal] || { best: [], worst: [] };
 }
 
-function calculateNumerology(birthDate) {
+function calculateNumerology(birthDate, fullName = "") {
   const date = new Date(birthDate);
   const day = date.getDate();
   const month = date.getMonth() + 1;
@@ -473,6 +475,22 @@ function calculateNumerology(birthDate) {
   const currentYear = new Date().getFullYear();
   const personalYear = calculatePersonalYear(day, month, currentYear);
   
+  // Calculate name-based numbers if name is provided
+  let expressionNumber = 0;
+  let soulUrgeNumber = 0;
+  let personalityNumber = 0;
+  
+  if (fullName && fullName.trim() !== "") {
+    expressionNumber = calculateExpressionNumber(fullName);
+    soulUrgeNumber = calculateSoulUrgeNumber(fullName);
+    personalityNumber = calculatePersonalityNumber(fullName);
+  } else {
+    // Use fallback calculations if no name provided
+    expressionNumber = ((day + month) % 9) || 9;
+    soulUrgeNumber = ((month + year % 100) % 9) || 9;
+    personalityNumber = ((day + year % 100) % 9) || 9;
+  }
+  
   return {
     life_path_number: lifePathNumber,
     life_path_keyword: lifePathKeywords[lifePathNumber]?.keyword || "Seeker",
@@ -480,17 +498,30 @@ function calculateNumerology(birthDate) {
     birth_day_number: birthDayNumber,
     birth_day_meaning: birthDayMeaning,
     personal_year: personalYear,
-    expression_number: calculateExpressionNumber(birthDate), // Simplified version
-    soul_urge_number: calculateSoulUrgeNumber(birthDate), // Simplified version
-    personality_number: calculatePersonalityNumber(birthDate) // Simplified version
+    expression_number: expressionNumber,
+    expression_keyword: getNumerologyKeyword(expressionNumber),
+    soul_urge_number: soulUrgeNumber,
+    soul_urge_keyword: getNumerologyKeyword(soulUrgeNumber),
+    personality_number: personalityNumber
   };
 }
 
 function reduceSingleDigit(num) {
-  // Reduce to a single digit unless it's a master number
-  while (num > 9 && num !== 11 && num !== 22 && num !== 33) {
-    num = [...String(num)].reduce((sum, digit) => sum + parseInt(digit), 0);
+  // Preserve master numbers 11, 22, 33
+  if (num === 11 || num === 22 || num === 33) {
+    return num;
   }
+  
+  // Reduce to a single digit
+  while (num > 9) {
+    num = [...String(num)].reduce((sum, digit) => sum + parseInt(digit), 0);
+    
+    // Check for master numbers after reduction
+    if (num === 11 || num === 22 || num === 33) {
+      return num;
+    }
+  }
+  
   return num;
 }
 
@@ -534,24 +565,86 @@ function calculatePersonalYear(day, month, currentYear) {
   return reduceSingleDigit(sum);
 }
 
-// Simplified placeholder functions for other numerology calculations
-function calculateExpressionNumber(birthDate) {
-  // In a real implementation, this would use the full birth name
-  // For now, we'll use a value derived from the birth date
-  const date = new Date(birthDate);
-  return ((date.getDate() + date.getMonth() + 1) % 9) || 9;
+// Numerology letter-number mapping (Pythagorean system)
+const PYTHAGOREAN_NUMEROLOGY = {
+  'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 5, 'f': 6, 'g': 7, 'h': 8, 'i': 9,
+  'j': 1, 'k': 2, 'l': 3, 'm': 4, 'n': 5, 'o': 6, 'p': 7, 'q': 8, 'r': 9,
+  's': 1, 't': 2, 'u': 3, 'v': 4, 'w': 5, 'x': 6, 'y': 7, 'z': 8,
+  '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '0': 0
+};
+
+// Helper to normalize name (remove accents and special characters)
+function normalizeName(name) {
+  return name.toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // Remove accents
+    .replace(/[^a-z0-9]/g, "");      // Remove non-alphanumeric
 }
 
-function calculateSoulUrgeNumber(birthDate) {
-  // In a real implementation, this would use the vowels in the birth name
-  // For now, we'll use a value derived from the birth date
-  const date = new Date(birthDate);
-  return ((date.getMonth() + 1 + date.getFullYear() % 100) % 9) || 9;
+// Calculate Expression Number (all letters)
+function calculateExpressionNumber(fullName) {
+  const normalizedName = normalizeName(fullName);
+  
+  // Sum all letters
+  let sum = 0;
+  for (const char of normalizedName) {
+    sum += PYTHAGOREAN_NUMEROLOGY[char] || 0;
+  }
+  
+  // Preserve master numbers
+  return reduceSingleDigit(sum);
 }
 
-function calculatePersonalityNumber(birthDate) {
-  // In a real implementation, this would use the consonants in the birth name
-  // For now, we'll use a value derived from the birth date
-  const date = new Date(birthDate);
-  return ((date.getDate() + date.getFullYear() % 100) % 9) || 9;
+// Calculate Soul Urge Number (vowels only)
+function calculateSoulUrgeNumber(fullName) {
+  const normalizedName = normalizeName(fullName);
+  const vowels = "aeiou";
+  
+  // Sum vowels only
+  let sum = 0;
+  for (const char of normalizedName) {
+    if (vowels.includes(char)) {
+      sum += PYTHAGOREAN_NUMEROLOGY[char] || 0;
+    }
+  }
+  
+  // Preserve master numbers
+  return reduceSingleDigit(sum);
+}
+
+// Calculate Personality Number (consonants only)
+function calculatePersonalityNumber(fullName) {
+  const normalizedName = normalizeName(fullName);
+  const vowels = "aeiou";
+  
+  // Sum consonants only
+  let sum = 0;
+  for (const char of normalizedName) {
+    if (!vowels.includes(char) && PYTHAGOREAN_NUMEROLOGY[char]) {
+      sum += PYTHAGOREAN_NUMEROLOGY[char];
+    }
+  }
+  
+  // Preserve master numbers
+  return reduceSingleDigit(sum);
+}
+
+// Get keyword for a numerology number
+function getNumerologyKeyword(number) {
+  const keywords = {
+    1: "Independent Leader",
+    2: "Cooperative Mediator",
+    3: "Creative Communicator",
+    4: "Practical Builder",
+    5: "Freedom Seeker",
+    6: "Responsible Nurturer",
+    7: "Analytical Seeker",
+    8: "Abundant Manifester",
+    9: "Humanitarian",
+    11: "Intuitive Channel",
+    22: "Master Builder",
+    33: "Master Teacher"
+  };
+  
+  return keywords[number] || "Unknown";
 }

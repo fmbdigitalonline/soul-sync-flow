@@ -74,6 +74,9 @@ const GATE_TO_CENTER_MAP = {
   60: "Root", 52: "Root", 19: "Root", 39: "Root", 41: "Root", 53: "Root", 38: "Root", 54: "Root", 58: "Root"
 };
 
+// Solar movement constant
+const SOLAR_DEG_PER_DAY = 0.985647; // mean solar motion in degrees per day
+
 /**
  * Calculate Human Design profile based on birth data and celestial positions
  */
@@ -81,20 +84,19 @@ export async function calculateHumanDesign(birthDate, birthTime, location, timez
   try {
     console.log("Calculating Human Design for", birthDate, birthTime);
     
-    // Calculate Julian date for both personality (birth time) and design (88.36 degrees earlier)
+    // Calculate Julian date for birth time (personality)
     const birthDateTime = new Date(birthDate + "T" + birthTime);
     const personalityTimestamp = birthDateTime.getTime();
     
     // For design chart, we're calculating positions as if they were 88.36 degrees earlier
-    // This is approximately 88.36 days earlier based on the sun's motion
-    // In a full implementation, we would use the actual astronomical calculations
-    // to find the exact time when the sun was 88.36 degrees earlier
-    const designTimestamp = personalityTimestamp - (88.36 * 24 * 60 * 60 * 1000);
+    // This is approximately 89.66 days earlier based on accurate solar motion
+    const offsetDays = 88.36 / SOLAR_DEG_PER_DAY; // 89.66 days
+    const designTimestamp = personalityTimestamp - (offsetDays * 24 * 60 * 60 * 1000);
     
     console.log("Personality timestamp:", new Date(personalityTimestamp).toISOString());
     console.log("Design timestamp:", new Date(designTimestamp).toISOString());
     
-    // Calculate gate activations for both charts
+    // Calculate gate activations for personality chart
     const personalityGates = calculateGatesFromPositions(celestialData);
     
     // In a real implementation, we would calculate the design positions
@@ -115,8 +117,12 @@ export async function calculateHumanDesign(birthDate, birthTime, location, timez
     // Calculate authority based on activated centers
     const authority = determineAuthorityFromCenters(activatedCenters);
     
-    // Calculate profile based on Sun and Earth positions
-    const profile = determineProfile(celestialData);
+    // Extract sun gates from personality and design for profile calculation
+    const personalitySunGate = personalityGates.find(g => g.planet === "sun");
+    const designSunGate = designGates.find(g => g.planet === "sun");
+    
+    // Calculate profile based on Sun gates' lines
+    const profile = determineProfile(personalitySunGate, designSunGate);
     
     // Calculate definition type based on connected centers
     const definition = determineDefinition(activatedCenters);
@@ -143,19 +149,7 @@ export async function calculateHumanDesign(birthDate, birthTime, location, timez
     };
   } catch (error) {
     console.error("Error calculating Human Design:", error);
-    return {
-      type: "GENERATOR", // Default fallback
-      profile: "3/5 (Martyr/Heretic)",
-      authority: "Emotional",
-      strategy: "Wait to respond",
-      definition: "Split",
-      not_self_theme: "Frustration",
-      life_purpose: "To find satisfaction through your work",
-      gates: {
-        unconscious_design: ["16.5", "20.3", "57.2", "34.6"],
-        conscious_personality: ["11.4", "48.3", "39.5", "41.1"]
-      }
-    };
+    throw error; // Bubble up the error instead of returning fallback data
   }
 }
 
@@ -166,13 +160,11 @@ function calculateGatesFromPositions(celestialData) {
   // Map each planet to its corresponding gate
   for (const [planet, position] of Object.entries(celestialData)) {
     if (position && typeof position.longitude === 'number') {
-      // Correct formula: Math.floor((longitude / 360) * 384) to map to 64 gates * 6 lines = 384 positions
-      const position384 = Math.floor((position.longitude / 360) * 384);
-      
-      // Get gate (1-64) and line (1-6)
-      // There are 64 gates with 6 lines each = 384 total positions
-      const gate = Math.floor(position384 / 6) % 64 + 1;
-      const line = position384 % 6 + 1;
+      // Improved formula for accurate gate and line calculation
+      // Each gate spans 5.625 degrees (360/64)
+      const frac = (position.longitude % 360) / 5.625;
+      const gate = Math.floor(frac) + 1;
+      const line = Math.floor((frac - Math.floor(frac)) * 6) + 1;
       
       gates.push({
         planet,
@@ -315,16 +307,11 @@ function determineAuthorityFromCenters(activatedCenters) {
   return "NONE";
 }
 
-// Determine profile based on celestial positions
-function determineProfile(celestialData) {
-  // In a full implementation, this would be calculated from Sun and Earth positions
-  // Profile is represented as two numbers from 1-6
-  
-  // Use sun position to determine conscious personality number (1-6)
-  const conscious = Math.floor((celestialData.sun.longitude / 60) % 6) + 1;
-  
-  // Use ascendant position to determine unconscious design number (1-6)
-  const unconscious = Math.floor((celestialData.ascendant.longitude / 60) % 6) + 1;
+// Determine profile based on sun lines from personality and design charts
+function determineProfile(personalitySunGate, designSunGate) {
+  // Use the lines from personality and design sun gates
+  const conscious = personalitySunGate?.line || 1;
+  const unconscious = designSunGate?.line || 1;
   
   // Profile labels
   const profileLabels = {
