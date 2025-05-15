@@ -94,11 +94,99 @@ export type BlueprintData = {
   };
 };
 
+// Define MBTI keyword mappings
+const MBTI_DATA: Record<string, {
+  core_keywords: string[];
+  dominant_function: string;
+  auxiliary_function: string;
+}> = {
+  'INTJ': {
+    core_keywords: ["Strategic", "Innovative", "Independent"],
+    dominant_function: "Introverted Intuition (Ni)",
+    auxiliary_function: "Extraverted Thinking (Te)"
+  },
+  'INTP': {
+    core_keywords: ["Logical", "Conceptual", "Analytical"],
+    dominant_function: "Introverted Thinking (Ti)",
+    auxiliary_function: "Extraverted Intuition (Ne)"
+  },
+  'ENTJ': {
+    core_keywords: ["Decisive", "Strategic", "Efficient"],
+    dominant_function: "Extraverted Thinking (Te)",
+    auxiliary_function: "Introverted Intuition (Ni)"
+  },
+  'ENTP': {
+    core_keywords: ["Innovative", "Adaptable", "Debater"],
+    dominant_function: "Extraverted Intuition (Ne)",
+    auxiliary_function: "Introverted Thinking (Ti)"
+  },
+  'INFJ': {
+    core_keywords: ["Insightful", "Counselor", "Advocate"],
+    dominant_function: "Introverted Intuition (Ni)",
+    auxiliary_function: "Extraverted Feeling (Fe)"
+  },
+  'INFP': {
+    core_keywords: ["Idealistic", "Empathetic", "Authentic"],
+    dominant_function: "Introverted Feeling (Fi)",
+    auxiliary_function: "Extraverted Intuition (Ne)"
+  },
+  'ENFJ': {
+    core_keywords: ["Charismatic", "Empathetic", "Inspiring"],
+    dominant_function: "Extraverted Feeling (Fe)",
+    auxiliary_function: "Introverted Intuition (Ni)"
+  },
+  'ENFP': {
+    core_keywords: ["Enthusiastic", "Creative", "People-oriented"],
+    dominant_function: "Extraverted Intuition (Ne)",
+    auxiliary_function: "Introverted Feeling (Fi)"
+  },
+  'ISTJ': {
+    core_keywords: ["Organized", "Practical", "Detail-oriented"],
+    dominant_function: "Introverted Sensing (Si)",
+    auxiliary_function: "Extraverted Thinking (Te)"
+  },
+  'ISFJ': {
+    core_keywords: ["Nurturing", "Reliable", "Traditional"],
+    dominant_function: "Introverted Sensing (Si)",
+    auxiliary_function: "Extraverted Feeling (Fe)"
+  },
+  'ESTJ': {
+    core_keywords: ["Efficient", "Structured", "Logical"],
+    dominant_function: "Extraverted Thinking (Te)",
+    auxiliary_function: "Introverted Sensing (Si)"
+  },
+  'ESFJ': {
+    core_keywords: ["Caring", "Social", "Harmonious"],
+    dominant_function: "Extraverted Feeling (Fe)",
+    auxiliary_function: "Introverted Sensing (Si)"
+  },
+  'ISTP': {
+    core_keywords: ["Practical", "Adaptable", "Analytical"],
+    dominant_function: "Introverted Thinking (Ti)",
+    auxiliary_function: "Extraverted Sensing (Se)"
+  },
+  'ISFP': {
+    core_keywords: ["Artistic", "Sensitive", "Spontaneous"],
+    dominant_function: "Introverted Feeling (Fi)",
+    auxiliary_function: "Extraverted Sensing (Se)"
+  },
+  'ESTP': {
+    core_keywords: ["Energetic", "Action-oriented", "Pragmatic"],
+    dominant_function: "Extraverted Sensing (Se)",
+    auxiliary_function: "Introverted Thinking (Ti)"
+  },
+  'ESFP': {
+    core_keywords: ["Enthusiastic", "Fun-loving", "Spontaneous"],
+    dominant_function: "Extraverted Sensing (Se)",
+    auxiliary_function: "Introverted Feeling (Fi)"
+  }
+};
+
 export const blueprintService = {
   /**
    * Generate a blueprint from birth data
    */
-  async generateBlueprintFromBirthData(userData: BlueprintData['user_meta']): Promise<{ data: BlueprintData | null; error?: string; isPartial?: boolean }> {
+  async generateBlueprintFromBirthData(userData: BlueprintData['user_meta'] & { personality?: string }): Promise<{ data: BlueprintData | null; error?: string; isPartial?: boolean }> {
     try {
       console.log('Generating blueprint from birth data:', userData);
       
@@ -109,7 +197,7 @@ export const blueprintService = {
             date: userData.birth_date,
             time: userData.birth_time_local,
             location: userData.birth_location,
-            timezone: userData.timezone,
+            timezone: userData.timezone || "UTC",
             fullName: userData.full_name // Pass the name for numerology calculations
           }
         }
@@ -127,15 +215,25 @@ export const blueprintService = {
       
       console.log('Received calculation data:', calcData);
       
+      // Get the MBTI data based on the user's selection or fallback to INFJ
+      const mbtiType = userData.personality || "INFJ";
+      const mbtiData = MBTI_DATA[mbtiType] || MBTI_DATA.INFJ;
+      
       // Create the blueprint using the calculation results
       const blueprint: BlueprintData = {
-        user_meta: userData,
+        user_meta: {
+          full_name: userData.full_name,
+          preferred_name: userData.preferred_name,
+          birth_date: userData.birth_date,
+          birth_time_local: userData.birth_time_local,
+          birth_location: userData.birth_location,
+          timezone: userData.timezone || "UTC",
+        },
         cognition_mbti: {
-          // For now, use default MBTI data or an API could be added later
-          type: "INFJ",
-          core_keywords: ["Insightful", "Counselor", "Advocate"],
-          dominant_function: "Introverted Intuition (Ni)",
-          auxiliary_function: "Extraverted Feeling (Fe)"
+          type: mbtiType,
+          core_keywords: mbtiData.core_keywords,
+          dominant_function: mbtiData.dominant_function,
+          auxiliary_function: mbtiData.auxiliary_function
         },
         energy_strategy_human_design: calcData.humanDesign || {
           type: "Unknown",
@@ -219,7 +317,6 @@ export const blueprintService = {
       };
     } catch (err) {
       console.error("Error generating blueprint:", err);
-      // No fallback data anymore - just throw the error up
       return { 
         data: null, 
         error: err instanceof Error ? err.message : String(err)

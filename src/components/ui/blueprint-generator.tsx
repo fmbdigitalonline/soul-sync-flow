@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { BlueprintData, blueprintService } from "@/services/blueprint-service";
 import { useToast } from "@/hooks/use-toast";
@@ -51,13 +50,14 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
         console.log("Saving blueprint data to database...");
 
         // Create user data object for blueprint generation
-        const userData: BlueprintData["user_meta"] = {
+        const userData = {
           full_name: formData.name,
           preferred_name: formData.name.split(" ")[0], // Use first name as preferred name
           birth_date: formData.birthDate,
           birth_time_local: formData.birthTime,
           birth_location: formData.birthLocation,
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, // Use browser timezone
+          personality: formData.personality // Add the personality field
         };
 
         console.log("Generating blueprint with user data:", userData);
@@ -153,13 +153,14 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
         setProgress(10);
         
         // Create user data object for blueprint generation
-        const userData: BlueprintData["user_meta"] = {
+        const userData = {
           full_name: formData.name,
           preferred_name: formData.name.split(" ")[0],
           birth_date: formData.birthDate,
           birth_time_local: formData.birthTime,
           birth_location: formData.birthLocation,
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          personality: formData.personality // Add the personality field
         };
         
         console.log("Retrying blueprint generation with user data:", userData);
