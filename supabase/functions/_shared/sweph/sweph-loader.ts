@@ -6,7 +6,7 @@ import initializeWasm from "./astro.js";  // Default import is now the init func
 let wasmModuleCache: any = null;
 
 // Define a constant for the CDN URL to ensure consistency
-const CDN_URL = "https://cdn.jsdelivr.net/gh/u-blusky/sweph-wasm@0.11.3/js/astro.wasm";
+const CDN_URL = "https://cdn.jsdelivr.net/gh/u-blusky/sweph-wasm/js/astro.wasm";
 
 /**
  * Initialize the Swiss Ephemeris WASM module

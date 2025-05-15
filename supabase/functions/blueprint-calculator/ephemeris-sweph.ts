@@ -3,7 +3,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import initializeWasm from './sweph/astro.js';  // Import from local path
 
 // Define a constant for the CDN URL to ensure consistency
-const CDN_URL = "https://cdn.jsdelivr.net/gh/u-blusky/sweph-wasm@0.11.3/js/astro.wasm";
+const CDN_URL = "https://cdn.jsdelivr.net/gh/u-blusky/sweph-wasm/js/astro.wasm";
 
 /**
  * Calculate planetary positions using Swiss Ephemeris
