@@ -1,5 +1,6 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import * as path from "https://deno.land/std@0.168.0/path/mod.ts";
 
 // Cache for the initialized WASM module
 let wasmModuleCache: any = null;
@@ -19,13 +20,28 @@ async function initializeSwephModule() {
     // Load astro.js module
     const astroModule = await import('../_shared/sweph/astro.js');
     
-    // Initialize WASM with properly resolved path
-    // Use URL constructor with import.meta.url to get proper path resolution
-    const wasmPath = new URL('../_shared/sweph/astro.wasm', import.meta.url).href;
-    console.log(`Loading WASM from path: ${wasmPath}`);
+    // Use proper path resolution for Deno
+    // First try to load from local filesystem using relative path
+    const wasmPath = path.join(path.dirname(path.fromFileUrl(import.meta.url)), "../_shared/sweph/astro.wasm");
+    console.log(`Attempting to load WASM from path: ${wasmPath}`);
     
+    let wasmModule;
     const loadStartTime = performance.now();
-    const wasmModule = await astroModule.initializeWasm(wasmPath);
+    
+    try {
+      // Try to load the WASM file directly using Deno's filesystem API
+      const wasmBytes = await Deno.readFile(wasmPath);
+      console.log(`Successfully read ${wasmBytes.byteLength} bytes from WASM file`);
+      wasmModule = await astroModule.initializeWasmFromBytes(wasmBytes);
+    } catch (fsError) {
+      console.warn(`Failed to load WASM from local filesystem: ${fsError.message}`);
+      
+      // Fallback to using the CDN version if local file is not accessible
+      const cdnUrl = "https://cdn.jsdelivr.net/gh/u-blusky/sweph-wasm@0.11.3/js/astro.wasm";
+      console.log(`Falling back to CDN URL: ${cdnUrl}`);
+      wasmModule = await astroModule.initializeWasm(cdnUrl);
+    }
+    
     const loadEndTime = performance.now();
     const loadDuration = loadEndTime - loadStartTime;
     
@@ -33,16 +49,7 @@ async function initializeSwephModule() {
       throw new Error("Swiss Ephemeris WASM module failed to initialize");
     }
     
-    // Calculate file size (approximately)
-    let wasmSize = "unknown";
-    try {
-      const wasmFile = await Deno.stat(new URL('../_shared/sweph/astro.wasm', import.meta.url));
-      wasmSize = `${Math.round(wasmFile.size / 1024)} kB`;
-    } catch (e) {
-      console.warn("Could not determine WASM file size:", e);
-    }
-    
-    console.log(`[SwissEph] loaded astro.wasm (${wasmSize}) in ${Math.round(loadDuration)} ms`);
+    console.log(`[SwissEph] loaded WASM in ${Math.round(loadDuration)} ms`);
     
     // Store in cache for reuse
     wasmModuleCache = wasmModule;

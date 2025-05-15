@@ -1,11 +1,30 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { calculatePlanetaryPositionsWithSweph } from "./ephemeris-sweph.ts";
+import * as path from "https://deno.land/std@0.168.0/path/mod.ts";
 
 // CORS headers for browser requests
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Check if WASM file is accessible
+async function checkWasmFile() {
+  try {
+    const wasmPath = path.join(path.dirname(path.fromFileUrl(import.meta.url)), "../_shared/sweph/astro.wasm");
+    const stat = await Deno.stat(wasmPath);
+    return {
+      exists: true,
+      size: stat.size,
+      path: wasmPath
+    };
+  } catch (error) {
+    return {
+      exists: false,
+      error: error.message
+    };
+  }
+}
 
 // Known test cases with their expected outputs
 const testCases = [
@@ -127,6 +146,11 @@ serve(async (req) => {
 
   try {
     console.log("Running Swiss Ephemeris verification tests");
+    
+    // Check WASM file availability first
+    const wasmStatus = await checkWasmFile();
+    console.log("WASM file status:", wasmStatus);
+    
     const startTime = Date.now();
     let results = [];
     let allPassed = true;
@@ -202,9 +226,15 @@ serve(async (req) => {
       results.push(testResult);
     }
 
-    // Return test summary
+    // Return test summary with enhanced diagnostic info
     return new Response(
       JSON.stringify({
+        system_info: {
+          deno_version: Deno.version,
+          runtime: Deno.build,
+          wasm_status: wasmStatus,
+          cwd: Deno.cwd(),
+        },
         test_summary: {
           all_passed: allPassed,
           total_tests: testCases.length,
@@ -227,7 +257,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         error: 'Test execution failed',
-        details: error.message
+        details: error.message,
+        stack: error.stack
       }),
       {
         status: 500,
