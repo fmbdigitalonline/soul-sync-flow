@@ -6,14 +6,91 @@
 const ephemeris = {};
 
 // Define the components we'll be exporting
-ephemeris.JulDay = {};
-ephemeris.Bodies = {};
-ephemeris.Houses = {};
-ephemeris.HouseSystems = {};
-ephemeris.Flags = {};
+ephemeris.JulDay = {
+  // Add fromDate function for easy date conversion to Julian Day
+  fromDate: (year, month, day, hour = 0, minute = 0, second = 0) => {
+    if (!ephemeris.swe_julday) {
+      throw new Error("WASM module not initialized");
+    }
+    return ephemeris.swe_julday(year, month, day, hour + minute/60 + second/3600, ephemeris.SE_GREG_CAL);
+  },
+};
+
+ephemeris.Bodies = {
+  SUN: 0,
+  MOON: 1,
+  MERCURY: 2,
+  VENUS: 3,
+  MARS: 4,
+  JUPITER: 5,
+  SATURN: 6,
+  URANUS: 7,
+  NEPTUNE: 8,
+  PLUTO: 9,
+  MEAN_NODE: 10,
+  TRUE_NODE: 11,
+  CHIRON: 15
+};
+
+ephemeris.Houses = {
+  calculate: (julDay, lat, lon, system = 'P') => {
+    if (!wasmModuleCache) {
+      throw new Error("WASM module not initialized");
+    }
+    
+    const houses = new Float64Array(13);
+    const ascmc = new Float64Array(10);
+    
+    wasmModuleCache.swe_houses(julDay, lat, lon, system, houses, ascmc);
+    
+    return {
+      ascendant: ascmc[wasmModuleCache.SE_ASC],
+      mc: ascmc[wasmModuleCache.SE_MC],
+      armc: ascmc[wasmModuleCache.SE_ARMC],
+      vertex: ascmc[wasmModuleCache.SE_VERTEX],
+      cusps: Array.from(houses.slice(1, 13))
+    };
+  }
+};
+
+ephemeris.HouseSystems = {
+  PLACIDUS: 'P',
+  KOCH: 'K',
+  PORPHYRIUS: 'O',
+  REGIOMONTANUS: 'R',
+  CAMPANUS: 'C',
+  EQUAL: 'E',
+  WHOLE_SIGN: 'W'
+};
+
+ephemeris.Flags = {
+  SPEED: 256,
+  EQUATORIAL: 2048,
+  SIDEREAL: 64
+};
+
+// Calculate function to get planetary positions
+ephemeris.calculate = (julDay, bodyId, flags = ephemeris.Flags.SPEED) => {
+  if (!wasmModuleCache) {
+    throw new Error("WASM module not initialized");
+  }
+  
+  const result = new Float64Array(6);
+  wasmModuleCache.swe_calc_ut(julDay, bodyId, flags, result);
+  
+  return {
+    longitude: result[0],
+    latitude: result[1],
+    distance: result[2],
+    longitudeSpeed: result[3],
+    latitudeSpeed: result[4],
+    distanceSpeed: result[5]
+  };
+};
 
 // Cache for the initialized WASM module
 let wasmModuleCache = null;
+let wasmLoadStartTime = 0;
 
 // Initialize the WASM module
 const initializeWasm = async (wasmUrl) => {
@@ -25,6 +102,7 @@ const initializeWasm = async (wasmUrl) => {
     }
     
     console.log("Initializing WASM module from:", wasmUrl);
+    wasmLoadStartTime = performance.now();
     
     // We'll use a CDN URL as a fallback if local loading fails
     const CDN_URL = "https://cdn.jsdelivr.net/gh/u-blusky/sweph-wasm@0.11.3/js/astro.wasm";
@@ -36,16 +114,19 @@ const initializeWasm = async (wasmUrl) => {
       if (typeof Deno !== 'undefined') {
         console.log("Running in Deno environment, using Deno.readFile");
         // Use URL parsing to get the proper file path
-        const url = new URL(wasmUrl);
-        console.log(`Parsed WASM URL path: ${url.pathname}`);
-        wasmBinary = await Deno.readFile(url.pathname);
-        console.log("Successfully loaded WASM binary from local file");
+        console.log(`Parsed WASM URL path: ${wasmUrl}`);
+        wasmBinary = await Deno.readFile(wasmUrl);
+        
+        // Get file size for logging
+        const fileInfo = await Deno.stat(wasmUrl);
+        console.log(`Successfully loaded WASM binary from local file (${Math.round(fileInfo.size / 1024)} kB)`);
       } else {
         // For browser or Node.js environments
         console.log("Fetching WASM from provided URL");
         const response = await fetch(wasmUrl);
         if (!response.ok) throw new Error(`Failed to fetch WASM: ${response.status}`);
         wasmBinary = await response.arrayBuffer();
+        console.log(`Successfully fetched WASM binary (${Math.round(wasmBinary.byteLength / 1024)} kB)`);
       }
     } catch (error) {
       // If local loading fails, try the CDN URL
@@ -55,6 +136,7 @@ const initializeWasm = async (wasmUrl) => {
       const response = await fetch(CDN_URL);
       if (!response.ok) throw new Error(`Failed to fetch WASM from CDN: ${response.status}`);
       wasmBinary = await response.arrayBuffer();
+      console.log(`Successfully fetched WASM binary from CDN (${Math.round(wasmBinary.byteLength / 1024)} kB)`);
     }
     
     // Instantiate the WASM module with the binary
@@ -63,7 +145,8 @@ const initializeWasm = async (wasmUrl) => {
       env: { memory: new WebAssembly.Memory({ initial: 10, maximum: 100 }) }
     });
     
-    console.log("WASM module instantiated successfully!");
+    const loadDuration = performance.now() - wasmLoadStartTime;
+    console.log(`WASM module instantiated successfully in ${Math.round(loadDuration)} ms!`);
     
     // Cache the module
     wasmModuleCache = wasmModule.instance.exports;

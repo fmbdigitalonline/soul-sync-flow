@@ -1,9 +1,9 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 // Swiss Ephemeris wrapper for Deno
-import { calculatePlanetaryPositions as legacyCalculate } from "./ephemeris.ts";
-import { calculatePlanetaryPositionsWithSweph } from "./ephemeris-sweph.ts";
-import { calculateHumanDesign } from './human-design.ts';
+import { calculatePlanetaryPositions as legacyCalculate } from "../ephemeris.ts";
+import { calculatePlanetaryPositionsWithSweph } from "../ephemeris-sweph.ts";
+import { calculateHumanDesign } from '../human-design.ts';
 
 // CORS headers for browser requests
 const corsHeaders = {
@@ -93,14 +93,21 @@ serve(async (req) => {
     let errors: Record<string, string> = {};
     let debugInfo: Record<string, any> = {};
     
+    // Capture start time for performance logging
+    const calculationStartTime = performance.now();
+    
     // Force parameter to override feature flag for testing
     const forceEngine = new URL(req.url).searchParams.get("engine");
     const useSweph = forceEngine === "sweph" ? true : 
                     forceEngine === "legacy" ? false : 
                     USE_SWEPH;
     
+    // Log which engine we're using
+    console.log(`Using ${useSweph ? "Swiss Ephemeris (WASM)" : "Legacy"} engine for calculations`);
+    
     // Attempt to calculate planetary positions using the selected engine
     try {
+      const engineStartTime = performance.now();
       console.log(`Starting celestial calculations using ${useSweph ? "Swiss Ephemeris" : "legacy"} engine...`);
       
       let celestialData;
@@ -108,14 +115,20 @@ serve(async (req) => {
       if (useSweph && retryCount < MAX_RETRIES) {
         try {
           celestialData = await calculatePlanetaryPositionsWithSweph(date, time, location, timezone || "UTC");
+          debugInfo.engine = "swiss_ephemeris";
           debugInfo.wasm = "Loaded successfully";
+          debugInfo.engineDuration = Math.round(performance.now() - engineStartTime);
         } catch (ephemerisError) {
           console.error("Error with Swiss Ephemeris, falling back to legacy:", ephemerisError);
           retryCount++;
           debugInfo.wasm = `Failed: ${ephemerisError.message}`;
+          console.log(`Falling back to legacy engine (retry ${retryCount}/${MAX_RETRIES})`);
+          
           // Fall back to legacy calculation in case of error
+          const fallbackStartTime = performance.now();
           celestialData = await legacyCalculate(date, time, location, timezone || "UTC");
           debugInfo.engine = "legacy (after SwEph failure)";
+          debugInfo.fallbackDuration = Math.round(performance.now() - fallbackStartTime);
         }
       } else {
         if (retryCount >= MAX_RETRIES) {
@@ -124,6 +137,7 @@ serve(async (req) => {
         }
         celestialData = await legacyCalculate(date, time, location, timezone || "UTC");
         debugInfo.engine = "legacy (direct)";
+        debugInfo.engineDuration = Math.round(performance.now() - engineStartTime);
       }
       
       results.celestialData = celestialData;
@@ -194,6 +208,10 @@ serve(async (req) => {
       }, 500);
     }
     
+    // Calculate total processing time
+    const totalProcessingTime = Math.round(performance.now() - calculationStartTime);
+    debugInfo.totalProcessingTime = totalProcessingTime;
+    
     // Return results with debug info included
     return new Response(
       JSON.stringify({
@@ -204,7 +222,8 @@ serve(async (req) => {
           errors: Object.keys(errors).length > 0 ? errors : undefined,
           calculated_at: new Date().toISOString(),
           input: { date, time, location, timezone: timezone || "UTC" },
-          engine: useSweph && !debugInfo.engine?.includes("legacy") ? "swiss_ephemeris" : "legacy",
+          engine: debugInfo.engine || (useSweph ? "swiss_ephemeris" : "legacy"),
+          processing_time_ms: totalProcessingTime,
           debug: debugInfo
         }
       }),

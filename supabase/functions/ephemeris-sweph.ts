@@ -1,159 +1,209 @@
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 
-import { calculatePlanetaryPositions as legacyCalculate } from "./ephemeris.ts";
-import ephemeris, { initializeWasm, Bodies, JulDay } from "../_shared/sweph/astro.js";
-
-// Flag to track if the WASM module is initialized
-let wasmInitialized = false;
+// Cache for the initialized WASM module
+let wasmModuleCache: any = null;
 
 /**
- * Calculate planetary positions using Swiss Ephemeris WASM
+ * Initialize the Swiss Ephemeris WASM module
  */
-export async function calculatePlanetaryPositionsWithSweph(date: string, time: string, location: string, timezone: string) {
-  console.log(`SwEph: Calculating positions for ${date} ${time} at ${location} in timezone ${timezone}`);
-  
+async function initializeSwephModule() {
   try {
-    // Initialize the WASM module if not already done
-    if (!wasmInitialized) {
-      console.log("SwEph: Initializing WASM module");
-      try {
-        // The path is relative to the edge function
-        wasmInitialized = await initializeWasm("../_shared/sweph/astro.wasm");
-        console.log(`SwEph: WASM initialization ${wasmInitialized ? 'successful' : 'failed'}`);
-        
-        if (!wasmInitialized) {
-          throw new Error("Failed to initialize WASM module");
-        }
-      } catch (e) {
-        console.error("SwEph: Error initializing WASM:", e);
-        throw e;
-      }
+    if (wasmModuleCache) {
+      console.log("Using cached WASM module");
+      return wasmModuleCache;
+    }
+
+    console.log("Initializing Swiss Ephemeris WASM module");
+    
+    // Load astro.js module
+    const astroModule = await import('../_shared/sweph/astro.js');
+    
+    // Initialize WASM with properly resolved path
+    // Use URL constructor with import.meta.url to get proper path resolution
+    const wasmPath = new URL('../_shared/sweph/astro.wasm', import.meta.url).href;
+    console.log(`Loading WASM from path: ${wasmPath}`);
+    
+    const loadStartTime = performance.now();
+    const wasmModule = await astroModule.initializeWasm(wasmPath);
+    const loadEndTime = performance.now();
+    const loadDuration = loadEndTime - loadStartTime;
+    
+    if (!wasmModule) {
+      throw new Error("Swiss Ephemeris WASM module failed to initialize");
     }
     
-    // Convert date and time to Julian day
-    const [year, month, day] = date.split('-').map(Number);
-    const [hour, minute] = time.split(':').map(Number);
+    // Calculate file size (approximately)
+    let wasmSize = "unknown";
+    try {
+      const wasmFile = await Deno.stat(new URL('../_shared/sweph/astro.wasm', import.meta.url));
+      wasmSize = `${Math.round(wasmFile.size / 1024)} kB`;
+    } catch (e) {
+      console.warn("Could not determine WASM file size:", e);
+    }
     
-    const julDay = JulDay.fromDate(year, month, day, hour, minute, 0);
-    console.log(`SwEph: Julian day calculated: ${julDay}`);
+    console.log(`[SwissEph] loaded astro.wasm (${wasmSize}) in ${Math.round(loadDuration)} ms`);
     
-    // Get coordinates for location (this would be implemented in a real system)
-    const coords = await getLocationCoordinates(location);
+    // Store in cache for reuse
+    wasmModuleCache = wasmModule;
     
-    // Calculate planets
-    const planets = calculatePlanets(julDay);
-    
-    // Calculate houses
-    const houses = ephemeris.Houses.calculate(
-      julDay, 
-      coords.latitude, 
-      coords.longitude, 
-      ephemeris.HouseSystems.PLACIDUS
-    );
-    
-    // Compile the results
-    const results = {
-      julianDay: julDay,
-      ascendant: {
-        longitude: houses.ascendant,
-        house: 1
-      },
-      mc: {
-        longitude: houses.mc,
-        house: 10
-      },
-      sun: planets.sun,
-      moon: planets.moon,
-      mercury: planets.mercury,
-      venus: planets.venus,
-      mars: planets.mars,
-      jupiter: planets.jupiter,
-      saturn: planets.saturn,
-      uranus: planets.uranus,
-      neptune: planets.neptune,
-      pluto: planets.pluto,
-      chiron: planets.chiron,
-      houses: houses.cusps
-    };
-    
-    return results;
+    return wasmModule;
   } catch (error) {
-    console.error("SwEph: Error in calculation:", error);
-    throw error; // Propagate error instead of falling back
+    console.error("Failed to initialize Swiss Ephemeris WASM module:", error);
+    // We'll throw the error instead of silently falling back
+    throw error;
   }
 }
 
-// Helper function to calculate planetary positions
-function calculatePlanets(julDay: number) {
-  return {
-    sun: {
-      longitude: ephemeris.calculate(julDay, Bodies.SUN).longitude,
-      latitude: ephemeris.calculate(julDay, Bodies.SUN).latitude,
-      house: assignHouse(ephemeris.calculate(julDay, Bodies.SUN).longitude)
-    },
-    moon: {
-      longitude: ephemeris.calculate(julDay, Bodies.MOON).longitude,
-      latitude: ephemeris.calculate(julDay, Bodies.MOON).latitude,
-      house: assignHouse(ephemeris.calculate(julDay, Bodies.MOON).longitude)
-    },
-    mercury: {
-      longitude: ephemeris.calculate(julDay, Bodies.MERCURY).longitude,
-      latitude: ephemeris.calculate(julDay, Bodies.MERCURY).latitude,
-      house: assignHouse(ephemeris.calculate(julDay, Bodies.MERCURY).longitude)
-    },
-    venus: {
-      longitude: ephemeris.calculate(julDay, Bodies.VENUS).longitude,
-      latitude: ephemeris.calculate(julDay, Bodies.VENUS).latitude,
-      house: assignHouse(ephemeris.calculate(julDay, Bodies.VENUS).longitude)
-    },
-    mars: {
-      longitude: ephemeris.calculate(julDay, Bodies.MARS).longitude,
-      latitude: ephemeris.calculate(julDay, Bodies.MARS).latitude,
-      house: assignHouse(ephemeris.calculate(julDay, Bodies.MARS).longitude)
-    },
-    jupiter: {
-      longitude: ephemeris.calculate(julDay, Bodies.JUPITER).longitude,
-      latitude: ephemeris.calculate(julDay, Bodies.JUPITER).latitude,
-      house: assignHouse(ephemeris.calculate(julDay, Bodies.JUPITER).longitude)
-    },
-    saturn: {
-      longitude: ephemeris.calculate(julDay, Bodies.SATURN).longitude,
-      latitude: ephemeris.calculate(julDay, Bodies.SATURN).latitude,
-      house: assignHouse(ephemeris.calculate(julDay, Bodies.SATURN).longitude)
-    },
-    uranus: {
-      longitude: ephemeris.calculate(julDay, Bodies.URANUS).longitude,
-      latitude: ephemeris.calculate(julDay, Bodies.URANUS).latitude,
-      house: assignHouse(ephemeris.calculate(julDay, Bodies.URANUS).longitude)
-    },
-    neptune: {
-      longitude: ephemeris.calculate(julDay, Bodies.NEPTUNE).longitude,
-      latitude: ephemeris.calculate(julDay, Bodies.NEPTUNE).latitude,
-      house: assignHouse(ephemeris.calculate(julDay, Bodies.NEPTUNE).longitude)
-    },
-    pluto: {
-      longitude: ephemeris.calculate(julDay, Bodies.PLUTO).longitude,
-      latitude: ephemeris.calculate(julDay, Bodies.PLUTO).latitude,
-      house: assignHouse(ephemeris.calculate(julDay, Bodies.PLUTO).longitude)
-    },
-    chiron: {
-      longitude: ephemeris.calculate(julDay, Bodies.CHIRON).longitude,
-      latitude: ephemeris.calculate(julDay, Bodies.CHIRON).latitude,
-      house: assignHouse(ephemeris.calculate(julDay, Bodies.CHIRON).longitude)
+/**
+ * Calculate planetary positions using Swiss Ephemeris
+ */
+export async function calculatePlanetaryPositionsWithSweph(date, time, location, timezone) {
+  try {
+    console.log(`SwEph: Calculating positions for ${date} ${time} at ${location} in timezone ${timezone}`);
+    
+    // Initialize the WASM module
+    const sweph = await initializeSwephModule();
+    
+    // Parse the date
+    const [year, month, day] = date.split('-').map(Number);
+    const [hour, minute] = time.split(':').map(Number);
+    
+    // We need to get accurate coordinates for the location
+    const coords = await getLocationCoordinates(location);
+    console.log(`SwEph: Location coordinates: lat ${coords.latitude}, long ${coords.longitude}`);
+    
+    // Calculate JD (Julian Date)
+    const jd = sweph.swe_julday(year, month, day, hour + minute/60, sweph.SE_GREG_CAL);
+    console.log(`SwEph: Julian date calculated: ${jd}`);
+    
+    // Calculate positions for major planets and points
+    const celestialBodies = {
+      'sun': sweph.SE_SUN,
+      'moon': sweph.SE_MOON,
+      'mercury': sweph.SE_MERCURY,
+      'venus': sweph.SE_VENUS,
+      'mars': sweph.SE_MARS,
+      'jupiter': sweph.SE_JUPITER,
+      'saturn': sweph.SE_SATURN,
+      'uranus': sweph.SE_URANUS,
+      'neptune': sweph.SE_NEPTUNE,
+      'pluto': sweph.SE_PLUTO,
+      'north_node': sweph.SE_TRUE_NODE,
+      'chiron': sweph.SE_CHIRON,
+    };
+    
+    const positions = {};
+    
+    for (const [body, id] of Object.entries(celestialBodies)) {
+      const result = new Float64Array(6);
+      const flags = sweph.SEFLG_SPEED;
+      
+      const ret = sweph.swe_calc_ut(jd, id, flags, result);
+      
+      if (ret < 0) {
+        console.warn(`Error calculating position for ${body}`);
+        continue;
+      }
+      
+      positions[body] = {
+        longitude: result[0],
+        latitude: result[1],
+        distance: result[2],
+        longitudeSpeed: result[3],
+        latitudeSpeed: result[4],
+        distanceSpeed: result[5],
+      };
+      
+      console.log(`SwEph: ${body} position: lon ${result[0].toFixed(6)}, lat ${result[1].toFixed(6)}`);
     }
-  };
-}
-
-// Simple helper to assign houses based on longitude
-function assignHouse(longitude: number): number {
-  return Math.floor(longitude / 30) + 1;
+    
+    // Calculate Ascendant and MC
+    const houses = new Float64Array(13);
+    const ascmc = new Float64Array(10);
+    
+    sweph.swe_houses(jd, coords.latitude, coords.longitude, 'P', houses, ascmc);
+    
+    positions['ascendant'] = {
+      longitude: ascmc[sweph.SE_ASC],
+      latitude: 0,
+      house: 1
+    };
+    
+    positions['mc'] = {
+      longitude: ascmc[sweph.SE_MC],
+      latitude: 0,
+      house: 10
+    };
+    
+    console.log(`SwEph: Ascendant: ${positions['ascendant'].longitude.toFixed(6)}`);
+    console.log(`SwEph: MC: ${positions['mc'].longitude.toFixed(6)}`);
+    
+    // Add house cusps
+    positions['houses'] = Array.from(houses.slice(1, 13)).map((cusp, index) => ({
+      cusp: index + 1,
+      longitude: cusp
+    }));
+    
+    // Add timestamp for reference
+    positions['timestamp'] = Date.parse(`${date}T${time}`);
+    positions['source'] = 'swiss_ephemeris';
+    
+    return positions;
+  } catch (error) {
+    console.error("SwEph: Error calculating positions:", error);
+    // We no longer silently fall back - throw the error up so we can diagnose issues
+    throw error;
+  }
 }
 
 // Helper function to get location coordinates
 async function getLocationCoordinates(location: string): Promise<{ latitude: number; longitude: number }> {
-  // In a real implementation, we would call a geocoding service here
-  // For now, return default coordinates for testing
-  return {
-    latitude: 40.7128,
-    longitude: -74.0060
-  };
+  try {
+    // Use a geocoding service to get coordinates
+    // If GOOGLE_MAPS_API_KEY is available, use the Google Maps Geocoding API
+    const googleApiKey = Deno.env.get("GOOGLE_MAPS_API_KEY");
+    
+    if (googleApiKey) {
+      const encodedLocation = encodeURIComponent(location);
+      const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedLocation}&key=${googleApiKey}`;
+      
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (data.results && data.results.length > 0) {
+        const result = data.results[0];
+        const { lat, lng } = result.geometry.location;
+        console.log(`Geocoded location "${location}" to: ${lat}, ${lng}`);
+        return { latitude: lat, longitude: lng };
+      } else {
+        throw new Error(`No results found for location: ${location}`);
+      }
+    } else {
+      // Fallback to OpenStreetMap/Nominatim if no Google API key
+      const encodedLocation = encodeURIComponent(location);
+      const url = `https://nominatim.openstreetmap.org/search?q=${encodedLocation}&format=json`;
+      
+      const response = await fetch(url, {
+        headers: {
+          "User-Agent": "SoulSync Blueprint Calculator/1.0"
+        }
+      });
+      
+      const data = await response.json();
+      
+      if (data && data.length > 0) {
+        const result = data[0];
+        console.log(`Geocoded location "${location}" to: ${result.lat}, ${result.lon}`);
+        return { latitude: parseFloat(result.lat), longitude: parseFloat(result.lon) };
+      }
+      
+      // If we still can't get coordinates, use a default
+      console.warn(`Failed to geocode location: ${location}, using default coordinates`);
+      return { latitude: 40.7128, longitude: -74.0060 }; // New York City as default
+    }
+  } catch (error) {
+    console.error(`Error geocoding location "${location}":`, error);
+    // Return default values in case of error
+    return { latitude: 40.7128, longitude: -74.0060 }; // New York City as default
+  }
 }
