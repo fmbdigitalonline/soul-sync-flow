@@ -26,10 +26,20 @@ export async function calculatePlanetaryPositionsWithSweph(date, time, location,
     } catch (fsError) {
       console.warn(`Failed to load WASM from local filesystem: ${fsError.message}`);
       
-      // Fallback to using the correct GitHub URL if local file is not accessible
-      const cdnUrl = "https://raw.githubusercontent.com/u-blusky/sweph-wasm/main/js/astro.wasm";
-      console.log(`Falling back to GitHub URL: ${cdnUrl}`);
-      sweph = await initializeWasm(cdnUrl);
+      // Try to fetch from Supabase Storage
+      const supabaseStorageUrl = "https://qxaajirrqrcnmvtowjbg.supabase.co/storage/v1/object/public/astro-wasm/astro.wasm";
+      console.log(`Falling back to Supabase Storage URL: ${supabaseStorageUrl}`);
+      
+      try {
+        sweph = await initializeWasm(supabaseStorageUrl);
+      } catch (storageError) {
+        console.warn(`Failed to load WASM from Supabase Storage: ${storageError.message}`);
+        
+        // Final fallback to GitHub as last resort
+        const githubUrl = "https://raw.githubusercontent.com/u-blusky/sweph-wasm/main/js/astro.wasm";
+        console.log(`Falling back to GitHub URL: ${githubUrl}`);
+        sweph = await initializeWasm(githubUrl);
+      }
     }
     
     // Parse the date
