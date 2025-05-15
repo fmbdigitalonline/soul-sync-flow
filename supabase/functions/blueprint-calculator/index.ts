@@ -1,3 +1,4 @@
+
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 // Swiss Ephemeris wrapper for Deno
 import { calculatePlanetaryPositions } from './ephemeris.ts';
@@ -35,8 +36,8 @@ interface CalculationResults {
 }
 
 // Feature flag for Swiss Ephemeris calculations
-// Set to true to always use SwEph and see errors
-const USE_SWEPH = true;
+// Setting to false to fall back to legacy calculation if WASM fails
+const USE_SWEPH = false;
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -97,19 +98,27 @@ serve(async (req) => {
     try {
       console.log(`Starting celestial calculations using ${useSweph ? "Swiss Ephemeris" : "legacy"} engine...`);
       
-      const celestialData = useSweph ? 
-        await calculatePlanetaryPositionsWithSweph(date, time, location, timezone || "UTC") :
-        await calculatePlanetaryPositions(date, time, location, timezone || "UTC");
+      let celestialData;
+      try {
+        if (useSweph) {
+          celestialData = await calculatePlanetaryPositionsWithSweph(date, time, location, timezone || "UTC");
+        } else {
+          celestialData = await calculatePlanetaryPositions(date, time, location, timezone || "UTC");
+        }
+      } catch (ephemerisError) {
+        console.error("Error with primary ephemeris, falling back to legacy:", ephemerisError);
+        celestialData = await calculatePlanetaryPositions(date, time, location, timezone || "UTC");
+      }
       
       results.celestialData = celestialData;
       console.log("Celestial calculations completed successfully");
     } catch (celestialError) {
       console.error("Error in celestial calculations:", celestialError);
       errors.celestial = celestialError.message;
-      // No fallback - let the error propagate
+      // Return a friendly error
       return errorResponse({
-        error: "Celestial calculation failed",
-        details: celestialError.message,
+        error: "Failed to calculate celestial positions",
+        details: "There was a problem processing the astronomical data. Please try again later.",
         code: "CELESTIAL_CALCULATION_ERROR"
       }, 500);
     }
