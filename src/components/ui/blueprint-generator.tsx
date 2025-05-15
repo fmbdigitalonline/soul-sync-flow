@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+
+import React, { useState, useEffect, useRef } from "react";
 import { BlueprintData, blueprintService } from "@/services/blueprint-service";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -29,6 +30,8 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
   >("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { toast } = useToast();
+  const retryCountRef = useRef(0);
+  const maxRetries = 2; // Limit retries to prevent excessive API calls
 
   useEffect(() => {
     const generateBlueprint = async () => {
@@ -111,6 +114,9 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
           setProgress(100);
           setStatus("complete");
           
+          // Reset retry count on success
+          retryCountRef.current = 0;
+          
           // Pass the blueprint to parent component
           onComplete(blueprint);
         } else {
@@ -140,8 +146,23 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
     generateBlueprint();
   }, [formData, onComplete, toast]);
 
-  // Try again handler
+  // Try again handler with retry limits
   const handleTryAgain = () => {
+    // Check if we've exceeded the maximum retry attempts
+    if (retryCountRef.current >= maxRetries) {
+      setErrorMessage(`Maximum retry attempts (${maxRetries}) reached. Please go back and check your information.`);
+      toast({
+        title: "Too Many Attempts",
+        description: `Failed after ${maxRetries} attempts. Please check your birth information and try again later.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Increment retry counter
+    retryCountRef.current += 1;
+    console.log(`Retry attempt ${retryCountRef.current} of ${maxRetries}`);
+    
     setStatus("idle");
     setErrorMessage(null);
     setProgress(0);
@@ -209,6 +230,8 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
           
           setProgress(100);
           setStatus("complete");
+          // Reset retry count on success
+          retryCountRef.current = 0;
           onComplete(blueprint);
         } else {
           setErrorMessage("No blueprint data generated on retry");
@@ -303,13 +326,19 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
           </div>
           <p className="text-sm">{errorMessage || "An unknown error occurred"}</p>
           <div>
-            <button
-              onClick={handleTryAgain}
-              className="bg-soul-purple hover:bg-soul-purple/80 text-white px-4 py-2 rounded-md flex items-center mx-auto"
-            >
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Try Again
-            </button>
+            {retryCountRef.current < maxRetries ? (
+              <button
+                onClick={handleTryAgain}
+                className="bg-soul-purple hover:bg-soul-purple/80 text-white px-4 py-2 rounded-md flex items-center mx-auto"
+              >
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Try Again ({retryCountRef.current + 1}/{maxRetries + 1})
+              </button>
+            ) : (
+              <div className="text-amber-500 text-sm">
+                Maximum retry attempts reached. Please check your information and try again later.
+              </div>
+            )}
           </div>
         </div>
       )}
