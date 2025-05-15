@@ -18,9 +18,10 @@ export const useOnboarding3D = () => {
   // Animation controls - replacing useAnimation with useAnimate
   const [sceneRef, animate] = useAnimate();
   
-  // Steps mapping
+  // Steps mapping - adding "Full Name" step
   const steps = [
     "Welcome",
+    "Full Name", // Added step for name
     "Birth Date",
     "Birth Time",
     "Birth Location",
@@ -143,6 +144,7 @@ export const useOnboarding3D = () => {
       let stepKey = steps[currentStep].toLowerCase().replace(/\s+/g, '');
       const messageKeyMap: Record<string, string> = {
         'welcome': 'welcome',
+        'fullname': 'welcome', // Map full name to welcome messages
         'birthdate': 'birthDate',
         'birthtime': 'birthTime',
         'birthlocation': 'birthLocation',
@@ -195,6 +197,7 @@ export const useOnboarding3D = () => {
     let stepKey = steps[currentStep].toLowerCase().replace(/\s+/g, '');
     const messageKeyMap: Record<string, string> = {
       'welcome': 'welcome',
+      'fullname': 'welcome', // Map full name to welcome messages
       'birthdate': 'birthDate',
       'birthtime': 'birthTime',
       'birthlocation': 'birthLocation',
@@ -238,6 +241,7 @@ export const useOnboarding3D = () => {
     // Map the step keys to message keys
     const messageKeyMap: Record<string, string> = {
       'welcome': 'welcome',
+      'fullname': 'welcome', // Map full name to welcome messages
       'birthdate': 'birthDate',
       'birthtime': 'birthTime',
       'birthlocation': 'birthLocation',

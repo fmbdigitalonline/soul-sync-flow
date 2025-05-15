@@ -8,6 +8,8 @@ import { BlueprintGenerator } from "@/components/blueprint/BlueprintGenerationFl
 import { zodiac } from "@/components/ui/zodiac";
 import { MBTISelector } from "@/components/blueprint/MBTISelector";
 import { BirthDataForm } from "@/components/blueprint/BirthDataForm";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { BlueprintData } from "@/services/blueprint-service"; 
 import { useToast } from "@/hooks/use-toast";
 import { useOnboarding3D } from "@/hooks/use-onboarding-3d";
@@ -123,7 +125,48 @@ export default function Onboarding() {
             </div>
           </div>
         );
-      case 1: // Birth Date
+      case 1: // Full Name
+        return (
+          <div className="space-y-4 max-w-md mx-auto">
+            <h2 className="text-xl font-display font-bold text-center mb-2">What's your name?</h2>
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Full Name</Label>
+                <Input
+                  id="fullName"
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => updateFormData({ name: e.target.value })}
+                  placeholder="Enter your full name"
+                  className="bg-white/5 border-white/10"
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="preferredName">Preferred Name (optional)</Label>
+                <Input
+                  id="preferredName"
+                  type="text"
+                  value={formData.preferredName}
+                  onChange={(e) => updateFormData({ preferredName: e.target.value })}
+                  placeholder="How would you like to be addressed?"
+                  className="bg-white/5 border-white/10"
+                />
+              </div>
+            </div>
+            <div className="flex justify-between pt-4">
+              <Button variant="ghost" onClick={goToPrevStep}>Back</Button>
+              <Button 
+                disabled={!formData.name}
+                onClick={goToNextStep}
+              >
+                Continue
+              </Button>
+            </div>
+          </div>
+        );
+      case 2: // Birth Date
         return (
           <div className="space-y-4 max-w-md mx-auto">
             <h2 className="text-xl font-display font-bold text-center mb-2">When were you born?</h2>
@@ -153,7 +196,7 @@ export default function Onboarding() {
             </div>
           </div>
         );
-      case 2: // Birth Time
+      case 3: // Birth Time
         return (
           <div className="space-y-4 max-w-md mx-auto">
             <h2 className="text-xl font-display font-bold text-center mb-2">What time were you born?</h2>
@@ -182,7 +225,7 @@ export default function Onboarding() {
             </div>
           </div>
         );
-      case 3: // Birth Location
+      case 4: // Birth Location
         return (
           <div className="space-y-4 max-w-md mx-auto">
             <h2 className="text-xl font-display font-bold text-center mb-2">Where were you born?</h2>
@@ -211,7 +254,7 @@ export default function Onboarding() {
             </div>
           </div>
         );
-      case 4: // Personality
+      case 5: // Personality
         return (
           <div className="space-y-4 max-w-md mx-auto">
             <h2 className="text-xl font-display font-bold text-center mb-2">What's your personality type?</h2>
@@ -227,7 +270,7 @@ export default function Onboarding() {
             </div>
           </div>
         );
-      case 5: // Generating Blueprint
+      case 6: // Generating Blueprint
         return (
           <div className="space-y-6 text-center max-w-md mx-auto">
             <h2 className="text-xl font-display font-bold">Generating Your Soul Blueprint</h2>
@@ -263,7 +306,7 @@ export default function Onboarding() {
         speaking={speaking}
         stage={stage}
         interactionStage={interactionStage}
-        isCalculating={currentStep === 5}
+        isCalculating={currentStep === 6}
       >
         {/* Progress indicator (simplified) */}
         <div className="absolute top-4 left-0 right-0 px-4">

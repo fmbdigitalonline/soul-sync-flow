@@ -32,8 +32,8 @@ export const SoulOrbProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const messages = {
     welcome: [
       "Welcome to SoulSync! I'm here to help you create your personal soul blueprint.",
-      "Let's start your journey of self-discovery together.",
-      "I'll need some information from you to generate your unique blueprint."
+      "Let's start your journey of self-discovery together. First, I'll need to know your name.",
+      "Your name carries energy and vibration that influences your cosmic blueprint."
     ],
     birthDate: [
       "Your birth date contains important cosmic information.",
