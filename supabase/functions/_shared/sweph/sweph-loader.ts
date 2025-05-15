@@ -1,4 +1,3 @@
-
 import * as path from "https://deno.land/std@0.168.0/path/mod.ts";
 import initializeWasm from "./astro.js";  // Default import is now the init function
 
@@ -6,8 +5,12 @@ import initializeWasm from "./astro.js";  // Default import is now the init func
 let wasmModuleCache: any = null;
 
 // Define a constant for the CDN URL to ensure consistency
-// Using the correct tag (without 'v' prefix) and js/ folder path to get the Emscripten build (~632KB)
-const CDN_URL = "https://cdn.jsdelivr.net/gh/u-blusky/sweph-wasm@0.11.3/js/astro.wasm";
+const CDN_URL =
+  "https://raw.githubusercontent.com/u-blusky/sweph-wasm/v0.11.3/js/astro.wasm";
+
+// (optional) keep jsDelivr as a second fallback:
+const CDN_FALLBACK =
+  "https://cdn.jsdelivr.net/gh/u-blusky/sweph-wasm/js/astro.wasm";
 
 /**
  * Initialize the Swiss Ephemeris WASM module
@@ -30,11 +33,9 @@ export async function initializeSwephModule() {
     
     try {
       wasmModule = await initializeWasm(CDN_URL);
-      console.log(`Successfully loaded WASM module from CDN`);
-    } catch (error) {
-      console.error(`Failed to load WASM from CDN: ${error.message}`);
-      // We're removing the unpkg fallback as it can never work
-      throw error;
+    } catch (_) {
+      console.warn("raw GH failed, trying jsDelivr");
+      wasmModule = await initializeWasm(CDN_FALLBACK);
     }
     
     const loadEndTime = performance.now();
