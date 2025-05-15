@@ -5,6 +5,9 @@ import initializeWasm from "./astro.js";  // Default import is now the init func
 // Cache for the initialized WASM module
 let wasmModuleCache: any = null;
 
+// Define a constant for the CDN URL to ensure consistency
+const CDN_URL = "https://cdn.jsdelivr.net/gh/u-blusky/sweph-wasm@0.11.3/js/astro.wasm";
+
 /**
  * Initialize the Swiss Ephemeris WASM module
  */
@@ -31,7 +34,7 @@ export async function initializeSwephModule() {
       
       // Initialize from bytes directly
       wasmModule = await initializeWasm(wasmBytes);
-      console.log(`[SwissEph] loaded ${wasmUrl.pathname}`);
+      console.log(`[SwissEph] loaded ${wasmUrl.pathname} (${Math.round(wasmBytes.byteLength / 1024)} kB)`);
     } catch (fsError) {
       console.warn(`Failed to load WASM from local filesystem: ${fsError.message}`);
       
@@ -44,10 +47,9 @@ export async function initializeSwephModule() {
       } catch (storageError) {
         console.warn(`Failed to load WASM from Supabase Storage: ${storageError.message}`);
         
-        // Final fallback to GitHub as last resort
-        const githubUrl = "https://raw.githubusercontent.com/u-blusky/sweph-wasm/main/js/astro.wasm";
-        console.log(`Falling back to GitHub URL: ${githubUrl}`);
-        wasmModule = await initializeWasm(githubUrl);
+        // Final fallback to GitHub CDN (using the Emscripten build path)
+        console.log(`Falling back to GitHub URL: ${CDN_URL}`);
+        wasmModule = await initializeWasm(CDN_URL);
       }
     }
     

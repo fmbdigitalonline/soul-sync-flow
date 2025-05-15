@@ -2,6 +2,9 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import initializeWasm from './sweph/astro.js';  // Import from local path
 
+// Define a constant for the CDN URL to ensure consistency
+const CDN_URL = "https://cdn.jsdelivr.net/gh/u-blusky/sweph-wasm@0.11.3/js/astro.wasm";
+
 /**
  * Calculate planetary positions using Swiss Ephemeris
  */
@@ -35,10 +38,9 @@ export async function calculatePlanetaryPositionsWithSweph(date, time, location,
       } catch (storageError) {
         console.warn(`Failed to load WASM from Supabase Storage: ${storageError.message}`);
         
-        // Final fallback to GitHub as last resort
-        const githubUrl = "https://raw.githubusercontent.com/u-blusky/sweph-wasm/main/js/astro.wasm";
-        console.log(`Falling back to GitHub URL: ${githubUrl}`);
-        sweph = await initializeWasm(githubUrl);
+        // Final fallback to GitHub as last resort (using the Emscripten build)
+        console.log(`Falling back to GitHub URL: ${CDN_URL}`);
+        sweph = await initializeWasm(CDN_URL);
       }
     }
     
