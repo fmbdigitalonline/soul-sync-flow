@@ -6,7 +6,7 @@ echo "Starting Swiss Ephemeris verification tests..."
 
 # Check if astro.wasm file exists
 echo -e "\nChecking if WASM file exists..."
-WASM_PATH="../_shared/sweph/astro.wasm"
+WASM_PATH="./sweph/astro.wasm"
 if [ -f "$WASM_PATH" ]; then
   echo "✓ WASM file found at $WASM_PATH ($(ls -lh $WASM_PATH | awk '{print $5}'))"
   echo "  Full path: $(realpath $WASM_PATH)"
@@ -56,14 +56,21 @@ curl -s -X POST http://localhost:54321/functions/v1/test-verification | jq .
 # Run a direct test of the Swiss Ephemeris loading
 echo -e "\n3. Testing direct astro.wasm loading..."
 cat <<EOF > /tmp/test-wasm-loading.ts
-import { initializeSwephModule } from "../_shared/sweph/sweph-loader.ts";
+import initializeWasm from "../_shared/sweph/astro.js";
 
 console.log("Current directory:", Deno.cwd());
 console.log("Import URL:", import.meta.url);
 
 try {
   console.log("Attempting to load Swiss Ephemeris WASM module...");
-  const sweph = await initializeSwephModule();
+  
+  const wasmUrl = new URL("./sweph/astro.wasm", import.meta.url);
+  console.log("WASM URL:", wasmUrl.href);
+  
+  const wasmBytes = await Deno.readFile(wasmUrl);
+  console.log(`Successfully read ${wasmBytes.byteLength} bytes from WASM file`);
+  
+  const sweph = await initializeWasm(wasmBytes);
   console.log("Success! Module loaded and returned:", !!sweph);
   
   // Test basic calculation

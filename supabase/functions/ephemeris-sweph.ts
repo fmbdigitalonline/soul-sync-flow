@@ -1,3 +1,4 @@
+
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { initializeSwephModule } from './_shared/sweph/sweph-loader.ts';
 
@@ -129,9 +130,10 @@ async function getLocationCoordinates(location: string): Promise<{ latitude: num
       const encodedLocation = encodeURIComponent(location);
       const url = `https://nominatim.openstreetmap.org/search?q=${encodedLocation}&format=json`;
       
+      // Add proper User-Agent for rate-limiting compliance
       const response = await fetch(url, {
         headers: {
-          "User-Agent": "SoulSync Blueprint Calculator/1.0"
+          "User-Agent": "SoulSync/1.0 (contact@soulsync.com)"
         }
       });
       

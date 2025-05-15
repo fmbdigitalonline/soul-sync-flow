@@ -1,5 +1,9 @@
+
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { initializeSwephModule } from '../_shared/sweph/sweph-loader.ts';
+import initializeWasm from '../_shared/sweph/astro.js';
+
+// Create a directory structure for the WASM file
+// blueprint-calculator/sweph/astro.wasm
 
 /**
  * Calculate planetary positions using Swiss Ephemeris
@@ -8,8 +12,27 @@ export async function calculatePlanetaryPositionsWithSweph(date, time, location,
   try {
     console.log(`SwEph: Calculating positions for ${date} ${time} at ${location} in timezone ${timezone}`);
     
-    // Initialize the WASM module using our improved loader
-    const sweph = await initializeSwephModule();
+    // Initialize the WASM module
+    const wasmUrl = new URL("./sweph/astro.wasm", import.meta.url);
+    console.log(`[path] ${wasmUrl.href}`);
+    
+    let sweph;
+    try {
+      // Deno.readFile accepts a URL object directly
+      const wasmBytes = await Deno.readFile(wasmUrl);
+      console.log(`Successfully read ${wasmBytes.byteLength} bytes from WASM file`);
+      
+      // Initialize from bytes directly
+      sweph = await initializeWasm(wasmBytes);
+      console.log(`[SwissEph] loaded ${wasmUrl.pathname} (${Math.round(wasmBytes.byteLength / 1024)} kB)`);
+    } catch (fsError) {
+      console.warn(`Failed to load WASM from local filesystem: ${fsError.message}`);
+      
+      // Fallback to using the CDN version if local file is not accessible
+      const cdnUrl = "https://cdn.jsdelivr.net/gh/u-blusky/sweph-wasm@0.11.3/astro.wasm";
+      console.log(`Falling back to CDN URL: ${cdnUrl}`);
+      sweph = await initializeWasm(cdnUrl);
+    }
     
     // Parse the date
     const [year, month, day] = date.split('-').map(Number);
@@ -129,9 +152,10 @@ async function getLocationCoordinates(location: string): Promise<{ latitude: num
       const encodedLocation = encodeURIComponent(location);
       const url = `https://nominatim.openstreetmap.org/search?q=${encodedLocation}&format=json`;
       
+      // Add proper User-Agent for rate-limiting compliance
       const response = await fetch(url, {
         headers: {
-          "User-Agent": "SoulSync Blueprint Calculator/1.0"
+          "User-Agent": "SoulSync/1.0 (contact@soulsync.com)"
         }
       });
       

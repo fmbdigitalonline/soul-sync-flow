@@ -1,5 +1,6 @@
 
 import * as path from "https://deno.land/std@0.168.0/path/mod.ts";
+import initializeWasm from "./astro.js";  // Default import is now the init function
 
 // Cache for the initialized WASM module
 let wasmModuleCache: any = null;
@@ -16,9 +17,6 @@ export async function initializeSwephModule() {
 
     console.log("Initializing Swiss Ephemeris WASM module");
     
-    // Load astro.js module
-    const astroModule = await import('./astro.js');
-    
     // Build URL exactly once - the base is this file's location
     const wasmUrl = new URL('./astro.wasm', import.meta.url);
     console.log(`Loading WASM from URL: ${wasmUrl}`);
@@ -32,15 +30,15 @@ export async function initializeSwephModule() {
       console.log(`Successfully read ${wasmBytes.byteLength} bytes from WASM file`);
       
       // Initialize from bytes directly
-      wasmModule = await astroModule.initializeWasm(wasmBytes);
+      wasmModule = await initializeWasm(wasmBytes);
       console.log(`[SwissEph] loaded ${wasmUrl.pathname}`);
     } catch (fsError) {
       console.warn(`Failed to load WASM from local filesystem: ${fsError.message}`);
       
       // Fallback to using the CDN version if local file is not accessible
-      const cdnUrl = "https://cdn.jsdelivr.net/gh/u-blusky/sweph-wasm@0.11.3/js/astro.wasm";
+      const cdnUrl = "https://cdn.jsdelivr.net/gh/u-blusky/sweph-wasm@0.11.3/astro.wasm";
       console.log(`Falling back to CDN URL: ${cdnUrl}`);
-      wasmModule = await astroModule.initializeWasm(cdnUrl);
+      wasmModule = await initializeWasm(cdnUrl);
     }
     
     const loadEndTime = performance.now();

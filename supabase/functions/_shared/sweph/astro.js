@@ -1,3 +1,4 @@
+
 // Swiss Ephemeris WASM wrapper for JavaScript
 // This file is adapted from the sweph-wasm project
 
@@ -202,8 +203,8 @@ const initializeWasm = async (wasmBytesOrUrl) => {
 };
 
 // Export the main object and initialization function
-export default ephemeris;
-export { initializeWasm };
+export default initializeWasm;  // Changed to default export the init function
+export const swe = ephemeris;   // Named export for the ephemeris object
 
 // Export individual components for direct use
 export const JulDay = ephemeris.JulDay;
