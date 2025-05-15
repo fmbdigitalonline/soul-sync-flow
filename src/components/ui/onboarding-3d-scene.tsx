@@ -6,9 +6,9 @@ import { SoulOrb3D } from './soul-orb-3d';
 
 interface Onboarding3DSceneProps {
   speaking?: boolean;
-  stage?: "welcome" | "collecting" | "generating" | "complete";
+  stage?: "welcome" | "collecting" | "generating" | "complete" | "error";  // Added "error" stage
   interactionStage?: "listening" | "input";
-  isCalculating?: boolean; // New prop for calculation state
+  isCalculating?: boolean;
   children?: React.ReactNode;
 }
 
@@ -16,7 +16,7 @@ const Onboarding3DScene: React.FC<Onboarding3DSceneProps> = ({
   speaking = false,
   stage = "welcome",
   interactionStage = "listening",
-  isCalculating = false, // New prop with default value
+  isCalculating = false,
   children 
 }) => {
   // Set the orb position based on interaction stage

@@ -17,9 +17,13 @@ interface BirthDataFormProps {
     birthLocation: string;
     timezone: string;
   }) => void;
+  // Add the new prop types
+  hideTimeLocation?: boolean;
+  hideDateLocation?: boolean;
+  hideDateTime?: boolean;
 }
 
-export const BirthDataForm: React.FC<BirthDataFormProps> = ({ birthData, onChange }) => {
+export const BirthDataForm: React.FC<BirthDataFormProps> = ({ birthData, onChange, hideTimeLocation, hideDateLocation, hideDateTime }) => {
   const [location, setLocation] = useState(birthData.birthLocation);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
@@ -100,64 +104,70 @@ export const BirthDataForm: React.FC<BirthDataFormProps> = ({ birthData, onChang
 
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="birthDate">Birth Date</Label>
-        <Input
-          id="birthDate"
-          type="date"
-          value={birthData.birthDate}
-          onChange={(e) => updateData('birthDate', formatDate(e.target.value))}
-          required
-        />
-      </div>
+      {!hideDateLocation && !hideDateTime && (
+        <div className="space-y-2">
+          <Label htmlFor="birthDate">Birth Date</Label>
+          <Input
+            id="birthDate"
+            type="date"
+            value={birthData.birthDate}
+            onChange={(e) => updateData('birthDate', formatDate(e.target.value))}
+            required
+          />
+        </div>
+      )}
       
-      <div className="space-y-2">
-        <Label htmlFor="birthTime">Birth Time (as precise as possible)</Label>
-        <Input
-          id="birthTime"
-          type="time"
-          value={birthData.birthTime}
-          onChange={(e) => updateData('birthTime', e.target.value)}
-          required
-        />
-        <p className="text-xs text-muted-foreground">
-          If you don't know your exact birth time, please use 12:00
-        </p>
-      </div>
+      {!hideTimeLocation && !hideDateTime && (
+        <div className="space-y-2">
+          <Label htmlFor="birthTime">Birth Time (as precise as possible)</Label>
+          <Input
+            id="birthTime"
+            type="time"
+            value={birthData.birthTime}
+            onChange={(e) => updateData('birthTime', e.target.value)}
+            required
+          />
+          <p className="text-xs text-muted-foreground">
+            If you don't know your exact birth time, please use 12:00
+          </p>
+        </div>
+      )}
       
-      <div className="space-y-2 relative">
-        <Label htmlFor="birthLocation">Birth Location (City, Country)</Label>
-        <Input
-          id="birthLocation"
-          type="text"
-          value={location}
-          onChange={handleLocationChange}
-          placeholder="e.g. New York, USA"
-          required
-        />
-        
-        {isLoadingSuggestions && (
-          <div className="absolute right-3 top-8">
-            <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full"></div>
-          </div>
-        )}
-        
-        {suggestions.length > 0 && (
-          <div className="absolute z-10 mt-1 w-full bg-card border border-border rounded-md shadow-lg max-h-60 overflow-auto">
-            <ul className="py-1">
-              {suggestions.map((suggestion, index) => (
-                <li
-                  key={index}
-                  className="px-4 py-2 hover:bg-accent cursor-pointer"
-                  onClick={() => selectSuggestion(suggestion)}
-                >
-                  {suggestion}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
+      {!hideTimeLocation && !hideDateLocation && (
+        <div className="space-y-2 relative">
+          <Label htmlFor="birthLocation">Birth Location (City, Country)</Label>
+          <Input
+            id="birthLocation"
+            type="text"
+            value={location}
+            onChange={handleLocationChange}
+            placeholder="e.g. New York, USA"
+            required
+          />
+          
+          {isLoadingSuggestions && (
+            <div className="absolute right-3 top-8">
+              <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full"></div>
+            </div>
+          )}
+          
+          {suggestions.length > 0 && (
+            <div className="absolute z-10 mt-1 w-full bg-card border border-border rounded-md shadow-lg max-h-60 overflow-auto">
+              <ul className="py-1">
+                {suggestions.map((suggestion, index) => (
+                  <li
+                    key={index}
+                    className="px-4 py-2 hover:bg-accent cursor-pointer"
+                    onClick={() => selectSuggestion(suggestion)}
+                  >
+                    {suggestion}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
       
       <div className="space-y-2">
         <Label htmlFor="timezone">Timezone</Label>
