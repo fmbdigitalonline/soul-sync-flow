@@ -60,10 +60,13 @@ const Onboarding = () => {
   // Handle blueprint generation completion
   const handleBlueprintComplete = () => {
     // Prevent multiple executions
-    if (navigationTriggeredRef.current) return;
-    navigationTriggeredRef.current = true;
+    if (navigationTriggeredRef.current || blueprintGenerated) {
+      console.log("Navigation already triggered, ignoring duplicate completion");
+      return;
+    }
     
-    // Set flag to prevent looping
+    // Set flags to prevent looping
+    navigationTriggeredRef.current = true;
     setBlueprintGenerated(true);
     
     toast({
@@ -77,6 +80,7 @@ const Onboarding = () => {
     // Navigate to blueprint page after transition
     setTimeout(() => {
       console.log("Navigating to blueprint page after blueprint generation");
+      if (!navigationTriggeredRef.current) return; // Double-check flag before navigating
       navigate("/blueprint");
     }, 2000);
   };
@@ -109,7 +113,11 @@ const Onboarding = () => {
     }
   }, [blueprintGenerated, navigate]);
 
+  // Prevent re-renders on the generating step
   const renderStepContent = () => {
+    // Create a stable instance of BlueprintGenerator on the final step
+    const generatingStep = steps.length - 1;
+    
     switch (currentStep) {
       case 0:
         return (
@@ -244,10 +252,12 @@ const Onboarding = () => {
           </div>
         );
       case 5:
+        // The Generating step - only render BlueprintGenerator once
         return (
           <div className="space-y-6 text-center">
             <h2 className="text-2xl font-display font-bold">Generating Your Soul Blueprint</h2>
             <BlueprintGenerator 
+              key={`blueprint-generator-${blueprintGenerated ? 'complete' : 'active'}`}
               formData={formData}
               onComplete={handleBlueprintComplete}
               className="mt-4"

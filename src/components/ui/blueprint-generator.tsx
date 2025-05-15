@@ -32,9 +32,16 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
   const { toast } = useToast();
   const retryCountRef = useRef(0);
   const maxRetries = 2; // Limit retries to prevent excessive API calls
+  const hasStartedGenerationRef = useRef(false);
 
   useEffect(() => {
     const generateBlueprint = async () => {
+      // Prevent multiple generation attempts in a single component lifecycle
+      if (hasStartedGenerationRef.current) {
+        console.log("Blueprint generation already started, ignoring duplicate effect");
+        return;
+      }
+
       if (
         !formData.name ||
         !formData.birthDate ||
@@ -47,6 +54,7 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
       }
 
       try {
+        hasStartedGenerationRef.current = true;
         setStatus("generating");
         setProgress(10);
 
@@ -158,6 +166,9 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
       });
       return;
     }
+    
+    // Reset the generation flag to allow another attempt
+    hasStartedGenerationRef.current = false;
     
     // Increment retry counter
     retryCountRef.current += 1;
