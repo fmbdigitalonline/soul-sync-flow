@@ -3,23 +3,34 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import * as Astronomy from "npm:astronomy-engine@2";
 
 /**
- * Convert Julian Day (JD) to AstroTime object
- * @param jd Julian Day number
+ * Convert whatever time input we receive to an AstroTime object
+ * @param input Julian Day number, Date object, or AstroTime object
  * @returns AstroTime object
  */
-function jdToAstroTime(jd) {
-  return new Astronomy.AstroTime(jd - 2451545.0); // deltaTT is built-in
+function toAstroTime(input: number | Date | Astronomy.AstroTime): Astronomy.AstroTime {
+  if (input instanceof Astronomy.AstroTime) return input;
+
+  // Blueprint code passes a Julian Day number (TT)
+  if (typeof input === "number") {
+    // JD(TT) → Δdays since J2000 (JD 2451545.0)
+    return new Astronomy.AstroTime(input - 2451545.0);
+  }
+
+  // If it's already a JS Date, let Astronomy convert UTC→TT
+  if (input instanceof Date) return Astronomy.MakeTime(input);
+
+  throw new Error("Unsupported time argument: " + typeof input);
 }
 
 /**
- * Calculate ecliptic longitude using Julian Day
+ * Calculate ecliptic longitude using any time format
  * @param body Celestial body name
- * @param jd Julian Day number
+ * @param time Julian Day number, Date object, or AstroTime object
  * @returns Ecliptic longitude in degrees
  */
-function calculateEclipticLongitude(body, jd) {
-  const time = jdToAstroTime(jd);
-  return Astronomy.Ecliptic(body, time).elon;
+function eclLon(body: string, time: number | Date | Astronomy.AstroTime): number {
+  const astroTime = toAstroTime(time);
+  return Astronomy.Ecliptic(body, astroTime).elon;
 }
 
 /**
@@ -39,13 +50,17 @@ export async function calculatePlanetaryPositionsWithAstro(date, time, location,
   console.log(`AstroEngine: Created date object: ${dateObj.toISOString()}`);
   
   // Convert to AstroTime for highest precision
-  const astroTime = new Astronomy.AstroTime(dateObj);
+  const astroTime = toAstroTime(dateObj);
   console.log(`AstroEngine: Converted to AstroTime: ${astroTime.toString()}`);
   
-  // Sanity check outputs
-  const testSunLon = Astronomy.Ecliptic("Sun", astroTime).elon;
-  const testMoonLon = Astronomy.Ecliptic("Moon", astroTime).elon;
+  // Sanity check outputs - using our eclLon helper to prevent errors
+  const testSunLon = eclLon("Sun", astroTime);
+  const testMoonLon = eclLon("Moon", astroTime);
   console.log(`Sanity check: Sun longitude: ${testSunLon}°, Moon longitude: ${testMoonLon}°`);
+  
+  // Additional sanity check with Julian Day
+  const testJd = 2460080.5; // 2025-05-22 noon TT
+  console.log(`JD Sanity check: Sun: ${eclLon("Sun", testJd)}°, Moon: ${eclLon("Moon", testJd)}°`);
   
   // Get coordinates for the location
   const coords = await getLocationCoordinates(location);
@@ -76,7 +91,10 @@ export async function calculatePlanetaryPositionsWithAstro(date, time, location,
   const positions = {};
   
   for (const body of bodies) {
-    // Calculate ecliptic coordinates (longitude and latitude)
+    // Calculate ecliptic coordinates (longitude and latitude) using our helper
+    const eclipticLongitude = eclLon(body.name, astroTime);
+    
+    // Calculate the full ecliptic coordinates properly
     const ecliptic = Astronomy.Ecliptic(body.name, astroTime);
     
     // Calculate distance (for planets only, not Sun or Moon)
@@ -91,7 +109,7 @@ export async function calculatePlanetaryPositionsWithAstro(date, time, location,
     
     // Store the position data
     positions[body.id] = {
-      longitude: ecliptic.elon,
+      longitude: eclipticLongitude,
       latitude: ecliptic.elat,
       distance: distance,
       rightAscension: equatorial.ra,
@@ -100,7 +118,7 @@ export async function calculatePlanetaryPositionsWithAstro(date, time, location,
       latitudeSpeed: 0
     };
     
-    console.log(`AstroEngine: ${body.id} position: lon ${ecliptic.elon.toFixed(6)}°, lat ${ecliptic.elat.toFixed(6)}°`);
+    console.log(`AstroEngine: ${body.id} position: lon ${eclipticLongitude.toFixed(6)}°, lat ${ecliptic.elat.toFixed(6)}°`);
   }
   
   // Calculate lunar nodes
@@ -232,15 +250,21 @@ async function getLocationCoordinates(location: string): Promise<{ latitude: num
   }
 }
 
-// Export helper function for other modules to use
-export function convertJdToAstroTime(jd) {
-  return jdToAstroTime(jd);
+/**
+ * Export helper function for other modules to use
+ * @param jd Julian Day number
+ * @returns AstroTime object
+ */
+export function convertJdToAstroTime(jd: number): Astronomy.AstroTime {
+  return toAstroTime(jd);
 }
 
-// Export helper function for calculating ecliptic longitude by Julian Day
-export function eclipticLongitudeByJd(body, jd) {
-  // Make sure we convert the Julian Day to an AstroTime object
-  const time = jdToAstroTime(jd);
-  // Then use this AstroTime object with Astronomy.Ecliptic
-  return Astronomy.Ecliptic(body, time).elon;
+/**
+ * Export helper function for calculating ecliptic longitude by Julian Day
+ * @param body Celestial body name
+ * @param jd Julian Day number
+ * @returns Ecliptic longitude in degrees
+ */
+export function eclipticLongitudeByJd(body: string, jd: number): number {
+  return eclLon(body, jd);
 }

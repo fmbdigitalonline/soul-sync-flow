@@ -35,6 +35,10 @@ serve(async (req) => {
     const moonLonByJd = eclipticLongitudeByJd("Moon", testJd);
     console.log(`Sanity test with Julian Day (${testJd}): Sun lon: ${sunLonByJd}°, Moon lon: ${moonLonByJd}°`);
     
+    // Additional sanity check with different Julian Day
+    const testJd2 = 2460080.5; // 2025-05-22 noon TT
+    console.log(`Additional JD test (${testJd2}): Sun: ${eclipticLongitudeByJd("Sun", testJd2)}°, Moon: ${eclipticLongitudeByJd("Moon", testJd2)}°`);
+    
     // Calculate positions using Astronomy Engine
     const positions = await calculatePlanetaryPositionsWithAstro(
       testDate, testTime, testLocation, testTimezone
@@ -89,6 +93,11 @@ serve(async (req) => {
             sun_longitude: sunLonByJd,
             moon_longitude: moonLonByJd,
             sun_sign: zodiacSigns[Math.floor(sunLonByJd / 30)]
+          },
+          jd_test_2: {
+            jd: testJd2,
+            sun_longitude: eclipticLongitudeByJd("Sun", testJd2),
+            moon_longitude: eclipticLongitudeByJd("Moon", testJd2)
           },
           processing_time_ms: duration,
           engine: "astronomy_engine"
