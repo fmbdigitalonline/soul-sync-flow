@@ -1,3 +1,10 @@
 
-[files]
+[functions]
 include = []
+
+[import_map]
+imports = {}
+
+[env]
+WASM_SOURCE = "full_fallback_chain"
+

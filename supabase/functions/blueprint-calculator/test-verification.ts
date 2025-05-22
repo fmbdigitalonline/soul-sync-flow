@@ -12,31 +12,80 @@ const corsHeaders = {
 // Check if WASM file is accessible
 async function checkWasmFile() {
   try {
-    const wasmUrl = new URL("../_shared/sweph/astro.wasm", import.meta.url);
-    console.log(`Checking WASM file at: ${wasmUrl}`);
-    
+    // First try to access the local file in the same directory
     try {
-      const stat = await Deno.stat(wasmUrl);
+      const localWasmPath = new URL('./sweph/astro.wasm', import.meta.url);
+      console.log(`Checking local WASM file at: ${localWasmPath}`);
+      
+      const stat = await Deno.stat(localWasmPath);
       return {
         exists: true,
         size: stat.size,
-        path: wasmUrl.pathname
+        path: localWasmPath.pathname,
+        source: 'local'
       };
-    } catch (error) {
-      console.warn(`Error accessing WASM file: ${error.message}`);
-      // Try fallback to CDN
-      const response = await fetch("https://cdn.jsdelivr.net/gh/u-blusky/sweph-wasm@0.11.3/js/astro.wasm", { method: 'HEAD' });
-      return {
-        exists: response.ok,
-        size: response.headers.get('content-length') ? parseInt(response.headers.get('content-length')!) : 0,
-        path: 'CDN fallback',
-        cdn_fallback: true
-      };
+    } catch (localError) {
+      console.warn(`Local WASM file not found: ${localError.message}, trying shared folder`);
+      
+      // Try shared folder
+      try {
+        const sharedWasmPath = new URL("../_shared/sweph/astro.wasm", import.meta.url);
+        console.log(`Checking shared WASM file at: ${sharedWasmPath}`);
+        
+        const stat = await Deno.stat(sharedWasmPath);
+        return {
+          exists: true,
+          size: stat.size,
+          path: sharedWasmPath.pathname,
+          source: 'shared'
+        };
+      } catch (sharedError) {
+        console.warn(`Shared WASM file not found: ${sharedError.message}, trying CDN fallbacks`);
+        
+        // Try the first CDN fallback
+        try {
+          const githubResponse = await fetch(
+            "https://raw.githubusercontent.com/u-blusky/sweph-wasm/v0.11.3/js/astro.wasm", 
+            { method: 'HEAD' }
+          );
+          
+          if (githubResponse.ok) {
+            return {
+              exists: true,
+              size: githubResponse.headers.get('content-length') ? parseInt(githubResponse.headers.get('content-length')!) : 0,
+              path: 'GitHub CDN',
+              source: 'github_cdn'
+            };
+          } else {
+            throw new Error(`GitHub CDN returned ${githubResponse.status}`);
+          }
+        } catch (githubError) {
+          console.warn(`GitHub CDN failed: ${githubError.message}, trying jsDelivr`);
+          
+          // Finally try the jsDelivr CDN
+          const jsDelivrResponse = await fetch(
+            "https://cdn.jsdelivr.net/gh/u-blusky/sweph-wasm@0.11.3/js/astro.wasm", 
+            { method: 'HEAD' }
+          );
+          
+          if (jsDelivrResponse.ok) {
+            return {
+              exists: true,
+              size: jsDelivrResponse.headers.get('content-length') ? parseInt(jsDelivrResponse.headers.get('content-length')!) : 0,
+              path: 'jsDelivr CDN',
+              source: 'jsdelivr_cdn'
+            };
+          } else {
+            throw new Error(`jsDelivr CDN returned ${jsDelivrResponse.status}`);
+          }
+        }
+      }
     }
   } catch (error) {
     return {
       exists: false,
-      error: error.message
+      error: error.message,
+      attempted_sources: ['local', 'shared', 'github_cdn', 'jsdelivr_cdn']
     };
   }
 }
@@ -103,6 +152,7 @@ serve(async (req) => {
     let results = [];
     let allPassed = true;
     let wasWarmBootUsed = false;
+    let engineUsed = 'unknown';
 
     // Run each test case
     for (const testCase of testCases) {
@@ -123,6 +173,8 @@ serve(async (req) => {
           testCase.input.location,
           testCase.input.timezone
         );
+        
+        engineUsed = celestialData.source || 'swiss_ephemeris';
 
         // The second time we reuse the warm instance
         if (wasmInitialized) {
@@ -196,7 +248,8 @@ serve(async (req) => {
           failed_tests: results.filter(r => !r.passed).length,
           total_duration_ms: Date.now() - startTime,
           warm_boot_used: wasWarmBootUsed,
-          wasm_initialized: wasmInitialized
+          wasm_initialized: wasmInitialized,
+          engine_used: engineUsed
         },
         test_results: results
       }, null, 2),
