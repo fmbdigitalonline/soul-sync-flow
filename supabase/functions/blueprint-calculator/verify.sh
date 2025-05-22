@@ -1,97 +1,78 @@
 
 #!/bin/bash
-# Script to run ephemeris verification tests
+# Script to verify WASM file loading and test Swiss Ephemeris
 
-echo "Starting Swiss Ephemeris verification tests..."
+echo "=== Swiss Ephemeris WASM Setup Verification ==="
+echo
 
-# Check if astro.wasm file exists
-echo -e "\nChecking if WASM file exists..."
-WASM_PATH="./sweph/astro.wasm"
-if [ -f "$WASM_PATH" ]; then
-  echo "✓ WASM file found at $WASM_PATH ($(ls -lh $WASM_PATH | awk '{print $5}'))"
-  echo "  Full path: $(realpath $WASM_PATH)"
-else
-  echo "✗ WASM file NOT found at $WASM_PATH"
-  echo "Checking alternate locations..."
-  find ../ -name "astro.wasm" | while read file; do
-    echo "  Found at: $file ($(ls -lh $file | awk '{print $5}'))"
-    echo "  Full path: $(realpath $file)"
-  done
+# Check environment variables
+echo "1. Environment Configuration:"
+echo "   WASM_SOURCE: ${WASM_SOURCE:-'not set'}"
+echo "   WASM_BUCKET: ${WASM_BUCKET:-'not set'}"
+echo "   WASM_OBJECT_PATH: ${WASM_OBJECT_PATH:-'not set'}"
+echo "   SUPABASE_PROJECT: ${SUPABASE_PROJECT:-'not set'}"
+
+# Check if astro.wasm file exists locally
+echo
+echo "2. Checking for WASM files:"
+WASM_PATHS=(
+  "./sweph/astro.wasm"
+  "../_shared/sweph/astro.wasm"
+)
+
+for WASM_PATH in "${WASM_PATHS[@]}"; do
+  if [ -f "$WASM_PATH" ]; then
+    SIZE=$(du -h "$WASM_PATH" | cut -f1)
+    echo "   ✅ Found: $WASM_PATH ($SIZE)"
+    echo "      Full path: $(realpath "$WASM_PATH")"
+  else
+    echo "   ❌ Not found: $WASM_PATH"
+  fi
+done
+
+# Check storage URL
+if [ -n "$SUPABASE_PROJECT" ] && [ -n "$WASM_BUCKET" ] && [ -n "$WASM_OBJECT_PATH" ]; then
+  STORAGE_URL="https://${SUPABASE_PROJECT}.supabase.co/storage/v1/object/public/${WASM_BUCKET}/${WASM_OBJECT_PATH}"
+  echo
+  echo "3. Testing Storage URL:"
+  echo "   URL: $STORAGE_URL"
+  
+  # Check if curl is available
+  if command -v curl &> /dev/null; then
+    CURL_RESULT=$(curl -s -I "$STORAGE_URL")
+    HTTP_STATUS=$(echo "$CURL_RESULT" | grep HTTP | awk '{print $2}')
+    
+    if [ "$HTTP_STATUS" == "200" ]; then
+      CONTENT_TYPE=$(echo "$CURL_RESULT" | grep -i "content-type" | awk '{print $2}')
+      CONTENT_LENGTH=$(echo "$CURL_RESULT" | grep -i "content-length" | awk '{print $2}')
+      CONTENT_LENGTH_KB=$((CONTENT_LENGTH / 1024))
+      
+      echo "   ✅ URL accessible: HTTP $HTTP_STATUS"
+      echo "      Content-Type: $CONTENT_TYPE"
+      echo "      Size: $CONTENT_LENGTH_KB KB"
+      
+      if [ $CONTENT_LENGTH_KB -ge 630 ] && [ $CONTENT_LENGTH_KB -le 650 ]; then
+        echo "      ✅ Correct size range for Emscripten build"
+      else
+        echo "      ⚠️ WARNING: Size outside expected range (630-650 KB) - may be wrong build"
+      fi
+    else
+      echo "   ❌ URL not accessible: HTTP $HTTP_STATUS"
+      echo "      This usually means either:"
+      echo "      - The bucket doesn't exist"
+      echo "      - The file doesn't exist in the bucket"
+      echo "      - The bucket isn't public"
+    fi
+  else
+    echo "   ⚠️ Cannot test URL - curl not available"
+  fi
 fi
 
-# Check the .deno configuration
-echo -e "\nChecking .deno configuration..."
-if [ -f ".deno" ]; then
-  echo "✓ .deno file exists:"
-  cat .deno
-else
-  echo "✗ .deno file missing"
-fi
+# Run a test
+echo
+echo "4. Running ephemeris test calculation:"
+DENO_DIR=.deno_dir deno run --allow-net --allow-read --allow-env ./test-verification.ts \
+  | grep -E 'engine_used|all_passed|passed_tests|failed_tests'
 
-# Start the local function server if not already running
-if ! nc -z localhost 54321 >/dev/null 2>&1; then
-  echo -e "\nStarting Supabase functions server..."
-  DENO_DIR=.deno_dir supabase functions serve blueprint-calculator &
-  SERVER_PID=$!
-  sleep 3  # Give server time to start
-else
-  echo -e "\nSupabase functions server already running"
-fi
-
-# Run the basic smoke test with curl
-echo -e "\n1. Running smoke test with curl..."
-curl -s -X POST http://localhost:54321/functions/v1/blueprint-calculator \
-     -H 'Content-Type: application/json' \
-     -d '{"birthData":{"date":"1978-02-12","time":"22:00","location":"Paramaribo, Suriname","fullName":"Nikola Tesla"}}' \
-     | jq '.calculation_metadata.engine,
-           .humanDesign.type,
-           .humanDesign.profile,
-           .chineseZodiac.animal,
-           .numerology.life_path_number'
-
-# Run the more comprehensive verification tests
-echo -e "\n2. Running comprehensive verification tests..."
-curl -s -X POST http://localhost:54321/functions/v1/test-verification | jq .
-
-# Run a direct test of the Swiss Ephemeris loading
-echo -e "\n3. Testing direct astro.wasm loading..."
-cat <<EOF > /tmp/test-wasm-loading.ts
-import initializeWasm from "../_shared/sweph/astro.js";
-
-console.log("Current directory:", Deno.cwd());
-console.log("Import URL:", import.meta.url);
-
-try {
-  console.log("Attempting to load Swiss Ephemeris WASM module...");
-  
-  const wasmUrl = new URL("./sweph/astro.wasm", import.meta.url);
-  console.log("WASM URL:", wasmUrl.href);
-  
-  const wasmBytes = await Deno.readFile(wasmUrl);
-  console.log("Successfully read \${wasmBytes.byteLength} bytes from WASM file");
-  
-  const sweph = await initializeWasm(wasmBytes);
-  console.log("Success! Module loaded and returned:", !!sweph);
-  
-  // Test basic calculation
-  const jd = sweph.swe_julday(2020, 1, 1, 12, sweph.SE_GREG_CAL);
-  console.log("Julian Day calculation test:", jd);
-  
-  Deno.exit(0);
-} catch (error) {
-  console.error("Failed to load WASM module:", error);
-  Deno.exit(1);
-}
-EOF
-
-echo "Running direct WASM loader test..."
-DENO_DIR=.deno_dir deno run --allow-read --allow-net /tmp/test-wasm-loading.ts
-
-# If we started the server, shut it down
-if [ -n "$SERVER_PID" ]; then
-  echo -e "\nStopping Supabase functions server..."
-  kill $SERVER_PID
-  wait $SERVER_PID 2>/dev/null
-fi
-
-echo -e "\nVerification tests complete."
+echo
+echo "Verification complete."

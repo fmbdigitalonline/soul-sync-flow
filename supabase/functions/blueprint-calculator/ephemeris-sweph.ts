@@ -1,3 +1,4 @@
+
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { initializeSwephModule } from '../_shared/sweph/sweph-loader.ts';
 
@@ -8,7 +9,7 @@ export async function calculatePlanetaryPositionsWithSweph(date, time, location,
   try {
     console.log(`SwEph: Calculating positions for ${date} ${time} at ${location} in timezone ${timezone}`);
     
-    // Initialize the WASM module using our improved loader that always uses the Emscripten build
+    // Initialize the WASM module using our improved loader that handles multiple sources
     const sweph = await initializeSwephModule();
     
     // Parse the date

@@ -6,5 +6,6 @@ include = []
 imports = {}
 
 [env]
-WASM_SOURCE = "full_fallback_chain"
-
+WASM_SOURCE = "storage_bucket"
+WASM_BUCKET = "wasm"
+WASM_OBJECT_PATH = "astro.wasm"

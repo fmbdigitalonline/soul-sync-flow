@@ -1,7 +1,6 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { calculatePlanetaryPositionsWithSweph } from "./ephemeris-sweph.ts";
-import * as path from "https://deno.land/std@0.168.0/path/mod.ts";
 
 // CORS headers for browser requests
 const corsHeaders = {
@@ -9,84 +8,47 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Check if WASM file is accessible
-async function checkWasmFile() {
+// Check WASM storage and environment setup
+async function checkEnvironmentSetup() {
+  const results = {
+    wasm_source: Deno.env.get("WASM_SOURCE") || "undefined",
+    project_id: Deno.env.get("SUPABASE_PROJECT") || "undefined",
+    wasm_bucket: Deno.env.get("WASM_BUCKET") || "undefined",
+    wasm_object_path: Deno.env.get("WASM_OBJECT_PATH") || "undefined",
+    storage_url: `https://${Deno.env.get("SUPABASE_PROJECT") || "qxaajirrqrcnmvtowjbg"}.supabase.co/storage/v1/object/public/${Deno.env.get("WASM_BUCKET") || "wasm"}/${Deno.env.get("WASM_OBJECT_PATH") || "astro.wasm"}`,
+  };
+
+  // Test WASM URL accessibility
   try {
-    // First try to access the local file in the same directory
-    try {
-      const localWasmPath = new URL('./sweph/astro.wasm', import.meta.url);
-      console.log(`Checking local WASM file at: ${localWasmPath}`);
+    const wasmUrl = results.storage_url;
+    console.log(`Testing WASM URL: ${wasmUrl}`);
+    
+    const response = await fetch(wasmUrl, { method: 'HEAD' });
+    
+    results["storage_url_accessible"] = response.ok;
+    results["storage_url_status"] = response.status;
+    
+    if (response.ok) {
+      const contentType = response.headers.get('content-type');
+      const contentLength = response.headers.get('content-length');
+      const cacheControl = response.headers.get('cache-control');
       
-      const stat = await Deno.stat(localWasmPath);
-      return {
-        exists: true,
-        size: stat.size,
-        path: localWasmPath.pathname,
-        source: 'local'
-      };
-    } catch (localError) {
-      console.warn(`Local WASM file not found: ${localError.message}, trying shared folder`);
+      results["content_type"] = contentType;
+      results["file_size_bytes"] = contentLength ? parseInt(contentLength) : 0;
+      results["file_size_kb"] = contentLength ? Math.round(parseInt(contentLength) / 1024) : 0;
+      results["cache_control"] = cacheControl || 'not set';
       
-      // Try shared folder
-      try {
-        const sharedWasmPath = new URL("../_shared/sweph/astro.wasm", import.meta.url);
-        console.log(`Checking shared WASM file at: ${sharedWasmPath}`);
-        
-        const stat = await Deno.stat(sharedWasmPath);
-        return {
-          exists: true,
-          size: stat.size,
-          path: sharedWasmPath.pathname,
-          source: 'shared'
-        };
-      } catch (sharedError) {
-        console.warn(`Shared WASM file not found: ${sharedError.message}, trying CDN fallbacks`);
-        
-        // Try the first CDN fallback
-        try {
-          const githubResponse = await fetch(
-            "https://raw.githubusercontent.com/u-blusky/sweph-wasm/v0.11.3/js/astro.wasm", 
-            { method: 'HEAD' }
-          );
-          
-          if (githubResponse.ok) {
-            return {
-              exists: true,
-              size: githubResponse.headers.get('content-length') ? parseInt(githubResponse.headers.get('content-length')!) : 0,
-              path: 'GitHub CDN',
-              source: 'github_cdn'
-            };
-          } else {
-            throw new Error(`GitHub CDN returned ${githubResponse.status}`);
-          }
-        } catch (githubError) {
-          console.warn(`GitHub CDN failed: ${githubError.message}, trying jsDelivr`);
-          
-          // Finally try the jsDelivr CDN
-          const jsDelivrResponse = await fetch(
-            "https://cdn.jsdelivr.net/gh/u-blusky/sweph-wasm@0.11.3/js/astro.wasm", 
-            { method: 'HEAD' }
-          );
-          
-          if (jsDelivrResponse.ok) {
-            return {
-              exists: true,
-              size: jsDelivrResponse.headers.get('content-length') ? parseInt(jsDelivrResponse.headers.get('content-length')!) : 0,
-              path: 'jsDelivr CDN',
-              source: 'jsdelivr_cdn'
-            };
-          } else {
-            throw new Error(`jsDelivr CDN returned ${jsDelivrResponse.status}`);
-          }
-        }
+      // Check if file size is in the expected range for Emscripten build
+      if (contentLength) {
+        const sizeKB = Math.round(parseInt(contentLength) / 1024);
+        results["correct_build"] = sizeKB >= 630 && sizeKB <= 650;
       }
     }
+    
+    return results;
   } catch (error) {
-    return {
-      exists: false,
-      error: error.message,
-      attempted_sources: ['local', 'shared', 'github_cdn', 'jsdelivr_cdn']
-    };
+    results["error"] = error.message;
+    return results;
   }
 }
 
@@ -144,9 +106,9 @@ serve(async (req) => {
   try {
     console.log("Running Swiss Ephemeris verification tests");
     
-    // Check WASM file availability first
-    const wasmStatus = await checkWasmFile();
-    console.log("WASM file status:", wasmStatus);
+    // Check environment setup and WASM accessibility first
+    const envStatus = await checkEnvironmentSetup();
+    console.log("Environment status:", envStatus);
     
     const startTime = Date.now();
     let results = [];
@@ -195,7 +157,8 @@ serve(async (req) => {
           sunSign,
           moonSign,
           ascendant: getZodiacSign(celestialData.ascendant?.longitude || 0),
-          calculationTime: Date.now() - testStart
+          calculationTime: Date.now() - testStart,
+          source: celestialData.source
         };
 
         testResult.actual = actual;
@@ -234,7 +197,7 @@ serve(async (req) => {
         system_info: {
           deno_version: Deno.version,
           runtime: Deno.build,
-          wasm_status: wasmStatus,
+          env_config: envStatus,
           memory_usage: {
             rss: Deno.memoryUsage().rss,
             heapTotal: Deno.memoryUsage().heapTotal,
