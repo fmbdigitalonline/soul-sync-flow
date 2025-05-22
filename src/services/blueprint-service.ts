@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 // Blueprint template type definition
@@ -228,6 +229,7 @@ export const blueprintService = {
           birth_time_local: userData.birth_time_local,
           birth_location: userData.birth_location,
           timezone: userData.timezone || "UTC",
+          personality: mbtiType, // Store the personality type explicitly
         },
         cognition_mbti: {
           type: mbtiType,
@@ -288,7 +290,9 @@ export const blueprintService = {
         },
         timing_overlays: {
           current_transits: [],
-          notes: "Generated using real astronomical calculations"
+          notes: calcData.celestialData?.source === "astronomy_engine" ? 
+            "Generated using Astronomy Engine calculations" : 
+            "Generated using astronomical calculations"
         },
         goal_stack: [],
         task_graph: {},
@@ -301,7 +305,7 @@ export const blueprintService = {
           partial_calculation: calcData.calculation_metadata?.partial || false,
           calculation_errors: calcData.calculation_metadata?.errors,
           calculation_date: calcData.calculation_metadata?.calculated_at || new Date().toISOString(),
-          engine: calcData.calculation_metadata?.engine || "unknown",
+          engine: calcData.calculation_metadata?.engine || "astronomy_engine",
           data_sources: {
             western: calcData.westernProfile ? "calculated" : "unknown",
             chinese: calcData.chineseZodiac ? "calculated" : "unknown",
