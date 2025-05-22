@@ -85,6 +85,9 @@ serve(async (req) => {
       console.error("Error checking local paths:", localError);
     }
     
+    // Determine if we're using the newer or older build
+    const isNewerBuild = contentLength > 900000;
+    
     // Return the diagnostic information
     return new Response(
       JSON.stringify({
@@ -101,7 +104,7 @@ serve(async (req) => {
           size_bytes: contentLength,
           size_kb: Math.round(contentLength/1024),
           error: errorDetails,
-          expected_size_kb: "~632 KB"
+          expected_size_kb: isNewerBuild ? "~1.1 MB (with embedded ephemeris)" : "~632 KB (without embedded ephemeris)"
         },
         local_files: localPaths,
         recommendations: [
@@ -109,7 +112,7 @@ serve(async (req) => {
             "Create a public bucket named 'wasm' in Supabase Storage" : 
             "Storage URL is accessible",
           contentLength < 630000 && wasmStatus === "accessible" ? 
-            "File seems too small. Ensure it's the correct Emscripten build (should be ~632 KB)" : 
+            "File seems too small. Ensure it's the correct Emscripten build (should be ~632 KB or ~1.1 MB)" : 
             null,
           "Set Cache-Control: public, max-age=31536000, immutable on the WASM file"
         ].filter(Boolean)

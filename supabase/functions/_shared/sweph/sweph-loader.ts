@@ -59,9 +59,11 @@ export async function initializeSwephModule() {
         wasmBinary = await response.arrayBuffer();
         const fileSizeKB = Math.round(wasmBinary.byteLength / 1024);
         
-        // Verify file size is roughly what we expect (guard rail)
-        if (fileSizeKB < 630 || fileSizeKB > 650) {
-          console.warn(`WARNING: WASM file size (${fileSizeKB} KB) is outside expected range for Emscripten build (630-650 KB). May be wrong build.`);
+        // UPDATED: Relaxed size validation to accept larger files with embedded ephemeris data
+        // Previous check was rejecting files > 650KB, now accepting up to 1.5MB
+        // This allows newer builds (~1.1MB) with embedded ephemeris data to work
+        if (fileSizeKB < 630 || fileSizeKB > 1500) {
+          console.warn(`WARNING: WASM file size (${fileSizeKB} KB) is outside expected range for Emscripten build (630-1500 KB). May be wrong build.`);
         }
         
         console.log(`Successfully downloaded WASM binary: ${fileSizeKB} KB from Storage`);
