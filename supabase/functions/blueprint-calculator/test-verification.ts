@@ -101,8 +101,8 @@ serve(async (req) => {
         engineUsed = celestialData.source || 'astronomy_engine';
 
         // Extract sun and moon signs
-        const sunLongitude = celestialData.sun?.longitude || 0;
-        const moonLongitude = celestialData.moon?.longitude || 0;
+        const sunLongitude = celestialData.sun.longitude;
+        const moonLongitude = celestialData.moon.longitude;
         
         // Calculate zodiac signs
         const sunSign = getZodiacSign(sunLongitude);
@@ -111,7 +111,7 @@ serve(async (req) => {
         const actual = {
           sunSign,
           moonSign,
-          ascendant: getZodiacSign(celestialData.ascendant?.longitude || 0),
+          ascendant: getZodiacSign(celestialData.ascendant.longitude),
           calculationTime: Date.now() - testStart,
           source: celestialData.source
         };

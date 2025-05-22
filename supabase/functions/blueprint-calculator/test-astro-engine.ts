@@ -34,8 +34,8 @@ serve(async (req) => {
     );
     
     // Extract sun sign and moon sign
-    const sunLongitude = positions.sun?.longitude || 0;
-    const moonLongitude = positions.moon?.longitude || 0;
+    const sunLongitude = positions.sun.longitude;
+    const moonLongitude = positions.moon.longitude;
     const sunSign = Math.floor(sunLongitude / 30);
     const moonSign = Math.floor(moonLongitude / 30);
     
@@ -74,8 +74,8 @@ serve(async (req) => {
             sign_index: moonSign
           },
           ascendant: {
-            longitude: positions.ascendant?.longitude,
-            sign: zodiacSigns[Math.floor((positions.ascendant?.longitude || 0) / 30)]
+            longitude: positions.ascendant.longitude,
+            sign: zodiacSigns[Math.floor(positions.ascendant.longitude / 30)]
           },
           processing_time_ms: duration,
           engine: "astronomy_engine"

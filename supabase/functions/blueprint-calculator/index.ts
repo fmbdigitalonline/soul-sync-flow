@@ -1,3 +1,4 @@
+
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 // Change to import the new Astronomy Engine implementation
 import { calculatePlanetaryPositionsWithAstro } from "./ephemeris-astroengine.ts";
@@ -111,7 +112,7 @@ serve(async (req) => {
       // Return a friendly error
       return errorResponse({
         error: "Failed to calculate celestial positions",
-        details: "There was a problem processing the astronomical data. Please try again later.",
+        details: celestialError.message,
         code: "CELESTIAL_CALCULATION_ERROR"
       }, 500);
     }
@@ -123,6 +124,11 @@ serve(async (req) => {
       } catch (westernError) {
         console.error("Error calculating Western profile:", westernError);
         errors.western = westernError.message;
+        return errorResponse({
+          error: "Western profile calculation failed",
+          details: westernError.message,
+          code: "WESTERN_CALCULATION_ERROR"
+        }, 500);
       }
     } else {
       errors.western = "Unable to calculate Western profile: celestial data not available";
@@ -132,21 +138,31 @@ serve(async (req) => {
       }, 500);
     }
     
-    // These calculations can proceed even if celestial calculations failed
+    // Calculate Chinese zodiac
     try {
-      // We'll use our improved Chinese zodiac calculation with Li Chun pivot
       results.chineseZodiac = calculateChineseZodiac(date);
     } catch (chineseError) {
       console.error("Error calculating Chinese zodiac:", chineseError);
       errors.chinese = chineseError.message;
+      return errorResponse({
+        error: "Chinese zodiac calculation failed",
+        details: chineseError.message,
+        code: "CHINESE_CALCULATION_ERROR"
+      }, 500);
     }
     
+    // Calculate numerology
     try {
       // Extract name from birth data if available, otherwise use fallback calculations
       results.numerology = calculateNumerology(date, fullName || "");
     } catch (numerologyError) {
       console.error("Error calculating numerology:", numerologyError);
       errors.numerology = numerologyError.message;
+      return errorResponse({
+        error: "Numerology calculation failed",
+        details: numerologyError.message,
+        code: "NUMEROLOGY_CALCULATION_ERROR"
+      }, 500);
     }
     
     // Calculate Human Design profile
@@ -155,18 +171,18 @@ serve(async (req) => {
         results.humanDesign = await calculateHumanDesign(date, time, location, timezone, results.celestialData);
       } else {
         errors.humanDesign = "Unable to calculate Human Design: celestial data not available";
+        return errorResponse({
+          error: "Human Design calculation failed: missing celestial data",
+          code: "MISSING_CELESTIAL_DATA_HD"
+        }, 500);
       }
     } catch (hdError) {
       console.error("Error calculating Human Design:", hdError);
       errors.humanDesign = hdError.message;
-    }
-
-    // Check if we have at least celestial data, which is required
-    if (!results.celestialData) {
       return errorResponse({
-        error: "Essential celestial calculations failed",
-        details: errors,
-        code: "ESSENTIAL_CALCULATIONS_FAILED"
+        error: "Human Design calculation failed",
+        details: hdError.message,
+        code: "HUMAN_DESIGN_CALCULATION_ERROR"
       }, 500);
     }
     
