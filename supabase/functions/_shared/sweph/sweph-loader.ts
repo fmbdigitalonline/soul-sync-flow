@@ -14,9 +14,12 @@ const WASM_OBJECT_PATH = Deno.env.get("WASM_OBJECT_PATH") || "astro.wasm";
 // Define the storage bucket URL
 const STORAGE_URL = `https://${SUPABASE_PROJECT}.supabase.co/storage/v1/object/public/${WASM_BUCKET}/${WASM_OBJECT_PATH}`;
 
-// Define fallback CDN URLs for reliability
-const GITHUB_CDN_URL = "https://raw.githubusercontent.com/u-blusky/sweph-wasm/v0.11.3/js/astro.wasm";
-const JSDELIVR_CDN_URL = "https://cdn.jsdelivr.net/gh/u-blusky/sweph-wasm@0.11.3/js/astro.wasm";
+// Add the specific URL provided by the user
+const CUSTOM_STORAGE_URL = "https://qxaajirrqrcnmvtowjbg.supabase.co/storage/v1/object/public/astro-wasm//astro.wasm";
+
+// Updated CDN URLs to use the latest builds from the SwissEph project
+const GITHUB_CDN_URL = "https://cdn.jsdelivr.net/npm/@swisseph/swisseph-wasm@3.0.1/dist/swisseph.wasm";
+const JSDELIVR_CDN_URL = "https://unpkg.com/@swisseph/swisseph-wasm@3.0.1/dist/swisseph.wasm";
 
 /**
  * Initialize the Swiss Ephemeris WASM module
@@ -40,20 +43,14 @@ export async function initializeSwephModule() {
       // Always use the full fallback chain for maximum reliability
       // Try all sources in sequence until one works
       let error;
-      
-      // 1. First try storage bucket (most reliable when configured correctly)
+
+      // 0. First try the custom URL specifically provided by the user
       try {
-        console.log(`Loading WASM from Supabase Storage: ${STORAGE_URL}`);
-        const response = await fetch(STORAGE_URL);
+        console.log(`Loading WASM from custom Storage URL: ${CUSTOM_STORAGE_URL}`);
+        const response = await fetch(CUSTOM_STORAGE_URL);
         
         if (!response.ok) {
-          throw new Error(`Failed to fetch WASM from Storage: HTTP ${response.status} ${response.statusText}`);
-        }
-        
-        // Check content length to ensure we got the right file
-        const contentLength = response.headers.get('content-length');
-        if (contentLength && parseInt(contentLength) < 630000) {
-          console.warn(`WARNING: WASM file size (${Math.round(parseInt(contentLength)/1024)} KB) is smaller than expected for Emscripten build (≈632 KB)`);
+          throw new Error(`Failed to fetch WASM from Custom URL: HTTP ${response.status} ${response.statusText}`);
         }
         
         wasmBinary = await response.arrayBuffer();
@@ -66,15 +63,46 @@ export async function initializeSwephModule() {
           console.warn(`WARNING: WASM file size (${fileSizeKB} KB) is outside expected range for Emscripten build (630-1500 KB). May be wrong build.`);
         }
         
-        console.log(`Successfully downloaded WASM binary: ${fileSizeKB} KB from Storage`);
-        source = "storage_bucket";
+        console.log(`Successfully downloaded WASM binary: ${fileSizeKB} KB from Custom URL`);
+        source = "custom_storage_url";
         
         // If we get here, we've successfully loaded the WASM file
         const loadEndTime = performance.now();
         const loadDuration = loadEndTime - loadStartTime;
-        console.log(`[SwissEph] loaded WASM in ${Math.round(loadDuration)} ms from Storage`);
+        console.log(`[SwissEph] loaded WASM in ${Math.round(loadDuration)} ms from Custom URL`);
         
         // Initialize and return the WASM module
+        const wasmModule = await initializeWasm(wasmBinary);
+        return wasmModule;
+      } catch (customUrlError) {
+        console.warn(`❌ Custom URL failed: ${customUrlError.message}, trying next source...`);
+        error = customUrlError;
+      }
+      
+      // 1. Then try default storage bucket
+      try {
+        console.log(`Loading WASM from Supabase Storage: ${STORAGE_URL}`);
+        const response = await fetch(STORAGE_URL);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch WASM from Storage: HTTP ${response.status} ${response.statusText}`);
+        }
+        
+        wasmBinary = await response.arrayBuffer();
+        const fileSizeKB = Math.round(wasmBinary.byteLength / 1024);
+        
+        // UPDATED: Relaxed size validation to accept larger files with embedded ephemeris data
+        if (fileSizeKB < 630 || fileSizeKB > 1500) {
+          console.warn(`WARNING: WASM file size (${fileSizeKB} KB) is outside expected range for Emscripten build (630-1500 KB). May be wrong build.`);
+        }
+        
+        console.log(`Successfully downloaded WASM binary: ${fileSizeKB} KB from Storage`);
+        source = "storage_bucket";
+        
+        const loadEndTime = performance.now();
+        const loadDuration = loadEndTime - loadStartTime;
+        console.log(`[SwissEph] loaded WASM in ${Math.round(loadDuration)} ms from Storage`);
+        
         const wasmModule = await initializeWasm(wasmBinary);
         return wasmModule;
       } catch (storageError) {
@@ -85,13 +113,14 @@ export async function initializeSwephModule() {
       // 2. Try local file (for development environments)
       try {
         console.log("Loading WASM from local file");
-        const localWasmPath = new URL('./sweph/astro.wasm', import.meta.url);
+        // Use path methods to fix directory detection issues
+        const localWasmPath = path.join(Deno.cwd(), "supabase", "functions", "blueprint-calculator", "sweph", "astro.wasm");
+        console.log(`Attempting to load from: ${localWasmPath}`);
         wasmBinary = await Deno.readFile(localWasmPath);
         const fileSizeKB = Math.round(wasmBinary.byteLength / 1024);
         console.log(`Successfully loaded local WASM binary: ${fileSizeKB} KB`);
         source = "local";
         
-        // Initialize and return the WASM module
         const loadEndTime = performance.now();
         const loadDuration = loadEndTime - loadStartTime;
         console.log(`[SwissEph] loaded WASM in ${Math.round(loadDuration)} ms from local file`);
@@ -106,13 +135,13 @@ export async function initializeSwephModule() {
       // 3. Try shared folder
       try {
         console.log("Loading WASM from shared folder");
-        const sharedWasmPath = new URL('../_shared/sweph/astro.wasm', import.meta.url);
+        const sharedWasmPath = path.join(Deno.cwd(), "supabase", "functions", "_shared", "sweph", "astro.wasm");
+        console.log(`Attempting to load from: ${sharedWasmPath}`);
         wasmBinary = await Deno.readFile(sharedWasmPath);
         const fileSizeKB = Math.round(wasmBinary.byteLength / 1024);
         console.log(`Successfully loaded shared WASM binary: ${fileSizeKB} KB`);
         source = "shared";
         
-        // Initialize and return the WASM module
         const loadEndTime = performance.now();
         const loadDuration = loadEndTime - loadStartTime;
         console.log(`[SwissEph] loaded WASM in ${Math.round(loadDuration)} ms from shared file`);
@@ -136,7 +165,6 @@ export async function initializeSwephModule() {
         console.log(`Successfully downloaded WASM binary: ${fileSizeKB} KB from GitHub CDN`);
         source = "github_cdn";
         
-        // Initialize and return the WASM module
         const loadEndTime = performance.now();
         const loadDuration = loadEndTime - loadStartTime;
         console.log(`[SwissEph] loaded WASM in ${Math.round(loadDuration)} ms from GitHub CDN`);
@@ -160,7 +188,6 @@ export async function initializeSwephModule() {
         console.log(`Successfully downloaded WASM binary: ${fileSizeKB} KB from jsDelivr CDN`);
         source = "jsdelivr_cdn";
         
-        // Initialize and return the WASM module
         const loadEndTime = performance.now();
         const loadDuration = loadEndTime - loadStartTime;
         console.log(`[SwissEph] loaded WASM in ${Math.round(loadDuration)} ms from jsDelivr CDN`);

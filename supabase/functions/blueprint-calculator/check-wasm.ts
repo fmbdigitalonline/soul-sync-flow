@@ -25,13 +25,23 @@ serve(async (req) => {
     // Define the storage URL
     const storageUrl = `https://${supabaseProject}.supabase.co/storage/v1/object/public/${wasmBucket}/${wasmPath}`;
     
+    // Add custom URL check too
+    const customUrl = "https://qxaajirrqrcnmvtowjbg.supabase.co/storage/v1/object/public/astro-wasm//astro.wasm";
+    
     console.log(`Testing WASM URL: ${storageUrl}`);
+    console.log(`Also testing custom WASM URL: ${customUrl}`);
     
     // Try to fetch the WASM file
     let wasmStatus = "unknown";
     let contentType = "unknown";
     let contentLength = 0;
     let errorDetails = null;
+    
+    // Also check custom URL
+    let customUrlStatus = "unknown";
+    let customContentType = "unknown";
+    let customContentLength = 0;
+    let customErrorDetails = null;
     
     try {
       // Use HEAD request to check if file exists without downloading it
@@ -52,6 +62,27 @@ serve(async (req) => {
       console.error("Error fetching WASM file:", fetchError);
       wasmStatus = "fetch_error";
       errorDetails = fetchError.message;
+    }
+    
+    // Check custom URL too
+    try {
+      const customResponse = await fetch(customUrl, { method: 'HEAD' });
+      
+      customUrlStatus = customResponse.ok ? "accessible" : "not_accessible";
+      customContentType = customResponse.headers.get('content-type') || "not provided";
+      const customLengthHeader = customResponse.headers.get('content-length');
+      customContentLength = customLengthHeader ? parseInt(customLengthHeader) : 0;
+      
+      if (customResponse.ok) {
+        console.log(`✅ Custom WASM URL accessible! Size: ${Math.round(customContentLength/1024)} KB`);
+      } else {
+        console.error(`❌ Custom WASM URL not accessible. Status: ${customResponse.status} ${customResponse.statusText}`);
+        customErrorDetails = `HTTP ${customResponse.status}: ${customResponse.statusText}`;
+      }
+    } catch (fetchError) {
+      console.error("Error fetching custom WASM URL:", fetchError);
+      customUrlStatus = "fetch_error";
+      customErrorDetails = fetchError.message;
     }
     
     // Also check local paths for completeness
@@ -86,7 +117,7 @@ serve(async (req) => {
     }
     
     // Determine if we're using the newer or older build
-    const isNewerBuild = contentLength > 900000;
+    const isNewerBuild = contentLength > 900000 || customContentLength > 900000;
     
     // Return the diagnostic information
     return new Response(
@@ -106,12 +137,20 @@ serve(async (req) => {
           error: errorDetails,
           expected_size_kb: isNewerBuild ? "~1.1 MB (with embedded ephemeris)" : "~632 KB (without embedded ephemeris)"
         },
+        custom_storage: {
+          url: customUrl,
+          status: customUrlStatus,
+          content_type: customContentType,
+          size_bytes: customContentLength,
+          size_kb: Math.round(customContentLength/1024),
+          error: customErrorDetails
+        },
         local_files: localPaths,
         recommendations: [
-          wasmStatus !== "accessible" ? 
+          wasmStatus !== "accessible" && customUrlStatus !== "accessible" ? 
             "Create a public bucket named 'wasm' in Supabase Storage" : 
-            "Storage URL is accessible",
-          contentLength < 630000 && wasmStatus === "accessible" ? 
+            "One of the storage URLs is accessible",
+          contentLength < 630000 && customContentLength < 630000 && wasmStatus === "accessible" && customUrlStatus === "accessible" ? 
             "File seems too small. Ensure it's the correct Emscripten build (should be ~632 KB or ~1.1 MB)" : 
             null,
           "Set Cache-Control: public, max-age=31536000, immutable on the WASM file"
