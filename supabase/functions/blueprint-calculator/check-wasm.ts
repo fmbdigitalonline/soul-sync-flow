@@ -16,6 +16,10 @@ serve(async (req) => {
   try {
     console.log("Checking WASM configuration...");
     
+    // Check if WASI is supported in this Deno environment
+    const wasiSupported = typeof Deno.Wasi === 'function';
+    console.log(`WASI support detected: ${wasiSupported ? 'Yes' : 'No'}`);
+    
     // Gather environment info
     const wasmSource = Deno.env.get("WASM_SOURCE") || "storage_bucket";
     const supabaseProject = Deno.env.get("SUPABASE_PROJECT") || "qxaajirrqrcnmvtowjbg";
@@ -36,12 +40,14 @@ serve(async (req) => {
     let contentType = "unknown";
     let contentLength = 0;
     let errorDetails = null;
+    let wasmType = "unknown";
     
     // Also check custom URL
     let customUrlStatus = "unknown";
     let customContentType = "unknown";
     let customContentLength = 0;
     let customErrorDetails = null;
+    let customWasmType = "unknown";
     
     try {
       // Use HEAD request to check if file exists without downloading it
@@ -54,6 +60,24 @@ serve(async (req) => {
       
       if (response.ok) {
         console.log(`✅ WASM file accessible! Size: ${Math.round(contentLength/1024)} KB`);
+        
+        // Get a small part of the WASM file to check for WASI headers
+        try {
+          const checkResponse = await fetch(storageUrl, {
+            headers: { Range: 'bytes=0-1000' }
+          });
+          
+          if (checkResponse.ok) {
+            const sampleData = await checkResponse.arrayBuffer();
+            const textDecoder = new TextDecoder();
+            const sampleText = textDecoder.decode(new Uint8Array(sampleData));
+            
+            wasmType = sampleText.includes("wasi_snapshot_preview1") ? "WASI" : "Emscripten";
+            console.log(`Detected WASM type from storage URL: ${wasmType}`);
+          }
+        } catch (err) {
+          console.warn("Failed to check WASM type:", err);
+        }
       } else {
         console.error(`❌ WASM file not accessible. Status: ${response.status} ${response.statusText}`);
         errorDetails = `HTTP ${response.status}: ${response.statusText}`;
@@ -75,6 +99,24 @@ serve(async (req) => {
       
       if (customResponse.ok) {
         console.log(`✅ Custom WASM URL accessible! Size: ${Math.round(customContentLength/1024)} KB`);
+        
+        // Get a small part of the WASM file to check for WASI headers
+        try {
+          const checkResponse = await fetch(customUrl, {
+            headers: { Range: 'bytes=0-1000' }
+          });
+          
+          if (checkResponse.ok) {
+            const sampleData = await checkResponse.arrayBuffer();
+            const textDecoder = new TextDecoder();
+            const sampleText = textDecoder.decode(new Uint8Array(sampleData));
+            
+            customWasmType = sampleText.includes("wasi_snapshot_preview1") ? "WASI" : "Emscripten";
+            console.log(`Detected WASM type from custom URL: ${customWasmType}`);
+          }
+        } catch (err) {
+          console.warn("Failed to check custom WASM type:", err);
+        }
       } else {
         console.error(`❌ Custom WASM URL not accessible. Status: ${customResponse.status} ${customResponse.statusText}`);
         customErrorDetails = `HTTP ${customResponse.status}: ${customResponse.statusText}`;
@@ -126,7 +168,9 @@ serve(async (req) => {
           wasm_source: wasmSource,
           supabase_project: supabaseProject,
           wasm_bucket: wasmBucket,
-          wasm_path: wasmPath
+          wasm_path: wasmPath,
+          wasi_supported: wasiSupported,
+          deno_version: Deno.version
         },
         storage: {
           url: storageUrl,
@@ -134,6 +178,7 @@ serve(async (req) => {
           content_type: contentType,
           size_bytes: contentLength,
           size_kb: Math.round(contentLength/1024),
+          wasm_type: wasmType,
           error: errorDetails,
           expected_size_kb: isNewerBuild ? "~1.1 MB (with embedded ephemeris)" : "~632 KB (without embedded ephemeris)"
         },
@@ -143,6 +188,7 @@ serve(async (req) => {
           content_type: customContentType,
           size_bytes: customContentLength,
           size_kb: Math.round(customContentLength/1024),
+          wasm_type: customWasmType,
           error: customErrorDetails
         },
         local_files: localPaths,
@@ -152,6 +198,9 @@ serve(async (req) => {
             "One of the storage URLs is accessible",
           contentLength < 630000 && customContentLength < 630000 && wasmStatus === "accessible" && customUrlStatus === "accessible" ? 
             "File seems too small. Ensure it's the correct Emscripten build (should be ~632 KB or ~1.1 MB)" : 
+            null,
+          !wasiSupported && (wasmType === "WASI" || customWasmType === "WASI") ?
+            "Your WASM file appears to be a WASI build but this Deno environment doesn't support WASI. Try an Emscripten build instead." :
             null,
           "Set Cache-Control: public, max-age=31536000, immutable on the WASM file"
         ].filter(Boolean)
@@ -170,7 +219,9 @@ serve(async (req) => {
       JSON.stringify({
         error: 'WASM check failed',
         details: error.message,
-        stack: error.stack
+        stack: error.stack,
+        wasi_supported: typeof Deno.Wasi === 'function',
+        deno_version: Deno.version
       }),
       {
         status: 500,

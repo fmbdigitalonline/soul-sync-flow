@@ -37,7 +37,7 @@ export async function initializeSwephModule() {
     // Create a promise for the initialization and store it in the cache
     wasmPromiseCache = (async () => {
       const loadStartTime = performance.now();
-      let wasmBinary: ArrayBuffer;
+      let wasmBinary: ArrayBuffer | Uint8Array;
       let source: string;
       
       // Always use the full fallback chain for maximum reliability
@@ -66,13 +66,16 @@ export async function initializeSwephModule() {
         console.log(`Successfully downloaded WASM binary: ${fileSizeKB} KB from Custom URL`);
         source = "custom_storage_url";
         
+        // Convert to Uint8Array if it's an ArrayBuffer
+        const wasmBytes = wasmBinary instanceof ArrayBuffer ? new Uint8Array(wasmBinary) : wasmBinary;
+        
         // If we get here, we've successfully loaded the WASM file
         const loadEndTime = performance.now();
         const loadDuration = loadEndTime - loadStartTime;
         console.log(`[SwissEph] loaded WASM in ${Math.round(loadDuration)} ms from Custom URL`);
         
         // Initialize and return the WASM module
-        const wasmModule = await initializeWasm(new Uint8Array(wasmBinary));
+        const wasmModule = await initializeWasm(wasmBytes);
         return wasmModule;
       } catch (customUrlError) {
         console.warn(`❌ Custom URL failed: ${customUrlError.message}, trying next source...`);
@@ -99,11 +102,14 @@ export async function initializeSwephModule() {
         console.log(`Successfully downloaded WASM binary: ${fileSizeKB} KB from Storage`);
         source = "storage_bucket";
         
+        // Convert to Uint8Array if it's an ArrayBuffer
+        const wasmBytes = wasmBinary instanceof ArrayBuffer ? new Uint8Array(wasmBinary) : wasmBinary;
+        
         const loadEndTime = performance.now();
         const loadDuration = loadEndTime - loadStartTime;
         console.log(`[SwissEph] loaded WASM in ${Math.round(loadDuration)} ms from Storage`);
         
-        const wasmModule = await initializeWasm(new Uint8Array(wasmBinary));
+        const wasmModule = await initializeWasm(wasmBytes);
         return wasmModule;
       } catch (storageError) {
         console.warn(`❌ Storage bucket failed: ${storageError.message}, trying next source...`);
@@ -125,7 +131,7 @@ export async function initializeSwephModule() {
         const loadDuration = loadEndTime - loadStartTime;
         console.log(`[SwissEph] loaded WASM in ${Math.round(loadDuration)} ms from local file`);
         
-        const wasmModule = await initializeWasm(new Uint8Array(wasmBinary));
+        const wasmModule = await initializeWasm(wasmBinary);
         return wasmModule;
       } catch (localError) {
         console.warn(`❌ Local WASM failed: ${localError.message}, trying next source...`);
@@ -146,7 +152,7 @@ export async function initializeSwephModule() {
         const loadDuration = loadEndTime - loadStartTime;
         console.log(`[SwissEph] loaded WASM in ${Math.round(loadDuration)} ms from shared file`);
         
-        const wasmModule = await initializeWasm(new Uint8Array(wasmBinary));
+        const wasmModule = await initializeWasm(wasmBinary);
         return wasmModule;
       } catch (sharedError) {
         console.warn(`❌ Shared WASM failed: ${sharedError.message}, trying next source...`);
@@ -165,11 +171,14 @@ export async function initializeSwephModule() {
         console.log(`Successfully downloaded WASM binary: ${fileSizeKB} KB from GitHub CDN`);
         source = "github_cdn";
         
+        // Convert to Uint8Array if it's an ArrayBuffer
+        const wasmBytes = wasmBinary instanceof ArrayBuffer ? new Uint8Array(wasmBinary) : wasmBinary;
+        
         const loadEndTime = performance.now();
         const loadDuration = loadEndTime - loadStartTime;
         console.log(`[SwissEph] loaded WASM in ${Math.round(loadDuration)} ms from GitHub CDN`);
         
-        const wasmModule = await initializeWasm(new Uint8Array(wasmBinary));
+        const wasmModule = await initializeWasm(wasmBytes);
         return wasmModule;
       } catch (githubError) {
         console.warn(`❌ GitHub CDN failed: ${githubError.message}, trying last resort...`);
@@ -188,11 +197,14 @@ export async function initializeSwephModule() {
         console.log(`Successfully downloaded WASM binary: ${fileSizeKB} KB from jsDelivr CDN`);
         source = "jsdelivr_cdn";
         
+        // Convert to Uint8Array if it's an ArrayBuffer
+        const wasmBytes = wasmBinary instanceof ArrayBuffer ? new Uint8Array(wasmBinary) : wasmBinary;
+        
         const loadEndTime = performance.now();
         const loadDuration = loadEndTime - loadStartTime;
         console.log(`[SwissEph] loaded WASM in ${Math.round(loadDuration)} ms from jsDelivr CDN`);
         
-        const wasmModule = await initializeWasm(new Uint8Array(wasmBinary));
+        const wasmModule = await initializeWasm(wasmBytes);
         return wasmModule;
       } catch (jsdelivrError) {
         console.error(`❌ All WASM sources failed. Last error: ${jsdelivrError.message}`);

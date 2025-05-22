@@ -1,3 +1,4 @@
+
 // Swiss Ephemeris WASM wrapper for JavaScript
 // This file is adapted from the sweph-wasm project
 
@@ -133,11 +134,98 @@ const initializeWasm = async (wasmBytesOrUrl) => {
     
     console.log(`Successfully obtained WASM binary (${Math.round(wasmBinary.byteLength / 1024)} kB)`);
     
-    // Instantiate the WASM module with the binary
-    console.log("Instantiating WASM module");
-    const wasmModule = await WebAssembly.instantiate(wasmBinary, {
-      env: { memory: new WebAssembly.Memory({ initial: 10, maximum: 100 }) }
-    });
+    // Convert to Uint8Array if it's an ArrayBuffer
+    const wasmBytes = wasmBinary instanceof ArrayBuffer ? new Uint8Array(wasmBinary) : wasmBinary;
+    
+    // Try to detect if this is a WASI build by checking for custom sections
+    let isWasiBuild = false;
+    try {
+      // This is a simple heuristic - check for "wasi" or "wasm" strings in the binary
+      const textDecoder = new TextDecoder();
+      const wasmText = textDecoder.decode(wasmBytes.slice(0, 1000)); // Just check start of file
+      isWasiBuild = wasmText.includes("wasi_snapshot_preview1");
+      console.log(`WASM build type detection: ${isWasiBuild ? "WASI" : "Emscripten"}`);
+    } catch (err) {
+      console.warn("Failed to detect WASM build type:", err);
+    }
+    
+    let wasmModule;
+    
+    // If we're in Deno and it's a WASI build, use Deno.Wasi
+    if (typeof Deno !== 'undefined' && isWasiBuild) {
+      console.log("Using Deno.Wasi for WASI-compatible WASM module");
+      try {
+        // Create a WASI instance
+        const wasi = new Deno.Wasi({
+          args: [],
+          env: {},
+          preopens: {
+            '/': '/'
+          },
+        });
+        
+        // Instantiate with WASI imports
+        const importObject = {
+          wasi_snapshot_preview1: wasi.exports,
+          env: { memory: new WebAssembly.Memory({ initial: 10, maximum: 100 }) }
+        };
+        
+        // Compile and instantiate the module
+        const module = await WebAssembly.compile(wasmBytes);
+        const instance = await WebAssembly.instantiate(module, importObject);
+        
+        // Initialize WASI
+        wasi.initialize(instance);
+        
+        wasmModule = { instance };
+        console.log("Successfully instantiated WASM module with WASI runtime");
+        
+      } catch (wasiError) {
+        console.error("Failed to instantiate with WASI:", wasiError);
+        throw new Error(`WASI initialization failed: ${wasiError.message}`);
+      }
+    } else {
+      // Standard Emscripten build (default)
+      console.log("Instantiating standard Emscripten WASM module");
+      try {
+        // Instantiate the WASM module with the binary
+        wasmModule = await WebAssembly.instantiate(wasmBytes, {
+          env: { memory: new WebAssembly.Memory({ initial: 10, maximum: 100 }) }
+        });
+      } catch (emscriptenError) {
+        // If this fails and it might be a WASI build, try with empty wasi_snapshot_preview1
+        if (emscriptenError.message.includes("wasi_snapshot_preview1")) {
+          console.log("Emscripten instantiation failed, trying with mock WASI imports");
+          
+          // Create mock WASI imports
+          const mockWasiImports = {
+            wasi_snapshot_preview1: {
+              // Minimal mock implementation of required WASI functions
+              proc_exit: (code) => console.log(`proc_exit called with code ${code}`),
+              fd_close: () => 0,
+              fd_write: () => 0,
+              fd_seek: () => 0,
+              fd_read: () => 0,
+              // Add other functions as needed
+            },
+            env: { memory: new WebAssembly.Memory({ initial: 10, maximum: 100 }) }
+          };
+          
+          try {
+            // Try with mock WASI imports
+            wasmModule = await WebAssembly.instantiate(wasmBytes, mockWasiImports);
+            console.log("Successfully instantiated with mock WASI imports");
+          } catch (mockError) {
+            console.error("Failed to instantiate with mock WASI imports:", mockError);
+            throw new Error(`WASM instantiation failed with both standard and mock WASI imports: ${mockError.message}`);
+          }
+        } else {
+          // If it's another error, rethrow
+          console.error("Failed to instantiate WASM module:", emscriptenError);
+          throw emscriptenError;
+        }
+      }
+    }
     
     const loadDuration = performance.now() - wasmLoadStartTime;
     console.log(`WASM module instantiated successfully in ${Math.round(loadDuration)} ms!`);

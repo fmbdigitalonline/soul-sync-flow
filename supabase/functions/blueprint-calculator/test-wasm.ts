@@ -20,6 +20,10 @@ serve(async (req) => {
     // Track time for performance measurement
     const startTime = performance.now();
     
+    // Check if WASI is supported in this Deno environment
+    const wasiSupported = typeof Deno.Wasi === 'function';
+    console.log(`WASI support detected: ${wasiSupported ? 'Yes' : 'No'}`);
+    
     // Try to initialize the WASM module
     console.log("Attempting to initialize Swiss Ephemeris WASM module...");
     const sweph = await initializeSwephModule();
@@ -58,6 +62,8 @@ serve(async (req) => {
             latitude: result[1],
             distance: result[2]
           },
+          wasi_support: wasiSupported,
+          deno_version: Deno.version,
           processing_time_ms: duration
         }
       }),
@@ -76,6 +82,8 @@ serve(async (req) => {
         success: false,
         error: error.message,
         stack: error.stack,
+        wasi_support: typeof Deno.Wasi === 'function',
+        deno_version: Deno.version,
         message: "Failed to initialize or test the Swiss Ephemeris WASM module"
       }),
       { 
