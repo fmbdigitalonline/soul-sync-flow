@@ -170,12 +170,7 @@ serve(async (req) => {
           wasm_bucket: wasmBucket,
           wasm_path: wasmPath,
           wasi_supported: wasiSupported,
-          deno_version: Deno.version,
-          runtime: {
-            name: Deno.version.deno,
-            v8: Deno.version.v8,
-            typescript: Deno.version.typescript
-          }
+          deno_version: Deno.version
         },
         storage: {
           url: storageUrl,
@@ -205,14 +200,10 @@ serve(async (req) => {
             "File seems too small. Ensure it's the correct Emscripten build (should be ~632 KB or ~1.1 MB)" : 
             null,
           !wasiSupported && (wasmType === "WASI" || customWasmType === "WASI") ?
-            "Using a mock WASI implementation since native WASI is not available in this Deno environment." :
+            "Your WASM file appears to be a WASI build but this Deno environment doesn't support WASI. Try an Emscripten build instead." :
             null,
           "Set Cache-Control: public, max-age=31536000, immutable on the WASM file"
-        ].filter(Boolean),
-        wasi_fallback: {
-          enabled: true,
-          method: "Using mock WASI import implementation that stubs required functions"
-        }
+        ].filter(Boolean)
       }, null, 2),
       {
         headers: {

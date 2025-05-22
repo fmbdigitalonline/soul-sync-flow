@@ -51,15 +51,6 @@ serve(async (req) => {
     const endTime = performance.now();
     const duration = Math.round(endTime - startTime);
     
-    // Try to detect WASM module type
-    let wasmType = "Unknown";
-    try {
-      // We can't check the WebAssembly module directly, but we can infer from our initialization
-      wasmType = "Emscripten with mock WASI fallback";
-    } catch (err) {
-      console.warn("Failed to determine WASM type:", err);
-    }
-    
     return new Response(
       JSON.stringify({
         success: true,
@@ -72,7 +63,6 @@ serve(async (req) => {
             distance: result[2]
           },
           wasi_support: wasiSupported,
-          wasm_type: wasmType,
           deno_version: Deno.version,
           processing_time_ms: duration
         }

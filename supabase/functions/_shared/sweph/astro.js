@@ -150,49 +150,39 @@ const initializeWasm = async (wasmBytesOrUrl) => {
     }
     
     let wasmModule;
-
-    // Create mock WASI imports for WASI builds
-    const mockWasiImports = {
-      wasi_snapshot_preview1: {
-        // Minimal mock implementation of required WASI functions
-        proc_exit: (code) => console.log(`proc_exit called with code ${code}`),
-        fd_close: () => 0,
-        fd_write: () => 0,
-        fd_seek: () => 0,
-        fd_read: () => 0,
-        environ_sizes_get: () => 0,
-        environ_get: () => 0,
-        args_sizes_get: () => 0,
-        args_get: () => 0,
-        random_get: () => 0,
-        clock_time_get: () => 0,
-        // Add other functions as needed
-      },
-      env: { memory: new WebAssembly.Memory({ initial: 10, maximum: 100 }) }
-    };
-
-    // For WASI builds
-    if (isWasiBuild) {
-      console.log("Using mock WASI imports for WASI-compatible WASM module");
+    
+    // If we're in Deno and it's a WASI build, use Deno.Wasi
+    if (typeof Deno !== 'undefined' && isWasiBuild) {
+      console.log("Using Deno.Wasi for WASI-compatible WASM module");
       try {
-        // Try with mock WASI imports
+        // Create a WASI instance
+        const wasi = new Deno.Wasi({
+          args: [],
+          env: {},
+          preopens: {
+            '/': '/'
+          },
+        });
+        
+        // Instantiate with WASI imports
+        const importObject = {
+          wasi_snapshot_preview1: wasi.exports,
+          env: { memory: new WebAssembly.Memory({ initial: 10, maximum: 100 }) }
+        };
+        
+        // Compile and instantiate the module
         const module = await WebAssembly.compile(wasmBytes);
-        const instance = await WebAssembly.instantiate(module, mockWasiImports);
+        const instance = await WebAssembly.instantiate(module, importObject);
+        
+        // Initialize WASI
+        wasi.initialize(instance);
+        
         wasmModule = { instance };
-        console.log("Successfully instantiated WASM module with mock WASI runtime");
+        console.log("Successfully instantiated WASM module with WASI runtime");
+        
       } catch (wasiError) {
-        console.error("Failed to instantiate with mock WASI:", wasiError);
-        // Fall back to standard instantiation as a last resort
-        try {
-          // Standard Emscripten instantiation as fallback
-          console.log("Falling back to standard instantiation");
-          wasmModule = await WebAssembly.instantiate(wasmBytes, {
-            env: { memory: new WebAssembly.Memory({ initial: 10, maximum: 100 }) }
-          });
-          console.log("Successfully instantiated with standard imports");
-        } catch (fallbackError) {
-          throw new Error(`WASM instantiation failed with both WASI and standard imports: ${fallbackError.message}`);
-        }
+        console.error("Failed to instantiate with WASI:", wasiError);
+        throw new Error(`WASI initialization failed: ${wasiError.message}`);
       }
     } else {
       // Standard Emscripten build (default)
@@ -206,6 +196,20 @@ const initializeWasm = async (wasmBytesOrUrl) => {
         // If this fails and it might be a WASI build, try with empty wasi_snapshot_preview1
         if (emscriptenError.message.includes("wasi_snapshot_preview1")) {
           console.log("Emscripten instantiation failed, trying with mock WASI imports");
+          
+          // Create mock WASI imports
+          const mockWasiImports = {
+            wasi_snapshot_preview1: {
+              // Minimal mock implementation of required WASI functions
+              proc_exit: (code) => console.log(`proc_exit called with code ${code}`),
+              fd_close: () => 0,
+              fd_write: () => 0,
+              fd_seek: () => 0,
+              fd_read: () => 0,
+              // Add other functions as needed
+            },
+            env: { memory: new WebAssembly.Memory({ initial: 10, maximum: 100 }) }
+          };
           
           try {
             // Try with mock WASI imports
