@@ -239,5 +239,8 @@ export function convertJdToAstroTime(jd) {
 
 // Export helper function for calculating ecliptic longitude by Julian Day
 export function eclipticLongitudeByJd(body, jd) {
-  return calculateEclipticLongitude(body, jd);
+  // Make sure we convert the Julian Day to an AstroTime object
+  const time = jdToAstroTime(jd);
+  // Then use this AstroTime object with Astronomy.Ecliptic
+  return Astronomy.Ecliptic(body, time).elon;
 }
