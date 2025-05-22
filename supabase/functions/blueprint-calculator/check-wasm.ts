@@ -19,11 +19,11 @@ serve(async (req) => {
     // Gather environment info
     const wasmSource = Deno.env.get("WASM_SOURCE") || "storage_bucket";
     const supabaseProject = Deno.env.get("SUPABASE_PROJECT") || "qxaajirrqrcnmvtowjbg";
-    const wasmBucket = Deno.env.get("WASM_BUCKET") || "wasm";
-    const wasmPath = Deno.env.get("WASM_OBJECT_PATH") || "astro.wasm";
+    const wasmBucket = Deno.env.get("WASM_BUCKET") || "astro-wasm";
+    const wasmPath = Deno.env.get("WASM_OBJECT_PATH") || "/astro.wasm";
     
     // Define the storage URL
-    const storageUrl = `https://${supabaseProject}.supabase.co/storage/v1/object/public/${wasmBucket}/${wasmPath}`;
+    const storageUrl = `https://${supabaseProject}.supabase.co/storage/v1/object/public/${wasmBucket}${wasmPath}`;
     
     // Add custom URL check too
     const customUrl = "https://qxaajirrqrcnmvtowjbg.supabase.co/storage/v1/object/public/astro-wasm//astro.wasm";
@@ -148,7 +148,7 @@ serve(async (req) => {
         local_files: localPaths,
         recommendations: [
           wasmStatus !== "accessible" && customUrlStatus !== "accessible" ? 
-            "Create a public bucket named 'wasm' in Supabase Storage" : 
+            "Create a public bucket named 'astro-wasm' in Supabase Storage" : 
             "One of the storage URLs is accessible",
           contentLength < 630000 && customContentLength < 630000 && wasmStatus === "accessible" && customUrlStatus === "accessible" ? 
             "File seems too small. Ensure it's the correct Emscripten build (should be ~632 KB or ~1.1 MB)" : 

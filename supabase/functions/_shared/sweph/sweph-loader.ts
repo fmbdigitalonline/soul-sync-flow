@@ -8,11 +8,11 @@ let wasmPromiseCache: Promise<any> | null = null;
 // Define constants for the different sources of the WASM file
 const WASM_SOURCE = Deno.env.get("WASM_SOURCE") || "full_fallback_chain";
 const SUPABASE_PROJECT = Deno.env.get("SUPABASE_PROJECT") || "qxaajirrqrcnmvtowjbg";
-const WASM_BUCKET = Deno.env.get("WASM_BUCKET") || "wasm";
-const WASM_OBJECT_PATH = Deno.env.get("WASM_OBJECT_PATH") || "astro.wasm";
+const WASM_BUCKET = Deno.env.get("WASM_BUCKET") || "astro-wasm";  // Updated to match your bucket name
+const WASM_OBJECT_PATH = Deno.env.get("WASM_OBJECT_PATH") || "/astro.wasm";  // Added leading slash
 
 // Define the storage bucket URL
-const STORAGE_URL = `https://${SUPABASE_PROJECT}.supabase.co/storage/v1/object/public/${WASM_BUCKET}/${WASM_OBJECT_PATH}`;
+const STORAGE_URL = `https://${SUPABASE_PROJECT}.supabase.co/storage/v1/object/public/${WASM_BUCKET}${WASM_OBJECT_PATH}`;
 
 // Add the specific URL provided by the user
 const CUSTOM_STORAGE_URL = "https://qxaajirrqrcnmvtowjbg.supabase.co/storage/v1/object/public/astro-wasm//astro.wasm";
@@ -72,7 +72,7 @@ export async function initializeSwephModule() {
         console.log(`[SwissEph] loaded WASM in ${Math.round(loadDuration)} ms from Custom URL`);
         
         // Initialize and return the WASM module
-        const wasmModule = await initializeWasm(wasmBinary);
+        const wasmModule = await initializeWasm(new Uint8Array(wasmBinary));
         return wasmModule;
       } catch (customUrlError) {
         console.warn(`❌ Custom URL failed: ${customUrlError.message}, trying next source...`);
@@ -103,7 +103,7 @@ export async function initializeSwephModule() {
         const loadDuration = loadEndTime - loadStartTime;
         console.log(`[SwissEph] loaded WASM in ${Math.round(loadDuration)} ms from Storage`);
         
-        const wasmModule = await initializeWasm(wasmBinary);
+        const wasmModule = await initializeWasm(new Uint8Array(wasmBinary));
         return wasmModule;
       } catch (storageError) {
         console.warn(`❌ Storage bucket failed: ${storageError.message}, trying next source...`);
@@ -114,7 +114,7 @@ export async function initializeSwephModule() {
       try {
         console.log("Loading WASM from local file");
         // Use path methods to fix directory detection issues
-        const localWasmPath = path.join(Deno.cwd(), "supabase", "functions", "blueprint-calculator", "sweph", "astro.wasm");
+        const localWasmPath = path.join(Deno.cwd(), "sweph", "astro.wasm");
         console.log(`Attempting to load from: ${localWasmPath}`);
         wasmBinary = await Deno.readFile(localWasmPath);
         const fileSizeKB = Math.round(wasmBinary.byteLength / 1024);
@@ -125,7 +125,7 @@ export async function initializeSwephModule() {
         const loadDuration = loadEndTime - loadStartTime;
         console.log(`[SwissEph] loaded WASM in ${Math.round(loadDuration)} ms from local file`);
         
-        const wasmModule = await initializeWasm(wasmBinary);
+        const wasmModule = await initializeWasm(new Uint8Array(wasmBinary));
         return wasmModule;
       } catch (localError) {
         console.warn(`❌ Local WASM failed: ${localError.message}, trying next source...`);
@@ -135,7 +135,7 @@ export async function initializeSwephModule() {
       // 3. Try shared folder
       try {
         console.log("Loading WASM from shared folder");
-        const sharedWasmPath = path.join(Deno.cwd(), "supabase", "functions", "_shared", "sweph", "astro.wasm");
+        const sharedWasmPath = path.join(Deno.cwd(), "_shared", "sweph", "astro.wasm");
         console.log(`Attempting to load from: ${sharedWasmPath}`);
         wasmBinary = await Deno.readFile(sharedWasmPath);
         const fileSizeKB = Math.round(wasmBinary.byteLength / 1024);
@@ -146,7 +146,7 @@ export async function initializeSwephModule() {
         const loadDuration = loadEndTime - loadStartTime;
         console.log(`[SwissEph] loaded WASM in ${Math.round(loadDuration)} ms from shared file`);
         
-        const wasmModule = await initializeWasm(wasmBinary);
+        const wasmModule = await initializeWasm(new Uint8Array(wasmBinary));
         return wasmModule;
       } catch (sharedError) {
         console.warn(`❌ Shared WASM failed: ${sharedError.message}, trying next source...`);
@@ -169,7 +169,7 @@ export async function initializeSwephModule() {
         const loadDuration = loadEndTime - loadStartTime;
         console.log(`[SwissEph] loaded WASM in ${Math.round(loadDuration)} ms from GitHub CDN`);
         
-        const wasmModule = await initializeWasm(wasmBinary);
+        const wasmModule = await initializeWasm(new Uint8Array(wasmBinary));
         return wasmModule;
       } catch (githubError) {
         console.warn(`❌ GitHub CDN failed: ${githubError.message}, trying last resort...`);
@@ -192,7 +192,7 @@ export async function initializeSwephModule() {
         const loadDuration = loadEndTime - loadStartTime;
         console.log(`[SwissEph] loaded WASM in ${Math.round(loadDuration)} ms from jsDelivr CDN`);
         
-        const wasmModule = await initializeWasm(wasmBinary);
+        const wasmModule = await initializeWasm(new Uint8Array(wasmBinary));
         return wasmModule;
       } catch (jsdelivrError) {
         console.error(`❌ All WASM sources failed. Last error: ${jsdelivrError.message}`);
