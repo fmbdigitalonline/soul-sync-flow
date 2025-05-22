@@ -1,6 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { Astronomy } from "npm:astronomy-engine@2";
+import * as AstronomyEngine from "npm:astronomy-engine@2";
 
 /**
  * Calculate planetary positions using Astronomy Engine
@@ -25,7 +25,7 @@ export async function calculatePlanetaryPositionsWithAstro(date, time, location,
     console.log(`AstroEngine: Location coordinates: lat ${coords.latitude}, long ${coords.longitude}`);
     
     // Calculate Julian date in terrestrial time
-    const jdTT = Astronomy.MakeTime(dateObj).tt;
+    const jdTT = AstronomyEngine.MakeTime(dateObj).tt;
     console.log(`AstroEngine: Julian date (TT) calculated: ${jdTT}`);
     
     // Define the bodies we want to calculate positions for
@@ -48,15 +48,15 @@ export async function calculatePlanetaryPositionsWithAstro(date, time, location,
     for (const body of bodies) {
       try {
         // Calculate ecliptic coordinates (longitude and latitude)
-        const ecliptic = Astronomy.Ecliptic(body.name, dateObj);
+        const ecliptic = AstronomyEngine.Ecliptic(body.name, dateObj);
         
         // Calculate heliocentric position for distance
         const vector = body.id !== "sun" && body.id !== "moon" 
-          ? Astronomy.HelioVector(body.name, dateObj) 
+          ? AstronomyEngine.HelioVector(body.name, dateObj) 
           : null;
         
         // Calculate body position in equatorial coordinates
-        const equatorial = Astronomy.Equator(body.name, dateObj, false, true);
+        const equatorial = AstronomyEngine.Equator(body.name, dateObj, false, true);
         
         // Store the position data
         positions[body.id] = {
@@ -128,7 +128,7 @@ export async function calculatePlanetaryPositionsWithAstro(date, time, location,
 function calculateLunarNodes(date) {
   // Calculate lunar nodes using orbital elements
   // This is a simplified calculation of the mean lunar nodes
-  const e = Astronomy.HelioVector("Moon", date);
+  const e = AstronomyEngine.HelioVector("Moon", date);
   const ascending = (Math.atan2(e.y, e.x) * 180/Math.PI + 360) % 360;
   return { 
     northNode: ascending, 
@@ -140,11 +140,11 @@ function calculateLunarNodes(date) {
 function calculateHousesAndAngles(date, coords) {
   try {
     // Calculate the Earth rotation angle (ERA)
-    const era = Astronomy.SiderealTime(date);
+    const era = AstronomyEngine.SiderealTime(date);
     
     // Calculate horizon coordinates for the sun to help determine ascendant
     // This is a simplified approach - a full implementation would use proper algorithms
-    const sunEquator = Astronomy.Equator("Sun", date, false, true);
+    const sunEquator = AstronomyEngine.Equator("Sun", date, false, true);
     
     // Convert to ecliptic coordinates to get an approximation of the ascendant
     // This is highly simplified - real ascendant calculation requires more complex math
