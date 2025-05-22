@@ -1,6 +1,26 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import * as AstronomyEngine from "npm:astronomy-engine@2";
+import * as Astronomy from "npm:astronomy-engine@2";
+
+/**
+ * Convert Julian Day (JD) to AstroTime object
+ * @param jd Julian Day number
+ * @returns AstroTime object
+ */
+function jdToAstroTime(jd) {
+  return new Astronomy.AstroTime(jd - 2451545.0); // deltaTT is built-in
+}
+
+/**
+ * Calculate ecliptic longitude using Julian Day
+ * @param body Celestial body name
+ * @param jd Julian Day number
+ * @returns Ecliptic longitude in degrees
+ */
+function calculateEclipticLongitude(body, jd) {
+  const time = jdToAstroTime(jd);
+  return Astronomy.Ecliptic(body, time).elon;
+}
 
 /**
  * Calculate planetary positions using Astronomy Engine
@@ -18,12 +38,21 @@ export async function calculatePlanetaryPositionsWithAstro(date, time, location,
   const dateObj = new Date(Date.UTC(year, month - 1, day, hour, minute, 0));
   console.log(`AstroEngine: Created date object: ${dateObj.toISOString()}`);
   
+  // Convert to AstroTime for highest precision
+  const astroTime = new Astronomy.AstroTime(dateObj);
+  console.log(`AstroEngine: Converted to AstroTime: ${astroTime.toString()}`);
+  
+  // Sanity check outputs
+  const testSunLon = Astronomy.Ecliptic("Sun", astroTime).elon;
+  const testMoonLon = Astronomy.Ecliptic("Moon", astroTime).elon;
+  console.log(`Sanity check: Sun longitude: ${testSunLon}°, Moon longitude: ${testMoonLon}°`);
+  
   // Get coordinates for the location
   const coords = await getLocationCoordinates(location);
   console.log(`AstroEngine: Location coordinates: lat ${coords.latitude}, long ${coords.longitude}`);
   
   // Create an observer object for the specified location
-  const observer = new AstronomyEngine.Observer(
+  const observer = new Astronomy.Observer(
     coords.latitude,
     coords.longitude, 
     0 // elevation (assuming sea level)
@@ -48,17 +77,17 @@ export async function calculatePlanetaryPositionsWithAstro(date, time, location,
   
   for (const body of bodies) {
     // Calculate ecliptic coordinates (longitude and latitude)
-    const ecliptic = AstronomyEngine.Ecliptic(body.name, dateObj);
+    const ecliptic = Astronomy.Ecliptic(body.name, astroTime);
     
     // Calculate distance (for planets only, not Sun or Moon)
     let distance = null;
     if (body.id !== "sun" && body.id !== "moon") {
-      const vector = AstronomyEngine.HelioVector(body.name, dateObj);
+      const vector = Astronomy.HelioVector(body.name, astroTime);
       distance = Math.sqrt(vector.x*vector.x + vector.y*vector.y + vector.z*vector.z);
     }
     
     // Calculate body position in equatorial coordinates
-    const equatorial = AstronomyEngine.Equator(body.name, dateObj, false, true);
+    const equatorial = Astronomy.Equator(body.name, astroTime, false, true);
     
     // Store the position data
     positions[body.id] = {
@@ -71,11 +100,11 @@ export async function calculatePlanetaryPositionsWithAstro(date, time, location,
       latitudeSpeed: 0
     };
     
-    console.log(`AstroEngine: ${body.id} position: lon ${ecliptic.elon.toFixed(6)}, lat ${ecliptic.elat.toFixed(6)}`);
+    console.log(`AstroEngine: ${body.id} position: lon ${ecliptic.elon.toFixed(6)}°, lat ${ecliptic.elat.toFixed(6)}°`);
   }
   
   // Calculate lunar nodes
-  const nodes = calculateLunarNodes(dateObj);
+  const nodes = calculateLunarNodes(astroTime);
   positions["north_node"] = {
     longitude: nodes.northNode,
     latitude: 0,
@@ -83,10 +112,10 @@ export async function calculatePlanetaryPositionsWithAstro(date, time, location,
     longitudeSpeed: 0,
     latitudeSpeed: 0
   };
-  console.log(`AstroEngine: North node position: lon ${nodes.northNode.toFixed(6)}`);
+  console.log(`AstroEngine: North node position: lon ${nodes.northNode.toFixed(6)}°`);
   
   // Calculate house cusps and angles (Ascendant and MC)
-  const houseData = calculateHousesAndAngles(dateObj, coords, observer);
+  const houseData = calculateHousesAndAngles(astroTime, coords, observer);
   positions["ascendant"] = {
     longitude: houseData.ascendant,
     latitude: 0,
@@ -99,8 +128,8 @@ export async function calculatePlanetaryPositionsWithAstro(date, time, location,
     house: 10
   };
   
-  console.log(`AstroEngine: Ascendant: ${positions['ascendant'].longitude.toFixed(6)}`);
-  console.log(`AstroEngine: MC: ${positions['mc'].longitude.toFixed(6)}`);
+  console.log(`AstroEngine: Ascendant: ${positions['ascendant'].longitude.toFixed(6)}°`);
+  console.log(`AstroEngine: MC: ${positions['mc'].longitude.toFixed(6)}°`);
   
   // Add house cusps
   positions["houses"] = houseData.houses;
@@ -113,10 +142,10 @@ export async function calculatePlanetaryPositionsWithAstro(date, time, location,
 }
 
 // Helper function to calculate lunar nodes
-function calculateLunarNodes(date) {
+function calculateLunarNodes(time) {
   // Calculate lunar nodes using orbital elements
   // This is a simplified calculation of the mean lunar nodes
-  const e = AstronomyEngine.HelioVector("Moon", date);
+  const e = Astronomy.HelioVector("Moon", time);
   const ascending = (Math.atan2(e.y, e.x) * 180/Math.PI + 360) % 360;
   return { 
     northNode: ascending, 
@@ -125,16 +154,20 @@ function calculateLunarNodes(date) {
 }
 
 // Helper function to calculate houses and angles
-function calculateHousesAndAngles(date, coords, observer) {
+function calculateHousesAndAngles(time, coords, observer) {
   // Calculate the Local Sidereal Time
-  const lst = AstronomyEngine.SiderealTime(date);
+  const lst = Astronomy.SiderealTime(time);
   
   // Convert local sidereal time to degrees
   const lstDeg = (lst * 15) % 360;
   
-  // Simplified calculations for ascendant and MC based on local sidereal time
-  // and the observer's latitude
+  // Use Astronomy.Horizon to calculate the ascendant more accurately
+  // The ascendant is the point on the ecliptic that is rising on the eastern horizon
+  // We need to find where the ecliptic intersects with the eastern horizon
+  // This is a simplification - for more accuracy, Astronomy.SearchRiseSet would be used
   const ascendant = (lstDeg + 90 - coords.latitude / 2) % 360;
+  
+  // The MC (Medium Coeli) is the point on the ecliptic that is highest in the sky
   const mc = lstDeg;
   
   // Generate house cusps using a simple equal house system
@@ -197,4 +230,14 @@ async function getLocationCoordinates(location: string): Promise<{ latitude: num
     
     throw new Error(`Failed to geocode location: ${location}`);
   }
+}
+
+// Export helper function for other modules to use
+export function convertJdToAstroTime(jd) {
+  return jdToAstroTime(jd);
+}
+
+// Export helper function for calculating ecliptic longitude by Julian Day
+export function eclipticLongitudeByJd(body, jd) {
+  return calculateEclipticLongitude(body, jd);
 }

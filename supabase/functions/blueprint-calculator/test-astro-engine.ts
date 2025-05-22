@@ -1,6 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { calculatePlanetaryPositionsWithAstro } from "./ephemeris-astroengine.ts";
+import { calculatePlanetaryPositionsWithAstro, eclipticLongitudeByJd } from "./ephemeris-astroengine.ts";
+import * as Astronomy from "npm:astronomy-engine@2";
 
 // CORS headers for browser requests
 const corsHeaders = {
@@ -27,6 +28,12 @@ serve(async (req) => {
     const testTimezone = "America/New_York";
     
     console.log(`Testing calculation for ${testDate} ${testTime} at ${testLocation}`);
+    
+    // Test Julian Day conversion function with a known value
+    const testJd = 2460000; // ~2023-01-21
+    const sunLonByJd = eclipticLongitudeByJd("Sun", testJd);
+    const moonLonByJd = eclipticLongitudeByJd("Moon", testJd);
+    console.log(`Sanity test with Julian Day (${testJd}): Sun lon: ${sunLonByJd}°, Moon lon: ${moonLonByJd}°`);
     
     // Calculate positions using Astronomy Engine
     const positions = await calculatePlanetaryPositionsWithAstro(
@@ -76,6 +83,12 @@ serve(async (req) => {
           ascendant: {
             longitude: positions.ascendant.longitude,
             sign: zodiacSigns[Math.floor(positions.ascendant.longitude / 30)]
+          },
+          jd_test: {
+            jd: testJd,
+            sun_longitude: sunLonByJd,
+            moon_longitude: moonLonByJd,
+            sun_sign: zodiacSigns[Math.floor(sunLonByJd / 30)]
           },
           processing_time_ms: duration,
           engine: "astronomy_engine"
