@@ -1,3 +1,4 @@
+
 import * as path from "https://deno.land/std@0.168.0/path/mod.ts";
 import initializeWasm from "./astro.js";  // Default import is now the init function
 
@@ -10,7 +11,7 @@ const CDN_URL =
 
 // (optional) keep jsDelivr as a second fallback:
 const CDN_FALLBACK =
-  "https://cdn.jsdelivr.net/gh/u-blusky/sweph-wasm/js/astro.wasm";
+  "https://cdn.jsdelivr.net/gh/u-blusky/sweph-wasm@0.11.3/js/astro.wasm";
 
 /**
  * Initialize the Swiss Ephemeris WASM module
@@ -29,13 +30,51 @@ export async function initializeSwephModule() {
     
     // Skip trying to load from local filesystem and directly use the CDN URL
     // This ensures we always get the correct Emscripten build (~632KB) and not the WASI build (~1MB+)
-    console.log(`Loading WASM from CDN: ${CDN_URL}`);
+    console.log(`Loading WASM from primary CDN: ${CDN_URL}`);
     
     try {
-      wasmModule = await initializeWasm(CDN_URL);
-    } catch (_) {
-      console.warn("raw GH failed, trying jsDelivr");
-      wasmModule = await initializeWasm(CDN_FALLBACK);
+      // Add more detailed logging to track the download
+      const response = await fetch(CDN_URL);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch WASM from primary CDN: ${response.status} ${response.statusText}`);
+      }
+      
+      const wasmBinary = await response.arrayBuffer();
+      const fileSizeKB = Math.round(wasmBinary.byteLength / 1024);
+      console.log(`Downloaded WASM binary: ${fileSizeKB} KB from primary CDN`);
+      
+      // Verify file size is roughly what we expect (between 600KB-650KB for Emscripten build)
+      if (fileSizeKB < 600 || fileSizeKB > 650) {
+        console.warn(`WARNING: WASM file size (${fileSizeKB} KB) is outside expected range for Emscripten build (600-650 KB)`);
+      }
+      
+      wasmModule = await initializeWasm(wasmBinary);
+      console.log("Successfully initialized WASM from primary CDN");
+    } catch (primaryError) {
+      console.warn(`Primary CDN failed: ${primaryError.message}, trying fallback...`);
+      
+      try {
+        // Try the jsDelivr fallback
+        const fallbackResponse = await fetch(CDN_FALLBACK);
+        if (!fallbackResponse.ok) {
+          throw new Error(`Failed to fetch WASM from fallback CDN: ${fallbackResponse.status} ${fallbackResponse.statusText}`);
+        }
+        
+        const fallbackBinary = await fallbackResponse.arrayBuffer();
+        const fallbackSizeKB = Math.round(fallbackBinary.byteLength / 1024);
+        console.log(`Downloaded WASM binary: ${fallbackSizeKB} KB from fallback CDN`);
+        
+        // Verify file size is roughly what we expect
+        if (fallbackSizeKB < 600 || fallbackSizeKB > 650) {
+          console.warn(`WARNING: Fallback WASM file size (${fallbackSizeKB} KB) is outside expected range`);
+        }
+        
+        wasmModule = await initializeWasm(fallbackBinary);
+        console.log("Successfully initialized WASM from fallback CDN");
+      } catch (fallbackError) {
+        console.error("All CDN sources failed:", fallbackError);
+        throw new Error(`Failed to load WASM from any source: ${primaryError.message}, fallback: ${fallbackError.message}`);
+      }
     }
     
     const loadEndTime = performance.now();
