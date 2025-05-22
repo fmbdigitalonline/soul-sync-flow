@@ -88,9 +88,14 @@ verify_jwt = false
 cors = ["*"]
 methods = ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
 [functions.blueprint-calculator.env]
-WASM_SOURCE = "storage_bucket"
+WASM_SOURCE = "full_fallback_chain"
 WASM_BUCKET = "wasm"
 WASM_OBJECT_PATH = "astro.wasm"
+
+[functions.blueprint-calculator.check-wasm]
+verify_jwt = false
+cors = ["*"]
+methods = ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
 
 [analytics]
 enabled = false
