@@ -3,25 +3,22 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import * as Astronomy from "npm:astronomy-engine@2";
 
 /**
- * Convert JD, Date, or AstroTime → AstroTime (TT)
+ * Convert anything the blueprint passes (JD | Date | AstroTime) → AstroTime
  * This is the bulletproof helper that prevents all "tt" crashes
  */
 function toAstroTime(x: number | Date | Astronomy.AstroTime): Astronomy.AstroTime {
   if (x instanceof Astronomy.AstroTime) return x;
 
   if (typeof x === "number") {
-    // Convert Julian Day to Date first, then to AstroTime for proper initialization
-    // JD 2451545.0 = January 1, 2000, 12:00 TT (J2000.0)
-    const millisecondsPerDay = 24 * 60 * 60 * 1000;
-    const j2000Milliseconds = Date.UTC(2000, 0, 1, 12, 0, 0); // J2000.0 in milliseconds
-    const deltaMilliseconds = (x - 2451545.0) * millisecondsPerDay;
-    const dateFromJD = new Date(j2000Milliseconds + deltaMilliseconds);
-    return Astronomy.MakeTime(dateFromJD);
+    /* x is a Julian Day *in TT*. Library wants Δdays since J2000. */
+    return new Astronomy.AstroTime(x - 2_451_545.0);
   }
 
-  if (x instanceof Date) return Astronomy.MakeTime(x); // UTC → TT
+  if (x instanceof Date) {
+    return Astronomy.MakeTime(x);           // UTC date → proper AstroTime
+  }
 
-  throw new Error(`Unsupported time value: ${x}`);
+  throw new Error(`Unsupported time value (${typeof x}): ${x}`);
 }
 
 /**
@@ -31,6 +28,12 @@ function toAstroTime(x: number | Date | Astronomy.AstroTime): Astronomy.AstroTim
 export function eclLon(body: Astronomy.Body, when: number | Date | Astronomy.AstroTime): number {
   return Astronomy.Ecliptic(body, toAstroTime(when)).elon;
 }
+
+// Self-test to catch any remaining issues during cold start
+console.log(
+  "[AstroEngine] sanity: Sun @ J2000 =",
+  eclLon("Sun", 2451545.0).toFixed(3), "°"
+);
 
 /**
  * Safe wrapper for Astronomy.Ecliptic
@@ -79,15 +82,6 @@ export async function calculatePlanetaryPositionsWithAstro(date, time, location,
   // Convert to AstroTime for highest precision using our bulletproof helper
   const astroTime = toAstroTime(dateObj);
   console.log(`AstroEngine: Converted to AstroTime: ${astroTime.toString()}`);
-  
-  // Sanity check outputs - using our eclLon helper to prevent errors
-  const testSunLon = eclLon("Sun", astroTime);
-  const testMoonLon = eclLon("Moon", astroTime);
-  console.log(`Sanity check: Sun longitude: ${testSunLon}°, Moon longitude: ${testMoonLon}°`);
-  
-  // Additional sanity check with Julian Day
-  const testJd = 2460080.5; // 2025-05-22 noon TT
-  console.log(`JD Sanity check: Sun: ${eclLon("Sun", testJd)}°, Moon: ${eclLon("Moon", testJd)}°`);
   
   // Get coordinates for the location
   const coords = await getLocationCoordinates(location);
