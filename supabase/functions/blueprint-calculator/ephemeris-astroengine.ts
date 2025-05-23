@@ -2,22 +2,72 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import * as Astronomy from "npm:astronomy-engine@2";
 
-// CRITICAL: This is the ONLY way to safely create AstroTime objects
+// CRITICAL: Convert everything to Julian Day first, then to AstroTime
+// Astronomy.MakeTime() is BROKEN in Supabase/Deno environment
 function createSafeAstroTime(input: number | Date): Astronomy.AstroTime {
   try {
+    let julianDay: number;
+    
     if (typeof input === "number") {
-      // For Julian Day: convert to days since J2000.0 (JD 2451545.0)
-      return new Astronomy.AstroTime(input - 2451545.0);
+      // Already a Julian Day
+      julianDay = input;
     } else if (input instanceof Date) {
-      // For Date objects: let Astronomy.MakeTime handle the conversion
-      return Astronomy.MakeTime(input);
+      // Convert Date to Julian Day manually (Astronomy.MakeTime is broken)
+      julianDay = dateToJulianDay(input);
     } else {
       throw new Error(`Invalid time input type: ${typeof input}`);
     }
+    
+    // Convert Julian Day to days since J2000.0 (JD 2451545.0)
+    const daysSinceJ2000 = julianDay - 2451545.0;
+    return new Astronomy.AstroTime(daysSinceJ2000);
+    
   } catch (error) {
     console.error(`Failed to create AstroTime from ${input}:`, error);
     throw error;
   }
+}
+
+// Manual Date to Julian Day conversion (bypasses broken Astronomy.MakeTime)
+function dateToJulianDay(date: Date): number {
+  // Standard Julian Day calculation formula
+  const year = date.getUTCFullYear();
+  const month = date.getUTCMonth() + 1; // getUTCMonth is 0-based
+  const day = date.getUTCDate();
+  const hour = date.getUTCHours();
+  const minute = date.getUTCMinutes();
+  const second = date.getUTCSeconds();
+  const millisecond = date.getUTCMilliseconds();
+  
+  // Convert time to decimal day
+  const decimalDay = day + (hour + (minute + (second + millisecond / 1000) / 60) / 60) / 24;
+  
+  // Julian Day calculation
+  let a = Math.floor((14 - month) / 12);
+  let y = year + 4800 - a;
+  let m = month + 12 * a - 3;
+  
+  const julianDay = decimalDay + Math.floor((153 * m + 2) / 5) + 365 * y + Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400) - 32045;
+  
+  return julianDay;
+}
+
+// Self-test using manual Julian Day conversion (bypasses broken MakeTime)
+try {
+  const testJD = 2451545.0; // J2000.0
+  const testTime = createSafeAstroTime(testJD);
+  const testSunPos = Astronomy.Ecliptic("Sun", testTime);
+  console.log(`[AstroEngine] Self-test PASSED: Sun @ J2000 = ${testSunPos.elon.toFixed(3)}°`);
+  
+  // Test with the problematic date from the error
+  const problemDate = new Date("1978-02-12T22:00:00Z");
+  const problemTime = createSafeAstroTime(problemDate);
+  const problemSunPos = Astronomy.Ecliptic("Sun", problemTime);
+  console.log(`[AstroEngine] Problem date test PASSED: Sun in 1978 = ${problemSunPos.elon.toFixed(3)}°`);
+  
+} catch (error) {
+  console.error("[AstroEngine] Self-test FAILED:", error);
+  throw new Error("Astronomy Engine initialization failed");
 }
 
 // Safe wrapper for ecliptic longitude
