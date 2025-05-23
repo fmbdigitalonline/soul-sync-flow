@@ -1,7 +1,8 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { calculatePlanetaryPositionsWithAstro, eclipticLongitudeByJd } from "./ephemeris-astroengine.ts";
-import * as Astronomy from "npm:astronomy-engine@2";
+// Fixed: Use default import
+import Astronomy from "npm:astronomy-engine@2";
 
 // CORS headers for browser requests
 const corsHeaders = {
@@ -16,7 +17,7 @@ serve(async (req) => {
   }
 
   try {
-    console.log("Starting Astronomy Engine test");
+    console.log("Starting Astronomy Engine test with bulletproof fix");
     
     // Track time for performance measurement
     const startTime = performance.now();
@@ -69,7 +70,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        message: "Astronomy Engine test completed successfully",
+        message: "Astronomy Engine test completed successfully with bulletproof fix",
         test_results: {
           date: testDate,
           time: testTime,
@@ -100,7 +101,8 @@ serve(async (req) => {
             moon_longitude: eclipticLongitudeByJd("Moon", testJd2)
           },
           processing_time_ms: duration,
-          engine: "astronomy_engine"
+          engine: "astronomy_engine",
+          fix_applied: "bulletproof_time_conversion"
         }
       }),
       { 

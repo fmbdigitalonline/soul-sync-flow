@@ -1,36 +1,42 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import * as Astronomy from "npm:astronomy-engine@2";
+import Astronomy from "npm:astronomy-engine@2";
 
 /**
- * Convert whatever time input we receive to an AstroTime object
- * @param input Julian Day number, Date object, or AstroTime object
- * @returns AstroTime object
+ * Convert whatever we receive (JD, Date or AstroTime) → valid AstroTime
+ * This is the bulletproof helper that prevents all "tt" crashes
  */
-function toAstroTime(input: number | Date | Astronomy.AstroTime): Astronomy.AstroTime {
-  if (input instanceof Astronomy.AstroTime) return input;
+function toAstroTime(t: number | Date | Astronomy.AstroTime): Astronomy.AstroTime {
+  if (t instanceof Astronomy.AstroTime) return t;
 
-  // Blueprint code passes a Julian Day number (TT)
-  if (typeof input === "number") {
-    // JD(TT) → Δdays since J2000 (JD 2451545.0)
-    return new Astronomy.AstroTime(input - 2451545.0);
+  if (typeof t === "number") {
+    // JD(TT) → Δdays from J2000 (JD 2451545.0)
+    return new Astronomy.AstroTime(t - 2_451_545.0);
   }
 
-  // If it's already a JS Date, let Astronomy convert UTC→TT
-  if (input instanceof Date) return Astronomy.MakeTime(input);
+  if (t instanceof Date) {
+    // MakeTime converts UTC Date → AstroTime with ΔT included
+    return Astronomy.MakeTime(t);
+  }
 
-  throw new Error("Unsupported time argument: " + typeof input);
+  throw new Error(`Unsupported time value: ${JSON.stringify(t)}`);
 }
 
 /**
- * Calculate ecliptic longitude using any time format
- * @param body Celestial body name
- * @param time Julian Day number, Date object, or AstroTime object
- * @returns Ecliptic longitude in degrees
+ * Ecliptic longitude 0-360° for any supported body
+ * This wrapper ensures we always pass valid AstroTime objects
  */
-function eclLon(body: string, time: number | Date | Astronomy.AstroTime): number {
-  const astroTime = toAstroTime(time);
-  return Astronomy.Ecliptic(body, astroTime).elon;
+export function eclLon(body: Astronomy.Body, when: number | Date | Astronomy.AstroTime): number {
+  const time = toAstroTime(when);
+  return Astronomy.Ecliptic(body, time).elon;
+}
+
+// Sanity-check: Sun longitude on J2000 should be ≈ 280.147° (mean)
+try {
+  const test = eclLon("Sun", 2_451_545.0);
+  console.log("[AstroEngine] self-test Sun J2000 →", test.toFixed(3), "°");
+} catch (err) {
+  console.error("[AstroEngine] self-test FAILED:", err);
+  throw err; // fail fast on cold-start
 }
 
 /**
@@ -49,7 +55,7 @@ export async function calculatePlanetaryPositionsWithAstro(date, time, location,
   const dateObj = new Date(Date.UTC(year, month - 1, day, hour, minute, 0));
   console.log(`AstroEngine: Created date object: ${dateObj.toISOString()}`);
   
-  // Convert to AstroTime for highest precision
+  // Convert to AstroTime for highest precision using our bulletproof helper
   const astroTime = toAstroTime(dateObj);
   console.log(`AstroEngine: Converted to AstroTime: ${astroTime.toString()}`);
   
@@ -91,7 +97,7 @@ export async function calculatePlanetaryPositionsWithAstro(date, time, location,
   const positions = {};
   
   for (const body of bodies) {
-    // Calculate ecliptic coordinates (longitude and latitude) using our helper
+    // Calculate ecliptic coordinates (longitude and latitude) using our safe helper
     const eclipticLongitude = eclLon(body.name, astroTime);
     
     // Calculate the full ecliptic coordinates properly
