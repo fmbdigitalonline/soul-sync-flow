@@ -29,12 +29,6 @@ export function eclLon(body: Astronomy.Body, when: number | Date | Astronomy.Ast
   return Astronomy.Ecliptic(body, toAstroTime(when)).elon;
 }
 
-// Self-test to catch any remaining issues during cold start
-console.log(
-  "[AstroEngine] sanity: Sun @ J2000 =",
-  eclLon("Sun", 2451545.0).toFixed(3), "°"
-);
-
 /**
  * Safe wrapper for Astronomy.Ecliptic
  */
