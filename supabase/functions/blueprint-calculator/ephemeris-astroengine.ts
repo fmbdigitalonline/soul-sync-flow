@@ -1,43 +1,35 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import Astronomy from "npm:astronomy-engine@2";
+import * as Astronomy from "npm:astronomy-engine@2";
 
 /**
- * Convert whatever we receive (JD, Date or AstroTime) → valid AstroTime
+ * Convert JD, Date, or AstroTime → AstroTime (TT)
  * This is the bulletproof helper that prevents all "tt" crashes
  */
-function toAstroTime(t: number | Date | Astronomy.AstroTime): Astronomy.AstroTime {
-  if (t instanceof Astronomy.AstroTime) return t;
+function toAstroTime(x: number | Date | Astronomy.AstroTime): Astronomy.AstroTime {
+  if (x instanceof Astronomy.AstroTime) return x;
 
-  if (typeof t === "number") {
-    // JD(TT) → Δdays from J2000 (JD 2451545.0)
-    return new Astronomy.AstroTime(t - 2_451_545.0);
+  if (typeof x === "number") {
+    // argument is a Julian Day (TT)
+    return new Astronomy.AstroTime(x - 2_451_545.0);   // Δdays from J2000
   }
 
-  if (t instanceof Date) {
-    // MakeTime converts UTC Date → AstroTime with ΔT included
-    return Astronomy.MakeTime(t);
-  }
+  if (x instanceof Date) return Astronomy.MakeTime(x); // UTC → TT
 
-  throw new Error(`Unsupported time value: ${JSON.stringify(t)}`);
+  throw new Error(`Unsupported time value: ${x}`);
 }
 
 /**
- * Ecliptic longitude 0-360° for any supported body
+ * Ecliptic longitude 0–360° for any body
  * This wrapper ensures we always pass valid AstroTime objects
  */
 export function eclLon(body: Astronomy.Body, when: number | Date | Astronomy.AstroTime): number {
-  const time = toAstroTime(when);
-  return Astronomy.Ecliptic(body, time).elon;
+  return Astronomy.Ecliptic(body, toAstroTime(when)).elon;
 }
 
-// Sanity-check: Sun longitude on J2000 should be ≈ 280.147° (mean)
-try {
-  const test = eclLon("Sun", 2_451_545.0);
-  console.log("[AstroEngine] self-test Sun J2000 →", test.toFixed(3), "°");
-} catch (err) {
-  console.error("[AstroEngine] self-test FAILED:", err);
-  throw err; // fail fast on cold-start
-}
+// Sanity check before deploying
+console.log(
+  "[Self-test] Sun @ J2000 =", eclLon("Sun", 2451545.0).toFixed(3), "°"
+);
 
 /**
  * Calculate planetary positions using Astronomy Engine
