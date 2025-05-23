@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { calculatePlanetaryPositionsWithAstro, eclipticLongitudeByJd } from "./ephemeris-astroengine.ts";
 // Fixed: Use namespace import
@@ -29,7 +30,7 @@ serve(async (req) => {
     
     console.log(`Testing calculation for ${testDate} ${testTime} at ${testLocation}`);
     
-    // Test Julian Day conversion function with a known value
+    // Test Julian Day conversion function with a known value - moved inside the serve function
     const testJd = 2460000; // ~2023-01-21
     const sunLonByJd = eclipticLongitudeByJd("Sun", testJd);
     const moonLonByJd = eclipticLongitudeByJd("Moon", testJd);
