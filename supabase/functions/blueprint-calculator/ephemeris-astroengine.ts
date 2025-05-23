@@ -11,13 +11,17 @@ function jdToDate(jd: number): Date {
 // Always hand Ecliptic a Date (or pass the Date straight through)
 export function eclLon(body: string, when: number | Date | { tt: number }): number {
   try {
-    const date =
-      typeof when === "number"        ? jdToDate(when) :
-      when instanceof Date            ? when           :
-      /* object with tt already → convert to JD-TT → Date */
-      (when && typeof when.tt === "number")
-        ? jdToDate(when.tt)           : (() => { throw
-            new Error(`Unsupported time arg: ${JSON.stringify(when)}`) })();
+    let date: Date;
+    
+    if (typeof when === "number") {
+      date = jdToDate(when);
+    } else if (when instanceof Date) {
+      date = when;
+    } else if (when && typeof when.tt === "number") {
+      date = jdToDate(when.tt);
+    } else {
+      throw new Error(`Unsupported time arg: ${JSON.stringify(when)}`);
+    }
 
     const ecliptic = Astronomy.Ecliptic(body as Astronomy.Body, date);
     return ecliptic.elon;
@@ -29,30 +33,51 @@ export function eclLon(body: string, when: number | Date | { tt: number }): numb
 
 // Safe wrapper for heliocentric vector
 function safeHelioVector(body: string, when: number | Date | any) {
-  const date = typeof when === "number" ? jdToDate(when) : 
-               when instanceof Date ? when :
-               (when && typeof when.tt === "number") ? jdToDate(when.tt) :
-               (() => { throw new Error(`Unsupported time arg: ${JSON.stringify(when)}`) })();
+  let date: Date;
+  
+  if (typeof when === "number") {
+    date = jdToDate(when);
+  } else if (when instanceof Date) {
+    date = when;
+  } else if (when && typeof when.tt === "number") {
+    date = jdToDate(when.tt);
+  } else {
+    throw new Error(`Unsupported time arg: ${JSON.stringify(when)}`);
+  }
   
   return Astronomy.HelioVector(body as Astronomy.Body, date);
 }
 
 // Safe wrapper for equatorial coordinates
 function safeEquator(body: string, when: number | Date | any) {
-  const date = typeof when === "number" ? jdToDate(when) : 
-               when instanceof Date ? when :
-               (when && typeof when.tt === "number") ? jdToDate(when.tt) :
-               (() => { throw new Error(`Unsupported time arg: ${JSON.stringify(when)}`) })();
+  let date: Date;
+  
+  if (typeof when === "number") {
+    date = jdToDate(when);
+  } else if (when instanceof Date) {
+    date = when;
+  } else if (when && typeof when.tt === "number") {
+    date = jdToDate(when.tt);
+  } else {
+    throw new Error(`Unsupported time arg: ${JSON.stringify(when)}`);
+  }
   
   return Astronomy.Equator(body as Astronomy.Body, date, false, true);
 }
 
 // Safe wrapper for sidereal time
 function safeSiderealTime(when: number | Date | any) {
-  const date = typeof when === "number" ? jdToDate(when) : 
-               when instanceof Date ? when :
-               (when && typeof when.tt === "number") ? jdToDate(when.tt) :
-               (() => { throw new Error(`Unsupported time arg: ${JSON.stringify(when)}`) })();
+  let date: Date;
+  
+  if (typeof when === "number") {
+    date = jdToDate(when);
+  } else if (when instanceof Date) {
+    date = when;
+  } else if (when && typeof when.tt === "number") {
+    date = jdToDate(when.tt);
+  } else {
+    throw new Error(`Unsupported time arg: ${JSON.stringify(when)}`);
+  }
   
   return Astronomy.SiderealTime(date);
 }
