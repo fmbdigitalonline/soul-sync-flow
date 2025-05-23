@@ -30,7 +30,7 @@ serve(async (req) => {
     
     console.log(`Testing calculation for ${testDate} ${testTime} at ${testLocation}`);
     
-    // Test Julian Day conversion function with a known value - moved inside the serve function
+    // Test Julian Day conversion function with a known value - ALL MOVED INSIDE SERVE FUNCTION
     const testJd = 2460000; // ~2023-01-21
     const sunLonByJd = eclipticLongitudeByJd("Sun", testJd);
     const moonLonByJd = eclipticLongitudeByJd("Moon", testJd);
