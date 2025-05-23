@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import * as Astronomy from "npm:astronomy-engine@2";
 
@@ -7,25 +8,18 @@ function jdToDate(jd: number): Date {
   return new Date((jd - 2_440_587.5) * 86_400_000);
 }
 
-// Always return a valid AstroTime
-function toAstroTime(t: number | Date | any): Astronomy.AstroTime {
-  // Already a fully-formed AstroTime or a look-alike that has .tt
-  if (t && typeof t.tt === 'number') return t as Astronomy.AstroTime;
-
-  // Julian-Day number (TT) → Date → AstroTime
-  if (typeof t === 'number') return Astronomy.MakeTime(jdToDate(t));
-
-  // Plain JavaScript Date (UTC) → AstroTime
-  if (t instanceof Date) return Astronomy.MakeTime(t);
-
-  throw new Error(`Unsupported time value (${typeof t}): ${JSON.stringify(t)}`);
-}
-
-// Safe wrapper for ecliptic longitude
-export function eclLon(body: string, when: number | Date | any): number {
+// Always hand Ecliptic a Date (or pass the Date straight through)
+export function eclLon(body: string, when: number | Date | { tt: number }): number {
   try {
-    const astroTime = toAstroTime(when);
-    const ecliptic = Astronomy.Ecliptic(body as Astronomy.Body, astroTime);
+    const date =
+      typeof when === "number"        ? jdToDate(when) :
+      when instanceof Date            ? when           :
+      /* object with tt already → convert to JD-TT → Date */
+      (when && typeof when.tt === "number")
+        ? jdToDate(when.tt)           : (() => { throw
+            new Error(`Unsupported time arg: ${JSON.stringify(when)}`) })();
+
+    const ecliptic = Astronomy.Ecliptic(body as Astronomy.Body, date);
     return ecliptic.elon;
   } catch (error) {
     console.error(`eclLon failed for ${body} at ${when}:`, error);
@@ -35,20 +29,32 @@ export function eclLon(body: string, when: number | Date | any): number {
 
 // Safe wrapper for heliocentric vector
 function safeHelioVector(body: string, when: number | Date | any) {
-  const astroTime = toAstroTime(when);
-  return Astronomy.HelioVector(body as Astronomy.Body, astroTime);
+  const date = typeof when === "number" ? jdToDate(when) : 
+               when instanceof Date ? when :
+               (when && typeof when.tt === "number") ? jdToDate(when.tt) :
+               (() => { throw new Error(`Unsupported time arg: ${JSON.stringify(when)}`) })();
+  
+  return Astronomy.HelioVector(body as Astronomy.Body, date);
 }
 
 // Safe wrapper for equatorial coordinates
 function safeEquator(body: string, when: number | Date | any) {
-  const astroTime = toAstroTime(when);
-  return Astronomy.Equator(body as Astronomy.Body, astroTime, false, true);
+  const date = typeof when === "number" ? jdToDate(when) : 
+               when instanceof Date ? when :
+               (when && typeof when.tt === "number") ? jdToDate(when.tt) :
+               (() => { throw new Error(`Unsupported time arg: ${JSON.stringify(when)}`) })();
+  
+  return Astronomy.Equator(body as Astronomy.Body, date, false, true);
 }
 
 // Safe wrapper for sidereal time
 function safeSiderealTime(when: number | Date | any) {
-  const astroTime = toAstroTime(when);
-  return Astronomy.SiderealTime(astroTime);
+  const date = typeof when === "number" ? jdToDate(when) : 
+               when instanceof Date ? when :
+               (when && typeof when.tt === "number") ? jdToDate(when.tt) :
+               (() => { throw new Error(`Unsupported time arg: ${JSON.stringify(when)}`) })();
+  
+  return Astronomy.SiderealTime(date);
 }
 
 export interface PlanetaryPosition {
@@ -81,8 +87,8 @@ export async function calculatePlanetaryPositionsWithAstro(
     
     // Cold-start self-test to verify astronomy engine works correctly
     try {
-      const testSunLon = eclLon("Sun", 2451545.0); // J2000
-      console.log(`[AstroEngine] Sun @ J2000 = ${testSunLon.toFixed(6)}°`);
+      const testSunLon = eclLon("Sun", 2_451_545.0); // J2000
+      console.log(`[AstroEngine] Sun @ JD 2451545 = ${testSunLon.toFixed(6)}°`);
     } catch (error) {
       console.error("Self-test failed:", error);
       throw new Error("Astronomy engine self-test failed");
@@ -131,8 +137,7 @@ export async function calculatePlanetaryPositionsWithAstro(
         const eclipticLongitude = eclLon(body.name, dateObj);
         
         // Calculate the full ecliptic coordinates properly
-        const astroTime = toAstroTime(dateObj);
-        const ecliptic = Astronomy.Ecliptic(body.name, astroTime);
+        const ecliptic = Astronomy.Ecliptic(body.name, dateObj);
         
         // Calculate distance (for planets only, not Sun or Moon)
         let distance = null;
@@ -239,7 +244,6 @@ export async function calculatePlanetaryPositionsWithAstro(
 function calculateLunarNodes(time: Date) {
   try {
     // Calculate lunar nodes using orbital elements
-    const astroTime = toAstroTime(time);
     const e = safeHelioVector("Moon", time);
     const ascending = (Math.atan2(e.y, e.x) * 180/Math.PI + 360) % 360;
     return { 
@@ -356,10 +360,10 @@ async function getLocationCoordinates(location: string): Promise<{ latitude: num
 /**
  * Export helper function for other modules to use
  * @param jd Julian Day number
- * @returns AstroTime object
+ * @returns Date object
  */
-export function convertJdToAstroTime(jd: number): Astronomy.AstroTime {
-  return toAstroTime(jd);
+export function convertJdToDate(jd: number): Date {
+  return jdToDate(jd);
 }
 
 /**
