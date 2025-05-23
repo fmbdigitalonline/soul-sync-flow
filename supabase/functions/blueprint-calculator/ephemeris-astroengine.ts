@@ -3,29 +3,26 @@ import * as Astronomy from "npm:astronomy-engine@2";
 
 // Helper function to convert Julian Day to JavaScript Date
 function jdToDate(jd: number): Date {
-  // Convert Julian Day to milliseconds since Unix epoch
-  const msPerDay = 24 * 60 * 60 * 1000;
-  const unixEpochJd = 2440587.5; // JD for Unix epoch (1970-01-01 00:00:00 UTC)
-  const msSinceEpoch = (jd - unixEpochJd) * msPerDay;
-  return new Date(msSinceEpoch);
+  // JD 2440587.5 = 1970-01-01T00:00:00Z (Unix epoch)
+  return new Date((jd - 2_440_587.5) * 86_400_000);
 }
 
-// Bullet-proof time conversion using official Astronomy Engine helpers
-function toAstroTime(t: number | Date | Astronomy.AstroTime): Astronomy.AstroTime {
-  // Already correct AstroTime
-  if (t instanceof Astronomy.AstroTime) return t;
+// Always return a valid AstroTime
+function toAstroTime(t: number | Date | any): Astronomy.AstroTime {
+  // Already a fully-formed AstroTime or a look-alike that has .tt
+  if (t && typeof t.tt === 'number') return t as Astronomy.AstroTime;
 
-  // JULIAN DAY (TT) → use the official helper
-  if (typeof t === "number") return Astronomy.TimeFromTT(t);
+  // Julian-Day number (TT) → Date → AstroTime
+  if (typeof t === 'number') return Astronomy.MakeTime(jdToDate(t));
 
-  // JavaScript Date (UTC) → AstroTime
+  // Plain JavaScript Date (UTC) → AstroTime
   if (t instanceof Date) return Astronomy.MakeTime(t);
 
-  throw new Error(`Unsupported time arg: ${t}`);
+  throw new Error(`Unsupported time value (${typeof t}): ${JSON.stringify(t)}`);
 }
 
 // Safe wrapper for ecliptic longitude
-export function eclLon(body: string, when: number | Date | Astronomy.AstroTime): number {
+export function eclLon(body: string, when: number | Date | any): number {
   try {
     const astroTime = toAstroTime(when);
     const ecliptic = Astronomy.Ecliptic(body as Astronomy.Body, astroTime);
@@ -37,19 +34,19 @@ export function eclLon(body: string, when: number | Date | Astronomy.AstroTime):
 }
 
 // Safe wrapper for heliocentric vector
-function safeHelioVector(body: string, when: number | Date | Astronomy.AstroTime) {
+function safeHelioVector(body: string, when: number | Date | any) {
   const astroTime = toAstroTime(when);
   return Astronomy.HelioVector(body as Astronomy.Body, astroTime);
 }
 
 // Safe wrapper for equatorial coordinates
-function safeEquator(body: string, when: number | Date | Astronomy.AstroTime) {
+function safeEquator(body: string, when: number | Date | any) {
   const astroTime = toAstroTime(when);
   return Astronomy.Equator(body as Astronomy.Body, astroTime, false, true);
 }
 
 // Safe wrapper for sidereal time
-function safeSiderealTime(when: number | Date | Astronomy.AstroTime) {
+function safeSiderealTime(when: number | Date | any) {
   const astroTime = toAstroTime(when);
   return Astronomy.SiderealTime(astroTime);
 }
