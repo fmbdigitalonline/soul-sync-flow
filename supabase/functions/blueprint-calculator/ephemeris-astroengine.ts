@@ -2,25 +2,39 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import * as Astronomy from "npm:astronomy-engine@2";
 
-// CRITICAL: Convert everything to Julian Day first, then to AstroTime
-// Astronomy.MakeTime() is BROKEN in Supabase/Deno environment
+// CRITICAL: Multi-fallback approach for creating AstroTime objects in Supabase/Deno
 function createSafeAstroTime(input: number | Date): Astronomy.AstroTime {
   try {
-    let julianDay: number;
+    let astroTime: Astronomy.AstroTime;
     
     if (typeof input === "number") {
-      // Already a Julian Day
-      julianDay = input;
+      // Input is Julian Day - convert to UT (days since J2000.0)
+      const utDays = input - 2451545.0;
+      astroTime = new Astronomy.AstroTime(utDays);
     } else if (input instanceof Date) {
-      // Convert Date to Julian Day manually (Astronomy.MakeTime is broken)
-      julianDay = dateToJulianDay(input);
+      // Try official Astronomy.MakeTime first
+      try {
+        astroTime = Astronomy.MakeTime(input);
+        // Validate the result has proper structure
+        if (!astroTime || typeof astroTime.tt !== 'number') {
+          throw new Error("MakeTime returned invalid AstroTime object");
+        }
+      } catch (makeTimeError) {
+        console.warn("MakeTime failed, using manual UT conversion:", makeTimeError);
+        // Fallback: manual UT calculation from Date
+        const utDays = dateToUTDays(input);
+        astroTime = new Astronomy.AstroTime(utDays);
+      }
     } else {
       throw new Error(`Invalid time input type: ${typeof input}`);
     }
     
-    // Convert Julian Day to days since J2000.0 (JD 2451545.0)
-    const daysSinceJ2000 = julianDay - 2451545.0;
-    return new Astronomy.AstroTime(daysSinceJ2000);
+    // Validate the AstroTime object
+    if (!astroTime || typeof astroTime.tt !== 'number') {
+      throw new Error("Created AstroTime object is invalid - missing .tt property");
+    }
+    
+    return astroTime;
     
   } catch (error) {
     console.error(`Failed to create AstroTime from ${input}:`, error);
@@ -28,46 +42,21 @@ function createSafeAstroTime(input: number | Date): Astronomy.AstroTime {
   }
 }
 
-// Manual Date to Julian Day conversion (bypasses broken Astronomy.MakeTime)
-function dateToJulianDay(date: Date): number {
-  // Standard Julian Day calculation formula
-  const year = date.getUTCFullYear();
-  const month = date.getUTCMonth() + 1; // getUTCMonth is 0-based
-  const day = date.getUTCDate();
-  const hour = date.getUTCHours();
-  const minute = date.getUTCMinutes();
-  const second = date.getUTCSeconds();
-  const millisecond = date.getUTCMilliseconds();
+// Convert Date to UT days since J2000.0 (proper astronomical method)
+function dateToUTDays(date: Date): number {
+  // Get UTC time in milliseconds since Unix epoch
+  const utcMillis = date.getTime();
   
-  // Convert time to decimal day
-  const decimalDay = day + (hour + (minute + (second + millisecond / 1000) / 60) / 60) / 24;
+  // Convert to Julian Day
+  // Unix epoch (1970-01-01 00:00:00 UTC) = JD 2440587.5
+  const unixEpochJD = 2440587.5;
+  const millisecondsPerDay = 24 * 60 * 60 * 1000;
+  const julianDay = unixEpochJD + (utcMillis / millisecondsPerDay);
   
-  // Julian Day calculation
-  let a = Math.floor((14 - month) / 12);
-  let y = year + 4800 - a;
-  let m = month + 12 * a - 3;
+  // Convert Julian Day to UT days since J2000.0 (JD 2451545.0)
+  const utDays = julianDay - 2451545.0;
   
-  const julianDay = decimalDay + Math.floor((153 * m + 2) / 5) + 365 * y + Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400) - 32045;
-  
-  return julianDay;
-}
-
-// Self-test using manual Julian Day conversion (bypasses broken MakeTime)
-try {
-  const testJD = 2451545.0; // J2000.0
-  const testTime = createSafeAstroTime(testJD);
-  const testSunPos = Astronomy.Ecliptic("Sun", testTime);
-  console.log(`[AstroEngine] Self-test PASSED: Sun @ J2000 = ${testSunPos.elon.toFixed(3)}°`);
-  
-  // Test with the problematic date from the error
-  const problemDate = new Date("1978-02-12T22:00:00Z");
-  const problemTime = createSafeAstroTime(problemDate);
-  const problemSunPos = Astronomy.Ecliptic("Sun", problemTime);
-  console.log(`[AstroEngine] Problem date test PASSED: Sun in 1978 = ${problemSunPos.elon.toFixed(3)}°`);
-  
-} catch (error) {
-  console.error("[AstroEngine] Self-test FAILED:", error);
-  throw new Error("Astronomy Engine initialization failed");
+  return utDays;
 }
 
 // Safe wrapper for ecliptic longitude
@@ -128,12 +117,32 @@ export async function calculatePlanetaryPositionsWithAstro(
   try {
     console.log(`AstroEngine: Calculating positions for ${date} ${time} at ${location} in timezone ${timezone}`);
     
+    // Run self-tests first (moved inside function to prevent module init failures)
+    try {
+      console.log("Running Astronomy Engine self-tests...");
+      
+      // Test 1: J2000.0 epoch
+      const testJD = 2451545.0;
+      const testTime = createSafeAstroTime(testJD);
+      const testSunPos = Astronomy.Ecliptic("Sun", testTime);
+      console.log(`[AstroEngine] Self-test PASSED: Sun @ J2000 = ${testSunPos.elon.toFixed(3)}°`);
+      
+      // Test 2: The problematic date from the error
+      const problemDate = new Date("1978-02-12T22:00:00Z");
+      const problemTime = createSafeAstroTime(problemDate);
+      const problemSunPos = Astronomy.Ecliptic("Sun", problemTime);
+      console.log(`[AstroEngine] Problem date test PASSED: Sun in 1978 = ${problemSunPos.elon.toFixed(3)}°`);
+      
+    } catch (testError) {
+      console.error("[AstroEngine] Self-test FAILED:", testError);
+      throw new Error("Astronomy Engine self-test failed");
+    }
+    
     // Parse the date and time
     const [year, month, day] = date.split('-').map(Number);
     const [hour, minute] = time.split(':').map(Number);
     
     // Create a proper Date object
-    // Note: Astronomy Engine expects UTC date objects
     const dateObj = new Date(Date.UTC(year, month - 1, day, hour, minute, 0));
     console.log(`AstroEngine: Created date object: ${dateObj.toISOString()}`);
     
