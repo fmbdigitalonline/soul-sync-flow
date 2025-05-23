@@ -33,6 +33,34 @@ export function eclLon(body: Astronomy.Body, when: number | Date | Astronomy.Ast
 }
 
 /**
+ * Safe wrapper for Astronomy.Ecliptic
+ */
+function safeEcliptic(body: Astronomy.Body, when: number | Date | Astronomy.AstroTime) {
+  return Astronomy.Ecliptic(body, toAstroTime(when));
+}
+
+/**
+ * Safe wrapper for Astronomy.HelioVector
+ */
+function safeHelioVector(body: Astronomy.Body, when: number | Date | Astronomy.AstroTime) {
+  return Astronomy.HelioVector(body, toAstroTime(when));
+}
+
+/**
+ * Safe wrapper for Astronomy.Equator
+ */
+function safeEquator(body: Astronomy.Body, when: number | Date | Astronomy.AstroTime, equinox?: boolean, true_equinox?: boolean) {
+  return Astronomy.Equator(body, toAstroTime(when), equinox, true_equinox);
+}
+
+/**
+ * Safe wrapper for Astronomy.SiderealTime
+ */
+function safeSiderealTime(when: number | Date | Astronomy.AstroTime) {
+  return Astronomy.SiderealTime(toAstroTime(when));
+}
+
+/**
  * Calculate planetary positions using Astronomy Engine
  * This is a pure JavaScript implementation with no WASM/external data dependencies
  */
@@ -93,18 +121,18 @@ export async function calculatePlanetaryPositionsWithAstro(date, time, location,
     // Calculate ecliptic coordinates (longitude and latitude) using our safe helper
     const eclipticLongitude = eclLon(body.name, astroTime);
     
-    // Calculate the full ecliptic coordinates properly
-    const ecliptic = Astronomy.Ecliptic(body.name, astroTime);
+    // Calculate the full ecliptic coordinates properly using safe wrapper
+    const ecliptic = safeEcliptic(body.name, astroTime);
     
     // Calculate distance (for planets only, not Sun or Moon)
     let distance = null;
     if (body.id !== "sun" && body.id !== "moon") {
-      const vector = Astronomy.HelioVector(body.name, astroTime);
+      const vector = safeHelioVector(body.name, astroTime);
       distance = Math.sqrt(vector.x*vector.x + vector.y*vector.y + vector.z*vector.z);
     }
     
-    // Calculate body position in equatorial coordinates
-    const equatorial = Astronomy.Equator(body.name, astroTime, false, true);
+    // Calculate body position in equatorial coordinates using safe wrapper
+    const equatorial = safeEquator(body.name, astroTime, false, true);
     
     // Store the position data
     positions[body.id] = {
@@ -120,7 +148,7 @@ export async function calculatePlanetaryPositionsWithAstro(date, time, location,
     console.log(`AstroEngine: ${body.id} position: lon ${eclipticLongitude.toFixed(6)}°, lat ${ecliptic.elat.toFixed(6)}°`);
   }
   
-  // Calculate lunar nodes
+  // Calculate lunar nodes using safe wrapper
   const nodes = calculateLunarNodes(astroTime);
   positions["north_node"] = {
     longitude: nodes.northNode,
@@ -131,7 +159,7 @@ export async function calculatePlanetaryPositionsWithAstro(date, time, location,
   };
   console.log(`AstroEngine: North node position: lon ${nodes.northNode.toFixed(6)}°`);
   
-  // Calculate house cusps and angles (Ascendant and MC)
+  // Calculate house cusps and angles (Ascendant and MC) using safe wrapper
   const houseData = calculateHousesAndAngles(astroTime, coords, observer);
   positions["ascendant"] = {
     longitude: houseData.ascendant,
@@ -158,11 +186,11 @@ export async function calculatePlanetaryPositionsWithAstro(date, time, location,
   return positions;
 }
 
-// Helper function to calculate lunar nodes
+// Helper function to calculate lunar nodes using safe wrapper
 function calculateLunarNodes(time) {
-  // Calculate lunar nodes using orbital elements
+  // Calculate lunar nodes using orbital elements with safe wrapper
   // This is a simplified calculation of the mean lunar nodes
-  const e = Astronomy.HelioVector("Moon", time);
+  const e = safeHelioVector("Moon", time);
   const ascending = (Math.atan2(e.y, e.x) * 180/Math.PI + 360) % 360;
   return { 
     northNode: ascending, 
@@ -170,10 +198,10 @@ function calculateLunarNodes(time) {
   };
 }
 
-// Helper function to calculate houses and angles
+// Helper function to calculate houses and angles using safe wrapper
 function calculateHousesAndAngles(time, coords, observer) {
-  // Calculate the Local Sidereal Time
-  const lst = Astronomy.SiderealTime(time);
+  // Calculate the Local Sidereal Time using safe wrapper
+  const lst = safeSiderealTime(time);
   
   // Convert local sidereal time to degrees
   const lstDeg = (lst * 15) % 360;
