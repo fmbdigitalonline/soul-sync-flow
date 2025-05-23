@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import * as Astronomy from "npm:astronomy-engine@2";
 
@@ -9,8 +10,13 @@ function toAstroTime(x: number | Date | Astronomy.AstroTime): Astronomy.AstroTim
   if (x instanceof Astronomy.AstroTime) return x;
 
   if (typeof x === "number") {
-    // argument is a Julian Day (TT)
-    return new Astronomy.AstroTime(x - 2_451_545.0);   // Δdays from J2000
+    // Convert Julian Day to Date first, then to AstroTime for proper initialization
+    // JD 2451545.0 = January 1, 2000, 12:00 TT (J2000.0)
+    const millisecondsPerDay = 24 * 60 * 60 * 1000;
+    const j2000Milliseconds = Date.UTC(2000, 0, 1, 12, 0, 0); // J2000.0 in milliseconds
+    const deltaMilliseconds = (x - 2451545.0) * millisecondsPerDay;
+    const dateFromJD = new Date(j2000Milliseconds + deltaMilliseconds);
+    return Astronomy.MakeTime(dateFromJD);
   }
 
   if (x instanceof Date) return Astronomy.MakeTime(x); // UTC → TT
@@ -25,11 +31,6 @@ function toAstroTime(x: number | Date | Astronomy.AstroTime): Astronomy.AstroTim
 export function eclLon(body: Astronomy.Body, when: number | Date | Astronomy.AstroTime): number {
   return Astronomy.Ecliptic(body, toAstroTime(when)).elon;
 }
-
-// Sanity check before deploying
-console.log(
-  "[Self-test] Sun @ J2000 =", eclLon("Sun", 2451545.0).toFixed(3), "°"
-);
 
 /**
  * Calculate planetary positions using Astronomy Engine
