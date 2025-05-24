@@ -33,6 +33,67 @@ interface CalculationResults {
   };
 }
 
+// Chinese Zodiac calculation function
+function calculateChineseZodiac(date: string) {
+  const year = parseInt(date.split('-')[0]);
+  const animals = [
+    'Rat', 'Ox', 'Tiger', 'Rabbit', 'Dragon', 'Snake',
+    'Horse', 'Goat', 'Monkey', 'Rooster', 'Dog', 'Pig'
+  ];
+  
+  // Chinese zodiac cycle starts in 4 AD for the Rat
+  const animalIndex = (year - 4) % 12;
+  const animal = animals[animalIndex];
+  
+  return {
+    animal: animal,
+    year: year,
+    element: getChineseElement(year),
+    description: `${year} is the year of the ${animal}`
+  };
+}
+
+// Helper function to get Chinese element
+function getChineseElement(year: number): string {
+  const elements = ['Wood', 'Fire', 'Earth', 'Metal', 'Water'];
+  const elementIndex = Math.floor(((year - 4) % 10) / 2);
+  return elements[elementIndex];
+}
+
+// Numerology calculation function
+function calculateNumerology(date: string, fullName: string) {
+  const [year, month, day] = date.split('-').map(Number);
+  
+  // Life Path Number calculation
+  const lifePathSum = year + month + day;
+  const lifePathNumber = reduceToSingleDigit(lifePathSum);
+  
+  // Expression Number from name (if provided)
+  let expressionNumber = null;
+  if (fullName) {
+    const nameValue = fullName.toUpperCase().replace(/[^A-Z]/g, '').split('').reduce((sum, char) => {
+      return sum + (char.charCodeAt(0) - 64);
+    }, 0);
+    expressionNumber = reduceToSingleDigit(nameValue);
+  }
+  
+  return {
+    lifePathNumber,
+    expressionNumber,
+    birthDay: day,
+    birthMonth: month,
+    birthYear: year
+  };
+}
+
+// Helper function to reduce numbers to single digits (except master numbers)
+function reduceToSingleDigit(num: number): number {
+  while (num > 9 && num !== 11 && num !== 22 && num !== 33) {
+    num = num.toString().split('').map(Number).reduce((a, b) => a + b, 0);
+  }
+  return num;
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
