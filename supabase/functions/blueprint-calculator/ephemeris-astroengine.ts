@@ -117,12 +117,12 @@ export async function calculatePlanetaryPositionsWithAstro(
   try {
     console.log(`AstroEngine: Calculating positions for ${date} ${time} at ${location} in timezone ${timezone}`);
     
-    // Enhanced self-test with safe helper
+    // Enhanced self-test with safe helper - using Moon instead of Sun
     try {
       console.log("🔥 running self-test with safe EclipticLongitude helper...");
       const testDate = jdToDate(2_451_545.0); // J2000 as proper Date
-      const testSunLon = Astronomy.EclipticLongitude("Sun", testDate);
-      console.log(`[AstroEngine] Self-test passed: Sun @ J2000 = ${testSunLon.toFixed(6)}°`);
+      const testMoonLon = Astronomy.EclipticLongitude("Moon", testDate);
+      console.log(`[AstroEngine] Self-test passed: Moon @ J2000 = ${testMoonLon.toFixed(6)}°`);
     } catch (error) {
       console.error("Self-test failed:", error);
       throw new Error("Astronomy engine self-test failed");
