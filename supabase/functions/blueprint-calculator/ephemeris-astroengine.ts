@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import * as Astronomy from "npm:astronomy-engine@2";
 import { calculateLunarNodes } from './lunar-nodes-calculator.ts';
@@ -177,17 +176,14 @@ export async function calculatePlanetaryPositionsWithAstro(
     
     const positions = {};
     
-    // Calculate positions for each celestial body
+    // Calculate positions for each celestial body using safe helpers
     for (const body of bodies) {
       try {
-        console.log(`🔥 calculating ${body.id} with safe EclipticLongitude...`);
+        console.log(`🔥 calculating ${body.id} with safe EclipticLongitude/Latitude...`);
         
-        // Use the safe built-in helper for ecliptic longitude
+        // Use safe built-in helpers for both longitude and latitude
         const longitude = Astronomy.EclipticLongitude(body.name as Astronomy.Body, dateObj);
-        
-        // Calculate ecliptic latitude (we still need Ecliptic for this, but with proper AstroTime)
-        const astroTime = new Astronomy.AstroTime(dateObj);
-        const ecliptic = Astronomy.Ecliptic(body.name as Astronomy.Body, astroTime);
+        const latitude = Astronomy.EclipticLatitude(body.name as Astronomy.Body, dateObj);
         
         // Calculate distance for planets
         let distance = null;
@@ -205,7 +201,7 @@ export async function calculatePlanetaryPositionsWithAstro(
         
         positions[body.id] = {
           longitude: longitude,
-          latitude: ecliptic.elat,
+          latitude: latitude,
           distance: distance,
           rightAscension: equatorial.ra,
           declination: equatorial.dec,
@@ -213,7 +209,7 @@ export async function calculatePlanetaryPositionsWithAstro(
           latitudeSpeed: 0
         };
         
-        console.log(`AstroEngine: ${body.id} position: lon ${longitude.toFixed(6)}°, lat ${ecliptic.elat.toFixed(6)}°`);
+        console.log(`AstroEngine: ${body.id} position: lon ${longitude.toFixed(6)}°, lat ${latitude.toFixed(6)}°`);
       } catch (error) {
         console.error(`Failed to calculate position for ${body.id}:`, error);
         // Continue with other planets
