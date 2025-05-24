@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import * as Astronomy from "npm:astronomy-engine@2";
 import { calculateLunarNodes } from './lunar-nodes-calculator.ts';
@@ -121,6 +122,8 @@ export async function calculatePlanetaryPositionsWithAstro(
     try {
       console.log("🔥 running self-test with safe EclipticLongitude helper...");
       const testDate = jdToDate(2_451_545.0); // J2000 as proper Date
+      
+      // Use the Moon (geocentric) instead of the Sun (heliocentric Sun is undefined)
       const testMoonLon = Astronomy.EclipticLongitude("Moon", testDate);
       console.log(`[AstroEngine] Self-test passed: Moon @ J2000 = ${testMoonLon.toFixed(6)}°`);
     } catch (error) {
