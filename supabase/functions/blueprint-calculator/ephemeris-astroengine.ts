@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import * as Astronomy from "npm:astronomy-engine@2";
 import { calculateLunarNodes } from './lunar-nodes-calculator.ts';
@@ -9,7 +10,7 @@ function jdToDate(jd: number): Date {
   return new Date((jd - 2_440_587.5) * 86_400_000);
 }
 
-// Always hand Ecliptic a Date (or pass the Date straight through)
+// Fixed eclLon function that properly handles time conversion
 export function eclLon(body: string, when: number | Date | { tt: number }): number {
   try {
     let date: Date;
@@ -24,6 +25,8 @@ export function eclLon(body: string, when: number | Date | { tt: number }): numb
       throw new Error(`Unsupported time arg: ${JSON.stringify(when)}`);
     }
 
+    console.log(`eclLon: Converting ${body} at ${when} to date: ${date.toISOString()}`);
+    
     const ecliptic = Astronomy.Ecliptic(body as Astronomy.Body, date);
     return ecliptic.elon;
   } catch (error) {
@@ -112,8 +115,9 @@ export async function calculatePlanetaryPositionsWithAstro(
     
     // Enhanced self-test with proper error handling
     try {
-      const testSunLon = eclLon("Sun", 2_451_545.0); // J2000
-      console.log(`[AstroEngine] Self-test passed: Sun @ JD 2451545 = ${testSunLon.toFixed(6)}°`);
+      const testDate = jdToDate(2_451_545.0); // J2000 as proper Date
+      const testSunLon = eclLon("Sun", testDate);
+      console.log(`[AstroEngine] Self-test passed: Sun @ J2000 = ${testSunLon.toFixed(6)}°`);
     } catch (error) {
       console.error("Self-test failed:", error);
       throw new Error("Astronomy engine self-test failed");
@@ -167,7 +171,7 @@ export async function calculatePlanetaryPositionsWithAstro(
     // Calculate positions for each celestial body
     for (const body of bodies) {
       try {
-        // Calculate ecliptic coordinates
+        // Calculate ecliptic coordinates using proper Date object
         const ecliptic = Astronomy.Ecliptic(body.name, dateObj);
         
         // Calculate distance for planets
@@ -281,7 +285,7 @@ export async function calculatePlanetaryPositionsWithAstro(
 function calculateLunarNodes(positions: { [key: string]: PlanetaryPosition }, jd: number) {
   try {
     // Calculate lunar nodes using orbital elements
-    const e = safeHelioVector("Moon", jd);
+    const e = safeHelioVector("Moon", jdToDate(jd));
     const ascending = (Math.atan2(e.y, e.x) * 180/Math.PI + 360) % 360;
     return { 
       northNode: ascending, 
@@ -300,7 +304,7 @@ function calculateLunarNodes(positions: { [key: string]: PlanetaryPosition }, jd
 function calculateHouseCusps(jd: number, latitude: number, longitude: number, positions: { [key: string]: PlanetaryPosition }) {
   try {
     // Calculate the Local Sidereal Time
-    const lst = safeSiderealTime(jd);
+    const lst = safeSiderealTime(jdToDate(jd));
     
     // Convert local sidereal time to degrees
     const lstDeg = (lst * 15) % 360;
@@ -410,5 +414,5 @@ export function convertJdToDate(jd: number): Date {
  * @returns Ecliptic longitude in degrees
  */
 export function eclipticLongitudeByJd(body: string, jd: number): number {
-  return eclLon(body, jd);
+  return eclLon(body, jdToDate(jd));
 }
