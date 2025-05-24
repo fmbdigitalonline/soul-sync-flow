@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import * as Astronomy from "npm:astronomy-engine@2";
 import { calculateLunarNodes } from './lunar-nodes-calculator.ts';
@@ -11,6 +12,8 @@ function jdToDate(jd: number): Date {
 
 // Fixed eclLon function that properly handles time conversion
 export function eclLon(body: string, when: number | Date | { tt: number }): number {
+  console.log("🔥 running patched eclLon with MakeTime fix...");
+  
   try {
     let date: Date;
     
@@ -119,6 +122,7 @@ export async function calculatePlanetaryPositionsWithAstro(
     
     // Enhanced self-test with proper error handling
     try {
+      console.log("🔥 running self-test with patched eclLon...");
       const testDate = jdToDate(2_451_545.0); // J2000 as proper Date
       const testSunLon = eclLon("Sun", testDate);
       console.log(`[AstroEngine] Self-test passed: Sun @ J2000 = ${testSunLon.toFixed(6)}°`);
@@ -176,6 +180,8 @@ export async function calculatePlanetaryPositionsWithAstro(
     // Calculate positions for each celestial body
     for (const body of bodies) {
       try {
+        console.log(`🔥 calculating ${body.id} with patched AstroTime...`);
+        
         // Create proper AstroTime object for Astronomy Engine
         const astroTime = Astronomy.MakeTime(dateObj);
         
