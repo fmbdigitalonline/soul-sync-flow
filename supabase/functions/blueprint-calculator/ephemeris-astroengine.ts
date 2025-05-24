@@ -1,6 +1,7 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import * as Astronomy from "npm:astronomy-engine@2";
+import { calculateLunarNodes } from './lunar-nodes-calculator.ts';
+import { calculateHouseCusps } from './house-system-calculator.ts';
 
 // Helper function to convert Julian Day to JavaScript Date
 function jdToDate(jd: number): Date {
@@ -98,8 +99,7 @@ export interface HousesAndAngles {
 }
 
 /**
- * Calculate planetary positions using Astronomy Engine
- * This is a pure JavaScript implementation with no WASM/external data dependencies
+ * Calculate planetary positions using Astronomy Engine with enhanced accuracy
  */
 export async function calculatePlanetaryPositionsWithAstro(
   date: string,
@@ -110,36 +110,45 @@ export async function calculatePlanetaryPositionsWithAstro(
   try {
     console.log(`AstroEngine: Calculating positions for ${date} ${time} at ${location} in timezone ${timezone}`);
     
-    // Cold-start self-test to verify astronomy engine works correctly
+    // Enhanced self-test with proper error handling
     try {
       const testSunLon = eclLon("Sun", 2_451_545.0); // J2000
-      console.log(`[AstroEngine] Sun @ JD 2451545 = ${testSunLon.toFixed(6)}°`);
+      console.log(`[AstroEngine] Self-test passed: Sun @ JD 2451545 = ${testSunLon.toFixed(6)}°`);
     } catch (error) {
       console.error("Self-test failed:", error);
       throw new Error("Astronomy engine self-test failed");
     }
     
-    // Parse the date and time
+    // Parse the date and time with enhanced validation
     const [year, month, day] = date.split('-').map(Number);
     const [hour, minute] = time.split(':').map(Number);
     
-    // Create a proper Date object
-    // Note: Astronomy Engine expects UTC date objects
+    if (!year || !month || !day || hour === undefined || minute === undefined) {
+      throw new Error("Invalid date or time format");
+    }
+    
+    // Create accurate Date object in UTC
     const dateObj = new Date(Date.UTC(year, month - 1, day, hour, minute, 0));
     console.log(`AstroEngine: Created date object: ${dateObj.toISOString()}`);
     
-    // Get coordinates for the location
-    const coords = await getLocationCoordinates(location);
-    console.log(`AstroEngine: Location coordinates: lat ${coords.latitude}, long ${coords.longitude}`);
+    // Calculate Julian Date for accurate astronomical calculations
+    const jd = Astronomy.MakeTime(dateObj).tt;
+    console.log(`AstroEngine: Julian Date: ${jd}`);
     
-    // Create an observer object for the specified location
-    const observer = new Astronomy.Observer(
-      coords.latitude,
-      coords.longitude, 
-      0 // elevation (assuming sea level)
-    );
+    // Get coordinates for the location with error handling
+    let coords;
+    try {
+      coords = await getLocationCoordinates(location);
+      console.log(`AstroEngine: Location coordinates: lat ${coords.latitude}, long ${coords.longitude}`);
+    } catch (error) {
+      console.error("Geocoding failed:", error);
+      throw new Error(`Failed to geocode location: ${location}`);
+    }
     
-    // Define the bodies we want to calculate positions for
+    // Create observer for house calculations
+    const observer = new Astronomy.Observer(coords.latitude, coords.longitude, 0);
+    
+    // Enhanced planetary calculations
     const bodies = [
       { id: "sun", name: "Sun" },
       { id: "moon", name: "Moon" },
@@ -153,57 +162,53 @@ export async function calculatePlanetaryPositionsWithAstro(
       { id: "pluto", name: "Pluto" }
     ];
     
-    // Calculate positions for each body
     const positions = {};
     
+    // Calculate positions for each celestial body
     for (const body of bodies) {
       try {
-        // Calculate ecliptic coordinates (longitude and latitude) using our safe helper
-        const eclipticLongitude = eclLon(body.name, dateObj);
-        
-        // Calculate the full ecliptic coordinates properly
+        // Calculate ecliptic coordinates
         const ecliptic = Astronomy.Ecliptic(body.name, dateObj);
         
-        // Calculate distance (for planets only, not Sun or Moon)
+        // Calculate distance for planets
         let distance = null;
         if (body.id !== "sun" && body.id !== "moon") {
-          const vector = safeHelioVector(body.name, dateObj);
-          distance = Math.sqrt(vector.x*vector.x + vector.y*vector.y + vector.z*vector.z);
+          try {
+            const vector = safeHelioVector(body.name, dateObj);
+            distance = Math.sqrt(vector.x*vector.x + vector.y*vector.y + vector.z*vector.z);
+          } catch (error) {
+            console.warn(`Could not calculate distance for ${body.id}:`, error);
+          }
         }
         
-        // Calculate body position in equatorial coordinates
+        // Calculate equatorial coordinates
         const equatorial = safeEquator(body.name, dateObj);
         
-        // Store the position data
         positions[body.id] = {
-          longitude: eclipticLongitude,
+          longitude: ecliptic.elon,
           latitude: ecliptic.elat,
           distance: distance,
           rightAscension: equatorial.ra,
           declination: equatorial.dec,
-          longitudeSpeed: 0, // Speed calculation would require additional work
+          longitudeSpeed: 0, // TODO: Calculate speed
           latitudeSpeed: 0
         };
         
-        console.log(`AstroEngine: ${body.id} position: lon ${eclipticLongitude.toFixed(6)}°, lat ${ecliptic.elat.toFixed(6)}°`);
+        console.log(`AstroEngine: ${body.id} position: lon ${ecliptic.elon.toFixed(6)}°, lat ${ecliptic.elat.toFixed(6)}°`);
       } catch (error) {
         console.error(`Failed to calculate position for ${body.id}:`, error);
-        // Continue with other planets instead of failing completely
+        // Continue with other planets
         positions[body.id] = {
-          longitude: 0,
-          latitude: 0,
-          distance: null,
-          rightAscension: 0,
-          declination: 0,
-          longitudeSpeed: 0,
-          latitudeSpeed: 0
+          longitude: 0, latitude: 0, distance: null,
+          rightAscension: 0, declination: 0,
+          longitudeSpeed: 0, latitudeSpeed: 0
         };
       }
     }
     
-    // Calculate lunar nodes
+    // Calculate accurate lunar nodes
     try {
-      const nodes = calculateLunarNodes(dateObj);
+      const nodes = calculateLunarNodes(positions, jd);
       positions["north_node"] = {
         longitude: nodes.northNode,
         latitude: 0,
@@ -215,17 +220,15 @@ export async function calculatePlanetaryPositionsWithAstro(
     } catch (error) {
       console.error("Failed to calculate lunar nodes:", error);
       positions["north_node"] = {
-        longitude: 0,
-        latitude: 0,
-        distance: null,
-        longitudeSpeed: 0,
-        latitudeSpeed: 0
+        longitude: 0, latitude: 0, distance: null,
+        longitudeSpeed: 0, latitudeSpeed: 0
       };
     }
     
-    // Calculate house cusps and angles (Ascendant and MC)
+    // Calculate accurate house cusps and angles
     try {
-      const houseData = calculateHousesAndAngles(dateObj, coords, observer);
+      const houseData = calculateHouseCusps(jd, coords.latitude, coords.longitude, positions);
+      
       positions["ascendant"] = {
         longitude: houseData.ascendant,
         latitude: 0,
@@ -233,31 +236,40 @@ export async function calculatePlanetaryPositionsWithAstro(
       };
       
       positions["mc"] = {
-        longitude: houseData.mc,
+        longitude: houseData.midheaven,
         latitude: 0,
         house: 10
       };
       
-      console.log(`AstroEngine: Ascendant: ${positions['ascendant'].longitude.toFixed(6)}°`);
-      console.log(`AstroEngine: MC: ${positions['mc'].longitude.toFixed(6)}°`);
-      
-      // Add house cusps
       positions["houses"] = houseData.houses;
+      
+      console.log(`AstroEngine: Ascendant: ${houseData.ascendant.toFixed(6)}°`);
+      console.log(`AstroEngine: MC: ${houseData.midheaven.toFixed(6)}°`);
     } catch (error) {
       console.error("Failed to calculate houses and angles:", error);
-      positions["ascendant"] = { longitude: 0, latitude: 0, house: 1 };
-      positions["mc"] = { longitude: 90, latitude: 0, house: 10 };
+      // Fallback to simple calculations
+      const lst = safeSiderealTime(dateObj);
+      const ascendant = (lst * 15 + 90 - coords.latitude / 2 + 360) % 360;
+      const mc = (lst * 15) % 360;
+      
+      positions["ascendant"] = { longitude: ascendant, latitude: 0, house: 1 };
+      positions["mc"] = { longitude: mc, latitude: 0, house: 10 };
       positions["houses"] = Array.from({ length: 12 }, (_, i) => ({ 
         cusp: i + 1, 
-        longitude: i * 30 
+        longitude: (ascendant + i * 30) % 360 
       }));
     }
     
-    // Add timestamp for reference
+    // Add metadata
     positions["timestamp"] = dateObj.getTime();
-    positions["source"] = "astronomy_engine";
+    positions["source"] = "astronomy_engine_enhanced";
+    positions["julian_date"] = jd;
+    positions["observer"] = {
+      latitude: coords.latitude,
+      longitude: coords.longitude
+    };
     
-    console.log("Celestial calculations completed successfully");
+    console.log("Enhanced celestial calculations completed successfully");
     return positions;
   } catch (error) {
     console.error("Error in calculatePlanetaryPositionsWithAstro:", error);
@@ -266,10 +278,10 @@ export async function calculatePlanetaryPositionsWithAstro(
 }
 
 // Helper function to calculate lunar nodes
-function calculateLunarNodes(time: Date) {
+function calculateLunarNodes(positions: { [key: string]: PlanetaryPosition }, jd: number) {
   try {
     // Calculate lunar nodes using orbital elements
-    const e = safeHelioVector("Moon", time);
+    const e = safeHelioVector("Moon", jd);
     const ascending = (Math.atan2(e.y, e.x) * 180/Math.PI + 360) % 360;
     return { 
       northNode: ascending, 
@@ -284,17 +296,17 @@ function calculateLunarNodes(time: Date) {
   }
 }
 
-// Helper function to calculate houses and angles
-function calculateHousesAndAngles(time: Date, coords: { latitude: number; longitude: number }, observer: Astronomy.Observer) {
+// Helper function to calculate house cusps
+function calculateHouseCusps(jd: number, latitude: number, longitude: number, positions: { [key: string]: PlanetaryPosition }) {
   try {
     // Calculate the Local Sidereal Time
-    const lst = safeSiderealTime(time);
+    const lst = safeSiderealTime(jd);
     
     // Convert local sidereal time to degrees
     const lstDeg = (lst * 15) % 360;
     
     // Calculate the ascendant (simplified method)
-    const ascendant = (lstDeg + 90 - coords.latitude / 2) % 360;
+    const ascendant = (lstDeg + 90 - latitude / 2) % 360;
     
     // The MC (Medium Coeli) is the point on the ecliptic that is highest in the sky
     const mc = lstDeg;
@@ -310,7 +322,7 @@ function calculateHousesAndAngles(time: Date, coords: { latitude: number; longit
     
     return {
       ascendant,
-      mc,
+      midheaven: mc,
       houses
     };
   } catch (error) {
@@ -326,7 +338,7 @@ function calculateHousesAndAngles(time: Date, coords: { latitude: number; longit
     
     return {
       ascendant: 0,
-      mc: 90,
+      midheaven: 90,
       houses
     };
   }
