@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import * as Astronomy from "npm:astronomy-engine@2";
 import { calculateLunarNodes } from './lunar-nodes-calculator.ts';
@@ -27,7 +26,9 @@ export function eclLon(body: string, when: number | Date | { tt: number }): numb
 
     console.log(`eclLon: Converting ${body} at ${when} to date: ${date.toISOString()}`);
     
-    const ecliptic = Astronomy.Ecliptic(body as Astronomy.Body, date);
+    // Create proper AstroTime object instead of passing raw Date
+    const astroTime = Astronomy.MakeTime(date);
+    const ecliptic = Astronomy.Ecliptic(body as Astronomy.Body, astroTime);
     return ecliptic.elon;
   } catch (error) {
     console.error(`eclLon failed for ${body} at ${when}:`, error);
@@ -49,7 +50,8 @@ function safeHelioVector(body: string, when: number | Date | any) {
     throw new Error(`Unsupported time arg: ${JSON.stringify(when)}`);
   }
   
-  return Astronomy.HelioVector(body as Astronomy.Body, date);
+  const astroTime = Astronomy.MakeTime(date);
+  return Astronomy.HelioVector(body as Astronomy.Body, astroTime);
 }
 
 // Safe wrapper for equatorial coordinates
@@ -66,7 +68,8 @@ function safeEquator(body: string, when: number | Date | any) {
     throw new Error(`Unsupported time arg: ${JSON.stringify(when)}`);
   }
   
-  return Astronomy.Equator(body as Astronomy.Body, date, false, true);
+  const astroTime = Astronomy.MakeTime(date);
+  return Astronomy.Equator(body as Astronomy.Body, astroTime, false, true);
 }
 
 // Safe wrapper for sidereal time
@@ -83,7 +86,8 @@ function safeSiderealTime(when: number | Date | any) {
     throw new Error(`Unsupported time arg: ${JSON.stringify(when)}`);
   }
   
-  return Astronomy.SiderealTime(date);
+  const astroTime = Astronomy.MakeTime(date);
+  return Astronomy.SiderealTime(astroTime);
 }
 
 export interface PlanetaryPosition {
@@ -136,7 +140,8 @@ export async function calculatePlanetaryPositionsWithAstro(
     console.log(`AstroEngine: Created date object: ${dateObj.toISOString()}`);
     
     // Calculate Julian Date for accurate astronomical calculations
-    const jd = Astronomy.MakeTime(dateObj).tt;
+    const astroTime = Astronomy.MakeTime(dateObj);
+    const jd = astroTime.tt;
     console.log(`AstroEngine: Julian Date: ${jd}`);
     
     // Get coordinates for the location with error handling
@@ -171,8 +176,11 @@ export async function calculatePlanetaryPositionsWithAstro(
     // Calculate positions for each celestial body
     for (const body of bodies) {
       try {
-        // Calculate ecliptic coordinates using proper Date object
-        const ecliptic = Astronomy.Ecliptic(body.name, dateObj);
+        // Create proper AstroTime object for Astronomy Engine
+        const astroTime = Astronomy.MakeTime(dateObj);
+        
+        // Calculate ecliptic coordinates using proper AstroTime object
+        const ecliptic = Astronomy.Ecliptic(body.name as Astronomy.Body, astroTime);
         
         // Calculate distance for planets
         let distance = null;
