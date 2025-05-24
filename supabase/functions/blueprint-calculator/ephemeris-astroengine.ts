@@ -9,9 +9,9 @@ function jdToDate(jd: number): Date {
   return new Date((jd - 2_440_587.5) * 86_400_000);
 }
 
-// Fixed eclLon function that properly handles time conversion
+// Fixed eclLon function using the safe EclipticLongitude helper
 export function eclLon(body: string, when: number | Date | { tt: number }): number {
-  console.log("🔥 running patched eclLon with AstroTime constructor...");
+  console.log("🔥 using safe EclipticLongitude helper...");
   
   try {
     let date: Date;
@@ -28,14 +28,8 @@ export function eclLon(body: string, when: number | Date | { tt: number }): numb
 
     console.log(`eclLon: Converting ${body} at ${when} to date: ${date.toISOString()}`);
     
-    // Use AstroTime constructor instead of MakeTime
-    const astroTime = new Astronomy.AstroTime(date);
-    
-    // Debug log to verify .tt property
-    console.log(`DEBUG eclLon: astroTime.tt = ${astroTime.tt}`);
-    
-    const ecliptic = Astronomy.Ecliptic(body as Astronomy.Body, astroTime);
-    return ecliptic.elon;
+    // Use the safe built-in helper that handles time conversion internally
+    return Astronomy.EclipticLongitude(body as Astronomy.Body, date);
   } catch (error) {
     console.error(`eclLon failed for ${body} at ${when}:`, error);
     throw error;
@@ -123,11 +117,11 @@ export async function calculatePlanetaryPositionsWithAstro(
   try {
     console.log(`AstroEngine: Calculating positions for ${date} ${time} at ${location} in timezone ${timezone}`);
     
-    // Enhanced self-test with proper error handling
+    // Enhanced self-test with safe helper
     try {
-      console.log("🔥 running self-test with patched AstroTime constructor...");
+      console.log("🔥 running self-test with safe EclipticLongitude helper...");
       const testDate = jdToDate(2_451_545.0); // J2000 as proper Date
-      const testSunLon = eclLon("Sun", testDate);
+      const testSunLon = Astronomy.EclipticLongitude("Sun", testDate);
       console.log(`[AstroEngine] Self-test passed: Sun @ J2000 = ${testSunLon.toFixed(6)}°`);
     } catch (error) {
       console.error("Self-test failed:", error);
@@ -183,15 +177,13 @@ export async function calculatePlanetaryPositionsWithAstro(
     // Calculate positions for each celestial body
     for (const body of bodies) {
       try {
-        console.log(`🔥 calculating ${body.id} with AstroTime constructor...`);
+        console.log(`🔥 calculating ${body.id} with safe EclipticLongitude...`);
         
-        // Use AstroTime constructor instead of MakeTime
+        // Use the safe built-in helper for ecliptic longitude
+        const longitude = Astronomy.EclipticLongitude(body.name as Astronomy.Body, dateObj);
+        
+        // Calculate ecliptic latitude (we still need Ecliptic for this, but with proper AstroTime)
         const astroTime = new Astronomy.AstroTime(dateObj);
-        
-        // Debug log to verify .tt property
-        console.log(`DEBUG main loop: ${body.id} astroTime.tt = ${astroTime.tt}`);
-        
-        // Calculate ecliptic coordinates using proper AstroTime object
         const ecliptic = Astronomy.Ecliptic(body.name as Astronomy.Body, astroTime);
         
         // Calculate distance for planets
@@ -209,7 +201,7 @@ export async function calculatePlanetaryPositionsWithAstro(
         const equatorial = safeEquator(body.name, dateObj);
         
         positions[body.id] = {
-          longitude: ecliptic.elon,
+          longitude: longitude,
           latitude: ecliptic.elat,
           distance: distance,
           rightAscension: equatorial.ra,
@@ -218,7 +210,7 @@ export async function calculatePlanetaryPositionsWithAstro(
           latitudeSpeed: 0
         };
         
-        console.log(`AstroEngine: ${body.id} position: lon ${ecliptic.elon.toFixed(6)}°, lat ${ecliptic.elat.toFixed(6)}°`);
+        console.log(`AstroEngine: ${body.id} position: lon ${longitude.toFixed(6)}°, lat ${ecliptic.elat.toFixed(6)}°`);
       } catch (error) {
         console.error(`Failed to calculate position for ${body.id}:`, error);
         // Continue with other planets
