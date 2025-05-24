@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import * as Astronomy from "npm:astronomy-engine@2";
 import { calculateLunarNodes } from './lunar-nodes-calculator.ts';
@@ -12,7 +11,7 @@ function jdToDate(jd: number): Date {
 
 // Fixed eclLon function that properly handles time conversion
 export function eclLon(body: string, when: number | Date | { tt: number }): number {
-  console.log("🔥 running patched eclLon with MakeTime fix...");
+  console.log("🔥 running patched eclLon with AstroTime constructor...");
   
   try {
     let date: Date;
@@ -29,8 +28,12 @@ export function eclLon(body: string, when: number | Date | { tt: number }): numb
 
     console.log(`eclLon: Converting ${body} at ${when} to date: ${date.toISOString()}`);
     
-    // Create proper AstroTime object instead of passing raw Date
-    const astroTime = Astronomy.MakeTime(date);
+    // Use AstroTime constructor instead of MakeTime
+    const astroTime = new Astronomy.AstroTime(date);
+    
+    // Debug log to verify .tt property
+    console.log(`DEBUG eclLon: astroTime.tt = ${astroTime.tt}`);
+    
     const ecliptic = Astronomy.Ecliptic(body as Astronomy.Body, astroTime);
     return ecliptic.elon;
   } catch (error) {
@@ -53,7 +56,7 @@ function safeHelioVector(body: string, when: number | Date | any) {
     throw new Error(`Unsupported time arg: ${JSON.stringify(when)}`);
   }
   
-  const astroTime = Astronomy.MakeTime(date);
+  const astroTime = new Astronomy.AstroTime(date);
   return Astronomy.HelioVector(body as Astronomy.Body, astroTime);
 }
 
@@ -71,7 +74,7 @@ function safeEquator(body: string, when: number | Date | any) {
     throw new Error(`Unsupported time arg: ${JSON.stringify(when)}`);
   }
   
-  const astroTime = Astronomy.MakeTime(date);
+  const astroTime = new Astronomy.AstroTime(date);
   return Astronomy.Equator(body as Astronomy.Body, astroTime, false, true);
 }
 
@@ -89,7 +92,7 @@ function safeSiderealTime(when: number | Date | any) {
     throw new Error(`Unsupported time arg: ${JSON.stringify(when)}`);
   }
   
-  const astroTime = Astronomy.MakeTime(date);
+  const astroTime = new Astronomy.AstroTime(date);
   return Astronomy.SiderealTime(astroTime);
 }
 
@@ -122,7 +125,7 @@ export async function calculatePlanetaryPositionsWithAstro(
     
     // Enhanced self-test with proper error handling
     try {
-      console.log("🔥 running self-test with patched eclLon...");
+      console.log("🔥 running self-test with patched AstroTime constructor...");
       const testDate = jdToDate(2_451_545.0); // J2000 as proper Date
       const testSunLon = eclLon("Sun", testDate);
       console.log(`[AstroEngine] Self-test passed: Sun @ J2000 = ${testSunLon.toFixed(6)}°`);
@@ -144,7 +147,7 @@ export async function calculatePlanetaryPositionsWithAstro(
     console.log(`AstroEngine: Created date object: ${dateObj.toISOString()}`);
     
     // Calculate Julian Date for accurate astronomical calculations
-    const astroTime = Astronomy.MakeTime(dateObj);
+    const astroTime = new Astronomy.AstroTime(dateObj);
     const jd = astroTime.tt;
     console.log(`AstroEngine: Julian Date: ${jd}`);
     
@@ -180,10 +183,13 @@ export async function calculatePlanetaryPositionsWithAstro(
     // Calculate positions for each celestial body
     for (const body of bodies) {
       try {
-        console.log(`🔥 calculating ${body.id} with patched AstroTime...`);
+        console.log(`🔥 calculating ${body.id} with AstroTime constructor...`);
         
-        // Create proper AstroTime object for Astronomy Engine
-        const astroTime = Astronomy.MakeTime(dateObj);
+        // Use AstroTime constructor instead of MakeTime
+        const astroTime = new Astronomy.AstroTime(dateObj);
+        
+        // Debug log to verify .tt property
+        console.log(`DEBUG main loop: ${body.id} astroTime.tt = ${astroTime.tt}`);
         
         // Calculate ecliptic coordinates using proper AstroTime object
         const ecliptic = Astronomy.Ecliptic(body.name as Astronomy.Body, astroTime);
