@@ -9,84 +9,18 @@ function jdToDate(jd: number): Date {
   return new Date((jd - 2_440_587.5) * 86_400_000);
 }
 
-// Fixed eclLon function using the safe EclipticLongitude helper
-export function eclLon(body: string, when: number | Date | { tt: number }): number {
-  console.log("🔥 using safe EclipticLongitude helper...");
-  
-  try {
-    let date: Date;
-    
-    if (typeof when === "number") {
-      date = jdToDate(when);
-    } else if (when instanceof Date) {
-      date = when;
-    } else if (when && typeof when.tt === "number") {
-      date = jdToDate(when.tt);
-    } else {
-      throw new Error(`Unsupported time arg: ${JSON.stringify(when)}`);
-    }
-
-    console.log(`eclLon: Converting ${body} at ${when} to date: ${date.toISOString()}`);
-    
-    // Use the safe built-in helper that handles time conversion internally
-    return Astronomy.EclipticLongitude(body as Astronomy.Body, date);
-  } catch (error) {
-    console.error(`eclLon failed for ${body} at ${when}:`, error);
-    throw error;
-  }
-}
-
 // Safe wrapper for heliocentric vector
-function safeHelioVector(body: string, when: number | Date | any) {
-  let date: Date;
-  
-  if (typeof when === "number") {
-    date = jdToDate(when);
-  } else if (when instanceof Date) {
-    date = when;
-  } else if (when && typeof when.tt === "number") {
-    date = jdToDate(when.tt);
-  } else {
-    throw new Error(`Unsupported time arg: ${JSON.stringify(when)}`);
-  }
-  
-  const astroTime = new Astronomy.AstroTime(date);
+function safeHelioVector(body: string, astroTime: any) {
   return Astronomy.HelioVector(body as Astronomy.Body, astroTime);
 }
 
 // Safe wrapper for equatorial coordinates
-function safeEquator(body: string, when: number | Date | any) {
-  let date: Date;
-  
-  if (typeof when === "number") {
-    date = jdToDate(when);
-  } else if (when instanceof Date) {
-    date = when;
-  } else if (when && typeof when.tt === "number") {
-    date = jdToDate(when.tt);
-  } else {
-    throw new Error(`Unsupported time arg: ${JSON.stringify(when)}`);
-  }
-  
-  const astroTime = new Astronomy.AstroTime(date);
+function safeEquator(body: string, astroTime: any) {
   return Astronomy.Equator(body as Astronomy.Body, astroTime, false, true);
 }
 
 // Safe wrapper for sidereal time
-function safeSiderealTime(when: number | Date | any) {
-  let date: Date;
-  
-  if (typeof when === "number") {
-    date = jdToDate(when);
-  } else if (when instanceof Date) {
-    date = when;
-  } else if (when && typeof when.tt === "number") {
-    date = jdToDate(when.tt);
-  } else {
-    throw new Error(`Unsupported time arg: ${JSON.stringify(when)}`);
-  }
-  
-  const astroTime = new Astronomy.AstroTime(date);
+function safeSiderealTime(astroTime: any) {
   return Astronomy.SiderealTime(astroTime);
 }
 
@@ -117,13 +51,14 @@ export async function calculatePlanetaryPositionsWithAstro(
   try {
     console.log(`AstroEngine: Calculating positions for ${date} ${time} at ${location} in timezone ${timezone}`);
     
-    // Enhanced self-test with safe helper - using Moon instead of Sun
+    // Enhanced self-test with proper AstroTime
     try {
       console.log("🔥 running self-test with safe EclipticLongitude helper...");
       const testDate = jdToDate(2_451_545.0); // J2000 as proper Date
+      const testAstroTime = Astronomy.MakeTime(testDate);
       
       // Use the Moon (geocentric) instead of the Sun (heliocentric Sun is undefined)
-      const testMoonLon = Astronomy.EclipticLongitude("Moon", testDate);
+      const testMoonLon = Astronomy.EclipticLongitude("Moon", testAstroTime);
       console.log(`[AstroEngine] Self-test passed: Moon @ J2000 = ${testMoonLon.toFixed(6)}°`);
     } catch (error) {
       console.error("Self-test failed:", error);
@@ -176,28 +111,33 @@ export async function calculatePlanetaryPositionsWithAstro(
     
     const positions = {};
     
-    // Calculate positions for each celestial body using safe helpers
+    // Calculate positions for each celestial body using proper AstroTime objects
     for (const body of bodies) {
       try {
-        console.log(`🔥 calculating ${body.id} with safe EclipticLongitude/Latitude...`);
+        console.log(`🔥 calculating ${body.id} with proper AstroTime...`);
         
-        // Use safe built-in helpers for both longitude and latitude
-        const longitude = Astronomy.EclipticLongitude(body.name as Astronomy.Body, dateObj);
-        const latitude = Astronomy.EclipticLatitude(body.name as Astronomy.Body, dateObj);
+        // Build an AstroTime once per body - this ensures valid .tt property
+        const at = Astronomy.MakeTime(dateObj);
+        
+        // Use safe built-in helpers with proper AstroTime - guaranteed .tt is defined
+        const longitude = Astronomy.EclipticLongitude(body.name as Astronomy.Body, at);
+        const latitude = Astronomy.EclipticLatitude(body.name as Astronomy.Body, at);
+        
+        console.log(`DEBUG ${body.id}: lon=${longitude.toFixed(6)}, lat=${latitude.toFixed(6)}`);
         
         // Calculate distance for planets
         let distance = null;
         if (body.id !== "sun" && body.id !== "moon") {
           try {
-            const vector = safeHelioVector(body.name, dateObj);
-            distance = Math.sqrt(vector.x*vector.x + vector.y*vector.y + vector.z*vector.z);
+            const vector = safeHelioVector(body.name, at);
+            distance = Math.hypot(vector.x, vector.y, vector.z);
           } catch (error) {
             console.warn(`Could not calculate distance for ${body.id}:`, error);
           }
         }
         
         // Calculate equatorial coordinates
-        const equatorial = safeEquator(body.name, dateObj);
+        const equatorial = safeEquator(body.name, at);
         
         positions[body.id] = {
           longitude: longitude,
@@ -262,8 +202,9 @@ export async function calculatePlanetaryPositionsWithAstro(
       console.log(`AstroEngine: MC: ${houseData.midheaven.toFixed(6)}°`);
     } catch (error) {
       console.error("Failed to calculate houses and angles:", error);
-      // Fallback to simple calculations
-      const lst = safeSiderealTime(dateObj);
+      // Fallback to simple calculations using proper AstroTime
+      const astroTimeForHouses = Astronomy.MakeTime(dateObj);
+      const lst = safeSiderealTime(astroTimeForHouses);
       const ascendant = (lst * 15 + 90 - coords.latitude / 2 + 360) % 360;
       const mc = (lst * 15) % 360;
       
@@ -296,7 +237,9 @@ export async function calculatePlanetaryPositionsWithAstro(
 function calculateLunarNodes(positions: { [key: string]: PlanetaryPosition }, jd: number) {
   try {
     // Calculate lunar nodes using orbital elements
-    const e = safeHelioVector("Moon", jdToDate(jd));
+    const dateForNodes = jdToDate(jd);
+    const astroTimeForNodes = Astronomy.MakeTime(dateForNodes);
+    const e = safeHelioVector("Moon", astroTimeForNodes);
     const ascending = (Math.atan2(e.y, e.x) * 180/Math.PI + 360) % 360;
     return { 
       northNode: ascending, 
@@ -314,8 +257,10 @@ function calculateLunarNodes(positions: { [key: string]: PlanetaryPosition }, jd
 // Helper function to calculate house cusps
 function calculateHouseCusps(jd: number, latitude: number, longitude: number, positions: { [key: string]: PlanetaryPosition }) {
   try {
-    // Calculate the Local Sidereal Time
-    const lst = safeSiderealTime(jdToDate(jd));
+    // Calculate the Local Sidereal Time using proper AstroTime
+    const dateForHouses = jdToDate(jd);
+    const astroTimeForHouses = Astronomy.MakeTime(dateForHouses);
+    const lst = safeSiderealTime(astroTimeForHouses);
     
     // Convert local sidereal time to degrees
     const lstDeg = (lst * 15) % 360;
@@ -425,5 +370,7 @@ export function convertJdToDate(jd: number): Date {
  * @returns Ecliptic longitude in degrees
  */
 export function eclipticLongitudeByJd(body: string, jd: number): number {
-  return eclLon(body, jdToDate(jd));
+  const date = jdToDate(jd);
+  const astroTime = Astronomy.MakeTime(date);
+  return Astronomy.EclipticLongitude(body as Astronomy.Body, astroTime);
 }
