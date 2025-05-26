@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import * as Astronomy from "npm:astronomy-engine@2";
 import { calculateLunarNodes } from './lunar-nodes-calculator.ts';
@@ -78,8 +77,8 @@ export async function calculatePlanetaryPositionsWithAstro(
     const dateObj = new Date(Date.UTC(year, month - 1, day, hour, minute, 0));
     console.log(`AstroEngine: Created date object: ${dateObj.toISOString()}`);
     
-    // Calculate Julian Date for accurate astronomical calculations
-    const astroTime = new Astronomy.AstroTime(dateObj);
+    // Create AstroTime once and reuse for all calculations
+    const astroTime = Astronomy.MakeTime(dateObj);
     const jd = astroTime.tt;
     console.log(`AstroEngine: Julian Date: ${jd}`);
     
@@ -112,16 +111,13 @@ export async function calculatePlanetaryPositionsWithAstro(
     
     const positions = {};
     
-    // Calculate positions for each celestial body using proper AstroTime objects
+    // Calculate positions for each celestial body using the same AstroTime
     for (const body of bodies) {
       try {
         console.log(`🔥 calculating ${body.id} with proper AstroTime...`);
         
-        // 1) Build an AstroTime (guaranteed to have .tt)
-        const at = Astronomy.MakeTime(dateObj);
-        
         // 2) Call the low-level Ecliptic() once
-        const ecl = Astronomy.Ecliptic(body.name as Astronomy.Body, at);
+        const ecl = Astronomy.Ecliptic(body.name as Astronomy.Body, astroTime);
         
         // 3) Extract both longitude and latitude from ecl
         const longitude = ecl.elon;
@@ -133,7 +129,7 @@ export async function calculatePlanetaryPositionsWithAstro(
         let distance = null;
         if (body.id !== "sun" && body.id !== "moon") {
           try {
-            const vector = safeHelioVector(body.name, at);
+            const vector = safeHelioVector(body.name, astroTime);
             distance = Math.hypot(vector.x, vector.y, vector.z);
           } catch (error) {
             console.warn(`Could not calculate distance for ${body.id}:`, error);
@@ -141,7 +137,7 @@ export async function calculatePlanetaryPositionsWithAstro(
         }
         
         // Calculate equatorial coordinates
-        const equatorial = safeEquator(body.name, at);
+        const equatorial = safeEquator(body.name, astroTime);
         
         positions[body.id] = {
           longitude: longitude,
@@ -206,9 +202,8 @@ export async function calculatePlanetaryPositionsWithAstro(
       console.log(`AstroEngine: MC: ${houseData.midheaven.toFixed(6)}°`);
     } catch (error) {
       console.error("Failed to calculate houses and angles:", error);
-      // Fallback to simple calculations using proper AstroTime
-      const astroTimeForHouses = Astronomy.MakeTime(dateObj);
-      const lst = safeSiderealTime(astroTimeForHouses);
+      // Fallback to simple calculations using the same AstroTime
+      const lst = safeSiderealTime(astroTime);
       const ascendant = (lst * 15 + 90 - coords.latitude / 2 + 360) % 360;
       const mc = (lst * 15) % 360;
       
