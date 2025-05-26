@@ -116,12 +116,20 @@ export async function calculatePlanetaryPositionsWithAstro(
       try {
         console.log(`🔥 calculating ${body.id} with proper AstroTime...`);
         
-        // 2) Call the low-level Ecliptic() once
-        const ecl = Astronomy.Ecliptic(body.name as Astronomy.Body, astroTime);
+        let longitude: number, latitude: number;
         
-        // 3) Extract both longitude and latitude from ecl
-        const longitude = ecl.elon;
-        const latitude = ecl.elat;
+        if (body.name === "Sun") {
+          // ─── SUN SPECIAL CASE ────────────────────────────
+          // Use safe helper for longitude and hard-code latitude to 0
+          longitude = Astronomy.EclipticLongitude("Sun", astroTime);
+          latitude = 0; // Sun's ecliptic latitude is essentially 0°
+        } else {
+          // ─── ALL OTHER BODIES ────────────────────────────
+          // Call the low-level Ecliptic() once
+          const ecl = Astronomy.Ecliptic(body.name as Astronomy.Body, astroTime);
+          longitude = ecl.elon;
+          latitude = ecl.elat;
+        }
         
         console.log(`DEBUG ${body.id}: lon=${longitude.toFixed(6)}, lat=${latitude.toFixed(6)}`);
         
