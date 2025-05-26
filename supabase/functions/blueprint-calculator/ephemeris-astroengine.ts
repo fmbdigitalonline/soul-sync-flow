@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import * as Astronomy from "npm:astronomy-engine@2";
 import { calculateLunarNodes } from './lunar-nodes-calculator.ts';
@@ -49,7 +50,7 @@ export async function calculatePlanetaryPositionsWithAstro(
   timezone: string
 ) {
   try {
-    console.log(`AstroEngine: Calculating positions for ${date} ${time} at ${location} in timezone ${timezone}`);
+    console.log(`AstroEngine: Calculating positions for ${date} ${time} at ${location} in timezone ${timezone || "unknown"}`);
     
     // Enhanced self-test with proper AstroTime
     try {
@@ -119,10 +120,14 @@ export async function calculatePlanetaryPositionsWithAstro(
         let longitude: number, latitude: number;
         
         if (body.name === "Sun") {
-          // ─── SUN SPECIAL CASE ────────────────────────────
-          // Use safe helper for longitude and hard-code latitude to 0
-          longitude = Astronomy.EclipticLongitude("Sun", astroTime);
-          latitude = 0; // Sun's ecliptic latitude is essentially 0°
+          // ─── SUN SPECIAL CASE (NEW) ─────────────────────────
+          // 1) Get Earth's heliocentric vector (x,y,z) at this time
+          const earthVec = Astronomy.HelioVector("Earth", astroTime);
+          
+          // 2) Convert to geocentric Sun longitude by inverting direction (+180°)
+          const lonRad = Math.atan2(earthVec.y, earthVec.x);
+          longitude = (lonRad * 180/Math.PI + 180 + 360) % 360;
+          latitude = 0;  // Sun's ecliptic latitude ≈ 0°
         } else {
           // ─── ALL OTHER BODIES ────────────────────────────
           // Call the low-level Ecliptic() once
