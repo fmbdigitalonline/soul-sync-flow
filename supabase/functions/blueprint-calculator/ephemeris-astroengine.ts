@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import * as Astronomy from "npm:astronomy-engine@2";
 import { calculateLunarNodes } from './lunar-nodes-calculator.ts';
@@ -116,12 +117,15 @@ export async function calculatePlanetaryPositionsWithAstro(
       try {
         console.log(`🔥 calculating ${body.id} with proper AstroTime...`);
         
-        // Build an AstroTime once per body - this ensures valid .tt property
+        // 1) Build an AstroTime (guaranteed to have .tt)
         const at = Astronomy.MakeTime(dateObj);
         
-        // Use safe built-in helpers with proper AstroTime - guaranteed .tt is defined
-        const longitude = Astronomy.EclipticLongitude(body.name as Astronomy.Body, at);
-        const latitude = Astronomy.EclipticLatitude(body.name as Astronomy.Body, at);
+        // 2) Call the low-level Ecliptic() once
+        const ecl = Astronomy.Ecliptic(body.name as Astronomy.Body, at);
+        
+        // 3) Extract both longitude and latitude from ecl
+        const longitude = ecl.elon;
+        const latitude = ecl.elat;
         
         console.log(`DEBUG ${body.id}: lon=${longitude.toFixed(6)}, lat=${latitude.toFixed(6)}`);
         
