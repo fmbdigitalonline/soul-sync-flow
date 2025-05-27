@@ -20,13 +20,16 @@ function safeEquator(
   astroTime: Astronomy.AstroTime,
   observer: Astronomy.Observer
 ) {
-  // false = apparent coordinates, true = topocentric, observer = Observer instance
+  // Arguments for Astronomy.Equator(body, time, observer, equPq, equTop):
+  // observer: The Observer instance
+  // equPq: false for apparent coordinates (corrects for light travel time, etc.)
+  // equTop: true for topocentric coordinates (corrects for diurnal parallax and aberration)
   return Astronomy.Equator(
     body as Astronomy.Body,
     astroTime,
-    false,        // apparent?
-    true,         // topocentric
-    observer      // Observer instance
+    observer,     // Correct: Pass the Observer instance as the 3rd argument
+    false,        // Correct: equPq = false for apparent coordinates
+    true          // Correct: equTop = true for topocentric coordinates
   );
 }
 
