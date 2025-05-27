@@ -30,9 +30,12 @@ function safeEquator(
   );
 }
 
-// Safe wrapper for sidereal time - now takes Observer instance
-function safeSiderealTime(observer: Astronomy.Observer): number {
-  return Astronomy.SiderealTime(observer);
+// Safe wrapper for sidereal time - now takes AstroTime and Observer instance
+function safeSiderealTime(
+  astroTime: Astronomy.AstroTime, 
+  observer: Astronomy.Observer
+): number {
+  return Astronomy.SiderealTime(astroTime, observer);
 }
 
 export interface PlanetaryPosition {
@@ -225,8 +228,8 @@ export async function calculatePlanetaryPositionsWithAstro(
       console.log(`AstroEngine: MC: ${houseData.midheaven.toFixed(6)}°`);
     } catch (error) {
       console.error("Failed to calculate houses and angles:", error);
-      // Fallback to simple calculations using the Observer instance
-      const lst = safeSiderealTime(observer);
+      // Fallback to simple calculations using the Observer instance and AstroTime
+      const lst = safeSiderealTime(astroTime, observer);
       const ascendant = (lst * 15 + 90 - coords.latitude / 2 + 360) % 360;
       const mc = (lst * 15) % 360;
       
@@ -281,9 +284,10 @@ function calculateHouseCusps(jd: number, latitude: number, longitude: number, po
   try {
     // Create observer for sidereal time calculation
     const observer = new Astronomy.Observer(latitude, longitude, 0);
+    const astroTime = Astronomy.MakeTime(convertJdToDate(jd));
     
-    // Calculate the Local Sidereal Time using Observer instance
-    const lst = safeSiderealTime(observer);
+    // Calculate the Local Sidereal Time using AstroTime and Observer instance
+    const lst = safeSiderealTime(astroTime, observer);
     
     // Convert local sidereal time to degrees
     const lstDeg = (lst * 15) % 360;
