@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import * as Astronomy from "npm:astronomy-engine@2";
 import { calculateLunarNodes } from './lunar-nodes-calculator.ts';
@@ -15,9 +14,20 @@ function safeHelioVector(body: string, astroTime: any) {
   return Astronomy.HelioVector(body as Astronomy.Body, astroTime);
 }
 
-// Safe wrapper for equatorial coordinates (geocentric only)
-function safeEquator(body: string, astroTime: any) {
-  return Astronomy.Equator(body as Astronomy.Body, astroTime, false);
+// Safe wrapper for equatorial coordinates - now takes Observer instance
+function safeEquator(
+  body: string,
+  astroTime: Astronomy.AstroTime,
+  observer: Astronomy.Observer
+) {
+  // false = apparent coordinates, true = topocentric, observer = Observer instance
+  return Astronomy.Equator(
+    body as Astronomy.Body,
+    astroTime,
+    false,        // apparent?
+    true,         // topocentric
+    observer      // Observer instance
+  );
 }
 
 // Safe wrapper for sidereal time - now takes Observer instance
@@ -149,8 +159,8 @@ export async function calculatePlanetaryPositionsWithAstro(
           }
         }
         
-        // Calculate equatorial coordinates (geocentric only)
-        const equatorial = safeEquator(body.name, astroTime);
+        // Calculate equatorial coordinates - now with Observer
+        const equatorial = safeEquator(body.name, astroTime, observer);
         
         positions[body.id] = {
           longitude: longitude,
