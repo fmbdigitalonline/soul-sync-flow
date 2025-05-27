@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import * as Astronomy from "npm:astronomy-engine@2";
-import { calculateLunarNodes } from './lunar-nodes-calculator.ts';
 import { calculateHouseCusps } from './house-system-calculator.ts';
 
 // Helper function to convert Julian Day to JavaScript Date
@@ -96,8 +95,16 @@ export async function calculatePlanetaryPositionsWithAstro(
     
     // Create AstroTime once and reuse for all calculations
     const astroTime = Astronomy.MakeTime(dateObj);
+    
+    // Check immediately if astroTime is valid
+    if (!astroTime || typeof astroTime.tt !== 'number') {
+      console.error("CRITICAL: astroTime is invalid immediately after MakeTime!", JSON.stringify(astroTime));
+      throw new Error("astroTime invalid after MakeTime");
+    }
+    
     const jd = astroTime.tt;
     console.log(`AstroEngine: Julian Date: ${jd}`);
+    console.log("AstroTime object after creation:", JSON.stringify(astroTime)); // LOG 1
     
     // Get coordinates for the location with error handling
     let coords;
@@ -111,6 +118,12 @@ export async function calculatePlanetaryPositionsWithAstro(
     
     // Create observer for house calculations
     const observer = new Astronomy.Observer(coords.latitude, coords.longitude, 0);
+    
+    console.log("AstroTime object before loop:", JSON.stringify(astroTime)); // LOG 2
+    if (!astroTime || typeof astroTime.tt !== 'number') { // Re-check before loop
+      console.error("CRITICAL: astroTime became invalid before the calculation loop!", JSON.stringify(astroTime));
+      throw new Error("astroTime became invalid before loop");
+    }
     
     // Enhanced planetary calculations
     const bodies = [
@@ -132,6 +145,23 @@ export async function calculatePlanetaryPositionsWithAstro(
     for (const body of bodies) {
       try {
         console.log(`🔥 calculating ${body.id} with proper AstroTime...`);
+        
+        if (body.name === "Moon") {
+          console.log("Moon calc: astroTime type:", typeof astroTime);
+          console.log("Moon calc: astroTime value:", JSON.stringify(astroTime));
+          if (typeof astroTime === 'undefined') {
+            console.error("CRITICAL: astroTime IS UNDEFINED before Ecliptic call for Moon!");
+            throw new Error("Manually detected astroTime as UNDEFINED for Moon calculation");
+          }
+          if (astroTime === null) {
+            console.error("CRITICAL: astroTime IS NULL before Ecliptic call for Moon!");
+            throw new Error("Manually detected astroTime as NULL for Moon calculation");
+          }
+          if (typeof astroTime.tt !== 'number' || isNaN(astroTime.tt)) {
+            console.error("CRITICAL: astroTime.tt is invalid for Moon calculation:", astroTime.tt, "Full object:", JSON.stringify(astroTime));
+            throw new Error("Manually detected astroTime.tt as invalid for Moon calculation");
+          }
+        }
         
         let longitude: number, latitude: number;
         
@@ -190,9 +220,9 @@ export async function calculatePlanetaryPositionsWithAstro(
       }
     }
     
-    // Calculate accurate lunar nodes
+    // Calculate accurate lunar nodes using the corrected function
     try {
-      const nodes = calculateLunarNodes(positions, jd);
+      const nodes = calculateLunarNodes(astroTime);
       positions["north_node"] = {
         longitude: nodes.northNode,
         latitude: 0,
@@ -261,17 +291,14 @@ export async function calculatePlanetaryPositionsWithAstro(
   }
 }
 
-// Helper function to calculate lunar nodes
-function calculateLunarNodes(positions: { [key: string]: PlanetaryPosition }, jd: number) {
+// Corrected helper function to calculate lunar nodes using astronomy-engine's dedicated functions
+function calculateLunarNodes(astroTime: Astronomy.AstroTime) {
   try {
-    // Calculate lunar nodes using orbital elements
-    const dateForNodes = jdToDate(jd);
-    const astroTimeForNodes = Astronomy.MakeTime(dateForNodes);
-    const e = safeHelioVector("Moon", astroTimeForNodes);
-    const ascending = (Math.atan2(e.y, e.x) * 180/Math.PI + 360) % 360;
+    // Calculate true lunar nodes using Astronomy Engine's dedicated function
+    const nodesLon = Astronomy.TrueLunarNodes(astroTime); // Returns longitude of the true ascending node
     return { 
-      northNode: ascending, 
-      southNode: (ascending + 180) % 360 
+      northNode: nodesLon, 
+      southNode: (nodesLon + 180) % 360 
     };
   } catch (error) {
     console.error("Error calculating lunar nodes:", error);
