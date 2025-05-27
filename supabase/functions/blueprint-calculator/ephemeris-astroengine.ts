@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import * as Astronomy from "npm:astronomy-engine@2";
 import { calculateLunarNodes } from './lunar-nodes-calculator.ts';
@@ -14,14 +15,14 @@ function safeHelioVector(body: string, astroTime: any) {
   return Astronomy.HelioVector(body as Astronomy.Body, astroTime);
 }
 
-// Safe wrapper for equatorial coordinates
+// Safe wrapper for equatorial coordinates (geocentric only)
 function safeEquator(body: string, astroTime: any) {
-  return Astronomy.Equator(body as Astronomy.Body, astroTime, false, true);
+  return Astronomy.Equator(body as Astronomy.Body, astroTime, false);
 }
 
-// Safe wrapper for sidereal time
-function safeSiderealTime(astroTime: any) {
-  return Astronomy.SiderealTime(astroTime);
+// Safe wrapper for sidereal time - now takes Observer instance
+function safeSiderealTime(observer: Astronomy.Observer): number {
+  return Astronomy.SiderealTime(observer);
 }
 
 export interface PlanetaryPosition {
@@ -148,7 +149,7 @@ export async function calculatePlanetaryPositionsWithAstro(
           }
         }
         
-        // Calculate equatorial coordinates
+        // Calculate equatorial coordinates (geocentric only)
         const equatorial = safeEquator(body.name, astroTime);
         
         positions[body.id] = {
@@ -214,8 +215,8 @@ export async function calculatePlanetaryPositionsWithAstro(
       console.log(`AstroEngine: MC: ${houseData.midheaven.toFixed(6)}°`);
     } catch (error) {
       console.error("Failed to calculate houses and angles:", error);
-      // Fallback to simple calculations using the same AstroTime
-      const lst = safeSiderealTime(astroTime);
+      // Fallback to simple calculations using the Observer instance
+      const lst = safeSiderealTime(observer);
       const ascendant = (lst * 15 + 90 - coords.latitude / 2 + 360) % 360;
       const mc = (lst * 15) % 360;
       
@@ -268,10 +269,11 @@ function calculateLunarNodes(positions: { [key: string]: PlanetaryPosition }, jd
 // Helper function to calculate house cusps
 function calculateHouseCusps(jd: number, latitude: number, longitude: number, positions: { [key: string]: PlanetaryPosition }) {
   try {
-    // Calculate the Local Sidereal Time using proper AstroTime
-    const dateForHouses = jdToDate(jd);
-    const astroTimeForHouses = Astronomy.MakeTime(dateForHouses);
-    const lst = safeSiderealTime(astroTimeForHouses);
+    // Create observer for sidereal time calculation
+    const observer = new Astronomy.Observer(latitude, longitude, 0);
+    
+    // Calculate the Local Sidereal Time using Observer instance
+    const lst = safeSiderealTime(observer);
     
     // Convert local sidereal time to degrees
     const lstDeg = (lst * 15) % 360;
