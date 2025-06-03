@@ -16,7 +16,7 @@ serve(async (req) => {
 
   try {
     // Use the specific date from the error logs that was causing issues
-    const year = 1977, month = 11, day = 15, hour = 6, minute = 23; // User's birth date
+    const year = 2024, month = 11, day = 15, hour = 6, minute = 23; // User's birth date
     const dateObj = new Date(Date.UTC(year, month - 1, day, hour, minute, 0)); // JS Date: month is 0-indexed
     
     let responseMessage = `Minimal Moon Test for: ${dateObj.toISOString()}\n`;
