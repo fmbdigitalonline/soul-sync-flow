@@ -16,7 +16,7 @@ serve(async (req) => {
 
   try {
     // Use the specific date from the error logs that was causing issues
-    const year = 1978, month = 2, day = 12, hour = 22, minute = 0; // User's birth date
+    const year = 1977, month = 11, day = 15, hour = 6, minute = 23; // User's birth date
     const dateObj = new Date(Date.UTC(year, month - 1, day, hour, minute, 0)); // JS Date: month is 0-indexed
     
     let responseMessage = `Minimal Moon Test for: ${dateObj.toISOString()}\n`;
@@ -58,7 +58,29 @@ serve(async (req) => {
           status = 500;
         }
 
-        // Test 3: Try other planets for comparison
+        // Test 3: Try GeoVector for Moon (needed for workaround)
+        try {
+          console.log("Minimal Test - INFO: Attempting Astronomy.GeoVector('Moon', astroTime)...");
+          const geoMoon = Astronomy.GeoVector("Moon", astroTime);
+          responseMessage += `Minimal Test - SUCCESS: GeoVector for Moon SUCCEEDED. X: ${geoMoon.x}, Y: ${geoMoon.y}, Z: ${geoMoon.z}\n`;
+          console.log(`GeoVector for Moon: x=${geoMoon.x}, y=${geoMoon.y}, z=${geoMoon.z}`);
+        } catch (e) {
+          responseMessage += `Minimal Test - FAILURE: GeoVector for Moon FAILED. Error: ${e.toString()}\n`;
+          console.error(`GeoVector error: ${e.toString()}`);
+        }
+
+        // Test 4: Try TrueObliquity (needed for workaround)
+        try {
+          console.log("Minimal Test - INFO: Attempting Astronomy.TrueObliquity(astroTime)...");
+          const obliquity = Astronomy.TrueObliquity(astroTime);
+          responseMessage += `Minimal Test - SUCCESS: TrueObliquity SUCCEEDED. Obliquity: ${obliquity}°\n`;
+          console.log(`TrueObliquity: ${obliquity}°`);
+        } catch (e) {
+          responseMessage += `Minimal Test - FAILURE: TrueObliquity FAILED. Error: ${e.toString()}\n`;
+          console.error(`TrueObliquity error: ${e.toString()}`);
+        }
+
+        // Test 5: Try other planets for comparison
         const testBodies = ["Sun", "Mercury", "Venus", "Mars"];
         for (const body of testBodies) {
           try {
