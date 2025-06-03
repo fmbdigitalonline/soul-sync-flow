@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import * as Astronomy from "npm:astronomy-engine@2";
 import { calculateHouseCusps } from './house-system-calculator.ts';
@@ -11,25 +12,6 @@ function jdToDate(jd: number): Date {
 // Safe wrapper for heliocentric vector
 function safeHelioVector(body: string, astroTime: any) {
   return Astronomy.HelioVector(body as Astronomy.Body, astroTime);
-}
-
-// Safe wrapper for equatorial coordinates - now takes Observer instance
-function safeEquator(
-  body: string,
-  astroTime: Astronomy.AstroTime,
-  observer: Astronomy.Observer
-) {
-  // Arguments for Astronomy.Equator(body, time, observer, equPq, equTop):
-  // observer: The Observer instance
-  // equPq: false for apparent coordinates (corrects for light travel time, etc.)
-  // equTop: true for topocentric coordinates (corrects for diurnal parallax and aberration)
-  return Astronomy.Equator(
-    body as Astronomy.Body,
-    astroTime,
-    observer,     // Correct: Pass the Observer instance as the 3rd argument
-    false,        // Correct: equPq = false for apparent coordinates
-    true          // Correct: equTop = true for topocentric coordinates
-  );
 }
 
 // Safe wrapper for sidereal time - now takes AstroTime and Observer instance
@@ -159,6 +141,17 @@ export async function calculatePlanetaryPositionsWithAstro(
           latitude = 0;  // Sun's ecliptic latitude ≈ 0°
         } else {
           // ─── ALL OTHER BODIES ────────────────────────────
+          // Ultra-specific logging for Moon before Ecliptic call
+          if (body.name === "Moon") {
+            console.log(`PRE-MOON-ECLIPTIC-CALL: Validating astroTime. Type: ${typeof astroTime}, TT: ${astroTime ? astroTime.tt : 'astroTime_undefined'}, Object: ${JSON.stringify(astroTime)}`);
+            if (!astroTime || typeof astroTime.tt !== 'number' || isNaN(astroTime.tt)) {
+              const errorMsg = `CRITICAL ERROR FOR MOON: astroTime.tt is invalid immediately before Ecliptic call! TT: ${astroTime ? astroTime.tt : 'astroTime_is_undefined'}, Full object: ${JSON.stringify(astroTime)}`;
+              console.error(errorMsg);
+              throw new Error(errorMsg);
+            }
+            console.log("MOON: About to call Astronomy.Ecliptic with validated astroTime...");
+          }
+          
           // ALWAYS pass *the same* astroTime object you got from MakeTime()
           const ecl = Astronomy.Ecliptic(body.name as Astronomy.Body, astroTime);
           longitude = ecl.elon;
