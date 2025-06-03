@@ -146,27 +146,10 @@ export async function calculatePlanetaryPositionsWithAstro(
       try {
         console.log(`🔥 calculating ${body.id} with proper AstroTime...`);
         
-        if (body.name === "Moon") {
-          console.log("Moon calc: astroTime type:", typeof astroTime);
-          console.log("Moon calc: astroTime value:", JSON.stringify(astroTime));
-          if (typeof astroTime === 'undefined') {
-            console.error("CRITICAL: astroTime IS UNDEFINED before Ecliptic call for Moon!");
-            throw new Error("Manually detected astroTime as UNDEFINED for Moon calculation");
-          }
-          if (astroTime === null) {
-            console.error("CRITICAL: astroTime IS NULL before Ecliptic call for Moon!");
-            throw new Error("Manually detected astroTime as NULL for Moon calculation");
-          }
-          if (typeof astroTime.tt !== 'number' || isNaN(astroTime.tt)) {
-            console.error("CRITICAL: astroTime.tt is invalid for Moon calculation:", astroTime.tt, "Full object:", JSON.stringify(astroTime));
-            throw new Error("Manually detected astroTime.tt as invalid for Moon calculation");
-          }
-        }
-        
         let longitude: number, latitude: number;
         
         if (body.name === "Sun") {
-          // ─── SUN SPECIAL CASE (NEW) ─────────────────────────
+          // ─── SUN SPECIAL CASE ─────────────────────────
           // 1) Get Earth's heliocentric vector (x,y,z) at this time
           const earthVec = Astronomy.HelioVector("Earth", astroTime);
           
@@ -176,7 +159,7 @@ export async function calculatePlanetaryPositionsWithAstro(
           latitude = 0;  // Sun's ecliptic latitude ≈ 0°
         } else {
           // ─── ALL OTHER BODIES ────────────────────────────
-          // Call the low-level Ecliptic() once
+          // ALWAYS pass *the same* astroTime object you got from MakeTime()
           const ecl = Astronomy.Ecliptic(body.name as Astronomy.Body, astroTime);
           longitude = ecl.elon;
           latitude = ecl.elat;
@@ -195,8 +178,8 @@ export async function calculatePlanetaryPositionsWithAstro(
           }
         }
         
-        // Calculate equatorial coordinates - now with Observer
-        const equatorial = safeEquator(body.name, astroTime, observer);
+        // Calculate equatorial coordinates using the same astroTime
+        const equatorial = Astronomy.Equator(body.name as Astronomy.Body, astroTime, observer, false, true);
         
         positions[body.id] = {
           longitude: longitude,
