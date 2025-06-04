@@ -17,16 +17,17 @@ serve(async (req) => {
   try {
     const url = new URL(req.url);
     
-    // Handle test endpoints that don't need JSON body
-    if (url.pathname.includes('/test-')) {
-      // For test endpoints, just continue without parsing JSON
-      return new Response("Test endpoint routing - this shouldn't be reached", {
-        status: 404,
-        headers: { 
-          "Content-Type": "text/plain; charset=utf-8",
-          ...corsHeaders 
-        }
-      });
+    // Handle test endpoints by importing and executing them
+    if (url.pathname.includes('/test-moon-minimal')) {
+      // Import and execute the Moon test
+      const { default: testMoonMinimal } = await import('./test-moon-minimal.ts');
+      return await testMoonMinimal(req);
+    }
+    
+    if (url.pathname.includes('/test-wasm')) {
+      // Import and execute the WASM test
+      const { default: testWasm } = await import('./test-wasm.ts');
+      return await testWasm(req);
     }
 
     // Only parse JSON for non-test endpoints and POST requests

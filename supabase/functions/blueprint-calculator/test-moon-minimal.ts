@@ -8,7 +8,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-serve(async (req) => {
+async function testMoonMinimal(req) {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -126,4 +126,12 @@ serve(async (req) => {
       }
     );
   }
-});
+}
+
+// Export for direct serving and for import by main router
+export default testMoonMinimal;
+
+// Also support direct serving if this file is run independently
+if (import.meta.main) {
+  serve(testMoonMinimal);
+}
