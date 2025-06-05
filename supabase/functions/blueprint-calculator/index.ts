@@ -17,7 +17,7 @@ serve(async (req) => {
   try {
     const url = new URL(req.url);
     
-    // Handle test endpoints by importing and executing them
+    // Handle test endpoints FIRST, before any other processing
     if (url.pathname.includes('/test-moon-minimal')) {
       // Import and execute the Moon test
       const { default: testMoonMinimal } = await import('./test-moon-minimal.ts');
@@ -30,7 +30,7 @@ serve(async (req) => {
       return await testWasm(req);
     }
 
-    // Only parse JSON for non-test endpoints and POST requests
+    // Only parse JSON for main blueprint calculation endpoints and POST requests
     let requestData = {};
     if (req.method === 'POST') {
       const text = await req.text();
