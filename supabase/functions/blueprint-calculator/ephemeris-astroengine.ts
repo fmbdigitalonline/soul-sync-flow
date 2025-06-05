@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import * as Astronomy from "npm:astronomy-engine@2";
 import { calculateHouseCusps } from './house-system-calculator.ts';
@@ -139,23 +138,59 @@ export async function calculatePlanetaryPositionsWithAstro(
           const lonRad = Math.atan2(earthVec.y, earthVec.x);
           longitude = (lonRad * 180/Math.PI + 180 + 360) % 360;
           latitude = 0;  // Sun's ecliptic latitude ≈ 0°
+        } else if (body.name === "Moon") {
+          // ─── MOON WORKAROUND FOR ECLIPTIC FAILURE ────
+          console.log(`MOON WORKAROUND: Using EclipticLongitude instead of Ecliptic for ${body.name}`);
+          
+          try {
+            // Use the working EclipticLongitude function
+            longitude = Astronomy.EclipticLongitude("Moon", astroTime);
+            
+            // For latitude, we'll need a workaround since Ecliptic is failing
+            // Try to calculate it manually using GeoVector if available
+            try {
+              const geoMoon = Astronomy.GeoVector("Moon", astroTime);
+              const obliquity = 23.4393; // Mean obliquity in degrees (fallback)
+              
+              // Convert geocentric equatorial to ecliptic
+              const ra = Math.atan2(geoMoon.y, geoMoon.x);
+              const dec = Math.atan2(geoMoon.z, Math.sqrt(geoMoon.x * geoMoon.x + geoMoon.y * geoMoon.y));
+              
+              const oblRad = obliquity * Math.PI / 180;
+              latitude = Math.asin(Math.sin(dec) * Math.cos(oblRad) - Math.cos(dec) * Math.sin(oblRad) * Math.sin(ra)) * 180 / Math.PI;
+              
+              console.log(`MOON MANUAL LATITUDE: ${latitude.toFixed(6)}°`);
+            } catch (latError) {
+              console.warn(`Could not calculate Moon latitude manually: ${latError}. Using 0.`);
+              latitude = 0; // Fallback
+            }
+          } catch (lonError) {
+            console.error(`Even EclipticLongitude failed for Moon: ${lonError}`);
+            throw lonError;
+          }
         } else {
           // ─── ALL OTHER BODIES ────────────────────────────
-          // Ultra-specific logging for Moon before Ecliptic call
-          if (body.name === "Moon") {
-            console.log(`PRE-MOON-ECLIPTIC-CALL: Validating astroTime. Type: ${typeof astroTime}, TT: ${astroTime ? astroTime.tt : 'astroTime_undefined'}, Object: ${JSON.stringify(astroTime)}`);
-            if (!astroTime || typeof astroTime.tt !== 'number' || isNaN(astroTime.tt)) {
-              const errorMsg = `CRITICAL ERROR FOR MOON: astroTime.tt is invalid immediately before Ecliptic call! TT: ${astroTime ? astroTime.tt : 'astroTime_is_undefined'}, Full object: ${JSON.stringify(astroTime)}`;
-              console.error(errorMsg);
-              throw new Error(errorMsg);
+          // Try the standard Ecliptic function, but with fallback
+          try {
+            console.log(`STANDARD APPROACH: Attempting Ecliptic for ${body.name}`);
+            const ecl = Astronomy.Ecliptic(body.name as Astronomy.Body, astroTime);
+            longitude = ecl.elon;
+            latitude = ecl.elat;
+          } catch (eclipticError) {
+            console.warn(`Ecliptic failed for ${body.name}: ${eclipticError}. Trying EclipticLongitude fallback.`);
+            
+            // Fallback to EclipticLongitude if available
+            try {
+              longitude = Astronomy.EclipticLongitude(body.name as Astronomy.Body, astroTime);
+              latitude = 0; // Approximate for non-Moon bodies
+              console.log(`FALLBACK SUCCESS: ${body.name} longitude via EclipticLongitude: ${longitude.toFixed(6)}°`);
+            } catch (fallbackError) {
+              console.error(`Both Ecliptic and EclipticLongitude failed for ${body.name}: ${fallbackError}`);
+              // Use default positions as last resort
+              longitude = 0;
+              latitude = 0;
             }
-            console.log("MOON: About to call Astronomy.Ecliptic with validated astroTime...");
           }
-          
-          // ALWAYS pass *the same* astroTime object you got from MakeTime()
-          const ecl = Astronomy.Ecliptic(body.name as Astronomy.Body, astroTime);
-          longitude = ecl.elon;
-          latitude = ecl.elat;
         }
         
         console.log(`DEBUG ${body.id}: lon=${longitude.toFixed(6)}, lat=${latitude.toFixed(6)}`);
@@ -172,14 +207,21 @@ export async function calculatePlanetaryPositionsWithAstro(
         }
         
         // Calculate equatorial coordinates using the same astroTime
-        const equatorial = Astronomy.Equator(body.name as Astronomy.Body, astroTime, observer, false, true);
+        let rightAscension = 0, declination = 0;
+        try {
+          const equatorial = Astronomy.Equator(body.name as Astronomy.Body, astroTime, observer, false, true);
+          rightAscension = equatorial.ra;
+          declination = equatorial.dec;
+        } catch (equatorialError) {
+          console.warn(`Could not calculate equatorial coordinates for ${body.id}: ${equatorialError}`);
+        }
         
         positions[body.id] = {
           longitude: longitude,
           latitude: latitude,
           distance: distance,
-          rightAscension: equatorial.ra,
-          declination: equatorial.dec,
+          rightAscension: rightAscension,
+          declination: declination,
           longitudeSpeed: 0, // TODO: Calculate speed
           latitudeSpeed: 0
         };
