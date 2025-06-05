@@ -15,190 +15,170 @@ async function testMoonMinimal(req) {
   }
 
   try {
-    // IMMEDIATE ACTION: Investigate function availability
-    console.log('=== FUNCTION AVAILABILITY CHECK ===');
-    console.log('Type of Astronomy.TrueObliquity:', typeof Astronomy.TrueObliquity);
-    console.log('Type of Astronomy.DateToJulian:', typeof Astronomy.DateToJulian);
-    console.log('Type of Astronomy.AstroTime constructor:', typeof Astronomy.AstroTime);
-    console.log('Type of Astronomy.MakeTime:', typeof Astronomy.MakeTime);
-    console.log('Type of Astronomy.Ecliptic:', typeof Astronomy.Ecliptic);
-    console.log('Type of Astronomy.EclipticLongitude:', typeof Astronomy.EclipticLongitude);
-    console.log('Type of Astronomy.GeoVector:', typeof Astronomy.GeoVector);
-    console.log('Total Astronomy exports:', Object.keys(Astronomy).length);
-    console.log('First 20 exports:', Object.keys(Astronomy).slice(0, 20));
-    console.log('=====================================');
-
-    // Use the specific date from the error logs that was causing issues
-    const year = 2024, month = 11, day = 15, hour = 6, minute = 23; // User's birth date
-    const dateObj = new Date(Date.UTC(year, month - 1, day, hour, minute, 0)); // JS Date: month is 0-indexed
+    console.log('=== COMPLETE EXPORT ANALYSIS ===');
     
-    let responseMessage = `Enhanced Moon Test for: ${dateObj.toISOString()}\n`;
-    responseMessage += `=== FUNCTION AVAILABILITY RESULTS ===\n`;
-    responseMessage += `TrueObliquity: ${typeof Astronomy.TrueObliquity}\n`;
-    responseMessage += `DateToJulian: ${typeof Astronomy.DateToJulian}\n`;
-    responseMessage += `AstroTime constructor: ${typeof Astronomy.AstroTime}\n`;
-    responseMessage += `MakeTime: ${typeof Astronomy.MakeTime}\n`;
-    responseMessage += `Ecliptic: ${typeof Astronomy.Ecliptic}\n`;
-    responseMessage += `EclipticLongitude: ${typeof Astronomy.EclipticLongitude}\n`;
-    responseMessage += `GeoVector: ${typeof Astronomy.GeoVector}\n`;
-    responseMessage += `Total exports: ${Object.keys(Astronomy).length}\n`;
-    responseMessage += `First 20 exports: ${Object.keys(Astronomy).slice(0, 20).join(', ')}\n`;
-    responseMessage += `=====================================\n\n`;
+    // Get ALL exports from the Astronomy module
+    const allExports = Object.keys(Astronomy).sort();
+    console.log(`Total exports found: ${allExports.length}`);
+    console.log('All exports:', allExports);
+    
+    // Check specific functions mentioned in your analysis
+    const criticalFunctions = [
+      'TrueObliquity',
+      'DateToJulian', 
+      'AstroTime',
+      'MakeTime',
+      'Ecliptic',
+      'EclipticLongitude',
+      'GeoVector',
+      'HelioVector',
+      'Equator',
+      'SiderealTime',
+      'TrueLunarNodes'
+    ];
+    
+    let responseMessage = `=== COMPLETE EXPORT ANALYSIS ===\n`;
+    responseMessage += `Total exports found: ${allExports.length}\n`;
+    responseMessage += `All exports: ${allExports.join(', ')}\n\n`;
+    
+    responseMessage += `=== CRITICAL FUNCTION AVAILABILITY ===\n`;
+    criticalFunctions.forEach(funcName => {
+      const funcType = typeof Astronomy[funcName];
+      responseMessage += `${funcName}: ${funcType}\n`;
+      console.log(`${funcName}: ${funcType}`);
+    });
+    responseMessage += `\n`;
+    
+    // Look for functions that might be TrueObliquity under different names
+    const obliquityFunctions = allExports.filter(name => 
+      name.toLowerCase().includes('obliquity') || 
+      name.toLowerCase().includes('tilt') ||
+      name.toLowerCase().includes('epsilon')
+    );
+    responseMessage += `Functions containing 'obliquity', 'tilt', or 'epsilon': ${obliquityFunctions.join(', ')}\n`;
+    
+    // Look for functions that might be DateToJulian under different names
+    const julianFunctions = allExports.filter(name => 
+      name.toLowerCase().includes('julian') || 
+      name.toLowerCase().includes('jd') ||
+      name.toLowerCase().includes('date')
+    );
+    responseMessage += `Functions containing 'julian', 'jd', or 'date': ${julianFunctions.join(', ')}\n\n`;
+    
+    // Use the specific date from the error logs that was causing issues
+    const year = 2024, month = 11, day = 15, hour = 6, minute = 23;
+    const dateObj = new Date(Date.UTC(year, month - 1, day, hour, minute, 0));
+    
+    responseMessage += `=== ASTROTIME CREATION TEST ===\n`;
+    responseMessage += `Test date: ${dateObj.toISOString()}\n`;
     
     let status = 200;
 
     try {
-      console.log("Enhanced Test: Creating AstroTime...");
-      
-      // Step 2: Create AstroTime using MakeTime
+      console.log("Creating AstroTime using MakeTime...");
       const astroTime = Astronomy.MakeTime(dateObj);
       
       if (!astroTime || typeof astroTime.tt !== 'number' || isNaN(astroTime.tt)) {
-        responseMessage += `Enhanced Test - ERROR: astroTime is invalid after MakeTime. TT: ${astroTime ? astroTime.tt : 'astroTime_undefined'}, Object: ${JSON.stringify(astroTime)}\n`;
-        console.error(responseMessage);
+        responseMessage += `ERROR: astroTime is invalid. TT: ${astroTime ? astroTime.tt : 'undefined'}\n`;
+        responseMessage += `Full object: ${JSON.stringify(astroTime)}\n`;
         status = 500;
       } else {
-        responseMessage += `Enhanced Test - INFO: astroTime created successfully. TT: ${astroTime.tt}\n`;
-        responseMessage += `Enhanced Test - DEBUG: Full astroTime object: ${JSON.stringify(astroTime)}\n`;
-        console.log(responseMessage);
-
-        // Step 3: Try alternative AstroTime creation using Julian Day (only if functions exist)
-        if (typeof Astronomy.DateToJulian === 'function' && typeof Astronomy.AstroTime === 'function') {
+        responseMessage += `SUCCESS: astroTime created. TT: ${astroTime.tt}\n`;
+        responseMessage += `Full object: ${JSON.stringify(astroTime)}\n`;
+        
+        // Test alternative AstroTime creation if constructor exists
+        if (typeof Astronomy.AstroTime === 'function') {
           try {
-            console.log("Enhanced Test - INFO: Attempting alternative AstroTime creation via Julian Day...");
-            const jd_ut = Astronomy.DateToJulian(dateObj);
-            const testAstroTimeFromJD = new Astronomy.AstroTime(jd_ut);
-            responseMessage += `Enhanced Test - INFO: AstroTime from JD_UT: TT = ${testAstroTimeFromJD.tt}, Object: ${JSON.stringify(testAstroTimeFromJD)}\n`;
-            console.log(`AstroTime from JD_UT: TT = ${testAstroTimeFromJD.tt}`);
-            
-            // Test if this alternative astroTime works better with Ecliptic
-            try {
-              console.log("Enhanced Test - INFO: Testing Ecliptic with alternative astroTime...");
-              const ecl = Astronomy.Ecliptic("Moon", testAstroTimeFromJD);
-              responseMessage += `Enhanced Test - SUCCESS: Ecliptic with alternative astroTime SUCCEEDED. Longitude: ${ecl.elon}, Latitude: ${ecl.elat}\n`;
-            } catch (e) {
-              responseMessage += `Enhanced Test - FAILURE: Ecliptic with alternative astroTime also FAILED. Error: ${e.toString()}\n`;
-            }
+            // Try to create from TT directly
+            const altAstroTime = new Astronomy.AstroTime(astroTime.tt);
+            responseMessage += `Alternative AstroTime from TT: ${JSON.stringify(altAstroTime)}\n`;
           } catch (e) {
-            responseMessage += `Enhanced Test - WARNING: Alternative AstroTime creation failed: ${e.toString()}\n`;
+            responseMessage += `Alternative AstroTime creation failed: ${e.toString()}\n`;
           }
-        } else {
-          responseMessage += `Enhanced Test - WARNING: DateToJulian (${typeof Astronomy.DateToJulian}) or AstroTime constructor (${typeof Astronomy.AstroTime}) not available\n`;
         }
-
-        // Test 1: Try EclipticLongitude first (this worked in previous tests)
+        
+        // Test the functions that work
+        responseMessage += `\n=== FUNCTION TESTING ===\n`;
+        
+        // Test EclipticLongitude (this works)
         if (typeof Astronomy.EclipticLongitude === 'function') {
           try {
-            console.log("Enhanced Test - INFO: Attempting Astronomy.EclipticLongitude('Moon', astroTime)...");
             const moonLon = Astronomy.EclipticLongitude("Moon", astroTime);
-            responseMessage += `Enhanced Test - SUCCESS: EclipticLongitude for Moon SUCCEEDED. Longitude: ${moonLon}\n`;
-            console.log(`EclipticLongitude for Moon: ${moonLon}`);
+            responseMessage += `✅ EclipticLongitude("Moon"): ${moonLon}°\n`;
           } catch (e) {
-            responseMessage += `Enhanced Test - FAILURE: EclipticLongitude for Moon FAILED. Error: ${e.toString()}\n`;
-            console.error(`EclipticLongitude error: ${e.toString()}`);
+            responseMessage += `❌ EclipticLongitude("Moon") failed: ${e.toString()}\n`;
           }
-        } else {
-          responseMessage += `Enhanced Test - ERROR: EclipticLongitude function not available (type: ${typeof Astronomy.EclipticLongitude})\n`;
         }
-
-        // Test 2: Try the problematic Ecliptic call with detailed error logging
+        
+        // Test Ecliptic (this fails)
         if (typeof Astronomy.Ecliptic === 'function') {
           try {
-            console.log("Enhanced Test - INFO: Attempting Astronomy.Ecliptic('Moon', astroTime)...");
-            console.log(`Pre-Ecliptic astroTime validation: tt=${astroTime.tt}, type=${typeof astroTime.tt}, isNaN=${isNaN(astroTime.tt)}`);
             const ecl = Astronomy.Ecliptic("Moon", astroTime);
-            responseMessage += `Enhanced Test - SUCCESS: Ecliptic call for Moon SUCCEEDED. Longitude: ${ecl.elon}, Latitude: ${ecl.elat}\n`;
-            console.log(`Ecliptic for Moon: lon=${ecl.elon}, lat=${ecl.elat}`);
+            responseMessage += `✅ Ecliptic("Moon"): lon=${ecl.elon}°, lat=${ecl.elat}°\n`;
           } catch (e) {
-            responseMessage += `Enhanced Test - CRITICAL FAILURE: Ecliptic call for Moon FAILED. Error: ${e.toString()}\nStack: ${e.stack}\n`;
-            console.error(`Ecliptic error: ${e.toString()}`);
-            console.error(`Stack: ${e.stack}`);
-            status = 500;
+            responseMessage += `❌ Ecliptic("Moon") failed: ${e.toString()}\n`;
           }
-        } else {
-          responseMessage += `Enhanced Test - ERROR: Ecliptic function not available (type: ${typeof Astronomy.Ecliptic})\n`;
         }
-
-        // Test 3: Try GeoVector for Moon with enhanced error reporting
+        
+        // Test GeoVector (this fails)
         if (typeof Astronomy.GeoVector === 'function') {
           try {
-            console.log("Enhanced Test - INFO: Attempting Astronomy.GeoVector('Moon', astroTime)...");
-            console.log(`Pre-GeoVector astroTime validation: tt=${astroTime.tt}, object keys: ${Object.keys(astroTime)}`);
             const geoMoon = Astronomy.GeoVector("Moon", astroTime);
-            responseMessage += `Enhanced Test - SUCCESS: GeoVector for Moon SUCCEEDED. X: ${geoMoon.x}, Y: ${geoMoon.y}, Z: ${geoMoon.z}\n`;
-            console.log(`GeoVector for Moon: x=${geoMoon.x}, y=${geoMoon.y}, z=${geoMoon.z}`);
+            responseMessage += `✅ GeoVector("Moon"): x=${geoMoon.x}, y=${geoMoon.y}, z=${geoMoon.z}\n`;
           } catch (e) {
-            responseMessage += `Enhanced Test - FAILURE: GeoVector for Moon FAILED. Error: ${e.toString()}\nStack: ${e.stack}\n`;
-            console.error(`GeoVector error: ${e.toString()}`);
-            console.error(`Stack: ${e.stack}`);
-          }
-        } else {
-          responseMessage += `Enhanced Test - ERROR: GeoVector function not available (type: ${typeof Astronomy.GeoVector})\n`;
-        }
-
-        // Test 4: Try TrueObliquity if function is available
-        if (typeof Astronomy.TrueObliquity === 'function') {
-          try {
-            console.log("Enhanced Test - INFO: Attempting Astronomy.TrueObliquity(astroTime)...");
-            const obliquity = Astronomy.TrueObliquity(astroTime);
-            responseMessage += `Enhanced Test - SUCCESS: TrueObliquity SUCCEEDED. Obliquity: ${obliquity}°\n`;
-            console.log(`TrueObliquity: ${obliquity}°`);
-          } catch (e) {
-            responseMessage += `Enhanced Test - FAILURE: TrueObliquity FAILED. Error: ${e.toString()}\nStack: ${e.stack}\n`;
-            console.error(`TrueObliquity error: ${e.toString()}`);
-            console.error(`Stack: ${e.stack}`);
-          }
-        } else {
-          responseMessage += `Enhanced Test - WARNING: TrueObliquity function not available (type: ${typeof Astronomy.TrueObliquity})\n`;
-        }
-
-        // Test 5: Try other planets for comparison to see if the issue is widespread
-        const testBodies = ["Mercury", "Venus", "Mars"];
-        for (const body of testBodies) {
-          if (typeof Astronomy.Ecliptic === 'function') {
-            try {
-              console.log(`Enhanced Test - INFO: Testing Ecliptic for ${body}...`);
-              const ecl = Astronomy.Ecliptic(body, astroTime);
-              responseMessage += `${body}: lon=${ecl.elon.toFixed(6)}°, lat=${ecl.elat.toFixed(6)}° - SUCCESS\n`;
-            } catch (e) {
-              responseMessage += `${body} FAILED: ${e.toString()}\n`;
-              console.error(`${body} failed: ${e.toString()}`);
-            }
-          } else {
-            responseMessage += `${body} SKIPPED: Ecliptic function not available\n`;
+            responseMessage += `❌ GeoVector("Moon") failed: ${e.toString()}\n`;
           }
         }
-
-        // Test 6: Sun using HelioVector approach (if available)
+        
+        // Test HelioVector (for Sun calculation)
         if (typeof Astronomy.HelioVector === 'function') {
           try {
             const earthVec = Astronomy.HelioVector("Earth", astroTime);
             const lonRad = Math.atan2(earthVec.y, earthVec.x);
             const longitude = (lonRad * 180/Math.PI + 180 + 360) % 360;
-            responseMessage += `Sun (via HelioVector): ${longitude.toFixed(6)}° - SUCCESS\n`;
+            responseMessage += `✅ HelioVector("Earth") -> Sun longitude: ${longitude.toFixed(6)}°\n`;
           } catch (e) {
-            responseMessage += `Sun FAILED: ${e.toString()}\n`;
+            responseMessage += `❌ HelioVector("Earth") failed: ${e.toString()}\n`;
           }
-        } else {
-          responseMessage += `Sun SKIPPED: HelioVector function not available\n`;
         }
-
-        // Test 7: Library version and environment info
-        responseMessage += `\n=== ENVIRONMENT INFO ===\n`;
-        responseMessage += `Deno version: ${Deno.version.deno}\n`;
-        responseMessage += `Available Astronomy functions: ${Object.keys(Astronomy).slice(0, 10).join(', ')}...\n`;
-        responseMessage += `Total Astronomy exports: ${Object.keys(Astronomy).length}\n`;
         
-        // List all available functions for debugging
-        const allExports = Object.keys(Astronomy).sort();
-        responseMessage += `All exports: ${allExports.join(', ')}\n`;
+        // Test other planets with Ecliptic
+        const testPlanets = ["Mercury", "Venus", "Mars"];
+        testPlanets.forEach(planet => {
+          if (typeof Astronomy.Ecliptic === 'function') {
+            try {
+              const ecl = Astronomy.Ecliptic(planet, astroTime);
+              responseMessage += `✅ Ecliptic("${planet}"): lon=${ecl.elon.toFixed(6)}°, lat=${ecl.elat.toFixed(6)}°\n`;
+            } catch (e) {
+              responseMessage += `❌ Ecliptic("${planet}") failed: ${e.toString()}\n`;
+            }
+          }
+        });
+        
+        // Test EclipticLongitude for other planets as fallback
+        testPlanets.forEach(planet => {
+          if (typeof Astronomy.EclipticLongitude === 'function') {
+            try {
+              const lon = Astronomy.EclipticLongitude(planet, astroTime);
+              responseMessage += `✅ EclipticLongitude("${planet}"): ${lon.toFixed(6)}°\n`;
+            } catch (e) {
+              responseMessage += `❌ EclipticLongitude("${planet}") failed: ${e.toString()}\n`;
+            }
+          }
+        });
       }
     } catch (e) {
-      responseMessage += `Enhanced Test - CRITICAL FAILURE: General error. Error: ${e.toString()}\nStack: ${e.stack}\n`;
-      console.error(responseMessage);
+      responseMessage += `CRITICAL ERROR during AstroTime creation/testing: ${e.toString()}\n`;
+      responseMessage += `Stack: ${e.stack}\n`;
       status = 500;
     }
-
+    
+    // Environment information
+    responseMessage += `\n=== ENVIRONMENT INFO ===\n`;
+    responseMessage += `Deno version: ${Deno.version.deno}\n`;
+    responseMessage += `V8 version: ${Deno.version.v8}\n`;
+    responseMessage += `TypeScript version: ${Deno.version.typescript}\n`;
+    
     return new Response(responseMessage, { 
       status: status, 
       headers: { 
@@ -207,7 +187,7 @@ async function testMoonMinimal(req) {
       } 
     });
   } catch (error) {
-    console.error("Unexpected error in enhanced Moon test:", error);
+    console.error("Unexpected error in export analysis:", error);
     
     return new Response(
       `Unexpected error: ${error.message}\nStack: ${error.stack}`,
