@@ -11,6 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "sweph": "^2.10.3-ee",
     "@hookform/resolvers": "^3.9.0",
     "@radix-ui/react-accordion": "^1.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",
@@ -65,8 +66,7 @@
     "tailwindcss-animate": "^1.0.7",
     "three": "^0.159.0",
     "vaul": "^0.9.3",
-    "zod": "^3.23.8",
-    "sweph": "^2.10.3-ee",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
