@@ -39,6 +39,7 @@ async function testAstronomia(req) {
         // Calculate Julian Day using astronomia's julian module
         let jd;
         try {
+          // Try different julian conversion methods
           if (astronomia.julian && astronomia.julian.CalendarGregorianToJD) {
             jd = astronomia.julian.CalendarGregorianToJD(
               testCase.date.getUTCFullYear(),
@@ -46,25 +47,67 @@ async function testAstronomia(req) {
               testCase.date.getUTCDate() + 
               (testCase.date.getUTCHours() + testCase.date.getUTCMinutes()/60 + testCase.date.getUTCSeconds()/3600) / 24
             );
-            responseMessage += `  Julian Day: ${jd}\n`;
+          } else if (astronomia.julian && astronomia.julian.dateToJD) {
+            jd = astronomia.julian.dateToJD(testCase.date);
+          } else if (astronomia.julian && astronomia.julian.DateToJD) {
+            jd = astronomia.julian.DateToJD(testCase.date);
           } else {
-            throw new Error("Julian conversion function not found");
+            // Manual JD calculation as fallback
+            const a = Math.floor((14 - testCase.date.getUTCMonth() - 1) / 12);
+            const y = testCase.date.getUTCFullYear() + 4800 - a;
+            const m = testCase.date.getUTCMonth() + 1 + 12 * a - 3;
+            jd = testCase.date.getUTCDate() + Math.floor((153 * m + 2) / 5) + 365 * y + 
+                 Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400) - 32045 +
+                 (testCase.date.getUTCHours() + testCase.date.getUTCMinutes()/60 + testCase.date.getUTCSeconds()/3600) / 24;
           }
+          responseMessage += `  Julian Day: ${jd}\n`;
         } catch (e) {
           responseMessage += `  Julian Day calculation: ERROR - ${e.message}\n`;
           continue;
         }
 
+        // Calculate True Obliquity (essential for coordinate conversion)
+        let trueObliquity, trueObliquityDeg;
+        try {
+          if (astronomia.nutation) {
+            const meanObliquity = astronomia.nutation.meanObliquity(jd); // in radians
+            const nutationValues = astronomia.nutation.nutation(jd); // [deltaPsi, deltaEpsilon] in radians
+            const deltaEpsilon = Array.isArray(nutationValues) ? nutationValues[1] : nutationValues.deltaEpsilon || 0;
+            trueObliquity = meanObliquity + deltaEpsilon;
+            trueObliquityDeg = trueObliquity * 180 / Math.PI;
+            responseMessage += `  True Obliquity: ${trueObliquityDeg.toFixed(6)}°\n`;
+          } else {
+            responseMessage += `  True Obliquity: nutation module not found\n`;
+          }
+        } catch (e) {
+          responseMessage += `  True Obliquity: ERROR - ${e.message}\n`;
+        }
+
         // Test Sun position using solar module
         try {
-          if (astronomia.solar && astronomia.solar.apparentEquatorialVSOP87) {
-            const sunPos = astronomia.solar.apparentEquatorialVSOP87(jd);
-            responseMessage += `  Sun Position: RA=${sunPos.ra}°, Dec=${sunPos.dec}°\n`;
-          } else if (astronomia.solar && astronomia.solar.apparentLongitude) {
-            const sunLon = astronomia.solar.apparentLongitude(jd);
-            responseMessage += `  Sun Longitude: ${sunLon}°\n`;
+          if (astronomia.solar && trueObliquity) {
+            let sunEcliptic;
+            
+            // Try different solar position methods
+            if (astronomia.solar.apparentEquatorial) {
+              const sunEquatorial = astronomia.solar.apparentEquatorial(jd);
+              // Convert equatorial to ecliptic using coord module
+              if (astronomia.coord && astronomia.coord.Ecliptic && astronomia.coord.Equatorial) {
+                const equatorialCoord = new astronomia.coord.Equatorial(sunEquatorial.ra || sunEquatorial._ra, sunEquatorial.dec || sunEquatorial._dec);
+                sunEcliptic = new astronomia.coord.Ecliptic(equatorialCoord, trueObliquity);
+                responseMessage += `  Sun Longitude: ${(sunEcliptic.lon * 180 / Math.PI).toFixed(6)}°\n`;
+                responseMessage += `  Sun Latitude: ${(sunEcliptic.lat * 180 / Math.PI).toFixed(6)}°\n`;
+              } else {
+                responseMessage += `  Sun: Coord conversion not available\n`;
+              }
+            } else if (astronomia.solar.apparentLongitude) {
+              const sunLon = astronomia.solar.apparentLongitude(jd);
+              responseMessage += `  Sun Longitude: ${(sunLon * 180 / Math.PI).toFixed(6)}°\n`;
+            } else {
+              responseMessage += `  Sun: No usable function found in solar module\n`;
+            }
           } else {
-            responseMessage += `  Sun: No usable function found in solar module\n`;
+            responseMessage += `  Sun: Missing solar module or obliquity\n`;
           }
         } catch (e) {
           responseMessage += `  Sun: ERROR - ${e.message}\n`;
@@ -72,26 +115,39 @@ async function testAstronomia(req) {
 
         // Test Moon position using moonposition module  
         try {
-          if (astronomia.moonposition && astronomia.moonposition.position) {
-            const moonPos = astronomia.moonposition.position(jd);
-            responseMessage += `  Moon Position: ${JSON.stringify(moonPos).slice(0, 80)}...\n`;
+          if (astronomia.moonposition && astronomia.moonposition.position && trueObliquity) {
+            const moonEquatorial = astronomia.moonposition.position(jd);
+            
+            // Convert to ecliptic coordinates
+            if (astronomia.coord && astronomia.coord.Ecliptic && astronomia.coord.Equatorial) {
+              const equatorialCoord = new astronomia.coord.Equatorial(moonEquatorial._ra, moonEquatorial._dec);
+              const moonEcliptic = new astronomia.coord.Ecliptic(equatorialCoord, trueObliquity);
+              responseMessage += `  Moon Longitude: ${(moonEcliptic.lon * 180 / Math.PI).toFixed(6)}°\n`;
+              responseMessage += `  Moon Latitude: ${(moonEcliptic.lat * 180 / Math.PI).toFixed(6)}°\n`;
+            } else {
+              responseMessage += `  Moon: Coord conversion not available\n`;
+            }
           } else {
-            responseMessage += `  Moon: No position function found in moonposition module\n`;
+            responseMessage += `  Moon: Missing moonposition module or obliquity\n`;
           }
         } catch (e) {
           responseMessage += `  Moon: ERROR - ${e.message}\n`;
         }
 
-        // Test True Lunar Node using moonnode module
+        // Test True Lunar Nodes using moonnode module
         try {
-          if (astronomia.moonnode && astronomia.moonnode.node) {
-            const node = astronomia.moonnode.node(jd);
-            responseMessage += `  Lunar Node: ${JSON.stringify(node).slice(0, 60)}...\n`;
-          } else if (astronomia.moonnode && astronomia.moonnode.meanNode) {
-            const meanNode = astronomia.moonnode.meanNode(jd);
-            responseMessage += `  Mean Lunar Node: ${meanNode}°\n`;
+          if (astronomia.moonnode) {
+            if (astronomia.moonnode.ascending) {
+              const northNode = astronomia.moonnode.ascending(jd);
+              responseMessage += `  True North Node: ${(northNode * 180 / Math.PI).toFixed(6)}°\n`;
+            } else if (astronomia.moonnode.meanAscending) {
+              const meanNorthNode = astronomia.moonnode.meanAscending(jd);
+              responseMessage += `  Mean North Node: ${(meanNorthNode * 180 / Math.PI).toFixed(6)}°\n`;
+            } else {
+              responseMessage += `  Lunar Node: No node function found\n`;
+            }
           } else {
-            responseMessage += `  Lunar Node: No node function found in moonnode module\n`;
+            responseMessage += `  Lunar Node: moonnode module not found\n`;
           }
         } catch (e) {
           responseMessage += `  Lunar Node: ERROR - ${e.message}\n`;
@@ -101,32 +157,35 @@ async function testAstronomia(req) {
         const planets = ['mercury', 'venus', 'mars', 'jupiter', 'saturn'];
         for (const planet of planets) {
           try {
-            if (astronomia.planetposition && astronomia.planetposition[planet]) {
-              const planetPos = astronomia.planetposition[planet](jd);
-              responseMessage += `  ${planet}: ${JSON.stringify(planetPos).slice(0, 60)}...\n`;
+            if (astronomia.planetposition && astronomia.planetposition.Planet && trueObliquity) {
+              const planetObj = new astronomia.planetposition.Planet(planet);
+              
+              // Try different methods to get planet position
+              let planetEquatorial;
+              if (planetObj.position) {
+                planetEquatorial = planetObj.position(jd);
+              } else if (planetObj.equatorial) {
+                planetEquatorial = planetObj.equatorial(jd);
+              } else if (planetObj.positionEquatorial) {
+                planetEquatorial = planetObj.positionEquatorial(jd);
+              }
+              
+              if (planetEquatorial && astronomia.coord) {
+                const equatorialCoord = new astronomia.coord.Equatorial(
+                  planetEquatorial.ra || planetEquatorial._ra, 
+                  planetEquatorial.dec || planetEquatorial._dec
+                );
+                const planetEcliptic = new astronomia.coord.Ecliptic(equatorialCoord, trueObliquity);
+                responseMessage += `  ${planet} Longitude: ${(planetEcliptic.lon * 180 / Math.PI).toFixed(6)}°\n`;
+              } else {
+                responseMessage += `  ${planet}: Could not get position\n`;
+              }
             } else {
-              responseMessage += `  ${planet}: No function found in planetposition module\n`;
+              responseMessage += `  ${planet}: planetposition.Planet not available\n`;
             }
           } catch (e) {
             responseMessage += `  ${planet}: ERROR - ${e.message}\n`;
           }
-        }
-
-        // Test obliquity using nutation module
-        try {
-          if (astronomia.nutation && astronomia.nutation.meanObliquity) {
-            const meanObl = astronomia.nutation.meanObliquity(jd);
-            responseMessage += `  Mean Obliquity: ${meanObl}°\n`;
-            
-            if (astronomia.nutation.nutation) {
-              const nutValues = astronomia.nutation.nutation(jd);
-              responseMessage += `  Nutation: ${JSON.stringify(nutValues).slice(0, 60)}...\n`;
-            }
-          } else {
-            responseMessage += `  Obliquity: No meanObliquity function found in nutation module\n`;
-          }
-        } catch (e) {
-          responseMessage += `  Obliquity: ERROR - ${e.message}\n`;
         }
 
       } catch (e) {
@@ -135,21 +194,21 @@ async function testAstronomia(req) {
       }
     }
 
-    // Explore module structure for debugging
-    responseMessage += `\n=== MODULE STRUCTURE ANALYSIS ===\n`;
-    const moduleNames = ['julian', 'solar', 'moonposition', 'moonnode', 'nutation', 'planetposition'];
+    // Explore module structure for debugging (condensed)
+    responseMessage += `\n=== MODULE STRUCTURE SUMMARY ===\n`;
+    const moduleNames = ['julian', 'solar', 'moonposition', 'moonnode', 'nutation', 'planetposition', 'coord'];
     
     for (const moduleName of moduleNames) {
       try {
         const module = astronomia[moduleName];
         if (module && typeof module === 'object') {
-          const functions = Object.keys(module).filter(key => typeof module[key] === 'function');
-          responseMessage += `${moduleName}: ${functions.join(', ')}\n`;
+          const functions = Object.keys(module).filter(key => typeof module[key] === 'function').slice(0, 5);
+          responseMessage += `${moduleName}: ${functions.join(', ')}${functions.length === 5 ? '...' : ''}\n`;
         } else {
-          responseMessage += `${moduleName}: Not found or not an object\n`;
+          responseMessage += `${moduleName}: Not found\n`;
         }
       } catch (e) {
-        responseMessage += `${moduleName}: Error accessing - ${e.message}\n`;
+        responseMessage += `${moduleName}: Error - ${e.message}\n`;
       }
     }
 
