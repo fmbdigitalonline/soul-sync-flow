@@ -220,7 +220,31 @@ export default async function handler(req: Request) {
   }
 
   try {
-    const { birthDate, birthTime, birthLocation, timezone } = await req.json();
+    console.log('Prokerala API test endpoint called');
+    
+    // Use default test data if no body is provided
+    let birthDate = "1990-03-21";
+    let birthTime = "12:00";
+    let birthLocation = "40.7128,-74.0060";
+    let timezone = "America/New_York";
+
+    // Try to parse JSON body if it exists and has content
+    if (req.method === 'POST') {
+      const text = await req.text();
+      if (text && text.trim()) {
+        try {
+          const data = JSON.parse(text);
+          birthDate = data.birthDate || birthDate;
+          birthTime = data.birthTime || birthTime;
+          birthLocation = data.birthLocation || birthLocation;
+          timezone = data.timezone || timezone;
+        } catch (parseError) {
+          console.warn('Could not parse request body, using defaults:', parseError);
+        }
+      }
+    }
+
+    console.log('Testing with data:', { birthDate, birthTime, birthLocation, timezone });
 
     const result = await calculatePlanetaryPositionsWithProkerala(
       birthDate,
