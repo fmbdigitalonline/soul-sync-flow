@@ -1,7 +1,8 @@
+
 // File: api/ephemeris.js
 
-const sweph = require('sweph');
-const path = require('path');
+import sweph from 'sweph';
+import path from 'path';
 
 // This tells sweph where to find the data files you will upload in Step 5.
 // Vercel makes these files available in the `/var/task/ephemeris` directory.
@@ -9,7 +10,7 @@ const ephe_path = path.join(process.cwd(), 'ephemeris');
 sweph.set_ephe_path(ephe_path);
 
 // This is the main serverless function handler.
-module.exports = (req, res) => {
+export default function handler(req, res) {
   // Set CORS headers to allow your Supabase app to call this API
   res.setHeader('Access-Control-Allow-Origin', '*'); // For development. Be more specific in production.
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -85,4 +86,4 @@ module.exports = (req, res) => {
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });
   }
-};
+}
