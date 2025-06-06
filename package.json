@@ -11,7 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "sweph-js": "^2.10.3-ee",
+    "sweph": "2.10.03-ee",
     "@hookform/resolvers": "^3.9.0",
     "@radix-ui/react-accordion": "^1.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",
