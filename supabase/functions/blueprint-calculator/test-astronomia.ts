@@ -14,19 +14,17 @@ async function testAstronomia(req) {
   }
 
   try {
-    console.log('=== ASTRONOMIA LIBRARY TEST ===');
+    console.log('=== ASTRONOMIA PROPER API TEST ===');
     
-    let responseMessage = `=== ASTRONOMIA LIBRARY TEST ===\n`;
+    let responseMessage = `=== ASTRONOMIA PROPER API TEST ===\n`;
 
     // Import astronomia
     const astronomia = await import('npm:astronomia@4.1.1');
     console.log('Astronomia imported successfully');
     
-    const exports = Object.keys(astronomia).sort();
-    responseMessage += `✅ Astronomia loaded: ${exports.length} exports available\n`;
-    responseMessage += `Available modules: ${exports.join(', ')}\n\n`;
+    responseMessage += `✅ Astronomia loaded successfully\n\n`;
 
-    // Test dates - your problematic ones
+    // Test dates - your problematic ones plus standard ones
     const testDates = [
       { name: 'Problematic Date 1', date: new Date('2024-11-15T06:23:00.000Z') },
       { name: 'Problematic Date 2', date: new Date('1977-11-15T06:23:00.000Z') },
@@ -34,64 +32,98 @@ async function testAstronomia(req) {
       { name: 'Standard Date 2', date: new Date('2000-01-01T00:00:00.000Z') }
     ];
 
-    responseMessage += `=== TESTING CORE ASTRONOMICAL FUNCTIONS ===\n`;
-
     for (const testCase of testDates) {
       responseMessage += `\n--- ${testCase.name}: ${testCase.date.toISOString()} ---\n`;
       
       try {
-        // Test Julian Day calculation
-        if (astronomia.julian && typeof astronomia.julian.CalendarGregorianToJD === 'function') {
-          const jd = astronomia.julian.CalendarGregorianToJD(
-            testCase.date.getUTCFullYear(),
-            testCase.date.getUTCMonth() + 1,
-            testCase.date.getUTCDate() + 
-            (testCase.date.getUTCHours() + testCase.date.getUTCMinutes()/60 + testCase.date.getUTCSeconds()/3600) / 24
-          );
-          responseMessage += `  Julian Day: ${jd}\n`;
-        } else {
-          responseMessage += `  Julian Day: Function not available\n`;
+        // Calculate Julian Day using astronomia's julian module
+        let jd;
+        try {
+          if (astronomia.julian && astronomia.julian.CalendarGregorianToJD) {
+            jd = astronomia.julian.CalendarGregorianToJD(
+              testCase.date.getUTCFullYear(),
+              testCase.date.getUTCMonth() + 1,
+              testCase.date.getUTCDate() + 
+              (testCase.date.getUTCHours() + testCase.date.getUTCMinutes()/60 + testCase.date.getUTCSeconds()/3600) / 24
+            );
+            responseMessage += `  Julian Day: ${jd}\n`;
+          } else {
+            throw new Error("Julian conversion function not found");
+          }
+        } catch (e) {
+          responseMessage += `  Julian Day calculation: ERROR - ${e.message}\n`;
+          continue;
         }
 
-        // Test planetary positions
-        const planets = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn'];
-        
+        // Test Sun position using solar module
+        try {
+          if (astronomia.solar && astronomia.solar.apparentEquatorialVSOP87) {
+            const sunPos = astronomia.solar.apparentEquatorialVSOP87(jd);
+            responseMessage += `  Sun Position: RA=${sunPos.ra}°, Dec=${sunPos.dec}°\n`;
+          } else if (astronomia.solar && astronomia.solar.apparentLongitude) {
+            const sunLon = astronomia.solar.apparentLongitude(jd);
+            responseMessage += `  Sun Longitude: ${sunLon}°\n`;
+          } else {
+            responseMessage += `  Sun: No usable function found in solar module\n`;
+          }
+        } catch (e) {
+          responseMessage += `  Sun: ERROR - ${e.message}\n`;
+        }
+
+        // Test Moon position using moonposition module  
+        try {
+          if (astronomia.moonposition && astronomia.moonposition.position) {
+            const moonPos = astronomia.moonposition.position(jd);
+            responseMessage += `  Moon Position: ${JSON.stringify(moonPos).slice(0, 80)}...\n`;
+          } else {
+            responseMessage += `  Moon: No position function found in moonposition module\n`;
+          }
+        } catch (e) {
+          responseMessage += `  Moon: ERROR - ${e.message}\n`;
+        }
+
+        // Test True Lunar Node using moonnode module
+        try {
+          if (astronomia.moonnode && astronomia.moonnode.node) {
+            const node = astronomia.moonnode.node(jd);
+            responseMessage += `  Lunar Node: ${JSON.stringify(node).slice(0, 60)}...\n`;
+          } else if (astronomia.moonnode && astronomia.moonnode.meanNode) {
+            const meanNode = astronomia.moonnode.meanNode(jd);
+            responseMessage += `  Mean Lunar Node: ${meanNode}°\n`;
+          } else {
+            responseMessage += `  Lunar Node: No node function found in moonnode module\n`;
+          }
+        } catch (e) {
+          responseMessage += `  Lunar Node: ERROR - ${e.message}\n`;
+        }
+
+        // Test planets using planetposition module
+        const planets = ['mercury', 'venus', 'mars', 'jupiter', 'saturn'];
         for (const planet of planets) {
           try {
-            // Try different ways astronomia might calculate planetary positions
             if (astronomia.planetposition && astronomia.planetposition[planet]) {
-              const pos = astronomia.planetposition[planet](jd);
-              responseMessage += `  ${planet}: ${JSON.stringify(pos).slice(0, 80)}...\n`;
-            } else if (astronomia[planet]) {
-              const pos = astronomia[planet](jd);
-              responseMessage += `  ${planet}: ${JSON.stringify(pos).slice(0, 80)}...\n`;
+              const planetPos = astronomia.planetposition[planet](jd);
+              responseMessage += `  ${planet}: ${JSON.stringify(planetPos).slice(0, 60)}...\n`;
             } else {
-              responseMessage += `  ${planet}: No calculation function found\n`;
+              responseMessage += `  ${planet}: No function found in planetposition module\n`;
             }
           } catch (e) {
             responseMessage += `  ${planet}: ERROR - ${e.message}\n`;
           }
         }
 
-        // Test lunar nodes if available
-        try {
-          if (astronomia.moonnode) {
-            const nodes = astronomia.moonnode(jd);
-            responseMessage += `  Lunar Nodes: ${JSON.stringify(nodes).slice(0, 80)}...\n`;
-          } else {
-            responseMessage += `  Lunar Nodes: Function not available\n`;
-          }
-        } catch (e) {
-          responseMessage += `  Lunar Nodes: ERROR - ${e.message}\n`;
-        }
-
-        // Test obliquity if available
+        // Test obliquity using nutation module
         try {
           if (astronomia.nutation && astronomia.nutation.meanObliquity) {
-            const obliquity = astronomia.nutation.meanObliquity(jd);
-            responseMessage += `  Obliquity: ${obliquity}\n`;
+            const meanObl = astronomia.nutation.meanObliquity(jd);
+            responseMessage += `  Mean Obliquity: ${meanObl}°\n`;
+            
+            if (astronomia.nutation.nutation) {
+              const nutValues = astronomia.nutation.nutation(jd);
+              responseMessage += `  Nutation: ${JSON.stringify(nutValues).slice(0, 60)}...\n`;
+            }
           } else {
-            responseMessage += `  Obliquity: Function not available\n`;
+            responseMessage += `  Obliquity: No meanObliquity function found in nutation module\n`;
           }
         } catch (e) {
           responseMessage += `  Obliquity: ERROR - ${e.message}\n`;
@@ -103,24 +135,25 @@ async function testAstronomia(req) {
       }
     }
 
-    // List available sub-modules for reference
-    responseMessage += `\n=== AVAILABLE ASTRONOMIA MODULES ===\n`;
-    for (const exportName of exports.slice(0, 20)) {
+    // Explore module structure for debugging
+    responseMessage += `\n=== MODULE STRUCTURE ANALYSIS ===\n`;
+    const moduleNames = ['julian', 'solar', 'moonposition', 'moonnode', 'nutation', 'planetposition'];
+    
+    for (const moduleName of moduleNames) {
       try {
-        const module = astronomia[exportName];
-        if (typeof module === 'object' && module !== null) {
-          const subExports = Object.keys(module);
-          responseMessage += `${exportName}: ${subExports.slice(0, 5).join(', ')}${subExports.length > 5 ? '...' : ''}\n`;
+        const module = astronomia[moduleName];
+        if (module && typeof module === 'object') {
+          const functions = Object.keys(module).filter(key => typeof module[key] === 'function');
+          responseMessage += `${moduleName}: ${functions.join(', ')}\n`;
         } else {
-          responseMessage += `${exportName}: ${typeof module}\n`;
+          responseMessage += `${moduleName}: Not found or not an object\n`;
         }
       } catch (e) {
-        responseMessage += `${exportName}: Error accessing - ${e.message}\n`;
+        responseMessage += `${moduleName}: Error accessing - ${e.message}\n`;
       }
     }
 
     responseMessage += `\n=== TEST COMPLETED ===\n`;
-    responseMessage += `Environment: Deno ${Deno.version.deno}\n`;
     responseMessage += `Test completed at: ${new Date().toISOString()}\n`;
 
     return new Response(responseMessage, { 
@@ -147,10 +180,8 @@ async function testAstronomia(req) {
   }
 }
 
-// Export for direct serving and for import by main router
 export default testAstronomia;
 
-// Also support direct serving if this file is run independently
 if (import.meta.main) {
   serve(testAstronomia);
 }
