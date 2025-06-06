@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -6,14 +5,15 @@ import { PomodoroTimer } from "./PomodoroTimer";
 import { HabitTracker } from "./HabitTracker";
 import { GoalSetting } from "./GoalSetting";
 import { Clock, Calendar, Target, ListChecks } from "lucide-react";
-import { blueprintService, BlueprintData } from "@/services/blueprint-service";
+import { blueprintService } from "@/services/blueprint-service";
 import { supabase } from "@/integrations/supabase/client";
 
-export const ProductivityDashboard: React.FC = () => {
+const ProductivityDashboard = () => {
   const [activeTab, setActiveTab] = useState("focus");
-  const [blueprint, setBlueprint] = useState<BlueprintData | null>(null);
+  const [blueprintData, setBlueprintData] = useState<BlueprintData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [lifePathNumber, setLifePathNumber] = useState<number>(1);
 
   // Check authentication status
   useEffect(() => {
@@ -35,39 +35,41 @@ export const ProductivityDashboard: React.FC = () => {
 
   // Fetch blueprint data
   useEffect(() => {
-    const fetchBlueprintData = async () => {
-      if (isAuthenticated) {
-        setIsLoading(true);
+    const fetchBlueprint = async () => {
+      try {
         const { data } = await blueprintService.getActiveBlueprintData();
-        setBlueprint(data);
-        setIsLoading(false);
-      } else {
-        setIsLoading(false);
+        if (data) {
+          setBlueprintData(data);
+          // Use correct property name
+          setLifePathNumber(data.values_life_path.lifePathNumber || 1);
+        }
+      } catch (error) {
+        console.error("Error fetching blueprint:", error);
       }
     };
-    
-    fetchBlueprintData();
-  }, [isAuthenticated]);
+
+    fetchBlueprint();
+  }, []);
 
   // Get relevant blueprint traits for productivity tools
   const getRelevantTraits = () => {
-    if (!blueprint) return [];
+    if (!blueprintData) return [];
     
     return [
-      blueprint.cognition_mbti.type,
-      blueprint.energy_strategy_human_design.type,
-      blueprint.archetype_western.sun_sign.split(" ")[0],
-      blueprint.archetype_western.moon_sign.split(" ")[0],
-      `Life Path ${blueprint.values_life_path.life_path_number}`
+      blueprintData.cognition_mbti.type,
+      blueprintData.energy_strategy_human_design.type,
+      blueprintData.archetype_western.sun_sign.split(" ")[0],
+      blueprintData.archetype_western.moon_sign.split(" ")[0],
+      `Life Path ${lifePathNumber}`
     ];
   };
 
   // Get focus style from blueprint
   const getFocusStyle = () => {
-    if (!blueprint) return "standard";
+    if (!blueprintData) return "standard";
     
-    const mbtiType = blueprint.cognition_mbti.type;
-    const hdType = blueprint.energy_strategy_human_design.type;
+    const mbtiType = blueprintData.cognition_mbti.type;
+    const hdType = blueprintData.energy_strategy_human_design.type;
     
     // Determine focus style based on blueprint traits
     if (mbtiType.startsWith("IN") || hdType === "Projector") {
@@ -156,3 +158,5 @@ export const ProductivityDashboard: React.FC = () => {
     </CosmicCard>
   );
 };
+
+export default ProductivityDashboard;

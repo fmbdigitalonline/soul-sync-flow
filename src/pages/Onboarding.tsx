@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "@/lib/framer-motion";
@@ -10,7 +9,7 @@ import { MBTISelector } from "@/components/blueprint/MBTISelector";
 import { BirthDataForm } from "@/components/blueprint/BirthDataForm";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { BlueprintData } from "@/services/blueprint-service"; 
+import { BlueprintData, blueprintService } from "@/services/blueprint-service"; 
 import { useToast } from "@/hooks/use-toast";
 import { useOnboarding3D } from "@/hooks/use-onboarding-3d";
 import { useSoulOrb } from "@/contexts/SoulOrbContext";
@@ -314,9 +313,7 @@ export default function Onboarding() {
     // Add a delayed navigation check to handle cases where blueprint exists
     const checkBlueprintAndNavigate = async () => {
       try {
-        const { data: blueprint } = await import('@/services/blueprint-service').then(
-          module => module.blueprintService.getActiveBlueprintData()
-        );
+        const { data: blueprint } = await blueprintService.getActiveBlueprintData();
         
         if (blueprint && currentStep === 0) {
           console.log("Blueprint already exists, redirecting to blueprint page");

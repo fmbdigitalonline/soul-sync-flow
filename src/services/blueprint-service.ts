@@ -173,7 +173,7 @@ class BlueprintService {
     try {
       console.log('Calling blueprint calculator with user data:', userData);
 
-      // Call the Supabase function with the correct field names
+      // Call the Supabase function with the correct field names (direct fields, not wrapped)
       const { data, error } = await this.supabase.functions.invoke('blueprint-calculator', {
         body: {
           birthDate: userData.birth_date,
@@ -360,5 +360,7 @@ class BlueprintService {
   }
 }
 
+// Create and export a singleton instance
+import { supabase } from '@/integrations/supabase/client';
+export const blueprintService = new BlueprintService({ supabase });
 export default BlueprintService;
-

@@ -1,16 +1,16 @@
-
-import React, { useState } from "react";
+import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { BlueprintData } from "@/services/blueprint-service";
+import CosmicCard from "@/components/ui/cosmic-card";
 
 interface BlueprintViewerProps {
   blueprint: BlueprintData;
 }
 
-const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint }) => {
+export const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint }) => {
   const [activeTab, setActiveTab] = useState("overview");
   
   // Extract calculation metadata with proper typing to avoid TypeScript errors
@@ -27,8 +27,11 @@ const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint }) => {
     (metadata.engine === "swiss_ephemeris" ? "Swiss Ephemeris" : "Legacy Calculator") : 
     "Template Data";
   
+  // Fix the numerology section to use correct property names
+  const numerologyData = blueprint.values_life_path;
+  
   return (
-    <div className="container mx-auto">
+    <div className="space-y-6">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-2xl font-bold">Soul Blueprint for {blueprint.user_meta.preferred_name}</h2>
@@ -132,21 +135,32 @@ const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint }) => {
         </TabsContent>
 
         <TabsContent value="numerology" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Numerology</CardTitle>
-              <CardDescription>Insights from your life path number.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p>Life Path Number: {blueprint.values_life_path.life_path_number}</p>
-              <p>Life Path Keyword: {blueprint.values_life_path.life_path_keyword}</p>
-              <p>Life Path Description: {blueprint.values_life_path.life_path_description}</p>
-              <p>Birth Day Number: {blueprint.values_life_path.birth_day_number}</p>
-              <p>Birth Day Meaning: {blueprint.values_life_path.birth_day_meaning}</p>
-              <p>Personal Year: {blueprint.values_life_path.personal_year}</p>
-              <p>Expression Number: {blueprint.values_life_path.expression_number}</p>
-            </CardContent>
-          </Card>
+          <CosmicCard>
+            <h3 className="text-xl font-display font-bold mb-4">Life Path Numbers</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <h4 className="font-semibold">Life Path Number</h4>
+                <p className="text-2xl font-bold text-soul-purple">{numerologyData.lifePathNumber || "Unknown"}</p>
+                <p className="text-sm text-gray-400">{"Your life's purpose and journey"}</p>
+                <p className="text-sm">{"Your unique path in life"}</p>
+              </div>
+              <div>
+                <h4 className="font-semibold">Birth Day Number</h4>
+                <p className="text-2xl font-bold text-soul-purple">{numerologyData.birthDay || "Unknown"}</p>
+                <p className="text-sm text-gray-400">{"Natural talents and abilities"}</p>
+              </div>
+              <div>
+                <h4 className="font-semibold">Personal Year</h4>
+                <p className="text-2xl font-bold text-soul-purple">{new Date().getFullYear() - numerologyData.birthYear || "Unknown"}</p>
+                <p className="text-sm text-gray-400">{"Current year's energy and focus"}</p>
+              </div>
+              <div>
+                <h4 className="font-semibold">Expression Number</h4>
+                <p className="text-2xl font-bold text-soul-purple">{numerologyData.expressionNumber || "Unknown"}</p>
+                <p className="text-sm text-gray-400">{"Your natural talents and abilities"}</p>
+              </div>
+            </div>
+          </CosmicCard>
         </TabsContent>
 
         <TabsContent value="western" className="mt-6">
