@@ -9,18 +9,17 @@ const require = createRequire(import.meta.url);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Import sweph using require since it might be a CommonJS module
-const sweph = require('sweph');
-
-// This tells sweph where to find the data files you will upload in Step 5.
-// Vercel makes these files available in the `/var/task/ephemeris` directory.
-const ephe_path = path.join(process.cwd(), 'ephemeris');
-sweph.set_ephe_path(ephe_path);
+// CORS headers for browser requests
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
 
 // This is the main serverless function handler.
-export default function handler(req, res) {
+export default async function handler(req, res) {
   // Set CORS headers to allow your Supabase app to call this API
-  res.setHeader('Access-Control-Allow-Origin', '*'); // For development. Be more specific in production.
+  res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
@@ -30,24 +29,78 @@ export default function handler(req, res) {
   }
 
   if (req.method !== 'POST') {
-    return res.status(405).send({ error: 'Method Not Allowed' });
+    return res.status(405).json({ success: false, error: 'Method Not Allowed' });
   }
 
   try {
     const { datetime, coordinates } = req.body;
-    const [lat, lon] = coordinates.split(',').map(Number);
-    const date = new Date(datetime);
+    
+    if (!datetime || !coordinates) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Missing required parameters: datetime and coordinates' 
+      });
+    }
 
-    // 1. Convert input date to Julian Day UT
+    const [lat, lon] = coordinates.split(',').map(Number);
+    
+    if (isNaN(lat) || isNaN(lon)) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Invalid coordinates format. Expected "lat,lon"' 
+      });
+    }
+
+    const date = new Date(datetime);
+    
+    if (isNaN(date.getTime())) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Invalid datetime format' 
+      });
+    }
+
+    // Try to import sweph dynamically
+    let sweph;
+    try {
+      sweph = require('sweph');
+    } catch (importError) {
+      console.error('Failed to import sweph:', importError);
+      return res.status(500).json({ 
+        success: false, 
+        error: 'Swiss Ephemeris library not available. Please ensure sweph is installed.' 
+      });
+    }
+
+    // Check if sweph is properly initialized
+    if (!sweph || typeof sweph.swe_julday !== 'function') {
+      console.error('sweph module loaded but functions not available:', Object.keys(sweph || {}));
+      return res.status(500).json({ 
+        success: false, 
+        error: 'Swiss Ephemeris library not properly initialized' 
+      });
+    }
+
+    // Set ephemeris path if needed
+    try {
+      const ephe_path = path.join(process.cwd(), 'ephemeris');
+      if (typeof sweph.set_ephe_path === 'function') {
+        sweph.set_ephe_path(ephe_path);
+      }
+    } catch (pathError) {
+      console.warn('Could not set ephemeris path:', pathError);
+    }
+
+    // Convert input date to Julian Day UT
     const year = date.getUTCFullYear();
     const month = date.getUTCMonth() + 1;
     const day = date.getUTCDate();
     const hour = date.getUTCHours() + (date.getUTCMinutes() / 60) + (date.getUTCSeconds() / 3600);
 
-    const julianDayUT = sweph.swe_julday(year, month, day, hour, sweph.SE_GREG_CAL);
-    const jd = julianDayUT.jd;
+    const julianDayResult = sweph.swe_julday(year, month, day, hour, sweph.SE_GREG_CAL);
+    const jd = julianDayResult.jd || julianDayResult; // Handle different return formats
 
-    // 2. Define which celestial bodies you need
+    // Define which celestial bodies to calculate
     const bodies = {
         sun: sweph.SE_SUN,
         moon: sweph.SE_MOON,
@@ -59,23 +112,29 @@ export default function handler(req, res) {
         uranus: sweph.SE_URANUS,
         neptune: sweph.SE_NEPTUNE,
         pluto: sweph.SE_PLUTO,
-        north_node: sweph.SE_TRUE_NODE, // This gets you the True North Node
+        north_node: sweph.SE_TRUE_NODE,
     };
 
-    const flags = sweph.SEFLG_SPEED | sweph.SEFLG_SWIEPH; // Standard flags
+    const flags = sweph.SEFLG_SPEED | sweph.SEFLG_SWIEPH;
     const ephemerisData = {};
 
-    // 3. Calculate the position for each body
+    // Calculate the position for each body
     for (const [name, id] of Object.entries(bodies)) {
-        const result = sweph.swe_calc_ut(jd, id, flags);
-        if (result.error) {
-            ephemerisData[name] = { error: result.error };
-        } else {
-            ephemerisData[name] = {
-                longitude: result.longitude,
-                latitude: result.latitude,
-                speed: result.longitude_speed,
-            };
+        try {
+            const result = sweph.swe_calc_ut(jd, id, flags);
+            if (result.error) {
+                console.warn(`Error calculating ${name}:`, result.error);
+                ephemerisData[name] = { error: result.error };
+            } else {
+                ephemerisData[name] = {
+                    longitude: result.longitude,
+                    latitude: result.latitude,
+                    speed: result.longitude_speed,
+                };
+            }
+        } catch (calcError) {
+            console.warn(`Exception calculating ${name}:`, calcError);
+            ephemerisData[name] = { error: calcError.message };
         }
     }
 
@@ -88,10 +147,22 @@ export default function handler(req, res) {
         };
     }
 
-    // 4. Send the successful JSON response
-    res.status(200).json({ success: true, data: ephemerisData });
+    // Send the successful JSON response
+    res.status(200).json({ 
+      success: true, 
+      data: ephemerisData,
+      metadata: {
+        julian_day: jd,
+        calculated_at: new Date().toISOString(),
+        coordinates: { latitude: lat, longitude: lon }
+      }
+    });
 
-  } catch (e) {
-    res.status(500).json({ success: false, error: e.message });
+  } catch (error) {
+    console.error('Ephemeris calculation error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message || 'Internal server error during ephemeris calculation'
+    });
   }
 }
