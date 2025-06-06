@@ -1,8 +1,16 @@
 
 // File: api/ephemeris.js
 
-import sweph from 'sweph';
+import { createRequire } from 'module';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+const require = createRequire(import.meta.url);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Import sweph using require since it might be a CommonJS module
+const sweph = require('sweph');
 
 // This tells sweph where to find the data files you will upload in Step 5.
 // Vercel makes these files available in the `/var/task/ephemeris` directory.
