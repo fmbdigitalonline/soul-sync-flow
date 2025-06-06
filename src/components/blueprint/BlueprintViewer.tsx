@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { BlueprintData } from "@/services/blueprint-service";
-import CosmicCard from "@/components/ui/cosmic-card";
+import { CosmicCard } from "@/components/ui/cosmic-card";
 
 interface BlueprintViewerProps {
   blueprint: BlueprintData;
