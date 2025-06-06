@@ -25,9 +25,15 @@ serve(async (req) => {
     }
     
     if (url.pathname.includes('/test-astrometry')) {
-      // Import and execute the new Astrometry test
+      // Import and execute the Astrometry test
       const { default: testAstrometry } = await import('./test-astrometry.ts');
       return await testAstrometry(req);
+    }
+    
+    if (url.pathname.includes('/test-available-astronomy')) {
+      // Import and execute the comprehensive astronomy availability test
+      const { default: testAvailableAstronomy } = await import('./test-available-astronomy.ts');
+      return await testAvailableAstronomy(req);
     }
     
     if (url.pathname.includes('/test-wasm')) {
