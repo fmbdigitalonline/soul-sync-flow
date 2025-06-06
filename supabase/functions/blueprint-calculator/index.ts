@@ -1,6 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { calculatePlanetaryPositionsWithAstro } from './ephemeris-astroengine.ts';
+import { calculatePlanetaryPositionsWithProkerala } from './ephemeris-prokerala.ts';
 
 // CORS headers for browser requests
 const corsHeaders = {
@@ -46,6 +46,12 @@ serve(async (req) => {
       // Import and execute the WASM test
       const { default: testWasm } = await import('./test-wasm.ts');
       return await testWasm(req);
+    }
+
+    if (url.pathname.includes('/test-prokerala')) {
+      // Import and execute the Prokerala API test
+      const { default: testProkerala } = await import('./prokerala-api.ts');
+      return await testProkerala(req);
     }
 
     // Only parse JSON for main blueprint calculation endpoints and POST requests
@@ -102,8 +108,8 @@ serve(async (req) => {
       timezone
     });
 
-    // Calculate planetary positions using Astronomy Engine
-    const positions = await calculatePlanetaryPositionsWithAstro(
+    // Calculate planetary positions using Prokerala API
+    const result = await calculatePlanetaryPositionsWithProkerala(
       birthDate,
       birthTime,
       birthLocation,
@@ -112,9 +118,9 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       success: true,
-      data: positions,
+      data: result.data,
       timestamp: new Date().toISOString(),
-      source: "astronomy_engine"
+      source: "prokerala_api"
     }), {
       headers: { 
         "Content-Type": "application/json",
