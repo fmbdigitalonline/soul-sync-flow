@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 // CORS headers for browser requests
@@ -90,7 +89,7 @@ export async function calculatePlanetaryPositionsWithProkerala(
     console.log('Calling planet-position endpoint with:', {
       coordinates,
       datetime: isoDateTime,
-      ayanamsa: 0, // Critical: 0 = Tropical/Western astrology
+      ayanamsa: 1, // Use 1 (Lahiri) as it's a valid value according to the API error
     });
 
     // Use the correct endpoint with GET method and query parameters
@@ -98,7 +97,7 @@ export async function calculatePlanetaryPositionsWithProkerala(
     
     // URL-encode the datetime parameter to handle special characters
     const encodedDatetime = encodeURIComponent(isoDateTime);
-    const ayanamsa = 0; // 0 = Tropical zodiac (Western astrology)
+    const ayanamsa = 1; // Use 1 (Lahiri ayanamsa) as 0 is not allowed
     
     // Construct the final URL with all parameters in the query string
     const finalApiUrl = `${apiUrlBase}?datetime=${encodedDatetime}&coordinates=${coordinates}&ayanamsa=${ayanamsa}`;
