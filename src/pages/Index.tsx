@@ -6,7 +6,6 @@ import MainLayout from "@/components/Layout/MainLayout";
 import { ArrowRight, LogIn } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useSoulOrb } from "@/contexts/SoulOrbContext";
-import { useEffect } from "react";
 import { blueprintService } from "@/services/blueprint-service";
 import { useNavigate } from "react-router-dom";
 

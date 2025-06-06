@@ -5,7 +5,7 @@ import { PomodoroTimer } from "./PomodoroTimer";
 import { HabitTracker } from "./HabitTracker";
 import { GoalSetting } from "./GoalSetting";
 import { Clock, Calendar, Target, ListChecks } from "lucide-react";
-import { blueprintService } from "@/services/blueprint-service";
+import { blueprintService, BlueprintData } from "@/services/blueprint-service";
 import { supabase } from "@/integrations/supabase/client";
 
 const ProductivityDashboard = () => {

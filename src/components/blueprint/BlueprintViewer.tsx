@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -66,12 +66,6 @@ export const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint }) =
           <TabsTrigger value="numerology">Numerology</TabsTrigger>
           <TabsTrigger value="western">Western Astrology</TabsTrigger>
           <TabsTrigger value="chinese">Chinese Astrology</TabsTrigger>
-          {/* <TabsTrigger value="timing">Timing Overlays</TabsTrigger>
-          <TabsTrigger value="goals">Goal Stack</TabsTrigger>
-          <TabsTrigger value="tasks">Task Graph</TabsTrigger>
-          <TabsTrigger value="beliefs">Belief Logs</TabsTrigger>
-          <TabsTrigger value="excitement">Excitement Scores</TabsTrigger>
-          <TabsTrigger value="vibration">Vibration Check-ins</TabsTrigger> */}
         </TabsList>
         
         <TabsContent value="overview" className="mt-6">
@@ -193,79 +187,6 @@ export const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint }) =
             </CardContent>
           </Card>
         </TabsContent>
-
-        {/* <TabsContent value="timing" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Timing Overlays</CardTitle>
-              <CardDescription>Current transits and notes.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p>Current Transits: {blueprint.timing_overlays.current_transits}</p>
-              <p>Notes: {blueprint.timing_overlays.notes}</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="goals" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Goal Stack</CardTitle>
-              <CardDescription>Your goals and aspirations.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p>Goal Stack: {blueprint.goal_stack}</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="tasks" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Task Graph</CardTitle>
-              <CardDescription>Your tasks and activities.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p>Task Graph: {blueprint.task_graph}</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="beliefs" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Belief Logs</CardTitle>
-              <CardDescription>Your beliefs and affirmations.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p>Belief Logs: {blueprint.belief_logs}</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="excitement" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Excitement Scores</CardTitle>
-              <CardDescription>Your excitement levels.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p>Excitement Scores: {blueprint.excitement_scores}</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="vibration" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Vibration Check-ins</CardTitle>
-              <CardDescription>Your vibration levels.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p>Vibration Check-ins: {blueprint.vibration_check_ins}</p>
-            </CardContent>
-          </Card>
-        </TabsContent> */}
       </Tabs>
     </div>
   );

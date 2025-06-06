@@ -97,3 +97,14 @@ export const sampleBlueprints: BlueprintData[] = [
     is_active: true
   }
 ];
+
+export const exampleFeurionBlueprint: BlueprintData = sampleBlueprints[0];
+
+export const importBlueprintFromJson = (jsonText: string): { data?: BlueprintData; error?: string } => {
+  try {
+    const parsed = JSON.parse(jsonText);
+    return { data: parsed as BlueprintData };
+  } catch (error) {
+    return { error: "Invalid JSON format" };
+  }
+};

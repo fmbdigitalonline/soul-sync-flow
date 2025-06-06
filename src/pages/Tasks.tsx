@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { Check, Plus, Clock, Trash2, Calendar, Star, MoreVertical, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { SpeechBubble } from "@/components/ui/speech-bubble";
-import { ProductivityDashboard } from "@/components/productivity/ProductivityDashboard";
+import ProductivityDashboard from "@/components/productivity/ProductivityDashboard";
 
 // Define task types
 type TaskStatus = "todo" | "in-progress" | "stuck" | "completed";
