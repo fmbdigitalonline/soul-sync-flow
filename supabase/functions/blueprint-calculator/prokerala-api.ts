@@ -66,7 +66,7 @@ export async function calculatePlanetaryPositionsWithProkerala(
   timezone?: string
 ): Promise<any> {
   try {
-    console.log('Starting Prokerala Daily Panchang Ephemeris API call...');
+    console.log('Starting Prokerala Planet Position API call...');
     
     // Get access token
     const accessToken = await getProkeralaAccessToken();
@@ -87,14 +87,14 @@ export async function calculatePlanetaryPositionsWithProkerala(
     const dateTime = new Date(dateTimeString);
     const isoDateTime = dateTime.toISOString();
     
-    console.log('Calling daily-panchang-ephemeris endpoint with:', {
+    console.log('Calling planet-position endpoint with:', {
       coordinates,
       datetime: isoDateTime,
       ayanamsa: 0, // Critical: 0 = Tropical/Western astrology
     });
 
     // Use the correct endpoint with POST method
-    const apiUrl = 'https://api.prokerala.com/v2/astrology/daily-panchang-ephemeris';
+    const apiUrl = 'https://api.prokerala.com/v2/astrology/planet-position';
     
     const requestBody = {
       datetime: isoDateTime,
@@ -116,12 +116,12 @@ export async function calculatePlanetaryPositionsWithProkerala(
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`Prokerala daily-panchang-ephemeris API call failed: ${response.status} ${errorText}`);
-      throw new Error(`Prokerala daily-panchang-ephemeris API failed: ${response.status} ${errorText}`);
+      console.error(`Prokerala planet-position API call failed: ${response.status} ${errorText}`);
+      throw new Error(`Prokerala planet-position API failed: ${response.status} ${errorText}`);
     }
 
     const data = await response.json();
-    console.log('✅ SUCCESS: Daily Panchang Ephemeris endpoint returned data');
+    console.log('✅ SUCCESS: Planet Position endpoint returned data');
     console.log('Response structure:', JSON.stringify(data, null, 2));
     
     // Extract planet positions from the response
@@ -136,7 +136,7 @@ export async function calculatePlanetaryPositionsWithProkerala(
       planetPositions = data.data;
     } else {
       console.error('Could not find planet_positions in response structure:', data);
-      throw new Error('Invalid response structure from daily-panchang-ephemeris endpoint');
+      throw new Error('Invalid response structure from planet-position endpoint');
     }
 
     console.log('Planet positions array length:', planetPositions.length);
@@ -157,7 +157,7 @@ export async function calculatePlanetaryPositionsWithProkerala(
       north_node: extractPlanetData(planetPositions, 'True North Node', 103) || extractPlanetData(planetPositions, 'North Node', 103),
       south_node: extractPlanetData(planetPositions, 'True South Node', 104) || extractPlanetData(planetPositions, 'South Node', 104),
       calculation_timestamp: new Date().toISOString(),
-      source: 'prokerala_daily_panchang_ephemeris',
+      source: 'prokerala_planet_position',
       raw_response: data,
     };
 
@@ -174,7 +174,7 @@ export async function calculatePlanetaryPositionsWithProkerala(
     };
 
   } catch (error) {
-    console.error('Error in Prokerala daily-panchang-ephemeris API call:', error);
+    console.error('Error in Prokerala planet-position API call:', error);
     throw error;
   }
 }
@@ -225,7 +225,7 @@ export default async function handler(req: Request) {
   }
 
   try {
-    console.log('Prokerala daily-panchang-ephemeris API test endpoint called');
+    console.log('Prokerala planet-position API test endpoint called');
     
     // Use default test data if no body is provided
     let birthDate = "1990-03-21";
@@ -249,7 +249,7 @@ export default async function handler(req: Request) {
       }
     }
 
-    console.log('Testing daily-panchang-ephemeris with data:', { birthDate, birthTime, birthLocation, timezone });
+    console.log('Testing planet-position with data:', { birthDate, birthTime, birthLocation, timezone });
 
     const result = await calculatePlanetaryPositionsWithProkerala(
       birthDate,
@@ -266,13 +266,13 @@ export default async function handler(req: Request) {
     });
 
   } catch (error) {
-    console.error("Error in Prokerala daily-panchang-ephemeris API test:", error);
+    console.error("Error in Prokerala planet-position API test:", error);
     
     return new Response(
       JSON.stringify({
-        error: "Prokerala daily-panchang-ephemeris API test failed",
+        error: "Prokerala planet-position API test failed",
         details: error.message,
-        code: "PROKERALA_DAILY_PANCHANG_EPHEMERIS_API_ERROR"
+        code: "PROKERALA_PLANET_POSITION_API_ERROR"
       }),
       { 
         status: 500,
