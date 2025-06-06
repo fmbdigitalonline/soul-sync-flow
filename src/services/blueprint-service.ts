@@ -1,22 +1,52 @@
+import { SupabaseClient } from '@supabase/supabase-js';
 
-import { supabase } from "@/integrations/supabase/client";
-
-// Blueprint template type definition
-export type BlueprintData = {
+export interface BlueprintData {
+  id: string;
+  user_id: string;
   user_meta: {
     full_name: string;
-    preferred_name?: string; // Make preferred_name optional here
+    preferred_name?: string;
     birth_date: string;
     birth_time_local: string;
     birth_location: string;
     timezone: string;
-    personality?: string; // Add personality as optional field
+    personality?: string;
   };
-  cognition_mbti: {
-    type: string;
-    core_keywords: string[];
-    dominant_function: string;
-    auxiliary_function: string;
+  metadata: {
+    engine: string;
+    data_sources: {
+      western: string;
+      chinese: string;
+      numerology: string;
+      humanDesign: string;
+    };
+    calculation_date: string;
+    calculation_success: boolean;
+    partial_calculation: boolean;
+  };
+  archetype_western: {
+    sun_sign: string;
+    moon_sign: string;
+    rising_sign: string;
+    sun_keyword: string;
+    moon_keyword: string;
+    source: string;
+    houses: Record<string, any>;
+    aspects: any[];
+  };
+  archetype_chinese: {
+    animal: string;
+    element: string;
+    yin_yang: string;
+    keyword: string;
+    year: number;
+  };
+  values_life_path: {
+    lifePathNumber: number;
+    expressionNumber: number;
+    birthDay: number;
+    birthMonth: number;
+    birthYear: number;
   };
   energy_strategy_human_design: {
     type: string;
@@ -26,55 +56,30 @@ export type BlueprintData = {
     definition: string;
     not_self_theme: string;
     life_purpose: string;
-    centers?: Record<string, boolean>; // New: defined centers
     gates: {
-      unconscious_design: string[];
-      conscious_personality: string[];
+      unconscious_design: any[];
+      conscious_personality: any[];
     };
+    centers: Record<string, any>;
+    metadata: Record<string, any>;
+  };
+  cognition_mbti: {
+    type: string;
+    core_keywords: string[];
+    dominant_function: string;
+    auxiliary_function: string;
   };
   bashar_suite: {
+    excitement_compass: {
+      principle: string;
+    };
     belief_interface: {
       principle: string;
       reframe_prompt: string;
     };
-    excitement_compass: {
-      principle: string;
-    };
     frequency_alignment: {
       quick_ritual: string;
     };
-  };
-  values_life_path: {
-    life_path_number: number;
-    life_path_keyword: string;
-    life_path_description?: string; // New: more detailed description
-    birth_day_number?: number; // New: day number meaning
-    birth_day_meaning?: string; // New: meaning of birth day
-    personal_year?: number; // New: personal year calculation
-    expression_number: number;
-    expression_keyword: string;
-    soul_urge_number: number;
-    soul_urge_keyword: string;
-    personality_number: number;
-  };
-  archetype_western: {
-    sun_sign: string;
-    sun_keyword: string;
-    moon_sign: string;
-    moon_keyword: string;
-    rising_sign: string;
-    aspects?: any[]; // New: planetary aspects
-    houses?: Record<string, any>; // New: house placements
-    source?: string; // New: source flag to track if data is calculated or default
-  };
-  archetype_chinese: {
-    animal: string;
-    element: string;
-    yin_yang: string;
-    keyword: string;
-    element_characteristic?: string; // New: element characteristics
-    compatibility?: {best: string[], worst: string[]}; // New: compatibility info
-    source?: string; // New: source flag
   };
   timing_overlays: {
     current_transits: any[];
@@ -82,353 +87,278 @@ export type BlueprintData = {
   };
   goal_stack: any[];
   task_graph: Record<string, any>;
-  belief_logs: any[];
   excitement_scores: any[];
   vibration_check_ins: any[];
-  metadata?: {
-    calculation_success: boolean;
-    partial_calculation: boolean;
-    calculation_errors?: Record<string, string>;
-    calculation_date?: string;
-    engine?: string;
-    data_sources?: Record<string, string>;
-  };
-};
+  belief_logs: any[];
+  created_at: string;
+  updated_at: string;
+  is_active: boolean;
+}
 
-// Define MBTI keyword mappings
-const MBTI_DATA: Record<string, {
-  core_keywords: string[];
-  dominant_function: string;
-  auxiliary_function: string;
-}> = {
-  'INTJ': {
-    core_keywords: ["Strategic", "Innovative", "Independent"],
-    dominant_function: "Introverted Intuition (Ni)",
-    auxiliary_function: "Extraverted Thinking (Te)"
-  },
-  'INTP': {
-    core_keywords: ["Logical", "Conceptual", "Analytical"],
-    dominant_function: "Introverted Thinking (Ti)",
-    auxiliary_function: "Extraverted Intuition (Ne)"
-  },
-  'ENTJ': {
-    core_keywords: ["Decisive", "Strategic", "Efficient"],
-    dominant_function: "Extraverted Thinking (Te)",
-    auxiliary_function: "Introverted Intuition (Ni)"
-  },
-  'ENTP': {
-    core_keywords: ["Innovative", "Adaptable", "Debater"],
-    dominant_function: "Extraverted Intuition (Ne)",
-    auxiliary_function: "Introverted Thinking (Ti)"
-  },
-  'INFJ': {
-    core_keywords: ["Insightful", "Counselor", "Advocate"],
-    dominant_function: "Introverted Intuition (Ni)",
-    auxiliary_function: "Extraverted Feeling (Fe)"
-  },
-  'INFP': {
-    core_keywords: ["Idealistic", "Empathetic", "Authentic"],
-    dominant_function: "Introverted Feeling (Fi)",
-    auxiliary_function: "Extraverted Intuition (Ne)"
-  },
-  'ENFJ': {
-    core_keywords: ["Charismatic", "Empathetic", "Inspiring"],
-    dominant_function: "Extraverted Feeling (Fe)",
-    auxiliary_function: "Introverted Intuition (Ni)"
-  },
-  'ENFP': {
-    core_keywords: ["Enthusiastic", "Creative", "People-oriented"],
-    dominant_function: "Extraverted Intuition (Ne)",
-    auxiliary_function: "Introverted Feeling (Fi)"
-  },
-  'ISTJ': {
-    core_keywords: ["Organized", "Practical", "Detail-oriented"],
-    dominant_function: "Introverted Sensing (Si)",
-    auxiliary_function: "Extraverted Thinking (Te)"
-  },
-  'ISFJ': {
-    core_keywords: ["Nurturing", "Reliable", "Traditional"],
-    dominant_function: "Introverted Sensing (Si)",
-    auxiliary_function: "Extraverted Feeling (Fe)"
-  },
-  'ESTJ': {
-    core_keywords: ["Efficient", "Structured", "Logical"],
-    dominant_function: "Extraverted Thinking (Te)",
-    auxiliary_function: "Introverted Sensing (Si)"
-  },
-  'ESFJ': {
-    core_keywords: ["Caring", "Social", "Harmonious"],
-    dominant_function: "Extraverted Feeling (Fe)",
-    auxiliary_function: "Introverted Sensing (Si)"
-  },
-  'ISTP': {
-    core_keywords: ["Practical", "Adaptable", "Analytical"],
-    dominant_function: "Introverted Thinking (Ti)",
-    auxiliary_function: "Extraverted Sensing (Se)"
-  },
-  'ISFP': {
-    core_keywords: ["Artistic", "Sensitive", "Spontaneous"],
-    dominant_function: "Introverted Feeling (Fi)",
-    auxiliary_function: "Extraverted Sensing (Se)"
-  },
-  'ESTP': {
-    core_keywords: ["Energetic", "Action-oriented", "Pragmatic"],
-    dominant_function: "Extraverted Sensing (Se)",
-    auxiliary_function: "Introverted Thinking (Ti)"
-  },
-  'ESFP': {
-    core_keywords: ["Enthusiastic", "Fun-loving", "Spontaneous"],
-    dominant_function: "Extraverted Sensing (Se)",
-    auxiliary_function: "Introverted Feeling (Fi)"
+export interface BlueprintServiceParams {
+  supabase: SupabaseClient;
+}
+
+class BlueprintService {
+  private supabase: SupabaseClient;
+
+  constructor(params: BlueprintServiceParams) {
+    this.supabase = params.supabase;
   }
-};
 
-export const blueprintService = {
-  /**
-   * Generate a blueprint from birth data
-   */
-  async generateBlueprintFromBirthData(userData: BlueprintData['user_meta'] & { personality?: string }): Promise<{ data: BlueprintData | null; error?: string; isPartial?: boolean }> {
+  async getActiveBlueprintData(): Promise<{ data: BlueprintData | null; error: string | null }> {
     try {
-      console.log('Generating blueprint from birth data:', userData);
-      
-      // Call the Edge Function to calculate the astrological data
-      const { data: calcData, error: calcError } = await supabase.functions.invoke('blueprint-calculator', {
+      const { data, error } = await this.supabase
+        .from('blueprints')
+        .select('*')
+        .eq('is_active', true)
+        .single();
+
+      if (error) {
+        console.error('Error fetching active blueprint:', error);
+        return { data: null, error: `Error fetching active blueprint: ${error.message}` };
+      }
+
+      return { data: data as BlueprintData, error: null };
+    } catch (error) {
+      console.error('Unexpected error fetching active blueprint:', error);
+      return { data: null, error: 'Unexpected error fetching active blueprint.' };
+    }
+  }
+
+  async saveBlueprintData(blueprintData: BlueprintData): Promise<{ success: boolean; error: string | null }> {
+    try {
+      const { data: existingBlueprint, error: existingError } = await this.supabase
+        .from('blueprints')
+        .select('id')
+        .eq('user_meta', blueprintData.user_meta)
+        .single();
+
+      if (existingError && existingError.code !== 'PGRST116') {
+        console.error('Error checking for existing blueprint:', existingError);
+        return { success: false, error: `Error checking for existing blueprint: ${existingError.message}` };
+      }
+
+      if (existingBlueprint) {
+        console.warn('Blueprint already exists for this user, skipping save.');
+        return { success: true, error: null };
+      }
+
+      const { data, error } = await this.supabase
+        .from('blueprints')
+        .insert([blueprintData])
+        .select('*');
+
+      if (error) {
+        console.error('Error saving blueprint data:', error);
+        return { success: false, error: `Error saving blueprint data: ${error.message}` };
+      }
+
+      return { success: true, error: null };
+    } catch (error) {
+      console.error('Unexpected error saving blueprint data:', error);
+      return { success: false, error: 'Unexpected error saving blueprint data.' };
+    }
+  }
+
+  async generateBlueprintFromBirthData(userData: {
+    full_name: string;
+    preferred_name?: string;
+    birth_date: string;
+    birth_time_local: string;
+    birth_location: string;
+    timezone: string;
+    personality?: string;
+  }): Promise<{ data: BlueprintData | null; error: string | null; isPartial: boolean }> {
+    try {
+      console.log('Calling blueprint calculator with user data:', userData);
+
+      // Call the Supabase function with the correct field names
+      const { data, error } = await this.supabase.functions.invoke('blueprint-calculator', {
         body: {
-          birthData: {
-            date: userData.birth_date,
-            time: userData.birth_time_local,
-            location: userData.birth_location,
-            timezone: userData.timezone || "UTC",
-            fullName: userData.full_name // Pass the name for numerology calculations
-          }
+          birthDate: userData.birth_date,
+          birthTime: userData.birth_time_local,
+          birthLocation: userData.birth_location,
+          timezone: userData.timezone
         }
       });
-      
-      if (calcError) {
-        console.error('Error calling blueprint calculator:', calcError);
-        throw new Error(`Calculation service error: ${calcError.message}`);
+
+      if (error) {
+        console.error('Error from blueprint calculator function:', error);
+        return { 
+          data: null, 
+          error: `Blueprint calculation failed: ${error.message || 'Unknown error'}`,
+          isPartial: false
+        };
       }
-      
-      if (!calcData) {
-        console.error('No data returned from calculation service');
-        throw new Error('No data returned from calculation service');
+
+      if (!data?.success) {
+        console.error('Blueprint calculator returned unsuccessful result:', data);
+        return { 
+          data: null, 
+          error: data?.error || 'Blueprint calculation was not successful',
+          isPartial: false
+        };
       }
-      
-      console.log('Received calculation data:', calcData);
-      
-      // Get the MBTI data based on the user's selection or fallback to INFJ
-      const mbtiType = userData.personality || "INFJ";
-      const mbtiData = MBTI_DATA[mbtiType] || MBTI_DATA.INFJ;
-      
-      // Create the blueprint using the calculation results
+
+      console.log('Blueprint calculator returned data:', data);
+
+      // Transform the response into our BlueprintData format
       const blueprint: BlueprintData = {
+        id: crypto.randomUUID(),
+        user_id: '', // Will be set when saving
         user_meta: {
           full_name: userData.full_name,
-          preferred_name: userData.preferred_name,
+          preferred_name: userData.preferred_name || userData.full_name.split(' ')[0],
           birth_date: userData.birth_date,
           birth_time_local: userData.birth_time_local,
           birth_location: userData.birth_location,
-          timezone: userData.timezone || "UTC",
-          personality: mbtiType, // Store the personality type explicitly
+          timezone: userData.timezone,
+          personality: userData.personality
         },
-        cognition_mbti: {
-          type: mbtiType,
-          core_keywords: mbtiData.core_keywords,
-          dominant_function: mbtiData.dominant_function,
-          auxiliary_function: mbtiData.auxiliary_function
+        metadata: data.data?.calculation_metadata || {
+          engine: data.source || 'unknown',
+          data_sources: {
+            western: 'calculated',
+            chinese: 'calculated',
+            numerology: 'calculated',
+            humanDesign: 'calculated'
+          },
+          calculation_date: new Date().toISOString(),
+          calculation_success: true,
+          partial_calculation: data.data?.calculation_metadata?.partial || false
         },
-        energy_strategy_human_design: calcData.humanDesign || {
-          type: "Unknown",
-          profile: "Unknown",
-          authority: "Unknown",
-          strategy: "Unknown",
-          definition: "Unknown",
-          not_self_theme: "Unknown",
-          life_purpose: "Unknown",
+        archetype_western: data.data?.westernProfile ? {
+          sun_sign: data.data.westernProfile.sun_sign || 'Unknown',
+          moon_sign: data.data.westernProfile.moon_sign || 'Unknown', 
+          rising_sign: data.data.westernProfile.rising_sign || 'Unknown',
+          sun_keyword: data.data.westernProfile.sun_keyword || 'Unknown',
+          moon_keyword: data.data.westernProfile.moon_keyword || 'Unknown',
+          source: data.data.westernProfile.source || 'calculated',
+          houses: {},
+          aspects: []
+        } : {
+          sun_sign: 'Unknown',
+          moon_sign: 'Unknown',
+          rising_sign: 'Unknown',
+          sun_keyword: 'Unknown',
+          moon_keyword: 'Unknown',
+          source: 'fallback',
+          houses: {},
+          aspects: []
+        },
+        archetype_chinese: data.data?.chineseZodiac || {
+          animal: 'Unknown',
+          element: 'Unknown',
+          yin_yang: 'Unknown',
+          keyword: 'Unknown',
+          year: new Date(userData.birth_date).getFullYear()
+        },
+        values_life_path: data.data?.numerology ? {
+          lifePathNumber: data.data.numerology.life_path_number || 1,
+          expressionNumber: data.data.numerology.expression_number || 1,
+          birthDay: new Date(userData.birth_date).getDate(),
+          birthMonth: new Date(userData.birth_date).getMonth() + 1,
+          birthYear: new Date(userData.birth_date).getFullYear()
+        } : {
+          lifePathNumber: 1,
+          expressionNumber: 1,
+          birthDay: new Date(userData.birth_date).getDate(),
+          birthMonth: new Date(userData.birth_date).getMonth() + 1,
+          birthYear: new Date(userData.birth_date).getFullYear()
+        },
+        energy_strategy_human_design: data.data?.humanDesign || {
+          type: 'Generator',
+          profile: '1/3',
+          authority: 'Sacral',
+          strategy: 'To Respond',
+          definition: 'Single',
+          not_self_theme: 'Frustration',
+          life_purpose: 'To find satisfaction through responding',
           gates: {
             unconscious_design: [],
             conscious_personality: []
-          }
+          },
+          centers: {},
+          metadata: {}
+        },
+        cognition_mbti: {
+          type: userData.personality || 'INFJ',
+          core_keywords: this.getMBTIKeywords(userData.personality || 'INFJ'),
+          dominant_function: this.getDominantFunction(userData.personality || 'INFJ'),
+          auxiliary_function: this.getAuxiliaryFunction(userData.personality || 'INFJ')
         },
         bashar_suite: {
-          // Static data for now
+          excitement_compass: {
+            principle: "Follow your highest excitement in the moment to the best of your ability"
+          },
           belief_interface: {
             principle: "What you believe is what you experience as reality",
             reframe_prompt: "What would I have to believe to experience this?"
-          },
-          excitement_compass: {
-            principle: "Follow your highest excitement in the moment to the best of your ability"
           },
           frequency_alignment: {
             quick_ritual: "Visualize feeling the way you want to feel for 17 seconds"
           }
         },
-        // Use the calculated numerology data
-        values_life_path: calcData.numerology || {
-          life_path_number: 0,
-          life_path_keyword: "Unknown",
-          expression_number: 0,
-          expression_keyword: "Unknown",
-          soul_urge_number: 0,
-          soul_urge_keyword: "Unknown",
-          personality_number: 0
-        },
-        // Use the calculated Western astrology data
-        archetype_western: calcData.westernProfile || {
-          sun_sign: "Unknown",
-          sun_keyword: "Unknown",
-          moon_sign: "Unknown",
-          moon_keyword: "Unknown",
-          rising_sign: "Unknown"
-        },
-        // Use the calculated Chinese zodiac data
-        archetype_chinese: calcData.chineseZodiac || {
-          animal: "Unknown",
-          element: "Unknown",
-          yin_yang: "Unknown",
-          keyword: "Unknown"
-        },
         timing_overlays: {
           current_transits: [],
-          notes: calcData.celestialData?.source === "astronomy_engine" ? 
-            "Generated using Astronomy Engine calculations" : 
-            "Generated using astronomical calculations"
+          notes: data.notice || "Generated using available calculation methods"
         },
         goal_stack: [],
         task_graph: {},
-        belief_logs: [],
         excitement_scores: [],
         vibration_check_ins: [],
-        // Add metadata to track calculation quality and engine used
-        metadata: {
-          calculation_success: calcData.calculation_metadata?.success || false,
-          partial_calculation: calcData.calculation_metadata?.partial || false,
-          calculation_errors: calcData.calculation_metadata?.errors,
-          calculation_date: calcData.calculation_metadata?.calculated_at || new Date().toISOString(),
-          engine: calcData.calculation_metadata?.engine || "astronomy_engine",
-          data_sources: {
-            western: calcData.westernProfile ? "calculated" : "unknown",
-            chinese: calcData.chineseZodiac ? "calculated" : "unknown",
-            numerology: calcData.numerology ? "calculated" : "unknown",
-            humanDesign: calcData.humanDesign ? "calculated" : "unknown"
-          }
-        }
+        belief_logs: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        is_active: true
       };
+
+      const isPartial = data.data?.calculation_metadata?.partial || false;
       
       return { 
         data: blueprint, 
-        isPartial: calcData.calculation_metadata?.partial || false
+        error: null,
+        isPartial
       };
-    } catch (err) {
-      console.error("Error generating blueprint:", err);
+
+    } catch (error) {
+      console.error('Error in generateBlueprintFromBirthData:', error);
       return { 
         data: null, 
-        error: err instanceof Error ? err.message : String(err)
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        isPartial: false
       };
     }
-  },
-  
-  /**
-   * Save a blueprint to Supabase for the current user
-   */
-  async saveBlueprintData(blueprint: BlueprintData): Promise<{ success: boolean; error?: string }> {
-    try {
-      const { data: user } = await supabase.auth.getUser();
-      
-      if (!user || !user.user) {
-        return { success: false, error: "User not authenticated" };
-      }
-      
-      // First set all existing blueprints to inactive
-      await supabase
-        .from('user_blueprints')
-        .update({ is_active: false })
-        .eq('user_id', user.user.id);
-        
-      // Then insert the new active blueprint
-      const { error } = await supabase
-        .from('user_blueprints')
-        .insert({
-          user_id: user.user.id,
-          blueprint: blueprint,
-          is_active: true
-        });
-        
-      if (error) {
-        console.error("Error saving blueprint:", error);
-        return { success: false, error: error.message };
-      }
-      
-      console.log("Blueprint saved successfully");
-      return { success: true };
-    } catch (err) {
-      console.error("Error saving blueprint:", err);
-      return { success: false, error: err instanceof Error ? err.message : String(err) };
-    }
-  },
-  
-  /**
-   * Get the active blueprint for the current user
-   */
-  async getActiveBlueprintData(): Promise<{ data: BlueprintData | null; error?: string }> {
-    try {
-      const { data: user } = await supabase.auth.getUser();
-      
-      if (!user || !user.user) {
-        return { data: null, error: "User not authenticated" };
-      }
-      
-      const { data, error } = await supabase
-        .from('user_blueprints')
-        .select('blueprint')
-        .eq('user_id', user.user.id)
-        .eq('is_active', true)
-        .order('updated_at', { ascending: false })
-        .limit(1)
-        .single();
-        
-      if (error) {
-        if (error.code === 'PGRST116') { // No rows returned error
-          return { data: null };
-        }
-        return { data: null, error: error.message };
-      }
-      
-      return { data: data.blueprint as BlueprintData };
-    } catch (err) {
-      console.error("Error getting blueprint:", err);
-      return { data: null, error: err instanceof Error ? err.message : String(err) };
-    }
-  },
-  
-  /**
-   * Update an existing blueprint
-   */
-  async updateBlueprintData(id: string, blueprint: Partial<BlueprintData>): Promise<{ success: boolean; error?: string }> {
-    try {
-      const { data: user } = await supabase.auth.getUser();
-      
-      if (!user || !user.user) {
-        return { success: false, error: "User not authenticated" };
-      }
-      
-      const { error } = await supabase
-        .from('user_blueprints')
-        .update({
-          blueprint: blueprint,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', id)
-        .eq('user_id', user.user.id);
-        
-      if (error) {
-        return { success: false, error: error.message };
-      }
-      
-      return { success: true };
-    } catch (err) {
-      console.error("Error updating blueprint:", err);
-      return { success: false, error: err instanceof Error ? err.message : String(err) };
-    }
   }
-};
+
+  private getMBTIKeywords(type: string): string[] {
+    const keywords: { [key: string]: string[] } = {
+      INFJ: ['Insightful', 'Idealistic', 'Compassionate'],
+      ENFP: ['Enthusiastic', 'Imaginative', 'Charismatic'],
+      // Add keywords for other MBTI types as needed
+    };
+    return keywords[type] || ['Generic', 'Placeholder'];
+  }
+
+  private getDominantFunction(type: string): string {
+    const functions: { [key: string]: string } = {
+      INFJ: 'Introverted Intuition (Ni)',
+      ENFP: 'Extroverted Intuition (Ne)',
+      // Add dominant functions for other MBTI types
+    };
+    return functions[type] || 'Undefined';
+  }
+
+  private getAuxiliaryFunction(type: string): string {
+    const functions: { [key: string]: string } = {
+      INFJ: 'Extroverted Feeling (Fe)',
+      ENFP: 'Introverted Feeling (Fi)',
+      // Add auxiliary functions for other MBTI types
+    };
+    return functions[type] || 'Undefined';
+  }
+}
+
+export default BlueprintService;
+
