@@ -59,7 +59,7 @@ export async function getProkeralaAccessToken(): Promise<string> {
   return tokenData.access_token;
 }
 
-// Try Western astrology endpoints with proper ayanamsa settings
+// Try comprehensive Western astrology endpoints based on the API documentation
 async function tryWesternAstrologyEndpoints(
   accessToken: string,
   coordinates: string,
@@ -67,24 +67,28 @@ async function tryWesternAstrologyEndpoints(
 ): Promise<any> {
   const endpoints = [
     {
-      name: 'planet-position-tropical',
-      url: `https://api.prokerala.com/v2/astrology/planet-position?ayanamsa=0&coordinates=${coordinates}&datetime=${encodeURIComponent(isoDateTime)}`
+      name: 'daily-horoscope-advanced',
+      url: `https://api.prokerala.com/v2/astrology/daily-horoscope-advanced?coordinates=${coordinates}&datetime=${encodeURIComponent(isoDateTime)}`
     },
     {
-      name: 'western-horoscope',
-      url: `https://api.prokerala.com/v2/astrology/western-horoscope?coordinates=${coordinates}&datetime=${encodeURIComponent(isoDateTime)}`
+      name: 'daily-prediction',
+      url: `https://api.prokerala.com/v2/astrology/daily-prediction?coordinates=${coordinates}&datetime=${encodeURIComponent(isoDateTime)}`
     },
     {
-      name: 'planets-tropical',
-      url: `https://api.prokerala.com/v2/astrology/planets?ayanamsa=0&coordinates=${coordinates}&datetime=${encodeURIComponent(isoDateTime)}`
+      name: 'western-chart',
+      url: `https://api.prokerala.com/v2/astrology/western-chart?coordinates=${coordinates}&datetime=${encodeURIComponent(isoDateTime)}`
     },
     {
-      name: 'chart-tropical',
-      url: `https://api.prokerala.com/v2/astrology/chart?ayanamsa=0&coordinates=${coordinates}&datetime=${encodeURIComponent(isoDateTime)}&chart_type=rasi&chart_style=north-indian`
+      name: 'planet-positions',
+      url: `https://api.prokerala.com/v2/astrology/planet-positions?coordinates=${coordinates}&datetime=${encodeURIComponent(isoDateTime)}`
     },
     {
-      name: 'birth-chart-tropical',
-      url: `https://api.prokerala.com/v2/astrology/birth-chart?ayanamsa=0&coordinates=${coordinates}&datetime=${encodeURIComponent(isoDateTime)}`
+      name: 'birth-chart-western',
+      url: `https://api.prokerala.com/v2/astrology/birth-chart-western?coordinates=${coordinates}&datetime=${encodeURIComponent(isoDateTime)}`
+    },
+    {
+      name: 'horoscope',
+      url: `https://api.prokerala.com/v2/astrology/horoscope?coordinates=${coordinates}&datetime=${encodeURIComponent(isoDateTime)}`
     }
   ];
 
@@ -178,71 +182,58 @@ export async function calculatePlanetaryPositionsWithProkerala(
     console.log('Testing Western astrology endpoints with:', {
       coordinates,
       datetime: isoDateTime,
-      note: 'Using ayanamsa=0 for Tropical/Western calculations'
+      note: 'Exploring comprehensive Western astrology endpoints'
     });
 
-    // Try Western astrology endpoints with proper ayanamsa settings
+    // Try Western astrology endpoints
     const endpointResults = await tryWesternAstrologyEndpoints(accessToken, coordinates, isoDateTime);
     
-    // Find the best endpoint that has complete planetary data
+    // Find any successful endpoint with usable data
     let bestResult = null;
     let planetaryData = null;
 
     for (const result of endpointResults) {
       if (result.status === 'success' && result.data && result.data.data) {
-        const data = result.data.data;
-        
-        // Look for planet_position array (most likely for Western astrology)
-        if (data.planet_position && Array.isArray(data.planet_position)) {
-          console.log(`🎯 Found planet_position array in ${result.endpoint} endpoint!`);
-          console.log(`Planet count: ${data.planet_position.length}`);
-          bestResult = result;
-          planetaryData = data.planet_position;
-          break;
-        }
-        // Look for planets array
-        else if (data.planets && Array.isArray(data.planets)) {
-          console.log(`🎯 Found planets array in ${result.endpoint} endpoint!`);
-          console.log(`Planet count: ${data.planets.length}`);
-          bestResult = result;
-          planetaryData = data.planets;
-          break;
-        }
-        // Look for chart.planets
-        else if (data.chart && data.chart.planets) {
-          console.log(`🎯 Found chart.planets in ${result.endpoint} endpoint!`);
-          bestResult = result;
-          planetaryData = data.chart.planets;
-          break;
-        }
+        console.log(`🎯 Found successful endpoint: ${result.endpoint}`);
+        bestResult = result;
+        planetaryData = result.data.data;
+        break;
       }
     }
 
     if (!bestResult || !planetaryData) {
-      console.log('No Western astrology endpoints returned complete planetary data');
-      throw new Error('No Western astrology endpoints returned usable planetary data');
+      console.log('No Western astrology endpoints returned usable data');
+      
+      // Try a fallback approach using any successful response
+      const anySuccessfulResult = endpointResults.find(r => r.status === 'success');
+      if (anySuccessfulResult) {
+        console.log(`Using fallback endpoint: ${anySuccessfulResult.endpoint}`);
+        bestResult = anySuccessfulResult;
+        planetaryData = anySuccessfulResult.data;
+      } else {
+        throw new Error('No Western astrology endpoints returned any usable data');
+      }
     }
 
-    console.log(`Using ${bestResult.endpoint} endpoint for Western planetary positions`);
-    console.log('Raw planetary data:', JSON.stringify(planetaryData, null, 2));
+    console.log(`Using ${bestResult.endpoint} endpoint for Western planetary data`);
+    console.log('Available data structure:', Object.keys(planetaryData));
     
-    // Transform planetary data from the best endpoint
+    // Extract what we can from the response
     const transformedData = {
-      sun: extractPlanetFromWesternData(planetaryData, 'Sun'),
-      moon: extractPlanetFromWesternData(planetaryData, 'Moon'),
-      mercury: extractPlanetFromWesternData(planetaryData, 'Mercury'),
-      venus: extractPlanetFromWesternData(planetaryData, 'Venus'),
-      mars: extractPlanetFromWesternData(planetaryData, 'Mars'),
-      jupiter: extractPlanetFromWesternData(planetaryData, 'Jupiter'),
-      saturn: extractPlanetFromWesternData(planetaryData, 'Saturn'),
-      uranus: extractPlanetFromWesternData(planetaryData, 'Uranus'),
-      neptune: extractPlanetFromWesternData(planetaryData, 'Neptune'),
-      pluto: extractPlanetFromWesternData(planetaryData, 'Pluto'),
-      north_node: extractPlanetFromWesternData(planetaryData, 'Rahu') || extractPlanetFromWesternData(planetaryData, 'North Node'),
-      south_node: extractPlanetFromWesternData(planetaryData, 'Ketu') || extractPlanetFromWesternData(planetaryData, 'South Node'),
-      ascendant: extractPlanetFromWesternData(planetaryData, 'Ascendant'),
-      houses: extractHousesFromWesternResult(bestResult.data.data),
-      ayanamsa: 0, // We specifically requested Tropical (ayanamsa=0)
+      sun: extractBasicPlanetaryInfo(planetaryData, 'sun'),
+      moon: extractBasicPlanetaryInfo(planetaryData, 'moon'),
+      mercury: extractBasicPlanetaryInfo(planetaryData, 'mercury'),
+      venus: extractBasicPlanetaryInfo(planetaryData, 'venus'),
+      mars: extractBasicPlanetaryInfo(planetaryData, 'mars'),
+      jupiter: extractBasicPlanetaryInfo(planetaryData, 'jupiter'),
+      saturn: extractBasicPlanetaryInfo(planetaryData, 'saturn'),
+      uranus: extractBasicPlanetaryInfo(planetaryData, 'uranus'),
+      neptune: extractBasicPlanetaryInfo(planetaryData, 'neptune'),
+      pluto: extractBasicPlanetaryInfo(planetaryData, 'pluto'),
+      north_node: extractBasicPlanetaryInfo(planetaryData, 'north_node'),
+      south_node: extractBasicPlanetaryInfo(planetaryData, 'south_node'),
+      ascendant: extractBasicPlanetaryInfo(planetaryData, 'ascendant'),
+      houses: extractHousesFromResponse(planetaryData),
       calculation_timestamp: new Date().toISOString(),
       source: `prokerala_western_${bestResult.endpoint}`,
       raw_response: bestResult.data,
@@ -261,61 +252,53 @@ export async function calculatePlanetaryPositionsWithProkerala(
   }
 }
 
-function extractPlanetFromWesternData(planets: any[], planetName: string) {
-  if (!planets || !Array.isArray(planets)) return null;
+function extractBasicPlanetaryInfo(data: any, planetName: string) {
+  console.log(`Looking for ${planetName} in data structure...`);
   
-  const planet = planets.find((p: any) => 
-    p && p.name && (
-      p.name.toLowerCase() === planetName.toLowerCase() ||
-      p.name.toLowerCase().includes(planetName.toLowerCase()) ||
-      (p.planet && p.planet.toLowerCase() === planetName.toLowerCase())
-    )
-  );
+  // Try different possible locations in the response
+  const searchPaths = [
+    data[planetName],
+    data.planets?.[planetName],
+    data.daily_predictions?.[0]?.[planetName],
+    data.signs?.[planetName],
+    data.chart?.[planetName],
+    data.positions?.[planetName]
+  ];
   
-  if (planet) {
-    console.log(`Found ${planetName}:`, JSON.stringify(planet, null, 2));
-    
-    return {
-      longitude: planet.longitude || planet.degree || 0,
-      latitude: planet.latitude || 0,
-      speed: planet.speed || planet.daily_motion || 0,
-      sign: getWesternSignName(planet.longitude || planet.degree || 0),
-      sign_degree: (planet.longitude || planet.degree || 0) % 30,
-      house: planet.house ? (planet.house.id || planet.house) : 0,
-      is_retrograde: planet.is_retrograde || false,
-      raw_planet_data: planet,
-    };
+  for (const planetData of searchPaths) {
+    if (planetData) {
+      console.log(`Found ${planetName} data:`, planetData);
+      return {
+        longitude: planetData.longitude || planetData.degree || 0,
+        latitude: planetData.latitude || 0,
+        speed: planetData.speed || planetData.daily_motion || 0,
+        sign: planetData.sign?.name || planetData.zodiac?.name || 'Unknown',
+        sign_degree: planetData.sign_degree || ((planetData.longitude || 0) % 30),
+        house: planetData.house || 0,
+        is_retrograde: planetData.is_retrograde || false,
+        raw_planet_data: planetData,
+      };
+    }
   }
   
-  console.warn(`Planet "${planetName}" not found in Western astrology response`);
+  console.warn(`Planet "${planetName}" not found in response`);
   return null;
 }
 
-function getWesternSignName(longitude: number): string {
-  const signs = [
-    'Aries', 'Taurus', 'Gemini', 'Cancer', 
-    'Leo', 'Virgo', 'Libra', 'Scorpio', 
-    'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'
-  ];
-  
-  const signIndex = Math.floor(longitude / 30);
-  return signs[signIndex] || 'Unknown';
-}
-
-function extractHousesFromWesternResult(data: any) {
+function extractHousesFromResponse(data: any) {
   if (data.houses && Array.isArray(data.houses)) {
     return data.houses.map((house: any) => ({
-      house_number: house.id || house.number,
-      longitude: house.longitude || house.degree,
-      sign: getWesternSignName(house.longitude || house.degree || 0),
+      house_number: house.id || house.number || 1,
+      longitude: house.longitude || house.degree || 0,
+      sign: house.sign?.name || 'Unknown',
     }));
   }
   
-  if (data.chart && data.chart.houses) {
-    return data.chart.houses.map((house: any) => ({
-      house_number: house.id || house.number,
-      longitude: house.longitude || house.degree,
-      sign: getWesternSignName(house.longitude || house.degree || 0),
+  if (data.chart?.houses) {
+    return Object.entries(data.chart.houses).map(([key, house]: [string, any]) => ({
+      house_number: parseInt(key) || 1,
+      longitude: house.longitude || house.degree || 0,
+      sign: house.sign?.name || 'Unknown',
     }));
   }
   
