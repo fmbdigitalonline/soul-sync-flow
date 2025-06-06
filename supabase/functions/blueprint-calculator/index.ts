@@ -18,6 +18,12 @@ serve(async (req) => {
     const url = new URL(req.url);
     
     // Handle test endpoints FIRST, before any other processing
+    if (url.pathname.includes('/test-astronomia')) {
+      // Import and execute the Astronomia test
+      const { default: testAstronomia } = await import('./test-astronomia.ts');
+      return await testAstronomia(req);
+    }
+    
     if (url.pathname.includes('/test-moon-minimal')) {
       // Import and execute the Moon test
       const { default: testMoonMinimal } = await import('./test-moon-minimal.ts');
