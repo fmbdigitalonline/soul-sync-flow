@@ -100,7 +100,7 @@ serve(async (req) => {
       timezone
     });
 
-    // Call the new Vercel ephemeris API for accurate calculations
+    // Call the Vercel ephemeris API with proper configuration
     const result = await generateBlueprintWithVercelAPI(birthDate, birthTime, birthLocation, timezone);
 
     return new Response(JSON.stringify({
@@ -137,35 +137,38 @@ serve(async (req) => {
 });
 
 async function generateBlueprintWithVercelAPI(birthDate: string, birthTime: string, birthLocation: string, timezone?: string) {
-  // Your Vercel API endpoint
-  const VERCEL_API_URL = "https://soul-sync-flow-i9g4spyz9-info-fmbonlinenls-projects.vercel.app/api/ephemeris";
+  // Updated Vercel API endpoint - make sure this matches your actual deployment
+  const VERCEL_API_URL = "https://soul-sync-flow.vercel.app/api/ephemeris";
   
   try {
     // Parse birth date and time
     const birthDateTime = new Date(`${birthDate}T${birthTime}:00`);
     
     // Extract coordinates from birthLocation
-    // Assuming format like "New York, NY, USA" or "40.7128,-74.0060"
     let coordinates;
     if (birthLocation.includes(',') && /^-?\d+\.?\d*,-?\d+\.?\d*$/.test(birthLocation.trim())) {
       // Direct coordinates format
       coordinates = birthLocation.trim();
     } else {
       // City name format - use default coordinates for testing
-      // In production, you'd want to geocode the city name first
       coordinates = "40.7128,-74.0060"; // Default to NYC
     }
     
     console.log("Calling Vercel ephemeris API with:", {
       datetime: birthDateTime.toISOString(),
-      coordinates
+      coordinates,
+      url: VERCEL_API_URL
     });
     
-    // Call your Vercel ephemeris API
+    // Call your Vercel ephemeris API with proper headers
     const ephemerisResponse = await fetch(VERCEL_API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'User-Agent': 'SoulSync-Blueprint-Calculator/1.0',
+        // Add any API key if your Vercel API requires it
+        // 'Authorization': `Bearer ${Deno.env.get('VERCEL_API_KEY')}`,
       },
       body: JSON.stringify({
         datetime: birthDateTime.toISOString(),
@@ -173,8 +176,13 @@ async function generateBlueprintWithVercelAPI(birthDate: string, birthTime: stri
       })
     });
     
+    console.log("Vercel API response status:", ephemerisResponse.status);
+    console.log("Vercel API response headers:", Object.fromEntries(ephemerisResponse.headers.entries()));
+    
     if (!ephemerisResponse.ok) {
-      throw new Error(`Ephemeris API returned ${ephemerisResponse.status}: ${ephemerisResponse.statusText}`);
+      const errorText = await ephemerisResponse.text();
+      console.error("Vercel API error response:", errorText);
+      throw new Error(`Ephemeris API returned ${ephemerisResponse.status}: ${ephemerisResponse.statusText}. Response: ${errorText}`);
     }
     
     const ephemerisData = await ephemerisResponse.json();
@@ -214,10 +222,7 @@ async function generateBlueprintWithVercelAPI(birthDate: string, birthTime: stri
     
   } catch (error) {
     console.error("Error calling Vercel ephemeris API:", error);
-    
-    // Fallback to temporary data if API fails
-    console.log("Falling back to temporary calculations...");
-    return await generateTemporaryBlueprint(birthDate, birthTime, birthLocation, timezone);
+    throw error; // Re-throw the error instead of falling back
   }
 }
 
