@@ -152,9 +152,19 @@ export async function calculatePlanetaryPositionsWithProkerala(
       throw new Error(`Prokerala API request failed: ${kundliResponse.status} ${errorText}`);
     }
 
-    const kundliData: ProkeralaKundliResponse = await kundliResponse.json();
+    const kundliData: any = await kundliResponse.json();
     
     console.log('Successfully received Prokerala data');
+    console.log('Raw API response structure:', JSON.stringify(kundliData, null, 2));
+    
+    // Check if the response has the expected structure
+    if (!kundliData || !kundliData.data) {
+      throw new Error('Invalid API response structure: missing data property');
+    }
+    
+    if (!kundliData.data.planets || !Array.isArray(kundliData.data.planets)) {
+      throw new Error('Invalid API response structure: missing or invalid planets array');
+    }
     
     // Transform the Prokerala response to match our expected format
     const transformedData = {
@@ -170,12 +180,12 @@ export async function calculatePlanetaryPositionsWithProkerala(
       pluto: findPlanetData(kundliData.data.planets, 'Pluto'),
       north_node: findPlanetData(kundliData.data.planets, 'Rahu') || findPlanetData(kundliData.data.planets, 'North Node'),
       south_node: findPlanetData(kundliData.data.planets, 'Ketu') || findPlanetData(kundliData.data.planets, 'South Node'),
-      houses: kundliData.data.houses.map(house => ({
+      houses: kundliData.data.houses ? kundliData.data.houses.map((house: any) => ({
         house_number: house.id,
         longitude: house.longitude,
-        sign: house.sign.name,
-      })),
-      ayanamsa: kundliData.data.ayanamsa,
+        sign: house.sign ? house.sign.name : 'Unknown',
+      })) : [],
+      ayanamsa: kundliData.data.ayanamsa || null,
       calculation_timestamp: new Date().toISOString(),
       source: 'prokerala_api',
     };
@@ -193,22 +203,30 @@ export async function calculatePlanetaryPositionsWithProkerala(
 }
 
 function findPlanetData(planets: any[], planetName: string) {
+  // Add safety check to ensure planets is an array
+  if (!planets || !Array.isArray(planets)) {
+    console.error('Planets data is not an array:', planets);
+    return null;
+  }
+  
   const planet = planets.find(p => 
-    p.name.toLowerCase() === planetName.toLowerCase() ||
-    p.name.toLowerCase().includes(planetName.toLowerCase())
+    p && p.name && (
+      p.name.toLowerCase() === planetName.toLowerCase() ||
+      p.name.toLowerCase().includes(planetName.toLowerCase())
+    )
   );
   
   if (!planet) {
-    console.warn(`Planet "${planetName}" not found in Prokerala response`);
+    console.warn(`Planet "${planetName}" not found in Prokerala response. Available planets:`, planets.map(p => p?.name).filter(Boolean));
     return null;
   }
   
   return {
-    longitude: planet.longitude,
-    latitude: planet.latitude,
-    speed: planet.speed,
-    sign: planet.sign.name,
-    house: planet.house.id,
+    longitude: planet.longitude || 0,
+    latitude: planet.latitude || 0,
+    speed: planet.speed || 0,
+    sign: planet.sign ? planet.sign.name : 'Unknown',
+    house: planet.house ? planet.house.id : 0,
     raw_planet_data: planet,
   };
 }
