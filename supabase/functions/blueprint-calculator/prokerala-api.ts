@@ -13,40 +13,6 @@ interface ProkeralaTokenResponse {
   expires_in: number;
 }
 
-interface ProkeralaPlanetaryResponse {
-  data: {
-    planets: Array<{
-      id: number;
-      name: string;
-      longitude: number;
-      latitude: number;
-      speed: number;
-      sign: {
-        id: number;
-        name: string;
-        longitude: number;
-      };
-      house: {
-        id: number;
-        name: string;
-      };
-    }>;
-    houses: Array<{
-      id: number;
-      longitude: number;
-      sign: {
-        id: number;
-        name: string;
-      };
-    }>;
-    ayanamsa: {
-      id: number;
-      name: string;
-      value: number;
-    };
-  };
-}
-
 // Cache for access tokens to avoid generating new ones for every request
 let cachedToken: { token: string; expires: number } | null = null;
 
@@ -112,7 +78,6 @@ export async function calculatePlanetaryPositionsWithProkerala(
       coordinates = birthLocation.trim();
     } else {
       // For now, use a default coordinate. In production, you'd want to geocode the location
-      // This is a placeholder - you might want to integrate with a geocoding service
       console.warn(`Location "${birthLocation}" needs to be converted to coordinates. Using default NYC coordinates.`);
       coordinates = "40.7128,-74.0060"; // Default to NYC
     }
@@ -130,15 +95,15 @@ export async function calculatePlanetaryPositionsWithProkerala(
       isoDateTime = dateTime.toISOString();
     }
     
-    console.log('Making request to Prokerala Planets API with:', {
+    console.log('Making request to Prokerala Kundli API with:', {
       coordinates,
       datetime: isoDateTime,
     });
 
-    // Make the API request to get planetary positions
-    // Using the planets endpoint instead of kundli
-    const planetsResponse = await fetch(
-      `https://api.prokerala.com/v2/astrology/planets?ayanamsa=1&coordinates=${coordinates}&datetime=${encodeURIComponent(isoDateTime)}`,
+    // Use the kundli endpoint instead of planets (which doesn't exist)
+    // Based on the API documentation pattern
+    const kundliResponse = await fetch(
+      `https://api.prokerala.com/v2/astrology/kundli?ayanamsa=1&coordinates=${coordinates}&datetime=${encodeURIComponent(isoDateTime)}`,
       {
         method: 'GET',
         headers: {
@@ -148,87 +113,48 @@ export async function calculatePlanetaryPositionsWithProkerala(
       }
     );
 
-    if (!planetsResponse.ok) {
-      const errorText = await planetsResponse.text();
-      console.error(`Prokerala Planets API request failed: ${planetsResponse.status} ${errorText}`);
-      throw new Error(`Prokerala Planets API request failed: ${planetsResponse.status} ${errorText}`);
+    if (!kundliResponse.ok) {
+      const errorText = await kundliResponse.text();
+      console.error(`Prokerala Kundli API request failed: ${kundliResponse.status} ${errorText}`);
+      throw new Error(`Prokerala Kundli API request failed: ${kundliResponse.status} ${errorText}`);
     }
 
-    const planetsData: any = await planetsResponse.json();
+    const kundliData: any = await kundliResponse.json();
     
-    console.log('Successfully received Prokerala planets data');
-    console.log('Raw Planets API response structure:', JSON.stringify(planetsData, null, 2));
+    console.log('Successfully received Prokerala kundli data');
+    console.log('Raw Kundli API response structure:', JSON.stringify(kundliData, null, 2));
     
     // Check if the response has the expected structure
-    if (!planetsData || !planetsData.data) {
-      throw new Error('Invalid Planets API response structure: missing data property');
+    if (!kundliData || !kundliData.data) {
+      throw new Error('Invalid Kundli API response structure: missing data property');
     }
     
-    if (!planetsData.data.planets || !Array.isArray(planetsData.data.planets)) {
-      console.log('No planets array found, trying alternative structure...');
-      
-      // If planets endpoint doesn't work, try to extract what we can from available data
-      if (planetsData.data && typeof planetsData.data === 'object') {
-        // Create a fallback response with whatever planetary data we can extract
-        const transformedData = {
-          sun: extractPlanetFromAnyData(planetsData.data, 'Sun'),
-          moon: extractPlanetFromAnyData(planetsData.data, 'Moon'),
-          mercury: extractPlanetFromAnyData(planetsData.data, 'Mercury'),
-          venus: extractPlanetFromAnyData(planetsData.data, 'Venus'),
-          mars: extractPlanetFromAnyData(planetsData.data, 'Mars'),
-          jupiter: extractPlanetFromAnyData(planetsData.data, 'Jupiter'),
-          saturn: extractPlanetFromAnyData(planetsData.data, 'Saturn'),
-          uranus: null, // Vedic astrology typically doesn't include outer planets
-          neptune: null,
-          pluto: null,
-          north_node: extractPlanetFromAnyData(planetsData.data, 'Rahu'),
-          south_node: extractPlanetFromAnyData(planetsData.data, 'Ketu'),
-          houses: [],
-          ayanamsa: planetsData.data.ayanamsa || null,
-          calculation_timestamp: new Date().toISOString(),
-          source: 'prokerala_api_fallback',
-          raw_response: planetsData,
-        };
-
-        return {
-          success: true,
-          data: transformedData,
-          raw_response: planetsData,
-          isPartial: true,
-        };
-      }
-      
-      throw new Error('Invalid Planets API response structure: missing or invalid planets array');
-    }
-    
-    // Transform the Prokerala response to match our expected format
+    // Try to extract planetary information from the kundli response
+    // The structure might be different, so we'll adapt based on what we receive
     const transformedData = {
-      sun: findPlanetData(planetsData.data.planets, 'Sun'),
-      moon: findPlanetData(planetsData.data.planets, 'Moon'),
-      mercury: findPlanetData(planetsData.data.planets, 'Mercury'),
-      venus: findPlanetData(planetsData.data.planets, 'Venus'),
-      mars: findPlanetData(planetsData.data.planets, 'Mars'),
-      jupiter: findPlanetData(planetsData.data.planets, 'Jupiter'),
-      saturn: findPlanetData(planetsData.data.planets, 'Saturn'),
-      uranus: findPlanetData(planetsData.data.planets, 'Uranus'),
-      neptune: findPlanetData(planetsData.data.planets, 'Neptune'),
-      pluto: findPlanetData(planetsData.data.planets, 'Pluto'),
-      north_node: findPlanetData(planetsData.data.planets, 'Rahu') || findPlanetData(planetsData.data.planets, 'North Node'),
-      south_node: findPlanetData(planetsData.data.planets, 'Ketu') || findPlanetData(planetsData.data.planets, 'South Node'),
-      houses: planetsData.data.houses ? planetsData.data.houses.map((house: any) => ({
-        house_number: house.id,
-        longitude: house.longitude,
-        sign: house.sign ? house.sign.name : 'Unknown',
-      })) : [],
-      ayanamsa: planetsData.data.ayanamsa || null,
+      sun: extractPlanetFromKundli(kundliData.data, 'Sun'),
+      moon: extractPlanetFromKundli(kundliData.data, 'Moon'),
+      mercury: extractPlanetFromKundli(kundliData.data, 'Mercury'),
+      venus: extractPlanetFromKundli(kundliData.data, 'Venus'),
+      mars: extractPlanetFromKundli(kundliData.data, 'Mars'),
+      jupiter: extractPlanetFromKundli(kundliData.data, 'Jupiter'),
+      saturn: extractPlanetFromKundli(kundliData.data, 'Saturn'),
+      uranus: null, // Vedic astrology typically doesn't include outer planets
+      neptune: null,
+      pluto: null,
+      north_node: extractPlanetFromKundli(kundliData.data, 'Rahu'),
+      south_node: extractPlanetFromKundli(kundliData.data, 'Ketu'),
+      houses: extractHousesFromKundli(kundliData.data),
+      ayanamsa: kundliData.data.ayanamsa || null,
       calculation_timestamp: new Date().toISOString(),
-      source: 'prokerala_api',
+      source: 'prokerala_api_kundli',
+      raw_response: kundliData,
     };
 
     return {
       success: true,
       data: transformedData,
-      raw_response: planetsData,
+      raw_response: kundliData,
     };
 
   } catch (error) {
@@ -237,40 +163,32 @@ export async function calculatePlanetaryPositionsWithProkerala(
   }
 }
 
-function findPlanetData(planets: any[], planetName: string) {
-  // Add safety check to ensure planets is an array
-  if (!planets || !Array.isArray(planets)) {
-    console.error('Planets data is not an array:', planets);
-    return null;
+function extractPlanetFromKundli(data: any, planetName: string) {
+  // Try to extract planetary information from kundli data structure
+  // The exact structure will depend on what the API returns
+  
+  // Check if there are planets array
+  if (data.planets && Array.isArray(data.planets)) {
+    const planet = data.planets.find((p: any) => 
+      p && p.name && (
+        p.name.toLowerCase() === planetName.toLowerCase() ||
+        p.name.toLowerCase().includes(planetName.toLowerCase())
+      )
+    );
+    
+    if (planet) {
+      return {
+        longitude: planet.longitude || 0,
+        latitude: planet.latitude || 0,
+        speed: planet.speed || 0,
+        sign: planet.sign ? planet.sign.name : 'Unknown',
+        house: planet.house ? planet.house.id : 0,
+        raw_planet_data: planet,
+      };
+    }
   }
   
-  const planet = planets.find(p => 
-    p && p.name && (
-      p.name.toLowerCase() === planetName.toLowerCase() ||
-      p.name.toLowerCase().includes(planetName.toLowerCase())
-    )
-  );
-  
-  if (!planet) {
-    console.warn(`Planet "${planetName}" not found in Prokerala response. Available planets:`, planets.map(p => p?.name).filter(Boolean));
-    return null;
-  }
-  
-  return {
-    longitude: planet.longitude || 0,
-    latitude: planet.latitude || 0,
-    speed: planet.speed || 0,
-    sign: planet.sign ? planet.sign.name : 'Unknown',
-    house: planet.house ? planet.house.id : 0,
-    raw_planet_data: planet,
-  };
-}
-
-function extractPlanetFromAnyData(data: any, planetName: string) {
-  // Try to extract planetary information from any available data structure
-  // This is a fallback when the API doesn't return the expected format
-  
-  // Check if there's nakshatra_details and if it contains relevant info
+  // Check if there's nakshatra_details and relevant info
   if (data.nakshatra_details) {
     const nakshatra = data.nakshatra_details;
     
@@ -299,7 +217,21 @@ function extractPlanetFromAnyData(data: any, planetName: string) {
     }
   }
   
+  console.warn(`Planet "${planetName}" not found in Prokerala kundli response`);
   return null;
+}
+
+function extractHousesFromKundli(data: any) {
+  // Try to extract house information from kundli data
+  if (data.houses && Array.isArray(data.houses)) {
+    return data.houses.map((house: any) => ({
+      house_number: house.id,
+      longitude: house.longitude,
+      sign: house.sign ? house.sign.name : 'Unknown',
+    }));
+  }
+  
+  return [];
 }
 
 // Test endpoint for direct testing
