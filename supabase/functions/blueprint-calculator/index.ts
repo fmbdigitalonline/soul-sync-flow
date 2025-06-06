@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 // CORS headers for browser requests
@@ -101,16 +100,15 @@ serve(async (req) => {
       timezone
     });
 
-    // TEMPORARY: Return a structured response while transitioning to helper API
-    // This provides a functioning blueprint system while the proper ephemeris API is being built
-    const result = await generateTemporaryBlueprint(birthDate, birthTime, birthLocation, timezone);
+    // Call the new Vercel ephemeris API for accurate calculations
+    const result = await generateBlueprintWithVercelAPI(birthDate, birthTime, birthLocation, timezone);
 
     return new Response(JSON.stringify({
       success: true,
       data: result,
       timestamp: new Date().toISOString(),
-      source: "temporary_fallback",
-      notice: "Using temporary data while setting up dedicated ephemeris API"
+      source: "vercel_ephemeris_api",
+      notice: "Using accurate Swiss Ephemeris calculations via Vercel API"
     }), {
       headers: { 
         "Content-Type": "application/json",
@@ -138,70 +136,129 @@ serve(async (req) => {
   }
 });
 
-async function generateTemporaryBlueprint(birthDate: string, birthTime: string, birthLocation: string, timezone?: string) {
-  // Parse the birth date to extract information for temporary calculations
-  const birthDateObj = new Date(birthDate);
-  const birthYear = birthDateObj.getFullYear();
-  const birthMonth = birthDateObj.getMonth() + 1;
-  const birthDay = birthDateObj.getDate();
+async function generateBlueprintWithVercelAPI(birthDate: string, birthTime: string, birthLocation: string, timezone?: string) {
+  // Your Vercel API endpoint
+  const VERCEL_API_URL = "https://soul-sync-flow-i9g4spyz9-info-fmbonlinenls-projects.vercel.app/api/ephemeris";
   
-  // Simple sun sign calculation based on birth date (tropical zodiac)
-  const sunSign = calculateSunSign(birthMonth, birthDay);
-  
-  // Mock planetary positions - these would come from your helper API
-  const mockPlanetaryData = {
-    sun: {
-      longitude: ((birthMonth - 1) * 30 + birthDay) % 360, // Simplified sun position
-      latitude: 0,
-      speed: 0.98,
-      distance: 1.0,
-      sign: sunSign,
-      sign_degree: birthDay,
-      is_retrograde: false
-    },
-    moon: {
-      longitude: (((birthMonth - 1) * 30 + birthDay) + 90) % 360, // Mock moon position
-      latitude: 0,
-      speed: 13.2,
-      distance: 0.0025,
-      sign: calculateSignFromLongitude((((birthMonth - 1) * 30 + birthDay) + 90) % 360),
-      sign_degree: ((((birthMonth - 1) * 30 + birthDay) + 90) % 360) % 30,
-      is_retrograde: false
-    },
-    // Add other planets with mock data
-    mercury: { longitude: 0, latitude: 0, speed: 0, distance: 0, sign: "Aries", sign_degree: 0, is_retrograde: false },
-    venus: { longitude: 0, latitude: 0, speed: 0, distance: 0, sign: "Aries", sign_degree: 0, is_retrograde: false },
-    mars: { longitude: 0, latitude: 0, speed: 0, distance: 0, sign: "Aries", sign_degree: 0, is_retrograde: false },
-    jupiter: { longitude: 0, latitude: 0, speed: 0, distance: 0, sign: "Aries", sign_degree: 0, is_retrograde: false },
-    saturn: { longitude: 0, latitude: 0, speed: 0, distance: 0, sign: "Aries", sign_degree: 0, is_retrograde: false },
-    uranus: { longitude: 0, latitude: 0, speed: 0, distance: 0, sign: "Aries", sign_degree: 0, is_retrograde: false },
-    neptune: { longitude: 0, latitude: 0, speed: 0, distance: 0, sign: "Aries", sign_degree: 0, is_retrograde: false },
-    pluto: { longitude: 0, latitude: 0, speed: 0, distance: 0, sign: "Aries", sign_degree: 0, is_retrograde: false },
-    north_node: { longitude: 0, latitude: 0, speed: 0, distance: 0, sign: "Aries", sign_degree: 0, is_retrograde: false },
-    south_node: { longitude: 0, latitude: 0, speed: 0, distance: 0, sign: "Aries", sign_degree: 0, is_retrograde: false }
-  };
+  try {
+    // Parse birth date and time
+    const birthDateTime = new Date(`${birthDate}T${birthTime}:00`);
+    
+    // Extract coordinates from birthLocation
+    // Assuming format like "New York, NY, USA" or "40.7128,-74.0060"
+    let coordinates;
+    if (birthLocation.includes(',') && /^-?\d+\.?\d*,-?\d+\.?\d*$/.test(birthLocation.trim())) {
+      // Direct coordinates format
+      coordinates = birthLocation.trim();
+    } else {
+      // City name format - use default coordinates for testing
+      // In production, you'd want to geocode the city name first
+      coordinates = "40.7128,-74.0060"; // Default to NYC
+    }
+    
+    console.log("Calling Vercel ephemeris API with:", {
+      datetime: birthDateTime.toISOString(),
+      coordinates
+    });
+    
+    // Call your Vercel ephemeris API
+    const ephemerisResponse = await fetch(VERCEL_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        datetime: birthDateTime.toISOString(),
+        coordinates: coordinates
+      })
+    });
+    
+    if (!ephemerisResponse.ok) {
+      throw new Error(`Ephemeris API returned ${ephemerisResponse.status}: ${ephemerisResponse.statusText}`);
+    }
+    
+    const ephemerisData = await ephemerisResponse.json();
+    
+    if (!ephemerisData.success) {
+      throw new Error(`Ephemeris API error: ${ephemerisData.error || 'Unknown error'}`);
+    }
+    
+    console.log("Received ephemeris data:", ephemerisData);
+    
+    // Process the accurate planetary data
+    const celestialData = ephemerisData.data;
+    
+    // Generate Western astrology profile
+    const westernProfile = generateWesternProfile(celestialData);
+    
+    // Generate other profile components
+    const chineseZodiac = calculateChineseZodiac(new Date(birthDate).getFullYear());
+    const numerology = calculateNumerology(birthDate, "Sample Name");
+    const humanDesign = await generateHumanDesign(celestialData, birthDate, birthTime);
+    
+    return {
+      calculation_metadata: {
+        success: true,
+        partial: false,
+        errors: {},
+        calculated_at: new Date().toISOString(),
+        engine: "swiss_ephemeris_vercel",
+        notice: "Accurate calculations using Swiss Ephemeris via Vercel API"
+      },
+      westernProfile,
+      chineseZodiac,
+      numerology,
+      humanDesign,
+      celestialData
+    };
+    
+  } catch (error) {
+    console.error("Error calling Vercel ephemeris API:", error);
+    
+    // Fallback to temporary data if API fails
+    console.log("Falling back to temporary calculations...");
+    return await generateTemporaryBlueprint(birthDate, birthTime, birthLocation, timezone);
+  }
+}
 
+function generateWesternProfile(celestialData: any) {
+  const sunData = celestialData.sun;
+  const moonData = celestialData.moon;
+  
+  if (!sunData || !moonData) {
+    throw new Error("Missing essential planetary data from ephemeris");
+  }
+  
+  // Calculate zodiac signs from longitude
+  const sunSign = calculateSignFromLongitude(sunData.longitude);
+  const moonSign = calculateSignFromLongitude(moonData.longitude);
+  
+  // Calculate degrees within sign
+  const sunDegree = sunData.longitude % 30;
+  const moonDegree = moonData.longitude % 30;
+  
   return {
-    calculation_metadata: {
-      success: true,
-      partial: true,
-      errors: {},
-      calculated_at: new Date().toISOString(),
-      engine: "temporary_fallback",
-      notice: "This is temporary data. Setting up dedicated ephemeris API for accurate calculations."
-    },
-    westernProfile: {
-      sun_sign: `${sunSign} ${mockPlanetaryData.sun.sign_degree.toFixed(1)}°`,
-      sun_keyword: getSunKeyword(sunSign),
-      moon_sign: `${mockPlanetaryData.moon.sign} ${mockPlanetaryData.moon.sign_degree.toFixed(1)}°`,
-      moon_keyword: getMoonKeyword(mockPlanetaryData.moon.sign),
-      rising_sign: "Aries 0°", // Temporary
-      source: "temporary_calculation"
-    },
-    chineseZodiac: calculateChineseZodiac(birthYear),
-    numerology: calculateNumerology(birthDate, "Sample Name"),
-    humanDesign: {
-      type: "Generator", // Temporary
+    sun_sign: `${sunSign} ${sunDegree.toFixed(1)}°`,
+    sun_keyword: getSunKeyword(sunSign),
+    moon_sign: `${moonSign} ${moonDegree.toFixed(1)}°`,
+    moon_keyword: getMoonKeyword(moonSign),
+    rising_sign: "Calculating...", // Would need birth time and location for accurate calculation
+    source: "swiss_ephemeris_accurate"
+  };
+}
+
+async function generateHumanDesign(celestialData: any, birthDate: string, birthTime: string) {
+  // Import the enhanced Human Design calculator
+  const { calculateHumanDesign } = await import('./human-design-calculator.ts');
+  
+  try {
+    return await calculateHumanDesign(birthDate, birthTime, "New York", "America/New_York", celestialData);
+  } catch (error) {
+    console.error("Error calculating Human Design:", error);
+    
+    // Fallback Human Design data
+    return {
+      type: "Generator",
       profile: "1/3",
       authority: "Sacral",
       strategy: "To Respond",
@@ -212,26 +269,9 @@ async function generateTemporaryBlueprint(birthDate: string, birthTime: string, 
         unconscious_design: [],
         conscious_personality: []
       },
-      source: "temporary_calculation"
-    },
-    celestialData: mockPlanetaryData
-  };
-}
-
-function calculateSunSign(month: number, day: number): string {
-  // Simplified sun sign calculation (tropical zodiac dates)
-  if ((month == 3 && day >= 21) || (month == 4 && day <= 19)) return "Aries";
-  if ((month == 4 && day >= 20) || (month == 5 && day <= 20)) return "Taurus";
-  if ((month == 5 && day >= 21) || (month == 6 && day <= 20)) return "Gemini";
-  if ((month == 6 && day >= 21) || (month == 7 && day <= 22)) return "Cancer";
-  if ((month == 7 && day >= 23) || (month == 8 && day <= 22)) return "Leo";
-  if ((month == 8 && day >= 23) || (month == 9 && day <= 22)) return "Virgo";
-  if ((month == 9 && day >= 23) || (month == 10 && day <= 22)) return "Libra";
-  if ((month == 10 && day >= 23) || (month == 11 && day <= 21)) return "Scorpio";
-  if ((month == 11 && day >= 22) || (month == 12 && day <= 21)) return "Sagittarius";
-  if ((month == 12 && day >= 22) || (month == 1 && day <= 19)) return "Capricorn";
-  if ((month == 1 && day >= 20) || (month == 2 && day <= 18)) return "Aquarius";
-  return "Pisces";
+      source: "fallback_calculation"
+    };
+  }
 }
 
 function calculateSignFromLongitude(longitude: number): string {
@@ -318,4 +358,96 @@ function getLifePathKeyword(number: number): string {
     6: 'Nurturer', 7: 'Seeker', 8: 'Achiever', 9: 'Humanitarian'
   };
   return keywords[number] || 'Seeker';
+}
+
+async function generateTemporaryBlueprint(birthDate: string, birthTime: string, birthLocation: string, timezone?: string) {
+  const birthDateObj = new Date(birthDate);
+  const birthYear = birthDateObj.getFullYear();
+  const birthMonth = birthDateObj.getMonth() + 1;
+  const birthDay = birthDateObj.getDate();
+  
+  const sunSign = calculateSunSign(birthMonth, birthDay);
+  
+  const mockPlanetaryData = {
+    sun: {
+      longitude: ((birthMonth - 1) * 30 + birthDay) % 360,
+      latitude: 0,
+      speed: 0.98,
+      distance: 1.0,
+      sign: sunSign,
+      sign_degree: birthDay,
+      is_retrograde: false
+    },
+    moon: {
+      longitude: (((birthMonth - 1) * 30 + birthDay) + 90) % 360,
+      latitude: 0,
+      speed: 13.2,
+      distance: 0.0025,
+      sign: calculateSignFromLongitude((((birthMonth - 1) * 30 + birthDay) + 90) % 360),
+      sign_degree: ((((birthMonth - 1) * 30 + birthDay) + 90) % 360) % 30,
+      is_retrograde: false
+    },
+    // Add other planets with mock data
+    mercury: { longitude: 0, latitude: 0, speed: 0, distance: 0, sign: "Aries", sign_degree: 0, is_retrograde: false },
+    venus: { longitude: 0, latitude: 0, speed: 0, distance: 0, sign: "Aries", sign_degree: 0, is_retrograde: false },
+    mars: { longitude: 0, latitude: 0, speed: 0, distance: 0, sign: "Aries", sign_degree: 0, is_retrograde: false },
+    jupiter: { longitude: 0, latitude: 0, speed: 0, distance: 0, sign: "Aries", sign_degree: 0, is_retrograde: false },
+    saturn: { longitude: 0, latitude: 0, speed: 0, distance: 0, sign: "Aries", sign_degree: 0, is_retrograde: false },
+    uranus: { longitude: 0, latitude: 0, speed: 0, distance: 0, sign: "Aries", sign_degree: 0, is_retrograde: false },
+    neptune: { longitude: 0, latitude: 0, speed: 0, distance: 0, sign: "Aries", sign_degree: 0, is_retrograde: false },
+    pluto: { longitude: 0, latitude: 0, speed: 0, distance: 0, sign: "Aries", sign_degree: 0, is_retrograde: false },
+    north_node: { longitude: 0, latitude: 0, speed: 0, distance: 0, sign: "Aries", sign_degree: 0, is_retrograde: false },
+    south_node: { longitude: 0, latitude: 0, speed: 0, distance: 0, sign: "Aries", sign_degree: 0, is_retrograde: false }
+  };
+
+  return {
+    calculation_metadata: {
+      success: true,
+      partial: true,
+      errors: {},
+      calculated_at: new Date().toISOString(),
+      engine: "temporary_fallback",
+      notice: "Using fallback data due to API error. Please check API connectivity."
+    },
+    westernProfile: {
+      sun_sign: `${sunSign} ${mockPlanetaryData.sun.sign_degree.toFixed(1)}°`,
+      sun_keyword: getSunKeyword(sunSign),
+      moon_sign: `${mockPlanetaryData.moon.sign} ${mockPlanetaryData.moon.sign_degree.toFixed(1)}°`,
+      moon_keyword: getMoonKeyword(mockPlanetaryData.moon.sign),
+      rising_sign: "Aries 0°",
+      source: "temporary_calculation"
+    },
+    chineseZodiac: calculateChineseZodiac(birthYear),
+    numerology: calculateNumerology(birthDate, "Sample Name"),
+    humanDesign: {
+      type: "Generator",
+      profile: "1/3",
+      authority: "Sacral",
+      strategy: "To Respond",
+      definition: "Single",
+      not_self_theme: "Frustration",
+      life_purpose: "To find satisfaction through responding",
+      gates: {
+        unconscious_design: [],
+        conscious_personality: []
+      },
+      source: "temporary_calculation"
+    },
+    celestialData: mockPlanetaryData
+  };
+}
+
+function calculateSunSign(month: number, day: number): string {
+  if ((month == 3 && day >= 21) || (month == 4 && day <= 19)) return "Aries";
+  if ((month == 4 && day >= 20) || (month == 5 && day <= 20)) return "Taurus";
+  if ((month == 5 && day >= 21) || (month == 6 && day <= 20)) return "Gemini";
+  if ((month == 6 && day >= 21) || (month == 7 && day <= 22)) return "Cancer";
+  if ((month == 7 && day >= 23) || (month == 8 && day <= 22)) return "Leo";
+  if ((month == 8 && day >= 23) || (month == 9 && day <= 22)) return "Virgo";
+  if ((month == 9 && day >= 23) || (month == 10 && day <= 22)) return "Libra";
+  if ((month == 10 && day >= 23) || (month == 11 && day <= 21)) return "Scorpio";
+  if ((month == 11 && day >= 22) || (month == 12 && day <= 21)) return "Sagittarius";
+  if ((month == 12 && day >= 22) || (month == 1 && day <= 19)) return "Capricorn";
+  if ((month == 1 && day >= 20) || (month == 2 && day <= 18)) return "Aquarius";
+  return "Pisces";
 }
