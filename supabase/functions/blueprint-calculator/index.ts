@@ -24,6 +24,12 @@ serve(async (req) => {
       return await testMoonMinimal(req);
     }
     
+    if (url.pathname.includes('/test-astrometry')) {
+      // Import and execute the new Astrometry test
+      const { default: testAstrometry } = await import('./test-astrometry.ts');
+      return await testAstrometry(req);
+    }
+    
     if (url.pathname.includes('/test-wasm')) {
       // Import and execute the WASM test
       const { default: testWasm } = await import('./test-wasm.ts');
