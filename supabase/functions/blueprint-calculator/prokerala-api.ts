@@ -93,25 +93,25 @@ export async function calculatePlanetaryPositionsWithProkerala(
       ayanamsa: 0, // Critical: 0 = Tropical/Western astrology
     });
 
-    // Use the correct endpoint with POST method
-    const apiUrl = 'https://api.prokerala.com/v2/astrology/planet-position';
+    // Use the correct endpoint with GET method and query parameters
+    const apiUrlBase = 'https://api.prokerala.com/v2/astrology/planet-position';
     
-    const requestBody = {
-      datetime: isoDateTime,
-      coordinates: coordinates,
-      ayanamsa: 0, // 0 = Tropical zodiac (Western astrology)
-    };
+    // URL-encode the datetime parameter to handle special characters
+    const encodedDatetime = encodeURIComponent(isoDateTime);
+    const ayanamsa = 0; // 0 = Tropical zodiac (Western astrology)
     
-    console.log('Full API URL:', apiUrl);
-    console.log('Request body:', JSON.stringify(requestBody, null, 2));
+    // Construct the final URL with all parameters in the query string
+    const finalApiUrl = `${apiUrlBase}?datetime=${encodedDatetime}&coordinates=${coordinates}&ayanamsa=${ayanamsa}`;
+    
+    console.log('Full API URL:', finalApiUrl);
 
-    const response = await fetch(apiUrl, {
-      method: 'POST', // MUST be POST
+    const response = await fetch(finalApiUrl, {
+      method: 'GET', // MUST be GET as indicated by the 405 error
       headers: {
         'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
+        // No Content-Type needed for GET requests
       },
-      body: JSON.stringify(requestBody),
+      // No body for GET requests
     });
 
     if (!response.ok) {
