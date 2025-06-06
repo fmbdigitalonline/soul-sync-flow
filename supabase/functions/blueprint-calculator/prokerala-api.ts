@@ -66,7 +66,7 @@ export async function calculatePlanetaryPositionsWithProkerala(
   timezone?: string
 ): Promise<any> {
   try {
-    console.log('Starting Prokerala Ephemeris API call...');
+    console.log('Starting Prokerala Daily Panchang Ephemeris API call...');
     
     // Get access token
     const accessToken = await getProkeralaAccessToken();
@@ -87,67 +87,81 @@ export async function calculatePlanetaryPositionsWithProkerala(
     const dateTime = new Date(dateTimeString);
     const isoDateTime = dateTime.toISOString();
     
-    console.log('Calling ephemeris endpoint with:', {
+    console.log('Calling daily-panchang-ephemeris endpoint with:', {
       coordinates,
       datetime: isoDateTime,
       ayanamsa: 0, // Critical: 0 = Tropical/Western astrology
     });
 
-    // Build the API URL for ephemeris endpoint
-    const apiUrl = new URL('https://api.prokerala.com/v2/astrology/ephemeris');
-    apiUrl.searchParams.set('datetime', isoDateTime);
-    apiUrl.searchParams.set('coordinates', coordinates);
-    apiUrl.searchParams.set('ayanamsa', '0'); // 0 = Tropical zodiac (Western astrology)
+    // Use the correct endpoint with POST method
+    const apiUrl = 'https://api.prokerala.com/v2/astrology/daily-panchang-ephemeris';
     
-    console.log('Full ephemeris API URL:', apiUrl.toString());
+    const requestBody = {
+      datetime: isoDateTime,
+      coordinates: coordinates,
+      ayanamsa: 0, // 0 = Tropical zodiac (Western astrology)
+    };
+    
+    console.log('Full API URL:', apiUrl);
+    console.log('Request body:', JSON.stringify(requestBody, null, 2));
 
-    const response = await fetch(apiUrl.toString(), {
-      method: 'GET',
+    const response = await fetch(apiUrl, {
+      method: 'POST', // MUST be POST
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`Prokerala ephemeris API call failed: ${response.status} ${errorText}`);
-      throw new Error(`Prokerala ephemeris API failed: ${response.status} ${errorText}`);
+      console.error(`Prokerala daily-panchang-ephemeris API call failed: ${response.status} ${errorText}`);
+      throw new Error(`Prokerala daily-panchang-ephemeris API failed: ${response.status} ${errorText}`);
     }
 
     const data = await response.json();
-    console.log('✅ SUCCESS: Ephemeris endpoint returned data');
+    console.log('✅ SUCCESS: Daily Panchang Ephemeris endpoint returned data');
     console.log('Response structure:', JSON.stringify(data, null, 2));
     
-    // Extract ephemeris data from the response
-    if (!data.data || !Array.isArray(data.data)) {
-      console.error('Unexpected ephemeris response structure:', data);
-      throw new Error('Invalid response structure from ephemeris endpoint');
+    // Extract planet positions from the response
+    let planetPositions = [];
+    
+    // Look for planet_positions in various possible locations in the response
+    if (data.data && data.data.planet_positions && Array.isArray(data.data.planet_positions)) {
+      planetPositions = data.data.planet_positions;
+    } else if (data.planet_positions && Array.isArray(data.planet_positions)) {
+      planetPositions = data.planet_positions;
+    } else if (data.data && Array.isArray(data.data)) {
+      planetPositions = data.data;
+    } else {
+      console.error('Could not find planet_positions in response structure:', data);
+      throw new Error('Invalid response structure from daily-panchang-ephemeris endpoint');
     }
 
-    const ephemerisData = data.data;
-    console.log('Ephemeris data array length:', ephemerisData.length);
+    console.log('Planet positions array length:', planetPositions.length);
+    console.log('First few planet positions:', planetPositions.slice(0, 3));
     
-    // Transform the ephemeris data to our expected format
+    // Transform the planet positions data to our expected format
     const transformedData = {
-      sun: extractEphemerisData(ephemerisData, 'Sun', 0),
-      moon: extractEphemerisData(ephemerisData, 'Moon', 1),
-      mercury: extractEphemerisData(ephemerisData, 'Mercury', 2),
-      venus: extractEphemerisData(ephemerisData, 'Venus', 3),
-      mars: extractEphemerisData(ephemerisData, 'Mars', 4),
-      jupiter: extractEphemerisData(ephemerisData, 'Jupiter', 5),
-      saturn: extractEphemerisData(ephemerisData, 'Saturn', 6),
-      uranus: extractEphemerisData(ephemerisData, 'Uranus', 7),
-      neptune: extractEphemerisData(ephemerisData, 'Neptune', 8),
-      pluto: extractEphemerisData(ephemerisData, 'Pluto', 9),
-      north_node: extractEphemerisData(ephemerisData, 'True North Node', 103),
-      south_node: extractEphemerisData(ephemerisData, 'True South Node', 104),
+      sun: extractPlanetData(planetPositions, 'Sun', 0),
+      moon: extractPlanetData(planetPositions, 'Moon', 1),
+      mercury: extractPlanetData(planetPositions, 'Mercury', 2),
+      venus: extractPlanetData(planetPositions, 'Venus', 3),
+      mars: extractPlanetData(planetPositions, 'Mars', 4),
+      jupiter: extractPlanetData(planetPositions, 'Jupiter', 5),
+      saturn: extractPlanetData(planetPositions, 'Saturn', 6),
+      uranus: extractPlanetData(planetPositions, 'Uranus', 7),
+      neptune: extractPlanetData(planetPositions, 'Neptune', 8),
+      pluto: extractPlanetData(planetPositions, 'Pluto', 9),
+      north_node: extractPlanetData(planetPositions, 'True North Node', 103) || extractPlanetData(planetPositions, 'North Node', 103),
+      south_node: extractPlanetData(planetPositions, 'True South Node', 104) || extractPlanetData(planetPositions, 'South Node', 104),
       calculation_timestamp: new Date().toISOString(),
-      source: 'prokerala_ephemeris',
+      source: 'prokerala_daily_panchang_ephemeris',
       raw_response: data,
     };
 
-    console.log('Transformed ephemeris data preview:', {
+    console.log('Transformed planet data preview:', {
       sun: transformedData.sun,
       moon: transformedData.moon,
       north_node: transformedData.north_node
@@ -160,23 +174,23 @@ export async function calculatePlanetaryPositionsWithProkerala(
     };
 
   } catch (error) {
-    console.error('Error in Prokerala ephemeris API call:', error);
+    console.error('Error in Prokerala daily-panchang-ephemeris API call:', error);
     throw error;
   }
 }
 
-function extractEphemerisData(ephemerisArray: any[], planetName: string, planetId?: number) {
+function extractPlanetData(planetPositions: any[], planetName: string, planetId?: number) {
   console.log(`Looking for planet: ${planetName} (ID: ${planetId})`);
   
   // Find planet by name or ID
-  const planet = ephemerisArray.find(p => {
+  const planet = planetPositions.find(p => {
     const nameMatch = p.name && p.name.toLowerCase().includes(planetName.toLowerCase());
     const idMatch = planetId !== undefined && p.id === planetId;
     return nameMatch || idMatch;
   });
   
   if (!planet) {
-    console.warn(`Planet "${planetName}" not found in ephemeris data`);
+    console.warn(`Planet "${planetName}" not found in planet positions data`);
     return null;
   }
   
@@ -184,13 +198,13 @@ function extractEphemerisData(ephemerisArray: any[], planetName: string, planetI
   
   return {
     longitude: planet.longitude || 0,
-    latitude: planet.latitude || 0, // This should now be available from ephemeris!
+    latitude: planet.latitude || 0, // This should now be available!
     speed: planet.speed || 0,
     distance: planet.distance || 0,
     sign: convertLongitudeToSign(planet.longitude || 0),
     sign_degree: (planet.longitude || 0) % 30,
     is_retrograde: planet.is_retrograde || false,
-    raw_ephemeris_data: planet,
+    raw_planet_data: planet,
   };
 }
 
@@ -211,7 +225,7 @@ export default async function handler(req: Request) {
   }
 
   try {
-    console.log('Prokerala ephemeris API test endpoint called');
+    console.log('Prokerala daily-panchang-ephemeris API test endpoint called');
     
     // Use default test data if no body is provided
     let birthDate = "1990-03-21";
@@ -235,7 +249,7 @@ export default async function handler(req: Request) {
       }
     }
 
-    console.log('Testing ephemeris with data:', { birthDate, birthTime, birthLocation, timezone });
+    console.log('Testing daily-panchang-ephemeris with data:', { birthDate, birthTime, birthLocation, timezone });
 
     const result = await calculatePlanetaryPositionsWithProkerala(
       birthDate,
@@ -252,13 +266,13 @@ export default async function handler(req: Request) {
     });
 
   } catch (error) {
-    console.error("Error in Prokerala ephemeris API test:", error);
+    console.error("Error in Prokerala daily-panchang-ephemeris API test:", error);
     
     return new Response(
       JSON.stringify({
-        error: "Prokerala ephemeris API test failed",
+        error: "Prokerala daily-panchang-ephemeris API test failed",
         details: error.message,
-        code: "PROKERALA_EPHEMERIS_API_ERROR"
+        code: "PROKERALA_DAILY_PANCHANG_EPHEMERIS_API_ERROR"
       }),
       { 
         status: 500,
