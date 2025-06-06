@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 // CORS headers for browser requests
@@ -58,32 +59,32 @@ export async function getProkeralaAccessToken(): Promise<string> {
   return tokenData.access_token;
 }
 
-// Try multiple endpoints to find complete planetary data
-async function tryProkeralaEndpoints(
+// Try Western astrology endpoints with proper ayanamsa settings
+async function tryWesternAstrologyEndpoints(
   accessToken: string,
   coordinates: string,
   isoDateTime: string
 ): Promise<any> {
   const endpoints = [
     {
-      name: 'chart',
-      url: `https://api.prokerala.com/v2/astrology/chart?ayanamsa=1&coordinates=${coordinates}&datetime=${encodeURIComponent(isoDateTime)}&chart_type=rasi`
+      name: 'planet-position-tropical',
+      url: `https://api.prokerala.com/v2/astrology/planet-position?ayanamsa=0&coordinates=${coordinates}&datetime=${encodeURIComponent(isoDateTime)}`
     },
     {
-      name: 'planet-position',
-      url: `https://api.prokerala.com/v2/astrology/planet-position?ayanamsa=1&coordinates=${coordinates}&datetime=${encodeURIComponent(isoDateTime)}`
+      name: 'western-horoscope',
+      url: `https://api.prokerala.com/v2/astrology/western-horoscope?coordinates=${coordinates}&datetime=${encodeURIComponent(isoDateTime)}`
     },
     {
-      name: 'birth-chart',
-      url: `https://api.prokerala.com/v2/astrology/birth-chart?ayanamsa=1&coordinates=${coordinates}&datetime=${encodeURIComponent(isoDateTime)}`
+      name: 'planets-tropical',
+      url: `https://api.prokerala.com/v2/astrology/planets?ayanamsa=0&coordinates=${coordinates}&datetime=${encodeURIComponent(isoDateTime)}`
     },
     {
-      name: 'horoscope',
-      url: `https://api.prokerala.com/v2/astrology/horoscope?ayanamsa=1&coordinates=${coordinates}&datetime=${encodeURIComponent(isoDateTime)}`
+      name: 'chart-tropical',
+      url: `https://api.prokerala.com/v2/astrology/chart?ayanamsa=0&coordinates=${coordinates}&datetime=${encodeURIComponent(isoDateTime)}&chart_type=rasi&chart_style=north-indian`
     },
     {
-      name: 'kundli',
-      url: `https://api.prokerala.com/v2/astrology/kundli?ayanamsa=1&coordinates=${coordinates}&datetime=${encodeURIComponent(isoDateTime)}`
+      name: 'birth-chart-tropical',
+      url: `https://api.prokerala.com/v2/astrology/birth-chart?ayanamsa=0&coordinates=${coordinates}&datetime=${encodeURIComponent(isoDateTime)}`
     }
   ];
 
@@ -91,7 +92,7 @@ async function tryProkeralaEndpoints(
 
   for (const endpoint of endpoints) {
     try {
-      console.log(`Trying endpoint: ${endpoint.name} - ${endpoint.url}`);
+      console.log(`Trying Western endpoint: ${endpoint.name} - ${endpoint.url}`);
       
       const response = await fetch(endpoint.url, {
         method: 'GET',
@@ -145,7 +146,7 @@ export async function calculatePlanetaryPositionsWithProkerala(
   timezone?: string
 ): Promise<any> {
   try {
-    console.log('Starting Prokerala API exploration...');
+    console.log('Starting Prokerala Western Astrology API exploration...');
     
     // Get access token
     const accessToken = await getProkeralaAccessToken();
@@ -174,35 +175,42 @@ export async function calculatePlanetaryPositionsWithProkerala(
       isoDateTime = dateTime.toISOString();
     }
     
-    console.log('Testing multiple Prokerala endpoints with:', {
+    console.log('Testing Western astrology endpoints with:', {
       coordinates,
       datetime: isoDateTime,
+      note: 'Using ayanamsa=0 for Tropical/Western calculations'
     });
 
-    // Try all available endpoints
-    const endpointResults = await tryProkeralaEndpoints(accessToken, coordinates, isoDateTime);
+    // Try Western astrology endpoints with proper ayanamsa settings
+    const endpointResults = await tryWesternAstrologyEndpoints(accessToken, coordinates, isoDateTime);
     
-    // Find the best endpoint that has planetary data
+    // Find the best endpoint that has complete planetary data
     let bestResult = null;
     let planetaryData = null;
 
     for (const result of endpointResults) {
       if (result.status === 'success' && result.data && result.data.data) {
-        // Check if this endpoint has planetary positions
         const data = result.data.data;
         
-        if (data.planets && Array.isArray(data.planets)) {
-          console.log(`🎯 Found planetary data in ${result.endpoint} endpoint!`);
+        // Look for planet_position array (most likely for Western astrology)
+        if (data.planet_position && Array.isArray(data.planet_position)) {
+          console.log(`🎯 Found planet_position array in ${result.endpoint} endpoint!`);
+          console.log(`Planet count: ${data.planet_position.length}`);
+          bestResult = result;
+          planetaryData = data.planet_position;
+          break;
+        }
+        // Look for planets array
+        else if (data.planets && Array.isArray(data.planets)) {
+          console.log(`🎯 Found planets array in ${result.endpoint} endpoint!`);
+          console.log(`Planet count: ${data.planets.length}`);
           bestResult = result;
           planetaryData = data.planets;
           break;
-        } else if (data.planet_positions && Array.isArray(data.planet_positions)) {
-          console.log(`🎯 Found planet positions in ${result.endpoint} endpoint!`);
-          bestResult = result;
-          planetaryData = data.planet_positions;
-          break;
-        } else if (data.chart && data.chart.planets) {
-          console.log(`🎯 Found chart planets in ${result.endpoint} endpoint!`);
+        }
+        // Look for chart.planets
+        else if (data.chart && data.chart.planets) {
+          console.log(`🎯 Found chart.planets in ${result.endpoint} endpoint!`);
           bestResult = result;
           planetaryData = data.chart.planets;
           break;
@@ -211,64 +219,49 @@ export async function calculatePlanetaryPositionsWithProkerala(
     }
 
     if (!bestResult || !planetaryData) {
-      console.log('No endpoints returned planetary data, falling back to kundli endpoint for basic info');
-      
-      // Fallback to kundli for what we can get
-      const kundliResult = endpointResults.find(r => r.endpoint === 'kundli' && r.status === 'success');
-      if (kundliResult && kundliResult.data) {
-        const transformedData = extractDataFromKundli(kundliResult.data.data);
-        return {
-          success: true,
-          data: {
-            ...transformedData,
-            endpoint_exploration: endpointResults,
-            note: "Used fallback kundli endpoint - limited planetary data available"
-          },
-          raw_response: kundliResult.data,
-        };
-      }
-    } else {
-      console.log(`Using ${bestResult.endpoint} endpoint for complete planetary data`);
-      
-      // Transform planetary data from the best endpoint
-      const transformedData = {
-        sun: extractPlanetFromArray(planetaryData, 'Sun'),
-        moon: extractPlanetFromArray(planetaryData, 'Moon'),
-        mercury: extractPlanetFromArray(planetaryData, 'Mercury'),
-        venus: extractPlanetFromArray(planetaryData, 'Venus'),
-        mars: extractPlanetFromArray(planetaryData, 'Mars'),
-        jupiter: extractPlanetFromArray(planetaryData, 'Jupiter'),
-        saturn: extractPlanetFromArray(planetaryData, 'Saturn'),
-        uranus: extractPlanetFromArray(planetaryData, 'Uranus'),
-        neptune: extractPlanetFromArray(planetaryData, 'Neptune'),
-        pluto: extractPlanetFromArray(planetaryData, 'Pluto'),
-        north_node: extractPlanetFromArray(planetaryData, 'Rahu') || extractPlanetFromArray(planetaryData, 'North Node'),
-        south_node: extractPlanetFromArray(planetaryData, 'Ketu') || extractPlanetFromArray(planetaryData, 'South Node'),
-        houses: extractHousesFromBestResult(bestResult.data.data),
-        ayanamsa: bestResult.data.data.ayanamsa || null,
-        calculation_timestamp: new Date().toISOString(),
-        source: `prokerala_api_${bestResult.endpoint}`,
-        raw_response: bestResult.data,
-        endpoint_exploration: endpointResults,
-      };
-
-      return {
-        success: true,
-        data: transformedData,
-        raw_response: bestResult.data,
-      };
+      console.log('No Western astrology endpoints returned complete planetary data');
+      throw new Error('No Western astrology endpoints returned usable planetary data');
     }
 
-    // If we get here, no endpoints worked
-    throw new Error('No Prokerala endpoints returned usable data');
+    console.log(`Using ${bestResult.endpoint} endpoint for Western planetary positions`);
+    console.log('Raw planetary data:', JSON.stringify(planetaryData, null, 2));
+    
+    // Transform planetary data from the best endpoint
+    const transformedData = {
+      sun: extractPlanetFromWesternData(planetaryData, 'Sun'),
+      moon: extractPlanetFromWesternData(planetaryData, 'Moon'),
+      mercury: extractPlanetFromWesternData(planetaryData, 'Mercury'),
+      venus: extractPlanetFromWesternData(planetaryData, 'Venus'),
+      mars: extractPlanetFromWesternData(planetaryData, 'Mars'),
+      jupiter: extractPlanetFromWesternData(planetaryData, 'Jupiter'),
+      saturn: extractPlanetFromWesternData(planetaryData, 'Saturn'),
+      uranus: extractPlanetFromWesternData(planetaryData, 'Uranus'),
+      neptune: extractPlanetFromWesternData(planetaryData, 'Neptune'),
+      pluto: extractPlanetFromWesternData(planetaryData, 'Pluto'),
+      north_node: extractPlanetFromWesternData(planetaryData, 'Rahu') || extractPlanetFromWesternData(planetaryData, 'North Node'),
+      south_node: extractPlanetFromWesternData(planetaryData, 'Ketu') || extractPlanetFromWesternData(planetaryData, 'South Node'),
+      ascendant: extractPlanetFromWesternData(planetaryData, 'Ascendant'),
+      houses: extractHousesFromWesternResult(bestResult.data.data),
+      ayanamsa: 0, // We specifically requested Tropical (ayanamsa=0)
+      calculation_timestamp: new Date().toISOString(),
+      source: `prokerala_western_${bestResult.endpoint}`,
+      raw_response: bestResult.data,
+      endpoint_exploration: endpointResults,
+    };
+
+    return {
+      success: true,
+      data: transformedData,
+      raw_response: bestResult.data,
+    };
 
   } catch (error) {
-    console.error('Error in Prokerala exploration:', error);
+    console.error('Error in Prokerala Western astrology exploration:', error);
     throw error;
   }
 }
 
-function extractPlanetFromArray(planets: any[], planetName: string) {
+function extractPlanetFromWesternData(planets: any[], planetName: string) {
   if (!planets || !Array.isArray(planets)) return null;
   
   const planet = planets.find((p: any) => 
@@ -280,25 +273,41 @@ function extractPlanetFromArray(planets: any[], planetName: string) {
   );
   
   if (planet) {
+    console.log(`Found ${planetName}:`, JSON.stringify(planet, null, 2));
+    
     return {
       longitude: planet.longitude || planet.degree || 0,
       latitude: planet.latitude || 0,
       speed: planet.speed || planet.daily_motion || 0,
-      sign: planet.sign ? (planet.sign.name || planet.sign) : planet.rasi?.name || 'Unknown',
+      sign: getWesternSignName(planet.longitude || planet.degree || 0),
+      sign_degree: (planet.longitude || planet.degree || 0) % 30,
       house: planet.house ? (planet.house.id || planet.house) : 0,
+      is_retrograde: planet.is_retrograde || false,
       raw_planet_data: planet,
     };
   }
   
+  console.warn(`Planet "${planetName}" not found in Western astrology response`);
   return null;
 }
 
-function extractHousesFromBestResult(data: any) {
+function getWesternSignName(longitude: number): string {
+  const signs = [
+    'Aries', 'Taurus', 'Gemini', 'Cancer', 
+    'Leo', 'Virgo', 'Libra', 'Scorpio', 
+    'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'
+  ];
+  
+  const signIndex = Math.floor(longitude / 30);
+  return signs[signIndex] || 'Unknown';
+}
+
+function extractHousesFromWesternResult(data: any) {
   if (data.houses && Array.isArray(data.houses)) {
     return data.houses.map((house: any) => ({
       house_number: house.id || house.number,
       longitude: house.longitude || house.degree,
-      sign: house.sign ? (house.sign.name || house.sign) : 'Unknown',
+      sign: getWesternSignName(house.longitude || house.degree || 0),
     }));
   }
   
@@ -306,99 +315,7 @@ function extractHousesFromBestResult(data: any) {
     return data.chart.houses.map((house: any) => ({
       house_number: house.id || house.number,
       longitude: house.longitude || house.degree,
-      sign: house.sign ? (house.sign.name || house.sign) : 'Unknown',
-    }));
-  }
-  
-  return [];
-}
-
-function extractDataFromKundli(data: any) {
-  return {
-    sun: extractPlanetFromKundli(data, 'Sun'),
-    moon: extractPlanetFromKundli(data, 'Moon'),
-    mercury: extractPlanetFromKundli(data, 'Mercury'),
-    venus: extractPlanetFromKundli(data, 'Venus'),
-    mars: extractPlanetFromKundli(data, 'Mars'),
-    jupiter: extractPlanetFromKundli(data, 'Jupiter'),
-    saturn: extractPlanetFromKundli(data, 'Saturn'),
-    uranus: null,
-    neptune: null,
-    pluto: null,
-    north_node: extractPlanetFromKundli(data, 'Rahu'),
-    south_node: extractPlanetFromKundli(data, 'Ketu'),
-    houses: extractHousesFromKundli(data),
-    ayanamsa: data.ayanamsa || null,
-    calculation_timestamp: new Date().toISOString(),
-    source: 'prokerala_api_kundli_fallback',
-  };
-}
-
-function extractPlanetFromKundli(data: any, planetName: string) {
-  // Try to extract planetary information from kundli data structure
-  // The exact structure will depend on what the API returns
-  
-  // Check if there are planets array
-  if (data.planets && Array.isArray(data.planets)) {
-    const planet = data.planets.find((p: any) => 
-      p && p.name && (
-        p.name.toLowerCase() === planetName.toLowerCase() ||
-        p.name.toLowerCase().includes(planetName.toLowerCase())
-      )
-    );
-    
-    if (planet) {
-      return {
-        longitude: planet.longitude || 0,
-        latitude: planet.latitude || 0,
-        speed: planet.speed || 0,
-        sign: planet.sign ? planet.sign.name : 'Unknown',
-        house: planet.house ? planet.house.id : 0,
-        raw_planet_data: planet,
-      };
-    }
-  }
-  
-  // Check if there's nakshatra_details and relevant info
-  if (data.nakshatra_details) {
-    const nakshatra = data.nakshatra_details;
-    
-    // For Moon-related calculations from nakshatra
-    if (planetName.toLowerCase() === 'moon' && nakshatra.chandra_rasi) {
-      return {
-        longitude: 0, // We don't have exact longitude
-        latitude: 0,
-        speed: 0,
-        sign: nakshatra.chandra_rasi.name || 'Unknown',
-        house: 0,
-        raw_planet_data: nakshatra.chandra_rasi,
-      };
-    }
-    
-    // For Sun-related calculations from nakshatra
-    if (planetName.toLowerCase() === 'sun' && nakshatra.soorya_rasi) {
-      return {
-        longitude: 0, // We don't have exact longitude
-        latitude: 0,
-        speed: 0,
-        sign: nakshatra.soorya_rasi.name || 'Unknown',
-        house: 0,
-        raw_planet_data: nakshatra.soorya_rasi,
-      };
-    }
-  }
-  
-  console.warn(`Planet "${planetName}" not found in Prokerala kundli response`);
-  return null;
-}
-
-function extractHousesFromKundli(data: any) {
-  // Try to extract house information from kundli data
-  if (data.houses && Array.isArray(data.houses)) {
-    return data.houses.map((house: any) => ({
-      house_number: house.id,
-      longitude: house.longitude,
-      sign: house.sign ? house.sign.name : 'Unknown',
+      sign: getWesternSignName(house.longitude || house.degree || 0),
     }));
   }
   
@@ -412,7 +329,7 @@ export default async function handler(req: Request) {
   }
 
   try {
-    console.log('Prokerala API exploration endpoint called');
+    console.log('Prokerala Western Astrology API exploration endpoint called');
     
     // Use default test data if no body is provided
     let birthDate = "1990-03-21";
@@ -436,7 +353,7 @@ export default async function handler(req: Request) {
       }
     }
 
-    console.log('Exploring Prokerala endpoints with data:', { birthDate, birthTime, birthLocation, timezone });
+    console.log('Exploring Western astrology endpoints with data:', { birthDate, birthTime, birthLocation, timezone });
 
     const result = await calculatePlanetaryPositionsWithProkerala(
       birthDate,
@@ -453,13 +370,13 @@ export default async function handler(req: Request) {
     });
 
   } catch (error) {
-    console.error("Error in Prokerala API exploration:", error);
+    console.error("Error in Prokerala Western Astrology API exploration:", error);
     
     return new Response(
       JSON.stringify({
-        error: "Prokerala API exploration failed",
+        error: "Prokerala Western Astrology API exploration failed",
         details: error.message,
-        code: "PROKERALA_API_ERROR"
+        code: "PROKERALA_WESTERN_API_ERROR"
       }),
       { 
         status: 500,
