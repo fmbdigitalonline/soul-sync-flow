@@ -18,29 +18,25 @@ async function testAstronomia(req) {
     
     let responseMessage = `=== ASTRONOMIA FINAL INTEGRATION TEST ===\n`;
 
-    // Import astronomia and required data
+    // Import astronomia main library
     const astronomia = await import('npm:astronomia@4.1.1');
     console.log('Astronomia imported successfully');
     
     responseMessage += `✅ Astronomia loaded successfully\n\n`;
 
-    // Import VSOP87 data for planets
+    // Import VSOP87 data files directly for each planet
     let vsop87Data = {};
-    try {
-      const dataModule = await import('npm:astronomia@4.1.1/data');
-      vsop87Data = {
-        mercury: dataModule.vsop87Mercury || null,
-        venus: dataModule.vsop87Venus || null,
-        mars: dataModule.vsop87Mars || null,
-        jupiter: dataModule.vsop87Jupiter || null,
-        saturn: dataModule.vsop87Saturn || null,
-        uranus: dataModule.vsop87Uranus || null,
-        neptune: dataModule.vsop87Neptune || null
-      };
-      responseMessage += `✅ VSOP87 data loaded for planets\n`;
-    } catch (e) {
-      responseMessage += `⚠️ VSOP87 data import failed: ${e.message}\n`;
-      responseMessage += `Will test without planet positions\n`;
+    const planetNames = ['mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune'];
+    
+    for (const planetName of planetNames) {
+      try {
+        const dataModule = await import(`npm:astronomia@4.1.1/data/vsop87${planetName.charAt(0).toUpperCase() + planetName.slice(1)}`);
+        vsop87Data[planetName] = dataModule.default || dataModule;
+        responseMessage += `✅ VSOP87 data loaded for ${planetName}\n`;
+      } catch (e) {
+        responseMessage += `⚠️ VSOP87 data import failed for ${planetName}: ${e.message}\n`;
+        vsop87Data[planetName] = null;
+      }
     }
 
     // Test dates
@@ -86,10 +82,10 @@ async function testAstronomia(req) {
         try {
           const nutation = astronomia.nutation || astronomia.default?.nutation;
           if (nutation) {
-            const meanObliquityRad = nutation.meanObliquity(jd); // Returns radians
-            const nutationResult = nutation.nutation(jd); // Returns [dPsi, dEpsilon] in radians
+            const meanObliquityRad = nutation.meanObliquity(jd);
+            const nutationResult = nutation.nutation(jd);
             const deltaEpsilon = Array.isArray(nutationResult) ? nutationResult[1] : (nutationResult.deltaEpsilon || 0);
-            trueObliquityRad = meanObliquityRad + deltaEpsilon; // Keep in radians
+            trueObliquityRad = meanObliquityRad + deltaEpsilon;
             responseMessage += `  True Obliquity: ${(trueObliquityRad * 180 / Math.PI).toFixed(6)}° (${trueObliquityRad.toFixed(8)} rad)\n`;
           } else {
             throw new Error("nutation module not available");
@@ -99,29 +95,30 @@ async function testAstronomia(req) {
           continue;
         }
 
-        // Step 3: Calculate Sun Position with PROPER COORDINATE CONVERSION
+        // Step 3: Calculate Sun Position with PROPER COORDINATE CONVERSION (ALL RADIANS)
         try {
           const solar = astronomia.solar || astronomia.default?.solar;
           const coord = astronomia.coord || astronomia.default?.coord;
           
           if (solar && coord && trueObliquityRad !== undefined) {
-            // Get Sun's apparent equatorial coordinates (in radians)
             const sunEquatorial = solar.apparentEquatorial(jd);
             console.log('Sun equatorial result:', sunEquatorial);
             
             if (sunEquatorial && (sunEquatorial.ra !== undefined || sunEquatorial._ra !== undefined)) {
-              const sunRaRad = sunEquatorial.ra || sunEquatorial._ra || 0; // Already in radians
-              const sunDecRad = sunEquatorial.dec || sunEquatorial._dec || 0; // Already in radians
+              const sunRaRad = sunEquatorial.ra || sunEquatorial._ra || 0;
+              const sunDecRad = sunEquatorial.dec || sunEquatorial._dec || 0;
               
               responseMessage += `  Sun Equatorial: RA=${(sunRaRad * 180 / Math.PI).toFixed(6)}°, Dec=${(sunDecRad * 180 / Math.PI).toFixed(6)}°\n`;
               
               // Convert to ecliptic coordinates using RADIANS throughout
               if (coord.Ecliptic && coord.Equatorial) {
                 try {
-                  const sunEquatorialCoord = new coord.Equatorial(sunRaRad, sunDecRad); // Pass radians
-                  const sunEclipticCoord = new coord.Ecliptic(sunEquatorialCoord, trueObliquityRad); // Pass radians
+                  // Create Equatorial coord object with radians
+                  const sunEquatorialCoord = new coord.Equatorial(sunRaRad, sunDecRad);
+                  // Convert to Ecliptic using radians for obliquity  
+                  const sunEclipticCoord = new coord.Ecliptic(sunEquatorialCoord, trueObliquityRad);
                   
-                  // NOW convert to degrees for display
+                  // Convert result to degrees for display
                   const sunEclipticLonDeg = sunEclipticCoord.lon * 180 / Math.PI;
                   const sunEclipticLatDeg = sunEclipticCoord.lat * 180 / Math.PI;
                   
@@ -140,7 +137,7 @@ async function testAstronomia(req) {
           responseMessage += `  Sun ERROR: ${e.message}\n`;
         }
 
-        // Step 4: Calculate Moon Position with PROPER COORDINATE CONVERSION
+        // Step 4: Calculate Moon Position with PROPER COORDINATE CONVERSION (ALL RADIANS)
         try {
           const moonposition = astronomia.moonposition || astronomia.default?.moonposition;
           const coord = astronomia.coord || astronomia.default?.coord;
@@ -150,18 +147,20 @@ async function testAstronomia(req) {
             console.log('Moon equatorial result:', moonEquatorial);
             
             if (moonEquatorial && (moonEquatorial.ra !== undefined || moonEquatorial._ra !== undefined)) {
-              const moonRaRad = moonEquatorial.ra || moonEquatorial._ra || 0; // Already in radians
-              const moonDecRad = moonEquatorial.dec || moonEquatorial._dec || 0; // Already in radians
+              const moonRaRad = moonEquatorial.ra || moonEquatorial._ra || 0;
+              const moonDecRad = moonEquatorial.dec || moonEquatorial._dec || 0;
               
               responseMessage += `  Moon Equatorial: RA=${(moonRaRad * 180 / Math.PI).toFixed(6)}°, Dec=${(moonDecRad * 180 / Math.PI).toFixed(6)}°\n`;
               
               // Convert to ecliptic coordinates using RADIANS throughout
               if (coord.Ecliptic && coord.Equatorial) {
                 try {
-                  const moonEquatorialCoord = new coord.Equatorial(moonRaRad, moonDecRad); // Pass radians
-                  const moonEclipticCoord = new coord.Ecliptic(moonEquatorialCoord, trueObliquityRad); // Pass radians
+                  // Create Equatorial coord object with radians
+                  const moonEquatorialCoord = new coord.Equatorial(moonRaRad, moonDecRad);
+                  // Convert to Ecliptic using radians for obliquity
+                  const moonEclipticCoord = new coord.Ecliptic(moonEquatorialCoord, trueObliquityRad);
                   
-                  // NOW convert to degrees for display
+                  // Convert result to degrees for display
                   const moonEclipticLonDeg = moonEclipticCoord.lon * 180 / Math.PI;
                   const moonEclipticLatDeg = moonEclipticCoord.lat * 180 / Math.PI;
                   
@@ -186,16 +185,16 @@ async function testAstronomia(req) {
           if (moonnode) {
             let northNodeLonDeg;
             if (moonnode.ascending) {
-              const rawNodeRad = moonnode.ascending(jd); // Likely returns radians
-              const rawNodeDeg = rawNodeRad * 180 / Math.PI; // Convert to degrees
+              const rawNodeRad = moonnode.ascending(jd);
+              const rawNodeDeg = rawNodeRad * 180 / Math.PI;
               
               // Normalize to 0-360 degree range
               northNodeLonDeg = rawNodeDeg % 360;
               if (northNodeLonDeg < 0) northNodeLonDeg += 360;
               
             } else if (moonnode.meanAscending) {
-              const rawNodeRad = moonnode.meanAscending(jd); // Likely returns radians
-              const rawNodeDeg = rawNodeRad * 180 / Math.PI; // Convert to degrees
+              const rawNodeRad = moonnode.meanAscending(jd);
+              const rawNodeDeg = rawNodeRad * 180 / Math.PI;
               
               // Normalize to 0-360 degree range  
               northNodeLonDeg = rawNodeDeg % 360;
@@ -210,20 +209,18 @@ async function testAstronomia(req) {
           responseMessage += `  Lunar Node ERROR: ${e.message}\n`;
         }
 
-        // Step 6: Test Planet Positions with VSOP87 Data
-        const planets = ['mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune'];
-        
-        for (const planetName of planets) {
+        // Step 6: Test Planet Positions with LOADED VSOP87 Data
+        for (const planetName of planetNames) {
           try {
             const planetposition = astronomia.planetposition || astronomia.default?.planetposition;
             const coord = astronomia.coord || astronomia.default?.coord;
             
             if (planetposition && planetposition.Planet && vsop87Data[planetName]) {
-              // Create planet instance with VSOP87 data
+              // Create planet instance with VSOP87 data (following your example)
               const planet = new planetposition.Planet(planetName, vsop87Data[planetName]);
               
               // Get planet's equatorial position
-              const planetEquatorial = planet.position(jd); // Check exact method name in docs
+              const planetEquatorial = planet.position(jd);
               
               if (planetEquatorial && (planetEquatorial.ra !== undefined || planetEquatorial._ra !== undefined)) {
                 const planetRaRad = planetEquatorial.ra || planetEquatorial._ra || 0;
@@ -231,7 +228,7 @@ async function testAstronomia(req) {
                 
                 responseMessage += `  ${planetName.toUpperCase()} Equatorial: RA=${(planetRaRad * 180 / Math.PI).toFixed(6)}°, Dec=${(planetDecRad * 180 / Math.PI).toFixed(6)}°\n`;
                 
-                // Convert to ecliptic coordinates
+                // Convert to ecliptic coordinates using RADIANS (following your example)
                 if (coord && coord.Ecliptic && coord.Equatorial && trueObliquityRad !== undefined) {
                   try {
                     const planetEquatorialCoord = new coord.Equatorial(planetRaRad, planetDecRad);
@@ -270,8 +267,8 @@ async function testAstronomia(req) {
     responseMessage += `✅ Julian Day calculation: Working correctly\n`;
     responseMessage += `🔧 Coordinate conversion: Fixed radians/degrees issue\n`;
     responseMessage += `🔧 Lunar node normalization: Fixed\n`;
+    responseMessage += `🔧 VSOP87 data loading: Implemented direct imports\n`;
     responseMessage += `📊 Next step: Validate results against JPL Horizons\n`;
-    responseMessage += `📁 Note: Some planets may need specific VSOP87 data imports\n`;
 
     return new Response(responseMessage, { 
       status: 200, 
