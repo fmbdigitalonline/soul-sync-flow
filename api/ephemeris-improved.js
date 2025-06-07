@@ -7,10 +7,10 @@ const corsHeaders = {
 
 // Improved planetary calculations using VSOP87D series for higher accuracy
 function calculatePlanetaryPositions(datetime, coordinates) {
-  const [lat, lon] = coordinates.split(',').map(Number);
+  const [lat, lon] = coordinates.split(/[,\s]+/).map(Number);
   
   if (isNaN(lat) || isNaN(lon)) {
-    throw new Error('Invalid coordinates format. Expected "lat,lon"');
+    throw new Error('Invalid coordinates format. Expected "lat,lon" or "lat lon"');
   }
 
   const date = new Date(datetime);
@@ -21,8 +21,8 @@ function calculatePlanetaryPositions(datetime, coordinates) {
 
   console.log(`Calculating improved positions for ${datetime} at coordinates ${lat}, ${lon}`);
 
-  // Calculate Julian Day Number with proper ΔT correction
-  const jd = calculateJulianDayWithDeltaT(date);
+  // Calculate Julian Day Number with proper ΔT correction (returns UT JD)
+  const jdUT = calculateJulianDayWithDeltaT(date);
   
   // Calculate positions using improved VSOP87D algorithms
   const ephemerisData = {};
@@ -30,18 +30,22 @@ function calculatePlanetaryPositions(datetime, coordinates) {
 
   bodies.forEach(bodyName => {
     try {
-      const position = calculateImprovedBodyPosition(bodyName, jd);
+      const position = calculateImprovedBodyPosition(bodyName, jdUT);
       
-      ephemerisData[bodyName] = {
-        longitude: normalizeAngle(position.longitude),
-        latitude: position.latitude,
-        distance: position.distance,
-        speed: position.speed,
-        right_ascension: position.ra || 0,
-        declination: position.dec || 0
-      };
-      
-      console.log(`${bodyName}: longitude ${position.longitude.toFixed(6)}°, latitude ${position.latitude.toFixed(6)}°`);
+      if (position && typeof position.longitude === 'number') {
+        ephemerisData[bodyName] = {
+          longitude: normalizeAngle(position.longitude),
+          latitude: position.latitude,
+          distance: position.distance,
+          speed: position.speed,
+          right_ascension: position.ra || 0,
+          declination: position.dec || 0
+        };
+        
+        console.log(`${bodyName}: longitude ${position.longitude.toFixed(6)}°, latitude ${position.latitude.toFixed(6)}°`);
+      } else {
+        throw new Error(`Invalid position data for ${bodyName}`);
+      }
     } catch (error) {
       console.warn(`Error calculating position for ${bodyName}:`, error.message);
       ephemerisData[bodyName] = { error: error.message };
@@ -50,7 +54,7 @@ function calculatePlanetaryPositions(datetime, coordinates) {
 
   // Calculate lunar nodes with improved accuracy
   console.log("Calculating improved lunar nodes...");
-  const lunarNodes = calculateImprovedLunarNodes(jd);
+  const lunarNodes = calculateImprovedLunarNodes(jdUT);
   ephemerisData.north_node = {
     longitude: normalizeAngle(lunarNodes.northNode),
     latitude: 0,
@@ -72,9 +76,9 @@ function calculatePlanetaryPositions(datetime, coordinates) {
   console.log("Calculating aspects with professional orbs...");
   const aspects = calculateAspectsWithProperOrbs(ephemerisData);
 
-  // Calculate astrological houses with proper timezone handling
+  // Calculate astrological houses with proper timezone handling (use UT JD)
   console.log("Calculating houses with timezone correction...");
-  const houses = calculateHousesWithTimezone(jd, lat, lon, ephemerisData);
+  const houses = calculateHousesWithTimezone(jdUT, lat, lon, ephemerisData);
 
   return {
     planets: ephemerisData,
@@ -82,8 +86,9 @@ function calculatePlanetaryPositions(datetime, coordinates) {
     houses: houses,
     metadata: {
       calculation_method: "improved_vsop87d",
-      julian_day: jd,
-      delta_t_applied: true
+      julian_day: jdUT,
+      delta_t_applied: true,
+      jd_convention: "0h_ut_minus_0.5d_meeus"
     }
   };
 }
@@ -94,7 +99,7 @@ function normalizeAngle(angle) {
   return normalized;
 }
 
-// Calculate Julian Day with ΔT correction for historical accuracy
+// Calculate Julian Day with ΔT correction for historical accuracy (returns UT JD)
 function calculateJulianDayWithDeltaT(date) {
   const a = Math.floor((14 - (date.getMonth() + 1)) / 12);
   const y = date.getFullYear() + 4800 - a;
@@ -105,11 +110,11 @@ function calculateJulianDayWithDeltaT(date) {
   // Add time fraction
   const timeOfDay = (date.getHours() + date.getMinutes() / 60 + date.getSeconds() / 3600) / 24;
   
-  const jd = jdn + timeOfDay - 0.5;
+  const jdUT = jdn + timeOfDay - 0.5;  // Meeus convention: 0h UT minus 0.5d
   
-  // Apply ΔT correction for historical accuracy (simplified Espenak/Meeus table)
-  const deltaT = calculateDeltaT(date.getFullYear());
-  return jd + (deltaT / 86400); // Convert seconds to days
+  // Note: ΔT is applied in individual calculations, not to the base JD
+  // This ensures sidereal time calculations use UT, not TT
+  return jdUT;
 }
 
 // ΔT calculation based on Espenak/Meeus polynomial expressions
@@ -133,10 +138,10 @@ function calculateDeltaT(year) {
 // Improved Sun position using VSOP87D series (simplified)
 function calculateImprovedSunPosition(T) {
   // VSOP87D terms for Sun's longitude (simplified version with main terms)
-  const L0 = 280.4664567 + 360007.6982779 * T + 0.03032028 * T * T 
-             + T * T * T / 49931 - T * T * T * T / 15300 - T * T * T * T * T / 2000000;
+  const L0 = normalizeAngle(280.4664567 + 360007.6982779 * T + 0.03032028 * T * T 
+             + T * T * T / 49931 - T * T * T * T / 15300 - T * T * T * T * T / 2000000);
   
-  const M = 357.5291092 + 35999.0502909 * T - 0.0001536 * T * T + T * T * T / 24490000;
+  const M = normalizeAngle(357.5291092 + 35999.0502909 * T - 0.0001536 * T * T + T * T * T / 24490000);
   
   // Equation of center with higher-order terms
   const C = (1.914602 - 0.004817 * T - 0.000014 * T * T) * Math.sin(M * Math.PI / 180) +
@@ -145,9 +150,10 @@ function calculateImprovedSunPosition(T) {
   
   const longitude = normalizeAngle(L0 + C);
   
-  // More accurate distance calculation
+  // Corrected distance calculation: r = a(1-e²)/(1+e*cos(ν))
   const E = 0.016708634 - 0.000042037 * T - 0.0000001267 * T * T;
-  const distance = 1.000001018 * (1 - E * Math.cos(M * Math.PI / 180)) / (1 + E * Math.cos((M + C) * Math.PI / 180));
+  const trueAnomaly = normalizeAngle(M + C);
+  const distance = 1.000001018 * (1 - E * E) / (1 + E * Math.cos(trueAnomaly * Math.PI / 180));
   
   return {
     longitude: longitude,
@@ -159,14 +165,14 @@ function calculateImprovedSunPosition(T) {
   };
 }
 
-// Improved Moon position with major perturbations
+// Improved Moon position with major perturbations and normalized angles
 function calculateImprovedMoonPosition(T) {
-  // Improved lunar theory with major perturbation terms
-  const L = 218.3164477 + 481267.88123421 * T - 0.0015786 * T * T + T * T * T / 538841 - T * T * T * T / 65194000;
-  const D = 297.8501921 + 445267.1114034 * T - 0.0018819 * T * T + T * T * T / 545868 - T * T * T * T / 113065000;
-  const M = 357.5291092 + 35999.0502909 * T - 0.0001536 * T * T + T * T * T / 24490000;
-  const Mp = 134.9633964 + 477198.8675055 * T + 0.0087414 * T * T + T * T * T / 69699 - T * T * T * T / 14712000;
-  const F = 93.2720950 + 483202.0175233 * T - 0.0036539 * T * T - T * T * T / 3526000 + T * T * T * T / 863310000;
+  // Improved lunar theory with major perturbation terms - normalize all arguments
+  const L = normalizeAngle(218.3164477 + 481267.88123421 * T - 0.0015786 * T * T + T * T * T / 538841 - T * T * T * T / 65194000);
+  const D = normalizeAngle(297.8501921 + 445267.1114034 * T - 0.0018819 * T * T + T * T * T / 545868 - T * T * T * T / 113065000);
+  const M = normalizeAngle(357.5291092 + 35999.0502909 * T - 0.0001536 * T * T + T * T * T / 24490000);
+  const Mp = normalizeAngle(134.9633964 + 477198.8675055 * T + 0.0087414 * T * T + T * T * T / 69699 - T * T * T * T / 14712000);
+  const F = normalizeAngle(93.2720950 + 483202.0175233 * T - 0.0036539 * T * T - T * T * T / 3526000 + T * T * T * T / 863310000);
   
   // Major longitude terms (adding more perturbation terms)
   const longitude = L + 
@@ -202,9 +208,13 @@ function calculateImprovedMoonPosition(T) {
   };
 }
 
-// Improved planetary calculations with perturbations
-function calculateImprovedBodyPosition(bodyName, jd) {
-  const T = (jd - 2451545.0) / 36525;
+// Improved planetary calculations with proper perihelion longitudes
+function calculateImprovedBodyPosition(bodyName, jdUT) {
+  // Apply ΔT for TT-based calculations
+  const year = new Date((jdUT + 2440587.5 - 2440588) * 86400000).getFullYear();
+  const deltaT = calculateDeltaT(year);
+  const jdTT = jdUT + (deltaT / 86400);
+  const T = (jdTT - 2451545.0) / 36525;
   
   switch (bodyName.toLowerCase()) {
     case 'sun':
@@ -232,36 +242,40 @@ function calculateImprovedBodyPosition(bodyName, jd) {
   }
 }
 
-// Improved planetary position calculations with major perturbations
+// Improved planetary position calculations with proper perihelion longitudes
 function calculateImprovedPlanetPosition(T, planet) {
-  // Simplified VSOP87D implementation with main terms for each planet
+  // Simplified VSOP87D implementation with proper perihelion longitudes
   const planetData = {
-    mercury: { a: 0.387098, period: 87.969, L0: 252.250906, dL: 149472.6746358, e: 0.20563175, i: 7.004986, node: 48.330893 },
-    venus: { a: 0.723332, period: 224.701, L0: 181.979801, dL: 58517.8156076, e: 0.00677188, i: 3.394662, node: 76.679920 },
-    mars: { a: 1.523679, period: 686.980, L0: 355.433275, dL: 19140.2993313, e: 0.09340062, i: 1.849726, node: 49.558093 },
-    jupiter: { a: 5.204267, period: 4332.589, L0: 34.351484, dL: 3034.9056746, e: 0.04838624, i: 1.303270, node: 100.464441 },
-    saturn: { a: 9.582017, period: 10759.22, L0: 50.077471, dL: 1222.1137943, e: 0.05386179, i: 2.485240, node: 113.665524 },
-    uranus: { a: 19.20184, period: 30688.5, L0: 314.055005, dL: 428.4669983, e: 0.04725744, i: 0.773196, node: 74.005947 },
-    neptune: { a: 30.04778, period: 60182, L0: 304.348665, dL: 218.4862002, e: 0.00859048, i: 1.769952, node: 131.784057 },
-    pluto: { a: 39.4821, period: 90560, L0: 238.92903833, dL: 145.20780515, e: 0.24882730, i: 17.141001, node: 110.299390 }
+    mercury: { a: 0.387098, period: 87.969, L0: 252.250906, dL: 149472.6746358, e: 0.20563175, i: 7.004986, node: 48.330893, perihelion: 77.456119 },
+    venus: { a: 0.723332, period: 224.701, L0: 181.979801, dL: 58517.8156076, e: 0.00677188, i: 3.394662, node: 76.679920, perihelion: 131.563707 },
+    mars: { a: 1.523679, period: 686.980, L0: 355.433275, dL: 19140.2993313, e: 0.09340062, i: 1.849726, node: 49.558093, perihelion: 336.060234 },
+    jupiter: { a: 5.204267, period: 4332.589, L0: 34.351484, dL: 3034.9056746, e: 0.04838624, i: 1.303270, node: 100.464441, perihelion: 14.331309 },
+    saturn: { a: 9.582017, period: 10759.22, L0: 50.077471, dL: 1222.1137943, e: 0.05386179, i: 2.485240, node: 113.665524, perihelion: 93.056787 },
+    uranus: { a: 19.20184, period: 30688.5, L0: 314.055005, dL: 428.4669983, e: 0.04725744, i: 0.773196, node: 74.005947, perihelion: 173.005159 },
+    neptune: { a: 30.04778, period: 60182, L0: 304.348665, dL: 218.4862002, e: 0.00859048, i: 1.769952, node: 131.784057, perihelion: 48.123691 },
+    pluto: { a: 39.4821, period: 90560, L0: 238.92903833, dL: 145.20780515, e: 0.24882730, i: 17.141001, node: 110.299390, perihelion: 224.06891 }
   };
   
   const p = planetData[planet];
   if (!p) throw new Error(`Planet data not found for ${planet}`);
   
   // Mean longitude
-  const L = p.L0 + p.dL * T;
+  const L = normalizeAngle(p.L0 + p.dL * T);
   
-  // Mean anomaly
-  const M = L - (p.node + (83.76922 * T)); // Simplified perihelion
+  // Mean anomaly using proper perihelion longitude
+  const omega = normalizeAngle(p.perihelion + (p.perihelion * 0.0001 * T)); // Small precession
+  const M = normalizeAngle(L - omega);
   
   // Equation of center (simplified)
   const C = (2 * p.e - 0.25 * p.e * p.e * p.e) * Math.sin(M * Math.PI / 180) +
             (1.25 * p.e * p.e) * Math.sin(2 * M * Math.PI / 180) +
             (13/12 * p.e * p.e * p.e) * Math.sin(3 * M * Math.PI / 180);
   
-  const trueAnomaly = M + C;
+  const trueAnomaly = normalizeAngle(M + C);
   const longitude = normalizeAngle(L + C);
+  
+  // Corrected distance formula: r = a(1-e²)/(1+e*cos(ν))
+  const distance = p.a * (1 - p.e * p.e) / (1 + p.e * Math.cos(trueAnomaly * Math.PI / 180));
   
   // Simple latitude calculation
   const latitude = p.i * Math.sin((longitude - p.node) * Math.PI / 180);
@@ -269,25 +283,29 @@ function calculateImprovedPlanetPosition(T, planet) {
   return {
     longitude: longitude,
     latitude: latitude,
-    distance: p.a * (1 - p.e * p.e) / (1 + p.e * Math.cos(trueAnomaly * Math.PI / 180)),
+    distance: distance,
     speed: 360 / p.period,
     ra: longitude,
     dec: latitude
   };
 }
 
-// Calculate improved lunar nodes with better accuracy
-function calculateImprovedLunarNodes(jd) {
-  const T = (jd - 2451545.0) / 36525.0;
+// Calculate improved lunar nodes with normalized arguments
+function calculateImprovedLunarNodes(jdUT) {
+  // Apply ΔT for TT-based calculations
+  const year = new Date((jdUT + 2440587.5 - 2440588) * 86400000).getFullYear();
+  const deltaT = calculateDeltaT(year);
+  const jdTT = jdUT + (deltaT / 86400);
+  const T = (jdTT - 2451545.0) / 36525.0;
   
-  // More accurate lunar node calculation with perturbations
+  // More accurate lunar node calculation with perturbations - normalize all arguments
   let meanAscendingNode = 125.0445479 - 1934.1362891 * T + 0.0020754 * T * T + T * T * T / 467441.0 - T * T * T * T / 60616000.0;
   
-  // Add major perturbation terms
-  const D = 297.8501921 + 445267.1114034 * T;
-  const M = 357.5291092 + 35999.0502909 * T; 
-  const Mp = 134.9633964 + 477198.8675055 * T;
-  const F = 93.2720950 + 483202.0175233 * T;
+  // Add major perturbation terms - normalize all arguments first
+  const D = normalizeAngle(297.8501921 + 445267.1114034 * T);
+  const M = normalizeAngle(357.5291092 + 35999.0502909 * T); 
+  const Mp = normalizeAngle(134.9633964 + 477198.8675055 * T);
+  const F = normalizeAngle(93.2720950 + 483202.0175233 * T);
   
   const perturbations = 
     -1.274 * Math.sin((Mp - 2 * D) * Math.PI / 180) +
@@ -307,7 +325,7 @@ function calculateImprovedLunarNodes(jd) {
   };
 }
 
-// Calculate aspects with professional orb system
+// Calculate aspects with professional orb system and corrected applying logic
 function calculateAspectsWithProperOrbs(ephemerisData) {
   const aspects = [];
   
@@ -344,7 +362,7 @@ function calculateAspectsWithProperOrbs(ephemerisData) {
       const pos1 = ephemerisData[planet1];
       const pos2 = ephemerisData[planet2];
       
-      if (pos1 && pos2 && pos1.longitude !== undefined && pos2.longitude !== undefined) {
+      if (pos1 && pos2 && pos1.longitude !== undefined && pos2.longitude !== undefined && !pos1.error && !pos2.error) {
         let angleDiff = Math.abs(pos1.longitude - pos2.longitude);
         if (angleDiff > 180) angleDiff = 360 - angleDiff;
         
@@ -358,6 +376,10 @@ function calculateAspectsWithProperOrbs(ephemerisData) {
             const exactness = Math.abs(angleDiff - targetAngle);
             const strength = ((averageOrb - exactness) / averageOrb) * 100;
             
+            // Corrected applying logic for radix charts
+            const delta = (pos2.longitude - pos1.longitude + 360) % 360;
+            const applying = delta < targetAngle ? pos1.speed > pos2.speed : pos1.speed < pos2.speed;
+            
             aspects.push({
               planet1: planet1,
               planet2: planet2,
@@ -366,7 +388,7 @@ function calculateAspectsWithProperOrbs(ephemerisData) {
               exactness: exactness,
               strength: Math.round(strength * 100) / 100,
               orb_used: averageOrb,
-              applying: pos1.speed > pos2.speed
+              applying: applying
             });
             break;
           }
@@ -378,12 +400,11 @@ function calculateAspectsWithProperOrbs(ephemerisData) {
   return aspects;
 }
 
-// House calculation functions with timezone fixes
+// House calculation functions with timezone fixes - uses UT JD for sidereal time
 
-function calculateHousesWithTimezone(jd, latitude, longitude, ephemerisData) {
-  // Keep existing house calculation but ensure proper timezone handling
+function calculateHousesWithTimezone(jdUT, latitude, longitude, ephemerisData) {
   try {
-    const lst = calculateLocalSiderealTime(jd, longitude);
+    const lst = calculateLocalSiderealTime(jdUT, longitude);
     const ramc = (lst * 15) % 360;
     const ascendant = calculateAscendant(ramc, latitude);
     const midheaven = ramc;
@@ -403,15 +424,14 @@ function calculateHousesWithTimezone(jd, latitude, longitude, ephemerisData) {
   }
 }
 
-function calculateLocalSiderealTime(jd, longitude) {
-  const T = (jd - 2451545.0) / 36525.0;
+function calculateLocalSiderealTime(jdUT, longitude) {
+  const T = (jdUT - 2451545.0) / 36525.0;
   
-  // Mean sidereal time at Greenwich (in degrees)
-  let gst = 280.46061837 + 360.98564736629 * (jd - 2451545.0) + 0.000387933 * T * T - T * T * T / 38710000.0;
+  // Mean sidereal time at Greenwich (in degrees) - using UT, not TT
+  let gst = 280.46061837 + 360.98564736629 * (jdUT - 2451545.0) + 0.000387933 * T * T - T * T * T / 38710000.0;
   
   // Normalize to 0-360 degrees
-  gst = gst % 360;
-  if (gst < 0) gst += 360;
+  gst = normalizeAngle(gst);
   
   // Convert to hours and add longitude correction
   const gstHours = gst / 15.0;
@@ -485,7 +505,7 @@ function assignPlanetsToHouses(houses, ephemerisData) {
   
   planets.forEach(planet => {
     const position = ephemerisData[planet];
-    if (position && typeof position.longitude === 'number') {
+    if (position && typeof position.longitude === 'number' && !position.error) {
       const houseIndex = findHouseForLongitude(position.longitude, houses);
       if (houseIndex >= 0 && houseIndex < housesWithPlanets.length) {
         housesWithPlanets[houseIndex].planets.push({
@@ -559,13 +579,21 @@ export default async function handler(req, res) {
         coordinates: coordinates,
         engine: 'improved-vsop87d-ephemeris',
         features: ['improved_planetary_positions', 'professional_orbs', 'delta_t_correction', 'lunar_nodes', 'aspects', 'houses'],
-        accuracy_notes: 'VSOP87D series with ΔT correction, professional orb system',
+        accuracy_notes: 'VSOP87D series with ΔT correction, professional orb system, proper perihelion longitudes',
         debug_info: {
-          engine_version: 'improved-ephemeris v2.0',
+          engine_version: 'improved-ephemeris v2.1',
           runtime: 'vercel-serverless',
           planets_calculated: Object.keys(ephemerisData.planets || {}),
           aspects_found: ephemerisData.aspects?.length || 0,
-          houses_calculated: ephemerisData.houses?.houses?.length || 0
+          houses_calculated: ephemerisData.houses?.houses?.length || 0,
+          fixes_applied: [
+            'normalized_lunar_arguments',
+            'proper_perihelion_longitudes', 
+            'corrected_sun_distance_formula',
+            'improved_applying_aspect_logic',
+            'coordinate_parser_flexibility',
+            'error_propagation_guards'
+          ]
         }
       }
     });
