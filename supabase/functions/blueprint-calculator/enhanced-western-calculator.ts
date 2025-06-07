@@ -1,4 +1,3 @@
-
 // Enhanced Western astrology calculations with proper sign boundaries and accurate aspect orbs
 
 export interface EnhancedWesternProfile {
@@ -34,7 +33,7 @@ interface AspectData {
   planet1: string;
   planet2: string;
   aspect: string;
-  orb: number;
+  orb_used: number;
   exactness: number;
   strength: number;
   applying: boolean;
@@ -133,22 +132,29 @@ function calculateEnhancedSignFromLongitude(longitude: number): { sign: string; 
   };
 }
 
-// Enhanced aspect calculations with professional orb system
+// Fixed applying logic for radix charts
+function isApplying(p1Pos: number, p2Pos: number, target: number): boolean {
+  // returns true if p1 is *behind* exact aspect and moving towards it
+  const delta = ((p2Pos - p1Pos + 360) % 360);
+  return delta > 0 && delta < target;
+}
+
+// Enhanced aspect calculations with professional orb system and fixed applying logic
 function calculateEnhancedAspects(celestialData: any): AspectData[] {
   const aspects: AspectData[] = [];
   
-  // Professional orb system (more precise than before)
+  // Professional orb system with tightened semi-sextile orbs
   const orbSystem = {
-    sun: { conjunction: 10, opposition: 10, trine: 8, square: 8, sextile: 6, quincunx: 3, semisextile: 3 },
-    moon: { conjunction: 10, opposition: 10, trine: 8, square: 8, sextile: 6, quincunx: 3, semisextile: 3 },
-    mercury: { conjunction: 7, opposition: 7, trine: 6, square: 6, sextile: 4, quincunx: 2, semisextile: 2 },
-    venus: { conjunction: 7, opposition: 7, trine: 6, square: 6, sextile: 4, quincunx: 2, semisextile: 2 },
-    mars: { conjunction: 8, opposition: 8, trine: 6, square: 6, sextile: 4, quincunx: 2, semisextile: 2 },
-    jupiter: { conjunction: 9, opposition: 9, trine: 7, square: 7, sextile: 5, quincunx: 3, semisextile: 3 },
-    saturn: { conjunction: 9, opposition: 9, trine: 7, square: 7, sextile: 5, quincunx: 3, semisextile: 3 },
-    uranus: { conjunction: 6, opposition: 6, trine: 5, square: 5, sextile: 3, quincunx: 2, semisextile: 2 },
-    neptune: { conjunction: 6, opposition: 6, trine: 5, square: 5, sextile: 3, quincunx: 2, semisextile: 2 },
-    pluto: { conjunction: 6, opposition: 6, trine: 5, square: 5, sextile: 3, quincunx: 2, semisextile: 2 }
+    sun: { conjunction: 10, opposition: 10, trine: 8, square: 8, sextile: 6, quincunx: 3, semisextile: 2 },
+    moon: { conjunction: 10, opposition: 10, trine: 8, square: 8, sextile: 6, quincunx: 3, semisextile: 2 },
+    mercury: { conjunction: 7, opposition: 7, trine: 6, square: 6, sextile: 4, quincunx: 2, semisextile: 1 },
+    venus: { conjunction: 7, opposition: 7, trine: 6, square: 6, sextile: 4, quincunx: 2, semisextile: 1 },
+    mars: { conjunction: 8, opposition: 8, trine: 6, square: 6, sextile: 4, quincunx: 2, semisextile: 1 },
+    jupiter: { conjunction: 9, opposition: 9, trine: 7, square: 7, sextile: 5, quincunx: 3, semisextile: 2 },
+    saturn: { conjunction: 9, opposition: 9, trine: 7, square: 7, sextile: 5, quincunx: 3, semisextile: 2 },
+    uranus: { conjunction: 6, opposition: 6, trine: 5, square: 5, sextile: 3, quincunx: 2, semisextile: 1 },
+    neptune: { conjunction: 6, opposition: 6, trine: 5, square: 5, sextile: 3, quincunx: 2, semisextile: 1 },
+    pluto: { conjunction: 6, opposition: 6, trine: 5, square: 5, sextile: 3, quincunx: 2, semisextile: 1 }
   };
 
   const aspectAngles = {
@@ -185,14 +191,17 @@ function calculateEnhancedAspects(celestialData: any): AspectData[] {
           if (exactness <= averageOrb) {
             const strength = ((averageOrb - exactness) / averageOrb) * 100;
             
+            // Fixed applying logic for radix charts using zodiac order
+            const applying = isApplying(pos1.longitude, pos2.longitude, targetAngle);
+            
             aspects.push({
               planet1,
               planet2,
               aspect: aspectName,
-              orb: exactness,
+              orb_used: averageOrb,
               exactness,
               strength: Math.round(strength * 100) / 100,
-              applying: (pos1.speed || 0) > (pos2.speed || 0)
+              applying
             });
             break;
           }
