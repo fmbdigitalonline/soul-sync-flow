@@ -183,6 +183,72 @@ export type Database = {
         }
         Relationships: []
       }
+      blueprints: {
+        Row: {
+          archetype_chinese: Json
+          archetype_western: Json
+          bashar_suite: Json
+          belief_logs: Json
+          cognition_mbti: Json
+          created_at: string
+          energy_strategy_human_design: Json
+          excitement_scores: Json
+          goal_stack: Json
+          id: string
+          is_active: boolean
+          metadata: Json
+          task_graph: Json
+          timing_overlays: Json
+          updated_at: string
+          user_id: string
+          user_meta: Json
+          values_life_path: Json
+          vibration_check_ins: Json
+        }
+        Insert: {
+          archetype_chinese: Json
+          archetype_western: Json
+          bashar_suite: Json
+          belief_logs?: Json
+          cognition_mbti: Json
+          created_at?: string
+          energy_strategy_human_design: Json
+          excitement_scores?: Json
+          goal_stack?: Json
+          id?: string
+          is_active?: boolean
+          metadata: Json
+          task_graph?: Json
+          timing_overlays: Json
+          updated_at?: string
+          user_id: string
+          user_meta: Json
+          values_life_path: Json
+          vibration_check_ins?: Json
+        }
+        Update: {
+          archetype_chinese?: Json
+          archetype_western?: Json
+          bashar_suite?: Json
+          belief_logs?: Json
+          cognition_mbti?: Json
+          created_at?: string
+          energy_strategy_human_design?: Json
+          excitement_scores?: Json
+          goal_stack?: Json
+          id?: string
+          is_active?: boolean
+          metadata?: Json
+          task_graph?: Json
+          timing_overlays?: Json
+          updated_at?: string
+          user_id?: string
+          user_meta?: Json
+          values_life_path?: Json
+          vibration_check_ins?: Json
+        }
+        Relationships: []
+      }
       conversation_memory: {
         Row: {
           created_at: string | null

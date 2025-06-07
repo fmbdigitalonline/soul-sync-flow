@@ -128,25 +128,56 @@ class BlueprintService {
 
   async saveBlueprintData(blueprintData: BlueprintData): Promise<{ success: boolean; error: string | null }> {
     try {
+      // Get current user
+      const { data: { user } } = await this.supabase.auth.getUser();
+      
+      if (!user) {
+        return { success: false, error: 'User not authenticated' };
+      }
+
+      // Check if user already has an active blueprint
       const { data: existingBlueprint, error: existingError } = await this.supabase
         .from('blueprints')
         .select('id')
-        .eq('user_meta', blueprintData.user_meta)
-        .single();
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .maybeSingle();
 
-      if (existingError && existingError.code !== 'PGRST116') {
+      if (existingError) {
         console.error('Error checking for existing blueprint:', existingError);
         return { success: false, error: `Error checking for existing blueprint: ${existingError.message}` };
       }
 
       if (existingBlueprint) {
-        console.warn('Blueprint already exists for this user, skipping save.');
+        console.log('User already has an active blueprint, updating existing one');
+        
+        // Update the existing blueprint
+        const { error: updateError } = await this.supabase
+          .from('blueprints')
+          .update({
+            ...blueprintData,
+            user_id: user.id,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingBlueprint.id);
+
+        if (updateError) {
+          console.error('Error updating blueprint:', updateError);
+          return { success: false, error: `Error updating blueprint: ${updateError.message}` };
+        }
+
         return { success: true, error: null };
       }
 
+      // Create new blueprint
       const { data, error } = await this.supabase
         .from('blueprints')
-        .insert([blueprintData])
+        .insert([{
+          ...blueprintData,
+          user_id: user.id,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }])
         .select('*');
 
       if (error) {
