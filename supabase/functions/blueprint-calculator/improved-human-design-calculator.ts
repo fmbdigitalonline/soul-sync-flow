@@ -1,4 +1,3 @@
-
 // Improved Human Design calculation with canonical gate wheel
 import { GATE_TO_CENTER_MAP, CHANNELS, GATE_NAMES } from './human-design-gates.ts';
 import { findGateAndLineFromLongitude, zodiacLongitudeToHumanDesignGate } from './human-design-wheel.ts';
@@ -6,6 +5,11 @@ import { findGateAndLineFromLongitude, zodiacLongitudeToHumanDesignGate } from '
 // More precise solar motion using epoch-specific values
 const MEAN_SOLAR_MOTION_2000 = 0.9856473354; // degrees per day for epoch 2000.0
 const DESIGN_OFFSET_DEGREES = 88.36; // degrees before birth (canonical value)
+
+// TypeScript types for better type safety
+type HDType = 'GENERATOR' | 'MANIFESTOR' | 'MANIFESTING_GENERATOR' | 'PROJECTOR' | 'REFLECTOR';
+type HDAuthority = 'EMOTIONAL' | 'SACRAL' | 'SPLENIC' | 'EGO' | 'SELF_PROJECTED' | 'MENTAL' | 'LUNAR';
+type HDDefinition = 'No Definition (Reflector)' | 'Single Definition' | 'Single Definition (Connected)' | 'Split Definition' | 'Triple Split Definition' | 'Quadruple Split Definition';
 
 interface ImprovedGateActivation {
   planet: string;
@@ -23,7 +27,7 @@ interface ImprovedCenterActivation {
     defined: boolean;
     gates: number[];
     channels: string[];
-    type: 'motor' | 'awareness' | 'pressure';
+    type: 'motor' | 'awareness' | 'pressure' | 'communication';
     openness_percentage: number;
   };
 }
@@ -73,7 +77,7 @@ export async function calculateImprovedHumanDesign(birthDate: string, birthTime:
     const strategy = getEnhancedStrategyForType(type, centerActivations);
     const notSelfTheme = getEnhancedNotSelfThemeForType(type, centerActivations);
     
-    // Generate comprehensive life purpose
+    // Generate comprehensive life purpose with error handling
     const lifePurpose = generateComprehensiveLifePurpose(type, profile, centerActivations, personalityGates, designGates);
     
     return {
@@ -137,7 +141,7 @@ function calculateImprovedGatesFromPositions(celestialData: any, chartType: stri
       // Use canonical gate wheel mapping
       const gateInfo = zodiacLongitudeToHumanDesignGate(position.longitude);
       
-      // Calculate precise degrees and minutes
+      // Calculate precise degrees and minutes with leading zeros for UI
       const totalDegrees = position.longitude % 30; // Degrees within sign
       const degrees = Math.floor(totalDegrees);
       const minutes = Math.floor((totalDegrees - degrees) * 60);
@@ -153,7 +157,7 @@ function calculateImprovedGatesFromPositions(celestialData: any, chartType: stri
         minutes
       });
       
-      console.log(`${chartType} ${planet}: Gate ${gateInfo.gate}.${gateInfo.line} (${gateInfo.gateName}) at ${gateInfo.sign} ${degrees}°${minutes}'`);
+      console.log(`${chartType} ${planet}: Gate ${gateInfo.gate}.${gateInfo.line} (${gateInfo.gateName}) at ${gateInfo.sign} ${degrees.toString().padStart(2, '0')}°${minutes.toString().padStart(2, '0')}'`);
     }
   }
   
@@ -164,11 +168,11 @@ function calculateImprovedGatesFromPositions(celestialData: any, chartType: stri
 function determineImprovedCenterActivations(personalityGates: ImprovedGateActivation[], designGates: ImprovedGateActivation[]): ImprovedCenterActivation {
   const centerActivations: ImprovedCenterActivation = {};
   
-  // Initialize all centers with enhanced metadata
+  // Initialize all centers with enhanced metadata (fixed Throat type)
   const centerTypes = {
     "Head": "pressure",
     "Ajna": "awareness", 
-    "Throat": "motor",
+    "Throat": "communication", // Fixed: Throat is communication, not motor
     "G": "awareness",
     "Heart": "motor",
     "Solar Plexus": "motor",
@@ -182,7 +186,7 @@ function determineImprovedCenterActivations(personalityGates: ImprovedGateActiva
       defined: false, // CRITICAL: Start as undefined
       gates: [],
       channels: [],
-      type: type as 'motor' | 'awareness' | 'pressure',
+      type: type as 'motor' | 'awareness' | 'pressure' | 'communication',
       openness_percentage: 0
     };
   });
@@ -220,17 +224,19 @@ function determineImprovedCenterActivations(personalityGates: ImprovedGateActiva
     }
   });
   
-  // Calculate openness percentages
+  // Calculate openness percentages with division by zero guard
   Object.keys(centerActivations).forEach(center => {
     const totalGatesInCenter = Object.values(GATE_TO_CENTER_MAP).filter(c => c === center).length;
     const definedGates = centerActivations[center].gates.length;
-    centerActivations[center].openness_percentage = Math.round((definedGates / totalGatesInCenter) * 100);
+    centerActivations[center].openness_percentage = totalGatesInCenter > 0 
+      ? Math.round((definedGates / totalGatesInCenter) * 100)
+      : 0; // Guard against division by zero
   });
   
   return centerActivations;
 }
 
-// Helper function to check if centers are connected via channels
+// Improved connection checking with breadth-first search for indirect connections
 function centresConnected(start: string, targets: string[], centerActivations: ImprovedCenterActivation): boolean {
   const seen = new Set<string>();
   const queue: string[] = [start];
@@ -263,24 +269,19 @@ function centresConnected(start: string, targets: string[], centerActivations: I
   return false;
 }
 
-// Enhanced type determination evaluating all centers with motor connection logic
-function determineTypeFromAllCenters(centerActivations: ImprovedCenterActivation): string {
+// Enhanced type determination evaluating all centers with improved MG detection
+function determineTypeFromAllCenters(centerActivations: ImprovedCenterActivation): HDType {
   const sacralDefined = centerActivations["Sacral"]?.defined || false;
   const throatDefined = centerActivations["Throat"]?.defined || false;
-  const heartDefined = centerActivations["Heart"]?.defined || false;
-  const solarPlexusDefined = centerActivations["Solar Plexus"]?.defined || false;
-  const rootDefined = centerActivations["Root"]?.defined || false;
-  const spleenDefined = centerActivations["Spleen"]?.defined || false;
-  const gDefined = centerActivations["G"]?.defined || false;
-  const ajnaDefined = centerActivations["Ajna"]?.defined || false;
-  const headDefined = centerActivations["Head"]?.defined || false;
   
   // Count all defined centers
-  const definedCenters = Object.values(centerActivations).filter(center => center.defined);
+  const definedCenters = Object.entries(centerActivations)
+    .filter(([_, center]) => center.defined)
+    .map(([name, _]) => name);
   const definedCenterCount = definedCenters.length;
   
-  console.log(`Defined centers (${definedCenterCount}):`, 
-    Object.keys(centerActivations).filter(key => centerActivations[key].defined));
+  // FIXED: Correct console logging
+  console.log(`Defined centers (${definedCenterCount}):`, definedCenters);
   
   // Reflector: No defined centers
   if (definedCenterCount === 0) {
@@ -299,11 +300,11 @@ function determineTypeFromAllCenters(centerActivations: ImprovedCenterActivation
     }
   }
   
-  // Manifesting Generator: Sacral AND sacral connected to throat
+  // Manifesting Generator: Sacral AND sacral connected to throat (improved with breadth-first search)
   if (sacralDefined && throatDefined) {
     const sacralConnectedToThroat = centresConnected('Sacral', ['Throat'], centerActivations);
     if (sacralConnectedToThroat) {
-      console.log("Type: MANIFESTING GENERATOR (sacral connected to throat)");
+      console.log("Type: MANIFESTING GENERATOR (sacral connected to throat - direct or indirect)");
       return "MANIFESTING_GENERATOR";
     }
   }
@@ -319,35 +320,8 @@ function determineTypeFromAllCenters(centerActivations: ImprovedCenterActivation
   return "PROJECTOR";
 }
 
-// Enhanced connection checking
-function checkMotorToThroatConnection(centerActivations: ImprovedCenterActivation): boolean {
-  const throatChannels = centerActivations["Throat"]?.channels || [];
-  const motorCenters = ["Heart", "Solar Plexus", "Root"];
-  
-  const connected = throatChannels.some(channel => {
-    const channelData = CHANNELS[channel];
-    return channelData && motorCenters.some(motor => 
-      channelData.centers.includes(motor) && channelData.centers.includes("Throat")
-    );
-  });
-  
-  console.log("Motor to throat connection:", connected, "via channels:", throatChannels);
-  return connected;
-}
-
-function checkSacralToThroatConnection(centerActivations: ImprovedCenterActivation): boolean {
-  const throatChannels = centerActivations["Throat"]?.channels || [];
-  const sacralChannels = centerActivations["Sacral"]?.channels || [];
-  
-  // Check for direct or indirect connection
-  const directConnection = throatChannels.some(channel => sacralChannels.includes(channel));
-  
-  console.log("Sacral to throat connection:", directConnection, "throat channels:", throatChannels, "sacral channels:", sacralChannels);
-  return directConnection;
-}
-
-// Enhanced authority determination with complete hierarchy
-function determineAuthorityFromCenterHierarchy(centerActivations: ImprovedCenterActivation): string {
+// Enhanced authority determination with correct labeling
+function determineAuthorityFromCenterHierarchy(centerActivations: ImprovedCenterActivation): HDAuthority {
   console.log("Determining authority from defined centers...");
   
   // Complete authority hierarchy
@@ -368,7 +342,7 @@ function determineAuthorityFromCenterHierarchy(centerActivations: ImprovedCenter
     return "EGO";
   }
   if (centerActivations["G"]?.defined) {
-    console.log("Authority: SELF (G Center defined)");
+    console.log("Authority: SELF-PROJECTED EGO (G Center defined)"); // Fixed label
     return "SELF_PROJECTED";
   }
   if (centerActivations["Ajna"]?.defined) {
@@ -380,7 +354,7 @@ function determineAuthorityFromCenterHierarchy(centerActivations: ImprovedCenter
   return "LUNAR";
 }
 
-// Enhanced profile calculation with validation
+// Enhanced profile calculation with complete profile set
 function calculateProfileFromSunGates(personalityGates: ImprovedGateActivation[], designGates: ImprovedGateActivation[]): string {
   const personalitySun = personalityGates.find(g => g.planet === "sun");
   const designSun = designGates.find(g => g.planet === "sun");
@@ -416,8 +390,10 @@ function getProfileDescription(conscious: number, unconscious: number): string {
     "4/1": "The Opportunist Investigator",
     "5/1": "The Heretic Investigator",
     "5/2": "The Heretic Hermit",
+    "5/3": "The Heretic Martyr", // Added missing profile
     "6/2": "The Role Model Hermit",
-    "6/3": "The Role Model Martyr"
+    "6/3": "The Role Model Martyr",
+    "6/4": "The Role Model Opportunist" // Added missing profile
   };
   
   return profiles[`${conscious}/${unconscious}`] || "Unique Profile Combination";
@@ -469,7 +445,7 @@ function simulateDesignPositions(designDateTime: Date) {
 }
 
 // Enhanced strategy and theme calculation
-function getEnhancedStrategyForType(type: string, centerActivations: ImprovedCenterActivation): string {
+function getEnhancedStrategyForType(type: HDType, centerActivations: ImprovedCenterActivation): string {
   const strategies = {
     "GENERATOR": "To respond to life; find satisfaction in your work",
     "MANIFESTING_GENERATOR": "To respond and inform; find efficiency in your actions",
@@ -481,7 +457,7 @@ function getEnhancedStrategyForType(type: string, centerActivations: ImprovedCen
   return strategies[type] || "To follow your inner guidance";
 }
 
-function getEnhancedNotSelfThemeForType(type: string, centerActivations: ImprovedCenterActivation): string {
+function getEnhancedNotSelfThemeForType(type: HDType, centerActivations: ImprovedCenterActivation): string {
   const themes = {
     "GENERATOR": "Frustration when not responding correctly",
     "MANIFESTING_GENERATOR": "Anger and frustration when initiating without response",
@@ -493,42 +469,47 @@ function getEnhancedNotSelfThemeForType(type: string, centerActivations: Improve
   return themes[type] || "Confusion and uncertainty";
 }
 
-// Generate comprehensive life purpose
-function generateComprehensiveLifePurpose(type: string, profile: string, centerActivations: ImprovedCenterActivation, personalityGates: ImprovedGateActivation[], designGates: ImprovedGateActivation[]): string {
-  const profileNumber = profile.split('/')[0];
-  
-  const basePurpose = {
-    "GENERATOR": "To master skills and find satisfaction in work, building sustainable energy systems",
-    "MANIFESTING_GENERATOR": "To initiate and build with efficient, multi-passionate energy, informing others along the way",
-    "PROJECTOR": "To guide and direct others' energy wisely, waiting for recognition and invitation",
-    "MANIFESTOR": "To initiate new cycles and catalyze change, informing others before acting",
-    "REFLECTOR": "To mirror community health and wisdom, reflecting back what is and what could be"
-  };
-  
-  const profileModifiers = {
-    "1": "through deep investigation and foundational research",
-    "2": "through natural talents and selective sharing of wisdom",
-    "3": "through experimentation, resilience, and learning from mistakes",
-    "4": "through building strong relationships and networking effectively",
-    "5": "through providing practical solutions and adaptable strategies",
-    "6": "through embodying wisdom and serving as a role model"
-  };
-  
-  const centerInfluences = Object.entries(centerActivations)
-    .filter(([_, center]) => center.defined)
-    .map(([name, _]) => `with the defined energy of the ${name} Center`)
-    .join(", ");
-  
-  let lifePurpose = `${basePurpose[type]} ${profileModifiers[profileNumber]}`;
-  if (centerInfluences) {
-    lifePurpose += `, guided ${centerInfluences}`;
+// Generate comprehensive life purpose with error handling
+function generateComprehensiveLifePurpose(type: HDType, profile: string, centerActivations: ImprovedCenterActivation, personalityGates: ImprovedGateActivation[], designGates: ImprovedGateActivation[]): string {
+  try {
+    const profileNumber = profile.split('/')[0];
+    
+    const basePurpose = {
+      "GENERATOR": "To master skills and find satisfaction in work, building sustainable energy systems",
+      "MANIFESTING_GENERATOR": "To initiate and build with efficient, multi-passionate energy, informing others along the way",
+      "PROJECTOR": "To guide and direct others' energy wisely, waiting for recognition and invitation",
+      "MANIFESTOR": "To initiate new cycles and catalyze change, informing others before acting",
+      "REFLECTOR": "To mirror community health and wisdom, reflecting back what is and what could be"
+    };
+    
+    const profileModifiers = {
+      "1": "through deep investigation and foundational research",
+      "2": "through natural talents and selective sharing of wisdom",
+      "3": "through experimentation, resilience, and learning from mistakes",
+      "4": "through building strong relationships and networking effectively",
+      "5": "through providing practical solutions and adaptable strategies",
+      "6": "through embodying wisdom and serving as a role model"
+    };
+    
+    const centerInfluences = Object.entries(centerActivations)
+      .filter(([_, center]) => center.defined)
+      .map(([name, _]) => `with the defined energy of the ${name} Center`)
+      .join(", ");
+    
+    let lifePurpose = `${basePurpose[type]} ${profileModifiers[profileNumber]}`;
+    if (centerInfluences) {
+      lifePurpose += `, guided ${centerInfluences}`;
+    }
+    
+    return lifePurpose;
+  } catch (error) {
+    console.warn("Error generating life purpose:", error);
+    return "To follow your unique path of self-discovery and authentic expression";
   }
-  
-  return lifePurpose;
 }
 
-// Calculate definition type based on center connections
-function calculateDefinitionWithConnections(centerActivations: ImprovedCenterActivation): string {
+// Fixed: Calculate definition type based on center connections
+function calculateDefinitionWithConnections(centerActivations: ImprovedCenterActivation): HDDefinition {
   const definedCenters = Object.entries(centerActivations)
     .filter(([_, center]) => center.defined)
     .map(([name, _]) => name);
@@ -536,33 +517,44 @@ function calculateDefinitionWithConnections(centerActivations: ImprovedCenterAct
   if (definedCenters.length === 0) return "No Definition (Reflector)";
   if (definedCenters.length === 1) return "Single Definition";
   
-  // Analyze connection patterns
-  let connected = true;
-  for (let i = 0; i < definedCenters.length - 1; i++) {
-    const center1 = definedCenters[i];
-    const center2 = definedCenters[i + 1];
+  // Analyze connection patterns using breadth-first search
+  const connectedGroups: string[][] = [];
+  const visited = new Set<string>();
+  
+  for (const center of definedCenters) {
+    if (visited.has(center)) continue;
     
-    const channelExists = Object.keys(CHANNELS).some(channelKey => {
-      const [gate1, gate2] = channelKey.split('-').map(Number);
-      return (
-        centerActivations[center1].gates.includes(gate1) &&
-        centerActivations[center2].gates.includes(gate2)
-      ) || (
-        centerActivations[center1].gates.includes(gate2) &&
-        centerActivations[center2].gates.includes(gate1)
-      );
-    });
+    const group: string[] = [];
+    const queue = [center];
     
-    if (!channelExists) {
-      connected = false;
-      break;
+    while (queue.length) {
+      const currentCenter = queue.shift()!;
+      if (visited.has(currentCenter)) continue;
+      
+      visited.add(currentCenter);
+      group.push(currentCenter);
+      
+      // Find all centers connected to this one through channels
+      centerActivations[currentCenter].channels.forEach(channelKey => {
+        const channelData = CHANNELS[channelKey];
+        if (channelData) {
+          channelData.centers.forEach(connectedCenter => {
+            if (definedCenters.includes(connectedCenter) && !visited.has(connectedCenter)) {
+              queue.push(connectedCenter);
+            }
+          });
+        }
+      });
+    }
+    
+    if (group.length > 0) {
+      connectedGroups.push(group);
     }
   }
   
-  if (connected) return "Single Definition (Connected)";
-  
-  // Split Definition logic
-  if (definedCenters.length === 2) return "Split Definition";
-  if (definedCenters.length === 3) return "Triple Split Definition";
+  // Determine definition type based on number of groups
+  if (connectedGroups.length === 1) return "Single Definition (Connected)";
+  if (connectedGroups.length === 2) return "Split Definition";
+  if (connectedGroups.length === 3) return "Triple Split Definition";
   return "Quadruple Split Definition";
 }
