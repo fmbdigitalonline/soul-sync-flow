@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "@/lib/framer-motion";
@@ -6,7 +7,6 @@ import { Onboarding3DScene } from "@/components/ui/onboarding-3d-scene";
 import { BlueprintGenerator } from "@/components/blueprint/BlueprintGenerationFlow";
 import { zodiac } from "@/components/ui/zodiac";
 import { MBTISelector } from "@/components/blueprint/MBTISelector";
-import { BirthDataForm } from "@/components/blueprint/BirthDataForm";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BlueprintData, blueprintService } from "@/services/blueprint-service"; 
@@ -179,19 +179,17 @@ export default function Onboarding() {
           <div className="space-y-4 max-w-md mx-auto">
             <h2 className="text-xl font-display font-bold text-center mb-2">When were you born?</h2>
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-              <BirthDataForm
-                birthData={{
-                  birthDate: formData.birthDate,
-                  birthTime: formData.birthTime,
-                  birthLocation: formData.birthLocation,
-                  timezone: formData.timezone
-                }}
-                showDateOnly={true}
-                onChange={(data) => updateFormData({
-                  birthDate: data.birthDate,
-                  timezone: data.timezone
-                })}
-              />
+              <div className="space-y-2">
+                <Label htmlFor="birthDate">Birth Date</Label>
+                <Input
+                  id="birthDate"
+                  type="date"
+                  value={formData.birthDate}
+                  onChange={(e) => updateFormData({ birthDate: e.target.value })}
+                  className="bg-white/5 border-white/10"
+                  required
+                />
+              </div>
             </div>
             <div className="flex justify-between pt-4">
               <Button variant="ghost" onClick={goToPrevStep}>Back</Button>
@@ -209,18 +207,20 @@ export default function Onboarding() {
           <div className="space-y-4 max-w-md mx-auto">
             <h2 className="text-xl font-display font-bold text-center mb-2">What time were you born?</h2>
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-              <BirthDataForm
-                birthData={{
-                  birthDate: formData.birthDate,
-                  birthTime: formData.birthTime,
-                  birthLocation: formData.birthLocation,
-                  timezone: formData.timezone
-                }}
-                showTimeOnly={true}
-                onChange={(data) => updateFormData({
-                  birthTime: data.birthTime,
-                })}
-              />
+              <div className="space-y-2">
+                <Label htmlFor="birthTime">Birth Time (Local Time)</Label>
+                <Input
+                  id="birthTime"
+                  type="time"
+                  value={formData.birthTime}
+                  onChange={(e) => updateFormData({ birthTime: e.target.value })}
+                  className="bg-white/5 border-white/10"
+                  required
+                />
+                <p className="text-sm text-white/60">
+                  Enter the local time where you were born - we'll automatically handle timezone conversion
+                </p>
+              </div>
             </div>
             <div className="flex justify-between pt-4">
               <Button variant="ghost" onClick={goToPrevStep}>Back</Button>
@@ -238,18 +238,21 @@ export default function Onboarding() {
           <div className="space-y-4 max-w-md mx-auto">
             <h2 className="text-xl font-display font-bold text-center mb-2">Where were you born?</h2>
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-              <BirthDataForm
-                birthData={{
-                  birthDate: formData.birthDate,
-                  birthTime: formData.birthTime,
-                  birthLocation: formData.birthLocation,
-                  timezone: formData.timezone
-                }}
-                showLocationOnly={true}
-                onChange={(data) => updateFormData({
-                  birthLocation: data.birthLocation,
-                })}
-              />
+              <div className="space-y-2">
+                <Label htmlFor="birthLocation">Birth Location</Label>
+                <Input
+                  id="birthLocation"
+                  type="text"
+                  value={formData.birthLocation}
+                  onChange={(e) => updateFormData({ birthLocation: e.target.value })}
+                  placeholder="City, Country (e.g., Paramaribo, Suriname)"
+                  className="bg-white/5 border-white/10"
+                  required
+                />
+                <p className="text-sm text-white/60">
+                  We'll automatically find the exact coordinates and historical timezone
+                </p>
+              </div>
             </div>
             <div className="flex justify-between pt-4">
               <Button variant="ghost" onClick={goToPrevStep}>Back</Button>
@@ -290,7 +293,6 @@ export default function Onboarding() {
                 birth_date: formData.birthDate,
                 birth_time_local: formData.birthTime,
                 birth_location: formData.birthLocation,
-                timezone: formData.timezone,
                 personality: formData.personality
               }}
               onComplete={handleBlueprintComplete}
