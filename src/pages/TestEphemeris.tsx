@@ -135,7 +135,7 @@ const TestEphemeris = () => {
         </CardHeader>
         <CardContent>
           <div className="bg-gray-100 p-3 rounded font-mono text-sm">
-            {window.location.origin.replace('lovableproject.com', 'supabase.co')}/functions/v1/test-ephemeris
+            https://qxaajirrqrcnmvtowjbg.supabase.co/functions/v1/test-ephemeris
           </div>
           <p className="text-sm text-muted-foreground mt-2">
             This will return JSON with detailed test results and debug information.
