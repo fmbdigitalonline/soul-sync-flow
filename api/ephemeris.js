@@ -16,6 +16,48 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type',
 };
 
+// Cache for initialized sweph module
+let swephModule = null;
+let isInitialized = false;
+
+// Initialize Swiss Ephemeris once
+async function initializeSweph() {
+  if (isInitialized && swephModule) {
+    return swephModule;
+  }
+
+  try {
+    console.log('Initializing Swiss Ephemeris...');
+    swephModule = require('sweph');
+    
+    if (!swephModule || typeof swephModule.swe_set_ephe_path !== 'function') {
+      throw new Error('Swiss Ephemeris module not properly loaded');
+    }
+
+    // CRITICAL: Initialize Swiss Ephemeris before any calculations
+    // This is required even when using built-in Moshier ephemeris
+    console.log('Setting ephemeris path for initialization...');
+    swephModule.swe_set_ephe_path(null); // Use built-in Moshier ephemeris
+    
+    // Verify that core functions are available after initialization
+    if (typeof swephModule.swe_julday !== 'function') {
+      throw new Error('swe_julday function not available after initialization');
+    }
+    if (typeof swephModule.swe_calc_ut !== 'function') {
+      throw new Error('swe_calc_ut function not available after initialization');
+    }
+
+    isInitialized = true;
+    console.log('Swiss Ephemeris initialized successfully!');
+    return swephModule;
+  } catch (error) {
+    console.error('Failed to initialize Swiss Ephemeris:', error);
+    swephModule = null;
+    isInitialized = false;
+    throw error;
+  }
+}
+
 // This is the main serverless function handler.
 export default async function handler(req, res) {
   // Set CORS headers to allow your Supabase app to call this API
@@ -60,36 +102,8 @@ export default async function handler(req, res) {
       });
     }
 
-    // Try to import sweph dynamically
-    let sweph;
-    try {
-      sweph = require('sweph');
-    } catch (importError) {
-      console.error('Failed to import sweph:', importError);
-      return res.status(500).json({ 
-        success: false, 
-        error: 'Swiss Ephemeris library not available. Please ensure sweph is installed.' 
-      });
-    }
-
-    // Check if sweph is properly initialized
-    if (!sweph || typeof sweph.swe_julday !== 'function') {
-      console.error('sweph module loaded but functions not available:', Object.keys(sweph || {}));
-      return res.status(500).json({ 
-        success: false, 
-        error: 'Swiss Ephemeris library not properly initialized' 
-      });
-    }
-
-    // Set ephemeris path if needed
-    try {
-      const ephe_path = path.join(process.cwd(), 'ephemeris');
-      if (typeof sweph.set_ephe_path === 'function') {
-        sweph.set_ephe_path(ephe_path);
-      }
-    } catch (pathError) {
-      console.warn('Could not set ephemeris path:', pathError);
-    }
+    // Initialize Swiss Ephemeris
+    const sweph = await initializeSweph();
 
     // Convert input date to Julian Day UT
     const year = date.getUTCFullYear();
@@ -97,8 +111,9 @@ export default async function handler(req, res) {
     const day = date.getUTCDate();
     const hour = date.getUTCHours() + (date.getUTCMinutes() / 60) + (date.getUTCSeconds() / 3600);
 
-    const julianDayResult = sweph.swe_julday(year, month, day, hour, sweph.SE_GREG_CAL);
-    const jd = julianDayResult.jd || julianDayResult; // Handle different return formats
+    console.log(`Calculating Julian Day for: ${year}-${month}-${day} ${hour}:00 UTC`);
+    const jd = sweph.swe_julday(year, month, day, hour, sweph.SE_GREG_CAL);
+    console.log(`Julian Day calculated: ${jd}`);
 
     // Define which celestial bodies to calculate
     const bodies = {
@@ -121,6 +136,7 @@ export default async function handler(req, res) {
     // Calculate the position for each body
     for (const [name, id] of Object.entries(bodies)) {
         try {
+            console.log(`Calculating position for ${name} (ID: ${id})`);
             const result = sweph.swe_calc_ut(jd, id, flags);
             if (result.error) {
                 console.warn(`Error calculating ${name}:`, result.error);
@@ -131,6 +147,7 @@ export default async function handler(req, res) {
                     latitude: result.latitude,
                     speed: result.longitude_speed,
                 };
+                console.log(`${name}: longitude ${result.longitude.toFixed(6)}°`);
             }
         } catch (calcError) {
             console.warn(`Exception calculating ${name}:`, calcError);
@@ -146,6 +163,8 @@ export default async function handler(req, res) {
             speed: ephemerisData.north_node.speed
         };
     }
+
+    console.log('Ephemeris calculation completed successfully');
 
     // Send the successful JSON response
     res.status(200).json({ 
