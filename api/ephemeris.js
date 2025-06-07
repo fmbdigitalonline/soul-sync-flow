@@ -39,6 +39,28 @@ async function initializeSweph() {
     console.log('Setting ephemeris path for initialization...');
     swephModule.swe_set_ephe_path(null); // Use built-in Moshier ephemeris
     
+    // Enhanced debugging after initialization
+    console.log('Initialization complete. Testing library functions...');
+    
+    // Test if constants are available
+    console.log('SE_SUN constant:', swephModule.SE_SUN);
+    console.log('SE_GREG_CAL constant:', swephModule.SE_GREG_CAL);
+    console.log('SEFLG_SPEED constant:', swephModule.SEFLG_SPEED);
+    console.log('SEFLG_SWIEPH constant:', swephModule.SEFLG_SWIEPH);
+    
+    // Log all available module keys for debugging
+    console.log('sweph module keys:', Object.keys(swephModule));
+    console.log('sweph version info:', swephModule.swe_version ? swephModule.swe_version() : 'No version function');
+    
+    // Test a simple calculation
+    try {
+      const testJD = swephModule.swe_julday(2025, 1, 1, 12, swephModule.SE_GREG_CAL);
+      console.log('Test Julian Day successful:', testJD);
+    } catch (testError) {
+      console.error('Test calculation failed:', testError);
+      throw new Error(`Post-initialization test failed: ${testError.message}`);
+    }
+    
     // Verify that core functions are available after initialization
     if (typeof swephModule.swe_julday !== 'function') {
       throw new Error('swe_julday function not available after initialization');
@@ -115,22 +137,15 @@ export default async function handler(req, res) {
     const jd = sweph.swe_julday(year, month, day, hour, sweph.SE_GREG_CAL);
     console.log(`Julian Day calculated: ${jd}`);
 
-    // Define which celestial bodies to calculate
+    // Start with just the Sun for testing
     const bodies = {
         sun: sweph.SE_SUN,
-        moon: sweph.SE_MOON,
-        mercury: sweph.SE_MERCURY,
-        venus: sweph.SE_VENUS,
-        mars: sweph.SE_MARS,
-        jupiter: sweph.SE_JUPITER,
-        saturn: sweph.SE_SATURN,
-        uranus: sweph.SE_URANUS,
-        neptune: sweph.SE_NEPTUNE,
-        pluto: sweph.SE_PLUTO,
-        north_node: sweph.SE_TRUE_NODE,
     };
 
-    const flags = sweph.SEFLG_SPEED | sweph.SEFLG_SWIEPH;
+    // Use simpler flags first
+    const flags = sweph.SEFLG_SWIEPH; // Remove SEFLG_SPEED for now
+    console.log('Using calculation flags:', flags);
+    
     const ephemerisData = {};
 
     // Calculate the position for each body
@@ -138,6 +153,8 @@ export default async function handler(req, res) {
         try {
             console.log(`Calculating position for ${name} (ID: ${id})`);
             const result = sweph.swe_calc_ut(jd, id, flags);
+            console.log(`Raw result for ${name}:`, result);
+            
             if (result.error) {
                 console.warn(`Error calculating ${name}:`, result.error);
                 ephemerisData[name] = { error: result.error };
@@ -145,7 +162,7 @@ export default async function handler(req, res) {
                 ephemerisData[name] = {
                     longitude: result.longitude,
                     latitude: result.latitude,
-                    speed: result.longitude_speed,
+                    speed: result.longitude_speed || 0, // Default if speed not available
                 };
                 console.log(`${name}: longitude ${result.longitude.toFixed(6)}°`);
             }
@@ -153,15 +170,6 @@ export default async function handler(req, res) {
             console.warn(`Exception calculating ${name}:`, calcError);
             ephemerisData[name] = { error: calcError.message };
         }
-    }
-
-    // Add South Node (always 180 degrees opposite the North Node)
-    if (ephemerisData.north_node && !ephemerisData.north_node.error) {
-        ephemerisData.south_node = {
-            longitude: (ephemerisData.north_node.longitude + 180) % 360,
-            latitude: 0,
-            speed: ephemerisData.north_node.speed
-        };
     }
 
     console.log('Ephemeris calculation completed successfully');
@@ -173,7 +181,12 @@ export default async function handler(req, res) {
       metadata: {
         julian_day: jd,
         calculated_at: new Date().toISOString(),
-        coordinates: { latitude: lat, longitude: lon }
+        coordinates: { latitude: lat, longitude: lon },
+        debug_info: {
+          sweph_version: sweph.swe_version ? sweph.swe_version() : 'Unknown',
+          flags_used: flags,
+          bodies_calculated: Object.keys(bodies)
+        }
       }
     });
 
