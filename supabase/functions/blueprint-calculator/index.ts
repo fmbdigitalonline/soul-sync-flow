@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { calculateNumerology } from './numerology-calculator.ts';
 import { calculateImprovedHumanDesign } from './improved-human-design-calculator.ts';
@@ -8,7 +7,6 @@ import { calculateEnhancedWesternProfile } from './enhanced-western-calculator.t
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
 serve(async (req) => {
@@ -78,15 +76,14 @@ serve(async (req) => {
       }
     }
 
-    // Extract required fields including fullName
-    const { birthDate, birthTime, birthLocation, fullName = 'Unknown' } = requestData;
+    const { birthDate, birthTime, birthLocation } = requestData;
 
     // Validate required fields for main blueprint calculation
     if (!birthDate || !birthTime || !birthLocation) {
       return new Response(
         JSON.stringify({ 
           error: "Missing required fields",
-          details: "birthDate, birthTime, and birthLocation are required. fullName is recommended for accurate numerology.",
+          details: "birthDate, birthTime, and birthLocation are required",
           code: "MISSING_FIELDS"
         }),
         { 
@@ -102,12 +99,11 @@ serve(async (req) => {
     console.log("Enhanced Blueprint Calculator: Processing request", {
       birthDate,
       birthTime,
-      birthLocation,
-      fullName
+      birthLocation
     });
 
     // Call the enhanced blueprint generation with improved calculations
-    const result = await generateEnhancedBlueprintWithAccurateCalculations(birthDate, birthTime, birthLocation, fullName);
+    const result = await generateEnhancedBlueprintWithAccurateCalculations(birthDate, birthTime, birthLocation);
 
     return new Response(JSON.stringify({
       success: true,
@@ -142,7 +138,7 @@ serve(async (req) => {
   }
 });
 
-async function generateEnhancedBlueprintWithAccurateCalculations(birthDate: string, birthTime: string, birthLocation: string, fullName: string) {
+async function generateEnhancedBlueprintWithAccurateCalculations(birthDate: string, birthTime: string, birthLocation: string) {
   // Use the improved Vercel API endpoint
   const IMPROVED_VERCEL_API_URL = "https://soul-sync-flow.vercel.app/api/ephemeris-improved";
   
@@ -152,8 +148,7 @@ async function generateEnhancedBlueprintWithAccurateCalculations(birthDate: stri
     const coordinates = await getLocationCoordinates(birthLocation);
     console.log(`Geocoded location "${birthLocation}" to: ${coordinates.latitude}, ${coordinates.longitude}`);
     
-    // Preserve seconds if supplied in birthTime
-    const birthDateTime = new Date(`${birthDate}T${birthTime.length <= 5 ? birthTime + ':00' : birthTime}`);
+    const birthDateTime = new Date(`${birthDate}T${birthTime}:00`);
     const timezoneOffset = await getHistoricalTimezoneOffset(coordinates, birthDateTime);
     console.log(`Historical timezone offset: ${timezoneOffset} seconds (${timezoneOffset/3600} hours)`);
     
@@ -197,11 +192,11 @@ async function generateEnhancedBlueprintWithAccurateCalculations(birthDate: stri
     
     const celestialData = ephemerisData.data;
     
-    // Generate enhanced Western astrology profile with safe house data access
-    const westernProfile = calculateEnhancedWesternProfile(celestialData, celestialData.houses ?? {});
+    // Generate enhanced Western astrology profile
+    const westernProfile = calculateEnhancedWesternProfile(celestialData, celestialData.houses);
     
-    // Generate improved numerology with actual fullName
-    const numerology = calculateNumerology(birthDate, fullName);
+    // Generate improved numerology with master numbers
+    const numerology = calculateNumerology(birthDate, "Full Name"); // Will be replaced with actual name
     
     // Generate enhanced Chinese zodiac
     const chineseZodiac = calculateChineseZodiac(new Date(birthDate).getFullYear());
@@ -230,8 +225,7 @@ async function generateEnhancedBlueprintWithAccurateCalculations(birthDate: stri
           "Canonical Jovian Archive Human Design wheel",
           "Classical Pythagorean numerology with master numbers",
           "Proper sign boundary handling",
-          "Enhanced house system calculations",
-          "Accurate fullName-based numerology calculations"
+          "Enhanced house system calculations"
         ],
         notice: "Production-grade accuracy with professional calculation standards"
       },

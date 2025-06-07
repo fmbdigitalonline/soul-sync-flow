@@ -32,28 +32,26 @@ export const GATE_TO_CENTER_MAP = {
   60: "Root", 52: "Root", 19: "Root", 39: "Root", 41: "Root", 53: "Root", 38: "Root", 54: "Root", 58: "Root"
 };
 
-// Complete 36-channel definitions connecting gates to determine defined centers
-export const CHANNELS: Record<string, { name: string; centers: [string, string] }> = {
+// Channel definitions connecting gates to determine defined centers
+export const CHANNELS = {
   "1-8": { name: "Inspiration", centers: ["G", "Throat"] },
-  "2-14": { name: "The Beat", centers: ["G", "Sacral"] },
-  "3-60": { name: "Mutation", centers: ["Root", "Sacral"] },
+  "2-14": { name: "Keeper of the Keys", centers: ["G", "Sacral"] },
+  "3-60": { name: "Mutation", centers: ["Sacral", "Root"] },
   "4-63": { name: "Logic", centers: ["Ajna", "Head"] },
-  "5-15": { name: "Rhythm", centers: ["Sacral", "G"] },
-  "6-59": { name: "Intimacy", centers: ["Solar Plexus", "Sacral"] },
-  "7-31": { name: "The Alpha", centers: ["G", "Throat"] },
-  "9-52": { name: "Concentration", centers: ["Root", "Sacral"] },
+  "5-15": { name: "Fixed Rhythms", centers: ["Sacral", "G"] },
+  "6-59": { name: "Mating", centers: ["Solar Plexus", "Sacral"] },
+  "7-31": { name: "Alpha", centers: ["G", "Throat"] },
+  "9-52": { name: "Concentration", centers: ["Sacral", "Root"] },
   "10-20": { name: "Awakening", centers: ["G", "Throat"] },
   "10-34": { name: "Exploration", centers: ["G", "Sacral"] },
   "11-56": { name: "Curiosity", centers: ["Ajna", "Throat"] },
   "12-22": { name: "Openness", centers: ["Throat", "Solar Plexus"] },
-  "13-33": { name: "The Prodigal", centers: ["G", "Throat"] },
-  "16-48": { name: "Waves of Talent", centers: ["Throat", "Spleen"] },
+  "13-33": { name: "Prodigal", centers: ["G", "Throat"] },
+  "16-48": { name: "Wavelength", centers: ["Throat", "Spleen"] },
   "17-62": { name: "Acceptance", centers: ["Ajna", "Throat"] },
-  "18-58": { name: "Judgement", centers: ["Spleen", "Root"] },
+  "18-58": { name: "Judgment", centers: ["Spleen", "Root"] },
   "19-49": { name: "Synthesis", centers: ["Root", "Solar Plexus"] },
-  "20-34": { name: "Charisma", centers: ["Throat", "Sacral"] },
-  "20-57": { name: "Brain-Wave", centers: ["Throat", "Spleen"] },
-  "21-45": { name: "Money", centers: ["Heart", "Throat"] },
+  "21-45": { name: "Money Line", centers: ["Heart", "Throat"] },
   "23-43": { name: "Structuring", centers: ["Ajna", "Throat"] },
   "24-61": { name: "Awareness", centers: ["Ajna", "Head"] },
   "25-51": { name: "Initiation", centers: ["G", "Heart"] },
@@ -63,11 +61,10 @@ export const CHANNELS: Record<string, { name: string; centers: [string, string] 
   "29-46": { name: "Discovery", centers: ["Sacral", "G"] },
   "30-41": { name: "Recognition", centers: ["Solar Plexus", "Root"] },
   "32-54": { name: "Transformation", centers: ["Spleen", "Root"] },
-  "34-57": { name: "Power", centers: ["Sacral", "Spleen"] },
   "35-36": { name: "Transitoriness", centers: ["Throat", "Solar Plexus"] },
   "37-40": { name: "Community", centers: ["Solar Plexus", "Heart"] },
   "39-55": { name: "Emoting", centers: ["Root", "Solar Plexus"] },
-  "42-53": { name: "Maturation", centers: ["Root", "Sacral"] },
+  "42-53": { name: "Maturation", centers: ["Sacral", "Root"] },
   "47-64": { name: "Abstraction", centers: ["Ajna", "Head"] },
   "57-10": { name: "Perfected Form", centers: ["Spleen", "G"] }
 };
