@@ -193,7 +193,7 @@ async function generateBlueprintWithVercelAPI(birthDate: string, birthTime: stri
     
     console.log("Received ephemeris data:", ephemerisData);
     
-    // Process the accurate planetary data
+    // Process the accurate planetary data - handle the new nested structure
     const celestialData = ephemerisData.data;
     
     // Generate Western astrology profile
@@ -227,10 +227,12 @@ async function generateBlueprintWithVercelAPI(birthDate: string, birthTime: stri
 }
 
 function generateWesternProfile(celestialData: any) {
-  const sunData = celestialData.sun;
-  const moonData = celestialData.moon;
+  // Handle both old format (direct access) and new format (nested under planets)
+  const sunData = celestialData.planets?.sun || celestialData.sun;
+  const moonData = celestialData.planets?.moon || celestialData.moon;
   
   if (!sunData || !moonData) {
+    console.error("Celestial data structure:", JSON.stringify(celestialData, null, 2));
     throw new Error("Missing essential planetary data from ephemeris");
   }
   
