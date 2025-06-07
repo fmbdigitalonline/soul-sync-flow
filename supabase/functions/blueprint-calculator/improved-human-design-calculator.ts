@@ -159,7 +159,7 @@ function calculateImprovedGatesFromPositions(celestialData: any, chartType: stri
   return gates;
 }
 
-// Enhanced center activation determination
+// Enhanced center activation determination with STRICT channel-only definition
 function determineImprovedCenterActivations(personalityGates: ImprovedGateActivation[], designGates: ImprovedGateActivation[]): ImprovedCenterActivation {
   const centerActivations: ImprovedCenterActivation = {};
   
@@ -178,7 +178,7 @@ function determineImprovedCenterActivations(personalityGates: ImprovedGateActiva
   
   Object.entries(centerTypes).forEach(([center, type]) => {
     centerActivations[center] = {
-      defined: false,
+      defined: false, // CRITICAL: Start as undefined
       gates: [],
       channels: [],
       type: type as 'motor' | 'awareness' | 'pressure',
@@ -190,7 +190,7 @@ function determineImprovedCenterActivations(personalityGates: ImprovedGateActiva
   const allGates = [...personalityGates, ...designGates];
   const gateNumbers = allGates.map(g => g.gate);
   
-  // Activate centers based on gates
+  // Activate centers based on gates BUT DO NOT DEFINE THEM YET
   allGates.forEach(({ gate }) => {
     const center = GATE_TO_CENTER_MAP[gate];
     if (center && centerActivations[center]) {
@@ -200,7 +200,7 @@ function determineImprovedCenterActivations(personalityGates: ImprovedGateActiva
     }
   });
   
-  // Check for channel completions with enhanced validation
+  // CRITICAL FIX: Check for channel completions and ONLY THEN define centers
   Object.entries(CHANNELS).forEach(([channelKey, channelData]) => {
     const [gate1, gate2] = channelKey.split('-').map(Number);
     
@@ -208,7 +208,7 @@ function determineImprovedCenterActivations(personalityGates: ImprovedGateActiva
       // Channel is complete - define both centers
       channelData.centers.forEach(centerName => {
         if (centerActivations[centerName]) {
-          centerActivations[centerName].defined = true;
+          centerActivations[centerName].defined = true; // ✅ ONLY define when channel is complete
           if (!centerActivations[centerName].channels.includes(channelKey)) {
             centerActivations[centerName].channels.push(channelKey);
           }
@@ -229,7 +229,40 @@ function determineImprovedCenterActivations(personalityGates: ImprovedGateActiva
   return centerActivations;
 }
 
-// Enhanced type determination evaluating all centers
+// Helper function to check if centers are connected via channels
+function centresConnected(start: string, targets: string[], centerActivations: ImprovedCenterActivation): boolean {
+  const seen = new Set<string>();
+  const queue: string[] = [start];
+  
+  while (queue.length) {
+    const currentCenter = queue.shift()!;
+    if (targets.includes(currentCenter)) return true;
+    
+    if (seen.has(currentCenter)) continue;
+    seen.add(currentCenter);
+    
+    // Check all channels connected to this center
+    centerActivations[currentCenter].channels.forEach(channelKey => {
+      const channelData = CHANNELS[channelKey];
+      if (channelData) {
+        channelData.centers
+          .filter(centerName => 
+            centerActivations[centerName].defined && 
+            !seen.has(centerName)
+          )
+          .forEach(centerName => {
+            if (!seen.has(centerName)) {
+              queue.push(centerName);
+            }
+          });
+      }
+    });
+  }
+  
+  return false;
+}
+
+// Enhanced type determination evaluating all centers with motor connection logic
 function determineTypeFromAllCenters(centerActivations: ImprovedCenterActivation): string {
   const sacralDefined = centerActivations["Sacral"]?.defined || false;
   const throatDefined = centerActivations["Throat"]?.defined || false;
@@ -245,29 +278,29 @@ function determineTypeFromAllCenters(centerActivations: ImprovedCenterActivation
   const definedCenters = Object.values(centerActivations).filter(center => center.defined);
   const definedCenterCount = definedCenters.length;
   
-  console.log(`Defined centers (${definedCenterCount}):`, definedCenters.map((_, i) => Object.keys(centerActivations)[i]).filter((_, i) => definedCenters[i]));
+  console.log(`Defined centers (${definedCenterCount}):`, 
+    Object.keys(centerActivations).filter(key => centerActivations[key].defined));
   
   // Reflector: No defined centers
   if (definedCenterCount === 0) {
     return "REFLECTOR";
   }
   
-  // Motor centers: Sacral, Heart, Solar Plexus, Root
-  const motorCenters = [sacralDefined, heartDefined, solarPlexusDefined, rootDefined];
-  const definedMotorCenters = motorCenters.filter(Boolean).length;
+  // Motor centers: Heart, Solar Plexus, Root (Sacral handled separately)
+  const nonSacralMotorCenters = ["Heart", "Solar Plexus", "Root"];
   
   // Manifestor: Motor center connected to throat (but not sacral)
-  if (throatDefined && !sacralDefined && definedMotorCenters > 0) {
-    const motorConnectedToThroat = checkMotorToThroatConnection(centerActivations);
+  if (throatDefined && !sacralDefined) {
+    const motorConnectedToThroat = centresConnected('Throat', nonSacralMotorCenters, centerActivations);
     if (motorConnectedToThroat) {
       console.log("Type: MANIFESTOR (motor to throat, no sacral)");
       return "MANIFESTOR";
     }
   }
   
-  // Manifesting Generator: Sacral AND motor connected to throat
+  // Manifesting Generator: Sacral AND sacral connected to throat
   if (sacralDefined && throatDefined) {
-    const sacralConnectedToThroat = checkSacralToThroatConnection(centerActivations);
+    const sacralConnectedToThroat = centresConnected('Sacral', ['Throat'], centerActivations);
     if (sacralConnectedToThroat) {
       console.log("Type: MANIFESTING GENERATOR (sacral connected to throat)");
       return "MANIFESTING_GENERATOR";
