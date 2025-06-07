@@ -1,3 +1,4 @@
+
 // Improved Human Design calculation with canonical gate wheel
 import { GATE_TO_CENTER_MAP, CHANNELS, GATE_NAMES } from './human-design-gates.ts';
 import { findGateAndLineFromLongitude, zodiacLongitudeToHumanDesignGate } from './human-design-wheel.ts';
@@ -565,5 +566,3 @@ function calculateDefinitionWithConnections(centerActivations: ImprovedCenterAct
   if (definedCenters.length === 3) return "Triple Split Definition";
   return "Quadruple Split Definition";
 }
-
-export { calculateImprovedHumanDesign };
