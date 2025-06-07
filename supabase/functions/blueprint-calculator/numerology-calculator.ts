@@ -14,6 +14,10 @@ export interface NumerologyProfile {
   calculation_method: string;
 }
 
+export interface NumerologyOptions {
+  method: 'component' | 'full_digit';
+}
+
 // Letter to number mapping (Pythagorean system)
 const LETTER_VALUES: { [key: string]: number } = {
   'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'F': 6, 'G': 7, 'H': 8, 'I': 9,
@@ -24,16 +28,19 @@ const LETTER_VALUES: { [key: string]: number } = {
 // Vowels for Soul Urge calculation
 const VOWELS = new Set(['A', 'E', 'I', 'O', 'U', 'Y']);
 
-export function calculateNumerology(birthDate: string, fullName: string): NumerologyProfile {
-  console.log(`Calculating numerology for ${fullName}, born ${birthDate}`);
+export function calculateNumerology(
+  birthDate: string, 
+  fullName: string, 
+  options: NumerologyOptions = { method: 'component' }
+): NumerologyProfile {
+  console.log(`Calculating numerology for ${fullName}, born ${birthDate} using ${options.method} method`);
   
-  const dateObj = new Date(birthDate);
-  const month = dateObj.getMonth() + 1;
-  const day = dateObj.getDate();
-  const year = dateObj.getFullYear();
+  // Parse date using UTC to avoid timezone shifting
+  const [year, month, day] = birthDate.split('-').map(Number);
+  const dateObj = new Date(Date.UTC(year, month - 1, day));
   
-  // Life Path Number - proper digit-by-digit reduction
-  const lifePathNumber = calculateLifePathNumber(month, day, year);
+  // Life Path Number - with method selection
+  const lifePathNumber = calculateLifePathNumber(year, month, day, options.method);
   
   // Expression Number (full name)
   const expressionNumber = calculateExpressionNumber(fullName);
@@ -45,7 +52,7 @@ export function calculateNumerology(birthDate: string, fullName: string): Numero
   const personalityNumber = calculatePersonalityNumber(fullName);
   
   // Birthday Number (day of birth)
-  const birthdayNumber = reduceNumber(day);
+  const birthdayNumber = reduceToNumber(day);
   
   return {
     life_path_number: lifePathNumber,
@@ -57,35 +64,56 @@ export function calculateNumerology(birthDate: string, fullName: string): Numero
     expression_keyword: getExpressionKeyword(expressionNumber),
     soul_urge_keyword: getSoulUrgeKeyword(soulUrgeNumber),
     personality_keyword: getPersonalityKeyword(personalityNumber),
-    calculation_method: "classical_pythagorean_with_master_numbers"
+    calculation_method: `${options.method}_pythagorean_with_master_numbers`
   };
 }
 
-// Proper Life Path calculation with master number preservation
-function calculateLifePathNumber(month: number, day: number, year: number): number | string {
-  console.log(`Calculating Life Path for ${month}/${day}/${year}`);
+// Normalize names to handle international characters
+function normalizeName(name: string): string {
+  return name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Strip diacritics
+    .toUpperCase()
+    .replace(/[^A-Z\s]/g, ''); // Keep letters and spaces for word splitting
+}
+
+// Life Path calculation with method selection
+function calculateLifePathNumber(year: number, month: number, day: number, method: 'component' | 'full_digit'): number | string {
+  console.log(`Calculating Life Path for ${month}/${day}/${year} using ${method} method`);
   
-  // Reduce each component separately, preserving master numbers
-  const reducedMonth = reduceNumber(month);
-  const reducedDay = reduceNumber(day);
-  const reducedYear = reduceToSingleDigitPreservingMasters(year);
+  if (method === 'full_digit') {
+    // Full digit method: add all digits in the date
+    const dateString = `${year}${month.toString().padStart(2, '0')}${day.toString().padStart(2, '0')}`;
+    const digitSum = [...dateString].map(Number).reduce((a, b) => a + b, 0);
+    console.log(`Full digit sum: ${digitSum}`);
+    return reduceNumber(digitSum);
+  }
+  
+  // Component method: reduce each component separately
+  const reducedMonth = reduceToNumber(month);
+  const reducedDay = reduceToNumber(day);
+  const reducedYear = reduceYear(year);
   
   console.log(`Reduced components: month=${reducedMonth}, day=${reducedDay}, year=${reducedYear}`);
   
   // Add the reduced components
-  const sum = Number(reducedMonth) + Number(reducedDay) + Number(reducedYear);
+  const sum = reducedMonth + (typeof reducedYear === 'string' ? parseInt(reducedYear) : reducedYear);
   console.log(`Sum of reduced components: ${sum}`);
   
-  // Final reduction, preserving master numbers
   return reduceNumber(sum);
 }
 
 // Expression Number calculation (full name)
 function calculateExpressionNumber(fullName: string): number | string {
-  const cleanName = fullName.toUpperCase().replace(/[^A-Z]/g, '');
-  let sum = 0;
+  const normalizedName = normalizeName(fullName);
   
-  for (const letter of cleanName) {
+  if (!normalizedName.trim()) {
+    console.warn('Empty name after normalization');
+    return 1; // Default fallback
+  }
+  
+  let sum = 0;
+  for (const letter of normalizedName.replace(/\s/g, '')) {
     if (LETTER_VALUES[letter]) {
       sum += LETTER_VALUES[letter];
     }
@@ -96,13 +124,20 @@ function calculateExpressionNumber(fullName: string): number | string {
 
 // Soul Urge Number calculation (vowels only)
 function calculateSoulUrgeNumber(fullName: string): number | string {
-  const cleanName = fullName.toUpperCase().replace(/[^A-Z]/g, '');
+  const normalizedName = normalizeName(fullName);
   let sum = 0;
+  let hasVowels = false;
   
-  for (const letter of cleanName) {
+  for (const letter of normalizedName.replace(/\s/g, '')) {
     if (VOWELS.has(letter) && LETTER_VALUES[letter]) {
       sum += LETTER_VALUES[letter];
+      hasVowels = true;
     }
+  }
+  
+  if (!hasVowels) {
+    console.warn('No vowels found in name');
+    return 1; // Default fallback
   }
   
   return reduceNumber(sum);
@@ -110,19 +145,26 @@ function calculateSoulUrgeNumber(fullName: string): number | string {
 
 // Personality Number calculation (consonants only)
 function calculatePersonalityNumber(fullName: string): number | string {
-  const cleanName = fullName.toUpperCase().replace(/[^A-Z]/g, '');
+  const normalizedName = normalizeName(fullName);
   let sum = 0;
+  let hasConsonants = false;
   
-  for (const letter of cleanName) {
+  for (const letter of normalizedName.replace(/\s/g, '')) {
     if (!VOWELS.has(letter) && LETTER_VALUES[letter]) {
       sum += LETTER_VALUES[letter];
+      hasConsonants = true;
     }
+  }
+  
+  if (!hasConsonants) {
+    console.warn('No consonants found in name');
+    return 1; // Default fallback
   }
   
   return reduceNumber(sum);
 }
 
-// Proper reduction with master number preservation
+// Improved reduction that preserves master numbers but returns consistent types
 function reduceNumber(num: number): number | string {
   if (num <= 9) return num;
   
@@ -132,22 +174,34 @@ function reduceNumber(num: number): number | string {
   }
   
   // Reduce by adding digits
-  const digits = num.toString().split('').map(Number);
-  const sum = digits.reduce((a, b) => a + b, 0);
-  
-  // Check if the sum is a master number
-  if (sum === 11 || sum === 22 || sum === 33) {
-    return sum.toString();
+  let current = num;
+  while (current > 9 && ![11, 22, 33].includes(current)) {
+    const digits = current.toString().split('').map(Number);
+    current = digits.reduce((a, b) => a + b, 0);
   }
   
-  // Continue reducing if still greater than 9
-  return sum > 9 ? reduceNumber(sum) : sum;
+  // Check if final result is a master number
+  if (current === 11 || current === 22 || current === 33) {
+    return current.toString();
+  }
+  
+  return current;
 }
 
-// Special reduction for years that preserves master numbers
-function reduceToSingleDigitPreservingMasters(num: number): number | string {
-  let current = num;
+// Helper for non-master-number reductions (always returns number)
+function reduceToNumber(num: number): number {
+  while (num > 9) {
+    const digits = num.toString().split('').map(Number);
+    num = digits.reduce((a, b) => a + b, 0);
+  }
+  return num;
+}
+
+// Special year reduction that preserves master numbers
+function reduceYear(year: number): number | string {
+  let current = year;
   
+  // Reduce until we get to a manageable range
   while (current > 33) {
     const digits = current.toString().split('').map(Number);
     current = digits.reduce((a, b) => a + b, 0);
@@ -165,6 +219,11 @@ function reduceToSingleDigitPreservingMasters(num: number): number | string {
   }
   
   return current;
+}
+
+// Helper to get numeric value from number|string for calculations
+function getNumericValue(value: number | string): number {
+  return typeof value === 'string' ? parseInt(value) : value;
 }
 
 // Enhanced keyword mappings
