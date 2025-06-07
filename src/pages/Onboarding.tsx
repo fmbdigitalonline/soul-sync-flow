@@ -44,7 +44,6 @@ export default function Onboarding() {
     birthDate: "",
     birthTime: "",
     birthLocation: "",
-    timezone: "UTC",
     personality: "INFJ" // Default MBTI
   });
   
@@ -293,6 +292,7 @@ export default function Onboarding() {
                 birth_date: formData.birthDate,
                 birth_time_local: formData.birthTime,
                 birth_location: formData.birthLocation,
+                timezone: "AUTO_RESOLVED", // This will be automatically resolved by the backend
                 personality: formData.personality
               }}
               onComplete={handleBlueprintComplete}
