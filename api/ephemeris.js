@@ -1,4 +1,3 @@
-
 // CORS headers for browser requests
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -50,6 +49,7 @@ function calculatePlanetaryPositions(datetime, coordinates) {
   });
 
   // Calculate lunar nodes
+  console.log("Calculating lunar nodes...");
   const lunarNodes = calculateLunarNodes(jd);
   ephemerisData.north_node = {
     longitude: lunarNodes.northNode,
@@ -69,9 +69,11 @@ function calculatePlanetaryPositions(datetime, coordinates) {
   };
 
   // Calculate aspects between planets
+  console.log("Calculating aspects...");
   const aspects = calculateAspects(ephemerisData);
 
   // Calculate astrological houses
+  console.log("Calculating houses...");
   const houses = calculateHouses(jd, lat, lon, ephemerisData);
 
   return {
