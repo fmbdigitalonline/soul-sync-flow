@@ -49,7 +49,36 @@ function calculatePlanetaryPositions(datetime, coordinates) {
     }
   });
 
-  return ephemerisData;
+  // Calculate lunar nodes
+  const lunarNodes = calculateLunarNodes(jd);
+  ephemerisData.north_node = {
+    longitude: lunarNodes.northNode,
+    latitude: 0,
+    distance: 0,
+    speed: -0.053,
+    right_ascension: lunarNodes.northNode,
+    declination: 0
+  };
+  ephemerisData.south_node = {
+    longitude: lunarNodes.southNode,
+    latitude: 0,
+    distance: 0,
+    speed: -0.053,
+    right_ascension: lunarNodes.southNode,
+    declination: 0
+  };
+
+  // Calculate aspects between planets
+  const aspects = calculateAspects(ephemerisData);
+
+  // Calculate astrological houses
+  const houses = calculateHouses(jd, lat, lon, ephemerisData);
+
+  return {
+    planets: ephemerisData,
+    aspects: aspects,
+    houses: houses
+  };
 }
 
 // Calculate Julian Day Number
@@ -164,6 +193,235 @@ function calculatePlanetPosition(T, a, period, node, incl, peri, epoch) {
   };
 }
 
+// Calculate lunar nodes
+function calculateLunarNodes(jd) {
+  const T = (jd - 2451545.0) / 36525.0;
+  
+  // Mean longitude of ascending node in degrees
+  let meanAscendingNode = 125.0445479 - 1934.1362891 * T + 0.0020754 * T * T + T * T * T / 467441.0 - T * T * T * T / 60616000.0;
+  
+  // Normalize to 0-360 degrees
+  meanAscendingNode = meanAscendingNode % 360;
+  if (meanAscendingNode < 0) meanAscendingNode += 360;
+  
+  const northNode = meanAscendingNode;
+  const southNode = (northNode + 180) % 360;
+  
+  console.log(`Calculated North Node: ${northNode.toFixed(6)}°, South Node: ${southNode.toFixed(6)}°`);
+  
+  return {
+    northNode: northNode,
+    southNode: southNode
+  };
+}
+
+// Calculate aspects between planets
+function calculateAspects(ephemerisData) {
+  const aspects = [];
+  const aspectOrbs = {
+    conjunction: { degrees: 0, orb: 8 },
+    opposition: { degrees: 180, orb: 8 },
+    trine: { degrees: 120, orb: 8 },
+    square: { degrees: 90, orb: 8 },
+    sextile: { degrees: 60, orb: 6 },
+    quincunx: { degrees: 150, orb: 3 },
+    semisextile: { degrees: 30, orb: 3 }
+  };
+
+  const planets = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto', 'north_node'];
+  
+  for (let i = 0; i < planets.length; i++) {
+    for (let j = i + 1; j < planets.length; j++) {
+      const planet1 = planets[i];
+      const planet2 = planets[j];
+      
+      const pos1 = ephemerisData[planet1];
+      const pos2 = ephemerisData[planet2];
+      
+      if (pos1 && pos2 && pos1.longitude !== undefined && pos2.longitude !== undefined) {
+        let angleDiff = Math.abs(pos1.longitude - pos2.longitude);
+        if (angleDiff > 180) angleDiff = 360 - angleDiff;
+        
+        for (const [aspectName, aspectData] of Object.entries(aspectOrbs)) {
+          const targetAngle = aspectData.degrees;
+          const orb = aspectData.orb;
+          
+          if (Math.abs(angleDiff - targetAngle) <= orb) {
+            const exactness = Math.abs(angleDiff - targetAngle);
+            const strength = ((orb - exactness) / orb) * 100;
+            
+            aspects.push({
+              planet1: planet1,
+              planet2: planet2,
+              aspect: aspectName,
+              angle: angleDiff,
+              exactness: exactness,
+              strength: Math.round(strength * 100) / 100,
+              applying: pos1.speed > pos2.speed
+            });
+            break;
+          }
+        }
+      }
+    }
+  }
+  
+  console.log(`Calculated ${aspects.length} aspects`);
+  return aspects;
+}
+
+// Calculate astrological houses using Placidus system
+function calculateHouses(jd, latitude, longitude, ephemerisData) {
+  try {
+    // Calculate Local Sidereal Time
+    const lst = calculateLocalSiderealTime(jd, longitude);
+    
+    // Calculate RAMC (Right Ascension of Medium Coeli)
+    const ramc = (lst * 15) % 360;
+    
+    // Calculate Ascendant
+    const ascendant = calculateAscendant(ramc, latitude);
+    
+    // Medium Coeli (Midheaven) is the RAMC
+    const midheaven = ramc;
+    
+    // Calculate house cusps using simplified Placidus system
+    const houses = calculatePlacidusHouses(ascendant, midheaven);
+    
+    // Add planets to houses
+    const housesWithPlanets = assignPlanetsToHouses(houses, ephemerisData);
+    
+    console.log(`Calculated houses - ASC: ${ascendant.toFixed(2)}°, MC: ${midheaven.toFixed(2)}°`);
+    
+    return {
+      houses: housesWithPlanets,
+      ascendant: ascendant,
+      midheaven: midheaven,
+      descendant: (ascendant + 180) % 360,
+      ic: (midheaven + 180) % 360
+    };
+  } catch (error) {
+    console.error("Error calculating houses:", error);
+    return { error: error.message };
+  }
+}
+
+function calculateLocalSiderealTime(jd, longitude) {
+  const T = (jd - 2451545.0) / 36525.0;
+  
+  // Mean sidereal time at Greenwich (in hours)
+  let gst = 280.46061837 + 360.98564736629 * (jd - 2451545.0) + 0.000387933 * T * T - T * T * T / 38710000.0;
+  
+  // Normalize to 0-360 degrees
+  gst = gst % 360;
+  if (gst < 0) gst += 360;
+  
+  // Convert to hours and add longitude correction
+  const gstHours = gst / 15.0;
+  const longitudeHours = longitude / 15.0;
+  
+  let lst = gstHours + longitudeHours;
+  
+  // Normalize to 0-24 hours
+  lst = lst % 24;
+  if (lst < 0) lst += 24;
+  
+  return lst;
+}
+
+function calculateAscendant(ramc, latitude) {
+  const ramcRad = ramc * Math.PI / 180;
+  const latRad = latitude * Math.PI / 180;
+  
+  // Obliquity of ecliptic
+  const obliquity = 23.439291 * Math.PI / 180;
+  
+  // Calculate Ascendant
+  const y = -Math.cos(ramcRad);
+  const x = Math.sin(ramcRad) * Math.cos(obliquity) + Math.tan(latRad) * Math.sin(obliquity);
+  
+  let ascendant = Math.atan2(y, x) * 180 / Math.PI;
+  
+  // Normalize to 0-360 degrees
+  ascendant = (ascendant + 360) % 360;
+  
+  return ascendant;
+}
+
+function calculatePlacidusHouses(ascendant, midheaven) {
+  const houses = [];
+  
+  // Calculate house cusps (simplified Placidus)
+  houses[0] = { cusp: 1, longitude: ascendant };
+  houses[9] = { cusp: 10, longitude: midheaven };
+  
+  const ic = (midheaven + 180) % 360;
+  const descendant = (ascendant + 180) % 360;
+  
+  houses[3] = { cusp: 4, longitude: ic };
+  houses[6] = { cusp: 7, longitude: descendant };
+  
+  // Calculate intermediate house cusps
+  const firstQuadrant = (midheaven - ascendant + 360) % 360;
+  houses[1] = { cusp: 2, longitude: (ascendant + firstQuadrant / 3) % 360 };
+  houses[2] = { cusp: 3, longitude: (ascendant + 2 * firstQuadrant / 3) % 360 };
+  
+  const secondQuadrant = (descendant - ic + 360) % 360;
+  houses[4] = { cusp: 5, longitude: (ic + secondQuadrant / 3) % 360 };
+  houses[5] = { cusp: 6, longitude: (ic + 2 * secondQuadrant / 3) % 360 };
+  
+  const thirdQuadrant = (ic - descendant + 360) % 360;
+  houses[7] = { cusp: 8, longitude: (descendant + thirdQuadrant / 3) % 360 };
+  houses[8] = { cusp: 9, longitude: (descendant + 2 * thirdQuadrant / 3) % 360 };
+  
+  const fourthQuadrant = (ascendant - midheaven + 360) % 360;
+  houses[10] = { cusp: 11, longitude: (midheaven + fourthQuadrant / 3) % 360 };
+  houses[11] = { cusp: 12, longitude: (midheaven + 2 * fourthQuadrant / 3) % 360 };
+  
+  return houses;
+}
+
+function assignPlanetsToHouses(houses, ephemerisData) {
+  const housesWithPlanets = houses.map(house => ({ ...house, planets: [] }));
+  
+  const planets = ["sun", "moon", "mercury", "venus", "mars", "jupiter", "saturn", "uranus", "neptune", "pluto", "north_node", "south_node"];
+  
+  planets.forEach(planet => {
+    const position = ephemerisData[planet];
+    if (position && typeof position.longitude === 'number') {
+      const houseIndex = findHouseForLongitude(position.longitude, houses);
+      if (houseIndex >= 0 && houseIndex < housesWithPlanets.length) {
+        housesWithPlanets[houseIndex].planets.push({
+          name: planet,
+          longitude: position.longitude
+        });
+      }
+    }
+  });
+  
+  return housesWithPlanets;
+}
+
+function findHouseForLongitude(longitude, houses) {
+  for (let i = 0; i < houses.length; i++) {
+    const currentHouse = houses[i].longitude;
+    const nextHouse = houses[(i + 1) % houses.length].longitude;
+    
+    // Handle crossing 0 degrees
+    if (currentHouse > nextHouse) {
+      if (longitude >= currentHouse || longitude < nextHouse) {
+        return i;
+      }
+    } else {
+      if (longitude >= currentHouse && longitude < nextHouse) {
+        return i;
+      }
+    }
+  }
+  
+  return 0; // Default to first house
+}
+
 // This is the main serverless function handler.
 export default async function handler(req, res) {
   // Set CORS headers to allow your Supabase app to call this API
@@ -192,10 +450,10 @@ export default async function handler(req, res) {
 
     console.log(`Processing request for datetime: ${datetime}, coordinates: ${coordinates}`);
     
-    // Calculate ephemeris data using simplified astronomical calculations
+    // Calculate complete ephemeris data including lunar nodes, aspects, and houses
     const ephemerisData = calculatePlanetaryPositions(datetime, coordinates);
 
-    console.log('Ephemeris calculation completed successfully');
+    console.log('Complete ephemeris calculation completed successfully');
 
     // Send the successful JSON response
     res.status(200).json({ 
@@ -204,11 +462,14 @@ export default async function handler(req, res) {
       metadata: {
         calculated_at: new Date().toISOString(),
         coordinates: coordinates,
-        engine: 'simplified-astronomy',
+        engine: 'complete-astrology-engine',
+        features: ['planetary_positions', 'lunar_nodes', 'aspects', 'houses'],
         debug_info: {
-          engine_version: 'simplified-astronomy v1.0',
+          engine_version: 'complete-astrology-engine v1.0',
           runtime: 'vercel-serverless',
-          bodies_calculated: Object.keys(ephemerisData)
+          planets_calculated: Object.keys(ephemerisData.planets || {}),
+          aspects_found: ephemerisData.aspects?.length || 0,
+          houses_calculated: ephemerisData.houses?.houses?.length || 0
         }
       }
     });
@@ -218,7 +479,7 @@ export default async function handler(req, res) {
     res.status(500).json({ 
       success: false, 
       error: error.message || 'Internal server error during ephemeris calculation',
-      engine: 'simplified-astronomy'
+      engine: 'complete-astrology-engine'
     });
   }
 }
