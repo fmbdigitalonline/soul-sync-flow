@@ -1,3 +1,4 @@
+
 import { SupabaseClient } from '@supabase/supabase-js';
 
 export interface BlueprintData {
@@ -132,7 +133,8 @@ class BlueprintService {
       const { data: { user } } = await this.supabase.auth.getUser();
       
       if (!user) {
-        return { success: false, error: 'User not authenticated' };
+        console.error('User not authenticated when trying to save blueprint');
+        return { success: false, error: 'User not authenticated. Please sign in to save your blueprint.' };
       }
 
       // Check if user already has an active blueprint

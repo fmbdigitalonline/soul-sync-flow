@@ -13,11 +13,13 @@ import { BlueprintData, blueprintService } from "@/services/blueprint-service";
 import { useToast } from "@/hooks/use-toast";
 import { useOnboarding3D } from "@/hooks/use-onboarding-3d";
 import { useSoulOrb } from "@/contexts/SoulOrbContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Onboarding() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { speak } = useSoulOrb();
+  const { user, loading: authLoading } = useAuth();
   
   // Get the onboarding 3D functionality
   const {
@@ -111,6 +113,19 @@ export default function Onboarding() {
       }, 1500);
     }
   }, [blueprintGenerated, navigate]);
+
+  // Check if user is authenticated when trying to generate blueprint
+  useEffect(() => {
+    if (currentStep === 6 && !authLoading && !user) {
+      console.log("User not authenticated, redirecting to auth page");
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to generate your Soul Blueprint.",
+        variant: "destructive",
+      });
+      navigate("/auth");
+    }
+  }, [currentStep, user, authLoading, navigate, toast]);
 
   // Render the appropriate content based on the current step
   const renderStepContent = () => {
@@ -276,11 +291,37 @@ export default function Onboarding() {
             </div>
             <div className="flex justify-between pt-4">
               <Button variant="ghost" onClick={goToPrevStep}>Back</Button>
-              <Button onClick={goToNextStep}>Continue</Button>
+              <Button onClick={() => {
+                // Check if user is authenticated before proceeding
+                if (!user && !authLoading) {
+                  toast({
+                    title: "Authentication Required",
+                    description: "Please sign in to continue with blueprint generation.",
+                  });
+                  navigate("/auth");
+                  return;
+                }
+                goToNextStep();
+              }}>
+                Continue
+              </Button>
             </div>
           </div>
         );
       case 6: // Generating Blueprint
+        // Only show this step if user is authenticated
+        if (!user && !authLoading) {
+          return (
+            <div className="space-y-6 text-center max-w-md mx-auto">
+              <h2 className="text-xl font-display font-bold">Authentication Required</h2>
+              <p className="text-white/80">Please sign in to generate your Soul Blueprint.</p>
+              <Button onClick={() => navigate("/auth")} className="bg-soul-purple hover:bg-soul-purple/90">
+                Sign In
+              </Button>
+            </div>
+          );
+        }
+
         return (
           <div className="space-y-6 text-center max-w-md mx-auto">
             <h2 className="text-xl font-display font-bold">Generating Your Soul Blueprint</h2>
@@ -315,6 +356,8 @@ export default function Onboarding() {
     // Add a delayed navigation check to handle cases where blueprint exists
     const checkBlueprintAndNavigate = async () => {
       try {
+        if (!user) return; // Only check if user is authenticated
+        
         const { data: blueprint } = await blueprintService.getActiveBlueprintData();
         
         if (blueprint && currentStep === 0) {
@@ -334,11 +377,12 @@ export default function Onboarding() {
       }
     };
     
-    // Run the check after a short delay to allow the component to mount properly
-    const timer = setTimeout(checkBlueprintAndNavigate, 1500);
-    
-    return () => clearTimeout(timer);
-  }, [navigate, toast, currentStep]);
+    // Only run the check if user is authenticated and not in auth loading state
+    if (user && !authLoading) {
+      const timer = setTimeout(checkBlueprintAndNavigate, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [navigate, toast, currentStep, user, authLoading]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-soul-black to-soul-purple/20 text-white relative overflow-hidden">
