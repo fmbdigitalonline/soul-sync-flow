@@ -1,3 +1,4 @@
+
 // Improved Human Design calculation with canonical gate wheel
 import { GATE_TO_CENTER_MAP, CHANNELS, GATE_NAMES } from './human-design-gates.ts';
 import { findGateAndLineFromLongitude, zodiacLongitudeToHumanDesignGate } from './human-design-wheel.ts';
@@ -167,7 +168,7 @@ function determineImprovedCenterActivations(personalityGates: ImprovedGateActiva
   const centerTypes = {
     "Head": "pressure",
     "Ajna": "awareness", 
-    "Throat": "motor",
+    "Throat": "awareness",  // Fixed: Throat is communication/awareness, not motor
     "G": "awareness",
     "Heart": "motor",
     "Solar Plexus": "motor",
@@ -219,11 +220,12 @@ function determineImprovedCenterActivations(personalityGates: ImprovedGateActiva
     }
   });
   
-  // Calculate openness percentages
+  // Calculate openness percentages with safety guard
   Object.keys(centerActivations).forEach(center => {
     const totalGatesInCenter = Object.values(GATE_TO_CENTER_MAP).filter(c => c === center).length;
     const definedGates = centerActivations[center].gates.length;
-    centerActivations[center].openness_percentage = Math.round((definedGates / totalGatesInCenter) * 100);
+    centerActivations[center].openness_percentage = totalGatesInCenter > 0 ? 
+      Math.round((definedGates / totalGatesInCenter) * 100) : 0;
   });
   
   return centerActivations;
@@ -244,8 +246,11 @@ function determineTypeFromAllCenters(centerActivations: ImprovedCenterActivation
   // Count all defined centers
   const definedCenters = Object.values(centerActivations).filter(center => center.defined);
   const definedCenterCount = definedCenters.length;
+  const definedCenterNames = Object.entries(centerActivations)
+    .filter(([_, center]) => center.defined)
+    .map(([name, _]) => name);
   
-  console.log(`Defined centers (${definedCenterCount}):`, definedCenters.map((_, i) => Object.keys(centerActivations)[i]).filter((_, i) => definedCenters[i]));
+  console.log(`Defined centers (${definedCenterCount}):`, definedCenterNames);
   
   // Reflector: No defined centers
   if (definedCenterCount === 0) {
@@ -265,11 +270,11 @@ function determineTypeFromAllCenters(centerActivations: ImprovedCenterActivation
     }
   }
   
-  // Manifesting Generator: Sacral AND motor connected to throat
+  // Manifesting Generator: Sacral AND motor connected to throat (enhanced BFS)
   if (sacralDefined && throatDefined) {
-    const sacralConnectedToThroat = checkSacralToThroatConnection(centerActivations);
+    const sacralConnectedToThroat = checkSacralToThroatConnectionBFS(centerActivations);
     if (sacralConnectedToThroat) {
-      console.log("Type: MANIFESTING GENERATOR (sacral connected to throat)");
+      console.log("Type: MANIFESTING GENERATOR (sacral connected to throat via BFS)");
       return "MANIFESTING_GENERATOR";
     }
   }
@@ -301,15 +306,62 @@ function checkMotorToThroatConnection(centerActivations: ImprovedCenterActivatio
   return connected;
 }
 
-function checkSacralToThroatConnection(centerActivations: ImprovedCenterActivation): boolean {
-  const throatChannels = centerActivations["Throat"]?.channels || [];
-  const sacralChannels = centerActivations["Sacral"]?.channels || [];
+// Enhanced BFS connection check for Manifesting Generators
+function checkSacralToThroatConnectionBFS(centerActivations: ImprovedCenterActivation): boolean {
+  const definedCenters = Object.entries(centerActivations)
+    .filter(([_, center]) => center.defined)
+    .map(([name, _]) => name);
   
-  // Check for direct or indirect connection
-  const directConnection = throatChannels.some(channel => sacralChannels.includes(channel));
+  if (!definedCenters.includes("Sacral") || !definedCenters.includes("Throat")) {
+    return false;
+  }
   
-  console.log("Sacral to throat connection:", directConnection, "throat channels:", throatChannels, "sacral channels:", sacralChannels);
-  return directConnection;
+  // Build connection graph from channels
+  const connections: { [center: string]: string[] } = {};
+  definedCenters.forEach(center => {
+    connections[center] = [];
+  });
+  
+  // Add connections based on complete channels
+  Object.entries(CHANNELS).forEach(([channelKey, channelData]) => {
+    const [gate1, gate2] = channelKey.split('-').map(Number);
+    const allGates = [
+      ...Object.values(centerActivations).flatMap(center => center.gates)
+    ];
+    
+    if (allGates.includes(gate1) && allGates.includes(gate2)) {
+      const [center1, center2] = channelData.centers;
+      if (connections[center1] && connections[center2]) {
+        connections[center1].push(center2);
+        connections[center2].push(center1);
+      }
+    }
+  });
+  
+  // BFS from Sacral to Throat
+  const visited = new Set<string>();
+  const queue = ["Sacral"];
+  visited.add("Sacral");
+  
+  while (queue.length > 0) {
+    const current = queue.shift()!;
+    
+    if (current === "Throat") {
+      console.log("Sacral to throat connection found via BFS");
+      return true;
+    }
+    
+    const neighbors = connections[current] || [];
+    neighbors.forEach(neighbor => {
+      if (!visited.has(neighbor)) {
+        visited.add(neighbor);
+        queue.push(neighbor);
+      }
+    });
+  }
+  
+  console.log("No Sacral to throat connection found via BFS");
+  return false;
 }
 
 // Enhanced authority determination with complete hierarchy
@@ -334,8 +386,8 @@ function determineAuthorityFromCenterHierarchy(centerActivations: ImprovedCenter
     return "EGO";
   }
   if (centerActivations["G"]?.defined) {
-    console.log("Authority: SELF (G Center defined)");
-    return "SELF_PROJECTED";
+    console.log("Authority: SELF-PROJECTED EGO (G Center defined)");
+    return "SELF-PROJECTED";
   }
   if (centerActivations["Ajna"]?.defined) {
     console.log("Authority: MENTAL (Ajna defined - rare)");
@@ -382,8 +434,10 @@ function getProfileDescription(conscious: number, unconscious: number): string {
     "4/1": "The Opportunist Investigator",
     "5/1": "The Heretic Investigator",
     "5/2": "The Heretic Hermit",
+    "5/3": "The Heretic Martyr",
     "6/2": "The Role Model Hermit",
-    "6/3": "The Role Model Martyr"
+    "6/3": "The Role Model Martyr",
+    "6/4": "The Role Model Opportunist"
   };
   
   return profiles[`${conscious}/${unconscious}`] || "Unique Profile Combination";
@@ -502,35 +556,63 @@ function calculateDefinitionWithConnections(centerActivations: ImprovedCenterAct
   if (definedCenters.length === 0) return "No Definition (Reflector)";
   if (definedCenters.length === 1) return "Single Definition";
   
-  // Analyze connection patterns
-  let connected = true;
-  for (let i = 0; i < definedCenters.length - 1; i++) {
-    const center1 = definedCenters[i];
-    const center2 = definedCenters[i + 1];
+  // Build connection graph from complete channels
+  const connections: { [center: string]: string[] } = {};
+  definedCenters.forEach(center => {
+    connections[center] = [];
+  });
+  
+  // Add connections based on complete channels
+  Object.entries(CHANNELS).forEach(([channelKey, channelData]) => {
+    const [gate1, gate2] = channelKey.split('-').map(Number);
+    const allGates = Object.values(centerActivations).flatMap(center => center.gates);
     
-    const channelExists = Object.keys(CHANNELS).some(channelKey => {
-      const [gate1, gate2] = channelKey.split('-').map(Number);
-      return (
-        centerActivations[center1].gates.includes(gate1) &&
-        centerActivations[center2].gates.includes(gate2)
-      ) || (
-        centerActivations[center1].gates.includes(gate2) &&
-        centerActivations[center2].gates.includes(gate1)
-      );
-    });
-    
-    if (!channelExists) {
-      connected = false;
-      break;
+    if (allGates.includes(gate1) && allGates.includes(gate2)) {
+      const [center1, center2] = channelData.centers;
+      if (connections[center1] && connections[center2]) {
+        connections[center1].push(center2);
+        connections[center2].push(center1);
+      }
     }
+  });
+  
+  // Find connected components using DFS
+  const visited = new Set<string>();
+  const components: string[][] = [];
+  
+  definedCenters.forEach(center => {
+    if (!visited.has(center)) {
+      const component: string[] = [];
+      const stack = [center];
+      
+      while (stack.length > 0) {
+        const current = stack.pop()!;
+        if (!visited.has(current)) {
+          visited.add(current);
+          component.push(current);
+          const neighbors = connections[current] || [];
+          neighbors.forEach(neighbor => {
+            if (!visited.has(neighbor)) {
+              stack.push(neighbor);
+            }
+          });
+        }
+      }
+      
+      if (component.length > 0) {
+        components.push(component);
+      }
+    }
+  });
+  
+  // Determine definition type based on number of components
+  if (components.length === 1) {
+    return "Single Definition";
+  } else if (components.length === 2) {
+    return "Split Definition";
+  } else if (components.length === 3) {
+    return "Triple Split Definition";
+  } else {
+    return "Quadruple Split Definition";
   }
-  
-  if (connected) return "Single Definition (Connected)";
-  
-  // Split Definition logic
-  if (definedCenters.length === 2) return "Split Definition";
-  if (definedCenters.length === 3) return "Triple Split Definition";
-  return "Quadruple Split Definition";
 }
-
-export { calculateImprovedHumanDesign };
