@@ -1,19 +1,31 @@
-
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { BlueprintData } from "@/services/blueprint-service";
 import { CosmicCard } from "@/components/ui/cosmic-card";
+import { EnhancedBlueprintData } from "@/types/blueprint-enhanced";
+import { BlueprintEnhancementService } from "@/services/blueprint-enhancement-service";
+import EnhancedBlueprintViewer from "./EnhancedBlueprintViewer";
 
 interface BlueprintViewerProps {
   blueprint: BlueprintData;
 }
 
 export const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint }) => {
+  const [useEnhanced, setUseEnhanced] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
   
+  const enhancedBlueprint = useMemo(() => {
+    if (!useEnhanced) return null;
+    return BlueprintEnhancementService.enhanceBlueprintData(blueprint);
+  }, [blueprint, useEnhanced]);
+
+  if (useEnhanced && enhancedBlueprint) {
+    return <EnhancedBlueprintViewer blueprint={enhancedBlueprint} />;
+  }
+
   // Extract calculation metadata with proper typing to avoid TypeScript errors
   const metadata = blueprint?.metadata || {
     calculation_success: false,
