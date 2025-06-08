@@ -15,6 +15,12 @@ serve(async (req) => {
   try {
     const url = new URL(req.url);
     
+    // Add debug endpoint FIRST for testing calculation issues
+    if (url.pathname.includes('/debug-calculation')) {
+      const { default: debugEndpoint } = await import('./debug-endpoint.ts');
+      return await debugEndpoint(req);
+    }
+    
     // Handle test endpoints FIRST, before any other processing
     if (url.pathname.includes('/test-astronomia')) {
       const { default: testAstronomia } = await import('./test-astronomia.ts');
