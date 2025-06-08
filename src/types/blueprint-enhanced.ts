@@ -1,4 +1,6 @@
 
+import { BlueprintData } from "@/services/blueprint-service";
+
 export interface EnhancedBlueprintData extends BlueprintData {
   enhanced_sections: {
     energy_identity: {
