@@ -2,6 +2,24 @@
 import { BlueprintData } from "@/services/blueprint-service";
 
 export interface EnhancedBlueprintData extends BlueprintData {
+  // Core enrichments for personalized guidance
+  interaction_prefs: {
+    support_style: "Directive" | "Socratic" | "Reflective" | "Collaborative";
+    tone: "Warm-honest" | "Professional" | "Casual-friendly" | "Mystical" | "Scientific";
+    emoji_usage: "Minimal" | "Moderate" | "Abundant";
+    preferred_format: "Bullet-points" | "Paragraphs" | "Questions" | "Action-steps";
+  };
+  
+  marketing_archetype: {
+    primary: "Explorer" | "Hero" | "Sage" | "Creator" | "Caregiver" | "Magician" | "Ruler" | "Jester" | "Lover" | "Everyman" | "Innocent" | "Rebel";
+    secondary?: string;
+    brand_voice_keywords: string[];
+  };
+  
+  goal_persona: "Productivity" | "Creativity" | "Relationships" | "Health" | "Spirituality" | "Career" | "Adventure";
+  
+  north_star: string; // User's mission/purpose statement
+  
   enhanced_sections: {
     energy_identity: {
       facts: string[];
