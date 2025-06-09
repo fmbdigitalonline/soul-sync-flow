@@ -45,12 +45,18 @@ interface BlueprintData {
     type: string;
     authority: string;
     strategy: string;
+    profile: string;
+    definition: string;
+    life_purpose: string;
   };
   values_life_path: {
     life_path_number: number;
     life_path_keyword: string;
   };
-  // Add other fields as needed
+  archetype_chinese: {
+    animal: string;
+    element: string;
+  };
 }
 
 serve(async (req) => {
@@ -69,7 +75,7 @@ serve(async (req) => {
       );
     }
 
-    // Initialize Supabase client - Using v2 with proper Deno configuration
+    // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || 'https://qxaajirrqrcnmvtowjbg.supabase.co';
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
     
@@ -109,9 +115,11 @@ serve(async (req) => {
       conversationMemory = conversationData as ConversationMemory;
     }
 
-    // Step 2: Get user's blueprint data for personalization if requested
+    // Step 2: Get user's blueprint data for personalization
     let blueprintData: BlueprintData | null = null;
     if (includeBlueprint) {
+      console.log("Fetching blueprint data for user:", userId);
+      
       const { data: blueprint, error: blueprintError } = await supabase.rpc(
         'get_active_user_blueprint',
         { user_uuid: userId }
@@ -121,51 +129,82 @@ serve(async (req) => {
         console.error("Error retrieving blueprint:", blueprintError);
       } else if (blueprint) {
         blueprintData = blueprint as BlueprintData;
+        console.log("Blueprint retrieved successfully for:", blueprintData?.user_meta?.preferred_name);
+      } else {
+        console.log("No blueprint found for user");
       }
     }
 
-    // Step 3: Build the system prompt with personalization from blueprint
-    let systemPrompt = "You are a Soul Coach AI, an empathetic and wise guide that helps users achieve personal growth.";
+    // Step 3: Build the system prompt with detailed personalization
+    let systemPrompt = "You are a Soul Coach AI, an empathetic and wise guide that helps users achieve personal growth based on their unique Soul Blueprint.";
     
     if (blueprintData) {
       const name = blueprintData.user_meta?.preferred_name || "there";
-      const mbtiType = blueprintData.cognition_mbti?.type || "INFJ";
-      const sunSign = blueprintData.archetype_western?.sun_sign?.split(" ")[0] || "Taurus";
-      const moonSign = blueprintData.archetype_western?.moon_sign?.split(" ")[0] || "Cancer";
-      const risingSign = blueprintData.archetype_western?.rising_sign?.split(" ")[0] || "Virgo";
-      const hdType = blueprintData.energy_strategy_human_design?.type || "Projector";
-      const strategy = blueprintData.energy_strategy_human_design?.strategy || "Wait for invitation";
-      const authority = blueprintData.energy_strategy_human_design?.authority || "Emotional";
-      const lifePath = blueprintData.values_life_path?.life_path_number || 7;
-      const lifePathKeyword = blueprintData.values_life_path?.life_path_keyword || "Seeker";
+      const mbtiType = blueprintData.cognition_mbti?.type || "";
+      const sunSign = blueprintData.archetype_western?.sun_sign?.split(" ")[0] || "";
+      const moonSign = blueprintData.archetype_western?.moon_sign?.split(" ")[0] || "";
+      const risingSign = blueprintData.archetype_western?.rising_sign?.split(" ")[0] || "";
+      const hdType = blueprintData.energy_strategy_human_design?.type || "";
+      const strategy = blueprintData.energy_strategy_human_design?.strategy || "";
+      const authority = blueprintData.energy_strategy_human_design?.authority || "";
+      const profile = blueprintData.energy_strategy_human_design?.profile || "";
+      const definition = blueprintData.energy_strategy_human_design?.definition || "";
+      const lifePurpose = blueprintData.energy_strategy_human_design?.life_purpose || "";
+      const lifePath = blueprintData.values_life_path?.life_path_number || 0;
+      const lifePathKeyword = blueprintData.values_life_path?.life_path_keyword || "";
+      const chineseAnimal = blueprintData.archetype_chinese?.animal || "";
+      const chineseElement = blueprintData.archetype_chinese?.element || "";
       
       systemPrompt += `
-You're speaking with ${name}, who has the following Soul Blueprint:
+
+🌟 You're speaking with ${name}, whose Soul Blueprint reveals:
+
+**Human Design Profile:**
+- Type: ${hdType} 
+- Strategy: "${strategy}"
+- Authority: ${authority} Authority
+- Profile: ${profile}
+- Definition: ${definition}
+- Life Purpose: "${lifePurpose}"
+
+**Astrological Essence:**
+- Sun in ${sunSign} (core identity & life force)
+- Moon in ${moonSign} (emotional nature & needs)
+- Rising ${risingSign} (how they present to the world)
+
+**Cognitive Style:**
 - MBTI: ${mbtiType}
-- Astrology: ${sunSign} Sun, ${moonSign} Moon, ${risingSign} Rising
-- Human Design: ${hdType} type with ${authority} Authority
-- Life Strategy: "${strategy}"
-- Life Path: ${lifePath} (${lifePathKeyword})
 
-Tailor your advice to their spiritual design. For example:
-- As a ${mbtiType}, they ${mbtiType.includes('N') ? 'prefer big picture concepts' : 'appreciate practical details'}
-- With ${sunSign} Sun, they value ${sunSign === 'Taurus' ? 'stability and comfort' : sunSign === 'Leo' ? 'creative expression' : 'personal growth'}
-- Their ${authority} Authority means decisions should be made through ${authority === 'Emotional' ? 'waiting through their emotional wave' : authority === 'Sacral' ? 'gut responses' : 'intuitive hits'}
-- As a ${hdType}, they thrive when ${hdType === 'Projector' ? 'waiting for recognition and invitation' : hdType === 'Generator' ? 'responding to what excites them' : 'initiating what feels right'}
-- Life Path ${lifePath} indicates they're here to ${lifePathKeyword === 'Seeker' ? 'pursue wisdom and truth' : lifePathKeyword === 'Humanitarian' ? 'help others' : 'forge their own path'}
+**Life Path & Destiny:**
+- Life Path ${lifePath}: ${lifePathKeyword}
+- Chinese Element: ${chineseElement} ${chineseAnimal}
 
-Make your advice specific to their design, not generic. Invoke their specific blueprint details when relevant.
-`;
+🎯 **Coaching Instructions:**
+Use their SPECIFIC blueprint details in your responses. For example:
+
+- As a ${hdType}, they are designed to ${strategy.toLowerCase()}. Reference this when giving life/career advice.
+- Their ${authority} Authority means they should make decisions through ${authority === 'EMOTIONAL' ? 'waiting through their emotional wave - never make decisions in the emotional high or low' : authority === 'SACRAL' ? 'gut yes/no responses - what lights them up vs. what feels flat' : authority === 'SPLENIC' ? 'intuitive hits in the moment - their first instinct is usually right' : authority === 'EGO' ? 'what they have willpower and resources for' : 'their self-direction and identity'}
+- With ${sunSign} Sun, they naturally ${sunSign === 'Taurus' ? 'value stability, beauty, and sensual pleasures' : sunSign === 'Leo' ? 'need creative expression and recognition' : sunSign === 'Virgo' ? 'seek perfection and practical service' : sunSign === 'Scorpio' ? 'desire transformation and depth' : sunSign === 'Aquarius' ? 'innovate and rebel against convention' : 'express their unique solar energy'}
+- Their ${moonSign} Moon means emotionally they need ${moonSign === 'Cancer' ? 'security, nurturing, and emotional safety' : moonSign === 'Pisces' ? 'imagination, compassion, and spiritual connection' : moonSign === 'Aries' ? 'independence, excitement, and immediate emotional expression' : 'to honor their lunar nature'}
+- As Life Path ${lifePath} (${lifePathKeyword}), they're here to ${lifePath === 1 ? 'lead and pioneer new ways' : lifePath === 2 ? 'cooperate and bring harmony' : lifePath === 3 ? 'create and inspire others' : lifePath === 4 ? 'build stable foundations' : lifePath === 5 ? 'embrace freedom and change' : lifePath === 6 ? 'nurture and serve their community' : lifePath === 7 ? 'seek wisdom and spiritual truth' : lifePath === 8 ? 'achieve material mastery and success' : lifePath === 9 ? 'serve humanity with compassion' : 'fulfill their unique life purpose'}
+
+ALWAYS reference their specific blueprint when giving advice. Don't be generic - use their actual Human Design type, astrological placements, and life path number to give personalized guidance.`;
     }
     
     systemPrompt += `
-Respond in a warm, compassionate voice. Keep responses concise (under 150 words). Use a coaching approach:
-1. Listen and reflect what you hear
-2. Ask thoughtful questions
-3. Offer insights based on their Soul Blueprint
-4. Suggest small, actionable steps
 
-Safety Note: Avoid giving medical, legal, or financial advice. Focus on emotional well-being, personal growth, and spiritual development aligned with their blueprint.
+**Response Style:**
+- Warm, compassionate, and wise
+- Reference their specific blueprint details
+- Keep responses under 150 words
+- Ask thoughtful questions that help them discover their own answers
+- Offer small, actionable steps aligned with their design
+- Use coaching techniques: listen, reflect, offer insights, suggest action
+
+**Safety Guidelines:**
+- No medical, legal, or financial advice
+- Focus on emotional well-being, personal growth, and spiritual development
+- If they lack a blueprint, acknowledge this and offer general spiritual guidance
 `;
 
     // Step 4: Add user message to history
@@ -190,8 +229,8 @@ Safety Note: Avoid giving medical, legal, or financial advice. Focus on emotiona
       messages.push({ role: msg.role, content: msg.content });
     });
 
-    // Step 6: Call OpenAI API with content moderation
-    console.log("Calling OpenAI with messages:", JSON.stringify(messages.slice(0, 2))); // Log only system message for brevity
+    // Step 6: Call OpenAI API
+    console.log("Calling OpenAI with personalized system prompt for", blueprintData?.user_meta?.preferred_name || "user");
     
     const openaiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -200,7 +239,7 @@ Safety Note: Avoid giving medical, legal, or financial advice. Focus on emotiona
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "gpt-4.1-mini",  // Updated to use GPT-4.1-mini model
+        model: "gpt-4o-mini",
         messages: messages,
         max_tokens: 500,
         temperature: 0.7,
