@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 // CORS headers for browser requests
@@ -14,6 +15,12 @@ serve(async (req) => {
 
   try {
     const url = new URL(req.url);
+    
+    // Add Human Design test endpoint FIRST for testing your specific birth data
+    if (url.pathname.includes('/test-human-design')) {
+      const { default: testHumanDesign } = await import('./test-human-design.ts');
+      return await testHumanDesign(req);
+    }
     
     // Add debug endpoint FIRST for testing calculation issues
     if (url.pathname.includes('/debug-calculation')) {
