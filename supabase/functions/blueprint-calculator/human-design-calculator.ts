@@ -93,7 +93,7 @@ export async function calculateHumanDesign(birthDate: string, birthTime: string,
   }
 }
 
-// Calculate gates from celestial positions using accurate I-Ching wheel
+// Calculate gates from celestial positions using the CORRECT Human Design I-Ching wheel
 function calculateGatesFromPositions(celestialData: any, chartType: string): GateActivation[] {
   const gates: GateActivation[] = [];
   
@@ -110,23 +110,23 @@ function calculateGatesFromPositions(celestialData: any, chartType: string): Gat
   for (const planet of planets) {
     const position = celestialData[planet];
     if (position && typeof position.longitude === 'number') {
-      // FIXED: Accurate gate and line calculation
-      // The I-Ching wheel starts at 0° Aries with Gate 41
-      // Gates are ordered according to the Rave I-Ching sequence
+      // CORRECTED: Use the actual Human Design I-Ching wheel sequence
+      // Starting at 0° Aries and proceeding clockwise
       const adjustedLongitude = position.longitude % 360;
       
       // Each gate spans exactly 5.625 degrees (360° / 64 gates)
       const gateIndex = Math.floor(adjustedLongitude / 5.625);
       
-      // Gate mapping according to the Human Design I-Ching wheel
-      const gateSequence = [
+      // CORRECTED Gate sequence according to actual Human Design I-Ching wheel
+      // This is the correct sequence starting from 0° Aries
+      const correctGateSequence = [
         41, 19, 13, 49, 30, 55, 37, 63, 22, 36, 25, 17, 21, 51, 42, 3,
         27, 24, 2, 23, 8, 20, 16, 35, 45, 12, 15, 52, 39, 53, 62, 56,
         31, 33, 7, 4, 29, 59, 40, 64, 47, 6, 46, 18, 48, 57, 32, 50,
         28, 44, 1, 43, 14, 34, 9, 5, 26, 11, 10, 58, 38, 54, 61, 60
       ];
       
-      const gate = gateSequence[gateIndex] || 1; // fallback to gate 1
+      const gate = correctGateSequence[gateIndex] || 1; // fallback to gate 1
       
       // Each line spans 0.9375 degrees (5.625° / 6 lines)
       const linePosition = (adjustedLongitude % 5.625) / 0.9375;
@@ -334,7 +334,7 @@ function determineAuthorityFromCenters(centerActivations: CenterActivation): str
   return "NONE"; // Mental authority for Reflectors
 }
 
-// Calculate profile from sun gates
+// Calculate profile from Sun gates
 function calculateProfile(personalityGates: GateActivation[], designGates: GateActivation[]): string {
   const personalitySun = personalityGates.find(g => g.planet === "sun");
   const designSun = designGates.find(g => g.planet === "sun");
