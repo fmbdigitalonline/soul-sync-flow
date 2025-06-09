@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "@/lib/framer-motion";
@@ -7,6 +6,7 @@ import { Onboarding3DScene } from "@/components/ui/onboarding-3d-scene";
 import { BlueprintGenerator } from "@/components/blueprint/BlueprintGenerationFlow";
 import { zodiac } from "@/components/ui/zodiac";
 import { MBTISelector } from "@/components/blueprint/MBTISelector";
+import { GoalSelectionStep } from "@/components/blueprint/GoalSelectionStep";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BlueprintData, blueprintService } from "@/services/blueprint-service"; 
@@ -86,14 +86,47 @@ export default function Onboarding() {
     
     speak("Your soul blueprint has been generated! Let's explore it together.");
     
-    // Navigate to blueprint page after transition
+    // Navigate to blueprint page after a short delay
     setTimeout(() => {
       console.log("Navigating to blueprint page after blueprint generation");
+      navigate("/blueprint", { replace: true });
+    }, 1500);
+  };
+
+  // Handle goal selection completion
+  const handleGoalSelectionComplete = (preferences: { primary_goal: string; support_style: number; time_horizon: string }) => {
+    console.log("Goal selection completed with preferences:", preferences);
+    
+    // Update the blueprint with runtime preferences
+    if (blueprintData) {
+      const updatedBlueprint = {
+        ...blueprintData,
+        runtime_preferences: preferences
+      };
       
-      if (navigationTriggeredRef.current) {
-        navigate("/blueprint");
-      }
-    }, 2000);
+      // Save the updated blueprint
+      blueprintService.saveBlueprintData(updatedBlueprint).then(({ success, error }) => {
+        if (success) {
+          console.log("Blueprint updated with runtime preferences");
+          toast({
+            title: "Preferences Saved",
+            description: "Your coaching preferences have been saved to your blueprint.",
+          });
+          
+          // Navigate to blueprint page
+          setTimeout(() => {
+            navigate("/blueprint", { replace: true });
+          }, 1000);
+        } else {
+          console.error("Error saving runtime preferences:", error);
+          toast({
+            title: "Error",
+            description: "Failed to save your preferences. Please try again.",
+            variant: "destructive",
+          });
+        }
+      });
+    }
   };
 
   // On first render
@@ -126,6 +159,42 @@ export default function Onboarding() {
       navigate("/auth");
     }
   }, [currentStep, user, authLoading, navigate, toast]);
+
+  // Check for existing blueprint and redirect if found
+  useEffect(() => {
+    const checkExistingBlueprint = async () => {
+      try {
+        if (!user || authLoading) return;
+        
+        const { data: existingBlueprint, error } = await blueprintService.getActiveBlueprintData();
+        
+        if (error) {
+          console.log("No existing blueprint found or error fetching:", error);
+          return;
+        }
+        
+        if (existingBlueprint && currentStep === 0) {
+          console.log("Existing blueprint found, redirecting to blueprint page");
+          toast({
+            title: "Welcome Back!",
+            description: "You already have a Soul Blueprint. Redirecting you to view it.",
+          });
+          
+          setTimeout(() => {
+            navigate("/blueprint", { replace: true });
+          }, 1000);
+        }
+      } catch (error) {
+        console.error("Error checking for existing blueprint:", error);
+      }
+    };
+    
+    // Only check after a short delay to avoid immediate redirects
+    if (user && !authLoading) {
+      const timer = setTimeout(checkExistingBlueprint, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [user, authLoading, currentStep, navigate, toast]);
 
   // Render the appropriate content based on the current step
   const renderStepContent = () => {
@@ -341,6 +410,13 @@ export default function Onboarding() {
             />
           </div>
         );
+      case 7: // Goal Selection
+        return (
+          <div className="space-y-6 text-center max-w-md mx-auto">
+            <h2 className="text-xl font-display font-bold">Choose Your Path</h2>
+            <GoalSelectionStep onComplete={handleGoalSelectionComplete} />
+          </div>
+        );
       default:
         return <div>Unknown step</div>;
     }
@@ -349,40 +425,6 @@ export default function Onboarding() {
   // Determine whether to show speech bubble or form input
   const showInput = interactionStage === 'input' && !isTransitioning;
   const orbAnimation = speaking ? "speaking" : isTransitioning ? "transitioning" : "idle";
-
-  // If the user has already completed the onboarding and is somehow back here with a blueprint,
-  // redirect them to the blueprint page
-  useEffect(() => {
-    // Add a delayed navigation check to handle cases where blueprint exists
-    const checkBlueprintAndNavigate = async () => {
-      try {
-        if (!user) return; // Only check if user is authenticated
-        
-        const { data: blueprint } = await blueprintService.getActiveBlueprintData();
-        
-        if (blueprint && currentStep === 0) {
-          console.log("Blueprint already exists, redirecting to blueprint page");
-          toast({
-            title: "Welcome Back!",
-            description: "You've already created your Soul Blueprint. Redirecting you to view it.",
-          });
-          
-          // Short delay before navigation
-          setTimeout(() => {
-            navigate("/blueprint");
-          }, 1000);
-        }
-      } catch (error) {
-        console.error("Error checking for existing blueprint:", error);
-      }
-    };
-    
-    // Only run the check if user is authenticated and not in auth loading state
-    if (user && !authLoading) {
-      const timer = setTimeout(checkBlueprintAndNavigate, 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [navigate, toast, currentStep, user, authLoading]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-soul-black to-soul-purple/20 text-white relative overflow-hidden">

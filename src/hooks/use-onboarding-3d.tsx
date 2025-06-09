@@ -18,15 +18,16 @@ export const useOnboarding3D = () => {
   // Animation controls - replacing useAnimation with useAnimate
   const [sceneRef, animate] = useAnimate();
   
-  // Steps mapping - adding "Full Name" step
+  // Steps mapping - updated to include Goal Selection
   const steps = [
     "Welcome",
-    "Full Name", // Added step for name
+    "Full Name",
     "Birth Date",
     "Birth Time",
     "Birth Location",
     "Personality",
     "Generating",
+    "Goal Selection", // New step
   ];
   
   // Transition to next step with proper timing
@@ -53,8 +54,8 @@ export const useOnboarding3D = () => {
       if (currentStep === steps.length - 1) {
         // Complete onboarding
         setStage('complete');
-      } else if (currentStep === steps.length - 2) {
-        // Start generation process
+      } else if (currentStep === steps.length - 3) {
+        // Start generation process (step 6 - Generating)
         setStage('generating');
         setCurrentStep((prev) => prev + 1);
         setCurrentMessageIndex(0);
@@ -149,7 +150,8 @@ export const useOnboarding3D = () => {
         'birthtime': 'birthTime',
         'birthlocation': 'birthLocation',
         'personality': 'personality',
-        'generating': 'generating'
+        'generating': 'generating',
+        'goalselection': 'welcome' // Map goal selection to welcome messages
       };
       const messageKey = messageKeyMap[stepKey] || 'welcome';
       
@@ -202,7 +204,8 @@ export const useOnboarding3D = () => {
       'birthtime': 'birthTime',
       'birthlocation': 'birthLocation',
       'personality': 'personality',
-      'generating': 'generating'
+      'generating': 'generating',
+      'goalselection': 'welcome' // Map goal selection to welcome messages
     };
     const messageKey = messageKeyMap[stepKey] || 'welcome';
     
@@ -246,7 +249,8 @@ export const useOnboarding3D = () => {
       'birthtime': 'birthTime',
       'birthlocation': 'birthLocation',
       'personality': 'personality',
-      'generating': 'generating'
+      'generating': 'generating',
+      'goalselection': 'welcome' // Map goal selection to welcome messages
     };
     
     // Get the correct message key from our map
