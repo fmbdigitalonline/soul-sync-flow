@@ -97,6 +97,11 @@ export interface BlueprintData {
   excitement_scores: any[];
   vibration_check_ins: any[];
   belief_logs: any[];
+  runtime_preferences?: {
+    primary_goal: string;
+    support_style: number;
+    time_horizon: string;
+  };
   created_at: string;
   updated_at: string;
   is_active: boolean;
@@ -115,11 +120,20 @@ class BlueprintService {
 
   async getActiveBlueprintData(): Promise<{ data: BlueprintData | null; error: string | null }> {
     try {
+      // Get current user first
+      const { data: { user } } = await this.supabase.auth.getUser();
+      
+      if (!user) {
+        return { data: null, error: 'User not authenticated' };
+      }
+
       const { data, error } = await this.supabase
         .from('blueprints')
         .select('*')
+        .eq('user_id', user.id)
         .eq('is_active', true)
-        .single();
+        .order('updated_at', { ascending: false })
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching active blueprint:', error);
