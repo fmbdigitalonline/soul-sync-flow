@@ -17,6 +17,7 @@ export function GoalSelectionStep({ onComplete }: GoalSelectionStepProps) {
   const [primaryGoal, setPrimaryGoal] = useState('');
   const [supportStyle, setSupportStyle] = useState([3]);
   const [timeHorizon, setTimeHorizon] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const goals = [
     { id: 'personal_growth', label: 'Personal Growth & Self-Discovery' },
@@ -34,17 +35,32 @@ export function GoalSelectionStep({ onComplete }: GoalSelectionStepProps) {
     { id: 'long_term', label: 'Next 1-3 years' }
   ];
 
-  const handleSubmit = () => {
-    if (primaryGoal && timeHorizon) {
-      onComplete({
+  const handleSubmit = async () => {
+    if (!primaryGoal || !timeHorizon || isSubmitting) {
+      return;
+    }
+
+    console.log('GoalSelectionStep: Starting submission with preferences:', {
+      primary_goal: primaryGoal,
+      support_style: supportStyle[0],
+      time_horizon: timeHorizon
+    });
+
+    setIsSubmitting(true);
+
+    try {
+      await onComplete({
         primary_goal: primaryGoal,
         support_style: supportStyle[0],
         time_horizon: timeHorizon
       });
+    } catch (error) {
+      console.error('GoalSelectionStep: Error during submission:', error);
+      setIsSubmitting(false);
     }
   };
 
-  const isValid = primaryGoal && timeHorizon;
+  const isValid = primaryGoal && timeHorizon && !isSubmitting;
 
   return (
     <div className="space-y-6 max-w-md mx-auto">
@@ -52,7 +68,7 @@ export function GoalSelectionStep({ onComplete }: GoalSelectionStepProps) {
         {/* Primary Goal Selection */}
         <div className="space-y-3">
           <Label className="text-base font-medium">What's your primary focus area?</Label>
-          <RadioGroup value={primaryGoal} onValueChange={setPrimaryGoal}>
+          <RadioGroup value={primaryGoal} onValueChange={setPrimaryGoal} disabled={isSubmitting}>
             {goals.map((goal) => (
               <div key={goal.id} className="flex items-center space-x-2">
                 <RadioGroupItem value={goal.id} id={goal.id} />
@@ -77,6 +93,7 @@ export function GoalSelectionStep({ onComplete }: GoalSelectionStepProps) {
               min={1}
               step={1}
               className="w-full"
+              disabled={isSubmitting}
             />
             <div className="flex justify-between text-xs text-white/60">
               <span>Light touch</span>
@@ -88,7 +105,7 @@ export function GoalSelectionStep({ onComplete }: GoalSelectionStepProps) {
         {/* Time Horizon */}
         <div className="space-y-3">
           <Label className="text-base font-medium">What's your timeline?</Label>
-          <RadioGroup value={timeHorizon} onValueChange={setTimeHorizon}>
+          <RadioGroup value={timeHorizon} onValueChange={setTimeHorizon} disabled={isSubmitting}>
             {timeHorizons.map((horizon) => (
               <div key={horizon.id} className="flex items-center space-x-2">
                 <RadioGroupItem value={horizon.id} id={horizon.id} />
@@ -106,7 +123,7 @@ export function GoalSelectionStep({ onComplete }: GoalSelectionStepProps) {
         disabled={!isValid}
         className="w-full bg-soul-purple hover:bg-soul-purple/90"
       >
-        Complete Setup
+        {isSubmitting ? "Saving..." : "Complete Setup"}
       </Button>
     </div>
   );

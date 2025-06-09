@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "@/lib/framer-motion";
@@ -56,7 +55,7 @@ export default function Onboarding() {
   
   // Refs to prevent navigation loops
   const navigationTriggeredRef = useRef(false);
-  const goalSelectionTriggeredRef = useRef(false); // Add ref to prevent multiple goal selections
+  const goalSelectionTriggeredRef = useRef(false);
   
   // Update form data
   const updateFormData = (newData: Partial<typeof formData>) => {
@@ -79,6 +78,7 @@ export default function Onboarding() {
     
     if (newBlueprint) {
       setBlueprintData(newBlueprint);
+      console.log("Blueprint data stored in state for goal selection");
     }
     
     toast({
@@ -95,7 +95,7 @@ export default function Onboarding() {
     }, 1500);
   };
 
-  // Handle goal selection completion - fetch fresh blueprint from database
+  // Handle goal selection completion with improved error handling
   const handleGoalSelectionComplete = async (preferences: { 
     primary_goal: string; 
     support_style: number; 
@@ -111,19 +111,28 @@ export default function Onboarding() {
     console.log("Goal selection completed with preferences:", preferences);
     
     try {
-      // Get the current active blueprint from the database (fresh data)
-      const { data: currentBlueprint, error: fetchError } = await blueprintService.getActiveBlueprintData();
+      let currentBlueprint = blueprintData;
       
-      if (fetchError || !currentBlueprint) {
-        console.error("Error fetching current blueprint:", fetchError);
-        toast({
-          title: "Error",
-          description: "Could not find your blueprint. Please try regenerating your blueprint.",
-          variant: "destructive",
-        });
-        goalSelectionTriggeredRef.current = false;
-        return;
+      // If we don't have blueprint data in state, try to fetch it from database
+      if (!currentBlueprint) {
+        console.log("No blueprint in state, fetching from database...");
+        const { data: fetchedBlueprint, error: fetchError } = await blueprintService.getActiveBlueprintData();
+        
+        if (fetchError) {
+          console.error("Error fetching blueprint from database:", fetchError);
+          throw new Error(`Could not fetch blueprint: ${fetchError}`);
+        }
+        
+        if (!fetchedBlueprint) {
+          console.error("No active blueprint found in database");
+          throw new Error("No active blueprint found. Please regenerate your blueprint.");
+        }
+        
+        currentBlueprint = fetchedBlueprint;
+        console.log("Successfully fetched blueprint from database");
       }
+
+      console.log("Using blueprint for goal update:", currentBlueprint.id);
 
       // Update the blueprint's goal_stack with the coaching preferences
       const updatedBlueprint = {
@@ -140,11 +149,13 @@ export default function Onboarding() {
         ]
       };
 
+      console.log("Saving updated blueprint with goals...");
+      
       // Save the updated blueprint (this will replace the existing one)
       const { success, error } = await blueprintService.saveBlueprintData(updatedBlueprint);
       
       if (success) {
-        console.log("Blueprint updated with coaching preferences");
+        console.log("Blueprint updated with coaching preferences successfully");
         toast({
           title: "Preferences Saved",
           description: "Your coaching preferences have been saved to your blueprint.",
@@ -158,21 +169,19 @@ export default function Onboarding() {
         }, 1000);
       } else {
         console.error("Error updating blueprint:", error);
-        toast({
-          title: "Error",
-          description: error || "Failed to save your preferences. Please try again.",
-          variant: "destructive",
-        });
-        goalSelectionTriggeredRef.current = false; // Reset on error
+        throw new Error(error || "Failed to save your preferences");
       }
     } catch (error) {
-      console.error("Unexpected error saving preferences:", error);
+      console.error("Error in goal selection completion:", error);
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
+      
       toast({
         title: "Error",
-        description: "An unexpected error occurred. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
-      goalSelectionTriggeredRef.current = false; // Reset on error
+      
+      goalSelectionTriggeredRef.current = false; // Reset on error to allow retry
     }
   };
 
