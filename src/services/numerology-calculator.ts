@@ -43,12 +43,12 @@ export class NumerologyCalculator {
     const day = date.getDate();
     const year = date.getFullYear();
 
-    // Add all digits together
-    const monthSum = this.reduceToSingleDigit(month);
-    const daySum = this.reduceToSingleDigit(day);
-    const yearSum = this.reduceToSingleDigit(year);
+    // Convert each component to single digit first, then add
+    const monthDigit = this.reduceToSingleDigit(month);
+    const dayDigit = this.reduceToSingleDigit(day);
+    const yearDigit = this.reduceToSingleDigit(year);
 
-    const total = monthSum + daySum + yearSum;
+    const total = monthDigit + dayDigit + yearDigit;
     return this.reduceToSingleDigitWithMasters(total);
   }
 
@@ -60,6 +60,7 @@ export class NumerologyCalculator {
       total += this.letterValues[letter] || 0;
     }
 
+    // Check for master numbers during reduction process
     return this.reduceToSingleDigitWithMasters(total);
   }
 
@@ -90,11 +91,23 @@ export class NumerologyCalculator {
   }
 
   private static reduceToSingleDigitWithMasters(num: number): number {
-    // Keep master numbers 11, 22, 33
-    if (num === 11 || num === 22 || num === 33) {
-      return num;
+    // Keep reducing until we get a single digit or master number
+    while (num > 9) {
+      // Check if current number is a master number before reducing
+      if (num === 11 || num === 22 || num === 33) {
+        return num;
+      }
+      
+      // Reduce by adding digits
+      num = num.toString().split('').reduce((sum, digit) => sum + parseInt(digit), 0);
+      
+      // Check again if the result is a master number
+      if (num === 11 || num === 22 || num === 33) {
+        return num;
+      }
     }
-    return this.reduceToSingleDigit(num);
+    
+    return num;
   }
 
   private static getLifePathKeyword(number: number): string {
