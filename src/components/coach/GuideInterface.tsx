@@ -16,6 +16,9 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Message } from "@/hooks/use-ai-coach";
+import { MoodTracker } from "./MoodTracker";
+import { ReflectionPrompts } from "./ReflectionPrompts";
+import { InsightJournal } from "./InsightJournal";
 
 interface GuideInterfaceProps {
   messages: Message[];
@@ -31,6 +34,9 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
   messagesEndRef,
 }) => {
   const [inputValue, setInputValue] = useState("");
+  const [showMoodTracker, setShowMoodTracker] = useState(false);
+  const [showReflectionPrompts, setShowReflectionPrompts] = useState(false);
+  const [showInsightJournal, setShowInsightJournal] = useState(false);
 
   const handleSendMessage = () => {
     if (inputValue.trim() === "") return;
@@ -44,21 +50,21 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
     }
   };
 
-  // Reflection prompts for personal growth
-  const reflectionPrompts = [
-    "What is my blueprint telling me?",
-    "Help me understand my patterns",
-    "What does this situation mean for me?",
-    "Guide me through this feeling",
-  ];
+  const handleMoodSelect = (mood: string, energy: string) => {
+    const moodMessage = `I'm feeling ${mood.toLowerCase()} with ${energy.toLowerCase()} energy right now. Help me understand what this might mean for me today.`;
+    onSendMessage(moodMessage);
+    setShowMoodTracker(false);
+  };
 
-  const handlePrompt = (prompt: string) => {
-    onSendMessage(prompt);
+  const handleInsightSave = (insight: string, tags: string[]) => {
+    const insightMessage = `I want to share an insight: "${insight}". This feels like it's about: ${tags.join(', ')}. Help me explore this deeper.`;
+    onSendMessage(insightMessage);
+    setShowInsightJournal(false);
   };
 
   return (
     <>
-      {/* Insight Dashboard */}
+      {/* Soul Compass Dashboard */}
       <CosmicCard className="p-4 mb-4">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-medium flex items-center">
@@ -70,41 +76,56 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
             Reflection mode
           </Badge>
         </div>
+        
+        <div className="flex gap-2 mb-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowMoodTracker(!showMoodTracker)}
+            className="text-xs h-7 border-soul-purple/30"
+          >
+            <Heart className="h-3 w-3 mr-1" />
+            Check-in
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowReflectionPrompts(!showReflectionPrompts)}
+            className="text-xs h-7 border-soul-purple/30"
+          >
+            <Sparkles className="h-3 w-3 mr-1" />
+            Reflect
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowInsightJournal(!showInsightJournal)}
+            className="text-xs h-7 border-soul-purple/30"
+          >
+            <Star className="h-3 w-3 mr-1" />
+            Journal
+          </Button>
+        </div>
+        
         <div className="text-xs text-muted-foreground">
           Your Soul Guide is here to help you understand yourself more deeply and navigate life's complexities with wisdom.
         </div>
       </CosmicCard>
 
+      {/* Conditional Components */}
+      {showMoodTracker && <MoodTracker onMoodSelect={handleMoodSelect} />}
+      {showReflectionPrompts && <ReflectionPrompts onPromptSelect={onSendMessage} />}
+      {showInsightJournal && <InsightJournal onInsightSave={handleInsightSave} />}
+
       {/* Chat Messages */}
       <div className="flex-1 overflow-y-auto mb-4 space-y-4 pb-4">
         {messages.length === 0 && (
-          <div className="space-y-4">
-            <div className="text-center p-6 text-muted-foreground">
-              <Heart className="h-12 w-12 text-soul-purple mx-auto mb-4" />
-              <h3 className="text-lg font-medium mb-1">Your Soul Guide awaits</h3>
-              <p className="text-sm max-w-xs mx-auto">
-                Share what's on your heart and mind. Let's explore the deeper patterns together.
-              </p>
-            </div>
-            
-            {/* Reflection Prompts */}
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-center text-muted-foreground">Gentle Starters:</p>
-              <div className="grid grid-cols-1 gap-2">
-                {reflectionPrompts.map((prompt, index) => (
-                  <Button
-                    key={index}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handlePrompt(prompt)}
-                    className="justify-start text-xs h-8 border-soul-purple/20 hover:bg-soul-purple/10"
-                  >
-                    <Sparkles className="h-3 w-3 mr-2" />
-                    {prompt}
-                  </Button>
-                ))}
-              </div>
-            </div>
+          <div className="text-center p-6 text-muted-foreground">
+            <Heart className="h-12 w-12 text-soul-purple mx-auto mb-4" />
+            <h3 className="text-lg font-medium mb-1">Your Soul Guide awaits</h3>
+            <p className="text-sm max-w-xs mx-auto">
+              Share what's on your heart and mind. Let's explore the deeper patterns together.
+            </p>
           </div>
         )}
         
