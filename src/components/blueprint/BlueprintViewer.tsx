@@ -19,7 +19,7 @@ export const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint }) =
   
   const enhancedBlueprint = useMemo(() => {
     if (!useEnhanced) return null;
-    return BlueprintEnhancementService.enhanceBlueprintData(blueprint);
+    return BlueprintEnhancementService.enhanceBlueprint(blueprint);
   }, [blueprint, useEnhanced]);
 
   if (useEnhanced && enhancedBlueprint) {
