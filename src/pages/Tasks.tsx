@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
@@ -219,18 +220,6 @@ const Tasks = () => {
         </CosmicCard>
 
         <div className="flex justify-between items-center mb-4">
-          <Tabs
-            defaultValue="all"
-            className="w-full"
-            onValueChange={(value) => setActiveTab(value)}
-          >
-            <TabsList className="grid w-full max-w-xs grid-cols-3">
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="active">Active</TabsTrigger>
-              <TabsTrigger value="completed">Completed</TabsTrigger>
-            </TabsList>
-          </Tabs>
-          
           <div className="flex items-center space-x-2">
             <Button 
               variant={activeView === "list" ? "default" : "outline"}
@@ -250,33 +239,70 @@ const Tasks = () => {
         </div>
 
         {activeView === "list" ? (
-          <TabsContent value={activeTab} className="space-y-3">
-            {filteredTasks.length === 0 ? (
-              <div className="text-center py-6">
-                <p className="text-muted-foreground">No tasks found</p>
-                {activeTab !== "all" && (
-                  <Button
-                    variant="link"
-                    onClick={() => setActiveTab("all")}
-                    className="mt-2"
-                  >
-                    View all tasks
-                  </Button>
-                )}
-              </div>
-            ) : (
-              filteredTasks.map((task) => (
-                <TaskCard
-                  key={task.id}
-                  task={task}
-                  onToggle={() => toggleTaskCompletion(task.id)}
-                  onDelete={() => deleteTask(task.id)}
-                  onStatusChange={(status) => updateTaskStatus(task.id, status)}
-                  priorityColor={getPriorityColor(task.priority)}
-                />
-              ))
-            )}
-          </TabsContent>
+          <Tabs defaultValue="all" onValueChange={(value) => setActiveTab(value)} className="space-y-4">
+            <TabsList className="grid w-full max-w-xs grid-cols-3">
+              <TabsTrigger value="all">All</TabsTrigger>
+              <TabsTrigger value="active">Active</TabsTrigger>
+              <TabsTrigger value="completed">Completed</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="all" className="space-y-3">
+              {tasks.length === 0 ? (
+                <div className="text-center py-6">
+                  <p className="text-muted-foreground">No tasks found</p>
+                </div>
+              ) : (
+                tasks.map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    onToggle={() => toggleTaskCompletion(task.id)}
+                    onDelete={() => deleteTask(task.id)}
+                    onStatusChange={(status) => updateTaskStatus(task.id, status)}
+                    priorityColor={getPriorityColor(task.priority)}
+                  />
+                ))
+              )}
+            </TabsContent>
+            
+            <TabsContent value="active" className="space-y-3">
+              {tasks.filter(task => !task.completed).length === 0 ? (
+                <div className="text-center py-6">
+                  <p className="text-muted-foreground">No active tasks found</p>
+                </div>
+              ) : (
+                tasks.filter(task => !task.completed).map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    onToggle={() => toggleTaskCompletion(task.id)}
+                    onDelete={() => deleteTask(task.id)}
+                    onStatusChange={(status) => updateTaskStatus(task.id, status)}
+                    priorityColor={getPriorityColor(task.priority)}
+                  />
+                ))
+              )}
+            </TabsContent>
+            
+            <TabsContent value="completed" className="space-y-3">
+              {tasks.filter(task => task.completed).length === 0 ? (
+                <div className="text-center py-6">
+                  <p className="text-muted-foreground">No completed tasks found</p>
+                </div>
+              ) : (
+                tasks.filter(task => task.completed).map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    onToggle={() => toggleTaskCompletion(task.id)}
+                    onDelete={() => deleteTask(task.id)}
+                    onStatusChange={(status) => updateTaskStatus(task.id, status)}
+                    priorityColor={getPriorityColor(task.priority)}
+                  />
+                ))
+              )}
+            </TabsContent>
+          </Tabs>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-2">
             <KanbanColumn 
