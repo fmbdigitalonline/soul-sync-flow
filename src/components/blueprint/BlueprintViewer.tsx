@@ -239,13 +239,13 @@ export const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint }) =
                   <p className="text-3xl font-bold text-soul-purple">{numerologyData.expressionNumber}</p>
                   <p className="text-sm text-gray-600">{numerologyData.expressionKeyword || "Your natural talents and abilities"}</p>
                 </div>
-              </div>
-              <div className="space-y-4">
                 <div>
                   <h4 className="font-semibold text-soul-purple">Soul Urge Number</h4>
                   <p className="text-3xl font-bold text-soul-purple">{numerologyData.soulUrgeNumber}</p>
                   <p className="text-sm text-gray-600">{numerologyData.soulUrgeKeyword || "Your inner desires and motivations"}</p>
                 </div>
+              </div>
+              <div className="space-y-4">
                 <div>
                   <h4 className="font-semibold text-soul-purple">Birthday Number</h4>
                   <p className="text-3xl font-bold text-soul-purple">{numerologyData.birthdayNumber}</p>
