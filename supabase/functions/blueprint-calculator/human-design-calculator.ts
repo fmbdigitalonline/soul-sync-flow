@@ -1,4 +1,3 @@
-
 // Enhanced Human Design calculation module
 import { GATE_TO_CENTER_MAP, CHANNELS, GATE_NAMES } from './human-design-gates.ts';
 
@@ -37,15 +36,15 @@ export async function calculateHumanDesign(birthDate: string, birthTime: string,
     console.log("Personality time:", birthDateTime.toISOString());
     console.log("Design time:", designDateTime.toISOString());
     
-    // Calculate gate activations for personality chart (conscious)
+    // Calculate gate activations for personality chart (conscious) - USE CURRENT CELESTIAL DATA
     const personalityGates = calculateGatesFromPositions(celestialData, "personality");
     
     // Calculate design positions using accurate ephemeris
     const designCelestialData = await calculateDesignPositions(designDateTime, location, timezone);
     const designGates = calculateGatesFromPositions(designCelestialData, "design");
     
-    console.log("Personality gates:", personalityGates.slice(0, 3)); // Log first 3 for brevity
-    console.log("Design gates:", designGates.slice(0, 3));
+    console.log("Personality gates:", personalityGates); // Log all gates
+    console.log("Design gates:", designGates); // Log all gates
     
     // Determine center activations based on both charts
     const centerActivations = determineCenterActivations(personalityGates, designGates);
@@ -98,30 +97,55 @@ export async function calculateHumanDesign(birthDate: string, birthTime: string,
 function calculateGatesFromPositions(celestialData: any, chartType: string): GateActivation[] {
   const gates: GateActivation[] = [];
   
+  console.log(`Calculating ${chartType} gates from celestial data:`, Object.keys(celestialData || {}));
+  
+  if (!celestialData) {
+    console.error(`No celestial data provided for ${chartType} chart`);
+    return gates;
+  }
+  
   // Define planets in order of importance
   const planets = ["sun", "moon", "mercury", "venus", "mars", "jupiter", "saturn", "uranus", "neptune", "pluto"];
   
   for (const planet of planets) {
     const position = celestialData[planet];
     if (position && typeof position.longitude === 'number') {
-      // Accurate gate and line calculation
+      // FIXED: Accurate gate and line calculation
+      // The I-Ching wheel starts at 0° Aries with Gate 41
+      // Gates are ordered according to the Rave I-Ching sequence
+      const adjustedLongitude = position.longitude % 360;
+      
       // Each gate spans exactly 5.625 degrees (360° / 64 gates)
-      const gatePosition = (position.longitude % 360) / 5.625;
-      const gate = Math.floor(gatePosition) + 1;
+      const gateIndex = Math.floor(adjustedLongitude / 5.625);
+      
+      // Gate mapping according to the Human Design I-Ching wheel
+      const gateSequence = [
+        41, 19, 13, 49, 30, 55, 37, 63, 22, 36, 25, 17, 21, 51, 42, 3,
+        27, 24, 2, 23, 8, 20, 16, 35, 45, 12, 15, 52, 39, 53, 62, 56,
+        31, 33, 7, 4, 29, 59, 40, 64, 47, 6, 46, 18, 48, 57, 32, 50,
+        28, 44, 1, 43, 14, 34, 9, 5, 26, 11, 10, 58, 38, 54, 61, 60
+      ];
+      
+      const gate = gateSequence[gateIndex] || 1; // fallback to gate 1
       
       // Each line spans 0.9375 degrees (5.625° / 6 lines)
-      const linePosition = (gatePosition - Math.floor(gatePosition)) * 6;
+      const linePosition = (adjustedLongitude % 5.625) / 0.9375;
       const line = Math.floor(linePosition) + 1;
       
       gates.push({
         planet,
         gate,
-        line: Math.min(line, 6), // Ensure line doesn't exceed 6
+        line: Math.min(Math.max(line, 1), 6), // Ensure line is between 1-6
         longitude: position.longitude
       });
+      
+      console.log(`${chartType} ${planet}: longitude ${position.longitude.toFixed(2)}° -> Gate ${gate}.${line}`);
+    } else {
+      console.warn(`Missing or invalid position data for ${planet} in ${chartType} chart`);
     }
   }
   
+  console.log(`Total ${chartType} gates calculated:`, gates.length);
   return gates;
 }
 
@@ -188,6 +212,8 @@ function determineCenterActivations(personalityGates: GateActivation[], designGa
   const allGates = [...personalityGates, ...designGates];
   const gateNumbers = allGates.map(g => g.gate);
   
+  console.log("All active gates:", gateNumbers.sort((a, b) => a - b));
+  
   // Activate centers based on gates
   allGates.forEach(({ gate }) => {
     const center = GATE_TO_CENTER_MAP[gate];
@@ -212,8 +238,15 @@ function determineCenterActivations(personalityGates: GateActivation[], designGa
           }
         }
       });
+      console.log(`Channel ${channelKey} (${channelData.name}) is complete - defining centers:`, channelData.centers);
     }
   });
+  
+  // Log final center definitions
+  const definedCenters = Object.entries(centerActivations)
+    .filter(([_, center]) => center.defined)
+    .map(([name, _]) => name);
+  console.log("Defined centers:", definedCenters);
   
   return centerActivations;
 }
