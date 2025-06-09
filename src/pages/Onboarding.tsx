@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "@/lib/framer-motion";
@@ -130,8 +131,8 @@ export default function Onboarding() {
         ]
       };
 
-      // Update the blueprint with the new goal stack
-      const { success, error } = await blueprintService.updateBlueprint(updatedBlueprint);
+      // Update the blueprint with the new goal stack using the correct method
+      const { success, error } = await blueprintService.saveBlueprintData(updatedBlueprint);
       
       if (success) {
         console.log("Blueprint updated with coaching preferences");
