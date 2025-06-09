@@ -93,7 +93,7 @@ export default function Onboarding() {
     }, 1500);
   };
 
-  // Handle goal selection completion
+  // Handle goal selection completion - fixed to work with existing database schema
   const handleGoalSelectionComplete = async (preferences: { 
     primary_goal: string; 
     support_style: number; 
@@ -102,11 +102,39 @@ export default function Onboarding() {
     console.log("Goal selection completed with preferences:", preferences);
     
     try {
-      // Update the blueprint with runtime preferences using the new method
-      const { success, error } = await blueprintService.updateBlueprintRuntimePreferences(preferences);
+      // Get the current blueprint and update it with preferences in the goal_stack
+      const { data: currentBlueprint, error: fetchError } = await blueprintService.getActiveBlueprintData();
+      
+      if (fetchError || !currentBlueprint) {
+        console.error("Error fetching current blueprint:", fetchError);
+        toast({
+          title: "Error",
+          description: "Could not find your blueprint. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Update the blueprint's goal_stack with the runtime preferences
+      const updatedBlueprint = {
+        ...currentBlueprint,
+        goal_stack: [
+          {
+            id: `goal_${Date.now()}`,
+            primary_goal: preferences.primary_goal,
+            support_style: preferences.support_style,
+            time_horizon: preferences.time_horizon,
+            created_at: new Date().toISOString(),
+            status: 'active'
+          }
+        ]
+      };
+
+      // Update the blueprint with the new goal stack
+      const { success, error } = await blueprintService.updateBlueprint(updatedBlueprint);
       
       if (success) {
-        console.log("Blueprint updated with runtime preferences");
+        console.log("Blueprint updated with coaching preferences");
         toast({
           title: "Preferences Saved",
           description: "Your coaching preferences have been saved to your blueprint.",
@@ -119,7 +147,7 @@ export default function Onboarding() {
           navigate("/blueprint", { replace: true });
         }, 1000);
       } else {
-        console.error("Error saving runtime preferences:", error);
+        console.error("Error updating blueprint:", error);
         toast({
           title: "Error",
           description: error || "Failed to save your preferences. Please try again.",
