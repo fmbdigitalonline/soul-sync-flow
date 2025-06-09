@@ -95,7 +95,7 @@ export default function Onboarding() {
     }, 1500);
   };
 
-  // Handle goal selection completion with improved error handling
+  // Handle goal selection completion - FIXED VERSION
   const handleGoalSelectionComplete = async (preferences: { 
     primary_goal: string; 
     support_style: number; 
@@ -111,48 +111,10 @@ export default function Onboarding() {
     console.log("Goal selection completed with preferences:", preferences);
     
     try {
-      let currentBlueprint = blueprintData;
+      // Use the updateBlueprintRuntimePreferences method instead of saveBlueprintData
+      console.log("Updating blueprint runtime preferences...");
       
-      // If we don't have blueprint data in state, try to fetch it from database
-      if (!currentBlueprint) {
-        console.log("No blueprint in state, fetching from database...");
-        const { data: fetchedBlueprint, error: fetchError } = await blueprintService.getActiveBlueprintData();
-        
-        if (fetchError) {
-          console.error("Error fetching blueprint from database:", fetchError);
-          throw new Error(`Could not fetch blueprint: ${fetchError}`);
-        }
-        
-        if (!fetchedBlueprint) {
-          console.error("No active blueprint found in database");
-          throw new Error("No active blueprint found. Please regenerate your blueprint.");
-        }
-        
-        currentBlueprint = fetchedBlueprint;
-        console.log("Successfully fetched blueprint from database");
-      }
-
-      console.log("Using blueprint for goal update:", currentBlueprint.id);
-
-      // Update the blueprint's goal_stack with the coaching preferences
-      const updatedBlueprint = {
-        ...currentBlueprint,
-        goal_stack: [
-          {
-            id: `goal_${Date.now()}`,
-            primary_goal: preferences.primary_goal,
-            support_style: preferences.support_style,
-            time_horizon: preferences.time_horizon,
-            created_at: new Date().toISOString(),
-            status: 'active'
-          }
-        ]
-      };
-
-      console.log("Saving updated blueprint with goals...");
-      
-      // Save the updated blueprint (this will replace the existing one)
-      const { success, error } = await blueprintService.saveBlueprintData(updatedBlueprint);
+      const { success, error } = await blueprintService.updateBlueprintRuntimePreferences(preferences);
       
       if (success) {
         console.log("Blueprint updated with coaching preferences successfully");
@@ -168,7 +130,7 @@ export default function Onboarding() {
           navigate("/blueprint", { replace: true });
         }, 1000);
       } else {
-        console.error("Error updating blueprint:", error);
+        console.error("Error updating blueprint preferences:", error);
         throw new Error(error || "Failed to save your preferences");
       }
     } catch (error) {
