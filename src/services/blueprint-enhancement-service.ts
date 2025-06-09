@@ -1,231 +1,158 @@
 
-import { BlueprintData } from "./blueprint-service";
+import { BlueprintData } from "@/services/blueprint-service";
 import { EnhancedBlueprintData } from "@/types/blueprint-enhanced";
 
 export class BlueprintEnhancementService {
-  
-  // Enhance MBTI with proper cognitive functions
-  static enhanceMBTI(mbtiType: string): { 
-    dominant_function: string; 
-    auxiliary_function: string; 
-    tertiary_function: string; 
-    inferior_function: string;
-    assertiveness_style: string;
-  } {
-    const mbtiStack: Record<string, any> = {
-      INTJ: {
-        dominant_function: "Introverted Intuition (Ni)",
-        auxiliary_function: "Extraverted Thinking (Te)", 
-        tertiary_function: "Introverted Feeling (Fi)",
-        inferior_function: "Extraverted Sensing (Se)",
-        assertiveness_style: "Strategic-direct"
-      },
-      INFJ: {
-        dominant_function: "Introverted Intuition (Ni)",
-        auxiliary_function: "Extraverted Feeling (Fe)",
-        tertiary_function: "Introverted Thinking (Ti)", 
-        inferior_function: "Extraverted Sensing (Se)",
-        assertiveness_style: "Gentle-persistent"
-      },
-      ENTJ: {
-        dominant_function: "Extraverted Thinking (Te)",
-        auxiliary_function: "Introverted Intuition (Ni)",
-        tertiary_function: "Extraverted Sensing (Se)",
-        inferior_function: "Introverted Feeling (Fi)",
-        assertiveness_style: "Command-presence"
-      },
-      ENFJ: {
-        dominant_function: "Extraverted Feeling (Fe)",
-        auxiliary_function: "Introverted Intuition (Ni)",
-        tertiary_function: "Extraverted Sensing (Se)",
-        inferior_function: "Introverted Thinking (Ti)",
-        assertiveness_style: "Inspirational-leading"
-      },
-      INFP: {
-        dominant_function: "Introverted Feeling (Fi)",
-        auxiliary_function: "Extraverted Intuition (Ne)",
-        tertiary_function: "Introverted Sensing (Si)",
-        inferior_function: "Extraverted Thinking (Te)",
-        assertiveness_style: "Values-driven"
-      },
-      ENFP: {
-        dominant_function: "Extraverted Intuition (Ne)",
-        auxiliary_function: "Introverted Feeling (Fi)",
-        tertiary_function: "Extraverted Thinking (Te)",
-        inferior_function: "Introverted Sensing (Si)",
-        assertiveness_style: "Enthusiastic-persuasive"
-      },
-      // Add more types as needed...
-    };
-
-    return mbtiStack[mbtiType] || {
-      dominant_function: "To be determined",
-      auxiliary_function: "To be determined", 
-      tertiary_function: "To be determined",
-      inferior_function: "To be determined",
-      assertiveness_style: "Adaptive"
-    };
-  }
-
-  // Derive marketing archetype from personality data
-  static deriveMarketingArchetype(blueprint: BlueprintData): { 
-    primary: string; 
-    secondary?: string; 
-    brand_voice_keywords: string[] 
-  } {
-    const mbti = blueprint.cognition_mbti?.type || "";
-    const sunSign = blueprint.archetype_western?.sun_sign || "";
-    const hdType = blueprint.energy_strategy_human_design?.type || "";
-
-    // Simple mapping logic (can be enhanced)
-    if (mbti.includes("NT")) {
-      return {
-        primary: "Explorer",
-        secondary: "Sage",
-        brand_voice_keywords: ["innovative", "strategic", "visionary", "analytical"]
-      };
-    } else if (mbti.includes("NF")) {
-      return {
-        primary: "Creator", 
-        secondary: "Caregiver",
-        brand_voice_keywords: ["authentic", "inspiring", "empathetic", "transformative"]
-      };
-    } else if (hdType === "Manifestor") {
-      return {
-        primary: "Hero",
-        secondary: "Ruler", 
-        brand_voice_keywords: ["bold", "initiating", "powerful", "direct"]
-      };
-    }
-
-    return {
-      primary: "Explorer",
-      brand_voice_keywords: ["curious", "genuine", "growth-oriented"]
-    };
-  }
-
-  // Derive goal persona from various signals
-  static deriveGoalPersona(blueprint: BlueprintData): string {
-    const personality = blueprint.user_meta?.personality;
-    const hdType = blueprint.energy_strategy_human_design?.type;
-    
-    // Simple heuristics - can be made more sophisticated
-    if (personality?.includes("achievement") || hdType === "Manifestor") {
-      return "Productivity";
-    } else if (personality?.includes("creative") || personality?.includes("art")) {
-      return "Creativity";
-    } else if (personality?.includes("help") || personality?.includes("service")) {
-      return "Relationships";
-    }
-    
-    return "Productivity"; // Default
-  }
-
-  // Generate default interaction preferences
-  static generateInteractionPrefs(): {
-    support_style: "Directive" | "Socratic" | "Reflective" | "Collaborative";
-    tone: "Warm-honest" | "Professional" | "Casual-friendly" | "Mystical" | "Scientific";
-    emoji_usage: "Minimal" | "Moderate" | "Abundant";
-    preferred_format: "Bullet-points" | "Paragraphs" | "Questions" | "Action-steps";
-  } {
-    return {
-      support_style: "Directive",
-      tone: "Warm-honest", 
-      emoji_usage: "Minimal",
-      preferred_format: "Bullet-points"
-    };
-  }
-
-  // Main enhancement function
-  static enhanceBlueprint(blueprint: BlueprintData): EnhancedBlueprintData {
-    const enhancedMBTI = this.enhanceMBTI(blueprint.cognition_mbti?.type || "");
-    const marketingArchetype = this.deriveMarketingArchetype(blueprint);
-    const goalPersona = this.deriveGoalPersona(blueprint);
-    const interactionPrefs = this.generateInteractionPrefs();
-
-    return {
+  static enhanceBlueprintData(blueprint: BlueprintData, celestialData?: any): EnhancedBlueprintData {
+    const enhanced: EnhancedBlueprintData = {
       ...blueprint,
-      interaction_prefs: interactionPrefs,
-      marketing_archetype: marketingArchetype,
-      goal_persona: goalPersona as any,
-      north_star: "Decode yourself and take aligned action", // Default - can be customized
-      
-      // Enhanced cognition_mbti with proper functions
-      cognition_mbti: {
-        ...blueprint.cognition_mbti,
-        ...enhancedMBTI
-      },
-      
       enhanced_sections: {
-        energy_identity: {
-          facts: [
-            `Your ${blueprint.energy_strategy_human_design?.type || 'Generator'} energy works best when you ${blueprint.energy_strategy_human_design?.strategy?.toLowerCase() || 'respond to opportunities'}`,
-            `Your ${blueprint.cognition_mbti?.type || 'INFJ'} thinking style processes through ${enhancedMBTI.dominant_function}`
-          ],
-          narratives: {
-            novice: `You're a ${blueprint.energy_strategy_human_design?.type || 'Generator'} who thrives by ${blueprint.energy_strategy_human_design?.strategy?.toLowerCase() || 'responding to what lights you up'}.`,
-            amateur: `Your energy blueprint combines ${blueprint.energy_strategy_human_design?.type || 'Generator'} mechanics with ${blueprint.cognition_mbti?.type || 'INFJ'} cognitive processing, creating a unique decision-making style.`,
-            pro: `As a ${blueprint.energy_strategy_human_design?.type || 'Generator'} with ${enhancedMBTI.dominant_function} leading your cognition, your optimal workflow alternates between ${blueprint.energy_strategy_human_design?.strategy?.toLowerCase() || 'responsive action'} and ${enhancedMBTI.auxiliary_function} integration periods.`
-          }
-        },
-        western_astrology: {
-          facts: [
-            `Sun in ${blueprint.archetype_western?.sun_sign || 'Taurus'} drives your core identity toward ${blueprint.archetype_western?.sun_keyword || 'stability'}`,
-            `Moon in ${blueprint.archetype_western?.moon_sign || 'Scorpio'} governs your emotional needs and instinctive responses`
-          ],
-          narratives: {
-            novice: `Your ${blueprint.archetype_western?.sun_sign || 'Taurus'} Sun wants ${blueprint.archetype_western?.sun_keyword?.toLowerCase() || 'security'}, while your ${blueprint.archetype_western?.moon_sign || 'Scorpio'} Moon needs ${blueprint.archetype_western?.moon_keyword?.toLowerCase() || 'depth'}.`,
-            amateur: `The tension between your ${blueprint.archetype_western?.sun_sign || 'Taurus'} identity and ${blueprint.archetype_western?.moon_sign || 'Scorpio'} emotional nature creates your unique motivational pattern.`,
-            pro: `Your ${blueprint.archetype_western?.sun_sign || 'Taurus'}-${blueprint.archetype_western?.moon_sign || 'Scorpio'} combination suggests optimal performance when you balance ${blueprint.archetype_western?.sun_keyword?.toLowerCase() || 'steady progress'} with ${blueprint.archetype_western?.moon_keyword?.toLowerCase() || 'transformative depth'}.`
-          },
-          aspects: [],
-          houses: {},
-          retrogrades: []
-        },
-        human_design: {
-          facts: [
-            `Your ${blueprint.energy_strategy_human_design?.authority || 'Sacral'} Authority is your decision-making compass`,
-            `Your ${blueprint.energy_strategy_human_design?.profile || '1/3'} Profile shapes how you learn and interact with others`
-          ],
-          narratives: {
-            novice: `Trust your ${blueprint.energy_strategy_human_design?.authority || 'gut feelings'} when making decisions.`,
-            amateur: `Your ${blueprint.energy_strategy_human_design?.profile || '1/3'} Profile means you learn through ${blueprint.energy_strategy_human_design?.profile?.includes('1') ? 'investigation and' : ''} ${blueprint.energy_strategy_human_design?.profile?.includes('3') ? 'trial-and-error' : 'observation'}.`,
-            pro: `Align with your ${blueprint.energy_strategy_human_design?.authority || 'Sacral Authority'} for major decisions while honoring your ${blueprint.energy_strategy_human_design?.profile || '1/3'} learning style in skill development.`
-          },
-          centers: {},
-          gates: [],
-          channels: []
-        },
-        numerology: {
-          facts: [
-            `Life Path ${blueprint.values_life_path?.lifePathNumber || 7} guides your soul's primary learning theme`,
-            `Expression ${blueprint.values_life_path?.expressionNumber || 3} reveals your natural talents and gifts`
-          ],
-          narratives: {
-            novice: `Your Life Path ${blueprint.values_life_path?.lifePathNumber || 7} journey is about ${blueprint.values_life_path?.lifePathKeyword?.toLowerCase() || 'seeking truth'}.`,
-            amateur: `The combination of Life Path ${blueprint.values_life_path?.lifePathNumber || 7} and Expression ${blueprint.values_life_path?.expressionNumber || 3} suggests success through ${blueprint.values_life_path?.lifePathKeyword?.toLowerCase() || 'deep analysis'} expressed via ${blueprint.values_life_path?.expressionKeyword?.toLowerCase() || 'creative communication'}.`,
-            pro: `Your numerological blueprint indicates optimal life satisfaction when you channel your ${blueprint.values_life_path?.expressionNumber || 3}-energy talents into ${blueprint.values_life_path?.lifePathNumber || 7}-themed pursuits.`
-          },
-          calculations: {}
-        },
-        chinese_astrology: {
-          facts: [
-            `${blueprint.archetype_chinese?.element || 'Earth'} ${blueprint.archetype_chinese?.animal || 'Dog'} brings ${blueprint.archetype_chinese?.keyword || 'loyalty'} energy to your approach`,
-            `Your Chinese zodiac influences timing and relationship patterns`
-          ],
-          narratives: {
-            novice: `As an ${blueprint.archetype_chinese?.element || 'Earth'} ${blueprint.archetype_chinese?.animal || 'Dog'}, you naturally embody ${blueprint.archetype_chinese?.keyword?.toLowerCase() || 'faithful'} energy.`,
-            amateur: `Your ${blueprint.archetype_chinese?.element || 'Earth'} ${blueprint.archetype_chinese?.animal || 'Dog'} nature complements your Western ${blueprint.archetype_western?.sun_sign || 'Taurus'} identity, creating a ${blueprint.archetype_chinese?.yin_yang || 'balanced'} approach to goals.`,
-            pro: `The ${blueprint.archetype_chinese?.element || 'Earth'} ${blueprint.archetype_chinese?.animal || 'Dog'} archetype suggests peak performance during years and seasons that honor ${blueprint.archetype_chinese?.keyword?.toLowerCase() || 'steady loyalty'} values.`
-          },
-          four_pillars: {
-            year: { animal: blueprint.archetype_chinese?.animal || 'Dog', element: blueprint.archetype_chinese?.element || 'Earth' },
-            month: { animal: 'TBD', element: 'TBD' },
-            day: { animal: 'TBD', element: 'TBD' }, 
-            hour: { animal: 'TBD', element: 'TBD' }
-          }
-        }
+        energy_identity: this.generateEnergyIdentitySection(blueprint),
+        western_astrology: this.generateWesternSection(blueprint, celestialData),
+        human_design: this.generateHumanDesignSection(blueprint),
+        numerology: this.generateNumerologySection(blueprint),
+        chinese_astrology: this.generateChineseSection(blueprint)
       }
-    } as EnhancedBlueprintData;
+    };
+    
+    return enhanced;
+  }
+
+  private static generateEnergyIdentitySection(blueprint: BlueprintData) {
+    const facts = [
+      `${blueprint.energy_strategy_human_design.type}`,
+      `Life Path ${blueprint.values_life_path.lifePathNumber}`,
+      `${blueprint.archetype_western.sun_sign}`,
+      `${blueprint.archetype_chinese.element} ${blueprint.archetype_chinese.animal}`
+    ];
+
+    return {
+      facts,
+      narratives: {
+        novice: `You're a ${blueprint.energy_strategy_human_design.type}. This means you're designed to ${blueprint.energy_strategy_human_design.strategy.toLowerCase()}. Your life path number ${blueprint.values_life_path.lifePathNumber} shows your soul's journey, while your ${blueprint.archetype_western.sun_sign} sun brings ${blueprint.archetype_western.sun_keyword.toLowerCase()} energy.`,
+        amateur: `As a ${blueprint.energy_strategy_human_design.type} with ${blueprint.energy_strategy_human_design.authority} authority, your strategy is to ${blueprint.energy_strategy_human_design.strategy.toLowerCase()}. Your Life Path ${blueprint.values_life_path.lifePathNumber} combined with ${blueprint.archetype_western.sun_sign} sun creates a unique blend of ${blueprint.archetype_western.sun_keyword.toLowerCase()} solar energy and structured life purpose.`,
+        pro: `${blueprint.energy_strategy_human_design.type}, ${blueprint.energy_strategy_human_design.definition} definition, Profile ${blueprint.energy_strategy_human_design.profile}. Strategy: ${blueprint.energy_strategy_human_design.strategy}. The intersection of HD Type energy with Life Path ${blueprint.values_life_path.lifePathNumber} and ${blueprint.archetype_western.sun_sign} solar expression creates a complex energetic signature focused on ${blueprint.energy_strategy_human_design.life_purpose.toLowerCase()}.`
+      }
+    };
+  }
+
+  private static generateWesternSection(blueprint: BlueprintData, celestialData?: any) {
+    const facts = [
+      `☉ ${blueprint.archetype_western.sun_sign}`,
+      `☽ ${blueprint.archetype_western.moon_sign}`,
+      `ASC ${blueprint.archetype_western.rising_sign}`,
+    ];
+
+    // Add additional facts if we have celestial data
+    if (celestialData?.aspects?.length > 0) {
+      const tightestAspect = celestialData.aspects[0];
+      facts.push(`${tightestAspect.planet1} ${tightestAspect.aspect} ${tightestAspect.planet2}`);
+    }
+
+    return {
+      facts,
+      narratives: {
+        novice: `Your sun in ${blueprint.archetype_western.sun_sign} makes you a ${blueprint.archetype_western.sun_keyword.toLowerCase()}, while your moon in ${blueprint.archetype_western.moon_sign} shows you're ${blueprint.archetype_western.moon_keyword.toLowerCase()} emotionally. Your rising sign ${blueprint.archetype_western.rising_sign} is how others first see you.`,
+        amateur: `The ${blueprint.archetype_western.sun_sign} sun gives you ${blueprint.archetype_western.sun_keyword.toLowerCase()} core energy, while ${blueprint.archetype_western.moon_sign} moon provides ${blueprint.archetype_western.moon_keyword.toLowerCase()} emotional responses. Your ${blueprint.archetype_western.rising_sign} ascendant creates your outer personality and first impressions.`,
+        pro: `Solar ${blueprint.archetype_western.sun_sign} expression manifests as ${blueprint.archetype_western.sun_keyword.toLowerCase()} identity, lunar ${blueprint.archetype_western.moon_sign} provides ${blueprint.archetype_western.moon_keyword.toLowerCase()} emotional substrate, and ${blueprint.archetype_western.rising_sign} rising creates the persona through which this internal dynamic is expressed to the world.`
+      },
+      aspects: celestialData?.aspects || [],
+      houses: celestialData?.houses || {},
+      retrogrades: this.findRetrogrades(celestialData)
+    };
+  }
+
+  private static generateHumanDesignSection(blueprint: BlueprintData) {
+    const facts = [
+      `${blueprint.energy_strategy_human_design.type}`,
+      `${blueprint.energy_strategy_human_design.strategy}`,
+      `${blueprint.energy_strategy_human_design.authority}`,
+      `Profile ${blueprint.energy_strategy_human_design.profile}`,
+      `${blueprint.energy_strategy_human_design.definition} Definition`
+    ];
+
+    // Add gates if available
+    const totalGates = blueprint.energy_strategy_human_design.gates.conscious_personality.length + 
+                     blueprint.energy_strategy_human_design.gates.unconscious_design.length;
+    if (totalGates > 0) {
+      facts.push(`${totalGates} Active Gates`);
+    }
+
+    return {
+      facts,
+      narratives: {
+        novice: `You're a ${blueprint.energy_strategy_human_design.type}! Your strategy is to ${blueprint.energy_strategy_human_design.strategy.toLowerCase()}. Listen to your ${blueprint.energy_strategy_human_design.authority} for decisions. When you don't follow this, you might feel ${blueprint.energy_strategy_human_design.not_self_theme.toLowerCase()}.`,
+        amateur: `As a ${blueprint.energy_strategy_human_design.type} with ${blueprint.energy_strategy_human_design.authority} authority, your strategy is to ${blueprint.energy_strategy_human_design.strategy.toLowerCase()}. Your ${blueprint.energy_strategy_human_design.definition} definition and ${blueprint.energy_strategy_human_design.profile} profile show how your energy flows and how you learn best.`,
+        pro: `${blueprint.energy_strategy_human_design.type} with ${blueprint.energy_strategy_human_design.definition} definition creates specific energetic dynamics. Profile ${blueprint.energy_strategy_human_design.profile} determines learning style and life themes. ${blueprint.energy_strategy_human_design.authority} authority provides the decision-making mechanism that aligns with your design's natural flow.`
+      },
+      centers: this.analyzeCenters(blueprint.energy_strategy_human_design.centers),
+      gates: this.combineGates(blueprint.energy_strategy_human_design.gates),
+      channels: this.identifyChannels(blueprint.energy_strategy_human_design.gates)
+    };
+  }
+
+  private static generateNumerologySection(blueprint: BlueprintData) {
+    const facts = [
+      `Life Path ${blueprint.values_life_path.lifePathNumber}`,
+      `Expression ${blueprint.values_life_path.expressionNumber}`,
+      `Birth Day ${blueprint.values_life_path.birthDay}`,
+      `Birth Year ${blueprint.values_life_path.birthYear}`
+    ];
+
+    return {
+      facts,
+      narratives: {
+        novice: `Your Life Path ${blueprint.values_life_path.lifePathNumber} is like your soul's main mission in this lifetime. Your Expression Number ${blueprint.values_life_path.expressionNumber} shows your natural talents and abilities.`,
+        amateur: `Life Path ${blueprint.values_life_path.lifePathNumber} represents your core life purpose and lessons. Expression Number ${blueprint.values_life_path.expressionNumber} reveals your inherent talents and how you naturally express yourself in the world.`,
+        pro: `Life Path ${blueprint.values_life_path.lifePathNumber} indicates karmic lessons and spiritual evolution path. Expression Number ${blueprint.values_life_path.expressionNumber} represents the vibrational frequency of your full birth name, showing innate capabilities and destined expression.`
+      },
+      calculations: {
+        lifePathNumber: { value: blueprint.values_life_path.lifePathNumber, method: "Birth date reduction" },
+        expressionNumber: { value: blueprint.values_life_path.expressionNumber, method: "Full name calculation" }
+      }
+    };
+  }
+
+  private static generateChineseSection(blueprint: BlueprintData) {
+    const facts = [
+      `${blueprint.archetype_chinese.animal}`,
+      `${blueprint.archetype_chinese.element}`,
+      `${blueprint.archetype_chinese.yin_yang}`,
+      `Year ${blueprint.values_life_path.birthYear}`
+    ];
+
+    return {
+      facts,
+      narratives: {
+        novice: `You're a ${blueprint.archetype_chinese.element} ${blueprint.archetype_chinese.animal}! This means you have the ${blueprint.archetype_chinese.animal.toLowerCase()}'s natural qualities combined with ${blueprint.archetype_chinese.element.toLowerCase()} energy.`,
+        amateur: `Born in a ${blueprint.archetype_chinese.element} ${blueprint.archetype_chinese.animal} year with ${blueprint.archetype_chinese.yin_yang} polarity, you carry both the ${blueprint.archetype_chinese.animal.toLowerCase()}'s characteristic traits and the ${blueprint.archetype_chinese.element.toLowerCase()} element's influence on your personality and life approach.`,
+        pro: `${blueprint.archetype_chinese.element} ${blueprint.archetype_chinese.animal} with ${blueprint.archetype_chinese.yin_yang} polarity creates a specific energetic signature in the Chinese metaphysical system. This combination influences both personality expression and compatibility patterns within the sexagenary cycle.`
+      },
+      four_pillars: {
+        year: { animal: blueprint.archetype_chinese.animal, element: blueprint.archetype_chinese.element },
+        month: { animal: "Unknown", element: "Unknown" },
+        day: { animal: "Unknown", element: "Unknown" },
+        hour: { animal: "Unknown", element: "Unknown" }
+      }
+    };
+  }
+
+  private static findRetrogrades(celestialData: any): string[] {
+    // Implementation would check planetary speeds
+    return [];
+  }
+
+  private static analyzeCenters(centers: Record<string, any>) {
+    // Implementation would analyze center definitions
+    return {};
+  }
+
+  private static combineGates(gates: { unconscious_design: any[]; conscious_personality: any[] }) {
+    return [...gates.unconscious_design, ...gates.conscious_personality];
+  }
+
+  private static identifyChannels(gates: { unconscious_design: any[]; conscious_personality: any[] }) {
+    // Implementation would identify formed channels
+    return [];
   }
 }

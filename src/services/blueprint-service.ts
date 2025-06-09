@@ -245,9 +245,6 @@ class BlueprintService {
       // Calculate numerology using the proper calculator
       const numerologyResult = NumerologyCalculator.calculateNumerology(userData.full_name, userData.birth_date);
 
-      // Enhanced MBTI processing
-      const enhancedMBTI = this.getEnhancedMBTI(userData.personality || 'INFJ');
-
       // Transform the response into our BlueprintData format
       const blueprint: BlueprintData = {
         id: crypto.randomUUID(),
@@ -280,8 +277,8 @@ class BlueprintService {
           sun_keyword: data.data.westernProfile.sun_keyword || 'Unknown',
           moon_keyword: data.data.westernProfile.moon_keyword || 'Unknown',
           source: data.data.westernProfile.source || 'calculated',
-          houses: data.data.westernProfile.houses || {},
-          aspects: data.data.westernProfile.aspects || []
+          houses: {},
+          aspects: []
         } : {
           sun_sign: 'Unknown',
           moon_sign: 'Unknown',
@@ -327,7 +324,12 @@ class BlueprintService {
           centers: {},
           metadata: {}
         },
-        cognition_mbti: enhancedMBTI,
+        cognition_mbti: {
+          type: userData.personality || 'INFJ',
+          core_keywords: this.getMBTIKeywords(userData.personality || 'INFJ'),
+          dominant_function: this.getDominantFunction(userData.personality || 'INFJ'),
+          auxiliary_function: this.getAuxiliaryFunction(userData.personality || 'INFJ')
+        },
         bashar_suite: {
           excitement_compass: {
             principle: "Follow your highest excitement in the moment to the best of your ability"
@@ -370,50 +372,6 @@ class BlueprintService {
         isPartial: false
       };
     }
-  }
-
-  private getEnhancedMBTI(type: string): any {
-    const mbtiStack: Record<string, any> = {
-      INFJ: {
-        type: 'INFJ',
-        core_keywords: ['Insightful', 'Idealistic', 'Compassionate'],
-        dominant_function: 'Introverted Intuition (Ni)',
-        auxiliary_function: 'Extroverted Feeling (Fe)',
-        tertiary_function: 'Introverted Thinking (Ti)',
-        inferior_function: 'Extroverted Sensing (Se)'
-      },
-      ENFP: {
-        type: 'ENFP',
-        core_keywords: ['Enthusiastic', 'Imaginative', 'Charismatic'],
-        dominant_function: 'Extroverted Intuition (Ne)',
-        auxiliary_function: 'Introverted Feeling (Fi)',
-        tertiary_function: 'Extroverted Thinking (Te)',
-        inferior_function: 'Introverted Sensing (Si)'
-      },
-      INTJ: {
-        type: 'INTJ',
-        core_keywords: ['Strategic', 'Independent', 'Decisive'],
-        dominant_function: 'Introverted Intuition (Ni)',
-        auxiliary_function: 'Extroverted Thinking (Te)',
-        tertiary_function: 'Introverted Feeling (Fi)',
-        inferior_function: 'Extroverted Sensing (Se)'
-      },
-      ENTJ: {
-        type: 'ENTJ',
-        core_keywords: ['Leadership', 'Strategic', 'Efficient'],
-        dominant_function: 'Extroverted Thinking (Te)',
-        auxiliary_function: 'Introverted Intuition (Ni)',
-        tertiary_function: 'Extroverted Sensing (Se)',
-        inferior_function: 'Introverted Feeling (Fi)'
-      }
-    };
-
-    return mbtiStack[type] || {
-      type: type,
-      core_keywords: ['Adaptive', 'Flexible'],
-      dominant_function: 'To be determined',
-      auxiliary_function: 'To be determined'
-    };
   }
 
   private getMBTIKeywords(type: string): string[] {
