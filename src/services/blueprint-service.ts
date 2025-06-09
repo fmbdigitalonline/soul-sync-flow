@@ -254,24 +254,58 @@ class BlueprintService {
         return { success: false, error: 'User not authenticated' };
       }
 
+      console.log('Updating blueprint preferences for user:', user.id);
+
       // Clean up any duplicates first
       await this.cleanupDuplicateBlueprints(user.id);
 
-      // Update the active blueprint with runtime preferences
+      // Get the current active blueprint
+      const { data: currentBlueprint, error: fetchError } = await this.supabase
+        .from('blueprints')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .single();
+
+      if (fetchError) {
+        console.error('Error fetching current blueprint:', fetchError);
+        return { success: false, error: `Error fetching current blueprint: ${fetchError.message}` };
+      }
+
+      if (!currentBlueprint) {
+        return { success: false, error: 'No active blueprint found. Please regenerate your blueprint.' };
+      }
+
+      // Create the preferences object to add to goal_stack
+      const goalPreference = {
+        id: `coaching_preferences_${Date.now()}`,
+        type: 'coaching_preferences',
+        primary_goal: preferences.primary_goal,
+        support_style: preferences.support_style,
+        time_horizon: preferences.time_horizon,
+        created_at: new Date().toISOString(),
+        status: 'active'
+      };
+
+      // Update the goal_stack with the coaching preferences
+      const updatedGoalStack = [...(currentBlueprint.goal_stack || []), goalPreference];
+
+      // Update the blueprint with the new goal_stack
       const { error } = await this.supabase
         .from('blueprints')
         .update({
-          runtime_preferences: preferences,
+          goal_stack: updatedGoalStack,
           updated_at: new Date().toISOString()
         })
         .eq('user_id', user.id)
         .eq('is_active', true);
 
       if (error) {
-        console.error('Error updating runtime preferences:', error);
-        return { success: false, error: `Error updating runtime preferences: ${error.message}` };
+        console.error('Error updating blueprint with preferences:', error);
+        return { success: false, error: `Error updating blueprint preferences: ${error.message}` };
       }
 
+      console.log('Successfully updated blueprint with coaching preferences');
       return { success: true, error: null };
     } catch (error) {
       console.error('Unexpected error updating runtime preferences:', error);

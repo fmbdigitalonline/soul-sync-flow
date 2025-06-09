@@ -21,6 +21,9 @@ export default function Onboarding() {
   const { speak } = useSoulOrb();
   const { user, loading: authLoading } = useAuth();
   
+  // Detect development mode
+  const isDevelopment = import.meta.env.DEV;
+  
   // Get the onboarding 3D functionality
   const {
     is3DMode,
@@ -66,7 +69,7 @@ export default function Onboarding() {
   const handleBlueprintComplete = (newBlueprint?: BlueprintData) => {
     // Prevent multiple executions
     if (navigationTriggeredRef.current || blueprintGenerated) {
-      console.log("Navigation already triggered, ignoring duplicate completion");
+      console.log("Blueprint generation already started, ignoring duplicate completion");
       return;
     }
     
@@ -95,7 +98,7 @@ export default function Onboarding() {
     }, 1500);
   };
 
-  // Handle goal selection completion - FIXED VERSION
+  // Handle goal selection completion with improved error handling and development mode support
   const handleGoalSelectionComplete = async (preferences: { 
     primary_goal: string; 
     support_style: number; 
@@ -110,9 +113,12 @@ export default function Onboarding() {
     goalSelectionTriggeredRef.current = true;
     console.log("Goal selection completed with preferences:", preferences);
     
+    if (isDevelopment) {
+      console.log("Development mode detected - handling onboarding completion gracefully");
+    }
+    
     try {
-      // Use the updateBlueprintRuntimePreferences method instead of saveBlueprintData
-      console.log("Updating blueprint runtime preferences...");
+      console.log("Updating blueprint with coaching preferences...");
       
       const { success, error } = await blueprintService.updateBlueprintRuntimePreferences(preferences);
       
@@ -138,12 +144,23 @@ export default function Onboarding() {
       const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
       
       toast({
-        title: "Error",
+        title: "Error Saving Preferences",
         description: errorMessage,
         variant: "destructive",
       });
       
-      goalSelectionTriggeredRef.current = false; // Reset on error to allow retry
+      // Reset the loading state on error
+      goalSelectionTriggeredRef.current = false;
+      
+      // Add some debugging info in development
+      if (isDevelopment) {
+        console.error("Development debugging - Error details:", {
+          error,
+          preferences,
+          user: user?.id,
+          currentStep
+        });
+      }
     }
   };
 
@@ -178,7 +195,7 @@ export default function Onboarding() {
     }
   }, [currentStep, user, authLoading, navigate, toast]);
 
-  // Check for existing blueprint and redirect if found - improved error handling
+  // Check for existing blueprint and redirect if found - improved error handling with development mode support
   useEffect(() => {
     const checkExistingBlueprint = async () => {
       try {
@@ -192,6 +209,16 @@ export default function Onboarding() {
         }
         
         if (existingBlueprint && currentStep === 0) {
+          // In development mode, be less aggressive about redirecting
+          if (isDevelopment) {
+            console.log("Development mode: Existing blueprint found but allowing onboarding continuation");
+            toast({
+              title: "Development Mode",
+              description: "Existing blueprint found. You can continue with onboarding or go to blueprint page.",
+            });
+            return;
+          }
+          
           console.log("Existing blueprint found, redirecting to blueprint page");
           toast({
             title: "Welcome Back!",
@@ -205,6 +232,9 @@ export default function Onboarding() {
       } catch (error) {
         console.error("Error checking for existing blueprint:", error);
         // Don't show error to user for this check, just log it
+        if (isDevelopment) {
+          console.error("Development debugging - Blueprint check error:", error);
+        }
       }
     };
     
@@ -213,7 +243,7 @@ export default function Onboarding() {
       const timer = setTimeout(checkExistingBlueprint, 1500);
       return () => clearTimeout(timer);
     }
-  }, [user, authLoading, currentStep, navigate, toast]);
+  }, [user, authLoading, currentStep, navigate, toast, isDevelopment]);
 
   // Render the appropriate content based on the current step
   const renderStepContent = () => {
@@ -225,6 +255,11 @@ export default function Onboarding() {
             <p className="text-white/80">
               I'm your personal astrology guide. Let me help you discover your cosmic blueprint.
             </p>
+            {isDevelopment && (
+              <p className="text-xs text-yellow-400 bg-yellow-900/20 p-2 rounded">
+                Dev Mode: Multiple onboarding attempts supported
+              </p>
+            )}
             <div className="pt-4">
               <Button 
                 className="w-full bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-colors"
@@ -435,6 +470,11 @@ export default function Onboarding() {
             <h2 className="text-xl font-display font-bold">Choose Your Path</h2>
             <p className="text-white/80">Let's set up your coaching preferences to personalize your experience.</p>
             <GoalSelectionStep onComplete={handleGoalSelectionComplete} />
+            {isDevelopment && (
+              <p className="text-xs text-blue-400 bg-blue-900/20 p-2 rounded">
+                Dev Mode: Preferences will be stored in goal_stack
+              </p>
+            )}
           </div>
         );
       default:
