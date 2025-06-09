@@ -42,7 +42,7 @@ export const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint }) =
     metadata.engine?.includes("swiss_ephemeris") || 
     metadata.engine?.includes("vercel") ||
     metadata.data_sources?.western === "calculated";
-    
+  
   const calculationEngine = isRealCalculation ? 
     (metadata.engine?.includes("swiss_ephemeris") ? "Swiss Ephemeris via Vercel API" : 
      metadata.engine?.includes("vercel") ? "Vercel Ephemeris API" :
@@ -226,28 +226,37 @@ export const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint }) =
 
         <TabsContent value="numerology" className="mt-6">
           <CosmicCard>
-            <h3 className="text-xl font-display font-bold mb-4">Life Path Numbers</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <h4 className="font-semibold">Life Path Number</h4>
-                <p className="text-2xl font-bold text-soul-purple">{numerologyData.lifePathNumber || "Unknown"}</p>
-                <p className="text-sm text-gray-400">Your life's purpose and journey</p>
+            <h3 className="text-xl font-display font-bold mb-4">Numerology Profile</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-semibold text-soul-purple">Life Path Number</h4>
+                  <p className="text-3xl font-bold text-soul-purple">{numerologyData.lifePathNumber}</p>
+                  <p className="text-sm text-gray-600">{numerologyData.lifePathKeyword || "Your life's purpose and journey"}</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-soul-purple">Expression Number</h4>
+                  <p className="text-3xl font-bold text-soul-purple">{numerologyData.expressionNumber}</p>
+                  <p className="text-sm text-gray-600">{numerologyData.expressionKeyword || "Your natural talents and abilities"}</p>
+                </div>
               </div>
-              <div>
-                <h4 className="font-semibold">Birth Day Number</h4>
-                <p className="text-2xl font-bold text-soul-purple">{numerologyData.birthDay || "Unknown"}</p>
-                <p className="text-sm text-gray-400">Natural talents and abilities</p>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-semibold text-soul-purple">Soul Urge Number</h4>
+                  <p className="text-3xl font-bold text-soul-purple">{numerologyData.soulUrgeNumber}</p>
+                  <p className="text-sm text-gray-600">{numerologyData.soulUrgeKeyword || "Your inner desires and motivations"}</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-soul-purple">Birthday Number</h4>
+                  <p className="text-3xl font-bold text-soul-purple">{numerologyData.birthdayNumber}</p>
+                  <p className="text-sm text-gray-600">{numerologyData.birthdayKeyword || "Special talents from your birth day"}</p>
+                </div>
               </div>
-              <div>
-                <h4 className="font-semibold">Personal Year</h4>
-                <p className="text-2xl font-bold text-soul-purple">{new Date().getFullYear() - numerologyData.birthYear || "Unknown"}</p>
-                <p className="text-sm text-gray-400">Current year's energy and focus</p>
-              </div>
-              <div>
-                <h4 className="font-semibold">Expression Number</h4>
-                <p className="text-2xl font-bold text-soul-purple">{numerologyData.expressionNumber || "Unknown"}</p>
-                <p className="text-sm text-gray-400">Your natural talents and abilities</p>
-              </div>
+            </div>
+            <div className="mt-6 pt-4 border-t border-gray-200">
+              <p className="text-sm text-gray-500">
+                Calculated from: {blueprint.user_meta.full_name} • Born: {new Date(blueprint.user_meta.birth_date).toLocaleDateString()}
+              </p>
             </div>
           </CosmicCard>
         </TabsContent>

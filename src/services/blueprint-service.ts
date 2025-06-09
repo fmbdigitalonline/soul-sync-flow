@@ -45,9 +45,15 @@ export interface BlueprintData {
   values_life_path: {
     lifePathNumber: number;
     expressionNumber: number;
+    soulUrgeNumber: number;
+    birthdayNumber: number;
     birthDay: number;
     birthMonth: number;
     birthYear: number;
+    lifePathKeyword?: string;
+    expressionKeyword?: string;
+    soulUrgeKeyword?: string;
+    birthdayKeyword?: string;
   };
   energy_strategy_human_design: {
     type: string;
