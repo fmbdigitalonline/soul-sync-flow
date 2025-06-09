@@ -84,7 +84,7 @@ export default function Onboarding() {
       description: "Your soul blueprint has been created and is ready to explore!",
     });
     
-    speak("Your soul blueprint has been generated! Let's set up your coaching preferences.");
+    speak("Your soul blueprint has been generated! Now let's set up your coaching preferences.");
     
     // Move to goal selection step instead of navigating away
     setTimeout(() => {
@@ -422,6 +422,7 @@ export default function Onboarding() {
         return (
           <div className="space-y-6 text-center max-w-md mx-auto">
             <h2 className="text-xl font-display font-bold">Choose Your Path</h2>
+            <p className="text-white/80">Let's set up your coaching preferences to personalize your experience.</p>
             <GoalSelectionStep onComplete={handleGoalSelectionComplete} />
           </div>
         );
@@ -443,7 +444,7 @@ export default function Onboarding() {
         interactionStage={interactionStage}
         isCalculating={currentStep === 6}
       >
-        {/* Progress indicator (simplified) */}
+        {/* Progress indicator */}
         <div className="absolute top-4 left-0 right-0 px-4">
           <div className="w-full max-w-md mx-auto flex justify-between mb-1">
             {steps.map((_, index) => (
@@ -458,6 +459,9 @@ export default function Onboarding() {
                 }`}
               ></div>
             ))}
+          </div>
+          <div className="text-center text-sm text-white/60">
+            Step {currentStep + 1} of {steps.length}: {steps[currentStep]}
           </div>
         </div>
 

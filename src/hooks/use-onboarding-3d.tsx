@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useSoulOrb } from '@/contexts/SoulOrbContext';
 import { useAnimate } from 'framer-motion';
@@ -18,16 +17,16 @@ export const useOnboarding3D = () => {
   // Animation controls - replacing useAnimation with useAnimate
   const [sceneRef, animate] = useAnimate();
   
-  // Steps mapping - updated to include Goal Selection
+  // Steps mapping - corrected step order
   const steps = [
-    "Welcome",
-    "Full Name",
-    "Birth Date",
-    "Birth Time",
-    "Birth Location",
-    "Personality",
-    "Generating",
-    "Goal Selection", // New step
+    "Welcome",        // 0
+    "Full Name",      // 1
+    "Birth Date",     // 2
+    "Birth Time",     // 3
+    "Birth Location", // 4
+    "Personality",    // 5
+    "Generating",     // 6
+    "Goal Selection", // 7
   ];
   
   // Transition to next step with proper timing
@@ -52,19 +51,23 @@ export const useOnboarding3D = () => {
     // Update step after animation
     setTimeout(() => {
       if (currentStep === steps.length - 1) {
-        // Complete onboarding
+        // Complete onboarding only when we're at the last step (Goal Selection)
         setStage('complete');
-      } else if (currentStep === steps.length - 3) {
-        // Start generation process (step 6 - Generating)
-        setStage('generating');
-        setCurrentStep((prev) => prev + 1);
-        setCurrentMessageIndex(0);
-        setInteractionStage('listening');
       } else {
         // Go to next step
         setCurrentStep((prev) => prev + 1);
         setCurrentMessageIndex(0);
         setInteractionStage('listening'); // Reset to listening stage for the new step
+        
+        // Set the correct stage based on the new step
+        const newStep = currentStep + 1;
+        if (newStep === 6) { // Generating step
+          setStage('generating');
+        } else if (newStep === 7) { // Goal Selection step
+          setStage('welcome'); // Use welcome stage for goal selection
+        } else {
+          setStage('collecting');
+        }
       }
       
       // Prevent flickering by waiting until content changes before showing bubble
