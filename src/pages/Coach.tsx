@@ -9,9 +9,12 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useAICoach } from "@/hooks/use-ai-coach";
 import { supabase } from "@/integrations/supabase/client";
+import { AgentSelector } from "@/components/coach/AgentSelector";
+import { CoachInterface } from "@/components/coach/CoachInterface";
+import { GuideInterface } from "@/components/coach/GuideInterface";
 
 const Coach = () => {
-  const { messages, isLoading, sendMessage, resetConversation } = useAICoach();
+  const { messages, isLoading, sendMessage, resetConversation, currentAgent, switchAgent } = useAICoach();
   const [inputValue, setInputValue] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -59,7 +62,7 @@ const Coach = () => {
     resetConversation();
     toast({
       title: "New Conversation",
-      description: "Started a new conversation with your Soul Coach",
+      description: `Started a new conversation with your ${currentAgent === "coach" ? "Soul Coach" : currentAgent === "guide" ? "Soul Guide" : "Soul Companion"}`,
     });
   };
 
@@ -70,9 +73,9 @@ const Coach = () => {
           <CosmicCard className="p-6 text-center">
             <Sparkles className="h-8 w-8 text-soul-purple mx-auto mb-4" />
             <h1 className="text-2xl font-bold font-display mb-2">
-              <span className="gradient-text">Soul Coach</span>
+              <span className="gradient-text">Soul AI</span>
             </h1>
-            <p className="mb-6">You need to sign in to access your personalized AI coach</p>
+            <p className="mb-6">You need to sign in to access your personalized AI guidance</p>
             <Button 
               className="bg-soul-purple hover:bg-soul-purple/90"
               onClick={() => window.location.href = '/auth'}
@@ -98,94 +101,121 @@ const Coach = () => {
             <RefreshCw className="h-5 w-5" />
           </Button>
           <h1 className="text-2xl font-bold font-display">
-            <span className="gradient-text">Soul Coach</span>
+            <span className="gradient-text">
+              {currentAgent === "coach" ? "Soul Coach" : currentAgent === "guide" ? "Soul Guide" : "Soul AI"}
+            </span>
           </h1>
           <Button variant="ghost" size="icon" onClick={() => window.location.href = '/blueprint'}>
             <Settings className="h-5 w-5" />
           </Button>
         </div>
 
-        <div className="flex-1 overflow-y-auto mb-4 space-y-4 pb-4">
-          {messages.length === 0 && (
-            <div className="h-full flex flex-col items-center justify-center text-center p-6 text-muted-foreground">
-              <Sparkles className="h-12 w-12 text-soul-purple mb-4" />
-              <h3 className="text-lg font-medium mb-1">Your Soul Coach is ready</h3>
-              <p className="text-sm max-w-xs">
-                Ask a question or share what's on your mind for personalized guidance based on your Soul Blueprint
-              </p>
-            </div>
-          )}
-          
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={cn(
-                "flex",
-                message.sender === "user" ? "justify-end" : "justify-start"
-              )}
-            >
+        <AgentSelector 
+          currentAgent={currentAgent} 
+          onAgentChange={switchAgent}
+          className="mb-4"
+        />
+
+        {currentAgent === "coach" ? (
+          <CoachInterface
+            messages={messages}
+            isLoading={isLoading}
+            onSendMessage={sendMessage}
+            messagesEndRef={messagesEndRef}
+          />
+        ) : currentAgent === "guide" ? (
+          <GuideInterface
+            messages={messages}
+            isLoading={isLoading}
+            onSendMessage={sendMessage}
+            messagesEndRef={messagesEndRef}
+          />
+        ) : (
+          // Blend mode - use a mix of both interfaces
+          <div className="flex-1 overflow-y-auto mb-4 space-y-4 pb-4">
+            {messages.length === 0 && (
+              <div className="h-full flex flex-col items-center justify-center text-center p-6 text-muted-foreground">
+                <Sparkles className="h-12 w-12 text-soul-purple mb-4" />
+                <h3 className="text-lg font-medium mb-1">Your Soul Companion is ready</h3>
+                <p className="text-sm max-w-xs">
+                  Ask a question or share what's on your mind for balanced guidance combining productivity and personal insight
+                </p>
+              </div>
+            )}
+            
+            {messages.map((message) => (
               <div
+                key={message.id}
                 className={cn(
-                  "max-w-[80%] rounded-2xl p-4",
-                  message.sender === "user"
-                    ? "bg-soul-purple text-white"
-                    : "cosmic-card"
+                  "flex",
+                  message.sender === "user" ? "justify-end" : "justify-start"
                 )}
               >
-                <div className="flex items-center space-x-2 mb-1">
-                  {message.sender === "ai" ? (
-                    <Sparkles className="h-4 w-4 text-soul-purple" />
-                  ) : (
-                    <User className="h-4 w-4" />
+                <div
+                  className={cn(
+                    "max-w-[80%] rounded-2xl p-4",
+                    message.sender === "user"
+                      ? "bg-soul-purple text-white"
+                      : "cosmic-card"
                   )}
-                  <p className="text-xs font-medium">
-                    {message.sender === "ai" ? "Soul Coach" : "You"}
-                  </p>
-                </div>
-                <p className="text-sm">{message.content}</p>
-              </div>
-            </div>
-          ))}
-          {isLoading && (
-            <div className="flex justify-start">
-              <div className="cosmic-card max-w-[80%] rounded-2xl p-4">
-                <div className="flex items-center space-x-2">
-                  <Sparkles className="h-4 w-4 text-soul-purple" />
-                  <p className="text-xs font-medium">Soul Coach</p>
-                </div>
-                <div className="flex items-center space-x-2 mt-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <p className="text-sm">Consulting your Soul Blueprint...</p>
+                >
+                  <div className="flex items-center space-x-2 mb-1">
+                    {message.sender === "ai" ? (
+                      <Sparkles className="h-4 w-4 text-soul-purple" />
+                    ) : (
+                      <User className="h-4 w-4" />
+                    )}
+                    <p className="text-xs font-medium">
+                      {message.sender === "ai" ? "Soul Companion" : "You"}
+                    </p>
+                  </div>
+                  <p className="text-sm">{message.content}</p>
                 </div>
               </div>
-            </div>
-          )}
-          <div ref={messagesEndRef} />
-        </div>
+            ))}
+            {isLoading && (
+              <div className="flex justify-start">
+                <div className="cosmic-card max-w-[80%] rounded-2xl p-4">
+                  <div className="flex items-center space-x-2">
+                    <Sparkles className="h-4 w-4 text-soul-purple" />
+                    <p className="text-xs font-medium">Soul Companion</p>
+                  </div>
+                  <div className="flex items-center space-x-2 mt-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <p className="text-sm">Consulting your Soul Blueprint...</p>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+        )}
 
-        <div className="sticky bottom-0 pb-4">
-          <CosmicCard className="flex items-center space-x-2 p-2">
-            <Input
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={handleKeyPress}
-              placeholder="Ask your Soul Coach..."
-              className="flex-1"
-              disabled={isLoading}
-            />
-            <Button
-              size="icon"
-              onClick={handleSendMessage}
-              disabled={inputValue.trim() === "" || isLoading}
-              className="bg-soul-purple hover:bg-soul-purple/90"
-            >
-              <SendHorizontal className="h-4 w-4" />
-            </Button>
-          </CosmicCard>
-          <p className="text-xs text-center text-muted-foreground mt-2">
-            Your Soul Coach responds based on your unique Blueprint
-          </p>
-        </div>
+        {(currentAgent === "blend") && (
+          <div className="sticky bottom-0 pb-4">
+            <CosmicCard className="flex items-center space-x-2 p-2">
+              <Input
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleKeyPress}
+                placeholder="Ask your Soul Companion..."
+                className="flex-1"
+                disabled={isLoading}
+              />
+              <Button
+                size="icon"
+                onClick={handleSendMessage}
+                disabled={inputValue.trim() === "" || isLoading}
+                className="bg-soul-purple hover:bg-soul-purple/90"
+              >
+                <SendHorizontal className="h-4 w-4" />
+              </Button>
+            </CosmicCard>
+            <p className="text-xs text-center text-muted-foreground mt-2">
+              Your Soul Companion responds based on your unique Blueprint
+            </p>
+          </div>
+        )}
       </div>
     </MainLayout>
   );
