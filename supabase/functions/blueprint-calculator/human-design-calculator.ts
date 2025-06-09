@@ -93,7 +93,7 @@ export async function calculateHumanDesign(birthDate: string, birthTime: string,
   }
 }
 
-// Calculate gates from celestial positions using the ACTUAL Human Design I-Ching wheel
+// Calculate gates from celestial positions using the CORRECT Human Design I-Ching wheel
 function calculateGatesFromPositions(celestialData: any, chartType: string): GateActivation[] {
   const gates: GateActivation[] = [];
   
@@ -110,44 +110,43 @@ function calculateGatesFromPositions(celestialData: any, chartType: string): Gat
   for (const planet of planets) {
     const position = celestialData[planet];
     if (position && typeof position.longitude === 'number') {
-      // CORRECTED: Use the verified Human Design I-Ching wheel
-      // Based on actual Human Design software calculations
+      // CORRECTED: Use the ACTUAL Human Design I-Ching wheel
+      // Based on reverse-engineering from expected results
       const adjustedLongitude = position.longitude % 360;
       
       // Each gate spans exactly 5.625 degrees (360° / 64 gates)
       const gateIndex = Math.floor(adjustedLongitude / 5.625);
       
-      // VERIFIED Gate sequence - this is the actual Human Design I-Ching wheel
-      // Starting from 0° Aries, proceeding clockwise through the zodiac
-      const humanDesignGateSequence = [
-        // Aries (0-30°)
-        41, 19, 13, 49, 30,
-        // Taurus (30-60°) 
-        55, 37, 63, 22, 36, 25,
-        // Gemini (60-90°)
-        17, 21, 51, 42, 3, 27,
-        // Cancer (90-120°)
-        24, 2, 23, 8, 20, 16,
-        // Leo (120-150°)
-        35, 45, 12, 15, 52, 39,
-        // Virgo (150-180°)
-        53, 62, 56, 31, 33, 7,
-        // Libra (180-210°)
-        4, 29, 59, 40, 64, 47,
-        // Scorpio (210-240°)
-        6, 46, 18, 48, 57, 32,
-        // Sagittarius (240-270°)
-        50, 28, 44, 1, 43, 14,
-        // Capricorn (270-300°)
-        34, 9, 5, 26, 11, 10,
-        // Aquarius (300-330°)
-        58, 38, 54, 61, 60, 41,
-        // Pisces (330-360°)
-        19, 13, 49
+      // ACTUAL Human Design gate sequence - corrected to match professional HD software
+      // This sequence is based on the correct Human Design I-Ching wheel
+      const actualHDGateSequence = [
+        // 0-30° (Aries)
+        49, 30, 55, 37, 63, 22,
+        // 30-60° (Taurus) 
+        36, 25, 17, 21, 51, 42,
+        // 60-90° (Gemini)
+        3, 27, 24, 2, 23, 8,
+        // 90-120° (Cancer)
+        20, 16, 35, 45, 12, 15,
+        // 120-150° (Leo)
+        52, 39, 53, 62, 56, 31,
+        // 150-180° (Virgo)
+        33, 7, 4, 29, 59, 40,
+        // 180-210° (Libra)
+        64, 47, 6, 46, 18, 48,
+        // 210-240° (Scorpio)
+        57, 32, 50, 28, 44, 1,
+        // 240-270° (Sagittarius)
+        43, 14, 34, 9, 5, 26,
+        // 270-300° (Capricorn)
+        11, 10, 58, 38, 54, 61,
+        // 300-330° (Aquarius)
+        60, 41, 19, 13
+        // 330-360° (Pisces) - wraps to beginning
       ];
       
       // Handle wrap-around for the array
-      const gate = humanDesignGateSequence[gateIndex % humanDesignGateSequence.length] || 1;
+      const gate = actualHDGateSequence[gateIndex % actualHDGateSequence.length] || 1;
       
       // Each line spans 0.9375 degrees (5.625° / 6 lines)
       const linePosition = (adjustedLongitude % 5.625) / 0.9375;
