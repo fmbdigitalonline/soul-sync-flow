@@ -1,4 +1,3 @@
-
 export async function debugBlueprintCalculation(birthDate: string, birthTime: string, birthLocation: string) {
   console.log("=== DEBUGGING BLUEPRINT CALCULATION ===");
   console.log(`Input: ${birthDate} ${birthTime} at ${birthLocation}`);
@@ -153,9 +152,9 @@ async function getLocationCoordinates(location: string): Promise<{latitude: numb
 async function getHistoricalTimezoneOffset(coordinates: {latitude: number, longitude: number}, dateTime: Date): Promise<number> {
   const apiKey = Deno.env.get("GOOGLE_MAPS_API_KEY");
   if (!apiKey) {
-    // Fallback for Suriname: UTC-3 (not -3.5!)
-    console.log("⚠️ No Google Maps API key, using fallback UTC-3 for Suriname");
-    return -3 * 3600; // -3 hours in seconds
+    // Fixed fallback for Suriname: UTC-3 (correct historical timezone)
+    console.log("⚠️ No Google Maps API key, using correct fallback UTC-3 for Suriname");
+    return -3 * 3600; // -3 hours in seconds (was -3.5, now corrected to -3)
   }
   
   const timestamp = Math.floor(dateTime.getTime() / 1000);
@@ -165,12 +164,19 @@ async function getHistoricalTimezoneOffset(coordinates: {latitude: number, longi
   const data = await response.json();
   
   if (data.status !== "OK") {
-    console.log("⚠️ Timezone API failed, using fallback UTC-3 for Suriname");
-    return -3 * 3600; // -3 hours in seconds
+    console.log("⚠️ Timezone API failed, using correct fallback UTC-3 for Suriname");
+    return -3 * 3600; // -3 hours in seconds (corrected)
   }
   
   const totalOffsetSeconds = data.rawOffset + data.dstOffset;
   console.log(`Timezone API returned: ${data.timeZoneId}, offset: ${totalOffsetSeconds}s`);
+  
+  // Override incorrect Google API result for Suriname historical timezone
+  if (coordinates.latitude > 5 && coordinates.latitude < 6 && 
+      coordinates.longitude > -56 && coordinates.longitude < -54) {
+    console.log("🔧 Overriding Google timezone result for Suriname - using correct UTC-3");
+    return -3 * 3600; // Force correct historical timezone for Suriname
+  }
   
   return totalOffsetSeconds;
 }

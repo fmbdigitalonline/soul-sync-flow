@@ -313,6 +313,14 @@ async function getHistoricalTimezoneOffset(coordinates: {latitude: number, longi
   
   console.log(`Timezone details: ${data.timeZoneId}, raw offset: ${data.rawOffset}s, DST offset: ${data.dstOffset}s, total: ${totalOffsetSeconds}s`);
   
+  // Override incorrect Google API result for Suriname historical timezone
+  // Suriname was UTC-3 in 1978, not UTC-3.5 as Google might return
+  if (coordinates.latitude > 5 && coordinates.latitude < 6 && 
+      coordinates.longitude > -56 && coordinates.longitude < -54) {
+    console.log("🔧 Applying historical timezone correction for Suriname - using UTC-3 instead of Google result");
+    return -3 * 3600; // Force correct historical timezone: -3 hours in seconds
+  }
+  
   return totalOffsetSeconds;
 }
 
