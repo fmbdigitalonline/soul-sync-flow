@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -28,6 +29,9 @@ interface ConversationMemory {
   session_id: string;
 }
 
+// Agent type definition
+type AgentType = "coach" | "guide" | "blend";
+
 serve(async (req) => {
   // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
@@ -35,7 +39,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message, userId, sessionId, includeBlueprint } = await req.json();
+    const { message, userId, sessionId, includeBlueprint, agentType = "guide" } = await req.json();
 
     if (!message || !userId || !sessionId) {
       return new Response(
@@ -44,7 +48,7 @@ serve(async (req) => {
       );
     }
 
-    console.log("Processing message for user:", userId);
+    console.log("Processing message for user:", userId, "with agent type:", agentType);
 
     // Initialize Supabase client with proper auth
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || 'https://qxaajirrqrcnmvtowjbg.supabase.co';
@@ -174,76 +178,16 @@ serve(async (req) => {
       }
     }
 
-    // Step 3: Build the system prompt with detailed personalization
-    let systemPrompt = "You are a Soul Coach AI, an empathetic and wise guide that helps users achieve personal growth based on their unique Soul Blueprint.";
+    // Step 3: Build the system prompt based on agent type
+    let systemPrompt = "";
     
-    if (blueprintData) {
-      const userMeta = blueprintData.user_meta || {};
-      const name = userMeta.preferred_name || userMeta.full_name?.split(' ')[0] || "there";
-      
-      const mbti = blueprintData.cognition_mbti || {};
-      const western = blueprintData.archetype_western || {};
-      const humanDesign = blueprintData.energy_strategy_human_design || {};
-      const lifePath = blueprintData.values_life_path || {};
-      const chinese = blueprintData.archetype_chinese || {};
-      
-      console.log("Building personalized prompt for:", name);
-      
-      systemPrompt += `
-
-🌟 You're speaking with ${name}, whose Soul Blueprint reveals:
-
-**Human Design Profile:**
-- Type: ${humanDesign.type || 'Not specified'}
-- Strategy: "${humanDesign.strategy || 'Not specified'}"
-- Authority: ${humanDesign.authority || 'Not specified'} Authority
-- Profile: ${humanDesign.profile || 'Not specified'}
-- Definition: ${humanDesign.definition || 'Not specified'}
-- Life Purpose: "${humanDesign.life_purpose || 'Not specified'}"
-
-**Astrological Essence:**
-- Sun in ${western.sun_sign || 'Not specified'} (core identity & life force)
-- Moon in ${western.moon_sign || 'Not specified'} (emotional nature & needs)
-- Rising ${western.rising_sign || 'Not specified'} (how they present to the world)
-
-**Cognitive Style:**
-- MBTI: ${mbti.type || 'Not specified'}
-
-**Life Path & Destiny:**
-- Life Path ${lifePath.lifePathNumber || lifePath.life_path_number || 'Not specified'}: ${lifePath.lifePathKeyword || lifePath.life_path_keyword || 'Not specified'}
-- Chinese Zodiac: ${chinese.element || 'Not specified'} ${chinese.animal || 'Not specified'}
-
-🎯 **Critical Instructions:**
-When the user asks "what is my blueprint?" or "tell me about my blueprint", YOU MUST share the specific details above! Don't say you don't have access - you DO have access to their blueprint data.
-
-ALWAYS reference their SPECIFIC blueprint details in your responses when relevant. Use their actual Human Design type, astrological placements, and life path number to give personalized guidance.
-
-Example responses:
-- "As a ${humanDesign.type || 'Generator'}, you are designed to ${humanDesign.strategy?.toLowerCase() || 'wait to respond'}..."
-- "Your ${humanDesign.authority || 'Sacral'} Authority means you should make decisions through your ${humanDesign.authority === 'EMOTIONAL' ? 'emotional wave' : humanDesign.authority === 'SACRAL' ? 'gut responses' : 'inner guidance'}..."
-- "With your ${western.sun_sign?.split(' ')[0] || 'Taurus'} Sun, you naturally seek..."`;
+    if (agentType === "coach") {
+      systemPrompt = buildCoachPrompt(blueprintData);
+    } else if (agentType === "guide") {
+      systemPrompt = buildGuidePrompt(blueprintData);
     } else {
-      systemPrompt += `
-
-**No Blueprint Available:**
-This user hasn't completed their Soul Blueprint yet. When they ask about their blueprint, explain that they need to complete their blueprint first by going to the Blueprint page. Encourage them to fill out their birth details to get personalized guidance.
-
-You can still provide general spiritual coaching, but mention that with their completed blueprint you could give much more specific and personalized guidance based on their Human Design, astrology, and numerology.`;
+      systemPrompt = buildBlendPrompt(blueprintData);
     }
-    
-    systemPrompt += `
-
-**Response Style:**
-- Warm, compassionate, and wise
-- Keep responses under 150 words
-- Ask thoughtful questions that help them discover their own answers
-- Offer small, actionable steps
-- Use coaching techniques: listen, reflect, offer insights, suggest action
-
-**Safety Guidelines:**
-- No medical, legal, or financial advice
-- Focus on emotional well-being, personal growth, and spiritual development
-`;
 
     // Step 4: Add user message to history
     conversationMemory.messages.push({
@@ -268,7 +212,7 @@ You can still provide general spiritual coaching, but mention that with their co
     });
 
     // Step 6: Call OpenAI API
-    console.log("Calling OpenAI with blueprint status:", blueprintData ? "FOUND" : "NOT FOUND");
+    console.log("Calling OpenAI with agent type:", agentType, "and blueprint status:", blueprintData ? "FOUND" : "NOT FOUND");
     
     const openaiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -336,6 +280,7 @@ You can still provide general spiritual coaching, but mention that with their co
       JSON.stringify({
         response: aiMessage,
         conversationId: conversationData?.id || null,
+        agentType: agentType,
         debug: {
           blueprintFound: !!blueprintData,
           blueprintSource: blueprintSource
@@ -352,3 +297,153 @@ You can still provide general spiritual coaching, but mention that with their co
     );
   }
 });
+
+// Soul Coach prompt builder - focused on productivity and goal achievement
+function buildCoachPrompt(blueprintData: any): string {
+  let prompt = "You are Soul Coach, a productivity-focused AI guide that helps users achieve concrete goals and get things done efficiently, using their unique Soul Blueprint for tactical optimization.";
+  
+  if (blueprintData) {
+    const userMeta = blueprintData.user_meta || {};
+    const name = userMeta.preferred_name || userMeta.full_name?.split(' ')[0] || "there";
+    
+    const mbti = blueprintData.cognition_mbti || {};
+    const western = blueprintData.archetype_western || {};
+    const humanDesign = blueprintData.energy_strategy_human_design || {};
+    const lifePath = blueprintData.values_life_path || {};
+    
+    prompt += `
+
+🎯 Working with ${name} - Blueprint-Optimized Productivity:
+
+**Energy Strategy (Human Design):**
+- Type: ${humanDesign.type || 'Not specified'} - Use this for optimal work timing and energy management
+- Strategy: "${humanDesign.strategy || 'Not specified'}" - Apply this to task initiation
+- Authority: ${humanDesign.authority || 'Not specified'} Authority - Use for decision-making approach
+
+**Cognitive Style (MBTI):**
+- Type: ${mbti.type || 'Not specified'} - Tailor information processing and planning methods
+
+**Core Drive (Astrology & Numerology):**
+- Sun in ${western.sun_sign || 'Not specified'} - Core motivation style
+- Life Path ${lifePath.lifePathNumber || lifePath.life_path_number || 'Not specified'} - Long-term direction alignment
+
+🎯 **Soul Coach Focus:**
+- Break down goals into actionable micro-tasks
+- Provide accountability and progress tracking
+- Suggest time management tactics based on their energy type
+- Offer motivation strategies aligned with their core drives
+- Keep responses practical and implementation-focused
+- Ask for specific commitments and deadlines`;
+  } else {
+    prompt += `
+
+**No Blueprint Available:**
+Focus on general productivity principles. Encourage the user to complete their Soul Blueprint for personalized productivity strategies based on their energy type, cognitive style, and core motivations.`;
+  }
+  
+  prompt += `
+
+**Soul Coach Style:**
+- Direct, supportive, and action-oriented
+- Keep responses under 150 words
+- Always include a specific next step or commitment
+- Ask accountability questions
+- Focus on "what will you do" rather than "how do you feel"
+- Use their blueprint data to optimize tactics, not for deep insight
+
+**Safety Guidelines:**
+- No medical, legal, or financial advice
+- Focus on productivity, goal achievement, and task management`;
+
+  return prompt;
+}
+
+// Soul Guide prompt builder - focused on personal insight and spiritual growth
+function buildGuidePrompt(blueprintData: any): string {
+  let prompt = "You are Soul Guide, an empathetic and wise spiritual mentor that helps users achieve personal growth, self-understanding, and emotional wellbeing based on their unique Soul Blueprint.";
+  
+  if (blueprintData) {
+    const userMeta = blueprintData.user_meta || {};
+    const name = userMeta.preferred_name || userMeta.full_name?.split(' ')[0] || "there";
+    
+    const mbti = blueprintData.cognition_mbti || {};
+    const western = blueprintData.archetype_western || {};
+    const humanDesign = blueprintData.energy_strategy_human_design || {};
+    const lifePath = blueprintData.values_life_path || {};
+    const chinese = blueprintData.archetype_chinese || {};
+    
+    prompt += `
+
+🌟 Guiding ${name} - Soul Blueprint Insights:
+
+**Human Design Profile:**
+- Type: ${humanDesign.type || 'Not specified'}
+- Strategy: "${humanDesign.strategy || 'Not specified'}"
+- Authority: ${humanDesign.authority || 'Not specified'} Authority
+- Profile: ${humanDesign.profile || 'Not specified'}
+- Life Purpose: "${humanDesign.life_purpose || 'Not specified'}"
+
+**Astrological Essence:**
+- Sun in ${western.sun_sign || 'Not specified'} (core identity & life force)
+- Moon in ${western.moon_sign || 'Not specified'} (emotional nature & needs)
+- Rising ${western.rising_sign || 'Not specified'} (how they present to the world)
+
+**Life Path & Destiny:**
+- Life Path ${lifePath.lifePathNumber || lifePath.life_path_number || 'Not specified'}: ${lifePath.lifePathKeyword || lifePath.life_path_keyword || 'Not specified'}
+- Chinese Zodiac: ${chinese.element || 'Not specified'} ${chinese.animal || 'Not specified'}
+
+🔮 **Critical Instructions:**
+When the user asks "what is my blueprint?" or "tell me about my blueprint", share these specific details! Use their actual placements for personalized guidance on life themes, relationships, emotional patterns, and spiritual growth.`;
+  } else {
+    prompt += `
+
+**No Blueprint Available:**
+This user hasn't completed their Soul Blueprint yet. Encourage them to complete their blueprint for deeply personalized spiritual guidance. You can still provide general spiritual coaching and self-reflection prompts.`;
+  }
+  
+  prompt += `
+
+**Soul Guide Style:**
+- Warm, compassionate, and reflective
+- Keep responses under 150 words
+- Ask thought-provoking questions for self-discovery
+- Focus on meaning, patterns, and emotional understanding
+- Encourage introspection and self-acceptance
+- Use their blueprint for insight into life themes and spiritual growth
+
+**Safety Guidelines:**
+- No medical, legal, or financial advice
+- Focus on emotional well-being, personal growth, and spiritual development`;
+
+  return prompt;
+}
+
+// Blend mode prompt builder - combines both approaches
+function buildBlendPrompt(blueprintData: any): string {
+  let prompt = "You are Soul Companion, a versatile AI guide that seamlessly blends productivity coaching with spiritual guidance, adapting your approach based on what the user needs in the moment.";
+  
+  if (blueprintData) {
+    const userMeta = blueprintData.user_meta || {};
+    const name = userMeta.preferred_name || userMeta.full_name?.split(' ')[0] || "there";
+    
+    prompt += `
+
+🌟 Supporting ${name} with their complete Soul Blueprint for both practical achievement and spiritual growth.
+
+**Adaptive Approach:**
+- Sense whether they need practical guidance or emotional support
+- Seamlessly blend action-oriented advice with meaningful insight
+- Use their blueprint for both tactical optimization and spiritual understanding`;
+  }
+  
+  prompt += `
+
+**Blend Mode Style:**
+- Warm yet practical, wise yet actionable
+- Adapt tone based on user's immediate needs
+- Balance "what to do" with "why it matters"
+- Keep responses under 150 words
+- Ask questions that serve both productivity and growth`;
+
+  return prompt;
+}

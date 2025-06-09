@@ -6,17 +6,21 @@ export interface AICoachResponse {
   conversationId: string | null;
 }
 
+export type AgentType = "coach" | "guide" | "blend";
+
 export const aiCoachService = {
   /**
    * Sends a message to the AI Coach and gets a response
    * @param message The user's message
    * @param sessionId A unique identifier for the conversation session
    * @param includeBlueprint Whether to include blueprint data for personalization
+   * @param agentType The type of agent to use (coach, guide, or blend)
    */
   async sendMessage(
     message: string,
     sessionId: string = "default",
-    includeBlueprint: boolean = true
+    includeBlueprint: boolean = true,
+    agentType: AgentType = "guide"
   ): Promise<AICoachResponse> {
     try {
       // Get current user
@@ -34,6 +38,7 @@ export const aiCoachService = {
           userId,
           sessionId,
           includeBlueprint,
+          agentType,
         },
       });
 
