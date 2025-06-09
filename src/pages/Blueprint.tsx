@@ -1,17 +1,18 @@
-
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MainLayout from "@/components/Layout/MainLayout";
 import BlueprintViewer from "@/components/blueprint/BlueprintViewer";
+import EnhancedBlueprintViewer from "@/components/blueprint/EnhancedBlueprintViewer";
 import BlueprintEditor from "@/components/blueprint/BlueprintEditor";
 import { Button } from "@/components/ui/button";
-import { Loader2, MessageCircle, RefreshCw } from "lucide-react";
+import { Loader2, MessageCircle, RefreshCw, ToggleLeft, ToggleRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { BlueprintData, blueprintService } from "@/services/blueprint-service";
 import { useNavigate } from "react-router-dom";
 import { BlueprintGenerator } from "@/components/blueprint/BlueprintGenerationFlow";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSoulOrb } from "@/contexts/SoulOrbContext";
+import { BlueprintEnhancementService } from "@/services/blueprint-enhancement-service";
 
 const Blueprint = () => {
   const [activeTab, setActiveTab] = useState("view");
@@ -19,6 +20,7 @@ const Blueprint = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isNewUser, setIsNewUser] = useState(false);
+  const [useEnhanced, setUseEnhanced] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -215,7 +217,24 @@ const Blueprint = () => {
           <h1 className="text-3xl font-bold font-display">
             <span className="gradient-text">Soul Blueprint</span>
           </h1>
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
+            {/* Enhanced View Toggle */}
+            <div className="flex items-center gap-2 mr-4">
+              <span className="text-sm text-muted-foreground">Basic</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setUseEnhanced(!useEnhanced)}
+                className="p-1"
+              >
+                {useEnhanced ? 
+                  <ToggleRight className="h-6 w-6 text-soul-purple" /> : 
+                  <ToggleLeft className="h-6 w-6 text-gray-400" />
+                }
+              </Button>
+              <span className="text-sm text-muted-foreground">Enhanced</span>
+            </div>
+            
             <Button 
               variant="outline"
               className="flex items-center"
@@ -245,7 +264,15 @@ const Blueprint = () => {
           </TabsList>
           
           <TabsContent value="view" className="mt-6">
-            {blueprint && <BlueprintViewer blueprint={blueprint} />}
+            {blueprint && (
+              useEnhanced ? (
+                <EnhancedBlueprintViewer 
+                  blueprint={BlueprintEnhancementService.enhanceBlueprintData(blueprint)} 
+                />
+              ) : (
+                <BlueprintViewer blueprint={blueprint} />
+              )
+            )}
           </TabsContent>
           
           <TabsContent value="edit" className="mt-6">
