@@ -84,47 +84,54 @@ export default function Onboarding() {
       description: "Your soul blueprint has been created and is ready to explore!",
     });
     
-    speak("Your soul blueprint has been generated! Let's explore it together.");
+    speak("Your soul blueprint has been generated! Let's set up your coaching preferences.");
     
-    // Navigate to blueprint page after a short delay
+    // Move to goal selection step instead of navigating away
     setTimeout(() => {
-      console.log("Navigating to blueprint page after blueprint generation");
-      navigate("/blueprint", { replace: true });
+      goToNextStep(); // This will move to step 7 (Goal Selection)
+      navigationTriggeredRef.current = false; // Reset for goal selection
     }, 1500);
   };
 
   // Handle goal selection completion
-  const handleGoalSelectionComplete = (preferences: { primary_goal: string; support_style: number; time_horizon: string }) => {
+  const handleGoalSelectionComplete = async (preferences: { 
+    primary_goal: string; 
+    support_style: number; 
+    time_horizon: string 
+  }) => {
     console.log("Goal selection completed with preferences:", preferences);
     
-    // Update the blueprint with runtime preferences
-    if (blueprintData) {
-      const updatedBlueprint = {
-        ...blueprintData,
-        runtime_preferences: preferences
-      };
+    try {
+      // Update the blueprint with runtime preferences using the new method
+      const { success, error } = await blueprintService.updateBlueprintRuntimePreferences(preferences);
       
-      // Save the updated blueprint
-      blueprintService.saveBlueprintData(updatedBlueprint).then(({ success, error }) => {
-        if (success) {
-          console.log("Blueprint updated with runtime preferences");
-          toast({
-            title: "Preferences Saved",
-            description: "Your coaching preferences have been saved to your blueprint.",
-          });
-          
-          // Navigate to blueprint page
-          setTimeout(() => {
-            navigate("/blueprint", { replace: true });
-          }, 1000);
-        } else {
-          console.error("Error saving runtime preferences:", error);
-          toast({
-            title: "Error",
-            description: "Failed to save your preferences. Please try again.",
-            variant: "destructive",
-          });
-        }
+      if (success) {
+        console.log("Blueprint updated with runtime preferences");
+        toast({
+          title: "Preferences Saved",
+          description: "Your coaching preferences have been saved to your blueprint.",
+        });
+        
+        speak("Perfect! Your preferences have been saved. Welcome to SoulSync!");
+        
+        // Navigate to blueprint page
+        setTimeout(() => {
+          navigate("/blueprint", { replace: true });
+        }, 1000);
+      } else {
+        console.error("Error saving runtime preferences:", error);
+        toast({
+          title: "Error",
+          description: error || "Failed to save your preferences. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Unexpected error saving preferences:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
       });
     }
   };
@@ -160,7 +167,7 @@ export default function Onboarding() {
     }
   }, [currentStep, user, authLoading, navigate, toast]);
 
-  // Check for existing blueprint and redirect if found
+  // Check for existing blueprint and redirect if found - improved error handling
   useEffect(() => {
     const checkExistingBlueprint = async () => {
       try {
@@ -186,6 +193,7 @@ export default function Onboarding() {
         }
       } catch (error) {
         console.error("Error checking for existing blueprint:", error);
+        // Don't show error to user for this check, just log it
       }
     };
     

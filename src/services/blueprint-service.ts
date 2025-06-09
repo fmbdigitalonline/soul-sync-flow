@@ -127,12 +127,17 @@ class BlueprintService {
         return { data: null, error: 'User not authenticated' };
       }
 
+      // First, clean up any duplicate active blueprints for this user
+      await this.cleanupDuplicateBlueprints(user.id);
+
+      // Now fetch the active blueprint (should be only one)
       const { data, error } = await this.supabase
         .from('blueprints')
         .select('*')
         .eq('user_id', user.id)
         .eq('is_active', true)
         .order('updated_at', { ascending: false })
+        .limit(1)
         .maybeSingle();
 
       if (error) {
@@ -147,6 +152,44 @@ class BlueprintService {
     }
   }
 
+  private async cleanupDuplicateBlueprints(userId: string): Promise<void> {
+    try {
+      // Get all active blueprints for this user, ordered by creation date (newest first)
+      const { data: activeBlueprints, error } = await this.supabase
+        .from('blueprints')
+        .select('id, created_at')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching active blueprints for cleanup:', error);
+        return;
+      }
+
+      // If there are multiple active blueprints, deactivate all but the newest
+      if (activeBlueprints && activeBlueprints.length > 1) {
+        console.log(`Found ${activeBlueprints.length} active blueprints for user ${userId}, cleaning up duplicates`);
+        
+        // Keep the first (newest) one, deactivate the rest
+        const blueprintsToDeactivate = activeBlueprints.slice(1).map(bp => bp.id);
+        
+        const { error: updateError } = await this.supabase
+          .from('blueprints')
+          .update({ is_active: false, updated_at: new Date().toISOString() })
+          .in('id', blueprintsToDeactivate);
+
+        if (updateError) {
+          console.error('Error deactivating duplicate blueprints:', updateError);
+        } else {
+          console.log(`Successfully deactivated ${blueprintsToDeactivate.length} duplicate blueprints`);
+        }
+      }
+    } catch (error) {
+      console.error('Error in cleanupDuplicateBlueprints:', error);
+    }
+  }
+
   async saveBlueprintData(blueprintData: BlueprintData): Promise<{ success: boolean; error: string | null }> {
     try {
       // Get current user
@@ -157,60 +200,82 @@ class BlueprintService {
         return { success: false, error: 'User not authenticated. Please sign in to save your blueprint.' };
       }
 
-      // Check if user already has an active blueprint
-      const { data: existingBlueprint, error: existingError } = await this.supabase
+      // Use a transaction-like approach to prevent race conditions
+      // First, deactivate any existing active blueprints for this user
+      const { error: deactivateError } = await this.supabase
         .from('blueprints')
-        .select('id')
+        .update({ 
+          is_active: false, 
+          updated_at: new Date().toISOString() 
+        })
         .eq('user_id', user.id)
-        .eq('is_active', true)
-        .maybeSingle();
+        .eq('is_active', true);
 
-      if (existingError) {
-        console.error('Error checking for existing blueprint:', existingError);
-        return { success: false, error: `Error checking for existing blueprint: ${existingError.message}` };
+      if (deactivateError) {
+        console.error('Error deactivating existing blueprints:', deactivateError);
+        return { success: false, error: `Error deactivating existing blueprints: ${deactivateError.message}` };
       }
 
-      if (existingBlueprint) {
-        console.log('User already has an active blueprint, updating existing one');
-        
-        // Update the existing blueprint
-        const { error: updateError } = await this.supabase
-          .from('blueprints')
-          .update({
-            ...blueprintData,
-            user_id: user.id,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', existingBlueprint.id);
-
-        if (updateError) {
-          console.error('Error updating blueprint:', updateError);
-          return { success: false, error: `Error updating blueprint: ${updateError.message}` };
-        }
-
-        return { success: true, error: null };
-      }
-
-      // Create new blueprint
+      // Now create the new blueprint as the only active one
       const { data, error } = await this.supabase
         .from('blueprints')
         .insert([{
           ...blueprintData,
           user_id: user.id,
+          is_active: true,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         }])
-        .select('*');
+        .select('*')
+        .single();
 
       if (error) {
         console.error('Error saving blueprint data:', error);
         return { success: false, error: `Error saving blueprint data: ${error.message}` };
       }
 
+      console.log('Successfully saved new blueprint with ID:', data.id);
       return { success: true, error: null };
     } catch (error) {
       console.error('Unexpected error saving blueprint data:', error);
       return { success: false, error: 'Unexpected error saving blueprint data.' };
+    }
+  }
+
+  async updateBlueprintRuntimePreferences(preferences: {
+    primary_goal: string;
+    support_style: number;
+    time_horizon: string;
+  }): Promise<{ success: boolean; error: string | null }> {
+    try {
+      const { data: { user } } = await this.supabase.auth.getUser();
+      
+      if (!user) {
+        return { success: false, error: 'User not authenticated' };
+      }
+
+      // Clean up any duplicates first
+      await this.cleanupDuplicateBlueprints(user.id);
+
+      // Update the active blueprint with runtime preferences
+      const { error } = await this.supabase
+        .from('blueprints')
+        .update({
+          runtime_preferences: preferences,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', user.id)
+        .eq('is_active', true);
+
+      if (error) {
+        console.error('Error updating runtime preferences:', error);
+        return { success: false, error: `Error updating runtime preferences: ${error.message}` };
+      }
+
+      return { success: true, error: null };
+    } catch (error) {
+      console.error('Unexpected error updating runtime preferences:', error);
+      return { success: false, error: 'Unexpected error updating runtime preferences.' };
     }
   }
 
