@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "@/lib/framer-motion";
@@ -94,7 +95,7 @@ export default function Onboarding() {
     }, 1500);
   };
 
-  // Handle goal selection completion - fixed to prevent multiple executions
+  // Handle goal selection completion - fetch fresh blueprint from database
   const handleGoalSelectionComplete = async (preferences: { 
     primary_goal: string; 
     support_style: number; 
@@ -110,12 +111,14 @@ export default function Onboarding() {
     console.log("Goal selection completed with preferences:", preferences);
     
     try {
-      // Get the current blueprint data from state (should be available from blueprint generation)
-      if (!blueprintData) {
-        console.error("No blueprint data available for updating");
+      // Get the current active blueprint from the database (fresh data)
+      const { data: currentBlueprint, error: fetchError } = await blueprintService.getActiveBlueprintData();
+      
+      if (fetchError || !currentBlueprint) {
+        console.error("Error fetching current blueprint:", fetchError);
         toast({
           title: "Error",
-          description: "Blueprint data not found. Please try regenerating your blueprint.",
+          description: "Could not find your blueprint. Please try regenerating your blueprint.",
           variant: "destructive",
         });
         goalSelectionTriggeredRef.current = false;
@@ -124,7 +127,7 @@ export default function Onboarding() {
 
       // Update the blueprint's goal_stack with the coaching preferences
       const updatedBlueprint = {
-        ...blueprintData,
+        ...currentBlueprint,
         goal_stack: [
           {
             id: `goal_${Date.now()}`,
