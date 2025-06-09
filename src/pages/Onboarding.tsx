@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "@/lib/framer-motion";
@@ -9,6 +10,7 @@ import { MBTISelector } from "@/components/blueprint/MBTISelector";
 import { GoalSelectionStep } from "@/components/blueprint/GoalSelectionStep";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BlueprintData, blueprintService } from "@/services/blueprint-service"; 
 import { useToast } from "@/hooks/use-toast";
 import { useOnboarding3D } from "@/hooks/use-onboarding-3d";
@@ -51,6 +53,13 @@ export default function Onboarding() {
     birthLocation: "",
     personality: "INFJ" // Default MBTI
   });
+
+  // Birth date components state
+  const [birthDateComponents, setBirthDateComponents] = useState({
+    day: "",
+    month: "",
+    year: ""
+  });
   
   // State variables for blueprint generation
   const [blueprintGenerated, setBlueprintGenerated] = useState(false);
@@ -59,10 +68,62 @@ export default function Onboarding() {
   // Refs to prevent navigation loops
   const navigationTriggeredRef = useRef(false);
   const goalSelectionTriggeredRef = useRef(false);
+
+  // Generate months array
+  const months = [
+    { value: "01", label: "January" },
+    { value: "02", label: "February" },
+    { value: "03", label: "March" },
+    { value: "04", label: "April" },
+    { value: "05", label: "May" },
+    { value: "06", label: "June" },
+    { value: "07", label: "July" },
+    { value: "08", label: "August" },
+    { value: "09", label: "September" },
+    { value: "10", label: "October" },
+    { value: "11", label: "November" },
+    { value: "12", label: "December" }
+  ];
+
+  // Generate years array (from 1920 to current year)
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: currentYear - 1919 }, (_, i) => currentYear - i);
+
+  // Update birth date when components change
+  useEffect(() => {
+    const { day, month, year } = birthDateComponents;
+    if (day && month && year) {
+      const formattedDate = `${year}-${month}-${day.padStart(2, '0')}`;
+      setFormData(prev => ({ ...prev, birthDate: formattedDate }));
+    }
+  }, [birthDateComponents]);
   
   // Update form data
   const updateFormData = (newData: Partial<typeof formData>) => {
     setFormData(prevData => ({ ...prevData, ...newData }));
+  };
+
+  // Update birth date components
+  const updateBirthDateComponent = (component: 'day' | 'month' | 'year', value: string) => {
+    setBirthDateComponents(prev => ({ ...prev, [component]: value }));
+  };
+
+  // Validate birth date
+  const isValidBirthDate = () => {
+    const { day, month, year } = birthDateComponents;
+    if (!day || !month || !year) return false;
+    
+    const dayNum = parseInt(day);
+    const monthNum = parseInt(month);
+    const yearNum = parseInt(year);
+    
+    if (dayNum < 1 || dayNum > 31) return false;
+    if (monthNum < 1 || monthNum > 12) return false;
+    if (yearNum < 1920 || yearNum > currentYear) return false;
+    
+    // Check for valid day in month
+    const daysInMonth = new Date(yearNum, monthNum, 0).getDate();
+    return dayNum <= daysInMonth;
   };
   
   // Handle blueprint generation completion
@@ -75,7 +136,6 @@ export default function Onboarding() {
     
     console.log("Blueprint generation completed with data:", newBlueprint);
     
-    // Set flags to prevent looping
     navigationTriggeredRef.current = true;
     setBlueprintGenerated(true);
     
@@ -91,10 +151,9 @@ export default function Onboarding() {
     
     speak("Your soul blueprint has been generated! Now let's set up your coaching preferences.");
     
-    // Move to goal selection step instead of navigating away
     setTimeout(() => {
-      goToNextStep(); // This will move to step 7 (Goal Selection)
-      navigationTriggeredRef.current = false; // Reset for goal selection
+      goToNextStep();
+      navigationTriggeredRef.current = false;
     }, 1500);
   };
 
@@ -131,7 +190,6 @@ export default function Onboarding() {
         
         speak("Perfect! Your preferences have been saved. Welcome to SoulSync!");
         
-        // Navigate to blueprint page
         setTimeout(() => {
           navigate("/blueprint", { replace: true });
         }, 1000);
@@ -149,10 +207,8 @@ export default function Onboarding() {
         variant: "destructive",
       });
       
-      // Reset the loading state on error
       goalSelectionTriggeredRef.current = false;
       
-      // Add some debugging info in development
       if (isDevelopment) {
         console.error("Development debugging - Error details:", {
           error,
@@ -169,20 +225,17 @@ export default function Onboarding() {
     document.title = "SoulSync - Onboarding";
   }, []);
   
-  // Effect to handle completion
   useEffect(() => {
     if (blueprintGenerated && !navigationTriggeredRef.current) {
       navigationTriggeredRef.current = true;
       console.log("Blueprint generated, preparing to navigate");
       
-      // Delay to allow animation to complete
       setTimeout(() => {
         navigate("/blueprint");
       }, 1500);
     }
   }, [blueprintGenerated, navigate]);
 
-  // Check if user is authenticated when trying to generate blueprint
   useEffect(() => {
     if (currentStep === 6 && !authLoading && !user) {
       console.log("User not authenticated, redirecting to auth page");
@@ -195,7 +248,6 @@ export default function Onboarding() {
     }
   }, [currentStep, user, authLoading, navigate, toast]);
 
-  // Check for existing blueprint and redirect if found - improved error handling with development mode support
   useEffect(() => {
     const checkExistingBlueprint = async () => {
       try {
@@ -209,7 +261,6 @@ export default function Onboarding() {
         }
         
         if (existingBlueprint && currentStep === 0) {
-          // In development mode, be less aggressive about redirecting
           if (isDevelopment) {
             console.log("Development mode: Existing blueprint found but allowing onboarding continuation");
             toast({
@@ -231,14 +282,12 @@ export default function Onboarding() {
         }
       } catch (error) {
         console.error("Error checking for existing blueprint:", error);
-        // Don't show error to user for this check, just log it
         if (isDevelopment) {
           console.error("Development debugging - Blueprint check error:", error);
         }
       }
     };
     
-    // Only check after a short delay to avoid immediate redirects
     if (user && !authLoading) {
       const timer = setTimeout(checkExistingBlueprint, 1500);
       return () => clearTimeout(timer);
@@ -315,23 +364,63 @@ export default function Onboarding() {
         return (
           <div className="space-y-4 max-w-md mx-auto">
             <h2 className="text-xl font-display font-bold text-center mb-2">When were you born?</h2>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-              <div className="space-y-2">
-                <Label htmlFor="birthDate">Birth Date</Label>
-                <Input
-                  id="birthDate"
-                  type="date"
-                  value={formData.birthDate}
-                  onChange={(e) => updateFormData({ birthDate: e.target.value })}
-                  className="bg-white/5 border-white/10"
-                  required
-                />
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 space-y-4">
+              <div className="space-y-3">
+                <Label>Birth Date</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <Label htmlFor="day" className="text-sm text-white/70">Day</Label>
+                    <Input
+                      id="day"
+                      type="number"
+                      min="1"
+                      max="31"
+                      value={birthDateComponents.day}
+                      onChange={(e) => updateBirthDateComponent('day', e.target.value)}
+                      placeholder="DD"
+                      className="bg-white/5 border-white/10 text-center"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="month" className="text-sm text-white/70">Month</Label>
+                    <Select value={birthDateComponents.month} onValueChange={(value) => updateBirthDateComponent('month', value)}>
+                      <SelectTrigger className="bg-white/5 border-white/10">
+                        <SelectValue placeholder="Month" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {months.map((month) => (
+                          <SelectItem key={month.value} value={month.value}>
+                            {month.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="year" className="text-sm text-white/70">Year</Label>
+                    <Select value={birthDateComponents.year} onValueChange={(value) => updateBirthDateComponent('year', value)}>
+                      <SelectTrigger className="bg-white/5 border-white/10">
+                        <SelectValue placeholder="YYYY" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-40 overflow-y-auto">
+                        {years.map((year) => (
+                          <SelectItem key={year} value={year.toString()}>
+                            {year}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <p className="text-sm text-white/60">
+                  Select your exact birth date for accurate calculations
+                </p>
               </div>
             </div>
             <div className="flex justify-between pt-4">
               <Button variant="ghost" onClick={goToPrevStep}>Back</Button>
               <Button 
-                disabled={!formData.birthDate}
+                disabled={!isValidBirthDate()}
                 onClick={goToNextStep}
               >
                 Continue
@@ -415,7 +504,6 @@ export default function Onboarding() {
             <div className="flex justify-between pt-4">
               <Button variant="ghost" onClick={goToPrevStep}>Back</Button>
               <Button onClick={() => {
-                // Check if user is authenticated before proceeding
                 if (!user && !authLoading) {
                   toast({
                     title: "Authentication Required",
@@ -432,7 +520,6 @@ export default function Onboarding() {
           </div>
         );
       case 6: // Generating Blueprint
-        // Only show this step if user is authenticated
         if (!user && !authLoading) {
           return (
             <div className="space-y-6 text-center max-w-md mx-auto">
@@ -456,7 +543,7 @@ export default function Onboarding() {
                 birth_date: formData.birthDate,
                 birth_time_local: formData.birthTime,
                 birth_location: formData.birthLocation,
-                timezone: "AUTO_RESOLVED", // This will be automatically resolved by the backend
+                timezone: "AUTO_RESOLVED",
                 personality: formData.personality
               }}
               onComplete={handleBlueprintComplete}
@@ -488,14 +575,12 @@ export default function Onboarding() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-soul-black to-soul-purple/20 text-white relative overflow-hidden">
-      {/* 3D Background */}
       <Onboarding3DScene
         speaking={speaking}
         stage={stage}
         interactionStage={interactionStage}
         isCalculating={currentStep === 6}
       >
-        {/* Progress indicator */}
         <div className="absolute top-4 left-0 right-0 px-4">
           <div className="w-full max-w-md mx-auto flex justify-between mb-1">
             {steps.map((_, index) => (
@@ -516,7 +601,6 @@ export default function Onboarding() {
           </div>
         </div>
 
-        {/* Animated content container */}
         <motion.div
           ref={sceneRef}
           initial={{ opacity: 0 }}
@@ -527,7 +611,6 @@ export default function Onboarding() {
             perspective: '1000px'
           }}
         >
-          {/* Card with dynamic opacity for smooth transitions */}
           <motion.div 
             initial={{ opacity: 0 }} 
             animate={{ opacity: cardOpacity }}
@@ -539,7 +622,6 @@ export default function Onboarding() {
         </motion.div>
       </Onboarding3DScene>
       
-      {/* Floating orb functionality - clicks trigger interactions */}
       <div 
         className="fixed bottom-10 right-10 cursor-pointer"
         onClick={handleOrbClick}
