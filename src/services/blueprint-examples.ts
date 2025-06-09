@@ -62,9 +62,15 @@ export const sampleBlueprints: BlueprintData[] = [
     values_life_path: {
       lifePathNumber: 7,
       expressionNumber: 3,
+      soulUrgeNumber: 5,
+      birthdayNumber: 6,
       birthDay: 15,
       birthMonth: 6,
-      birthYear: 1990
+      birthYear: 1990,
+      lifePathKeyword: "Seeker",
+      expressionKeyword: "Creative Communicator",
+      soulUrgeKeyword: "Freedom",
+      birthdayKeyword: "Responsible"
     },
     archetype_western: {
       sun_sign: "Gemini",

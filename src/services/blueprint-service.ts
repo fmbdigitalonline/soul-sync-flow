@@ -1,5 +1,5 @@
-
 import { SupabaseClient } from '@supabase/supabase-js';
+import { NumerologyCalculator } from './numerology-calculator';
 
 export interface BlueprintData {
   id: string;
@@ -242,6 +242,9 @@ class BlueprintService {
 
       console.log('Blueprint calculator returned data:', data);
 
+      // Calculate numerology using the proper calculator
+      const numerologyResult = NumerologyCalculator.calculateNumerology(userData.full_name, userData.birth_date);
+
       // Transform the response into our BlueprintData format
       const blueprint: BlueprintData = {
         id: crypto.randomUUID(),
@@ -293,18 +296,18 @@ class BlueprintService {
           keyword: 'Unknown',
           year: new Date(userData.birth_date).getFullYear()
         },
-        values_life_path: data.data?.numerology ? {
-          lifePathNumber: data.data.numerology.life_path_number || 1,
-          expressionNumber: data.data.numerology.expression_number || 1,
+        values_life_path: {
+          lifePathNumber: numerologyResult.lifePathNumber,
+          expressionNumber: numerologyResult.expressionNumber,
+          soulUrgeNumber: numerologyResult.soulUrgeNumber,
+          birthdayNumber: numerologyResult.birthdayNumber,
           birthDay: new Date(userData.birth_date).getDate(),
           birthMonth: new Date(userData.birth_date).getMonth() + 1,
-          birthYear: new Date(userData.birth_date).getFullYear()
-        } : {
-          lifePathNumber: 1,
-          expressionNumber: 1,
-          birthDay: new Date(userData.birth_date).getDate(),
-          birthMonth: new Date(userData.birth_date).getMonth() + 1,
-          birthYear: new Date(userData.birth_date).getFullYear()
+          birthYear: new Date(userData.birth_date).getFullYear(),
+          lifePathKeyword: numerologyResult.lifePathKeyword,
+          expressionKeyword: numerologyResult.expressionKeyword,
+          soulUrgeKeyword: numerologyResult.soulUrgeKeyword,
+          birthdayKeyword: numerologyResult.birthdayKeyword
         },
         energy_strategy_human_design: data.data?.humanDesign || {
           type: 'Generator',
