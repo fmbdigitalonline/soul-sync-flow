@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { PersonalityEngine } from "@/services/personality-engine";
 
 export interface AICoachResponse {
   response: string;
@@ -8,14 +9,10 @@ export interface AICoachResponse {
 
 export type AgentType = "coach" | "guide" | "blend";
 
+// Initialize personality engine
+const personalityEngine = new PersonalityEngine();
+
 export const aiCoachService = {
-  /**
-   * Sends a message to the AI Coach and gets a response
-   * @param message The user's message
-   * @param sessionId A unique identifier for the conversation session
-   * @param includeBlueprint Whether to include blueprint data for personalization
-   * @param agentType The type of agent to use (coach, guide, or blend)
-   */
   async sendMessage(
     message: string,
     sessionId: string = "default",
@@ -23,7 +20,6 @@ export const aiCoachService = {
     agentType: AgentType = "guide"
   ): Promise<AICoachResponse> {
     try {
-      // Get current user
       const { data: authData } = await supabase.auth.getUser();
       if (!authData.user) {
         throw new Error("User not authenticated");
@@ -31,7 +27,9 @@ export const aiCoachService = {
 
       const userId = authData.user.id;
 
-      // Call the AI Coach edge function
+      // Generate personality-driven system prompt
+      const systemPrompt = personalityEngine.generateSystemPrompt(agentType);
+
       const { data, error } = await supabase.functions.invoke("ai-coach", {
         body: {
           message,
@@ -39,6 +37,7 @@ export const aiCoachService = {
           sessionId,
           includeBlueprint,
           agentType,
+          systemPrompt, // Pass the generated prompt
         },
       });
 
@@ -54,10 +53,11 @@ export const aiCoachService = {
     }
   },
 
-  /**
-   * Create a new session ID for a fresh conversation
-   */
   createNewSession(): string {
     return `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+  },
+
+  updatePersonalityBlueprint(blueprint: any) {
+    personalityEngine.updateBlueprint(blueprint);
   }
 };

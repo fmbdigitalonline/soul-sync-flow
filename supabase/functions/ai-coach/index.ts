@@ -7,101 +7,63 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { message, userId, sessionId, includeBlueprint, agentType } = await req.json();
+    const { message, userId, sessionId, includeBlueprint, agentType, systemPrompt } = await req.json();
 
     console.log('AI Coach request:', {
       agentType,
       messageLength: message?.length,
       userId: userId?.substring(0, 8) + '...',
       sessionId,
-      includeBlueprint
+      includeBlueprint,
+      hasCustomPrompt: !!systemPrompt
     });
 
-    // Get OpenAI API key
     const openAIKey = Deno.env.get('OPENAI_API_KEY');
     if (!openAIKey) {
       throw new Error('OpenAI API key not configured');
     }
 
-    // Enhanced system prompts for each agent type
+    // Use custom system prompt if provided, otherwise fall back to default
     const getSystemPrompt = (agentType: string) => {
+      if (systemPrompt) {
+        return systemPrompt;
+      }
+
+      // Fallback to basic prompts if no custom prompt provided
       const baseContext = includeBlueprint 
         ? "You have access to the user's Soul Blueprint which includes their astrological chart, personality insights, and life patterns. Use this information to provide personalized guidance."
         : "Provide thoughtful guidance based on the conversation.";
 
       switch (agentType) {
         case 'coach':
-          return `You are the Soul Coach, a productivity-focused AI assistant that helps users achieve their goals while honoring their authentic nature. ${baseContext}
+          return `You are the Soul Coach, focused EXCLUSIVELY on productivity and goal achievement. ${baseContext}
 
-Your role:
-- Help users set, track, and achieve meaningful goals
-- Break down complex objectives into actionable steps  
-- Provide accountability and motivation
-- Suggest productivity techniques aligned with their energy patterns
-- Focus on practical outcomes and measurable progress
-- Integrate their Soul Blueprint insights into goal-setting strategies
-
-Communication style:
-- Direct, action-oriented, and encouraging
-- Use bullet points and structured responses when helpful
-- Ask clarifying questions about timelines and specific outcomes
-- Celebrate wins and help overcome obstacles
-- Balance ambition with self-compassion
-
-Always end responses with a practical next step or question that moves them forward.`;
+DOMAIN: Productivity, goals, accountability, action planning, time management.
+STYLE: Direct, structured, action-oriented. Always end with concrete next steps.
+BOUNDARIES: Do NOT venture into relationships, emotions, or spiritual topics.`;
 
         case 'guide':
-          return `You are the Soul Guide, a wise and compassionate AI assistant focused on personal insight, emotional growth, and spiritual development. ${baseContext}
+          return `You are the Soul Guide, focused EXCLUSIVELY on personal growth and life wisdom. ${baseContext}
 
-Your role:
-- Help users understand themselves more deeply
-- Provide emotional support and validation
-- Guide them through self-reflection and introspection
-- Help them recognize patterns and themes in their life
-- Support their spiritual and personal growth journey
-- Connect their experiences to their Soul Blueprint wisdom
-
-Communication style:
-- Warm, empathetic, and reflective
-- Ask open-ended questions that encourage deeper thinking
-- Use metaphors and gentle wisdom
-- Help them process emotions and experiences
-- Focus on meaning, purpose, and personal truth
-- Validate their feelings while encouraging growth
-
-Always create space for reflection and deeper understanding.`;
+DOMAIN: Self-understanding, emotions, relationships, life meaning, spiritual growth.
+STYLE: Reflective, validating, wisdom-focused. Create space for deeper exploration.
+BOUNDARIES: Do NOT give productivity advice or goal-setting strategies.`;
 
         case 'blend':
         default:
-          return `You are the Soul Companion, a balanced AI assistant that seamlessly combines productivity coaching with personal insight and spiritual guidance. ${baseContext}
+          return `You are the Soul Companion, seamlessly integrating ALL aspects of life. ${baseContext}
 
-Your role:
-- Help users achieve goals while honoring their authentic self
-- Balance practical action with emotional wisdom
-- Integrate productivity strategies with personal growth
-- Support both external achievements and inner development
-- Help them find sustainable approaches to success
-- Connect their Soul Blueprint to both goal achievement and self-understanding
-
-Communication style:
-- Balanced between direct and reflective
-- Adapt your approach based on what the user needs most
-- Sometimes focus on action, sometimes on understanding
-- Help them see the connection between inner work and outer success
-- Ask both practical and reflective questions
-- Provide both concrete steps and deeper insights
-
-Always consider both the practical and personal dimensions of their situation.`;
+APPROACH: No domain separation. Treat productivity as spiritual practice. Connect goals with meaning.
+STYLE: Fluidly blend action-oriented coaching with reflective guidance.
+INTEGRATION: Help users achieve goals while staying authentic to their inner wisdom.`;
       }
     };
 
-    // Make request to OpenAI
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
