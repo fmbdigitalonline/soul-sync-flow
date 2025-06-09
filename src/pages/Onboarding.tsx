@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "@/lib/framer-motion";
@@ -56,6 +55,7 @@ export default function Onboarding() {
   
   // Refs to prevent navigation loops
   const navigationTriggeredRef = useRef(false);
+  const goalSelectionTriggeredRef = useRef(false); // Add ref to prevent multiple goal selections
   
   // Update form data
   const updateFormData = (newData: Partial<typeof formData>) => {
@@ -94,31 +94,37 @@ export default function Onboarding() {
     }, 1500);
   };
 
-  // Handle goal selection completion - fixed to work with existing database schema
+  // Handle goal selection completion - fixed to prevent multiple executions
   const handleGoalSelectionComplete = async (preferences: { 
     primary_goal: string; 
     support_style: number; 
     time_horizon: string 
   }) => {
+    // Prevent multiple executions
+    if (goalSelectionTriggeredRef.current) {
+      console.log("Goal selection already in progress, ignoring duplicate");
+      return;
+    }
+    
+    goalSelectionTriggeredRef.current = true;
     console.log("Goal selection completed with preferences:", preferences);
     
     try {
-      // Get the current blueprint and update it with preferences in the goal_stack
-      const { data: currentBlueprint, error: fetchError } = await blueprintService.getActiveBlueprintData();
-      
-      if (fetchError || !currentBlueprint) {
-        console.error("Error fetching current blueprint:", fetchError);
+      // Get the current blueprint data from state (should be available from blueprint generation)
+      if (!blueprintData) {
+        console.error("No blueprint data available for updating");
         toast({
           title: "Error",
-          description: "Could not find your blueprint. Please try again.",
+          description: "Blueprint data not found. Please try regenerating your blueprint.",
           variant: "destructive",
         });
+        goalSelectionTriggeredRef.current = false;
         return;
       }
 
-      // Update the blueprint's goal_stack with the runtime preferences
+      // Update the blueprint's goal_stack with the coaching preferences
       const updatedBlueprint = {
-        ...currentBlueprint,
+        ...blueprintData,
         goal_stack: [
           {
             id: `goal_${Date.now()}`,
@@ -131,7 +137,7 @@ export default function Onboarding() {
         ]
       };
 
-      // Update the blueprint with the new goal stack using the correct method
+      // Save the updated blueprint (this will replace the existing one)
       const { success, error } = await blueprintService.saveBlueprintData(updatedBlueprint);
       
       if (success) {
@@ -154,6 +160,7 @@ export default function Onboarding() {
           description: error || "Failed to save your preferences. Please try again.",
           variant: "destructive",
         });
+        goalSelectionTriggeredRef.current = false; // Reset on error
       }
     } catch (error) {
       console.error("Unexpected error saving preferences:", error);
@@ -162,6 +169,7 @@ export default function Onboarding() {
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
+      goalSelectionTriggeredRef.current = false; // Reset on error
     }
   };
 
