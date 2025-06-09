@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -29,36 +28,6 @@ interface ConversationMemory {
   session_id: string;
 }
 
-interface BlueprintData {
-  user_meta: {
-    preferred_name: string;
-  };
-  cognition_mbti: {
-    type: string;
-  };
-  archetype_western: {
-    sun_sign: string;
-    moon_sign: string;
-    rising_sign: string;
-  };
-  energy_strategy_human_design: {
-    type: string;
-    authority: string;
-    strategy: string;
-    profile: string;
-    definition: string;
-    life_purpose: string;
-  };
-  values_life_path: {
-    life_path_number: number;
-    life_path_keyword: string;
-  };
-  archetype_chinese: {
-    animal: string;
-    element: string;
-  };
-}
-
 serve(async (req) => {
   // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
@@ -75,7 +44,9 @@ serve(async (req) => {
       );
     }
 
-    // Initialize Supabase client
+    console.log("Processing message for user:", userId);
+
+    // Initialize Supabase client with proper auth
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || 'https://qxaajirrqrcnmvtowjbg.supabase.co';
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
     
@@ -115,23 +86,91 @@ serve(async (req) => {
       conversationMemory = conversationData as ConversationMemory;
     }
 
-    // Step 2: Get user's blueprint data for personalization
-    let blueprintData: BlueprintData | null = null;
+    // Step 2: Get user's blueprint data with comprehensive debugging
+    let blueprintData: any = null;
+    let blueprintSource = "none";
+    
     if (includeBlueprint) {
+      console.log("=== BLUEPRINT RETRIEVAL DEBUG ===");
       console.log("Fetching blueprint data for user:", userId);
       
-      const { data: blueprint, error: blueprintError } = await supabase.rpc(
-        'get_active_user_blueprint',
-        { user_uuid: userId }
-      );
+      // Method 1: Try the main 'blueprints' table
+      console.log("Method 1: Checking 'blueprints' table...");
+      const { data: mainBlueprint, error: mainError } = await supabase
+        .from('blueprints')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-      if (blueprintError) {
-        console.error("Error retrieving blueprint:", blueprintError);
-      } else if (blueprint) {
-        blueprintData = blueprint as BlueprintData;
-        console.log("Blueprint retrieved successfully for:", blueprintData?.user_meta?.preferred_name);
+      if (mainError) {
+        console.error("Error from blueprints table:", mainError);
+      } else if (mainBlueprint) {
+        console.log("✅ Found blueprint in main table!");
+        console.log("Blueprint preview:", {
+          id: mainBlueprint.id,
+          user_meta: mainBlueprint.user_meta,
+          has_user_meta: !!mainBlueprint.user_meta,
+          has_human_design: !!mainBlueprint.energy_strategy_human_design,
+          has_western: !!mainBlueprint.archetype_western
+        });
+        blueprintData = mainBlueprint;
+        blueprintSource = "blueprints table";
       } else {
-        console.log("No blueprint found for user");
+        console.log("❌ No blueprint found in main table");
+      }
+
+      // Method 2: Try the old 'user_blueprints' table if main table failed
+      if (!blueprintData) {
+        console.log("Method 2: Checking 'user_blueprints' table...");
+        const { data: oldBlueprint, error: oldError } = await supabase
+          .from('user_blueprints')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('is_active', true)
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (oldError) {
+          console.error("Error from user_blueprints table:", oldError);
+        } else if (oldBlueprint?.blueprint) {
+          console.log("✅ Found blueprint in old table!");
+          blueprintData = oldBlueprint.blueprint;
+          blueprintSource = "user_blueprints table";
+        } else {
+          console.log("❌ No blueprint found in old table either");
+        }
+      }
+
+      // Method 3: Try using the RPC function
+      if (!blueprintData) {
+        console.log("Method 3: Trying RPC function...");
+        const { data: rpcBlueprint, error: rpcError } = await supabase.rpc(
+          'get_active_user_blueprint',
+          { user_uuid: userId }
+        );
+
+        if (rpcError) {
+          console.error("Error from RPC function:", rpcError);
+        } else if (rpcBlueprint) {
+          console.log("✅ Found blueprint via RPC!");
+          blueprintData = rpcBlueprint;
+          blueprintSource = "RPC function";
+        } else {
+          console.log("❌ No blueprint found via RPC");
+        }
+      }
+
+      console.log("=== FINAL BLUEPRINT STATUS ===");
+      console.log("Blueprint found:", !!blueprintData);
+      console.log("Blueprint source:", blueprintSource);
+      
+      if (blueprintData) {
+        const name = blueprintData.user_meta?.preferred_name || blueprintData.user_meta?.full_name || "User";
+        console.log("User name from blueprint:", name);
       }
     }
 
@@ -139,72 +178,71 @@ serve(async (req) => {
     let systemPrompt = "You are a Soul Coach AI, an empathetic and wise guide that helps users achieve personal growth based on their unique Soul Blueprint.";
     
     if (blueprintData) {
-      const name = blueprintData.user_meta?.preferred_name || "there";
-      const mbtiType = blueprintData.cognition_mbti?.type || "";
-      const sunSign = blueprintData.archetype_western?.sun_sign?.split(" ")[0] || "";
-      const moonSign = blueprintData.archetype_western?.moon_sign?.split(" ")[0] || "";
-      const risingSign = blueprintData.archetype_western?.rising_sign?.split(" ")[0] || "";
-      const hdType = blueprintData.energy_strategy_human_design?.type || "";
-      const strategy = blueprintData.energy_strategy_human_design?.strategy || "";
-      const authority = blueprintData.energy_strategy_human_design?.authority || "";
-      const profile = blueprintData.energy_strategy_human_design?.profile || "";
-      const definition = blueprintData.energy_strategy_human_design?.definition || "";
-      const lifePurpose = blueprintData.energy_strategy_human_design?.life_purpose || "";
-      const lifePath = blueprintData.values_life_path?.life_path_number || 0;
-      const lifePathKeyword = blueprintData.values_life_path?.life_path_keyword || "";
-      const chineseAnimal = blueprintData.archetype_chinese?.animal || "";
-      const chineseElement = blueprintData.archetype_chinese?.element || "";
+      const userMeta = blueprintData.user_meta || {};
+      const name = userMeta.preferred_name || userMeta.full_name?.split(' ')[0] || "there";
+      
+      const mbti = blueprintData.cognition_mbti || {};
+      const western = blueprintData.archetype_western || {};
+      const humanDesign = blueprintData.energy_strategy_human_design || {};
+      const lifePath = blueprintData.values_life_path || {};
+      const chinese = blueprintData.archetype_chinese || {};
+      
+      console.log("Building personalized prompt for:", name);
       
       systemPrompt += `
 
 🌟 You're speaking with ${name}, whose Soul Blueprint reveals:
 
 **Human Design Profile:**
-- Type: ${hdType} 
-- Strategy: "${strategy}"
-- Authority: ${authority} Authority
-- Profile: ${profile}
-- Definition: ${definition}
-- Life Purpose: "${lifePurpose}"
+- Type: ${humanDesign.type || 'Not specified'}
+- Strategy: "${humanDesign.strategy || 'Not specified'}"
+- Authority: ${humanDesign.authority || 'Not specified'} Authority
+- Profile: ${humanDesign.profile || 'Not specified'}
+- Definition: ${humanDesign.definition || 'Not specified'}
+- Life Purpose: "${humanDesign.life_purpose || 'Not specified'}"
 
 **Astrological Essence:**
-- Sun in ${sunSign} (core identity & life force)
-- Moon in ${moonSign} (emotional nature & needs)
-- Rising ${risingSign} (how they present to the world)
+- Sun in ${western.sun_sign || 'Not specified'} (core identity & life force)
+- Moon in ${western.moon_sign || 'Not specified'} (emotional nature & needs)
+- Rising ${western.rising_sign || 'Not specified'} (how they present to the world)
 
 **Cognitive Style:**
-- MBTI: ${mbtiType}
+- MBTI: ${mbti.type || 'Not specified'}
 
 **Life Path & Destiny:**
-- Life Path ${lifePath}: ${lifePathKeyword}
-- Chinese Element: ${chineseElement} ${chineseAnimal}
+- Life Path ${lifePath.lifePathNumber || lifePath.life_path_number || 'Not specified'}: ${lifePath.lifePathKeyword || lifePath.life_path_keyword || 'Not specified'}
+- Chinese Zodiac: ${chinese.element || 'Not specified'} ${chinese.animal || 'Not specified'}
 
-🎯 **Coaching Instructions:**
-Use their SPECIFIC blueprint details in your responses. For example:
+🎯 **Critical Instructions:**
+When the user asks "what is my blueprint?" or "tell me about my blueprint", YOU MUST share the specific details above! Don't say you don't have access - you DO have access to their blueprint data.
 
-- As a ${hdType}, they are designed to ${strategy.toLowerCase()}. Reference this when giving life/career advice.
-- Their ${authority} Authority means they should make decisions through ${authority === 'EMOTIONAL' ? 'waiting through their emotional wave - never make decisions in the emotional high or low' : authority === 'SACRAL' ? 'gut yes/no responses - what lights them up vs. what feels flat' : authority === 'SPLENIC' ? 'intuitive hits in the moment - their first instinct is usually right' : authority === 'EGO' ? 'what they have willpower and resources for' : 'their self-direction and identity'}
-- With ${sunSign} Sun, they naturally ${sunSign === 'Taurus' ? 'value stability, beauty, and sensual pleasures' : sunSign === 'Leo' ? 'need creative expression and recognition' : sunSign === 'Virgo' ? 'seek perfection and practical service' : sunSign === 'Scorpio' ? 'desire transformation and depth' : sunSign === 'Aquarius' ? 'innovate and rebel against convention' : 'express their unique solar energy'}
-- Their ${moonSign} Moon means emotionally they need ${moonSign === 'Cancer' ? 'security, nurturing, and emotional safety' : moonSign === 'Pisces' ? 'imagination, compassion, and spiritual connection' : moonSign === 'Aries' ? 'independence, excitement, and immediate emotional expression' : 'to honor their lunar nature'}
-- As Life Path ${lifePath} (${lifePathKeyword}), they're here to ${lifePath === 1 ? 'lead and pioneer new ways' : lifePath === 2 ? 'cooperate and bring harmony' : lifePath === 3 ? 'create and inspire others' : lifePath === 4 ? 'build stable foundations' : lifePath === 5 ? 'embrace freedom and change' : lifePath === 6 ? 'nurture and serve their community' : lifePath === 7 ? 'seek wisdom and spiritual truth' : lifePath === 8 ? 'achieve material mastery and success' : lifePath === 9 ? 'serve humanity with compassion' : 'fulfill their unique life purpose'}
+ALWAYS reference their SPECIFIC blueprint details in your responses when relevant. Use their actual Human Design type, astrological placements, and life path number to give personalized guidance.
 
-ALWAYS reference their specific blueprint when giving advice. Don't be generic - use their actual Human Design type, astrological placements, and life path number to give personalized guidance.`;
+Example responses:
+- "As a ${humanDesign.type || 'Generator'}, you are designed to ${humanDesign.strategy?.toLowerCase() || 'wait to respond'}..."
+- "Your ${humanDesign.authority || 'Sacral'} Authority means you should make decisions through your ${humanDesign.authority === 'EMOTIONAL' ? 'emotional wave' : humanDesign.authority === 'SACRAL' ? 'gut responses' : 'inner guidance'}..."
+- "With your ${western.sun_sign?.split(' ')[0] || 'Taurus'} Sun, you naturally seek..."`;
+    } else {
+      systemPrompt += `
+
+**No Blueprint Available:**
+This user hasn't completed their Soul Blueprint yet. When they ask about their blueprint, explain that they need to complete their blueprint first by going to the Blueprint page. Encourage them to fill out their birth details to get personalized guidance.
+
+You can still provide general spiritual coaching, but mention that with their completed blueprint you could give much more specific and personalized guidance based on their Human Design, astrology, and numerology.`;
     }
     
     systemPrompt += `
 
 **Response Style:**
 - Warm, compassionate, and wise
-- Reference their specific blueprint details
 - Keep responses under 150 words
 - Ask thoughtful questions that help them discover their own answers
-- Offer small, actionable steps aligned with their design
+- Offer small, actionable steps
 - Use coaching techniques: listen, reflect, offer insights, suggest action
 
 **Safety Guidelines:**
 - No medical, legal, or financial advice
 - Focus on emotional well-being, personal growth, and spiritual development
-- If they lack a blueprint, acknowledge this and offer general spiritual guidance
 `;
 
     // Step 4: Add user message to history
@@ -214,7 +252,7 @@ ALWAYS reference their specific blueprint when giving advice. Don't be generic -
       timestamp: new Date().toISOString()
     });
 
-    // Keep conversation context window manageable (last 10 messages)
+    // Keep conversation context window manageable
     if (conversationMemory.messages.length > 20) {
       conversationMemory.messages = conversationMemory.messages.slice(-20);
     }
@@ -230,7 +268,7 @@ ALWAYS reference their specific blueprint when giving advice. Don't be generic -
     });
 
     // Step 6: Call OpenAI API
-    console.log("Calling OpenAI with personalized system prompt for", blueprintData?.user_meta?.preferred_name || "user");
+    console.log("Calling OpenAI with blueprint status:", blueprintData ? "FOUND" : "NOT FOUND");
     
     const openaiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -272,7 +310,6 @@ ALWAYS reference their specific blueprint when giving advice. Don't be generic -
 
     // Step 8: Save updated conversation to database
     if (conversationData) {
-      // Update existing conversation
       const { error: updateError } = await supabase
         .from('conversation_memory')
         .update({
@@ -285,7 +322,6 @@ ALWAYS reference their specific blueprint when giving advice. Don't be generic -
         console.error("Error updating conversation:", updateError);
       }
     } else {
-      // Insert new conversation
       const { error: insertError } = await supabase
         .from('conversation_memory')
         .insert(conversationMemory);
@@ -299,7 +335,11 @@ ALWAYS reference their specific blueprint when giving advice. Don't be generic -
     return new Response(
       JSON.stringify({
         response: aiMessage,
-        conversationId: conversationData?.id || null
+        conversationId: conversationData?.id || null,
+        debug: {
+          blueprintFound: !!blueprintData,
+          blueprintSource: blueprintSource
+        }
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
