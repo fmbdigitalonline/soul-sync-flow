@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Message } from "@/hooks/use-ai-coach";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface CoachInterfaceProps {
   messages: Message[];
@@ -32,6 +33,7 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
   messagesEndRef,
 }) => {
   const [inputValue, setInputValue] = useState("");
+  const { t } = useLanguage();
 
   const handleSendMessage = () => {
     if (inputValue.trim() === "") return;
@@ -47,10 +49,10 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
 
   // Quick action suggestions for productivity
   const quickActions = [
-    "Help me break down my goal",
-    "Create a daily routine",
-    "Set up accountability check-ins",
-    "Plan my week",
+    t('quickAction.breakDownGoal'),
+    t('quickAction.createRoutine'),
+    t('quickAction.setupAccountability'),
+    t('quickAction.planWeek'),
   ];
 
   const handleQuickAction = (action: string) => {
@@ -64,17 +66,17 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-medium flex items-center">
             <Target className="h-4 w-4 mr-2 text-green-400" />
-            Today's Progress
+            {t('coach.todaysProgress')}
           </h3>
           <Badge variant="outline" className="text-xs">
             <TrendingUp className="h-3 w-3 mr-1" />
-            3 day streak
+            {t('coach.dayStreak', { count: '3' })}
           </Badge>
         </div>
         <div className="space-y-2">
           <div className="flex justify-between text-xs">
-            <span>Daily goals</span>
-            <span>2/3 complete</span>
+            <span>{t('coach.dailyGoals')}</span>
+            <span>{t('coach.complete', { completed: '2', total: '3' })}</span>
           </div>
           <Progress value={66} className="h-2" />
         </div>
@@ -86,15 +88,15 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
           <div className="space-y-4">
             <div className="text-center p-6 text-muted-foreground">
               <Target className="h-12 w-12 text-green-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium mb-1">Your Soul Coach is ready</h3>
+              <h3 className="text-lg font-medium mb-1">{t('coach.ready')}</h3>
               <p className="text-sm max-w-xs mx-auto">
-                Let's turn your goals into actionable steps. What would you like to achieve?
+                {t('coach.readyDescription')}
               </p>
             </div>
             
             {/* Quick Actions */}
             <div className="space-y-2">
-              <p className="text-xs font-medium text-center text-muted-foreground">Quick Start:</p>
+              <p className="text-xs font-medium text-center text-muted-foreground">{t('coach.quickStart')}</p>
               <div className="grid grid-cols-1 gap-2">
                 {quickActions.map((action, index) => (
                   <Button
@@ -135,7 +137,7 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
                   <User className="h-4 w-4" />
                 )}
                 <p className="text-xs font-medium">
-                  {message.sender === "assistant" ? "Soul Coach" : "You"}
+                  {message.sender === "assistant" ? t('coach.soulCoach') : t('you')}
                 </p>
                 {message.sender === "assistant" && (
                   <Badge variant="outline" className="text-xs">
@@ -159,7 +161,7 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
                     onClick={() => onSendMessage("Mark this as done")}
                   >
                     <CheckCircle2 className="h-3 w-3 mr-1" />
-                    Done
+                    {t('coach.done')}
                   </Button>
                   <Button
                     size="sm"
@@ -168,7 +170,7 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
                     onClick={() => onSendMessage("Schedule this for later")}
                   >
                     <Calendar className="h-3 w-3 mr-1" />
-                    Schedule
+                    {t('coach.schedule')}
                   </Button>
                 </div>
               )}
@@ -181,11 +183,11 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
             <div className="cosmic-card border border-green-200/20 max-w-[80%] rounded-2xl p-4">
               <div className="flex items-center space-x-2">
                 <Target className="h-4 w-4 text-green-400" />
-                <p className="text-xs font-medium">Soul Coach</p>
+                <p className="text-xs font-medium">{t('coach.soulCoach')}</p>
               </div>
               <div className="flex items-center space-x-2 mt-2">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <p className="text-sm">Analyzing your goals...</p>
+                <p className="text-sm">{t('coach.analyzing')}</p>
               </div>
             </div>
           </div>
@@ -200,7 +202,7 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyPress}
-            placeholder="What's your next goal or challenge?"
+            placeholder={t('coach.inputPlaceholder')}
             className="flex-1"
             disabled={isLoading}
           />
@@ -214,7 +216,7 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
           </Button>
         </CosmicCard>
         <p className="text-xs text-center text-muted-foreground mt-2">
-          Goal-focused coaching powered by your Soul Blueprint
+          {t('coach.poweredBy')}
         </p>
       </div>
     </>

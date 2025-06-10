@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Message } from "@/hooks/use-ai-coach";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface BlendInterfaceProps {
   messages: Message[];
@@ -34,6 +35,7 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
   messagesEndRef,
 }) => {
   const [inputValue, setInputValue] = useState("");
+  const { t } = useLanguage();
 
   const handleSendMessage = () => {
     if (inputValue.trim() === "") return;
@@ -49,27 +51,27 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
 
   const quickActions = [
     {
-      label: "Set a goal",
+      label: t('blend.setGoal'),
       icon: Target,
-      message: "Help me set and track a meaningful goal",
+      message: t('action.setGoalMessage'),
       category: "productivity"
     },
     {
-      label: "Reflect on today",
+      label: t('blend.reflectToday'),
       icon: Heart,
-      message: "I want to reflect on my day and understand my feelings",
+      message: t('action.reflectMessage'),
       category: "reflection"
     },
     {
-      label: "Find balance",
+      label: t('blend.findBalance'),
       icon: Compass,
-      message: "Help me find balance between my productivity and personal growth",
+      message: t('action.balanceMessage'),
       category: "balance"
     },
     {
-      label: "Break through blocks",
+      label: t('blend.breakThrough'),
       icon: Zap,
-      message: "I'm feeling stuck and need help moving forward",
+      message: t('action.stuckMessage'),
       category: "breakthrough"
     }
   ];
@@ -81,16 +83,16 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-medium flex items-center">
             <Sparkles className="h-4 w-4 mr-2 text-soul-purple" />
-            Soul Companion
+            {t('blend.soulCompanion')}
           </h3>
           <Badge variant="outline" className="text-xs">
             <Star className="h-3 w-3 mr-1" />
-            Balanced guidance
+            {t('blend.balancedGuidance')}
           </Badge>
         </div>
         
         <p className="text-xs text-muted-foreground mb-3">
-          Your companion for both achieving goals and understanding yourself deeply
+          {t('blend.description')}
         </p>
         
         <div className="grid grid-cols-2 gap-2">
@@ -117,9 +119,9 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
         {messages.length === 0 && (
           <div className="text-center p-6 text-muted-foreground">
             <Sparkles className="h-12 w-12 text-soul-purple mx-auto mb-4" />
-            <h3 className="text-lg font-medium mb-1">Your Soul Companion awaits</h3>
+            <h3 className="text-lg font-medium mb-1">{t('blend.awaits')}</h3>
             <p className="text-sm max-w-xs mx-auto">
-              Ask about productivity, goals, personal growth, or reflection. I'll help you find the perfect balance.
+              {t('blend.awaitsDescription')}
             </p>
           </div>
         )}
@@ -147,12 +149,12 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
                   <User className="h-4 w-4" />
                 )}
                 <p className="text-xs font-medium">
-                  {message.sender === "assistant" ? "Soul Companion" : "You"}
+                  {message.sender === "assistant" ? t('coach.soulCompanion') : t('you')}
                 </p>
                 {message.sender === "assistant" && (
                   <Badge variant="outline" className="text-xs border-soul-purple/30">
                     <Compass className="h-3 w-3 mr-1" />
-                    Balanced
+                    {t('balanced')}
                   </Badge>
                 )}
               </div>
@@ -165,28 +167,28 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
                     size="sm"
                     variant="outline"
                     className="text-xs h-7 border-soul-purple/30"
-                    onClick={() => onSendMessage("How can I turn this into actionable steps?")}
+                    onClick={() => onSendMessage(t('action.actionableSteps'))}
                   >
                     <CheckCircle className="h-3 w-3 mr-1" />
-                    Make actionable
+                    {t('blend.makeActionable')}
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
                     className="text-xs h-7 border-soul-purple/30"
-                    onClick={() => onSendMessage("Help me understand the deeper meaning here")}
+                    onClick={() => onSendMessage(t('action.deeperMeaning'))}
                   >
                     <Heart className="h-3 w-3 mr-1" />
-                    Go deeper
+                    {t('blend.goDeeper')}
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
                     className="text-xs h-7 border-soul-purple/30"
-                    onClick={() => onSendMessage("What would my blueprint say about this?")}
+                    onClick={() => onSendMessage(t('action.blueprintSays'))}
                   >
                     <Star className="h-3 w-3 mr-1" />
-                    Blueprint wisdom
+                    {t('blend.blueprintWisdom')}
                   </Button>
                 </div>
               )}
@@ -199,11 +201,11 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
             <div className="cosmic-card border border-soul-purple/20 max-w-[80%] rounded-2xl p-4">
               <div className="flex items-center space-x-2">
                 <Sparkles className="h-4 w-4 text-soul-purple" />
-                <p className="text-xs font-medium">Soul Companion</p>
+                <p className="text-xs font-medium">{t('coach.soulCompanion')}</p>
               </div>
               <div className="flex items-center space-x-2 mt-2">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <p className="text-sm">Finding the perfect balance for you...</p>
+                <p className="text-sm">{t('blend.finding')}</p>
               </div>
             </div>
           </div>
@@ -218,7 +220,7 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyPress}
-            placeholder="Ask about goals, growth, or anything on your mind..."
+            placeholder={t('blend.inputPlaceholder')}
             className="flex-1"
             disabled={isLoading}
           />
@@ -232,7 +234,7 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
           </Button>
         </CosmicCard>
         <p className="text-xs text-center text-muted-foreground mt-2">
-          Balanced guidance combining productivity and personal insight
+          {t('blend.poweredBy')}
         </p>
       </div>
     </>

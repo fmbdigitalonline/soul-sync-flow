@@ -19,6 +19,7 @@ import { Message } from "@/hooks/use-ai-coach";
 import { MoodTracker } from "./MoodTracker";
 import { ReflectionPrompts } from "./ReflectionPrompts";
 import { InsightJournal } from "./InsightJournal";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface GuideInterfaceProps {
   messages: Message[];
@@ -37,6 +38,7 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
   const [showMoodTracker, setShowMoodTracker] = useState(false);
   const [showReflectionPrompts, setShowReflectionPrompts] = useState(false);
   const [showInsightJournal, setShowInsightJournal] = useState(false);
+  const { t } = useLanguage();
 
   const handleSendMessage = () => {
     if (inputValue.trim() === "") return;
@@ -69,11 +71,11 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-medium flex items-center">
             <Heart className="h-4 w-4 mr-2 text-soul-purple" />
-            Inner Compass
+            {t('guide.innerCompass')}
           </h3>
           <Badge variant="outline" className="text-xs">
             <Moon className="h-3 w-3 mr-1" />
-            Reflection mode
+            {t('guide.reflectionMode')}
           </Badge>
         </div>
         
@@ -85,7 +87,7 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
             className="text-xs h-7 border-soul-purple/30"
           >
             <Heart className="h-3 w-3 mr-1" />
-            Check-in
+            {t('guide.checkIn')}
           </Button>
           <Button
             variant="outline"
@@ -94,7 +96,7 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
             className="text-xs h-7 border-soul-purple/30"
           >
             <Sparkles className="h-3 w-3 mr-1" />
-            Reflect
+            {t('guide.reflect')}
           </Button>
           <Button
             variant="outline"
@@ -103,12 +105,12 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
             className="text-xs h-7 border-soul-purple/30"
           >
             <Star className="h-3 w-3 mr-1" />
-            Journal
+            {t('guide.journal')}
           </Button>
         </div>
         
         <div className="text-xs text-muted-foreground">
-          Your Soul Guide is here to help you understand yourself more deeply and navigate life's complexities with wisdom.
+          {t('guide.description')}
         </div>
       </CosmicCard>
 
@@ -122,9 +124,9 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
         {messages.length === 0 && (
           <div className="text-center p-6 text-muted-foreground">
             <Heart className="h-12 w-12 text-soul-purple mx-auto mb-4" />
-            <h3 className="text-lg font-medium mb-1">Your Soul Guide awaits</h3>
+            <h3 className="text-lg font-medium mb-1">{t('guide.awaits')}</h3>
             <p className="text-sm max-w-xs mx-auto">
-              Share what's on your heart and mind. Let's explore the deeper patterns together.
+              {t('guide.awaitsDescription')}
             </p>
           </div>
         )}
@@ -152,12 +154,12 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
                   <User className="h-4 w-4" />
                 )}
                 <p className="text-xs font-medium">
-                  {message.sender === "assistant" ? "Soul Guide" : "You"}
+                  {message.sender === "assistant" ? t('coach.soulGuide') : t('you')}
                 </p>
                 {message.sender === "assistant" && (
                   <Badge variant="outline" className="text-xs border-soul-purple/30">
                     <Star className="h-3 w-3 mr-1" />
-                    Insight
+                    {t('insight')}
                   </Badge>
                 )}
               </div>
@@ -170,19 +172,19 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
                     size="sm"
                     variant="outline"
                     className="text-xs h-7 border-soul-purple/30"
-                    onClick={() => onSendMessage("Tell me more about this")}
+                    onClick={() => onSendMessage(t('guide.tellMore'))}
                   >
                     <Compass className="h-3 w-3 mr-1" />
-                    Explore deeper
+                    {t('guide.exploreDeeper')}
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
                     className="text-xs h-7 border-soul-purple/30"
-                    onClick={() => onSendMessage("How does this connect to my blueprint?")}
+                    onClick={() => onSendMessage(t('guide.howConnect'))}
                   >
                     <Sparkles className="h-3 w-3 mr-1" />
-                    Blueprint link
+                    {t('guide.blueprintLink')}
                   </Button>
                 </div>
               )}
@@ -195,11 +197,11 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
             <div className="cosmic-card border border-soul-purple/20 max-w-[80%] rounded-2xl p-4">
               <div className="flex items-center space-x-2">
                 <Heart className="h-4 w-4 text-soul-purple" />
-                <p className="text-xs font-medium">Soul Guide</p>
+                <p className="text-xs font-medium">{t('coach.soulGuide')}</p>
               </div>
               <div className="flex items-center space-x-2 mt-2">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <p className="text-sm">Reflecting on your soul's wisdom...</p>
+                <p className="text-sm">{t('guide.reflecting')}</p>
               </div>
             </div>
           </div>
@@ -214,7 +216,7 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyPress}
-            placeholder="What's stirring in your soul today?"
+            placeholder={t('guide.inputPlaceholder')}
             className="flex-1"
             disabled={isLoading}
           />
@@ -228,7 +230,7 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
           </Button>
         </CosmicCard>
         <p className="text-xs text-center text-muted-foreground mt-2">
-          Compassionate guidance powered by your Soul Blueprint
+          {t('guide.poweredBy')}
         </p>
       </div>
     </>
