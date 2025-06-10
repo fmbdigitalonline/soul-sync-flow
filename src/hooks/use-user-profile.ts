@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import type { Database } from '@/integrations/supabase/types';
 
 export interface UserProfile {
   id: string;
@@ -40,6 +41,9 @@ export interface UserGoal {
   created_at: string;
   updated_at: string;
 }
+
+// Type for the raw database response
+type DatabaseGoal = Database['public']['Tables']['user_goals']['Row'];
 
 export const useUserProfile = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -98,9 +102,25 @@ export const useUserProfile = () => {
         return;
       }
 
+      // Transform goals data to match our UserGoal interface
+      const transformedGoals: UserGoal[] = (goalsData || []).map((goal: DatabaseGoal) => ({
+        id: goal.id,
+        user_id: goal.user_id,
+        title: goal.title,
+        description: goal.description,
+        progress: goal.progress || 0,
+        status: (goal.status || 'active') as 'active' | 'completed' | 'paused',
+        aligned_traits: Array.isArray(goal.aligned_traits) ? goal.aligned_traits as string[] : [],
+        milestones: Array.isArray(goal.milestones) ? goal.milestones : [],
+        target_date: goal.target_date,
+        category: goal.category || 'personal_growth',
+        created_at: goal.created_at,
+        updated_at: goal.updated_at
+      }));
+
       setProfile(profileData);
       setStatistics(statsData);
-      setGoals(goalsData || []);
+      setGoals(transformedGoals);
       setError(null);
     } catch (err) {
       console.error('Error in fetchUserData:', err);
