@@ -16,10 +16,12 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useUserProfile } from "@/hooks/use-user-profile";
 import { useBlueprintData } from "@/hooks/use-blueprint-data";
 import { calculateWeeklyInsights, WeeklyInsights } from "@/services/insights-service";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 
 const Profile = () => {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [darkMode, setDarkMode] = useState(false);
   const [weeklyInsights, setWeeklyInsights] = useState<WeeklyInsights | null>(null);
   
@@ -54,14 +56,14 @@ const Profile = () => {
     try {
       await supabase.auth.signOut();
       toast({
-        title: "Logged out",
-        description: "You have been successfully logged out.",
+        title: t('nav.signOut'),
+        description: t('profile.logoutSuccess'),
       });
     } catch (error) {
       console.error('Error logging out:', error);
       toast({
-        title: "Error",
-        description: "Failed to log out. Please try again.",
+        title: t('error'),
+        description: t('profile.logoutError'),
         variant: "destructive"
       });
     }
@@ -72,10 +74,10 @@ const Profile = () => {
     document.documentElement.classList.toggle("dark", checked);
     
     toast({
-      title: checked ? "Dark mode enabled" : "Light mode enabled",
+      title: checked ? t('profile.darkModeEnabled') : t('profile.lightModeEnabled'),
       description: checked 
-        ? "Switched to dark theme" 
-        : "Switched to light theme",
+        ? t('profile.darkModeDescription')
+        : t('profile.lightModeDescription'),
       duration: 2000,
     });
   };
@@ -84,8 +86,8 @@ const Profile = () => {
     await logActivity('task_completed', { source: 'profile_page' }, 10);
     
     toast({
-      title: "Task completed!",
-      description: "Great job on completing your task.",
+      title: t('profile.taskCompleted'),
+      description: t('profile.taskCompletedDescription'),
       icon: <Check className="h-4 w-4 text-green-500" />,
       duration: 2000,
     });
@@ -112,7 +114,7 @@ const Profile = () => {
       <MainLayout>
         <div className="p-6 max-w-md mx-auto">
           <CosmicCard className="p-6 text-center">
-            <p className="text-destructive">Error loading profile: {profileError}</p>
+            <p className="text-destructive">{t('profile.errorLoading')}: {profileError}</p>
           </CosmicCard>
         </div>
       </MainLayout>
@@ -144,19 +146,19 @@ const Profile = () => {
 
         <Tabs defaultValue="stats" className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-6 rounded-comfort">
-            <TabsTrigger value="stats" className="text-base">Stats</TabsTrigger>
-            <TabsTrigger value="goals" className="text-base">Goals</TabsTrigger>
-            <TabsTrigger value="settings" className="text-base">Settings</TabsTrigger>
+            <TabsTrigger value="stats" className="text-base">{t('profile.stats')}</TabsTrigger>
+            <TabsTrigger value="goals" className="text-base">{t('profile.goals')}</TabsTrigger>
+            <TabsTrigger value="settings" className="text-base">{t('profile.settings')}</TabsTrigger>
           </TabsList>
           
           <TabsContent value="stats" className="space-y-grid-16">
             <CosmicCard className="p-6 rounded-comfort">
-              <h2 className="font-heading font-medium mb-4">Your Growth Journey</h2>
+              <h2 className="font-heading font-medium mb-4">{t('profile.growthJourney')}</h2>
               
               <div className="space-y-grid-16">
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-base">Blueprint Completion</span>
+                    <span className="text-base">{t('profile.blueprintCompletion')}</span>
                     <span className="text-base font-medium">{blueprintCompletion}%</span>
                   </div>
                   <Progress value={blueprintCompletion} className="h-2" />
@@ -164,7 +166,7 @@ const Profile = () => {
                 
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-base">Active Goals</span>
+                    <span className="text-base">{t('profile.activeGoals')}</span>
                     <span className="text-base font-medium">{activeGoals.length}/{goals.length}</span>
                   </div>
                   <Progress value={goals.length > 0 ? (activeGoals.length / goals.length) * 100 : 0} className="h-2" />
@@ -172,7 +174,7 @@ const Profile = () => {
                 
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-base">Tasks Completed</span>
+                    <span className="text-base">{t('profile.tasksCompleted')}</span>
                     <span className="text-base font-medium">{statistics?.tasks_completed || 0}</span>
                   </div>
                   <Progress value={Math.min((statistics?.tasks_completed || 0) * 4, 100)} className="h-2" />
@@ -180,7 +182,7 @@ const Profile = () => {
                 
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-base">Coach Conversations</span>
+                    <span className="text-base">{t('profile.coachConversations')}</span>
                     <span className="text-base font-medium">{statistics?.coach_conversations || 0}</span>
                   </div>
                   <Progress value={Math.min((statistics?.coach_conversations || 0) * 8, 100)} className="h-2" />
@@ -189,13 +191,13 @@ const Profile = () => {
             </CosmicCard>
             
             <CosmicCard className="p-6 rounded-comfort">
-              <h2 className="font-heading font-medium mb-4">Weekly Insights</h2>
+              <h2 className="font-heading font-medium mb-4">{t('profile.weeklyInsights')}</h2>
               
               <div className="space-y-grid-8">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-base font-medium">Most Productive Day</p>
-                    <p className="text-sm text-muted-foreground">{weeklyInsights?.mostProductiveDay || 'Wednesday'}</p>
+                    <p className="text-base font-medium">{t('profile.mostProductiveDay')}</p>
+                    <p className="text-sm text-muted-foreground">{weeklyInsights?.mostProductiveDay || t('profile.wednesday')}</p>
                   </div>
                   <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
                     {weeklyInsights?.improvementTrend || '+0%'}
@@ -204,16 +206,16 @@ const Profile = () => {
                 
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-base font-medium">Energy Peaks</p>
-                    <p className="text-sm text-muted-foreground">{weeklyInsights?.energyPeaks || 'Morning: 9-11am'}</p>
+                    <p className="text-base font-medium">{t('profile.energyPeaks')}</p>
+                    <p className="text-sm text-muted-foreground">{weeklyInsights?.energyPeaks || t('profile.morningPeaks')}</p>
                   </div>
-                  <Badge className="bg-soul-teal bg-opacity-20 text-teal-800 hover:bg-soul-teal hover:bg-opacity-20">Aligned</Badge>
+                  <Badge className="bg-soul-teal bg-opacity-20 text-teal-800 hover:bg-soul-teal hover:bg-opacity-20">{t('profile.aligned')}</Badge>
                 </div>
                 
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-base font-medium">Focus Sessions</p>
-                    <p className="text-sm text-muted-foreground">{weeklyInsights?.focusSessionsThisWeek || 0} this week</p>
+                    <p className="text-base font-medium">{t('profile.focusSessions')}</p>
+                    <p className="text-sm text-muted-foreground">{weeklyInsights?.focusSessionsThisWeek || 0} {t('profile.thisWeek')}</p>
                   </div>
                   <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100">
                     +{statistics?.focus_sessions_completed || 0}
@@ -235,8 +237,8 @@ const Profile = () => {
               ))
             ) : (
               <CosmicCard className="p-6 text-center rounded-comfort">
-                <p className="text-muted-foreground mb-4">No goals found</p>
-                <p className="text-sm text-muted-foreground">Start by creating your first goal to track your progress</p>
+                <p className="text-muted-foreground mb-4">{t('profile.noGoals')}</p>
+                <p className="text-sm text-muted-foreground">{t('profile.createFirstGoal')}</p>
               </CosmicCard>
             )}
             
@@ -246,20 +248,20 @@ const Profile = () => {
                 className="text-soul-teal w-full flex items-center justify-center interactive-element"
               >
                 <ArrowUpRight className="mr-2 h-4 w-4" />
-                View All Goals
+                {t('profile.viewAllGoals')}
               </Button>
             </CosmicCard>
           </TabsContent>
           
           <TabsContent value="settings" className="space-y-grid-16">
             <CosmicCard className="p-6 rounded-comfort">
-              <h2 className="font-heading font-medium mb-4">App Settings</h2>
+              <h2 className="font-heading font-medium mb-4">{t('profile.appSettings')}</h2>
               
               <div className="space-y-grid-16">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <Bell className="h-5 w-5 text-muted-foreground" />
-                    <Label htmlFor="notifications" className="text-base">Notifications</Label>
+                    <Label htmlFor="notifications" className="text-base">{t('profile.notifications')}</Label>
                   </div>
                   <Switch id="notifications" defaultChecked />
                 </div>
@@ -270,7 +272,7 @@ const Profile = () => {
                       <Moon className="h-5 w-5 text-muted-foreground" /> : 
                       <Sun className="h-5 w-5 text-muted-foreground" />
                     }
-                    <Label htmlFor="dark-mode" className="text-base">Dark Mode</Label>
+                    <Label htmlFor="dark-mode" className="text-base">{t('profile.darkMode')}</Label>
                   </div>
                   <Switch 
                     id="dark-mode" 
@@ -289,13 +291,13 @@ const Profile = () => {
                       <div className="flex items-center justify-between cursor-pointer interactive-element hover:bg-muted p-2 rounded-md">
                         <div className="flex items-center space-x-3">
                           <Settings className="h-5 w-5 text-muted-foreground" />
-                          <span className="text-base">Account Settings</span>
+                          <span className="text-base">{t('profile.accountSettings')}</span>
                         </div>
                         <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
                       </div>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Configure your account preferences</p>
+                      <p>{t('profile.accountSettingsTooltip')}</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -309,7 +311,7 @@ const Profile = () => {
                 onClick={handleLogout}
               >
                 <LogOut className="mr-2 h-4 w-4" />
-                Log Out
+                {t('nav.signOut')}
               </Button>
             </CosmicCard>
           </TabsContent>
@@ -326,6 +328,8 @@ interface GoalCardProps {
 }
 
 const GoalCard = ({ goal, onComplete, onProgressUpdate }: GoalCardProps) => {
+  const { t } = useLanguage();
+  
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed':
@@ -351,13 +355,13 @@ const GoalCard = ({ goal, onComplete, onProgressUpdate }: GoalCardProps) => {
       <div className="flex justify-between items-start mb-2">
         <h3 className="font-medium font-heading">{goal.title}</h3>
         <Badge className={getStatusColor(goal.status)}>
-          {goal.status === 'active' ? 'On track' : goal.status}
+          {goal.status === 'active' ? t('profile.onTrack') : t(`profile.status.${goal.status}`)}
         </Badge>
       </div>
       
       <div className="space-y-2 mb-3">
         <div className="flex justify-between text-sm">
-          <span>Progress</span>
+          <span>{t('profile.progress')}</span>
           <span>{goal.progress}%</span>
         </div>
         <Progress value={goal.progress} className="h-2" />
@@ -379,7 +383,7 @@ const GoalCard = ({ goal, onComplete, onProgressUpdate }: GoalCardProps) => {
             className="ml-2 interactive-element"
             onClick={handleComplete}
           >
-            <Check className="h-4 w-4 mr-1" /> Complete
+            <Check className="h-4 w-4 mr-1" /> {t('profile.complete')}
           </Button>
         )}
       </div>
