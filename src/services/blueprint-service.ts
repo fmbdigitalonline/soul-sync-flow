@@ -332,7 +332,12 @@ class BlueprintService {
       BlueprintHealthChecker.validateRequired(userData.birth_time_local, 'Birth Data', 'birth_time_local');
       BlueprintHealthChecker.validateRequired(userData.birth_location, 'Birth Data', 'birth_location');
 
-      console.log('Calling blueprint calculator with user data:', userData);
+      console.log('🔍 HUMAN DESIGN DEBUG: Starting calculation with data:', {
+        birth_date: userData.birth_date,
+        birth_time: userData.birth_time_local,
+        birth_location: userData.birth_location,
+        timezone: userData.timezone
+      });
 
       // Call the Supabase function - this will fail in health check mode if not working
       const { data, error } = await this.supabase.functions.invoke('blueprint-calculator', {
@@ -344,9 +349,16 @@ class BlueprintService {
         }
       });
 
+      console.log('🔍 HUMAN DESIGN DEBUG: Edge function response:', {
+        success: data?.success,
+        error: error,
+        humanDesignData: data?.data?.humanDesign,
+        calculationMetadata: data?.data?.calculation_metadata
+      });
+
       if (error) {
         BlueprintHealthChecker.failIfHealthCheck('Blueprint Calculator', error.message || 'Unknown error');
-        console.error('Error from blueprint calculator function:', error);
+        console.error('❌ Error from blueprint calculator function:', error);
         return { 
           data: null, 
           error: `Blueprint calculation failed: ${error.message || 'Unknown error'}`,
@@ -356,7 +368,7 @@ class BlueprintService {
 
       if (!data?.success) {
         BlueprintHealthChecker.failIfHealthCheck('Blueprint Calculator', data?.error || 'Calculation not successful');
-        console.error('Blueprint calculator returned unsuccessful result:', data);
+        console.error('❌ Blueprint calculator returned unsuccessful result:', data);
         return { 
           data: null, 
           error: data?.error || 'Blueprint calculation was not successful',
@@ -364,19 +376,35 @@ class BlueprintService {
         };
       }
 
-      console.log('Blueprint calculator returned data:', data);
+      console.log('✅ Blueprint calculator returned data:', data);
 
       // Calculate numerology - this should always work as it's purely mathematical
       BlueprintHealthChecker.logValidation('Numerology', 'Calculating numerological values');
       const numerologyResult = NumerologyCalculator.calculateNumerology(userData.full_name, userData.birth_date);
 
+      // DETAILED HUMAN DESIGN VALIDATION
+      console.log('🔍 HUMAN DESIGN DEBUG: Detailed validation of returned data...');
+      
+      const humanDesignData = data.data?.humanDesign;
+      console.log('🔍 HUMAN DESIGN DEBUG: Raw human design data:', humanDesignData);
+
       // In health check mode, validate that we got real calculated data, not fallbacks
       if (BlueprintHealthChecker.isHealthCheck()) {
-        // Validate Human Design data is not just defaults
-        if (data.data?.humanDesign?.type === 'Generator' && 
-            data.data?.humanDesign?.profile === '1/3' &&
-            data.data?.humanDesign?.authority === 'Sacral') {
-          BlueprintHealthChecker.failIfHealthCheck('Human Design', 'Appears to be using default fallback values');
+        console.log('🔍 HEALTH CHECK MODE: Validating Human Design data is not fallback...');
+        
+        // Check for obvious fallback patterns
+        if (humanDesignData?.type === 'Generator' && 
+            humanDesignData?.profile === '1/3' &&
+            humanDesignData?.authority === 'Sacral') {
+          console.log('❌ DETECTED: Default Generator fallback pattern');
+          BlueprintHealthChecker.failIfHealthCheck('Human Design', 'Detected default Generator fallback values (type=Generator, profile=1/3, authority=Sacral)');
+        }
+
+        // Check if gates are empty or default
+        if (!humanDesignData?.gates?.conscious_personality?.length || 
+            !humanDesignData?.gates?.unconscious_design?.length) {
+          console.log('❌ DETECTED: Empty gates arrays');
+          BlueprintHealthChecker.failIfHealthCheck('Human Design', 'Gates arrays are empty - calculation failed');
         }
 
         // Validate Western astrology is not just "Unknown"
@@ -387,6 +415,21 @@ class BlueprintService {
         // Validate Chinese zodiac is not just "Unknown"
         if (data.data?.chineseZodiac?.animal === 'Unknown') {
           BlueprintHealthChecker.failIfHealthCheck('Chinese Zodiac', 'Animal calculation failed');
+        }
+      }
+
+      // SPECIFIC VALIDATION FOR YOUR EXPECTED RESULTS
+      console.log('🔍 HUMAN DESIGN DEBUG: Checking for expected Projector results...');
+      if (humanDesignData) {
+        console.log('🔍 Expected: Projector, Got:', humanDesignData.type);
+        console.log('🔍 Expected: 6/2, Got:', humanDesignData.profile);
+        console.log('🔍 Expected: Splenic, Got:', humanDesignData.authority);
+        console.log('🔍 Expected gates count: 26, Got conscious:', humanDesignData.gates?.conscious_personality?.length, 'unconscious:', humanDesignData.gates?.unconscious_design?.length);
+        
+        // Check if we're getting the wrong results
+        if (humanDesignData.type === 'Generator' && userData.birth_date === '1978-02-12') {
+          console.error('❌ CRITICAL: Getting Generator instead of Projector for known birth data!');
+          console.error('❌ This indicates the calculation engine is broken or using fallbacks');
         }
       }
 
@@ -445,20 +488,20 @@ class BlueprintService {
           soulUrgeKeyword: numerologyResult.soulUrgeKeyword,
           birthdayKeyword: numerologyResult.birthdayKeyword
         },
-        energy_strategy_human_design: data.data?.humanDesign ? {
-          type: this.validateCalculatedValue(data.data.humanDesign.type, 'Human Design', 'type'),
-          profile: data.data.humanDesign.profile || '1/3',
-          authority: data.data.humanDesign.authority || 'Sacral',
-          strategy: data.data.humanDesign.strategy || 'To Respond',
-          definition: data.data.humanDesign.definition || 'Single',
-          not_self_theme: data.data.humanDesign.not_self_theme || 'Frustration',
-          life_purpose: data.data.humanDesign.life_purpose || 'To find satisfaction through responding',
-          gates: data.data.humanDesign.gates || {
+        energy_strategy_human_design: humanDesignData ? {
+          type: this.validateCalculatedValue(humanDesignData.type, 'Human Design', 'type'),
+          profile: humanDesignData.profile || '1/3',
+          authority: humanDesignData.authority || 'Sacral',
+          strategy: humanDesignData.strategy || 'To Respond',
+          definition: humanDesignData.definition || 'Single',
+          not_self_theme: humanDesignData.not_self_theme || 'Frustration',
+          life_purpose: humanDesignData.life_purpose || 'To find satisfaction through responding',
+          gates: humanDesignData.gates || {
             unconscious_design: [],
             conscious_personality: []
           },
-          centers: data.data.humanDesign.centers || {},
-          metadata: data.data.humanDesign.metadata || {}
+          centers: humanDesignData.centers || {},
+          metadata: humanDesignData.metadata || {}
         } : this.getDefaultHumanDesign(),
         cognition_mbti: {
           type: userData.personality || this.getDefaultMBTI(),
@@ -494,24 +537,19 @@ class BlueprintService {
 
       const isPartial = data.data?.calculation_metadata?.partial || false;
       
-      return { 
-        data: blueprint, 
+      console.log('🔍 HUMAN DESIGN DEBUG: Final blueprint human design section:', blueprint.energy_strategy_human_design);
+      
+      return {
+        data: blueprint,
         error: null,
         isPartial
       };
-
     } catch (error) {
-      if (BlueprintHealthChecker.isHealthCheck()) {
-        console.error(`❌ FAILED: ${error instanceof Error ? error.message : 'Unknown error occurred'}`);
-        console.log('Health Check Mode - No Retries');
-        console.log('\nSystem configured to fail fast to reveal calculation issues.');
-        console.log('\nCheck the error details above to identify what needs fixing.');
-      }
-      
-      console.error('Error in generateBlueprintFromBirthData:', error);
+      console.error('❌ Unexpected error generating blueprint:', error);
+      BlueprintHealthChecker.failIfHealthCheck('Blueprint Generation', `Unexpected error: ${error}`);
       return { 
         data: null, 
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        error: `Unexpected error generating blueprint: ${error}`,
         isPartial: false
       };
     }
@@ -615,3 +653,5 @@ class BlueprintService {
 import { supabase } from '@/integrations/supabase/client';
 export const blueprintService = new BlueprintService({ supabase });
 export default BlueprintService;
+
+}
