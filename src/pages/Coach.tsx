@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
@@ -11,12 +10,14 @@ import { AgentSelector } from "@/components/coach/AgentSelector";
 import { CoachInterface } from "@/components/coach/CoachInterface";
 import { GuideInterface } from "@/components/coach/GuideInterface";
 import { BlendInterface } from "@/components/coach/BlendInterface";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Coach = () => {
   const { messages, isLoading, sendMessage, resetConversation, currentAgent, switchAgent } = useAICoach();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   // Check authentication status
   useEffect(() => {
@@ -46,26 +47,26 @@ const Coach = () => {
 
   const handleNewConversation = () => {
     resetConversation();
+    const agentName = currentAgent === "coach" ? t('coach.soulCoach') : 
+                     currentAgent === "guide" ? t('coach.soulGuide') : 
+                     t('coach.soulCompanion');
+    
     toast({
-      title: "New Conversation",
-      description: `Started a fresh conversation with your ${
-        currentAgent === "coach" ? "Soul Coach" : 
-        currentAgent === "guide" ? "Soul Guide" : 
-        "Soul Companion"
-      }`,
+      title: t('coach.newConversation'),
+      description: t('newConversationStarted', { agent: agentName }),
     });
   };
 
   const getAgentTitle = () => {
     switch (currentAgent) {
       case "coach":
-        return "Soul Coach";
+        return t('coach.soulCoach');
       case "guide":
-        return "Soul Guide";
+        return t('coach.soulGuide');
       case "blend":
-        return "Soul Companion";
+        return t('coach.soulCompanion');
       default:
-        return "Soul AI";
+        return t('coach.title');
     }
   };
 
@@ -76,14 +77,14 @@ const Coach = () => {
           <CosmicCard className="p-6 text-center">
             <Sparkles className="h-8 w-8 text-soul-purple mx-auto mb-4" />
             <h1 className="text-2xl font-bold font-display mb-2">
-              <span className="gradient-text">Soul AI</span>
+              <span className="gradient-text">{t('coach.title')}</span>
             </h1>
-            <p className="mb-6">You need to sign in to access your personalized AI guidance</p>
+            <p className="mb-6">{t('coach.signInRequired')}</p>
             <Button 
               className="bg-soul-purple hover:bg-soul-purple/90"
               onClick={() => window.location.href = '/auth'}
             >
-              Sign In
+              {t('nav.signIn')}
             </Button>
           </CosmicCard>
         </div>
@@ -100,7 +101,7 @@ const Coach = () => {
             variant="ghost" 
             size="icon" 
             onClick={handleNewConversation}
-            title="New Conversation"
+            title={t('coach.newConversation')}
             className="relative"
           >
             <RefreshCw className="h-5 w-5" />
@@ -112,7 +113,7 @@ const Coach = () => {
             variant="ghost" 
             size="icon" 
             onClick={() => window.location.href = '/blueprint'}
-            title="Blueprint Settings"
+            title={t('coach.blueprintSettings')}
           >
             <Settings className="h-5 w-5" />
           </Button>

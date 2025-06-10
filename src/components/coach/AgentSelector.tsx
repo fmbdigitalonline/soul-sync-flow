@@ -5,6 +5,7 @@ import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Separator } from "@/components/ui/separator";
 import { Target, Heart, Sparkles } from "lucide-react";
 import { AgentType } from "@/services/ai-coach-service";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface AgentSelectorProps {
   currentAgent: AgentType;
@@ -13,31 +14,33 @@ interface AgentSelectorProps {
 }
 
 export function AgentSelector({ currentAgent, onAgentChange, className }: AgentSelectorProps) {
+  const { t } = useLanguage();
+  
   const agents = [
     {
       type: "coach" as AgentType,
-      name: "Soul Coach",
+      name: t('agent.coach.name'),
       icon: Target,
-      description: "Pure productivity focus",
-      details: "Goals • Tasks • Achievement",
+      description: t('agent.coach.description'),
+      details: t('agent.coach.details'),
       color: "text-green-400",
       domain: "SEPARATED"
     },
     {
       type: "guide" as AgentType,
-      name: "Soul Guide", 
+      name: t('agent.guide.name'), 
       icon: Heart,
-      description: "Pure personal growth",
-      details: "Wisdom • Growth • Meaning",
+      description: t('agent.guide.description'),
+      details: t('agent.guide.details'),
       color: "text-soul-purple",
       domain: "SEPARATED"
     },
     {
       type: "blend" as AgentType,
-      name: "Soul Companion",
+      name: t('agent.blend.name'),
       icon: Sparkles,
-      description: "Integrated life guidance",
-      details: "Seamless • Holistic • Unified",
+      description: t('agent.blend.description'),
+      details: t('agent.blend.details'),
       color: "text-blue-400",
       domain: "INTEGRATED"
     },
@@ -46,15 +49,15 @@ export function AgentSelector({ currentAgent, onAgentChange, className }: AgentS
   return (
     <CosmicCard className={`p-4 ${className}`}>
       <div className="text-center mb-4">
-        <p className="text-sm font-medium mb-1">Choose Your Guidance Style</p>
-        <p className="text-xs text-muted-foreground">Separated domains or integrated approach</p>
+        <p className="text-sm font-medium mb-1">{t('agent.chooseStyle')}</p>
+        <p className="text-xs text-muted-foreground">{t('agent.separatedDomains')}</p>
       </div>
       
       <div className="space-y-3">
         {/* Separated Options */}
         <div>
           <div className="flex items-center justify-center mb-2">
-            <span className="text-xs text-muted-foreground font-medium">SEPARATED</span>
+            <span className="text-xs text-muted-foreground font-medium">{t('agent.separated')}</span>
           </div>
           <div className="grid grid-cols-2 gap-2">
             {agents.filter(agent => agent.domain === "SEPARATED").map((agent) => {
@@ -87,14 +90,14 @@ export function AgentSelector({ currentAgent, onAgentChange, className }: AgentS
 
         <div className="flex items-center justify-center">
           <Separator className="flex-1" />
-          <span className="px-2 text-xs text-muted-foreground">OR</span>
+          <span className="px-2 text-xs text-muted-foreground">{t('agent.or')}</span>
           <Separator className="flex-1" />
         </div>
 
         {/* Integrated Option */}
         <div>
           <div className="flex items-center justify-center mb-2">
-            <span className="text-xs text-muted-foreground font-medium">INTEGRATED</span>
+            <span className="text-xs text-muted-foreground font-medium">{t('agent.integrated')}</span>
           </div>
           {agents.filter(agent => agent.domain === "INTEGRATED").map((agent) => {
             const Icon = agent.icon;
