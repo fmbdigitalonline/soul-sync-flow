@@ -43,7 +43,7 @@ export default async function handler(req, res) {
       success: true,
       data: humanDesignResult,
       timestamp: new Date().toISOString(),
-      library: 'proper-hd-methodology-v1',
+      library: 'proper-hd-methodology-v2',
       notice: 'Using proper Human Design calculation with accurate Design Time and standard gate mapping'
     });
 
@@ -107,42 +107,45 @@ async function calculateHumanDesignProper({ birthDate, birthTime, birthLocation,
       personality_time: birthDateTime.toISOString(),
       design_time: designDateTime.toISOString(),
       offset_days: "88.736",
-      calculation_method: "PROPER_HD_METHODOLOGY_V1"
+      calculation_method: "PROPER_HD_METHODOLOGY_V2"
     }
   };
 }
 
 // Calculate Design Time celestial data for all 13 bodies
 async function calculateDesignTimeCelestialData(personalityCelestial, designDateTime) {
-  const designCelestial = {};
+  const designCelestial = { planets: {} };
   
   // For each celestial body, calculate its position at Design Time
   // This is a simplified approach - in reality, we'd need ephemeris data for the Design Time
   const planets = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto', 'north_node', 'south_node'];
   
-  planets.forEach(planet => {
-    if (personalityCelestial[planet]) {
-      // Calculate the approximate position at Design Time using average daily motion
-      const dailyMotion = getPlanetDailyMotion(planet);
-      const daysDifference = 88.736;
-      const designLongitude = (personalityCelestial[planet].longitude - (dailyMotion * daysDifference) + 360) % 360;
-      
-      designCelestial[planet] = {
-        ...personalityCelestial[planet],
-        longitude: designLongitude
+  // FIXED: Access the nested planets object
+  if (personalityCelestial.planets) {
+    planets.forEach(planet => {
+      if (personalityCelestial.planets[planet]) {
+        // Calculate the approximate position at Design Time using average daily motion
+        const dailyMotion = getPlanetDailyMotion(planet);
+        const daysDifference = 88.736;
+        const designLongitude = (personalityCelestial.planets[planet].longitude - (dailyMotion * daysDifference) + 360) % 360;
+        
+        designCelestial.planets[planet] = {
+          ...personalityCelestial.planets[planet],
+          longitude: designLongitude
+        };
+        
+        console.log(`${planet}: Personality ${personalityCelestial.planets[planet].longitude.toFixed(3)}° → Design ${designLongitude.toFixed(3)}°`);
+      }
+    });
+    
+    // Earth is always opposite to Sun
+    if (designCelestial.planets.sun) {
+      designCelestial.planets.earth = {
+        longitude: (designCelestial.planets.sun.longitude + 180) % 360,
+        latitude: 0,
+        distance: 1
       };
-      
-      console.log(`${planet}: Personality ${personalityCelestial[planet].longitude.toFixed(3)}° → Design ${designLongitude.toFixed(3)}°`);
     }
-  });
-  
-  // Earth is always opposite to Sun
-  if (designCelestial.sun) {
-    designCelestial.earth = {
-      longitude: (designCelestial.sun.longitude + 180) % 360,
-      latitude: 0,
-      distance: 1
-    };
   }
   
   return designCelestial;
@@ -179,50 +182,52 @@ function calculateHDGatesFromCelestialData(celestialData) {
     'uranus', 'neptune', 'pluto'
   ];
   
-  hdOrder.forEach(planet => {
-    if (celestialData[planet]) {
-      const gateInfo = longitudeToHDGate(celestialData[planet].longitude);
-      gates.push({
-        planet,
-        gate: gateInfo.gate,
-        line: gateInfo.line
-      });
-      
-      console.log(`${planet}: ${celestialData[planet].longitude.toFixed(3)}° → Gate ${gateInfo.gate}.${gateInfo.line}`);
-    }
-  });
+  // FIXED: Access the nested planets object
+  if (celestialData.planets) {
+    hdOrder.forEach(planet => {
+      if (celestialData.planets[planet]) {
+        const gateInfo = longitudeToHDGate(celestialData.planets[planet].longitude);
+        gates.push({
+          planet,
+          gate: gateInfo.gate,
+          line: gateInfo.line
+        });
+        
+        console.log(`${planet}: ${celestialData.planets[planet].longitude.toFixed(3)}° → Gate ${gateInfo.gate}.${gateInfo.line}`);
+      }
+    });
+  }
   
   return gates;
 }
 
-// Proper longitude to HD gate conversion using standard HD wheel
+// Standard longitude to HD gate conversion using proper HD wheel
 function longitudeToHDGate(longitude) {
-  // Standard Human Design wheel starting positions
-  // The HD wheel starts at 0° Aries with specific gate assignments
-  
   // Normalize longitude to 0-360
   const normalizedLon = ((longitude % 360) + 360) % 360;
+  
+  // Apply the 45-degree offset to align with HD wheel
+  const adjustedLon = (normalizedLon - 45 + 360) % 360;
   
   // HD wheel: 64 gates, each covering 5.625° (360/64)
   const degreesPerGate = 360 / 64;
   const degreesPerLine = degreesPerGate / 6; // 6 lines per gate
   
-  // Calculate gate number (1-64) - this uses the standard HD wheel mapping
-  // Starting from 0° Aries, the gates follow a specific sequence
-  const gateIndex = Math.floor(normalizedLon / degreesPerGate);
+  // Calculate gate index (0-63)
+  const gateIndex = Math.floor(adjustedLon / degreesPerGate);
   
-  // Standard HD gate wheel order starting from 0° Aries
-  const standardHDWheel = [
-    41, 19, 13, 49, 30, 55, 37, 63, 22, 36, 25, 17, 21, 51, 42, 3,
-    27, 24, 2, 23, 8, 20, 16, 35, 45, 12, 15, 52, 39, 53, 62, 56,
-    31, 33, 7, 4, 29, 59, 40, 64, 47, 6, 46, 18, 48, 57, 32, 50,
-    28, 44, 1, 43, 14, 34, 9, 5, 26, 11, 10, 58, 38, 54, 61, 60
+  // Corrected HD gate wheel starting from Gate 21 at 0° adjusted longitude
+  const gateWheel = [
+    21, 51, 42, 3, 27, 24, 2, 23, 8, 20, 16, 35, 45, 12, 15, 52,
+    39, 53, 62, 56, 31, 33, 7, 4, 29, 59, 40, 64, 47, 6, 46, 18,
+    48, 57, 32, 50, 28, 44, 1, 43, 14, 34, 9, 5, 26, 11, 10, 58,
+    38, 54, 61, 60, 41, 19, 13, 49, 30, 55, 37, 63, 22, 36, 25, 17
   ];
   
-  const gate = standardHDWheel[gateIndex];
+  const gate = gateWheel[gateIndex];
   
   // Calculate line (1-6) within the gate
-  const positionInGate = normalizedLon % degreesPerGate;
+  const positionInGate = adjustedLon % degreesPerGate;
   const line = Math.floor(positionInGate / degreesPerLine) + 1;
   
   return { gate, line: Math.min(line, 6) };
@@ -288,7 +293,7 @@ function calculateCentersFromChannels(allGates) {
     }
   });
   
-  // Define channels that can activate centers
+  // Define channels that can activate centers - only when both gates are present
   const channels = [
     // Major channels for type determination
     [34, 20], [34, 10], [34, 57], // Sacral to Throat
@@ -300,7 +305,7 @@ function calculateCentersFromChannels(allGates) {
     [13, 33], [7, 31], [1, 8], [10, 20], [16, 48], [20, 34], [12, 22], [45, 21] // Other channels
   ];
   
-  // Define centers only when complete channels exist
+  // Define centers only when complete channels exist (both gates present)
   channels.forEach(([gateA, gateB]) => {
     const centerA = gateToCenterMap[gateA];
     const centerB = gateToCenterMap[gateB];
