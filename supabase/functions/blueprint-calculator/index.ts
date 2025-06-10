@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 // CORS headers for browser requests
@@ -216,7 +215,7 @@ async function generateBlueprintWithAutomaticTimezone(birthDate: string, birthTi
     // Generate other profile components
     const chineseZodiac = calculateChineseZodiac(new Date(birthDate).getFullYear());
     const numerology = calculateNumerology(birthDate, "Sample Name");
-    const humanDesign = await generateHumanDesign(celestialData, birthDate, birthTime, birthLocation, coordinates);
+    const humanDesign = await generateHumanDesign(birthDate, birthTime, birthLocation, Intl.DateTimeFormat().resolvedOptions().timeZone);
     
     return {
       calculation_metadata: {
@@ -387,32 +386,90 @@ function generateWesternProfile(celestialData: any) {
   };
 }
 
-async function generateHumanDesign(celestialData: any, birthDate: string, birthTime: string, birthLocation: string, coordinates: {latitude: number, longitude: number}) {
-  // Import the enhanced Human Design calculator
-  const { calculateHumanDesign } = await import('./human-design-calculator.ts');
+async function generateHumanDesign(birthDate: string, birthTime: string, birthLocation: string, timezone: string) {
+  console.log("🎯 Human Design: Starting calculation with Vercel API integration");
   
   try {
-    // Use the coordinates and accurate timezone-resolved data for Human Design
-    return await calculateHumanDesign(birthDate, birthTime, birthLocation, "AUTO_RESOLVED", celestialData);
-  } catch (error) {
-    console.error("Error calculating Human Design:", error);
+    // Step 1: Get accurate celestial data
+    console.log("Step 1: Getting celestial data for Human Design...");
+    const celestialData = await getAccurateCelestialData(birthDate, birthTime, birthLocation, timezone);
     
-    // Fallback Human Design data
-    return {
-      type: "Generator",
-      profile: "1/3",
-      authority: "Sacral",
-      strategy: "To Respond",
-      definition: "Single",
-      not_self_theme: "Frustration",
-      life_purpose: "To find satisfaction through responding",
-      gates: {
-        unconscious_design: [],
-        conscious_personality: []
-      },
-      source: "fallback_calculation"
-    };
+    if (!celestialData || !celestialData.planets) {
+      throw new Error("Failed to get celestial data for Human Design calculation");
+    }
+    
+    // Step 2: Call the Human Design calculation (now via Vercel API)
+    console.log("Step 2: Calling Human Design calculation via Vercel API...");
+    const { calculateHumanDesign } = await import('./human-design-calculator.ts');
+    const humanDesignResult = await calculateHumanDesign(
+      birthDate,
+      birthTime,
+      birthLocation,
+      timezone,
+      celestialData
+    );
+    
+    console.log("✅ Human Design calculation completed via Vercel API");
+    console.log("Result type:", humanDesignResult.type);
+    console.log("Result profile:", humanDesignResult.profile);
+    console.log("Result authority:", humanDesignResult.authority);
+    
+    // Check if this is a fallback result
+    if (humanDesignResult.metadata?.calculation_method === "FALLBACK_NEEDS_PROPER_LIBRARY") {
+      console.log("⚠️ WARNING: Using fallback Human Design calculation - proper library integration needed");
+    }
+    
+    return humanDesignResult;
+    
+  } catch (error) {
+    console.error("Error in Human Design generation:", error);
+    throw error;
   }
+}
+
+// Helper function to get accurate celestial data
+async function getAccurateCelestialData(birthDate: string, birthTime: string, birthLocation: string, timezone: string) {
+  const VERCEL_API_URL = "https://soul-sync-flow.vercel.app/api/ephemeris";
+  
+  // Step 1: Get coordinates from location string
+  const coordinates = await getLocationCoordinates(birthLocation);
+  
+  // Step 2: Get historical timezone offset for the specific birth moment
+  const birthDateTime = new Date(`${birthDate}T${birthTime}:00`);
+  const timezoneOffset = await getHistoricalTimezoneOffset(coordinates, birthDateTime);
+  
+  // Step 3: Create the accurate UTC timestamp
+  const localTimestamp = birthDateTime.getTime();
+  const utcTimestamp = localTimestamp - (timezoneOffset * 1000); // Convert seconds to milliseconds
+  const accurateUtcDateTime = new Date(utcTimestamp);
+  
+  // Step 4: Call Vercel API with accurate UTC time and coordinates
+  const ephemerisResponse = await fetch(VERCEL_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'User-Agent': 'SoulSync-Blueprint-Calculator/1.0',
+    },
+    body: JSON.stringify({
+      datetime: accurateUtcDateTime.toISOString(),
+      coordinates: `${coordinates.latitude},${coordinates.longitude}`
+    })
+  });
+  
+  if (!ephemerisResponse.ok) {
+    const errorText = await ephemerisResponse.text();
+    console.error("Vercel API error response:", errorText);
+    throw new Error(`Ephemeris API returned ${ephemerisResponse.status}: ${ephemerisResponse.statusText}. Response: ${errorText}`);
+  }
+  
+  const ephemerisData = await ephemerisResponse.json();
+  
+  if (!ephemerisData.success) {
+    throw new Error(`Ephemeris API error: ${ephemerisData.error || 'Unknown error'}`);
+  }
+  
+  return ephemerisData.data;
 }
 
 function calculateSignFromLongitude(longitude: number): string {
