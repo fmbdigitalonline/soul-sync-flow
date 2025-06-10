@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MainLayout from "@/components/Layout/MainLayout";
@@ -13,6 +14,7 @@ import { BlueprintGenerator } from "@/components/blueprint/BlueprintGenerationFl
 import { useAuth } from "@/contexts/AuthContext";
 import { useSoulOrb } from "@/contexts/SoulOrbContext";
 import { BlueprintEnhancementService } from "@/services/blueprint-enhancement-service";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Blueprint = () => {
   const [activeTab, setActiveTab] = useState("view");
@@ -25,6 +27,7 @@ const Blueprint = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { speak } = useSoulOrb();
+  const { t } = useLanguage();
 
   // Check if user has any blueprints
   useEffect(() => {
@@ -38,7 +41,7 @@ const Blueprint = () => {
           if (error) {
             console.error("Error loading blueprint:", error);
             toast({
-              title: "Error loading blueprint",
+              title: t('blueprint.errorLoading'),
               description: error,
               variant: "destructive"
             });
@@ -50,8 +53,8 @@ const Blueprint = () => {
           if (!data) {
             setIsNewUser(true);
             toast({
-              title: "Welcome to SoulSync!",
-              description: "Let's create your Soul Blueprint through our onboarding process.",
+              title: t('blueprint.welcome'),
+              description: t('blueprint.onboardingMessage'),
             });
             navigate('/onboarding');
             return;
@@ -61,8 +64,8 @@ const Blueprint = () => {
         } catch (err) {
           console.error("Unexpected error loading blueprint:", err);
           toast({
-            title: "Error",
-            description: "Failed to load your blueprint. Please try again.",
+            title: t('error'),
+            description: t('blueprint.errorLoading'),
             variant: "destructive"
           });
         } finally {
@@ -74,7 +77,7 @@ const Blueprint = () => {
     if (user) {
       checkUserBlueprints();
     }
-  }, [user, navigate, toast]);
+  }, [user, navigate, toast, t]);
 
   const handleSaveBlueprint = async (updatedBlueprint: BlueprintData) => {
     try {
@@ -83,15 +86,15 @@ const Blueprint = () => {
       
       if (result.success) {
         toast({
-          title: "Blueprint saved",
-          description: "Your Soul Blueprint has been successfully updated",
+          title: t('blueprint.saved'),
+          description: t('blueprint.savedDescription'),
         });
         setBlueprint(updatedBlueprint);
         setActiveTab("view");
       } else {
         toast({
-          title: "Error saving blueprint",
-          description: result.error || "Failed to save blueprint",
+          title: t('blueprint.errorSaving'),
+          description: result.error || t('blueprint.errorSaving'),
           variant: "destructive"
         });
       }
@@ -99,8 +102,8 @@ const Blueprint = () => {
     } catch (err) {
       console.error("Error in save handler:", err);
       toast({
-        title: "Error",
-        description: "An unexpected error occurred while saving",
+        title: t('error'),
+        description: String(err),
         variant: "destructive"
       });
       return { success: false, error: String(err) };
@@ -114,15 +117,15 @@ const Blueprint = () => {
       
       // Give user feedback
       toast({
-        title: "Regenerating Blueprint",
-        description: "We're calculating your cosmic profile. This may take a moment...",
+        title: t('blueprint.regenerating'),
+        description: t('blueprint.regeneratingDescription'),
       });
       
-      speak("I'm regenerating your Soul Blueprint with the latest cosmic calculations.");
+      speak(t('blueprint.regeneratingDescription'));
     } else {
       toast({
-        title: "Error",
-        description: "No blueprint data available to regenerate",
+        title: t('error'),
+        description: t('blueprint.errorLoading'),
         variant: "destructive"
       });
     }
@@ -132,8 +135,8 @@ const Blueprint = () => {
     try {
       if (!newBlueprint) {
         toast({
-          title: "Error",
-          description: "No blueprint data was generated",
+          title: t('error'),
+          description: t('blueprint.errorGenerating'),
           variant: "destructive"
         });
         setIsGenerating(false);
@@ -147,23 +150,23 @@ const Blueprint = () => {
       if (result.success) {
         setBlueprint(newBlueprint);
         toast({
-          title: "Blueprint generated",
-          description: "Your Soul Blueprint has been successfully regenerated and saved",
+          title: t('blueprint.generated'),
+          description: t('blueprint.generatedDescription'),
         });
         
-        speak("Your new Soul Blueprint is ready to explore!");
+        speak(t('blueprint.generatedDescription'));
       } else {
         toast({
-          title: "Error saving generated blueprint",
-          description: result.error || "Failed to save the generated blueprint",
+          title: t('blueprint.errorGenerating'),
+          description: result.error || t('blueprint.errorGenerating'),
           variant: "destructive"
         });
       }
     } catch (error) {
       console.error("Error handling generation completion:", error);
       toast({
-        title: "Error",
-        description: "An unexpected error occurred while saving the blueprint",
+        title: t('error'),
+        description: String(error),
         variant: "destructive"
       });
     }
@@ -178,14 +181,14 @@ const Blueprint = () => {
         <div className="container mx-auto p-6 flex flex-col items-center justify-center min-h-[80vh]">
           <div className="cosmic-card p-8 text-center max-w-md w-full">
             <h1 className="text-2xl font-bold font-display mb-4">
-              <span className="gradient-text">Soul Blueprint</span>
+              <span className="gradient-text">{t('blueprint.title')}</span>
             </h1>
-            <p className="mb-6">You need to sign in to view and edit your Soul Blueprint</p>
+            <p className="mb-6">{t('blueprint.signInRequired')}</p>
             <Button 
               className="bg-soul-purple hover:bg-soul-purple/90"
               onClick={() => navigate('/auth')}
             >
-              Sign In
+              {t('nav.signIn')}
             </Button>
           </div>
         </div>
@@ -198,7 +201,7 @@ const Blueprint = () => {
       <MainLayout>
         <div className="container mx-auto p-6 flex flex-col items-center justify-center min-h-[80vh]">
           <Loader2 className="h-8 w-8 animate-spin text-soul-purple" />
-          <p className="mt-2">Loading your Soul Blueprint...</p>
+          <p className="mt-2">{t('blueprint.loading')}</p>
         </div>
       </MainLayout>
     );
@@ -215,12 +218,12 @@ const Blueprint = () => {
       <div className="container mx-auto p-6 pb-20">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold font-display">
-            <span className="gradient-text">Soul Blueprint</span>
+            <span className="gradient-text">{t('blueprint.title')}</span>
           </h1>
           <div className="flex gap-2 items-center">
             {/* Enhanced View Toggle */}
             <div className="flex items-center gap-2 mr-4">
-              <span className="text-sm text-muted-foreground">Basic</span>
+              <span className="text-sm text-muted-foreground">{t('blueprint.basicView')}</span>
               <Button
                 variant="ghost"
                 size="sm"
@@ -232,7 +235,7 @@ const Blueprint = () => {
                   <ToggleLeft className="h-6 w-6 text-gray-400" />
                 }
               </Button>
-              <span className="text-sm text-muted-foreground">Enhanced</span>
+              <span className="text-sm text-muted-foreground">{t('blueprint.enhancedView')}</span>
             </div>
             
             <Button 
@@ -242,24 +245,24 @@ const Blueprint = () => {
               disabled={isGenerating}
             >
               <RefreshCw className="mr-2 h-4 w-4" />
-              {isGenerating ? 'Generating...' : 'Regenerate Blueprint'}
+              {isGenerating ? t('blueprint.generating') : t('blueprint.regenerate')}
             </Button>
             <Button 
               className="bg-soul-purple hover:bg-soul-purple/90 flex items-center"
               onClick={() => navigate('/coach')}
             >
               <MessageCircle className="mr-2 h-4 w-4" />
-              Chat with Soul Coach
+              {t('blueprint.chatWithCoach')}
             </Button>
           </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
           <TabsList className="grid grid-cols-3 w-[600px] max-w-full mx-auto">
-            <TabsTrigger value="view">View Blueprint</TabsTrigger>
-            <TabsTrigger value="edit">Edit Blueprint</TabsTrigger>
+            <TabsTrigger value="view">{t('blueprint.viewTab')}</TabsTrigger>
+            <TabsTrigger value="edit">{t('blueprint.editTab')}</TabsTrigger>
             <TabsTrigger value="generating" disabled={!isGenerating}>
-              Generating
+              {t('blueprint.generatingTab')}
             </TabsTrigger>
           </TabsList>
           

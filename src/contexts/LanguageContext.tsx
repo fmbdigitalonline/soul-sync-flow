@@ -22,6 +22,50 @@ const translations = {
     'nav.signIn': 'Sign In',
     'nav.signOut': 'Sign Out',
     
+    // Blueprint Page
+    'blueprint.title': 'Soul Blueprint',
+    'blueprint.signInRequired': 'You need to sign in to view and edit your Soul Blueprint',
+    'blueprint.loading': 'Loading your Soul Blueprint...',
+    'blueprint.viewTab': 'View Blueprint',
+    'blueprint.editTab': 'Edit Blueprint',
+    'blueprint.generatingTab': 'Generating',
+    'blueprint.basicView': 'Basic',
+    'blueprint.enhancedView': 'Enhanced',
+    'blueprint.regenerate': 'Regenerate Blueprint',
+    'blueprint.chatWithCoach': 'Chat with Soul Coach',
+    'blueprint.generating': 'Generating...',
+    'blueprint.calculatedUsing': 'Calculated using',
+    'blueprint.templateData': 'Using template data',
+    'blueprint.welcome': 'Welcome to SoulSync!',
+    'blueprint.onboardingMessage': "Let's create your Soul Blueprint through our onboarding process.",
+    'blueprint.saved': 'Blueprint saved',
+    'blueprint.savedDescription': 'Your Soul Blueprint has been successfully updated',
+    'blueprint.errorSaving': 'Error saving blueprint',
+    'blueprint.errorLoading': 'Error loading blueprint',
+    'blueprint.regenerating': 'Regenerating Blueprint',
+    'blueprint.regeneratingDescription': "We're calculating your cosmic profile. This may take a moment...",
+    'blueprint.generated': 'Blueprint generated',
+    'blueprint.generatedDescription': 'Your Soul Blueprint has been successfully regenerated and saved',
+    'blueprint.errorGenerating': 'Error saving generated blueprint',
+    'blueprint.realCalculations': 'Real Calculations',
+    'blueprint.partialData': 'Partial Data',
+    'blueprint.templateDataBadge': 'Template Data',
+    
+    // Blueprint Sections
+    'blueprint.overview': 'Overview',
+    'blueprint.mbti': 'MBTI',
+    'blueprint.humanDesign': 'Human Design',
+    'blueprint.bashar': 'Bashar Suite',
+    'blueprint.numerology': 'Numerology',
+    'blueprint.western': 'Western Astrology',
+    'blueprint.chinese': 'Chinese Astrology',
+    'blueprint.energyIdentity': 'Energy & Identity',
+    'blueprint.westernAstrology': 'Western Astrology',
+    'blueprint.chineseAstrology': 'Chinese Astrology',
+    'blueprint.novice': 'Novice',
+    'blueprint.amateur': 'Amateur',
+    'blueprint.pro': 'Pro',
+    
     // Coach Page
     'coach.title': 'Soul AI',
     'coach.signInRequired': 'You need to sign in to access your personalized AI guidance',
@@ -125,7 +169,8 @@ const translations = {
     'close': 'Close',
     'next': 'Next',
     'previous': 'Previous',
-    'continue': 'Continue'
+    'continue': 'Continue',
+    'send': 'Send'
   },
   
   nl: {
@@ -137,6 +182,50 @@ const translations = {
     'nav.profile': 'Profiel',
     'nav.signIn': 'Inloggen',
     'nav.signOut': 'Uitloggen',
+    
+    // Blueprint Page
+    'blueprint.title': 'Ziel Blauwdruk',
+    'blueprint.signInRequired': 'Je moet inloggen om je Ziel Blauwdruk te bekijken en bewerken',
+    'blueprint.loading': 'Je Ziel Blauwdruk laden...',
+    'blueprint.viewTab': 'Blauwdruk Bekijken',
+    'blueprint.editTab': 'Blauwdruk Bewerken',
+    'blueprint.generatingTab': 'Genereren',
+    'blueprint.basicView': 'Basis',
+    'blueprint.enhancedView': 'Uitgebreid',
+    'blueprint.regenerate': 'Blauwdruk Regenereren',
+    'blueprint.chatWithCoach': 'Chat met Ziel Coach',
+    'blueprint.generating': 'Genereren...',
+    'blueprint.calculatedUsing': 'Berekend met',
+    'blueprint.templateData': 'Gebruikt sjabloongegevens',
+    'blueprint.welcome': 'Welkom bij SoulSync!',
+    'blueprint.onboardingMessage': 'Laten we je Ziel Blauwdruk maken via ons onboarding proces.',
+    'blueprint.saved': 'Blauwdruk opgeslagen',
+    'blueprint.savedDescription': 'Je Ziel Blauwdruk is succesvol bijgewerkt',
+    'blueprint.errorSaving': 'Fout bij opslaan blauwdruk',
+    'blueprint.errorLoading': 'Fout bij laden blauwdruk',
+    'blueprint.regenerating': 'Blauwdruk Regenereren',
+    'blueprint.regeneratingDescription': 'We berekenen je kosmische profiel. Dit kan even duren...',
+    'blueprint.generated': 'Blauwdruk gegenereerd',
+    'blueprint.generatedDescription': 'Je Ziel Blauwdruk is succesvol geregenereerd en opgeslagen',
+    'blueprint.errorGenerating': 'Fout bij opslaan gegenereerde blauwdruk',
+    'blueprint.realCalculations': 'Echte Berekeningen',
+    'blueprint.partialData': 'Gedeeltelijke Gegevens',
+    'blueprint.templateDataBadge': 'Sjabloon Gegevens',
+    
+    // Blueprint Sections
+    'blueprint.overview': 'Overzicht',
+    'blueprint.mbti': 'MBTI',
+    'blueprint.humanDesign': 'Human Design',
+    'blueprint.bashar': 'Bashar Suite',
+    'blueprint.numerology': 'Numerologie',
+    'blueprint.western': 'Westerse Astrologie',
+    'blueprint.chinese': 'Chinese Astrologie',
+    'blueprint.energyIdentity': 'Energie & Identiteit',
+    'blueprint.westernAstrology': 'Westerse Astrologie',
+    'blueprint.chineseAstrology': 'Chinese Astrologie',
+    'blueprint.novice': 'Beginner',
+    'blueprint.amateur': 'Amateur',
+    'blueprint.pro': 'Pro',
     
     // Coach Page
     'coach.title': 'Ziel AI',
@@ -241,7 +330,8 @@ const translations = {
     'close': 'Sluiten',
     'next': 'Volgende',
     'previous': 'Vorige',
-    'continue': 'Doorgaan'
+    'continue': 'Doorgaan',
+    'send': 'Versturen'
   }
 };
 

@@ -1,155 +1,86 @@
 
-import { useState, useCallback, useEffect } from "react";
-import { aiCoachService, AICoachResponse, AgentType } from "@/services/ai-coach-service";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
+import { useState, useEffect } from "react";
+import { aiCoachService, AgentType } from "@/services/ai-coach-service";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export interface Message {
   id: string;
   content: string;
-  sender: "user" | "ai";
+  sender: "user" | "assistant";
   timestamp: Date;
   agentType?: AgentType;
 }
 
-export function useAICoach() {
+export const useAICoach = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [sessionId, setSessionId] = useState<string>("");
   const [currentAgent, setCurrentAgent] = useState<AgentType>("guide");
-  const [conversationContext, setConversationContext] = useState<string>("");
-  const { toast } = useToast();
-  const { user } = useAuth();
+  const [currentSessionId] = useState(() => aiCoachService.createNewSession());
+  const { language } = useLanguage();
 
-  // Initialize session ID
-  useEffect(() => {
-    if (!sessionId) {
-      setSessionId(aiCoachService.createNewSession());
-    }
-  }, [sessionId]);
+  const sendMessage = async (content: string) => {
+    if (!content.trim()) return;
 
-  // Build conversation context from recent messages
-  const buildContext = useCallback((messages: Message[]) => {
-    const recentMessages = messages.slice(-6); // Last 6 messages for context
-    return recentMessages.map(msg => 
-      `${msg.sender === "user" ? "User" : "Assistant"}: ${msg.content}`
-    ).join("\n");
-  }, []);
-
-  // Create a new session
-  const resetConversation = useCallback(() => {
-    setMessages([]);
-    setSessionId(aiCoachService.createNewSession());
-    setConversationContext("");
-  }, []);
-
-  // Switch agent type with context preservation
-  const switchAgent = useCallback((agentType: AgentType) => {
-    const previousAgent = currentAgent;
-    setCurrentAgent(agentType);
-    
-    // Build context from recent conversation
-    const context = buildContext(messages);
-    setConversationContext(context);
-    
-    // Add a system message to indicate the switch with context
-    const systemMessage: Message = {
-      id: `system_${Date.now()}`,
-      content: `Switched to ${
-        agentType === "coach" ? "Soul Coach" : 
-        agentType === "guide" ? "Soul Guide" : 
-        "Soul Companion"
-      } mode. Your conversation context has been preserved.`,
-      sender: "ai",
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      content,
+      sender: "user",
       timestamp: new Date(),
-      agentType,
+      agentType: currentAgent,
     };
-    
-    setMessages((prev) => [...prev, systemMessage]);
-    
-    // Show toast notification
-    toast({
-      title: "Agent Switch",
-      description: `Now chatting with your ${
-        agentType === "coach" ? "Soul Coach" : 
-        agentType === "guide" ? "Soul Guide" : 
-        "Soul Companion"
-      }. Your conversation context is preserved.`,
-    });
-  }, [currentAgent, messages, buildContext, toast]);
 
-  // Send a message to the AI Coach
-  const sendMessage = useCallback(
-    async (content: string, agentType?: AgentType) => {
-      if (!content.trim() || !user) return;
+    setMessages(prev => [...prev, userMessage]);
+    setIsLoading(true);
 
-      const activeAgent = agentType || currentAgent;
+    try {
+      const response = await aiCoachService.sendMessage(
+        content,
+        currentSessionId,
+        true,
+        currentAgent,
+        language // Pass the current language
+      );
 
-      try {
-        // Add user message to state
-        const userMessage: Message = {
-          id: Date.now().toString(),
-          content,
-          sender: "user",
-          timestamp: new Date(),
-          agentType: activeAgent,
-        };
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: response.response,
+        sender: "assistant",
+        timestamp: new Date(),
+        agentType: currentAgent,
+      };
 
-        setMessages((prev) => [...prev, userMessage]);
-        setIsLoading(true);
+      setMessages(prev => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error("Error sending message:", error);
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: language === 'nl' ? "Sorry, er is een fout opgetreden. Probeer het later opnieuw." : "Sorry, there was an error. Please try again later.",
+        sender: "assistant",
+        timestamp: new Date(),
+        agentType: currentAgent,
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-        // Include conversation context for agent switches
-        const messageWithContext = conversationContext 
-          ? `Previous conversation context:\n${conversationContext}\n\nCurrent message: ${content}`
-          : content;
+  const resetConversation = () => {
+    setMessages([]);
+  };
 
-        // Call the AI Coach service
-        const response = await aiCoachService.sendMessage(
-          messageWithContext, 
-          sessionId, 
-          true, 
-          activeAgent
-        );
-
-        // Clear context after first message with new agent
-        if (conversationContext) {
-          setConversationContext("");
-        }
-
-        // Add AI response to state
-        const aiMessage: Message = {
-          id: `ai_${Date.now().toString()}`,
-          content: response.response,
-          sender: "ai",
-          timestamp: new Date(),
-          agentType: activeAgent,
-        };
-
-        setMessages((prev) => [...prev, aiMessage]);
-      } catch (error) {
-        console.error("Error sending message to AI Coach:", error);
-        toast({
-          title: "Error",
-          description:
-            error instanceof Error
-              ? error.message
-              : "Failed to get response from Soul Coach",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [sessionId, user, toast, currentAgent, conversationContext]
-  );
+  const switchAgent = (newAgent: AgentType) => {
+    setCurrentAgent(newAgent);
+    // Optionally reset conversation when switching agents
+    // resetConversation();
+  };
 
   return {
     messages,
     isLoading,
     sendMessage,
     resetConversation,
-    sessionId,
     currentAgent,
     switchAgent,
   };
-}
+};

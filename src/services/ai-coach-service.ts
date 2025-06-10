@@ -17,7 +17,8 @@ export const aiCoachService = {
     message: string,
     sessionId: string = "default",
     includeBlueprint: boolean = true,
-    agentType: AgentType = "guide"
+    agentType: AgentType = "guide",
+    language: string = "en"
   ): Promise<AICoachResponse> {
     try {
       const { data: authData } = await supabase.auth.getUser();
@@ -38,6 +39,7 @@ export const aiCoachService = {
           includeBlueprint,
           agentType,
           systemPrompt, // Pass the generated prompt
+          language, // Pass the language
         },
       });
 

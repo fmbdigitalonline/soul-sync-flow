@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message, userId, sessionId, includeBlueprint, agentType, systemPrompt } = await req.json();
+    const { message, userId, sessionId, includeBlueprint, agentType, systemPrompt, language = 'en' } = await req.json();
 
     console.log('AI Coach request:', {
       agentType,
@@ -20,35 +20,54 @@ serve(async (req) => {
       userId: userId?.substring(0, 8) + '...',
       sessionId,
       includeBlueprint,
-      hasCustomPrompt: !!systemPrompt
+      hasCustomPrompt: !!systemPrompt,
+      language
     });
 
     const openAIKey = Deno.env.get('OPENAI_API_KEY');
     if (!openAIKey) {
-      throw new Error('OpenAI API key not configured');
+      const errorMessage = language === 'nl' ? 'OpenAI API sleutel niet geconfigureerd' : 'OpenAI API key not configured';
+      throw new Error(errorMessage);
     }
 
     // Use custom system prompt if provided, otherwise fall back to default
-    const getSystemPrompt = (agentType: string) => {
+    const getSystemPrompt = (agentType: string, language: string) => {
       if (systemPrompt) {
         return systemPrompt;
       }
 
+      // Language-specific responses
+      const isNL = language === 'nl';
+      
       // Fallback to basic prompts if no custom prompt provided
       const baseContext = includeBlueprint 
-        ? "You have access to the user's Soul Blueprint which includes their astrological chart, personality insights, and life patterns. Use this information to provide personalized guidance."
-        : "Provide thoughtful guidance based on the conversation.";
+        ? (isNL ? "Je hebt toegang tot de Ziel Blauwdruk van de gebruiker die hun astrologische kaart, persoonlijkheidsinzichten en levenspatronen bevat. Gebruik deze informatie om gepersonaliseerde begeleiding te bieden." 
+                : "You have access to the user's Soul Blueprint which includes their astrological chart, personality insights, and life patterns. Use this information to provide personalized guidance.")
+        : (isNL ? "Bied doordachte begeleiding gebaseerd op het gesprek." 
+                : "Provide thoughtful guidance based on the conversation.");
 
       switch (agentType) {
         case 'coach':
-          return `You are the Soul Coach, focused EXCLUSIVELY on productivity and goal achievement. ${baseContext}
+          return isNL 
+            ? `Je bent de Ziel Coach, EXCLUSIEF gericht op productiviteit en het bereiken van doelen. ${baseContext}
+
+DOMEIN: Productiviteit, doelen, verantwoording, actie planning, tijdbeheer.
+STIJL: Direct, gestructureerd, actiegericht. Eindig altijd met concrete volgende stappen.
+GRENZEN: GA NIET in op relaties, emoties, of spirituele onderwerpen.`
+            : `You are the Soul Coach, focused EXCLUSIVELY on productivity and goal achievement. ${baseContext}
 
 DOMAIN: Productivity, goals, accountability, action planning, time management.
 STYLE: Direct, structured, action-oriented. Always end with concrete next steps.
 BOUNDARIES: Do NOT venture into relationships, emotions, or spiritual topics.`;
 
         case 'guide':
-          return `You are the Soul Guide, focused EXCLUSIVELY on personal growth and life wisdom. ${baseContext}
+          return isNL 
+            ? `Je bent de Ziel Gids, EXCLUSIEF gericht op persoonlijke groei en levenswijsheid. ${baseContext}
+
+DOMEIN: Zelfbegrip, emoties, relaties, levensbetekenis, spirituele groei.
+STIJL: Reflectief, validatie, wijsheid-gericht. Creëer ruimte voor diepere verkenning.
+GRENZEN: Geef GEEN productiviteitsadvies of doelstellingsstrategieën.`
+            : `You are the Soul Guide, focused EXCLUSIVELY on personal growth and life wisdom. ${baseContext}
 
 DOMAIN: Self-understanding, emotions, relationships, life meaning, spiritual growth.
 STYLE: Reflective, validating, wisdom-focused. Create space for deeper exploration.
@@ -56,7 +75,13 @@ BOUNDARIES: Do NOT give productivity advice or goal-setting strategies.`;
 
         case 'blend':
         default:
-          return `You are the Soul Companion, seamlessly integrating ALL aspects of life. ${baseContext}
+          return isNL 
+            ? `Je bent de Ziel Metgezel, die naadloos ALLE aspecten van het leven integreert. ${baseContext}
+
+AANPAK: Geen domeinscheiding. Behandel productiviteit als spirituele praktijk. Verbind doelen met betekenis.
+STIJL: Vloeiend mengsel van actiegericht coachen met reflectieve begeleiding.
+INTEGRATIE: Help gebruikers doelen te bereiken terwijl ze authentiek blijven voor hun innerlijke wijsheid.`
+            : `You are the Soul Companion, seamlessly integrating ALL aspects of life. ${baseContext}
 
 APPROACH: No domain separation. Treat productivity as spiritual practice. Connect goals with meaning.
 STYLE: Fluidly blend action-oriented coaching with reflective guidance.
@@ -75,7 +100,7 @@ INTEGRATION: Help users achieve goals while staying authentic to their inner wis
         messages: [
           {
             role: 'system',
-            content: getSystemPrompt(agentType || 'guide')
+            content: getSystemPrompt(agentType || 'guide', language)
           },
           {
             role: 'user',
@@ -90,14 +115,16 @@ INTEGRATION: Help users achieve goals while staying authentic to their inner wis
     if (!response.ok) {
       const errorData = await response.text();
       console.error('OpenAI API error:', errorData);
-      throw new Error(`OpenAI API error: ${response.status}`);
+      const errorMessage = language === 'nl' ? `OpenAI API fout: ${response.status}` : `OpenAI API error: ${response.status}`;
+      throw new Error(errorMessage);
     }
 
     const data = await response.json();
     const aiResponse = data.choices[0]?.message?.content;
 
     if (!aiResponse) {
-      throw new Error('No response from OpenAI');
+      const errorMessage = language === 'nl' ? 'Geen reactie van OpenAI' : 'No response from OpenAI';
+      throw new Error(errorMessage);
     }
 
     console.log('AI Coach response generated successfully');
