@@ -54,7 +54,7 @@ export default async function handler(req, res) {
       success: true,
       data: humanDesignResult,
       timestamp: new Date().toISOString(),
-      library: 'proper-hd-methodology-v6-with-geocoding-and-validation',
+      library: 'proper-hd-methodology-v7-with-geocoding-and-validation',
       notice: 'Using proper Human Design calculation with geocoding and robust validation'
     });
 
@@ -113,19 +113,33 @@ async function calculateHumanDesignProper({ birthDate, birthTime, timezone, cele
   console.log('Raw celestialData:', JSON.stringify(celestialData, null, 2));
   console.log('Extracted personalityCelestial:', JSON.stringify(personalityCelestial, null, 2));
   
-  // ROBUST VALIDATION: Check that we have valid personality celestial data
+  // COMPREHENSIVE VALIDATION: Check that we have valid personality celestial data
   if (!personalityCelestial || typeof personalityCelestial !== 'object') {
-    throw new Error(`Invalid personality celestial data - expected object, got: ${typeof personalityCelestial}`);
+    throw new Error(`Invalid personality celestial data - expected object, got: ${typeof personalityCelestial}. Data: ${JSON.stringify(personalityCelestial)}`);
   }
   
-  // Check for essential planets
+  // Check for essential planets with detailed error reporting
   const requiredPlanets = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto'];
-  const missingPlanets = requiredPlanets.filter(planet => !personalityCelestial[planet] || typeof personalityCelestial[planet].longitude !== 'number');
+  const missingPlanets = [];
+  const invalidPlanets = [];
+  
+  requiredPlanets.forEach(planet => {
+    if (!personalityCelestial[planet]) {
+      missingPlanets.push(planet);
+    } else if (typeof personalityCelestial[planet] !== 'object' || typeof personalityCelestial[planet].longitude !== 'number') {
+      invalidPlanets.push(`${planet}: ${JSON.stringify(personalityCelestial[planet])}`);
+    }
+  });
   
   if (missingPlanets.length > 0) {
     console.error('❌ Missing essential planetary data:', missingPlanets);
     console.error('❌ Available planets:', Object.keys(personalityCelestial));
     throw new Error(`Missing essential planetary data for: ${missingPlanets.join(', ')}`);
+  }
+  
+  if (invalidPlanets.length > 0) {
+    console.error('❌ Invalid planetary data format:', invalidPlanets);
+    throw new Error(`Invalid planetary data format for: ${invalidPlanets.join(', ')}`);
   }
   
   console.log('✅ Personality celestial data validation passed');
@@ -135,12 +149,21 @@ async function calculateHumanDesignProper({ birthDate, birthTime, timezone, cele
   // Get Design time celestial data
   const designCelestial = await getAccurateDesignTimeCelestialData(designDateTime, coordinates, timezone, personalityCelestial);
   
-  // ROBUST VALIDATION: Check that we have valid design celestial data
+  // COMPREHENSIVE VALIDATION: Check that we have valid design celestial data
   if (!designCelestial || typeof designCelestial !== 'object') {
-    throw new Error(`Invalid design celestial data - expected object, got: ${typeof designCelestial}`);
+    throw new Error(`Invalid design celestial data - expected object, got: ${typeof designCelestial}. Data: ${JSON.stringify(designCelestial)}`);
   }
   
-  const missingDesignPlanets = requiredPlanets.filter(planet => !designCelestial[planet] || typeof designCelestial[planet].longitude !== 'number');
+  const missingDesignPlanets = [];
+  const invalidDesignPlanets = [];
+  
+  requiredPlanets.forEach(planet => {
+    if (!designCelestial[planet]) {
+      missingDesignPlanets.push(planet);
+    } else if (typeof designCelestial[planet] !== 'object' || typeof designCelestial[planet].longitude !== 'number') {
+      invalidDesignPlanets.push(`${planet}: ${JSON.stringify(designCelestial[planet])}`);
+    }
+  });
   
   if (missingDesignPlanets.length > 0) {
     console.error('❌ Missing essential design planetary data:', missingDesignPlanets);
@@ -148,13 +171,32 @@ async function calculateHumanDesignProper({ birthDate, birthTime, timezone, cele
     throw new Error(`Missing essential design planetary data for: ${missingDesignPlanets.join(', ')}`);
   }
   
+  if (invalidDesignPlanets.length > 0) {
+    console.error('❌ Invalid design planetary data format:', invalidDesignPlanets);
+    throw new Error(`Invalid design planetary data format for: ${invalidDesignPlanets.join(', ')}`);
+  }
+  
   console.log('✅ Design celestial data validation passed');
   
   // Step 3: Calculate gates using proper HD methodology
   console.log('🔍 About to calculate personality gates...');
+  console.log('Personality celestial data being passed:', JSON.stringify(personalityCelestial, null, 2));
+  
+  // Add extra validation right before the function call
+  if (!personalityCelestial || !personalityCelestial.sun) {
+    throw new Error(`Personality celestial data incomplete! Data: ${JSON.stringify(personalityCelestial)}`);
+  }
+  
   const personalityGates = calculateHDGatesFromCelestialData(personalityCelestial, 'personality');
   
   console.log('🔍 About to calculate design gates...');
+  console.log('Design celestial data being passed:', JSON.stringify(designCelestial, null, 2));
+  
+  // Add extra validation right before the function call
+  if (!designCelestial || !designCelestial.sun) {
+    throw new Error(`Design celestial data incomplete! Data: ${JSON.stringify(designCelestial)}`);
+  }
+  
   const designGates = calculateHDGatesFromCelestialData(designCelestial, 'design');
   
   console.log('Personality gates calculated:', personalityGates);
@@ -361,20 +403,44 @@ function calculateImprovedDesignTimeCelestialData(designDateTime, personalityCel
 // Calculate HD gates from celestial data using proper methodology with robust validation
 function calculateHDGatesFromCelestialData(celestialData, type) {
   console.log(`🔍 calculateHDGatesFromCelestialData called with type: ${type}`);
-  console.log(`🔍 Celestial data received:`, JSON.stringify(celestialData, null, 2));
+  console.log(`🔍 Raw celestial data received:`, JSON.stringify(celestialData, null, 2));
   
-  // ROBUST VALIDATION: Check input data
-  if (!celestialData || typeof celestialData !== 'object') {
+  // IMMEDIATE INPUT VALIDATION
+  if (!celestialData) {
+    throw new Error(`No celestial data provided for ${type}! Received: ${celestialData}`);
+  }
+  
+  if (typeof celestialData !== 'object') {
     throw new Error(`Invalid celestial data for ${type} - expected object, got: ${typeof celestialData}. Data: ${JSON.stringify(celestialData)}`);
   }
   
-  // Check for essential planets
-  if (!celestialData.sun || typeof celestialData.sun.longitude !== 'number') {
-    throw new Error(`Missing or invalid sun data for ${type}! Sun data: ${JSON.stringify(celestialData.sun)}`);
+  // Check for essential planets with detailed debugging
+  if (!celestialData.sun) {
+    console.error(`❌ CRITICAL: Missing sun data for ${type}!`);
+    console.error(`Available keys in celestialData:`, Object.keys(celestialData));
+    throw new Error(`Missing sun data for ${type}! Available keys: ${Object.keys(celestialData).join(', ')}`);
   }
   
-  if (!celestialData.moon || typeof celestialData.moon.longitude !== 'number') {
-    throw new Error(`Missing or invalid moon data for ${type}! Moon data: ${JSON.stringify(celestialData.moon)}`);
+  if (typeof celestialData.sun !== 'object') {
+    throw new Error(`Invalid sun data for ${type} - expected object, got: ${typeof celestialData.sun}. Sun data: ${JSON.stringify(celestialData.sun)}`);
+  }
+  
+  if (typeof celestialData.sun.longitude !== 'number') {
+    throw new Error(`Missing or invalid sun longitude for ${type}! Sun data: ${JSON.stringify(celestialData.sun)}`);
+  }
+  
+  if (!celestialData.moon) {
+    console.error(`❌ CRITICAL: Missing moon data for ${type}!`);
+    console.error(`Available keys in celestialData:`, Object.keys(celestialData));
+    throw new Error(`Missing moon data for ${type}! Available keys: ${Object.keys(celestialData).join(', ')}`);
+  }
+  
+  if (typeof celestialData.moon !== 'object') {
+    throw new Error(`Invalid moon data for ${type} - expected object, got: ${typeof celestialData.moon}. Moon data: ${JSON.stringify(celestialData.moon)}`);
+  }
+  
+  if (typeof celestialData.moon.longitude !== 'number') {
+    throw new Error(`Missing or invalid moon longitude for ${type}! Moon data: ${JSON.stringify(celestialData.moon)}`);
   }
   
   console.log(`✅ Basic validation passed for ${type} celestial data`);
