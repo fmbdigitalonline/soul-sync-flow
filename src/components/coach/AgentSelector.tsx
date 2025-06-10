@@ -2,7 +2,8 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { CosmicCard } from "@/components/ui/cosmic-card";
-import { Target, Heart, Sparkles, Separator } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { Target, Heart, Sparkles } from "lucide-react";
 import { AgentType } from "@/services/ai-coach-service";
 
 interface AgentSelectorProps {
