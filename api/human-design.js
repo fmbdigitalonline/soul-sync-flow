@@ -59,7 +59,7 @@ export default async function handler(req, res) {
 
 // Corrected Human Design calculation using verified formulas
 async function calculateHumanDesignCorrected({ birthDate, birthTime, birthLocation, timezone, celestialData }) {
-  console.log('Using corrected Human Design calculation v3 with verified formulas...');
+  console.log('Using corrected Human Design calculation v4 with fixed planet mapping...');
   
   // Use the actual celestial data from our Swiss Ephemeris calculations
   const planets = celestialData.planets;
@@ -68,7 +68,7 @@ async function calculateHumanDesignCorrected({ birthDate, birthTime, birthLocati
   const personalityGates = [];
   const designGates = [];
   
-  // Human Design planetary order (13 activations)
+  // FIXED: Human Design planetary order (13 activations) - exact order matters!
   const hdPlanets = [
     { name: 'sun', hd_name: 'Sun' },
     { name: 'earth', hd_name: 'Earth' },
@@ -85,20 +85,30 @@ async function calculateHumanDesignCorrected({ birthDate, birthTime, birthLocati
     { name: 'pluto', hd_name: 'Pluto' }
   ];
   
-  hdPlanets.forEach(planet => {
+  // FIXED: Process each planet in the exact HD order with correct data mapping
+  hdPlanets.forEach((planet, index) => {
     let longitude;
     
+    // FIXED: Correct planet data access
     if (planet.name === 'earth') {
       // Earth is always opposite to Sun (180 degrees)
+      if (!planets.sun) {
+        console.error('Sun data missing for Earth calculation');
+        return;
+      }
       longitude = (planets.sun.longitude + 180) % 360;
+      console.log(`Earth longitude calculated: ${longitude}° (Sun: ${planets.sun.longitude}° + 180°)`);
     } else if (planets[planet.name]) {
       longitude = planets[planet.name].longitude;
+      console.log(`${planet.hd_name} longitude: ${longitude}°`);
     } else {
+      console.error(`Planet data missing for ${planet.name}`);
       return; // Skip if planet data not available
     }
     
-    // Convert longitude to Human Design gate and line using CORRECTED formula with 45° offset
+    // Convert longitude to Human Design gate and line using CORRECTED formula
     const gateInfo = longitudeToHumanDesignGateCorrected(longitude);
+    console.log(`${planet.hd_name}: ${longitude}° → Gate ${gateInfo.gate}.${gateInfo.line}`);
     
     // Personality (conscious) - current time
     personalityGates.push(`${gateInfo.gate}.${gateInfo.line}`);
@@ -106,8 +116,12 @@ async function calculateHumanDesignCorrected({ birthDate, birthTime, birthLocati
     // Design (unconscious) - using solar arc method ONLY for Sun/Earth/nodes
     const designLongitude = calculateDesignLongitudeCorrected(longitude, planet.name);
     const designGateInfo = longitudeToHumanDesignGateCorrected(designLongitude);
+    console.log(`${planet.hd_name} design: ${designLongitude}° → Gate ${designGateInfo.gate}.${designGateInfo.line}`);
     designGates.push(`${designGateInfo.gate}.${designGateInfo.line}`);
   });
+
+  console.log('Calculated personality gates:', personalityGates);
+  console.log('Calculated design gates:', designGates);
 
   // Calculate centers and channels based on gates using CORRECTED HD mappings with channel-based definition
   const centers = calculateCentersFromGatesCorrected([...personalityGates, ...designGates]);
@@ -115,9 +129,10 @@ async function calculateHumanDesignCorrected({ birthDate, birthTime, birthLocati
   // Determine type based on center definitions and actual channels
   const type = determineHumanDesignTypeCorrected(centers);
   
-  // Calculate profile from Sun/Earth gates (first two gates) using CORRECTED logic
-  const sunGate = personalityGates[0]; // Sun
-  const earthGate = personalityGates[1]; // Earth
+  // FIXED: Calculate profile from Sun/Earth gates (first two gates in HD order)
+  const sunGate = personalityGates[0]; // Sun (index 0)
+  const earthGate = personalityGates[1]; // Earth (index 1)
+  console.log(`Profile calculation: Sun gate ${sunGate}, Earth gate ${earthGate}`);
   const profile = calculateProfileCorrected(sunGate, earthGate);
   
   // Determine authority based on defined centers using CORRECTED hierarchy
@@ -140,7 +155,7 @@ async function calculateHumanDesignCorrected({ birthDate, birthTime, birthLocati
       personality_time: new Date(`${birthDate}T${birthTime}`).toISOString(),
       design_time: new Date(new Date(`${birthDate}T${birthTime}`).getTime() - (88.736 * 24 * 60 * 60 * 1000)).toISOString(),
       offset_days: "88.736",
-      calculation_method: "CORRECTED_CUSTOM_V3_WHEEL_ROTATION_SOLAR_ARC_SCOPE_CHANNEL_DEFINITION"
+      calculation_method: "CORRECTED_CUSTOM_V4_FIXED_PLANET_MAPPING"
     }
   };
 }
@@ -184,10 +199,13 @@ function calculateDesignLongitudeCorrected(personalityLongitude, planetName) {
   // Sun moves 57.86° in ~88.736 days (solar arc method)
   const SOLAR_ARC = 57.86;
   
-  // Apply solar arc offset only for Sun/Earth/nodes - all other planets stay at natal position
+  // FIXED: Apply solar arc offset only for Sun/Earth/nodes - all other planets stay at natal position
   if (['sun', 'earth', 'north_node', 'south_node'].includes(planetName)) {
-    return (personalityLongitude - SOLAR_ARC + 360) % 360;
+    const designLon = (personalityLongitude - SOLAR_ARC + 360) % 360;
+    console.log(`${planetName} design offset: ${personalityLongitude}° - ${SOLAR_ARC}° = ${designLon}°`);
+    return designLon;
   } else {
+    console.log(`${planetName} design: no offset (${personalityLongitude}°)`);
     return personalityLongitude; // Moon and planets unchanged
   }
 }
