@@ -75,8 +75,8 @@ async function calculateHumanDesignProper({ birthDate, birthTime, birthLocation,
   console.log('Sun longitude:', personalityCelestial?.sun?.longitude);
   console.log('Moon longitude:', personalityCelestial?.moon?.longitude);
   
-  // IMPROVED: Use Vercel ephemeris API for accurate Design time celestial data
-  const designCelestial = await getAccurateDesignTimeCelestialData(designDateTime, birthLocation, timezone, personalityCelestial);
+  // FIXED: Pass celestialData instead of birthLocation to get proper coordinates
+  const designCelestial = await getAccurateDesignTimeCelestialData(designDateTime, celestialData, timezone, personalityCelestial);
   
   // Step 3: Calculate gates using proper HD methodology
   const personalityGates = calculateHDGatesFromCelestialData(personalityCelestial, 'personality');
@@ -115,8 +115,8 @@ async function calculateHumanDesignProper({ birthDate, birthTime, birthLocation,
   };
 }
 
-// IMPROVED: Use Vercel ephemeris API for accurate Design Time celestial data
-async function getAccurateDesignTimeCelestialData(designDateTime, birthLocation, timezone, personalityCelestial) {
+// FIXED: Use celestialData to get proper coordinates for the Vercel ephemeris API
+async function getAccurateDesignTimeCelestialData(designDateTime, celestialData, timezone, personalityCelestial) {
   console.log('🔍 Getting accurate Design time celestial data via Vercel ephemeris API...');
   
   try {
@@ -124,7 +124,16 @@ async function getAccurateDesignTimeCelestialData(designDateTime, birthLocation,
     const designDateStr = designDateTime.toISOString().split('T')[0];
     const designTimeStr = designDateTime.toISOString().split('T')[1].substring(0, 8);
     
-    console.log(`🔍 Calling Vercel ephemeris API for Design time: ${designDateStr} ${designTimeStr} at ${birthLocation}`);
+    // FIXED: Use coordinates from celestialData instead of birth location string
+    const coordinates = celestialData.timezone_info?.coordinates || celestialData.coordinates;
+    
+    console.log(`🔍 Calling Vercel ephemeris API for Design time: ${designDateStr} ${designTimeStr}`);
+    console.log(`🔍 Using coordinates: ${coordinates}`);
+    
+    if (!coordinates) {
+      console.warn('⚠️ No coordinates found in celestialData, falling back to approximation');
+      throw new Error('No coordinates available for ephemeris lookup');
+    }
     
     // Call our Vercel ephemeris API for the Design time
     const ephemerisResponse = await fetch('https://soul-sync-flow.vercel.app/api/ephemeris', {
@@ -134,7 +143,7 @@ async function getAccurateDesignTimeCelestialData(designDateTime, birthLocation,
       },
       body: JSON.stringify({
         datetime: `${designDateStr}T${designTimeStr}.000Z`,
-        coordinates: birthLocation // Assuming coordinates are provided or will be geocoded
+        coordinates: coordinates // Now using proper "lat,lon" format
       })
     });
     
@@ -212,7 +221,7 @@ function transformEphemerisResponse(ephemerisData) {
   return celestialData;
 }
 
-// FIXED: Improved approximation fallback with orbital variations - NOW USES PERSONALITY DATA
+// FIXED: Now properly uses personality celestial data as the starting point
 function calculateImprovedDesignTimeCelestialData(designDateTime, personalityCelestial) {
   console.log('🔄 Using improved approximation with orbital variations for Design time...');
   console.log('🔍 Starting with personality celestial data:', personalityCelestial);
