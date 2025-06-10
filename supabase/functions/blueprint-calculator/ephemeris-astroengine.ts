@@ -120,7 +120,7 @@ export interface HousesAndAngles {
 
 /**
  * Calculate planetary positions using CORRECTED astronomical calculations
- * CRITICAL FIX: Proper date handling for accurate planetary positions
+ * CRITICAL FIX: Proper AstroTime creation from UTC components
  */
 export async function calculatePlanetaryPositionsWithAstro(
   date: string,
@@ -162,22 +162,21 @@ export async function calculatePlanetaryPositionsWithAstro(
       throw new Error(`Failed to geocode location: ${location}`);
     }
     
-    // CRITICAL FIX: Create proper UTC date for Paramaribo
-    console.log(`Creating date for: ${year}-${month}-${day} ${hour}:${minute} in timezone ${timezone}`);
+    // CRITICAL FIX: Create proper UTC components for AstroTime
+    console.log(`Creating UTC components for: ${year}-${month}-${day} ${hour}:${minute} in timezone ${timezone}`);
     
-    let utcDate: Date;
+    let utcYear: number, utcMonth: number, utcDay: number, utcHour: number, utcMinute: number;
     
     if (timezone === 'America/Paramaribo' || timezone === 'America/Suriname') {
       // CORRECTED: Paramaribo is UTC-3, so to convert local time to UTC, we ADD 3 hours
-      // But we need to use Date.UTC to create the date properly
       console.log(`Converting Paramaribo time ${hour}:${minute} to UTC by adding 3 hours`);
       
-      // Create UTC date directly using Date.UTC constructor to avoid timezone issues
-      // Local time 22:00 + 3 hours = 01:00 UTC next day
-      let utcHour = hour + 3;
-      let utcDay = day;
-      let utcMonth = month;
-      let utcYear = year;
+      // Convert local time to UTC components
+      utcHour = hour + 3;
+      utcDay = day;
+      utcMonth = month;
+      utcYear = year;
+      utcMinute = minute;
       
       // Handle day overflow
       if (utcHour >= 24) {
@@ -196,24 +195,21 @@ export async function calculatePlanetaryPositionsWithAstro(
         }
       }
       
-      // Use Date.UTC to create proper UTC timestamp
-      utcDate = new Date(Date.UTC(utcYear, utcMonth - 1, utcDay, utcHour, minute, 0));
-      console.log(`UTC date created: ${utcDate.toISOString()}`);
+      console.log(`UTC components: ${utcYear}-${utcMonth}-${utcDay} ${utcHour}:${utcMinute}`);
     } else {
-      // For other timezones, use standard conversion
-      const localDate = new Date(year, month - 1, day, hour, minute, 0);
-      utcDate = new Date(localDate.getTime() - (localDate.getTimezoneOffset() * 60000));
+      // For other timezones, use the provided values as UTC
+      utcYear = year;
+      utcMonth = month;
+      utcDay = day;
+      utcHour = hour;
+      utcMinute = minute;
     }
     
-    console.log(`AstroEngine: Final UTC date: ${utcDate.toISOString()}`);
+    // CRITICAL FIX: Create AstroTime from UTC components using the correct method
+    console.log(`Creating AstroTime from UTC components: ${utcYear}-${utcMonth}-${utcDay} ${utcHour}:${utcMinute}`);
     
-    // Validate the date is reasonable
-    if (utcDate.getFullYear() < 1900 || utcDate.getFullYear() > 2100) {
-      throw new Error(`Invalid year: ${utcDate.getFullYear()}`);
-    }
-    
-    // Create AstroTime from the properly converted UTC date
-    const astroTime = Astronomy.MakeTime(utcDate);
+    // Use the astronomy engine's date constructor that takes individual components
+    const astroTime = new Astronomy.AstroTime(utcYear, utcMonth, utcDay, utcHour, utcMinute, 0);
     
     // Validate that astroTime was created properly
     if (!astroTime || typeof astroTime.tt !== 'number') {
@@ -406,29 +402,29 @@ export async function calculatePlanetaryPositionsWithAstro(
     }
     
     // Add metadata
-    positions["timestamp"] = utcDate.getTime();
-    positions["source"] = "astronomy_engine_corrected_timezone";
+    positions["timestamp"] = Date.now();
+    positions["source"] = "astronomy_engine_fixed_astrotime";
     positions["julian_date"] = jd;
     positions["observer"] = {
       latitude: coords.latitude,
       longitude: coords.longitude
     };
-    positions["calculation_method"] = "ecliptic_longitude_with_corrected_timezone";
+    positions["calculation_method"] = "astrotime_from_utc_components";
     
     // Add debug info for troubleshooting
     positions["debug_info"] = {
       input_date: date,
       input_time: time,
       input_timezone: timezone,
-      utc_date_created: utcDate.toISOString(),
+      utc_components: { utcYear, utcMonth, utcDay, utcHour, utcMinute },
       julian_date: jd,
       expected_jd: expectedJD,
       jd_difference: Math.abs(jd - expectedJD),
-      year_validation: utcDate.getFullYear() === 1978,
-      month_validation: utcDate.getMonth() + 1 === 2
+      year_validation: utcYear === 1978,
+      month_validation: utcMonth === 2
     };
     
-    console.log("✅ Corrected astronomical calculations completed successfully");
+    console.log("✅ Fixed astronomical calculations completed successfully");
     return positions;
   } catch (error) {
     console.error("Error in calculatePlanetaryPositionsWithAstro:", error);
