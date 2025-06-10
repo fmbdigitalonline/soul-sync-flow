@@ -68,29 +68,86 @@ export default async function handler(req, res) {
   }
 }
 
-// Geocode location using OpenStreetMap/Nominatim (free service)
+// Enhanced geocoding using Google Maps Geocoding API
 async function geocodeLocation(locationName) {
+  console.log(`🔍 Starting Google geocoding for: ${locationName}`);
+  
+  // Check if we have a Google API key from environment
+  const googleApiKey = process.env.GOOGLE_MAPS_API_KEY;
+  
+  if (!googleApiKey) {
+    console.warn('⚠️ No Google Maps API key found, falling back to Nominatim');
+    return await tryNominatimGeocoding(locationName);
+  }
+  
   try {
-    console.log(`🔍 Geocoding location: ${locationName}`);
+    const encodedLocation = encodeURIComponent(locationName);
+    const googleUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedLocation}&key=${googleApiKey}`;
+    
+    console.log(`🔍 Calling Google Geocoding API for: ${locationName}`);
+    
+    const response = await fetch(googleUrl);
+    
+    if (!response.ok) {
+      throw new Error(`Google API returned ${response.status}: ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    
+    console.log(`🔍 Google API response status: ${data.status}`);
+    
+    if (data.status === 'OK' && data.results && data.results[0]) {
+      const result = data.results[0];
+      const { lat, lng } = result.geometry.location;
+      const coordinates = `${lat},${lng}`;
+      
+      console.log(`✅ Google geocoded "${locationName}" to: ${coordinates}`);
+      console.log(`📍 Formatted address: ${result.formatted_address}`);
+      
+      return coordinates;
+    } else if (data.status === 'ZERO_RESULTS') {
+      console.warn(`⚠️ Google found no results for: ${locationName}`);
+      return null;
+    } else {
+      console.error(`❌ Google geocoding failed with status: ${data.status}`);
+      if (data.error_message) {
+        console.error(`❌ Error message: ${data.error_message}`);
+      }
+      return null;
+    }
+    
+  } catch (error) {
+    console.error(`❌ Google geocoding error for ${locationName}:`, error.message);
+    
+    // Fallback to Nominatim if Google fails
+    console.log('🔄 Falling back to OpenStreetMap Nominatim...');
+    return await tryNominatimGeocoding(locationName);
+  }
+}
+
+// Fallback geocoding using OpenStreetMap Nominatim
+async function tryNominatimGeocoding(locationName) {
+  try {
+    console.log(`🔍 Trying Nominatim geocoding for: ${locationName}`);
     
     const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationName)}&limit=1`);
     
     if (!response.ok) {
-      throw new Error(`Geocoding API returned ${response.status}`);
+      throw new Error(`Nominatim API returned ${response.status}`);
     }
     
     const data = await response.json();
     
     if (data && data[0] && data[0].lat && data[0].lon) {
       const coordinates = `${data[0].lat},${data[0].lon}`;
-      console.log(`✅ Geocoded ${locationName} to: ${coordinates}`);
+      console.log(`✅ Nominatim geocoded ${locationName} to: ${coordinates}`);
       return coordinates;
     }
     
-    console.error(`❌ No geocoding results for: ${locationName}`);
+    console.error(`❌ No Nominatim results for: ${locationName}`);
     return null;
   } catch (error) {
-    console.error(`❌ Geocoding error for ${locationName}:`, error);
+    console.error(`❌ Nominatim geocoding error for ${locationName}:`, error);
     return null;
   }
 }
