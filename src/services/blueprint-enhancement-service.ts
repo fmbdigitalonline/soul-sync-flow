@@ -1,4 +1,3 @@
-
 import { BlueprintData } from "@/services/blueprint-service";
 import { EnhancedBlueprintData } from "@/types/blueprint-enhanced";
 
@@ -170,16 +169,19 @@ export class BlueprintEnhancementService {
     return match ? `${match[1]}°` : null;
   }
 
-  private static getDefinedCenters(centers: Record<string, any>): string[] {
-    return Object.entries(centers)
-      .filter(([_, center]: [string, any]) => center.defined)
+  private static getDefinedCenters(centers: Record<string, any> | undefined | null): string[] {
+    // Handle null/undefined centers by providing empty object as fallback
+    const safeCenters = centers || {};
+    return Object.entries(safeCenters)
+      .filter(([_, center]: [string, any]) => center?.defined)
       .map(([name, _]) => name);
   }
 
-  private static getChannelsFromCenters(centers: Record<string, any>): string[] {
+  private static getChannelsFromCenters(centers: Record<string, any> | undefined | null): string[] {
+    const safeCenters = centers || {};
     const allChannels: string[] = [];
-    Object.values(centers).forEach((center: any) => {
-      if (center.channels) {
+    Object.values(safeCenters).forEach((center: any) => {
+      if (center?.channels) {
         allChannels.push(...center.channels);
       }
     });
@@ -256,12 +258,13 @@ export class BlueprintEnhancementService {
     return [];
   }
 
-  private static analyzeCenters(centers: Record<string, any>) {
+  private static analyzeCenters(centers: Record<string, any> | undefined | null) {
+    const safeCenters = centers || {};
     const analyzed: Record<string, { defined: boolean; percentage: number }> = {};
-    Object.entries(centers).forEach(([name, center]: [string, any]) => {
+    Object.entries(safeCenters).forEach(([name, center]: [string, any]) => {
       analyzed[name] = {
-        defined: center.defined || false,
-        percentage: center.defined ? 100 : 0
+        defined: center?.defined || false,
+        percentage: center?.defined ? 100 : 0
       };
     });
     return analyzed;
