@@ -615,5 +615,3 @@ class BlueprintService {
 import { supabase } from '@/integrations/supabase/client';
 export const blueprintService = new BlueprintService({ supabase });
 export default BlueprintService;
-
-}
