@@ -14,34 +14,26 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { birthDate, birthTime, birthLocation, timezone, celestialData } = req.body;
+    const { birthDate, birthTime, birthLocation, timezone, celestialData, coordinates } = req.body;
 
     console.log('Human Design calculation request:', {
       birthDate,
       birthTime,
       birthLocation,
-      timezone
+      timezone,
+      coordinates
     });
 
     // Validate required data
-    if (!birthDate || !birthTime || !birthLocation || !celestialData) {
+    if (!birthDate || !birthTime || !birthLocation || !celestialData || !coordinates) {
       return res.status(400).json({
-        error: 'Missing required data: birthDate, birthTime, birthLocation, and celestialData are required'
+        error: 'Missing required data: birthDate, birthTime, birthLocation, celestialData, and coordinates are required'
       });
     }
 
-    // 1. Geocode first to get coordinates!
-    const coordinates = await geocodeLocation(birthLocation);
+    console.log(`✅ Using provided coordinates: ${coordinates}`);
 
-    if (!coordinates) {
-      return res.status(400).json({
-        error: `Could not geocode location: ${birthLocation}`
-      });
-    }
-
-    console.log(`✅ Geocoded ${birthLocation} to coordinates: ${coordinates}`);
-
-    // 2. Pass coordinates to calculation
+    // Calculate Human Design using the provided coordinates
     const humanDesignResult = await calculateHumanDesignProper({
       birthDate,
       birthTime,
@@ -54,8 +46,8 @@ export default async function handler(req, res) {
       success: true,
       data: humanDesignResult,
       timestamp: new Date().toISOString(),
-      library: 'proper-hd-methodology-v7-with-geocoding-and-validation',
-      notice: 'Using proper Human Design calculation with geocoding and robust validation'
+      library: 'proper-hd-methodology-v7-with-coordinates',
+      notice: 'Using proper Human Design calculation with provided coordinates'
     });
 
   } catch (error) {
