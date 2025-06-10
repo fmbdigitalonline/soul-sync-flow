@@ -14,7 +14,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { birthDate, birthTime, birthLocation, timezone, celestialData } = req.body;
+    const { birthDate, birthTime, birthLocation, timezone, celestialData, calculation_metadata } = req.body;
 
     console.log('Human Design calculation request:', {
       birthDate,
@@ -36,7 +36,8 @@ export default async function handler(req, res) {
       birthTime,
       birthLocation,
       timezone,
-      celestialData
+      celestialData,
+      calculation_metadata
     });
 
     return res.status(200).json({
@@ -58,7 +59,7 @@ export default async function handler(req, res) {
 }
 
 // Proper Human Design calculation using correct methodology
-async function calculateHumanDesignProper({ birthDate, birthTime, birthLocation, timezone, celestialData }) {
+async function calculateHumanDesignProper({ birthDate, birthTime, birthLocation, timezone, celestialData, calculation_metadata }) {
   console.log('Using proper Human Design methodology...');
   
   // Step 1: Calculate Design Time (88.736 days or 88.36° solar arc before birth)
@@ -75,8 +76,8 @@ async function calculateHumanDesignProper({ birthDate, birthTime, birthLocation,
   console.log('Sun longitude:', personalityCelestial?.sun?.longitude);
   console.log('Moon longitude:', personalityCelestial?.moon?.longitude);
   
-  // FIXED: Pass celestialData instead of birthLocation to get proper coordinates
-  const designCelestial = await getAccurateDesignTimeCelestialData(designDateTime, celestialData, timezone, personalityCelestial);
+  // FIXED: Pass calculation_metadata instead of celestialData to get proper coordinates
+  const designCelestial = await getAccurateDesignTimeCelestialData(designDateTime, calculation_metadata, timezone, personalityCelestial);
   
   // Step 3: Calculate gates using proper HD methodology
   const personalityGates = calculateHDGatesFromCelestialData(personalityCelestial, 'personality');
@@ -115,8 +116,8 @@ async function calculateHumanDesignProper({ birthDate, birthTime, birthLocation,
   };
 }
 
-// FIXED: Use celestialData to get proper coordinates for the Vercel ephemeris API
-async function getAccurateDesignTimeCelestialData(designDateTime, celestialData, timezone, personalityCelestial) {
+// FIXED: Use calculation_metadata to get proper coordinates for the Vercel ephemeris API
+async function getAccurateDesignTimeCelestialData(designDateTime, calculation_metadata, timezone, personalityCelestial) {
   console.log('🔍 Getting accurate Design time celestial data via Vercel ephemeris API...');
   
   try {
@@ -124,30 +125,14 @@ async function getAccurateDesignTimeCelestialData(designDateTime, celestialData,
     const designDateStr = designDateTime.toISOString().split('T')[0];
     const designTimeStr = designDateTime.toISOString().split('T')[1].substring(0, 8);
     
-    // FIXED: Check multiple possible locations for coordinates in the celestialData structure
-    let coordinates = null;
-    
-    // Try different possible locations for coordinates
-    if (celestialData.timezone_info?.coordinates) {
-      coordinates = celestialData.timezone_info.coordinates;
-      console.log('🔍 Found coordinates in timezone_info:', coordinates);
-    } else if (celestialData.coordinates) {
-      coordinates = celestialData.coordinates;
-      console.log('🔍 Found coordinates in root level:', coordinates);
-    } else if (celestialData.location?.coordinates) {
-      coordinates = celestialData.location.coordinates;
-      console.log('🔍 Found coordinates in location:', coordinates);
-    } else {
-      // Debug: Log the entire celestialData structure to see what's available
-      console.log('🔍 DEBUG: Full celestialData structure:', JSON.stringify(celestialData, null, 2));
-      console.warn('⚠️ No coordinates found in any expected location in celestialData');
-    }
+    // FIXED: Get coordinates from the correct location in calculation_metadata
+    const coordinates = calculation_metadata?.timezone_info?.coordinates;
     
     console.log(`🔍 Calling Vercel ephemeris API for Design time: ${designDateStr} ${designTimeStr}`);
     console.log(`🔍 Using coordinates: ${coordinates}`);
     
     if (!coordinates) {
-      console.warn('⚠️ No coordinates found in celestialData, falling back to approximation');
+      console.warn('⚠️ No coordinates found in calculation_metadata, falling back to approximation');
       throw new Error('No coordinates available for ephemeris lookup');
     }
     
