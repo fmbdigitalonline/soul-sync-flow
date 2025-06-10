@@ -54,8 +54,8 @@ export default async function handler(req, res) {
       success: true,
       data: humanDesignResult,
       timestamp: new Date().toISOString(),
-      library: 'proper-hd-methodology-v5-with-geocoding-and-vercel-ephemeris',
-      notice: 'Using proper Human Design calculation with geocoding and Vercel ephemeris API for accurate Design Time'
+      library: 'proper-hd-methodology-v6-with-geocoding-and-validation',
+      notice: 'Using proper Human Design calculation with geocoding and robust validation'
     });
 
   } catch (error) {
@@ -110,14 +110,51 @@ async function calculateHumanDesignProper({ birthDate, birthTime, timezone, cele
   const personalityCelestial = celestialData.planets; // Access the planets object
   
   console.log('🔍 DEBUG: Personality celestial data received:');
+  console.log('Raw celestialData:', JSON.stringify(celestialData, null, 2));
+  console.log('Extracted personalityCelestial:', JSON.stringify(personalityCelestial, null, 2));
+  
+  // ROBUST VALIDATION: Check that we have valid personality celestial data
+  if (!personalityCelestial || typeof personalityCelestial !== 'object') {
+    throw new Error(`Invalid personality celestial data - expected object, got: ${typeof personalityCelestial}`);
+  }
+  
+  // Check for essential planets
+  const requiredPlanets = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto'];
+  const missingPlanets = requiredPlanets.filter(planet => !personalityCelestial[planet] || typeof personalityCelestial[planet].longitude !== 'number');
+  
+  if (missingPlanets.length > 0) {
+    console.error('❌ Missing essential planetary data:', missingPlanets);
+    console.error('❌ Available planets:', Object.keys(personalityCelestial));
+    throw new Error(`Missing essential planetary data for: ${missingPlanets.join(', ')}`);
+  }
+  
+  console.log('✅ Personality celestial data validation passed');
   console.log('Sun longitude:', personalityCelestial?.sun?.longitude);
   console.log('Moon longitude:', personalityCelestial?.moon?.longitude);
   
-  // FIXED: Pass coordinates directly instead of trying to get them from calculation_metadata
+  // Get Design time celestial data
   const designCelestial = await getAccurateDesignTimeCelestialData(designDateTime, coordinates, timezone, personalityCelestial);
   
+  // ROBUST VALIDATION: Check that we have valid design celestial data
+  if (!designCelestial || typeof designCelestial !== 'object') {
+    throw new Error(`Invalid design celestial data - expected object, got: ${typeof designCelestial}`);
+  }
+  
+  const missingDesignPlanets = requiredPlanets.filter(planet => !designCelestial[planet] || typeof designCelestial[planet].longitude !== 'number');
+  
+  if (missingDesignPlanets.length > 0) {
+    console.error('❌ Missing essential design planetary data:', missingDesignPlanets);
+    console.error('❌ Available design planets:', Object.keys(designCelestial));
+    throw new Error(`Missing essential design planetary data for: ${missingDesignPlanets.join(', ')}`);
+  }
+  
+  console.log('✅ Design celestial data validation passed');
+  
   // Step 3: Calculate gates using proper HD methodology
+  console.log('🔍 About to calculate personality gates...');
   const personalityGates = calculateHDGatesFromCelestialData(personalityCelestial, 'personality');
+  
+  console.log('🔍 About to calculate design gates...');
   const designGates = calculateHDGatesFromCelestialData(designCelestial, 'design');
   
   console.log('Personality gates calculated:', personalityGates);
@@ -148,12 +185,12 @@ async function calculateHumanDesignProper({ birthDate, birthTime, timezone, cele
       personality_time: birthDateTime.toISOString(),
       design_time: designDateTime.toISOString(),
       offset_days: "88.736",
-      calculation_method: "PROPER_HD_METHODOLOGY_V5_WITH_GEOCODING_AND_VERCEL_EPHEMERIS"
+      calculation_method: "PROPER_HD_METHODOLOGY_V6_WITH_ROBUST_VALIDATION"
     }
   };
 }
 
-// FIXED: Use coordinates directly, remove calculation_metadata parameter
+// Get accurate Design time celestial data
 async function getAccurateDesignTimeCelestialData(designDateTime, coordinates, timezone, personalityCelestial) {
   console.log('🔍 Getting accurate Design time celestial data via Vercel ephemeris API...');
   
@@ -177,7 +214,7 @@ async function getAccurateDesignTimeCelestialData(designDateTime, coordinates, t
       },
       body: JSON.stringify({
         datetime: `${designDateStr}T${designTimeStr}.000Z`,
-        coordinates: coordinates // Now using geocoded coordinates directly
+        coordinates: coordinates
       })
     });
     
@@ -201,6 +238,8 @@ async function getAccurateDesignTimeCelestialData(designDateTime, coordinates, t
     
     // Transform the API response to match our expected format
     const designCelestial = transformEphemerisResponse(ephemerisData.data);
+    
+    console.log('🔍 Transformed design celestial data:', JSON.stringify(designCelestial, null, 2));
     
     return designCelestial;
     
@@ -255,7 +294,7 @@ function transformEphemerisResponse(ephemerisData) {
   return celestialData;
 }
 
-// FIXED: Now properly uses personality celestial data as the starting point
+// Improved fallback calculation with robust validation
 function calculateImprovedDesignTimeCelestialData(designDateTime, personalityCelestial) {
   console.log('🔄 Using improved approximation with orbital variations for Design time...');
   console.log('🔍 Starting with personality celestial data:', personalityCelestial);
@@ -285,13 +324,12 @@ function calculateImprovedDesignTimeCelestialData(designDateTime, personalityCel
   };
   
   Object.keys(planetMotions).forEach(planet => {
-    if (personalityCelestial[planet]) {
+    if (personalityCelestial[planet] && typeof personalityCelestial[planet].longitude === 'number') {
       const motion = planetMotions[planet];
       // Add some variation based on time of year (simplified)
       const timeVariation = Math.sin((designDateTime.getMonth() / 12) * 2 * Math.PI) * motion.variation;
       const adjustedMotion = motion.base + timeVariation;
       
-      // FIXED: Now correctly subtracts motion from the original personality longitude
       const personalityLongitude = personalityCelestial[planet].longitude;
       const designLongitude = (personalityLongitude - (adjustedMotion * daysDifference) + 360) % 360;
       
@@ -302,6 +340,8 @@ function calculateImprovedDesignTimeCelestialData(designDateTime, personalityCel
       };
       
       console.log(`🔍 ${planet}: Personality ${personalityLongitude.toFixed(3)}° → Design ${designLongitude.toFixed(3)}° (motion: ${adjustedMotion.toFixed(4)}°/day)`);
+    } else {
+      console.warn(`⚠️ Warning: Missing or invalid ${planet} data in personality celestial data`);
     }
   });
   
@@ -318,64 +358,26 @@ function calculateImprovedDesignTimeCelestialData(designDateTime, personalityCel
   return designCelestial;
 }
 
-// Calculate Design Time celestial data for all 13 bodies
-async function calculateDesignTimeCelestialData(personalityCelestial, designDateTime) {
-  const designCelestial = {};
+// Calculate HD gates from celestial data using proper methodology with robust validation
+function calculateHDGatesFromCelestialData(celestialData, type) {
+  console.log(`🔍 calculateHDGatesFromCelestialData called with type: ${type}`);
+  console.log(`🔍 Celestial data received:`, JSON.stringify(celestialData, null, 2));
   
-  // For each celestial body, calculate its position at Design Time
-  const planets = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto', 'north_node', 'south_node'];
-  
-  planets.forEach(planet => {
-    if (personalityCelestial[planet]) {
-      // Calculate the approximate position at Design Time using average daily motion
-      const dailyMotion = getPlanetDailyMotion(planet);
-      const daysDifference = 88.736;
-      const designLongitude = (personalityCelestial[planet].longitude - (dailyMotion * daysDifference) + 360) % 360;
-      
-      designCelestial[planet] = {
-        ...personalityCelestial[planet],
-        longitude: designLongitude
-      };
-      
-      console.log(`${planet}: Personality ${personalityCelestial[planet].longitude.toFixed(3)}° → Design ${designLongitude.toFixed(3)}°`);
-    }
-  });
-  
-  // Earth is always opposite to Sun
-  if (designCelestial.sun) {
-    designCelestial.earth = {
-      longitude: (designCelestial.sun.longitude + 180) % 360,
-      latitude: 0,
-      distance: 1
-    };
+  // ROBUST VALIDATION: Check input data
+  if (!celestialData || typeof celestialData !== 'object') {
+    throw new Error(`Invalid celestial data for ${type} - expected object, got: ${typeof celestialData}. Data: ${JSON.stringify(celestialData)}`);
   }
   
-  return designCelestial;
-}
-
-// Get average daily motion for each planet (degrees per day)
-function getPlanetDailyMotion(planet) {
-  const motions = {
-    sun: 0.9856,      // ~1° per day
-    moon: 13.1764,    // ~13° per day
-    mercury: 1.3833,  // Variable, average
-    venus: 1.6021,    // Variable, average
-    mars: 0.5240,     // Variable, average
-    jupiter: 0.0831,  // ~0.08° per day
-    saturn: 0.0335,   // ~0.03° per day
-    uranus: 0.0117,   // ~0.01° per day
-    neptune: 0.0061,  // ~0.006° per day
-    pluto: 0.0041,    // ~0.004° per day
-    north_node: -0.0529, // Retrograde motion
-    south_node: 0.0529   // Opposite to north node
-  };
+  // Check for essential planets
+  if (!celestialData.sun || typeof celestialData.sun.longitude !== 'number') {
+    throw new Error(`Missing or invalid sun data for ${type}! Sun data: ${JSON.stringify(celestialData.sun)}`);
+  }
   
-  return motions[planet] || 0;
-}
-
-// Calculate HD gates from celestial data using proper methodology
-function calculateHDGatesFromCelestialData(celestialData, type) {
-  console.log(`🔍 Calculating ${type} gates from celestial data:`, celestialData);
+  if (!celestialData.moon || typeof celestialData.moon.longitude !== 'number') {
+    throw new Error(`Missing or invalid moon data for ${type}! Moon data: ${JSON.stringify(celestialData.moon)}`);
+  }
+  
+  console.log(`✅ Basic validation passed for ${type} celestial data`);
   
   const gates = [];
   
@@ -397,7 +399,7 @@ function calculateHDGatesFromCelestialData(celestialData, type) {
   ];
   
   hdOrder.forEach(planet => {
-    if (earthCelestial[planet]) {
+    if (earthCelestial[planet] && typeof earthCelestial[planet].longitude === 'number') {
       const longitude = earthCelestial[planet].longitude;
       console.log(`🔍 Calculating for ${type} ${planet} with longitude: ${longitude.toFixed(3)}°`);
       
@@ -410,9 +412,16 @@ function calculateHDGatesFromCelestialData(celestialData, type) {
       });
       
       console.log(`✅ ${type} ${planet}: ${longitude.toFixed(3)}° → Gate ${gateInfo.gate}.${gateInfo.line}`);
+    } else {
+      console.warn(`⚠️ Warning: Missing or invalid ${planet} data for ${type}:`, earthCelestial[planet]);
     }
   });
   
+  if (gates.length === 0) {
+    throw new Error(`No valid gates calculated for ${type} - check celestial data format`);
+  }
+  
+  console.log(`✅ Successfully calculated ${gates.length} gates for ${type}`);
   return gates;
 }
 
