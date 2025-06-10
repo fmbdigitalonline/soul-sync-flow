@@ -14,7 +14,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    // FIXED: Remove calculation_metadata from here - it's nested inside celestialData
     const { birthDate, birthTime, birthLocation, timezone, celestialData } = req.body;
 
     console.log('Human Design calculation request:', {
@@ -31,21 +30,32 @@ export default async function handler(req, res) {
       });
     }
 
-    // Use proper Human Design calculation methodology
+    // 1. Geocode first to get coordinates!
+    const coordinates = await geocodeLocation(birthLocation);
+
+    if (!coordinates) {
+      return res.status(400).json({
+        error: `Could not geocode location: ${birthLocation}`
+      });
+    }
+
+    console.log(`✅ Geocoded ${birthLocation} to coordinates: ${coordinates}`);
+
+    // 2. Pass coordinates to calculation
     const humanDesignResult = await calculateHumanDesignProper({
       birthDate,
       birthTime,
-      birthLocation,
       timezone,
-      celestialData
+      celestialData,
+      coordinates
     });
 
     return res.status(200).json({
       success: true,
       data: humanDesignResult,
       timestamp: new Date().toISOString(),
-      library: 'proper-hd-methodology-v4-with-vercel-ephemeris',
-      notice: 'Using proper Human Design calculation with Vercel ephemeris API for accurate Design Time and corrected HD wheel'
+      library: 'proper-hd-methodology-v5-with-geocoding-and-vercel-ephemeris',
+      notice: 'Using proper Human Design calculation with geocoding and Vercel ephemeris API for accurate Design Time'
     });
 
   } catch (error) {
@@ -58,8 +68,35 @@ export default async function handler(req, res) {
   }
 }
 
+// Geocode location using OpenStreetMap/Nominatim (free service)
+async function geocodeLocation(locationName) {
+  try {
+    console.log(`🔍 Geocoding location: ${locationName}`);
+    
+    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationName)}&limit=1`);
+    
+    if (!response.ok) {
+      throw new Error(`Geocoding API returned ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    if (data && data[0] && data[0].lat && data[0].lon) {
+      const coordinates = `${data[0].lat},${data[0].lon}`;
+      console.log(`✅ Geocoded ${locationName} to: ${coordinates}`);
+      return coordinates;
+    }
+    
+    console.error(`❌ No geocoding results for: ${locationName}`);
+    return null;
+  } catch (error) {
+    console.error(`❌ Geocoding error for ${locationName}:`, error);
+    return null;
+  }
+}
+
 // Proper Human Design calculation using correct methodology
-async function calculateHumanDesignProper({ birthDate, birthTime, birthLocation, timezone, celestialData }) {
+async function calculateHumanDesignProper({ birthDate, birthTime, timezone, celestialData, coordinates }) {
   console.log('Using proper Human Design methodology...');
   
   // Step 1: Calculate Design Time (88.736 days or 88.36° solar arc before birth)
@@ -76,8 +113,8 @@ async function calculateHumanDesignProper({ birthDate, birthTime, birthLocation,
   console.log('Sun longitude:', personalityCelestial?.sun?.longitude);
   console.log('Moon longitude:', personalityCelestial?.moon?.longitude);
   
-  // FIXED: Pass celestialData.calculation_metadata instead of trying to get it from req.body
-  const designCelestial = await getAccurateDesignTimeCelestialData(designDateTime, celestialData.calculation_metadata, timezone, personalityCelestial);
+  // FIXED: Pass coordinates directly instead of trying to get them from calculation_metadata
+  const designCelestial = await getAccurateDesignTimeCelestialData(designDateTime, coordinates, timezone, personalityCelestial);
   
   // Step 3: Calculate gates using proper HD methodology
   const personalityGates = calculateHDGatesFromCelestialData(personalityCelestial, 'personality');
@@ -111,13 +148,13 @@ async function calculateHumanDesignProper({ birthDate, birthTime, birthLocation,
       personality_time: birthDateTime.toISOString(),
       design_time: designDateTime.toISOString(),
       offset_days: "88.736",
-      calculation_method: "PROPER_HD_METHODOLOGY_V4_WITH_VERCEL_EPHEMERIS_FIXED"
+      calculation_method: "PROPER_HD_METHODOLOGY_V5_WITH_GEOCODING_AND_VERCEL_EPHEMERIS"
     }
   };
 }
 
-// FIXED: Use calculation_metadata to get proper coordinates for the Vercel ephemeris API
-async function getAccurateDesignTimeCelestialData(designDateTime, calculation_metadata, timezone, personalityCelestial) {
+// FIXED: Use coordinates directly, remove calculation_metadata parameter
+async function getAccurateDesignTimeCelestialData(designDateTime, coordinates, timezone, personalityCelestial) {
   console.log('🔍 Getting accurate Design time celestial data via Vercel ephemeris API...');
   
   try {
@@ -125,15 +162,11 @@ async function getAccurateDesignTimeCelestialData(designDateTime, calculation_me
     const designDateStr = designDateTime.toISOString().split('T')[0];
     const designTimeStr = designDateTime.toISOString().split('T')[1].substring(0, 8);
     
-    // FIXED: Get coordinates from the correct location in calculation_metadata
-    const coordinates = calculation_metadata?.timezone_info?.coordinates;
-    
     console.log(`🔍 Calling Vercel ephemeris API for Design time: ${designDateStr} ${designTimeStr}`);
     console.log(`🔍 Using coordinates: ${coordinates}`);
     
     if (!coordinates) {
-      console.warn('⚠️ No coordinates found in calculation_metadata, falling back to approximation');
-      throw new Error('No coordinates available for ephemeris lookup');
+      throw new Error('No coordinates were provided for ephemeris lookup');
     }
     
     // Call our Vercel ephemeris API for the Design time
@@ -144,7 +177,7 @@ async function getAccurateDesignTimeCelestialData(designDateTime, calculation_me
       },
       body: JSON.stringify({
         datetime: `${designDateStr}T${designTimeStr}.000Z`,
-        coordinates: coordinates // Now using proper "lat,lon" format
+        coordinates: coordinates // Now using geocoded coordinates directly
       })
     });
     
