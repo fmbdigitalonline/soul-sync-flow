@@ -5,6 +5,7 @@ import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Progress } from "@/components/ui/progress";
 import { Play, Pause, RotateCcw, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface PomodoroTimerProps {
   defaultWorkMinutes?: number;
@@ -17,6 +18,8 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
   defaultBreakMinutes = 5,
   focusType = "standard"
 }) => {
+  const { t } = useLanguage();
+
   // Adjust defaults based on focus type
   const getAdjustedWorkMinutes = () => {
     switch (focusType?.toLowerCase()) {
@@ -46,16 +49,16 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
             if (isBreak) {
               // Break finished, start work session
               toast({
-                title: "Break finished!",
-                description: "Time to focus on your task.",
+                title: t('pomodoro.breakFinished'),
+                description: t('pomodoro.timeToFocus'),
               });
               setIsBreak(false);
               return getAdjustedWorkMinutes() * 60;
             } else {
               // Work session finished, start break
               toast({
-                title: "Pomodoro completed!",
-                description: "Take a short break.",
+                title: t('pomodoro.pomodoroCompleted'),
+                description: t('pomodoro.takeBreak'),
               });
               setPomodorosCompleted((prev) => prev + 1);
               setIsBreak(true);
@@ -68,7 +71,7 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
     }
 
     return () => clearInterval(interval);
-  }, [isActive, isBreak, defaultBreakMinutes, toast]);
+  }, [isActive, isBreak, defaultBreakMinutes, toast, t]);
 
   const formatTime = () => {
     const minutes = Math.floor(seconds / 60);
@@ -92,11 +95,23 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
     ? ((defaultBreakMinutes * 60 - seconds) / (defaultBreakMinutes * 60)) * 100
     : ((getAdjustedWorkMinutes() * 60 - seconds) / (getAdjustedWorkMinutes() * 60)) * 100;
 
+  const getRhythmDescription = () => {
+    switch (focusType?.toLowerCase()) {
+      case "deep focus":
+        return t('pomodoro.deepFocusRhythm');
+      case "quick bursts":
+        return t('pomodoro.quickBurstsRhythm');
+      case "standard":
+      default:
+        return t('pomodoro.standardRhythm');
+    }
+  };
+
   return (
     <CosmicCard className="p-6">
       <div className="flex flex-col items-center space-y-4">
         <h3 className="text-lg font-medium">
-          {isBreak ? "Break Time" : "Focus Timer"}
+          {isBreak ? t('pomodoro.breakTime') : t('pomodoro.focusTimer')}
         </h3>
         <div className="text-4xl font-bold">{formatTime()}</div>
         <Progress value={progress} className="w-full h-2" />
@@ -119,14 +134,10 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
         </div>
         <div className="text-sm text-muted-foreground flex items-center">
           <Clock className="h-4 w-4 mr-1" /> 
-          Pomodoros completed today: {pomodorosCompleted}
+          {t('pomodoro.pomodorosCompleted')}: {pomodorosCompleted}
         </div>
         <p className="text-xs text-muted-foreground text-center">
-          {focusType === "standard" 
-            ? "Standard 25/5 Pomodoro rhythm" 
-            : focusType === "deep focus" 
-              ? "Extended focus for deep work (40/5)" 
-              : "Quick bursts for enhanced attention (15/5)"}
+          {getRhythmDescription()}
         </p>
       </div>
     </CosmicCard>

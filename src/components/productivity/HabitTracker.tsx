@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Plus, Check, X, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Habit = {
   id: string;
@@ -20,6 +21,7 @@ interface HabitTrackerProps {
 }
 
 export const HabitTracker: React.FC<HabitTrackerProps> = ({ blueprintTraits = ["INFJ", "Projector", "Life Path 7"] }) => {
+  const { t } = useLanguage();
   const [habits, setHabits] = useState<Habit[]>([
     {
       id: "1",
@@ -126,8 +128,8 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({ blueprintTraits = ["
     setNewHabitName("");
     
     toast({
-      title: "Habit created",
-      description: `${newHabitName} added to your habit tracker.`,
+      title: t('habits.created'),
+      description: t('habits.createdDescription', { name: newHabitName }),
     });
   };
 
@@ -149,8 +151,8 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({ blueprintTraits = ["
     setHabits([...habits, newHabit]);
     
     toast({
-      title: "Suggested habit added",
-      description: `${habitName} added to your habit tracker.`,
+      title: t('habits.suggestedAdded'),
+      description: t('habits.suggestedAddedDescription', { name: habitName }),
     });
   };
 
@@ -158,18 +160,18 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({ blueprintTraits = ["
     setHabits(habits.filter(habit => habit.id !== habitId));
     
     toast({
-      title: "Habit deleted",
-      description: "The habit has been removed from your tracker.",
+      title: t('habits.deleted'),
+      description: t('habits.deletedDescription'),
     });
   };
 
   return (
     <CosmicCard className="p-6">
-      <h3 className="text-lg font-medium mb-4">Habit Tracker</h3>
+      <h3 className="text-lg font-medium mb-4">{t('habits.title')}</h3>
       
       <div className="flex space-x-2 mb-4">
         <Input
-          placeholder="Add a new habit..."
+          placeholder={t('habits.addPlaceholder')}
           value={newHabitName}
           onChange={(e) => setNewHabitName(e.target.value)}
           className="flex-1"
@@ -198,7 +200,7 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({ blueprintTraits = ["
                   <div className="flex items-center space-x-2">
                     <span className="font-medium">{habit.name}</span>
                     <Badge variant="outline" className="bg-purple-100 text-purple-800">
-                      {habit.streak} day{habit.streak !== 1 ? "s" : ""}
+                      {habit.streak} {habit.streak !== 1 ? t('habits.daysPlural') : t('habits.daysSingular')}
                     </Badge>
                   </div>
                   
@@ -245,14 +247,14 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({ blueprintTraits = ["
         </div>
       ) : (
         <p className="text-center text-muted-foreground py-6">
-          No habits added yet. Add one to get started!
+          {t('habits.noHabits')}
         </p>
       )}
       
       {getPersonalizedSuggestions().length > 0 && (
         <div className="mt-6">
           <h4 className="text-sm font-medium text-muted-foreground mb-2">
-            Aligned with your blueprint
+            {t('habits.alignedWithBlueprint')}
           </h4>
           <div className="flex flex-wrap gap-2">
             {getPersonalizedSuggestions().slice(0, 3).map((suggestion, index) => (

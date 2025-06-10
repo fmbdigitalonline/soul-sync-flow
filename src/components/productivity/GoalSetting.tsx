@@ -14,6 +14,7 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { Plus, Target, Calendar, Trash2, Star, CheckCircle2, CheckSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Goal = {
   id: string;
@@ -37,6 +38,7 @@ interface GoalSettingProps {
 export const GoalSetting: React.FC<GoalSettingProps> = ({
   blueprintTraits = ["INFJ", "Projector", "Life Path 7", "Pisces Moon"],
 }) => {
+  const { t } = useLanguage();
   const [goals, setGoals] = useState<Goal[]>([
     {
       id: "1",
@@ -85,13 +87,13 @@ export const GoalSetting: React.FC<GoalSettingProps> = ({
   // Get goal category suggestions based on blueprint
   const getCategorySuggestions = () => {
     const suggestions = [
-      { value: "personal", label: "Personal Growth" },
-      { value: "career", label: "Career & Work" },
-      { value: "health", label: "Health & Wellness" },
-      { value: "relationships", label: "Relationships" },
-      { value: "spiritual", label: "Spiritual Growth" },
-      { value: "financial", label: "Financial" },
-      { value: "creative", label: "Creative Projects" },
+      { value: "personal", label: t('goals.categoryPersonal') },
+      { value: "career", label: t('goals.categoryCareer') },
+      { value: "health", label: t('goals.categoryHealth') },
+      { value: "relationships", label: t('goals.categoryRelationships') },
+      { value: "spiritual", label: t('goals.categorySpiritual') },
+      { value: "financial", label: t('goals.categoryFinancial') },
+      { value: "creative", label: t('goals.categoryCreative') },
     ];
 
     // Prioritize certain categories based on blueprint traits
@@ -181,8 +183,8 @@ export const GoalSetting: React.FC<GoalSettingProps> = ({
     setShowNewGoalForm(false);
     
     toast({
-      title: "Goal created",
-      description: "New SMART goal has been added.",
+      title: t('goals.created'),
+      description: t('goals.createdDescription'),
     });
   };
 
@@ -212,8 +214,8 @@ export const GoalSetting: React.FC<GoalSettingProps> = ({
     setGoals(goals.filter(goal => goal.id !== goalId));
     
     toast({
-      title: "Goal deleted",
-      description: "The goal has been removed.",
+      title: t('goals.deleted'),
+      description: t('goals.deletedDescription'),
     });
   };
 
@@ -225,47 +227,47 @@ export const GoalSetting: React.FC<GoalSettingProps> = ({
   return (
     <CosmicCard className="p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-medium">SMART Goals</h3>
+        <h3 className="text-lg font-medium">{t('goals.smartGoals')}</h3>
         <Button
           onClick={() => setShowNewGoalForm(!showNewGoalForm)}
           variant="outline"
           size="sm"
         >
-          {showNewGoalForm ? "Cancel" : "Add Goal"}
+          {showNewGoalForm ? t('goals.cancel') : t('goals.addGoal')}
         </Button>
       </div>
 
       {showNewGoalForm && (
         <div className="mb-6 p-4 bg-secondary/20 rounded-lg space-y-4">
           <div>
-            <label className="text-sm font-medium">Goal Title</label>
+            <label className="text-sm font-medium">{t('goals.goalTitle')}</label>
             <Input
               value={newGoal.title}
               onChange={(e) => setNewGoal({ ...newGoal, title: e.target.value })}
-              placeholder="What do you want to achieve?"
+              placeholder={t('goals.goalTitlePlaceholder')}
               className="mt-1"
             />
           </div>
           
           <div>
-            <label className="text-sm font-medium">Description</label>
+            <label className="text-sm font-medium">{t('goals.description')}</label>
             <Textarea
               value={newGoal.description}
               onChange={(e) => setNewGoal({ ...newGoal, description: e.target.value })}
-              placeholder="Be specific about what success looks like"
+              placeholder={t('goals.descriptionPlaceholder')}
               className="mt-1"
             />
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium">Category</label>
+              <label className="text-sm font-medium">{t('goals.category')}</label>
               <Select
                 value={newGoal.category}
                 onValueChange={(value) => setNewGoal({ ...newGoal, category: value })}
               >
                 <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Select a category" />
+                  <SelectValue placeholder={t('goals.selectCategory')} />
                 </SelectTrigger>
                 <SelectContent>
                   {getCategorySuggestions().map((category) => (
@@ -278,7 +280,7 @@ export const GoalSetting: React.FC<GoalSettingProps> = ({
             </div>
             
             <div>
-              <label className="text-sm font-medium">Target Date</label>
+              <label className="text-sm font-medium">{t('goals.targetDate')}</label>
               <Input
                 type="date"
                 value={newGoal.deadline}
@@ -289,12 +291,12 @@ export const GoalSetting: React.FC<GoalSettingProps> = ({
           </div>
           
           <div>
-            <label className="text-sm font-medium">Milestones</label>
+            <label className="text-sm font-medium">{t('goals.milestones')}</label>
             <div className="flex space-x-2 mt-1">
               <Input
                 value={newMilestone}
                 onChange={(e) => setNewMilestone(e.target.value)}
-                placeholder="Add a milestone"
+                placeholder={t('goals.addMilestone')}
                 className="flex-1"
               />
               <Button onClick={handleAddMilestone} size="icon" variant="outline">
@@ -323,7 +325,7 @@ export const GoalSetting: React.FC<GoalSettingProps> = ({
           
           <div className="flex justify-end">
             <Button onClick={handleAddGoal} disabled={newGoal.title.trim() === ""}>
-              Create Goal
+              {t('goals.createGoal')}
             </Button>
           </div>
         </div>
@@ -353,7 +355,7 @@ export const GoalSetting: React.FC<GoalSettingProps> = ({
               <div className="flex items-center text-xs text-muted-foreground space-x-4">
                 <span className="flex items-center">
                   <Calendar className="h-3 w-3 mr-1" />
-                  {goal.deadline ? new Date(goal.deadline).toLocaleDateString() : "No deadline"}
+                  {goal.deadline ? new Date(goal.deadline).toLocaleDateString() : t('goals.noDeadline')}
                 </span>
                 <span>{getCategoryLabel(goal.category)}</span>
               </div>
@@ -374,14 +376,14 @@ export const GoalSetting: React.FC<GoalSettingProps> = ({
               
               <div className="space-y-1">
                 <div className="flex justify-between items-center text-xs">
-                  <span>Progress</span>
+                  <span>{t('goals.progress')}</span>
                   <span>{goal.progress}%</span>
                 </div>
                 <Progress value={goal.progress} className="h-1.5" />
               </div>
               
               <div className="space-y-2">
-                <h5 className="text-sm font-medium">Milestones</h5>
+                <h5 className="text-sm font-medium">{t('goals.milestonesTitle')}</h5>
                 {goal.milestones.length > 0 ? (
                   <div className="space-y-1">
                     {goal.milestones.map((milestone) => (
@@ -408,7 +410,7 @@ export const GoalSetting: React.FC<GoalSettingProps> = ({
                     ))}
                   </div>
                 ) : (
-                  <p className="text-xs text-muted-foreground">No milestones added yet.</p>
+                  <p className="text-xs text-muted-foreground">{t('goals.noMilestones')}</p>
                 )}
               </div>
               
@@ -418,7 +420,7 @@ export const GoalSetting: React.FC<GoalSettingProps> = ({
         </div>
       ) : (
         <p className="text-center text-muted-foreground py-6">
-          No goals added yet. Add your first SMART goal to get started!
+          {t('goals.noGoals')}
         </p>
       )}
     </CosmicCard>
