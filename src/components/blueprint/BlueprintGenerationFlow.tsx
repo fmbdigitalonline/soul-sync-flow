@@ -5,12 +5,12 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { motion } from "@/lib/framer-motion";
 import { SoulOrb } from "../ui/soul-orb";
-import { Loader2, AlertTriangle } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 interface BlueprintGeneratorProps {
   userProfile: {
     full_name: string;
-    preferred_name?: string;
+    preferred_name?: string; // Make preferred_name optional here
     birth_date: string;
     birth_time_local: string;
     birth_location: string;
@@ -31,28 +31,26 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
     "idle" | "generating" | "complete" | "error"
   >("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [healthCheckResults, setHealthCheckResults] = useState<string[]>([]);
   const { toast } = useToast();
   const [retryCount, setRetryCount] = useState(0);
-  const maxRetries = 0; // HEALTH CHECK: No retries - fail fast
+  const maxRetries = 2; // Limit retries to prevent excessive API calls
   const [hasStartedGeneration, setHasStartedGeneration] = useState(false);
 
   useEffect(() => {
     const generateBlueprint = async () => {
       // Prevent multiple generation attempts
       if (hasStartedGeneration) {
-        console.log("HEALTH CHECK: Blueprint generation already started, ignoring duplicate effect");
+        console.log("Blueprint generation already started, ignoring duplicate effect");
         return;
       }
 
-      // HEALTH CHECK: Strict validation
       if (
         !userProfile.full_name ||
         !userProfile.birth_date ||
         !userProfile.birth_time_local ||
         !userProfile.birth_location
       ) {
-        setErrorMessage("HEALTH CHECK FAIL: Missing required birth information");
+        setErrorMessage("Missing required birth information");
         setStatus("error");
         return;
       }
@@ -61,65 +59,79 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
         setHasStartedGeneration(true);
         setStatus("generating");
         setProgress(10);
-        setHealthCheckResults(["🔍 Starting health check mode - no fallbacks enabled"]);
 
-        console.log("HEALTH CHECK: Generating blueprint with user data:", userProfile);
+        console.log("Generating blueprint with user data:", userProfile);
         setProgress(30);
-        setHealthCheckResults(prev => [...prev, "📍 Validating birth data and location"]);
 
-        // Generate blueprint from birth data - HEALTH CHECK MODE
+        // Generate blueprint from birth data
         const { data: blueprint, error, isPartial } =
           await blueprintService.generateBlueprintFromBirthData(userProfile);
 
         setProgress(70);
 
         if (error) {
-          console.error("HEALTH CHECK FAIL: Error generating blueprint:", error);
+          console.error("Error generating blueprint:", error);
           setErrorMessage(error);
           setStatus("error");
-          setHealthCheckResults(prev => [...prev, `❌ FAILED: ${error}`]);
           toast({
-            title: "Health Check Failed",
-            description: error,
+            title: "Blueprint Generation Error",
+            description: error || "Failed to generate blueprint. Please try again.",
             variant: "destructive",
           });
           return;
         } 
         
         if (isPartial) {
-          throw new Error("HEALTH CHECK FAIL: Partial calculation detected - should not happen in health check mode");
+          toast({
+            title: "Blueprint Generation Partial",
+            description: "Some calculations were not fully accurate, but we've created your blueprint with the best available data.",
+            variant: "default",
+          });
         }
 
         // If we have a blueprint, save it
         if (blueprint) {
-          setHealthCheckResults(prev => [...prev, "✅ All calculations successful - saving blueprint"]);
-          
           const { success: saveSuccess, error: saveError } =
             await blueprintService.saveBlueprintData(blueprint);
 
           if (!saveSuccess) {
-            throw new Error(`HEALTH CHECK FAIL: Blueprint save failed - ${saveError}`);
+            console.error("Error saving blueprint:", saveError);
+            toast({
+              title: "Error Saving Blueprint",
+              description:
+                "Your blueprint was generated but couldn't be saved. Please try again.",
+              variant: "destructive",
+            });
+            setStatus("error");
+            setErrorMessage(saveError || "Failed to save blueprint");
+            return;
           }
           
           // Set progress to complete
           setProgress(100);
           setStatus("complete");
-          setHealthCheckResults(prev => [...prev, "🎉 Health check PASSED - all systems operational"]);
           
           // Pass the blueprint to parent component
           onComplete(blueprint);
         } else {
-          throw new Error("HEALTH CHECK FAIL: No blueprint data generated");
+          // This should not happen if errors are properly handled, but just in case
+          setErrorMessage("No blueprint data generated");
+          setStatus("error");
+          toast({
+            title: "Blueprint Generation Error",
+            description: "No blueprint data was generated. Please try again.",
+            variant: "destructive",
+          });
         }
       } catch (err) {
-        console.error("HEALTH CHECK FAIL: Unexpected error in blueprint generation:", err);
-        const errorMsg = err instanceof Error ? err.message : "Unknown error occurred";
-        setErrorMessage(errorMsg);
+        console.error("Unexpected error in blueprint generation:", err);
+        setErrorMessage(
+          err instanceof Error ? err.message : "Unknown error occurred"
+        );
         setStatus("error");
-        setHealthCheckResults(prev => [...prev, `💥 CRITICAL FAILURE: ${errorMsg}`]);
         toast({
-          title: "Health Check Critical Failure",
-          description: "System health check failed. Check console for details.",
+          title: "Blueprint Generation Error",
+          description: "There was a problem generating your blueprint. Please try again.",
           variant: "destructive",
         });
       }
@@ -128,13 +140,37 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
     generateBlueprint();
   }, [userProfile, onComplete, toast, hasStartedGeneration]);
 
+  // Try again handler with retry limits
+  const handleTryAgain = () => {
+    // Check if we've exceeded the maximum retry attempts
+    if (retryCount >= maxRetries) {
+      setErrorMessage(`Maximum retry attempts (${maxRetries}) reached. Please go back and check your information.`);
+      toast({
+        title: "Too Many Attempts",
+        description: `Failed after ${maxRetries} attempts. Please check your birth information and try again later.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Reset the generation flag to allow another attempt
+    setHasStartedGeneration(false);
+    
+    // Increment retry counter
+    setRetryCount(prev => prev + 1);
+    
+    setStatus("idle");
+    setErrorMessage(null);
+    setProgress(0);
+    
+    // The effect will trigger the generation again
+  };
+
   return (
     <div className={cn("space-y-4", className)}>
       {status === "idle" && (
         <div className="text-center">
-          <AlertTriangle className="mx-auto h-8 w-8 text-yellow-500 mb-2" />
-          <p className="font-semibold">Health Check Mode Enabled</p>
-          <p className="text-sm text-muted-foreground">All fallbacks disabled - system will fail hard to reveal issues</p>
+          <p>Ready to generate your personal Soul Blueprint...</p>
         </div>
       )}
 
@@ -143,34 +179,21 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
           <div className="flex justify-center">
             <SoulOrb size="md" pulse={true} stage="generating" />
           </div>
-          <p className="font-semibold">Running Health Check...</p>
+          <p>Generating your Soul Blueprint...</p>
           <div className="w-full bg-gray-800 rounded-full h-2.5 mb-4">
             <div
               className="bg-soul-purple h-2.5 rounded-full"
               style={{ width: `${progress}%` }}
             ></div>
           </div>
-          
-          {/* Health Check Results */}
-          <div className="text-left max-w-md mx-auto">
-            <h4 className="font-semibold mb-2">Health Check Progress:</h4>
-            <div className="space-y-1 text-sm font-mono">
-              {healthCheckResults.map((result, index) => (
-                <div key={index} className="text-left">
-                  {result}
-                </div>
-              ))}
-            </div>
-          </div>
-          
           <p className="text-sm text-gray-400">
             {progress < 30
-              ? "Validating astronomical calculation engines..."
+              ? "Connecting to celestial database..."
               : progress < 60
-              ? "Testing planetary position calculations..."
+              ? "Calculating planetary positions..."
               : progress < 80
-              ? "Verifying Human Design gate calculations..."
-              : "Finalizing health check..."}
+              ? "Generating your unique profile..."
+              : "Finalizing your Soul Blueprint..."}
           </p>
         </div>
       )}
@@ -179,56 +202,50 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="text-center space-y-4"
+          className="text-center"
         >
           <div className="flex justify-center">
             <SoulOrb size="md" pulse={false} stage="complete" />
           </div>
-          <p className="text-lg font-semibold text-green-500">🎉 Health Check PASSED!</p>
-          <p className="text-sm">All calculation engines are working correctly.</p>
-          
-          {/* Final Health Check Summary */}
-          <div className="text-left max-w-md mx-auto mt-4">
-            <h4 className="font-semibold mb-2">Health Check Summary:</h4>
-            <div className="space-y-1 text-sm font-mono bg-green-900/20 p-3 rounded">
-              {healthCheckResults.map((result, index) => (
-                <div key={index} className="text-left">
-                  {result}
-                </div>
-              ))}
-            </div>
-          </div>
+          <p className="text-lg font-semibold mt-2">Blueprint Generation Complete!</p>
+          <p className="text-sm">Your Soul Blueprint has been created successfully.</p>
         </motion.div>
       )}
 
       {status === "error" && (
         <div className="text-center space-y-4">
           <div className="text-red-500 flex items-center justify-center space-x-2">
-            <AlertTriangle className="h-6 w-6" />
-            <p className="font-medium">Health Check FAILED</p>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
+            <p className="font-medium">Blueprint Generation Error</p>
           </div>
-          <p className="text-sm font-mono bg-red-900/20 p-3 rounded text-left max-w-md mx-auto">
-            {errorMessage || "Unknown health check failure"}
-          </p>
-          
-          {/* Health Check Failure Results */}
-          {healthCheckResults.length > 0 && (
-            <div className="text-left max-w-md mx-auto">
-              <h4 className="font-semibold mb-2">Health Check Log:</h4>
-              <div className="space-y-1 text-sm font-mono bg-red-900/20 p-3 rounded">
-                {healthCheckResults.map((result, index) => (
-                  <div key={index} className="text-left">
-                    {result}
-                  </div>
-                ))}
+          <p className="text-sm">{errorMessage || "An unknown error occurred"}</p>
+          <div>
+            {retryCount < maxRetries ? (
+              <button
+                onClick={handleTryAgain}
+                className="bg-soul-purple hover:bg-soul-purple/80 text-white px-4 py-2 rounded-md flex items-center mx-auto"
+              >
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Try Again ({retryCount + 1}/{maxRetries + 1})
+              </button>
+            ) : (
+              <div className="text-amber-500 text-sm">
+                Maximum retry attempts reached. Please check your information and try again later.
               </div>
-            </div>
-          )}
-          
-          <div className="text-amber-500 text-sm">
-            <p className="font-semibold">Health Check Mode - No Retries</p>
-            <p>System configured to fail fast to reveal calculation issues.</p>
-            <p>Check the error details above to identify what needs fixing.</p>
+            )}
           </div>
         </div>
       )}
