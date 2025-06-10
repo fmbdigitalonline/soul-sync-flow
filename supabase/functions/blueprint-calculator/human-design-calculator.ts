@@ -37,8 +37,15 @@ export async function calculateHumanDesign(birthDate: string, birthTime: string,
     console.log("Personality time:", birthDateTime.toISOString());
     console.log("Design time:", designDateTime.toISOString());
     
-    // Calculate gate activations for personality chart (conscious) - USE CURRENT CELESTIAL DATA
-    const personalityGates = calculateGatesFromPositions(celestialData, "personality");
+    // FIXED: Extract the actual planets data from celestialData
+    console.log("🔧 DEBUG: Received celestial data structure:", Object.keys(celestialData || {}));
+    
+    // The celestial data should have a planets property with the actual planetary positions
+    const personalityPlanets = celestialData?.planets || celestialData;
+    console.log("🔧 DEBUG: Personality planets data:", Object.keys(personalityPlanets || {}));
+    
+    // Calculate gate activations for personality chart (conscious) - USE EXTRACTED PLANETS DATA
+    const personalityGates = calculateGatesFromPositions(personalityPlanets, "personality");
     
     // Calculate design positions using accurate ephemeris
     const designCelestialData = await calculateDesignPositions(designDateTime, location, timezone);
@@ -110,6 +117,8 @@ function calculateGatesFromPositions(celestialData: any, chartType: string): Gat
   
   planets.forEach(planet => {
     const position = celestialData[planet];
+    console.log(`🔧 DEBUG: ${chartType} ${planet} position:`, position);
+    
     if (position && typeof position.longitude === 'number') {
       // Calculate gate and line from actual longitude using the I Ching wheel
       const adjustedLongitude = (position.longitude + 360) % 360; // Ensure positive
@@ -141,7 +150,7 @@ function calculateGatesFromPositions(celestialData: any, chartType: string): Gat
       
       console.log(`${chartType} ${planet}: ${position.longitude.toFixed(2)}° -> Gate ${gate}.${line}`);
     } else {
-      console.warn(`${chartType} ${planet}: missing or invalid position data`);
+      console.warn(`${chartType} ${planet}: missing or invalid position data`, position);
     }
   });
   
