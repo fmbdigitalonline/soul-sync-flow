@@ -1,6 +1,4 @@
-// Human Design calculation endpoint using available Node.js libraries
-const HumanDesign = require('human-design');
-
+// Human Design calculation endpoint using custom implementation
 export default async function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -32,42 +30,22 @@ export default async function handler(req, res) {
       });
     }
 
-    // Try using the human-design library first
-    try {
-      const humanDesignResult = await calculateWithHumanDesignLibrary({
-        birthDate,
-        birthTime,
-        birthLocation,
-        timezone,
-        celestialData
-      });
+    // Use our improved calculation with proper HD formulas
+    const humanDesignResult = await calculateHumanDesignImproved({
+      birthDate,
+      birthTime,
+      birthLocation,
+      timezone,
+      celestialData
+    });
 
-      return res.status(200).json({
-        success: true,
-        data: humanDesignResult,
-        timestamp: new Date().toISOString(),
-        library: 'human-design-npm'
-      });
-    } catch (libraryError) {
-      console.log('human-design library failed, trying improved calculation:', libraryError.message);
-      
-      // If the library fails, use our improved calculation with proper HD formulas
-      const improvedResult = await calculateHumanDesignImproved({
-        birthDate,
-        birthTime,
-        birthLocation,
-        timezone,
-        celestialData
-      });
-
-      return res.status(200).json({
-        success: true,
-        data: improvedResult,
-        timestamp: new Date().toISOString(),
-        library: 'improved-custom',
-        notice: 'Using improved custom calculation with proper HD formulas'
-      });
-    }
+    return res.status(200).json({
+      success: true,
+      data: humanDesignResult,
+      timestamp: new Date().toISOString(),
+      library: 'improved-custom',
+      notice: 'Using improved custom calculation with proper HD formulas'
+    });
 
   } catch (error) {
     console.error('Human Design calculation error:', error);
@@ -77,49 +55,6 @@ export default async function handler(req, res) {
       timestamp: new Date().toISOString()
     });
   }
-}
-
-// Function to use the human-design npm library
-async function calculateWithHumanDesignLibrary({ birthDate, birthTime, birthLocation, timezone, celestialData }) {
-  console.log('Using human-design npm library for calculation...');
-  
-  // Parse birth data for the library
-  const birthDateTime = new Date(`${birthDate}T${birthTime}`);
-  
-  // Create Human Design calculation with birth data
-  const chart = new HumanDesign({
-    date: birthDateTime,
-    location: birthLocation,
-    timezone: timezone
-  });
-
-  // Get the calculated result
-  const result = chart.calculate();
-  
-  console.log('human-design library result:', result);
-
-  // Transform the library result to our format
-  return {
-    type: result.type || 'Unknown',
-    profile: result.profile || 'Unknown',
-    authority: result.authority || 'Unknown',
-    strategy: result.strategy || 'Unknown',
-    definition: result.definition || 'Unknown',
-    not_self_theme: result.notSelfTheme || 'Unknown',
-    life_purpose: result.lifePurpose || 'Unknown',
-    centers: result.centers || {},
-    gates: {
-      unconscious_design: result.gates?.design || [],
-      conscious_personality: result.gates?.personality || []
-    },
-    metadata: {
-      personality_time: birthDateTime.toISOString(),
-      design_time: new Date(birthDateTime.getTime() - (89.66 * 24 * 60 * 60 * 1000)).toISOString(),
-      offset_days: "89.66",
-      calculation_method: "HUMAN_DESIGN_NPM_LIBRARY",
-      library_version: "latest"
-    }
-  };
 }
 
 // Improved Human Design calculation using proper formulas and celestial data
