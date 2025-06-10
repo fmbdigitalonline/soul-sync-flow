@@ -1,4 +1,3 @@
-
 // Enhanced Human Design calculation module
 import { GATE_TO_CENTER_MAP, CHANNELS, GATE_NAMES } from './human-design-gates.ts';
 
@@ -101,7 +100,7 @@ export async function calculateHumanDesign(birthDate: string, birthTime: string,
   }
 }
 
-// Calculate gates from celestial positions using ACTUAL longitude calculations
+// Calculate gates from celestial positions using CORRECT Human Design gate wheel
 function calculateGatesFromPositions(celestialData: any, chartType: string): GateActivation[] {
   const gates: GateActivation[] = [];
   
@@ -120,21 +119,20 @@ function calculateGatesFromPositions(celestialData: any, chartType: string): Gat
     console.log(`🔧 DEBUG: ${chartType} ${planet} position:`, position);
     
     if (position && typeof position.longitude === 'number') {
-      // Calculate gate and line from actual longitude using the I Ching wheel
+      // Calculate gate and line from actual longitude using the CORRECT I Ching wheel
       const adjustedLongitude = (position.longitude + 360) % 360; // Ensure positive
       
-      // The I Ching wheel starts at 0° Aries (gate 25) and moves clockwise
-      // Each gate spans 5.625 degrees (360/64 gates)
-      const gateIndex = Math.floor(adjustedLongitude / 5.625);
-      
-      // Gate mapping according to I Ching wheel (starting from 0° Aries)
+      // FIXED: Use the correct Human Design gate wheel starting from 0° Aries
+      // This is the standard Professional Human Design gate sequence
       const gateWheel = [
-        25, 51, 3, 27, 24, 2, 23, 8, 20, 16, 35, 45, 12, 15, 52, 39,
-        53, 62, 56, 31, 33, 7, 4, 29, 59, 40, 64, 47, 6, 46, 18, 48,
-        57, 32, 50, 28, 44, 1, 43, 14, 34, 9, 5, 26, 11, 10, 58, 38,
-        54, 61, 60, 41, 19, 13, 49, 30, 55, 37, 63, 22, 36, 25, 17, 21
+        41, 19, 13, 49, 30, 55, 37, 63, 22, 36, 25, 17, 21, 51, 42, 3,
+        27, 24, 2, 23, 8, 20, 16, 35, 45, 12, 15, 52, 39, 53, 62, 56,
+        31, 33, 7, 4, 29, 59, 40, 64, 47, 6, 46, 18, 48, 57, 32, 50,
+        28, 44, 1, 43, 14, 34, 9, 5, 26, 11, 10, 58, 38, 54, 61, 60
       ];
       
+      // Each gate spans 5.625 degrees (360/64 gates)
+      const gateIndex = Math.floor(adjustedLongitude / 5.625);
       const gate = gateWheel[gateIndex] || 1; // Fallback to gate 1
       
       // Each line spans 0.9375 degrees (5.625/6 lines)
