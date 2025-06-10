@@ -1,3 +1,4 @@
+
 // Human Design calculation endpoint using proper HD methodology
 export default async function handler(req, res) {
   // Enable CORS
@@ -46,7 +47,7 @@ export default async function handler(req, res) {
       success: true,
       data: humanDesignResult,
       timestamp: new Date().toISOString(),
-      library: 'proper-hd-methodology-v8-fixed-design-time',
+      library: 'proper-hd-methodology-v9-fixed-design-time',
       notice: 'Using proper Human Design calculation with fixed design time data'
     });
 
@@ -72,7 +73,8 @@ async function calculateHumanDesignProper({ birthDate, birthTime, timezone, cele
   console.log('Design time:', designDateTime.toISOString());
   
   // Step 2: Get celestial data for both Personality (birth) and Design times
-  const personalityCelestial = celestialData.planets;
+  // IMPROVED: More flexible input handling
+  const personalityCelestial = celestialData.planets || celestialData;
   
   console.log('🔍 DEBUG: Personality celestial data received:');
   console.log('Raw celestialData:', JSON.stringify(celestialData, null, 2));
@@ -111,8 +113,8 @@ async function calculateHumanDesignProper({ birthDate, birthTime, timezone, cele
   console.log('Sun longitude:', personalityCelestial?.sun?.longitude);
   console.log('Moon longitude:', personalityCelestial?.moon?.longitude);
   
-  // Get Design time celestial data - FIXED APPROACH
-  const designCelestial = await getFixedDesignTimeCelestialData(designDateTime, coordinates, timezone, personalityCelestial);
+  // Get Design time celestial data - STRICT APPROACH
+  const designCelestial = calculateRobustDesignTimeCelestialData(designDateTime, personalityCelestial);
   
   // COMPREHENSIVE VALIDATION: Check that we have valid design celestial data
   if (!designCelestial || typeof designCelestial !== 'object') {
@@ -180,33 +182,25 @@ async function calculateHumanDesignProper({ birthDate, birthTime, timezone, cele
       personality_time: birthDateTime.toISOString(),
       design_time: designDateTime.toISOString(),
       offset_days: "88.736",
-      calculation_method: "PROPER_HD_METHODOLOGY_V8_FIXED_DESIGN_TIME"
+      calculation_method: "PROPER_HD_METHODOLOGY_V9_FIXED_DESIGN_TIME"
     }
   };
 }
 
-// FIXED: Design time celestial data calculation with robust fallback
-async function getFixedDesignTimeCelestialData(designDateTime, coordinates, timezone, personalityCelestial) {
-  console.log('🔍 Calculating Design time celestial data with robust fallback...');
-  
-  // Always use the robust calculation method that ensures all required planets are present
-  return calculateRobustDesignTimeCelestialData(designDateTime, personalityCelestial);
-}
-
-// Robust fallback calculation that GUARANTEES all required planets
+// IMPROVED: Strict design time celestial data calculation - fails fast on invalid data
 function calculateRobustDesignTimeCelestialData(designDateTime, personalityCelestial) {
-  console.log('🔄 Using robust Design time calculation that guarantees all planets...');
-  console.log('🔍 Starting with personality celestial data:', personalityCelestial);
+  console.log('🔄 Using strict Design time calculation...');
+  console.log('🔍 Input personality celestial data keys:', Object.keys(personalityCelestial || {}));
   
-  if (!personalityCelestial) {
-    console.error('❌ CRITICAL: No personality celestial data provided to fallback function');
-    throw new Error('Cannot calculate design time without personality data');
+  if (!personalityCelestial || typeof personalityCelestial !== 'object') {
+    console.error('❌ CRITICAL: Invalid personality celestial data provided to design calculation');
+    throw new Error(`Cannot calculate design time - invalid personality data: ${typeof personalityCelestial}`);
   }
   
   const designCelestial = {};
   const daysDifference = 88.736;
   
-  // Accurate daily motions for all required planets
+  // Accurate daily motions for all required planets (degrees per day)
   const planetMotions = {
     sun: { base: 0.9856, variation: 0.0341 },
     moon: { base: 13.1764, variation: 1.2 },
@@ -222,10 +216,23 @@ function calculateRobustDesignTimeCelestialData(designDateTime, personalityCeles
     south_node: { base: 0.0529, variation: 0.01 }
   };
   
-  // ENSURE ALL REQUIRED PLANETS ARE CALCULATED
-  Object.keys(planetMotions).forEach(planet => {
-    if (personalityCelestial[planet] && typeof personalityCelestial[planet].longitude === 'number') {
+  // Process all required planets - STRICT VALIDATION
+  const requiredPlanets = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto'];
+  
+  requiredPlanets.forEach(planet => {
+    console.log(`🔍 Processing ${planet}...`);
+    console.log(`🔍 Personality ${planet} data:`, personalityCelestial[planet]);
+    
+    if (personalityCelestial[planet] && 
+        typeof personalityCelestial[planet] === 'object' && 
+        typeof personalityCelestial[planet].longitude === 'number') {
+      
       const motion = planetMotions[planet];
+      if (!motion) {
+        console.error(`❌ CRITICAL: No motion data for ${planet}`);
+        throw new Error(`Missing motion data for planet: ${planet}`);
+      }
+      
       // Add some variation based on time of year (simplified)
       const timeVariation = Math.sin((designDateTime.getMonth() / 12) * 2 * Math.PI) * motion.variation;
       const adjustedMotion = motion.base + timeVariation;
@@ -239,17 +246,34 @@ function calculateRobustDesignTimeCelestialData(designDateTime, personalityCeles
         distance: personalityCelestial[planet].distance || 1
       };
       
-      console.log(`🔍 ${planet}: Personality ${personalityLongitude.toFixed(3)}° → Design ${designLongitude.toFixed(3)}° (motion: ${adjustedMotion.toFixed(4)}°/day)`);
+      console.log(`✅ ${planet}: Personality ${personalityLongitude.toFixed(3)}° → Design ${designLongitude.toFixed(3)}° (motion: ${adjustedMotion.toFixed(4)}°/day)`);
     } else {
-      console.warn(`⚠️ Warning: Missing or invalid ${planet} data in personality celestial data`);
+      console.error(`❌ CRITICAL: Missing or invalid ${planet} data in personality celestial data`);
+      console.error(`❌ Expected object with longitude property, got:`, personalityCelestial[planet]);
+      throw new Error(`Invalid ${planet} data in personality celestial - expected object with longitude, got: ${JSON.stringify(personalityCelestial[planet])}`);
+    }
+  });
+  
+  // Process optional planets if available
+  ['north_node', 'south_node'].forEach(planet => {
+    if (personalityCelestial[planet] && 
+        typeof personalityCelestial[planet] === 'object' && 
+        typeof personalityCelestial[planet].longitude === 'number') {
       
-      // FALLBACK: Create synthetic data to prevent errors
+      const motion = planetMotions[planet];
+      const timeVariation = Math.sin((designDateTime.getMonth() / 12) * 2 * Math.PI) * motion.variation;
+      const adjustedMotion = motion.base + timeVariation;
+      
+      const personalityLongitude = personalityCelestial[planet].longitude;
+      const designLongitude = (personalityLongitude - (adjustedMotion * daysDifference) + 360) % 360;
+      
       designCelestial[planet] = {
-        longitude: Math.random() * 360, // Random but valid longitude
-        latitude: 0,
-        distance: 1
+        longitude: designLongitude,
+        latitude: personalityCelestial[planet].latitude || 0,
+        distance: personalityCelestial[planet].distance || 1
       };
-      console.log(`🔄 Created synthetic ${planet} data: ${designCelestial[planet].longitude.toFixed(3)}°`);
+      
+      console.log(`✅ ${planet}: Personality ${personalityLongitude.toFixed(3)}° → Design ${designLongitude.toFixed(3)}° (motion: ${adjustedMotion.toFixed(4)}°/day)`);
     }
   });
   
@@ -260,19 +284,23 @@ function calculateRobustDesignTimeCelestialData(designDateTime, personalityCeles
       latitude: 0,
       distance: 1
     };
-    console.log(`🔍 earth: Design ${designCelestial.earth.longitude.toFixed(3)}° (opposite to sun)`);
+    console.log(`✅ earth: Design ${designCelestial.earth.longitude.toFixed(3)}° (opposite to sun)`);
   }
   
   // FINAL VALIDATION: Ensure we have all required planets
-  const requiredPlanets = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto'];
-  const stillMissing = requiredPlanets.filter(planet => !designCelestial[planet]);
+  const stillMissing = requiredPlanets.filter(planet => !designCelestial[planet] || typeof designCelestial[planet].longitude !== 'number');
   
   if (stillMissing.length > 0) {
-    console.error('❌ Still missing planets after robust calculation:', stillMissing);
+    console.error('❌ Still missing planets after calculation:', stillMissing);
+    console.error('❌ Design celestial data:', Object.keys(designCelestial));
+    stillMissing.forEach(planet => {
+      console.error(`❌ ${planet}:`, designCelestial[planet]);
+    });
     throw new Error(`Failed to calculate design data for: ${stillMissing.join(', ')}`);
   }
   
-  console.log('✅ Robust design celestial data calculation completed successfully');
+  console.log('✅ Strict design celestial data calculation completed successfully');
+  console.log('✅ Final design planets:', Object.keys(designCelestial));
   return designCelestial;
 }
 
