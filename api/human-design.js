@@ -1,3 +1,4 @@
+
 // Human Design calculation endpoint using proper HD methodology
 export default async function handler(req, res) {
   // Enable CORS
@@ -43,8 +44,8 @@ export default async function handler(req, res) {
       success: true,
       data: humanDesignResult,
       timestamp: new Date().toISOString(),
-      library: 'proper-hd-methodology-v2',
-      notice: 'Using proper Human Design calculation with accurate Design Time and standard gate mapping'
+      library: 'proper-hd-methodology-v3',
+      notice: 'Using proper Human Design calculation with corrected HD wheel and accurate gate mapping'
     });
 
   } catch (error) {
@@ -69,15 +70,14 @@ async function calculateHumanDesignProper({ birthDate, birthTime, birthLocation,
   console.log('Design time:', designDateTime.toISOString());
   
   // Step 2: Get celestial data for both Personality (birth) and Design times
-  const personalityCelestial = celestialData; // Current birth time data
+  const personalityCelestial = celestialData.planets; // Access the planets object
   
-  // For proper implementation, we need Design time celestial data
-  // For now, we'll calculate Design positions using the solar arc method for all bodies
+  // Calculate Design time celestial data
   const designCelestial = await calculateDesignTimeCelestialData(personalityCelestial, designDateTime);
   
   // Step 3: Calculate gates using proper HD methodology
-  const personalityGates = calculateHDGatesFromCelestialData(personalityCelestial);
-  const designGates = calculateHDGatesFromCelestialData(designCelestial);
+  const personalityGates = calculateHDGatesFromCelestialData(personalityCelestial, 'personality');
+  const designGates = calculateHDGatesFromCelestialData(designCelestial, 'design');
   
   console.log('Personality gates calculated:', personalityGates);
   console.log('Design gates calculated:', designGates);
@@ -107,45 +107,41 @@ async function calculateHumanDesignProper({ birthDate, birthTime, birthLocation,
       personality_time: birthDateTime.toISOString(),
       design_time: designDateTime.toISOString(),
       offset_days: "88.736",
-      calculation_method: "PROPER_HD_METHODOLOGY_V2"
+      calculation_method: "PROPER_HD_METHODOLOGY_V3"
     }
   };
 }
 
 // Calculate Design Time celestial data for all 13 bodies
 async function calculateDesignTimeCelestialData(personalityCelestial, designDateTime) {
-  const designCelestial = { planets: {} };
+  const designCelestial = {};
   
   // For each celestial body, calculate its position at Design Time
-  // This is a simplified approach - in reality, we'd need ephemeris data for the Design Time
   const planets = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto', 'north_node', 'south_node'];
   
-  // FIXED: Access the nested planets object
-  if (personalityCelestial.planets) {
-    planets.forEach(planet => {
-      if (personalityCelestial.planets[planet]) {
-        // Calculate the approximate position at Design Time using average daily motion
-        const dailyMotion = getPlanetDailyMotion(planet);
-        const daysDifference = 88.736;
-        const designLongitude = (personalityCelestial.planets[planet].longitude - (dailyMotion * daysDifference) + 360) % 360;
-        
-        designCelestial.planets[planet] = {
-          ...personalityCelestial.planets[planet],
-          longitude: designLongitude
-        };
-        
-        console.log(`${planet}: Personality ${personalityCelestial.planets[planet].longitude.toFixed(3)}° → Design ${designLongitude.toFixed(3)}°`);
-      }
-    });
-    
-    // Earth is always opposite to Sun
-    if (designCelestial.planets.sun) {
-      designCelestial.planets.earth = {
-        longitude: (designCelestial.planets.sun.longitude + 180) % 360,
-        latitude: 0,
-        distance: 1
+  planets.forEach(planet => {
+    if (personalityCelestial[planet]) {
+      // Calculate the approximate position at Design Time using average daily motion
+      const dailyMotion = getPlanetDailyMotion(planet);
+      const daysDifference = 88.736;
+      const designLongitude = (personalityCelestial[planet].longitude - (dailyMotion * daysDifference) + 360) % 360;
+      
+      designCelestial[planet] = {
+        ...personalityCelestial[planet],
+        longitude: designLongitude
       };
+      
+      console.log(`${planet}: Personality ${personalityCelestial[planet].longitude.toFixed(3)}° → Design ${designLongitude.toFixed(3)}°`);
     }
+  });
+  
+  // Earth is always opposite to Sun
+  if (designCelestial.sun) {
+    designCelestial.earth = {
+      longitude: (designCelestial.sun.longitude + 180) % 360,
+      latitude: 0,
+      distance: 1
+    };
   }
   
   return designCelestial;
@@ -172,8 +168,18 @@ function getPlanetDailyMotion(planet) {
 }
 
 // Calculate HD gates from celestial data using proper methodology
-function calculateHDGatesFromCelestialData(celestialData) {
+function calculateHDGatesFromCelestialData(celestialData, type) {
   const gates = [];
+  
+  // Add Earth manually since it's not in the celestial data
+  const earthCelestial = {
+    ...celestialData,
+    earth: {
+      longitude: (celestialData.sun.longitude + 180) % 360,
+      latitude: 0,
+      distance: 1
+    }
+  };
   
   // Standard HD order: Sun, Earth, North Node, South Node, Moon, Mercury, Venus, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto
   const hdOrder = [
@@ -182,58 +188,53 @@ function calculateHDGatesFromCelestialData(celestialData) {
     'uranus', 'neptune', 'pluto'
   ];
   
-  // FIXED: Access the nested planets object
-  if (celestialData.planets) {
-    hdOrder.forEach(planet => {
-      if (celestialData.planets[planet]) {
-        const gateInfo = longitudeToHDGate(celestialData.planets[planet].longitude);
-        gates.push({
-          planet,
-          gate: gateInfo.gate,
-          line: gateInfo.line
-        });
-        
-        console.log(`${planet}: ${celestialData.planets[planet].longitude.toFixed(3)}° → Gate ${gateInfo.gate}.${gateInfo.line}`);
-      }
-    });
-  }
+  hdOrder.forEach(planet => {
+    if (earthCelestial[planet]) {
+      const gateInfo = longitudeToHDGate(earthCelestial[planet].longitude);
+      gates.push({
+        planet,
+        gate: gateInfo.gate,
+        line: gateInfo.line,
+        type: type
+      });
+      
+      console.log(`${type} ${planet}: ${earthCelestial[planet].longitude.toFixed(3)}° → Gate ${gateInfo.gate}.${gateInfo.line}`);
+    }
+  });
   
   return gates;
 }
 
-// Standard longitude to HD gate conversion using proper HD wheel
+// CORRECTED: Proper longitude to HD gate conversion using correct HD wheel
 function longitudeToHDGate(longitude) {
   // Normalize longitude to 0-360
   const normalizedLon = ((longitude % 360) + 360) % 360;
-  
-  // Apply the 45-degree offset to align with HD wheel
-  const adjustedLon = (normalizedLon - 45 + 360) % 360;
   
   // HD wheel: 64 gates, each covering 5.625° (360/64)
   const degreesPerGate = 360 / 64;
   const degreesPerLine = degreesPerGate / 6; // 6 lines per gate
   
-  // Calculate gate index (0-63)
-  const gateIndex = Math.floor(adjustedLon / degreesPerGate);
-  
-  // Corrected HD gate wheel starting from Gate 21 at 0° adjusted longitude
-  const gateWheel = [
-    21, 51, 42, 3, 27, 24, 2, 23, 8, 20, 16, 35, 45, 12, 15, 52,
-    39, 53, 62, 56, 31, 33, 7, 4, 29, 59, 40, 64, 47, 6, 46, 18,
-    48, 57, 32, 50, 28, 44, 1, 43, 14, 34, 9, 5, 26, 11, 10, 58,
-    38, 54, 61, 60, 41, 19, 13, 49, 30, 55, 37, 63, 22, 36, 25, 17
+  // CORRECTED: HD wheel starts at gate 41 at 0° Aries (not gate 1 or 21)
+  // This is the correct HD wheel sequence starting from 0° Aries
+  const hdWheel = [
+    41, 19, 13, 49, 30, 55, 37, 63, 22, 36, 25, 17, 21, 51, 42, 3,
+    27, 24, 2, 23, 8, 20, 16, 35, 45, 12, 15, 52, 39, 53, 62, 56,
+    31, 33, 7, 4, 29, 59, 40, 64, 47, 6, 46, 18, 48, 57, 32, 50,
+    28, 44, 1, 43, 14, 34, 9, 5, 26, 11, 10, 58, 38, 54, 61, 60
   ];
   
-  const gate = gateWheel[gateIndex];
+  // Calculate gate index (0-63) - NO 45° offset applied
+  const gateIndex = Math.floor(normalizedLon / degreesPerGate);
+  const gate = hdWheel[gateIndex];
   
   // Calculate line (1-6) within the gate
-  const positionInGate = adjustedLon % degreesPerGate;
+  const positionInGate = normalizedLon % degreesPerGate;
   const line = Math.floor(positionInGate / degreesPerLine) + 1;
   
   return { gate, line: Math.min(line, 6) };
 }
 
-// Calculate centers based on complete channels only
+// CORRECTED: Calculate centers based on complete channels only
 function calculateCentersFromChannels(allGates) {
   const centers = {
     'Head': { defined: false, gates: [], channels: [] },
@@ -247,12 +248,12 @@ function calculateCentersFromChannels(allGates) {
     'Root': { defined: false, gates: [], channels: [] }
   };
   
-  // Proper HD gate-to-center mapping
+  // CORRECTED: Proper HD gate-to-center mapping
   const gateToCenterMap = {
     // Head Center
     64: 'Head', 61: 'Head', 63: 'Head',
     
-    // Ajna Center
+    // Ajna Center  
     47: 'Ajna', 24: 'Ajna', 4: 'Ajna', 17: 'Ajna', 43: 'Ajna', 11: 'Ajna',
     
     // Throat Center
@@ -263,12 +264,12 @@ function calculateCentersFromChannels(allGates) {
     // G Center
     25: 'G', 46: 'G', 22: 'G', 36: 'G', 2: 'G', 15: 'G', 5: 'G', 14: 'G',
     
-    // Heart Center
+    // Heart Center (Ego/Will)
     21: 'Heart', 40: 'Heart', 26: 'Heart', 51: 'Heart',
     
     // Solar Plexus Center
     6: 'Solar Plexus', 37: 'Solar Plexus', 30: 'Solar Plexus', 55: 'Solar Plexus',
-    49: 'Solar Plexus', 19: 'Solar Plexus', 13: 'Solar Plexus', 39: 'Solar Plexus',
+    49: 'Solar Plexus', 19: 'Solar Plexus', 39: 'Solar Plexus',
     41: 'Solar Plexus', 22: 'Solar Plexus', 36: 'Solar Plexus',
     
     // Sacral Center
@@ -289,23 +290,43 @@ function calculateCentersFromChannels(allGates) {
     const centerName = gateToCenterMap[gateNum];
     
     if (centerName && centers[centerName]) {
-      centers[centerName].gates.push(gateNum);
+      if (!centers[centerName].gates.includes(gateNum)) {
+        centers[centerName].gates.push(gateNum);
+      }
     }
   });
   
-  // Define channels that can activate centers - only when both gates are present
+  // CORRECTED: Define channels that create connections between centers
   const channels = [
-    // Major channels for type determination
-    [34, 20], [34, 10], [34, 57], // Sacral to Throat
-    [59, 6], [27, 50], [3, 60], [42, 53], [9, 52], // Other Sacral channels
-    [21, 45], [26, 44], [40, 37], [51, 25], // Heart channels
-    [35, 36], [22, 12], [30, 41], [49, 19], [55, 39], // Solar Plexus channels
-    [18, 58], [48, 16], [57, 10], [57, 20], [44, 26], [50, 27], [32, 54], [28, 38], // Spleen channels
-    [64, 47], [61, 24], [63, 4], [17, 62], [43, 23], [11, 56], // Head/Ajna channels
-    [13, 33], [7, 31], [1, 8], [10, 20], [16, 48], [20, 34], [12, 22], [45, 21] // Other channels
+    // Head to Ajna
+    [64, 47], [61, 24], [63, 4],
+    
+    // Ajna to Throat
+    [17, 62], [43, 23], [11, 56],
+    
+    // Throat connections
+    [35, 36], [12, 22], [8, 1], [31, 7], [33, 13], [10, 20], [16, 48],
+    
+    // G Center connections
+    [25, 51], [46, 29], [2, 14], [15, 5],
+    
+    // Heart connections
+    [21, 45], [26, 44], [40, 37], [51, 25],
+    
+    // Solar Plexus connections
+    [6, 59], [37, 40], [30, 41], [55, 39], [49, 19], [22, 12], [36, 35],
+    
+    // Sacral connections
+    [34, 57], [34, 10], [34, 20], [5, 15], [14, 2], [29, 46], [59, 6], [27, 50], [3, 60], [42, 53], [9, 52],
+    
+    // Spleen connections
+    [48, 16], [57, 34], [57, 10], [57, 20], [44, 26], [50, 27], [32, 54], [28, 38], [18, 58],
+    
+    // Root connections
+    [53, 42], [60, 3], [52, 9], [19, 49], [39, 55], [41, 30], [58, 18], [38, 28], [54, 32]
   ];
   
-  // Define centers only when complete channels exist (both gates present)
+  // Define centers only when complete channels exist
   channels.forEach(([gateA, gateB]) => {
     const centerA = gateToCenterMap[gateA];
     const centerB = gateToCenterMap[gateB];
@@ -316,46 +337,48 @@ function calculateCentersFromChannels(allGates) {
       
       centers[centerA].defined = true;
       centers[centerB].defined = true;
-      centers[centerA].channels.push([gateA, gateB]);
-      if (centerA !== centerB) {
-        centers[centerB].channels.push([gateA, gateB]);
+      
+      // Add channel to both centers
+      const channel = [gateA, gateB];
+      if (!centers[centerA].channels.some(ch => 
+          (ch[0] === channel[0] && ch[1] === channel[1]) || 
+          (ch[0] === channel[1] && ch[1] === channel[0]))) {
+        centers[centerA].channels.push(channel);
+      }
+      
+      if (centerA !== centerB && !centers[centerB].channels.some(ch => 
+          (ch[0] === channel[0] && ch[1] === channel[1]) || 
+          (ch[0] === channel[1] && ch[1] === channel[0]))) {
+        centers[centerB].channels.push(channel);
       }
     }
   });
   
+  console.log('Centers calculation result:', centers);
   return centers;
 }
 
-// Determine HD type using proper methodology
+// CORRECTED: Determine HD type using proper methodology
 function determineHDType(centers) {
   const sacralDefined = centers.Sacral?.defined || false;
   const throatDefined = centers.Throat?.defined || false;
   const heartDefined = centers.Heart?.defined || false;
   const solarPlexusDefined = centers['Solar Plexus']?.defined || false;
   const rootDefined = centers.Root?.defined || false;
-  const spleenDefined = centers.Spleen?.defined || false;
+  
+  console.log('Type determination - Centers:', {
+    sacral: sacralDefined,
+    throat: throatDefined,
+    heart: heartDefined,
+    solarPlexus: solarPlexusDefined,
+    root: rootDefined
+  });
   
   // Check for motor to throat connections for Manifestor
-  const motorToThroatChannels = [
-    [21, 45], [26, 44], [51, 25], // Heart to Throat
-    [35, 36], [12, 22], // Solar Plexus to Throat
-    [58, 18], [20, 10], [20, 57] // Root to Throat
-  ];
-  
-  const hasMotorToThroat = motorToThroatChannels.some(([a, b]) =>
-    (centers.Throat.gates.includes(a) && (centers.Heart.gates.includes(b) || centers['Solar Plexus'].gates.includes(b) || centers.Root.gates.includes(b))) ||
-    (centers.Throat.gates.includes(b) && (centers.Heart.gates.includes(a) || centers['Solar Plexus'].gates.includes(a) || centers.Root.gates.includes(a)))
-  );
+  const hasMotorToThroat = checkMotorToThroatConnection(centers);
   
   // Check for Sacral to Throat connection for Manifesting Generator
-  const sacralToThroatChannels = [
-    [34, 20], [34, 10], [34, 57], [5, 15], [14, 2], [29, 46]
-  ];
-  
-  const hasSacralToThroat = sacralToThroatChannels.some(([a, b]) =>
-    (centers.Sacral.gates.includes(a) && centers.Throat.gates.includes(b)) ||
-    (centers.Sacral.gates.includes(b) && centers.Throat.gates.includes(a))
-  );
+  const hasSacralToThroat = checkSacralToThroatConnection(centers);
   
   // Type determination logic
   if (sacralDefined && throatDefined && hasSacralToThroat) {
@@ -379,6 +402,35 @@ function determineHDType(centers) {
   return 'Projector';
 }
 
+// Helper function to check motor to throat connections
+function checkMotorToThroatConnection(centers) {
+  const motorToThroatChannels = [
+    [21, 45], [26, 44], [51, 25], // Heart to Throat
+    [35, 36], [12, 22], // Solar Plexus to Throat  
+    [58, 18], [10, 20], [57, 20] // Root to Throat
+  ];
+  
+  return motorToThroatChannels.some(([a, b]) => {
+    const hasChannel = centers.Throat?.gates.includes(a) || centers.Throat?.gates.includes(b);
+    const hasMotor = centers.Heart?.gates.includes(a) || centers.Heart?.gates.includes(b) ||
+                    centers['Solar Plexus']?.gates.includes(a) || centers['Solar Plexus']?.gates.includes(b) ||
+                    centers.Root?.gates.includes(a) || centers.Root?.gates.includes(b);
+    return hasChannel && hasMotor;
+  });
+}
+
+// Helper function to check sacral to throat connections
+function checkSacralToThroatConnection(centers) {
+  const sacralToThroatChannels = [
+    [34, 20], [34, 10], [34, 57], [5, 15], [14, 2], [29, 46]
+  ];
+  
+  return sacralToThroatChannels.some(([a, b]) => {
+    return (centers.Sacral?.gates.includes(a) && centers.Throat?.gates.includes(b)) ||
+           (centers.Sacral?.gates.includes(b) && centers.Throat?.gates.includes(a));
+  });
+}
+
 // Calculate HD profile from Sun and Earth gates
 function calculateHDProfile(sunGateInfo, earthGateInfo) {
   if (!sunGateInfo || !earthGateInfo) return '1/3';
@@ -400,7 +452,6 @@ function determineHDAuthority(centers) {
   return 'Lunar (Reflector)';
 }
 
-// Calculate definition type
 function calculateDefinition(centers) {
   const definedCenters = Object.values(centers).filter(center => center.defined).length;
   
@@ -410,7 +461,6 @@ function calculateDefinition(centers) {
   return 'Triple Split Definition';
 }
 
-// Generate life purpose based on type, profile, and authority
 function generateLifePurpose(type, profile, authority) {
   const purposes = {
     'Manifestor': `As a Manifestor with ${profile} profile, your purpose is to initiate and inform, creating impact through your ${authority} authority.`,
