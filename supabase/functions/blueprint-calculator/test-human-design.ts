@@ -1,7 +1,5 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { calculateHumanDesign } from './human-design-calculator.ts';
-import { calculatePlanetaryPositionsWithAstro } from './ephemeris-astroengine.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -9,11 +7,16 @@ const corsHeaders = {
 };
 
 export default async function testHumanDesign(req: Request) {
+  // Immediate logging to confirm function starts
+  console.log("🔧 TEST FUNCTION STARTED - Immediate entry point");
+  
   if (req.method === 'OPTIONS') {
+    console.log("🔧 OPTIONS request - returning CORS headers");
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    console.log("🔧 Entering main try block");
     console.log("=== TESTING HUMAN DESIGN WITH YOUR BIRTH DATA ===");
     
     // Your specific birth data
@@ -24,11 +27,71 @@ export default async function testHumanDesign(req: Request) {
     
     console.log("🔧 Testing with:", { birthDate, birthTime, birthLocation, timezone });
     
+    // Test if the import works
+    console.log("🔧 Testing imports...");
+    
+    let calculatePlanetaryPositionsWithAstro;
+    try {
+      console.log("🔧 Attempting to import calculatePlanetaryPositionsWithAstro...");
+      const ephemerisModule = await import('./ephemeris-astroengine.ts');
+      calculatePlanetaryPositionsWithAstro = ephemerisModule.calculatePlanetaryPositionsWithAstro;
+      console.log("✅ Successfully imported calculatePlanetaryPositionsWithAstro");
+    } catch (importError) {
+      console.error("❌ CRITICAL: Failed to import calculatePlanetaryPositionsWithAstro:", importError);
+      return new Response(JSON.stringify({
+        success: false,
+        error: {
+          step: "import_error",
+          name: importError.name,
+          message: importError.message,
+          stack: importError.stack,
+          details: "Failed to import calculatePlanetaryPositionsWithAstro from ephemeris-astroengine.ts"
+        },
+        test_failed: true,
+        timestamp: new Date().toISOString()
+      }), {
+        status: 500,
+        headers: { 
+          "Content-Type": "application/json",
+          ...corsHeaders 
+        }
+      });
+    }
+
+    let calculateHumanDesign;
+    try {
+      console.log("🔧 Attempting to import calculateHumanDesign...");
+      const humanDesignModule = await import('./human-design-calculator.ts');
+      calculateHumanDesign = humanDesignModule.calculateHumanDesign;
+      console.log("✅ Successfully imported calculateHumanDesign");
+    } catch (importError) {
+      console.error("❌ CRITICAL: Failed to import calculateHumanDesign:", importError);
+      return new Response(JSON.stringify({
+        success: false,
+        error: {
+          step: "import_error",
+          name: importError.name,
+          message: importError.message,
+          stack: importError.stack,
+          details: "Failed to import calculateHumanDesign from human-design-calculator.ts"
+        },
+        test_failed: true,
+        timestamp: new Date().toISOString()
+      }), {
+        status: 500,
+        headers: { 
+          "Content-Type": "application/json",
+          ...corsHeaders 
+        }
+      });
+    }
+    
     // Step 1: Get celestial data for personality time
     console.log("🔧 Step 1: Starting personality celestial calculations...");
     
     let personalityCelestialData;
     try {
+      console.log("🔧 About to call calculatePlanetaryPositionsWithAstro...");
       personalityCelestialData = await calculatePlanetaryPositionsWithAstro(
         birthDate, 
         birthTime, 
@@ -116,6 +179,7 @@ export default async function testHumanDesign(req: Request) {
     
     let humanDesignResult;
     try {
+      console.log("🔧 About to call calculateHumanDesign...");
       humanDesignResult = await calculateHumanDesign(
         birthDate,
         birthTime, 
@@ -242,15 +306,18 @@ export default async function testHumanDesign(req: Request) {
     console.error("❌ Top Error name:", topLevelError.name);
     console.error("❌ Top Error message:", topLevelError.message);
     console.error("❌ Top Error stack:", topLevelError.stack);
+    console.error("❌ Top Error toString:", topLevelError.toString());
     
     return new Response(JSON.stringify({
       success: false,
       error: {
         step: "top_level_handler",
-        name: topLevelError.name,
-        message: topLevelError.message,
-        stack: topLevelError.stack,
-        details: "Unhandled error in test function"
+        name: topLevelError.name || "UnknownError",
+        message: topLevelError.message || topLevelError.toString(),
+        stack: topLevelError.stack || "No stack trace available",
+        details: "Unhandled error in test function",
+        error_type: typeof topLevelError,
+        error_constructor: topLevelError.constructor?.name
       },
       test_failed: true,
       timestamp: new Date().toISOString()

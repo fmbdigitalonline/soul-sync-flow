@@ -1,6 +1,18 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import * as Astronomy from "npm:astronomy-engine@2";
+
+// Test import immediately
+console.log("🔧 EPHEMERIS MODULE: Starting to load...");
+
+let Astronomy;
+try {
+  console.log("🔧 EPHEMERIS MODULE: Importing astronomy-engine...");
+  Astronomy = await import("npm:astronomy-engine@2");
+  console.log("✅ EPHEMERIS MODULE: Successfully imported astronomy-engine");
+} catch (error) {
+  console.error("❌ EPHEMERIS MODULE: Failed to import astronomy-engine:", error);
+  throw new Error(`Failed to import astronomy-engine: ${error.message}`);
+}
+import * as path from "https://deno.land/std@0.168.0/path/mod.ts";
 import { calculateHouseCusps } from './house-system-calculator.ts';
 
 // Helper function to convert Julian Day to JavaScript Date
@@ -129,20 +141,29 @@ export async function calculatePlanetaryPositionsWithAstro(
   location: string,
   timezone: string
 ) {
+  console.log("🔧 EPHEMERIS: Function called with:", { date, time, location, timezone });
+  
   try {
     console.log(`🔧 AstroEngine: Starting calculation for ${date} ${time} at ${location} in timezone ${timezone || "unknown"}`);
+    
+    // Validate inputs first
+    if (!date || !time || !location) {
+      const errorMsg = `Missing required parameters: date=${date}, time=${time}, location=${location}`;
+      console.error("❌", errorMsg);
+      throw new Error(errorMsg);
+    }
     
     // Enhanced self-test with reliable EclipticLongitude
     try {
       console.log("🔧 Running self-test with reliable EclipticLongitude...");
-      const testDate = jdToDate(2_451_545.0); // J2000 as proper Date
-      const testAstroTime = Astronomy.MakeTime(testDate);
+      const testDate = new Date('2000-01-01T12:00:00Z'); // J2000 as proper Date
+      const testAstroTime = new Astronomy.AstroTime(testDate);
       
       const testMoonLon = Astronomy.EclipticLongitude("Moon", testAstroTime);
       console.log(`✅ Self-test passed: Moon @ J2000 = ${testMoonLon.toFixed(6)}°`);
     } catch (error) {
       console.error("❌ Self-test failed:", error);
-      throw new Error("Astronomy engine self-test failed");
+      throw new Error(`Astronomy engine self-test failed: ${error.message}`);
     }
     
     // Parse the date and time with CORRECTED handling
@@ -177,20 +198,23 @@ export async function calculatePlanetaryPositionsWithAstro(
       // CORRECTED: Paramaribo is UTC-3, so to convert local time to UTC, we ADD 3 hours
       console.log(`🔧 Converting Paramaribo time ${hour}:${minute} to UTC by adding 3 hours`);
       
-      // Use Date.UTC to create a proper UTC date
-      utcDate = new Date(Date.UTC(year, month - 1, day, hour + 3, minute, 0));
+      // Create UTC date by adding timezone offset
+      const utcHour = hour + 3;
+      const utcDay = utcHour >= 24 ? day + 1 : day;
+      const finalUtcHour = utcHour >= 24 ? utcHour - 24 : utcHour;
       
-      // Handle day overflow
-      if (hour + 3 >= 24) {
-        console.log(`🔧 Hour overflow detected, adjusting date`);
-        utcDate = new Date(Date.UTC(year, month - 1, day + 1, (hour + 3) - 24, minute, 0));
-      }
+      console.log(`🔧 UTC conversion: ${hour}:${minute} + 3 hours = ${finalUtcHour}:${minute} on day ${utcDay}`);
+      
+      // Use ISO string format for consistent parsing
+      const utcIsoString = `${year}-${month.toString().padStart(2, '0')}-${utcDay.toString().padStart(2, '0')}T${finalUtcHour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:00.000Z`;
+      utcDate = new Date(utcIsoString);
       
       console.log(`✅ UTC date created: ${utcDate.toISOString()}`);
     } else {
       // For other timezones, treat the provided time as UTC
       console.log(`🔧 Creating UTC date for non-Paramaribo timezone`);
-      utcDate = new Date(Date.UTC(year, month - 1, day, hour, minute, 0));
+      const utcIsoString = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}T${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:00.000Z`;
+      utcDate = new Date(utcIsoString);
       console.log(`✅ UTC date created: ${utcDate.toISOString()}`);
     }
     
@@ -201,10 +225,10 @@ export async function calculatePlanetaryPositionsWithAstro(
       throw new Error(errorMsg);
     }
     
-    // CRITICAL FIX: Create AstroTime using the proper method
+    // CRITICAL FIX: Create AstroTime using the corrected constructor
     console.log(`🔧 Creating AstroTime from UTC date: ${utcDate.toISOString()}`);
     
-    const astroTime = Astronomy.MakeTime(utcDate);
+    const astroTime = new Astronomy.AstroTime(utcDate);
     
     // Validate that astroTime was created properly
     if (!astroTime || typeof astroTime.tt !== 'number') {
