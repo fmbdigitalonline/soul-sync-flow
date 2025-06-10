@@ -43,8 +43,8 @@ export default async function handler(req, res) {
       success: true,
       data: humanDesignResult,
       timestamp: new Date().toISOString(),
-      library: 'corrected-custom-v2',
-      notice: 'Using corrected custom calculation with proper HD formulas v2 - fixed gate offset, solar arc, and center mapping'
+      library: 'corrected-custom-v3',
+      notice: 'Using corrected custom calculation with proper HD formulas v3 - fixed gate wheel rotation, solar arc scope, and channel-based center definition'
     });
 
   } catch (error) {
@@ -59,7 +59,7 @@ export default async function handler(req, res) {
 
 // Corrected Human Design calculation using verified formulas
 async function calculateHumanDesignCorrected({ birthDate, birthTime, birthLocation, timezone, celestialData }) {
-  console.log('Using corrected Human Design calculation v2 with verified formulas...');
+  console.log('Using corrected Human Design calculation v3 with verified formulas...');
   
   // Use the actual celestial data from our Swiss Ephemeris calculations
   const planets = celestialData.planets;
@@ -103,13 +103,13 @@ async function calculateHumanDesignCorrected({ birthDate, birthTime, birthLocati
     // Personality (conscious) - current time
     personalityGates.push(`${gateInfo.gate}.${gateInfo.line}`);
     
-    // Design (unconscious) - using solar arc method
-    const designLongitude = calculateDesignLongitudeCorrected(longitude);
+    // Design (unconscious) - using solar arc method ONLY for Sun/Earth/nodes
+    const designLongitude = calculateDesignLongitudeCorrected(longitude, planet.name);
     const designGateInfo = longitudeToHumanDesignGateCorrected(designLongitude);
     designGates.push(`${designGateInfo.gate}.${designGateInfo.line}`);
   });
 
-  // Calculate centers and channels based on gates using CORRECTED HD mappings
+  // Calculate centers and channels based on gates using CORRECTED HD mappings with channel-based definition
   const centers = calculateCentersFromGatesCorrected([...personalityGates, ...designGates]);
   
   // Determine type based on center definitions and actual channels
@@ -140,22 +140,22 @@ async function calculateHumanDesignCorrected({ birthDate, birthTime, birthLocati
       personality_time: new Date(`${birthDate}T${birthTime}`).toISOString(),
       design_time: new Date(new Date(`${birthDate}T${birthTime}`).getTime() - (88.736 * 24 * 60 * 60 * 1000)).toISOString(),
       offset_days: "88.736",
-      calculation_method: "CORRECTED_CUSTOM_V2_WITH_45_DEGREE_OFFSET_AND_SOLAR_ARC"
+      calculation_method: "CORRECTED_CUSTOM_V3_WHEEL_ROTATION_SOLAR_ARC_SCOPE_CHANNEL_DEFINITION"
     }
   };
 }
 
-// CORRECTED Human Design longitude to gate conversion with proper 45° offset
+// FIX 1: CORRECTED Gate wheel starting with Gate 21 at index 0 (rotated 16 positions)
 function longitudeToHumanDesignGateCorrected(longitude) {
   // Human Design wheel starts at 15° Taurus 56' (45° offset from 0° Aries)
   const GATE_OFFSET_DEG = 45; // 15° Taurus 56'
   
-  // The correct gate wheel order for Human Design
+  // CORRECTED gate wheel order starting with Gate 21 at 0° Aries (after 45° offset)
   const gateWheel = [
-    41, 19, 13, 49, 30, 55, 37, 63, 22, 36, 25, 17, 21, 51, 42, 3,
-    27, 24, 2, 23, 8, 20, 16, 35, 45, 12, 15, 52, 39, 53, 62, 56,
-    31, 33, 7, 4, 29, 59, 40, 64, 47, 6, 46, 18, 48, 57, 32, 50,
-    28, 44, 1, 43, 14, 34, 9, 5, 26, 11, 10, 58, 38, 54, 61, 60
+    21, 51, 42, 3, 27, 24, 2, 23, 8, 20, 16, 35, 45, 12, 15, 52,
+    39, 53, 62, 56, 31, 33, 7, 4, 29, 59, 40, 64, 47, 6, 46, 18,
+    48, 57, 32, 50, 28, 44, 1, 43, 14, 34, 9, 5, 26, 11, 10, 58,
+    38, 54, 61, 60, 41, 19, 13, 49, 30, 55, 37, 63, 22, 36, 25, 17
   ];
   
   // Each gate covers 5.625° (360/64)
@@ -169,7 +169,7 @@ function longitudeToHumanDesignGateCorrected(longitude) {
   
   // Calculate gate index
   const gateIndex = Math.floor(wheelPos / degreesPerGate);
-  const gate = gateWheel[gateIndex] || 41;
+  const gate = gateWheel[gateIndex] || 21;
   
   // Calculate line (1-6) within the gate
   const degreesPerLine = degreesPerGate / 6;
@@ -179,14 +179,20 @@ function longitudeToHumanDesignGateCorrected(longitude) {
   return { gate, line };
 }
 
-// Calculate design longitude using solar arc method
-function calculateDesignLongitudeCorrected(personalityLongitude) {
+// FIX 2: Calculate design longitude using solar arc method ONLY for Sun/Earth/nodes
+function calculateDesignLongitudeCorrected(personalityLongitude, planetName) {
   // Sun moves 57.86° in ~88.736 days (solar arc method)
   const SOLAR_ARC = 57.86;
-  return (personalityLongitude - SOLAR_ARC + 360) % 360;
+  
+  // Apply solar arc offset only for Sun/Earth/nodes - all other planets stay at natal position
+  if (['sun', 'earth', 'north_node', 'south_node'].includes(planetName)) {
+    return (personalityLongitude - SOLAR_ARC + 360) % 360;
+  } else {
+    return personalityLongitude; // Moon and planets unchanged
+  }
 }
 
-// CORRECTED center calculation with accurate gate-to-center mapping
+// FIX 3: CORRECTED center calculation with channel-based definition (not individual gates)
 function calculateCentersFromGatesCorrected(allGates) {
   const centers = {
     'Head': { defined: false, gates: [], channels: [] },
@@ -200,7 +206,7 @@ function calculateCentersFromGatesCorrected(allGates) {
     'Root': { defined: false, gates: [], channels: [] }
   };
   
-  // CORRECTED Human Design gate-to-center mapping (authoritative Ra/UruHu chart)
+  // CORRECTED Human Design gate-to-center mapping
   const gateToCenterMap = {
     // Head Center (Crown)
     64: 'Head', 61: 'Head', 63: 'Head',
@@ -236,26 +242,40 @@ function calculateCentersFromGatesCorrected(allGates) {
     58: 'Root', 38: 'Root', 54: 'Root', 61: 'Root'
   };
   
-  // Count gate occurrences in each center
-  const centerGateCounts = {};
-  
+  // First collect all gates in each center
   allGates.forEach(gateStr => {
     const gateNum = parseInt(gateStr.split('.')[0]);
     const centerName = gateToCenterMap[gateNum];
     
     if (centerName) {
-      if (!centerGateCounts[centerName]) {
-        centerGateCounts[centerName] = new Set();
-      }
-      centerGateCounts[centerName].add(gateNum);
       centers[centerName].gates.push(gateNum);
     }
   });
   
-  // A center is defined if it has activation
-  Object.keys(centerGateCounts).forEach(centerName => {
-    if (centerGateCounts[centerName].size > 0) {
-      centers[centerName].defined = true;
+  // Human Design channels (gate pairs that define centers when BOTH gates are present)
+  const channels = [
+    [34, 20], [34, 10], [34, 57], [59, 6], [5, 15], [3, 60], [29, 46], [42, 53],
+    [27, 50], [59, 6], [6, 37], [22, 12], [35, 36], [16, 48], [40, 37], [26, 44],
+    [21, 45], [25, 51], [2, 14], [46, 29], [47, 64], [24, 61], [4, 63], [17, 62],
+    [43, 23], [11, 56], [31, 7], [33, 13], [1, 8], [7, 31], [13, 33], [10, 20],
+    [57, 34], [48, 16], [18, 58], [38, 28], [54, 32], [44, 26], [50, 27], [32, 54],
+    [28, 38], [18, 58], [48, 16], [57, 10], [20, 34], [34, 10], [10, 57], [57, 20],
+    [6, 59], [37, 40], [22, 12], [36, 35], [30, 41], [55, 39], [49, 19], [13, 33]
+  ];
+  
+  // Define centers only when complete channels exist (both gates present)
+  channels.forEach(([gateA, gateB]) => {
+    const centerA = gateToCenterMap[gateA];
+    const centerB = gateToCenterMap[gateB];
+    
+    if (centerA && centerB && 
+        centers[centerA].gates.includes(gateA) && 
+        centers[centerB].gates.includes(gateB)) {
+      
+      centers[centerA].defined = true;
+      centers[centerB].defined = true;
+      centers[centerA].channels.push([gateA, gateB]);
+      centers[centerB].channels.push([gateA, gateB]);
     }
   });
   
@@ -352,7 +372,6 @@ function generateLifePurpose(type, profile, authority) {
   return purposes[type] || `Your purpose is to follow your ${authority} authority as a ${type}.`;
 }
 
-// Keep existing helper functions
 function getStrategyForType(type) {
   const strategies = {
     'Generator': 'Wait to respond',
