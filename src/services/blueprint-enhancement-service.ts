@@ -19,11 +19,11 @@ export class BlueprintEnhancementService {
   }
 
   private static generateEnergyIdentitySection(blueprint: BlueprintData) {
-    const sunSign = blueprint.archetype_western.sun_sign;
-    const hdType = blueprint.energy_strategy_human_design.type;
-    const lifePathNumber = blueprint.values_life_path.lifePathNumber;
-    const chineseElement = blueprint.archetype_chinese.element;
-    const chineseAnimal = blueprint.archetype_chinese.animal;
+    const sunSign = blueprint.archetype_western?.sun_sign || "Unknown";
+    const hdType = blueprint.energy_strategy_human_design?.type || "Unknown";
+    const lifePathNumber = blueprint.values_life_path?.lifePathNumber || 0;
+    const chineseElement = blueprint.archetype_chinese?.element || "Unknown";
+    const chineseAnimal = blueprint.archetype_chinese?.animal || "Unknown";
 
     const facts = [
       `${hdType}`,
@@ -35,19 +35,19 @@ export class BlueprintEnhancementService {
     return {
       facts,
       narratives: {
-        novice: `You're a ${hdType} with ${sunSign}. This means you're designed to ${blueprint.energy_strategy_human_design.strategy.toLowerCase()}. Your Life Path ${lifePathNumber} shows you're here to be a ${blueprint.values_life_path.lifePathKeyword?.toLowerCase() || 'creator'}. As a ${chineseElement} ${chineseAnimal}, you bring ${chineseElement.toLowerCase()} energy to everything you do.`,
+        novice: `You're a ${hdType} with ${sunSign}. This means you're designed to ${blueprint.energy_strategy_human_design?.strategy?.toLowerCase() || 'explore your path'}. Your Life Path ${lifePathNumber} shows you're here to be a ${blueprint.values_life_path?.lifePathKeyword?.toLowerCase() || 'creator'}. As a ${chineseElement} ${chineseAnimal}, you bring ${chineseElement.toLowerCase()} energy to everything you do.`,
         
-        amateur: `As a ${hdType} with ${blueprint.energy_strategy_human_design.authority} authority, your strategy is to ${blueprint.energy_strategy_human_design.strategy.toLowerCase()}. Your ${sunSign} gives you ${blueprint.archetype_western.sun_keyword.toLowerCase()} energy, while Life Path ${lifePathNumber} indicates your soul came here to master ${blueprint.values_life_path.lifePathKeyword?.toLowerCase() || 'creative expression'}. The ${chineseElement} ${chineseAnimal} combination adds ${chineseElement.toLowerCase()} stability and ${chineseAnimal.toLowerCase()} characteristics to your energetic signature.`,
+        amateur: `As a ${hdType} with ${blueprint.energy_strategy_human_design?.authority || 'inner'} authority, your strategy is to ${blueprint.energy_strategy_human_design?.strategy?.toLowerCase() || 'explore your path'}. Your ${sunSign} gives you ${blueprint.archetype_western?.sun_keyword?.toLowerCase() || 'unique'} energy, while Life Path ${lifePathNumber} indicates your soul came here to master ${blueprint.values_life_path?.lifePathKeyword?.toLowerCase() || 'creative expression'}. The ${chineseElement} ${chineseAnimal} combination adds ${chineseElement.toLowerCase()} stability and ${chineseAnimal.toLowerCase()} characteristics to your energetic signature.`,
         
-        pro: `${hdType} with ${blueprint.energy_strategy_human_design.definition} definition and ${blueprint.energy_strategy_human_design.profile} profile. ${sunSign} creates ${blueprint.archetype_western.sun_keyword.toLowerCase()} solar expression through ${blueprint.energy_strategy_human_design.authority} decision-making authority. Life Path ${lifePathNumber} (${blueprint.values_life_path.lifePathKeyword}) intersects with Expression Number ${blueprint.values_life_path.expressionNumber} (${blueprint.values_life_path.expressionKeyword}) creating a complex mandala of ${chineseElement} ${chineseAnimal} ${blueprint.archetype_chinese.yin_yang} polarity. Strategy: ${blueprint.energy_strategy_human_design.strategy}. Not-self theme: ${blueprint.energy_strategy_human_design.not_self_theme}.`
+        pro: `${hdType} with ${blueprint.energy_strategy_human_design?.definition || 'unique'} definition and ${blueprint.energy_strategy_human_design?.profile || 'personal'} profile. ${sunSign} creates ${blueprint.archetype_western?.sun_keyword?.toLowerCase() || 'dynamic'} solar expression through ${blueprint.energy_strategy_human_design?.authority || 'inner'} decision-making authority. Life Path ${lifePathNumber} (${blueprint.values_life_path?.lifePathKeyword || 'Growth'}) intersects with Expression Number ${blueprint.values_life_path?.expressionNumber || 0} (${blueprint.values_life_path?.expressionKeyword || 'Expression'}) creating a complex mandala of ${chineseElement} ${chineseAnimal} ${blueprint.archetype_chinese?.yin_yang || 'balanced'} polarity. Strategy: ${blueprint.energy_strategy_human_design?.strategy || 'Personal exploration'}. Not-self theme: ${blueprint.energy_strategy_human_design?.not_self_theme || 'Inner resistance'}.`
       }
     };
   }
 
   private static generateWesternSection(blueprint: BlueprintData, celestialData?: any) {
-    const sunSign = blueprint.archetype_western.sun_sign;
-    const moonSign = blueprint.archetype_western.moon_sign;
-    const risingSign = blueprint.archetype_western.rising_sign;
+    const sunSign = blueprint.archetype_western?.sun_sign || "Unknown";
+    const moonSign = blueprint.archetype_western?.moon_sign || "Unknown";
+    const risingSign = blueprint.archetype_western?.rising_sign || "Unknown";
     
     // Extract degrees if available
     const sunDegrees = this.extractDegrees(sunSign);
@@ -57,17 +57,17 @@ export class BlueprintEnhancementService {
       `☉ ${sunSign}`,
       `☽ ${moonSign}`,
       `ASC ${risingSign}`,
-      `Source: ${blueprint.archetype_western.source}`
+      `Source: ${blueprint.archetype_western?.source || 'calculation'}`
     ];
 
     return {
       facts,
       narratives: {
-        novice: `Your sun in ${sunSign.split(' ')[0]} makes you ${blueprint.archetype_western.sun_keyword.toLowerCase()}, while your moon in ${moonSign.split(' ')[0]} means you feel most comfortable when you're ${blueprint.archetype_western.moon_keyword.toLowerCase()}. Your rising sign shows how others see you when they first meet you.`,
+        novice: `Your sun in ${sunSign.split(' ')[0]} makes you ${blueprint.archetype_western?.sun_keyword?.toLowerCase() || 'unique'}, while your moon in ${moonSign.split(' ')[0]} means you feel most comfortable when you're ${blueprint.archetype_western?.moon_keyword?.toLowerCase() || 'authentic'}. Your rising sign shows how others see you when they first meet you.`,
         
-        amateur: `Your ${sunSign} creates ${blueprint.archetype_western.sun_keyword.toLowerCase()} core identity and conscious ego expression. The ${moonSign} provides ${blueprint.archetype_western.moon_keyword.toLowerCase()} emotional responses and unconscious patterns. Your ${risingSign} ascendant is your mask and first impression - how you naturally approach new situations and how the world sees you initially.`,
+        amateur: `Your ${sunSign} creates ${blueprint.archetype_western?.sun_keyword?.toLowerCase() || 'dynamic'} core identity and conscious ego expression. The ${moonSign} provides ${blueprint.archetype_western?.moon_keyword?.toLowerCase() || 'intuitive'} emotional responses and unconscious patterns. Your ${risingSign} ascendant is your mask and first impression - how you naturally approach new situations and how the world sees you initially.`,
         
-        pro: `Solar placement at ${sunSign} creates ${blueprint.archetype_western.sun_keyword.toLowerCase()} conscious identity${sunDegrees ? ` at ${sunDegrees}` : ''}. Lunar expression through ${moonSign}${moonDegrees ? ` at ${moonDegrees}` : ''} provides ${blueprint.archetype_western.moon_keyword.toLowerCase()} emotional substrate and unconscious response patterns. ${risingSign} ascendant creates the persona filter through which this solar-lunar dynamic is expressed to the world. Calculated using ${blueprint.archetype_western.source} with ${blueprint.metadata.engine || 'unknown engine'}.`
+        pro: `Solar placement at ${sunSign} creates ${blueprint.archetype_western?.sun_keyword?.toLowerCase() || 'dynamic'} conscious identity${sunDegrees ? ` at ${sunDegrees}` : ''}. Lunar expression through ${moonSign}${moonDegrees ? ` at ${moonDegrees}` : ''} provides ${blueprint.archetype_western?.moon_keyword?.toLowerCase() || 'intuitive'} emotional substrate and unconscious response patterns. ${risingSign} ascendant creates the persona filter through which this solar-lunar dynamic is expressed to the world. Calculated using ${blueprint.archetype_western?.source || 'ephemeris'} with ${blueprint.metadata?.engine || 'unknown engine'}.`
       },
       aspects: celestialData?.aspects || [],
       houses: celestialData?.houses || {},
@@ -77,16 +77,32 @@ export class BlueprintEnhancementService {
 
   private static generateHumanDesignSection(blueprint: BlueprintData) {
     const hd = blueprint.energy_strategy_human_design;
+    
+    // Add null checks for all Human Design data
+    if (!hd) {
+      return {
+        facts: ["Human Design data not available"],
+        narratives: {
+          novice: "Human Design calculation failed. Please regenerate your blueprint for accurate Human Design information.",
+          amateur: "Human Design data is incomplete. The system requires proper birth time and location for accurate Human Design calculations.",
+          pro: "Human Design calculation error: Missing or invalid ephemeris data. Check birth coordinates and time accuracy."
+        },
+        centers: {},
+        gates: [],
+        channels: []
+      };
+    }
+    
     const definedCenters = this.getDefinedCenters(hd.centers);
-    const totalGates = hd.gates.conscious_personality.length + hd.gates.unconscious_design.length;
+    const totalGates = (hd.gates?.conscious_personality?.length || 0) + (hd.gates?.unconscious_design?.length || 0);
     const channels = this.getChannelsFromCenters(hd.centers);
 
     const facts = [
-      `${hd.type}`,
-      `${hd.strategy}`,
-      `${hd.authority}`,
-      `Profile ${hd.profile}`,
-      `${hd.definition}`,
+      `${hd.type || 'Unknown'}`,
+      `${hd.strategy || 'Unknown'}`,
+      `${hd.authority || 'Unknown'}`,
+      `Profile ${hd.profile || 'Unknown'}`,
+      `${hd.definition || 'Unknown'}`,
       `${definedCenters.length}/9 Centers Defined`,
       `${totalGates} Active Gates`,
       `${channels.length} Channels`
@@ -95,43 +111,55 @@ export class BlueprintEnhancementService {
     return {
       facts,
       narratives: {
-        novice: `You're a ${hd.type}! This means your strategy is to ${hd.strategy.toLowerCase()}. When making decisions, listen to your ${hd.authority.toLowerCase()} authority. You have ${definedCenters.length} out of 9 energy centers defined, which means you have consistent energy in those areas. When you don't follow your strategy, you might feel ${hd.not_self_theme.toLowerCase()}.`,
+        novice: `You're a ${hd.type || 'Unknown'}! This means your strategy is to ${hd.strategy?.toLowerCase() || 'explore your path'}. When making decisions, listen to your ${hd.authority?.toLowerCase() || 'inner'} authority. You have ${definedCenters.length} out of 9 energy centers defined, which means you have consistent energy in those areas. When you don't follow your strategy, you might feel ${hd.not_self_theme?.toLowerCase() || 'resistance'}.`,
         
-        amateur: `As a ${hd.type} with ${hd.authority} authority, your strategy is to ${hd.strategy.toLowerCase()}. Your ${hd.definition} means your defined centers work ${hd.definition.includes('Single') ? 'as one connected system' : 'in separate groups'}. With ${definedCenters.length}/9 centers defined (${definedCenters.join(', ')}), you have reliable energy in these areas. Your ${hd.profile} profile shows you're here to ${this.getProfileDescription(hd.profile)}.`,
+        amateur: `As a ${hd.type || 'Unknown'} with ${hd.authority || 'inner'} authority, your strategy is to ${hd.strategy?.toLowerCase() || 'explore your path'}. Your ${hd.definition || 'unique'} means your defined centers work ${hd.definition?.includes('Single') ? 'as one connected system' : 'in separate groups'}. With ${definedCenters.length}/9 centers defined (${definedCenters.join(', ')}), you have reliable energy in these areas. Your ${hd.profile || 'personal'} profile shows you're here to ${this.getProfileDescription(hd.profile || '')}.`,
         
-        pro: `${hd.type} with ${hd.definition} operating through ${hd.authority} authority. Profile ${hd.profile} creates ${this.getProfileDescription(hd.profile)} incarnation cross themes. Defined centers: ${definedCenters.join(', ')} creating ${channels.length} channels: ${channels.join(', ')}. Conscious gates: ${hd.gates.conscious_personality.join(', ')}. Unconscious gates: ${hd.gates.unconscious_design.join(', ')}. Strategy: ${hd.strategy}. Not-self: ${hd.not_self_theme}. Life purpose: ${hd.life_purpose}.`
+        pro: `${hd.type || 'Unknown'} with ${hd.definition || 'unique'} operating through ${hd.authority || 'inner'} authority. Profile ${hd.profile || 'unknown'} creates ${this.getProfileDescription(hd.profile || '')} incarnation cross themes. Defined centers: ${definedCenters.join(', ')} creating ${channels.length} channels: ${channels.join(', ')}. Conscious gates: ${hd.gates?.conscious_personality?.join(', ') || 'none'}. Unconscious gates: ${hd.gates?.unconscious_design?.join(', ') || 'none'}. Strategy: ${hd.strategy || 'Unknown'}. Not-self: ${hd.not_self_theme || 'Unknown'}. Life purpose: ${hd.life_purpose || 'Unknown'}.`
       },
       centers: this.analyzeCenters(hd.centers),
-      gates: this.combineGates(hd.gates),
-      channels: this.identifyChannels(hd.gates)
+      gates: this.combineGates(hd.gates || { unconscious_design: [], conscious_personality: [] }),
+      channels: this.identifyChannels(hd.gates || { unconscious_design: [], conscious_personality: [] })
     };
   }
 
   private static generateNumerologySection(blueprint: BlueprintData) {
     const num = blueprint.values_life_path;
     
+    if (!num) {
+      return {
+        facts: ["Numerology data not available"],
+        narratives: {
+          novice: "Numerology calculation failed. Please check your full name and birth date.",
+          amateur: "Numerology data is incomplete. The system requires your full birth name for accurate calculations.",
+          pro: "Numerology calculation error: Missing name or birth date data."
+        },
+        calculations: {}
+      };
+    }
+    
     const facts = [
-      `Life Path ${num.lifePathNumber}`,
-      `Expression ${num.expressionNumber}`,
-      `Soul Urge ${num.soulUrgeNumber}`,
-      `Birthday ${num.birthdayNumber}`,
-      `Birth Year ${num.birthYear}`
+      `Life Path ${num.lifePathNumber || 0}`,
+      `Expression ${num.expressionNumber || 0}`,
+      `Soul Urge ${num.soulUrgeNumber || 0}`,
+      `Birthday ${num.birthdayNumber || 0}`,
+      `Birth Year ${num.birthYear || 0}`
     ];
 
     return {
       facts,
       narratives: {
-        novice: `Your Life Path ${num.lifePathNumber} means you're here to be a ${num.lifePathKeyword?.toLowerCase() || 'creator'}. Your Expression Number ${num.expressionNumber} shows you're naturally a ${num.expressionKeyword?.toLowerCase() || 'leader'}. Your Soul Urge ${num.soulUrgeNumber} reveals you deeply desire ${num.soulUrgeKeyword?.toLowerCase() || 'success'}.`,
+        novice: `Your Life Path ${num.lifePathNumber || 0} means you're here to be a ${num.lifePathKeyword?.toLowerCase() || 'creator'}. Your Expression Number ${num.expressionNumber || 0} shows you're naturally a ${num.expressionKeyword?.toLowerCase() || 'leader'}. Your Soul Urge ${num.soulUrgeNumber || 0} reveals you deeply desire ${num.soulUrgeKeyword?.toLowerCase() || 'success'}.`,
         
-        amateur: `Life Path ${num.lifePathNumber} (${num.lifePathKeyword}) represents your soul's primary lesson and life direction. Expression Number ${num.expressionNumber} (${num.expressionKeyword}) shows your natural talents and how you express yourself in the world. Soul Urge ${num.soulUrgeNumber} (${num.soulUrgeKeyword}) reveals your inner motivations and heart's desires. Birthday Number ${num.birthdayNumber} (${num.birthdayKeyword}) adds special gifts from the day you were born.`,
+        amateur: `Life Path ${num.lifePathNumber || 0} (${num.lifePathKeyword || 'Growth'}) represents your soul's primary lesson and life direction. Expression Number ${num.expressionNumber || 0} (${num.expressionKeyword || 'Expression'}) shows your natural talents and how you express yourself in the world. Soul Urge ${num.soulUrgeNumber || 0} (${num.soulUrgeKeyword || 'Desire'}) reveals your inner motivations and heart's desires. Birthday Number ${num.birthdayNumber || 0} (${num.birthdayKeyword || 'Talent'}) adds special gifts from the day you were born.`,
         
-        pro: `Numerological matrix: Life Path ${num.lifePathNumber} derived from birth date ${num.birthDay}/${num.birthMonth}/${num.birthYear} indicating ${num.lifePathKeyword} karmic lessons. Expression ${num.expressionNumber} calculated from full birth name creating ${num.expressionKeyword} vibrational frequency. Soul Urge ${num.soulUrgeNumber} (${num.soulUrgeKeyword}) from vowels shows core motivation. Birthday ${num.birthdayNumber} (${num.birthdayKeyword}) provides additional talents. Master numbers and reduction patterns create complex numerological mandala.`
+        pro: `Numerological matrix: Life Path ${num.lifePathNumber || 0} derived from birth date ${num.birthDay || 0}/${num.birthMonth || 0}/${num.birthYear || 0} indicating ${num.lifePathKeyword || 'growth'} karmic lessons. Expression ${num.expressionNumber || 0} calculated from full birth name creating ${num.expressionKeyword || 'expression'} vibrational frequency. Soul Urge ${num.soulUrgeNumber || 0} (${num.soulUrgeKeyword || 'desire'}) from vowels shows core motivation. Birthday ${num.birthdayNumber || 0} (${num.birthdayKeyword || 'talent'}) provides additional talents. Master numbers and reduction patterns create complex numerological mandala.`
       },
       calculations: {
-        lifePathNumber: { value: num.lifePathNumber, method: `${num.birthDay}/${num.birthMonth}/${num.birthYear} reduction` },
-        expressionNumber: { value: num.expressionNumber, method: `Full name: ${blueprint.user_meta.full_name}` },
-        soulUrgeNumber: { value: num.soulUrgeNumber, method: "Vowels in full name" },
-        birthdayNumber: { value: num.birthdayNumber, method: `Birth day: ${num.birthDay}` }
+        lifePathNumber: { value: num.lifePathNumber || 0, method: `${num.birthDay || 0}/${num.birthMonth || 0}/${num.birthYear || 0} reduction` },
+        expressionNumber: { value: num.expressionNumber || 0, method: `Full name: ${blueprint.user_meta?.full_name || 'Unknown'}` },
+        soulUrgeNumber: { value: num.soulUrgeNumber || 0, method: "Vowels in full name" },
+        birthdayNumber: { value: num.birthdayNumber || 0, method: `Birth day: ${num.birthDay || 0}` }
       }
     };
   }
@@ -139,24 +167,41 @@ export class BlueprintEnhancementService {
   private static generateChineseSection(blueprint: BlueprintData) {
     const chinese = blueprint.archetype_chinese;
     
+    if (!chinese) {
+      return {
+        facts: ["Chinese Astrology data not available"],
+        narratives: {
+          novice: "Chinese Astrology calculation failed. Please check your birth year.",
+          amateur: "Chinese Astrology data is incomplete. The system requires your birth year for calculations.",
+          pro: "Chinese Astrology calculation error: Missing birth year data."
+        },
+        four_pillars: {
+          year: { animal: "Unknown", element: "Unknown" },
+          month: { animal: "Unknown", element: "Unknown" },
+          day: { animal: "Unknown", element: "Unknown" },
+          hour: { animal: "Unknown", element: "Unknown" }
+        }
+      };
+    }
+    
     const facts = [
-      `${chinese.animal}`,
-      `${chinese.element}`,
-      `${chinese.yin_yang}`,
-      `Year ${blueprint.values_life_path.birthYear}`
+      `${chinese.animal || 'Unknown'}`,
+      `${chinese.element || 'Unknown'}`,
+      `${chinese.yin_yang || 'Unknown'}`,
+      `Year ${blueprint.values_life_path?.birthYear || 'Unknown'}`
     ];
 
     return {
       facts,
       narratives: {
-        novice: `You're a ${chinese.element} ${chinese.animal}! This means you have the ${chinese.animal.toLowerCase()}'s natural qualities like being ${this.getAnimalTraits(chinese.animal)}. The ${chinese.element.toLowerCase()} element adds ${this.getElementTraits(chinese.element)} energy to your personality.`,
+        novice: `You're a ${chinese.element || 'Unknown'} ${chinese.animal || 'Unknown'}! This means you have the ${chinese.animal?.toLowerCase() || 'unknown'}'s natural qualities like being ${this.getAnimalTraits(chinese.animal || '')}. The ${chinese.element?.toLowerCase() || 'unknown'} element adds ${this.getElementTraits(chinese.element || '')} energy to your personality.`,
         
-        amateur: `Born in a ${chinese.element} ${chinese.animal} year with ${chinese.yin_yang} polarity. The ${chinese.animal} brings ${this.getAnimalTraits(chinese.animal)} characteristics, while ${chinese.element} element provides ${this.getElementTraits(chinese.element)} energy. ${chinese.yin_yang} polarity affects how this energy expresses - ${chinese.yin_yang === 'Yang' ? 'active, external, giving' : 'receptive, internal, nurturing'}.`,
+        amateur: `Born in a ${chinese.element || 'Unknown'} ${chinese.animal || 'Unknown'} year with ${chinese.yin_yang || 'Unknown'} polarity. The ${chinese.animal || 'Unknown'} brings ${this.getAnimalTraits(chinese.animal || '')} characteristics, while ${chinese.element || 'Unknown'} element provides ${this.getElementTraits(chinese.element || '')} energy. ${chinese.yin_yang || 'Unknown'} polarity affects how this energy expresses - ${chinese.yin_yang === 'Yang' ? 'active, external, giving' : chinese.yin_yang === 'Yin' ? 'receptive, internal, nurturing' : 'balanced'}.`,
         
-        pro: `${chinese.element} ${chinese.animal} with ${chinese.yin_yang} polarity in the sexagenary cycle. Year pillar: ${chinese.element} ${chinese.animal} (${blueprint.values_life_path.birthYear}). This creates specific energetic patterns within the Chinese metaphysical framework affecting personality, compatibility, and life timing. Element ${chinese.element} governs ${this.getElementGoverning(chinese.element)}, while ${chinese.animal} archetypes ${this.getAnimalArchetype(chinese.animal)}. ${chinese.yin_yang} polarity determines expression modality.`
+        pro: `${chinese.element || 'Unknown'} ${chinese.animal || 'Unknown'} with ${chinese.yin_yang || 'Unknown'} polarity in the sexagenary cycle. Year pillar: ${chinese.element || 'Unknown'} ${chinese.animal || 'Unknown'} (${blueprint.values_life_path?.birthYear || 'Unknown'}). This creates specific energetic patterns within the Chinese metaphysical framework affecting personality, compatibility, and life timing. Element ${chinese.element || 'Unknown'} governs ${this.getElementGoverning(chinese.element || '')}, while ${chinese.animal || 'Unknown'} archetypes ${this.getAnimalArchetype(chinese.animal || '')}. ${chinese.yin_yang || 'Unknown'} polarity determines expression modality.`
       },
       four_pillars: {
-        year: { animal: chinese.animal, element: chinese.element },
+        year: { animal: chinese.animal || "Unknown", element: chinese.element || "Unknown" },
         month: { animal: "Calculating", element: "Calculating" },
         day: { animal: "Calculating", element: "Calculating" },
         hour: { animal: "Calculating", element: "Calculating" }
@@ -170,16 +215,20 @@ export class BlueprintEnhancementService {
     return match ? `${match[1]}°` : null;
   }
 
-  private static getDefinedCenters(centers: Record<string, any>): string[] {
+  private static getDefinedCenters(centers: Record<string, any> | undefined | null): string[] {
+    if (!centers) return [];
+    
     return Object.entries(centers)
-      .filter(([_, center]: [string, any]) => center.defined)
+      .filter(([_, center]: [string, any]) => center?.defined)
       .map(([name, _]) => name);
   }
 
-  private static getChannelsFromCenters(centers: Record<string, any>): string[] {
+  private static getChannelsFromCenters(centers: Record<string, any> | undefined | null): string[] {
+    if (!centers) return [];
+    
     const allChannels: string[] = [];
     Object.values(centers).forEach((center: any) => {
-      if (center.channels) {
+      if (center?.channels) {
         allChannels.push(...center.channels);
       }
     });
@@ -256,19 +305,24 @@ export class BlueprintEnhancementService {
     return [];
   }
 
-  private static analyzeCenters(centers: Record<string, any>) {
+  private static analyzeCenters(centers: Record<string, any> | undefined | null) {
     const analyzed: Record<string, { defined: boolean; percentage: number }> = {};
+    
+    if (!centers) return analyzed;
+    
     Object.entries(centers).forEach(([name, center]: [string, any]) => {
       analyzed[name] = {
-        defined: center.defined || false,
-        percentage: center.defined ? 100 : 0
+        defined: center?.defined || false,
+        percentage: center?.defined ? 100 : 0
       };
     });
     return analyzed;
   }
 
-  private static combineGates(gates: { unconscious_design: any[]; conscious_personality: any[] }) {
-    const allGates = [...gates.unconscious_design, ...gates.conscious_personality];
+  private static combineGates(gates: { unconscious_design: any[]; conscious_personality: any[] } | undefined | null) {
+    if (!gates) return [];
+    
+    const allGates = [...(gates.unconscious_design || []), ...(gates.conscious_personality || [])];
     return allGates.map((gate, index) => ({
       number: parseInt(gate.toString().split('.')[0]),
       name: `Gate ${gate}`,
@@ -276,7 +330,9 @@ export class BlueprintEnhancementService {
     }));
   }
 
-  private static identifyChannels(gates: { unconscious_design: any[]; conscious_personality: any[] }) {
+  private static identifyChannels(gates: { unconscious_design: any[]; conscious_personality: any[] } | undefined | null) {
+    if (!gates) return [];
+    
     return [
       { name: "1-8: Inspiration to Action", gates: [1, 8] },
       { name: "13-33: The Witness", gates: [13, 33] }
