@@ -1,4 +1,3 @@
-
 // Enhanced Human Design calculation module
 import { GATE_TO_CENTER_MAP, CHANNELS, GATE_NAMES } from './human-design-gates.ts';
 
@@ -24,40 +23,69 @@ interface CenterActivation {
 
 /**
  * Calculate accurate Human Design profile based on birth data and celestial positions
+ * HEALTH CHECK MODE: NO FALLBACKS - Will fail hard if data is incomplete
  */
 export async function calculateHumanDesign(birthDate: string, birthTime: string, location: string, timezone: string, celestialData: any) {
+  // HEALTH CHECK: Strict validation - no fallbacks
+  if (!celestialData) {
+    throw new Error("HEALTH CHECK FAIL: No celestial data provided - astronomical calculations failed");
+  }
+  
+  if (!birthDate || !birthTime || !location || !timezone) {
+    throw new Error("HEALTH CHECK FAIL: Missing required birth data parameters");
+  }
+
   try {
-    console.log("Calculating Human Design for", birthDate, birthTime, "at", location);
+    console.log("HEALTH CHECK: Calculating Human Design for", birthDate, birthTime, "at", location);
     
     // Calculate precise design time (88.36 degrees earlier)
     const birthDateTime = new Date(birthDate + "T" + birthTime);
     const offsetDays = DESIGN_OFFSET_DEGREES / MEAN_SOLAR_MOTION; // ~89.66 days
     const designDateTime = new Date(birthDateTime.getTime() - (offsetDays * 24 * 60 * 60 * 1000));
     
-    console.log("Personality time:", birthDateTime.toISOString());
-    console.log("Design time:", designDateTime.toISOString());
+    console.log("HEALTH CHECK: Personality time:", birthDateTime.toISOString());
+    console.log("HEALTH CHECK: Design time:", designDateTime.toISOString());
     
-    // Calculate gate activations for personality chart (conscious) - USE CURRENT CELESTIAL DATA
+    // Calculate gate activations for personality chart - STRICT MODE
     const personalityGates = calculateGatesFromPositions(celestialData, "personality");
+    if (personalityGates.length === 0) {
+      throw new Error("HEALTH CHECK FAIL: No personality gates calculated - celestial data insufficient");
+    }
     
-    // Calculate design positions using accurate ephemeris
+    // Calculate design positions using accurate ephemeris - NO FALLBACKS
     const designCelestialData = await calculateDesignPositions(designDateTime, location, timezone);
-    const designGates = calculateGatesFromPositions(designCelestialData, "design");
+    if (!designCelestialData) {
+      throw new Error("HEALTH CHECK FAIL: Design positions calculation failed - no fallback available");
+    }
     
-    console.log("Personality gates:", personalityGates.map(g => `${g.gate}.${g.line}`));
-    console.log("Design gates:", designGates.map(g => `${g.gate}.${g.line}`));
+    const designGates = calculateGatesFromPositions(designCelestialData, "design");
+    if (designGates.length === 0) {
+      throw new Error("HEALTH CHECK FAIL: No design gates calculated - design celestial data insufficient");
+    }
+    
+    console.log("HEALTH CHECK: Personality gates:", personalityGates.map(g => `${g.gate}.${g.line}`));
+    console.log("HEALTH CHECK: Design gates:", designGates.map(g => `${g.gate}.${g.line}`));
     
     // Determine center activations based on both charts
     const centerActivations = determineCenterActivations(personalityGates, designGates);
     
-    // Calculate Human Design type based on center definitions
+    // Calculate Human Design type based on center definitions - NO DEFAULTS
     const type = determineTypeFromCenters(centerActivations);
+    if (!type) {
+      throw new Error("HEALTH CHECK FAIL: Could not determine Human Design type from center activations");
+    }
     
     // Calculate authority based on defined centers hierarchy
     const authority = determineAuthorityFromCenters(centerActivations);
+    if (!authority) {
+      throw new Error("HEALTH CHECK FAIL: Could not determine authority from center activations");
+    }
     
-    // Calculate profile from Sun gates
+    // Calculate profile from Sun gates - STRICT VALIDATION
     const profile = calculateProfile(personalityGates, designGates);
+    if (!profile) {
+      throw new Error("HEALTH CHECK FAIL: Could not calculate profile from Sun positions");
+    }
     
     // Calculate definition type
     const definition = calculateDefinitionType(centerActivations);
@@ -85,24 +113,24 @@ export async function calculateHumanDesign(birthDate: string, birthTime: string,
       metadata: {
         personality_time: birthDateTime.toISOString(),
         design_time: designDateTime.toISOString(),
-        offset_days: offsetDays.toFixed(2)
+        offset_days: offsetDays.toFixed(2),
+        health_check_mode: true
       }
     };
   } catch (error) {
-    console.error("Error calculating Human Design:", error);
-    throw error;
+    console.error("HEALTH CHECK FAIL: Human Design calculation error:", error);
+    throw new Error(`HEALTH CHECK FAIL: Human Design calculation failed - ${error.message}`);
   }
 }
 
-// Calculate gates from celestial positions using ACTUAL longitude calculations
+// HEALTH CHECK: Calculate gates from celestial positions - NO FALLBACKS
 function calculateGatesFromPositions(celestialData: any, chartType: string): GateActivation[] {
   const gates: GateActivation[] = [];
   
-  console.log(`Calculating ${chartType} gates from celestial data:`, Object.keys(celestialData || {}));
+  console.log(`HEALTH CHECK: Calculating ${chartType} gates from celestial data:`, Object.keys(celestialData || {}));
   
-  if (!celestialData) {
-    console.error(`No celestial data provided for ${chartType} chart`);
-    return gates;
+  if (!celestialData || Object.keys(celestialData).length === 0) {
+    throw new Error(`HEALTH CHECK FAIL: No celestial data provided for ${chartType} chart`);
   }
   
   // Define planets in order of importance for Human Design
@@ -110,89 +138,71 @@ function calculateGatesFromPositions(celestialData: any, chartType: string): Gat
   
   planets.forEach(planet => {
     const position = celestialData[planet];
-    if (position && typeof position.longitude === 'number') {
-      // Calculate gate and line from actual longitude using the I Ching wheel
-      const adjustedLongitude = (position.longitude + 360) % 360; // Ensure positive
-      
-      // The I Ching wheel starts at 0° Aries (gate 25) and moves clockwise
-      // Each gate spans 5.625 degrees (360/64 gates)
-      const gateIndex = Math.floor(adjustedLongitude / 5.625);
-      
-      // Gate mapping according to I Ching wheel (starting from 0° Aries)
-      const gateWheel = [
-        25, 51, 3, 27, 24, 2, 23, 8, 20, 16, 35, 45, 12, 15, 52, 39,
-        53, 62, 56, 31, 33, 7, 4, 29, 59, 40, 64, 47, 6, 46, 18, 48,
-        57, 32, 50, 28, 44, 1, 43, 14, 34, 9, 5, 26, 11, 10, 58, 38,
-        54, 61, 60, 41, 19, 13, 49, 30, 55, 37, 63, 22, 36, 25, 17, 21
-      ];
-      
-      const gate = gateWheel[gateIndex] || 1; // Fallback to gate 1
-      
-      // Each line spans 0.9375 degrees (5.625/6 lines)
-      const linePosition = (adjustedLongitude % 5.625) / 0.9375;
-      const line = Math.floor(linePosition) + 1;
-      
-      gates.push({
-        planet,
-        gate,
-        line: Math.min(6, Math.max(1, line)), // Ensure line is 1-6
-        longitude: position.longitude
-      });
-      
-      console.log(`${chartType} ${planet}: ${position.longitude.toFixed(2)}° -> Gate ${gate}.${line}`);
-    } else {
-      console.warn(`${chartType} ${planet}: missing or invalid position data`);
+    if (!position || typeof position.longitude !== 'number') {
+      throw new Error(`HEALTH CHECK FAIL: Missing or invalid ${planet} position data for ${chartType} chart`);
     }
+    
+    // Calculate gate and line from actual longitude using the I Ching wheel
+    const adjustedLongitude = (position.longitude + 360) % 360; // Ensure positive
+    
+    // The I Ching wheel starts at 0° Aries (gate 25) and moves clockwise
+    // Each gate spans 5.625 degrees (360/64 gates)
+    const gateIndex = Math.floor(adjustedLongitude / 5.625);
+    
+    // Gate mapping according to I Ching wheel (starting from 0° Aries)
+    const gateWheel = [
+      25, 51, 3, 27, 24, 2, 23, 8, 20, 16, 35, 45, 12, 15, 52, 39,
+      53, 62, 56, 31, 33, 7, 4, 29, 59, 40, 64, 47, 6, 46, 18, 48,
+      57, 32, 50, 28, 44, 1, 43, 14, 34, 9, 5, 26, 11, 10, 58, 38,
+      54, 61, 60, 41, 19, 13, 49, 30, 55, 37, 63, 22, 36, 25, 17, 21
+    ];
+    
+    const gate = gateWheel[gateIndex];
+    if (!gate) {
+      throw new Error(`HEALTH CHECK FAIL: Invalid gate calculation for ${planet} at ${adjustedLongitude}°`);
+    }
+    
+    // Each line spans 0.9375 degrees (5.625/6 lines)
+    const linePosition = (adjustedLongitude % 5.625) / 0.9375;
+    const line = Math.floor(linePosition) + 1;
+    
+    if (line < 1 || line > 6) {
+      throw new Error(`HEALTH CHECK FAIL: Invalid line calculation for ${planet}: ${line}`);
+    }
+    
+    gates.push({
+      planet,
+      gate,
+      line,
+      longitude: position.longitude
+    });
+    
+    console.log(`HEALTH CHECK: ${chartType} ${planet}: ${position.longitude.toFixed(2)}° -> Gate ${gate}.${line}`);
   });
   
-  console.log(`Total ${chartType} gates calculated:`, gates.length);
+  console.log(`HEALTH CHECK: Total ${chartType} gates calculated:`, gates.length);
   return gates;
 }
 
-// Calculate design positions using the same ephemeris engine but offset time
+// HEALTH CHECK: Calculate design positions - NO SIMULATION FALLBACK
 async function calculateDesignPositions(designDateTime: Date, location: string, timezone: string) {
-  // Import the calculation function from our main ephemeris
-  const { calculatePlanetaryPositionsWithAstro } = await import('./ephemeris-astroengine.ts');
-  
-  const designDate = designDateTime.toISOString().split('T')[0];
-  const designTime = designDateTime.toISOString().split('T')[1].substring(0, 5);
-  
   try {
-    return await calculatePlanetaryPositionsWithAstro(designDate, designTime, location, timezone);
+    // Import the calculation function from our main ephemeris
+    const { calculatePlanetaryPositionsWithAstro } = await import('./ephemeris-astroengine.ts');
+    
+    const designDate = designDateTime.toISOString().split('T')[0];
+    const designTime = designDateTime.toISOString().split('T')[1].substring(0, 5);
+    
+    const result = await calculatePlanetaryPositionsWithAstro(designDate, designTime, location, timezone);
+    
+    if (!result || Object.keys(result).length === 0) {
+      throw new Error("HEALTH CHECK FAIL: Ephemeris returned empty data for design positions");
+    }
+    
+    return result;
   } catch (error) {
-    console.error("Error calculating design positions:", error);
-    // Fallback to simulated design data if ephemeris fails
-    return simulateDesignPositions(designDateTime);
+    throw new Error(`HEALTH CHECK FAIL: Design positions calculation failed - ${error.message}`);
   }
-}
-
-// Fallback simulation for design positions
-function simulateDesignPositions(designDateTime: Date) {
-  const designData: any = {};
-  const baseDate = new Date("2000-01-01T12:00:00Z");
-  const daysDiff = (designDateTime.getTime() - baseDate.getTime()) / (24 * 60 * 60 * 1000);
-  
-  // Approximate planetary positions for design time
-  const planetSpeeds = {
-    sun: 0.9856,
-    moon: 13.1764,
-    mercury: 1.3833,
-    venus: 1.6021,
-    mars: 0.5240,
-    jupiter: 0.0831,
-    saturn: 0.0335,
-    uranus: 0.0116,
-    neptune: 0.0060,
-    pluto: 0.0040,
-    north_node: -0.0529 // Retrograde motion
-  };
-  
-  for (const [planet, speed] of Object.entries(planetSpeeds)) {
-    const longitude = (daysDiff * speed + (planet === 'sun' ? 280 : Math.random() * 360)) % 360;
-    designData[planet] = { longitude };
-  }
-  
-  return designData;
 }
 
 // Determine center activations from both personality and design gates
@@ -239,7 +249,7 @@ function determineCenterActivations(personalityGates: GateActivation[], designGa
           }
         }
       });
-      console.log(`Channel ${channelKey} (${channelData.name}) complete - defining:`, channelData.centers);
+      console.log(`HEALTH CHECK: Channel ${channelKey} (${channelData.name}) complete - defining:`, channelData.centers);
     }
   });
   
@@ -247,13 +257,17 @@ function determineCenterActivations(personalityGates: GateActivation[], designGa
   const definedCenters = Object.entries(centerActivations)
     .filter(([_, center]) => center.defined)
     .map(([name, _]) => name);
-  console.log("Defined centers:", definedCenters);
+  console.log("HEALTH CHECK: Defined centers:", definedCenters);
   
   return centerActivations;
 }
 
-// Accurate type determination based on defined centers
+// HEALTH CHECK: Determine type - NO FALLBACKS
 function determineTypeFromCenters(centerActivations: CenterActivation): string {
+  if (!centerActivations || Object.keys(centerActivations).length === 0) {
+    throw new Error("HEALTH CHECK FAIL: No center activations data provided");
+  }
+
   const sacralDefined = centerActivations["Sacral"]?.defined || false;
   const throatDefined = centerActivations["Throat"]?.defined || false;
   const heartDefined = centerActivations["Heart"]?.defined || false;
@@ -322,8 +336,12 @@ function checkSacralToThroatConnection(centerActivations: CenterActivation): boo
   return connectingChannels.length > 0;
 }
 
-// Determine authority based on defined centers hierarchy
+// HEALTH CHECK: Authority determination - NO FALLBACKS
 function determineAuthorityFromCenters(centerActivations: CenterActivation): string {
+  if (!centerActivations) {
+    throw new Error("HEALTH CHECK FAIL: No center activations for authority determination");
+  }
+
   // Authority hierarchy (highest to lowest)
   if (centerActivations["Solar Plexus"]?.defined) return "Emotional";
   if (centerActivations["Sacral"]?.defined) return "Sacral";
@@ -331,17 +349,31 @@ function determineAuthorityFromCenters(centerActivations: CenterActivation): str
   if (centerActivations["Heart"]?.defined) return "Ego";
   if (centerActivations["G"]?.defined) return "Self";
   
-  return "None"; // Mental authority for Reflectors
+  // Mental authority for Reflectors
+  const definedCenterCount = Object.values(centerActivations).filter(center => center.defined).length;
+  if (definedCenterCount === 0) {
+    return "Mental";
+  }
+  
+  throw new Error("HEALTH CHECK FAIL: Could not determine authority from center configuration");
 }
 
-// Calculate profile from Sun gates
+// HEALTH CHECK: Profile calculation - NO FALLBACKS
 function calculateProfile(personalityGates: GateActivation[], designGates: GateActivation[]): string {
   const personalitySun = personalityGates.find(g => g.planet === "sun");
   const designSun = designGates.find(g => g.planet === "sun");
   
+  if (!personalitySun) {
+    throw new Error("HEALTH CHECK FAIL: No personality Sun position found");
+  }
+  
+  if (!designSun) {
+    throw new Error("HEALTH CHECK FAIL: No design Sun position found");
+  }
+  
   // Use actual calculated lines from sun positions
-  const consciousLine = personalitySun?.line || 1;
-  const unconsciousLine = designSun?.line || 1;
+  const consciousLine = personalitySun.line;
+  const unconsciousLine = designSun.line;
   
   const profileNames = {
     1: "Investigator",
@@ -352,7 +384,14 @@ function calculateProfile(personalityGates: GateActivation[], designGates: GateA
     6: "Role Model"
   };
   
-  return `${consciousLine}/${unconsciousLine} (${profileNames[consciousLine]}/${profileNames[unconsciousLine]})`;
+  const consciousName = profileNames[consciousLine];
+  const unconsciousName = profileNames[unconsciousLine];
+  
+  if (!consciousName || !unconsciousName) {
+    throw new Error(`HEALTH CHECK FAIL: Invalid profile lines - conscious: ${consciousLine}, unconscious: ${unconsciousLine}`);
+  }
+  
+  return `${consciousLine}/${unconsciousLine} (${consciousName}/${unconsciousName})`;
 }
 
 // Calculate definition type based on center connections
