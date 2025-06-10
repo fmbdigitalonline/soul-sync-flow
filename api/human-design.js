@@ -14,7 +14,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { birthDate, birthTime, birthLocation, timezone, celestialData, calculation_metadata } = req.body;
+    // FIXED: Remove calculation_metadata from here - it's nested inside celestialData
+    const { birthDate, birthTime, birthLocation, timezone, celestialData } = req.body;
 
     console.log('Human Design calculation request:', {
       birthDate,
@@ -36,8 +37,7 @@ export default async function handler(req, res) {
       birthTime,
       birthLocation,
       timezone,
-      celestialData,
-      calculation_metadata
+      celestialData
     });
 
     return res.status(200).json({
@@ -59,7 +59,7 @@ export default async function handler(req, res) {
 }
 
 // Proper Human Design calculation using correct methodology
-async function calculateHumanDesignProper({ birthDate, birthTime, birthLocation, timezone, celestialData, calculation_metadata }) {
+async function calculateHumanDesignProper({ birthDate, birthTime, birthLocation, timezone, celestialData }) {
   console.log('Using proper Human Design methodology...');
   
   // Step 1: Calculate Design Time (88.736 days or 88.36° solar arc before birth)
@@ -76,8 +76,8 @@ async function calculateHumanDesignProper({ birthDate, birthTime, birthLocation,
   console.log('Sun longitude:', personalityCelestial?.sun?.longitude);
   console.log('Moon longitude:', personalityCelestial?.moon?.longitude);
   
-  // FIXED: Pass calculation_metadata instead of celestialData to get proper coordinates
-  const designCelestial = await getAccurateDesignTimeCelestialData(designDateTime, calculation_metadata, timezone, personalityCelestial);
+  // FIXED: Pass celestialData.calculation_metadata instead of trying to get it from req.body
+  const designCelestial = await getAccurateDesignTimeCelestialData(designDateTime, celestialData.calculation_metadata, timezone, personalityCelestial);
   
   // Step 3: Calculate gates using proper HD methodology
   const personalityGates = calculateHDGatesFromCelestialData(personalityCelestial, 'personality');
