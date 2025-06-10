@@ -124,8 +124,24 @@ async function getAccurateDesignTimeCelestialData(designDateTime, celestialData,
     const designDateStr = designDateTime.toISOString().split('T')[0];
     const designTimeStr = designDateTime.toISOString().split('T')[1].substring(0, 8);
     
-    // FIXED: Use coordinates from celestialData instead of birth location string
-    const coordinates = celestialData.timezone_info?.coordinates || celestialData.coordinates;
+    // FIXED: Check multiple possible locations for coordinates in the celestialData structure
+    let coordinates = null;
+    
+    // Try different possible locations for coordinates
+    if (celestialData.timezone_info?.coordinates) {
+      coordinates = celestialData.timezone_info.coordinates;
+      console.log('🔍 Found coordinates in timezone_info:', coordinates);
+    } else if (celestialData.coordinates) {
+      coordinates = celestialData.coordinates;
+      console.log('🔍 Found coordinates in root level:', coordinates);
+    } else if (celestialData.location?.coordinates) {
+      coordinates = celestialData.location.coordinates;
+      console.log('🔍 Found coordinates in location:', coordinates);
+    } else {
+      // Debug: Log the entire celestialData structure to see what's available
+      console.log('🔍 DEBUG: Full celestialData structure:', JSON.stringify(celestialData, null, 2));
+      console.warn('⚠️ No coordinates found in any expected location in celestialData');
+    }
     
     console.log(`🔍 Calling Vercel ephemeris API for Design time: ${designDateStr} ${designTimeStr}`);
     console.log(`🔍 Using coordinates: ${coordinates}`);
