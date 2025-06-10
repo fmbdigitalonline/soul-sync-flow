@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import * as Astronomy from "npm:astronomy-engine@2";
 import { calculateHouseCusps } from './house-system-calculator.ts';
@@ -120,8 +119,8 @@ export interface HousesAndAngles {
 }
 
 /**
- * Calculate planetary positions using FIXED astronomical calculations
- * CRITICAL FIX: Proper timezone and date handling for accurate planetary positions
+ * Calculate planetary positions using CORRECTED astronomical calculations
+ * CRITICAL FIX: Proper date handling for accurate planetary positions
  */
 export async function calculatePlanetaryPositionsWithAstro(
   date: string,
@@ -145,7 +144,7 @@ export async function calculatePlanetaryPositionsWithAstro(
       throw new Error("Astronomy engine self-test failed");
     }
     
-    // Parse the date and time with CORRECTED timezone handling
+    // Parse the date and time
     const [year, month, day] = date.split('-').map(Number);
     const [hour, minute] = time.split(':').map(Number);
     
@@ -163,26 +162,38 @@ export async function calculatePlanetaryPositionsWithAstro(
       throw new Error(`Failed to geocode location: ${location}`);
     }
     
-    // CRITICAL FIX: Create proper UTC date based on local timezone
+    // CRITICAL FIX: Create proper UTC date for Paramaribo
     console.log(`Creating date for: ${year}-${month}-${day} ${hour}:${minute} in timezone ${timezone}`);
     
-    // Use proper timezone offset calculation for Paramaribo, Suriname
     let utcDate: Date;
     
-    // Paramaribo is UTC-3 year-round (no DST)
     if (timezone === 'America/Paramaribo' || timezone === 'America/Suriname') {
-      // CORRECT: For UTC-3, add 3 hours to local time to get UTC
-      // Local 22:00 + 3 hours = 01:00 UTC next day
-      utcDate = new Date(Date.UTC(year, month - 1, day, hour, minute, 0));
-      utcDate.setUTCHours(utcDate.getUTCHours() + 3);
+      // Paramaribo is UTC-3, so to convert local time to UTC, ADD 3 hours
+      // Local time 22:00 + 3 hours = 01:00 UTC next day (Feb 13)
+      console.log(`Converting Paramaribo time ${hour}:${minute} to UTC by adding 3 hours`);
+      
+      // Create the local date first
+      const localDate = new Date(year, month - 1, day, hour, minute, 0);
+      console.log(`Local date object: ${localDate.toISOString()}`);
+      
+      // Convert to UTC by adding the timezone offset (3 hours for UTC-3)
+      utcDate = new Date(localDate.getTime() + (3 * 60 * 60 * 1000));
+      console.log(`UTC date after timezone conversion: ${utcDate.toISOString()}`);
     } else {
-      // For other timezones, create local time and convert properly
+      // For other timezones, use standard conversion
       const localDate = new Date(year, month - 1, day, hour, minute, 0);
       utcDate = new Date(localDate.getTime() - (localDate.getTimezoneOffset() * 60000));
     }
     
     console.log(`AstroEngine: Final UTC date: ${utcDate.toISOString()}`);
-    console.log(`AstroEngine: Local input was: ${year}-${month.toString().padStart(2,'0')}-${day.toString().padStart(2,'0')} ${hour.toString().padStart(2,'0')}:${minute.toString().padStart(2,'0')}`);
+    
+    // Validate the date is reasonable
+    if (utcDate.getFullYear() !== 1978) {
+      console.error(`CRITICAL: Year mismatch - expected 1978, got ${utcDate.getFullYear()}`);
+    }
+    if (utcDate.getMonth() + 1 !== 2) {
+      console.error(`CRITICAL: Month mismatch - expected February (2), got ${utcDate.getMonth() + 1}`);
+    }
     
     // Create AstroTime from the properly converted UTC date
     const astroTime = Astronomy.MakeTime(utcDate);
@@ -197,13 +208,15 @@ export async function calculatePlanetaryPositionsWithAstro(
     console.log(`AstroEngine: Julian Date: ${jd}`);
     
     // Validate Julian Date is reasonable for 1978
-    const expectedJD = 2443548.375; // Feb 12, 1978 22:00 UTC-3 -> Feb 13, 1978 01:00 UTC
-    console.log(`AstroEngine: Expected JD for Feb 12, 1978 22:00 UTC-3 should be around: ${expectedJD}`);
+    const expectedJD = 2443549.375; // Feb 13, 1978 01:00 UTC (22:00 Feb 12 Paramaribo time + 3 hours)
+    console.log(`AstroEngine: Expected JD for Feb 12, 1978 22:00 Paramaribo (= Feb 13, 1978 01:00 UTC): ${expectedJD}`);
     
     if (Math.abs(jd - expectedJD) > 1) {
       console.error(`CRITICAL: Julian Date ${jd} is too far from expected ${expectedJD}. Difference: ${Math.abs(jd - expectedJD)} days`);
-      // Don't throw error, but log warning
-      console.warn("Proceeding with calculation despite Julian Date discrepancy");
+      console.error("This indicates a fundamental date conversion error!");
+      throw new Error(`Julian Date validation failed: got ${jd}, expected ~${expectedJD}`);
+    } else {
+      console.log(`✅ Julian Date validation passed: ${jd} is close to expected ${expectedJD}`);
     }
     
     // Create observer for house calculations
@@ -372,13 +385,13 @@ export async function calculatePlanetaryPositionsWithAstro(
     
     // Add metadata
     positions["timestamp"] = utcDate.getTime();
-    positions["source"] = "astronomy_engine_fixed_timezone";
+    positions["source"] = "astronomy_engine_corrected_timezone";
     positions["julian_date"] = jd;
     positions["observer"] = {
       latitude: coords.latitude,
       longitude: coords.longitude
     };
-    positions["calculation_method"] = "ecliptic_longitude_with_fixed_timezone";
+    positions["calculation_method"] = "ecliptic_longitude_with_corrected_timezone";
     
     // Add debug info for troubleshooting
     positions["debug_info"] = {
@@ -388,10 +401,12 @@ export async function calculatePlanetaryPositionsWithAstro(
       utc_date_created: utcDate.toISOString(),
       julian_date: jd,
       expected_jd: expectedJD,
-      jd_difference: Math.abs(jd - expectedJD)
+      jd_difference: Math.abs(jd - expectedJD),
+      year_validation: utcDate.getFullYear() === 1978,
+      month_validation: utcDate.getMonth() + 1 === 2
     };
     
-    console.log("✅ Fixed astronomical calculations completed successfully");
+    console.log("✅ Corrected astronomical calculations completed successfully");
     return positions;
   } catch (error) {
     console.error("Error in calculatePlanetaryPositionsWithAstro:", error);
