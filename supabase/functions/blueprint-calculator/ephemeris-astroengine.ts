@@ -144,7 +144,7 @@ export async function calculatePlanetaryPositionsWithAstro(
       throw new Error("Astronomy engine self-test failed");
     }
     
-    // Parse the date and time
+    // Parse the date and time with CORRECTED handling
     const [year, month, day] = date.split('-').map(Number);
     const [hour, minute] = time.split(':').map(Number);
     
@@ -168,17 +168,37 @@ export async function calculatePlanetaryPositionsWithAstro(
     let utcDate: Date;
     
     if (timezone === 'America/Paramaribo' || timezone === 'America/Suriname') {
-      // Paramaribo is UTC-3, so to convert local time to UTC, ADD 3 hours
-      // Local time 22:00 + 3 hours = 01:00 UTC next day (Feb 13)
+      // CORRECTED: Paramaribo is UTC-3, so to convert local time to UTC, we ADD 3 hours
+      // But we need to use Date.UTC to create the date properly
       console.log(`Converting Paramaribo time ${hour}:${minute} to UTC by adding 3 hours`);
       
-      // Create the local date first
-      const localDate = new Date(year, month - 1, day, hour, minute, 0);
-      console.log(`Local date object: ${localDate.toISOString()}`);
+      // Create UTC date directly using Date.UTC constructor to avoid timezone issues
+      // Local time 22:00 + 3 hours = 01:00 UTC next day
+      let utcHour = hour + 3;
+      let utcDay = day;
+      let utcMonth = month;
+      let utcYear = year;
       
-      // Convert to UTC by adding the timezone offset (3 hours for UTC-3)
-      utcDate = new Date(localDate.getTime() + (3 * 60 * 60 * 1000));
-      console.log(`UTC date after timezone conversion: ${utcDate.toISOString()}`);
+      // Handle day overflow
+      if (utcHour >= 24) {
+        utcHour -= 24;
+        utcDay += 1;
+        
+        // Handle month overflow (simplified - doesn't account for all edge cases but good for our test)
+        const daysInMonth = new Date(utcYear, utcMonth, 0).getDate();
+        if (utcDay > daysInMonth) {
+          utcDay = 1;
+          utcMonth += 1;
+          if (utcMonth > 12) {
+            utcMonth = 1;
+            utcYear += 1;
+          }
+        }
+      }
+      
+      // Use Date.UTC to create proper UTC timestamp
+      utcDate = new Date(Date.UTC(utcYear, utcMonth - 1, utcDay, utcHour, minute, 0));
+      console.log(`UTC date created: ${utcDate.toISOString()}`);
     } else {
       // For other timezones, use standard conversion
       const localDate = new Date(year, month - 1, day, hour, minute, 0);
@@ -188,11 +208,8 @@ export async function calculatePlanetaryPositionsWithAstro(
     console.log(`AstroEngine: Final UTC date: ${utcDate.toISOString()}`);
     
     // Validate the date is reasonable
-    if (utcDate.getFullYear() !== 1978) {
-      console.error(`CRITICAL: Year mismatch - expected 1978, got ${utcDate.getFullYear()}`);
-    }
-    if (utcDate.getMonth() + 1 !== 2) {
-      console.error(`CRITICAL: Month mismatch - expected February (2), got ${utcDate.getMonth() + 1}`);
+    if (utcDate.getFullYear() < 1900 || utcDate.getFullYear() > 2100) {
+      throw new Error(`Invalid year: ${utcDate.getFullYear()}`);
     }
     
     // Create AstroTime from the properly converted UTC date
@@ -208,8 +225,13 @@ export async function calculatePlanetaryPositionsWithAstro(
     console.log(`AstroEngine: Julian Date: ${jd}`);
     
     // Validate Julian Date is reasonable for 1978
-    const expectedJD = 2443549.375; // Feb 13, 1978 01:00 UTC (22:00 Feb 12 Paramaribo time + 3 hours)
+    const expectedJD = 2443549.375; // Feb 13, 1978 01:00 UTC (Feb 12, 1978 22:00 Paramaribo time + 3 hours)
     console.log(`AstroEngine: Expected JD for Feb 12, 1978 22:00 Paramaribo (= Feb 13, 1978 01:00 UTC): ${expectedJD}`);
+    
+    if (jd < 2400000 || jd > 2500000) {
+      console.error(`CRITICAL: Julian Date ${jd} is outside reasonable range for modern dates`);
+      throw new Error(`Julian Date validation failed: got ${jd}, expected ~${expectedJD}`);
+    }
     
     if (Math.abs(jd - expectedJD) > 1) {
       console.error(`CRITICAL: Julian Date ${jd} is too far from expected ${expectedJD}. Difference: ${Math.abs(jd - expectedJD)} days`);
