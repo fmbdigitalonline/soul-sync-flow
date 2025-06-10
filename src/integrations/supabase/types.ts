@@ -276,6 +276,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_activities: {
+        Row: {
+          activity_data: Json
+          activity_type: string
+          created_at: string
+          id: string
+          points_earned: number | null
+          user_id: string
+        }
+        Insert: {
+          activity_data?: Json
+          activity_type: string
+          created_at?: string
+          id?: string
+          points_earned?: number | null
+          user_id: string
+        }
+        Update: {
+          activity_data?: Json
+          activity_type?: string
+          created_at?: string
+          id?: string
+          points_earned?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_blueprints: {
         Row: {
           blueprint: Json
@@ -298,6 +325,120 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_goals: {
+        Row: {
+          aligned_traits: Json | null
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          milestones: Json | null
+          progress: number | null
+          status: string | null
+          target_date: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          aligned_traits?: Json | null
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          milestones?: Json | null
+          progress?: number | null
+          status?: string | null
+          target_date?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          aligned_traits?: Json | null
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          milestones?: Json | null
+          progress?: number | null
+          status?: string | null
+          target_date?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_statistics: {
+        Row: {
+          coach_conversations: number | null
+          current_streak: number | null
+          focus_sessions_completed: number | null
+          id: string
+          longest_streak: number | null
+          most_productive_day: string | null
+          preferred_focus_time: string | null
+          tasks_completed: number | null
+          total_points: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          coach_conversations?: number | null
+          current_streak?: number | null
+          focus_sessions_completed?: number | null
+          id?: string
+          longest_streak?: number | null
+          most_productive_day?: string | null
+          preferred_focus_time?: string | null
+          tasks_completed?: number | null
+          total_points?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          coach_conversations?: number | null
+          current_streak?: number | null
+          focus_sessions_completed?: number | null
+          id?: string
+          longest_streak?: number | null
+          most_productive_day?: string | null
+          preferred_focus_time?: string | null
+          tasks_completed?: number | null
+          total_points?: number | null
           updated_at?: string
           user_id?: string
         }

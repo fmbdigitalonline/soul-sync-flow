@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { CosmicCard } from "@/components/ui/cosmic-card";
@@ -6,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Play, Pause, RotateCcw, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PomodoroTimerProps {
   defaultWorkMinutes?: number;
@@ -39,6 +39,28 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
   const [pomodorosCompleted, setPomodorosCompleted] = useState(0);
   const { toast } = useToast();
 
+  const logFocusSession = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      await supabase
+        .from('user_activities')
+        .insert({
+          user_id: user.id,
+          activity_type: 'focus_session',
+          activity_data: {
+            duration_minutes: getAdjustedWorkMinutes(),
+            focus_type: focusType,
+            completed_at: new Date().toISOString()
+          },
+          points_earned: 15
+        });
+    } catch (error) {
+      console.error('Error logging focus session:', error);
+    }
+  };
+
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
 
@@ -61,6 +83,10 @@ export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({
                 description: t('pomodoro.takeBreak'),
               });
               setPomodorosCompleted((prev) => prev + 1);
+              
+              // Log the completed focus session
+              logFocusSession();
+              
               setIsBreak(true);
               return defaultBreakMinutes * 60;
             }

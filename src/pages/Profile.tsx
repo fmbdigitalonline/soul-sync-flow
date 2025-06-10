@@ -1,8 +1,7 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
-import { GradientButton } from "@/components/ui/gradient-button";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,16 +13,58 @@ import { FocusToggle } from "@/components/ui/focus-toggle";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useUserProfile } from "@/hooks/use-user-profile";
+import { useBlueprintData } from "@/hooks/use-blueprint-data";
+import { calculateWeeklyInsights, WeeklyInsights } from "@/services/insights-service";
+import { supabase } from "@/integrations/supabase/client";
 
 const Profile = () => {
   const { toast } = useToast();
   const [darkMode, setDarkMode] = useState(false);
+  const [weeklyInsights, setWeeklyInsights] = useState<WeeklyInsights | null>(null);
+  
+  const { 
+    profile, 
+    statistics, 
+    goals, 
+    loading: profileLoading, 
+    error: profileError,
+    logActivity,
+    updateGoalProgress 
+  } = useUserProfile();
+  
+  const { 
+    blueprintData, 
+    loading: blueprintLoading,
+    getPersonalityTraits,
+    getDisplayName,
+    getBlueprintCompletionPercentage 
+  } = useBlueprintData();
 
-  const handleLogout = () => {
-    toast({
-      title: "Logged out",
-      description: "You have been successfully logged out.",
-    });
+  useEffect(() => {
+    const fetchInsights = async () => {
+      const insights = await calculateWeeklyInsights();
+      setWeeklyInsights(insights);
+    };
+    
+    fetchInsights();
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out.",
+      });
+    } catch (error) {
+      console.error('Error logging out:', error);
+      toast({
+        title: "Error",
+        description: "Failed to log out. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const toggleDarkMode = (checked: boolean) => {
@@ -39,7 +80,9 @@ const Profile = () => {
     });
   };
 
-  const handleTaskComplete = () => {
+  const handleTaskComplete = async () => {
+    await logActivity('task_completed', { source: 'profile_page' }, 10);
+    
     toast({
       title: "Task completed!",
       description: "Great job on completing your task.",
@@ -48,19 +91,54 @@ const Profile = () => {
     });
   };
 
+  const loading = profileLoading || blueprintLoading;
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <div className="p-6 max-w-md mx-auto">
+          <div className="flex flex-col items-center text-center mb-6">
+            <div className="h-20 w-20 mb-4 bg-gray-200 rounded-full animate-pulse"></div>
+            <div className="h-6 w-32 bg-gray-200 rounded animate-pulse mb-2"></div>
+            <div className="h-4 w-48 bg-gray-200 rounded animate-pulse"></div>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (profileError) {
+    return (
+      <MainLayout>
+        <div className="p-6 max-w-md mx-auto">
+          <CosmicCard className="p-6 text-center">
+            <p className="text-destructive">Error loading profile: {profileError}</p>
+          </CosmicCard>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  const displayName = profile?.display_name || getDisplayName();
+  const personalityTraits = getPersonalityTraits();
+  const blueprintCompletion = getBlueprintCompletionPercentage();
+  const activeGoals = goals.filter(g => g.status === 'active');
+
   return (
     <MainLayout>
       <div className="p-6 max-w-md mx-auto">
         <div className="flex flex-col items-center text-center mb-6">
           <Avatar className="h-20 w-20 mb-4 shadow-soft-ui">
-            <AvatarImage src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=256&q=80" alt="Sarah" />
-            <AvatarFallback>S</AvatarFallback>
+            <AvatarImage src={profile?.avatar_url || undefined} alt={displayName} />
+            <AvatarFallback>{displayName.charAt(0).toUpperCase()}</AvatarFallback>
           </Avatar>
-          <h1 className="text-2xl font-bold font-heading mb-1">Sarah Johnson</h1>
+          <h1 className="text-2xl font-bold font-heading mb-1">{displayName}</h1>
           <div className="flex items-center space-x-2 mt-1">
-            <Badge variant="outline" className="bg-soul-teal bg-opacity-20">Leo Sun</Badge>
-            <Badge variant="outline" className="bg-soul-lavender bg-opacity-20">INFJ</Badge>
-            <Badge variant="outline" className="bg-soul-pewter bg-opacity-20">Projector</Badge>
+            {personalityTraits.map((trait, index) => (
+              <Badge key={index} variant="outline" className="bg-soul-teal bg-opacity-20">
+                {trait}
+              </Badge>
+            ))}
           </div>
         </div>
 
@@ -79,33 +157,33 @@ const Profile = () => {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-base">Blueprint Completion</span>
-                    <span className="text-base font-medium">100%</span>
+                    <span className="text-base font-medium">{blueprintCompletion}%</span>
                   </div>
-                  <Progress value={100} className="h-2" />
+                  <Progress value={blueprintCompletion} className="h-2" />
                 </div>
                 
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-base">Active Goals</span>
-                    <span className="text-base font-medium">2/4</span>
+                    <span className="text-base font-medium">{activeGoals.length}/{goals.length}</span>
                   </div>
-                  <Progress value={50} className="h-2" />
+                  <Progress value={goals.length > 0 ? (activeGoals.length / goals.length) * 100 : 0} className="h-2" />
                 </div>
                 
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-base">Tasks Completed</span>
-                    <span className="text-base font-medium">24</span>
+                    <span className="text-base font-medium">{statistics?.tasks_completed || 0}</span>
                   </div>
-                  <Progress value={80} className="h-2" />
+                  <Progress value={Math.min((statistics?.tasks_completed || 0) * 4, 100)} className="h-2" />
                 </div>
                 
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-base">Coach Conversations</span>
-                    <span className="text-base font-medium">12</span>
+                    <span className="text-base font-medium">{statistics?.coach_conversations || 0}</span>
                   </div>
-                  <Progress value={60} className="h-2" />
+                  <Progress value={Math.min((statistics?.coach_conversations || 0) * 8, 100)} className="h-2" />
                 </div>
               </div>
             </CosmicCard>
@@ -117,15 +195,17 @@ const Profile = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-base font-medium">Most Productive Day</p>
-                    <p className="text-sm text-muted-foreground">Wednesday</p>
+                    <p className="text-sm text-muted-foreground">{weeklyInsights?.mostProductiveDay || 'Wednesday'}</p>
                   </div>
-                  <Badge className="bg-green-100 text-green-800 hover:bg-green-100">+28%</Badge>
+                  <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+                    {weeklyInsights?.improvementTrend || '+0%'}
+                  </Badge>
                 </div>
                 
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-base font-medium">Energy Peaks</p>
-                    <p className="text-sm text-muted-foreground">Morning: 9-11am</p>
+                    <p className="text-sm text-muted-foreground">{weeklyInsights?.energyPeaks || 'Morning: 9-11am'}</p>
                   </div>
                   <Badge className="bg-soul-teal bg-opacity-20 text-teal-800 hover:bg-soul-teal hover:bg-opacity-20">Aligned</Badge>
                 </div>
@@ -133,39 +213,32 @@ const Profile = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-base font-medium">Focus Sessions</p>
-                    <p className="text-sm text-muted-foreground">8 completed</p>
+                    <p className="text-sm text-muted-foreground">{weeklyInsights?.focusSessionsThisWeek || 0} this week</p>
                   </div>
-                  <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100">+2</Badge>
+                  <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100">
+                    +{statistics?.focus_sessions_completed || 0}
+                  </Badge>
                 </div>
               </div>
             </CosmicCard>
           </TabsContent>
           
           <TabsContent value="goals" className="space-y-grid-16">
-            <GoalCard 
-              title="Complete meditation course"
-              progress={75}
-              alignedWith={["Pisces Moon", "INFJ"]}
-              status="On track"
-              onComplete={handleTaskComplete}
-            />
-            
-            <GoalCard 
-              title="Launch creative project"
-              progress={40}
-              alignedWith={["Leo Sun", "Life Path 7"]}
-              status="Needs attention"
-              statusColor="bg-amber-100 text-amber-800"
-              onComplete={handleTaskComplete}
-            />
-            
-            <GoalCard 
-              title="Learn new skill"
-              progress={20}
-              alignedWith={["Virgo Rising", "Projector"]}
-              status="Just started"
-              onComplete={handleTaskComplete}
-            />
+            {goals.length > 0 ? (
+              goals.map((goal) => (
+                <GoalCard 
+                  key={goal.id}
+                  goal={goal}
+                  onComplete={handleTaskComplete}
+                  onProgressUpdate={(progress) => updateGoalProgress(goal.id, progress)}
+                />
+              ))
+            ) : (
+              <CosmicCard className="p-6 text-center rounded-comfort">
+                <p className="text-muted-foreground mb-4">No goals found</p>
+                <p className="text-sm text-muted-foreground">Start by creating your first goal to track your progress</p>
+              </CosmicCard>
+            )}
             
             <CosmicCard className="text-center p-4 rounded-comfort">
               <Button
@@ -247,52 +320,64 @@ const Profile = () => {
 };
 
 interface GoalCardProps {
-  title: string;
-  progress: number;
-  alignedWith: string[];
-  status: string;
-  statusColor?: string;
+  goal: any;
   onComplete?: () => void;
+  onProgressUpdate?: (progress: number) => void;
 }
 
-const GoalCard = ({
-  title,
-  progress,
-  alignedWith,
-  status,
-  statusColor = "bg-green-100 text-green-800",
-  onComplete
-}: GoalCardProps) => {
+const GoalCard = ({ goal, onComplete, onProgressUpdate }: GoalCardProps) => {
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return "bg-green-100 text-green-800";
+      case 'paused':
+        return "bg-gray-100 text-gray-800";
+      default:
+        return "bg-green-100 text-green-800";
+    }
+  };
+
+  const handleComplete = () => {
+    if (onProgressUpdate) {
+      onProgressUpdate(100);
+    }
+    if (onComplete) {
+      onComplete();
+    }
+  };
+
   return (
     <CosmicCard className="p-6 rounded-comfort">
       <div className="flex justify-between items-start mb-2">
-        <h3 className="font-medium font-heading">{title}</h3>
-        <Badge className={statusColor}>{status}</Badge>
+        <h3 className="font-medium font-heading">{goal.title}</h3>
+        <Badge className={getStatusColor(goal.status)}>
+          {goal.status === 'active' ? 'On track' : goal.status}
+        </Badge>
       </div>
       
       <div className="space-y-2 mb-3">
         <div className="flex justify-between text-sm">
           <span>Progress</span>
-          <span>{progress}%</span>
+          <span>{goal.progress}%</span>
         </div>
-        <Progress value={progress} className="h-2" />
+        <Progress value={goal.progress} className="h-2" />
       </div>
       
       <div className="flex justify-between items-center">
         <div className="flex flex-wrap gap-1">
-          {alignedWith.map((trait) => (
-            <Badge key={trait} variant="outline" className="bg-secondary text-xs">
+          {goal.aligned_traits.map((trait: string, index: number) => (
+            <Badge key={index} variant="outline" className="bg-secondary text-xs">
               {trait}
             </Badge>
           ))}
         </div>
         
-        {progress < 100 && (
+        {goal.progress < 100 && (
           <Button 
             size="sm" 
             variant="outline"
             className="ml-2 interactive-element"
-            onClick={onComplete}
+            onClick={handleComplete}
           >
             <Check className="h-4 w-4 mr-1" /> Complete
           </Button>
