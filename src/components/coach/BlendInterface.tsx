@@ -141,15 +141,15 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
               )}
             >
               <div className="flex items-center space-x-2 mb-1">
-                {message.sender === "ai" ? (
+                {message.sender === "assistant" ? (
                   <Sparkles className="h-4 w-4 text-soul-purple" />
                 ) : (
                   <User className="h-4 w-4" />
                 )}
                 <p className="text-xs font-medium">
-                  {message.sender === "ai" ? "Soul Companion" : "You"}
+                  {message.sender === "assistant" ? "Soul Companion" : "You"}
                 </p>
-                {message.sender === "ai" && (
+                {message.sender === "assistant" && (
                   <Badge variant="outline" className="text-xs border-soul-purple/30">
                     <Compass className="h-3 w-3 mr-1" />
                     Balanced
@@ -159,7 +159,7 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
               <p className="text-sm leading-relaxed">{message.content}</p>
               
               {/* Action buttons for AI messages */}
-              {message.sender === "ai" && messages.indexOf(message) === messages.length - 1 && (
+              {message.sender === "assistant" && messages.indexOf(message) === messages.length - 1 && (
                 <div className="flex flex-wrap gap-2 mt-3">
                   <Button
                     size="sm"

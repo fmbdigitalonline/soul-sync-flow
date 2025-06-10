@@ -129,15 +129,15 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
               )}
             >
               <div className="flex items-center space-x-2 mb-1">
-                {message.sender === "ai" ? (
+                {message.sender === "assistant" ? (
                   <Target className="h-4 w-4 text-green-400" />
                 ) : (
                   <User className="h-4 w-4" />
                 )}
                 <p className="text-xs font-medium">
-                  {message.sender === "ai" ? "Soul Coach" : "You"}
+                  {message.sender === "assistant" ? "Soul Coach" : "You"}
                 </p>
-                {message.sender === "ai" && (
+                {message.sender === "assistant" && (
                   <Badge variant="outline" className="text-xs">
                     <Clock className="h-3 w-3 mr-1" />
                     {new Date(message.timestamp).toLocaleTimeString([], { 
@@ -150,7 +150,7 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
               <p className="text-sm leading-relaxed">{message.content}</p>
               
               {/* Action buttons for AI messages */}
-              {message.sender === "ai" && messages.indexOf(message) === messages.length - 1 && (
+              {message.sender === "assistant" && messages.indexOf(message) === messages.length - 1 && (
                 <div className="flex space-x-2 mt-3">
                   <Button
                     size="sm"
