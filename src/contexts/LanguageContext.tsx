@@ -317,6 +317,7 @@ const translations = {
     'profile.status.completed': 'Completed',
     'profile.status.paused': 'Paused',
     'profile.status.active': 'Active',
+    'profile.focusMode': 'Focus Mode',
   },
   
   nl: {
@@ -620,11 +621,12 @@ const translations = {
     'profile.taskCompletedDescription': 'Goed gedaan met het voltooien van je taak.',
     'profile.errorLoading': 'Fout bij laden profiel',
     'profile.progress': 'Voortgang',
-    'profile.complete': 'Voltooien',
+    'profile.complete': 'Voltoien',
     'profile.onTrack': 'Op koers',
     'profile.status.completed': 'Voltooid',
     'profile.status.paused': 'Gepauzeerd',
     'profile.status.active': 'Actief',
+    'profile.focusMode': 'Focus Modus',
   }
 };
 
@@ -666,5 +668,3 @@ export const useLanguage = () => {
 };
 
 export default LanguageProvider;
-
-</edits_to_apply>
