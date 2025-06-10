@@ -27,7 +27,7 @@ interface CenterActivation {
  */
 export async function calculateHumanDesign(birthDate: string, birthTime: string, location: string, timezone: string, celestialData: any) {
   try {
-    console.log("Calculating accurate Human Design for", birthDate, birthTime);
+    console.log("Calculating Human Design for", birthDate, birthTime, "at", location);
     
     // Calculate precise design time (88.36 degrees earlier)
     const birthDateTime = new Date(birthDate + "T" + birthTime);
@@ -44,8 +44,8 @@ export async function calculateHumanDesign(birthDate: string, birthTime: string,
     const designCelestialData = await calculateDesignPositions(designDateTime, location, timezone);
     const designGates = calculateGatesFromPositions(designCelestialData, "design");
     
-    console.log("Personality gates:", personalityGates); // Log all gates
-    console.log("Design gates:", designGates); // Log all gates
+    console.log("Personality gates:", personalityGates.map(g => `${g.gate}.${g.line}`));
+    console.log("Design gates:", designGates.map(g => `${g.gate}.${g.line}`));
     
     // Determine center activations based on both charts
     const centerActivations = determineCenterActivations(personalityGates, designGates);
@@ -105,31 +105,41 @@ function calculateGatesFromPositions(celestialData: any, chartType: string): Gat
     return gates;
   }
   
-  // Define planets in order of importance
-  const planets = ["sun", "moon", "mercury", "venus", "mars", "jupiter", "saturn", "uranus", "neptune", "pluto", "north_node", "chiron"];
+  // Define planets in order of importance for Human Design
+  const planets = ["sun", "moon", "mercury", "venus", "mars", "jupiter", "saturn", "uranus", "neptune", "pluto", "north_node"];
   
   planets.forEach(planet => {
     const position = celestialData[planet];
     if (position && typeof position.longitude === 'number') {
-      // Calculate gate and line from actual longitude
+      // Calculate gate and line from actual longitude using the I Ching wheel
       const adjustedLongitude = (position.longitude + 360) % 360; // Ensure positive
       
+      // The I Ching wheel starts at 0° Aries (gate 25) and moves clockwise
       // Each gate spans 5.625 degrees (360/64 gates)
-      const gatePosition = adjustedLongitude / 5.625;
-      const gate = Math.floor(gatePosition) + 1;
+      const gateIndex = Math.floor(adjustedLongitude / 5.625);
+      
+      // Gate mapping according to I Ching wheel (starting from 0° Aries)
+      const gateWheel = [
+        25, 51, 3, 27, 24, 2, 23, 8, 20, 16, 35, 45, 12, 15, 52, 39,
+        53, 62, 56, 31, 33, 7, 4, 29, 59, 40, 64, 47, 6, 46, 18, 48,
+        57, 32, 50, 28, 44, 1, 43, 14, 34, 9, 5, 26, 11, 10, 58, 38,
+        54, 61, 60, 41, 19, 13, 49, 30, 55, 37, 63, 22, 36, 25, 17, 21
+      ];
+      
+      const gate = gateWheel[gateIndex] || 1; // Fallback to gate 1
       
       // Each line spans 0.9375 degrees (5.625/6 lines)
-      const linePosition = (gatePosition - Math.floor(gatePosition)) * 6;
+      const linePosition = (adjustedLongitude % 5.625) / 0.9375;
       const line = Math.floor(linePosition) + 1;
       
       gates.push({
         planet,
         gate,
-        line,
+        line: Math.min(6, Math.max(1, line)), // Ensure line is 1-6
         longitude: position.longitude
       });
       
-      console.log(`${chartType} ${planet}: longitude ${position.longitude.toFixed(2)}° -> Gate ${gate}.${line}`);
+      console.log(`${chartType} ${planet}: ${position.longitude.toFixed(2)}° -> Gate ${gate}.${line}`);
     } else {
       console.warn(`${chartType} ${planet}: missing or invalid position data`);
     }
@@ -173,11 +183,12 @@ function simulateDesignPositions(designDateTime: Date) {
     saturn: 0.0335,
     uranus: 0.0116,
     neptune: 0.0060,
-    pluto: 0.0040
+    pluto: 0.0040,
+    north_node: -0.0529 // Retrograde motion
   };
   
   for (const [planet, speed] of Object.entries(planetSpeeds)) {
-    const longitude = (daysDiff * speed) % 360;
+    const longitude = (daysDiff * speed + (planet === 'sun' ? 280 : Math.random() * 360)) % 360;
     designData[planet] = { longitude };
   }
   
@@ -228,7 +239,7 @@ function determineCenterActivations(personalityGates: GateActivation[], designGa
           }
         }
       });
-      console.log(`Channel ${channelKey} (${channelData.name}) is complete - defining centers:`, channelData.centers);
+      console.log(`Channel ${channelKey} (${channelData.name}) complete - defining:`, channelData.centers);
     }
   });
   
@@ -248,46 +259,38 @@ function determineTypeFromCenters(centerActivations: CenterActivation): string {
   const heartDefined = centerActivations["Heart"]?.defined || false;
   const solarPlexusDefined = centerActivations["Solar Plexus"]?.defined || false;
   const rootDefined = centerActivations["Root"]?.defined || false;
-  const spleenDefined = centerActivations["Spleen"]?.defined || false;
   
-  // Motor centers: Sacral, Heart, Solar Plexus, Root
-  const motorCenters = [sacralDefined, heartDefined, solarPlexusDefined, rootDefined];
-  const hasMotorCenter = motorCenters.some(defined => defined);
+  // Check for any defined centers
+  const definedCenterCount = Object.values(centerActivations).filter(center => center.defined).length;
   
   // Reflector: No defined centers
-  const definedCenterCount = Object.values(centerActivations).filter(center => center.defined).length;
   if (definedCenterCount === 0) {
-    return "REFLECTOR";
+    return "Reflector";
   }
   
   // Manifestor: Motor center connected to throat (but not sacral)
   if (throatDefined && !sacralDefined && (heartDefined || solarPlexusDefined || rootDefined)) {
-    // Check if motor center is actually connected to throat via channels
     const motorConnectedToThroat = checkMotorToThroatConnection(centerActivations);
     if (motorConnectedToThroat) {
-      return "MANIFESTOR";
+      return "Manifestor";
     }
   }
   
-  // Projector: No sacral defined and not a manifestor
-  if (!sacralDefined) {
-    return "PROJECTOR";
-  }
-  
-  // Manifesting Generator: Sacral connected to throat
+  // Manifesting Generator: Sacral AND throat both defined with connection
   if (sacralDefined && throatDefined) {
     const sacralConnectedToThroat = checkSacralToThroatConnection(centerActivations);
     if (sacralConnectedToThroat) {
-      return "MANIFESTING_GENERATOR";
+      return "Manifesting Generator";
     }
   }
   
   // Generator: Sacral defined
   if (sacralDefined) {
-    return "GENERATOR";
+    return "Generator";
   }
   
-  return "GENERATOR"; // Default fallback
+  // Projector: No sacral defined (and not a manifestor or reflector)
+  return "Projector";
 }
 
 // Check if motor centers are connected to throat
@@ -308,20 +311,27 @@ function checkSacralToThroatConnection(centerActivations: CenterActivation): boo
   const throatChannels = centerActivations["Throat"]?.channels || [];
   const sacralChannels = centerActivations["Sacral"]?.channels || [];
   
-  // Direct connection check
-  return throatChannels.some(channel => sacralChannels.includes(channel));
+  // Check for channels that connect Sacral to Throat
+  const connectingChannels = throatChannels.filter(channel => {
+    const channelData = CHANNELS[channel];
+    return channelData && 
+           channelData.centers.includes("Sacral") && 
+           channelData.centers.includes("Throat");
+  });
+  
+  return connectingChannels.length > 0;
 }
 
 // Determine authority based on defined centers hierarchy
 function determineAuthorityFromCenters(centerActivations: CenterActivation): string {
   // Authority hierarchy (highest to lowest)
-  if (centerActivations["Solar Plexus"]?.defined) return "EMOTIONAL";
-  if (centerActivations["Sacral"]?.defined) return "SACRAL";
-  if (centerActivations["Spleen"]?.defined) return "SPLENIC";
-  if (centerActivations["Heart"]?.defined) return "EGO";
-  if (centerActivations["G"]?.defined) return "SELF";
+  if (centerActivations["Solar Plexus"]?.defined) return "Emotional";
+  if (centerActivations["Sacral"]?.defined) return "Sacral";
+  if (centerActivations["Spleen"]?.defined) return "Splenic";
+  if (centerActivations["Heart"]?.defined) return "Ego";
+  if (centerActivations["G"]?.defined) return "Self";
   
-  return "NONE"; // Mental authority for Reflectors
+  return "None"; // Mental authority for Reflectors
 }
 
 // Calculate profile from Sun gates
@@ -354,25 +364,40 @@ function calculateDefinitionType(centerActivations: CenterActivation): string {
   if (definedCenters.length === 0) return "No Definition";
   if (definedCenters.length === 1) return "Single Definition";
   
-  // For now, simplified definition calculation
-  // In a full implementation, this would analyze connection patterns
-  const connectionCount = definedCenters.length;
+  // Simplified definition calculation based on connected groups
+  const connectionGroups = analyzeCenterConnections(centerActivations);
   
-  if (connectionCount <= 3) return "Single Definition";
-  if (connectionCount <= 5) return "Split Definition";
-  if (connectionCount <= 7) return "Triple Split Definition";
+  if (connectionGroups === 1) return "Single Definition";
+  if (connectionGroups === 2) return "Split Definition";
+  if (connectionGroups === 3) return "Triple Split Definition";
   
   return "Quadruple Split Definition";
+}
+
+// Analyze how many separate connection groups exist
+function analyzeCenterConnections(centerActivations: CenterActivation): number {
+  const definedCenters = Object.entries(centerActivations)
+    .filter(([_, center]) => center.defined)
+    .map(([name, _]) => name);
+  
+  if (definedCenters.length <= 1) return definedCenters.length;
+  
+  // For simplicity, assume single definition unless we detect clear splits
+  // A proper implementation would trace actual channel connections
+  const hasChannels = Object.values(centerActivations)
+    .some(center => center.channels.length > 0);
+  
+  return hasChannels ? 1 : Math.min(2, definedCenters.length);
 }
 
 // Get strategy for type
 function getStrategyForType(type: string): string {
   const strategies = {
-    "GENERATOR": "Wait to respond",
-    "MANIFESTING_GENERATOR": "Wait to respond, then inform",
-    "PROJECTOR": "Wait for the invitation",
-    "MANIFESTOR": "Inform before acting",
-    "REFLECTOR": "Wait a lunar cycle before deciding"
+    "Generator": "Wait to respond",
+    "Manifesting Generator": "Wait to respond, then inform",
+    "Projector": "Wait for the invitation",
+    "Manifestor": "Inform before acting",
+    "Reflector": "Wait a lunar cycle before deciding"
   };
   
   return strategies[type] || "Wait to respond";
@@ -381,11 +406,11 @@ function getStrategyForType(type: string): string {
 // Get not-self theme for type
 function getNotSelfThemeForType(type: string): string {
   const themes = {
-    "GENERATOR": "Frustration",
-    "MANIFESTING_GENERATOR": "Frustration and anger",
-    "PROJECTOR": "Bitterness",
-    "MANIFESTOR": "Anger",
-    "REFLECTOR": "Disappointment"
+    "Generator": "Frustration",
+    "Manifesting Generator": "Frustration and anger",
+    "Projector": "Bitterness", 
+    "Manifestor": "Anger",
+    "Reflector": "Disappointment"
   };
   
   return themes[type] || "Frustration";
@@ -396,18 +421,18 @@ function generateLifePurpose(type: string, profile: string, centerActivations: C
   const profileNumber = profile.split('/')[0];
   
   const basePurpose = {
-    "GENERATOR": "Build and create sustainable energy systems",
-    "MANIFESTING_GENERATOR": "Initiate and build with efficient multi-passionate energy",
-    "PROJECTOR": "Guide and direct others' energy wisely",
-    "MANIFESTOR": "Initiate new cycles and catalyze change",
-    "REFLECTOR": "Mirror community health and wisdom"
+    "Generator": "Build and create sustainable energy systems",
+    "Manifesting Generator": "Initiate and build with efficient multi-passionate energy", 
+    "Projector": "Guide and direct others' energy wisely",
+    "Manifestor": "Initiate new cycles and catalyze change",
+    "Reflector": "Mirror community health and wisdom"
   };
   
   const profileModifiers = {
     "1": "through deep research and investigation",
     "2": "through natural talents and selective sharing",
     "3": "through experimentation and learning from mistakes",
-    "4": "through relationships and networking",
+    "4": "through relationships and networking", 
     "5": "through providing practical solutions",
     "6": "through being a role model and example"
   };
