@@ -1,5 +1,4 @@
-
-// Human Design calculation endpoint using proper HD methodology
+// Human Design calculation endpoint using proper HD methodology with dual ephemeris calls
 export default async function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -26,20 +25,20 @@ export default async function handler(req, res) {
     });
 
     // Validate required data
-    if (!birthDate || !birthTime || !birthLocation || !celestialData || !coordinates) {
+    if (!birthDate || !birthTime || !birthLocation || !coordinates) {
       return res.status(400).json({
-        error: 'Missing required data: birthDate, birthTime, birthLocation, celestialData, and coordinates are required'
+        error: 'Missing required data: birthDate, birthTime, birthLocation, and coordinates are required'
       });
     }
 
     console.log(`✅ Using provided coordinates: ${coordinates}`);
 
-    // Calculate Human Design using the provided coordinates
+    // Calculate Human Design using proper dual ephemeris approach
     const humanDesignResult = await calculateHumanDesignProper({
       birthDate,
       birthTime,
+      birthLocation,
       timezone,
-      celestialData,
       coordinates
     });
 
@@ -47,8 +46,8 @@ export default async function handler(req, res) {
       success: true,
       data: humanDesignResult,
       timestamp: new Date().toISOString(),
-      library: 'proper-hd-methodology-v9-fixed-design-time',
-      notice: 'Using proper Human Design calculation with fixed design time data'
+      library: 'proper-hd-methodology-v10-dual-ephemeris',
+      notice: 'Using proper Human Design calculation with dual ephemeris calls'
     });
 
   } catch (error) {
@@ -61,106 +60,54 @@ export default async function handler(req, res) {
   }
 }
 
-// Proper Human Design calculation using correct methodology
-async function calculateHumanDesignProper({ birthDate, birthTime, timezone, celestialData, coordinates }) {
-  console.log('Using proper Human Design methodology...');
+// CORRECTED: Proper Human Design calculation using TWO ephemeris calls
+async function calculateHumanDesignProper({ birthDate, birthTime, birthLocation, timezone, coordinates }) {
+  console.log('Using proper Human Design methodology with dual ephemeris calls...');
   
-  // Step 1: Calculate Design Time (88.736 days or 88.36° solar arc before birth)
+  // Step 1: Calculate Design Time (88.736 days before birth)
   const birthDateTime = new Date(`${birthDate}T${birthTime}`);
   const designDateTime = new Date(birthDateTime.getTime() - (88.736 * 24 * 60 * 60 * 1000));
   
   console.log('Birth time:', birthDateTime.toISOString());
   console.log('Design time:', designDateTime.toISOString());
   
-  // Step 2: Get celestial data for both Personality (birth) and Design times
-  // IMPROVED: More flexible input handling
-  const personalityCelestial = celestialData.planets || celestialData;
+  // Step 2: Make TWO separate ephemeris calls
+  console.log('🔍 Making ephemeris call for PERSONALITY (birth) time...');
+  const personalityCelestial = await getEphemerisData(
+    birthDateTime,
+    birthLocation,
+    timezone,
+    coordinates,
+    'personality'
+  );
   
-  console.log('🔍 DEBUG: Personality celestial data received:');
-  console.log('Raw celestialData:', JSON.stringify(celestialData, null, 2));
-  console.log('Extracted personalityCelestial:', JSON.stringify(personalityCelestial, null, 2));
+  console.log('🔍 Making ephemeris call for DESIGN time...');
+  const designCelestial = await getEphemerisData(
+    designDateTime,
+    birthLocation,
+    timezone,
+    coordinates,
+    'design'
+  );
   
-  // COMPREHENSIVE VALIDATION: Check that we have valid personality celestial data
-  if (!personalityCelestial || typeof personalityCelestial !== 'object') {
-    throw new Error(`Invalid personality celestial data - expected object, got: ${typeof personalityCelestial}. Data: ${JSON.stringify(personalityCelestial)}`);
-  }
+  // Step 3: Validate both celestial data sets
+  validateCelestialData(personalityCelestial, 'personality');
+  validateCelestialData(designCelestial, 'design');
   
-  // Check for essential planets with detailed error reporting
-  const requiredPlanets = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto'];
-  const missingPlanets = [];
-  const invalidPlanets = [];
-  
-  requiredPlanets.forEach(planet => {
-    if (!personalityCelestial[planet]) {
-      missingPlanets.push(planet);
-    } else if (typeof personalityCelestial[planet] !== 'object' || typeof personalityCelestial[planet].longitude !== 'number') {
-      invalidPlanets.push(`${planet}: ${JSON.stringify(personalityCelestial[planet])}`);
-    }
-  });
-  
-  if (missingPlanets.length > 0) {
-    console.error('❌ Missing essential planetary data:', missingPlanets);
-    console.error('❌ Available planets:', Object.keys(personalityCelestial));
-    throw new Error(`Missing essential planetary data for: ${missingPlanets.join(', ')}`);
-  }
-  
-  if (invalidPlanets.length > 0) {
-    console.error('❌ Invalid planetary data format:', invalidPlanets);
-    throw new Error(`Invalid planetary data format for: ${invalidPlanets.join(', ')}`);
-  }
-  
-  console.log('✅ Personality celestial data validation passed');
-  console.log('Sun longitude:', personalityCelestial?.sun?.longitude);
-  console.log('Moon longitude:', personalityCelestial?.moon?.longitude);
-  
-  // Get Design time celestial data - STRICT APPROACH
-  const designCelestial = calculateRobustDesignTimeCelestialData(designDateTime, personalityCelestial);
-  
-  // COMPREHENSIVE VALIDATION: Check that we have valid design celestial data
-  if (!designCelestial || typeof designCelestial !== 'object') {
-    throw new Error(`Invalid design celestial data - expected object, got: ${typeof designCelestial}. Data: ${JSON.stringify(designCelestial)}`);
-  }
-  
-  const missingDesignPlanets = [];
-  const invalidDesignPlanets = [];
-  
-  requiredPlanets.forEach(planet => {
-    if (!designCelestial[planet]) {
-      missingDesignPlanets.push(planet);
-    } else if (typeof designCelestial[planet] !== 'object' || typeof designCelestial[planet].longitude !== 'number') {
-      invalidDesignPlanets.push(`${planet}: ${JSON.stringify(designCelestial[planet])}`);
-    }
-  });
-  
-  if (missingDesignPlanets.length > 0) {
-    console.error('❌ Missing essential design planetary data:', missingDesignPlanets);
-    console.error('❌ Available design planets:', Object.keys(designCelestial));
-    throw new Error(`Missing essential design planetary data for: ${missingDesignPlanets.join(', ')}`);
-  }
-  
-  if (invalidDesignPlanets.length > 0) {
-    console.error('❌ Invalid design planetary data format:', invalidDesignPlanets);
-    throw new Error(`Invalid design planetary data format for: ${invalidDesignPlanets.join(', ')}`);
-  }
-  
-  console.log('✅ Design celestial data validation passed');
-  
-  // Step 3: Calculate gates using proper HD methodology
-  console.log('🔍 About to calculate personality gates...');
-  
+  // Step 4: Calculate gates using proper HD methodology
+  console.log('🔍 Calculating personality gates from actual ephemeris data...');
   const personalityGates = calculateHDGatesFromCelestialData(personalityCelestial, 'personality');
   
-  console.log('🔍 About to calculate design gates...');
-  
+  console.log('🔍 Calculating design gates from actual ephemeris data...');
   const designGates = calculateHDGatesFromCelestialData(designCelestial, 'design');
   
   console.log('Personality gates calculated:', personalityGates);
   console.log('Design gates calculated:', designGates);
   
-  // Step 4: Determine centers based on proper channel definitions
+  // Step 5: Determine centers based on proper channel definitions
   const centers = calculateCentersFromChannels([...personalityGates, ...designGates]);
   
-  // Step 5: Calculate type, profile, authority using proper HD rules
+  // Step 6: Calculate type, profile, authority using proper HD rules
   const type = determineHDType(centers);
   const profile = calculateHDProfile(personalityGates[0], personalityGates[1]); // Sun and Earth
   const authority = determineHDAuthority(centers);
@@ -182,176 +129,119 @@ async function calculateHumanDesignProper({ birthDate, birthTime, timezone, cele
       personality_time: birthDateTime.toISOString(),
       design_time: designDateTime.toISOString(),
       offset_days: "88.736",
-      calculation_method: "PROPER_HD_METHODOLOGY_V9_FIXED_DESIGN_TIME"
+      calculation_method: "PROPER_HD_METHODOLOGY_V10_DUAL_EPHEMERIS"
     }
   };
 }
 
-// IMPROVED: Strict design time celestial data calculation - fails fast on invalid data
-function calculateRobustDesignTimeCelestialData(designDateTime, personalityCelestial) {
-  console.log('🔄 Using strict Design time calculation...');
-  console.log('🔍 Input personality celestial data keys:', Object.keys(personalityCelestial || {}));
+// NEW: Get ephemeris data for a specific date/time using external API
+async function getEphemerisData(dateTime, location, timezone, coordinates, calculationType) {
+  console.log(`🔍 Getting ${calculationType} ephemeris data for:`, dateTime.toISOString());
   
-  if (!personalityCelestial || typeof personalityCelestial !== 'object') {
-    console.error('❌ CRITICAL: Invalid personality celestial data provided to design calculation');
-    throw new Error(`Cannot calculate design time - invalid personality data: ${typeof personalityCelestial}`);
+  // Format date and time for the API call
+  const year = dateTime.getFullYear();
+  const month = String(dateTime.getMonth() + 1).padStart(2, '0');
+  const day = String(dateTime.getDate()).padStart(2, '0');
+  const formattedDate = `${year}-${month}-${day}`;
+  
+  const hours = String(dateTime.getHours()).padStart(2, '0');
+  const minutes = String(dateTime.getMinutes()).padStart(2, '0');
+  const formattedTime = `${hours}:${minutes}`;
+  
+  console.log(`📅 ${calculationType} API call: ${formattedDate} ${formattedTime}`);
+  
+  try {
+    // Call the same ephemeris API endpoint but with the specific date/time
+    const ephemerisUrl = 'https://soul-sync-flow.vercel.app/api/ephemeris';
+    
+    const response = await fetch(ephemerisUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        date: formattedDate,
+        time: formattedTime,
+        location: location,
+        timezone: timezone,
+        coordinates: coordinates
+      })
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`❌ ${calculationType} ephemeris API error:`, response.status, errorText);
+      throw new Error(`Ephemeris API failed for ${calculationType}: ${response.status} ${errorText}`);
+    }
+    
+    const ephemerisResult = await response.json();
+    console.log(`✅ ${calculationType} ephemeris API response received`);
+    
+    if (!ephemerisResult.success) {
+      throw new Error(`Ephemeris calculation failed for ${calculationType}: ${ephemerisResult.error}`);
+    }
+    
+    // Extract the celestial data from the response
+    const celestialData = ephemerisResult.data?.planets || ephemerisResult.data;
+    
+    if (!celestialData) {
+      throw new Error(`No celestial data returned for ${calculationType}`);
+    }
+    
+    console.log(`✅ ${calculationType} celestial data extracted successfully`);
+    console.log(`🌟 ${calculationType} Sun longitude:`, celestialData.sun?.longitude);
+    console.log(`🌙 ${calculationType} Moon longitude:`, celestialData.moon?.longitude);
+    
+    return celestialData;
+    
+  } catch (error) {
+    console.error(`❌ Error getting ${calculationType} ephemeris data:`, error);
+    throw new Error(`Failed to get ${calculationType} ephemeris data: ${error.message}`);
+  }
+}
+
+// ENHANCED: Validate celestial data with comprehensive checks
+function validateCelestialData(celestialData, type) {
+  console.log(`🔍 Validating ${type} celestial data...`);
+  
+  if (!celestialData || typeof celestialData !== 'object') {
+    throw new Error(`Invalid ${type} celestial data - expected object, got: ${typeof celestialData}`);
   }
   
-  const designCelestial = {};
-  const daysDifference = 88.736;
-  
-  // Accurate daily motions for all required planets (degrees per day)
-  const planetMotions = {
-    sun: { base: 0.9856, variation: 0.0341 },
-    moon: { base: 13.1764, variation: 1.2 },
-    mercury: { base: 1.3833, variation: 0.5 },
-    venus: { base: 1.6021, variation: 0.2 },
-    mars: { base: 0.5240, variation: 0.3 },
-    jupiter: { base: 0.0831, variation: 0.01 },
-    saturn: { base: 0.0335, variation: 0.005 },
-    uranus: { base: 0.0117, variation: 0.002 },
-    neptune: { base: 0.0061, variation: 0.001 },
-    pluto: { base: 0.0041, variation: 0.0005 },
-    north_node: { base: -0.0529, variation: 0.01 }, // Retrograde
-    south_node: { base: 0.0529, variation: 0.01 }
-  };
-  
-  // Process all required planets - STRICT VALIDATION
+  // Check for essential planets
   const requiredPlanets = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto'];
+  const missingPlanets = [];
+  const invalidPlanets = [];
   
   requiredPlanets.forEach(planet => {
-    console.log(`🔍 Processing ${planet}...`);
-    console.log(`🔍 Personality ${planet} data:`, personalityCelestial[planet]);
-    
-    if (personalityCelestial[planet] && 
-        typeof personalityCelestial[planet] === 'object' && 
-        typeof personalityCelestial[planet].longitude === 'number') {
-      
-      const motion = planetMotions[planet];
-      if (!motion) {
-        console.error(`❌ CRITICAL: No motion data for ${planet}`);
-        throw new Error(`Missing motion data for planet: ${planet}`);
-      }
-      
-      // Add some variation based on time of year (simplified)
-      const timeVariation = Math.sin((designDateTime.getMonth() / 12) * 2 * Math.PI) * motion.variation;
-      const adjustedMotion = motion.base + timeVariation;
-      
-      const personalityLongitude = personalityCelestial[planet].longitude;
-      const designLongitude = (personalityLongitude - (adjustedMotion * daysDifference) + 360) % 360;
-      
-      designCelestial[planet] = {
-        longitude: designLongitude,
-        latitude: personalityCelestial[planet].latitude || 0,
-        distance: personalityCelestial[planet].distance || 1
-      };
-      
-      console.log(`✅ ${planet}: Personality ${personalityLongitude.toFixed(3)}° → Design ${designLongitude.toFixed(3)}° (motion: ${adjustedMotion.toFixed(4)}°/day)`);
-    } else {
-      console.error(`❌ CRITICAL: Missing or invalid ${planet} data in personality celestial data`);
-      console.error(`❌ Expected object with longitude property, got:`, personalityCelestial[planet]);
-      throw new Error(`Invalid ${planet} data in personality celestial - expected object with longitude, got: ${JSON.stringify(personalityCelestial[planet])}`);
+    if (!celestialData[planet]) {
+      missingPlanets.push(planet);
+    } else if (typeof celestialData[planet] !== 'object' || typeof celestialData[planet].longitude !== 'number') {
+      invalidPlanets.push(`${planet}: ${JSON.stringify(celestialData[planet])}`);
     }
   });
   
-  // Process optional planets if available
-  ['north_node', 'south_node'].forEach(planet => {
-    if (personalityCelestial[planet] && 
-        typeof personalityCelestial[planet] === 'object' && 
-        typeof personalityCelestial[planet].longitude === 'number') {
-      
-      const motion = planetMotions[planet];
-      const timeVariation = Math.sin((designDateTime.getMonth() / 12) * 2 * Math.PI) * motion.variation;
-      const adjustedMotion = motion.base + timeVariation;
-      
-      const personalityLongitude = personalityCelestial[planet].longitude;
-      const designLongitude = (personalityLongitude - (adjustedMotion * daysDifference) + 360) % 360;
-      
-      designCelestial[planet] = {
-        longitude: designLongitude,
-        latitude: personalityCelestial[planet].latitude || 0,
-        distance: personalityCelestial[planet].distance || 1
-      };
-      
-      console.log(`✅ ${planet}: Personality ${personalityLongitude.toFixed(3)}° → Design ${designLongitude.toFixed(3)}° (motion: ${adjustedMotion.toFixed(4)}°/day)`);
-    }
-  });
-  
-  // Earth is always opposite to Sun
-  if (designCelestial.sun) {
-    designCelestial.earth = {
-      longitude: (designCelestial.sun.longitude + 180) % 360,
-      latitude: 0,
-      distance: 1
-    };
-    console.log(`✅ earth: Design ${designCelestial.earth.longitude.toFixed(3)}° (opposite to sun)`);
+  if (missingPlanets.length > 0) {
+    console.error(`❌ Missing essential ${type} planetary data:`, missingPlanets);
+    console.error(`❌ Available ${type} planets:`, Object.keys(celestialData));
+    throw new Error(`Missing essential ${type} planetary data for: ${missingPlanets.join(', ')}`);
   }
   
-  // FINAL VALIDATION: Ensure we have all required planets
-  const stillMissing = requiredPlanets.filter(planet => !designCelestial[planet] || typeof designCelestial[planet].longitude !== 'number');
-  
-  if (stillMissing.length > 0) {
-    console.error('❌ Still missing planets after calculation:', stillMissing);
-    console.error('❌ Design celestial data:', Object.keys(designCelestial));
-    stillMissing.forEach(planet => {
-      console.error(`❌ ${planet}:`, designCelestial[planet]);
-    });
-    throw new Error(`Failed to calculate design data for: ${stillMissing.join(', ')}`);
+  if (invalidPlanets.length > 0) {
+    console.error(`❌ Invalid ${type} planetary data format:`, invalidPlanets);
+    throw new Error(`Invalid ${type} planetary data format for: ${invalidPlanets.join(', ')}`);
   }
   
-  console.log('✅ Strict design celestial data calculation completed successfully');
-  console.log('✅ Final design planets:', Object.keys(designCelestial));
-  return designCelestial;
+  console.log(`✅ ${type} celestial data validation passed`);
 }
 
-// Calculate HD gates from celestial data using proper methodology with robust validation
+// Calculate HD gates from celestial data using proper methodology
 function calculateHDGatesFromCelestialData(celestialData, type) {
-  console.log(`🔍 calculateHDGatesFromCelestialData called with type: ${type}`);
-  console.log(`🔍 Raw celestial data received:`, JSON.stringify(celestialData, null, 2));
-  
-  // IMMEDIATE INPUT VALIDATION
-  if (!celestialData) {
-    throw new Error(`No celestial data provided for ${type}! Received: ${celestialData}`);
-  }
-  
-  if (typeof celestialData !== 'object') {
-    throw new Error(`Invalid celestial data for ${type} - expected object, got: ${typeof celestialData}. Data: ${JSON.stringify(celestialData)}`);
-  }
-  
-  // Check for essential planets with detailed debugging
-  if (!celestialData.sun) {
-    console.error(`❌ CRITICAL: Missing sun data for ${type}!`);
-    console.error(`Available keys in celestialData:`, Object.keys(celestialData));
-    throw new Error(`Missing sun data for ${type}! Available keys: ${Object.keys(celestialData).join(', ')}`);
-  }
-  
-  if (typeof celestialData.sun !== 'object') {
-    throw new Error(`Invalid sun data for ${type} - expected object, got: ${typeof celestialData.sun}. Sun data: ${JSON.stringify(celestialData.sun)}`);
-  }
-  
-  if (typeof celestialData.sun.longitude !== 'number') {
-    throw new Error(`Missing or invalid sun longitude for ${type}! Sun data: ${JSON.stringify(celestialData.sun)}`);
-  }
-  
-  if (!celestialData.moon) {
-    console.error(`❌ CRITICAL: Missing moon data for ${type}!`);
-    console.error(`Available keys in celestialData:`, Object.keys(celestialData));
-    throw new Error(`Missing moon data for ${type}! Available keys: ${Object.keys(celestialData).join(', ')}`);
-  }
-  
-  if (typeof celestialData.moon !== 'object') {
-    throw new Error(`Invalid moon data for ${type} - expected object, got: ${typeof celestialData.moon}. Moon data: ${JSON.stringify(celestialData.moon)}`);
-  }
-  
-  if (typeof celestialData.moon.longitude !== 'number') {
-    throw new Error(`Missing or invalid moon longitude for ${type}! Moon data: ${JSON.stringify(celestialData.moon)}`);
-  }
-  
-  console.log(`✅ Basic validation passed for ${type} celestial data`);
+  console.log(`🔍 Calculating ${type} gates from celestial data...`);
   
   const gates = [];
   
-  // Add Earth manually since it's not in the celestial data
+  // Add Earth manually (opposite to Sun)
   const earthCelestial = {
     ...celestialData,
     earth: {
@@ -371,7 +261,7 @@ function calculateHDGatesFromCelestialData(celestialData, type) {
   hdOrder.forEach(planet => {
     if (earthCelestial[planet] && typeof earthCelestial[planet].longitude === 'number') {
       const longitude = earthCelestial[planet].longitude;
-      console.log(`🔍 Calculating for ${type} ${planet} with longitude: ${longitude.toFixed(3)}°`);
+      console.log(`🔍 ${type} ${planet}: ${longitude.toFixed(3)}°`);
       
       const gateInfo = longitudeToHDGate(longitude);
       gates.push({
@@ -381,9 +271,9 @@ function calculateHDGatesFromCelestialData(celestialData, type) {
         type: type
       });
       
-      console.log(`✅ ${type} ${planet}: ${longitude.toFixed(3)}° → Gate ${gateInfo.gate}.${gateInfo.line}`);
+      console.log(`✅ ${type} ${planet}: Gate ${gateInfo.gate}.${gateInfo.line}`);
     } else {
-      console.warn(`⚠️ Warning: Missing or invalid ${planet} data for ${type}:`, earthCelestial[planet]);
+      console.warn(`⚠️ Missing ${planet} data for ${type}:`, earthCelestial[planet]);
     }
   });
   
@@ -395,7 +285,6 @@ function calculateHDGatesFromCelestialData(celestialData, type) {
   return gates;
 }
 
-// CORRECTED: Proper longitude to HD gate conversion using correct HD wheel
 function longitudeToHDGate(longitude) {
   // Normalize longitude to 0-360
   const normalizedLon = ((longitude % 360) + 360) % 360;
@@ -404,8 +293,7 @@ function longitudeToHDGate(longitude) {
   const degreesPerGate = 360 / 64;
   const degreesPerLine = degreesPerGate / 6; // 6 lines per gate
   
-  // CORRECTED: HD wheel starts at gate 41 at 0° Aries (not gate 1 or 21)
-  // This is the correct HD wheel sequence starting from 0° Aries
+  // HD wheel starts at gate 41 at 0° Aries
   const hdWheel = [
     41, 19, 13, 49, 30, 55, 37, 63, 22, 36, 25, 17, 21, 51, 42, 3,
     27, 24, 2, 23, 8, 20, 16, 35, 45, 12, 15, 52, 39, 53, 62, 56,
@@ -413,7 +301,7 @@ function longitudeToHDGate(longitude) {
     28, 44, 1, 43, 14, 34, 9, 5, 26, 11, 10, 58, 38, 54, 61, 60
   ];
   
-  // Calculate gate index (0-63) - NO 45° offset applied
+  // Calculate gate index (0-63)
   const gateIndex = Math.floor(normalizedLon / degreesPerGate);
   const gate = hdWheel[gateIndex];
   
@@ -421,12 +309,9 @@ function longitudeToHDGate(longitude) {
   const positionInGate = normalizedLon % degreesPerGate;
   const line = Math.floor(positionInGate / degreesPerLine) + 1;
   
-  console.log(`🔍 longitudeToHDGate: ${normalizedLon.toFixed(3)}° → gateIndex ${gateIndex} → gate ${gate}, line ${Math.min(line, 6)}`);
-  
   return { gate, line: Math.min(line, 6) };
 }
 
-// CORRECTED: Calculate centers based on complete channels only
 function calculateCentersFromChannels(allGates) {
   const centers = {
     'Head': { defined: false, gates: [], channels: [] },
@@ -440,43 +325,24 @@ function calculateCentersFromChannels(allGates) {
     'Root': { defined: false, gates: [], channels: [] }
   };
   
-  // CORRECTED: Proper HD gate-to-center mapping
   const gateToCenterMap = {
-    // Head Center
     64: 'Head', 61: 'Head', 63: 'Head',
-    
-    // Ajna Center  
     47: 'Ajna', 24: 'Ajna', 4: 'Ajna', 17: 'Ajna', 43: 'Ajna', 11: 'Ajna',
-    
-    // Throat Center
     62: 'Throat', 23: 'Throat', 56: 'Throat', 35: 'Throat', 12: 'Throat',
     45: 'Throat', 33: 'Throat', 8: 'Throat', 31: 'Throat', 7: 'Throat',
     1: 'Throat', 13: 'Throat', 10: 'Throat', 20: 'Throat', 16: 'Throat',
-    
-    // G Center
     25: 'G', 46: 'G', 22: 'G', 36: 'G', 2: 'G', 15: 'G', 5: 'G', 14: 'G',
-    
-    // Heart Center (Ego/Will)
     21: 'Heart', 40: 'Heart', 26: 'Heart', 51: 'Heart',
-    
-    // Solar Plexus Center
     6: 'Solar Plexus', 37: 'Solar Plexus', 30: 'Solar Plexus', 55: 'Solar Plexus',
     49: 'Solar Plexus', 19: 'Solar Plexus', 39: 'Solar Plexus',
     41: 'Solar Plexus', 22: 'Solar Plexus', 36: 'Solar Plexus',
-    
-    // Sacral Center
     34: 'Sacral', 5: 'Sacral', 14: 'Sacral', 29: 'Sacral', 59: 'Sacral',
     9: 'Sacral', 3: 'Sacral', 42: 'Sacral', 27: 'Sacral',
-    
-    // Spleen Center
     48: 'Spleen', 57: 'Spleen', 44: 'Spleen', 50: 'Spleen', 32: 'Spleen', 28: 'Spleen', 18: 'Spleen',
-    
-    // Root Center
     53: 'Root', 60: 'Root', 52: 'Root', 19: 'Root', 39: 'Root', 41: 'Root',
     58: 'Root', 38: 'Root', 54: 'Root'
   };
   
-  // Collect gates for each center
   allGates.forEach(gateInfo => {
     const gateNum = gateInfo.gate;
     const centerName = gateToCenterMap[gateNum];
@@ -488,37 +354,18 @@ function calculateCentersFromChannels(allGates) {
     }
   });
   
-  // CORRECTED: Define channels that create connections between centers
   const channels = [
-    // Head to Ajna
     [64, 47], [61, 24], [63, 4],
-    
-    // Ajna to Throat
     [17, 62], [43, 23], [11, 56],
-    
-    // Throat connections
     [35, 36], [12, 22], [8, 1], [31, 7], [33, 13], [10, 20], [16, 48],
-    
-    // G Center connections
     [25, 51], [46, 29], [2, 14], [15, 5],
-    
-    // Heart connections
     [21, 45], [26, 44], [40, 37], [51, 25],
-    
-    // Solar Plexus connections
     [6, 59], [37, 40], [30, 41], [55, 39], [49, 19], [22, 12], [36, 35],
-    
-    // Sacral connections
     [34, 57], [34, 10], [34, 20], [5, 15], [14, 2], [29, 46], [59, 6], [27, 50], [3, 60], [42, 53], [9, 52],
-    
-    // Spleen connections
     [48, 16], [57, 34], [57, 10], [57, 20], [44, 26], [50, 27], [32, 54], [28, 38], [18, 58],
-    
-    // Root connections
     [53, 42], [60, 3], [52, 9], [19, 49], [39, 55], [41, 30], [58, 18], [38, 28], [54, 32]
   ];
   
-  // Define centers only when complete channels exist
   channels.forEach(([gateA, gateB]) => {
     const centerA = gateToCenterMap[gateA];
     const centerB = gateToCenterMap[gateB];
@@ -530,7 +377,6 @@ function calculateCentersFromChannels(allGates) {
       centers[centerA].defined = true;
       centers[centerB].defined = true;
       
-      // Add channel to both centers
       const channel = [gateA, gateB];
       if (!centers[centerA].channels.some(ch => 
           (ch[0] === channel[0] && ch[1] === channel[1]) || 
@@ -546,11 +392,9 @@ function calculateCentersFromChannels(allGates) {
     }
   });
   
-  console.log('Centers calculation result:', centers);
   return centers;
 }
 
-// CORRECTED: Determine HD type using proper methodology
 function determineHDType(centers) {
   const sacralDefined = centers.Sacral?.defined || false;
   const throatDefined = centers.Throat?.defined || false;
@@ -558,21 +402,9 @@ function determineHDType(centers) {
   const solarPlexusDefined = centers['Solar Plexus']?.defined || false;
   const rootDefined = centers.Root?.defined || false;
   
-  console.log('Type determination - Centers:', {
-    sacral: sacralDefined,
-    throat: throatDefined,
-    heart: heartDefined,
-    solarPlexus: solarPlexusDefined,
-    root: rootDefined
-  });
-  
-  // Check for motor to throat connections for Manifestor
   const hasMotorToThroat = checkMotorToThroatConnection(centers);
-  
-  // Check for Sacral to Throat connection for Manifesting Generator
   const hasSacralToThroat = checkSacralToThroatConnection(centers);
   
-  // Type determination logic
   if (sacralDefined && throatDefined && hasSacralToThroat) {
     return 'Manifesting Generator';
   }
@@ -585,7 +417,6 @@ function determineHDType(centers) {
     return 'Generator';
   }
   
-  // Check if no centers are defined (Reflector)
   const definedCenters = Object.values(centers).filter(center => center.defined).length;
   if (definedCenters === 0) {
     return 'Reflector';
@@ -594,28 +425,16 @@ function determineHDType(centers) {
   return 'Projector';
 }
 
-// CORRECTED: Helper function to check ONLY motor to throat connections
 function checkMotorToThroatConnection(centers) {
-  // CORRECTED: Only include verified channels that connect motor centers to Throat
   const motorToThroatChannels = [
-    // Heart (Ego/Will) to Throat - VERIFIED
-    [21, 45], // Channel of Money
-    [26, 44], // Channel of Surrender
-    
-    // Solar Plexus to Throat - VERIFIED
-    [35, 36], // Channel of Transitoriness
-    [12, 22], // Channel of Openness
-    
-    // Root to Throat - CORRECTED (removed questionable channels)
-    // Note: Most Root energy reaches Throat through other centers
+    [21, 45], [26, 44], 
+    [35, 36], [12, 22]
   ];
   
   return motorToThroatChannels.some(([gateA, gateB]) => {
-    // Check if we have both gates of the channel active
     const hasGateA = Object.values(centers).some(center => center.gates.includes(gateA));
     const hasGateB = Object.values(centers).some(center => center.gates.includes(gateB));
     
-    // Verify the channel actually connects a motor to throat
     const isMotorToThroat = (
       (centers.Heart?.gates.includes(gateA) && centers.Throat?.gates.includes(gateB)) ||
       (centers.Heart?.gates.includes(gateB) && centers.Throat?.gates.includes(gateA)) ||
@@ -627,7 +446,6 @@ function checkMotorToThroatConnection(centers) {
   });
 }
 
-// Helper function to check sacral to throat connections
 function checkSacralToThroatConnection(centers) {
   const sacralToThroatChannels = [
     [34, 20], [34, 10], [34, 57], [5, 15], [14, 2], [29, 46]
@@ -639,7 +457,6 @@ function checkSacralToThroatConnection(centers) {
   });
 }
 
-// Calculate HD profile from Sun and Earth gates
 function calculateHDProfile(sunGateInfo, earthGateInfo) {
   if (!sunGateInfo || !earthGateInfo) return '1/3';
   
@@ -649,7 +466,6 @@ function calculateHDProfile(sunGateInfo, earthGateInfo) {
   return `${sunLine}/${earthLine}`;
 }
 
-// Determine authority using proper HD hierarchy
 function determineHDAuthority(centers) {
   if (centers['Solar Plexus']?.defined) return 'Emotional';
   if (centers.Sacral?.defined) return 'Sacral';
@@ -703,11 +519,9 @@ function getNotSelfThemeForType(type) {
   return themes[type] || 'Unknown';
 }
 
-// Enhanced geocoding using Google Maps Geocoding API
 async function geocodeLocation(locationName) {
   console.log(`🔍 Starting Google geocoding for: ${locationName}`);
   
-  // Check if we have a Google API key from environment
   const googleApiKey = process.env.GOOGLE_MAPS_API_KEY;
   
   if (!googleApiKey) {
@@ -719,8 +533,6 @@ async function geocodeLocation(locationName) {
     const encodedLocation = encodeURIComponent(locationName);
     const googleUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedLocation}&key=${googleApiKey}`;
     
-    console.log(`🔍 Calling Google Geocoding API for: ${locationName}`);
-    
     const response = await fetch(googleUrl);
     
     if (!response.ok) {
@@ -729,38 +541,28 @@ async function geocodeLocation(locationName) {
     
     const data = await response.json();
     
-    console.log(`🔍 Google API response status: ${data.status}`);
-    
     if (data.status === 'OK' && data.results && data.results[0]) {
       const result = data.results[0];
       const { lat, lng } = result.geometry.location;
       const coordinates = `${lat},${lng}`;
       
       console.log(`✅ Google geocoded "${locationName}" to: ${coordinates}`);
-      console.log(`📍 Formatted address: ${result.formatted_address}`);
-      
       return coordinates;
     } else if (data.status === 'ZERO_RESULTS') {
       console.warn(`⚠️ Google found no results for: ${locationName}`);
       return null;
     } else {
       console.error(`❌ Google geocoding failed with status: ${data.status}`);
-      if (data.error_message) {
-        console.error(`❌ Error message: ${data.error_message}`);
-      }
       return null;
     }
     
   } catch (error) {
     console.error(`❌ Google geocoding error for ${locationName}:`, error.message);
-    
-    // Fallback to Nominatim if Google fails
     console.log('🔄 Falling back to OpenStreetMap Nominatim...');
     return await tryNominatimGeocoding(locationName);
   }
 }
 
-// Fallback geocoding using OpenStreetMap Nominatim
 async function tryNominatimGeocoding(locationName) {
   try {
     console.log(`🔍 Trying Nominatim geocoding for: ${locationName}`);
