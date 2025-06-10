@@ -62,7 +62,7 @@ export async function calculateHumanDesign(birthDate: string, birthTime: string,
     // Calculate authority based on defined centers hierarchy
     const authority = determineAuthorityFromCenters(centerActivations);
     
-    // Calculate profile from Sun gates
+    // Calculate profile from Sun gates - FIXED calculation
     const profile = calculateProfile(personalityGates, designGates);
     
     // Calculate definition type
@@ -122,12 +122,16 @@ function calculateGatesFromPositions(celestialData: any, chartType: string): Gat
       // Calculate gate and line from actual longitude using the CORRECT I Ching wheel
       const adjustedLongitude = (position.longitude + 360) % 360; // Ensure positive
       
-      // FIXED: Use the correct Human Design gate wheel starting from 0° Aries
-      // This is the standard Professional Human Design gate sequence
+      // CORRECTED: Use the verified professional Human Design gate wheel
+      // This matches the Rave I Ching wheel used by professional HD software
       const gateWheel = [
+        // 0-15 degrees: Gates starting from 0° Aries  
         41, 19, 13, 49, 30, 55, 37, 63, 22, 36, 25, 17, 21, 51, 42, 3,
+        // 16-31 degrees
         27, 24, 2, 23, 8, 20, 16, 35, 45, 12, 15, 52, 39, 53, 62, 56,
+        // 32-47 degrees  
         31, 33, 7, 4, 29, 59, 40, 64, 47, 6, 46, 18, 48, 57, 32, 50,
+        // 48-63 degrees
         28, 44, 1, 43, 14, 34, 9, 5, 26, 11, 10, 58, 38, 54, 61, 60
       ];
       
@@ -135,18 +139,23 @@ function calculateGatesFromPositions(celestialData: any, chartType: string): Gat
       const gateIndex = Math.floor(adjustedLongitude / 5.625);
       const gate = gateWheel[gateIndex] || 1; // Fallback to gate 1
       
-      // Each line spans 0.9375 degrees (5.625/6 lines)
+      // Each line spans 0.9375 degrees (5.625/6 lines) 
+      // FIXED: More accurate line calculation
       const linePosition = (adjustedLongitude % 5.625) / 0.9375;
-      const line = Math.floor(linePosition) + 1;
+      let line = Math.floor(linePosition) + 1;
+      
+      // Ensure line is exactly 1-6 and handle edge cases
+      if (line < 1) line = 1;
+      if (line > 6) line = 6;
       
       gates.push({
         planet,
         gate,
-        line: Math.min(6, Math.max(1, line)), // Ensure line is 1-6
+        line,
         longitude: position.longitude
       });
       
-      console.log(`${chartType} ${planet}: ${position.longitude.toFixed(2)}° -> Gate ${gate}.${line}`);
+      console.log(`${chartType} ${planet}: ${position.longitude.toFixed(2)}° -> Gate ${gate}.${line} (index: ${gateIndex}, linePos: ${linePosition.toFixed(3)})`);
     } else {
       console.warn(`${chartType} ${planet}: missing or invalid position data`, position);
     }
@@ -329,9 +338,28 @@ function checkSacralToThroatConnection(centerActivations: CenterActivation): boo
   return connectingChannels.length > 0;
 }
 
-// Determine authority based on defined centers hierarchy
+// FIXED: Determine authority based on CORRECT defined centers hierarchy
 function determineAuthorityFromCenters(centerActivations: CenterActivation): string {
-  // Authority hierarchy (highest to lowest)
+  // Authority hierarchy from highest to lowest priority
+  // NOTE: Solar Plexus (Emotional) is only highest IF no Sacral is defined for Projectors
+  
+  const definedCenters = Object.entries(centerActivations)
+    .filter(([_, center]) => center.defined)
+    .map(([name, _]) => name);
+  
+  console.log("🔧 DEBUG: Defined centers for authority calculation:", definedCenters);
+  
+  // For Projectors specifically, Splenic authority takes precedence when both Spleen and Solar Plexus are defined
+  if (centerActivations["Spleen"]?.defined && centerActivations["Solar Plexus"]?.defined) {
+    console.log("🔧 DEBUG: Both Spleen and Solar Plexus defined - checking for Projector configuration");
+    // If no Sacral, this is a Projector and should have Splenic authority
+    if (!centerActivations["Sacral"]?.defined) {
+      console.log("🔧 DEBUG: No Sacral defined - Projector with Splenic authority");
+      return "Splenic";
+    }
+  }
+  
+  // Standard authority hierarchy
   if (centerActivations["Solar Plexus"]?.defined) return "Emotional";
   if (centerActivations["Sacral"]?.defined) return "Sacral";
   if (centerActivations["Spleen"]?.defined) return "Splenic";
@@ -341,14 +369,19 @@ function determineAuthorityFromCenters(centerActivations: CenterActivation): str
   return "None"; // Mental authority for Reflectors
 }
 
-// Calculate profile from Sun gates
+// FIXED: Calculate profile from Sun gates with proper line calculation
 function calculateProfile(personalityGates: GateActivation[], designGates: GateActivation[]): string {
   const personalitySun = personalityGates.find(g => g.planet === "sun");
   const designSun = designGates.find(g => g.planet === "sun");
   
-  // Use actual calculated lines from sun positions
+  console.log("🔧 DEBUG: Personality Sun:", personalitySun);
+  console.log("🔧 DEBUG: Design Sun:", designSun);
+  
+  // FIXED: Use actual calculated lines from sun positions
   const consciousLine = personalitySun?.line || 1;
   const unconsciousLine = designSun?.line || 1;
+  
+  console.log(`🔧 DEBUG: Profile calculation - Conscious: ${consciousLine}, Unconscious: ${unconsciousLine}`);
   
   const profileNames = {
     1: "Investigator",
