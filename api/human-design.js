@@ -71,8 +71,12 @@ async function calculateHumanDesignProper({ birthDate, birthTime, birthLocation,
   // Step 2: Get celestial data for both Personality (birth) and Design times
   const personalityCelestial = celestialData.planets; // Access the planets object
   
+  console.log('🔍 DEBUG: Personality celestial data received:');
+  console.log('Sun longitude:', personalityCelestial?.sun?.longitude);
+  console.log('Moon longitude:', personalityCelestial?.moon?.longitude);
+  
   // IMPROVED: Use Vercel ephemeris API for accurate Design time celestial data
-  const designCelestial = await getAccurateDesignTimeCelestialData(designDateTime, birthLocation, timezone);
+  const designCelestial = await getAccurateDesignTimeCelestialData(designDateTime, birthLocation, timezone, personalityCelestial);
   
   // Step 3: Calculate gates using proper HD methodology
   const personalityGates = calculateHDGatesFromCelestialData(personalityCelestial, 'personality');
@@ -106,21 +110,21 @@ async function calculateHumanDesignProper({ birthDate, birthTime, birthLocation,
       personality_time: birthDateTime.toISOString(),
       design_time: designDateTime.toISOString(),
       offset_days: "88.736",
-      calculation_method: "PROPER_HD_METHODOLOGY_V4_WITH_VERCEL_EPHEMERIS"
+      calculation_method: "PROPER_HD_METHODOLOGY_V4_WITH_VERCEL_EPHEMERIS_FIXED"
     }
   };
 }
 
 // IMPROVED: Use Vercel ephemeris API for accurate Design Time celestial data
-async function getAccurateDesignTimeCelestialData(designDateTime, birthLocation, timezone) {
-  console.log('Getting accurate Design time celestial data via Vercel ephemeris API...');
+async function getAccurateDesignTimeCelestialData(designDateTime, birthLocation, timezone, personalityCelestial) {
+  console.log('🔍 Getting accurate Design time celestial data via Vercel ephemeris API...');
   
   try {
     // Format the Design time for the API
     const designDateStr = designDateTime.toISOString().split('T')[0];
     const designTimeStr = designDateTime.toISOString().split('T')[1].substring(0, 8);
     
-    console.log(`Calling Vercel ephemeris API for Design time: ${designDateStr} ${designTimeStr} at ${birthLocation}`);
+    console.log(`🔍 Calling Vercel ephemeris API for Design time: ${designDateStr} ${designTimeStr} at ${birthLocation}`);
     
     // Call our Vercel ephemeris API for the Design time
     const ephemerisResponse = await fetch('https://soul-sync-flow.vercel.app/api/ephemeris', {
@@ -134,17 +138,23 @@ async function getAccurateDesignTimeCelestialData(designDateTime, birthLocation,
       })
     });
     
+    console.log(`🔍 Ephemeris API response status: ${ephemerisResponse.status}`);
+    
     if (!ephemerisResponse.ok) {
+      const errorText = await ephemerisResponse.text();
+      console.error(`❌ Ephemeris API error: ${ephemerisResponse.status} - ${errorText}`);
       throw new Error(`Ephemeris API error: ${ephemerisResponse.status}`);
     }
     
     const ephemerisData = await ephemerisResponse.json();
+    console.log('🔍 Raw ephemeris API response:', ephemerisData);
     
     if (!ephemerisData.success || !ephemerisData.data) {
+      console.error('❌ Invalid ephemeris response structure:', ephemerisData);
       throw new Error('Invalid ephemeris response');
     }
     
-    console.log('Successfully retrieved Design time ephemeris data from Vercel API');
+    console.log('✅ Successfully retrieved Design time ephemeris data from Vercel API');
     
     // Transform the API response to match our expected format
     const designCelestial = transformEphemerisResponse(ephemerisData.data);
@@ -152,8 +162,9 @@ async function getAccurateDesignTimeCelestialData(designDateTime, birthLocation,
     return designCelestial;
     
   } catch (error) {
-    console.warn('Vercel ephemeris API unavailable, using improved approximation:', error.message);
-    return calculateImprovedDesignTimeCelestialData(designDateTime);
+    console.error('❌ Vercel ephemeris API failed:', error.message);
+    console.log('🔄 Falling back to improved approximation with personality data...');
+    return calculateImprovedDesignTimeCelestialData(designDateTime, personalityCelestial);
   }
 }
 
@@ -201,21 +212,27 @@ function transformEphemerisResponse(ephemerisData) {
   return celestialData;
 }
 
-// Improved approximation fallback with orbital variations
-function calculateImprovedDesignTimeCelestialData(designDateTime) {
-  console.log('Using improved approximation with orbital variations for Design time...');
+// FIXED: Improved approximation fallback with orbital variations - NOW USES PERSONALITY DATA
+function calculateImprovedDesignTimeCelestialData(designDateTime, personalityCelestial) {
+  console.log('🔄 Using improved approximation with orbital variations for Design time...');
+  console.log('🔍 Starting with personality celestial data:', personalityCelestial);
+  
+  if (!personalityCelestial) {
+    console.error('❌ CRITICAL: No personality celestial data provided to fallback function');
+    throw new Error('Cannot calculate design time without personality data');
+  }
   
   const designCelestial = {};
   const daysDifference = 88.736;
   
   // More accurate daily motions accounting for orbital eccentricity
   const planetMotions = {
-    sun: { base: 0.9856, variation: 0.0341 },      // Sun varies due to Earth's elliptical orbit
-    moon: { base: 13.1764, variation: 1.2 },       // Moon has significant variation
-    mercury: { base: 1.3833, variation: 0.5 },     // Mercury is highly variable
-    venus: { base: 1.6021, variation: 0.2 },       // Venus less variable
-    mars: { base: 0.5240, variation: 0.3 },        // Mars quite variable
-    jupiter: { base: 0.0831, variation: 0.01 },    // Outer planets more stable
+    sun: { base: 0.9856, variation: 0.0341 },
+    moon: { base: 13.1764, variation: 1.2 },
+    mercury: { base: 1.3833, variation: 0.5 },
+    venus: { base: 1.6021, variation: 0.2 },
+    mars: { base: 0.5240, variation: 0.3 },
+    jupiter: { base: 0.0831, variation: 0.01 },
     saturn: { base: 0.0335, variation: 0.005 },
     uranus: { base: 0.0117, variation: 0.002 },
     neptune: { base: 0.0061, variation: 0.001 },
@@ -225,20 +242,24 @@ function calculateImprovedDesignTimeCelestialData(designDateTime) {
   };
   
   Object.keys(planetMotions).forEach(planet => {
-    const motion = planetMotions[planet];
-    // Add some variation based on time of year (simplified)
-    const timeVariation = Math.sin((designDateTime.getMonth() / 12) * 2 * Math.PI) * motion.variation;
-    const adjustedMotion = motion.base + timeVariation;
-    
-    const designLongitude = (360 - (adjustedMotion * daysDifference) + 360) % 360;
-    
-    designCelestial[planet] = {
-      longitude: designLongitude,
-      latitude: 0,
-      distance: 1
-    };
-    
-    console.log(`${planet}: Design position ${designLongitude.toFixed(3)}° (adjusted motion: ${adjustedMotion.toFixed(4)}°/day)`);
+    if (personalityCelestial[planet]) {
+      const motion = planetMotions[planet];
+      // Add some variation based on time of year (simplified)
+      const timeVariation = Math.sin((designDateTime.getMonth() / 12) * 2 * Math.PI) * motion.variation;
+      const adjustedMotion = motion.base + timeVariation;
+      
+      // FIXED: Now correctly subtracts motion from the original personality longitude
+      const personalityLongitude = personalityCelestial[planet].longitude;
+      const designLongitude = (personalityLongitude - (adjustedMotion * daysDifference) + 360) % 360;
+      
+      designCelestial[planet] = {
+        longitude: designLongitude,
+        latitude: personalityCelestial[planet].latitude || 0,
+        distance: personalityCelestial[planet].distance || 1
+      };
+      
+      console.log(`🔍 ${planet}: Personality ${personalityLongitude.toFixed(3)}° → Design ${designLongitude.toFixed(3)}° (motion: ${adjustedMotion.toFixed(4)}°/day)`);
+    }
   });
   
   // Earth is always opposite to Sun
@@ -248,6 +269,7 @@ function calculateImprovedDesignTimeCelestialData(designDateTime) {
       latitude: 0,
       distance: 1
     };
+    console.log(`🔍 earth: Design ${designCelestial.earth.longitude.toFixed(3)}° (opposite to sun)`);
   }
   
   return designCelestial;
@@ -310,6 +332,8 @@ function getPlanetDailyMotion(planet) {
 
 // Calculate HD gates from celestial data using proper methodology
 function calculateHDGatesFromCelestialData(celestialData, type) {
+  console.log(`🔍 Calculating ${type} gates from celestial data:`, celestialData);
+  
   const gates = [];
   
   // Add Earth manually since it's not in the celestial data
@@ -331,7 +355,10 @@ function calculateHDGatesFromCelestialData(celestialData, type) {
   
   hdOrder.forEach(planet => {
     if (earthCelestial[planet]) {
-      const gateInfo = longitudeToHDGate(earthCelestial[planet].longitude);
+      const longitude = earthCelestial[planet].longitude;
+      console.log(`🔍 Calculating for ${type} ${planet} with longitude: ${longitude.toFixed(3)}°`);
+      
+      const gateInfo = longitudeToHDGate(longitude);
       gates.push({
         planet,
         gate: gateInfo.gate,
@@ -339,7 +366,7 @@ function calculateHDGatesFromCelestialData(celestialData, type) {
         type: type
       });
       
-      console.log(`${type} ${planet}: ${earthCelestial[planet].longitude.toFixed(3)}° → Gate ${gateInfo.gate}.${gateInfo.line}`);
+      console.log(`✅ ${type} ${planet}: ${longitude.toFixed(3)}° → Gate ${gateInfo.gate}.${gateInfo.line}`);
     }
   });
   
@@ -371,6 +398,8 @@ function longitudeToHDGate(longitude) {
   // Calculate line (1-6) within the gate
   const positionInGate = normalizedLon % degreesPerGate;
   const line = Math.floor(positionInGate / degreesPerLine) + 1;
+  
+  console.log(`🔍 longitudeToHDGate: ${normalizedLon.toFixed(3)}° → gateIndex ${gateIndex} → gate ${gate}, line ${Math.min(line, 6)}`);
   
   return { gate, line: Math.min(line, 6) };
 }
