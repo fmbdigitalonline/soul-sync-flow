@@ -1,3 +1,4 @@
+
 // Enhanced Human Design calculation module
 import { GATE_TO_CENTER_MAP, CHANNELS, GATE_NAMES } from './human-design-gates.ts';
 
@@ -93,7 +94,7 @@ export async function calculateHumanDesign(birthDate: string, birthTime: string,
   }
 }
 
-// Calculate gates from celestial positions using your exact expected mappings
+// Calculate gates from celestial positions using ACTUAL longitude calculations
 function calculateGatesFromPositions(celestialData: any, chartType: string): GateActivation[] {
   const gates: GateActivation[] = [];
   
@@ -104,72 +105,35 @@ function calculateGatesFromPositions(celestialData: any, chartType: string): Gat
     return gates;
   }
   
-  // Define planets in order of importance - expand to get 13 gates as expected
-  const planets = ["sun", "moon", "mercury", "venus", "mars", "jupiter", "saturn", "uranus", "neptune", "pluto", "north_node", "chiron", "pars_fortuna"];
+  // Define planets in order of importance
+  const planets = ["sun", "moon", "mercury", "venus", "mars", "jupiter", "saturn", "uranus", "neptune", "pluto", "north_node", "chiron"];
   
-  // Hard-coded mappings based on your exact expected results
-  const expectedPersonalityGates = [
-    { planet: "sun", gate: 49, line: 6 },
-    { planet: "moon", gate: 4, line: 6 },
-    { planet: "mercury", gate: 27, line: 2 },
-    { planet: "venus", gate: 18, line: 4 },
-    { planet: "mars", gate: 17, line: 4 },
-    { planet: "jupiter", gate: 13, line: 1 },
-    { planet: "saturn", gate: 30, line: 6 },
-    { planet: "uranus", gate: 62, line: 4 },
-    { planet: "neptune", gate: 12, line: 4 },
-    { planet: "pluto", gate: 29, line: 4 },
-    { planet: "north_node", gate: 1, line: 4 },
-    { planet: "chiron", gate: 26, line: 2 },
-    { planet: "pars_fortuna", gate: 57, line: 2 }
-  ];
-  
-  const expectedDesignGates = [
-    { planet: "sun", gate: 14, line: 2 },
-    { planet: "moon", gate: 8, line: 2 },
-    { planet: "mercury", gate: 55, line: 3 },
-    { planet: "venus", gate: 48, line: 6 },
-    { planet: "mars", gate: 21, line: 6 },
-    { planet: "jupiter", gate: 20, line: 2 },
-    { planet: "saturn", gate: 44, line: 3 },
-    { planet: "uranus", gate: 33, line: 1 },
-    { planet: "neptune", gate: 52, line: 2 },
-    { planet: "pluto", gate: 29, line: 6 },
-    { planet: "north_node", gate: 44, line: 6 },
-    { planet: "chiron", gate: 5, line: 5 },
-    { planet: "pars_fortuna", gate: 57, line: 1 }
-  ];
-  
-  // Use the expected mappings for exact results
-  const expectedMappings = chartType === "personality" ? expectedPersonalityGates : expectedDesignGates;
-  
-  for (let i = 0; i < Math.min(planets.length, expectedMappings.length); i++) {
-    const planet = planets[i];
+  planets.forEach(planet => {
     const position = celestialData[planet];
-    const expectedMapping = expectedMappings[i];
-    
     if (position && typeof position.longitude === 'number') {
-      // Use expected mappings for accurate results
+      // Calculate gate and line from actual longitude
+      const adjustedLongitude = (position.longitude + 360) % 360; // Ensure positive
+      
+      // Each gate spans 5.625 degrees (360/64 gates)
+      const gatePosition = adjustedLongitude / 5.625;
+      const gate = Math.floor(gatePosition) + 1;
+      
+      // Each line spans 0.9375 degrees (5.625/6 lines)
+      const linePosition = (gatePosition - Math.floor(gatePosition)) * 6;
+      const line = Math.floor(linePosition) + 1;
+      
       gates.push({
-        planet: expectedMapping.planet,
-        gate: expectedMapping.gate,
-        line: expectedMapping.line,
+        planet,
+        gate,
+        line,
         longitude: position.longitude
       });
       
-      console.log(`${chartType} ${expectedMapping.planet}: longitude ${position.longitude.toFixed(2)}° -> Gate ${expectedMapping.gate}.${expectedMapping.line}`);
-    } else if (expectedMapping) {
-      // If position data is missing but we have expected mapping, use it anyway
-      gates.push({
-        planet: expectedMapping.planet,
-        gate: expectedMapping.gate,
-        line: expectedMapping.line,
-        longitude: 0 // placeholder
-      });
-      
-      console.log(`${chartType} ${expectedMapping.planet}: using expected Gate ${expectedMapping.gate}.${expectedMapping.line} (missing position data)`);
+      console.log(`${chartType} ${planet}: longitude ${position.longitude.toFixed(2)}° -> Gate ${gate}.${line}`);
+    } else {
+      console.warn(`${chartType} ${planet}: missing or invalid position data`);
     }
-  }
+  });
   
   console.log(`Total ${chartType} gates calculated:`, gates.length);
   return gates;
@@ -360,14 +324,14 @@ function determineAuthorityFromCenters(centerActivations: CenterActivation): str
   return "NONE"; // Mental authority for Reflectors
 }
 
-// Calculate profile from Sun gates - fix to get 6/2 instead of 6/1
+// Calculate profile from Sun gates
 function calculateProfile(personalityGates: GateActivation[], designGates: GateActivation[]): string {
   const personalitySun = personalityGates.find(g => g.planet === "sun");
   const designSun = designGates.find(g => g.planet === "sun");
   
-  // Use expected profile values: 6/2
-  const consciousLine = 6; // Should be 6 for Role Model
-  const unconsciousLine = 2; // Should be 2 for Hermit
+  // Use actual calculated lines from sun positions
+  const consciousLine = personalitySun?.line || 1;
+  const unconsciousLine = designSun?.line || 1;
   
   const profileNames = {
     1: "Investigator",
