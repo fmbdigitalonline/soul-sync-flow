@@ -90,15 +90,23 @@ async function calculateHumanDesignProper({ birthDate, birthTime, birthLocation,
     'design'
   );
   
+  // CRITICAL DEBUG: Check what we actually got
+  console.log('[DEBUG] personalityCelestial keys:', Object.keys(personalityCelestial || {}));
+  console.log('[DEBUG] personalityCelestial.sun:', personalityCelestial?.sun);
+  console.log('[DEBUG] designCelestial keys:', Object.keys(designCelestial || {}));
+  console.log('[DEBUG] designCelestial.sun:', designCelestial?.sun);
+  
   // Step 3: Validate both celestial data sets
   validateCelestialData(personalityCelestial, 'personality');
   validateCelestialData(designCelestial, 'design');
   
   // Step 4: Calculate gates using proper HD methodology
   console.log('🔍 Calculating personality gates from actual ephemeris data...');
+  console.log('[DEBUG] Passing personalityCelestial to gates:', personalityCelestial);
   const personalityGates = calculateHDGatesFromCelestialData(personalityCelestial, 'personality');
   
   console.log('🔍 Calculating design gates from actual ephemeris data...');
+  console.log('[DEBUG] Passing designCelestial to gates:', designCelestial);
   const designGates = calculateHDGatesFromCelestialData(designCelestial, 'design');
   
   console.log('Personality gates calculated:', personalityGates);
@@ -134,7 +142,7 @@ async function calculateHumanDesignProper({ birthDate, birthTime, birthLocation,
   };
 }
 
-// NEW: Get ephemeris data for a specific date/time using external API
+// FIXED: Get ephemeris data for a specific date/time using external API
 async function getEphemerisData(dateTime, location, timezone, coordinates, calculationType) {
   console.log(`🔍 Getting ${calculationType} ephemeris data for:`, dateTime.toISOString());
   
@@ -160,10 +168,7 @@ async function getEphemerisData(dateTime, location, timezone, coordinates, calcu
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        date: formattedDate,
-        time: formattedTime,
-        location: location,
-        timezone: timezone,
+        datetime: `${formattedDate}T${formattedTime}:00.000Z`,
         coordinates: coordinates
       })
     });
@@ -181,11 +186,36 @@ async function getEphemerisData(dateTime, location, timezone, coordinates, calcu
       throw new Error(`Ephemeris calculation failed for ${calculationType}: ${ephemerisResult.error}`);
     }
     
-    // Extract the celestial data from the response
-    const celestialData = ephemerisResult.data?.planets || ephemerisResult.data;
+    // CRITICAL FIX: Handle different API response structures
+    let celestialData;
+    
+    if (ephemerisResult.data && ephemerisResult.data.planets) {
+      celestialData = ephemerisResult.data.planets;
+      console.log(`[DEBUG] Using ephemerisResult.data.planets for ${calculationType}`);
+    } else if (ephemerisResult.data && typeof ephemerisResult.data.sun === 'object') {
+      celestialData = ephemerisResult.data;
+      console.log(`[DEBUG] Using ephemerisResult.data directly for ${calculationType}`);
+    } else {
+      console.error(`[DEBUG] Raw ephemeris response for ${calculationType}:`, JSON.stringify(ephemerisResult, null, 2));
+      throw new Error(`No valid planetary data in ephemeris response for ${calculationType}!`);
+    }
+    
+    // CRITICAL DEBUG: Log what we extracted
+    console.log(`[DEBUG] ${calculationType} celestialData keys:`, Object.keys(celestialData || {}));
+    console.log(`[DEBUG] ${calculationType} celestialData.sun:`, celestialData?.sun);
+    console.log(`[DEBUG] ${calculationType} celestialData.moon:`, celestialData?.moon);
     
     if (!celestialData) {
       throw new Error(`No celestial data returned for ${calculationType}`);
+    }
+    
+    // Validate we have the essential data
+    if (!celestialData.sun || typeof celestialData.sun.longitude !== 'number') {
+      throw new Error(`Invalid sun data for ${calculationType}: ${JSON.stringify(celestialData.sun)}`);
+    }
+    
+    if (!celestialData.moon || typeof celestialData.moon.longitude !== 'number') {
+      throw new Error(`Invalid moon data for ${calculationType}: ${JSON.stringify(celestialData.moon)}`);
     }
     
     console.log(`✅ ${calculationType} celestial data extracted successfully`);
@@ -238,6 +268,16 @@ function validateCelestialData(celestialData, type) {
 // Calculate HD gates from celestial data using proper methodology
 function calculateHDGatesFromCelestialData(celestialData, type) {
   console.log(`🔍 Calculating ${type} gates from celestial data...`);
+  console.log(`[DEBUG] celestialData in calculateHDGatesFromCelestialData:`, celestialData);
+  
+  // CRITICAL: Validate input immediately
+  if (!celestialData.sun || typeof celestialData.sun.longitude !== 'number') {
+    throw new Error(`Celestial data missing or invalid: sun.longitude is not a number for ${type}. Got: ${JSON.stringify(celestialData.sun)}`);
+  }
+  
+  if (!celestialData.moon || typeof celestialData.moon.longitude !== 'number') {
+    throw new Error(`Celestial data missing or invalid: moon.longitude is not a number for ${type}. Got: ${JSON.stringify(celestialData.moon)}`);
+  }
   
   const gates = [];
   
