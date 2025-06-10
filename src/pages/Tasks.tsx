@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
@@ -12,6 +11,7 @@ import { Check, Plus, Clock, Trash2, Calendar, Star, MoreVertical, AlertCircle }
 import { useToast } from "@/hooks/use-toast";
 import { SpeechBubble } from "@/components/ui/speech-bubble";
 import ProductivityDashboard from "@/components/productivity/ProductivityDashboard";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // Define task types
 type TaskStatus = "todo" | "in-progress" | "stuck" | "completed";
@@ -72,6 +72,7 @@ const Tasks = () => {
   const [helpVisible, setHelpVisible] = useState(false);
   const [showProductivityTools, setShowProductivityTools] = useState(true);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const handleAddTask = () => {
     if (newTaskTitle.trim() === "") return;
@@ -80,17 +81,17 @@ const Tasks = () => {
       id: Date.now().toString(),
       title: newTaskTitle,
       completed: false,
-      status: "todo", // This is now properly typed as TaskStatus
+      status: "todo",
       priority: "medium",
-      alignedWith: ["Leo Sun", "INFJ"], // Default alignment for demo
+      alignedWith: ["Leo Sun", "INFJ"],
     };
 
     setTasks([newTask, ...tasks]);
     setNewTaskTitle("");
 
     toast({
-      title: "Task added",
-      description: "Your new aligned task has been created.",
+      title: t('tasks.addedToast'),
+      description: t('tasks.addedDescription'),
     });
   };
 
@@ -118,8 +119,8 @@ const Tasks = () => {
     const task = tasks.find((t) => t.id === id);
     if (task) {
       toast({
-        title: task.completed ? "Task reopened" : "Task completed",
-        description: task.completed ? "You've reopened this task" : "Great job completing this task!",
+        title: task.completed ? t('tasks.reopenedToast') : t('tasks.completedToast'),
+        description: task.completed ? t('tasks.reopenedDescription') : t('tasks.completedDescription'),
       });
     }
   };
@@ -139,7 +140,6 @@ const Tasks = () => {
       })
     );
 
-    // Show help bubble when a task is marked as stuck
     if (newStatus === "stuck") {
       setHelpVisible(true);
       setTimeout(() => {
@@ -152,8 +152,8 @@ const Tasks = () => {
     setTasks(tasks.filter((task) => task.id !== id));
     
     toast({
-      title: "Task deleted",
-      description: "Your task has been removed.",
+      title: t('tasks.deletedToast'),
+      description: t('tasks.deletedDescription'),
     });
   };
 
@@ -187,10 +187,10 @@ const Tasks = () => {
       <div className="p-4 max-w-5xl mx-auto">
         <div className="text-center mb-6">
           <h1 className="text-2xl font-bold font-display">
-            <span className="gradient-text">Aligned Tasks</span>
+            <span className="gradient-text">{t('tasks.title')}</span>
           </h1>
           <p className="text-sm text-muted-foreground">
-            Tasks personalized to your Soul Blueprint
+            {t('tasks.subtitle')}
           </p>
         </div>
 
@@ -206,7 +206,7 @@ const Tasks = () => {
               value={newTaskTitle}
               onChange={(e) => setNewTaskTitle(e.target.value)}
               onKeyDown={handleKeyPress}
-              placeholder="Add a new aligned task..."
+              placeholder={t('tasks.addPlaceholder')}
               className="flex-1"
             />
             <GradientButton
@@ -226,14 +226,14 @@ const Tasks = () => {
               size="sm"
               onClick={() => setActiveView("list")}
             >
-              List
+              {t('tasks.viewList')}
             </Button>
             <Button 
               variant={activeView === "kanban" ? "default" : "outline"}
               size="sm"
               onClick={() => setActiveView("kanban")}
             >
-              Kanban
+              {t('tasks.viewKanban')}
             </Button>
           </div>
         </div>
@@ -241,15 +241,15 @@ const Tasks = () => {
         {activeView === "list" ? (
           <Tabs defaultValue="all" onValueChange={(value) => setActiveTab(value)} className="space-y-4">
             <TabsList className="grid w-full max-w-xs grid-cols-3">
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="active">Active</TabsTrigger>
-              <TabsTrigger value="completed">Completed</TabsTrigger>
+              <TabsTrigger value="all">{t('tasks.tabAll')}</TabsTrigger>
+              <TabsTrigger value="active">{t('tasks.tabActive')}</TabsTrigger>
+              <TabsTrigger value="completed">{t('tasks.tabCompleted')}</TabsTrigger>
             </TabsList>
             
             <TabsContent value="all" className="space-y-3">
               {tasks.length === 0 ? (
                 <div className="text-center py-6">
-                  <p className="text-muted-foreground">No tasks found</p>
+                  <p className="text-muted-foreground">{t('tasks.noTasks')}</p>
                 </div>
               ) : (
                 tasks.map((task) => (
@@ -268,7 +268,7 @@ const Tasks = () => {
             <TabsContent value="active" className="space-y-3">
               {tasks.filter(task => !task.completed).length === 0 ? (
                 <div className="text-center py-6">
-                  <p className="text-muted-foreground">No active tasks found</p>
+                  <p className="text-muted-foreground">{t('tasks.noActiveTasks')}</p>
                 </div>
               ) : (
                 tasks.filter(task => !task.completed).map((task) => (
@@ -287,7 +287,7 @@ const Tasks = () => {
             <TabsContent value="completed" className="space-y-3">
               {tasks.filter(task => task.completed).length === 0 ? (
                 <div className="text-center py-6">
-                  <p className="text-muted-foreground">No completed tasks found</p>
+                  <p className="text-muted-foreground">{t('tasks.noCompletedTasks')}</p>
                 </div>
               ) : (
                 tasks.filter(task => task.completed).map((task) => (
@@ -306,7 +306,7 @@ const Tasks = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-2">
             <KanbanColumn 
-              title="To Do" 
+              title={t('tasks.statusTodo')}
               tasks={todoTasks} 
               status="todo"
               onToggle={toggleTaskCompletion}
@@ -315,7 +315,7 @@ const Tasks = () => {
               getPriorityColor={getPriorityColor}
             />
             <KanbanColumn 
-              title="In Progress" 
+              title={t('tasks.statusInProgress')}
               tasks={inProgressTasks} 
               status="in-progress"
               onToggle={toggleTaskCompletion}
@@ -324,7 +324,7 @@ const Tasks = () => {
               getPriorityColor={getPriorityColor}
             />
             <KanbanColumn 
-              title="Stuck" 
+              title={t('tasks.statusStuck')}
               tasks={stuckTasks} 
               status="stuck"
               onToggle={toggleTaskCompletion}
@@ -334,7 +334,7 @@ const Tasks = () => {
               helpVisible={helpVisible}
             />
             <KanbanColumn 
-              title="Completed" 
+              title={t('tasks.statusCompleted')}
               tasks={completedTasks} 
               status="completed"
               onToggle={toggleTaskCompletion}
@@ -363,6 +363,18 @@ const TaskCard = ({
   priorityColor: string;
 }) => {
   const [showMenu, setShowMenu] = useState(false);
+  const { t } = useLanguage();
+
+  const getTranslatedDueDate = (dueDate?: string) => {
+    if (!dueDate) return "";
+    if (dueDate === "Today") return t('tasks.dueToday');
+    if (dueDate === "Tomorrow") return t('tasks.dueTomorrow');
+    return dueDate;
+  };
+
+  const getTranslatedPriority = (priority: "low" | "medium" | "high") => {
+    return t(`tasks.priority${priority.charAt(0).toUpperCase() + priority.slice(1)}`);
+  };
 
   return (
     <CosmicCard>
@@ -392,15 +404,15 @@ const TaskCard = ({
             {task.dueDate && (
               <div className="flex items-center space-x-1 text-xs text-muted-foreground">
                 <Clock className="h-3 w-3" />
-                <span>{task.dueDate}</span>
+                <span>{getTranslatedDueDate(task.dueDate)}</span>
               </div>
             )}
             <Badge variant="outline" className={cn("text-xs py-0 px-2", priorityColor)}>
-              {task.priority}
+              {getTranslatedPriority(task.priority)}
             </Badge>
             {task.status === "stuck" && (
               <Badge variant="outline" className="bg-red-100 text-red-800 text-xs py-0 px-2">
-                Stuck
+                {t('tasks.statusStuck')}
               </Badge>
             )}
           </div>
@@ -419,7 +431,7 @@ const TaskCard = ({
             
             {showMenu && (
               <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md py-1 z-10">
-                <p className="px-4 py-1 text-xs text-muted-foreground">Status</p>
+                <p className="px-4 py-1 text-xs text-muted-foreground">{t('menu.status')}</p>
                 <button 
                   onClick={() => {
                     onStatusChange("todo");
@@ -427,7 +439,7 @@ const TaskCard = ({
                   }}
                   className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
                 >
-                  To Do
+                  {t('tasks.statusTodo')}
                 </button>
                 <button 
                   onClick={() => {
@@ -436,7 +448,7 @@ const TaskCard = ({
                   }}
                   className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
                 >
-                  In Progress
+                  {t('tasks.statusInProgress')}
                 </button>
                 <button 
                   onClick={() => {
@@ -445,7 +457,7 @@ const TaskCard = ({
                   }}
                   className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
                 >
-                  Stuck
+                  {t('tasks.statusStuck')}
                 </button>
                 <button 
                   onClick={() => {
@@ -454,7 +466,7 @@ const TaskCard = ({
                   }}
                   className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
                 >
-                  Completed
+                  {t('tasks.statusCompleted')}
                 </button>
                 <div className="border-t border-gray-200 my-1"></div>
                 <button 
@@ -464,7 +476,7 @@ const TaskCard = ({
                   }}
                   className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                 >
-                  Delete
+                  {t('menu.delete')}
                 </button>
               </div>
             )}
@@ -508,6 +520,8 @@ const KanbanColumn = ({
   getPriorityColor: (priority: "low" | "medium" | "high") => string;
   helpVisible?: boolean;
 }) => {
+  const { t } = useLanguage();
+
   return (
     <div className="relative bg-secondary/30 rounded-md p-3">
       <div className="flex items-center justify-between mb-3">
@@ -517,7 +531,7 @@ const KanbanColumn = ({
         {status === "stuck" && helpVisible && (
           <div className="absolute -top-4 right-4 z-20">
             <SpeechBubble position="top">
-              <p className="text-sm">I notice you have a stuck task. Would you like some help or suggestions to move it forward?</p>
+              <p className="text-sm">{t('tasks.stuckHelp')}</p>
             </SpeechBubble>
           </div>
         )}
@@ -546,7 +560,7 @@ const KanbanColumn = ({
         ))}
         {tasks.length === 0 && (
           <div className="text-center py-4 text-muted-foreground text-sm">
-            No tasks
+            {t('tasks.noTasks')}
           </div>
         )}
       </div>

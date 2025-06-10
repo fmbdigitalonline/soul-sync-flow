@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export type Language = 'en' | 'nl';
@@ -170,7 +169,54 @@ const translations = {
     'next': 'Next',
     'previous': 'Previous',
     'continue': 'Continue',
-    'send': 'Send'
+    'send': 'Send',
+    
+    // Tasks Page
+    'tasks.title': 'Aligned Tasks',
+    'tasks.subtitle': 'Tasks personalized to your Soul Blueprint',
+    'tasks.addPlaceholder': 'Add a new aligned task...',
+    'tasks.viewList': 'List',
+    'tasks.viewKanban': 'Kanban',
+    'tasks.tabAll': 'All',
+    'tasks.tabActive': 'Active',
+    'tasks.tabCompleted': 'Completed',
+    'tasks.noTasks': 'No tasks found',
+    'tasks.noActiveTasks': 'No active tasks found',
+    'tasks.noCompletedTasks': 'No completed tasks found',
+    'tasks.statusTodo': 'To Do',
+    'tasks.statusInProgress': 'In Progress',
+    'tasks.statusStuck': 'Stuck',
+    'tasks.statusCompleted': 'Completed',
+    'tasks.priorityLow': 'low',
+    'tasks.priorityMedium': 'medium',
+    'tasks.priorityHigh': 'high',
+    'tasks.dueToday': 'Today',
+    'tasks.dueTomorrow': 'Tomorrow',
+    'tasks.addedToast': 'Task added',
+    'tasks.addedDescription': 'Your new aligned task has been created.',
+    'tasks.completedToast': 'Task completed',
+    'tasks.completedDescription': 'Great job completing this task!',
+    'tasks.reopenedToast': 'Task reopened',
+    'tasks.reopenedDescription': "You've reopened this task",
+    'tasks.deletedToast': 'Task deleted',
+    'tasks.deletedDescription': 'Your task has been removed.',
+    'tasks.stuckHelp': 'I notice you have a stuck task. Would you like some help or suggestions to move it forward?',
+    
+    // Productivity Suite
+    'productivity.title': 'Productivity Suite',
+    'productivity.subtitle': 'Productivity Suite: Tailored to your unique Soul Blueprint',
+    'productivity.focusTimer': 'Focus Timer',
+    'productivity.habits': 'Habits',
+    'productivity.goals': 'Goals',
+    'productivity.planning': 'Planning',
+    'productivity.loading': 'Loading your personalized focus timer...',
+    'productivity.description1': 'Focus timer adjusts to your cognitive patterns',
+    'productivity.description2': 'Habits aligned with your energy cycles',
+    'productivity.description3': 'Goals framed around your natural strengths',
+    
+    // Menu Options
+    'menu.status': 'Status',
+    'menu.delete': 'Delete',
   },
   
   nl: {
@@ -331,7 +377,54 @@ const translations = {
     'next': 'Volgende',
     'previous': 'Vorige',
     'continue': 'Doorgaan',
-    'send': 'Versturen'
+    'send': 'Versturen',
+    
+    // Tasks Page
+    'tasks.title': 'Afgestemde Taken',
+    'tasks.subtitle': 'Taken gepersonaliseerd naar je Ziel Blauwdruk',
+    'tasks.addPlaceholder': 'Voeg een nieuwe afgestemde taak toe...',
+    'tasks.viewList': 'Lijst',
+    'tasks.viewKanban': 'Kanban',
+    'tasks.tabAll': 'Alle',
+    'tasks.tabActive': 'Actief',
+    'tasks.tabCompleted': 'Voltooid',
+    'tasks.noTasks': 'Geen taken gevonden',
+    'tasks.noActiveTasks': 'Geen actieve taken gevonden',
+    'tasks.noCompletedTasks': 'Geen voltooide taken gevonden',
+    'tasks.statusTodo': 'Te Doen',
+    'tasks.statusInProgress': 'Bezig',
+    'tasks.statusStuck': 'Vastgelopen',
+    'tasks.statusCompleted': 'Voltooid',
+    'tasks.priorityLow': 'laag',
+    'tasks.priorityMedium': 'gemiddeld',
+    'tasks.priorityHigh': 'hoog',
+    'tasks.dueToday': 'Vandaag',
+    'tasks.dueTomorrow': 'Morgen',
+    'tasks.addedToast': 'Taak toegevoegd',
+    'tasks.addedDescription': 'Je nieuwe afgestemde taak is aangemaakt.',
+    'tasks.completedToast': 'Taak voltooid',
+    'tasks.completedDescription': 'Goed gedaan met het voltooien van deze taak!',
+    'tasks.reopenedToast': 'Taak heropend',
+    'tasks.reopenedDescription': 'Je hebt deze taak heropend',
+    'tasks.deletedToast': 'Taak verwijderd',
+    'tasks.deletedDescription': 'Je taak is verwijderd.',
+    'tasks.stuckHelp': 'Ik zie dat je een vastgelopen taak hebt. Wil je hulp of suggesties om verder te komen?',
+    
+    // Productivity Suite
+    'productivity.title': 'Productiviteit Suite',
+    'productivity.subtitle': 'Productiviteit Suite: Afgestemd op je unieke Ziel Blauwdruk',
+    'productivity.focusTimer': 'Focus Timer',
+    'productivity.habits': 'Gewoontes',
+    'productivity.goals': 'Doelen',
+    'productivity.planning': 'Planning',
+    'productivity.loading': 'Je gepersonaliseerde focus timer laden...',
+    'productivity.description1': 'Focus timer past zich aan je cognitieve patronen aan',
+    'productivity.description2': 'Gewoontes afgestemd op je energiecycli',
+    'productivity.description3': 'Doelen geformuleerd rond je natuurlijke sterke punten',
+    
+    // Menu Options
+    'menu.status': 'Status',
+    'menu.delete': 'Verwijderen',
   }
 };
 
@@ -371,3 +464,5 @@ export const useLanguage = () => {
   }
   return context;
 };
+
+export default LanguageProvider;
