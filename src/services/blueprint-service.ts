@@ -1,5 +1,6 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { NumerologyCalculator } from './numerology-calculator';
+import { BlueprintHealthChecker } from './blueprint-health-checker';
 
 export interface BlueprintData {
   id: string;
@@ -323,9 +324,17 @@ class BlueprintService {
     personality?: string;
   }): Promise<{ data: BlueprintData | null; error: string | null; isPartial: boolean }> {
     try {
+      BlueprintHealthChecker.logValidation('Birth Data', 'Validating birth data and location');
+      
+      // Validate required fields in health check mode
+      BlueprintHealthChecker.validateRequired(userData.full_name, 'Birth Data', 'full_name');
+      BlueprintHealthChecker.validateRequired(userData.birth_date, 'Birth Data', 'birth_date');
+      BlueprintHealthChecker.validateRequired(userData.birth_time_local, 'Birth Data', 'birth_time_local');
+      BlueprintHealthChecker.validateRequired(userData.birth_location, 'Birth Data', 'birth_location');
+
       console.log('Calling blueprint calculator with user data:', userData);
 
-      // Call the Supabase function with the correct field names (direct fields, not wrapped)
+      // Call the Supabase function - this will fail in health check mode if not working
       const { data, error } = await this.supabase.functions.invoke('blueprint-calculator', {
         body: {
           birthDate: userData.birth_date,
@@ -336,6 +345,7 @@ class BlueprintService {
       });
 
       if (error) {
+        BlueprintHealthChecker.failIfHealthCheck('Blueprint Calculator', error.message || 'Unknown error');
         console.error('Error from blueprint calculator function:', error);
         return { 
           data: null, 
@@ -345,6 +355,7 @@ class BlueprintService {
       }
 
       if (!data?.success) {
+        BlueprintHealthChecker.failIfHealthCheck('Blueprint Calculator', data?.error || 'Calculation not successful');
         console.error('Blueprint calculator returned unsuccessful result:', data);
         return { 
           data: null, 
@@ -355,8 +366,29 @@ class BlueprintService {
 
       console.log('Blueprint calculator returned data:', data);
 
-      // Calculate numerology using the proper calculator
+      // Calculate numerology - this should always work as it's purely mathematical
+      BlueprintHealthChecker.logValidation('Numerology', 'Calculating numerological values');
       const numerologyResult = NumerologyCalculator.calculateNumerology(userData.full_name, userData.birth_date);
+
+      // In health check mode, validate that we got real calculated data, not fallbacks
+      if (BlueprintHealthChecker.isHealthCheck()) {
+        // Validate Human Design data is not just defaults
+        if (data.data?.humanDesign?.type === 'Generator' && 
+            data.data?.humanDesign?.profile === '1/3' &&
+            data.data?.humanDesign?.authority === 'Sacral') {
+          BlueprintHealthChecker.failIfHealthCheck('Human Design', 'Appears to be using default fallback values');
+        }
+
+        // Validate Western astrology is not just "Unknown"
+        if (data.data?.westernProfile?.sun_sign === 'Unknown') {
+          BlueprintHealthChecker.failIfHealthCheck('Western Astrology', 'Sun sign calculation failed');
+        }
+
+        // Validate Chinese zodiac is not just "Unknown"
+        if (data.data?.chineseZodiac?.animal === 'Unknown') {
+          BlueprintHealthChecker.failIfHealthCheck('Chinese Zodiac', 'Animal calculation failed');
+        }
+      }
 
       // Transform the response into our BlueprintData format
       const blueprint: BlueprintData = {
@@ -384,31 +416,22 @@ class BlueprintService {
           partial_calculation: data.data?.calculation_metadata?.partial || false
         },
         archetype_western: data.data?.westernProfile ? {
-          sun_sign: data.data.westernProfile.sun_sign || 'Unknown',
-          moon_sign: data.data.westernProfile.moon_sign || 'Unknown', 
-          rising_sign: data.data.westernProfile.rising_sign || 'Unknown',
+          sun_sign: this.validateCalculatedValue(data.data.westernProfile.sun_sign, 'Western Astrology', 'sun_sign'),
+          moon_sign: this.validateCalculatedValue(data.data.westernProfile.moon_sign, 'Western Astrology', 'moon_sign'), 
+          rising_sign: this.validateCalculatedValue(data.data.westernProfile.rising_sign, 'Western Astrology', 'rising_sign'),
           sun_keyword: data.data.westernProfile.sun_keyword || 'Unknown',
           moon_keyword: data.data.westernProfile.moon_keyword || 'Unknown',
           source: data.data.westernProfile.source || 'calculated',
           houses: {},
           aspects: []
-        } : {
-          sun_sign: 'Unknown',
-          moon_sign: 'Unknown',
-          rising_sign: 'Unknown',
-          sun_keyword: 'Unknown',
-          moon_keyword: 'Unknown',
-          source: 'fallback',
-          houses: {},
-          aspects: []
-        },
-        archetype_chinese: data.data?.chineseZodiac || {
-          animal: 'Unknown',
-          element: 'Unknown',
-          yin_yang: 'Unknown',
-          keyword: 'Unknown',
+        } : this.getDefaultWesternProfile(),
+        archetype_chinese: data.data?.chineseZodiac ? {
+          animal: this.validateCalculatedValue(data.data.chineseZodiac.animal, 'Chinese Zodiac', 'animal'),
+          element: this.validateCalculatedValue(data.data.chineseZodiac.element, 'Chinese Zodiac', 'element'),
+          yin_yang: data.data.chineseZodiac.yin_yang || 'Unknown',
+          keyword: data.data.chineseZodiac.keyword || 'Unknown',
           year: new Date(userData.birth_date).getFullYear()
-        },
+        } : this.getDefaultChineseProfile(userData.birth_date),
         values_life_path: {
           lifePathNumber: numerologyResult.lifePathNumber,
           expressionNumber: numerologyResult.expressionNumber,
@@ -422,26 +445,26 @@ class BlueprintService {
           soulUrgeKeyword: numerologyResult.soulUrgeKeyword,
           birthdayKeyword: numerologyResult.birthdayKeyword
         },
-        energy_strategy_human_design: data.data?.humanDesign || {
-          type: 'Generator',
-          profile: '1/3',
-          authority: 'Sacral',
-          strategy: 'To Respond',
-          definition: 'Single',
-          not_self_theme: 'Frustration',
-          life_purpose: 'To find satisfaction through responding',
-          gates: {
+        energy_strategy_human_design: data.data?.humanDesign ? {
+          type: this.validateCalculatedValue(data.data.humanDesign.type, 'Human Design', 'type'),
+          profile: data.data.humanDesign.profile || '1/3',
+          authority: data.data.humanDesign.authority || 'Sacral',
+          strategy: data.data.humanDesign.strategy || 'To Respond',
+          definition: data.data.humanDesign.definition || 'Single',
+          not_self_theme: data.data.humanDesign.not_self_theme || 'Frustration',
+          life_purpose: data.data.humanDesign.life_purpose || 'To find satisfaction through responding',
+          gates: data.data.humanDesign.gates || {
             unconscious_design: [],
             conscious_personality: []
           },
-          centers: {},
-          metadata: {}
-        },
+          centers: data.data.humanDesign.centers || {},
+          metadata: data.data.humanDesign.metadata || {}
+        } : this.getDefaultHumanDesign(),
         cognition_mbti: {
-          type: userData.personality || 'INFJ',
-          core_keywords: this.getMBTIKeywords(userData.personality || 'INFJ'),
-          dominant_function: this.getDominantFunction(userData.personality || 'INFJ'),
-          auxiliary_function: this.getAuxiliaryFunction(userData.personality || 'INFJ')
+          type: userData.personality || this.getDefaultMBTI(),
+          core_keywords: this.getMBTIKeywords(userData.personality || this.getDefaultMBTI()),
+          dominant_function: this.getDominantFunction(userData.personality || this.getDefaultMBTI()),
+          auxiliary_function: this.getAuxiliaryFunction(userData.personality || this.getDefaultMBTI())
         },
         bashar_suite: {
           excitement_compass: {
@@ -478,6 +501,13 @@ class BlueprintService {
       };
 
     } catch (error) {
+      if (BlueprintHealthChecker.isHealthCheck()) {
+        console.error(`❌ FAILED: ${error instanceof Error ? error.message : 'Unknown error occurred'}`);
+        console.log('Health Check Mode - No Retries');
+        console.log('\nSystem configured to fail fast to reveal calculation issues.');
+        console.log('\nCheck the error details above to identify what needs fixing.');
+      }
+      
       console.error('Error in generateBlueprintFromBirthData:', error);
       return { 
         data: null, 
@@ -485,6 +515,72 @@ class BlueprintService {
         isPartial: false
       };
     }
+  }
+
+  private validateCalculatedValue(value: any, component: string, field: string): string {
+    if (BlueprintHealthChecker.isHealthCheck()) {
+      if (!value || value === 'Unknown' || value === '') {
+        BlueprintHealthChecker.failIfHealthCheck(component, `${field} calculation failed - got: ${value}`);
+      }
+    }
+    return value || 'Unknown';
+  }
+
+  private getDefaultWesternProfile() {
+    if (BlueprintHealthChecker.isHealthCheck()) {
+      BlueprintHealthChecker.failIfHealthCheck('Western Astrology', 'Using fallback default profile instead of calculated values');
+    }
+    return {
+      sun_sign: 'Unknown',
+      moon_sign: 'Unknown',
+      rising_sign: 'Unknown',
+      sun_keyword: 'Unknown',
+      moon_keyword: 'Unknown',
+      source: 'fallback',
+      houses: {},
+      aspects: []
+    };
+  }
+
+  private getDefaultChineseProfile(birthDate: string) {
+    if (BlueprintHealthChecker.isHealthCheck()) {
+      BlueprintHealthChecker.failIfHealthCheck('Chinese Zodiac', 'Using fallback default profile instead of calculated values');
+    }
+    return {
+      animal: 'Unknown',
+      element: 'Unknown',
+      yin_yang: 'Unknown',
+      keyword: 'Unknown',
+      year: new Date(birthDate).getFullYear()
+    };
+  }
+
+  private getDefaultHumanDesign() {
+    if (BlueprintHealthChecker.isHealthCheck()) {
+      BlueprintHealthChecker.failIfHealthCheck('Human Design', 'Using fallback default profile instead of calculated values');
+    }
+    return {
+      type: 'Generator',
+      profile: '1/3',
+      authority: 'Sacral',
+      strategy: 'To Respond',
+      definition: 'Single',
+      not_self_theme: 'Frustration',
+      life_purpose: 'To find satisfaction through responding',
+      gates: {
+        unconscious_design: [],
+        conscious_personality: []
+      },
+      centers: {},
+      metadata: {}
+    };
+  }
+
+  private getDefaultMBTI(): string {
+    if (BlueprintHealthChecker.isHealthCheck()) {
+      BlueprintHealthChecker.failIfHealthCheck('MBTI', 'No personality type provided - cannot proceed without user input');
+    }
+    return 'INFJ';
   }
 
   private getMBTIKeywords(type: string): string[] {
@@ -519,3 +615,5 @@ class BlueprintService {
 import { supabase } from '@/integrations/supabase/client';
 export const blueprintService = new BlueprintService({ supabase });
 export default BlueprintService;
+
+}

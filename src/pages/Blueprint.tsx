@@ -5,8 +5,9 @@ import MainLayout from "@/components/Layout/MainLayout";
 import BlueprintViewer from "@/components/blueprint/BlueprintViewer";
 import EnhancedBlueprintViewer from "@/components/blueprint/EnhancedBlueprintViewer";
 import BlueprintEditor from "@/components/blueprint/BlueprintEditor";
+import { BlueprintHealthCheck } from "@/components/blueprint/BlueprintHealthCheck";
 import { Button } from "@/components/ui/button";
-import { Loader2, MessageCircle, RefreshCw, ToggleLeft, ToggleRight } from "lucide-react";
+import { Loader2, MessageCircle, RefreshCw, ToggleLeft, ToggleRight, Activity } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { BlueprintData, blueprintService } from "@/services/blueprint-service";
 import { useNavigate } from "react-router-dom";
@@ -258,9 +259,13 @@ const Blueprint = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
-          <TabsList className="grid grid-cols-3 w-[600px] max-w-full mx-auto">
+          <TabsList className="grid grid-cols-4 w-[800px] max-w-full mx-auto">
             <TabsTrigger value="view">{t('blueprint.viewTab')}</TabsTrigger>
             <TabsTrigger value="edit">{t('blueprint.editTab')}</TabsTrigger>
+            <TabsTrigger value="health-check">
+              <Activity className="mr-2 h-4 w-4" />
+              Health Check
+            </TabsTrigger>
             <TabsTrigger value="generating" disabled={!isGenerating}>
               {t('blueprint.generatingTab')}
             </TabsTrigger>
@@ -280,6 +285,10 @@ const Blueprint = () => {
           
           <TabsContent value="edit" className="mt-6">
             <BlueprintEditor onSave={handleSaveBlueprint} initialBlueprint={blueprint || undefined} />
+          </TabsContent>
+
+          <TabsContent value="health-check" className="mt-6">
+            <BlueprintHealthCheck />
           </TabsContent>
 
           <TabsContent value="generating" className="mt-6">
