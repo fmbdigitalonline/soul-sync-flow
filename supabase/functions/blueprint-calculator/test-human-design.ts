@@ -22,32 +22,152 @@ export default async function testHumanDesign(req: Request) {
     const birthLocation = "Paramaribo, Suriname";
     const timezone = "America/Paramaribo";
     
-    console.log("Testing with:", { birthDate, birthTime, birthLocation, timezone });
+    console.log("🔧 Testing with:", { birthDate, birthTime, birthLocation, timezone });
     
     // Step 1: Get celestial data for personality time
-    console.log("Step 1: Calculating personality celestial positions...");
-    const personalityCelestialData = await calculatePlanetaryPositionsWithAstro(
-      birthDate, 
-      birthTime, 
-      birthLocation, 
-      timezone
-    );
+    console.log("🔧 Step 1: Starting personality celestial calculations...");
     
-    console.log("Personality celestial data keys:", Object.keys(personalityCelestialData));
-    console.log("Sun position:", personalityCelestialData.sun);
-    console.log("Moon position:", personalityCelestialData.moon);
+    let personalityCelestialData;
+    try {
+      personalityCelestialData = await calculatePlanetaryPositionsWithAstro(
+        birthDate, 
+        birthTime, 
+        birthLocation, 
+        timezone
+      );
+      console.log("✅ Personality celestial data calculated successfully");
+      console.log("🔧 Sun position:", personalityCelestialData?.sun?.longitude);
+      console.log("🔧 Moon position:", personalityCelestialData?.moon?.longitude);
+      console.log("🔧 Total celestial objects:", Object.keys(personalityCelestialData || {}).length);
+    } catch (celestialError) {
+      console.error("❌ CRITICAL: Celestial calculation failed:", celestialError);
+      console.error("❌ Error name:", celestialError.name);
+      console.error("❌ Error message:", celestialError.message);
+      console.error("❌ Error stack:", celestialError.stack);
+      
+      return new Response(JSON.stringify({
+        success: false,
+        error: {
+          step: "celestial_calculation",
+          name: celestialError.name,
+          message: celestialError.message,
+          stack: celestialError.stack,
+          details: "Failed to calculate planetary positions"
+        },
+        test_failed: true,
+        timestamp: new Date().toISOString()
+      }), {
+        status: 500,
+        headers: { 
+          "Content-Type": "application/json",
+          ...corsHeaders 
+        }
+      });
+    }
+    
+    if (!personalityCelestialData) {
+      console.error("❌ CRITICAL: No celestial data returned");
+      return new Response(JSON.stringify({
+        success: false,
+        error: {
+          step: "celestial_data_validation",
+          message: "No celestial data returned from calculation",
+          details: "calculatePlanetaryPositionsWithAstro returned null/undefined"
+        },
+        test_failed: true
+      }), {
+        status: 500,
+        headers: { 
+          "Content-Type": "application/json",
+          ...corsHeaders 
+        }
+      });
+    }
+    
+    console.log("🔧 Celestial data keys:", Object.keys(personalityCelestialData));
+    
+    // Validate essential celestial data
+    if (!personalityCelestialData.sun || !personalityCelestialData.moon) {
+      console.error("❌ CRITICAL: Missing essential celestial data");
+      console.error("❌ Sun data:", personalityCelestialData.sun);
+      console.error("❌ Moon data:", personalityCelestialData.moon);
+      
+      return new Response(JSON.stringify({
+        success: false,
+        error: {
+          step: "essential_data_validation",
+          message: "Missing essential sun or moon data",
+          sun_available: !!personalityCelestialData.sun,
+          moon_available: !!personalityCelestialData.moon,
+          available_keys: Object.keys(personalityCelestialData)
+        },
+        test_failed: true
+      }), {
+        status: 500,
+        headers: { 
+          "Content-Type": "application/json",
+          ...corsHeaders 
+        }
+      });
+    }
     
     // Step 2: Calculate Human Design
-    console.log("Step 2: Calculating Human Design...");
-    const humanDesignResult = await calculateHumanDesign(
-      birthDate,
-      birthTime, 
-      birthLocation,
-      timezone,
-      personalityCelestialData
-    );
+    console.log("🔧 Step 2: Starting Human Design calculation...");
     
-    console.log("Human Design calculation complete!");
+    let humanDesignResult;
+    try {
+      humanDesignResult = await calculateHumanDesign(
+        birthDate,
+        birthTime, 
+        birthLocation,
+        timezone,
+        personalityCelestialData
+      );
+      console.log("✅ Human Design calculation complete!");
+    } catch (humanDesignError) {
+      console.error("❌ CRITICAL: Human Design calculation failed:", humanDesignError);
+      console.error("❌ HD Error name:", humanDesignError.name);
+      console.error("❌ HD Error message:", humanDesignError.message);
+      console.error("❌ HD Error stack:", humanDesignError.stack);
+      
+      return new Response(JSON.stringify({
+        success: false,
+        error: {
+          step: "human_design_calculation",
+          name: humanDesignError.name,
+          message: humanDesignError.message,
+          stack: humanDesignError.stack,
+          details: "Failed to calculate Human Design",
+          celestial_data_available: !!personalityCelestialData
+        },
+        test_failed: true
+      }), {
+        status: 500,
+        headers: { 
+          "Content-Type": "application/json",
+          ...corsHeaders 
+        }
+      });
+    }
+    
+    if (!humanDesignResult) {
+      console.error("❌ CRITICAL: No Human Design result returned");
+      return new Response(JSON.stringify({
+        success: false,
+        error: {
+          step: "human_design_validation",
+          message: "No Human Design result returned",
+          details: "calculateHumanDesign returned null/undefined"
+        },
+        test_failed: true
+      }), {
+        status: 500,
+        headers: { 
+          "Content-Type": "application/json",
+          ...corsHeaders 
+        }
+      });
+    }
     
     // Step 3: Compare with expected results
     const expectedData = {
@@ -76,6 +196,8 @@ export default async function testHumanDesign(req: Request) {
         .map(([name, _]: [string, any]) => name)
     };
     
+    console.log("✅ Analysis complete - sending results");
+    
     return new Response(JSON.stringify({
       success: true,
       test_data: {
@@ -103,7 +225,9 @@ export default async function testHumanDesign(req: Request) {
         personality_celestial_data_available: !!personalityCelestialData,
         sun_longitude: personalityCelestialData?.sun?.longitude,
         moon_longitude: personalityCelestialData?.moon?.longitude,
-        total_planets_available: Object.keys(personalityCelestialData || {}).length
+        total_planets_available: Object.keys(personalityCelestialData || {}).length,
+        julian_date: personalityCelestialData?.julian_date,
+        calculation_source: personalityCelestialData?.source
       }
     }, null, 2), {
       headers: { 
@@ -112,13 +236,24 @@ export default async function testHumanDesign(req: Request) {
       }
     });
 
-  } catch (error) {
-    console.error("Human Design test error:", error);
+  } catch (topLevelError) {
+    // Catch-all for any unhandled errors
+    console.error("❌ TOP-LEVEL ERROR:", topLevelError);
+    console.error("❌ Top Error name:", topLevelError.name);
+    console.error("❌ Top Error message:", topLevelError.message);
+    console.error("❌ Top Error stack:", topLevelError.stack);
+    
     return new Response(JSON.stringify({
       success: false,
-      error: error.message,
-      stack: error.stack,
-      test_failed: true
+      error: {
+        step: "top_level_handler",
+        name: topLevelError.name,
+        message: topLevelError.message,
+        stack: topLevelError.stack,
+        details: "Unhandled error in test function"
+      },
+      test_failed: true,
+      timestamp: new Date().toISOString()
     }), {
       status: 500,
       headers: { 

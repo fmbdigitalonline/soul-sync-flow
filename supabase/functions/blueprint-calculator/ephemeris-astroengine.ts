@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import * as Astronomy from "npm:astronomy-engine@2";
 import { calculateHouseCusps } from './house-system-calculator.ts';
@@ -129,18 +130,18 @@ export async function calculatePlanetaryPositionsWithAstro(
   timezone: string
 ) {
   try {
-    console.log(`AstroEngine: Calculating positions for ${date} ${time} at ${location} in timezone ${timezone || "unknown"}`);
+    console.log(`🔧 AstroEngine: Starting calculation for ${date} ${time} at ${location} in timezone ${timezone || "unknown"}`);
     
     // Enhanced self-test with reliable EclipticLongitude
     try {
-      console.log("🔥 Running self-test with reliable EclipticLongitude...");
+      console.log("🔧 Running self-test with reliable EclipticLongitude...");
       const testDate = jdToDate(2_451_545.0); // J2000 as proper Date
       const testAstroTime = Astronomy.MakeTime(testDate);
       
       const testMoonLon = Astronomy.EclipticLongitude("Moon", testAstroTime);
-      console.log(`[AstroEngine] Self-test passed: Moon @ J2000 = ${testMoonLon.toFixed(6)}°`);
+      console.log(`✅ Self-test passed: Moon @ J2000 = ${testMoonLon.toFixed(6)}°`);
     } catch (error) {
-      console.error("Self-test failed:", error);
+      console.error("❌ Self-test failed:", error);
       throw new Error("Astronomy engine self-test failed");
     }
     
@@ -149,88 +150,84 @@ export async function calculatePlanetaryPositionsWithAstro(
     const [hour, minute] = time.split(':').map(Number);
     
     if (!year || !month || !day || hour === undefined || minute === undefined) {
-      throw new Error("Invalid date or time format");
+      const errorMsg = `Invalid date or time format: ${date} ${time}`;
+      console.error("❌", errorMsg);
+      throw new Error(errorMsg);
     }
+    
+    console.log(`🔧 Parsed date/time: ${year}-${month}-${day} ${hour}:${minute}`);
     
     // Get coordinates FIRST to ensure proper timezone conversion
     let coords;
     try {
+      console.log(`🔧 Geocoding location: ${location}`);
       coords = await getLocationCoordinates(location);
-      console.log(`AstroEngine: Location coordinates: lat ${coords.latitude}, long ${coords.longitude}`);
+      console.log(`✅ Location coordinates: lat ${coords.latitude}, long ${coords.longitude}`);
     } catch (error) {
-      console.error("Geocoding failed:", error);
-      throw new Error(`Failed to geocode location: ${location}`);
+      console.error("❌ Geocoding failed:", error);
+      throw new Error(`Failed to geocode location: ${location}. Error: ${error.message}`);
     }
     
-    // CRITICAL FIX: Create proper UTC components for AstroTime
-    console.log(`Creating UTC components for: ${year}-${month}-${day} ${hour}:${minute} in timezone ${timezone}`);
+    // CRITICAL FIX: Create proper UTC Date object
+    console.log(`🔧 Creating UTC date for: ${year}-${month}-${day} ${hour}:${minute} in timezone ${timezone}`);
     
-    let utcYear: number, utcMonth: number, utcDay: number, utcHour: number, utcMinute: number;
+    let utcDate;
     
     if (timezone === 'America/Paramaribo' || timezone === 'America/Suriname') {
       // CORRECTED: Paramaribo is UTC-3, so to convert local time to UTC, we ADD 3 hours
-      console.log(`Converting Paramaribo time ${hour}:${minute} to UTC by adding 3 hours`);
+      console.log(`🔧 Converting Paramaribo time ${hour}:${minute} to UTC by adding 3 hours`);
       
-      // Convert local time to UTC components
-      utcHour = hour + 3;
-      utcDay = day;
-      utcMonth = month;
-      utcYear = year;
-      utcMinute = minute;
+      // Use Date.UTC to create a proper UTC date
+      utcDate = new Date(Date.UTC(year, month - 1, day, hour + 3, minute, 0));
       
       // Handle day overflow
-      if (utcHour >= 24) {
-        utcHour -= 24;
-        utcDay += 1;
-        
-        // Handle month overflow (simplified - doesn't account for all edge cases but good for our test)
-        const daysInMonth = new Date(utcYear, utcMonth, 0).getDate();
-        if (utcDay > daysInMonth) {
-          utcDay = 1;
-          utcMonth += 1;
-          if (utcMonth > 12) {
-            utcMonth = 1;
-            utcYear += 1;
-          }
-        }
+      if (hour + 3 >= 24) {
+        console.log(`🔧 Hour overflow detected, adjusting date`);
+        utcDate = new Date(Date.UTC(year, month - 1, day + 1, (hour + 3) - 24, minute, 0));
       }
       
-      console.log(`UTC components: ${utcYear}-${utcMonth}-${utcDay} ${utcHour}:${utcMinute}`);
+      console.log(`✅ UTC date created: ${utcDate.toISOString()}`);
     } else {
-      // For other timezones, use the provided values as UTC
-      utcYear = year;
-      utcMonth = month;
-      utcDay = day;
-      utcHour = hour;
-      utcMinute = minute;
+      // For other timezones, treat the provided time as UTC
+      console.log(`🔧 Creating UTC date for non-Paramaribo timezone`);
+      utcDate = new Date(Date.UTC(year, month - 1, day, hour, minute, 0));
+      console.log(`✅ UTC date created: ${utcDate.toISOString()}`);
     }
     
-    // CRITICAL FIX: Create AstroTime from UTC components using the correct method
-    console.log(`Creating AstroTime from UTC components: ${utcYear}-${utcMonth}-${utcDay} ${utcHour}:${utcMinute}`);
+    // Validate the UTC date
+    if (!utcDate || isNaN(utcDate.getTime())) {
+      const errorMsg = `Failed to create valid UTC date from: ${year}-${month}-${day} ${hour}:${minute}`;
+      console.error("❌", errorMsg);
+      throw new Error(errorMsg);
+    }
     
-    // Use the astronomy engine's date constructor that takes individual components
-    const astroTime = new Astronomy.AstroTime(utcYear, utcMonth, utcDay, utcHour, utcMinute, 0);
+    // CRITICAL FIX: Create AstroTime using the proper method
+    console.log(`🔧 Creating AstroTime from UTC date: ${utcDate.toISOString()}`);
+    
+    const astroTime = Astronomy.MakeTime(utcDate);
     
     // Validate that astroTime was created properly
     if (!astroTime || typeof astroTime.tt !== 'number') {
-      console.error("CRITICAL: astroTime is invalid!", JSON.stringify(astroTime));
+      console.error("❌ CRITICAL: astroTime is invalid!", JSON.stringify(astroTime));
       throw new Error("Failed to create valid AstroTime");
     }
     
     const jd = astroTime.tt;
-    console.log(`AstroEngine: Julian Date: ${jd}`);
+    console.log(`✅ Julian Date: ${jd}`);
     
     // Validate Julian Date is reasonable for 1978
     const expectedJD = 2443549.375; // Feb 13, 1978 01:00 UTC (Feb 12, 1978 22:00 Paramaribo time + 3 hours)
-    console.log(`AstroEngine: Expected JD for Feb 12, 1978 22:00 Paramaribo (= Feb 13, 1978 01:00 UTC): ${expectedJD}`);
+    console.log(`🔧 Expected JD for Feb 12, 1978 22:00 Paramaribo (= Feb 13, 1978 01:00 UTC): ${expectedJD}`);
     
     if (jd < 2400000 || jd > 2500000) {
-      console.error(`CRITICAL: Julian Date ${jd} is outside reasonable range for modern dates`);
+      const errorMsg = `Julian Date ${jd} is outside reasonable range for modern dates`;
+      console.error("❌ CRITICAL:", errorMsg);
       throw new Error(`Julian Date validation failed: got ${jd}, expected ~${expectedJD}`);
     }
     
     if (Math.abs(jd - expectedJD) > 1) {
-      console.error(`CRITICAL: Julian Date ${jd} is too far from expected ${expectedJD}. Difference: ${Math.abs(jd - expectedJD)} days`);
+      const errorMsg = `Julian Date ${jd} is too far from expected ${expectedJD}. Difference: ${Math.abs(jd - expectedJD)} days`;
+      console.error("❌ CRITICAL:", errorMsg);
       console.error("This indicates a fundamental date conversion error!");
       throw new Error(`Julian Date validation failed: got ${jd}, expected ~${expectedJD}`);
     } else {
@@ -239,6 +236,7 @@ export async function calculatePlanetaryPositionsWithAstro(
     
     // Create observer for house calculations
     const observer = new Astronomy.Observer(coords.latitude, coords.longitude, 0);
+    console.log(`✅ Observer created for coordinates: ${coords.latitude}, ${coords.longitude}`);
     
     // Calculate planetary positions using reliable EclipticLongitude
     const bodies = [
@@ -259,22 +257,32 @@ export async function calculatePlanetaryPositionsWithAstro(
     // Calculate positions for each celestial body
     for (const body of bodies) {
       try {
-        console.log(`🔥 Calculating ${body.id} using reliable EclipticLongitude...`);
+        console.log(`🔧 Calculating ${body.id} using reliable EclipticLongitude...`);
         
         let longitude: number, latitude: number;
         
         if (body.name === "Sun") {
           // Sun calculation using Earth's heliocentric vector
           const earthVec = Astronomy.HelioVector("Earth", astroTime);
+          if (!earthVec || typeof earthVec.x !== 'number' || typeof earthVec.y !== 'number') {
+            console.error(`❌ Invalid Earth vector for Sun calculation:`, earthVec);
+            throw new Error(`Failed to get Earth vector for Sun calculation`);
+          }
+          
           const lonRad = Math.atan2(earthVec.y, earthVec.x);
           longitude = (lonRad * 180/Math.PI + 180 + 360) % 360;
           latitude = 0;  // Sun's ecliptic latitude is always 0°
           
-          console.log(`🔍 Sun calculation details: earthVec=(${earthVec.x.toFixed(6)}, ${earthVec.y.toFixed(6)}, ${earthVec.z.toFixed(6)})`);
-          console.log(`🔍 Sun longitude raw calculation: atan2(${earthVec.y.toFixed(6)}, ${earthVec.x.toFixed(6)}) = ${lonRad.toFixed(6)} rad = ${(lonRad * 180/Math.PI + 180).toFixed(6)}°`);
+          console.log(`🔧 Sun calculation details: earthVec=(${earthVec.x.toFixed(6)}, ${earthVec.y.toFixed(6)}, ${earthVec.z.toFixed(6)})`);
+          console.log(`🔧 Sun longitude raw calculation: atan2(${earthVec.y.toFixed(6)}, ${earthVec.x.toFixed(6)}) = ${lonRad.toFixed(6)} rad = ${(lonRad * 180/Math.PI + 180).toFixed(6)}°`);
         } else {
           // Use reliable EclipticLongitude for all other bodies
           longitude = Astronomy.EclipticLongitude(body.name as Astronomy.Body, astroTime);
+          
+          if (typeof longitude !== 'number' || isNaN(longitude)) {
+            console.error(`❌ Invalid longitude for ${body.id}: ${longitude}`);
+            throw new Error(`Failed to calculate longitude for ${body.id}: got ${longitude}`);
+          }
           
           // Calculate latitude using manual approximation
           latitude = calculateEclipticLatitude(body.name, astroTime);
@@ -284,8 +292,9 @@ export async function calculatePlanetaryPositionsWithAstro(
         
         // Validate longitude is in expected range
         if (longitude < 0 || longitude >= 360) {
-          console.warn(`WARNING: ${body.id} longitude ${longitude}° is outside 0-360° range`);
+          console.warn(`⚠️ WARNING: ${body.id} longitude ${longitude}° is outside 0-360° range`);
           longitude = ((longitude % 360) + 360) % 360;
+          console.log(`🔧 Normalized ${body.id} longitude to: ${longitude.toFixed(6)}°`);
         }
         
         // Calculate distance for planets (optional, non-critical)
@@ -293,7 +302,9 @@ export async function calculatePlanetaryPositionsWithAstro(
         if (body.id !== "sun" && body.id !== "moon") {
           try {
             const vector = safeHelioVector(body.name, astroTime);
-            distance = Math.hypot(vector.x, vector.y, vector.z);
+            if (vector && typeof vector.x === 'number') {
+              distance = Math.hypot(vector.x, vector.y, vector.z);
+            }
           } catch (error) {
             console.warn(`Could not calculate distance for ${body.id}:`, error);
             distance = 1; // Default value
@@ -304,8 +315,10 @@ export async function calculatePlanetaryPositionsWithAstro(
         let rightAscension = 0, declination = 0;
         try {
           const equatorial = Astronomy.Equator(body.name as Astronomy.Body, astroTime, observer, false, true);
-          rightAscension = equatorial.ra;
-          declination = equatorial.dec;
+          if (equatorial && typeof equatorial.ra === 'number' && typeof equatorial.dec === 'number') {
+            rightAscension = equatorial.ra;
+            declination = equatorial.dec;
+          }
         } catch (equatorialError) {
           console.warn(`Could not calculate equatorial coordinates for ${body.id}: ${equatorialError}`);
           // Convert ecliptic to equatorial manually (simplified)
@@ -335,20 +348,16 @@ export async function calculatePlanetaryPositionsWithAstro(
           latitudeSpeed: 0
         };
         
-        console.log(`AstroEngine: ${body.id} position calculated successfully`);
+        console.log(`✅ ${body.id} position calculated successfully`);
       } catch (error) {
-        console.error(`Failed to calculate position for ${body.id}:`, error);
-        // Use fallback values to ensure blueprint generation continues
-        positions[body.id] = {
-          longitude: 0, latitude: 0, distance: 1,
-          rightAscension: 0, declination: 0,
-          longitudeSpeed: 0, latitudeSpeed: 0
-        };
+        console.error(`❌ Failed to calculate position for ${body.id}:`, error);
+        throw new Error(`Planetary calculation failed for ${body.id}: ${error.message}`);
       }
     }
     
     // Calculate lunar nodes using manual calculation
     try {
+      console.log(`🔧 Calculating lunar nodes...`);
       const nodes = calculateLunarNodesManual(astroTime);
       positions["north_node"] = {
         longitude: nodes.northNode,
@@ -357,17 +366,15 @@ export async function calculatePlanetaryPositionsWithAstro(
         longitudeSpeed: 0,
         latitudeSpeed: 0
       };
-      console.log(`AstroEngine: North node position: lon ${nodes.northNode.toFixed(6)}°`);
+      console.log(`✅ North node position: lon ${nodes.northNode.toFixed(6)}°`);
     } catch (error) {
-      console.error("Failed to calculate lunar nodes:", error);
-      positions["north_node"] = {
-        longitude: 0, latitude: 0, distance: null,
-        longitudeSpeed: 0, latitudeSpeed: 0
-      };
+      console.error("❌ Failed to calculate lunar nodes:", error);
+      throw new Error(`Lunar nodes calculation failed: ${error.message}`);
     }
     
     // Calculate house cusps and angles with fallbacks
     try {
+      console.log(`🔧 Calculating house cusps and angles...`);
       const houseData = calculateHouseCusps(jd, coords.latitude, coords.longitude, positions);
       
       positions["ascendant"] = {
@@ -384,21 +391,28 @@ export async function calculatePlanetaryPositionsWithAstro(
       
       positions["houses"] = houseData.houses;
       
-      console.log(`AstroEngine: Ascendant: ${houseData.ascendant.toFixed(6)}°`);
-      console.log(`AstroEngine: MC: ${houseData.midheaven.toFixed(6)}°`);
+      console.log(`✅ Ascendant: ${houseData.ascendant.toFixed(6)}°`);
+      console.log(`✅ MC: ${houseData.midheaven.toFixed(6)}°`);
     } catch (error) {
-      console.error("Failed to calculate houses and angles:", error);
+      console.error("❌ Failed to calculate houses and angles:", error);
       // Reliable fallback using sidereal time
-      const lst = safeSiderealTime(astroTime, observer);
-      const ascendant = (lst * 15 + 90 - coords.latitude / 2 + 360) % 360;
-      const mc = (lst * 15) % 360;
-      
-      positions["ascendant"] = { longitude: ascendant, latitude: 0, house: 1 };
-      positions["mc"] = { longitude: mc, latitude: 0, house: 10 };
-      positions["houses"] = Array.from({ length: 12 }, (_, i) => ({ 
-        cusp: i + 1, 
-        longitude: (ascendant + i * 30) % 360 
-      }));
+      try {
+        const lst = safeSiderealTime(astroTime, observer);
+        const ascendant = (lst * 15 + 90 - coords.latitude / 2 + 360) % 360;
+        const mc = (lst * 15) % 360;
+        
+        positions["ascendant"] = { longitude: ascendant, latitude: 0, house: 1 };
+        positions["mc"] = { longitude: mc, latitude: 0, house: 10 };
+        positions["houses"] = Array.from({ length: 12 }, (_, i) => ({ 
+          cusp: i + 1, 
+          longitude: (ascendant + i * 30) % 360 
+        }));
+        
+        console.log(`✅ Fallback house calculations complete`);
+      } catch (fallbackError) {
+        console.error("❌ Even fallback house calculations failed:", fallbackError);
+        throw new Error(`House calculations completely failed: ${fallbackError.message}`);
+      }
     }
     
     // Add metadata
@@ -409,36 +423,31 @@ export async function calculatePlanetaryPositionsWithAstro(
       latitude: coords.latitude,
       longitude: coords.longitude
     };
-    positions["calculation_method"] = "astrotime_from_utc_components";
+    positions["calculation_method"] = "astrotime_from_utc_date";
     
-    // Add debug info for troubleshooting
-    positions["debug_info"] = {
-      input_date: date,
-      input_time: time,
-      input_timezone: timezone,
-      utc_components: { utcYear, utcMonth, utcDay, utcHour, utcMinute },
-      julian_date: jd,
-      expected_jd: expectedJD,
-      jd_difference: Math.abs(jd - expectedJD),
-      year_validation: utcYear === 1978,
-      month_validation: utcMonth === 2
-    };
+    console.log("✅ All astronomical calculations completed successfully");
+    console.log(`🔧 Final position count: ${Object.keys(positions).length}`);
     
-    console.log("✅ Fixed astronomical calculations completed successfully");
     return positions;
   } catch (error) {
-    console.error("Error in calculatePlanetaryPositionsWithAstro:", error);
-    throw error;
+    console.error("❌ CRITICAL ERROR in calculatePlanetaryPositionsWithAstro:", error);
+    console.error("❌ Error name:", error.name);
+    console.error("❌ Error message:", error.message);
+    console.error("❌ Error stack:", error.stack);
+    throw error; // Re-throw with full error details
   }
 }
 
 // Helper function to get location coordinates
 async function getLocationCoordinates(location: string): Promise<{ latitude: number; longitude: number }> {
   try {
+    console.log(`🔧 Geocoding: ${location}`);
+    
     // Use a geocoding service to get coordinates
     const googleApiKey = Deno.env.get("GOOGLE_MAPS_API_KEY");
     
     if (googleApiKey) {
+      console.log(`🔧 Using Google Maps API for geocoding`);
       const encodedLocation = encodeURIComponent(location);
       const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedLocation}&key=${googleApiKey}`;
       
@@ -448,13 +457,15 @@ async function getLocationCoordinates(location: string): Promise<{ latitude: num
       if (data.results && data.results.length > 0) {
         const result = data.results[0];
         const { lat, lng } = result.geometry.location;
-        console.log(`Geocoded location "${location}" to: ${lat}, ${lng}`);
+        console.log(`✅ Geocoded location "${location}" to: ${lat}, ${lng}`);
         return { latitude: lat, longitude: lng };
       } else {
+        console.error(`❌ No geocoding results for: ${location}`, data);
         throw new Error(`No results found for location: ${location}`);
       }
     } else {
       // Fallback to OpenStreetMap/Nominatim if no Google API key
+      console.log(`🔧 Using OpenStreetMap/Nominatim for geocoding`);
       const encodedLocation = encodeURIComponent(location);
       const url = `https://nominatim.openstreetmap.org/search?q=${encodedLocation}&format=json`;
       
@@ -468,15 +479,16 @@ async function getLocationCoordinates(location: string): Promise<{ latitude: num
       
       if (data && data.length > 0) {
         const result = data[0];
-        console.log(`Geocoded location "${location}" to: ${result.lat}, ${result.lon}`);
+        console.log(`✅ Geocoded location "${location}" to: ${result.lat}, ${result.lon}`);
         return { latitude: parseFloat(result.lat), longitude: parseFloat(result.lon) };
       }
       
+      console.error(`❌ Nominatim geocoding failed for: ${location}`, data);
       throw new Error(`Failed to geocode location: ${location}`);
     }
   } catch (error) {
-    console.error(`Error geocoding location "${location}":`, error);
-    throw error;
+    console.error(`❌ Error geocoding location "${location}":`, error);
+    throw error; // Re-throw with original error
   }
 }
 
