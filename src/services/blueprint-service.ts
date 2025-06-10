@@ -1,5 +1,6 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { NumerologyCalculator } from './numerology-calculator';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface BlueprintData {
   id: string;
@@ -331,6 +332,11 @@ class BlueprintService {
         throw new Error("HEALTH CHECK FAIL: Missing required user data fields");
       }
 
+      // HEALTH CHECK: Verify Supabase client is properly initialized
+      if (!this.supabase || !this.supabase.functions) {
+        throw new Error("HEALTH CHECK FAIL: Supabase client not properly initialized");
+      }
+
       // Call the Supabase function with the correct field names
       const { data, error } = await this.supabase.functions.invoke('blueprint-calculator', {
         body: {
@@ -519,7 +525,20 @@ class BlueprintService {
     const functions = {
       'INFJ': 'Introverted Intuition (Ni)',
       'INFP': 'Introverted Feeling (Fi)',
-      // ... etc for all types
+      'INTJ': 'Introverted Intuition (Ni)',
+      'INTP': 'Introverted Thinking (Ti)',
+      'ENFJ': 'Extroverted Feeling (Fe)',
+      'ENFP': 'Extroverted Intuition (Ne)',
+      'ENTJ': 'Extroverted Thinking (Te)',
+      'ENTP': 'Extroverted Intuition (Ne)',
+      'ISFJ': 'Introverted Sensing (Si)',
+      'ISFP': 'Introverted Feeling (Fi)',
+      'ISTJ': 'Introverted Sensing (Si)',
+      'ISTP': 'Introverted Thinking (Ti)',
+      'ESFJ': 'Extroverted Feeling (Fe)',
+      'ESFP': 'Extroverted Sensing (Se)',
+      'ESTJ': 'Extroverted Thinking (Te)',
+      'ESTP': 'Extroverted Sensing (Se)'
     };
 
     const result = functions[type];
@@ -538,7 +557,20 @@ class BlueprintService {
     const functions = {
       'INFJ': 'Extroverted Feeling (Fe)',
       'INFP': 'Extroverted Intuition (Ne)',
-      // ... etc for all types
+      'INTJ': 'Extroverted Thinking (Te)',
+      'INTP': 'Introverted Intuition (Ni)',
+      'ENFJ': 'Introverted Intuition (Ni)',
+      'ENFP': 'Introverted Feeling (Fi)',
+      'ENTJ': 'Introverted Intuition (Ni)',
+      'ENTP': 'Introverted Thinking (Ti)',
+      'ISFJ': 'Extroverted Feeling (Fe)',
+      'ISFP': 'Extroverted Sensing (Se)',
+      'ISTJ': 'Extroverted Thinking (Te)',
+      'ISTP': 'Extroverted Sensing (Se)',
+      'ESFJ': 'Introverted Sensing (Si)',
+      'ESFP': 'Introverted Feeling (Fi)',
+      'ESTJ': 'Introverted Sensing (Si)',
+      'ESTP': 'Introverted Thinking (Ti)'
     };
 
     const result = functions[type];
@@ -549,8 +581,9 @@ class BlueprintService {
   }
 }
 
+// HEALTH CHECK: Initialize with actual Supabase client
 export const blueprintService = new BlueprintService({
-  supabase: {} as SupabaseClient // Will be injected
+  supabase: supabase // Use the real Supabase client instead of empty object
 });
 
 export default BlueprintService;
