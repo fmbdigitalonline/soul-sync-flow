@@ -21,6 +21,7 @@ import { Message } from "@/hooks/use-ai-coach";
 import { MoodTracker } from "./MoodTracker";
 import { ReflectionPrompts } from "./ReflectionPrompts";
 import { InsightJournal } from "./InsightJournal";
+import { TypewriterText } from "./TypewriterText";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface GuideInterfaceProps {
@@ -38,20 +39,13 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
 }) => {
   const [inputValue, setInputValue] = useState("");
   const [showTools, setShowTools] = useState(false);
-  const [showMoodTracker, setShowMoodTracker] = useState(false);
-  const [showReflectionPrompts, setShowReflectionPrompts] = useState(false);
-  const [showInsightJournal, setShowInsightJournal] = useState(false);
   const { t } = useLanguage();
 
   const handleSendMessage = () => {
     if (inputValue.trim() === "") return;
     onSendMessage(inputValue);
     setInputValue("");
-    // Close tools when sending a message
     setShowTools(false);
-    setShowMoodTracker(false);
-    setShowReflectionPrompts(false);
-    setShowInsightJournal(false);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -60,23 +54,8 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
     }
   };
 
-  const handleMoodSelect = (mood: string, energy: string) => {
-    const moodMessage = `I'm feeling ${mood.toLowerCase()} with ${energy.toLowerCase()} energy right now. Help me understand what this might mean for me today.`;
-    onSendMessage(moodMessage);
-    setShowMoodTracker(false);
-    setShowTools(false);
-  };
-
-  const handleInsightSave = (insight: string, tags: string[]) => {
-    const insightMessage = `I want to share an insight: "${insight}". This feels like it's about: ${tags.join(', ')}. Help me explore this deeper.`;
-    onSendMessage(insightMessage);
-    setShowInsightJournal(false);
-    setShowTools(false);
-  };
-
-  const handlePromptSelect = (prompt: string) => {
-    onSendMessage(prompt);
-    setShowReflectionPrompts(false);
+  const handleToolAction = (message: string) => {
+    onSendMessage(message);
     setShowTools(false);
   };
 
@@ -111,11 +90,7 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => {
-                  setShowMoodTracker(!showMoodTracker);
-                  setShowReflectionPrompts(false);
-                  setShowInsightJournal(false);
-                }}
+                onClick={() => handleToolAction("I want to check in with my current mood and energy. Help me understand what I'm feeling right now.")}
                 className="text-xs h-7 border-soul-purple/30"
               >
                 <Heart className="h-3 w-3 mr-1" />
@@ -124,11 +99,7 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => {
-                  setShowReflectionPrompts(!showReflectionPrompts);
-                  setShowMoodTracker(false);
-                  setShowInsightJournal(false);
-                }}
+                onClick={() => handleToolAction("I want to explore some deep reflection questions about my life and growth. What should I be asking myself?")}
                 className="text-xs h-7 border-soul-purple/30"
               >
                 <Sparkles className="h-3 w-3 mr-1" />
@@ -137,11 +108,7 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => {
-                  setShowInsightJournal(!showInsightJournal);
-                  setShowMoodTracker(false);
-                  setShowReflectionPrompts(false);
-                }}
+                onClick={() => handleToolAction("I have some insights I'd like to explore deeper. Help me understand what I'm learning about myself.")}
                 className="text-xs h-7 border-soul-purple/30"
               >
                 <Star className="h-3 w-3 mr-1" />
@@ -155,11 +122,6 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
           </div>
         )}
       </CosmicCard>
-
-      {/* Conditional Components */}
-      {showMoodTracker && <MoodTracker onMoodSelect={handleMoodSelect} />}
-      {showReflectionPrompts && <ReflectionPrompts onPromptSelect={handlePromptSelect} />}
-      {showInsightJournal && <InsightJournal onInsightSave={handleInsightSave} />}
 
       {/* Chat Messages */}
       <div className="flex-1 overflow-y-auto mb-4 space-y-4 pb-4">
@@ -205,12 +167,17 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
                   </Badge>
                 )}
               </div>
-              <div className="text-sm leading-relaxed whitespace-pre-wrap">
-                {message.content}
-                {message.isStreaming && (
-                  <span className="inline-block w-2 h-4 bg-soul-purple/60 ml-1 animate-pulse" />
-                )}
-              </div>
+              
+              {message.sender === "assistant" ? (
+                <TypewriterText 
+                  text={message.content} 
+                  isStreaming={message.isStreaming || false} 
+                />
+              ) : (
+                <div className="text-sm leading-relaxed whitespace-pre-wrap">
+                  {message.content}
+                </div>
+              )}
               
               {/* Reflection buttons for latest AI message only */}
               {message.sender === "assistant" && 

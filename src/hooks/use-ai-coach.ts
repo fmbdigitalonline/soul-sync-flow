@@ -1,9 +1,9 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { aiCoachService, AgentType } from "@/services/ai-coach-service";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useBlueprintData } from "./use-blueprint-data";
 import { LayeredBlueprint } from "@/types/personality-modules";
+import { useStreamingMessage } from "./use-streaming-message";
 
 export interface Message {
   id: string;
@@ -21,6 +21,15 @@ export const useAICoach = () => {
   const [currentSessionId] = useState(() => aiCoachService.createNewSession());
   const { language } = useLanguage();
   const { blueprintData } = useBlueprintData();
+  
+  const {
+    streamingContent,
+    isStreaming,
+    addStreamingChunk,
+    startStreaming,
+    completeStreaming,
+    resetStreaming,
+  } = useStreamingMessage();
 
   // Convert blueprint data to LayeredBlueprint format and update the AI service
   useEffect(() => {
@@ -117,9 +126,9 @@ export const useAICoach = () => {
 
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
+    resetStreaming();
 
     if (useStreaming) {
-      // Create assistant message with empty content for streaming
       const assistantMessageId = (Date.now() + 1).toString();
       const assistantMessage: Message = {
         id: assistantMessageId,
@@ -131,27 +140,33 @@ export const useAICoach = () => {
       };
 
       setMessages(prev => [...prev, assistantMessage]);
+      startStreaming();
 
       try {
+        let accumulatedContent = '';
+        
         await aiCoachService.sendStreamingMessage(
           content,
           currentSessionId,
-          true, // Always include blueprint for personalized responses
+          true,
           currentAgent,
           language,
           {
             onChunk: (chunk: string) => {
-              console.log('Received chunk:', chunk);
+              accumulatedContent += chunk;
+              addStreamingChunk(chunk);
+              
               setMessages(prev => 
                 prev.map(msg => 
                   msg.id === assistantMessageId 
-                    ? { ...msg, content: msg.content + chunk }
+                    ? { ...msg, content: accumulatedContent }
                     : msg
                 )
               );
             },
             onComplete: (fullResponse: string) => {
               console.log('Streaming complete, full response length:', fullResponse.length);
+              completeStreaming();
               setMessages(prev => 
                 prev.map(msg => 
                   msg.id === assistantMessageId 
@@ -163,17 +178,17 @@ export const useAICoach = () => {
             },
             onError: (error: Error) => {
               console.error("Streaming error:", error);
-              // Remove the empty streaming message and fall back to non-streaming
               setMessages(prev => prev.filter(msg => msg.id !== assistantMessageId));
               handleNonStreamingMessage(content);
+              completeStreaming();
             }
           }
         );
       } catch (error) {
         console.error("Error with streaming, falling back:", error);
-        // Remove the empty streaming message and fall back to non-streaming
         setMessages(prev => prev.filter(msg => msg.id !== assistantMessageId));
         handleNonStreamingMessage(content);
+        completeStreaming();
       }
     } else {
       handleNonStreamingMessage(content);
@@ -246,5 +261,7 @@ export const useAICoach = () => {
     resetConversation,
     currentAgent,
     switchAgent,
+    streamingContent,
+    isStreaming,
   };
 };

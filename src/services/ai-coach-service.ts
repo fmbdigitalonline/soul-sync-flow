@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { PersonalityEngine } from "./personality-engine";
 import { LayeredBlueprint, AgentMode } from "@/types/personality-modules";
@@ -86,14 +85,12 @@ class AICoachService {
     try {
       console.log('Starting streaming request...');
       
-      // Generate personalized system prompt using the personality engine
       const systemPrompt = includeBlueprint 
         ? this.personalityEngine.generateSystemPrompt(agentType as AgentMode)
         : null;
 
       console.log("Generated personalized system prompt for streaming, length:", systemPrompt?.length || 0);
       
-      // Make a direct fetch to the edge function
       const response = await fetch(`https://qxaajirrqrcnmvtowjbg.supabase.co/functions/v1/ai-coach-stream`, {
         method: 'POST',
         headers: {
@@ -121,7 +118,6 @@ class AICoachService {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let fullResponse = '';
-      let buffer = '';
 
       try {
         while (true) {
@@ -130,11 +126,7 @@ class AICoachService {
           if (done) break;
           
           const chunk = decoder.decode(value, { stream: true });
-          buffer += chunk;
-          
-          // Process complete lines
-          const lines = buffer.split('\n');
-          buffer = lines.pop() || ''; // Keep incomplete line in buffer
+          const lines = chunk.split('\n');
           
           for (const line of lines) {
             if (line.trim() === '') continue;
@@ -154,7 +146,12 @@ class AICoachService {
                   
                   if (content) {
                     fullResponse += content;
-                    callbacks.onChunk(content);
+                    // Pass each character individually for smoother streaming
+                    for (let i = 0; i < content.length; i++) {
+                      setTimeout(() => {
+                        callbacks.onChunk(content[i]);
+                      }, i * 10); // 10ms delay between characters
+                    }
                   }
                 } catch (parseError) {
                   console.log('Skipping non-JSON data:', data);
@@ -167,7 +164,6 @@ class AICoachService {
         reader.releaseLock();
       }
       
-      // If we reach here without getting [DONE], still call onComplete
       if (fullResponse) {
         callbacks.onComplete(fullResponse);
       }
