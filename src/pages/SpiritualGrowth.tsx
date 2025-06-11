@@ -63,6 +63,28 @@ const SpiritualGrowth = () => {
     });
   };
 
+  const handleMoodSelect = (mood: string, energy: string) => {
+    const moodMessage = `I'm feeling ${mood.toLowerCase()} with ${energy.toLowerCase()} energy right now. Help me understand what this might mean for me today.`;
+    sendMessage(moodMessage);
+    toast({
+      title: "Mood shared",
+      description: `Shared your ${mood} mood with ${energy} energy`,
+    });
+  };
+
+  const handlePromptSelect = (prompt: string) => {
+    sendMessage(prompt);
+  };
+
+  const handleInsightSave = (insight: string, tags: string[]) => {
+    const insightMessage = `I want to share an insight: "${insight}". This feels like it's about: ${tags.join(', ')}. Help me explore this deeper.`;
+    sendMessage(insightMessage);
+    toast({
+      title: "Insight saved",
+      description: "Your insight has been shared with the Soul Guide",
+    });
+  };
+
   if (!isAuthenticated) {
     return (
       <MainLayout>
@@ -136,15 +158,15 @@ const SpiritualGrowth = () => {
           </TabsContent>
           
           <TabsContent value="mood" className="flex-1">
-            <MoodTracker />
+            <MoodTracker onMoodSelect={handleMoodSelect} />
           </TabsContent>
           
           <TabsContent value="reflect" className="flex-1">
-            <ReflectionPrompts />
+            <ReflectionPrompts onPromptSelect={handlePromptSelect} />
           </TabsContent>
           
           <TabsContent value="journal" className="flex-1">
-            <InsightJournal />
+            <InsightJournal onInsightSave={handleInsightSave} />
           </TabsContent>
         </Tabs>
       </div>
