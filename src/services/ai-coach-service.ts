@@ -49,7 +49,7 @@ export const aiCoachService = {
               const personalityEngine = new PersonalityEngine();
               
               // Convert blueprint data to personality modules format
-              const personalityBlueprint = this.convertBlueprintToPersonalityModules(blueprintData);
+              const personalityBlueprint = this.convertBlueprintToPersonalityModules(blueprintData, agentType);
               console.log("Converted personality blueprint:", personalityBlueprint);
               
               personalityEngine.updateBlueprint(personalityBlueprint);
@@ -131,7 +131,7 @@ export const aiCoachService = {
   },
 
   // Convert blueprint data to personality modules format
-  convertBlueprintToPersonalityModules(blueprintData: any) {
+  convertBlueprintToPersonalityModules(blueprintData: any, agentType: AgentType) {
     console.log("Converting blueprint data to personality modules:", blueprintData);
     
     // Extract all the relevant data with fallbacks
