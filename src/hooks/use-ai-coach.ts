@@ -9,6 +9,7 @@ export interface Message {
   sender: "user" | "assistant";
   timestamp: Date;
   agentType?: AgentType;
+  isStreaming?: boolean;
 }
 
 export const useAICoach = () => {
@@ -18,7 +19,7 @@ export const useAICoach = () => {
   const [currentSessionId] = useState(() => aiCoachService.createNewSession());
   const { language } = useLanguage();
 
-  const sendMessage = async (content: string) => {
+  const sendMessage = async (content: string, useStreaming: boolean = true) => {
     if (!content.trim()) return;
 
     const userMessage: Message = {
@@ -32,34 +33,109 @@ export const useAICoach = () => {
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
 
+    if (useStreaming) {
+      // Create assistant message with empty content for streaming
+      const assistantMessageId = (Date.now() + 1).toString();
+      const assistantMessage: Message = {
+        id: assistantMessageId,
+        content: "",
+        sender: "assistant",
+        timestamp: new Date(),
+        agentType: currentAgent,
+        isStreaming: true,
+      };
+
+      setMessages(prev => [...prev, assistantMessage]);
+
+      try {
+        await aiCoachService.sendStreamingMessage(
+          content,
+          currentSessionId,
+          true,
+          currentAgent,
+          language,
+          {
+            onChunk: (chunk: string) => {
+              setMessages(prev => 
+                prev.map(msg => 
+                  msg.id === assistantMessageId 
+                    ? { ...msg, content: msg.content + chunk }
+                    : msg
+                )
+              );
+            },
+            onComplete: (fullResponse: string) => {
+              setMessages(prev => 
+                prev.map(msg => 
+                  msg.id === assistantMessageId 
+                    ? { ...msg, content: fullResponse, isStreaming: false }
+                    : msg
+                )
+              );
+              setIsLoading(false);
+            },
+            onError: (error: Error) => {
+              console.error("Streaming error:", error);
+              // Fall back to non-streaming
+              handleNonStreamingMessage(content, assistantMessageId);
+            }
+          }
+        );
+      } catch (error) {
+        console.error("Error with streaming, falling back:", error);
+        handleNonStreamingMessage(content, assistantMessageId);
+      }
+    } else {
+      handleNonStreamingMessage(content);
+    }
+  };
+
+  const handleNonStreamingMessage = async (content: string, existingMessageId?: string) => {
     try {
       const response = await aiCoachService.sendMessage(
         content,
         currentSessionId,
         true,
         currentAgent,
-        language // Pass the current language
+        language
       );
 
       const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        id: existingMessageId || (Date.now() + 1).toString(),
         content: response.response,
         sender: "assistant",
         timestamp: new Date(),
         agentType: currentAgent,
       };
 
-      setMessages(prev => [...prev, assistantMessage]);
+      if (existingMessageId) {
+        setMessages(prev => 
+          prev.map(msg => 
+            msg.id === existingMessageId ? assistantMessage : msg
+          )
+        );
+      } else {
+        setMessages(prev => [...prev, assistantMessage]);
+      }
     } catch (error) {
       console.error("Error sending message:", error);
       const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        id: existingMessageId || (Date.now() + 1).toString(),
         content: language === 'nl' ? "Sorry, er is een fout opgetreden. Probeer het later opnieuw." : "Sorry, there was an error. Please try again later.",
         sender: "assistant",
         timestamp: new Date(),
         agentType: currentAgent,
       };
-      setMessages(prev => [...prev, errorMessage]);
+
+      if (existingMessageId) {
+        setMessages(prev => 
+          prev.map(msg => 
+            msg.id === existingMessageId ? errorMessage : msg
+          )
+        );
+      } else {
+        setMessages(prev => [...prev, errorMessage]);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -71,8 +147,6 @@ export const useAICoach = () => {
 
   const switchAgent = (newAgent: AgentType) => {
     setCurrentAgent(newAgent);
-    // Optionally reset conversation when switching agents
-    // resetConversation();
   };
 
   return {

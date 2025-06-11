@@ -159,14 +159,19 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
                 {message.sender === "assistant" && (
                   <Badge variant="outline" className="text-xs border-soul-purple/30">
                     <Star className="h-3 w-3 mr-1" />
-                    {t('insight')}
+                    {message.isStreaming ? t('streaming') : t('insight')}
                   </Badge>
                 )}
               </div>
-              <p className="text-sm leading-relaxed">{message.content}</p>
+              <div className="text-sm leading-relaxed">
+                {message.content}
+                {message.isStreaming && (
+                  <span className="inline-block w-2 h-4 bg-soul-purple/60 ml-1 animate-pulse" />
+                )}
+              </div>
               
               {/* Reflection buttons for AI messages */}
-              {message.sender === "assistant" && messages.indexOf(message) === messages.length - 1 && (
+              {message.sender === "assistant" && !message.isStreaming && messages.indexOf(message) === messages.length - 1 && (
                 <div className="flex space-x-2 mt-3">
                   <Button
                     size="sm"
