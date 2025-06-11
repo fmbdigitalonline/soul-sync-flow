@@ -251,8 +251,8 @@ class BlueprintService {
         return { success: false, error: "No blueprint found for this user" };
       }
 
-      // Update the blueprint data with new preferences - ensure we have a valid object to spread
-      const currentBlueprintData = blueprint.blueprint as BlueprintData || {};
+      // Update the blueprint data with new preferences - safely cast the JSON to BlueprintData
+      const currentBlueprintData = (blueprint.blueprint as unknown) as BlueprintData;
       const updatedBlueprintData = {
         ...currentBlueprintData,
         goal_stack: {
