@@ -27,8 +27,8 @@ function App() {
       <LanguageProvider>
         <AuthProvider>
           <SoulOrbProvider>
-            <ModeProvider>
-              <Router>
+            <Router>
+              <ModeProvider>
                 <div className="min-h-screen cosmic-bg">
                   <Toaster />
                   <Routes>
@@ -44,8 +44,8 @@ function App() {
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </div>
-              </Router>
-            </ModeProvider>
+              </ModeProvider>
+            </Router>
           </SoulOrbProvider>
         </AuthProvider>
       </LanguageProvider>
