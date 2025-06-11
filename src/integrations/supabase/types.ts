@@ -324,6 +324,73 @@ export type Database = {
         }
         Relationships: []
       }
+      personality_answers: {
+        Row: {
+          answer: string
+          blueprint_id: string
+          created_at: string
+          id: string
+          item_code: string
+        }
+        Insert: {
+          answer: string
+          blueprint_id: string
+          created_at?: string
+          id?: string
+          item_code: string
+        }
+        Update: {
+          answer?: string
+          blueprint_id?: string
+          created_at?: string
+          id?: string
+          item_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personality_answers_blueprint_id_fkey"
+            columns: ["blueprint_id"]
+            isOneToOne: false
+            referencedRelation: "user_blueprints"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personality_scores: {
+        Row: {
+          big5: Json
+          big5_confidence: Json
+          blueprint_id: string
+          enneagram_probabilities: Json | null
+          last_updated: string
+          mbti_probabilities: Json
+        }
+        Insert: {
+          big5?: Json
+          big5_confidence?: Json
+          blueprint_id: string
+          enneagram_probabilities?: Json | null
+          last_updated?: string
+          mbti_probabilities?: Json
+        }
+        Update: {
+          big5?: Json
+          big5_confidence?: Json
+          blueprint_id?: string
+          enneagram_probabilities?: Json | null
+          last_updated?: string
+          mbti_probabilities?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personality_scores_blueprint_id_fkey"
+            columns: ["blueprint_id"]
+            isOneToOne: true
+            referencedRelation: "user_blueprints"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       productivity_journey: {
         Row: {
           completed_goals: Json | null

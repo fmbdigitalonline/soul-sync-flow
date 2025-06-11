@@ -5,7 +5,7 @@ import { PersonalityProfile } from "@/types/personality-fusion";
 
 export interface UserProfile {
   full_name: string;
-  preferred_name: string;
+  preferred_name?: string; // Make this optional
   birth_date: string;
   birth_time_local: string;
   birth_location: string;
@@ -43,10 +43,16 @@ export interface BlueprintDataResult {
 class BlueprintService {
   async getActiveBlueprintData(): Promise<BlueprintDataResult> {
     try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        return { data: null, error: "User not authenticated" };
+      }
+
       const { data, error } = await supabase
         .from('user_blueprints')
         .select('*')
-        .eq('user_id', supabase.auth.currentUser?.id)
+        .eq('user_id', user.id)
         .eq('is_active', true)
         .single();
 
@@ -61,7 +67,7 @@ class BlueprintService {
       }
 
       console.log("Active blueprint data:", data);
-      return { data: data.blueprint as BlueprintData, error: null };
+      return { data: data.blueprint as unknown as BlueprintData, error: null };
     } catch (error) {
       console.error("Unexpected error fetching active blueprint:", error);
       return { data: null, error: "Unexpected error occurred." };
@@ -72,12 +78,22 @@ class BlueprintService {
     try {
       console.log("Generating blueprint from birth data:", userProfile);
 
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        return { data: null, error: "User not authenticated" };
+      }
+
+      // Ensure preferred_name has a fallback
+      const profileWithDefaults = {
+        ...userProfile,
+        preferred_name: userProfile.preferred_name || userProfile.full_name.split(' ')[0],
+        user_id: user.id
+      };
+
       // For now, return a mock blueprint structure with the expected properties
       const mockBlueprint: BlueprintData = {
-        user_meta: {
-          ...userProfile,
-          user_id: supabase.auth.currentUser?.id || 'anonymous'
-        },
+        user_meta: profileWithDefaults,
         astrology: {},
         human_design: {},
         numerology: {},
@@ -207,7 +223,7 @@ class BlueprintService {
         .from('user_blueprints')
         .upsert({
           user_id: blueprintData.user_meta.user_id,
-          blueprint: blueprintData,
+          blueprint: blueprintData as any, // Cast to any for JSON compatibility
           is_active: true,
           updated_at: new Date().toISOString(),
         })
