@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { PersonalityFusionService } from "./personality-fusion-service";
 import { PersonalityProfile } from "@/types/personality-fusion";
@@ -245,14 +246,15 @@ class BlueprintService {
         return { success: false, error: fetchError.message };
       }
 
-      if (!blueprint) {
+      if (!blueprint || !blueprint.blueprint) {
         console.error("No blueprint found for user when updating preferences");
         return { success: false, error: "No blueprint found for this user" };
       }
 
-      // Update the blueprint data with new preferences
+      // Update the blueprint data with new preferences - ensure we have a valid object to spread
+      const currentBlueprintData = blueprint.blueprint as BlueprintData || {};
       const updatedBlueprintData = {
-        ...blueprint.blueprint,
+        ...currentBlueprintData,
         goal_stack: {
           primary_goal: preferences.primary_goal,
           support_style: preferences.support_style,
