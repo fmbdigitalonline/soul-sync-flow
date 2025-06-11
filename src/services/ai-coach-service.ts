@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { PersonalityEngine } from "@/services/personality-engine";
 import { blueprintService } from "@/services/blueprint-service";
@@ -30,30 +31,44 @@ export const aiCoachService = {
       if (includeBlueprint) {
         // Load user's blueprint data from the database
         console.log("Loading user blueprint for personalized coaching...");
-        const { data: blueprintData, error: blueprintError } = await blueprintService.getActiveBlueprintData();
         
-        if (blueprintError) {
-          console.warn("Could not load blueprint data:", blueprintError);
-          systemPrompt = this.generateFallbackPrompt(agentType, language);
-        } else if (blueprintData) {
-          console.log("Blueprint loaded successfully:", blueprintData);
+        try {
+          const { data: blueprintData, error: blueprintError } = await blueprintService.getActiveBlueprintData();
           
-          // Create personality engine with actual blueprint data
-          const personalityEngine = new PersonalityEngine();
-          
-          // Convert blueprint data to personality modules format
-          const personalityBlueprint = this.convertBlueprintToPersonalityModules(blueprintData);
-          console.log("Converted personality blueprint:", personalityBlueprint);
-          
-          personalityEngine.updateBlueprint(personalityBlueprint);
-          
-          // Generate personalized system prompt
-          systemPrompt = personalityEngine.generateSystemPrompt(agentType);
-          
-          console.log("Generated personalized prompt for agent type:", agentType);
-          console.log("System prompt preview:", systemPrompt.substring(0, 200) + "...");
-        } else {
-          console.log("No blueprint data found, using fallback prompt");
+          if (blueprintError) {
+            console.warn("Blueprint service error:", blueprintError);
+            systemPrompt = this.generateFallbackPrompt(agentType, language);
+          } else if (blueprintData && Object.keys(blueprintData).length > 0) {
+            console.log("Blueprint loaded successfully:", blueprintData);
+            
+            // Check if we have meaningful blueprint data
+            const hasValidData = this.validateBlueprintData(blueprintData);
+            
+            if (hasValidData) {
+              // Create personality engine with actual blueprint data
+              const personalityEngine = new PersonalityEngine();
+              
+              // Convert blueprint data to personality modules format
+              const personalityBlueprint = this.convertBlueprintToPersonalityModules(blueprintData);
+              console.log("Converted personality blueprint:", personalityBlueprint);
+              
+              personalityEngine.updateBlueprint(personalityBlueprint);
+              
+              // Generate personalized system prompt
+              systemPrompt = personalityEngine.generateSystemPrompt(agentType);
+              
+              console.log("Generated personalized prompt for agent type:", agentType);
+              console.log("System prompt preview:", systemPrompt.substring(0, 200) + "...");
+            } else {
+              console.log("Blueprint data exists but lacks meaningful content, using fallback");
+              systemPrompt = this.generateFallbackPrompt(agentType, language);
+            }
+          } else {
+            console.log("No blueprint data found, using fallback prompt");
+            systemPrompt = this.generateFallbackPrompt(agentType, language);
+          }
+        } catch (err) {
+          console.error("Error loading blueprint:", err);
           systemPrompt = this.generateFallbackPrompt(agentType, language);
         }
       } else {
@@ -82,6 +97,37 @@ export const aiCoachService = {
       console.error("Error in AI Coach service:", err);
       throw err;
     }
+  },
+
+  // Validate that blueprint data contains meaningful information
+  validateBlueprintData(blueprintData: any): boolean {
+    if (!blueprintData) return false;
+    
+    // Check for meaningful data in key sections
+    const hasWesternData = blueprintData.archetype_western?.sun_sign && 
+                          blueprintData.archetype_western.sun_sign !== 'Unknown';
+    
+    const hasHumanDesignData = blueprintData.energy_strategy_human_design?.type && 
+                              blueprintData.energy_strategy_human_design.type !== 'Generator';
+    
+    const hasMBTIData = blueprintData.cognition_mbti?.type;
+    
+    const hasChineseData = blueprintData.archetype_chinese?.animal && 
+                          blueprintData.archetype_chinese.animal !== 'Unknown';
+    
+    const hasLifePathData = blueprintData.values_life_path?.lifePathNumber;
+    
+    console.log("Blueprint validation:", {
+      hasWesternData,
+      hasHumanDesignData,
+      hasMBTIData,
+      hasChineseData,
+      hasLifePathData
+    });
+    
+    // Return true if we have at least 2 meaningful data points
+    const meaningfulSections = [hasWesternData, hasHumanDesignData, hasMBTIData, hasChineseData, hasLifePathData].filter(Boolean).length;
+    return meaningfulSections >= 2;
   },
 
   // Convert blueprint data to personality modules format
@@ -160,7 +206,7 @@ export const aiCoachService = {
         socialHooks: this.extractSocialHooks(blueprintData)
       },
       goalPersona: {
-        currentMode: 'guide' as const,
+        currentMode: agentType as 'coach' | 'guide' | 'blend',
         serviceRole: this.extractServiceRole(blueprintData),
         coachingTone: this.extractCoachingTone(blueprintData)
       },
@@ -528,12 +574,12 @@ export const aiCoachService = {
     switch (agentType) {
       case 'coach':
         return isNL 
-          ? "Je bent de Ziel Coach, gericht op productiviteit en het bereiken van doelen. Bied gestructureerde, actie-gerichte begeleiding."
-          : "You are the Soul Coach, focused on productivity and goal achievement. Provide structured, action-oriented guidance.";
+          ? "Je bent de Ziel Coach, EXCLUSIEF gericht op productiviteit en het bereiken van doelen. Bied gestructureerde, actie-gerichte begeleiding."
+          : "You are the Soul Coach, focused EXCLUSIVELY on productivity and goal achievement. Provide structured, action-oriented guidance.";
       case 'guide':
         return isNL 
-          ? "Je bent de Ziel Gids, gericht op persoonlijke groei en levenswijsheid. Bied reflectieve, inzichtelijke begeleiding."
-          : "You are the Soul Guide, focused on personal growth and life wisdom. Provide reflective, insightful guidance.";
+          ? "Je bent de Ziel Gids, EXCLUSIEF gericht op persoonlijke groei en levenswijsheid. Bied reflectieve, inzichtelijke begeleiding."
+          : "You are the Soul Guide, focused EXCLUSIVELY on personal growth and life wisdom. Provide reflective, insightful guidance.";
       case 'blend':
       default:
         return isNL 
