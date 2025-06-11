@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Clock, Target, Calendar, TrendingUp, Star, Play, CheckCircle } from "lucide-react";
+import { Clock, Target, Calendar, TrendingUp, Star, Play, CheckCircle, Brain } from "lucide-react";
 import { PomodoroTimer } from "./PomodoroTimer";
 import { HabitTracker } from "./HabitTracker";
 import { GoalSetting } from "./GoalSetting";
+import { GoalAchievement } from "./GoalAchievement";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const ProductivityDashboard = () => {
@@ -29,8 +30,12 @@ const ProductivityDashboard = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="timer" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+      <Tabs defaultValue="achievement" className="w-full">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="achievement" className="flex items-center gap-2">
+            <Brain className="h-4 w-4" />
+            <span className="hidden sm:inline">AI Goals</span>
+          </TabsTrigger>
           <TabsTrigger value="timer" className="flex items-center gap-2">
             <Clock className="h-4 w-4" />
             <span className="hidden sm:inline">{t('productivity.focusTimer')}</span>
@@ -48,6 +53,10 @@ const ProductivityDashboard = () => {
             <span className="hidden sm:inline">{t('productivity.planning')}</span>
           </TabsTrigger>
         </TabsList>
+        
+        <TabsContent value="achievement" className="mt-6">
+          <GoalAchievement />
+        </TabsContent>
         
         <TabsContent value="timer" className="mt-6">
           <PomodoroTimer />

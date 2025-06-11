@@ -54,8 +54,17 @@ export const useJourneyTracking = () => {
 
       if (productivityError && productivityError.code !== 'PGRST116') {
         console.error('Error fetching productivity journey:', productivityError);
-      } else {
-        setProductivityJourney(productivityData);
+      } else if (productivityData) {
+        setProductivityJourney({
+          ...productivityData,
+          current_goals: Array.isArray(productivityData.current_goals) ? productivityData.current_goals : [],
+          completed_goals: Array.isArray(productivityData.completed_goals) ? productivityData.completed_goals : [],
+          current_tasks: Array.isArray(productivityData.current_tasks) ? productivityData.current_tasks : [],
+          completed_tasks: Array.isArray(productivityData.completed_tasks) ? productivityData.completed_tasks : [],
+          focus_sessions: Array.isArray(productivityData.focus_sessions) ? productivityData.focus_sessions : [],
+          journey_milestones: Array.isArray(productivityData.journey_milestones) ? productivityData.journey_milestones : [],
+          productivity_metrics: productivityData.productivity_metrics || {}
+        });
       }
 
       // Fetch growth journey
@@ -67,8 +76,16 @@ export const useJourneyTracking = () => {
 
       if (growthError && growthError.code !== 'PGRST116') {
         console.error('Error fetching growth journey:', growthError);
-      } else {
-        setGrowthJourney(growthData);
+      } else if (growthData) {
+        setGrowthJourney({
+          ...growthData,
+          mood_entries: Array.isArray(growthData.mood_entries) ? growthData.mood_entries : [],
+          reflection_entries: Array.isArray(growthData.reflection_entries) ? growthData.reflection_entries : [],
+          insight_entries: Array.isArray(growthData.insight_entries) ? growthData.insight_entries : [],
+          spiritual_practices: Array.isArray(growthData.spiritual_practices) ? growthData.spiritual_practices : [],
+          growth_milestones: Array.isArray(growthData.growth_milestones) ? growthData.growth_milestones : [],
+          current_focus_areas: Array.isArray(growthData.current_focus_areas) ? growthData.current_focus_areas : []
+        });
       }
 
     } catch (error) {
@@ -207,6 +224,49 @@ export const useJourneyTracking = () => {
     });
   };
 
+  const addGoal = async (goal: any) => {
+    if (!productivityJourney) return;
+
+    const updatedGoals = [...(productivityJourney.current_goals || []), goal];
+    
+    await updateProductivityJourney({
+      current_goals: updatedGoals,
+      last_activity_date: new Date().toISOString()
+    });
+  };
+
+  const updateGoal = async (goalId: string, updates: any) => {
+    if (!productivityJourney) return;
+
+    const updatedGoals = productivityJourney.current_goals?.map(goal => 
+      goal.id === goalId ? { ...goal, ...updates } : goal
+    ) || [];
+    
+    await updateProductivityJourney({
+      current_goals: updatedGoals,
+      last_activity_date: new Date().toISOString()
+    });
+  };
+
+  const completeGoal = async (goalId: string) => {
+    if (!productivityJourney) return;
+
+    const goalToComplete = productivityJourney.current_goals?.find(g => g.id === goalId);
+    if (!goalToComplete) return;
+
+    const updatedCurrentGoals = productivityJourney.current_goals?.filter(g => g.id !== goalId) || [];
+    const updatedCompletedGoals = [...(productivityJourney.completed_goals || []), {
+      ...goalToComplete,
+      completed_at: new Date().toISOString()
+    }];
+    
+    await updateProductivityJourney({
+      current_goals: updatedCurrentGoals,
+      completed_goals: updatedCompletedGoals,
+      last_activity_date: new Date().toISOString()
+    });
+  };
+
   useEffect(() => {
     fetchJourneys();
   }, []);
@@ -222,6 +282,9 @@ export const useJourneyTracking = () => {
     addInsightEntry,
     addProductivityTask,
     completeProductivityTask,
+    addGoal,
+    updateGoal,
+    completeGoal,
     refetch: fetchJourneys
   };
 };

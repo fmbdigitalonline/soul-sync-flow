@@ -51,7 +51,6 @@ class EnhancedAICoachService {
   async loadConversationHistory(mode: AgentType): Promise<ChatMessage[]> {
     const cacheKey = `conversation_${mode}`;
     
-    // Check cache first
     if (this.conversationCache.has(cacheKey)) {
       return this.conversationCache.get(cacheKey) || [];
     }
@@ -74,7 +73,7 @@ class EnhancedAICoachService {
         return [];
       }
 
-      const messages = data?.messages || [];
+      const messages = Array.isArray(data?.messages) ? data.messages : [];
       this.conversationCache.set(cacheKey, messages);
       return messages;
     } catch (error) {
@@ -91,7 +90,6 @@ class EnhancedAICoachService {
       const cacheKey = `conversation_${mode}`;
       this.conversationCache.set(cacheKey, messages);
 
-      // Check if conversation exists
       const { data: existingConversation } = await supabase
         .from('conversation_memory')
         .select('id')
@@ -100,11 +98,10 @@ class EnhancedAICoachService {
         .single();
 
       if (existingConversation) {
-        // Update existing conversation
         const { error } = await supabase
           .from('conversation_memory')
           .update({
-            messages,
+            messages: messages as any,
             updated_at: new Date().toISOString()
           })
           .eq('id', existingConversation.id);
@@ -113,7 +110,6 @@ class EnhancedAICoachService {
           console.error('Error updating conversation:', error);
         }
       } else {
-        // Create new conversation
         const sessionId = this.createNewSession(mode);
         const { error } = await supabase
           .from('conversation_memory')
@@ -121,7 +117,7 @@ class EnhancedAICoachService {
             user_id: user.id,
             session_id: sessionId,
             mode,
-            messages
+            messages: messages as any
           });
 
         if (error) {
@@ -140,8 +136,7 @@ class EnhancedAICoachService {
 
       let contextString = "";
 
-      if (mode === "blend" || mode === "coach") {
-        // Get both productivity and growth journey data for Soul Companion
+      if (mode === "blend") {
         const [productivityResult, growthResult] = await Promise.all([
           supabase.from('productivity_journey').select('*').eq('user_id', user.id).single(),
           supabase.from('growth_journey').select('*').eq('user_id', user.id).single()
@@ -149,28 +144,38 @@ class EnhancedAICoachService {
 
         if (productivityResult.data) {
           const productivity = productivityResult.data;
+          const currentGoals = Array.isArray(productivity.current_goals) ? productivity.current_goals : [];
+          const completedGoals = Array.isArray(productivity.completed_goals) ? productivity.completed_goals : [];
+          const currentTasks = Array.isArray(productivity.current_tasks) ? productivity.current_tasks : [];
+          const completedTasks = Array.isArray(productivity.completed_tasks) ? productivity.completed_tasks : [];
+          const focusSessions = Array.isArray(productivity.focus_sessions) ? productivity.focus_sessions : [];
+          
           contextString += `\nProductivity Journey Context:
 - Current Position: ${productivity.current_position}
-- Active Goals: ${productivity.current_goals?.length || 0}
-- Completed Goals: ${productivity.completed_goals?.length || 0}
-- Current Tasks: ${productivity.current_tasks?.length || 0}
-- Completed Tasks: ${productivity.completed_tasks?.length || 0}
-- Focus Sessions: ${productivity.focus_sessions?.length || 0}
+- Active Goals: ${currentGoals.length}
+- Completed Goals: ${completedGoals.length}
+- Current Tasks: ${currentTasks.length}
+- Completed Tasks: ${completedTasks.length}
+- Focus Sessions: ${focusSessions.length}
 - Last Activity: ${productivity.last_activity_date}`;
         }
 
         if (growthResult.data) {
           const growth = growthResult.data;
+          const moodEntries = Array.isArray(growth.mood_entries) ? growth.mood_entries : [];
+          const reflectionEntries = Array.isArray(growth.reflection_entries) ? growth.reflection_entries : [];
+          const insightEntries = Array.isArray(growth.insight_entries) ? growth.insight_entries : [];
+          const currentFocusAreas = Array.isArray(growth.current_focus_areas) ? growth.current_focus_areas : [];
+          
           contextString += `\nGrowth Journey Context:
 - Current Position: ${growth.current_position}
-- Recent Moods: ${growth.mood_entries?.slice(-3).map(e => e.mood).join(', ') || 'None'}
-- Reflection Entries: ${growth.reflection_entries?.length || 0}
-- Insight Entries: ${growth.insight_entries?.length || 0}
-- Focus Areas: ${growth.current_focus_areas?.join(', ') || 'None'}
+- Recent Moods: ${moodEntries.slice(-3).map(e => e.mood).join(', ') || 'None'}
+- Reflection Entries: ${reflectionEntries.length}
+- Insight Entries: ${insightEntries.length}
+- Focus Areas: ${currentFocusAreas.join(', ') || 'None'}
 - Last Reflection: ${growth.last_reflection_date}`;
         }
       } else if (mode === "coach") {
-        // Get productivity-specific context
         const { data } = await supabase
           .from('productivity_journey')
           .select('*')
@@ -178,14 +183,17 @@ class EnhancedAICoachService {
           .single();
 
         if (data) {
+          const currentGoals = Array.isArray(data.current_goals) ? data.current_goals : [];
+          const currentTasks = Array.isArray(data.current_tasks) ? data.current_tasks : [];
+          const focusSessions = Array.isArray(data.focus_sessions) ? data.focus_sessions : [];
+          
           contextString = `\nProductivity Context:
 - Current Position: ${data.current_position}
-- Active Goals: ${data.current_goals?.length || 0}
-- Current Tasks: ${data.current_tasks?.length || 0}
-- Recent Focus Sessions: ${data.focus_sessions?.slice(-5).length || 0}`;
+- Active Goals: ${currentGoals.length}
+- Current Tasks: ${currentTasks.length}
+- Recent Focus Sessions: ${focusSessions.slice(-5).length}`;
         }
       } else if (mode === "guide") {
-        // Get growth-specific context
         const { data } = await supabase
           .from('growth_journey')
           .select('*')
@@ -193,11 +201,15 @@ class EnhancedAICoachService {
           .single();
 
         if (data) {
+          const moodEntries = Array.isArray(data.mood_entries) ? data.mood_entries : [];
+          const currentFocusAreas = Array.isArray(data.current_focus_areas) ? data.current_focus_areas : [];
+          const insightEntries = Array.isArray(data.insight_entries) ? data.insight_entries : [];
+          
           contextString = `\nGrowth Context:
 - Current Position: ${data.current_position}
-- Recent Mood: ${data.mood_entries?.slice(-1)[0]?.mood || 'Unknown'}
-- Focus Areas: ${data.current_focus_areas?.join(', ') || 'None'}
-- Recent Insights: ${data.insight_entries?.slice(-3).length || 0}`;
+- Recent Mood: ${moodEntries.slice(-1)[0]?.mood || 'Unknown'}
+- Focus Areas: ${currentFocusAreas.join(', ') || 'None'}
+- Recent Insights: ${insightEntries.slice(-3).length}`;
         }
       }
 
@@ -216,10 +228,8 @@ class EnhancedAICoachService {
     language: string = "en"
   ): Promise<{ response: string; conversationId: string }> {
     try {
-      // Get journey context for enhanced responses
       const journeyContext = await this.getJourneyContext(agentType);
       
-      // Generate personalized system prompt using the personality engine
       const systemPrompt = includeBlueprint 
         ? this.personalityEngine.generateSystemPrompt(agentType as AgentMode)
         : null;
@@ -235,7 +245,7 @@ class EnhancedAICoachService {
           agentType,
           language,
           systemPrompt,
-          journeyContext, // Include journey context
+          journeyContext,
         },
       });
 
