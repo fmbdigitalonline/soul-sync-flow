@@ -1,11 +1,12 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { EnhancedBlueprintData, ViewDepth } from "@/types/blueprint-enhanced";
+import { PersonalityFusionService } from "@/services/personality-fusion-service";
+import { PersonalityProfile } from "@/types/personality-fusion";
 
 interface EnhancedBlueprintViewerProps {
   blueprint: EnhancedBlueprintData;
@@ -63,10 +64,81 @@ const Section: React.FC<SectionProps> = ({ title, facts, narrative, depth }) => 
   );
 };
 
+const PersonalitySection: React.FC<{ 
+  personalityProfile: PersonalityProfile | null;
+  depth: ViewDepth;
+}> = ({ personalityProfile, depth }) => {
+  if (!personalityProfile) {
+    return (
+      <CosmicCard className="mb-6">
+        <div className="text-center p-6">
+          <p className="text-muted-foreground">Personality profile not available</p>
+        </div>
+      </CosmicCard>
+    );
+  }
+
+  const confidence = Math.round(
+    Object.values(personalityProfile.confidence).reduce((sum, c) => sum + c, 0) / 5 * 100
+  );
+
+  const facts = [
+    `Likely Type: ${personalityProfile.likelyType}`,
+    `Confidence: ${confidence}% certain`,
+    `Openness: ${Math.round(personalityProfile.bigFive.openness * 100)}%`,
+    `Conscientiousness: ${Math.round(personalityProfile.bigFive.conscientiousness * 100)}%`,
+    `Extraversion: ${Math.round(personalityProfile.bigFive.extraversion * 100)}%`,
+    `Agreeableness: ${Math.round(personalityProfile.bigFive.agreeableness * 100)}%`
+  ];
+
+  let narrative = personalityProfile.description;
+  
+  if (depth === 'amateur') {
+    const topTypes = Object.entries(personalityProfile.mbtiProbabilities)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 3)
+      .map(([type, prob]) => `${type} (${Math.round(prob * 100)}%)`)
+      .join(', ');
+    
+    narrative += ` Alternative possibilities include: ${topTypes}. This assessment will become more accurate as you interact with the system.`;
+  }
+  
+  if (depth === 'pro') {
+    narrative += ` Big Five scores: Openness ${Math.round(personalityProfile.bigFive.openness * 100)}, Conscientiousness ${Math.round(personalityProfile.bigFive.conscientiousness * 100)}, Extraversion ${Math.round(personalityProfile.bigFive.extraversion * 100)}, Agreeableness ${Math.round(personalityProfile.bigFive.agreeableness * 100)}, Neuroticism ${Math.round(personalityProfile.bigFive.neuroticism * 100)}. Based on ${personalityProfile.microAnswers?.length || 0} micro-interactions.`;
+  }
+
+  return (
+    <Section
+      title="Personality Profile"
+      facts={facts}
+      narrative={narrative}
+      depth={depth}
+    />
+  );
+};
+
 export const EnhancedBlueprintViewer: React.FC<EnhancedBlueprintViewerProps> = ({ blueprint }) => {
   const [depth, setDepth] = useState<ViewDepth>('novice');
+  const [personalityProfile, setPersonalityProfile] = useState<PersonalityProfile | null>(null);
+  
+  // Load personality profile
+  React.useEffect(() => {
+    const loadPersonalityProfile = async () => {
+      if (blueprint.id) {
+        const { data } = await PersonalityFusionService.getPersonalityProfile(blueprint.id);
+        setPersonalityProfile(data);
+      }
+    };
+    
+    loadPersonalityProfile();
+  }, [blueprint.id]);
   
   const sections = [
+    {
+      key: 'personality_profile',
+      title: 'Personality Profile',
+      component: <PersonalitySection personalityProfile={personalityProfile} depth={depth} />
+    },
     {
       key: 'energy_identity',
       title: 'Energy & Identity',
@@ -130,13 +202,16 @@ export const EnhancedBlueprintViewer: React.FC<EnhancedBlueprintViewerProps> = (
       <ScrollArea className="h-[calc(100vh-300px)] w-full">
         <div className="space-y-4 sm:space-y-6 pr-2 sm:pr-4">
           {sections.map((section) => (
-            <Section
-              key={section.key}
-              title={section.title}
-              facts={section.data.facts}
-              narrative={section.data.narratives[depth]}
-              depth={depth}
-            />
+            <div key={section.key}>
+              {section.component || (
+                <Section
+                  title={section.title}
+                  facts={section.data.facts}
+                  narrative={section.data.narratives[depth]}
+                  depth={depth}
+                />
+              )}
+            </div>
           ))}
         </div>
       </ScrollArea>

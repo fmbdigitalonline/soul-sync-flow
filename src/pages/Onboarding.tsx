@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "@/lib/framer-motion";
@@ -16,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useOnboarding3D } from "@/hooks/use-onboarding-3d";
 import { useSoulOrb } from "@/contexts/SoulOrbContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { PersonalityFusion } from "@/components/blueprint/PersonalityFusion";
 
 export default function Onboarding() {
   const navigate = useNavigate();
@@ -44,14 +44,14 @@ export default function Onboarding() {
     switchToInputStage
   } = useOnboarding3D();
 
-  // Form data state
+  // Form data state - update personality to store full profile
   const [formData, setFormData] = useState({
     name: "",
     preferredName: "",
     birthDate: "",
     birthTime: "",
     birthLocation: "",
-    personality: "INFJ" // Default MBTI
+    personality: null as any // Changed to store full personality profile
   });
 
   // Birth date components state
@@ -494,26 +494,36 @@ export default function Onboarding() {
       case 5: // Personality
         return (
           <div className="space-y-4 max-w-md mx-auto">
-            <h2 className="text-xl font-display font-bold text-center mb-2">What's your personality type?</h2>
+            <h2 className="text-xl font-display font-bold text-center mb-2">Tell us about your personality</h2>
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-              <MBTISelector 
+              <PersonalityFusion 
                 value={formData.personality}
                 onChange={(value) => updateFormData({ personality: value })}
+                seedData={{
+                  sunSign: "Aquarius", // This would come from birth data calculation
+                  moonSign: "Leo", // These are placeholders - would be calculated from birth data
+                  risingSign: "Gemini",
+                  humanDesignType: "Projector", // Would come from Human Design calculation
+                  lifePath: 7 // Would come from numerology calculation
+                }}
               />
             </div>
             <div className="flex justify-between pt-4">
               <Button variant="ghost" onClick={goToPrevStep}>Back</Button>
-              <Button onClick={() => {
-                if (!user && !authLoading) {
-                  toast({
-                    title: "Authentication Required",
-                    description: "Please sign in to continue with blueprint generation.",
-                  });
-                  navigate("/auth");
-                  return;
-                }
-                goToNextStep();
-              }}>
+              <Button 
+                disabled={!formData.personality}
+                onClick={() => {
+                  if (!user && !authLoading) {
+                    toast({
+                      title: "Authentication Required",
+                      description: "Please sign in to continue with blueprint generation.",
+                    });
+                    navigate("/auth");
+                    return;
+                  }
+                  goToNextStep();
+                }}
+              >
                 Continue
               </Button>
             </div>
