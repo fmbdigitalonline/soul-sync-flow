@@ -10,6 +10,7 @@ import { PomodoroTimer } from "./PomodoroTimer";
 import { HabitTracker } from "./HabitTracker";
 import { GoalSetting } from "./GoalSetting";
 import { GoalAchievement } from "./GoalAchievement";
+import { PlanningInterface } from "./PlanningInterface";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const ProductivityDashboard = () => {
@@ -36,6 +37,10 @@ const ProductivityDashboard = () => {
             <Brain className="h-4 w-4" />
             <span className="hidden sm:inline">AI Goals</span>
           </TabsTrigger>
+          <TabsTrigger value="planning" className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            <span className="hidden sm:inline">Planning</span>
+          </TabsTrigger>
           <TabsTrigger value="timer" className="flex items-center gap-2">
             <Clock className="h-4 w-4" />
             <span className="hidden sm:inline">{t('productivity.focusTimer')}</span>
@@ -48,14 +53,14 @@ const ProductivityDashboard = () => {
             <Target className="h-4 w-4" />
             <span className="hidden sm:inline">{t('productivity.goals')}</span>
           </TabsTrigger>
-          <TabsTrigger value="planning" className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            <span className="hidden sm:inline">{t('productivity.planning')}</span>
-          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="achievement" className="mt-6">
           <GoalAchievement />
+        </TabsContent>
+        
+        <TabsContent value="planning" className="mt-6">
+          <PlanningInterface />
         </TabsContent>
         
         <TabsContent value="timer" className="mt-6">
@@ -68,13 +73,6 @@ const ProductivityDashboard = () => {
         
         <TabsContent value="goals" className="mt-6">
           <GoalSetting />
-        </TabsContent>
-        
-        <TabsContent value="planning" className="mt-6">
-          <div className="text-center py-12">
-            <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">{t('productivity.loading')}</p>
-          </div>
         </TabsContent>
       </Tabs>
     </CosmicCard>
