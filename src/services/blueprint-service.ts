@@ -225,28 +225,56 @@ class BlueprintService {
     time_horizon: string;
   }): Promise<{ success: boolean; error?: string }> {
     try {
-      const { data: blueprintData, error: blueprintError } = await this.getActiveBlueprintData();
-
-      if (blueprintError || !blueprintData) {
-        console.error("Error fetching active blueprint:", blueprintError);
-        return { success: false, error: blueprintError || "No active blueprint found." };
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        return { success: false, error: "User not authenticated" };
       }
 
-      // Update the goal_stack with the new preferences
-      blueprintData.goal_stack = {
-        primary_goal: preferences.primary_goal,
-        support_style: preferences.support_style,
-        time_horizon: preferences.time_horizon
+      // Get the most recent blueprint for this user (whether active or not)
+      const { data: blueprint, error: fetchError } = await supabase
+        .from('user_blueprints')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (fetchError) {
+        console.error("Error fetching blueprint for preferences update:", fetchError);
+        return { success: false, error: fetchError.message };
+      }
+
+      if (!blueprint) {
+        console.error("No blueprint found for user when updating preferences");
+        return { success: false, error: "No blueprint found for this user" };
+      }
+
+      // Update the blueprint data with new preferences
+      const updatedBlueprintData = {
+        ...blueprint.blueprint,
+        goal_stack: {
+          primary_goal: preferences.primary_goal,
+          support_style: preferences.support_style,
+          time_horizon: preferences.time_horizon
+        }
       };
 
-      // Save the updated blueprint data
-      const saveResult = await this.saveBlueprintData(blueprintData);
+      // Update the existing blueprint record
+      const { error: updateError } = await supabase
+        .from('user_blueprints')
+        .update({
+          blueprint: updatedBlueprintData,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', blueprint.id);
 
-      if (!saveResult.success) {
-        console.error("Error saving updated blueprint:", saveResult.error);
-        return { success: false, error: saveResult.error };
+      if (updateError) {
+        console.error("Error updating blueprint with preferences:", updateError);
+        return { success: false, error: updateError.message };
       }
 
+      console.log("Blueprint preferences updated successfully");
       return { success: true };
     } catch (error) {
       console.error("Unexpected error updating blueprint preferences:", error);
@@ -262,9 +290,13 @@ class BlueprintService {
 
       console.log("Saving blueprint data:", blueprintData);
 
+      // First deactivate any existing active blueprints for this user
+      await this.ensureSingleActiveBlueprint(blueprintData.user_meta.user_id);
+
+      // Now insert the new blueprint
       const { data, error } = await supabase
         .from('user_blueprints')
-        .upsert({
+        .insert({
           user_id: blueprintData.user_meta.user_id,
           blueprint: blueprintData as any, // Cast to any for JSON compatibility
           is_active: true,
