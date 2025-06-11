@@ -17,7 +17,21 @@ export const useBlueprintData = () => {
         return;
       }
 
-      setBlueprintData(data);
+      // Ensure backward compatibility by mapping new properties to legacy names
+      if (data) {
+        const compatibleData = {
+          ...data,
+          archetype_western: data.archetype_western || data.astrology,
+          archetype_chinese: data.archetype_chinese || data.astrology,
+          values_life_path: data.values_life_path || data.numerology,
+          energy_strategy_human_design: data.energy_strategy_human_design || data.human_design,
+          cognition_mbti: data.cognition_mbti || data.mbti,
+          bashar_suite: data.bashar_suite || {},
+          timing_overlays: data.timing_overlays || {}
+        };
+        setBlueprintData(compatibleData);
+      }
+
       setError(null);
     } catch (err) {
       console.error('Error fetching blueprint:', err);

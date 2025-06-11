@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -49,8 +50,61 @@ export const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint }) =
      "Accurate Astronomical Calculations") : 
     "Template Data";
   
-  // Fix the numerology section to use correct property names
-  const numerologyData = blueprint.values_life_path;
+  // Get numerology data with fallback to ensure backwards compatibility
+  const numerologyData = blueprint.values_life_path || blueprint.numerology || {
+    lifePathNumber: 1,
+    lifePathKeyword: "Leader",
+    expressionNumber: 1,
+    expressionKeyword: "Independent",
+    soulUrgeNumber: 1,
+    soulUrgeKeyword: "Ambitious",
+    birthdayNumber: 1,
+    birthdayKeyword: "Pioneer"
+  };
+
+  // Get western astrology data with fallback
+  const westernData = blueprint.archetype_western || blueprint.astrology || {
+    sun_sign: "Unknown",
+    sun_keyword: "Unknown",
+    moon_sign: "Unknown", 
+    moon_keyword: "Unknown",
+    rising_sign: "Unknown",
+    source: "template"
+  };
+
+  // Get MBTI data with fallback
+  const mbtiData = blueprint.cognition_mbti || blueprint.mbti || {
+    type: "ENFP",
+    core_keywords: ["Enthusiastic", "Creative"],
+    dominant_function: "Extraverted Intuition",
+    auxiliary_function: "Introverted Feeling"
+  };
+
+  // Get Human Design data with fallback
+  const humanDesignData = blueprint.energy_strategy_human_design || blueprint.human_design || {
+    type: "Generator",
+    profile: "2/4",
+    authority: "Sacral",
+    strategy: "Respond",
+    definition: "Single",
+    not_self_theme: "Frustration",
+    life_purpose: "To find satisfaction"
+  };
+
+  // Get Bashar suite data with fallback
+  const basharData = blueprint.bashar_suite || {
+    excitement_compass: { principle: "Follow your highest excitement" },
+    belief_interface: { principle: "Beliefs create reality", reframe_prompt: "What would I rather believe?" },
+    frequency_alignment: { quick_ritual: "Take 3 deep breaths" }
+  };
+
+  // Get Chinese astrology data with fallback
+  const chineseData = blueprint.archetype_chinese || {
+    animal: "Dragon",
+    element: "Wood", 
+    yin_yang: "Yang",
+    keyword: "Powerful"
+  };
   
   return (
     <div className="space-y-6">
@@ -120,13 +174,13 @@ export const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint }) =
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
                   <div className="text-center">
                     <h4 className="font-semibold">Sun Sign</h4>
-                    <p className="text-lg text-soul-purple">{blueprint.archetype_western.sun_sign}</p>
-                    <p className="text-sm text-gray-600">{blueprint.archetype_western.sun_keyword}</p>
+                    <p className="text-lg text-soul-purple">{westernData.sun_sign}</p>
+                    <p className="text-sm text-gray-600">{westernData.sun_keyword}</p>
                   </div>
                   <div className="text-center">
                     <h4 className="font-semibold">Moon Sign</h4>
-                    <p className="text-lg text-soul-purple">{blueprint.archetype_western.moon_sign}</p>
-                    <p className="text-sm text-gray-600">{blueprint.archetype_western.moon_keyword}</p>
+                    <p className="text-lg text-soul-purple">{westernData.moon_sign}</p>
+                    <p className="text-sm text-gray-600">{westernData.moon_keyword}</p>
                   </div>
                   <div className="text-center">
                     <h4 className="font-semibold">Life Path</h4>
@@ -148,16 +202,16 @@ export const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint }) =
             <CardContent>
               <div className="space-y-3">
                 <div>
-                  <span className="font-semibold">Type:</span> {blueprint.cognition_mbti.type}
+                  <span className="font-semibold">Type:</span> {mbtiData.type}
                 </div>
                 <div>
-                  <span className="font-semibold">Core Keywords:</span> {blueprint.cognition_mbti.core_keywords.join(", ")}
+                  <span className="font-semibold">Core Keywords:</span> {mbtiData.core_keywords?.join(", ")}
                 </div>
                 <div>
-                  <span className="font-semibold">Dominant Function:</span> {blueprint.cognition_mbti.dominant_function}
+                  <span className="font-semibold">Dominant Function:</span> {mbtiData.dominant_function}
                 </div>
                 <div>
-                  <span className="font-semibold">Auxiliary Function:</span> {blueprint.cognition_mbti.auxiliary_function}
+                  <span className="font-semibold">Auxiliary Function:</span> {mbtiData.auxiliary_function}
                 </div>
               </div>
             </CardContent>
@@ -173,25 +227,25 @@ export const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint }) =
             <CardContent>
               <div className="space-y-3">
                 <div>
-                  <span className="font-semibold">Type:</span> {blueprint.energy_strategy_human_design.type}
+                  <span className="font-semibold">Type:</span> {humanDesignData.type}
                 </div>
                 <div>
-                  <span className="font-semibold">Profile:</span> {blueprint.energy_strategy_human_design.profile}
+                  <span className="font-semibold">Profile:</span> {humanDesignData.profile}
                 </div>
                 <div>
-                  <span className="font-semibold">Authority:</span> {blueprint.energy_strategy_human_design.authority}
+                  <span className="font-semibold">Authority:</span> {humanDesignData.authority}
                 </div>
                 <div>
-                  <span className="font-semibold">Strategy:</span> {blueprint.energy_strategy_human_design.strategy}
+                  <span className="font-semibold">Strategy:</span> {humanDesignData.strategy}
                 </div>
                 <div>
-                  <span className="font-semibold">Definition:</span> {blueprint.energy_strategy_human_design.definition}
+                  <span className="font-semibold">Definition:</span> {humanDesignData.definition}
                 </div>
                 <div>
-                  <span className="font-semibold">Not-Self Theme:</span> {blueprint.energy_strategy_human_design.not_self_theme}
+                  <span className="font-semibold">Not-Self Theme:</span> {humanDesignData.not_self_theme}
                 </div>
                 <div>
-                  <span className="font-semibold">Life Purpose:</span> {blueprint.energy_strategy_human_design.life_purpose}
+                  <span className="font-semibold">Life Purpose:</span> {humanDesignData.life_purpose}
                 </div>
               </div>
             </CardContent>
@@ -208,16 +262,16 @@ export const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint }) =
               <div className="space-y-4">
                 <div>
                   <h4 className="font-semibold">Excitement Compass</h4>
-                  <p className="text-sm text-gray-600">{blueprint.bashar_suite.excitement_compass.principle}</p>
+                  <p className="text-sm text-gray-600">{basharData.excitement_compass?.principle}</p>
                 </div>
                 <div>
                   <h4 className="font-semibold">Belief Interface</h4>
-                  <p className="text-sm text-gray-600">{blueprint.bashar_suite.belief_interface.principle}</p>
-                  <p className="text-xs text-gray-500 mt-1">Reframe: {blueprint.bashar_suite.belief_interface.reframe_prompt}</p>
+                  <p className="text-sm text-gray-600">{basharData.belief_interface?.principle}</p>
+                  <p className="text-xs text-gray-500 mt-1">Reframe: {basharData.belief_interface?.reframe_prompt}</p>
                 </div>
                 <div>
                   <h4 className="font-semibold">Frequency Alignment</h4>
-                  <p className="text-sm text-gray-600">{blueprint.bashar_suite.frequency_alignment.quick_ritual}</p>
+                  <p className="text-sm text-gray-600">{basharData.frequency_alignment?.quick_ritual}</p>
                 </div>
               </div>
             </CardContent>
@@ -270,22 +324,22 @@ export const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint }) =
             <CardContent>
               <div className="space-y-3">
                 <div>
-                  <span className="font-semibold">Sun Sign:</span> {blueprint.archetype_western.sun_sign}
+                  <span className="font-semibold">Sun Sign:</span> {westernData.sun_sign}
                 </div>
                 <div>
-                  <span className="font-semibold">Sun Keyword:</span> {blueprint.archetype_western.sun_keyword}
+                  <span className="font-semibold">Sun Keyword:</span> {westernData.sun_keyword}
                 </div>
                 <div>
-                  <span className="font-semibold">Moon Sign:</span> {blueprint.archetype_western.moon_sign}
+                  <span className="font-semibold">Moon Sign:</span> {westernData.moon_sign}
                 </div>
                 <div>
-                  <span className="font-semibold">Moon Keyword:</span> {blueprint.archetype_western.moon_keyword}
+                  <span className="font-semibold">Moon Keyword:</span> {westernData.moon_keyword}
                 </div>
                 <div>
-                  <span className="font-semibold">Rising Sign:</span> {blueprint.archetype_western.rising_sign}
+                  <span className="font-semibold">Rising Sign:</span> {westernData.rising_sign}
                 </div>
                 <div>
-                  <span className="font-semibold">Source:</span> {blueprint.archetype_western.source}
+                  <span className="font-semibold">Source:</span> {westernData.source}
                 </div>
               </div>
             </CardContent>
@@ -301,16 +355,16 @@ export const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint }) =
             <CardContent>
               <div className="space-y-3">
                 <div>
-                  <span className="font-semibold">Animal:</span> {blueprint.archetype_chinese.animal}
+                  <span className="font-semibold">Animal:</span> {chineseData.animal}
                 </div>
                 <div>
-                  <span className="font-semibold">Element:</span> {blueprint.archetype_chinese.element}
+                  <span className="font-semibold">Element:</span> {chineseData.element}
                 </div>
                 <div>
-                  <span className="font-semibold">Yin Yang:</span> {blueprint.archetype_chinese.yin_yang}
+                  <span className="font-semibold">Yin Yang:</span> {chineseData.yin_yang}
                 </div>
                 <div>
-                  <span className="font-semibold">Keyword:</span> {blueprint.archetype_chinese.keyword}
+                  <span className="font-semibold">Keyword:</span> {chineseData.keyword}
                 </div>
               </div>
             </CardContent>
