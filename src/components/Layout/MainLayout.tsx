@@ -1,6 +1,7 @@
+
 import React from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Home, Star, MessageCircle, ListTodo, User } from "lucide-react";
+import { Home, Star, MessageCircle, ListTodo, User, Heart, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -50,7 +51,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
   
   return (
     <div className="flex flex-col min-h-screen cosmic-bg">
-      {/* Simple header with auth actions */}
+      {/* Header with Soul Companion always accessible */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="container mx-auto flex justify-between items-center h-16 px-4">
           <Link to="/" className="text-xl font-bold font-display gradient-text">
@@ -58,6 +59,16 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
           </Link>
           
           <div className="flex items-center gap-2">
+            {/* Soul Companion - Always accessible */}
+            {user && (
+              <Link to="/coach">
+                <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4" />
+                  <span className="hidden sm:inline">Companion</span>
+                </Button>
+              </Link>
+            )}
+            
             <LanguageSelector />
             {user ? (
               <Button variant="ghost" onClick={signOut}>{t('nav.signOut')}</Button>
@@ -74,7 +85,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
         <nav className="fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center h-16 bg-white bg-opacity-80 backdrop-blur-md border-t border-border">
           <NavItem to="/" icon={Home} label={t('nav.home')} active={path === "/"} />
           <NavItem to="/blueprint" icon={Star} label={t('nav.blueprint')} active={path.startsWith("/blueprint")} />
-          <NavItem to="/coach" icon={MessageCircle} label={t('nav.coach')} active={path.startsWith("/coach")} />
+          <NavItem to="/spiritual-growth" icon={Heart} label="Growth" active={path.startsWith("/spiritual-growth")} />
           <NavItem to="/tasks" icon={ListTodo} label={t('nav.tasks')} active={path.startsWith("/tasks")} />
           <NavItem to="/profile" icon={User} label={t('nav.profile')} active={path.startsWith("/profile")} />
         </nav>

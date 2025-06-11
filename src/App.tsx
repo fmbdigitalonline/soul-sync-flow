@@ -8,6 +8,7 @@ import Auth from "@/pages/Auth";
 import Onboarding from "@/pages/Onboarding";
 import Blueprint from "@/pages/Blueprint";
 import Coach from "@/pages/Coach";
+import SpiritualGrowth from "@/pages/SpiritualGrowth";
 import Tasks from "@/pages/Tasks";
 import Profile from "@/pages/Profile";
 import NotFound from "@/pages/NotFound";
@@ -34,6 +35,7 @@ function App() {
                   <Route path="/onboarding" element={<Onboarding />} />
                   <Route path="/blueprint" element={<ProtectedRoute><Blueprint /></ProtectedRoute>} />
                   <Route path="/coach" element={<ProtectedRoute><Coach /></ProtectedRoute>} />
+                  <Route path="/spiritual-growth" element={<ProtectedRoute><SpiritualGrowth /></ProtectedRoute>} />
                   <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
                   <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                   <Route path="/test-ephemeris" element={<TestEphemeris />} />

@@ -1,13 +1,15 @@
+
 import React, { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { SoulOrbAvatar } from "@/components/ui/avatar";
 import MainLayout from "@/components/Layout/MainLayout";
-import { ArrowRight, LogIn } from "lucide-react";
+import { ArrowRight, LogIn, Target, Heart, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useSoulOrb } from "@/contexts/SoulOrbContext";
 import { blueprintService } from "@/services/blueprint-service";
 import { useNavigate } from "react-router-dom";
+import { CosmicCard } from "@/components/ui/cosmic-card";
 
 const Index = () => {
   const { user } = useAuth();
@@ -68,6 +70,34 @@ const Index = () => {
           <p className="text-xl mb-8">
             Your personal guide to self-discovery and growth.
           </p>
+
+          {user && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 max-w-2xl mx-auto">
+              <Link to="/tasks">
+                <CosmicCard className="p-4 hover:scale-105 transition-transform cursor-pointer">
+                  <Target className="h-8 w-8 text-green-400 mx-auto mb-2" />
+                  <h3 className="font-semibold mb-1">Productivity</h3>
+                  <p className="text-xs text-muted-foreground">Goals & Tasks</p>
+                </CosmicCard>
+              </Link>
+              
+              <Link to="/spiritual-growth">
+                <CosmicCard className="p-4 hover:scale-105 transition-transform cursor-pointer">
+                  <Heart className="h-8 w-8 text-soul-purple mx-auto mb-2" />
+                  <h3 className="font-semibold mb-1">Growth</h3>
+                  <p className="text-xs text-muted-foreground">Inner Wisdom</p>
+                </CosmicCard>
+              </Link>
+              
+              <Link to="/coach">
+                <CosmicCard className="p-4 hover:scale-105 transition-transform cursor-pointer">
+                  <Sparkles className="h-8 w-8 text-blue-400 mx-auto mb-2" />
+                  <h3 className="font-semibold mb-1">Companion</h3>
+                  <p className="text-xs text-muted-foreground">Integrated Guide</p>
+                </CosmicCard>
+              </Link>
+            </div>
+          )}
           
           <div className="flex flex-col md:flex-row justify-center gap-4">
             {user ? (
@@ -83,7 +113,7 @@ const Index = () => {
                 
                 <Link to="/coach">
                   <Button size="lg" variant="outline">
-                    Chat with Soul Coach
+                    Chat with Soul Companion
                   </Button>
                 </Link>
               </>
