@@ -3,7 +3,7 @@ import React, { useRef, useEffect, useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
-import { Heart, ArrowLeft, Sparkles } from "lucide-react";
+import { Heart, ArrowLeft, Sparkles, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAICoach } from "@/hooks/use-ai-coach";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,8 +11,10 @@ import { GuideInterface } from "@/components/coach/GuideInterface";
 import { MoodTracker } from "@/components/coach/MoodTracker";
 import { ReflectionPrompts } from "@/components/coach/ReflectionPrompts";
 import { InsightJournal } from "@/components/coach/InsightJournal";
+import { WeeklyInsights } from "@/components/coach/WeeklyInsights";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { usePersonalInsights } from "@/hooks/use-personal-insights";
 import { Link } from "react-router-dom";
 
 const SpiritualGrowth = () => {
@@ -21,6 +23,8 @@ const SpiritualGrowth = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
+  
+  const { saveMoodEntry, saveReflectionEntry, saveInsightEntry } = usePersonalInsights();
 
   // Check authentication status
   useEffect(() => {
@@ -63,26 +67,17 @@ const SpiritualGrowth = () => {
     });
   };
 
-  const handleMoodSelect = (mood: string, energy: string) => {
-    const moodMessage = `I'm feeling ${mood.toLowerCase()} with ${energy.toLowerCase()} energy right now. Help me understand what this might mean for me today.`;
-    sendMessage(moodMessage);
-    toast({
-      title: "Mood shared",
-      description: `Shared your ${mood} mood with ${energy} energy`,
-    });
+  // Data collection handlers (no AI messaging)
+  const handleMoodSave = (mood: string, energy: string) => {
+    saveMoodEntry(mood, energy);
   };
 
-  const handlePromptSelect = (prompt: string) => {
-    sendMessage(prompt);
+  const handleReflectionSave = (prompt: string, response: string) => {
+    saveReflectionEntry(prompt, response);
   };
 
   const handleInsightSave = (insight: string, tags: string[]) => {
-    const insightMessage = `I want to share an insight: "${insight}". This feels like it's about: ${tags.join(', ')}. Help me explore this deeper.`;
-    sendMessage(insightMessage);
-    toast({
-      title: "Insight saved",
-      description: "Your insight has been shared with the Soul Guide",
-    });
+    saveInsightEntry(insight, tags);
   };
 
   if (!isAuthenticated) {
@@ -131,7 +126,7 @@ const SpiritualGrowth = () => {
         </div>
 
         <Tabs defaultValue="guide" className="flex-1 flex flex-col">
-          <TabsList className="grid w-full grid-cols-4 mb-4">
+          <TabsList className="grid w-full grid-cols-5 mb-4">
             <TabsTrigger value="guide" className="flex items-center gap-1">
               <Heart className="h-3 w-3" />
               <span className="text-xs">Guide</span>
@@ -146,6 +141,10 @@ const SpiritualGrowth = () => {
             <TabsTrigger value="journal" className="flex items-center gap-1">
               <span className="text-xs">Journal</span>
             </TabsTrigger>
+            <TabsTrigger value="insights" className="flex items-center gap-1">
+              <TrendingUp className="h-3 w-3" />
+              <span className="text-xs">Insights</span>
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="guide" className="flex-1">
@@ -158,15 +157,19 @@ const SpiritualGrowth = () => {
           </TabsContent>
           
           <TabsContent value="mood" className="flex-1">
-            <MoodTracker onMoodSelect={handleMoodSelect} />
+            <MoodTracker onMoodSave={handleMoodSave} />
           </TabsContent>
           
           <TabsContent value="reflect" className="flex-1">
-            <ReflectionPrompts onPromptSelect={handlePromptSelect} />
+            <ReflectionPrompts onReflectionSave={handleReflectionSave} />
           </TabsContent>
           
           <TabsContent value="journal" className="flex-1">
             <InsightJournal onInsightSave={handleInsightSave} />
+          </TabsContent>
+          
+          <TabsContent value="insights" className="flex-1 overflow-y-auto">
+            <WeeklyInsights />
           </TabsContent>
         </Tabs>
       </div>
