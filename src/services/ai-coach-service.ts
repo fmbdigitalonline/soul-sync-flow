@@ -1,5 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { PersonalityEngine } from "./personality-engine";
+import { LayeredBlueprint, AgentMode } from "@/types/personality-modules";
 
 export type AgentType = "coach" | "guide" | "blend";
 
@@ -18,11 +20,21 @@ export interface StreamingResponse {
 
 class AICoachService {
   private sessions: Map<string, string> = new Map();
+  private personalityEngine: PersonalityEngine;
+
+  constructor() {
+    this.personalityEngine = new PersonalityEngine();
+  }
 
   createNewSession(): string {
     const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     this.sessions.set(sessionId, "");
     return sessionId;
+  }
+
+  updateUserBlueprint(blueprint: Partial<LayeredBlueprint>) {
+    this.personalityEngine.updateBlueprint(blueprint);
+    console.log("Updated user blueprint in AI coach service:", blueprint);
   }
 
   async sendMessage(
@@ -33,6 +45,13 @@ class AICoachService {
     language: string = "en"
   ): Promise<{ response: string; conversationId: string }> {
     try {
+      // Generate personalized system prompt using the personality engine
+      const systemPrompt = includeBlueprint 
+        ? this.personalityEngine.generateSystemPrompt(agentType as AgentMode)
+        : null;
+
+      console.log("Generated personalized system prompt length:", systemPrompt?.length || 0);
+
       const { data, error } = await supabase.functions.invoke("ai-coach", {
         body: {
           message,
@@ -40,6 +59,7 @@ class AICoachService {
           includeBlueprint,
           agentType,
           language,
+          systemPrompt, // Pass the personalized prompt
         },
       });
 
@@ -66,6 +86,13 @@ class AICoachService {
     try {
       console.log('Starting streaming request...');
       
+      // Generate personalized system prompt using the personality engine
+      const systemPrompt = includeBlueprint 
+        ? this.personalityEngine.generateSystemPrompt(agentType as AgentMode)
+        : null;
+
+      console.log("Generated personalized system prompt for streaming, length:", systemPrompt?.length || 0);
+      
       // Make a direct fetch to the edge function with proper URL
       const response = await fetch(`https://qxaajirrqrcnmvtowjbg.supabase.co/functions/v1/ai-coach-stream`, {
         method: 'POST',
@@ -79,6 +106,7 @@ class AICoachService {
           includeBlueprint,
           agentType,
           language,
+          systemPrompt, // Pass the personalized prompt
         }),
       });
 

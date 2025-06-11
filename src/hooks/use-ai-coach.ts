@@ -2,6 +2,8 @@
 import { useState, useEffect } from "react";
 import { aiCoachService, AgentType } from "@/services/ai-coach-service";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useBlueprintData } from "./use-blueprint-data";
+import { LayeredBlueprint } from "@/types/personality-modules";
 
 export interface Message {
   id: string;
@@ -18,6 +20,89 @@ export const useAICoach = () => {
   const [currentAgent, setCurrentAgent] = useState<AgentType>("guide");
   const [currentSessionId] = useState(() => aiCoachService.createNewSession());
   const { language } = useLanguage();
+  const { blueprintData } = useBlueprintData();
+
+  // Convert blueprint data to LayeredBlueprint format and update the AI service
+  useEffect(() => {
+    if (blueprintData) {
+      console.log("Converting blueprint data for personality engine:", blueprintData);
+      
+      // Convert the raw blueprint data to LayeredBlueprint format
+      const layeredBlueprint: Partial<LayeredBlueprint> = {
+        cognitiveTemperamental: {
+          mbtiType: blueprintData.cognition_mbti?.type || "Unknown",
+          functions: blueprintData.cognition_mbti?.functions || [],
+          dominantFunction: blueprintData.cognition_mbti?.dominant_function || "Unknown",
+          auxiliaryFunction: blueprintData.cognition_mbti?.auxiliary_function || "Unknown",
+          cognitiveStack: blueprintData.cognition_mbti?.cognitive_stack || [],
+          taskApproach: blueprintData.cognition_mbti?.task_approach || "systematic",
+          communicationStyle: blueprintData.cognition_mbti?.communication_style || "clear",
+          decisionMaking: blueprintData.cognition_mbti?.decision_making || "logical",
+          informationProcessing: blueprintData.cognition_mbti?.information_processing || "sequential",
+        },
+        energyDecisionStrategy: {
+          humanDesignType: blueprintData.energy_strategy_human_design?.type || "Generator",
+          authority: blueprintData.energy_strategy_human_design?.authority || "Sacral",
+          decisionStyle: blueprintData.energy_strategy_human_design?.decision_style || "intuitive",
+          pacing: blueprintData.energy_strategy_human_design?.pacing || "steady",
+          energyType: blueprintData.energy_strategy_human_design?.energy_type || "sustainable",
+          strategy: blueprintData.energy_strategy_human_design?.strategy || "respond",
+          profile: blueprintData.energy_strategy_human_design?.profile || "1/3",
+          centers: blueprintData.energy_strategy_human_design?.centers || [],
+          gates: blueprintData.energy_strategy_human_design?.gates || [],
+          channels: blueprintData.energy_strategy_human_design?.channels || [],
+        },
+        motivationBeliefEngine: {
+          mindset: blueprintData.bashar_suite?.mindset || "growth",
+          motivation: blueprintData.bashar_suite?.motivation || ["growth", "authenticity"],
+          stateManagement: blueprintData.bashar_suite?.state_management || "awareness",
+          coreBeliefs: blueprintData.bashar_suite?.core_beliefs || ["potential"],
+          drivingForces: blueprintData.bashar_suite?.driving_forces || ["purpose"],
+          excitementCompass: blueprintData.bashar_suite?.excitement_compass || "follow joy",
+          frequencyAlignment: blueprintData.bashar_suite?.frequency_alignment || "authentic self",
+          beliefInterface: blueprintData.bashar_suite?.belief_interface || [],
+          resistancePatterns: blueprintData.bashar_suite?.resistance_patterns || [],
+        },
+        coreValuesNarrative: {
+          lifePath: blueprintData.values_life_path?.lifePathNumber || 1,
+          meaningfulAreas: blueprintData.values_life_path?.meaningful_areas || ["growth"],
+          anchoringVision: blueprintData.values_life_path?.anchoring_vision || "authentic contribution",
+          lifeThemes: blueprintData.values_life_path?.life_themes || ["self-discovery"],
+          valueSystem: blueprintData.values_life_path?.value_system || "integrity",
+          northStar: blueprintData.values_life_path?.north_star || "purposeful living",
+          missionStatement: blueprintData.values_life_path?.mission_statement || "live authentically",
+          purposeAlignment: blueprintData.values_life_path?.purpose_alignment || "high",
+        },
+        publicArchetype: {
+          sunSign: blueprintData.archetype_western?.sun_sign || "Unknown",
+          socialStyle: blueprintData.archetype_western?.social_style || "warm",
+          publicVibe: blueprintData.archetype_western?.public_vibe || "approachable",
+          publicPersona: blueprintData.archetype_western?.public_persona || "genuine",
+          leadershipStyle: blueprintData.archetype_western?.leadership_style || "collaborative",
+          socialMask: blueprintData.archetype_western?.social_mask || "authentic",
+          externalExpression: blueprintData.archetype_western?.external_expression || "natural",
+        },
+        generationalCode: {
+          chineseZodiac: blueprintData.archetype_chinese?.animal || "Unknown",
+          element: blueprintData.archetype_chinese?.element || "Unknown",
+          cohortTint: blueprintData.archetype_chinese?.cohort_tint || "balanced",
+          generationalThemes: blueprintData.archetype_chinese?.generational_themes || [],
+          collectiveInfluence: blueprintData.archetype_chinese?.collective_influence || "moderate",
+        },
+        timingOverlays: {
+          currentTransits: blueprintData.timing_overlays?.current_transits || [],
+          seasonalInfluences: blueprintData.timing_overlays?.seasonal_influences || [],
+          cyclicalPatterns: blueprintData.timing_overlays?.cyclical_patterns || [],
+          optimalTimings: blueprintData.timing_overlays?.optimal_timings || [],
+          energyWeather: blueprintData.timing_overlays?.energy_weather || "stable growth",
+        },
+      };
+
+      // Update the AI service with the user's blueprint
+      aiCoachService.updateUserBlueprint(layeredBlueprint);
+      console.log("Updated AI service with layered blueprint");
+    }
+  }, [blueprintData]);
 
   const sendMessage = async (content: string, useStreaming: boolean = true) => {
     if (!content.trim()) return;
@@ -51,7 +136,7 @@ export const useAICoach = () => {
         await aiCoachService.sendStreamingMessage(
           content,
           currentSessionId,
-          true,
+          true, // Always include blueprint for personalized responses
           currentAgent,
           language,
           {
@@ -100,7 +185,7 @@ export const useAICoach = () => {
       const response = await aiCoachService.sendMessage(
         content,
         currentSessionId,
-        true,
+        true, // Always include blueprint for personalized responses
         currentAgent,
         language
       );
