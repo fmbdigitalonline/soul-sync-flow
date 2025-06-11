@@ -66,32 +66,11 @@ class AICoachService {
     try {
       console.log('Starting streaming request...');
       
-      const { data, error } = await supabase.functions.invoke("ai-coach-stream", {
-        body: {
-          message,
-          sessionId,
-          includeBlueprint,
-          agentType,
-          language,
-        },
-      });
-
-      if (error) {
-        console.error('Supabase function invoke error:', error);
-        throw error;
-      }
-
-      console.log('Supabase function response:', data);
-
-      // For streaming, the function should return a ReadableStream directly
-      // If we get here, it means the function returned successfully but we need to handle the stream
-      
-      // Since we can't get the stream directly from supabase.functions.invoke,
-      // we'll make a direct fetch to the edge function
-      const response = await fetch(`${supabase.supabaseUrl}/functions/v1/ai-coach-stream`, {
+      // Make a direct fetch to the edge function with proper URL
+      const response = await fetch(`https://qxaajirrqrcnmvtowjbg.supabase.co/functions/v1/ai-coach-stream`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${supabase.supabaseKey}`,
+          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4YWFqaXJycXJjbm12dG93amJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM5NzQ1NDcsImV4cCI6MjA1OTU1MDU0N30.HZRTlihPe3PNQVWxNHCrwjoa9R6Wvo8WOKlQVGunYIw`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
