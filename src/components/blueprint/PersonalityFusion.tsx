@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -53,6 +52,7 @@ export const PersonalityFusion: React.FC<PersonalityFusionProps> = ({
   const [answers, setAnswers] = useState<MicroAnswer[]>([]);
   const [confidenceRating, setConfidenceRating] = useState([3]);
   const [personalityEstimate, setPersonalityEstimate] = useState<PersonalityEstimate | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Micro-interaction steps
   const steps = [
@@ -277,8 +277,22 @@ export const PersonalityFusion: React.FC<PersonalityFusionProps> = ({
     return seedEstimate;
   };
 
-  const handleConfidenceSubmit = () => {
-    if (personalityEstimate) {
+  const handleConfidenceSubmit = async () => {
+    // Prevent multiple submissions
+    if (isSubmitting) {
+      console.log("Already submitting, ignoring duplicate click");
+      return;
+    }
+
+    if (!personalityEstimate) {
+      console.error("No personality estimate available");
+      return;
+    }
+
+    console.log("Starting confidence submit...");
+    setIsSubmitting(true);
+
+    try {
       const finalResult = {
         ...personalityEstimate,
         userConfidence: confidenceRating[0] / 5,
@@ -286,7 +300,12 @@ export const PersonalityFusion: React.FC<PersonalityFusionProps> = ({
         timestamp: new Date().toISOString()
       };
       
+      console.log("Calling onChange with final result:", finalResult);
       onChange(finalResult);
+      console.log("onChange called successfully");
+    } catch (error) {
+      console.error("Error in handleConfidenceSubmit:", error);
+      setIsSubmitting(false);
     }
   };
 
@@ -415,6 +434,7 @@ export const PersonalityFusion: React.FC<PersonalityFusionProps> = ({
             min={1}
             step={1}
             className="w-full"
+            disabled={isSubmitting}
           />
           
           <div className="flex justify-center">
@@ -430,9 +450,10 @@ export const PersonalityFusion: React.FC<PersonalityFusionProps> = ({
           
           <Button 
             onClick={handleConfidenceSubmit}
+            disabled={isSubmitting}
             className="w-full bg-soul-purple hover:bg-soul-purple/90"
           >
-            Continue with this profile
+            {isSubmitting ? "Processing..." : "Continue with this profile"}
           </Button>
           
           <p className="text-xs text-center text-muted-foreground">
