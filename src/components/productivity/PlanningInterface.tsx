@@ -20,7 +20,7 @@ import {
   ChevronRight
 } from "lucide-react";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
-import { format, parseISO, isWithinInterval, startOfDay, endOfDay } from "date-fns";
+import { format, parseISO, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
 
 interface Task {
   id: string;
@@ -33,6 +33,7 @@ interface Task {
   category: string;
   optimal_time_of_day: string[];
   goal_id?: string;
+  completed?: boolean;
 }
 
 interface Goal {
@@ -51,16 +52,31 @@ export const PlanningInterface = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
 
+  console.log("ProductivityJourney current_goals:", productivityJourney?.current_goals);
+
   const currentGoals = (productivityJourney?.current_goals || []) as Goal[];
   
-  // Extract all tasks from goals and add status if not present
+  // Extract all tasks from goals and normalize them
   const allTasks: Task[] = currentGoals.flatMap(goal => 
-    goal.tasks.map(task => ({
-      ...task,
-      status: task.status || 'todo',
-      goal_id: goal.id
-    }))
+    goal.tasks.map(task => {
+      // Normalize the task to ensure it has all required properties
+      const normalizedTask: Task = {
+        id: task.id,
+        title: task.title,
+        description: task.description || '',
+        status: task.completed ? 'completed' : (task.status || 'todo'),
+        due_date: task.due_date,
+        estimated_duration: task.estimated_duration || '30 min',
+        energy_level_required: task.energy_level_required || 'medium',
+        category: task.category || 'execution',
+        optimal_time_of_day: Array.isArray(task.optimal_time_of_day) ? task.optimal_time_of_day : ['morning'],
+        goal_id: goal.id
+      };
+      return normalizedTask;
+    })
   );
+
+  console.log("Extracted and normalized tasks:", allTasks);
 
   // Group tasks by status for Kanban
   const tasksByStatus = {
@@ -70,11 +86,14 @@ export const PlanningInterface = () => {
     completed: allTasks.filter(task => task.status === 'completed')
   };
 
+  console.log("Tasks by status:", tasksByStatus);
+
   // Get tasks for selected date
   const tasksForSelectedDate = allTasks.filter(task => {
     if (!task.due_date) return false;
     try {
       const taskDate = parseISO(task.due_date);
+      if (!isValid(taskDate)) return false;
       return isWithinInterval(taskDate, {
         start: startOfDay(selectedDate),
         end: endOfDay(selectedDate)
@@ -85,12 +104,20 @@ export const PlanningInterface = () => {
   });
 
   const updateTaskStatus = async (taskId: string, newStatus: 'todo' | 'in_progress' | 'stuck' | 'completed') => {
+    console.log(`Updating task ${taskId} to status ${newStatus}`);
+    
     const updatedGoals = currentGoals.map(goal => ({
       ...goal,
       tasks: goal.tasks.map(task => 
-        task.id === taskId ? { ...task, status: newStatus } : task
+        task.id === taskId ? { 
+          ...task, 
+          status: newStatus,
+          completed: newStatus === 'completed'
+        } : task
       )
     }));
+
+    console.log("Updated goals with new task status:", updatedGoals);
 
     await updateProductivityJourney({
       current_goals: updatedGoals
@@ -184,7 +211,14 @@ export const PlanningInterface = () => {
         {task.due_date && (
           <div className="flex items-center text-xs text-muted-foreground mt-1">
             <CalendarIcon className="h-3 w-3 mr-1" />
-            {format(parseISO(task.due_date), 'MMM d')}
+            {(() => {
+              try {
+                const date = parseISO(task.due_date);
+                return isValid(date) ? format(date, 'MMM d') : 'Invalid date';
+              } catch {
+                return 'Invalid date';
+              }
+            })()}
           </div>
         )}
       </div>
@@ -256,6 +290,9 @@ export const PlanningInterface = () => {
         <p className="text-sm text-muted-foreground">
           AI-generated tasks and milestones from your goals, organized for optimal productivity
         </p>
+        <div className="mt-2 text-xs text-muted-foreground">
+          Found {allTasks.length} tasks from {currentGoals.length} goals
+        </div>
       </div>
 
       <Tabs defaultValue="kanban" className="w-full">
@@ -351,9 +388,17 @@ export const PlanningInterface = () => {
                 </div>
                 
                 <div className="grid gap-3">
-                  {goal.tasks.map(task => (
-                    <TaskCard key={task.id} task={task} />
-                  ))}
+                  {goal.tasks.map(task => {
+                    const normalizedTask: Task = {
+                      ...task,
+                      status: task.completed ? 'completed' : (task.status || 'todo'),
+                      estimated_duration: task.estimated_duration || '30 min',
+                      energy_level_required: task.energy_level_required || 'medium',
+                      category: task.category || 'execution',
+                      optimal_time_of_day: Array.isArray(task.optimal_time_of_day) ? task.optimal_time_of_day : ['morning'],
+                    };
+                    return <TaskCard key={task.id} task={normalizedTask} />;
+                  })}
                 </div>
               </div>
             ))}
