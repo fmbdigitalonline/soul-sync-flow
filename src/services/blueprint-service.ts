@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { PersonalityFusionService } from "./personality-fusion-service";
 import { PersonalityProfile } from "@/types/personality-fusion";
@@ -50,12 +49,18 @@ class BlueprintService {
         return { data: null, error: "User not authenticated" };
       }
 
+      // First, deactivate all blueprints for this user except the most recent one
+      await this.ensureSingleActiveBlueprint(user.id);
+
+      // Now fetch the single active blueprint
       const { data, error } = await supabase
         .from('user_blueprints')
         .select('*')
         .eq('user_id', user.id)
         .eq('is_active', true)
-        .single();
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(); // Use maybeSingle instead of single to handle no results gracefully
 
       if (error) {
         console.error("Error fetching active blueprint:", error);
@@ -72,6 +77,43 @@ class BlueprintService {
     } catch (error) {
       console.error("Unexpected error fetching active blueprint:", error);
       return { data: null, error: "Unexpected error occurred." };
+    }
+  }
+
+  private async ensureSingleActiveBlueprint(userId: string): Promise<void> {
+    try {
+      // Get all active blueprints for this user, ordered by most recent first
+      const { data: activeBlueprints, error } = await supabase
+        .from('user_blueprints')
+        .select('id, updated_at')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .order('updated_at', { ascending: false });
+
+      if (error || !activeBlueprints || activeBlueprints.length <= 1) {
+        // No error needed if there's 0 or 1 active blueprint
+        return;
+      }
+
+      // If there are multiple active blueprints, deactivate all except the most recent one
+      const blueprintsToDeactivate = activeBlueprints.slice(1); // Keep the first (most recent), deactivate the rest
+      
+      if (blueprintsToDeactivate.length > 0) {
+        const idsToDeactivate = blueprintsToDeactivate.map(bp => bp.id);
+        
+        const { error: updateError } = await supabase
+          .from('user_blueprints')
+          .update({ is_active: false })
+          .in('id', idsToDeactivate);
+
+        if (updateError) {
+          console.error("Error deactivating duplicate blueprints:", updateError);
+        } else {
+          console.log(`Deactivated ${blueprintsToDeactivate.length} duplicate active blueprints`);
+        }
+      }
+    } catch (error) {
+      console.error("Error ensuring single active blueprint:", error);
     }
   }
 
