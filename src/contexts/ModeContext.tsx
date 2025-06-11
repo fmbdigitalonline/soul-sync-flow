@@ -9,6 +9,7 @@ interface ModeConfig {
   theme: string;
   allowedNavItems: string[];
   restrictedMessage?: string;
+  agentType: 'coach' | 'guide' | 'blend';
 }
 
 const modeConfigs: Record<AppMode, ModeConfig> = {
@@ -16,25 +17,29 @@ const modeConfigs: Record<AppMode, ModeConfig> = {
     name: 'Productivity Mode',
     theme: 'productivity',
     allowedNavItems: ['/', '/tasks', '/coach'],
-    restrictedMessage: 'Focus on your goals. Switch to Soul Companion for full access.'
+    restrictedMessage: 'Focus on your goals. Switch to Soul Companion for full access.',
+    agentType: 'coach'
   },
   growth: {
     name: 'Growth Mode', 
     theme: 'growth',
     allowedNavItems: ['/', '/spiritual-growth', '/coach'],
-    restrictedMessage: 'Stay in reflection. Switch to Soul Companion for full access.'
+    restrictedMessage: 'Stay in reflection. Switch to Soul Companion for full access.',
+    agentType: 'guide'
   },
   companion: {
     name: 'Soul Companion',
     theme: 'companion',
     allowedNavItems: ['/', '/blueprint', '/spiritual-growth', '/tasks', '/profile', '/coach'],
-    restrictedMessage: undefined
+    restrictedMessage: undefined,
+    agentType: 'blend'
   },
   neutral: {
     name: 'Soul Guide',
     theme: 'neutral',
     allowedNavItems: ['/', '/blueprint', '/spiritual-growth', '/tasks', '/profile', '/coach'],
-    restrictedMessage: undefined
+    restrictedMessage: undefined,
+    agentType: 'blend'
   }
 };
 

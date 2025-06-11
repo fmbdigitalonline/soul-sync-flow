@@ -254,6 +254,7 @@ export type Database = {
           created_at: string | null
           id: string
           messages: Json
+          mode: string | null
           session_id: string
           updated_at: string | null
           user_id: string
@@ -262,6 +263,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           messages?: Json
+          mode?: string | null
           session_id: string
           updated_at?: string | null
           user_id: string
@@ -270,7 +272,101 @@ export type Database = {
           created_at?: string | null
           id?: string
           messages?: Json
+          mode?: string | null
           session_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      growth_journey: {
+        Row: {
+          created_at: string | null
+          current_focus_areas: Json | null
+          current_position: string | null
+          growth_milestones: Json | null
+          id: string
+          insight_entries: Json | null
+          last_reflection_date: string | null
+          mood_entries: Json | null
+          reflection_entries: Json | null
+          spiritual_practices: Json | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_focus_areas?: Json | null
+          current_position?: string | null
+          growth_milestones?: Json | null
+          id?: string
+          insight_entries?: Json | null
+          last_reflection_date?: string | null
+          mood_entries?: Json | null
+          reflection_entries?: Json | null
+          spiritual_practices?: Json | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current_focus_areas?: Json | null
+          current_position?: string | null
+          growth_milestones?: Json | null
+          id?: string
+          insight_entries?: Json | null
+          last_reflection_date?: string | null
+          mood_entries?: Json | null
+          reflection_entries?: Json | null
+          spiritual_practices?: Json | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      productivity_journey: {
+        Row: {
+          completed_goals: Json | null
+          completed_tasks: Json | null
+          created_at: string | null
+          current_goals: Json | null
+          current_position: string | null
+          current_tasks: Json | null
+          focus_sessions: Json | null
+          id: string
+          journey_milestones: Json | null
+          last_activity_date: string | null
+          productivity_metrics: Json | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_goals?: Json | null
+          completed_tasks?: Json | null
+          created_at?: string | null
+          current_goals?: Json | null
+          current_position?: string | null
+          current_tasks?: Json | null
+          focus_sessions?: Json | null
+          id?: string
+          journey_milestones?: Json | null
+          last_activity_date?: string | null
+          productivity_metrics?: Json | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_goals?: Json | null
+          completed_tasks?: Json | null
+          created_at?: string | null
+          current_goals?: Json | null
+          current_position?: string | null
+          current_tasks?: Json | null
+          focus_sessions?: Json | null
+          id?: string
+          journey_milestones?: Json | null
+          last_activity_date?: string | null
+          productivity_metrics?: Json | null
           updated_at?: string | null
           user_id?: string
         }

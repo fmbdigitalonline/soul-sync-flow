@@ -1,11 +1,10 @@
-
 import React, { useRef, useEffect, useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
 import { Heart, Sparkles, Moon, ArrowDown, ArrowUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useAICoach } from "@/hooks/use-ai-coach";
+import { useEnhancedAICoach } from "@/hooks/use-enhanced-ai-coach";
 import { supabase } from "@/integrations/supabase/client";
 import { GuideInterface } from "@/components/coach/GuideInterface";
 import { MoodTracker } from "@/components/coach/MoodTracker";
@@ -13,10 +12,10 @@ import { ReflectionPrompts } from "@/components/coach/ReflectionPrompts";
 import { InsightJournal } from "@/components/coach/InsightJournal";
 import { WeeklyInsights } from "@/components/coach/WeeklyInsights";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { usePersonalInsights } from "@/hooks/use-personal-insights";
+import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 
 const SpiritualGrowth = () => {
-  const { messages, isLoading, sendMessage, resetConversation, currentAgent, switchAgent } = useAICoach();
+  const { messages, isLoading, sendMessage, resetConversation } = useEnhancedAICoach("guide");
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [showTools, setShowTools] = useState(false);
   const [showChat, setShowChat] = useState(false);
@@ -24,7 +23,7 @@ const SpiritualGrowth = () => {
   const { toast } = useToast();
   const { t } = useLanguage();
   
-  const { saveMoodEntry, saveReflectionEntry, saveInsightEntry } = usePersonalInsights();
+  const { growthJourney, addMoodEntry, addReflectionEntry, addInsightEntry } = useJourneyTracking();
 
   // Check authentication status
   useEffect(() => {
@@ -44,13 +43,6 @@ const SpiritualGrowth = () => {
     };
   }, []);
 
-  // Set agent to guide for this page
-  useEffect(() => {
-    if (currentAgent !== "guide") {
-      switchAgent("guide");
-    }
-  }, [currentAgent, switchAgent]);
-
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -67,17 +59,17 @@ const SpiritualGrowth = () => {
     });
   };
 
-  // Data collection handlers (no AI messaging)
+  // Data collection handlers with journey tracking
   const handleMoodSave = (mood: string, energy: string) => {
-    saveMoodEntry(mood, energy);
+    addMoodEntry(mood, energy);
   };
 
   const handleReflectionSave = (prompt: string, response: string) => {
-    saveReflectionEntry(prompt, response);
+    addReflectionEntry(prompt, response);
   };
 
   const handleInsightSave = (insight: string, tags: string[]) => {
-    saveInsightEntry(insight, tags);
+    addInsightEntry(insight, tags);
   };
 
   if (!isAuthenticated) {
@@ -111,6 +103,11 @@ const SpiritualGrowth = () => {
             <span className="gradient-text">Growth Mode</span>
           </h1>
           <p className="text-sm text-muted-foreground">Inner reflection & soul wisdom</p>
+          {growthJourney && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Position: {growthJourney.current_position} • {messages.length} conversation messages
+            </p>
+          )}
         </div>
 
         {/* Soul State Check-in */}

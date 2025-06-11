@@ -5,17 +5,19 @@ import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
 import { Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useAICoach } from "@/hooks/use-ai-coach";
+import { useEnhancedAICoach } from "@/hooks/use-enhanced-ai-coach";
 import { supabase } from "@/integrations/supabase/client";
 import { BlendInterface } from "@/components/coach/BlendInterface";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 
 const Coach = () => {
-  const { messages, isLoading, sendMessage, resetConversation, currentAgent, switchAgent } = useAICoach();
+  const { messages, isLoading, sendMessage, resetConversation } = useEnhancedAICoach("blend");
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
+  const { productivityJourney, growthJourney } = useJourneyTracking();
 
   // Check authentication status
   useEffect(() => {
@@ -34,13 +36,6 @@ const Coach = () => {
       subscription.unsubscribe();
     };
   }, []);
-
-  // Set agent to blend (Soul Companion) for this page
-  useEffect(() => {
-    if (currentAgent !== "blend") {
-      switchAgent("blend");
-    }
-  }, [currentAgent, switchAgent]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -89,6 +84,11 @@ const Coach = () => {
             <span className="gradient-text">{t('coach.soulCompanion')}</span>
           </h1>
           <p className="text-sm text-muted-foreground">Your integrated life guide</p>
+          {(productivityJourney || growthJourney) && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Connected to your journey data • {messages.length} conversation messages
+            </p>
+          )}
           <Button 
             variant="ghost" 
             size="sm" 
