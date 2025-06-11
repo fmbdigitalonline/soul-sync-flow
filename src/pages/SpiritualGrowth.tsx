@@ -3,7 +3,7 @@ import React, { useRef, useEffect, useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
-import { Heart, ArrowLeft, Sparkles, TrendingUp } from "lucide-react";
+import { Heart, Sparkles, Moon, ArrowDown, ArrowUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAICoach } from "@/hooks/use-ai-coach";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,14 +12,14 @@ import { MoodTracker } from "@/components/coach/MoodTracker";
 import { ReflectionPrompts } from "@/components/coach/ReflectionPrompts";
 import { InsightJournal } from "@/components/coach/InsightJournal";
 import { WeeklyInsights } from "@/components/coach/WeeklyInsights";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePersonalInsights } from "@/hooks/use-personal-insights";
-import { Link } from "react-router-dom";
 
 const SpiritualGrowth = () => {
   const { messages, isLoading, sendMessage, resetConversation, currentAgent, switchAgent } = useAICoach();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [showTools, setShowTools] = useState(false);
+  const [showChat, setShowChat] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -87,7 +87,7 @@ const SpiritualGrowth = () => {
           <CosmicCard className="p-6 text-center">
             <Heart className="h-8 w-8 text-soul-purple mx-auto mb-4" />
             <h1 className="text-2xl font-bold font-display mb-2">
-              <span className="gradient-text">{t('coach.soulGuide')}</span>
+              <span className="gradient-text">Growth Mode</span>
             </h1>
             <p className="mb-6">{t('coach.signInRequired')}</p>
             <Button 
@@ -105,73 +105,100 @@ const SpiritualGrowth = () => {
   return (
     <MainLayout>
       <div className="flex flex-col h-[calc(100vh-5rem)] max-w-md mx-auto p-4">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <Link to="/">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-          </Link>
-          <h1 className="text-xl font-bold font-display">
-            <span className="gradient-text">{t('coach.soulGuide')}</span>
+        {/* Growth Header */}
+        <div className="text-center mb-4">
+          <h1 className="text-2xl font-bold font-display mb-1">
+            <span className="gradient-text">Growth Mode</span>
           </h1>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={handleNewConversation}
-            className="text-xs"
-          >
-            New
-          </Button>
+          <p className="text-sm text-muted-foreground">Inner reflection & soul wisdom</p>
         </div>
 
-        <Tabs defaultValue="guide" className="flex-1 flex flex-col">
-          <TabsList className="grid w-full grid-cols-5 mb-4">
-            <TabsTrigger value="guide" className="flex items-center gap-1">
-              <Heart className="h-3 w-3" />
-              <span className="text-xs">Guide</span>
-            </TabsTrigger>
-            <TabsTrigger value="mood" className="flex items-center gap-1">
-              <Sparkles className="h-3 w-3" />
-              <span className="text-xs">Mood</span>
-            </TabsTrigger>
-            <TabsTrigger value="reflect" className="flex items-center gap-1">
-              <span className="text-xs">Reflect</span>
-            </TabsTrigger>
-            <TabsTrigger value="journal" className="flex items-center gap-1">
-              <span className="text-xs">Journal</span>
-            </TabsTrigger>
-            <TabsTrigger value="insights" className="flex items-center gap-1">
-              <TrendingUp className="h-3 w-3" />
-              <span className="text-xs">Insights</span>
-            </TabsTrigger>
-          </TabsList>
+        {/* Soul State Check-in */}
+        <CosmicCard className="p-4 mb-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-medium flex items-center">
+              <Heart className="h-4 w-4 mr-2 text-soul-purple" />
+              Your Inner State
+            </h3>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowTools(!showTools)}
+              className="text-xs"
+            >
+              {showTools ? (
+                <><ArrowUp className="h-3 w-3 mr-1" /> Hide Tools</>
+              ) : (
+                <><ArrowDown className="h-3 w-3 mr-1" /> Show Tools</>
+              )}
+            </Button>
+          </div>
           
-          <TabsContent value="guide" className="flex-1">
-            <GuideInterface
-              messages={messages}
-              isLoading={isLoading}
-              onSendMessage={sendMessage}
-              messagesEndRef={messagesEndRef}
-            />
-          </TabsContent>
+          {showTools && (
+            <div className="space-y-3">
+              <MoodTracker onMoodSave={handleMoodSave} />
+              <ReflectionPrompts onReflectionSave={handleReflectionSave} />
+              <InsightJournal onInsightSave={handleInsightSave} />
+            </div>
+          )}
           
-          <TabsContent value="mood" className="flex-1">
-            <MoodTracker onMoodSave={handleMoodSave} />
-          </TabsContent>
-          
-          <TabsContent value="reflect" className="flex-1">
-            <ReflectionPrompts onReflectionSave={handleReflectionSave} />
-          </TabsContent>
-          
-          <TabsContent value="journal" className="flex-1">
-            <InsightJournal onInsightSave={handleInsightSave} />
-          </TabsContent>
-          
-          <TabsContent value="insights" className="flex-1 overflow-y-auto">
-            <WeeklyInsights />
-          </TabsContent>
-        </Tabs>
+          {!showTools && (
+            <div className="space-y-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => sendMessage("Help me check in with my current emotional and spiritual state")}
+                className="w-full text-xs border-soul-purple/30 hover:bg-soul-purple/10"
+              >
+                <Moon className="h-3 w-3 mr-2" />
+                Start Soul Check-in
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowChat(!showChat)}
+                className="w-full text-xs border-soul-purple/30 hover:bg-soul-purple/10"
+              >
+                <Sparkles className="h-3 w-3 mr-2" />
+                {showChat ? 'Hide' : 'Open'} Soul Guide
+              </Button>
+            </div>
+          )}
+        </CosmicCard>
+
+        {/* Weekly Insights */}
+        <WeeklyInsights />
+
+        {/* Expandable Soul Guide Chat */}
+        {showChat && (
+          <div className="flex-1 flex flex-col mt-4">
+            <CosmicCard className="p-3 mb-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium">{t('coach.soulGuide')}</h3>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setShowChat(false)}
+                  className="text-xs"
+                >
+                  Minimize
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Your inner wisdom and spiritual growth companion
+              </p>
+            </CosmicCard>
+            
+            <div className="flex-1 flex flex-col">
+              <GuideInterface
+                messages={messages}
+                isLoading={isLoading}
+                onSendMessage={sendMessage}
+                messagesEndRef={messagesEndRef}
+              />
+            </div>
+          </div>
+        )}
       </div>
     </MainLayout>
   );
