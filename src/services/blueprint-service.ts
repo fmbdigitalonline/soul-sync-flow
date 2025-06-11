@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { PersonalityFusionService } from "./personality-fusion-service";
 import { PersonalityProfile } from "@/types/personality-fusion";
@@ -363,5 +364,3 @@ class BlueprintService {
 }
 
 export const blueprintService = new BlueprintService();
-
-</edits_to_apply>
