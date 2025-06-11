@@ -18,11 +18,11 @@ export class BlueprintEnhancementService {
   }
 
   private static generateEnergyIdentitySection(blueprint: BlueprintData) {
-    const sunSign = blueprint.archetype_western.sun_sign;
-    const hdType = blueprint.energy_strategy_human_design.type;
-    const lifePathNumber = blueprint.values_life_path.lifePathNumber;
-    const chineseElement = blueprint.archetype_chinese.element;
-    const chineseAnimal = blueprint.archetype_chinese.animal;
+    const sunSign = blueprint.archetype_western?.sun_sign || "Unknown";
+    const hdType = blueprint.energy_strategy_human_design?.type || "Generator";
+    const lifePathNumber = blueprint.values_life_path?.lifePathNumber || 1;
+    const chineseElement = blueprint.archetype_chinese?.element || "Wood";
+    const chineseAnimal = blueprint.archetype_chinese?.animal || "Dragon";
 
     const facts = [
       `${hdType}`,
@@ -34,19 +34,19 @@ export class BlueprintEnhancementService {
     return {
       facts,
       narratives: {
-        novice: `You're a ${hdType} with ${sunSign}. This means you're designed to ${blueprint.energy_strategy_human_design.strategy.toLowerCase()}. Your Life Path ${lifePathNumber} shows you're here to be a ${blueprint.values_life_path.lifePathKeyword?.toLowerCase() || 'creator'}. As a ${chineseElement} ${chineseAnimal}, you bring ${chineseElement.toLowerCase()} energy to everything you do.`,
+        novice: `You're a ${hdType} with ${sunSign}. This means you're designed to ${blueprint.energy_strategy_human_design?.strategy?.toLowerCase() || 'respond'}. Your Life Path ${lifePathNumber} shows you're here to be a ${blueprint.values_life_path?.lifePathKeyword?.toLowerCase() || 'creator'}. As a ${chineseElement} ${chineseAnimal}, you bring ${chineseElement.toLowerCase()} energy to everything you do.`,
         
-        amateur: `As a ${hdType} with ${blueprint.energy_strategy_human_design.authority} authority, your strategy is to ${blueprint.energy_strategy_human_design.strategy.toLowerCase()}. Your ${sunSign} gives you ${blueprint.archetype_western.sun_keyword.toLowerCase()} energy, while Life Path ${lifePathNumber} indicates your soul came here to master ${blueprint.values_life_path.lifePathKeyword?.toLowerCase() || 'creative expression'}. The ${chineseElement} ${chineseAnimal} combination adds ${chineseElement.toLowerCase()} stability and ${chineseAnimal.toLowerCase()} characteristics to your energetic signature.`,
+        amateur: `As a ${hdType} with ${blueprint.energy_strategy_human_design?.authority || 'Sacral'} authority, your strategy is to ${blueprint.energy_strategy_human_design?.strategy?.toLowerCase() || 'respond'}. Your ${sunSign} gives you ${blueprint.archetype_western?.sun_keyword?.toLowerCase() || 'communication'} energy, while Life Path ${lifePathNumber} indicates your soul came here to master ${blueprint.values_life_path?.lifePathKeyword?.toLowerCase() || 'creative expression'}. The ${chineseElement} ${chineseAnimal} combination adds ${chineseElement.toLowerCase()} stability and ${chineseAnimal.toLowerCase()} characteristics to your energetic signature.`,
         
-        pro: `${hdType} with ${blueprint.energy_strategy_human_design.definition} definition and ${blueprint.energy_strategy_human_design.profile} profile. ${sunSign} creates ${blueprint.archetype_western.sun_keyword.toLowerCase()} solar expression through ${blueprint.energy_strategy_human_design.authority} decision-making authority. Life Path ${lifePathNumber} (${blueprint.values_life_path.lifePathKeyword}) intersects with Expression Number ${blueprint.values_life_path.expressionNumber} (${blueprint.values_life_path.expressionKeyword}) creating a complex mandala of ${chineseElement} ${chineseAnimal} ${blueprint.archetype_chinese.yin_yang} polarity. Strategy: ${blueprint.energy_strategy_human_design.strategy}. Not-self theme: ${blueprint.energy_strategy_human_design.not_self_theme}.`
+        pro: `${hdType} with ${blueprint.energy_strategy_human_design?.definition || 'Single'} definition and ${blueprint.energy_strategy_human_design?.profile || '2/4'} profile. ${sunSign} creates ${blueprint.archetype_western?.sun_keyword?.toLowerCase() || 'communication'} solar expression through ${blueprint.energy_strategy_human_design?.authority || 'Sacral'} decision-making authority. Life Path ${lifePathNumber} (${blueprint.values_life_path?.lifePathKeyword || 'Seeker'}) intersects with Expression Number ${blueprint.values_life_path?.expressionNumber || 5} (${blueprint.values_life_path?.expressionKeyword || 'Freedom'}) creating a complex mandala of ${chineseElement} ${chineseAnimal} ${blueprint.archetype_chinese?.yin_yang || 'Yang'} polarity. Strategy: ${blueprint.energy_strategy_human_design?.strategy || 'Respond'}. Not-self theme: ${blueprint.energy_strategy_human_design?.not_self_theme || 'Frustration'}.`
       }
     };
   }
 
   private static generateWesternSection(blueprint: BlueprintData, celestialData?: any) {
-    const sunSign = blueprint.archetype_western.sun_sign;
-    const moonSign = blueprint.archetype_western.moon_sign;
-    const risingSign = blueprint.archetype_western.rising_sign;
+    const sunSign = blueprint.archetype_western?.sun_sign || "Unknown";
+    const moonSign = blueprint.archetype_western?.moon_sign || "Unknown";
+    const risingSign = blueprint.archetype_western?.rising_sign || "Unknown";
     
     // Extract degrees if available
     const sunDegrees = this.extractDegrees(sunSign);
@@ -56,17 +56,17 @@ export class BlueprintEnhancementService {
       `☉ ${sunSign}`,
       `☽ ${moonSign}`,
       `ASC ${risingSign}`,
-      `Source: ${blueprint.archetype_western.source}`
+      `Source: ${blueprint.archetype_western?.source || 'template'}`
     ];
 
     return {
       facts,
       narratives: {
-        novice: `Your sun in ${sunSign.split(' ')[0]} makes you ${blueprint.archetype_western.sun_keyword.toLowerCase()}, while your moon in ${moonSign.split(' ')[0]} means you feel most comfortable when you're ${blueprint.archetype_western.moon_keyword.toLowerCase()}. Your rising sign shows how others see you when they first meet you.`,
+        novice: `Your sun in ${sunSign.split(' ')[0]} makes you ${blueprint.archetype_western?.sun_keyword?.toLowerCase() || 'communicative'}, while your moon in ${moonSign.split(' ')[0]} means you feel most comfortable when you're ${blueprint.archetype_western?.moon_keyword?.toLowerCase() || 'nurturing'}. Your rising sign shows how others see you when they first meet you.`,
         
-        amateur: `Your ${sunSign} creates ${blueprint.archetype_western.sun_keyword.toLowerCase()} core identity and conscious ego expression. The ${moonSign} provides ${blueprint.archetype_western.moon_keyword.toLowerCase()} emotional responses and unconscious patterns. Your ${risingSign} ascendant is your mask and first impression - how you naturally approach new situations and how the world sees you initially.`,
+        amateur: `Your ${sunSign} creates ${blueprint.archetype_western?.sun_keyword?.toLowerCase() || 'communicative'} core identity and conscious ego expression. The ${moonSign} provides ${blueprint.archetype_western?.moon_keyword?.toLowerCase() || 'nurturing'} emotional responses and unconscious patterns. Your ${risingSign} ascendant is your mask and first impression - how you naturally approach new situations and how the world sees you initially.`,
         
-        pro: `Solar placement at ${sunSign} creates ${blueprint.archetype_western.sun_keyword.toLowerCase()} conscious identity${sunDegrees ? ` at ${sunDegrees}` : ''}. Lunar expression through ${moonSign}${moonDegrees ? ` at ${moonDegrees}` : ''} provides ${blueprint.archetype_western.moon_keyword.toLowerCase()} emotional substrate and unconscious response patterns. ${risingSign} ascendant creates the persona filter through which this solar-lunar dynamic is expressed to the world. Calculated using ${blueprint.archetype_western.source} with ${blueprint.metadata.engine || 'unknown engine'}.`
+        pro: `Solar placement at ${sunSign} creates ${blueprint.archetype_western?.sun_keyword?.toLowerCase() || 'communicative'} conscious identity${sunDegrees ? ` at ${sunDegrees}` : ''}. Lunar expression through ${moonSign}${moonDegrees ? ` at ${moonDegrees}` : ''} provides ${blueprint.archetype_western?.moon_keyword?.toLowerCase() || 'nurturing'} emotional substrate and unconscious response patterns. ${risingSign} ascendant creates the persona filter through which this solar-lunar dynamic is expressed to the world. Calculated using ${blueprint.archetype_western?.source || 'template'} with ${blueprint.metadata?.engine || 'unknown engine'}.`
       },
       aspects: celestialData?.aspects || [],
       houses: celestialData?.houses || {},
@@ -75,17 +75,20 @@ export class BlueprintEnhancementService {
   }
 
   private static generateHumanDesignSection(blueprint: BlueprintData) {
-    const hd = blueprint.energy_strategy_human_design;
+    const hd = blueprint.energy_strategy_human_design || {};
+    
+    // Safely access gates with fallback
+    const gates = hd.gates || { conscious_personality: [], unconscious_design: [] };
     const definedCenters = this.getDefinedCenters(hd.centers);
-    const totalGates = hd.gates.conscious_personality.length + hd.gates.unconscious_design.length;
+    const totalGates = (gates.conscious_personality?.length || 0) + (gates.unconscious_design?.length || 0);
     const channels = this.getChannelsFromCenters(hd.centers);
 
     const facts = [
-      `${hd.type}`,
-      `${hd.strategy}`,
-      `${hd.authority}`,
-      `Profile ${hd.profile}`,
-      `${hd.definition}`,
+      `${hd.type || 'Generator'}`,
+      `${hd.strategy || 'Respond'}`,
+      `${hd.authority || 'Sacral'}`,
+      `Profile ${hd.profile || '2/4'}`,
+      `${hd.definition || 'Single'}`,
       `${definedCenters.length}/9 Centers Defined`,
       `${totalGates} Active Gates`,
       `${channels.length} Channels`
@@ -94,15 +97,15 @@ export class BlueprintEnhancementService {
     return {
       facts,
       narratives: {
-        novice: `You're a ${hd.type}! This means your strategy is to ${hd.strategy.toLowerCase()}. When making decisions, listen to your ${hd.authority.toLowerCase()} authority. You have ${definedCenters.length} out of 9 energy centers defined, which means you have consistent energy in those areas. When you don't follow your strategy, you might feel ${hd.not_self_theme.toLowerCase()}.`,
+        novice: `You're a ${hd.type || 'Generator'}! This means your strategy is to ${hd.strategy?.toLowerCase() || 'respond'}. When making decisions, listen to your ${hd.authority?.toLowerCase() || 'sacral'} authority. You have ${definedCenters.length} out of 9 energy centers defined, which means you have consistent energy in those areas. When you don't follow your strategy, you might feel ${hd.not_self_theme?.toLowerCase() || 'frustration'}.`,
         
-        amateur: `As a ${hd.type} with ${hd.authority} authority, your strategy is to ${hd.strategy.toLowerCase()}. Your ${hd.definition} means your defined centers work ${hd.definition.includes('Single') ? 'as one connected system' : 'in separate groups'}. With ${definedCenters.length}/9 centers defined (${definedCenters.join(', ')}), you have reliable energy in these areas. Your ${hd.profile} profile shows you're here to ${this.getProfileDescription(hd.profile)}.`,
+        amateur: `As a ${hd.type || 'Generator'} with ${hd.authority || 'Sacral'} authority, your strategy is to ${hd.strategy?.toLowerCase() || 'respond'}. Your ${hd.definition || 'Single'} means your defined centers work ${(hd.definition || 'Single').includes('Single') ? 'as one connected system' : 'in separate groups'}. With ${definedCenters.length}/9 centers defined (${definedCenters.join(', ')}), you have reliable energy in these areas. Your ${hd.profile || '2/4'} profile shows you're here to ${this.getProfileDescription(hd.profile || '2/4')}.`,
         
-        pro: `${hd.type} with ${hd.definition} operating through ${hd.authority} authority. Profile ${hd.profile} creates ${this.getProfileDescription(hd.profile)} incarnation cross themes. Defined centers: ${definedCenters.join(', ')} creating ${channels.length} channels: ${channels.join(', ')}. Conscious gates: ${hd.gates.conscious_personality.join(', ')}. Unconscious gates: ${hd.gates.unconscious_design.join(', ')}. Strategy: ${hd.strategy}. Not-self: ${hd.not_self_theme}. Life purpose: ${hd.life_purpose}.`
+        pro: `${hd.type || 'Generator'} with ${hd.definition || 'Single'} operating through ${hd.authority || 'Sacral'} authority. Profile ${hd.profile || '2/4'} creates ${this.getProfileDescription(hd.profile || '2/4')} incarnation cross themes. Defined centers: ${definedCenters.join(', ')} creating ${channels.length} channels: ${channels.join(', ')}. Conscious gates: ${gates.conscious_personality?.join(', ') || 'None'}. Unconscious gates: ${gates.unconscious_design?.join(', ') || 'None'}. Strategy: ${hd.strategy || 'Respond'}. Not-self: ${hd.not_self_theme || 'Frustration'}. Life purpose: ${hd.life_purpose || 'To find satisfaction'}.`
       },
       centers: this.analyzeCenters(hd.centers),
-      gates: this.combineGates(hd.gates),
-      channels: this.identifyChannels(hd.gates)
+      gates: this.combineGates(gates),
+      channels: this.identifyChannels(gates)
     };
   }
 

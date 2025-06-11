@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { PersonalityFusionService } from "./personality-fusion-service";
 import { PersonalityProfile } from "@/types/personality-fusion";
@@ -182,7 +181,12 @@ class BlueprintService {
           strategy: "Respond",
           definition: "Single",
           not_self_theme: "Frustration",
-          life_purpose: "To find satisfaction through right work"
+          life_purpose: "To find satisfaction through right work",
+          gates: {
+            conscious_personality: [],
+            unconscious_design: []
+          },
+          centers: {}
         },
         cognition_mbti: {
           type: "ENFP",
@@ -262,11 +266,11 @@ class BlueprintService {
         }
       };
 
-      // Update the existing blueprint record
+      // Update the existing blueprint record - cast back to JSON for storage
       const { error: updateError } = await supabase
         .from('user_blueprints')
         .update({
-          blueprint: updatedBlueprintData,
+          blueprint: updatedBlueprintData as any,
           updated_at: new Date().toISOString()
         })
         .eq('id', blueprint.id);
@@ -359,3 +363,5 @@ class BlueprintService {
 }
 
 export const blueprintService = new BlueprintService();
+
+</edits_to_apply>
