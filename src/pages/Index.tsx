@@ -1,20 +1,21 @@
-
 import React, { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { SoulOrbAvatar } from "@/components/ui/avatar";
 import MainLayout from "@/components/Layout/MainLayout";
-import { ArrowRight, LogIn, Target, Heart, Sparkles } from "lucide-react";
+import { ArrowRight, LogIn, Target, Heart, Sparkles, Brain } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useSoulOrb } from "@/contexts/SoulOrbContext";
 import { blueprintService } from "@/services/blueprint-service";
 import { useNavigate } from "react-router-dom";
 import { CosmicCard } from "@/components/ui/cosmic-card";
+import PersonalityDemo from "@/components/personality/PersonalityDemo";
 
 const Index = () => {
   const { user } = useAuth();
   const { speak } = useSoulOrb();
   const navigate = useNavigate();
+  const [showDemo, setShowDemo] = useState(false);
   
   // Check if returning user has a blueprint
   useEffect(() => {
@@ -54,6 +55,25 @@ const Index = () => {
       navigate("/auth");
     }
   };
+  
+  if (showDemo) {
+    return (
+      <MainLayout>
+        <div className="container mx-auto p-6">
+          <div className="mb-6">
+            <Button 
+              variant="ghost" 
+              onClick={() => setShowDemo(false)}
+              className="mb-4"
+            >
+              ← Back to Home
+            </Button>
+          </div>
+          <PersonalityDemo />
+        </div>
+      </MainLayout>
+    );
+  }
   
   return (
     <MainLayout hideNav>
@@ -98,6 +118,18 @@ const Index = () => {
               </Link>
             </div>
           )}
+
+          {/* Demo button for seeing how personalization works */}
+          <div className="mb-6">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowDemo(true)}
+              className="mb-4"
+            >
+              <Brain className="mr-2 h-4 w-4" />
+              See How Personalization Works
+            </Button>
+          </div>
           
           <div className="flex flex-col md:flex-row justify-center gap-4">
             {user ? (
