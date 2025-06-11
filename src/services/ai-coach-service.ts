@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { PersonalityEngine } from "@/services/personality-engine";
 import { blueprintService } from "@/services/blueprint-service";
@@ -132,7 +131,7 @@ export const aiCoachService = {
 
   // Convert blueprint data to personality modules format
   convertBlueprintToPersonalityModules(blueprintData: any, agentType: AgentType) {
-    console.log("Converting blueprint data to personality modules:", blueprintData);
+    console.log("Converting blueprint data to enriched personality modules:", blueprintData);
     
     // Extract all the relevant data with fallbacks
     const mbtiType = blueprintData.cognition_mbti?.type || null;
@@ -144,8 +143,12 @@ export const aiCoachService = {
     const chineseAnimal = blueprintData.archetype_chinese?.animal || null;
     const chineseElement = blueprintData.archetype_chinese?.element || null;
     
-    console.log("Extracted traits:", {
+    // Extract enriched cognitive functions
+    const cognitiveFunctions = this.extractEnrichedCognitiveFunctions(mbtiType);
+    
+    console.log("Extracted enriched traits:", {
       mbtiType,
+      cognitiveFunctions,
       sunSign,
       hdType,
       hdAuthority,
@@ -158,10 +161,14 @@ export const aiCoachService = {
     return {
       cognitiveTemperamental: {
         mbtiType: mbtiType || "Unknown",
-        functions: this.extractCognitiveFunctions(mbtiType),
+        functions: cognitiveFunctions.functions,
+        dominantFunction: cognitiveFunctions.dominant,
+        auxiliaryFunction: cognitiveFunctions.auxiliary,
+        cognitiveStack: cognitiveFunctions.stack,
         taskApproach: this.extractTaskApproach(blueprintData),
         communicationStyle: this.extractCommunicationStyle(blueprintData),
-        decisionMaking: this.extractDecisionMaking(blueprintData)
+        decisionMaking: this.extractDecisionMaking(blueprintData),
+        informationProcessing: this.extractInformationProcessing(blueprintData)
       },
       energyDecisionStrategy: {
         humanDesignType: hdType || "Unknown",
@@ -169,73 +176,162 @@ export const aiCoachService = {
         decisionStyle: this.extractDecisionStyle(blueprintData),
         pacing: this.extractPacing(blueprintData),
         energyType: hdType || "Unknown",
-        strategy: hdStrategy || "Unknown"
+        strategy: hdStrategy || "Unknown",
+        profile: this.extractHumanDesignProfile(blueprintData),
+        centers: this.extractDefinedCenters(blueprintData),
+        gates: this.extractActiveGates(blueprintData),
+        channels: this.extractActiveChannels(blueprintData)
       },
       motivationBeliefEngine: {
         mindset: this.extractMindset(blueprintData),
         motivation: this.extractMotivations(blueprintData),
         stateManagement: this.extractStateManagement(blueprintData),
         coreBeliefs: this.extractCoreBeliefs(blueprintData),
-        drivingForces: this.extractDrivingForces(blueprintData)
+        drivingForces: this.extractDrivingForces(blueprintData),
+        excitementCompass: this.extractExcitementCompass(blueprintData),
+        frequencyAlignment: this.extractFrequencyAlignment(blueprintData),
+        beliefInterface: this.extractBeliefInterface(blueprintData),
+        resistancePatterns: this.extractResistancePatterns(blueprintData)
       },
       coreValuesNarrative: {
         lifePath: lifePathNumber || 0,
         meaningfulAreas: this.extractMeaningfulAreas(blueprintData),
         anchoringVision: this.extractAnchoringVision(blueprintData),
         lifeThemes: this.extractLifeThemes(blueprintData),
-        valueSystem: this.extractValueSystem(blueprintData)
+        valueSystem: this.extractValueSystem(blueprintData),
+        northStar: this.extractNorthStar(blueprintData),
+        missionStatement: this.extractMissionStatement(blueprintData),
+        purposeAlignment: this.extractPurposeAlignment(blueprintData)
       },
       publicArchetype: {
         sunSign: sunSign || "Unknown",
         socialStyle: this.extractSocialStyle(blueprintData),
         publicVibe: this.extractPublicVibe(blueprintData),
         publicPersona: this.extractPublicPersona(blueprintData),
-        leadershipStyle: this.extractLeadershipStyle(blueprintData)
+        leadershipStyle: this.extractLeadershipStyle(blueprintData),
+        socialMask: this.extractSocialMask(blueprintData),
+        externalExpression: this.extractExternalExpression(blueprintData)
       },
       generationalCode: {
         chineseZodiac: chineseAnimal || "Unknown",
         element: chineseElement || "Unknown",
-        cohortTint: this.extractCohortTint(blueprintData)
+        cohortTint: this.extractCohortTint(blueprintData),
+        generationalThemes: this.extractGenerationalThemes(blueprintData),
+        collectiveInfluence: this.extractCollectiveInfluence(blueprintData)
       },
       surfaceExpression: {
         observableStyle: this.extractObservableStyle(blueprintData),
-        realWorldImpact: this.extractRealWorldImpact(blueprintData)
+        realWorldImpact: this.extractRealWorldImpact(blueprintData),
+        behavioralSignatures: this.extractBehavioralSignatures(blueprintData),
+        externalManifestations: this.extractExternalManifestations(blueprintData)
       },
       marketingArchetype: {
         messagingStyle: this.extractMessagingStyle(blueprintData),
-        socialHooks: this.extractSocialHooks(blueprintData)
+        socialHooks: this.extractSocialHooks(blueprintData),
+        brandPersonality: this.extractBrandPersonality(blueprintData),
+        communicationPatterns: this.extractCommunicationPatterns(blueprintData),
+        influenceStyle: this.extractInfluenceStyle(blueprintData)
       },
       goalPersona: {
         currentMode: agentType as 'coach' | 'guide' | 'blend',
         serviceRole: this.extractServiceRole(blueprintData),
-        coachingTone: this.extractCoachingTone(blueprintData)
+        coachingTone: this.extractCoachingTone(blueprintData),
+        nudgeStyle: this.extractNudgeStyle(blueprintData),
+        motivationApproach: this.extractMotivationApproach(blueprintData)
       },
       interactionPreferences: {
         rapportStyle: this.extractRapportStyle(blueprintData),
         storyPreference: this.extractStoryPreference(blueprintData),
         empathyLevel: this.extractEmpathyLevel(blueprintData),
         conflictStyle: this.extractConflictStyle(blueprintData),
-        collaborationStyle: this.extractCollaborationStyle(blueprintData)
+        collaborationStyle: this.extractCollaborationStyle(blueprintData),
+        feedbackStyle: this.extractFeedbackStyle(blueprintData),
+        learningStyle: this.extractLearningStyle(blueprintData)
+      },
+      timingOverlays: {
+        currentTransits: this.extractCurrentTransits(blueprintData),
+        seasonalInfluences: this.extractSeasonalInfluences(),
+        cyclicalPatterns: this.extractCyclicalPatterns(blueprintData),
+        optimalTimings: this.extractOptimalTimings(blueprintData),
+        energyWeather: this.extractEnergyWeather(blueprintData)
+      },
+      proactiveContext: {
+        nudgeHistory: this.extractNudgeHistory(blueprintData),
+        taskGraph: this.extractTaskGraph(blueprintData),
+        streaks: this.extractStreaks(blueprintData),
+        moodLog: this.extractMoodLog(blueprintData),
+        recentPatterns: this.extractRecentPatterns(blueprintData),
+        triggerEvents: this.extractTriggerEvents(blueprintData)
       }
     };
   },
 
-  // Enhanced extraction methods with detailed personality profiling
-  extractCognitiveFunctions(mbtiType: string | null): string[] {
-    if (!mbtiType) return ["balanced cognitive processing"];
-    
-    const functionMap: Record<string, string[]> = {
-      'INTJ': ['Ni (visionary)', 'Te (systematic)', 'Fi (values)', 'Se (experiential)'],
-      'INTP': ['Ti (analytical)', 'Ne (possibilities)', 'Si (detailed)', 'Fe (harmony)'],
-      'ENTJ': ['Te (organizing)', 'Ni (strategic)', 'Se (action)', 'Fi (personal)'],
-      'ENTP': ['Ne (innovative)', 'Ti (logical)', 'Fe (social)', 'Si (traditional)'],
-      'INFJ': ['Ni (insightful)', 'Fe (empathetic)', 'Ti (precise)', 'Se (present)'],
-      'INFP': ['Fi (authentic)', 'Ne (creative)', 'Si (personal)', 'Te (efficient)'],
-      'ENFJ': ['Fe (people-focused)', 'Ni (future-oriented)', 'Se (adaptable)', 'Ti (analytical)'],
-      'ENFP': ['Ne (enthusiastic)', 'Fi (value-driven)', 'Te (goal-oriented)', 'Si (detailed)']
+  // Enhanced MBTI cognitive functions extraction
+  extractEnrichedCognitiveFunctions(mbtiType: string | null): any {
+    if (!mbtiType) return {
+      functions: ["balanced cognitive processing"],
+      dominant: "integrated awareness",
+      auxiliary: "supportive processing", 
+      stack: ["balanced thinking", "adaptive feeling", "practical sensing", "creative intuition"]
     };
     
-    return functionMap[mbtiType] || ['balanced cognitive approach'];
+    const functionMap: Record<string, any> = {
+      'INTJ': {
+        functions: ['Ni (introverted intuition)', 'Te (extraverted thinking)', 'Fi (introverted feeling)', 'Se (extraverted sensing)'],
+        dominant: 'Ni - visionary pattern recognition',
+        auxiliary: 'Te - systematic implementation',
+        stack: ['Ni visionary insight', 'Te structured execution', 'Fi authentic values', 'Se present-moment awareness']
+      },
+      'INTP': {
+        functions: ['Ti (introverted thinking)', 'Ne (extraverted intuition)', 'Si (introverted sensing)', 'Fe (extraverted feeling)'],
+        dominant: 'Ti - logical analysis and understanding',
+        auxiliary: 'Ne - exploring possibilities and connections',
+        stack: ['Ti precise logic', 'Ne creative possibilities', 'Si detailed recall', 'Fe social harmony']
+      },
+      'ENTJ': {
+        functions: ['Te (extraverted thinking)', 'Ni (introverted intuition)', 'Se (extraverted sensing)', 'Fi (introverted feeling)'],
+        dominant: 'Te - organized external execution',
+        auxiliary: 'Ni - strategic future planning',
+        stack: ['Te decisive action', 'Ni strategic vision', 'Se adaptable presence', 'Fi personal values']
+      },
+      'ENTP': {
+        functions: ['Ne (extraverted intuition)', 'Ti (introverted thinking)', 'Fe (extraverted feeling)', 'Si (introverted sensing)'],
+        dominant: 'Ne - innovative idea generation',
+        auxiliary: 'Ti - logical framework building',
+        stack: ['Ne creative innovation', 'Ti analytical precision', 'Fe social connection', 'Si traditional grounding']
+      },
+      'INFJ': {
+        functions: ['Ni (introverted intuition)', 'Fe (extraverted feeling)', 'Ti (introverted thinking)', 'Se (extraverted sensing)'],
+        dominant: 'Ni - insightful pattern synthesis',
+        auxiliary: 'Fe - empathetic connection and harmony',
+        stack: ['Ni deep insight', 'Fe compassionate understanding', 'Ti logical precision', 'Se sensory awareness']
+      },
+      'INFP': {
+        functions: ['Fi (introverted feeling)', 'Ne (extraverted intuition)', 'Si (introverted sensing)', 'Te (extraverted thinking)'],
+        dominant: 'Fi - authentic value alignment',
+        auxiliary: 'Ne - creative possibility exploration',
+        stack: ['Fi authentic values', 'Ne creative exploration', 'Si detailed memory', 'Te practical organization']
+      },
+      'ENFJ': {
+        functions: ['Fe (extraverted feeling)', 'Ni (introverted intuition)', 'Se (extraverted sensing)', 'Ti (introverted thinking)'],
+        dominant: 'Fe - people-focused harmony and growth',
+        auxiliary: 'Ni - intuitive future visioning',
+        stack: ['Fe inspiring connection', 'Ni visionary insight', 'Se adaptive action', 'Ti logical analysis']
+      },
+      'ENFP': {
+        functions: ['Ne (extraverted intuition)', 'Fi (introverted feeling)', 'Te (extraverted thinking)', 'Si (introverted sensing)'],
+        dominant: 'Ne - enthusiastic possibility creation',
+        auxiliary: 'Fi - value-driven authenticity',
+        stack: ['Ne inspiring possibilities', 'Fi authentic passion', 'Te efficient action', 'Si grounding details']
+      }
+    };
+    
+    return functionMap[mbtiType] || {
+      functions: ['balanced cognitive approach'],
+      dominant: 'integrated awareness',
+      auxiliary: 'adaptive processing',
+      stack: ['balanced cognition']
+    };
   },
 
   extractTaskApproach(blueprintData: any): string {
@@ -566,6 +662,218 @@ export const aiCoachService = {
     if (mbti?.includes('E')) return "engaging and energizing";
     if (mbti?.includes('I')) return "thoughtful and contributing";
     return "supportive and synergistic";
+  },
+
+  extractInformationProcessing(blueprintData: any): string {
+    const mbti = blueprintData.cognition_mbti?.type;
+    if (mbti?.includes('S')) return "detailed and practical information processing";
+    if (mbti?.includes('N')) return "pattern-based and conceptual information processing";
+    return "balanced information processing";
+  },
+
+  extractHumanDesignProfile(blueprintData: any): string {
+    return blueprintData.energy_strategy_human_design?.profile || "balanced approach";
+  },
+
+  extractDefinedCenters(blueprintData: any): string[] {
+    return blueprintData.energy_strategy_human_design?.defined_centers || ["consistent energy flow"];
+  },
+
+  extractActiveGates(blueprintData: any): string[] {
+    return blueprintData.energy_strategy_human_design?.gates || ["universal connection"];
+  },
+
+  extractActiveChannels(blueprintData: any): string[] {
+    return blueprintData.energy_strategy_human_design?.channels || ["integrated flow"];
+  },
+
+  extractExcitementCompass(blueprintData: any): string {
+    return "follow your highest excitement with integrity and purpose";
+  },
+
+  extractFrequencyAlignment(blueprintData: any): string {
+    return "authentic self-expression at your natural frequency";
+  },
+
+  extractBeliefInterface(blueprintData: any): string[] {
+    return ["I am worthy of my dreams", "Life supports my highest good", "Every experience offers wisdom"];
+  },
+
+  extractResistancePatterns(blueprintData: any): string[] {
+    const lifePathNumber = blueprintData.values_life_path?.lifePathNumber;
+    const patterns = [];
+    
+    if (lifePathNumber === 1) patterns.push("fear of not being good enough");
+    if (lifePathNumber === 7) patterns.push("perfectionism and isolation");
+    if (lifePathNumber === 9) patterns.push("overwhelm from others' needs");
+    
+    patterns.push("fear of judgment", "imposter syndrome");
+    return patterns;
+  },
+
+  extractNorthStar(blueprintData: any): string {
+    const lifePathNumber = blueprintData.values_life_path?.lifePathNumber;
+    if (lifePathNumber === 1) return "authentic leadership and pioneering new paths";
+    if (lifePathNumber === 7) return "bridging wisdom between spiritual and material worlds";
+    if (lifePathNumber === 9) return "compassionate service and completion of meaningful cycles";
+    return "living authentically while contributing to the greater good";
+  },
+
+  extractMissionStatement(blueprintData: any): string {
+    const hdType = blueprintData.energy_strategy_human_design?.type;
+    if (hdType === 'Projector') return "guiding others to their highest potential through wisdom and insight";
+    if (hdType === 'Generator') return "building sustainable value through dedicated response to what lights me up";
+    if (hdType === 'Manifestor') return "initiating positive change through independent action and innovation";
+    return "expressing my authentic self while making a meaningful difference";
+  },
+
+  extractPurposeAlignment(blueprintData: any): string {
+    return "integrating all aspects of self in service of authentic contribution";
+  },
+
+  extractSocialMask(blueprintData: any): string {
+    const sunSign = blueprintData.archetype_western?.sun_sign;
+    if (sunSign === 'Leo') return "confident and radiant leader";
+    if (sunSign === 'Libra') return "harmonious and diplomatic connector";
+    if (sunSign === 'Scorpio') return "mysterious and transformative force";
+    return "authentic and approachable presence";
+  },
+
+  extractExternalExpression(blueprintData: any): string {
+    return `${this.extractSocialStyle(blueprintData)} with ${this.extractPublicVibe(blueprintData)}`;
+  },
+
+  extractGenerationalThemes(blueprintData: any): string[] {
+    const chineseAnimal = blueprintData.archetype_chinese?.animal;
+    if (['Dragon', 'Tiger', 'Horse'].includes(chineseAnimal)) return ["transformation", "dynamic change", "innovation"];
+    if (['Ox', 'Snake', 'Rooster'].includes(chineseAnimal)) return ["stability", "methodical progress", "refinement"];
+    return ["balanced evolution", "integrated wisdom"];
+  },
+
+  extractCollectiveInfluence(blueprintData: any): string {
+    return "contributing to collective consciousness through authentic self-expression";
+  },
+
+  extractBehavioralSignatures(blueprintData: any): string[] {
+    const hdType = blueprintData.energy_strategy_human_design?.type;
+    const signatures = [];
+    
+    if (hdType === 'Projector') signatures.push("waiting for recognition", "guiding others");
+    if (hdType === 'Generator') signatures.push("responding to life", "sustained building energy");
+    if (hdType === 'Manifestor') signatures.push("initiating action", "informing others");
+    
+    signatures.push("authentic self-expression", "purposeful action");
+    return signatures;
+  },
+
+  extractExternalManifestations(blueprintData: any): string[] {
+    return ["consistent personal growth", "meaningful relationships", "purposeful contribution"];
+  },
+
+  extractBrandPersonality(blueprintData: any): string {
+    const communicationStyle = this.extractCommunicationStyle(blueprintData);
+    const publicVibe = this.extractPublicVibe(blueprintData);
+    return `${communicationStyle} with ${publicVibe} energy`;
+  },
+
+  extractCommunicationPatterns(blueprintData: any): string[] {
+    const patterns = [];
+    const mbti = blueprintData.cognition_mbti?.type;
+    
+    if (mbti?.includes('E')) patterns.push("expressive sharing", "energetic engagement");
+    if (mbti?.includes('I')) patterns.push("thoughtful reflection", "deep listening");
+    if (mbti?.includes('F')) patterns.push("empathetic connection", "values-based communication");
+    if (mbti?.includes('T')) patterns.push("logical presentation", "objective analysis");
+    
+    patterns.push("authentic expression", "purposeful dialogue");
+    return patterns;
+  },
+
+  extractInfluenceStyle(blueprintData: any): string {
+    const hdType = blueprintData.energy_strategy_human_design?.type;
+    if (hdType === 'Projector') return "wisdom-based guidance and recognition";
+    if (hdType === 'Generator') return "inspiring through dedicated example";
+    if (hdType === 'Manifestor') return "catalyzing change through independent action";
+    return "authentic influence through aligned action";
+  },
+
+  extractNudgeStyle(blueprintData: any): string {
+    const authority = blueprintData.energy_strategy_human_design?.authority;
+    if (authority === 'Emotional') return "gentle emotional check-ins with patience";
+    if (authority === 'Sacral') return "body-wisdom reminders and energy awareness";
+    return "supportive encouragement aligned with natural timing";
+  },
+
+  extractMotivationApproach(blueprintData: any): string {
+    const excitementCompass = this.extractExcitementCompass(blueprintData);
+    return `${excitementCompass} with practical action steps`;
+  },
+
+  extractFeedbackStyle(blueprintData: any): string {
+    const mbti = blueprintData.cognition_mbti?.type;
+    if (mbti?.includes('F')) return "gentle and supportive with emotional attunement";
+    if (mbti?.includes('T')) return "direct and constructive with logical framework";
+    return "balanced and encouraging feedback";
+  },
+
+  extractLearningStyle(blueprintData: any): string {
+    const mbti = blueprintData.cognition_mbti?.type;
+    if (mbti?.includes('S')) return "hands-on experiential learning with practical application";
+    if (mbti?.includes('N')) return "conceptual pattern-based learning with creative exploration";
+    return "integrated learning combining theory and practice";
+  },
+
+  extractCurrentTransits(blueprintData: any): string[] {
+    // In a real implementation, this would calculate current astrological transits
+    return ["general growth phase", "integration period", "expansion opportunity"];
+  },
+
+  extractSeasonalInfluences(): string[] {
+    const month = new Date().getMonth();
+    if (month >= 2 && month <= 4) return ["spring renewal", "new growth", "creative emergence"];
+    if (month >= 5 && month <= 7) return ["summer expansion", "active manifestation", "social connection"];
+    if (month >= 8 && month <= 10) return ["autumn harvest", "integration", "wisdom gathering"];
+    return ["winter reflection", "inner wisdom", "deep restoration"];
+  },
+
+  extractCyclicalPatterns(blueprintData: any): string[] {
+    return ["monthly renewal cycles", "seasonal energy shifts", "annual growth themes"];
+  },
+
+  extractOptimalTimings(blueprintData: any): string[] {
+    const hdType = blueprintData.energy_strategy_human_design?.type;
+    if (hdType === 'Generator') return ["when energy is high", "in response to opportunities"];
+    if (hdType === 'Projector') return ["when recognized and invited", "during rest periods"];
+    if (hdType === 'Manifestor') return ["when inspiration strikes", "after informing others"];
+    return ["aligned with natural energy", "following inner guidance"];
+  },
+
+  extractEnergyWeather(blueprintData: any): string {
+    return "stable with opportunities for growth and expansion";
+  },
+
+  extractNudgeHistory(blueprintData: any): string[] {
+    return ["gentle morning check-ins", "evening reflection prompts", "celebration of progress"];
+  },
+
+  extractTaskGraph(blueprintData: any): any {
+    return blueprintData.task_graph || {};
+  },
+
+  extractStreaks(blueprintData: any): any {
+    return { current: 0, longest: 0, recent_activities: [] };
+  },
+
+  extractMoodLog(blueprintData: any): string[] {
+    return ["generally optimistic", "engaged with growth", "open to learning"];
+  },
+
+  extractRecentPatterns(blueprintData: any): string[] {
+    return ["consistent engagement", "growth-oriented activities", "authentic expression"];
+  },
+
+  extractTriggerEvents(blueprintData: any): string[] {
+    return ["goal completion", "learning milestones", "relationship insights"];
   },
 
   generateFallbackPrompt(agentType: AgentType, language: string): string {
