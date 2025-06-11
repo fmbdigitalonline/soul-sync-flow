@@ -1,5 +1,4 @@
 
-
 import { BlueprintData } from './blueprint-service';
 
 export const sampleBlueprints: BlueprintData[] = [
@@ -94,7 +93,6 @@ export const sampleBlueprints: BlueprintData[] = [
       notes: "Sample blueprint for demonstration"
     },
     goal_stack: [],
-    belief_logs: [],
     astrology: {},
     human_design: {},
     numerology: {},
