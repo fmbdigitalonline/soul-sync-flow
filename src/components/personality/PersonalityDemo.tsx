@@ -39,18 +39,23 @@ const PersonalityDemo = () => {
       motivationBeliefEngine: {
         mindset: 'growth-oriented innovator',
         motivation: ['discovery', 'impact', 'variety'],
+        stateManagement: 'energy through excitement and novelty',
         excitementCompass: 'follow highest excitement through responsive building',
         frequencyAlignment: 'authentic innovation with sustainable energy',
         coreBeliefs: ['possibilities are endless', 'growth through exploration'],
         drivingForces: ['novelty', 'understanding', 'contribution'],
+        beliefInterface: ['curiosity leads to truth', 'collaboration amplifies innovation'],
         resistancePatterns: ['routine resistance', 'completion anxiety']
       },
       coreValuesNarrative: {
         lifePath: 3,
         meaningfulAreas: ['creativity', 'communication', 'innovation'],
+        anchoringVision: 'becoming a catalyst for positive change',
         northStar: 'innovative contribution to collective growth',
         lifeThemes: ['creative expression', 'authentic communication'],
-        missionStatement: 'inspire others through creative innovation'
+        valueSystem: 'growth through authentic self-expression',
+        missionStatement: 'inspire others through creative innovation',
+        purposeAlignment: 'aligned when creating and sharing new possibilities'
       }
     },
     isfcProjector: {
@@ -80,18 +85,23 @@ const PersonalityDemo = () => {
       motivationBeliefEngine: {
         mindset: 'service-oriented guide',
         motivation: ['helping others', 'harmony', 'security'],
+        stateManagement: 'energy through meaningful service and recognition',
         excitementCompass: 'follow excitement when recognized and invited',
         frequencyAlignment: 'authentic service with emotional wisdom',
         coreBeliefs: ['people matter most', 'steady service creates value'],
         drivingForces: ['support', 'stability', 'care'],
+        beliefInterface: ['love heals all', 'patient service transforms lives'],
         resistancePatterns: ['overwhelm from others needs', 'recognition seeking']
       },
       coreValuesNarrative: {
         lifePath: 6,
         meaningfulAreas: ['service', 'relationships', 'healing'],
+        anchoringVision: 'creating safe healing spaces for growth',
         northStar: 'nurturing guide for others growth',
         lifeThemes: ['compassionate service', 'harmonious relationships'],
-        missionStatement: 'create safe spaces for others to flourish'
+        valueSystem: 'love and service as foundation of meaningful life',
+        missionStatement: 'create safe spaces for others to flourish',
+        purposeAlignment: 'aligned when helping others feel supported and valued'
       }
     }
   };
@@ -106,6 +116,8 @@ const PersonalityDemo = () => {
       timingOverlays: {
         currentTransits: personalityEnrichmentService.calculateCurrentTransits(profile),
         seasonalInfluences: ['spring activation', 'new beginnings'],
+        cyclicalPatterns: ['quarterly review cycles', 'lunar awareness'],
+        optimalTimings: ['morning clarity', 'evening reflection'],
         energyWeather: 'stable with growth opportunities'
       },
       proactiveContext: personalityEnrichmentService.generateProactiveContext(profile)
