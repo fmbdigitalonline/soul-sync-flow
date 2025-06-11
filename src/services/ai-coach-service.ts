@@ -64,6 +64,8 @@ class AICoachService {
     callbacks: StreamingResponse
   ): Promise<void> {
     try {
+      console.log('Starting streaming request...');
+      
       const { data, error } = await supabase.functions.invoke("ai-coach-stream", {
         body: {
           message,
@@ -74,15 +76,36 @@ class AICoachService {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase function invoke error:', error);
+        throw error;
+      }
 
-      // Handle the streaming response
-      const response = await fetch(data.streamUrl, {
-        method: 'GET',
+      console.log('Supabase function response:', data);
+
+      // For streaming, the function should return a ReadableStream directly
+      // If we get here, it means the function returned successfully but we need to handle the stream
+      
+      // Since we can't get the stream directly from supabase.functions.invoke,
+      // we'll make a direct fetch to the edge function
+      const response = await fetch(`${supabase.supabaseUrl}/functions/v1/ai-coach-stream`, {
+        method: 'POST',
         headers: {
-          'Accept': 'text/event-stream',
+          'Authorization': `Bearer ${supabase.supabaseKey}`,
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          message,
+          sessionId,
+          includeBlueprint,
+          agentType,
+          language,
+        }),
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       if (!response.body) {
         throw new Error('No response body');

@@ -76,14 +76,17 @@ export const useAICoach = () => {
             },
             onError: (error: Error) => {
               console.error("Streaming error:", error);
-              // Fall back to non-streaming
-              handleNonStreamingMessage(content, assistantMessageId);
+              // Remove the empty streaming message and fall back to non-streaming
+              setMessages(prev => prev.filter(msg => msg.id !== assistantMessageId));
+              handleNonStreamingMessage(content);
             }
           }
         );
       } catch (error) {
         console.error("Error with streaming, falling back:", error);
-        handleNonStreamingMessage(content, assistantMessageId);
+        // Remove the empty streaming message and fall back to non-streaming
+        setMessages(prev => prev.filter(msg => msg.id !== assistantMessageId));
+        handleNonStreamingMessage(content);
       }
     } else {
       handleNonStreamingMessage(content);
