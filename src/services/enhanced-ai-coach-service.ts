@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { PersonalityEngine } from "./personality-engine";
 import { LayeredBlueprint, AgentMode } from "@/types/personality-modules";
@@ -26,6 +25,36 @@ export interface StreamingResponse {
   onChunk: (chunk: string) => void;
   onComplete: (fullResponse: string) => void;
   onError: (error: Error) => void;
+}
+
+// Type guard functions
+function isValidChatMessage(obj: any): obj is ChatMessage {
+  return obj && 
+    typeof obj.id === 'string' && 
+    typeof obj.content === 'string' && 
+    (obj.sender === 'user' || obj.sender === 'assistant');
+}
+
+function parseChatMessages(jsonData: any): ChatMessage[] {
+  if (!Array.isArray(jsonData)) return [];
+  
+  return jsonData.filter(isValidChatMessage).map(msg => ({
+    ...msg,
+    timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date()
+  }));
+}
+
+function parseJsonArray(jsonData: any): any[] {
+  if (Array.isArray(jsonData)) return jsonData;
+  if (jsonData === null || jsonData === undefined) return [];
+  return [];
+}
+
+function getMoodFromEntry(entry: any): string {
+  if (entry && typeof entry === 'object' && 'mood' in entry) {
+    return String(entry.mood);
+  }
+  return 'Unknown';
 }
 
 class EnhancedAICoachService {
@@ -73,7 +102,7 @@ class EnhancedAICoachService {
         return [];
       }
 
-      const messages = Array.isArray(data?.messages) ? data.messages : [];
+      const messages = parseChatMessages(data?.messages);
       this.conversationCache.set(cacheKey, messages);
       return messages;
     } catch (error) {
@@ -144,11 +173,11 @@ class EnhancedAICoachService {
 
         if (productivityResult.data) {
           const productivity = productivityResult.data;
-          const currentGoals = Array.isArray(productivity.current_goals) ? productivity.current_goals : [];
-          const completedGoals = Array.isArray(productivity.completed_goals) ? productivity.completed_goals : [];
-          const currentTasks = Array.isArray(productivity.current_tasks) ? productivity.current_tasks : [];
-          const completedTasks = Array.isArray(productivity.completed_tasks) ? productivity.completed_tasks : [];
-          const focusSessions = Array.isArray(productivity.focus_sessions) ? productivity.focus_sessions : [];
+          const currentGoals = parseJsonArray(productivity.current_goals);
+          const completedGoals = parseJsonArray(productivity.completed_goals);
+          const currentTasks = parseJsonArray(productivity.current_tasks);
+          const completedTasks = parseJsonArray(productivity.completed_tasks);
+          const focusSessions = parseJsonArray(productivity.focus_sessions);
           
           contextString += `\nProductivity Journey Context:
 - Current Position: ${productivity.current_position}
@@ -162,14 +191,14 @@ class EnhancedAICoachService {
 
         if (growthResult.data) {
           const growth = growthResult.data;
-          const moodEntries = Array.isArray(growth.mood_entries) ? growth.mood_entries : [];
-          const reflectionEntries = Array.isArray(growth.reflection_entries) ? growth.reflection_entries : [];
-          const insightEntries = Array.isArray(growth.insight_entries) ? growth.insight_entries : [];
-          const currentFocusAreas = Array.isArray(growth.current_focus_areas) ? growth.current_focus_areas : [];
+          const moodEntries = parseJsonArray(growth.mood_entries);
+          const reflectionEntries = parseJsonArray(growth.reflection_entries);
+          const insightEntries = parseJsonArray(growth.insight_entries);
+          const currentFocusAreas = parseJsonArray(growth.current_focus_areas);
           
           contextString += `\nGrowth Journey Context:
 - Current Position: ${growth.current_position}
-- Recent Moods: ${moodEntries.slice(-3).map(e => e.mood).join(', ') || 'None'}
+- Recent Moods: ${moodEntries.slice(-3).map(e => getMoodFromEntry(e)).join(', ') || 'None'}
 - Reflection Entries: ${reflectionEntries.length}
 - Insight Entries: ${insightEntries.length}
 - Focus Areas: ${currentFocusAreas.join(', ') || 'None'}
@@ -183,9 +212,9 @@ class EnhancedAICoachService {
           .single();
 
         if (data) {
-          const currentGoals = Array.isArray(data.current_goals) ? data.current_goals : [];
-          const currentTasks = Array.isArray(data.current_tasks) ? data.current_tasks : [];
-          const focusSessions = Array.isArray(data.focus_sessions) ? data.focus_sessions : [];
+          const currentGoals = parseJsonArray(data.current_goals);
+          const currentTasks = parseJsonArray(data.current_tasks);
+          const focusSessions = parseJsonArray(data.focus_sessions);
           
           contextString = `\nProductivity Context:
 - Current Position: ${data.current_position}
@@ -201,13 +230,13 @@ class EnhancedAICoachService {
           .single();
 
         if (data) {
-          const moodEntries = Array.isArray(data.mood_entries) ? data.mood_entries : [];
-          const currentFocusAreas = Array.isArray(data.current_focus_areas) ? data.current_focus_areas : [];
-          const insightEntries = Array.isArray(data.insight_entries) ? data.insight_entries : [];
+          const moodEntries = parseJsonArray(data.mood_entries);
+          const currentFocusAreas = parseJsonArray(data.current_focus_areas);
+          const insightEntries = parseJsonArray(data.insight_entries);
           
           contextString = `\nGrowth Context:
 - Current Position: ${data.current_position}
-- Recent Mood: ${moodEntries.slice(-1)[0]?.mood || 'Unknown'}
+- Recent Mood: ${moodEntries.slice(-1).map(e => getMoodFromEntry(e))[0] || 'Unknown'}
 - Focus Areas: ${currentFocusAreas.join(', ') || 'None'}
 - Recent Insights: ${insightEntries.slice(-3).length}`;
         }
@@ -364,3 +393,5 @@ class EnhancedAICoachService {
 }
 
 export const enhancedAICoachService = new EnhancedAICoachService();
+
+}
