@@ -80,16 +80,29 @@ export class PersonalityFusionService {
         .limit(10);
 
       // Generate likely type from probabilities
-      const likelyType = Object.keys(scores.mbti_probabilities).reduce((a, b) => 
-        scores.mbti_probabilities[a] > scores.mbti_probabilities[b] ? a : b
+      const mbtiProbabilities = scores.mbti_probabilities as Record<string, number>;
+      const likelyType = Object.keys(mbtiProbabilities).reduce((a, b) => 
+        mbtiProbabilities[a] > mbtiProbabilities[b] ? a : b
       );
 
       const profile: PersonalityProfile = {
-        bigFive: scores.big5,
-        confidence: scores.big5_confidence,
-        mbtiProbabilities: scores.mbti_probabilities,
+        bigFive: scores.big5 as {
+          openness: number;
+          conscientiousness: number;
+          extraversion: number;
+          agreeableness: number;
+          neuroticism: number;
+        },
+        confidence: scores.big5_confidence as {
+          openness: number;
+          conscientiousness: number;
+          extraversion: number;
+          agreeableness: number;
+          neuroticism: number;
+        },
+        mbtiProbabilities,
         likelyType,
-        description: this.generateDescription(likelyType, scores.big5),
+        description: this.generateDescription(likelyType, scores.big5 as any),
         microAnswers: answers?.map(a => ({
           key: a.item_code,
           value: parseFloat(a.answer)

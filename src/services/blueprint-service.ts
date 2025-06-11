@@ -16,6 +16,7 @@ export interface UserProfile {
 
 export interface BlueprintData {
   id?: string;
+  user_id?: string; // Add user_id property
   user_meta: UserProfile;
   astrology: any;
   human_design: any;

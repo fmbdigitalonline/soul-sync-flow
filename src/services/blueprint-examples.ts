@@ -1,10 +1,8 @@
-
 import { BlueprintData } from './blueprint-service';
 
 export const sampleBlueprints: BlueprintData[] = [
   {
     id: "sample-1",
-    user_id: "sample-user-1",
     user_meta: {
       full_name: "Sample User",
       preferred_name: "Sam",
@@ -98,9 +96,10 @@ export const sampleBlueprints: BlueprintData[] = [
     excitement_scores: [],
     vibration_check_ins: [],
     belief_logs: [],
-    created_at: "2025-01-01T00:00:00Z",
-    updated_at: "2025-01-01T00:00:00Z",
-    is_active: true
+    astrology: {},
+    human_design: {},
+    numerology: {},
+    mbti: {}
   }
 ];
 
