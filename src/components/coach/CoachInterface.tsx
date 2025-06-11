@@ -18,6 +18,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Message } from "@/hooks/use-ai-coach";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface CoachInterfaceProps {
   messages: Message[];
@@ -34,6 +35,7 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
 }) => {
   const [inputValue, setInputValue] = useState("");
   const { t } = useLanguage();
+  const isMobile = useIsMobile();
 
   const handleSendMessage = () => {
     if (inputValue.trim() === "") return;
@@ -61,11 +63,11 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
 
   return (
     <>
-      {/* Progress Dashboard */}
-      <CosmicCard className="p-4 mb-4">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-medium flex items-center">
-            <Target className="h-4 w-4 mr-2 text-green-400" />
+      {/* Compact Progress Dashboard for Mobile */}
+      <CosmicCard className={cn("mb-4", isMobile ? "p-3" : "p-4")}>
+        <div className="flex items-center justify-between mb-2">
+          <h3 className={cn("font-medium flex items-center", isMobile ? "text-xs" : "text-sm")}>
+            <Target className={cn("text-green-400 mr-2", isMobile ? "h-3 w-3" : "h-4 w-4")} />
             {t('coach.todaysProgress')}
           </h3>
           <Badge variant="outline" className="text-xs">
@@ -82,29 +84,29 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
         </div>
       </CosmicCard>
 
-      {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto mb-4 space-y-4 pb-4">
+      {/* Chat Messages - Improved flex layout */}
+      <div className="flex-1 overflow-y-auto mb-4 space-y-4 pb-4 min-h-0">
         {messages.length === 0 && (
           <div className="space-y-4">
-            <div className="text-center p-6 text-muted-foreground">
-              <Target className="h-12 w-12 text-green-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium mb-1">{t('coach.ready')}</h3>
-              <p className="text-sm max-w-xs mx-auto">
+            <div className="text-center p-4 text-muted-foreground">
+              <Target className={cn("text-green-400 mx-auto mb-4", isMobile ? "h-8 w-8" : "h-12 w-12")} />
+              <h3 className={cn("font-medium mb-1", isMobile ? "text-base" : "text-lg")}>{t('coach.ready')}</h3>
+              <p className={cn("max-w-xs mx-auto", isMobile ? "text-xs" : "text-sm")}>
                 {t('coach.readyDescription')}
               </p>
             </div>
             
-            {/* Quick Actions */}
+            {/* Quick Actions - More compact on mobile */}
             <div className="space-y-2">
               <p className="text-xs font-medium text-center text-muted-foreground">{t('coach.quickStart')}</p>
-              <div className="grid grid-cols-1 gap-2">
+              <div className={cn("gap-2", isMobile ? "grid grid-cols-1" : "grid grid-cols-2")}>
                 {quickActions.map((action, index) => (
                   <Button
                     key={index}
                     variant="outline"
                     size="sm"
                     onClick={() => handleQuickAction(action)}
-                    className="justify-start text-xs h-8"
+                    className={cn("justify-start text-xs", isMobile ? "h-7" : "h-8")}
                   >
                     {action}
                   </Button>
@@ -124,7 +126,8 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
           >
             <div
               className={cn(
-                "max-w-[80%] rounded-2xl p-4",
+                "max-w-[80%] rounded-2xl",
+                isMobile ? "p-3" : "p-4",
                 message.sender === "user"
                   ? "bg-green-600 text-white"
                   : "cosmic-card border border-green-200/20"
@@ -151,13 +154,13 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
               </div>
               <p className="text-sm leading-relaxed">{message.content}</p>
               
-              {/* Action buttons for AI messages */}
+              {/* Action buttons for AI messages - More compact on mobile */}
               {message.sender === "assistant" && messages.indexOf(message) === messages.length - 1 && (
-                <div className="flex space-x-2 mt-3">
+                <div className={cn("flex mt-3", isMobile ? "flex-col space-y-1" : "space-x-2")}>
                   <Button
                     size="sm"
                     variant="outline"
-                    className="text-xs h-7"
+                    className={cn("text-xs", isMobile ? "h-6" : "h-7")}
                     onClick={() => onSendMessage("Mark this as done")}
                   >
                     <CheckCircle2 className="h-3 w-3 mr-1" />
@@ -166,7 +169,7 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
                   <Button
                     size="sm"
                     variant="outline"
-                    className="text-xs h-7"
+                    className={cn("text-xs", isMobile ? "h-6" : "h-7")}
                     onClick={() => onSendMessage("Schedule this for later")}
                   >
                     <Calendar className="h-3 w-3 mr-1" />
@@ -180,7 +183,7 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
         
         {isLoading && (
           <div className="flex justify-start">
-            <div className="cosmic-card border border-green-200/20 max-w-[80%] rounded-2xl p-4">
+            <div className={cn("cosmic-card border border-green-200/20 max-w-[80%] rounded-2xl", isMobile ? "p-3" : "p-4")}>
               <div className="flex items-center space-x-2">
                 <Target className="h-4 w-4 text-green-400" />
                 <p className="text-xs font-medium">{t('coach.soulCoach')}</p>

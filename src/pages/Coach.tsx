@@ -9,6 +9,7 @@ import { useAICoach } from "@/hooks/use-ai-coach";
 import { supabase } from "@/integrations/supabase/client";
 import { BlendInterface } from "@/components/coach/BlendInterface";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Link } from "react-router-dom";
 
 const Coach = () => {
@@ -17,6 +18,7 @@ const Coach = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
+  const isMobile = useIsMobile();
 
   // Check authentication status
   useEffect(() => {
@@ -104,12 +106,14 @@ const Coach = () => {
           </Button>
         </div>
 
-        {/* Description */}
-        <CosmicCard className="p-4 mb-4 text-center">
-          <p className="text-sm text-muted-foreground">
-            Your integrated life guide combining productivity and personal growth wisdom
-          </p>
-        </CosmicCard>
+        {/* Description - Hide on mobile to save space */}
+        {!isMobile && (
+          <CosmicCard className="p-4 mb-4 text-center">
+            <p className="text-sm text-muted-foreground">
+              Your integrated life guide combining productivity and personal growth wisdom
+            </p>
+          </CosmicCard>
+        )}
 
         {/* Soul Companion Chat Interface */}
         <BlendInterface
