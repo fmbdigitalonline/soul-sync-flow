@@ -3,19 +3,11 @@ import React, { useState } from "react";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { 
-  Heart, 
   SendHorizontal, 
   User, 
   Loader2, 
-  Sparkles,
-  Target,
-  Compass,
-  Star,
-  Zap,
-  CheckCircle,
-  Calendar
+  Sparkles
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Message } from "@/hooks/use-ai-coach";
@@ -51,84 +43,16 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
     }
   };
 
-  const quickActions = [
-    {
-      label: t('blend.setGoal'),
-      icon: Target,
-      message: t('action.setGoalMessage'),
-      category: "productivity"
-    },
-    {
-      label: t('blend.reflectToday'),
-      icon: Heart,
-      message: t('action.reflectMessage'),
-      category: "reflection"
-    },
-    {
-      label: t('blend.findBalance'),
-      icon: Compass,
-      message: t('action.balanceMessage'),
-      category: "balance"
-    },
-    {
-      label: t('blend.breakThrough'),
-      icon: Zap,
-      message: t('action.stuckMessage'),
-      category: "breakthrough"
-    }
-  ];
-
   return (
     <>
-      {/* Compact Blend Mode Dashboard */}
-      <CosmicCard className={cn("mb-4", isMobile ? "p-3" : "p-4")}>
-        <div className="flex items-center justify-between mb-2">
-          <h3 className={cn("font-medium flex items-center", isMobile ? "text-xs" : "text-sm")}>
-            <Sparkles className={cn("text-soul-purple mr-2", isMobile ? "h-3 w-3" : "h-4 w-4")} />
-            {t('blend.soulCompanion')}
-          </h3>
-          <Badge variant="outline" className="text-xs">
-            <Star className="h-3 w-3 mr-1" />
-            {t('blend.balancedGuidance')}
-          </Badge>
-        </div>
-        
-        {!isMobile && (
-          <p className="text-xs text-muted-foreground mb-3">
-            {t('blend.description')}
-          </p>
-        )}
-        
-        <div className={cn("gap-2", isMobile ? "grid grid-cols-2" : "grid grid-cols-2")}>
-          {quickActions.map((action) => {
-            const Icon = action.icon;
-            return (
-              <Button
-                key={action.label}
-                variant="outline"
-                size="sm"
-                onClick={() => onSendMessage(action.message)}
-                className={cn(
-                  "text-xs flex flex-col items-center gap-1 border-soul-purple/30 hover:bg-soul-purple/10",
-                  isMobile ? "h-auto py-1 px-2" : "h-auto py-2 px-3"
-                )}
-              >
-                <Icon className="h-3 w-3" />
-                <span className={cn("text-center leading-tight", isMobile ? "text-xs" : "")}>{action.label}</span>
-              </Button>
-            );
-          })}
-        </div>
-      </CosmicCard>
-
-      {/* Chat Messages - Improved flex layout */}
+      {/* Chat Messages - Full space for conversation */}
       <div className="flex-1 overflow-y-auto mb-4 space-y-4 pb-4 min-h-0">
         {messages.length === 0 && (
-          <div className="text-center p-4 text-muted-foreground">
+          <div className="text-center p-6 text-muted-foreground">
             <Sparkles className={cn("text-soul-purple mx-auto mb-4", isMobile ? "h-8 w-8" : "h-12 w-12")} />
-            <h3 className={cn("font-medium mb-1", isMobile ? "text-base" : "text-lg")}>{t('blend.awaits')}</h3>
+            <h3 className={cn("font-medium mb-1", isMobile ? "text-base" : "text-lg")}>Your Soul Companion awaits</h3>
             <p className={cn("max-w-xs mx-auto", isMobile ? "text-xs" : "text-sm")}>
-              {t('blend.awaitsDescription')}
+              Share anything on your mind. I'm here to understand, guide, and support your entire journey.
             </p>
           </div>
         )}
@@ -159,47 +83,8 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
                 <p className="text-xs font-medium">
                   {message.sender === "assistant" ? t('coach.soulCompanion') : t('you')}
                 </p>
-                {message.sender === "assistant" && (
-                  <Badge variant="outline" className="text-xs border-soul-purple/30">
-                    <Compass className="h-3 w-3 mr-1" />
-                    {t('balanced')}
-                  </Badge>
-                )}
               </div>
               <p className="text-sm leading-relaxed">{message.content}</p>
-              
-              {/* Action buttons for AI messages - More compact on mobile */}
-              {message.sender === "assistant" && messages.indexOf(message) === messages.length - 1 && (
-                <div className={cn("mt-3", isMobile ? "flex flex-col gap-1" : "flex flex-wrap gap-2")}>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className={cn("text-xs border-soul-purple/30", isMobile ? "h-6" : "h-7")}
-                    onClick={() => onSendMessage(t('action.actionableSteps'))}
-                  >
-                    <CheckCircle className="h-3 w-3 mr-1" />
-                    {t('blend.makeActionable')}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className={cn("text-xs border-soul-purple/30", isMobile ? "h-6" : "h-7")}
-                    onClick={() => onSendMessage(t('action.deeperMeaning'))}
-                  >
-                    <Heart className="h-3 w-3 mr-1" />
-                    {t('blend.goDeeper')}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className={cn("text-xs border-soul-purple/30", isMobile ? "h-6" : "h-7")}
-                    onClick={() => onSendMessage(t('action.blueprintSays'))}
-                  >
-                    <Star className="h-3 w-3 mr-1" />
-                    {t('blend.blueprintWisdom')}
-                  </Button>
-                </div>
-              )}
             </div>
           </div>
         ))}
@@ -213,7 +98,7 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
               </div>
               <div className="flex items-center space-x-2 mt-2">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <p className="text-sm">{t('blend.finding')}</p>
+                <p className="text-sm">Understanding your soul...</p>
               </div>
             </div>
           </div>
@@ -228,7 +113,7 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyPress}
-            placeholder={t('blend.inputPlaceholder')}
+            placeholder="Share what's on your mind..."
             className="flex-1"
             disabled={isLoading}
           />
@@ -242,7 +127,7 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
           </Button>
         </CosmicCard>
         <p className="text-xs text-center text-muted-foreground mt-2">
-          {t('blend.poweredBy')}
+          Your complete life companion - integrating all aspects of your journey
         </p>
       </div>
     </>
