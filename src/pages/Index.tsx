@@ -44,8 +44,8 @@ const Index = () => {
     if (user) {
       blueprintService.getActiveBlueprintData().then(({ data }) => {
         if (data) {
-          // If they have a blueprint, go to blueprint page
-          navigate("/blueprint");
+          // If they have a blueprint, stay on home page - they're already here
+          speak("Your Soul Blueprint is ready! Explore the features below.");
         } else {
           // If no blueprint, start onboarding
           navigate("/onboarding");

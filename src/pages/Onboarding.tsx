@@ -157,7 +157,7 @@ export default function Onboarding() {
     }, 1500);
   };
 
-  // Handle goal selection completion with improved error handling and development mode support
+  // Handle goal selection completion - MODIFIED to redirect to home page
   const handleGoalSelectionComplete = async (preferences: { 
     primary_goal: string; 
     support_style: number; 
@@ -184,15 +184,16 @@ export default function Onboarding() {
       if (success) {
         console.log("Blueprint updated with coaching preferences successfully");
         toast({
-          title: "Preferences Saved",
-          description: "Your coaching preferences have been saved to your blueprint.",
+          title: "Welcome to SoulSync!",
+          description: "Your Soul Blueprint is complete. Welcome to your personalized journey.",
         });
         
-        speak("Perfect! Your preferences have been saved. Welcome to SoulSync!");
+        speak("Perfect! Your Soul Blueprint is complete. Welcome to SoulSync!");
         
+        // Redirect to home page after onboarding is fully complete
         setTimeout(() => {
-          navigate("/blueprint", { replace: true });
-        }, 1000);
+          navigate("/", { replace: true });
+        }, 2000);
       } else {
         console.error("Error updating blueprint preferences:", error);
         throw new Error(error || "Failed to save your preferences");
@@ -265,19 +266,19 @@ export default function Onboarding() {
             console.log("Development mode: Existing blueprint found but allowing onboarding continuation");
             toast({
               title: "Development Mode",
-              description: "Existing blueprint found. You can continue with onboarding or go to blueprint page.",
+              description: "Existing blueprint found. You can continue with onboarding or go to home page.",
             });
             return;
           }
           
-          console.log("Existing blueprint found, redirecting to blueprint page");
+          console.log("Existing blueprint found, redirecting to home page");
           toast({
             title: "Welcome Back!",
-            description: "You already have a Soul Blueprint. Redirecting you to view it.",
+            description: "You already have a Soul Blueprint. Welcome to your personalized journey.",
           });
           
           setTimeout(() => {
-            navigate("/blueprint", { replace: true });
+            navigate("/", { replace: true });
           }, 1000);
         }
       } catch (error) {
