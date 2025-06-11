@@ -12,7 +12,9 @@ import {
   Sparkles,
   Moon,
   Star,
-  Compass
+  Compass,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Message } from "@/hooks/use-ai-coach";
@@ -35,6 +37,7 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
   messagesEndRef,
 }) => {
   const [inputValue, setInputValue] = useState("");
+  const [showTools, setShowTools] = useState(false);
   const [showMoodTracker, setShowMoodTracker] = useState(false);
   const [showReflectionPrompts, setShowReflectionPrompts] = useState(false);
   const [showInsightJournal, setShowInsightJournal] = useState(false);
@@ -44,6 +47,11 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
     if (inputValue.trim() === "") return;
     onSendMessage(inputValue);
     setInputValue("");
+    // Close tools when sending a message
+    setShowTools(false);
+    setShowMoodTracker(false);
+    setShowReflectionPrompts(false);
+    setShowInsightJournal(false);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -56,67 +64,101 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
     const moodMessage = `I'm feeling ${mood.toLowerCase()} with ${energy.toLowerCase()} energy right now. Help me understand what this might mean for me today.`;
     onSendMessage(moodMessage);
     setShowMoodTracker(false);
+    setShowTools(false);
   };
 
   const handleInsightSave = (insight: string, tags: string[]) => {
     const insightMessage = `I want to share an insight: "${insight}". This feels like it's about: ${tags.join(', ')}. Help me explore this deeper.`;
     onSendMessage(insightMessage);
     setShowInsightJournal(false);
+    setShowTools(false);
+  };
+
+  const handlePromptSelect = (prompt: string) => {
+    onSendMessage(prompt);
+    setShowReflectionPrompts(false);
+    setShowTools(false);
   };
 
   return (
     <>
-      {/* Soul Compass Dashboard */}
+      {/* Collapsible Soul Compass Dashboard */}
       <CosmicCard className="p-4 mb-4">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-medium flex items-center">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
             <Heart className="h-4 w-4 mr-2 text-soul-purple" />
-            {t('guide.innerCompass')}
-          </h3>
-          <Badge variant="outline" className="text-xs">
-            <Moon className="h-3 w-3 mr-1" />
-            {t('guide.reflectionMode')}
-          </Badge>
+            <h3 className="text-sm font-medium">{t('guide.innerCompass')}</h3>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-xs">
+              <Moon className="h-3 w-3 mr-1" />
+              {t('guide.reflectionMode')}
+            </Badge>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowTools(!showTools)}
+              className="h-6 w-6 p-0"
+            >
+              {showTools ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </Button>
+          </div>
         </div>
         
-        <div className="flex gap-2 mb-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowMoodTracker(!showMoodTracker)}
-            className="text-xs h-7 border-soul-purple/30"
-          >
-            <Heart className="h-3 w-3 mr-1" />
-            {t('guide.checkIn')}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowReflectionPrompts(!showReflectionPrompts)}
-            className="text-xs h-7 border-soul-purple/30"
-          >
-            <Sparkles className="h-3 w-3 mr-1" />
-            {t('guide.reflect')}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowInsightJournal(!showInsightJournal)}
-            className="text-xs h-7 border-soul-purple/30"
-          >
-            <Star className="h-3 w-3 mr-1" />
-            {t('guide.journal')}
-          </Button>
-        </div>
-        
-        <div className="text-xs text-muted-foreground">
-          {t('guide.description')}
-        </div>
+        {showTools && (
+          <div className="mt-3 space-y-3">
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setShowMoodTracker(!showMoodTracker);
+                  setShowReflectionPrompts(false);
+                  setShowInsightJournal(false);
+                }}
+                className="text-xs h-7 border-soul-purple/30"
+              >
+                <Heart className="h-3 w-3 mr-1" />
+                {t('guide.checkIn')}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setShowReflectionPrompts(!showReflectionPrompts);
+                  setShowMoodTracker(false);
+                  setShowInsightJournal(false);
+                }}
+                className="text-xs h-7 border-soul-purple/30"
+              >
+                <Sparkles className="h-3 w-3 mr-1" />
+                {t('guide.reflect')}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setShowInsightJournal(!showInsightJournal);
+                  setShowMoodTracker(false);
+                  setShowReflectionPrompts(false);
+                }}
+                className="text-xs h-7 border-soul-purple/30"
+              >
+                <Star className="h-3 w-3 mr-1" />
+                {t('guide.journal')}
+              </Button>
+            </div>
+            
+            <div className="text-xs text-muted-foreground">
+              {t('guide.description')}
+            </div>
+          </div>
+        )}
       </CosmicCard>
 
       {/* Conditional Components */}
       {showMoodTracker && <MoodTracker onMoodSelect={handleMoodSelect} />}
-      {showReflectionPrompts && <ReflectionPrompts onPromptSelect={onSendMessage} />}
+      {showReflectionPrompts && <ReflectionPrompts onPromptSelect={handlePromptSelect} />}
       {showInsightJournal && <InsightJournal onInsightSave={handleInsightSave} />}
 
       {/* Chat Messages */}
@@ -131,7 +173,7 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
           </div>
         )}
         
-        {messages.map((message) => (
+        {messages.map((message, index) => (
           <div
             key={message.id}
             className={cn(
@@ -141,13 +183,13 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
           >
             <div
               className={cn(
-                "max-w-[80%] rounded-2xl p-4",
+                "max-w-[85%] rounded-2xl p-4",
                 message.sender === "user"
                   ? "bg-soul-purple text-white"
                   : "cosmic-card border border-soul-purple/20"
               )}
             >
-              <div className="flex items-center space-x-2 mb-1">
+              <div className="flex items-center space-x-2 mb-2">
                 {message.sender === "assistant" ? (
                   <Heart className="h-4 w-4 text-soul-purple" />
                 ) : (
@@ -163,15 +205,18 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
                   </Badge>
                 )}
               </div>
-              <div className="text-sm leading-relaxed">
+              <div className="text-sm leading-relaxed whitespace-pre-wrap">
                 {message.content}
                 {message.isStreaming && (
                   <span className="inline-block w-2 h-4 bg-soul-purple/60 ml-1 animate-pulse" />
                 )}
               </div>
               
-              {/* Reflection buttons for AI messages */}
-              {message.sender === "assistant" && !message.isStreaming && messages.indexOf(message) === messages.length - 1 && (
+              {/* Reflection buttons for latest AI message only */}
+              {message.sender === "assistant" && 
+               !message.isStreaming && 
+               index === messages.length - 1 && 
+               messages.length > 1 && (
                 <div className="flex space-x-2 mt-3">
                   <Button
                     size="sm"
@@ -199,12 +244,12 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
         
         {isLoading && (
           <div className="flex justify-start">
-            <div className="cosmic-card border border-soul-purple/20 max-w-[80%] rounded-2xl p-4">
-              <div className="flex items-center space-x-2">
+            <div className="cosmic-card border border-soul-purple/20 max-w-[85%] rounded-2xl p-4">
+              <div className="flex items-center space-x-2 mb-2">
                 <Heart className="h-4 w-4 text-soul-purple" />
                 <p className="text-xs font-medium">{t('coach.soulGuide')}</p>
               </div>
-              <div className="flex items-center space-x-2 mt-2">
+              <div className="flex items-center space-x-2">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 <p className="text-sm">{t('guide.reflecting')}</p>
               </div>

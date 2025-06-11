@@ -93,7 +93,7 @@ class AICoachService {
 
       console.log("Generated personalized system prompt for streaming, length:", systemPrompt?.length || 0);
       
-      // Make a direct fetch to the edge function with proper URL
+      // Make a direct fetch to the edge function
       const response = await fetch(`https://qxaajirrqrcnmvtowjbg.supabase.co/functions/v1/ai-coach-stream`, {
         method: 'POST',
         headers: {
@@ -106,7 +106,7 @@ class AICoachService {
           includeBlueprint,
           agentType,
           language,
-          systemPrompt, // Pass the personalized prompt
+          systemPrompt,
         }),
       });
 
@@ -121,6 +121,7 @@ class AICoachService {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let fullResponse = '';
+      let buffer = '';
 
       try {
         while (true) {
@@ -129,11 +130,15 @@ class AICoachService {
           if (done) break;
           
           const chunk = decoder.decode(value, { stream: true });
+          buffer += chunk;
           
-          // Split by lines to handle multiple SSE events in one chunk
-          const lines = chunk.split('\n');
+          // Process complete lines
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || ''; // Keep incomplete line in buffer
           
           for (const line of lines) {
+            if (line.trim() === '') continue;
+            
             if (line.startsWith('data: ')) {
               const data = line.slice(6).trim();
               
@@ -142,17 +147,17 @@ class AICoachService {
                 return;
               }
               
-              if (data) {
+              if (data && data !== '[DONE]') {
                 try {
                   const parsed = JSON.parse(data);
-                  if (parsed.choices?.[0]?.delta?.content) {
-                    const content = parsed.choices[0].delta.content;
+                  const content = parsed.choices?.[0]?.delta?.content;
+                  
+                  if (content) {
                     fullResponse += content;
                     callbacks.onChunk(content);
                   }
-                } catch (e) {
-                  // Skip lines that aren't valid JSON
-                  console.log('Skipping non-JSON line:', data);
+                } catch (parseError) {
+                  console.log('Skipping non-JSON data:', data);
                 }
               }
             }

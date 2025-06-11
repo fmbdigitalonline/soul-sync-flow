@@ -52,12 +52,21 @@ DOMEIN: Zelfbegrip, emoties, relaties, levensbetekenis, spirituele groei.
 STIJL: Reflectief, validatie, wijsheid-gericht. Creëer ruimte voor diepere verkenning.
 GRENZEN: Geef GEEN productiviteitsadvies of doelstellingsstrategieën.
 
-BELANGRIJK: Reageer ALTIJD in het Nederlands. Gebruik Nederlandse woorden en zinsbouw.`
+BELANGRIJK: 
+- Reageer ALTIJD in het Nederlands
+- Gebruik korte alinea's (1-3 zinnen per alinea)
+- Begin elk nieuw punt op een nieuwe regel
+- Gebruik spaties tussen alinea's voor leesbaarheid`
             : `You are the Soul Guide, focused EXCLUSIVELY on personal growth and life wisdom. ${baseContext}
 
 DOMAIN: Self-understanding, emotions, relationships, life meaning, spiritual growth.
 STYLE: Reflective, validating, wisdom-focused. Create space for deeper exploration.
-BOUNDARIES: Do NOT give productivity advice or goal-setting strategies.`;
+BOUNDARIES: Do NOT give productivity advice or goal-setting strategies.
+
+IMPORTANT: 
+- Use short paragraphs (1-3 sentences each)
+- Start new points on new lines
+- Use line breaks between paragraphs for readability`;
 
         default:
           return baseContext;
@@ -75,7 +84,7 @@ BOUNDARIES: Do NOT give productivity advice or goal-setting strategies.`;
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              model: 'gpt-4-1106-preview',
+              model: 'gpt-4o-mini',
               messages: [
                 {
                   role: 'system',
@@ -108,7 +117,9 @@ BOUNDARIES: Do NOT give productivity advice or goal-setting strategies.`;
               const { done, value } = await reader.read();
               
               if (done) {
-                controller.enqueue(new TextEncoder().encode("data: [DONE]\n\n"));
+                // Send final [DONE] message
+                const encoder = new TextEncoder();
+                controller.enqueue(encoder.encode("data: [DONE]\n\n"));
                 break;
               }
 
@@ -117,20 +128,25 @@ BOUNDARIES: Do NOT give productivity advice or goal-setting strategies.`;
               
               for (const line of lines) {
                 if (line.startsWith('data: ')) {
-                  const data = line.slice(6);
-                  if (data.trim() === '[DONE]') {
-                    controller.enqueue(new TextEncoder().encode("data: [DONE]\n\n"));
+                  const data = line.slice(6).trim();
+                  
+                  if (data === '[DONE]') {
+                    const encoder = new TextEncoder();
+                    controller.enqueue(encoder.encode("data: [DONE]\n\n"));
                     controller.close();
                     return;
                   }
                   
-                  try {
-                    const parsed = JSON.parse(data);
-                    if (parsed.choices?.[0]?.delta?.content) {
-                      controller.enqueue(new TextEncoder().encode(`data: ${data}\n\n`));
+                  if (data && data !== '[DONE]') {
+                    try {
+                      const parsed = JSON.parse(data);
+                      if (parsed.choices?.[0]?.delta?.content) {
+                        const encoder = new TextEncoder();
+                        controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+                      }
+                    } catch (e) {
+                      // Skip invalid JSON
                     }
-                  } catch (e) {
-                    // Skip invalid JSON
                   }
                 }
               }
