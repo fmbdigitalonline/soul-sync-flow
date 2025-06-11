@@ -56,6 +56,7 @@ export const useAICoach = () => {
           language,
           {
             onChunk: (chunk: string) => {
+              console.log('Received chunk:', chunk);
               setMessages(prev => 
                 prev.map(msg => 
                   msg.id === assistantMessageId 
@@ -65,6 +66,7 @@ export const useAICoach = () => {
               );
             },
             onComplete: (fullResponse: string) => {
+              console.log('Streaming complete, full response length:', fullResponse.length);
               setMessages(prev => 
                 prev.map(msg => 
                   msg.id === assistantMessageId 

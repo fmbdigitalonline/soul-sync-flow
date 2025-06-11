@@ -101,25 +101,31 @@ class AICoachService {
           if (done) break;
           
           const chunk = decoder.decode(value, { stream: true });
+          
+          // Split by lines to handle multiple SSE events in one chunk
           const lines = chunk.split('\n');
           
           for (const line of lines) {
             if (line.startsWith('data: ')) {
-              const data = line.slice(6);
+              const data = line.slice(6).trim();
+              
               if (data === '[DONE]') {
                 callbacks.onComplete(fullResponse);
                 return;
               }
               
-              try {
-                const parsed = JSON.parse(data);
-                if (parsed.choices?.[0]?.delta?.content) {
-                  const content = parsed.choices[0].delta.content;
-                  fullResponse += content;
-                  callbacks.onChunk(content);
+              if (data) {
+                try {
+                  const parsed = JSON.parse(data);
+                  if (parsed.choices?.[0]?.delta?.content) {
+                    const content = parsed.choices[0].delta.content;
+                    fullResponse += content;
+                    callbacks.onChunk(content);
+                  }
+                } catch (e) {
+                  // Skip lines that aren't valid JSON
+                  console.log('Skipping non-JSON line:', data);
                 }
-              } catch (e) {
-                // Ignore JSON parse errors for non-JSON lines
               }
             }
           }
@@ -128,7 +134,10 @@ class AICoachService {
         reader.releaseLock();
       }
       
-      callbacks.onComplete(fullResponse);
+      // If we reach here without getting [DONE], still call onComplete
+      if (fullResponse) {
+        callbacks.onComplete(fullResponse);
+      }
     } catch (error) {
       console.error("Error in streaming AI coach service:", error);
       callbacks.onError(error as Error);
