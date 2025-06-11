@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { PersonalityEngine } from "./personality-engine";
 import { LayeredBlueprint, AgentMode } from "@/types/personality-modules";
@@ -393,5 +394,3 @@ class EnhancedAICoachService {
 }
 
 export const enhancedAICoachService = new EnhancedAICoachService();
-
-}
