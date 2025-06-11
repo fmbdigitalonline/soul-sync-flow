@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { PersonalityEngine } from "./personality-engine";
 import { LayeredBlueprint, AgentMode } from "@/types/personality-modules";
@@ -146,12 +147,8 @@ class AICoachService {
                   
                   if (content) {
                     fullResponse += content;
-                    // Pass each character individually for smoother streaming
-                    for (let i = 0; i < content.length; i++) {
-                      setTimeout(() => {
-                        callbacks.onChunk(content[i]);
-                      }, i * 10); // 10ms delay between characters
-                    }
+                    // Pass the content chunk directly without artificial delays
+                    callbacks.onChunk(content);
                   }
                 } catch (parseError) {
                   console.log('Skipping non-JSON data:', data);
