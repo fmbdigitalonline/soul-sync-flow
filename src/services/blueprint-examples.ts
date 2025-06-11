@@ -94,7 +94,6 @@ export const sampleBlueprints: BlueprintData[] = [
       notes: "Sample blueprint for demonstration"
     },
     goal_stack: [],
-    vibration_check_ins: [],
     belief_logs: [],
     astrology: {},
     human_design: {},
