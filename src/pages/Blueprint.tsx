@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MainLayout from "@/components/Layout/MainLayout";
@@ -179,14 +178,14 @@ const Blueprint = () => {
   if (!user) {
     return (
       <MainLayout>
-        <div className="container mx-auto p-6 flex flex-col items-center justify-center min-h-[80vh]">
-          <div className="cosmic-card p-8 text-center max-w-md w-full">
-            <h1 className="text-2xl font-bold font-display mb-4">
+        <div className="w-full min-h-[80vh] flex items-center justify-center p-4 sm:p-6">
+          <div className="cosmic-card p-6 sm:p-8 text-center max-w-md w-full">
+            <h1 className="text-xl sm:text-2xl font-bold font-display mb-4">
               <span className="gradient-text">{t('blueprint.title')}</span>
             </h1>
-            <p className="mb-6">{t('blueprint.signInRequired')}</p>
+            <p className="mb-6 text-sm sm:text-base">{t('blueprint.signInRequired')}</p>
             <Button 
-              className="bg-soul-purple hover:bg-soul-purple/90"
+              className="bg-soul-purple hover:bg-soul-purple/90 w-full"
               onClick={() => navigate('/auth')}
             >
               {t('nav.signIn')}
@@ -200,9 +199,9 @@ const Blueprint = () => {
   if (isLoading) {
     return (
       <MainLayout>
-        <div className="container mx-auto p-6 flex flex-col items-center justify-center min-h-[80vh]">
+        <div className="w-full min-h-[80vh] flex flex-col items-center justify-center p-4 sm:p-6">
           <Loader2 className="h-8 w-8 animate-spin text-soul-purple" />
-          <p className="mt-2">{t('blueprint.loading')}</p>
+          <p className="mt-2 text-sm sm:text-base">{t('blueprint.loading')}</p>
         </div>
       </MainLayout>
     );
@@ -216,15 +215,17 @@ const Blueprint = () => {
 
   return (
     <MainLayout>
-      <div className="container mx-auto p-6 pb-20">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold font-display">
+      <div className="w-full p-4 sm:p-6 pb-20">
+        {/* Mobile-friendly header */}
+        <div className="flex flex-col gap-4 mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold font-display">
             <span className="gradient-text">{t('blueprint.title')}</span>
           </h1>
-          <div className="flex gap-2 items-center">
-            {/* Enhanced View Toggle */}
-            <div className="flex items-center gap-2 mr-4">
-              <span className="text-sm text-muted-foreground">{t('blueprint.basicView')}</span>
+          
+          {/* Enhanced View Toggle - Mobile Stack */}
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center sm:justify-between">
+            <div className="flex items-center justify-center gap-2 order-2 sm:order-1">
+              <span className="text-xs sm:text-sm text-muted-foreground">{t('blueprint.basicView')}</span>
               <Button
                 variant="ghost"
                 size="sm"
@@ -236,37 +237,42 @@ const Blueprint = () => {
                   <ToggleLeft className="h-6 w-6 text-gray-400" />
                 }
               </Button>
-              <span className="text-sm text-muted-foreground">{t('blueprint.enhancedView')}</span>
+              <span className="text-xs sm:text-sm text-muted-foreground">{t('blueprint.enhancedView')}</span>
             </div>
             
-            <Button 
-              variant="outline"
-              className="flex items-center"
-              onClick={handleRegenerateBlueprint}
-              disabled={isGenerating}
-            >
-              <RefreshCw className="mr-2 h-4 w-4" />
-              {isGenerating ? t('blueprint.generating') : t('blueprint.regenerate')}
-            </Button>
-            <Button 
-              className="bg-soul-purple hover:bg-soul-purple/90 flex items-center"
-              onClick={() => navigate('/coach')}
-            >
-              <MessageCircle className="mr-2 h-4 w-4" />
-              {t('blueprint.chatWithCoach')}
-            </Button>
+            {/* Action buttons - Mobile Stack */}
+            <div className="flex flex-col sm:flex-row gap-2 order-1 sm:order-2">
+              <Button 
+                variant="outline"
+                className="flex items-center justify-center text-sm h-9"
+                onClick={handleRegenerateBlueprint}
+                disabled={isGenerating}
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                {isGenerating ? t('blueprint.generating') : t('blueprint.regenerate')}
+              </Button>
+              <Button 
+                className="bg-soul-purple hover:bg-soul-purple/90 flex items-center justify-center text-sm h-9"
+                onClick={() => navigate('/coach')}
+              >
+                <MessageCircle className="mr-2 h-4 w-4" />
+                {t('blueprint.chatWithCoach')}
+              </Button>
+            </div>
           </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
-          <TabsList className="grid grid-cols-4 w-[800px] max-w-full mx-auto">
-            <TabsTrigger value="view">{t('blueprint.viewTab')}</TabsTrigger>
-            <TabsTrigger value="edit">{t('blueprint.editTab')}</TabsTrigger>
-            <TabsTrigger value="health-check">
-              <Activity className="mr-2 h-4 w-4" />
-              Health Check
+          {/* Mobile-responsive tabs */}
+          <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full max-w-4xl mx-auto h-auto p-1">
+            <TabsTrigger value="view" className="text-xs sm:text-sm py-2">{t('blueprint.viewTab')}</TabsTrigger>
+            <TabsTrigger value="edit" className="text-xs sm:text-sm py-2">{t('blueprint.editTab')}</TabsTrigger>
+            <TabsTrigger value="health-check" className="text-xs sm:text-sm py-2 flex items-center gap-1">
+              <Activity className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Health Check</span>
+              <span className="sm:hidden">Health</span>
             </TabsTrigger>
-            <TabsTrigger value="generating" disabled={!isGenerating}>
+            <TabsTrigger value="generating" disabled={!isGenerating} className="text-xs sm:text-sm py-2">
               {t('blueprint.generatingTab')}
             </TabsTrigger>
           </TabsList>

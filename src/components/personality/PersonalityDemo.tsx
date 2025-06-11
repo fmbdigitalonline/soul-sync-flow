@@ -134,26 +134,26 @@ const PersonalityDemo = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <CosmicCard className="p-6">
-        <h2 className="text-2xl font-bold mb-4">Personality System Demo</h2>
-        <p className="text-muted-foreground mb-6">
+    <div className="w-full max-w-6xl mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
+      <CosmicCard className="p-4 sm:p-6">
+        <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">Personality System Demo</h2>
+        <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
           This demonstrates how the same AI agent generates completely different personalities
           based on real user blueprint data. Each profile uses actual MBTI cognitive functions,
           Human Design types, and numerology to create unique coaching approaches.
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <CosmicCard className="p-4">
-            <h3 className="font-semibold mb-2">ENTP Generator (Life Path 3)</h3>
-            <p className="text-sm text-muted-foreground mb-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 sm:mb-6">
+          <CosmicCard className="p-3 sm:p-4">
+            <h3 className="font-semibold mb-2 text-sm sm:text-base">ENTP Generator (Life Path 3)</h3>
+            <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4 leading-relaxed">
               Innovative, energetic, idea-driven with sustainable building energy
             </p>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Button 
                 size="sm" 
                 onClick={() => handleGeneratePrompt('entpGenerator', 'coach')}
-                className="w-full"
+                className="w-full text-xs sm:text-sm h-8 sm:h-9"
               >
                 Generate Soul Coach Prompt
               </Button>
@@ -161,23 +161,23 @@ const PersonalityDemo = () => {
                 size="sm" 
                 variant="outline"
                 onClick={() => handleGeneratePrompt('entpGenerator', 'guide')}
-                className="w-full"
+                className="w-full text-xs sm:text-sm h-8 sm:h-9"
               >
                 Generate Soul Guide Prompt
               </Button>
             </div>
           </CosmicCard>
 
-          <CosmicCard className="p-4">
-            <h3 className="font-semibold mb-2">ISFJ Projector (Life Path 6)</h3>
-            <p className="text-sm text-muted-foreground mb-4">
+          <CosmicCard className="p-3 sm:p-4">
+            <h3 className="font-semibold mb-2 text-sm sm:text-base">ISFJ Projector (Life Path 6)</h3>
+            <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4 leading-relaxed">
               Service-oriented, detail-focused with guidance energy and emotional authority
             </p>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Button 
                 size="sm" 
                 onClick={() => handleGeneratePrompt('isfcProjector', 'coach')}
-                className="w-full"
+                className="w-full text-xs sm:text-sm h-8 sm:h-9"
               >
                 Generate Soul Coach Prompt
               </Button>
@@ -185,7 +185,7 @@ const PersonalityDemo = () => {
                 size="sm" 
                 variant="outline"
                 onClick={() => handleGeneratePrompt('isfcProjector', 'guide')}
-                className="w-full"
+                className="w-full text-xs sm:text-sm h-8 sm:h-9"
               >
                 Generate Soul Guide Prompt
               </Button>
@@ -195,16 +195,16 @@ const PersonalityDemo = () => {
       </CosmicCard>
 
       {generatedPrompt && (
-        <CosmicCard className="p-6">
-          <h3 className="text-xl font-semibold mb-4">
+        <CosmicCard className="p-4 sm:p-6">
+          <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">
             Generated AI System Prompt for {selectedProfile}
           </h3>
-          <div className="bg-muted/50 p-4 rounded-lg max-h-96 overflow-y-auto">
-            <pre className="whitespace-pre-wrap text-sm">
+          <div className="bg-muted/50 p-3 sm:p-4 rounded-lg max-h-64 sm:max-h-96 overflow-y-auto">
+            <pre className="whitespace-pre-wrap text-xs sm:text-sm leading-relaxed break-words">
               {generatedPrompt}
             </pre>
           </div>
-          <p className="text-sm text-muted-foreground mt-4">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-3 sm:mt-4 leading-relaxed">
             Notice how the AI's personality, communication style, strategies, and advice
             are completely tailored to this specific user's cognitive functions, energy type,
             decision-making style, and life themes. This is not hardcoded - it's dynamically

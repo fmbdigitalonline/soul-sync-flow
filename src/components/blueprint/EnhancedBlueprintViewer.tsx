@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,15 +16,13 @@ interface FactsGridProps {
 }
 
 const FactsGrid: React.FC<FactsGridProps> = ({ facts, title }) => {
-  const gridCols = facts.length <= 4 ? 2 : facts.length <= 6 ? 3 : 4;
-  
   return (
     <div className="mb-6">
       <h4 className="text-sm font-medium text-muted-foreground mb-3">{title} Overview</h4>
-      <div className={`grid grid-cols-${gridCols} gap-3`}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {facts.map((fact, index) => (
           <div key={index} className="bg-gradient-to-br from-soul-purple/5 to-soul-blue/5 border border-soul-purple/20 rounded-lg p-3 text-center">
-            <span className="font-medium text-sm">{fact}</span>
+            <span className="font-medium text-xs sm:text-sm break-words">{fact}</span>
           </div>
         ))}
       </div>
@@ -49,9 +46,9 @@ const Section: React.FC<SectionProps> = ({ title, facts, narrative, depth }) => 
 
   return (
     <CosmicCard className="mb-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xl font-display font-bold">{title}</h3>
-        <Badge className={depthColors[depth]}>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+        <h3 className="text-lg sm:text-xl font-display font-bold">{title}</h3>
+        <Badge className={`${depthColors[depth]} text-xs sm:text-sm self-start sm:self-center`}>
           {depth.charAt(0).toUpperCase() + depth.slice(1)}
         </Badge>
       </div>
@@ -59,7 +56,7 @@ const Section: React.FC<SectionProps> = ({ title, facts, narrative, depth }) => 
       <FactsGrid facts={facts} title={title} />
       
       <div className="prose prose-sm max-w-none">
-        <p className="text-gray-700 leading-relaxed">{narrative}</p>
+        <p className="text-gray-700 leading-relaxed text-sm sm:text-base break-words">{narrative}</p>
       </div>
     </CosmicCard>
   );
@@ -97,14 +94,14 @@ export const EnhancedBlueprintViewer: React.FC<EnhancedBlueprintViewerProps> = (
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 w-full">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+      <div className="flex flex-col gap-4 mb-6">
         <div>
-          <h2 className="text-2xl font-bold font-display">
+          <h2 className="text-xl sm:text-2xl font-bold font-display break-words">
             <span className="gradient-text">Soul Blueprint</span> for {blueprint.user_meta.preferred_name}
           </h2>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             {blueprint.metadata.calculation_success ? 
               `Calculated using ${blueprint.metadata.engine}` : 
               "Using template data"
@@ -112,15 +109,15 @@ export const EnhancedBlueprintViewer: React.FC<EnhancedBlueprintViewerProps> = (
           </p>
         </div>
         
-        {/* Depth Toggle */}
-        <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+        {/* Depth Toggle - Mobile Responsive */}
+        <div className="flex gap-1 bg-gray-100 rounded-lg p-1 w-fit mx-auto sm:mx-0">
           {(['novice', 'amateur', 'pro'] as ViewDepth[]).map((level) => (
             <Button
               key={level}
               variant={depth === level ? "default" : "ghost"}
               size="sm"
               onClick={() => setDepth(level)}
-              className={depth === level ? "bg-soul-purple text-white" : ""}
+              className={`${depth === level ? "bg-soul-purple text-white" : ""} text-xs sm:text-sm px-2 sm:px-3 h-8`}
             >
               {level.charAt(0).toUpperCase() + level.slice(1)}
             </Button>
@@ -129,8 +126,8 @@ export const EnhancedBlueprintViewer: React.FC<EnhancedBlueprintViewerProps> = (
       </div>
 
       {/* Sections Stack */}
-      <ScrollArea className="h-[calc(100vh-200px)]">
-        <div className="space-y-6 pr-4">
+      <ScrollArea className="h-[calc(100vh-300px)] w-full">
+        <div className="space-y-4 sm:space-y-6 pr-2 sm:pr-4">
           {sections.map((section) => (
             <Section
               key={section.key}
@@ -147,3 +144,5 @@ export const EnhancedBlueprintViewer: React.FC<EnhancedBlueprintViewerProps> = (
 };
 
 export default EnhancedBlueprintViewer;
+
+</initial_code>
