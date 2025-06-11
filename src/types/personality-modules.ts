@@ -12,27 +12,37 @@ export interface LayeredBlueprint {
     mbtiType: string;
     functions: string[];
     taskApproach: string;
+    communicationStyle: string;
+    decisionMaking: string;
   };
   energyDecisionStrategy: {
     humanDesignType: string;
     authority: string;
     decisionStyle: string;
     pacing: string;
+    energyType: string;
+    strategy: string;
   };
   motivationBeliefEngine: {
     mindset: string;
     motivation: string[];
     stateManagement: string;
+    coreBeliefs: string[];
+    drivingForces: string[];
   };
   coreValuesNarrative: {
     lifePath: number;
     meaningfulAreas: string[];
     anchoringVision: string;
+    lifeThemes: string[];
+    valueSystem: string;
   };
   publicArchetype: {
     sunSign: string;
     socialStyle: string;
     publicVibe: string;
+    publicPersona: string;
+    leadershipStyle: string;
   };
   generationalCode: {
     chineseZodiac: string;
@@ -56,6 +66,8 @@ export interface LayeredBlueprint {
     rapportStyle: string;
     storyPreference: string;
     empathyLevel: string;
+    conflictStyle: string;
+    collaborationStyle: string;
   };
 }
 
