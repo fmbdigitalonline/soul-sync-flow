@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MainLayout from "@/components/Layout/MainLayout";
 import BlueprintViewer from "@/components/blueprint/BlueprintViewer";
@@ -15,69 +15,37 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSoulOrb } from "@/contexts/SoulOrbContext";
 import { BlueprintEnhancementService } from "@/services/blueprint-enhancement-service";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useOptimizedBlueprintData } from "@/hooks/use-optimized-blueprint-data";
 
 const Blueprint = () => {
   const [activeTab, setActiveTab] = useState("view");
-  const [blueprint, setBlueprint] = useState<BlueprintData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isNewUser, setIsNewUser] = useState(false);
   const [useEnhanced, setUseEnhanced] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { speak } = useSoulOrb();
   const { t } = useLanguage();
+  
+  const { 
+    blueprintData, 
+    loading, 
+    error, 
+    hasBlueprint, 
+    refetch 
+  } = useOptimizedBlueprintData();
 
-  // Check if user has any blueprints
-  useEffect(() => {
-    const checkUserBlueprints = async () => {
-      if (user) {
-        setIsLoading(true);
-        try {
-          console.log("Checking for existing blueprint...");
-          const { data, error } = await blueprintService.getActiveBlueprintData();
-          
-          if (error) {
-            console.error("Error loading blueprint:", error);
-            toast({
-              title: t('blueprint.errorLoading'),
-              description: error,
-              variant: "destructive"
-            });
-          }
-          
-          console.log("Blueprint data check result:", data ? "Found" : "Not found");
-          
-          // If no blueprint exists, mark as new user and redirect to onboarding
-          if (!data) {
-            setIsNewUser(true);
-            toast({
-              title: t('blueprint.welcome'),
-              description: t('blueprint.onboardingMessage'),
-            });
-            navigate('/onboarding');
-            return;
-          }
-          
-          setBlueprint(data);
-        } catch (err) {
-          console.error("Unexpected error loading blueprint:", err);
-          toast({
-            title: t('error'),
-            description: t('blueprint.errorLoading'),
-            variant: "destructive"
-          });
-        } finally {
-          setIsLoading(false);
-        }
-      }
-    };
-    
-    if (user) {
-      checkUserBlueprints();
-    }
-  }, [user, navigate, toast, t]);
+  // Memoize enhanced blueprint data to prevent unnecessary recalculations
+  const enhancedBlueprint = useMemo(() => {
+    if (!blueprintData) return null;
+    return BlueprintEnhancementService.enhanceBlueprintData(blueprintData);
+  }, [blueprintData]);
+
+  // Redirect to onboarding if no blueprint exists
+  if (!loading && !hasBlueprint && user) {
+    navigate('/onboarding');
+    return null;
+  }
 
   const handleSaveBlueprint = async (updatedBlueprint: BlueprintData) => {
     try {
@@ -89,7 +57,7 @@ const Blueprint = () => {
           title: t('blueprint.saved'),
           description: t('blueprint.savedDescription'),
         });
-        setBlueprint(updatedBlueprint);
+        await refetch(); // Use the cached refetch
         setActiveTab("view");
       } else {
         toast({
@@ -111,11 +79,10 @@ const Blueprint = () => {
   };
 
   const handleRegenerateBlueprint = () => {
-    if (blueprint) {
+    if (blueprintData) {
       setIsGenerating(true);
       setActiveTab("generating");
       
-      // Give user feedback
       toast({
         title: t('blueprint.regenerating'),
         description: t('blueprint.regeneratingDescription'),
@@ -148,7 +115,7 @@ const Blueprint = () => {
       const result = await blueprintService.saveBlueprintData(newBlueprint);
       
       if (result.success) {
-        setBlueprint(newBlueprint);
+        await refetch(); // Use the cached refetch
         toast({
           title: t('blueprint.generated'),
           description: t('blueprint.generatedDescription'),
@@ -196,7 +163,7 @@ const Blueprint = () => {
     );
   }
 
-  if (isLoading) {
+  if (loading) {
     return (
       <MainLayout>
         <div className="w-full min-h-[80vh] flex flex-col items-center justify-center p-4 sm:p-6">
@@ -207,10 +174,15 @@ const Blueprint = () => {
     );
   }
 
-  // Redirect to onboarding if new user (this is a fallback in case the earlier navigation doesn't work)
-  if (isNewUser) {
-    navigate('/onboarding');
-    return null;
+  if (error) {
+    return (
+      <MainLayout>
+        <div className="w-full min-h-[80vh] flex flex-col items-center justify-center p-4 sm:p-6">
+          <p className="text-red-500 mb-4">{error}</p>
+          <Button onClick={() => refetch()}>Try Again</Button>
+        </div>
+      </MainLayout>
+    );
   }
 
   return (
@@ -278,19 +250,17 @@ const Blueprint = () => {
           </TabsList>
           
           <TabsContent value="view" className="mt-6">
-            {blueprint && (
-              useEnhanced ? (
-                <EnhancedBlueprintViewer 
-                  blueprint={BlueprintEnhancementService.enhanceBlueprintData(blueprint)} 
-                />
+            {blueprintData && (
+              useEnhanced && enhancedBlueprint ? (
+                <EnhancedBlueprintViewer blueprint={enhancedBlueprint} />
               ) : (
-                <BlueprintViewer blueprint={blueprint} />
+                <BlueprintViewer blueprint={blueprintData} />
               )
             )}
           </TabsContent>
           
           <TabsContent value="edit" className="mt-6">
-            <BlueprintEditor onSave={handleSaveBlueprint} initialBlueprint={blueprint || undefined} />
+            <BlueprintEditor onSave={handleSaveBlueprint} initialBlueprint={blueprintData || undefined} />
           </TabsContent>
 
           <TabsContent value="health-check" className="mt-6">
@@ -298,9 +268,9 @@ const Blueprint = () => {
           </TabsContent>
 
           <TabsContent value="generating" className="mt-6">
-            {isGenerating && blueprint && (
+            {isGenerating && blueprintData && (
               <BlueprintGenerator 
-                userProfile={blueprint?.user_meta || {
+                userProfile={blueprintData?.user_meta || {
                   full_name: "",
                   preferred_name: "",
                   birth_date: "",

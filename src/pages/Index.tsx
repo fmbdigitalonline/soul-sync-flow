@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { SoulOrbAvatar } from "@/components/ui/avatar";
@@ -7,52 +7,49 @@ import MainLayout from "@/components/Layout/MainLayout";
 import { ArrowRight, LogIn, Heart, Sparkles, Brain } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useSoulOrb } from "@/contexts/SoulOrbContext";
-import { blueprintService } from "@/services/blueprint-service";
 import { useNavigate } from "react-router-dom";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import PersonalityDemo from "@/components/personality/PersonalityDemo";
+import { useOptimizedBlueprintData } from "@/hooks/use-optimized-blueprint-data";
 
 const Index = () => {
   const { user } = useAuth();
   const { speak } = useSoulOrb();
   const navigate = useNavigate();
   const [showDemo, setShowDemo] = useState(false);
+  const { hasBlueprint, loading } = useOptimizedBlueprintData();
   
-  // Check if returning user has a blueprint
-  useEffect(() => {
-    const checkUserBlueprint = async () => {
-      if (user) {
-        try {
-          const { data } = await blueprintService.getActiveBlueprintData();
-          
-          if (!data) {
-            // Only suggest creating a blueprint if they don't have one
-            speak("Welcome! Let's create your Soul Blueprint to get started.");
-          } else {
-            speak("Welcome back! Your Soul Blueprint is ready to explore.");
-          }
-        } catch (error) {
-          console.error("Error checking blueprint:", error);
-        }
-      }
-    };
+  // Memoize the welcome message logic to prevent re-renders
+  const welcomeMessage = useMemo(() => {
+    if (!user) return null;
     
-    checkUserBlueprint();
-  }, [user, speak]);
+    if (hasBlueprint) {
+      return "Welcome back! Your Soul Blueprint is ready to explore.";
+    } else {
+      return "Welcome! Let's create your Soul Blueprint to get started.";
+    }
+  }, [user, hasBlueprint]);
+
+  // Only speak welcome message once when user and blueprint data are loaded
+  useEffect(() => {
+    if (user && !loading && welcomeMessage) {
+      // Add a small delay to prevent rapid-fire speaking
+      const timer = setTimeout(() => {
+        speak(welcomeMessage);
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [user, loading, welcomeMessage, speak]);
   
   const handleGetStarted = () => {
     if (user) {
-      blueprintService.getActiveBlueprintData().then(({ data }) => {
-        if (data) {
-          // If they have a blueprint, stay on home page - they're already here
-          speak("Your Soul Blueprint is ready! Explore the features below.");
-        } else {
-          // If no blueprint, start onboarding
-          navigate("/onboarding");
-        }
-      });
+      if (hasBlueprint) {
+        speak("Your Soul Blueprint is ready! Explore the features below.");
+      } else {
+        navigate("/onboarding");
+      }
     } else {
-      // Not logged in, go to auth
       navigate("/auth");
     }
   };
@@ -120,7 +117,6 @@ const Index = () => {
             </div>
           )}
 
-          {/* Demo button for seeing how personalization works */}
           <div className="mb-4 sm:mb-6 px-4">
             <Button 
               variant="outline" 
