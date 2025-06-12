@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
@@ -100,7 +101,7 @@ const Dreams = () => {
 
       console.log('Saving goal for user:', user.id);
 
-      // Convert Goal to a plain object to ensure it's serializable
+      // Convert Goal to a plain object with properly serialized nested arrays
       const goalAsJson = {
         id: goal.id,
         title: goal.title,
@@ -109,8 +110,23 @@ const Dreams = () => {
         timeframe: goal.timeframe,
         target_completion: goal.target_completion,
         created_at: goal.created_at,
-        milestones: goal.milestones || [],
-        tasks: goal.tasks || [],
+        milestones: (goal.milestones || []).map(milestone => ({
+          id: milestone.id,
+          title: milestone.title,
+          description: milestone.description,
+          target_date: milestone.target_date,
+          completed: milestone.completed || false,
+          completion_criteria: milestone.completion_criteria || []
+        })),
+        tasks: (goal.tasks || []).map(task => ({
+          id: task.id,
+          title: task.title,
+          description: task.description,
+          completed: task.completed || false,
+          estimated_duration: task.estimated_duration,
+          energy_level_required: task.energy_level_required,
+          category: task.category
+        })),
         blueprint_alignment: goal.blueprint_alignment || []
       };
       
