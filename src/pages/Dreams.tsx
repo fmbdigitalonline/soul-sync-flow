@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MainLayout from "@/components/Layout/MainLayout";
 import BlueprintViewer from "@/components/blueprint/BlueprintViewer";
@@ -25,7 +25,7 @@ import { useEnhancedAICoach } from "@/hooks/use-enhanced-ai-coach";
 import { supabase } from "@/integrations/supabase/client";
 import { CoachInterface } from "@/components/coach/CoachInterface";
 import { useBlueprintData } from "@/hooks/use-blueprint-data";
-import { goalDecompositionService } from "@/services/goal-decomposition-service";
+import { enhancedGoalDecompositionService } from "@/services/enhanced-goal-decomposition-service";
 import { JourneyMap } from "@/components/journey/JourneyMap";
 import { EnhancedJourneyMap } from "@/components/journey/EnhancedJourneyMap";
 import { TaskViews } from "@/components/journey/TaskViews";
@@ -116,7 +116,7 @@ const Dreams = () => {
       console.log('Starting dream creation with form:', dreamForm);
       
       // Create goal using blueprint-aligned decomposition
-      const goal = await goalDecompositionService.decomposeGoal(
+      const goal = await enhancedGoalDecompositionService.decomposeGoal(
         dreamForm.title,
         dreamForm.timeframe,
         dreamForm.category,

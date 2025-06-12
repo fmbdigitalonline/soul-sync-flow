@@ -1,4 +1,3 @@
-
 import { v4 as uuidv4 } from 'uuid';
 import { BlueprintData } from '@/services/blueprint-service';
 
@@ -68,7 +67,7 @@ class EnhancedGoalDecompositionService {
       created_at: new Date().toISOString(),
       milestones,
       tasks,
-      blueprint_alignment
+      blueprint_alignment: blueprintAlignment
     };
   }
 
