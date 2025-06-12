@@ -16,11 +16,11 @@ interface GoalSelectionStepProps {
 export function GoalSelectionStep({ onComplete }: GoalSelectionStepProps) {
   const [primaryGoal, setPrimaryGoal] = useState('');
   const [supportStyle, setSupportStyle] = useState([3]);
-  const [timeHorizon, setTimeHorizon] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const goals = [
+    { id: 'exploring', label: "I'm still exploring and figuring things out" },
     { id: 'personal_growth', label: 'Personal Growth & Self-Discovery' },
     { id: 'career_success', label: 'Career Success & Professional Development' },
     { id: 'relationships', label: 'Relationships & Communication' },
@@ -29,22 +29,15 @@ export function GoalSelectionStep({ onComplete }: GoalSelectionStepProps) {
     { id: 'spiritual_development', label: 'Spiritual Development' }
   ];
 
-  const timeHorizons = [
-    { id: 'immediate', label: 'Next 1-3 months' },
-    { id: 'short_term', label: 'Next 3-6 months' },
-    { id: 'medium_term', label: 'Next 6-12 months' },
-    { id: 'long_term', label: 'Next 1-3 years' }
-  ];
-
   const handleSubmit = async () => {
-    if (!primaryGoal || !timeHorizon || isSubmitting) {
+    if (!primaryGoal || isSubmitting) {
       return;
     }
 
     console.log('GoalSelectionStep: Starting submission with preferences:', {
       primary_goal: primaryGoal,
       support_style: supportStyle[0],
-      time_horizon: timeHorizon
+      time_horizon: 'flexible' // Default since we removed time selection
     });
 
     setIsSubmitting(true);
@@ -54,15 +47,13 @@ export function GoalSelectionStep({ onComplete }: GoalSelectionStepProps) {
       await onComplete({
         primary_goal: primaryGoal,
         support_style: supportStyle[0],
-        time_horizon: timeHorizon
+        time_horizon: 'flexible' // Default value
       });
       
-      // If we get here, the submission was successful
       console.log('GoalSelectionStep: Submission completed successfully');
     } catch (error) {
       console.error('GoalSelectionStep: Error during submission:', error);
       
-      // Reset the loading state and show error
       setIsSubmitting(false);
       const errorMessage = error instanceof Error ? error.message : 'Failed to save preferences';
       setSubmitError(errorMessage);
@@ -74,32 +65,44 @@ export function GoalSelectionStep({ onComplete }: GoalSelectionStepProps) {
     handleSubmit();
   };
 
-  const isValid = primaryGoal && timeHorizon && !isSubmitting;
+  const isValid = primaryGoal && !isSubmitting;
 
   return (
-    <div className="space-y-6 max-w-md mx-auto">
+    <div className="space-y-6 max-w-md mx-auto px-4">
       <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 space-y-6">
         {/* Primary Goal Selection */}
-        <div className="space-y-3">
-          <Label className="text-base font-medium">What's your primary focus area?</Label>
+        <div className="space-y-4">
+          <Label className="text-base font-medium text-center block">
+            What's your primary focus area?
+          </Label>
           <RadioGroup value={primaryGoal} onValueChange={setPrimaryGoal} disabled={isSubmitting}>
-            {goals.map((goal) => (
-              <div key={goal.id} className="flex items-center space-x-2">
-                <RadioGroupItem value={goal.id} id={goal.id} />
-                <Label htmlFor={goal.id} className="text-sm cursor-pointer">
-                  {goal.label}
-                </Label>
-              </div>
-            ))}
+            <div className="space-y-3">
+              {goals.map((goal) => (
+                <div key={goal.id} className="flex items-start space-x-3 p-2 rounded-lg hover:bg-white/5 transition-colors">
+                  <RadioGroupItem value={goal.id} id={goal.id} className="mt-1 flex-shrink-0" />
+                  <Label 
+                    htmlFor={goal.id} 
+                    className="text-sm cursor-pointer leading-relaxed flex-1"
+                  >
+                    {goal.label}
+                  </Label>
+                </div>
+              ))}
+            </div>
           </RadioGroup>
         </div>
 
         {/* Support Style */}
-        <div className="space-y-3">
-          <Label className="text-base font-medium">
-            How much guidance do you prefer? ({supportStyle[0]}/5)
+        <div className="space-y-4">
+          <Label className="text-base font-medium text-center block">
+            How much guidance do you prefer?
           </Label>
-          <div className="space-y-2">
+          <div className="space-y-3">
+            <div className="text-center">
+              <span className="text-lg font-medium text-soul-purple">
+                {supportStyle[0]}/5
+              </span>
+            </div>
             <Slider
               value={supportStyle}
               onValueChange={setSupportStyle}
@@ -109,26 +112,11 @@ export function GoalSelectionStep({ onComplete }: GoalSelectionStepProps) {
               className="w-full"
               disabled={isSubmitting}
             />
-            <div className="flex justify-between text-xs text-white/60">
+            <div className="flex justify-between text-xs text-white/60 px-1">
               <span>Light touch</span>
               <span>Structured guidance</span>
             </div>
           </div>
-        </div>
-
-        {/* Time Horizon */}
-        <div className="space-y-3">
-          <Label className="text-base font-medium">What's your timeline?</Label>
-          <RadioGroup value={timeHorizon} onValueChange={setTimeHorizon} disabled={isSubmitting}>
-            {timeHorizons.map((horizon) => (
-              <div key={horizon.id} className="flex items-center space-x-2">
-                <RadioGroupItem value={horizon.id} id={horizon.id} />
-                <Label htmlFor={horizon.id} className="text-sm cursor-pointer">
-                  {horizon.label}
-                </Label>
-              </div>
-            ))}
-          </RadioGroup>
         </div>
       </div>
 
@@ -152,15 +140,22 @@ export function GoalSelectionStep({ onComplete }: GoalSelectionStepProps) {
       <Button 
         onClick={handleSubmit}
         disabled={!isValid}
-        className="w-full bg-soul-purple hover:bg-soul-purple/90 disabled:opacity-50"
+        className="w-full bg-soul-purple hover:bg-soul-purple/90 disabled:opacity-50 py-3 text-base font-medium"
       >
-        {isSubmitting ? "Saving..." : "Complete Setup"}
+        {isSubmitting ? (
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            Saving...
+          </div>
+        ) : (
+          "Complete Setup"
+        )}
       </Button>
       
       {/* Development debugging info */}
       {import.meta.env.DEV && (
         <div className="text-xs text-gray-400 bg-gray-900/20 p-2 rounded">
-          Debug: {JSON.stringify({ primaryGoal, supportStyle: supportStyle[0], timeHorizon, isSubmitting })}
+          Debug: {JSON.stringify({ primaryGoal, supportStyle: supportStyle[0], isSubmitting })}
         </div>
       )}
     </div>
