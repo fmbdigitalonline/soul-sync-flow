@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { enhancedAICoachService, AgentType } from "@/services/enhanced-ai-coach-service";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -162,6 +161,19 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
     setIsLoading(true);
     resetStreaming();
 
+    // Enhanced context for better coaching
+    const enhancedContent = currentAgent === "coach" 
+      ? `${content}
+
+Please remember to:
+- Keep responses conversational and engaging
+- Break down advice into small, actionable chunks
+- Ask follow-up questions to maintain engagement
+- Provide specific next steps rather than general advice
+- Use encouraging and motivational language aligned with my personality
+- When suggesting tasks breakdown, be specific about time estimates and energy requirements`
+      : content;
+
     if (useStreaming) {
       const assistantMessageId = (Date.now() + 1).toString();
       const assistantMessage: Message = {
@@ -180,7 +192,7 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
         let accumulatedContent = '';
         
         await enhancedAICoachService.sendStreamingMessage(
-          content,
+          enhancedContent,
           currentSessionId,
           true,
           currentAgent,
@@ -213,7 +225,7 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
             onError: (error: Error) => {
               console.error("Enhanced streaming error:", error);
               setMessages(prev => prev.filter(msg => msg.id !== assistantMessageId));
-              handleNonStreamingMessage(content);
+              handleNonStreamingMessage(enhancedContent);
               completeStreaming();
             }
           }
@@ -221,11 +233,11 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
       } catch (error) {
         console.error("Error with enhanced streaming, falling back:", error);
         setMessages(prev => prev.filter(msg => msg.id !== assistantMessageId));
-        handleNonStreamingMessage(content);
+        handleNonStreamingMessage(enhancedContent);
         completeStreaming();
       }
     } else {
-      handleNonStreamingMessage(content);
+      handleNonStreamingMessage(enhancedContent);
     }
   };
 

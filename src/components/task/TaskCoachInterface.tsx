@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +17,9 @@ import {
 import { useEnhancedAICoach } from "@/hooks/use-enhanced-ai-coach";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 import { CoachInterface } from "@/components/coach/CoachInterface";
+import { SubTaskManager } from "./SubTaskManager";
+import { QuickActions } from "./QuickActions";
+import { SessionProgress } from "./SessionProgress";
 
 interface Task {
   id: string;
@@ -49,6 +51,7 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
   const [sessionStarted, setSessionStarted] = useState(false);
   const [focusTime, setFocusTime] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [taskProgress, setTaskProgress] = useState(0);
 
   // Timer effect
   useEffect(() => {
@@ -97,25 +100,56 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
   const handleStartSession = () => {
     setSessionStarted(true);
     setIsTimerRunning(true);
-    const initialMessage = `I'm ready to work on this task: "${task.title}". ${task.description ? `Description: ${task.description}. ` : ''}This task requires ${task.energy_level_required} energy and should take about ${task.estimated_duration}. Can you help me break this down into actionable steps and keep me motivated as I work through it?`;
+    const initialMessage = `I'm ready to work on this task: "${task.title}". ${task.description ? `Description: ${task.description}. ` : ''}This task requires ${task.energy_level_required} energy and should take about ${task.estimated_duration}. 
+
+As my coach, please help me by:
+1. Breaking this down into specific, actionable sub-tasks
+2. Keeping responses concise and interactive
+3. Checking in regularly to see how I'm progressing
+4. Providing motivation aligned with my personality
+
+Let's start with the first concrete step I should take right now.`;
+    
     sendMessage(initialMessage);
+  };
+
+  const handleQuickAction = (actionId: string, message: string) => {
+    sendMessage(message);
+  };
+
+  const handleSubTaskComplete = (subTaskId: string) => {
+    // Update progress based on completed sub-tasks
+    console.log('Sub-task completed:', subTaskId);
+  };
+
+  const handleAllSubTasksComplete = () => {
+    setTaskProgress(100);
+    sendMessage("I've completed all the sub-tasks! Can you help me review what I've accomplished and determine if the main task is fully complete?");
   };
 
   const handleCompleteTask = () => {
     setIsTimerRunning(false);
     onTaskComplete(task.id);
-    sendMessage(`Great! I've completed the task "${task.title}". It took me ${formatTime(focusTime)}. Can you help me reflect on what went well and what I learned?`);
+    sendMessage(`Excellent! I've completed the task "${task.title}". It took me ${formatTime(focusTime)} of focused work. Can you help me reflect on what went well, what I learned, and how this contributes to my overall goals?`);
   };
 
   const handleCoachMessage = (message: string) => {
     sendMessage(message);
   };
 
+  // Parse estimated duration to extract days
+  const getTotalDays = (duration: string): number => {
+    const dayMatch = duration.match(/(\d+)\s*days?/i);
+    return dayMatch ? parseInt(dayMatch[1]) : 1;
+  };
+
+  const totalDays = getTotalDays(task.estimated_duration);
+
   return (
     <div className="h-full flex flex-col">
-      {/* Task Header */}
-      <div className="border-b bg-background p-4">
-        <div className="flex items-center justify-between mb-4">
+      {/* Task Header - More compact */}
+      <div className="border-b bg-background p-3">
+        <div className="flex items-center justify-between mb-3">
           <Button 
             variant="ghost" 
             size="sm" 
@@ -152,90 +186,92 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
           </div>
         </div>
         
-        <div className="space-y-3">
+        {/* Compact task info */}
+        <div className="space-y-2">
           <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <h2 className="text-lg font-semibold flex items-center gap-2">
-                <Target className="h-5 w-5 text-soul-purple" />
-                {task.title}
-              </h2>
-              {task.description && (
-                <p className="text-sm text-muted-foreground mt-1">{task.description}</p>
-              )}
-            </div>
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <Target className="h-5 w-5 text-soul-purple" />
+              {task.title}
+            </h2>
             
-            <div className="flex items-center gap-2 ml-4">
-              <Badge className={getStatusColor(task.status)}>
-                {task.status.replace('_', ' ')}
-              </Badge>
-              {task.status !== 'completed' && (
-                <Button
-                  onClick={handleCompleteTask}
-                  disabled={!sessionStarted}
-                  className="bg-emerald-600 hover:bg-emerald-700"
-                  size="sm"
-                >
-                  <CheckCircle2 className="h-4 w-4 mr-1" />
-                  Complete
-                </Button>
-              )}
-            </div>
+            {task.status !== 'completed' && (
+              <Button
+                onClick={handleCompleteTask}
+                disabled={!sessionStarted}
+                className="bg-emerald-600 hover:bg-emerald-700"
+                size="sm"
+              >
+                <CheckCircle2 className="h-4 w-4 mr-1" />
+                Complete
+              </Button>
+            )}
           </div>
           
-          <div className="flex flex-wrap gap-2">
-            <Badge variant="outline" className={getEnergyColor(task.energy_level_required)}>
-              <Zap className="h-3 w-3 mr-1" />
-              {task.energy_level_required} energy
-            </Badge>
-            <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-              <Clock className="h-3 w-3 mr-1" />
-              {task.estimated_duration}
-            </Badge>
-            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-              {task.category}
-            </Badge>
-          </div>
-          
-          {task.optimal_time_of_day?.length > 0 && (
-            <div className="text-xs text-muted-foreground">
-              <span className="font-medium">Optimal time:</span> {task.optimal_time_of_day.join(', ')}
-            </div>
+          {task.description && (
+            <p className="text-sm text-muted-foreground">{task.description}</p>
           )}
         </div>
       </div>
 
-      {/* Coach Interface */}
-      <div className="flex-1 flex flex-col">
-        {!sessionStarted ? (
-          <div className="flex-1 flex items-center justify-center p-8">
-            <div className="text-center max-w-md">
-              <div className="w-16 h-16 bg-soul-purple/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Brain className="h-8 w-8 text-soul-purple" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Ready to Focus?</h3>
-              <p className="text-muted-foreground mb-6">
-                Start a coaching session to get personalized guidance and stay motivated while working on this task.
-              </p>
-              <Button 
-                onClick={handleStartSession}
-                className="bg-soul-purple hover:bg-soul-purple/90"
-                size="lg"
-              >
-                <MessageCircle className="h-4 w-4 mr-2" />
-                Start Coaching Session
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <div className="flex-1">
-            <CoachInterface
-              messages={messages}
+      {/* Main Content */}
+      <div className="flex-1 flex gap-4 p-4 min-h-0">
+        {/* Left Sidebar - Task Management */}
+        <div className="w-80 space-y-4 overflow-y-auto">
+          <SessionProgress 
+            focusTime={focusTime}
+            estimatedDuration={task.estimated_duration}
+            energyLevel={task.energy_level_required}
+            taskProgress={taskProgress}
+            totalDays={totalDays}
+          />
+          
+          <SubTaskManager
+            taskTitle={task.title}
+            onSubTaskComplete={handleSubTaskComplete}
+            onAllComplete={handleAllSubTasksComplete}
+          />
+          
+          {sessionStarted && (
+            <QuickActions
+              onAction={handleQuickAction}
               isLoading={isLoading}
-              onSendMessage={handleCoachMessage}
-              messagesEndRef={messagesEndRef}
             />
-          </div>
-        )}
+          )}
+        </div>
+
+        {/* Right Side - Coach Interface */}
+        <div className="flex-1 flex flex-col min-h-0">
+          {!sessionStarted ? (
+            <div className="flex-1 flex items-center justify-center p-8">
+              <div className="text-center max-w-md">
+                <div className="w-16 h-16 bg-soul-purple/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Brain className="h-8 w-8 text-soul-purple" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Ready to Focus?</h3>
+                <p className="text-muted-foreground mb-6">
+                  Start a personalized coaching session to tackle this task step-by-step with guidance tailored to your blueprint.
+                </p>
+                <Button 
+                  onClick={handleStartSession}
+                  className="bg-soul-purple hover:bg-soul-purple/90"
+                  size="lg"
+                >
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  Start Coaching Session
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex-1 min-h-0">
+              <CoachInterface
+                messages={messages}
+                isLoading={isLoading}
+                onSendMessage={handleCoachMessage}
+                messagesEndRef={messagesEndRef}
+              />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
