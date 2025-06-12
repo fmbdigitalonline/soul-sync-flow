@@ -95,37 +95,39 @@
 
   body {
     @apply bg-background text-foreground font-body text-base leading-relaxed;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   
-  /* Typography scale based on a 4pt modular scale (16 / 20 / 24 / 32 px) */
+  /* Enhanced Typography for App-like feel */
   h1 {
-    @apply text-4xl font-heading font-semibold;
+    @apply text-4xl font-heading font-semibold leading-tight;
   }
   
   h2 {
-    @apply text-3xl font-heading font-medium;
+    @apply text-3xl font-heading font-medium leading-tight;
   }
   
   h3 {
-    @apply text-2xl font-heading font-medium;
+    @apply text-2xl font-heading font-medium leading-tight;
   }
   
   h4 {
-    @apply text-xl font-heading font-medium;
+    @apply text-xl font-heading font-medium leading-tight;
   }
   
   p, li, input, textarea {
-    @apply text-base leading-normal; /* 16px with 1.5 line height */
+    @apply text-base leading-relaxed;
   }
   
   small {
-    @apply text-sm; /* 14px */
+    @apply text-sm;
   }
 }
 
 @layer components {
   .cosmic-card {
-    @apply bg-white bg-opacity-70 backdrop-blur-sm border border-white border-opacity-20 shadow-soft-ui rounded-xl;
+    @apply bg-white/80 backdrop-blur-lg border border-white/20 shadow-lg rounded-3xl;
   }
   
   .cosmic-bg {
@@ -140,10 +142,32 @@
     @apply font-focus;
   }
   
-  /* Interactive elements with appropriate sizing */
+  /* Interactive elements with app-like feel */
   .interactive-element {
-    @apply min-h-[48px] min-w-[48px] cursor-pointer transition-all duration-200;
+    @apply min-h-[48px] min-w-[48px] cursor-pointer transition-all duration-300;
   }
+  
+  /* App-like button hover effects */
+  .app-button {
+    @apply transform transition-all duration-300 hover:scale-105 active:scale-95;
+  }
+  
+  /* Smooth scrolling for mobile */
+  .smooth-scroll {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Enhanced animations for app-like interactions */
+@keyframes gentle-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(155, 135, 245, 0.4); }
+  50% { box-shadow: 0 0 0 10px rgba(155, 135, 245, 0); }
 }
 
 /* Accessibility: support prefers-reduced-motion */
@@ -156,16 +180,31 @@
   }
 }
 
+/* Mobile-first responsive improvements */
+@media (max-width: 640px) {
+  .cosmic-card {
+    @apply rounded-2xl;
+  }
+  
+  h1 {
+    @apply text-3xl;
+  }
+  
+  h2 {
+    @apply text-2xl;
+  }
+}
+
 /* Update spacious grid system */
 .grid-8 { gap: 8px; }
 .grid-16 { gap: 16px; }
 .grid-24 { gap: 24px; }
 
-/* Adjust corner radii */
+/* Modern corner radii */
 .rounded-comfort {
-  border-radius: 12px;
+  border-radius: 16px;
 }
 
 .rounded-spacious {
-  border-radius: 16px;
+  border-radius: 24px;
 }

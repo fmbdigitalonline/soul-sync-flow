@@ -6,7 +6,7 @@ import EnhancedBlueprintViewer from "@/components/blueprint/EnhancedBlueprintVie
 import BlueprintEditor from "@/components/blueprint/BlueprintEditor";
 import { BlueprintHealthCheck } from "@/components/blueprint/BlueprintHealthCheck";
 import { Button } from "@/components/ui/button";
-import { Loader2, MessageCircle, RefreshCw, ToggleLeft, ToggleRight, Activity } from "lucide-react";
+import { Loader2, MessageCircle, RefreshCw, ToggleLeft, ToggleRight, Activity, ArrowLeft, Plus, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { BlueprintData, blueprintService } from "@/services/blueprint-service";
 import { useNavigate } from "react-router-dom";
@@ -20,7 +20,7 @@ import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Heart, Target, Sparkles, MapPin, Calendar, Zap, Brain, Clock, CheckCircle } from "lucide-react";
+import { Heart, Target, MapPin, Calendar, Zap, Brain, Clock, CheckCircle } from "lucide-react";
 import { useEnhancedAICoach } from "@/hooks/use-enhanced-ai-coach";
 import { supabase } from "@/integrations/supabase/client";
 import { CoachInterface } from "@/components/coach/CoachInterface";
@@ -267,20 +267,22 @@ const Dreams = () => {
   if (!isAuthenticated) {
     return (
       <MainLayout>
-        <div className="min-h-screen flex items-center justify-center p-4">
-          <CosmicCard className="p-8 text-center max-w-sm w-full">
-            <Heart className="h-12 w-12 text-soul-purple mx-auto mb-6" />
-            <h1 className="text-2xl font-bold font-display mb-4">
-              <span className="text-soul-purple">Dream Achievement</span>
+        <div className="min-h-screen bg-gradient-to-br from-soul-purple/10 via-white to-soul-teal/5 flex items-center justify-center p-4">
+          <div className="bg-white/80 backdrop-blur-lg rounded-3xl p-8 shadow-2xl border border-white/20 text-center max-w-sm w-full">
+            <div className="w-16 h-16 bg-gradient-to-br from-soul-purple to-soul-teal rounded-full mx-auto mb-6 flex items-center justify-center">
+              <Heart className="h-8 w-8 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold mb-3 bg-gradient-to-r from-soul-purple to-soul-teal bg-clip-text text-transparent">
+              Dreams & Goals
             </h1>
-            <p className="mb-8 text-muted-foreground">Sign in to start your personalized journey to your dreams</p>
+            <p className="mb-8 text-gray-600 leading-relaxed">Transform your biggest dreams into achievable milestones with AI-powered guidance</p>
             <Button 
-              className="w-full bg-soul-purple hover:bg-soul-purple/90"
+              className="w-full bg-gradient-to-r from-soul-purple to-soul-teal hover:shadow-lg transition-all duration-300 rounded-2xl h-12 text-white font-medium"
               onClick={() => window.location.href = '/auth'}
             >
-              {t('nav.signIn')}
+              Get Started
             </Button>
-          </CosmicCard>
+          </div>
         </div>
       </MainLayout>
     );
@@ -290,7 +292,7 @@ const Dreams = () => {
   if (currentView === 'task-coach' && selectedTask) {
     return (
       <MainLayout>
-        <div className="h-screen">
+        <div className="h-screen bg-gradient-to-br from-soul-purple/5 to-soul-teal/5">
           <TaskCoachInterface
             task={selectedTask}
             onBack={handleBackFromTaskCoach}
@@ -304,25 +306,30 @@ const Dreams = () => {
   if (currentView === 'chat') {
     return (
       <MainLayout>
-        <div className="h-screen flex flex-col">
-          <div className="bg-background border-b border-border p-4">
-            <div className="flex items-center justify-between max-w-md mx-auto">
-              <div className="flex items-center">
-                <Heart className="h-5 w-5 text-soul-purple mr-2" />
-                <h2 className="text-lg font-semibold">Dream Guide</h2>
-              </div>
+        <div className="h-screen flex flex-col bg-gradient-to-br from-soul-purple/5 to-white">
+          {/* Modern Header */}
+          <div className="bg-white/80 backdrop-blur-lg border-b border-gray-100 p-4 sticky top-0 z-10">
+            <div className="flex items-center justify-between max-w-lg mx-auto">
               <Button 
                 variant="ghost" 
                 size="sm" 
                 onClick={() => setCurrentView('create')}
-                className="text-sm"
+                className="flex items-center gap-2 text-gray-600 hover:text-soul-purple rounded-xl"
               >
+                <ArrowLeft className="h-4 w-4" />
                 Back
               </Button>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-gradient-to-br from-soul-purple to-soul-teal rounded-full flex items-center justify-center">
+                  <Brain className="h-4 w-4 text-white" />
+                </div>
+                <h2 className="font-semibold text-gray-800">AI Dream Coach</h2>
+              </div>
+              <div className="w-16" /> {/* Spacer for centering */}
             </div>
           </div>
           
-          <div className="flex-1 max-w-md mx-auto w-full p-4">
+          <div className="flex-1 max-w-lg mx-auto w-full p-4">
             <CoachInterface
               messages={messages}
               isLoading={isLoading}
@@ -338,30 +345,34 @@ const Dreams = () => {
   if (currentView === 'journey') {
     return (
       <MainLayout>
-        <div className="min-h-screen bg-gradient-to-b from-soul-purple/5 to-background">
-          <div className="max-w-6xl mx-auto px-4 py-6">
+        <div className="min-h-screen bg-gradient-to-br from-soul-purple/5 via-white to-soul-teal/5">
+          <div className="max-w-7xl mx-auto px-4 py-6">
             
-            {/* Strategic Header */}
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center space-x-4">
+            {/* Modern Header */}
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-4">
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={() => setCurrentView('create')}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 text-gray-600 hover:text-soul-purple rounded-xl px-3 py-2"
                 >
-                  ← New Dream
+                  <ArrowLeft className="h-4 w-4" />
+                  New Dream
                 </Button>
-                <h1 className="text-2xl font-bold font-display">Strategic Command Center</h1>
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-800">Your Journey</h1>
+                  <p className="text-sm text-gray-500">Track progress and stay focused</p>
+                </div>
               </div>
               
-              {/* Quick Actions */}
+              {/* Action Pills */}
               <div className="flex gap-2">
                 <Button
                   variant={taskView === 'tasks' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setTaskView(taskView === 'tasks' ? 'none' : 'tasks')}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 rounded-xl border-gray-200 hover:border-soul-purple/50"
                 >
                   <Target className="h-4 w-4" />
                   Tasks
@@ -370,7 +381,7 @@ const Dreams = () => {
                   variant={taskView === 'focus' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setTaskView(taskView === 'focus' ? 'none' : 'focus')}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 rounded-xl border-gray-200 hover:border-soul-purple/50"
                 >
                   <Clock className="h-4 w-4" />
                   Focus
@@ -379,7 +390,7 @@ const Dreams = () => {
                   variant={taskView === 'habits' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setTaskView(taskView === 'habits' ? 'none' : 'habits')}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 rounded-xl border-gray-200 hover:border-soul-purple/50"
                 >
                   <CheckCircle className="h-4 w-4" />
                   Habits
@@ -387,19 +398,21 @@ const Dreams = () => {
               </div>
             </div>
 
-            {/* Main Layout: Journey Map + Optional Task View */}
+            {/* Main Content Grid */}
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
               
-              {/* Journey Map - Always Visible (Helicopter View) */}
+              {/* Journey Map */}
               <div className={`${taskView === 'none' ? 'xl:col-span-3' : 'xl:col-span-2'} transition-all duration-300`}>
-                <CosmicCard className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-5 w-5 text-soul-purple" />
-                      <h2 className="text-xl font-semibold">Journey Command Map</h2>
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {getBlueprintInsight()}
+                <div className="bg-white/80 backdrop-blur-lg rounded-3xl p-6 shadow-lg border border-white/20">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-soul-purple to-soul-teal rounded-2xl flex items-center justify-center">
+                        <MapPin className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-semibold text-gray-800">Journey Map</h2>
+                        <p className="text-sm text-gray-500">{getBlueprintInsight()}</p>
+                      </div>
                     </div>
                   </div>
                   
@@ -407,13 +420,13 @@ const Dreams = () => {
                     onTaskClick={handleTaskClick}
                     onMilestoneClick={handleMilestoneClick}
                   />
-                </CosmicCard>
+                </div>
               </div>
 
-              {/* Dynamic Task Management Panel */}
+              {/* Side Panel */}
               {taskView !== 'none' && (
                 <div className="xl:col-span-1 transition-all duration-300">
-                  <CosmicCard className="p-6 h-fit">
+                  <div className="bg-white/80 backdrop-blur-lg rounded-3xl p-6 shadow-lg border border-white/20 h-fit">
                     {taskView === 'tasks' && (
                       <TaskViews 
                         focusedMilestone={focusedMilestone}
@@ -425,14 +438,15 @@ const Dreams = () => {
                     {taskView === 'focus' && (
                       <div>
                         <div className="flex items-center justify-between mb-4">
-                          <h3 className="font-semibold flex items-center gap-2">
-                            <Clock className="h-5 w-5" />
+                          <h3 className="font-semibold flex items-center gap-2 text-gray-800">
+                            <Clock className="h-5 w-5 text-soul-purple" />
                             Focus Session
                           </h3>
                           <Button 
                             variant="ghost" 
                             size="sm" 
                             onClick={() => setTaskView('none')}
+                            className="rounded-xl"
                           >
                             ×
                           </Button>
@@ -444,14 +458,15 @@ const Dreams = () => {
                     {taskView === 'habits' && (
                       <div>
                         <div className="flex items-center justify-between mb-4">
-                          <h3 className="font-semibold flex items-center gap-2">
-                            <CheckCircle className="h-5 w-5" />
+                          <h3 className="font-semibold flex items-center gap-2 text-gray-800">
+                            <CheckCircle className="h-5 w-5 text-soul-purple" />
                             Daily Habits
                           </h3>
                           <Button 
                             variant="ghost" 
                             size="sm" 
                             onClick={() => setTaskView('none')}
+                            className="rounded-xl"
                           >
                             ×
                           </Button>
@@ -459,7 +474,7 @@ const Dreams = () => {
                         <HabitTracker />
                       </div>
                     )}
-                  </CosmicCard>
+                  </div>
                 </div>
               )}
             </div>
@@ -469,84 +484,92 @@ const Dreams = () => {
     );
   }
 
-  // Create Dream View (default)
+  // Create Dream View (default) - Completely redesigned
   return (
     <MainLayout>
-      <div className="min-h-screen bg-gradient-to-b from-soul-purple/5 to-background">
-        <div className="max-w-md mx-auto px-4 py-8">
+      <div className="min-h-screen bg-gradient-to-br from-soul-purple/10 via-white to-soul-teal/5">
+        <div className="max-w-lg mx-auto px-4 py-8">
           
-          {/* Hero Section - Above the fold */}
-          <div className="text-center mb-8">
-            <div className="w-20 h-20 mx-auto bg-gradient-to-br from-soul-purple/20 to-soul-purple/10 rounded-full flex items-center justify-center mb-6">
-              <Target className="h-10 w-10 text-soul-purple" />
+          {/* Hero Section */}
+          <div className="text-center mb-10">
+            <div className="w-24 h-24 mx-auto bg-gradient-to-br from-soul-purple via-soul-purple to-soul-teal rounded-full flex items-center justify-center mb-6 shadow-2xl">
+              <Sparkles className="h-12 w-12 text-white" />
             </div>
-            <h1 className="text-3xl font-bold font-display mb-3">Create Your Dream</h1>
-            <p className="text-muted-foreground text-lg leading-relaxed mb-2">
-              Turn your biggest aspiration into a personalized roadmap
+            <h1 className="text-3xl font-bold mb-4 bg-gradient-to-r from-soul-purple to-soul-teal bg-clip-text text-transparent">
+              What's Your Dream?
+            </h1>
+            <p className="text-gray-600 text-lg leading-relaxed mb-3">
+              Turn your biggest aspiration into a personalized, step-by-step journey
             </p>
-            <p className="text-sm text-soul-purple">{getBlueprintInsight()}</p>
+            <div className="inline-flex items-center gap-2 bg-soul-purple/10 px-4 py-2 rounded-full">
+              <div className="w-2 h-2 bg-soul-purple rounded-full animate-pulse"></div>
+              <p className="text-sm text-soul-purple font-medium">{getBlueprintInsight()}</p>
+            </div>
           </div>
 
           {/* Dream Creation Form */}
-          <CosmicCard className="p-6 mb-6">
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">What's your dream or goal?</label>
+          <div className="bg-white/80 backdrop-blur-lg rounded-3xl p-6 mb-8 shadow-lg border border-white/20">
+            <div className="space-y-6">
+              {/* Dream Input */}
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-700 block">Your Dream or Goal</label>
                 <Input
-                  placeholder="e.g., Launch my creative business, Get fit and healthy..."
+                  placeholder="Launch my creative business, get fit and healthy..."
                   value={dreamForm.title}
                   onChange={(e) => setDreamForm(prev => ({ ...prev, title: e.target.value }))}
-                  className="text-base"
+                  className="text-base border-gray-200 rounded-2xl h-12 focus:border-soul-purple focus:ring-soul-purple/20"
                 />
               </div>
 
-              <div>
-                <label className="text-sm font-medium mb-2 block">Why is this important to you?</label>
+              {/* Why Input */}
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-700 block">Why is this important?</label>
                 <Textarea
-                  placeholder="Share what drives this dream..."
+                  placeholder="Share what drives this dream and why it matters to you..."
                   value={dreamForm.description}
                   onChange={(e) => setDreamForm(prev => ({ ...prev, description: e.target.value }))}
-                  className="text-base min-h-[80px]"
+                  className="text-base border-gray-200 rounded-2xl min-h-[100px] focus:border-soul-purple focus:ring-soul-purple/20 resize-none"
                 />
               </div>
 
+              {/* Category & Timeline Grid */}
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Category</label>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gray-700 block">Category</label>
                   <Select 
                     value={dreamForm.category} 
                     onValueChange={(value) => setDreamForm(prev => ({ ...prev, category: value }))}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="border-gray-200 rounded-2xl h-12 focus:border-soul-purple">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="personal_growth">Personal Growth</SelectItem>
-                      <SelectItem value="career">Career</SelectItem>
-                      <SelectItem value="health">Health & Fitness</SelectItem>
-                      <SelectItem value="relationships">Relationships</SelectItem>
-                      <SelectItem value="creativity">Creativity</SelectItem>
-                      <SelectItem value="financial">Financial</SelectItem>
-                      <SelectItem value="spiritual">Spiritual</SelectItem>
+                    <SelectContent className="rounded-2xl border-gray-200">
+                      <SelectItem value="personal_growth" className="rounded-xl">Personal Growth</SelectItem>
+                      <SelectItem value="career" className="rounded-xl">Career</SelectItem>
+                      <SelectItem value="health" className="rounded-xl">Health & Fitness</SelectItem>
+                      <SelectItem value="relationships" className="rounded-xl">Relationships</SelectItem>
+                      <SelectItem value="creativity" className="rounded-xl">Creativity</SelectItem>
+                      <SelectItem value="financial" className="rounded-xl">Financial</SelectItem>
+                      <SelectItem value="spiritual" className="rounded-xl">Spiritual</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Timeframe</label>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gray-700 block">Timeline</label>
                   <Select 
                     value={dreamForm.timeframe} 
                     onValueChange={(value) => setDreamForm(prev => ({ ...prev, timeframe: value }))}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="border-gray-200 rounded-2xl h-12 focus:border-soul-purple">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1 month">1 Month</SelectItem>
-                      <SelectItem value="3 months">3 Months</SelectItem>
-                      <SelectItem value="6 months">6 Months</SelectItem>
-                      <SelectItem value="1 year">1 Year</SelectItem>
-                      <SelectItem value="2 years">2+ Years</SelectItem>
+                    <SelectContent className="rounded-2xl border-gray-200">
+                      <SelectItem value="1 month" className="rounded-xl">1 Month</SelectItem>
+                      <SelectItem value="3 months" className="rounded-xl">3 Months</SelectItem>
+                      <SelectItem value="6 months" className="rounded-xl">6 Months</SelectItem>
+                      <SelectItem value="1 year" className="rounded-xl">1 Year</SelectItem>
+                      <SelectItem value="2 years" className="rounded-xl">2+ Years</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -555,13 +578,13 @@ const Dreams = () => {
               {/* Create Button */}
               <Button 
                 onClick={handleCreateDream}
-                disabled={isCreatingDream}
-                className="w-full bg-soul-purple hover:bg-soul-purple/90 text-white text-lg py-6 rounded-xl font-semibold mt-6"
+                disabled={isCreatingDream || !dreamForm.title.trim()}
+                className="w-full bg-gradient-to-r from-soul-purple to-soul-teal hover:shadow-xl text-white text-lg py-6 rounded-2xl font-semibold mt-8 transition-all duration-300 disabled:opacity-50"
               >
                 {isCreatingDream ? (
                   <>
                     <Brain className="h-5 w-5 mr-2 animate-pulse" />
-                    Creating Your Journey...
+                    Creating Your AI Journey...
                   </>
                 ) : (
                   <>
@@ -571,41 +594,47 @@ const Dreams = () => {
                 )}
               </Button>
             </div>
-          </CosmicCard>
+          </div>
 
           {/* Alternative Options */}
-          <div className="space-y-3">
-            <div className="text-center text-sm text-muted-foreground mb-4">
-              Or explore other ways to start:
+          <div className="space-y-4">
+            <div className="text-center">
+              <p className="text-sm text-gray-500 mb-6">Or explore other ways to start</p>
             </div>
             
-            <Button
-              variant="outline"
-              onClick={handleStartAIGuidance}
-              className="w-full justify-start text-left p-4 h-auto border-soul-purple/30 hover:bg-soul-purple/5"
-            >
-              <div className="flex items-center">
-                <Zap className="h-5 w-5 mr-3 text-soul-purple" />
-                <div>
-                  <div className="font-medium">Talk with AI Dream Guide</div>
-                  <div className="text-sm text-muted-foreground">Explore your dreams through conversation</div>
+            <div className="space-y-3">
+              <Button
+                variant="outline"
+                onClick={handleStartAIGuidance}
+                className="w-full justify-start text-left p-4 h-auto border-gray-200 hover:border-soul-purple/50 hover:bg-soul-purple/5 rounded-2xl transition-all duration-300"
+              >
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-gradient-to-br from-soul-teal/20 to-soul-teal/10 rounded-2xl flex items-center justify-center mr-4">
+                    <Zap className="h-5 w-5 text-soul-teal" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-800">Talk with AI Dream Coach</div>
+                    <div className="text-sm text-gray-500">Explore your dreams through conversation</div>
+                  </div>
                 </div>
-              </div>
-            </Button>
+              </Button>
 
-            <Button
-              variant="outline"
-              onClick={() => setCurrentView('journey')}
-              className="w-full justify-start text-left p-4 h-auto border-soul-purple/30 hover:bg-soul-purple/5"
-            >
-              <div className="flex items-center">
-                <MapPin className="h-5 w-5 mr-3 text-soul-purple" />
-                <div>
-                  <div className="font-medium">View Existing Journey</div>
-                  <div className="text-sm text-muted-foreground">Continue your current dream path</div>
+              <Button
+                variant="outline"
+                onClick={() => setCurrentView('journey')}
+                className="w-full justify-start text-left p-4 h-auto border-gray-200 hover:border-soul-purple/50 hover:bg-soul-purple/5 rounded-2xl transition-all duration-300"
+              >
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-gradient-to-br from-soul-purple/20 to-soul-purple/10 rounded-2xl flex items-center justify-center mr-4">
+                    <MapPin className="h-5 w-5 text-soul-purple" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-800">View Current Journey</div>
+                    <div className="text-sm text-gray-500">Continue your dream progress</div>
+                  </div>
                 </div>
-              </div>
-            </Button>
+              </Button>
+            </div>
           </div>
         </div>
       </div>
