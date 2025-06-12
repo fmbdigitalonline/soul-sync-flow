@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -46,8 +45,8 @@ const SoulOrb: React.FC<SoulOrbProps> = ({
       newParticles.push({
         x: 50,
         y: 50,
-        size: Math.random() * 4 + 2,
-        speed: Math.random() * 0.5 + 0.5,
+        size: Math.random() * 3 + 1.5, // Smaller particles
+        speed: Math.random() * 0.3 + 0.3, // Slower speed
         angle: (Math.PI * 2 / particleCount) * i,
       });
     }
@@ -84,7 +83,7 @@ const SoulOrb: React.FC<SoulOrbProps> = ({
       ref={orbRef}
       onClick={onClick}
       className={cn(
-        "relative flex items-center justify-center rounded-full cursor-pointer", 
+        "relative flex items-center justify-center rounded-full cursor-pointer overflow-hidden", 
         sizeMap[size],
         className
       )}
@@ -104,17 +103,18 @@ const SoulOrb: React.FC<SoulOrbProps> = ({
       
       {/* Star in the center */}
       <div className="absolute w-1/2 h-1/2 bg-white rounded-full blur-[1px]" />
-      <div className="absolute w-[40%] h-[40%]">
+      <div className="absolute w-[30%] h-[30%]">
         <div className="absolute left-[45%] top-0 w-[10%] h-[100%] bg-white transform rotate-0" />
         <div className="absolute left-[45%] top-0 w-[10%] h-[100%] bg-white transform rotate-90" />
         <div className="absolute left-[45%] top-0 w-[10%] h-[100%] bg-white transform rotate-45" />
         <div className="absolute left-[45%] top-0 w-[10%] h-[100%] bg-white transform rotate-[135deg]" />
       </div>
       
-      {/* Orbital rings */}
+      {/* Orbital rings - adjusted to stay within bounds */}
       {particles.map((particle, index) => {
-        const x = 50 + Math.cos(particle.angle) * 40;
-        const y = 50 + Math.sin(particle.angle) * 40;
+        // Reduced orbital radius to 30% to keep particles inside the circle
+        const x = 50 + Math.cos(particle.angle) * 30;
+        const y = 50 + Math.sin(particle.angle) * 30;
         
         return (
           <div 
@@ -132,11 +132,11 @@ const SoulOrb: React.FC<SoulOrbProps> = ({
         );
       })}
       
-      {/* Orbital lines - new addition to match the image */}
-      <div className="absolute w-full h-full">
-        <div className="absolute inset-0 rounded-full border border-white opacity-70 rotate-45" />
-        <div className="absolute inset-0 rounded-full border border-white opacity-70 rotate-90" />
-        <div className="absolute inset-0 rounded-full border border-white opacity-70" />
+      {/* Orbital lines - adjusted to fit within circle */}
+      <div className="absolute inset-2">
+        <div className="absolute inset-0 rounded-full border border-white opacity-50 rotate-45" />
+        <div className="absolute inset-0 rounded-full border border-white opacity-50 rotate-90" />
+        <div className="absolute inset-0 rounded-full border border-white opacity-50" />
       </div>
       
       {/* Speaking indicator */}
