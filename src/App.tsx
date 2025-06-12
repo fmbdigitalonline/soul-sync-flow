@@ -7,7 +7,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { SoulOrbProvider } from "@/contexts/SoulOrbContext";
-import { AIProvider } from "@/contexts/AIContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Coach from "./pages/Coach";
@@ -26,18 +25,16 @@ function App() {
           <AuthProvider>
             <LanguageProvider>
               <SoulOrbProvider>
-                <AIProvider>
-                  <Toaster />
-                  <Sonner />
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/auth" element={<Auth />} />
-                    <Route path="/coach" element={<Coach />} />
-                    <Route path="/dreams" element={<Dreams />} />
-                    <Route path="/spiritual-growth" element={<SpiritualGrowth />} />
-                    <Route path="/onboarding" element={<Onboarding />} />
-                  </Routes>
-                </AIProvider>
+                <Toaster />
+                <Sonner />
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/coach" element={<Coach />} />
+                  <Route path="/dreams" element={<Dreams />} />
+                  <Route path="/spiritual-growth" element={<SpiritualGrowth />} />
+                  <Route path="/onboarding" element={<Onboarding />} />
+                </Routes>
               </SoulOrbProvider>
             </LanguageProvider>
           </AuthProvider>
