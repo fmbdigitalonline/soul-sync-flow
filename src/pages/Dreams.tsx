@@ -3,21 +3,17 @@ import React, { useRef, useEffect, useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
-import { Heart, TrendingUp, Star, Plus, MessageCircle, Sparkles, Target } from "lucide-react";
+import { Heart, Target, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useEnhancedAICoach } from "@/hooks/use-enhanced-ai-coach";
 import { supabase } from "@/integrations/supabase/client";
 import { CoachInterface } from "@/components/coach/CoachInterface";
-import DreamAchievementDashboard from "@/components/journey/DreamAchievementDashboard";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
 
 const Dreams = () => {
   const { messages, isLoading, sendMessage, resetConversation, currentAgent, switchAgent } = useEnhancedAICoach("coach");
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [showChat, setShowChat] = useState(false);
-  const [showDashboard, setShowDashboard] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -55,14 +51,6 @@ const Dreams = () => {
     scrollToBottom();
   }, [messages]);
 
-  const handleNewConversation = () => {
-    resetConversation();
-    toast({
-      title: "New Journey Conversation",
-      description: "Starting fresh with your Dream Guide",
-    });
-  };
-
   const handleStartDreamJourney = () => {
     sendMessage("I want to start my dream journey. Help me define my biggest goal and create a personalized action plan.");
     setShowChat(true);
@@ -78,15 +66,15 @@ const Dreams = () => {
   if (!isAuthenticated) {
     return (
       <MainLayout>
-        <div className="flex flex-col h-[calc(100vh-5rem)] max-w-md mx-auto p-4 items-center justify-center">
-          <CosmicCard className="p-6 text-center">
-            <Heart className="h-8 w-8 text-soul-purple mx-auto mb-4" />
-            <h1 className="text-2xl font-bold font-display mb-2">
+        <div className="min-h-screen flex items-center justify-center p-4">
+          <CosmicCard className="p-8 text-center max-w-sm w-full">
+            <Heart className="h-12 w-12 text-soul-purple mx-auto mb-6" />
+            <h1 className="text-2xl font-bold font-display mb-4">
               <span className="text-soul-purple">Dream Achievement</span>
             </h1>
-            <p className="mb-6">Sign in to start your personalized journey to your dreams</p>
+            <p className="mb-8 text-muted-foreground">Sign in to start your personalized journey to your dreams</p>
             <Button 
-              className="bg-soul-purple hover:bg-soul-purple/90"
+              className="w-full bg-soul-purple hover:bg-soul-purple/90"
               onClick={() => window.location.href = '/auth'}
             >
               {t('nav.signIn')}
@@ -97,137 +85,90 @@ const Dreams = () => {
     );
   }
 
-  return (
-    <MainLayout>
-      <div className="flex flex-col h-[calc(100vh-5rem)] max-w-md mx-auto p-4">
-        {/* Main Call-to-Action - Above the Fold */}
-        <div className="text-center mb-4">
-          <h1 className="text-xl font-bold font-display text-soul-purple mb-2 flex items-center justify-center">
-            <Heart className="h-5 w-5 mr-2" />
-            Dream Journey
-          </h1>
-          
-          {/* Primary CTA Button */}
-          <CosmicCard className="p-4 mb-4 border-soul-purple/30 bg-gradient-to-br from-soul-purple/5 to-transparent">
-            <div className="text-center space-y-3">
-              <div className="w-16 h-16 mx-auto bg-soul-purple/10 rounded-full flex items-center justify-center mb-3">
-                <Target className="h-8 w-8 text-soul-purple" />
+  if (showChat) {
+    return (
+      <MainLayout>
+        <div className="h-screen flex flex-col">
+          {/* Minimal Chat Header */}
+          <div className="bg-background border-b border-border p-4">
+            <div className="flex items-center justify-between max-w-md mx-auto">
+              <div className="flex items-center">
+                <Heart className="h-5 w-5 text-soul-purple mr-2" />
+                <h2 className="text-lg font-semibold">Dream Guide</h2>
               </div>
-              <h2 className="text-lg font-semibold">Start Your Dream Journey</h2>
-              <p className="text-sm text-muted-foreground">
-                Create your personalized path to achieving your dreams
-              </p>
               <Button 
-                onClick={handleStartDreamJourney}
-                className="w-full bg-soul-purple hover:bg-soul-purple/90 text-white"
-                disabled={isLoading}
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setShowChat(false)}
+                className="text-sm"
               >
-                <Sparkles className="h-4 w-4 mr-2" />
-                Create Your Dream Goal
+                Back
               </Button>
             </div>
-          </CosmicCard>
-        </div>
-
-        {/* Compact Journey Progress */}
-        <CosmicCard className="p-3 mb-3 border-soul-purple/20">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium flex items-center">
-              <TrendingUp className="h-4 w-4 mr-2 text-soul-purple" />
-              Journey Progress
-            </h3>
-            <Badge variant="outline" className="text-xs border-soul-purple/30">
-              2 of 5 milestones
-            </Badge>
           </div>
-          <Progress value={40} className="h-2 mb-3" />
           
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              className="flex-1 text-xs h-7 border-soul-purple/30"
-              onClick={() => sendMessage("What's my next soul step toward my dream?")}
+          {/* Chat Interface */}
+          <div className="flex-1 max-w-md mx-auto w-full p-4">
+            <CoachInterface
+              messages={messages}
+              isLoading={isLoading}
+              onSendMessage={sendMessage}
+              messagesEndRef={messagesEndRef}
+            />
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  return (
+    <MainLayout>
+      <div className="min-h-screen bg-gradient-to-b from-soul-purple/5 to-background">
+        <div className="max-w-md mx-auto px-4 py-8">
+          
+          {/* Hero Section - Above the fold */}
+          <div className="text-center mb-8">
+            <div className="mb-6">
+              <div className="w-24 h-24 mx-auto bg-gradient-to-br from-soul-purple/20 to-soul-purple/10 rounded-full flex items-center justify-center mb-6">
+                <Target className="h-12 w-12 text-soul-purple" />
+              </div>
+              <h1 className="text-2xl font-bold font-display mb-3">Start Your Dream Journey</h1>
+              <p className="text-muted-foreground text-lg leading-relaxed">
+                Define your first dream or goal to see your personalized journey map
+              </p>
+            </div>
+            
+            {/* Primary CTA */}
+            <Button 
+              onClick={handleStartDreamJourney}
+              className="w-full bg-soul-purple hover:bg-soul-purple/90 text-white text-lg py-6 rounded-xl font-semibold"
+              disabled={isLoading}
             >
-              <Star className="h-3 w-3 mr-1" />
-              Next Step
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="flex-1 text-xs h-7 border-soul-purple/30"
-              onClick={() => setShowDashboard(!showDashboard)}
-            >
-              <MessageCircle className="h-3 w-3 mr-1" />
-              {showDashboard ? 'Hide' : 'Tools'}
+              <Sparkles className="h-5 w-5 mr-2" />
+              Create Your First Dream
             </Button>
           </div>
-        </CosmicCard>
 
-        {/* Expandable Dashboard */}
-        {showDashboard && (
-          <div className="mb-4">
-            <DreamAchievementDashboard />
-          </div>
-        )}
-
-        {/* Quick Soul Guidance */}
-        {!showChat && !showDashboard && (
-          <CosmicCard className="p-4 mb-4 border-soul-purple/20">
-            <h3 className="text-sm font-medium mb-3 flex items-center">
-              <Sparkles className="h-4 w-4 mr-2 text-soul-purple" />
-              Quick Soul Guidance
-            </h3>
-            <div className="space-y-2">
+          {/* Quick Soul Guidance */}
+          <CosmicCard className="p-6 border-soul-purple/20">
+            <h3 className="text-lg font-semibold mb-4 text-center">Quick Soul Guidance</h3>
+            <div className="space-y-3">
               {quickActions.map((action, index) => (
                 <Button
                   key={index}
                   variant="outline"
-                  size="sm"
                   onClick={() => {
                     sendMessage(action);
                     setShowChat(true);
                   }}
-                  className="w-full justify-start text-xs h-8 border-soul-purple/30 hover:bg-soul-purple/5"
+                  className="w-full justify-start text-left p-4 h-auto border-soul-purple/30 hover:bg-soul-purple/5"
                 >
-                  <Plus className="h-3 w-3 mr-2" />
-                  {action}
+                  <div className="text-sm leading-relaxed">{action}</div>
                 </Button>
               ))}
             </div>
           </CosmicCard>
-        )}
-
-        {/* Expandable Chat Interface */}
-        {showChat && (
-          <div className="flex-1 flex flex-col">
-            <CosmicCard className="p-3 mb-3 border-soul-purple/20">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium">Dream Guide</h3>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => setShowChat(false)}
-                  className="text-xs"
-                >
-                  Minimize
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Your soul-aligned success companion
-              </p>
-            </CosmicCard>
-            
-            <div className="flex-1 flex flex-col">
-              <CoachInterface
-                messages={messages}
-                isLoading={isLoading}
-                onSendMessage={sendMessage}
-                messagesEndRef={messagesEndRef}
-              />
-            </div>
-          </div>
-        )}
+        </div>
       </div>
     </MainLayout>
   );
