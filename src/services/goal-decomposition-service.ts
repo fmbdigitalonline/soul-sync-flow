@@ -118,7 +118,7 @@ Structure your response clearly with numbered sections for milestones and tasks.
 
       console.log("AI Response received:", data.response);
       
-      // Always use intelligent parsing since AI responses are typically text
+      // Use the robust parsing approach
       const decomposedGoal = this.parseTextResponse(data.response, goalDescription, timeframe, category, blueprintData);
       
       console.log("Final decomposed goal:", decomposedGoal);
@@ -190,101 +190,51 @@ Provide detailed, personalized breakdowns that honor the user's unique blueprint
     const successCriteria: string[] = [];
     const blueprintAlignment: string[] = [];
 
-    const lines = response.split('\n').filter(line => line.trim());
+    // More robust parsing approach
+    const sections = this.splitResponseIntoSections(response);
     
-    let currentSection = '';
-    let currentMilestoneId = '';
+    // Parse milestones section
+    if (sections.milestones) {
+      sections.milestones.forEach((milestoneText, index) => {
+        const milestone = this.parseMilestone(milestoneText, index, timeframe, blueprintData);
+        if (milestone) milestones.push(milestone);
+      });
+    }
     
-    lines.forEach((line, index) => {
-      const cleanLine = line.trim();
-      
-      // Detect sections
-      if (cleanLine.toLowerCase().includes('milestone')) {
-        currentSection = 'milestones';
-      } else if (cleanLine.toLowerCase().includes('task')) {
-        currentSection = 'tasks';
-      }
-      
-      // Parse milestones
-      if (currentSection === 'milestones' && (cleanLine.match(/^\d+\./) || cleanLine.toLowerCase().includes('milestone'))) {
-        const milestoneTitle = cleanLine
-          .replace(/^\d+\.\s*/, '')
-          .replace(/milestone\s*\d*:?\s*/i, '')
-          .replace(/\s*-\s*.*$/, '')
-          .trim();
-        
-        if (milestoneTitle) {
-          const milestoneId = `milestone_${Date.now()}_${milestones.length}`;
-          currentMilestoneId = milestoneId;
-          
-          const milestone: Milestone = {
-            id: milestoneId,
-            title: milestoneTitle,
-            description: lines[index + 1]?.trim().replace(/description:\s*/i, '') || milestoneTitle,
-            target_date: this.calculateMilestoneDate(timeframe, milestones.length),
-            completion_criteria: this.extractCriteria(lines, index),
-            dependencies: [],
-            blueprint_considerations: this.extractBlueprintConsiderations(milestoneTitle, blueprintData),
-            completed: false,
-            progress: 0
-          };
-          milestones.push(milestone);
-        }
-      }
-      
-      // Parse tasks
-      if (currentSection === 'tasks' && cleanLine.match(/^\d+\./)) {
-        const taskTitle = cleanLine
-          .replace(/^\d+\.\s*/, '')
-          .replace(/for milestone \d+/i, '')
-          .trim();
-        
-        if (taskTitle) {
-          const task: Task = {
-            id: `task_${Date.now()}_${tasks.length}`,
-            title: taskTitle,
-            description: lines[index + 1]?.trim().replace(/description:\s*/i, '') || taskTitle,
-            category: this.categorizeTask(taskTitle, blueprintData),
-            estimated_duration: this.extractDuration(lines, index),
-            energy_level_required: this.assessEnergyLevel(taskTitle, blueprintData),
-            optimal_time_of_day: this.suggestOptimalTiming(taskTitle, blueprintData),
-            blueprint_alignment: this.extractBlueprintConsiderations(taskTitle, blueprintData),
-            dependencies: [],
-            milestone_id: currentMilestoneId,
-            completed: false,
-            priority: this.assessTaskPriority(taskTitle),
-          };
-          tasks.push(task);
-        }
-      }
-      
-      // Extract success criteria
-      if (cleanLine.toLowerCase().includes('success') || cleanLine.toLowerCase().includes('criteria')) {
-        successCriteria.push(cleanLine.trim());
-      }
-      
-      // Extract blueprint alignment
-      if (cleanLine.toLowerCase().includes(blueprintData.cognition_mbti?.type.toLowerCase() || '') ||
-          cleanLine.toLowerCase().includes(blueprintData.energy_strategy_human_design?.type.toLowerCase() || '')) {
-        blueprintAlignment.push(cleanLine.trim());
-      }
-    });
+    // Parse tasks section
+    if (sections.tasks) {
+      sections.tasks.forEach((taskText, index) => {
+        const task = this.parseTask(taskText, index, milestones, blueprintData);
+        if (task) tasks.push(task);
+      });
+    }
+
+    // Extract success criteria from anywhere in the response
+    successCriteria.push(...this.extractSuccessCriteria(response));
+    
+    // Extract blueprint alignment mentions
+    blueprintAlignment.push(...this.extractBlueprintAlignment(response, blueprintData));
 
     // Ensure we have at least some milestones and tasks
     if (milestones.length === 0) {
+      console.log("No milestones parsed, generating defaults");
       milestones.push(...this.generateDefaultMilestones(originalGoal, timeframe, blueprintData));
     }
     
     if (tasks.length === 0) {
+      console.log("No tasks parsed, generating defaults");
       tasks.push(...this.generateDefaultTasks(originalGoal, milestones, blueprintData));
     }
 
-    console.log(`Generated ${milestones.length} milestones and ${tasks.length} tasks`);
+    // Ensure tasks are properly linked to milestones
+    this.linkTasksToMilestones(tasks, milestones);
+
+    console.log(`Successfully parsed ${milestones.length} milestones and ${tasks.length} tasks`);
 
     return {
       id: `goal_${Date.now()}`,
       title: originalGoal,
-      description: response.substring(0, 200) + '...',
+      description: this.extractGoalDescription(response) || `A ${timeframe} goal in ${category}`,
       category,
       priority: 'medium',
       timeframe,
@@ -300,26 +250,268 @@ Provide detailed, personalized breakdowns that honor the user's unique blueprint
     };
   }
 
-  private extractCriteria(lines: string[], startIndex: number): string[] {
-    const criteria: string[] = [];
-    for (let i = startIndex + 1; i < Math.min(startIndex + 5, lines.length); i++) {
-      const line = lines[i]?.trim();
-      if (line && (line.toLowerCase().includes('criteria') || line.toLowerCase().includes('success'))) {
-        criteria.push(line.replace(/success criteria:\s*/i, '').trim());
+  private splitResponseIntoSections(response: string): {
+    milestones: string[];
+    tasks: string[];
+    other: string[];
+  } {
+    const lines = response.split('\n').filter(line => line.trim());
+    const result = {
+      milestones: [] as string[],
+      tasks: [] as string[],
+      other: [] as string[]
+    };
+    
+    let currentSection: 'milestones' | 'tasks' | 'other' = 'other';
+    let currentItem = '';
+    
+    for (const line of lines) {
+      const trimmed = line.trim();
+      
+      // Detect section headers more reliably
+      if (this.isMilestoneHeader(trimmed)) {
+        if (currentItem) result[currentSection].push(currentItem.trim());
+        currentSection = 'milestones';
+        currentItem = trimmed;
+      } else if (this.isTaskHeader(trimmed)) {
+        if (currentItem) result[currentSection].push(currentItem.trim());
+        currentSection = 'tasks';
+        currentItem = trimmed;
+      } else if (this.isNumberedItem(trimmed)) {
+        // Handle numbered items based on current section
+        if (currentItem) result[currentSection].push(currentItem.trim());
+        currentItem = trimmed;
+      } else {
+        // Continuation of current item
+        if (currentItem) currentItem += '\n' + trimmed;
+        else currentItem = trimmed;
       }
     }
-    return criteria.length > 0 ? criteria : ['Milestone completed successfully'];
+    
+    // Don't forget the last item
+    if (currentItem) result[currentSection].push(currentItem.trim());
+    
+    return result;
   }
 
-  private extractDuration(lines: string[], startIndex: number): string {
-    for (let i = startIndex + 1; i < Math.min(startIndex + 3, lines.length); i++) {
-      const line = lines[i]?.trim().toLowerCase();
-      if (line && line.includes('duration')) {
-        const match = line.match(/(\d+)\s*(hour|minute|day)/);
-        if (match) return `${match[1]} ${match[2]}${match[1] !== '1' ? 's' : ''}`;
+  private isMilestoneHeader(line: string): boolean {
+    const lower = line.toLowerCase();
+    return lower.includes('milestone') && (
+      lower.startsWith('milestone') || 
+      lower.includes('## milestone') ||
+      lower.includes('# milestone')
+    );
+  }
+
+  private isTaskHeader(line: string): boolean {
+    const lower = line.toLowerCase();
+    return lower.includes('task') && (
+      lower.startsWith('task') || 
+      lower.includes('## task') ||
+      lower.includes('# task')
+    );
+  }
+
+  private isNumberedItem(line: string): boolean {
+    return /^\d+\.\s+/.test(line.trim());
+  }
+
+  private parseMilestone(
+    milestoneText: string, 
+    index: number, 
+    timeframe: string, 
+    blueprintData: BlueprintData
+  ): Milestone | null {
+    const lines = milestoneText.split('\n').filter(l => l.trim());
+    if (lines.length === 0) return null;
+    
+    // Extract title from first line
+    const firstLine = lines[0].trim();
+    let title = firstLine
+      .replace(/^\d+\.\s*/, '')
+      .replace(/milestone\s*\d*:?\s*/i, '')
+      .replace(/\s*-\s*\d{4}-\d{2}-\d{2}.*$/, '') // Remove dates
+      .trim();
+    
+    if (!title) return null;
+    
+    // Extract description from subsequent lines
+    const description = lines.slice(1)
+      .filter(line => !line.toLowerCase().includes('description:'))
+      .map(line => line.replace(/^description:\s*/i, '').trim())
+      .join(' ')
+      .trim() || title;
+    
+    // Extract completion criteria
+    const criteria = this.extractCriteriaFromText(milestoneText);
+    
+    return {
+      id: `milestone_${Date.now()}_${index}`,
+      title,
+      description,
+      target_date: this.calculateMilestoneDate(timeframe, index),
+      completion_criteria: criteria.length > 0 ? criteria : ['Milestone completed successfully'],
+      dependencies: index > 0 ? [`milestone_${Date.now()}_${index - 1}`] : [],
+      blueprint_considerations: this.extractBlueprintConsiderations(title, blueprintData),
+      completed: false,
+      progress: 0
+    };
+  }
+
+  private parseTask(
+    taskText: string, 
+    index: number, 
+    milestones: Milestone[], 
+    blueprintData: BlueprintData
+  ): Task | null {
+    const lines = taskText.split('\n').filter(l => l.trim());
+    if (lines.length === 0) return null;
+    
+    // Extract title from first line
+    const firstLine = lines[0].trim();
+    let title = firstLine
+      .replace(/^\d+\.\s*/, '')
+      .replace(/task\s*\d*:?\s*/i, '')
+      .replace(/for milestone \d+/i, '')
+      .trim();
+    
+    if (!title) return null;
+    
+    // Extract description
+    const description = lines.slice(1)
+      .filter(line => !line.toLowerCase().includes('description:'))
+      .map(line => line.replace(/^description:\s*/i, '').trim())
+      .join(' ')
+      .trim() || title;
+    
+    // Determine which milestone this task belongs to
+    const milestoneId = this.determineMilestoneForTask(taskText, index, milestones);
+    
+    return {
+      id: `task_${Date.now()}_${index}`,
+      title,
+      description,
+      category: this.categorizeTask(title, blueprintData),
+      estimated_duration: this.extractDurationFromText(taskText) || '1-2 hours',
+      energy_level_required: this.assessEnergyLevel(title, blueprintData),
+      optimal_time_of_day: this.suggestOptimalTiming(title, blueprintData),
+      blueprint_alignment: this.extractBlueprintConsiderations(title, blueprintData),
+      dependencies: [],
+      milestone_id: milestoneId,
+      completed: false,
+      priority: this.assessTaskPriority(title)
+    };
+  }
+
+  private extractCriteriaFromText(text: string): string[] {
+    const criteria: string[] = [];
+    const lines = text.split('\n');
+    
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (trimmed.toLowerCase().includes('criteria') || 
+          trimmed.toLowerCase().includes('success')) {
+        // Extract criteria items
+        const criteriaText = trimmed
+          .replace(/success criteria:\s*/i, '')
+          .replace(/criteria:\s*/i, '')
+          .trim();
+        if (criteriaText) criteria.push(criteriaText);
       }
     }
-    return '1-2 hours';
+    
+    return criteria;
+  }
+
+  private extractDurationFromText(text: string): string | null {
+    const durationMatch = text.match(/duration:\s*([^\n]+)/i) || 
+                         text.match(/(\d+)\s*(hour|minute|day|week)s?/i);
+    
+    if (durationMatch) {
+      return durationMatch[1] || `${durationMatch[1]} ${durationMatch[2]}${durationMatch[1] !== '1' ? 's' : ''}`;
+    }
+    
+    return null;
+  }
+
+  private determineMilestoneForTask(taskText: string, taskIndex: number, milestones: Milestone[]): string | undefined {
+    // Look for explicit milestone references
+    const milestoneMatch = taskText.match(/milestone (\d+)/i);
+    if (milestoneMatch) {
+      const milestoneNumber = parseInt(milestoneMatch[1]) - 1;
+      if (milestoneNumber >= 0 && milestoneNumber < milestones.length) {
+        return milestones[milestoneNumber].id;
+      }
+    }
+    
+    // Distribute tasks evenly across milestones
+    if (milestones.length > 0) {
+      const milestoneIndex = Math.floor(taskIndex / Math.ceil(10 / milestones.length));
+      return milestones[Math.min(milestoneIndex, milestones.length - 1)]?.id;
+    }
+    
+    return undefined;
+  }
+
+  private linkTasksToMilestones(tasks: Task[], milestones: Milestone[]): void {
+    // Ensure all tasks are linked to milestones
+    tasks.forEach((task, index) => {
+      if (!task.milestone_id && milestones.length > 0) {
+        const milestoneIndex = Math.floor(index / Math.ceil(tasks.length / milestones.length));
+        task.milestone_id = milestones[Math.min(milestoneIndex, milestones.length - 1)]?.id;
+      }
+    });
+  }
+
+  private extractSuccessCriteria(response: string): string[] {
+    const criteria: string[] = [];
+    const lines = response.split('\n');
+    
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if ((trimmed.toLowerCase().includes('success') && trimmed.toLowerCase().includes('criteria')) ||
+          trimmed.toLowerCase().includes('measure') ||
+          trimmed.toLowerCase().includes('achieve')) {
+        criteria.push(trimmed);
+      }
+    }
+    
+    return criteria;
+  }
+
+  private extractGoalDescription(response: string): string | null {
+    // Try to extract a meaningful description from the AI response
+    const lines = response.split('\n').filter(l => l.trim());
+    
+    // Look for descriptive paragraphs (not headers or lists)
+    for (const line of lines.slice(0, 5)) { // Check first 5 lines
+      const trimmed = line.trim();
+      if (trimmed.length > 50 && 
+          !trimmed.match(/^\d+\./) && 
+          !trimmed.toLowerCase().includes('milestone') &&
+          !trimmed.toLowerCase().includes('task')) {
+        return trimmed.substring(0, 200) + (trimmed.length > 200 ? '...' : '');
+      }
+    }
+    
+    return null;
+  }
+
+  private extractBlueprintAlignment(response: string, blueprintData: BlueprintData): string[] {
+    const alignment: string[] = [];
+    const lines = response.split('\n');
+    
+    for (const line of lines) {
+      const trimmed = line.trim().toLowerCase();
+      if (blueprintData.cognition_mbti?.type && trimmed.includes(blueprintData.cognition_mbti.type.toLowerCase())) {
+        alignment.push(line.trim());
+      }
+      if (blueprintData.energy_strategy_human_design?.type && trimmed.includes(blueprintData.energy_strategy_human_design.type.toLowerCase())) {
+        alignment.push(line.trim());
+      }
+    }
+    
+    return alignment;
   }
 
   private categorizeTask(taskText: string, blueprintData: BlueprintData): 'planning' | 'execution' | 'review' | 'communication' {
