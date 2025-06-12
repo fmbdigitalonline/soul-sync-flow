@@ -66,9 +66,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Mobile Header */}
-      <div className="md:hidden bg-background border-b border-border sticky top-0 z-50">
+      <div className="md:hidden bg-white/80 backdrop-blur-lg border-b border-gray-100 sticky top-0 z-40">
         <div className="flex items-center justify-between p-4">
           <Link to="/" className="flex items-center space-x-2">
             <SoulOrbAvatar size="sm" />
@@ -82,56 +82,34 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
               variant="ghost"
               size="icon"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden"
+              className="md:hidden rounded-xl"
             >
               {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
           )}
         </div>
         
-        {/* Mobile Menu */}
+        {/* Mobile Menu Dropdown */}
         {isMenuOpen && user && (
-          <div className="border-t border-border bg-background p-4 space-y-2">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  onClick={() => setIsMenuOpen(false)}
-                  className={cn(
-                    "flex items-center space-x-3 p-3 rounded-lg transition-colors",
-                    isActive(item.to)
-                      ? "bg-primary/10 text-primary font-medium"
-                      : "text-muted-foreground hover:bg-secondary"
-                  )}
-                >
-                  <Icon className="h-5 w-5" />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-            
-            <div className="pt-2 border-t border-border">
-              <Button
-                variant="ghost"
-                onClick={handleSignOut}
-                className="w-full justify-start text-muted-foreground"
-              >
-                <LogOut className="h-5 w-5 mr-3" />
-                {t('nav.signOut')}
-              </Button>
-            </div>
+          <div className="border-t border-gray-100 bg-white/95 backdrop-blur-lg p-4 space-y-2">
+            <Button
+              variant="ghost"
+              onClick={handleSignOut}
+              className="w-full justify-start text-gray-600 rounded-xl"
+            >
+              <LogOut className="h-5 w-5 mr-3" />
+              {t('nav.signOut')}
+            </Button>
           </div>
         )}
       </div>
 
-      <div className="flex">
+      <div className="flex flex-1 min-h-0">
         {/* Desktop Sidebar */}
         {user && (
-          <div className="hidden md:flex w-64 min-h-screen bg-background border-r border-border flex-col">
+          <div className="hidden md:flex w-64 min-h-full bg-white/80 backdrop-blur-lg border-r border-gray-100 flex-col">
             {/* Logo */}
-            <div className="p-6 border-b border-border">
+            <div className="p-6 border-b border-gray-100">
               <Link to="/" className="flex items-center space-x-3">
                 <SoulOrbAvatar size="md" />
                 <span className="font-display font-bold text-xl gradient-text">
@@ -149,10 +127,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
                     key={item.to}
                     to={item.to}
                     className={cn(
-                      "flex items-center space-x-3 p-3 rounded-lg transition-colors",
+                      "flex items-center space-x-3 p-3 rounded-2xl transition-all duration-200",
                       isActive(item.to)
-                        ? "bg-primary/10 text-primary font-medium"
-                        : "text-muted-foreground hover:bg-secondary"
+                        ? "bg-gradient-to-r from-soul-purple/10 to-soul-teal/10 text-soul-purple font-medium border border-soul-purple/20"
+                        : "text-gray-600 hover:bg-gray-50 hover:text-soul-purple"
                     )}
                   >
                     <Icon className="h-5 w-5" />
@@ -163,11 +141,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
             </nav>
 
             {/* User Actions */}
-            <div className="p-4 border-t border-border space-y-2">
+            <div className="p-4 border-t border-gray-100 space-y-2">
               <Button
                 variant="ghost"
                 onClick={handleSignOut}
-                className="w-full justify-start text-muted-foreground"
+                className="w-full justify-start text-gray-600 rounded-xl hover:bg-gray-50"
               >
                 <LogOut className="h-5 w-5 mr-3" />
                 {t('nav.signOut')}
@@ -176,11 +154,50 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
           </div>
         )}
 
-        {/* Main Content */}
-        <div className="flex-1">
-          {children}
+        {/* Main Content - with proper mobile spacing */}
+        <div className="flex-1 flex flex-col min-h-0">
+          <div className="flex-1 overflow-auto pb-20 md:pb-0">
+            {children}
+          </div>
         </div>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      {user && (
+        <div className="md:hidden fixed bottom-0 left-0 right-0 z-50">
+          <div className="bg-white/95 backdrop-blur-lg border-t border-gray-100 px-2 py-2 shadow-lg">
+            <div className="flex justify-around items-center max-w-md mx-auto">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const active = isActive(item.to);
+                return (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    className={cn(
+                      "flex flex-col items-center gap-1 p-2 rounded-2xl transition-all duration-200 min-w-[60px]",
+                      active
+                        ? "bg-gradient-to-t from-soul-purple/10 to-soul-teal/10 text-soul-purple"
+                        : "text-gray-500 hover:text-soul-purple"
+                    )}
+                  >
+                    <Icon className={cn(
+                      "h-5 w-5 transition-all duration-200",
+                      active ? "scale-110" : ""
+                    )} />
+                    <span className={cn(
+                      "text-xs font-medium transition-all duration-200",
+                      active ? "text-soul-purple" : "text-gray-400"
+                    )}>
+                      {item.label}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

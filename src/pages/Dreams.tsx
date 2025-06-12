@@ -488,7 +488,7 @@ const Dreams = () => {
   return (
     <MainLayout>
       <div className="min-h-screen bg-gradient-to-br from-soul-purple/10 via-white to-soul-teal/5">
-        <div className="max-w-lg mx-auto px-4 py-8">
+        <div className="max-w-lg mx-auto px-4 py-8 pb-32 md:pb-8">
           
           {/* Hero Section */}
           <div className="text-center mb-10">
