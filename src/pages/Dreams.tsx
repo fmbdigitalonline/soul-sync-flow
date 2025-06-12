@@ -25,7 +25,7 @@ import { useEnhancedAICoach } from "@/hooks/use-enhanced-ai-coach";
 import { supabase } from "@/integrations/supabase/client";
 import { CoachInterface } from "@/components/coach/CoachInterface";
 import { useBlueprintData } from "@/hooks/use-blueprint-data";
-import { enhancedGoalDecompositionService } from "@/services/enhanced-goal-decomposition-service";
+import { aiGoalDecompositionService } from "@/services/ai-goal-decomposition-service";
 import { JourneyMap } from "@/components/journey/JourneyMap";
 import { EnhancedJourneyMap } from "@/components/journey/EnhancedJourneyMap";
 import { TaskViews } from "@/components/journey/TaskViews";
@@ -113,17 +113,18 @@ const Dreams = () => {
     setIsCreatingDream(true);
 
     try {
-      console.log('Starting dream creation with form:', dreamForm);
+      console.log('Starting AI-powered dream creation with form:', dreamForm);
       
-      // Create goal using blueprint-aligned decomposition
-      const goal = await enhancedGoalDecompositionService.decomposeGoal(
+      // Create goal using AI-powered blueprint-aligned decomposition
+      const aiGoal = await aiGoalDecompositionService.decomposeGoalWithAI(
         dreamForm.title,
+        dreamForm.description,
         dreamForm.timeframe,
         dreamForm.category,
         blueprintData || {}
       );
 
-      console.log('Goal decomposed successfully:', goal);
+      console.log('AI goal decomposed successfully:', aiGoal);
 
       // Save to productivity journey
       const { data: { user } } = await supabase.auth.getUser();
@@ -131,35 +132,39 @@ const Dreams = () => {
         throw new Error('User not authenticated');
       }
 
-      console.log('Saving goal for user:', user.id);
+      console.log('Saving AI-generated goal for user:', user.id);
 
-      // Convert Goal to a plain object with properly serialized nested arrays
+      // Convert AI Goal to database format
       const goalAsJson = {
-        id: goal.id,
-        title: goal.title,
-        description: goal.description,
-        category: goal.category,
-        timeframe: goal.timeframe,
-        target_completion: goal.target_completion,
-        created_at: goal.created_at,
-        milestones: (goal.milestones || []).map(milestone => ({
+        id: aiGoal.id,
+        title: aiGoal.title,
+        description: aiGoal.description,
+        category: aiGoal.category,
+        timeframe: aiGoal.timeframe,
+        target_completion: aiGoal.target_completion,
+        created_at: aiGoal.created_at,
+        milestones: (aiGoal.milestones || []).map(milestone => ({
           id: milestone.id,
           title: milestone.title,
           description: milestone.description,
           target_date: milestone.target_date,
           completed: milestone.completed || false,
-          completion_criteria: milestone.completion_criteria || []
+          completion_criteria: milestone.completion_criteria || [],
+          blueprint_alignment: milestone.blueprint_alignment
         })),
-        tasks: (goal.tasks || []).map(task => ({
+        tasks: (aiGoal.tasks || []).map(task => ({
           id: task.id,
           title: task.title,
           description: task.description,
           completed: task.completed || false,
           estimated_duration: task.estimated_duration,
           energy_level_required: task.energy_level_required,
-          category: task.category
+          category: task.category,
+          optimal_timing: task.optimal_timing,
+          blueprint_reasoning: task.blueprint_reasoning
         })),
-        blueprint_alignment: goal.blueprint_alignment || []
+        blueprint_insights: aiGoal.blueprint_insights || [],
+        personalization_notes: aiGoal.personalization_notes
       };
       
       const { error } = await supabase
@@ -173,16 +178,16 @@ const Dreams = () => {
         });
 
       if (error) {
-        console.error('Supabase error saving goal:', error);
+        console.error('Supabase error saving AI goal:', error);
         throw new Error(`Database error: ${error.message}`);
       }
 
-      console.log('Goal saved successfully to database');
+      console.log('AI-generated goal saved successfully to database');
 
       // Show success and switch to journey view
       toast({
-        title: "🎯 Dream Journey Created!",
-        description: "Your personalized roadmap is ready. Let's begin!",
+        title: "🎯 AI Dream Journey Created!",
+        description: "Your personalized roadmap has been created using your unique blueprint!",
       });
 
       // Reset form
@@ -195,10 +200,10 @@ const Dreams = () => {
 
       setCurrentView('journey');
     } catch (error) {
-      console.error('Error creating dream:', error);
+      console.error('Error creating AI dream:', error);
       toast({
         title: "Creation Error",
-        description: error instanceof Error ? error.message : "Failed to create your dream journey. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to create your AI dream journey. Please try again.",
         variant: "destructive"
       });
     } finally {
