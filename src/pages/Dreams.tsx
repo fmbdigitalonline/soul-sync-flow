@@ -15,15 +15,30 @@ import { useBlueprintData } from "@/hooks/use-blueprint-data";
 import { goalDecompositionService } from "@/services/goal-decomposition-service";
 import { JourneyMap } from "@/components/journey/JourneyMap";
 import { TaskViews } from "@/components/journey/TaskViews";
+import { TaskCoachInterface } from "@/components/task/TaskCoachInterface";
 import { PomodoroTimer } from "@/components/productivity/PomodoroTimer";
 import { HabitTracker } from "@/components/productivity/HabitTracker";
+
+interface Task {
+  id: string;
+  title: string;
+  description?: string;
+  status: 'todo' | 'in_progress' | 'stuck' | 'completed';
+  due_date?: string;
+  estimated_duration: string;
+  energy_level_required: string;
+  category: string;
+  optimal_time_of_day: string[];
+  goal_id?: string;
+}
 
 const Dreams = () => {
   const { messages, isLoading, sendMessage, resetConversation, currentAgent, switchAgent } = useEnhancedAICoach("coach");
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [currentView, setCurrentView] = useState<'create' | 'chat' | 'journey'>('create');
+  const [currentView, setCurrentView] = useState<'create' | 'chat' | 'journey' | 'task-coach'>('create');
   const [taskView, setTaskView] = useState<'none' | 'tasks' | 'focus' | 'habits'>('none');
   const [focusedMilestone, setFocusedMilestone] = useState<any>(null);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isCreatingDream, setIsCreatingDream] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -193,6 +208,26 @@ const Dreams = () => {
     return `This journey will be optimized for your ${traits.slice(0, 2).join(' & ')} nature`;
   };
 
+  // New task selection handler
+  const handleTaskSelect = (task: Task) => {
+    setSelectedTask(task);
+    setCurrentView('task-coach');
+  };
+
+  const handleTaskComplete = async (taskId: string) => {
+    // Update task status to completed
+    // This will be handled by the task coach interface
+    toast({
+      title: "🎉 Task Completed!",
+      description: "Great work! The task has been marked as complete.",
+    });
+  };
+
+  const handleBackFromTaskCoach = () => {
+    setSelectedTask(null);
+    setCurrentView('journey');
+  };
+
   const handleMilestoneClick = (milestoneId: string) => {
     // Find the milestone and focus on it
     const milestone = { id: milestoneId }; // You can expand this to get full milestone data
@@ -227,6 +262,21 @@ const Dreams = () => {
               {t('nav.signIn')}
             </Button>
           </CosmicCard>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  // Task Coach View
+  if (currentView === 'task-coach' && selectedTask) {
+    return (
+      <MainLayout>
+        <div className="h-screen">
+          <TaskCoachInterface
+            task={selectedTask}
+            onBack={handleBackFromTaskCoach}
+            onTaskComplete={handleTaskComplete}
+          />
         </div>
       </MainLayout>
     );
@@ -349,6 +399,7 @@ const Dreams = () => {
                       <TaskViews 
                         focusedMilestone={focusedMilestone}
                         onBackToJourney={handleBackToJourney}
+                        onTaskSelect={handleTaskSelect}
                       />
                     )}
                     

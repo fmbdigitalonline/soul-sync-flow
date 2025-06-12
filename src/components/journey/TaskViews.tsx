@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,7 +13,8 @@ import {
   AlertCircle,
   Pause,
   Play,
-  ArrowLeft
+  ArrowLeft,
+  MessageCircle
 } from "lucide-react";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 import { format, parseISO, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
@@ -47,9 +47,14 @@ interface Goal {
 interface TaskViewsProps {
   focusedMilestone?: any;
   onBackToJourney: () => void;
+  onTaskSelect: (task: Task) => void;
 }
 
-export const TaskViews: React.FC<TaskViewsProps> = ({ focusedMilestone, onBackToJourney }) => {
+export const TaskViews: React.FC<TaskViewsProps> = ({ 
+  focusedMilestone, 
+  onBackToJourney, 
+  onTaskSelect 
+}) => {
   const { productivityJourney, updateProductivityJourney } = useJourneyTracking();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
@@ -175,14 +180,16 @@ export const TaskViews: React.FC<TaskViewsProps> = ({ focusedMilestone, onBackTo
     
     return (
       <div
-        className={`p-3 border-2 rounded-lg cursor-move transition-all duration-200 ${getStatusColor(task.status)} hover:shadow-md`}
+        className={`p-3 border-2 rounded-lg cursor-pointer transition-all duration-200 ${getStatusColor(task.status)} hover:shadow-md`}
         draggable
         onDragStart={() => handleDragStart(task)}
+        onClick={() => onTaskSelect(task)}
       >
         <div className="flex items-start justify-between mb-2">
           <h4 className="font-medium text-sm leading-relaxed">{task.title}</h4>
-          <div className="ml-2 flex-shrink-0">
+          <div className="ml-2 flex-shrink-0 flex items-center gap-1">
             {getStatusIcon(task.status)}
+            <MessageCircle className="h-3 w-3 text-soul-purple opacity-60" />
           </div>
         </div>
         
@@ -205,6 +212,10 @@ export const TaskViews: React.FC<TaskViewsProps> = ({ focusedMilestone, onBackTo
             <span className="truncate">{goal.title}</span>
           </div>
         )}
+        
+        <div className="text-xs text-soul-purple font-medium mt-2 opacity-75">
+          Click to start coaching session →
+        </div>
       </div>
     );
   };
