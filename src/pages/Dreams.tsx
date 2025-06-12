@@ -1,19 +1,33 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useState, useMemo } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MainLayout from "@/components/Layout/MainLayout";
-import { CosmicCard } from "@/components/ui/cosmic-card";
+import BlueprintViewer from "@/components/blueprint/BlueprintViewer";
+import EnhancedBlueprintViewer from "@/components/blueprint/EnhancedBlueprintViewer";
+import BlueprintEditor from "@/components/blueprint/BlueprintEditor";
+import { BlueprintHealthCheck } from "@/components/blueprint/BlueprintHealthCheck";
 import { Button } from "@/components/ui/button";
+import { Loader2, MessageCircle, RefreshCw, ToggleLeft, ToggleRight, Activity } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { BlueprintData, blueprintService } from "@/services/blueprint-service";
+import { useNavigate } from "react-router-dom";
+import { BlueprintGenerator } from "@/components/blueprint/BlueprintGenerationFlow";
+import { useAuth } from "@/contexts/AuthContext";
+import { useSoulOrb } from "@/contexts/SoulOrbContext";
+import { BlueprintEnhancementService } from "@/services/blueprint-enhancement-service";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useOptimizedBlueprintData } from "@/hooks/use-optimized-blueprint-data";
+import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Heart, Target, Sparkles, MapPin, Calendar, Zap, Brain, Clock, CheckCircle } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import { useEnhancedAICoach } from "@/hooks/use-enhanced-ai-coach";
 import { supabase } from "@/integrations/supabase/client";
 import { CoachInterface } from "@/components/coach/CoachInterface";
-import { useLanguage } from "@/contexts/LanguageContext";
 import { useBlueprintData } from "@/hooks/use-blueprint-data";
 import { goalDecompositionService } from "@/services/goal-decomposition-service";
 import { JourneyMap } from "@/components/journey/JourneyMap";
+import { EnhancedJourneyMap } from "@/components/journey/EnhancedJourneyMap";
 import { TaskViews } from "@/components/journey/TaskViews";
 import { TaskCoachInterface } from "@/components/task/TaskCoachInterface";
 import { PomodoroTimer } from "@/components/productivity/PomodoroTimer";
@@ -384,7 +398,7 @@ const Dreams = () => {
                     </div>
                   </div>
                   
-                  <JourneyMap 
+                  <EnhancedJourneyMap 
                     onTaskClick={handleTaskClick}
                     onMilestoneClick={handleMilestoneClick}
                   />
