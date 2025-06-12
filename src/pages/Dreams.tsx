@@ -89,14 +89,16 @@ const Dreams = () => {
         blueprintData || {}
       );
 
-      // Save to productivity journey
+      // Save to productivity journey - convert Goal to JSON
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
+        const goalAsJson = JSON.parse(JSON.stringify(goal));
+        
         const { error } = await supabase
           .from('productivity_journey')
           .upsert({
             user_id: user.id,
-            current_goals: [goal],
+            current_goals: [goalAsJson],
             updated_at: new Date().toISOString()
           }, {
             onConflict: 'user_id'
@@ -104,6 +106,7 @@ const Dreams = () => {
 
         if (error) {
           console.error('Error saving goal:', error);
+          throw error;
         }
       }
 
