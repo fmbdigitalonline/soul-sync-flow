@@ -1,11 +1,10 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { enhancedAICoachService, AgentType } from "@/services/enhanced-ai-coach-service";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useBlueprintData } from "./use-blueprint-data";
 import { LayeredBlueprint } from "@/types/personality-modules";
 import { useStreamingMessage } from "./use-streaming-message";
-import { useJourneyTracking } from "./use-journey-tracking";
 
 export interface Message {
   id: string;
@@ -16,13 +15,13 @@ export interface Message {
   isStreaming?: boolean;
 }
 
-export const useEnhancedAICoach = (mode: AgentType = "guide") => {
+export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [currentSessionId] = useState(() => enhancedAICoachService.createNewSession(mode));
+  const [currentAgent, setCurrentAgent] = useState<AgentType>(defaultAgent);
+  const [currentSessionId] = useState(() => enhancedAICoachService.createNewSession(defaultAgent));
   const { language } = useLanguage();
   const { blueprintData } = useBlueprintData();
-  const { refetch: refetchJourneys } = useJourneyTracking();
   
   const {
     streamingContent,
@@ -33,21 +32,12 @@ export const useEnhancedAICoach = (mode: AgentType = "guide") => {
     resetStreaming,
   } = useStreamingMessage();
 
-  // Load conversation history when component mounts or mode changes
-  useEffect(() => {
-    const loadHistory = async () => {
-      const history = await enhancedAICoachService.loadConversationHistory(mode);
-      setMessages(history);
-    };
-    
-    loadHistory();
-  }, [mode]);
-
   // Convert blueprint data to LayeredBlueprint format and update the AI service
   useEffect(() => {
     if (blueprintData) {
       console.log("Converting blueprint data for enhanced personality engine:", blueprintData);
       
+      // Convert the raw blueprint data to LayeredBlueprint format
       const layeredBlueprint: Partial<LayeredBlueprint> = {
         cognitiveTemperamental: {
           mbtiType: blueprintData.cognition_mbti?.type || "Unknown",
@@ -118,17 +108,44 @@ export const useEnhancedAICoach = (mode: AgentType = "guide") => {
         },
       };
 
+      // Update the AI service with the user's blueprint
       enhancedAICoachService.updateUserBlueprint(layeredBlueprint);
       console.log("Updated enhanced AI service with layered blueprint");
     }
   }, [blueprintData]);
 
-  // Save conversation history whenever messages change
+  // Load conversation history when component mounts or agent changes
+  useEffect(() => {
+    const loadHistory = async () => {
+      try {
+        const history = await enhancedAICoachService.loadConversationHistory(currentAgent);
+        setMessages(history);
+        console.log(`Loaded ${history.length} messages for ${currentAgent} mode`);
+      } catch (error) {
+        console.error("Error loading conversation history:", error);
+      }
+    };
+
+    loadHistory();
+  }, [currentAgent]);
+
+  // Save conversation history when messages change
   useEffect(() => {
     if (messages.length > 0) {
-      enhancedAICoachService.saveConversationHistory(mode, messages);
+      const saveHistory = async () => {
+        try {
+          await enhancedAICoachService.saveConversationHistory(currentAgent, messages);
+          console.log(`Saved ${messages.length} messages for ${currentAgent} mode`);
+        } catch (error) {
+          console.error("Error saving conversation history:", error);
+        }
+      };
+
+      // Debounce saving to avoid excessive database calls
+      const timeoutId = setTimeout(saveHistory, 1000);
+      return () => clearTimeout(timeoutId);
     }
-  }, [messages, mode]);
+  }, [messages, currentAgent]);
 
   const sendMessage = async (content: string, useStreaming: boolean = true) => {
     if (!content.trim()) return;
@@ -138,7 +155,7 @@ export const useEnhancedAICoach = (mode: AgentType = "guide") => {
       content,
       sender: "user",
       timestamp: new Date(),
-      agentType: mode,
+      agentType: currentAgent,
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -152,7 +169,7 @@ export const useEnhancedAICoach = (mode: AgentType = "guide") => {
         content: "",
         sender: "assistant",
         timestamp: new Date(),
-        agentType: mode,
+        agentType: currentAgent,
         isStreaming: true,
       };
 
@@ -166,7 +183,7 @@ export const useEnhancedAICoach = (mode: AgentType = "guide") => {
           content,
           currentSessionId,
           true,
-          mode,
+          currentAgent,
           language,
           {
             onChunk: (chunk: string) => {
@@ -192,8 +209,6 @@ export const useEnhancedAICoach = (mode: AgentType = "guide") => {
                 )
               );
               setIsLoading(false);
-              // Refresh journey data after conversation
-              refetchJourneys();
             },
             onError: (error: Error) => {
               console.error("Enhanced streaming error:", error);
@@ -219,8 +234,8 @@ export const useEnhancedAICoach = (mode: AgentType = "guide") => {
       const response = await enhancedAICoachService.sendMessage(
         content,
         currentSessionId,
-        true,
-        mode,
+        true, // Always include blueprint for personalized responses
+        currentAgent,
         language
       );
 
@@ -229,7 +244,7 @@ export const useEnhancedAICoach = (mode: AgentType = "guide") => {
         content: response.response,
         sender: "assistant",
         timestamp: new Date(),
-        agentType: mode,
+        agentType: currentAgent,
       };
 
       if (existingMessageId) {
@@ -241,9 +256,6 @@ export const useEnhancedAICoach = (mode: AgentType = "guide") => {
       } else {
         setMessages(prev => [...prev, assistantMessage]);
       }
-
-      // Refresh journey data after conversation
-      refetchJourneys();
     } catch (error) {
       console.error("Error sending enhanced message:", error);
       const errorMessage: Message = {
@@ -251,7 +263,7 @@ export const useEnhancedAICoach = (mode: AgentType = "guide") => {
         content: language === 'nl' ? "Sorry, er is een fout opgetreden. Probeer het later opnieuw." : "Sorry, there was an error. Please try again later.",
         sender: "assistant",
         timestamp: new Date(),
-        agentType: mode,
+        agentType: currentAgent,
       };
 
       if (existingMessageId) {
@@ -273,12 +285,17 @@ export const useEnhancedAICoach = (mode: AgentType = "guide") => {
     enhancedAICoachService.clearConversationCache();
   };
 
+  const switchAgent = (newAgent: AgentType) => {
+    setCurrentAgent(newAgent);
+  };
+
   return {
     messages,
     isLoading,
     sendMessage,
     resetConversation,
-    currentAgent: mode,
+    currentAgent,
+    switchAgent,
     streamingContent,
     isStreaming,
   };
