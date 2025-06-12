@@ -500,6 +500,10 @@ export default function Onboarding() {
               <PersonalityFusion 
                 value={formData.personality}
                 onChange={(value) => updateFormData({ personality: value })}
+                onComplete={() => {
+                  console.log("PersonalityFusion completed, moving to next step");
+                  goToNextStep();
+                }}
                 seedData={{
                   sunSign: "Aquarius", // This would come from birth data calculation
                   moonSign: "Leo", // These are placeholders - would be calculated from birth data
@@ -511,22 +515,7 @@ export default function Onboarding() {
             </div>
             <div className="flex justify-between pt-4">
               <Button variant="ghost" onClick={goToPrevStep}>Back</Button>
-              <Button 
-                disabled={!formData.personality}
-                onClick={() => {
-                  if (!user && !authLoading) {
-                    toast({
-                      title: "Authentication Required",
-                      description: "Please sign in to continue with blueprint generation.",
-                    });
-                    navigate("/auth");
-                    return;
-                  }
-                  goToNextStep();
-                }}
-              >
-                Continue
-              </Button>
+              {/* Remove the continue button since PersonalityFusion handles completion */}
             </div>
           </div>
         );

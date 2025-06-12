@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { Sparkles, User, Home, Calendar } from "lucide-react";
 interface PersonalityFusionProps {
   value: any;
   onChange: (value: any) => void;
+  onComplete?: () => void; // Add callback for completion
   seedData?: {
     sunSign?: string;
     moonSign?: string;
@@ -46,6 +48,7 @@ interface PersonalityEstimate {
 export const PersonalityFusion: React.FC<PersonalityFusionProps> = ({ 
   value, 
   onChange, 
+  onComplete,
   seedData 
 }) => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -302,7 +305,14 @@ export const PersonalityFusion: React.FC<PersonalityFusionProps> = ({
       
       console.log("Calling onChange with final result:", finalResult);
       onChange(finalResult);
-      console.log("onChange called successfully");
+      
+      // Call onComplete callback to trigger next step
+      if (onComplete) {
+        console.log("Calling onComplete to trigger next step");
+        onComplete();
+      }
+      
+      console.log("Personality fusion completed successfully");
     } catch (error) {
       console.error("Error in handleConfidenceSubmit:", error);
       setIsSubmitting(false);
@@ -451,9 +461,16 @@ export const PersonalityFusion: React.FC<PersonalityFusionProps> = ({
           <Button 
             onClick={handleConfidenceSubmit}
             disabled={isSubmitting}
-            className="w-full bg-soul-purple hover:bg-soul-purple/90"
+            className="w-full bg-soul-purple hover:bg-soul-purple/90 text-white font-medium py-3 rounded-lg"
           >
-            {isSubmitting ? "Processing..." : "Continue with this profile"}
+            {isSubmitting ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Processing...
+              </div>
+            ) : (
+              "Continue with this profile"
+            )}
           </Button>
           
           <p className="text-xs text-center text-muted-foreground">
