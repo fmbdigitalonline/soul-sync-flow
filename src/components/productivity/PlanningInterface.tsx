@@ -17,7 +17,9 @@ import {
   Pause,
   Play,
   Brain,
-  ChevronRight
+  ChevronRight,
+  TrendingUp,
+  BarChart3
 } from "lucide-react";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 import { format, parseISO, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
@@ -52,14 +54,11 @@ export const PlanningInterface = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
 
-  console.log("ProductivityJourney current_goals:", productivityJourney?.current_goals);
-
   const currentGoals = (productivityJourney?.current_goals || []) as Goal[];
   
   // Extract all tasks from goals and normalize them
   const allTasks: Task[] = currentGoals.flatMap(goal => 
     goal.tasks.map(task => {
-      // Normalize the task to ensure it has all required properties
       const normalizedTask: Task = {
         id: task.id,
         title: task.title,
@@ -76,7 +75,14 @@ export const PlanningInterface = () => {
     })
   );
 
-  console.log("Extracted and normalized tasks:", allTasks);
+  // Calculate statistics
+  const stats = {
+    total: allTasks.length,
+    completed: allTasks.filter(t => t.status === 'completed').length,
+    inProgress: allTasks.filter(t => t.status === 'in_progress').length,
+    stuck: allTasks.filter(t => t.status === 'stuck').length,
+    completionRate: allTasks.length > 0 ? Math.round((allTasks.filter(t => t.status === 'completed').length / allTasks.length) * 100) : 0
+  };
 
   // Group tasks by status for Kanban
   const tasksByStatus = {
@@ -85,8 +91,6 @@ export const PlanningInterface = () => {
     stuck: allTasks.filter(task => task.status === 'stuck'),
     completed: allTasks.filter(task => task.status === 'completed')
   };
-
-  console.log("Tasks by status:", tasksByStatus);
 
   // Get tasks for selected date
   const tasksForSelectedDate = allTasks.filter(task => {
@@ -104,8 +108,6 @@ export const PlanningInterface = () => {
   });
 
   const updateTaskStatus = async (taskId: string, newStatus: 'todo' | 'in_progress' | 'stuck' | 'completed') => {
-    console.log(`Updating task ${taskId} to status ${newStatus}`);
-    
     const updatedGoals = currentGoals.map(goal => ({
       ...goal,
       tasks: goal.tasks.map(task => 
@@ -116,8 +118,6 @@ export const PlanningInterface = () => {
         } : task
       )
     }));
-
-    console.log("Updated goals with new task status:", updatedGoals);
 
     await updateProductivityJourney({
       current_goals: updatedGoals
@@ -152,20 +152,20 @@ export const PlanningInterface = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'todo': return 'bg-gray-100 text-gray-800 border-gray-200';
-      case 'in_progress': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'stuck': return 'bg-red-100 text-red-800 border-red-200';
-      case 'completed': return 'bg-green-100 text-green-800 border-green-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'todo': return 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100';
+      case 'in_progress': return 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100';
+      case 'stuck': return 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100';
+      case 'completed': return 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100';
+      default: return 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100';
     }
   };
 
   const getEnergyColor = (energy: string) => {
     switch (energy.toLowerCase()) {
-      case 'low': return 'bg-green-100 text-green-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'high': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'low': return 'bg-green-100 text-green-700 border-green-200';
+      case 'medium': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+      case 'high': return 'bg-red-100 text-red-700 border-red-200';
+      default: return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
 
@@ -174,42 +174,44 @@ export const PlanningInterface = () => {
     
     return (
       <div
-        className={`p-3 border rounded-lg cursor-move hover:shadow-sm transition-shadow ${getStatusColor(task.status)}`}
+        className={`p-4 border-2 rounded-xl cursor-move transition-all duration-200 ${getStatusColor(task.status)} hover:shadow-md`}
         draggable
         onDragStart={() => handleDragStart(task)}
       >
-        <div className="flex items-start justify-between mb-2">
-          <h4 className="font-medium text-sm">{task.title}</h4>
-          {getStatusIcon(task.status)}
+        <div className="flex items-start justify-between mb-3">
+          <h4 className="font-semibold text-sm leading-relaxed">{task.title}</h4>
+          <div className="ml-2 flex-shrink-0">
+            {getStatusIcon(task.status)}
+          </div>
         </div>
         
         {task.description && (
-          <p className="text-xs text-muted-foreground mb-2">{task.description}</p>
+          <p className="text-xs text-muted-foreground mb-3 leading-relaxed">{task.description}</p>
         )}
         
-        <div className="flex flex-wrap gap-1 mb-2">
-          <Badge variant="outline" className={`text-xs ${getEnergyColor(task.energy_level_required)}`}>
+        <div className="flex flex-wrap gap-2 mb-3">
+          <Badge variant="outline" className={`text-xs font-medium ${getEnergyColor(task.energy_level_required)}`}>
             {task.energy_level_required} energy
           </Badge>
-          <Badge variant="outline" className="text-xs">
+          <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-200">
             {task.estimated_duration}
           </Badge>
           {task.optimal_time_of_day.slice(0, 2).map(time => (
-            <Badge key={time} variant="outline" className="text-xs">
+            <Badge key={time} variant="outline" className="text-xs bg-indigo-50 text-indigo-700 border-indigo-200">
               {time}
             </Badge>
           ))}
         </div>
         
         {showGoal && goal && (
-          <div className="flex items-center text-xs text-muted-foreground">
+          <div className="flex items-center text-xs text-muted-foreground mb-2">
             <Target className="h-3 w-3 mr-1" />
-            {goal.title}
+            <span className="truncate">{goal.title}</span>
           </div>
         )}
         
         {task.due_date && (
-          <div className="flex items-center text-xs text-muted-foreground mt-1">
+          <div className="flex items-center text-xs text-muted-foreground">
             <CalendarIcon className="h-3 w-3 mr-1" />
             {(() => {
               try {
@@ -229,26 +231,28 @@ export const PlanningInterface = () => {
     title, 
     status, 
     tasks, 
-    icon 
+    icon,
+    accentColor
   }: { 
     title: string; 
     status: 'todo' | 'in_progress' | 'stuck' | 'completed';
     tasks: Task[]; 
     icon: React.ReactNode;
+    accentColor: string;
   }) => (
-    <div className="flex-1 min-w-64">
-      <div className="flex items-center justify-between mb-3 p-3 bg-secondary/20 rounded-lg">
-        <div className="flex items-center space-x-2">
+    <div className="flex-1 min-w-72">
+      <div className={`flex items-center justify-between mb-4 p-4 rounded-xl ${accentColor}`}>
+        <div className="flex items-center space-x-3">
           {icon}
-          <h3 className="font-medium text-sm">{title}</h3>
+          <h3 className="font-semibold text-sm">{title}</h3>
         </div>
-        <Badge variant="outline" className="text-xs">
+        <Badge variant="secondary" className="text-xs font-bold">
           {tasks.length}
         </Badge>
       </div>
       
       <div
-        className="space-y-3 min-h-96 p-2 border-2 border-dashed border-muted rounded-lg"
+        className="space-y-3 min-h-96 p-3 border-2 border-dashed border-muted-foreground/20 rounded-xl bg-muted/10 transition-colors hover:border-muted-foreground/40"
         onDragOver={handleDragOver}
         onDrop={(e) => handleDrop(e, status)}
       >
@@ -258,25 +262,37 @@ export const PlanningInterface = () => {
         
         {tasks.length === 0 && (
           <div className="flex items-center justify-center h-32 text-muted-foreground">
-            <p className="text-sm">Drop tasks here</p>
+            <p className="text-sm font-medium">Drop tasks here</p>
           </div>
         )}
       </div>
     </div>
   );
 
+  const StatCard = ({ label, value, icon, color }: { label: string; value: number; icon: React.ReactNode; color: string }) => (
+    <div className={`p-4 rounded-xl ${color}`}>
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-xs font-medium text-muted-foreground">{label}</p>
+          <p className="text-2xl font-bold">{value}</p>
+        </div>
+        {icon}
+      </div>
+    </div>
+  );
+
   if (currentGoals.length === 0) {
     return (
-      <CosmicCard className="p-6">
+      <CosmicCard className="p-8">
         <div className="text-center py-12">
-          <Brain className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="font-medium mb-2">No Intelligent Goals Yet</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            Create an AI-powered goal in the Goal Achievement tab to see your personalized planning board
+          <Brain className="h-16 w-16 text-muted-foreground mx-auto mb-6" />
+          <h3 className="text-xl font-semibold mb-3">No AI Goals Yet</h3>
+          <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+            Create an AI-powered goal in the Dream Achievement tab to see your personalized planning board with intelligent task breakdown
           </p>
-          <div className="flex items-center justify-center text-xs text-muted-foreground">
-            <ChevronRight className="h-3 w-3 mr-1" />
-            Switch to "AI Goals" tab to get started
+          <div className="flex items-center justify-center text-sm text-soul-purple font-medium">
+            <ChevronRight className="h-4 w-4 mr-1" />
+            Switch to "Dreams" tab to get started
           </div>
         </div>
       </CosmicCard>
@@ -286,56 +302,89 @@ export const PlanningInterface = () => {
   return (
     <CosmicCard className="p-6">
       <div className="mb-6">
-        <h3 className="text-lg font-medium mb-2">Intelligent Planning Board</h3>
-        <p className="text-sm text-muted-foreground">
+        <h3 className="text-xl font-semibold mb-2">Intelligent Task Management</h3>
+        <p className="text-muted-foreground">
           AI-generated tasks and milestones from your goals, organized for optimal productivity
         </p>
-        <div className="mt-2 text-xs text-muted-foreground">
-          Found {allTasks.length} tasks from {currentGoals.length} goals
-        </div>
+      </div>
+
+      {/* Stats Overview */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <StatCard 
+          label="Total Tasks" 
+          value={stats.total} 
+          icon={<List className="h-5 w-5 text-muted-foreground" />}
+          color="bg-slate-50"
+        />
+        <StatCard 
+          label="Completed" 
+          value={stats.completed} 
+          icon={<CheckCircle2 className="h-5 w-5 text-emerald-600" />}
+          color="bg-emerald-50"
+        />
+        <StatCard 
+          label="In Progress" 
+          value={stats.inProgress} 
+          icon={<Play className="h-5 w-5 text-blue-600" />}
+          color="bg-blue-50"
+        />
+        <StatCard 
+          label="Success Rate" 
+          value={stats.completionRate} 
+          icon={<TrendingUp className="h-5 w-5 text-purple-600" />}
+          color="bg-purple-50"
+        />
       </div>
 
       <Tabs defaultValue="kanban" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-6">
+        <TabsList className="grid w-full grid-cols-4 mb-6">
           <TabsTrigger value="kanban" className="flex items-center gap-2">
             <Kanban className="h-4 w-4" />
-            <span className="hidden sm:inline">Kanban Board</span>
-          </TabsTrigger>
-          <TabsTrigger value="calendar" className="flex items-center gap-2">
-            <CalendarIcon className="h-4 w-4" />
-            <span className="hidden sm:inline">Calendar View</span>
+            <span className="hidden sm:inline">Kanban Flow</span>
           </TabsTrigger>
           <TabsTrigger value="list" className="flex items-center gap-2">
             <List className="h-4 w-4" />
-            <span className="hidden sm:inline">List View</span>
+            <span className="hidden sm:inline">Task List</span>
+          </TabsTrigger>
+          <TabsTrigger value="calendar" className="flex items-center gap-2">
+            <CalendarIcon className="h-4 w-4" />
+            <span className="hidden sm:inline">Calendar</span>
+          </TabsTrigger>
+          <TabsTrigger value="dashboard" className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" />
+            <span className="hidden sm:inline">Overview</span>
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="kanban" className="mt-6">
-          <div className="flex gap-4 overflow-x-auto pb-4">
+          <div className="flex gap-6 overflow-x-auto pb-4">
             <KanbanColumn
               title="To Do"
               status="todo"
               tasks={tasksByStatus.todo}
-              icon={<List className="h-4 w-4 text-gray-600" />}
+              icon={<List className="h-5 w-5 text-slate-600" />}
+              accentColor="bg-slate-100"
             />
             <KanbanColumn
               title="In Progress"
               status="in_progress"
               tasks={tasksByStatus.in_progress}
-              icon={<Play className="h-4 w-4 text-blue-600" />}
+              icon={<Play className="h-5 w-5 text-blue-600" />}
+              accentColor="bg-blue-100"
             />
             <KanbanColumn
               title="Stuck"
               status="stuck"
               tasks={tasksByStatus.stuck}
-              icon={<AlertCircle className="h-4 w-4 text-red-600" />}
+              icon={<AlertCircle className="h-5 w-5 text-amber-600" />}
+              accentColor="bg-amber-100"
             />
             <KanbanColumn
               title="Completed"
               status="completed"
               tasks={tasksByStatus.completed}
-              icon={<CheckCircle2 className="h-4 w-4 text-green-600" />}
+              icon={<CheckCircle2 className="h-5 w-5 text-emerald-600" />}
+              accentColor="bg-emerald-100"
             />
           </div>
         </TabsContent>
@@ -347,20 +396,21 @@ export const PlanningInterface = () => {
                 mode="single"
                 selected={selectedDate}
                 onSelect={(date) => date && setSelectedDate(date)}
-                className="rounded-md border"
+                className="rounded-xl border"
               />
             </div>
             
             <div>
-              <h4 className="font-medium mb-4">
+              <h4 className="font-semibold mb-4 text-lg">
                 Tasks for {format(selectedDate, 'MMMM d, yyyy')}
               </h4>
               
               <div className="space-y-3">
                 {tasksForSelectedDate.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <CalendarIcon className="h-8 w-8 mx-auto mb-2" />
-                    <p className="text-sm">No tasks scheduled for this day</p>
+                  <div className="text-center py-12 text-muted-foreground">
+                    <CalendarIcon className="h-12 w-12 mx-auto mb-4" />
+                    <p className="font-medium">No tasks scheduled for this day</p>
+                    <p className="text-sm">Select a different date or add tasks to your goals</p>
                   </div>
                 ) : (
                   tasksForSelectedDate.map(task => (
@@ -375,15 +425,15 @@ export const PlanningInterface = () => {
         <TabsContent value="list" className="mt-6">
           <div className="space-y-6">
             {currentGoals.map(goal => (
-              <div key={goal.id} className="border rounded-lg p-4">
-                <div className="flex items-center justify-between mb-4">
+              <div key={goal.id} className="border rounded-xl p-6 bg-gradient-to-r from-background to-muted/20">
+                <div className="flex items-center justify-between mb-6">
                   <div>
-                    <h4 className="font-medium">{goal.title}</h4>
-                    <p className="text-sm text-muted-foreground">{goal.description}</p>
+                    <h4 className="text-lg font-semibold">{goal.title}</h4>
+                    <p className="text-muted-foreground">{goal.description}</p>
                   </div>
                   <div className="text-right">
-                    <div className="text-sm font-medium">{goal.progress}%</div>
-                    <Progress value={goal.progress} className="w-24 h-2 mt-1" />
+                    <div className="text-sm font-medium mb-1">{goal.progress}% Complete</div>
+                    <Progress value={goal.progress} className="w-24 h-2" />
                   </div>
                 </div>
                 
@@ -402,6 +452,43 @@ export const PlanningInterface = () => {
                 </div>
               </div>
             ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="dashboard" className="mt-6">
+          <div className="grid gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {currentGoals.map(goal => (
+                <div key={goal.id} className="p-6 border rounded-xl bg-gradient-to-br from-background to-muted/20">
+                  <div className="flex items-center justify-between mb-4">
+                    <Target className="h-8 w-8 text-soul-purple" />
+                    <Badge variant="outline" className="text-xs">
+                      {goal.category}
+                    </Badge>
+                  </div>
+                  <h4 className="font-semibold mb-2">{goal.title}</h4>
+                  <div className="space-y-3">
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Progress</span>
+                        <span className="font-medium">{goal.progress}%</span>
+                      </div>
+                      <Progress value={goal.progress} className="h-2" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 text-xs">
+                      <div>
+                        <span className="text-muted-foreground">Tasks</span>
+                        <p className="font-medium">{goal.tasks.length}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Completed</span>
+                        <p className="font-medium">{goal.tasks.filter(t => t.completed).length}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </TabsContent>
       </Tabs>
