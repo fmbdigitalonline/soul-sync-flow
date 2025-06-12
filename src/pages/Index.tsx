@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { SoulOrbAvatar } from "@/components/ui/avatar";
 import MainLayout from "@/components/Layout/MainLayout";
-import { ArrowRight, LogIn, Target, Heart, Sparkles, Brain } from "lucide-react";
+import { ArrowRight, LogIn, Heart, Sparkles, Brain } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useSoulOrb } from "@/contexts/SoulOrbContext";
 import { blueprintService } from "@/services/blueprint-service";
@@ -89,22 +89,22 @@ const Index = () => {
           </h1>
           
           <p className="text-lg sm:text-xl mb-6 sm:mb-8 px-4 text-muted-foreground">
-            Your personal guide to self-discovery and growth.
+            Your personal guide to achieving your dreams through soul-aligned action.
           </p>
 
           {user && (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
-              <Link to="/tasks" className="block">
+              <Link to="/dreams" className="block">
                 <CosmicCard className="p-3 sm:p-4 hover:scale-105 transition-transform cursor-pointer h-full">
-                  <Target className="h-6 w-6 sm:h-8 sm:w-8 text-green-400 mx-auto mb-2" />
-                  <h3 className="font-semibold mb-1 text-sm sm:text-base">Productivity</h3>
-                  <p className="text-xs text-muted-foreground">Goals & Tasks</p>
+                  <Heart className="h-6 w-6 sm:h-8 sm:w-8 text-soul-purple mx-auto mb-2" />
+                  <h3 className="font-semibold mb-1 text-sm sm:text-base">Dreams</h3>
+                  <p className="text-xs text-muted-foreground">Journey to Success</p>
                 </CosmicCard>
               </Link>
               
               <Link to="/spiritual-growth" className="block">
                 <CosmicCard className="p-3 sm:p-4 hover:scale-105 transition-transform cursor-pointer h-full">
-                  <Heart className="h-6 w-6 sm:h-8 sm:w-8 text-soul-purple mx-auto mb-2" />
+                  <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-blue-400 mx-auto mb-2" />
                   <h3 className="font-semibold mb-1 text-sm sm:text-base">Growth</h3>
                   <p className="text-xs text-muted-foreground">Inner Wisdom</p>
                 </CosmicCard>
@@ -112,9 +112,9 @@ const Index = () => {
               
               <Link to="/coach" className="block">
                 <CosmicCard className="p-3 sm:p-4 hover:scale-105 transition-transform cursor-pointer h-full">
-                  <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-blue-400 mx-auto mb-2" />
+                  <Brain className="h-6 w-6 sm:h-8 sm:w-8 text-green-400 mx-auto mb-2" />
                   <h3 className="font-semibold mb-1 text-sm sm:text-base">Companion</h3>
-                  <p className="text-xs text-muted-foreground">Integrated Guide</p>
+                  <p className="text-xs text-muted-foreground">AI Guide</p>
                 </CosmicCard>
               </Link>
             </div>
