@@ -13,7 +13,9 @@ import {
   Sparkles,
   Brain,
   Heart,
-  Zap
+  Zap,
+  Eye,
+  Calendar
 } from "lucide-react";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 import { useBlueprintData } from "@/hooks/use-blueprint-data";
@@ -35,14 +37,10 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({ onTaskClick, onMilestone
     return (
       <CosmicCard className="p-8 text-center">
         <Target className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-        <h3 className="text-xl font-semibold mb-2">Start Your Dream Journey</h3>
+        <h3 className="text-xl font-semibold mb-2">No Active Dream Journey</h3>
         <p className="text-muted-foreground mb-6">
-          Define your first dream or goal to see your personalized journey map
+          Create your first dream to see your personalized journey map
         </p>
-        <Button className="bg-soul-purple hover:bg-soul-purple/90">
-          <Sparkles className="h-4 w-4 mr-2" />
-          Create Your First Dream
-        </Button>
       </CosmicCard>
     );
   }
@@ -62,7 +60,15 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({ onTaskClick, onMilestone
     if (blueprintData.energy_strategy_human_design?.type) traits.push(blueprintData.energy_strategy_human_design.type);
     if (blueprintData.values_life_path?.lifePathNumber) traits.push(`Life Path ${blueprintData.values_life_path.lifePathNumber}`);
     
-    return `This journey aligns with your ${traits.slice(0, 2).join(' & ')} nature`;
+    return `Optimized for your ${traits.slice(0, 2).join(' & ')} blueprint`;
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric',
+      year: 'numeric'
+    });
   };
 
   return (
@@ -92,14 +98,18 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({ onTaskClick, onMilestone
             variant={selectedView === 'overview' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setSelectedView('overview')}
+            className="flex items-center gap-2"
           >
-            Helicopter View
+            <Eye className="h-4 w-4" />
+            Overview
           </Button>
           <Button
             variant={selectedView === 'detailed' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setSelectedView('detailed')}
+            className="flex items-center gap-2"
           >
+            <MapPin className="h-4 w-4" />
             Detailed Path
           </Button>
         </div>
@@ -114,71 +124,101 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({ onTaskClick, onMilestone
           </h3>
           
           <div className="relative">
-            {/* Journey Path */}
-            <div className="flex flex-col space-y-8">
-              {/* Dream Destination */}
-              <div className="flex items-center space-x-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border-2 border-green-200">
-                <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
-                  <Target className="h-6 w-6 text-white" />
-                </div>
-                <div className="flex-1">
-                  <h4 className="font-semibold text-green-800">Dream Achieved!</h4>
-                  <p className="text-sm text-green-600">{mainGoal.title}</p>
-                </div>
-              </div>
+            {/* Journey Path - Vertical Timeline */}
+            <div className="relative">
+              {/* Connecting Line */}
+              <div className="absolute left-6 top-12 bottom-12 w-0.5 bg-gradient-to-b from-soul-purple via-blue-400 to-green-500"></div>
               
-              {/* Milestones */}
-              {mainGoal.milestones?.map((milestone: any, index: number) => {
-                const isCompleted = milestone.completed;
-                const isCurrent = !isCompleted && index === completedMilestones.length;
-                
-                return (
-                  <div key={milestone.id} className="flex items-center space-x-4">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                      isCompleted ? 'bg-soul-purple text-white' : 
-                      isCurrent ? 'bg-blue-500 text-white animate-pulse' : 
-                      'bg-gray-200 text-gray-400'
-                    }`}>
-                      {isCompleted ? (
-                        <CheckCircle2 className="h-5 w-5" />
-                      ) : isCurrent ? (
-                        <Star className="h-5 w-5" />
-                      ) : (
-                        <div className="w-3 h-3 rounded-full bg-current" />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <h5 className={`font-medium ${isCompleted ? 'line-through text-muted-foreground' : ''}`}>
-                        {milestone.title}
-                      </h5>
-                      {isCurrent && (
-                        <Badge variant="outline" className="mt-1 bg-blue-50 text-blue-600">
-                          <MapPin className="h-3 w-3 mr-1" />
-                          You are here
-                        </Badge>
-                      )}
-                    </div>
-                    {isCurrent && (
-                      <Button
-                        size="sm"
-                        onClick={() => onMilestoneClick?.(milestone.id)}
-                        className="bg-blue-500 hover:bg-blue-600"
-                      >
-                        Focus Here
-                      </Button>
-                    )}
+              <div className="space-y-8">
+                {/* Dream Destination */}
+                <div className="flex items-center space-x-4 relative z-10">
+                  <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center shadow-lg">
+                    <Target className="h-6 w-6 text-white" />
                   </div>
-                );
-              })}
-              
-              {/* Starting Point */}
-              <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg border-2 border-gray-200">
-                <div className="w-10 h-10 bg-gray-400 rounded-full flex items-center justify-center">
-                  <CheckCircle2 className="h-5 w-5 text-white" />
+                  <div className="flex-1 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border-2 border-green-200">
+                    <h4 className="font-semibold text-green-800">🎯 Dream Achieved!</h4>
+                    <p className="text-sm text-green-600">{mainGoal.title}</p>
+                    <p className="text-xs text-green-500 mt-1">
+                      Target: {formatDate(mainGoal.target_completion)}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <h5 className="font-medium text-gray-600">Journey Started</h5>
-                  <p className="text-sm text-gray-500">Your dream begins here</p>
+                
+                {/* Milestones */}
+                {mainGoal.milestones?.map((milestone: any, index: number) => {
+                  const isCompleted = milestone.completed;
+                  const isCurrent = !isCompleted && index === completedMilestones.length;
+                  
+                  return (
+                    <div key={milestone.id} className="flex items-center space-x-4 relative z-10">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-md transition-all duration-300 ${
+                        isCompleted ? 'bg-soul-purple text-white scale-105' : 
+                        isCurrent ? 'bg-blue-500 text-white animate-pulse shadow-lg' : 
+                        'bg-gray-200 text-gray-400'
+                      }`}>
+                        {isCompleted ? (
+                          <CheckCircle2 className="h-5 w-5" />
+                        ) : isCurrent ? (
+                          <Star className="h-5 w-5" />
+                        ) : (
+                          <div className="w-3 h-3 rounded-full bg-current" />
+                        )}
+                      </div>
+                      <div className="flex-1 p-3 rounded-lg border transition-all duration-300 hover:shadow-md cursor-pointer" 
+                           onClick={() => onMilestoneClick?.(milestone.id)}
+                           style={{
+                             backgroundColor: isCompleted ? '#f8fafc' : isCurrent ? '#dbeafe' : '#f9fafb',
+                             borderColor: isCompleted ? '#e2e8f0' : isCurrent ? '#3b82f6' : '#e5e7eb'
+                           }}>
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <h5 className={`font-medium ${isCompleted ? 'line-through text-muted-foreground' : ''}`}>
+                              {milestone.title}
+                            </h5>
+                            <p className="text-sm text-muted-foreground mt-1">{milestone.description}</p>
+                            <div className="flex items-center gap-2 mt-2">
+                              <Calendar className="h-3 w-3 text-muted-foreground" />
+                              <span className="text-xs text-muted-foreground">
+                                {formatDate(milestone.target_date)}
+                              </span>
+                              {isCurrent && (
+                                <Badge variant="outline" className="ml-2 bg-blue-50 text-blue-600 border-blue-200">
+                                  <MapPin className="h-3 w-3 mr-1" />
+                                  You are here
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                          {isCurrent && (
+                            <Button
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onMilestoneClick?.(milestone.id);
+                              }}
+                              className="bg-blue-500 hover:bg-blue-600 ml-4"
+                            >
+                              Focus
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                
+                {/* Starting Point */}
+                <div className="flex items-center space-x-4 relative z-10">
+                  <div className="w-10 h-10 bg-gray-400 rounded-full flex items-center justify-center shadow-md">
+                    <CheckCircle2 className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="flex-1 p-3 bg-gray-50 rounded-lg border-2 border-gray-200">
+                    <h5 className="font-medium text-gray-600">🚀 Journey Started</h5>
+                    <p className="text-sm text-gray-500">Your dream begins here</p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {formatDate(mainGoal.created_at)}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -189,14 +229,23 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({ onTaskClick, onMilestone
         <div className="space-y-6">
           {/* Current Focus */}
           {currentMilestone && (
-            <CosmicCard className="p-6 border-blue-200">
+            <CosmicCard className="p-6 border-blue-200 bg-blue-50/50">
               <h3 className="font-semibold mb-4 flex items-center">
                 <Star className="h-5 w-5 mr-2 text-blue-500" />
-                Current Milestone
+                Current Milestone Focus
               </h3>
-              <div className="bg-blue-50 p-4 rounded-lg mb-4">
+              <div className="bg-white p-4 rounded-lg border border-blue-200 mb-4">
                 <h4 className="font-medium text-blue-800 mb-2">{currentMilestone.title}</h4>
-                <p className="text-sm text-blue-600">{currentMilestone.description}</p>
+                <p className="text-sm text-blue-600 mb-3">{currentMilestone.description}</p>
+                <div className="flex items-center gap-4 text-sm">
+                  <div className="flex items-center gap-1">
+                    <Calendar className="h-4 w-4 text-blue-500" />
+                    <span>Target: {formatDate(currentMilestone.target_date)}</span>
+                  </div>
+                  <Badge variant="outline" className="bg-blue-100 text-blue-700">
+                    {currentMilestone.completion_criteria?.length || 0} success criteria
+                  </Badge>
+                </div>
               </div>
             </CosmicCard>
           )}
@@ -207,31 +256,42 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({ onTaskClick, onMilestone
               <Zap className="h-5 w-5 mr-2 text-soul-purple" />
               Your Next Soul Steps
             </h3>
-            <div className="space-y-3">
-              {nextTasks.map((task: any, index: number) => (
-                <div
-                  key={task.id}
-                  className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-secondary/20 cursor-pointer transition-colors"
-                  onClick={() => onTaskClick?.(task.id)}
-                >
-                  <div className="w-8 h-8 bg-soul-purple/20 rounded-full flex items-center justify-center text-soul-purple font-semibold">
-                    {index + 1}
-                  </div>
-                  <div className="flex-1">
-                    <h5 className="font-medium">{task.title}</h5>
-                    <div className="flex gap-2 mt-1">
-                      <Badge variant="outline" className="text-xs">
-                        {task.estimated_duration}
-                      </Badge>
-                      <Badge variant="outline" className="text-xs">
-                        {task.energy_level_required} energy
-                      </Badge>
+            {nextTasks.length > 0 ? (
+              <div className="space-y-3">
+                {nextTasks.map((task: any, index: number) => (
+                  <div
+                    key={task.id}
+                    className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-secondary/20 cursor-pointer transition-all duration-200 hover:shadow-md"
+                    onClick={() => onTaskClick?.(task.id)}
+                  >
+                    <div className="w-8 h-8 bg-soul-purple/20 rounded-full flex items-center justify-center text-soul-purple font-semibold">
+                      {index + 1}
                     </div>
+                    <div className="flex-1">
+                      <h5 className="font-medium">{task.title}</h5>
+                      <p className="text-sm text-muted-foreground mb-2">{task.description}</p>
+                      <div className="flex gap-2">
+                        <Badge variant="outline" className="text-xs">
+                          {task.estimated_duration}
+                        </Badge>
+                        <Badge variant="outline" className="text-xs">
+                          {task.energy_level_required} energy
+                        </Badge>
+                        <Badge variant="outline" className="text-xs">
+                          {task.category}
+                        </Badge>
+                      </div>
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-muted-foreground" />
                   </div>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <Target className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>All tasks completed! Time to celebrate this milestone.</p>
+              </div>
+            )}
           </CosmicCard>
           
           {/* Blueprint Alignment */}
@@ -239,18 +299,18 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({ onTaskClick, onMilestone
             <CosmicCard className="p-6">
               <h3 className="font-semibold mb-4 flex items-center">
                 <Brain className="h-5 w-5 mr-2 text-green-500" />
-                Soul Alignment
+                Soul Blueprint Alignment
               </h3>
-              <div className="flex flex-wrap gap-2">
+              <div className="grid grid-cols-1 gap-3">
                 {mainGoal.blueprint_alignment.map((trait: string, index: number) => (
-                  <Badge key={index} variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                    <Star className="h-3 w-3 mr-1" />
-                    {trait}
-                  </Badge>
+                  <div key={index} className="flex items-center p-3 bg-green-50 rounded-lg border border-green-200">
+                    <Star className="h-4 w-4 mr-3 text-green-600" />
+                    <span className="text-sm text-green-800 font-medium">{trait}</span>
+                  </div>
                 ))}
               </div>
-              <p className="text-sm text-muted-foreground mt-3">
-                This journey honors your authentic self and natural strengths
+              <p className="text-sm text-muted-foreground mt-4 text-center">
+                ✨ This journey honors your authentic self and natural strengths
               </p>
             </CosmicCard>
           )}
