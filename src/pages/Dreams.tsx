@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
@@ -81,6 +80,8 @@ const Dreams = () => {
     setIsCreatingDream(true);
 
     try {
+      console.log('Starting dream creation with form:', dreamForm);
+      
       // Create goal using blueprint-aligned decomposition
       const goal = await goalDecompositionService.decomposeGoal(
         dreamForm.title,
@@ -89,26 +90,46 @@ const Dreams = () => {
         blueprintData || {}
       );
 
-      // Save to productivity journey - convert Goal to JSON
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const goalAsJson = JSON.parse(JSON.stringify(goal));
-        
-        const { error } = await supabase
-          .from('productivity_journey')
-          .upsert({
-            user_id: user.id,
-            current_goals: [goalAsJson],
-            updated_at: new Date().toISOString()
-          }, {
-            onConflict: 'user_id'
-          });
+      console.log('Goal decomposed successfully:', goal);
 
-        if (error) {
-          console.error('Error saving goal:', error);
-          throw error;
-        }
+      // Save to productivity journey
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
       }
+
+      console.log('Saving goal for user:', user.id);
+
+      // Convert Goal to a plain object to ensure it's serializable
+      const goalAsJson = {
+        id: goal.id,
+        title: goal.title,
+        description: goal.description,
+        category: goal.category,
+        timeframe: goal.timeframe,
+        target_completion: goal.target_completion,
+        created_at: goal.created_at,
+        milestones: goal.milestones || [],
+        tasks: goal.tasks || [],
+        blueprint_alignment: goal.blueprint_alignment || []
+      };
+      
+      const { error } = await supabase
+        .from('productivity_journey')
+        .upsert({
+          user_id: user.id,
+          current_goals: [goalAsJson],
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id'
+        });
+
+      if (error) {
+        console.error('Supabase error saving goal:', error);
+        throw new Error(`Database error: ${error.message}`);
+      }
+
+      console.log('Goal saved successfully to database');
 
       // Show success and switch to journey view
       toast({
@@ -116,12 +137,20 @@ const Dreams = () => {
         description: "Your personalized roadmap is ready. Let's begin!",
       });
 
+      // Reset form
+      setDreamForm({
+        title: '',
+        description: '',
+        category: 'personal_growth',
+        timeframe: '3 months'
+      });
+
       setCurrentView('journey');
     } catch (error) {
       console.error('Error creating dream:', error);
       toast({
         title: "Creation Error",
-        description: "Failed to create your dream journey. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to create your dream journey. Please try again.",
         variant: "destructive"
       });
     } finally {
