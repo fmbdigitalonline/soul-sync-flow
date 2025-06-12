@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Goal {
@@ -93,21 +92,19 @@ class GoalDecompositionService {
       
       const { data, error } = await supabase.functions.invoke("ai-coach", {
         body: {
-          message: `Break down this goal with intelligent analysis:
+          message: `Break down this goal into a detailed, actionable plan:
 
 GOAL: ${goalDescription}
 TIMEFRAME: ${timeframe}
 CATEGORY: ${category}
 
-Please provide a comprehensive breakdown including:
-1. Refined goal title and description
-2. Success criteria (3-5 measurable outcomes)
-3. Major milestones with target dates
-4. Specific tasks categorized by type
-5. Blueprint alignment recommendations
-6. Energy and timing considerations
+Create a comprehensive breakdown including:
+1. 3-4 major milestones with specific target dates
+2. 8-12 actionable tasks distributed across milestones
+3. Blueprint alignment recommendations
+4. Success criteria for each milestone
 
-Format as detailed JSON structure for implementation.`,
+Structure your response clearly with numbered sections for milestones and tasks.`,
           sessionId: `goal_decomposition_${Date.now()}`,
           includeBlueprint: true,
           agentType: "coach",
@@ -119,9 +116,12 @@ Format as detailed JSON structure for implementation.`,
 
       if (error) throw error;
 
-      // Parse AI response and structure it
-      const decomposedGoal = this.parseAIResponse(data.response, goalDescription, timeframe, category, blueprintData);
+      console.log("AI Response received:", data.response);
       
+      // Always use intelligent parsing since AI responses are typically text
+      const decomposedGoal = this.parseTextResponse(data.response, goalDescription, timeframe, category, blueprintData);
+      
+      console.log("Final decomposed goal:", decomposedGoal);
       return decomposedGoal;
     } catch (error) {
       console.error("Error in goal decomposition:", error);
@@ -147,70 +147,33 @@ USER BLUEPRINT ANALYSIS:
 - Decision Making: ${blueprintData.cognition_mbti?.decision_making}
 
 DECOMPOSITION PRINCIPLES:
-1. MBTI-Adapted Task Structure:
-   - For Intuitive types: Focus on big picture milestones, creative phases
-   - For Sensing types: Concrete, sequential steps with clear deliverables
-   - For Thinking types: Logical progression, metrics-based milestones
-   - For Feeling types: Value-aligned milestones, impact-focused outcomes
+1. Create 3-4 major milestones with specific target dates
+2. Generate 8-12 actionable tasks distributed across milestones
+3. Align tasks with the user's MBTI cognitive preferences
+4. Consider Human Design energy management for pacing
+5. Include blueprint-specific success strategies
 
-2. Human Design Energy Management:
-   - Generator/MG: Build momentum through responding, sustainable pacing
-   - Projector: Recognition-based milestones, invitation opportunities
-   - Manifestor: Autonomous phases, impact-driven outcomes
-   - Reflector: Flexible timing, environmental considerations
+RESPONSE FORMAT:
+Structure your response with clear sections:
 
-3. Life Path Integration:
-   - Align milestones with core life themes and lessons
-   - Integrate personal growth opportunities within achievement
-   - Consider karmic patterns and natural talents
+MILESTONES:
+1. [Milestone Title] - [Target Date]
+   Description: [What this milestone achieves]
+   Success Criteria: [How to measure completion]
 
-4. Timing and Energy Optimization:
-   - Match task energy requirements to user's natural patterns
-   - Consider astrological timing for major milestones
-   - Build in recovery and reflection phases
+2. [Next Milestone Title] - [Target Date]
+   ...
 
-5. Blueprint-Specific Success Strategies:
-   - Leverage dominant cognitive functions
-   - Align with natural decision-making authority
-   - Honor energy type and pacing preferences
-   - Include value-system alignment checks
+TASKS:
+1. [Task Title] for Milestone 1
+   Description: [What needs to be done]
+   Duration: [Time estimate]
+   Energy: [Low/Medium/High]
 
-TASK CATEGORIZATION SYSTEM:
-- Planning: Research, strategy, visioning (good for Intuitive types)
-- Execution: Implementation, building, creating (good for Sensing types)
-- Review: Analysis, optimization, course correction (good for Thinking types)
-- Communication: Sharing, networking, collaboration (good for Feeling types)
-
-MILESTONE CRITERIA:
-- Measurable progress markers
-- Blueprint-aligned achievement methods
-- Energy-sustainable pacing
-- Value-system compatibility
-- Growth opportunity integration
+2. [Next Task Title] for Milestone 1
+   ...
 
 Provide detailed, personalized breakdowns that honor the user's unique blueprint while ensuring practical achievability.`;
-  }
-
-  private parseAIResponse(
-    aiResponse: string,
-    originalGoal: string,
-    timeframe: string,
-    category: string,
-    blueprintData: BlueprintData
-  ): Goal {
-    try {
-      // Attempt to extract JSON from AI response
-      const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        return this.structureGoalFromAI(parsed, originalGoal, timeframe, category, blueprintData);
-      }
-    } catch (error) {
-      console.log("Could not parse AI JSON response, using intelligent text parsing");
-    }
-
-    // Intelligent text parsing of AI response
-    return this.parseTextResponse(aiResponse, originalGoal, timeframe, category, blueprintData);
   }
 
   private parseTextResponse(
@@ -220,59 +183,103 @@ Provide detailed, personalized breakdowns that honor the user's unique blueprint
     category: string,
     blueprintData: BlueprintData
   ): Goal {
-    const lines = response.split('\n').filter(line => line.trim());
+    console.log("Parsing AI text response...");
     
     const milestones: Milestone[] = [];
     const tasks: Task[] = [];
     const successCriteria: string[] = [];
     const blueprintAlignment: string[] = [];
 
-    // Extract milestones
+    const lines = response.split('\n').filter(line => line.trim());
+    
+    let currentSection = '';
+    let currentMilestoneId = '';
+    
     lines.forEach((line, index) => {
-      if (line.toLowerCase().includes('milestone') || line.match(/^\d+\./)) {
-        const milestone: Milestone = {
-          id: `milestone_${Date.now()}_${index}`,
-          title: line.replace(/^\d+\.?\s*/, '').replace(/milestone:?\s*/i, '').trim(),
-          description: lines[index + 1]?.trim() || '',
-          target_date: this.calculateMilestoneDate(timeframe, milestones.length),
-          completion_criteria: [line.trim()],
-          dependencies: [],
-          blueprint_considerations: this.extractBlueprintConsiderations(line, blueprintData),
-          completed: false,
-          progress: 0
-        };
-        milestones.push(milestone);
+      const cleanLine = line.trim();
+      
+      // Detect sections
+      if (cleanLine.toLowerCase().includes('milestone')) {
+        currentSection = 'milestones';
+      } else if (cleanLine.toLowerCase().includes('task')) {
+        currentSection = 'tasks';
       }
-
-      // Extract tasks
-      if (line.toLowerCase().includes('task') || line.includes('□') || line.includes('- ')) {
-        const task: Task = {
-          id: `task_${Date.now()}_${index}`,
-          title: line.replace(/task:?\s*/i, '').replace(/□\s*/, '').replace(/^-\s*/, '').trim(),
-          description: lines[index + 1]?.trim() || '',
-          category: this.categorizeTask(line, blueprintData),
-          estimated_duration: this.estimateDuration(line),
-          energy_level_required: this.assessEnergyLevel(line, blueprintData),
-          optimal_time_of_day: this.suggestOptimalTiming(line, blueprintData),
-          blueprint_alignment: this.extractBlueprintConsiderations(line, blueprintData),
-          dependencies: [],
-          completed: false,
-          priority: this.assessTaskPriority(line),
-        };
-        tasks.push(task);
+      
+      // Parse milestones
+      if (currentSection === 'milestones' && (cleanLine.match(/^\d+\./) || cleanLine.toLowerCase().includes('milestone'))) {
+        const milestoneTitle = cleanLine
+          .replace(/^\d+\.\s*/, '')
+          .replace(/milestone\s*\d*:?\s*/i, '')
+          .replace(/\s*-\s*.*$/, '')
+          .trim();
+        
+        if (milestoneTitle) {
+          const milestoneId = `milestone_${Date.now()}_${milestones.length}`;
+          currentMilestoneId = milestoneId;
+          
+          const milestone: Milestone = {
+            id: milestoneId,
+            title: milestoneTitle,
+            description: lines[index + 1]?.trim().replace(/description:\s*/i, '') || milestoneTitle,
+            target_date: this.calculateMilestoneDate(timeframe, milestones.length),
+            completion_criteria: this.extractCriteria(lines, index),
+            dependencies: [],
+            blueprint_considerations: this.extractBlueprintConsiderations(milestoneTitle, blueprintData),
+            completed: false,
+            progress: 0
+          };
+          milestones.push(milestone);
+        }
       }
-
+      
+      // Parse tasks
+      if (currentSection === 'tasks' && cleanLine.match(/^\d+\./)) {
+        const taskTitle = cleanLine
+          .replace(/^\d+\.\s*/, '')
+          .replace(/for milestone \d+/i, '')
+          .trim();
+        
+        if (taskTitle) {
+          const task: Task = {
+            id: `task_${Date.now()}_${tasks.length}`,
+            title: taskTitle,
+            description: lines[index + 1]?.trim().replace(/description:\s*/i, '') || taskTitle,
+            category: this.categorizeTask(taskTitle, blueprintData),
+            estimated_duration: this.extractDuration(lines, index),
+            energy_level_required: this.assessEnergyLevel(taskTitle, blueprintData),
+            optimal_time_of_day: this.suggestOptimalTiming(taskTitle, blueprintData),
+            blueprint_alignment: this.extractBlueprintConsiderations(taskTitle, blueprintData),
+            dependencies: [],
+            milestone_id: currentMilestoneId,
+            completed: false,
+            priority: this.assessTaskPriority(taskTitle),
+          };
+          tasks.push(task);
+        }
+      }
+      
       // Extract success criteria
-      if (line.toLowerCase().includes('success') || line.toLowerCase().includes('outcome')) {
-        successCriteria.push(line.trim());
+      if (cleanLine.toLowerCase().includes('success') || cleanLine.toLowerCase().includes('criteria')) {
+        successCriteria.push(cleanLine.trim());
       }
-
+      
       // Extract blueprint alignment
-      if (line.toLowerCase().includes(blueprintData.cognition_mbti?.type.toLowerCase() || '') ||
-          line.toLowerCase().includes(blueprintData.energy_strategy_human_design?.type.toLowerCase() || '')) {
-        blueprintAlignment.push(line.trim());
+      if (cleanLine.toLowerCase().includes(blueprintData.cognition_mbti?.type.toLowerCase() || '') ||
+          cleanLine.toLowerCase().includes(blueprintData.energy_strategy_human_design?.type.toLowerCase() || '')) {
+        blueprintAlignment.push(cleanLine.trim());
       }
     });
+
+    // Ensure we have at least some milestones and tasks
+    if (milestones.length === 0) {
+      milestones.push(...this.generateDefaultMilestones(originalGoal, timeframe, blueprintData));
+    }
+    
+    if (tasks.length === 0) {
+      tasks.push(...this.generateDefaultTasks(originalGoal, milestones, blueprintData));
+    }
+
+    console.log(`Generated ${milestones.length} milestones and ${tasks.length} tasks`);
 
     return {
       id: `goal_${Date.now()}`,
@@ -281,10 +288,10 @@ Provide detailed, personalized breakdowns that honor the user's unique blueprint
       category,
       priority: 'medium',
       timeframe,
-      success_criteria: successCriteria.length > 0 ? successCriteria : [originalGoal],
+      success_criteria: successCriteria.length > 0 ? successCriteria : [`Complete: ${originalGoal}`],
       milestones,
       tasks,
-      blueprint_alignment: blueprintAlignment,
+      blueprint_alignment: blueprintAlignment.length > 0 ? blueprintAlignment : this.generateBlueprintAlignment(blueprintData),
       energy_requirements: blueprintData.energy_strategy_human_design?.energy_type || 'medium',
       optimal_timing: this.generateOptimalTiming(blueprintData),
       created_at: new Date().toISOString(),
@@ -293,84 +300,28 @@ Provide detailed, personalized breakdowns that honor the user's unique blueprint
     };
   }
 
-  private structureGoalFromAI(
-    parsed: any,
-    originalGoal: string,
-    timeframe: string,
-    category: string,
-    blueprintData: BlueprintData
-  ): Goal {
-    return {
-      id: `goal_${Date.now()}`,
-      title: parsed.title || originalGoal,
-      description: parsed.description || originalGoal,
-      category,
-      priority: parsed.priority || 'medium',
-      timeframe,
-      success_criteria: parsed.success_criteria || [originalGoal],
-      milestones: (parsed.milestones || []).map((m: any, index: number) => ({
-        id: `milestone_${Date.now()}_${index}`,
-        title: m.title || `Milestone ${index + 1}`,
-        description: m.description || '',
-        target_date: m.target_date || this.calculateMilestoneDate(timeframe, index),
-        completion_criteria: m.completion_criteria || [m.title],
-        dependencies: m.dependencies || [],
-        blueprint_considerations: m.blueprint_considerations || [],
-        completed: false,
-        progress: 0
-      })),
-      tasks: (parsed.tasks || []).map((t: any, index: number) => ({
-        id: `task_${Date.now()}_${index}`,
-        title: t.title || `Task ${index + 1}`,
-        description: t.description || '',
-        category: t.category || this.categorizeTask(t.title, blueprintData),
-        estimated_duration: t.estimated_duration || '1 hour',
-        energy_level_required: t.energy_level_required || 'medium',
-        optimal_time_of_day: t.optimal_time_of_day || ['morning'],
-        blueprint_alignment: t.blueprint_alignment || [],
-        dependencies: t.dependencies || [],
-        completed: false,
-        priority: t.priority || 'medium'
-      })),
-      blueprint_alignment: parsed.blueprint_alignment || [],
-      energy_requirements: parsed.energy_requirements || 'medium',
-      optimal_timing: parsed.optimal_timing || this.generateOptimalTiming(blueprintData),
-      created_at: new Date().toISOString(),
-      target_completion: this.calculateTargetDate(timeframe),
-      progress: 0
-    };
+  private extractCriteria(lines: string[], startIndex: number): string[] {
+    const criteria: string[] = [];
+    for (let i = startIndex + 1; i < Math.min(startIndex + 5, lines.length); i++) {
+      const line = lines[i]?.trim();
+      if (line && (line.toLowerCase().includes('criteria') || line.toLowerCase().includes('success'))) {
+        criteria.push(line.replace(/success criteria:\s*/i, '').trim());
+      }
+    }
+    return criteria.length > 0 ? criteria : ['Milestone completed successfully'];
   }
 
-  private fallbackDecomposition(
-    goalDescription: string,
-    timeframe: string,
-    category: string,
-    blueprintData: BlueprintData
-  ): Goal {
-    // Rule-based fallback decomposition
-    const milestones = this.generateDefaultMilestones(goalDescription, timeframe, blueprintData);
-    const tasks = this.generateDefaultTasks(goalDescription, milestones, blueprintData);
-    
-    return {
-      id: `goal_${Date.now()}`,
-      title: goalDescription,
-      description: `A ${timeframe} goal in ${category}`,
-      category,
-      priority: 'medium',
-      timeframe,
-      success_criteria: [`Complete: ${goalDescription}`],
-      milestones,
-      tasks,
-      blueprint_alignment: this.generateBlueprintAlignment(blueprintData),
-      energy_requirements: blueprintData.energy_strategy_human_design?.energy_type || 'medium',
-      optimal_timing: this.generateOptimalTiming(blueprintData),
-      created_at: new Date().toISOString(),
-      target_completion: this.calculateTargetDate(timeframe),
-      progress: 0
-    };
+  private extractDuration(lines: string[], startIndex: number): string {
+    for (let i = startIndex + 1; i < Math.min(startIndex + 3, lines.length); i++) {
+      const line = lines[i]?.trim().toLowerCase();
+      if (line && line.includes('duration')) {
+        const match = line.match(/(\d+)\s*(hour|minute|day)/);
+        if (match) return `${match[1]} ${match[2]}${match[1] !== '1' ? 's' : ''}`;
+      }
+    }
+    return '1-2 hours';
   }
 
-  // Helper methods for intelligent categorization and planning
   private categorizeTask(taskText: string, blueprintData: BlueprintData): 'planning' | 'execution' | 'review' | 'communication' {
     const mbti = blueprintData.cognition_mbti?.type || '';
     const lowerTask = taskText.toLowerCase();
@@ -494,17 +445,6 @@ Provide detailed, personalized breakdowns that honor the user's unique blueprint
     return targetDate.toISOString().split('T')[0];
   }
 
-  private estimateDuration(taskText: string): string {
-    const lowerTask = taskText.toLowerCase();
-    
-    if (lowerTask.includes('quick') || lowerTask.includes('brief')) return '30 minutes';
-    if (lowerTask.includes('research') || lowerTask.includes('analyze')) return '2-3 hours';
-    if (lowerTask.includes('create') || lowerTask.includes('build')) return '4-6 hours';
-    if (lowerTask.includes('review') || lowerTask.includes('optimize')) return '1-2 hours';
-    
-    return '1-2 hours';
-  }
-
   private generateOptimalTiming(blueprintData: BlueprintData): string[] {
     const timing: string[] = [];
     const hdType = blueprintData.energy_strategy_human_design?.type || '';
@@ -608,6 +548,35 @@ Provide detailed, personalized breakdowns that honor the user's unique blueprint
   private getDefaultTaskCategory(index: number): 'planning' | 'execution' | 'review' | 'communication' {
     const categories: Array<'planning' | 'execution' | 'review' | 'communication'> = ['planning', 'execution', 'review'];
     return categories[index % categories.length];
+  }
+
+  private fallbackDecomposition(
+    goalDescription: string,
+    timeframe: string,
+    category: string,
+    blueprintData: BlueprintData
+  ): Goal {
+    // Rule-based fallback decomposition
+    const milestones = this.generateDefaultMilestones(goalDescription, timeframe, blueprintData);
+    const tasks = this.generateDefaultTasks(goalDescription, milestones, blueprintData);
+    
+    return {
+      id: `goal_${Date.now()}`,
+      title: goalDescription,
+      description: `A ${timeframe} goal in ${category}`,
+      category,
+      priority: 'medium',
+      timeframe,
+      success_criteria: [`Complete: ${goalDescription}`],
+      milestones,
+      tasks,
+      blueprint_alignment: this.generateBlueprintAlignment(blueprintData),
+      energy_requirements: blueprintData.energy_strategy_human_design?.energy_type || 'medium',
+      optimal_timing: this.generateOptimalTiming(blueprintData),
+      created_at: new Date().toISOString(),
+      target_completion: this.calculateTargetDate(timeframe),
+      progress: 0
+    };
   }
 }
 
