@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
@@ -6,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Heart, Target, Sparkles, MapPin, Calendar, Zap, Brain } from "lucide-react";
+import { Heart, Target, Sparkles, MapPin, Calendar, Zap, Brain, Clock, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useEnhancedAICoach } from "@/hooks/use-enhanced-ai-coach";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,12 +14,16 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useBlueprintData } from "@/hooks/use-blueprint-data";
 import { goalDecompositionService } from "@/services/goal-decomposition-service";
 import { JourneyMap } from "@/components/journey/JourneyMap";
-import DreamAchievementDashboard from "@/components/journey/DreamAchievementDashboard";
+import { TaskViews } from "@/components/journey/TaskViews";
+import { PomodoroTimer } from "@/components/productivity/PomodoroTimer";
+import { HabitTracker } from "@/components/productivity/HabitTracker";
 
 const Dreams = () => {
   const { messages, isLoading, sendMessage, resetConversation, currentAgent, switchAgent } = useEnhancedAICoach("coach");
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [currentView, setCurrentView] = useState<'create' | 'chat' | 'journey'>('create');
+  const [taskView, setTaskView] = useState<'none' | 'tasks' | 'focus' | 'habits'>('none');
+  const [focusedMilestone, setFocusedMilestone] = useState<any>(null);
   const [isCreatingDream, setIsCreatingDream] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -190,6 +193,23 @@ const Dreams = () => {
     return `This journey will be optimized for your ${traits.slice(0, 2).join(' & ')} nature`;
   };
 
+  const handleMilestoneClick = (milestoneId: string) => {
+    // Find the milestone and focus on it
+    const milestone = { id: milestoneId }; // You can expand this to get full milestone data
+    setFocusedMilestone(milestone);
+    setTaskView('tasks');
+  };
+
+  const handleTaskClick = (taskId: string) => {
+    // Focus on specific task - for now just switch to task view
+    setTaskView('tasks');
+  };
+
+  const handleBackToJourney = () => {
+    setTaskView('none');
+    setFocusedMilestone(null);
+  };
+
   if (!isAuthenticated) {
     return (
       <MainLayout>
@@ -216,7 +236,6 @@ const Dreams = () => {
     return (
       <MainLayout>
         <div className="h-screen flex flex-col">
-          {/* Minimal Chat Header */}
           <div className="bg-background border-b border-border p-4">
             <div className="flex items-center justify-between max-w-md mx-auto">
               <div className="flex items-center">
@@ -234,7 +253,6 @@ const Dreams = () => {
             </div>
           </div>
           
-          {/* Chat Interface */}
           <div className="flex-1 max-w-md mx-auto w-full p-4">
             <CoachInterface
               messages={messages}
@@ -252,28 +270,128 @@ const Dreams = () => {
     return (
       <MainLayout>
         <div className="min-h-screen bg-gradient-to-b from-soul-purple/5 to-background">
-          <div className="max-w-4xl mx-auto px-4 py-8">
+          <div className="max-w-6xl mx-auto px-4 py-6">
             
-            {/* Journey Header */}
-            <div className="text-center mb-8">
-              <div className="flex items-center justify-center mb-4">
+            {/* Strategic Header */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-4">
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={() => setCurrentView('create')}
-                  className="mr-4"
+                  className="flex items-center gap-2"
                 >
                   ← New Dream
                 </Button>
-                <h1 className="text-3xl font-bold font-display">Your Dream Journey</h1>
+                <h1 className="text-2xl font-bold font-display">Strategic Command Center</h1>
               </div>
-              <p className="text-muted-foreground">{getBlueprintInsight()}</p>
+              
+              {/* Quick Actions */}
+              <div className="flex gap-2">
+                <Button
+                  variant={taskView === 'tasks' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setTaskView(taskView === 'tasks' ? 'none' : 'tasks')}
+                  className="flex items-center gap-2"
+                >
+                  <Target className="h-4 w-4" />
+                  Tasks
+                </Button>
+                <Button
+                  variant={taskView === 'focus' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setTaskView(taskView === 'focus' ? 'none' : 'focus')}
+                  className="flex items-center gap-2"
+                >
+                  <Clock className="h-4 w-4" />
+                  Focus
+                </Button>
+                <Button
+                  variant={taskView === 'habits' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setTaskView(taskView === 'habits' ? 'none' : 'habits')}
+                  className="flex items-center gap-2"
+                >
+                  <CheckCircle className="h-4 w-4" />
+                  Habits
+                </Button>
+              </div>
             </div>
 
-            {/* Journey Map and Dashboard */}
-            <div className="space-y-8">
-              <JourneyMap />
-              <DreamAchievementDashboard />
+            {/* Main Layout: Journey Map + Optional Task View */}
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+              
+              {/* Journey Map - Always Visible (Helicopter View) */}
+              <div className={`${taskView === 'none' ? 'xl:col-span-3' : 'xl:col-span-2'} transition-all duration-300`}>
+                <CosmicCard className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-5 w-5 text-soul-purple" />
+                      <h2 className="text-xl font-semibold">Journey Command Map</h2>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {getBlueprintInsight()}
+                    </div>
+                  </div>
+                  
+                  <JourneyMap 
+                    onTaskClick={handleTaskClick}
+                    onMilestoneClick={handleMilestoneClick}
+                  />
+                </CosmicCard>
+              </div>
+
+              {/* Dynamic Task Management Panel */}
+              {taskView !== 'none' && (
+                <div className="xl:col-span-1 transition-all duration-300">
+                  <CosmicCard className="p-6 h-fit">
+                    {taskView === 'tasks' && (
+                      <TaskViews 
+                        focusedMilestone={focusedMilestone}
+                        onBackToJourney={handleBackToJourney}
+                      />
+                    )}
+                    
+                    {taskView === 'focus' && (
+                      <div>
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="font-semibold flex items-center gap-2">
+                            <Clock className="h-5 w-5" />
+                            Focus Session
+                          </h3>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => setTaskView('none')}
+                          >
+                            ×
+                          </Button>
+                        </div>
+                        <PomodoroTimer />
+                      </div>
+                    )}
+                    
+                    {taskView === 'habits' && (
+                      <div>
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="font-semibold flex items-center gap-2">
+                            <CheckCircle className="h-5 w-5" />
+                            Daily Habits
+                          </h3>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => setTaskView('none')}
+                          >
+                            ×
+                          </Button>
+                        </div>
+                        <HabitTracker />
+                      </div>
+                    )}
+                  </CosmicCard>
+                </div>
+              )}
             </div>
           </div>
         </div>
