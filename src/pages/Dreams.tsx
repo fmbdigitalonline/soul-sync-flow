@@ -32,6 +32,7 @@ import { TaskViews } from "@/components/journey/TaskViews";
 import { TaskCoachInterface } from "@/components/task/TaskCoachInterface";
 import { PomodoroTimer } from "@/components/productivity/PomodoroTimer";
 import { HabitTracker } from "@/components/productivity/HabitTracker";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Task {
   id: string;
@@ -58,6 +59,7 @@ const Dreams = () => {
   const { toast } = useToast();
   const { t } = useLanguage();
   const { blueprintData } = useBlueprintData();
+  const isMobile = useIsMobile();
 
   // Dream creation form state
   const [dreamForm, setDreamForm] = useState({
@@ -398,86 +400,142 @@ const Dreams = () => {
               </div>
             </div>
 
-            {/* Main Content Grid */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-              
-              {/* Journey Map */}
-              <div className={`${taskView === 'none' ? 'xl:col-span-3' : 'xl:col-span-2'} transition-all duration-300`}>
-                <div className="bg-white/80 backdrop-blur-lg rounded-3xl p-6 shadow-lg border border-white/20">
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-soul-purple to-soul-teal rounded-2xl flex items-center justify-center">
-                        <MapPin className="h-5 w-5 text-white" />
-                      </div>
-                      <div>
-                        <h2 className="text-xl font-semibold text-gray-800">Journey Map</h2>
-                        <p className="text-sm text-gray-500">{getBlueprintInsight()}</p>
+            {/* Main Content - Mobile First Layout */}
+            {isMobile && taskView !== 'none' ? (
+              // Mobile: Full screen task view
+              <div className="bg-white/80 backdrop-blur-lg rounded-3xl p-6 shadow-lg border border-white/20">
+                {taskView === 'tasks' && (
+                  <TaskViews 
+                    focusedMilestone={focusedMilestone}
+                    onBackToJourney={handleBackToJourney}
+                    onTaskSelect={handleTaskSelect}
+                  />
+                )}
+                
+                {taskView === 'focus' && (
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-semibold flex items-center gap-2 text-gray-800">
+                        <Clock className="h-5 w-5 text-soul-purple" />
+                        Focus Session
+                      </h3>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => setTaskView('none')}
+                        className="rounded-xl"
+                      >
+                        <ArrowLeft className="h-4 w-4" />
+                        Back
+                      </Button>
+                    </div>
+                    <PomodoroTimer />
+                  </div>
+                )}
+                
+                {taskView === 'habits' && (
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-semibold flex items-center gap-2 text-gray-800">
+                        <CheckCircle className="h-5 w-5 text-soul-purple" />
+                        Daily Habits
+                      </h3>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => setTaskView('none')}
+                        className="rounded-xl"
+                      >
+                        <ArrowLeft className="h-4 w-4" />
+                        Back
+                      </Button>
+                    </div>
+                    <HabitTracker />
+                  </div>
+                )}
+              </div>
+            ) : (
+              // Desktop grid layout OR mobile journey view
+              <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                
+                {/* Journey Map */}
+                <div className={`${taskView === 'none' || isMobile ? 'xl:col-span-3' : 'xl:col-span-2'} transition-all duration-300`}>
+                  <div className="bg-white/80 backdrop-blur-lg rounded-3xl p-6 shadow-lg border border-white/20">
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-soul-purple to-soul-teal rounded-2xl flex items-center justify-center">
+                          <MapPin className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                          <h2 className="text-xl font-semibold text-gray-800">Journey Map</h2>
+                          <p className="text-sm text-gray-500">{getBlueprintInsight()}</p>
+                        </div>
                       </div>
                     </div>
+                    
+                    <EnhancedJourneyMap 
+                      onTaskClick={handleTaskClick}
+                      onMilestoneClick={handleMilestoneClick}
+                    />
                   </div>
-                  
-                  <EnhancedJourneyMap 
-                    onTaskClick={handleTaskClick}
-                    onMilestoneClick={handleMilestoneClick}
-                  />
                 </div>
-              </div>
 
-              {/* Side Panel */}
-              {taskView !== 'none' && (
-                <div className="xl:col-span-1 transition-all duration-300">
-                  <div className="bg-white/80 backdrop-blur-lg rounded-3xl p-6 shadow-lg border border-white/20 h-fit">
-                    {taskView === 'tasks' && (
-                      <TaskViews 
-                        focusedMilestone={focusedMilestone}
-                        onBackToJourney={handleBackToJourney}
-                        onTaskSelect={handleTaskSelect}
-                      />
-                    )}
-                    
-                    {taskView === 'focus' && (
-                      <div>
-                        <div className="flex items-center justify-between mb-4">
-                          <h3 className="font-semibold flex items-center gap-2 text-gray-800">
-                            <Clock className="h-5 w-5 text-soul-purple" />
-                            Focus Session
-                          </h3>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => setTaskView('none')}
-                            className="rounded-xl"
-                          >
-                            ×
-                          </Button>
+                {/* Desktop Side Panel */}
+                {!isMobile && taskView !== 'none' && (
+                  <div className="xl:col-span-1 transition-all duration-300">
+                    <div className="bg-white/80 backdrop-blur-lg rounded-3xl p-6 shadow-lg border border-white/20 h-fit">
+                      {taskView === 'tasks' && (
+                        <TaskViews 
+                          focusedMilestone={focusedMilestone}
+                          onBackToJourney={handleBackToJourney}
+                          onTaskSelect={handleTaskSelect}
+                        />
+                      )}
+                      
+                      {taskView === 'focus' && (
+                        <div>
+                          <div className="flex items-center justify-between mb-4">
+                            <h3 className="font-semibold flex items-center gap-2 text-gray-800">
+                              <Clock className="h-5 w-5 text-soul-purple" />
+                              Focus Session
+                            </h3>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => setTaskView('none')}
+                              className="rounded-xl"
+                            >
+                              ×
+                            </Button>
+                          </div>
+                          <PomodoroTimer />
                         </div>
-                        <PomodoroTimer />
-                      </div>
-                    )}
-                    
-                    {taskView === 'habits' && (
-                      <div>
-                        <div className="flex items-center justify-between mb-4">
-                          <h3 className="font-semibold flex items-center gap-2 text-gray-800">
-                            <CheckCircle className="h-5 w-5 text-soul-purple" />
-                            Daily Habits
-                          </h3>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => setTaskView('none')}
-                            className="rounded-xl"
-                          >
-                            ×
-                          </Button>
+                      )}
+                      
+                      {taskView === 'habits' && (
+                        <div>
+                          <div className="flex items-center justify-between mb-4">
+                            <h3 className="font-semibold flex items-center gap-2 text-gray-800">
+                              <CheckCircle className="h-5 w-5 text-soul-purple" />
+                              Daily Habits
+                            </h3>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => setTaskView('none')}
+                              className="rounded-xl"
+                            >
+                              ×
+                            </Button>
+                          </div>
+                          <HabitTracker />
                         </div>
-                        <HabitTracker />
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </MainLayout>
