@@ -14,15 +14,15 @@ import { InsightJournal } from "@/components/coach/InsightJournal";
 import { WeeklyInsights } from "@/components/coach/WeeklyInsights";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 const SpiritualGrowth = () => {
   const { messages, isLoading, sendMessage, resetConversation } = useEnhancedAICoach("guide");
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [showMoodTracker, setShowMoodTracker] = useState(false);
-  const [showReflectionPrompts, setShowReflectionPrompts] = useState(false);
-  const [showInsightJournal, setShowInsightJournal] = useState(false);
-  const [showWeeklyInsights, setShowWeeklyInsights] = useState(false);
-  const [showChat, setShowChat] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -115,148 +115,115 @@ const SpiritualGrowth = () => {
         </div>
 
         {/* Collapsible Tools Section - Full Width */}
-        <div className="space-y-3 mb-4 w-full">
-          {/* Mood Tracker Toggle */}
-          <CosmicCard className="p-3 w-full">
-            <div className="flex items-center justify-between w-full">
-              <div className="flex items-center">
-                <Heart className="h-4 w-4 mr-2 text-soul-purple" />
-                <h3 className="text-sm font-medium">Mood Tracker</h3>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowMoodTracker(!showMoodTracker)}
-                className="h-6 w-6 p-0"
-              >
-                {showMoodTracker ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-              </Button>
-            </div>
-            {showMoodTracker && (
-              <div className="mt-3 w-full">
+        <div className="space-y-2 mb-4 w-full">
+          {/* Mood Tracker */}
+          <Collapsible>
+            <CosmicCard className="p-0 w-full">
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full p-3 justify-between h-auto rounded-2xl">
+                  <div className="flex items-center">
+                    <Heart className="h-4 w-4 mr-2 text-soul-purple" />
+                    <h3 className="text-sm font-medium">Mood Tracker</h3>
+                  </div>
+                  <ChevronDown className="h-4 w-4 transition-transform data-[state=open]:rotate-180" />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="px-3 pb-3">
                 <MoodTracker onMoodSave={handleMoodSave} />
-              </div>
-            )}
-          </CosmicCard>
+              </CollapsibleContent>
+            </CosmicCard>
+          </Collapsible>
 
-          {/* Reflection Prompts Toggle */}
-          <CosmicCard className="p-3 w-full">
-            <div className="flex items-center justify-between w-full">
-              <div className="flex items-center">
-                <Sparkles className="h-4 w-4 mr-2 text-soul-purple" />
-                <h3 className="text-sm font-medium">Reflection Prompts</h3>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowReflectionPrompts(!showReflectionPrompts)}
-                className="h-6 w-6 p-0"
-              >
-                {showReflectionPrompts ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-              </Button>
-            </div>
-            {showReflectionPrompts && (
-              <div className="mt-3 w-full">
+          {/* Reflection Prompts */}
+          <Collapsible>
+            <CosmicCard className="p-0 w-full">
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full p-3 justify-between h-auto rounded-2xl">
+                  <div className="flex items-center">
+                    <Sparkles className="h-4 w-4 mr-2 text-soul-purple" />
+                    <h3 className="text-sm font-medium">Reflection Prompts</h3>
+                  </div>
+                  <ChevronDown className="h-4 w-4 transition-transform data-[state=open]:rotate-180" />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="px-3 pb-3">
                 <ReflectionPrompts onReflectionSave={handleReflectionSave} />
-              </div>
-            )}
-          </CosmicCard>
+              </CollapsibleContent>
+            </CosmicCard>
+          </Collapsible>
 
-          {/* Insight Journal Toggle */}
-          <CosmicCard className="p-3 w-full">
-            <div className="flex items-center justify-between w-full">
-              <div className="flex items-center">
-                <Moon className="h-4 w-4 mr-2 text-soul-purple" />
-                <h3 className="text-sm font-medium">Insight Journal</h3>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowInsightJournal(!showInsightJournal)}
-                className="h-6 w-6 p-0"
-              >
-                {showInsightJournal ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-              </Button>
-            </div>
-            {showInsightJournal && (
-              <div className="mt-3 w-full">
+          {/* Insight Journal */}
+          <Collapsible>
+            <CosmicCard className="p-0 w-full">
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full p-3 justify-between h-auto rounded-2xl">
+                  <div className="flex items-center">
+                    <Moon className="h-4 w-4 mr-2 text-soul-purple" />
+                    <h3 className="text-sm font-medium">Insight Journal</h3>
+                  </div>
+                  <ChevronDown className="h-4 w-4 transition-transform data-[state=open]:rotate-180" />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="px-3 pb-3">
                 <InsightJournal onInsightSave={handleInsightSave} />
-              </div>
-            )}
-          </CosmicCard>
+              </CollapsibleContent>
+            </CosmicCard>
+          </Collapsible>
 
-          {/* Weekly Insights Toggle */}
-          <CosmicCard className="p-3 w-full">
-            <div className="flex items-center justify-between w-full">
-              <div className="flex items-center">
-                <Sparkles className="h-4 w-4 mr-2 text-soul-purple" />
-                <h3 className="text-sm font-medium">Weekly Insights</h3>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowWeeklyInsights(!showWeeklyInsights)}
-                className="h-6 w-6 p-0"
-              >
-                {showWeeklyInsights ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-              </Button>
-            </div>
-            {showWeeklyInsights && (
-              <div className="mt-3 w-full">
+          {/* Weekly Insights */}
+          <Collapsible>
+            <CosmicCard className="p-0 w-full">
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full p-3 justify-between h-auto rounded-2xl">
+                  <div className="flex items-center">
+                    <Sparkles className="h-4 w-4 mr-2 text-soul-purple" />
+                    <h3 className="text-sm font-medium">Weekly Insights</h3>
+                  </div>
+                  <ChevronDown className="h-4 w-4 transition-transform data-[state=open]:rotate-180" />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="px-3 pb-3">
                 <WeeklyInsights />
-              </div>
-            )}
-          </CosmicCard>
+              </CollapsibleContent>
+            </CosmicCard>
+          </Collapsible>
+
+          {/* Soul Guide Chat */}
+          <Collapsible>
+            <CosmicCard className="p-0 w-full">
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full p-3 justify-between h-auto rounded-2xl">
+                  <div className="flex items-center">
+                    <Heart className="h-4 w-4 mr-2 text-soul-purple" />
+                    <h3 className="text-sm font-medium">{t('coach.soulGuide')}</h3>
+                  </div>
+                  <ChevronDown className="h-4 w-4 transition-transform data-[state=open]:rotate-180" />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="px-3 pb-3">
+                <div className="space-y-2 w-full">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => sendMessage("Help me check in with my current emotional and spiritual state")}
+                    className="w-full text-xs border-soul-purple/30 hover:bg-soul-purple/10"
+                  >
+                    <Moon className="h-3 w-3 mr-2" />
+                    Start Soul Check-in
+                  </Button>
+                  <div className="mt-3">
+                    <GuideInterface
+                      messages={messages}
+                      isLoading={isLoading}
+                      onSendMessage={sendMessage}
+                      messagesEndRef={messagesEndRef}
+                    />
+                  </div>
+                </div>
+              </CollapsibleContent>
+            </CosmicCard>
+          </Collapsible>
         </div>
-
-        {/* Soul Guide Chat Toggle */}
-        <CosmicCard className="p-3 mb-4 w-full">
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center">
-              <Heart className="h-4 w-4 mr-2 text-soul-purple" />
-              <h3 className="text-sm font-medium">{t('coach.soulGuide')}</h3>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowChat(!showChat)}
-              className="h-6 w-6 p-0"
-            >
-              {showChat ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </Button>
-          </div>
-          
-          {!showChat && (
-            <div className="mt-3 space-y-2 w-full">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setShowChat(true);
-                  sendMessage("Help me check in with my current emotional and spiritual state");
-                }}
-                className="w-full text-xs border-soul-purple/30 hover:bg-soul-purple/10"
-              >
-                <Moon className="h-3 w-3 mr-2" />
-                Start Soul Check-in
-              </Button>
-            </div>
-          )}
-        </CosmicCard>
-
-        {/* Expandable Soul Guide Chat - Full Width */}
-        {showChat && (
-          <div className="flex-1 flex flex-col w-full">
-            <div className="flex-1 flex flex-col w-full">
-              <GuideInterface
-                messages={messages}
-                isLoading={isLoading}
-                onSendMessage={sendMessage}
-                messagesEndRef={messagesEndRef}
-              />
-            </div>
-          </div>
-        )}
       </div>
     </MainLayout>
   );
