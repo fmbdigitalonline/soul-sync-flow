@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -68,8 +67,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Mobile Header */}
-      <div className="md:hidden bg-white/80 backdrop-blur-lg border-b border-gray-100 sticky top-0 z-40">
-        <div className="flex items-center justify-between p-4">
+      <div className="md:hidden bg-white/80 backdrop-blur-lg border-b border-gray-100 sticky top-0 z-40 w-full">
+        <div className="flex items-center justify-between p-4 w-full">
           <Link to="/" className="flex items-center space-x-2">
             <SoulOrbAvatar size="sm" />
             <span className="font-display font-bold text-lg gradient-text">
@@ -91,7 +90,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
         
         {/* Mobile Menu Dropdown */}
         {isMenuOpen && user && (
-          <div className="border-t border-gray-100 bg-white/95 backdrop-blur-lg p-4 space-y-2">
+          <div className="border-t border-gray-100 bg-white/95 backdrop-blur-lg p-4 space-y-2 w-full">
             <Button
               variant="ghost"
               onClick={handleSignOut}
