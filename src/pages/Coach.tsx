@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
@@ -78,40 +77,28 @@ const Coach = () => {
   return (
     <MainLayout>
       <div className="flex flex-col h-[calc(100vh-5rem)] max-w-md mx-auto">
-        {/* Compact Header - Minimal space */}
-        <div className="flex-shrink-0 px-4 pt-3 pb-2">
+        {/* Ultra Minimal Header */}
+        <div className="flex-shrink-0 px-3 py-1">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-soul-purple to-soul-teal rounded-full flex items-center justify-center">
-                <MessageCircle className="h-4 w-4 text-white" />
+            <div className="flex items-center gap-1">
+              <div className="w-6 h-6 bg-gradient-to-br from-soul-purple to-soul-teal rounded-full flex items-center justify-center">
+                <MessageCircle className="h-3 w-3 text-white" />
               </div>
-              <div>
-                <h1 className="text-lg font-semibold">
-                  <span className="gradient-text">Soul Guide</span>
-                </h1>
-              </div>
+              <h1 className="text-sm font-medium gradient-text">Soul Guide</h1>
             </div>
-            
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={handleNewConversation}
-              className="h-8 px-2"
+              className="h-6 px-1"
             >
               <RotateCcw className="h-3 w-3" />
             </Button>
           </div>
-          
-          {/* Very compact status line */}
-          {(productivityJourney || growthJourney) && (
-            <p className="text-xs text-muted-foreground mt-1">
-              Connected • {messages.length} messages
-            </p>
-          )}
         </div>
 
-        {/* Maximized Chat Interface */}
-        <div className="flex-1 px-4 pb-4 min-h-0">
+        {/* Maximum Chat Interface */}
+        <div className="flex-1 px-3 pb-3 min-h-0">
           <BlendInterface
             messages={messages}
             isLoading={isLoading}
