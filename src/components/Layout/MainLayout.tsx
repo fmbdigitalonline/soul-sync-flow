@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,8 @@ import {
   Settings, 
   LogOut, 
   Menu, 
-  X 
+  X,
+  Star
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -49,6 +51,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
 
   const navItems = [
     { to: "/", icon: Home, label: t('nav.home') },
+    { to: "/blueprint", icon: Star, label: "Blueprint" },
     { to: "/dreams", icon: Heart, label: "Dreams" },
     { to: "/spiritual-growth", icon: Sparkles, label: t('nav.growth') },
     { to: "/coach", icon: MessageCircle, label: t('nav.coach') },

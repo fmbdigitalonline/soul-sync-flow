@@ -12,6 +12,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Coach from "./pages/Coach";
 import Dreams from "./pages/Dreams";
+import Blueprint from "./pages/Blueprint";
 import SpiritualGrowth from "./pages/SpiritualGrowth";
 import Onboarding from "./pages/Onboarding";
 import "./App.css";
@@ -41,6 +42,7 @@ function App() {
                   <Routes>
                     <Route path="/" element={<Index />} />
                     <Route path="/auth" element={<Auth />} />
+                    <Route path="/blueprint" element={<Blueprint />} />
                     <Route path="/coach" element={<Coach />} />
                     <Route path="/dreams" element={<Dreams />} />
                     <Route path="/spiritual-growth" element={<SpiritualGrowth />} />
