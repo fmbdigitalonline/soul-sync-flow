@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
@@ -76,7 +77,7 @@ const Coach = () => {
 
   return (
     <MainLayout>
-      <div className="flex flex-col h-[calc(100vh-5rem)] max-w-md mx-auto">
+      <div className="flex flex-col h-[calc(100vh-5rem)] w-full">
         {/* Ultra Minimal Header */}
         <div className="flex-shrink-0 px-3 py-1">
           <div className="flex items-center justify-between">
@@ -97,7 +98,7 @@ const Coach = () => {
           </div>
         </div>
 
-        {/* Maximum Chat Interface - Remove horizontal padding */}
+        {/* Maximum Chat Interface - Full width */}
         <div className="flex-1 pb-3 min-h-0">
           <BlendInterface
             messages={messages}
