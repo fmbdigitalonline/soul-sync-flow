@@ -78,7 +78,7 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
                   variant="outline"
                   size="sm"
                   onClick={() => handleQuickAction(action)}
-                  className="text-xs h-7 px-1"
+                  className="text-xs h-7 px-1 w-full"
                 >
                   {action}
                 </Button>
@@ -97,10 +97,10 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
           >
             <div
               className={cn(
-                "w-full max-w-none rounded-xl p-2",
+                "w-full rounded-xl p-2",
                 message.sender === "user"
                   ? "bg-gradient-to-br from-soul-purple to-soul-teal text-white"
-                  : "cosmic-card border border-white/20"
+                  : "cosmic-card border border-white/20 w-full"
               )}
             >
               <div className="flex items-center space-x-1 mb-1">
@@ -120,7 +120,7 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
         
         {isLoading && (
           <div className="flex justify-start w-full">
-            <div className="cosmic-card border border-white/20 w-full max-w-none rounded-xl p-2">
+            <div className="cosmic-card border border-white/20 w-full rounded-xl p-2">
               <div className="flex items-center space-x-1 mb-1">
                 <Brain className="h-3 w-3 text-soul-purple" />
                 <p className="text-xs font-medium opacity-75">Ziel</p>
@@ -142,7 +142,7 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyPress}
           placeholder="Share what's on your mind..."
-          className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-sm h-12 px-4 rounded-none"
+          className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-sm h-12 px-4 rounded-none w-full"
           disabled={isLoading}
         />
         <Button
