@@ -135,22 +135,22 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Full Width Input - Edge to edge */}
+      {/* Full Width Input - Truly edge to edge */}
       <div className="flex-shrink-0">
-        <div className="flex items-center bg-white/80 backdrop-blur-lg border border-white/20 mx-3 rounded-xl">
+        <div className="flex items-center bg-white/80 backdrop-blur-lg border-t border-white/20">
           <Input
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyPress}
             placeholder="Share what's on your mind..."
-            className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-sm h-10 px-3"
+            className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-sm h-12 px-4 rounded-none"
             disabled={isLoading}
           />
           <Button
             size="sm"
             onClick={handleSendMessage}
             disabled={inputValue.trim() === "" || isLoading}
-            className="bg-gradient-to-r from-soul-purple to-soul-teal hover:shadow-lg h-8 w-8 p-0 rounded-lg flex-shrink-0 mr-2"
+            className="bg-gradient-to-r from-soul-purple to-soul-teal hover:shadow-lg h-8 w-8 p-0 rounded-lg flex-shrink-0 mr-3"
           >
             <SendHorizontal className="h-3 w-3" />
           </Button>
