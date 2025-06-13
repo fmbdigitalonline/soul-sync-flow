@@ -135,8 +135,8 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Full Width Input */}
-      <div className="flex-shrink-0 px-1">
+      {/* Full Width Input - No padding */}
+      <div className="flex-shrink-0">
         <div className="flex items-center space-x-1 bg-white/80 backdrop-blur-lg rounded-xl p-1 border border-white/20">
           <Input
             value={inputValue}
