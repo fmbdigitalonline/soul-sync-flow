@@ -79,15 +79,15 @@ const SpiritualGrowth = () => {
   if (!isAuthenticated) {
     return (
       <MainLayout>
-        <div className="flex flex-col h-[calc(100vh-5rem)] max-w-md mx-auto p-4 items-center justify-center">
-          <CosmicCard className="p-6 text-center">
+        <div className="flex flex-col h-[calc(100vh-5rem)] w-full p-4 items-center justify-center">
+          <CosmicCard className="p-6 text-center w-full">
             <Heart className="h-8 w-8 text-soul-purple mx-auto mb-4" />
             <h1 className="text-2xl font-bold font-display mb-2">
               <span className="gradient-text">Growth Mode</span>
             </h1>
             <p className="mb-6">{t('coach.signInRequired')}</p>
             <Button 
-              className="bg-soul-purple hover:bg-soul-purple/90"
+              className="bg-soul-purple hover:bg-soul-purple/90 w-full"
               onClick={() => window.location.href = '/auth'}
             >
               {t('nav.signIn')}
@@ -102,7 +102,7 @@ const SpiritualGrowth = () => {
     <MainLayout>
       <div className="flex flex-col h-[calc(100vh-5rem)] w-full p-4">
         {/* Growth Header */}
-        <div className="text-center mb-4">
+        <div className="text-center mb-4 w-full">
           <h1 className="text-2xl font-bold font-display mb-1">
             <span className="gradient-text">Growth Mode</span>
           </h1>
@@ -114,11 +114,11 @@ const SpiritualGrowth = () => {
           )}
         </div>
 
-        {/* Collapsible Tools Section */}
-        <div className="space-y-3 mb-4">
+        {/* Collapsible Tools Section - Full Width */}
+        <div className="space-y-3 mb-4 w-full">
           {/* Mood Tracker Toggle */}
-          <CosmicCard className="p-3">
-            <div className="flex items-center justify-between">
+          <CosmicCard className="p-3 w-full">
+            <div className="flex items-center justify-between w-full">
               <div className="flex items-center">
                 <Heart className="h-4 w-4 mr-2 text-soul-purple" />
                 <h3 className="text-sm font-medium">Mood Tracker</h3>
@@ -133,15 +133,15 @@ const SpiritualGrowth = () => {
               </Button>
             </div>
             {showMoodTracker && (
-              <div className="mt-3">
+              <div className="mt-3 w-full">
                 <MoodTracker onMoodSave={handleMoodSave} />
               </div>
             )}
           </CosmicCard>
 
           {/* Reflection Prompts Toggle */}
-          <CosmicCard className="p-3">
-            <div className="flex items-center justify-between">
+          <CosmicCard className="p-3 w-full">
+            <div className="flex items-center justify-between w-full">
               <div className="flex items-center">
                 <Sparkles className="h-4 w-4 mr-2 text-soul-purple" />
                 <h3 className="text-sm font-medium">Reflection Prompts</h3>
@@ -156,15 +156,15 @@ const SpiritualGrowth = () => {
               </Button>
             </div>
             {showReflectionPrompts && (
-              <div className="mt-3">
+              <div className="mt-3 w-full">
                 <ReflectionPrompts onReflectionSave={handleReflectionSave} />
               </div>
             )}
           </CosmicCard>
 
           {/* Insight Journal Toggle */}
-          <CosmicCard className="p-3">
-            <div className="flex items-center justify-between">
+          <CosmicCard className="p-3 w-full">
+            <div className="flex items-center justify-between w-full">
               <div className="flex items-center">
                 <Moon className="h-4 w-4 mr-2 text-soul-purple" />
                 <h3 className="text-sm font-medium">Insight Journal</h3>
@@ -179,15 +179,15 @@ const SpiritualGrowth = () => {
               </Button>
             </div>
             {showInsightJournal && (
-              <div className="mt-3">
+              <div className="mt-3 w-full">
                 <InsightJournal onInsightSave={handleInsightSave} />
               </div>
             )}
           </CosmicCard>
 
           {/* Weekly Insights Toggle */}
-          <CosmicCard className="p-3">
-            <div className="flex items-center justify-between">
+          <CosmicCard className="p-3 w-full">
+            <div className="flex items-center justify-between w-full">
               <div className="flex items-center">
                 <Sparkles className="h-4 w-4 mr-2 text-soul-purple" />
                 <h3 className="text-sm font-medium">Weekly Insights</h3>
@@ -202,7 +202,7 @@ const SpiritualGrowth = () => {
               </Button>
             </div>
             {showWeeklyInsights && (
-              <div className="mt-3">
+              <div className="mt-3 w-full">
                 <WeeklyInsights />
               </div>
             )}
@@ -210,8 +210,8 @@ const SpiritualGrowth = () => {
         </div>
 
         {/* Soul Guide Chat Toggle */}
-        <CosmicCard className="p-3 mb-4">
-          <div className="flex items-center justify-between">
+        <CosmicCard className="p-3 mb-4 w-full">
+          <div className="flex items-center justify-between w-full">
             <div className="flex items-center">
               <Heart className="h-4 w-4 mr-2 text-soul-purple" />
               <h3 className="text-sm font-medium">{t('coach.soulGuide')}</h3>
@@ -227,7 +227,7 @@ const SpiritualGrowth = () => {
           </div>
           
           {!showChat && (
-            <div className="mt-3 space-y-2">
+            <div className="mt-3 space-y-2 w-full">
               <Button
                 variant="outline"
                 size="sm"
@@ -244,10 +244,10 @@ const SpiritualGrowth = () => {
           )}
         </CosmicCard>
 
-        {/* Expandable Soul Guide Chat */}
+        {/* Expandable Soul Guide Chat - Full Width */}
         {showChat && (
-          <div className="flex-1 flex flex-col">
-            <div className="flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col w-full">
+            <div className="flex-1 flex flex-col w-full">
               <GuideInterface
                 messages={messages}
                 isLoading={isLoading}
