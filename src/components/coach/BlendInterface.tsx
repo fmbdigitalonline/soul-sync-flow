@@ -113,7 +113,7 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
                   {message.sender === "assistant" ? "Ziel" : "You"}
                 </p>
               </div>
-              <p className="text-sm leading-relaxed">{message.content}</p>
+              <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
             </div>
           </div>
         ))}
@@ -135,22 +135,22 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Ultra Compact Input */}
-      <div className="flex-shrink-0">
+      {/* Full Width Input */}
+      <div className="flex-shrink-0 px-1">
         <div className="flex items-center space-x-1 bg-white/80 backdrop-blur-lg rounded-xl p-1 border border-white/20">
           <Input
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyPress}
             placeholder="Share what's on your mind..."
-            className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-sm h-8"
+            className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-sm h-8 px-2"
             disabled={isLoading}
           />
           <Button
             size="sm"
             onClick={handleSendMessage}
             disabled={inputValue.trim() === "" || isLoading}
-            className="bg-gradient-to-r from-soul-purple to-soul-teal hover:shadow-lg h-7 w-7 p-0 rounded-lg"
+            className="bg-gradient-to-r from-soul-purple to-soul-teal hover:shadow-lg h-7 w-7 p-0 rounded-lg flex-shrink-0"
           >
             <SendHorizontal className="h-3 w-3" />
           </Button>
