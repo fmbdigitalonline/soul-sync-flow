@@ -3,7 +3,7 @@ import React, { useRef, useEffect, useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
-import { Sparkles } from "lucide-react";
+import { Sparkles, MessageCircle, RotateCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useEnhancedAICoach } from "@/hooks/use-enhanced-ai-coach";
 import { supabase } from "@/integrations/supabase/client";
@@ -77,35 +77,48 @@ const Coach = () => {
 
   return (
     <MainLayout>
-      <div className="flex flex-col h-[calc(100vh-5rem)] max-w-md mx-auto p-4">
-        {/* Soul Companion Header */}
-        <div className="text-center mb-4">
-          <h1 className="text-xl font-bold font-display">
-            <span className="gradient-text">{t('coach.soulCompanion')}</span>
-          </h1>
-          <p className="text-sm text-muted-foreground">Your integrated life guide</p>
+      <div className="flex flex-col h-[calc(100vh-5rem)] max-w-md mx-auto">
+        {/* Compact Header - Minimal space */}
+        <div className="flex-shrink-0 px-4 pt-3 pb-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-gradient-to-br from-soul-purple to-soul-teal rounded-full flex items-center justify-center">
+                <MessageCircle className="h-4 w-4 text-white" />
+              </div>
+              <div>
+                <h1 className="text-lg font-semibold">
+                  <span className="gradient-text">Soul Guide</span>
+                </h1>
+              </div>
+            </div>
+            
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleNewConversation}
+              className="h-8 px-2"
+            >
+              <RotateCcw className="h-3 w-3" />
+            </Button>
+          </div>
+          
+          {/* Very compact status line */}
           {(productivityJourney || growthJourney) && (
             <p className="text-xs text-muted-foreground mt-1">
-              Connected to your journey data • {messages.length} conversation messages
+              Connected • {messages.length} messages
             </p>
           )}
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={handleNewConversation}
-            className="mt-2 text-xs"
-          >
-            New Conversation
-          </Button>
         </div>
 
-        {/* Pure Soul Companion Chat Interface */}
-        <BlendInterface
-          messages={messages}
-          isLoading={isLoading}
-          onSendMessage={sendMessage}
-          messagesEndRef={messagesEndRef}
-        />
+        {/* Maximized Chat Interface */}
+        <div className="flex-1 px-4 pb-4 min-h-0">
+          <BlendInterface
+            messages={messages}
+            isLoading={isLoading}
+            onSendMessage={sendMessage}
+            messagesEndRef={messagesEndRef}
+          />
+        </div>
       </div>
     </MainLayout>
   );
