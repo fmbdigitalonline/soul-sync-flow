@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -113,9 +112,9 @@ const SoulOrb: React.FC<SoulOrbProps> = ({
       
       {/* Orbital rings - adjusted to stay within bounds */}
       {particles.map((particle, index) => {
-        // Reduced orbital radius to 20% to ensure particles stay inside the circle
-        const x = 50 + Math.cos(particle.angle) * 20;
-        const y = 50 + Math.sin(particle.angle) * 20;
+        // Reduced orbital radius to 30% to keep particles inside the circle
+        const x = 50 + Math.cos(particle.angle) * 30;
+        const y = 50 + Math.sin(particle.angle) * 30;
         
         return (
           <div 
@@ -133,8 +132,8 @@ const SoulOrb: React.FC<SoulOrbProps> = ({
         );
       })}
       
-      {/* Orbital lines - reduced to fit within circle */}
-      <div className="absolute inset-4">
+      {/* Orbital lines - adjusted to fit within circle */}
+      <div className="absolute inset-2">
         <div className="absolute inset-0 rounded-full border border-white opacity-50 rotate-45" />
         <div className="absolute inset-0 rounded-full border border-white opacity-50 rotate-90" />
         <div className="absolute inset-0 rounded-full border border-white opacity-50" />
