@@ -97,8 +97,8 @@ const Coach = () => {
           </div>
         </div>
 
-        {/* Maximum Chat Interface */}
-        <div className="flex-1 px-3 pb-3 min-h-0">
+        {/* Maximum Chat Interface - Remove horizontal padding */}
+        <div className="flex-1 pb-3 min-h-0">
           <BlendInterface
             messages={messages}
             isLoading={isLoading}

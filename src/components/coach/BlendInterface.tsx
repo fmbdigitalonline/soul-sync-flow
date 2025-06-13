@@ -60,7 +60,7 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
   return (
     <div className="flex flex-col h-full">
       {/* Messages Area - Maximum space */}
-      <div className="flex-1 overflow-y-auto space-y-2 mb-2 min-h-0">
+      <div className="flex-1 overflow-y-auto space-y-2 mb-2 min-h-0 px-3">
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center px-2">
             <div className="w-12 h-12 bg-gradient-to-br from-soul-purple/20 to-soul-teal/20 rounded-full flex items-center justify-center mb-3">
@@ -135,22 +135,22 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Full Width Input - No padding */}
+      {/* Full Width Input - Edge to edge */}
       <div className="flex-shrink-0">
-        <div className="flex items-center space-x-1 bg-white/80 backdrop-blur-lg rounded-xl p-1 border border-white/20">
+        <div className="flex items-center bg-white/80 backdrop-blur-lg border border-white/20 mx-3 rounded-xl">
           <Input
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyPress}
             placeholder="Share what's on your mind..."
-            className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-sm h-8 px-2"
+            className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-sm h-10 px-3"
             disabled={isLoading}
           />
           <Button
             size="sm"
             onClick={handleSendMessage}
             disabled={inputValue.trim() === "" || isLoading}
-            className="bg-gradient-to-r from-soul-purple to-soul-teal hover:shadow-lg h-7 w-7 p-0 rounded-lg flex-shrink-0"
+            className="bg-gradient-to-r from-soul-purple to-soul-teal hover:shadow-lg h-8 w-8 p-0 rounded-lg flex-shrink-0 mr-2"
           >
             <SendHorizontal className="h-3 w-3" />
           </Button>
