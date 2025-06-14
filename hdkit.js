@@ -65,3 +65,23 @@ function nextLine(line) {
 function nextGateAndLine(gate, line) {
   return line === 6 ? nextGate(gate) + '.' + nextLine(line) : gate + '.' + nextLine(line);
 }
+
+// This is a placeholder. You should eventually put your real chart calculation here.
+export function calculateChart({ date, location }) {
+  // Example output: Just echos back the input, replace this with real calculation!
+  return Promise.resolve({
+    inputSummary: {
+      date,
+      location,
+    },
+    chart: {
+      // Replace this with real chart structure.
+      type: "Projector", // Example static value, replace with real logic!
+      authority: "Splenic",
+      profile: "6/2",
+      strategy: "Wait for the invitation",
+      gates: [],
+    },
+    notice: "This is a placeholder response from local hdkit.js."
+  });
+}
