@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Slider } from '@/components/ui/slider';
+import { CheckCircle2 } from 'lucide-react';
 
 interface GoalSelectionStepProps {
   onComplete: (preferences: {
@@ -67,6 +68,21 @@ export function GoalSelectionStep({ onComplete }: GoalSelectionStepProps) {
 
   const isValid = primaryGoal && !isSubmitting;
 
+  // Get selected goal label for display
+  const selectedGoalLabel = goals.find(goal => goal.id === primaryGoal)?.label;
+
+  // Get support style description
+  const getSupportStyleDescription = (level: number) => {
+    const descriptions = {
+      1: 'Minimal guidance - I prefer to explore independently',
+      2: 'Light guidance - Occasional suggestions and insights',
+      3: 'Balanced approach - Regular guidance with flexibility',
+      4: 'Active guidance - Structured support and recommendations',
+      5: 'Maximum guidance - Comprehensive coaching and direction'
+    };
+    return descriptions[level as keyof typeof descriptions] || '';
+  };
+
   return (
     <div className="space-y-6 max-w-md mx-auto px-4">
       <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 space-y-6">
@@ -86,6 +102,9 @@ export function GoalSelectionStep({ onComplete }: GoalSelectionStepProps) {
                   >
                     {goal.label}
                   </Label>
+                  {primaryGoal === goal.id && (
+                    <CheckCircle2 className="w-4 h-4 text-soul-purple mt-1 flex-shrink-0" />
+                  )}
                 </div>
               ))}
             </div>
@@ -116,8 +135,24 @@ export function GoalSelectionStep({ onComplete }: GoalSelectionStepProps) {
               <span>Light touch</span>
               <span>Structured guidance</span>
             </div>
+            {supportStyle[0] && (
+              <p className="text-xs text-white/80 text-center px-2">
+                {getSupportStyleDescription(supportStyle[0])}
+              </p>
+            )}
           </div>
         </div>
+
+        {/* Selection Summary */}
+        {primaryGoal && (
+          <div className="bg-white/5 rounded-lg p-4 space-y-2">
+            <h4 className="text-sm font-medium text-soul-purple">Your Selections:</h4>
+            <div className="text-xs space-y-1">
+              <p><span className="text-white/60">Focus:</span> {selectedGoalLabel}</p>
+              <p><span className="text-white/60">Guidance Level:</span> {supportStyle[0]}/5</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Error Message */}
@@ -151,13 +186,6 @@ export function GoalSelectionStep({ onComplete }: GoalSelectionStepProps) {
           "Complete Setup"
         )}
       </Button>
-      
-      {/* Development debugging info */}
-      {import.meta.env.DEV && (
-        <div className="text-xs text-gray-400 bg-gray-900/20 p-2 rounded">
-          Debug: {JSON.stringify({ primaryGoal, supportStyle: supportStyle[0], isSubmitting })}
-        </div>
-      )}
     </div>
   );
 }

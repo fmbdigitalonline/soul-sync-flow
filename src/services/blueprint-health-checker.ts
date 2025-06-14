@@ -35,7 +35,10 @@ export class BlueprintHealthChecker {
       this.healthCheckResults.push(result);
       
       const icon = status === 'pass' ? '✅' : status === 'fail' ? '❌' : '⚠️';
-      console.log(`${icon} HEALTH CHECK ${component}: ${message}`);
+      // Only log in development or health check mode
+      if (import.meta.env.DEV) {
+        console.log(`${icon} HEALTH CHECK ${component}: ${message}`);
+      }
     }
   }
   
@@ -51,7 +54,9 @@ export class BlueprintHealthChecker {
     if (this.isHealthCheckMode) {
       const error = `HEALTH CHECK FAIL: ${component} - ${reason}`;
       this.logHealthCheck(component, 'fail', reason);
-      console.error(`❌ FAILED: ${error}`);
+      if (import.meta.env.DEV) {
+        console.error(`❌ FAILED: ${error}`);
+      }
       throw new Error(error);
     }
     throw new Error(`${component}: ${reason}`);
@@ -65,7 +70,7 @@ export class BlueprintHealthChecker {
   }
   
   static logValidation(component: string, message: string) {
-    if (this.isHealthCheckMode) {
+    if (this.isHealthCheckMode && import.meta.env.DEV) {
       console.log(`📍 ${component}: ${message}`);
     }
   }
