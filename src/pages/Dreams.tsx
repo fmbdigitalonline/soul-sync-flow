@@ -57,6 +57,7 @@ const Dreams = () => {
   const [focusedMilestone, setFocusedMilestone] = useState<any>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isCreatingDream, setIsCreatingDream] = useState(false);
+  const [createdGoal, setCreatedGoal] = useState<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
