@@ -42,67 +42,111 @@ export async function calculateHumanDesign(
       "design"
     );
 
-    // Step 4: Calculate gates for both charts using HD standard wheel
-    const personalityGates = calculateHDGatesFromCelestialData(personalityCelestial, "personality");
-    const designGates = calculateHDGatesFromCelestialData(designCelestial, "design");
-
     // Canonical HD order
     const HD_PLANETS = [
       "sun", "earth", "north_node", "south_node", "moon", "mercury", "venus", "mars",
       "jupiter", "saturn", "uranus", "neptune", "pluto"
     ];
 
+    // ---- PATCH: HD GATE EXPANSION AND ORDERING ----
     function canonicalOrder(gatesArray) {
-      // Remove null gates and sort by HD planet order
-      const uniqueGates = [];
-      const keys = new Set();
-      for (const planet of HD_PLANETS) {
+      // Return only one (first, latest) gate/line per planet, sorted in canonical Human Design order
+      return HD_PLANETS.map(planet => {
         const found = gatesArray.find(g => g.planet === planet && g.gate && g.line);
-        if (found) {
-          const key = `${found.gate}.${found.line}`;
-          if (!keys.has(key)) {
-            uniqueGates.push({ ...found });
-            keys.add(key);
-          }
-        }
-      }
-      return uniqueGates;
+        return found ? { ...found } : null;
+      }).filter(Boolean);
     }
 
-    const personalityGatesOrdered = canonicalOrder(personalityGates);
-    const designGatesOrdered = canonicalOrder(designGates);
+    const personalityGatesRaw = calculateHDGatesFromCelestialData(personalityCelestial, "personality");
+    const designGatesRaw = calculateHDGatesFromCelestialData(designCelestial, "design");
+
+    const personalityGatesOrdered = canonicalOrder(personalityGatesRaw);
+    const designGatesOrdered = canonicalOrder(designGatesRaw);
 
     // Step 5: Determine centers and channels using both gate sets
     const centers = calculateCentersFromChannels([...personalityGatesOrdered, ...designGatesOrdered]);
 
-    // Step 6: Calculate type, authority, profile, strategy, definition, etc.
+    // Step 6: Type, authority, profile
     const type = determineHDType(centers);
     const authority = determineHDAuthority(centers);
 
-    // ----------------------------
-    // FIX: Profile per HD standard
-    // Personality: Sun.line = conscious
-    // Design: Earth.line = unconscious
-    function getSunAndEarthGates(gatesArr) {
-      // Always HD_PLANETS[0] = sun, [1] = earth, so look up by planet name
-      const sun = gatesArr.find(g => g.planet === "sun");
-      const earth = gatesArr.find(g => g.planet === "earth");
-      return { sun, earth };
+    // ----- FIX PROFILE: Personality Sun line, Design Earth line -----
+    function getGateByPlanet(gatesArr, planet) {
+      return gatesArr.find(g => g.planet === planet);
     }
-    const { sun: personalitySun } = getSunAndEarthGates(personalityGatesOrdered);
-    const { earth: designEarth } = getSunAndEarthGates(designGatesOrdered);
-
-    // HD labels
     const profileLabels = {
       1: "Investigator", 2: "Hermit", 3: "Martyr", 4: "Opportunist", 5: "Heretic", 6: "Role Model"
     };
 
-    let conscious = personalitySun && personalitySun.line ? personalitySun.line : 1;
-    let unconscious = designEarth && designEarth.line ? designEarth.line : 1;
+    const sunPersonality = getGateByPlanet(personalityGatesOrdered, "sun");
+    const earthDesign = getGateByPlanet(designGatesOrdered, "earth");
+    const conscious = sunPersonality?.line || 1;
+    const unconscious = earthDesign?.line || 1;
     const profile = `${conscious}/${unconscious} (${profileLabels[conscious] || ""}/${profileLabels[unconscious] || ""})`;
-    // ----------------------------
 
-    // Step 7: Improve definition calculation (true Split/etc)
+    // ---- PATCH: Robust channel graph definition evaluation ----
+    function calculateHDDefinition(centers) {
+      // Construct graph: nodes = defined centers, edges = channels connecting them
+      const definedCenters = Object.keys(centers).filter(cn => centers[cn].defined);
+      const adj = {};
+      definedCenters.forEach(center => adj[center] = []);
+      // Build adjacency list
+      for (const center of definedCenters) {
+        for (const ch of centers[center].channels || []) {
+          // For each channel, get the other connected center (if both defined)
+          const [a, b] = ch;
+          const ca = getCenterOfGate(a);
+          const cb = getCenterOfGate(b);
+          if (ca !== cb && definedCenters.includes(ca) && definedCenters.includes(cb)) {
+            if (!adj[ca].includes(cb)) adj[ca].push(cb);
+            if (!adj[cb].includes(ca)) adj[cb].push(ca);
+          }
+        }
+      }
+      // Count connected components via BFS
+      const visited = {};
+      let groupCount = 0;
+      for (const center of definedCenters) {
+        if (!visited[center]) {
+          groupCount++;
+          const queue = [center];
+          while (queue.length) {
+            const node = queue.shift();
+            if (!visited[node]) {
+              visited[node] = true;
+              (adj[node] || []).forEach(nbr => {
+                if (!visited[nbr]) queue.push(nbr);
+              });
+            }
+          }
+        }
+      }
+      // Map to labels
+      if (groupCount === 0) return "No Definition";
+      if (groupCount === 1) return "Single Definition";
+      if (groupCount === 2) return "Split Definition";
+      if (groupCount === 3) return "Triple Split Definition";
+      return "Quadruple Split Definition";
+    }
+    function getCenterOfGate(gateNum) {
+      // Must match mapping used elsewhere:
+      const gateToCenterMap = {
+        64: 'Head', 61: 'Head', 63: 'Head',
+        47: 'Ajna', 24: 'Ajna', 4: 'Ajna', 17: 'Ajna', 43: 'Ajna', 11: 'Ajna',
+        62: 'Throat', 23: 'Throat', 56: 'Throat', 35: 'Throat', 12: 'Throat',
+        45: 'Throat', 33: 'Throat', 8: 'Throat', 31: 'Throat', 7: 'Throat',
+        1: 'Throat', 13: 'Throat', 10: 'Throat', 20: 'Throat', 16: 'Throat',
+        25: 'G', 46: 'G', 22: 'G', 36: 'G', 2: 'G', 15: 'G', 5: 'G', 14: 'G',
+        21: 'Heart', 40: 'Heart', 26: 'Heart', 51: 'Heart',
+        6: 'Solar Plexus', 37: 'Solar Plexus', 30: 'Solar Plexus', 55: 'Solar Plexus', 49: 'Solar Plexus', 19: 'Solar Plexus', 39: 'Solar Plexus',
+        41: 'Solar Plexus', 22: 'Solar Plexus', 36: 'Solar Plexus',
+        34: 'Sacral', 5: 'Sacral', 14: 'Sacral', 29: 'Sacral', 59: 'Sacral', 9: 'Sacral', 3: 'Sacral', 42: 'Sacral', 27: 'Sacral',
+        48: 'Spleen', 57: 'Spleen', 44: 'Spleen', 50: 'Spleen', 32: 'Spleen', 28: 'Spleen', 18: 'Spleen',
+        53: 'Root', 60: 'Root', 52: 'Root', 19: 'Root', 39: 'Root', 41: 'Root', 58: 'Root', 38: 'Root', 54: 'Root'
+      };
+      return gateToCenterMap[gateNum];
+    }
+
     const definition = calculateHDDefinition(centers);
 
     // Format output as HD expects (no duplicates, canonical planet order)
@@ -418,50 +462,46 @@ function calculateHDProfile(sunGateInfo, designSunGateInfo) {
 
 // REPLACE calculateDefinition with an HD-correct channel graph method:
 function calculateHDDefinition(centers) {
-  // Build a graph: nodes = centers, edges = channels
-  // Each connected group of centers = a "definition area"
-  const centerNames = Object.keys(centers);
-  const visited = new Set();
-  let groups = 0;
-
-  function dfs(center) {
-    visited.add(center);
-    // For each channel in this center, visit the connected center
-    centers[center].channels.forEach(([gateA, gateB]) => {
-      const otherGate = centers[center].gates.includes(gateA) ? gateB : gateA;
-      const otherCenter = getCenterOfGate(otherGate);
-      if (otherCenter && centers[otherCenter].defined && !visited.has(otherCenter)) {
-        dfs(otherCenter);
+  // Construct graph: nodes = defined centers, edges = channels connecting them
+  const definedCenters = Object.keys(centers).filter(cn => centers[cn].defined);
+  const adj = {};
+  definedCenters.forEach(center => adj[center] = []);
+  // Build adjacency list
+  for (const center of definedCenters) {
+    for (const ch of centers[center].channels || []) {
+      // For each channel, get the other connected center (if both defined)
+      const [a, b] = ch;
+      const ca = getCenterOfGate(a);
+      const cb = getCenterOfGate(b);
+      if (ca !== cb && definedCenters.includes(ca) && definedCenters.includes(cb)) {
+        if (!adj[ca].includes(cb)) adj[ca].push(cb);
+        if (!adj[cb].includes(ca)) adj[cb].push(ca);
       }
-    });
-  }
-  function getCenterOfGate(gateNum) {
-    // Must match mapping used in centers calculation:
-    const gateToCenterMap = {
-      64: 'Head', 61: 'Head', 63: 'Head', 47: 'Ajna', 24: 'Ajna', 4: 'Ajna', 17: 'Ajna', 43: 'Ajna', 11: 'Ajna',
-      62: 'Throat', 23: 'Throat', 56: 'Throat', 35: 'Throat', 12: 'Throat', 45: 'Throat', 33: 'Throat', 8: 'Throat',
-      31: 'Throat', 7: 'Throat', 1: 'Throat', 13: 'Throat', 10: 'Throat', 20: 'Throat', 16: 'Throat',
-      25: 'G', 46: 'G', 22: 'G', 36: 'G', 2: 'G', 15: 'G', 5: 'G', 14: 'G',
-      21: 'Heart', 40: 'Heart', 26: 'Heart', 51: 'Heart',
-      6: 'Solar Plexus', 37: 'Solar Plexus', 30: 'Solar Plexus', 55: 'Solar Plexus', 49: 'Solar Plexus', 19: 'Solar Plexus', 39: 'Solar Plexus',
-      41: 'Solar Plexus', 22: 'Solar Plexus', 36: 'Solar Plexus',
-      34: 'Sacral', 5: 'Sacral', 14: 'Sacral', 29: 'Sacral', 59: 'Sacral', 9: 'Sacral', 3: 'Sacral', 42: 'Sacral', 27: 'Sacral',
-      48: 'Spleen', 57: 'Spleen', 44: 'Spleen', 50: 'Spleen', 32: 'Spleen', 28: 'Spleen', 18: 'Spleen',
-      53: 'Root', 60: 'Root', 52: 'Root', 19: 'Root', 39: 'Root', 41: 'Root', 58: 'Root', 38: 'Root', 54: 'Root'
-    };
-    return gateToCenterMap[gateNum];
-  }
-  // For each defined center, start a DFS if not already visited
-  for (const center of centerNames) {
-    if (centers[center].defined && !visited.has(center)) {
-      dfs(center);
-      groups++;
     }
   }
-  if (groups === 0) return "No Definition";
-  if (groups === 1) return "Single Definition";
-  if (groups === 2) return "Split Definition";
-  if (groups === 3) return "Triple Split Definition";
+  // Count connected components via BFS
+  const visited = {};
+  let groupCount = 0;
+  for (const center of definedCenters) {
+    if (!visited[center]) {
+      groupCount++;
+      const queue = [center];
+      while (queue.length) {
+        const node = queue.shift();
+        if (!visited[node]) {
+          visited[node] = true;
+          (adj[node] || []).forEach(nbr => {
+            if (!visited[nbr]) queue.push(nbr);
+          });
+        }
+      }
+    }
+  }
+  // Map to labels
+  if (groupCount === 0) return "No Definition";
+  if (groupCount === 1) return "Single Definition";
+  if (groupCount === 2) return "Split Definition";
+  if (groupCount === 3) return "Triple Split Definition";
   return "Quadruple Split Definition";
 }
 
