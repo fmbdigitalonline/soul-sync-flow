@@ -53,6 +53,33 @@ export const useOptimizedBlueprintData = () => {
     return Math.round((completedFields / totalFields) * 100);
   };
 
+  // Add debug logging for user type detection
+  const getPersonalityType = () => {
+    console.log('🎯 Getting personality type from optimized blueprint data:', blueprintData);
+    
+    if (!blueprintData) {
+      console.log('❌ No blueprint data available in optimized hook');
+      return 'powerful soul';
+    }
+    
+    const mbti = blueprintData?.cognition_mbti?.type;
+    const hdType = blueprintData?.energy_strategy_human_design?.type;
+    
+    console.log('🔍 Optimized MBTI type found:', mbti);
+    console.log('🔍 Optimized Human Design type found:', hdType);
+    
+    // Return the first available type with better fallbacks
+    if (mbti && mbti !== 'Unknown') return mbti;
+    if (hdType && hdType !== 'Unknown' && hdType !== 'Generator') return hdType;
+    
+    // Improved fallback based on available data
+    if (blueprintData?.archetype_western?.sun_sign && blueprintData.archetype_western.sun_sign !== 'Unknown') {
+      return `${blueprintData.archetype_western.sun_sign} soul`;
+    }
+    
+    return 'unique soul';
+  };
+
   return {
     blueprintData,
     loading,
@@ -61,6 +88,7 @@ export const useOptimizedBlueprintData = () => {
     hasBlueprint,
     getPersonalityTraits,
     getDisplayName,
-    getBlueprintCompletionPercentage
+    getBlueprintCompletionPercentage,
+    getPersonalityType
   };
 };

@@ -19,16 +19,24 @@ export const useBlueprintData = () => {
 
       // Ensure backward compatibility by mapping new properties to legacy names
       if (data) {
+        console.log('🔍 Raw blueprint data received:', data);
+        
         const compatibleData = {
           ...data,
           archetype_western: data.archetype_western || data.astrology,
           archetype_chinese: data.archetype_chinese || data.astrology,
           values_life_path: data.values_life_path || data.numerology,
-          energy_strategy_human_design: data.energy_strategy_human_design || data.human_design,
-          cognition_mbti: data.cognition_mbti || data.mbti,
+          // Fixed: Prioritize actual database field names first
+          energy_strategy_human_design: data.human_design || data.energy_strategy_human_design,
+          cognition_mbti: data.mbti || data.cognition_mbti,
           bashar_suite: data.bashar_suite || {},
           timing_overlays: data.timing_overlays || {}
         };
+        
+        console.log('🔄 Mapped blueprint data:', compatibleData);
+        console.log('🎯 MBTI data:', compatibleData.cognition_mbti);
+        console.log('🎯 Human Design data:', compatibleData.energy_strategy_human_design);
+        
         setBlueprintData(compatibleData);
       }
 

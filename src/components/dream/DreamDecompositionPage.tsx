@@ -32,10 +32,29 @@ export const DreamDecompositionPage: React.FC<DreamDecompositionPageProps> = ({
 
   // Get user type for personalization
   const getUserType = () => {
-    if (!blueprintData) return '';
+    console.log('🎯 Getting user type from blueprint data:', blueprintData);
+    
+    if (!blueprintData) {
+      console.log('❌ No blueprint data available');
+      return 'powerful soul';
+    }
+    
     const mbti = blueprintData?.cognition_mbti?.type;
     const hdType = blueprintData?.energy_strategy_human_design?.type;
-    return mbti || hdType || 'unique design';
+    
+    console.log('🔍 MBTI type found:', mbti);
+    console.log('🔍 Human Design type found:', hdType);
+    
+    // Return the first available type with better fallbacks
+    if (mbti && mbti !== 'Unknown') return mbti;
+    if (hdType && hdType !== 'Unknown' && hdType !== 'Generator') return hdType;
+    
+    // Improved fallback based on available data
+    if (blueprintData?.archetype_western?.sun_sign && blueprintData.archetype_western.sun_sign !== 'Unknown') {
+      return `${blueprintData.archetype_western.sun_sign} soul`;
+    }
+    
+    return 'unique soul';
   };
 
   const stages: DecompositionStage[] = [
