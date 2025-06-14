@@ -51,7 +51,7 @@ const Dreams = () => {
   const { messages, isLoading, sendMessage, resetConversation, currentAgent, switchAgent } = useEnhancedAICoach("coach");
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [currentView, setCurrentView] = useState<'create' | 'chat' | 'journey' | 'task-coach'>('create');
-  const [taskView, setTaskView] = useState<'none' | 'tasks' | 'focus' | 'habits'>('none');
+  const [activeTab, setActiveTab] = useState<'journey' | 'tasks' | 'focus' | 'habits'>('journey');
   const [focusedMilestone, setFocusedMilestone] = useState<any>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isCreatingDream, setIsCreatingDream] = useState(false);
@@ -253,17 +253,10 @@ const Dreams = () => {
     // Find the milestone and focus on it
     const milestone = { id: milestoneId }; // You can expand this to get full milestone data
     setFocusedMilestone(milestone);
-    setTaskView('tasks');
   };
 
   const handleTaskClick = (taskId: string) => {
     // Focus on specific task - for now just switch to task view
-    setTaskView('tasks');
-  };
-
-  const handleBackToJourney = () => {
-    setTaskView('none');
-    setFocusedMilestone(null);
   };
 
   if (!isAuthenticated) {
@@ -351,7 +344,7 @@ const Dreams = () => {
           <div className="max-w-7xl mx-auto px-4 py-6">
             
             {/* Modern Header */}
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-4">
                 <Button 
                   variant="ghost" 
@@ -367,109 +360,64 @@ const Dreams = () => {
                   <p className="text-sm text-gray-500">Track progress and stay focused</p>
                 </div>
               </div>
-              
-              {/* Action Pills */}
-              <div className="flex gap-2">
-                <Button
-                  variant={taskView === 'tasks' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setTaskView(taskView === 'tasks' ? 'none' : 'tasks')}
-                  className="flex items-center gap-2 rounded-xl border-gray-200 hover:border-soul-purple/50"
-                >
-                  <Target className="h-4 w-4" />
-                  Tasks
-                </Button>
-                <Button
-                  variant={taskView === 'focus' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setTaskView(taskView === 'focus' ? 'none' : 'focus')}
-                  className="flex items-center gap-2 rounded-xl border-gray-200 hover:border-soul-purple/50"
-                >
-                  <Clock className="h-4 w-4" />
-                  Focus
-                </Button>
-                <Button
-                  variant={taskView === 'habits' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setTaskView(taskView === 'habits' ? 'none' : 'habits')}
-                  className="flex items-center gap-2 rounded-xl border-gray-200 hover:border-soul-purple/50"
-                >
-                  <CheckCircle className="h-4 w-4" />
-                  Habits
-                </Button>
-              </div>
             </div>
 
-            {/* Main Content - Mobile First Layout */}
-            {isMobile && taskView !== 'none' ? (
-              // Mobile: Full screen task view
-              <div className="bg-white/80 backdrop-blur-lg rounded-3xl p-6 shadow-lg border border-white/20">
-                {taskView === 'tasks' && (
-                  <TaskViews 
-                    focusedMilestone={focusedMilestone}
-                    onBackToJourney={handleBackToJourney}
-                    onTaskSelect={handleTaskSelect}
-                  />
-                )}
-                
-                {taskView === 'focus' && (
-                  <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-semibold flex items-center gap-2 text-gray-800">
-                        <Clock className="h-5 w-5 text-soul-purple" />
-                        Focus Session
-                      </h3>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => setTaskView('none')}
-                        className="rounded-xl"
-                      >
-                        <ArrowLeft className="h-4 w-4" />
-                        Back
-                      </Button>
-                    </div>
-                    <PomodoroTimer />
-                  </div>
-                )}
-                
-                {taskView === 'habits' && (
-                  <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-semibold flex items-center gap-2 text-gray-800">
-                        <CheckCircle className="h-5 w-5 text-soul-purple" />
-                        Daily Habits
-                      </h3>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => setTaskView('none')}
-                        className="rounded-xl"
-                      >
-                        <ArrowLeft className="h-4 w-4" />
-                        Back
-                      </Button>
-                    </div>
-                    <HabitTracker />
-                  </div>
-                )}
+            {/* Mobile-First Tab Navigation */}
+            <div className="bg-white/80 backdrop-blur-lg rounded-3xl shadow-lg border border-white/20">
+              
+              {/* Mobile Horizontal Tab Bar */}
+              <div className="border-b border-gray-100 p-4">
+                <div className="flex overflow-x-auto space-x-2 pb-2">
+                  <Button
+                    variant={activeTab === 'journey' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setActiveTab('journey')}
+                    className="flex items-center gap-2 rounded-xl whitespace-nowrap min-w-fit border-gray-200 hover:border-soul-purple/50"
+                  >
+                    <MapPin className="h-4 w-4" />
+                    Journey
+                  </Button>
+                  <Button
+                    variant={activeTab === 'tasks' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setActiveTab('tasks')}
+                    className="flex items-center gap-2 rounded-xl whitespace-nowrap min-w-fit border-gray-200 hover:border-soul-purple/50"
+                  >
+                    <Target className="h-4 w-4" />
+                    Tasks
+                  </Button>
+                  <Button
+                    variant={activeTab === 'focus' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setActiveTab('focus')}
+                    className="flex items-center gap-2 rounded-xl whitespace-nowrap min-w-fit border-gray-200 hover:border-soul-purple/50"
+                  >
+                    <Clock className="h-4 w-4" />
+                    Focus
+                  </Button>
+                  <Button
+                    variant={activeTab === 'habits' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setActiveTab('habits')}
+                    className="flex items-center gap-2 rounded-xl whitespace-nowrap min-w-fit border-gray-200 hover:border-soul-purple/50"
+                  >
+                    <CheckCircle className="h-4 w-4" />
+                    Habits
+                  </Button>
+                </div>
               </div>
-            ) : (
-              // Desktop grid layout OR mobile journey view
-              <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                
-                {/* Journey Map */}
-                <div className={`${taskView === 'none' || isMobile ? 'xl:col-span-3' : 'xl:col-span-2'} transition-all duration-300`}>
-                  <div className="bg-white/80 backdrop-blur-lg rounded-3xl p-6 shadow-lg border border-white/20">
-                    <div className="flex items-center justify-between mb-6">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-soul-purple to-soul-teal rounded-2xl flex items-center justify-center">
-                          <MapPin className="h-5 w-5 text-white" />
-                        </div>
-                        <div>
-                          <h2 className="text-xl font-semibold text-gray-800">Journey Map</h2>
-                          <p className="text-sm text-gray-500">{getBlueprintInsight()}</p>
-                        </div>
+
+              {/* Tab Content */}
+              <div className="p-6">
+                {activeTab === 'journey' && (
+                  <div>
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="w-10 h-10 bg-gradient-to-br from-soul-purple to-soul-teal rounded-2xl flex items-center justify-center">
+                        <MapPin className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-semibold text-gray-800">Journey Map</h2>
+                        <p className="text-sm text-gray-500">{getBlueprintInsight()}</p>
                       </div>
                     </div>
                     
@@ -478,64 +426,45 @@ const Dreams = () => {
                       onMilestoneClick={handleMilestoneClick}
                     />
                   </div>
-                </div>
+                )}
 
-                {/* Desktop Side Panel */}
-                {!isMobile && taskView !== 'none' && (
-                  <div className="xl:col-span-1 transition-all duration-300">
-                    <div className="bg-white/80 backdrop-blur-lg rounded-3xl p-6 shadow-lg border border-white/20 h-fit">
-                      {taskView === 'tasks' && (
-                        <TaskViews 
-                          focusedMilestone={focusedMilestone}
-                          onBackToJourney={handleBackToJourney}
-                          onTaskSelect={handleTaskSelect}
-                        />
-                      )}
-                      
-                      {taskView === 'focus' && (
-                        <div>
-                          <div className="flex items-center justify-between mb-4">
-                            <h3 className="font-semibold flex items-center gap-2 text-gray-800">
-                              <Clock className="h-5 w-5 text-soul-purple" />
-                              Focus Session
-                            </h3>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              onClick={() => setTaskView('none')}
-                              className="rounded-xl"
-                            >
-                              ×
-                            </Button>
-                          </div>
-                          <PomodoroTimer />
-                        </div>
-                      )}
-                      
-                      {taskView === 'habits' && (
-                        <div>
-                          <div className="flex items-center justify-between mb-4">
-                            <h3 className="font-semibold flex items-center gap-2 text-gray-800">
-                              <CheckCircle className="h-5 w-5 text-soul-purple" />
-                              Daily Habits
-                            </h3>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              onClick={() => setTaskView('none')}
-                              className="rounded-xl"
-                            >
-                              ×
-                            </Button>
-                          </div>
-                          <HabitTracker />
-                        </div>
-                      )}
+                {activeTab === 'tasks' && (
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-semibold flex items-center gap-2 text-gray-800">
+                        <Target className="h-5 w-5 text-soul-purple" />
+                        Your Tasks
+                      </h3>
                     </div>
+                    <TaskViews 
+                      focusedMilestone={focusedMilestone}
+                      onBackToJourney={() => setActiveTab('journey')}
+                      onTaskSelect={handleTaskSelect}
+                    />
+                  </div>
+                )}
+                
+                {activeTab === 'focus' && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-4">
+                      <Clock className="h-5 w-5 text-soul-purple" />
+                      <h3 className="font-semibold text-gray-800">Focus Session</h3>
+                    </div>
+                    <PomodoroTimer />
+                  </div>
+                )}
+                
+                {activeTab === 'habits' && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-4">
+                      <CheckCircle className="h-5 w-5 text-soul-purple" />
+                      <h3 className="font-semibold text-gray-800">Daily Habits</h3>
+                    </div>
+                    <HabitTracker />
                   </div>
                 )}
               </div>
-            )}
+            </div>
           </div>
         </div>
       </MainLayout>
