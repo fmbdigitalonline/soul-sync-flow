@@ -1,5 +1,5 @@
 
-import { calculateChart } from '../hdkit.js';
+const { calculateChart } = require('../hdkit/index.js');
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -20,7 +20,7 @@ export default async function handler(req, res) {
 
     const dateTimeISO = new Date(`${birthDate}T${birthTime}:00`).toISOString();
 
-    // Now uses local hdkit.js for chart calculation
+    // Now uses local hdkit for chart calculation
     const chart = await calculateChart({
       date: dateTimeISO,
       location: { lat: coordinates.lat, lon: coordinates.lon }
@@ -32,3 +32,4 @@ export default async function handler(req, res) {
     return res.status(500).json({ success: false, error: error.message });
   }
 }
+
