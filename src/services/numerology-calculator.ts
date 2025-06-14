@@ -21,6 +21,32 @@ export class NumerologyCalculator {
 
   private static vowels = ['A', 'E', 'I', 'O', 'U', 'Y']; // Include Y as vowel
 
+  // Utility for name-by-name reduction (standard numerology)
+  private static reduceNameParts(
+    fullName: string,
+    filterFn: (letter: string) => boolean
+  ): number {
+    // Split into parts (first/middle/last)
+    const nameParts = fullName.toUpperCase().split(/\s+/).filter(Boolean);
+    const reducedParts: number[] = [];
+
+    for (const part of nameParts) {
+      // Get only relevant letters in this part
+      const letters = part.replace(/[^A-Z]/g, '').split('').filter(filterFn);
+      // Sum their values
+      const sum = letters.reduce(
+        (acc, ch) => acc + (this.letterValues[ch] || 0),
+        0
+      );
+      // Reduce sum to 1 digit or master number
+      const reduced = this.reduceToSingleDigitWithMasters(sum);
+      reducedParts.push(reduced);
+    }
+    // Now sum the reduced values of all parts
+    const total = reducedParts.reduce((a, b) => a + b, 0);
+    return this.reduceToSingleDigitWithMasters(total);
+  }
+
   static calculateNumerology(fullName: string, birthDate: string): NumerologyResult {
     console.log('🔢 NUMEROLOGY DEBUG: Starting calculation for:', { fullName, birthDate });
     
@@ -77,76 +103,20 @@ export class NumerologyCalculator {
     return result;
   }
 
+  // --- UPDATED TO STANDARD NAME-BY-NAME REDUCTION ---
   private static calculateExpression(fullName: string): number {
-    console.log('🔢 Expression calculation for:', fullName);
-    
-    const cleanName = fullName.toUpperCase().replace(/[^A-Z]/g, '');
-    console.log('🔢 Clean name:', cleanName);
-    
-    let total = 0;
-    const letterBreakdown: string[] = [];
-
-    for (const letter of cleanName) {
-      const value = this.letterValues[letter] || 0;
-      total += value;
-      letterBreakdown.push(`${letter}=${value}`);
-    }
-
-    console.log('🔢 Expression letter breakdown:', letterBreakdown.join(', '));
-    console.log('🔢 Expression total before reduction:', total);
-    
-    const result = this.reduceToSingleDigitWithMasters(total);
-    console.log('🔢 Expression result:', result);
-    
-    return result;
+    // expression uses ALL letters
+    return this.reduceNameParts(fullName, (ch) => /[A-Z]/.test(ch));
   }
 
   private static calculateSoulUrge(fullName: string): number {
-    console.log('🔢 Soul Urge calculation for:', fullName);
-    
-    const cleanName = fullName.toUpperCase().replace(/[^A-Z]/g, '');
-    let total = 0;
-    const vowelBreakdown: string[] = [];
-
-    for (const letter of cleanName) {
-      if (this.vowels.includes(letter)) {
-        const value = this.letterValues[letter] || 0;
-        total += value;
-        vowelBreakdown.push(`${letter}=${value}`);
-      }
-    }
-
-    console.log('🔢 Soul Urge vowel breakdown:', vowelBreakdown.join(', '));
-    console.log('🔢 Soul Urge total before reduction:', total);
-    
-    const result = this.reduceToSingleDigitWithMasters(total);
-    console.log('🔢 Soul Urge result:', result);
-    
-    return result;
+    // soul urge: ONLY vowels (A E I O U, maybe Y, but we skip Y for classic mode)
+    return this.reduceNameParts(fullName, (ch) => ['A', 'E', 'I', 'O', 'U'].includes(ch));
   }
 
   private static calculatePersonality(fullName: string): number {
-    console.log('🔢 Personality calculation for:', fullName);
-    
-    const cleanName = fullName.toUpperCase().replace(/[^A-Z]/g, '');
-    let total = 0;
-    const consonantBreakdown: string[] = [];
-
-    for (const letter of cleanName) {
-      if (!this.vowels.includes(letter)) {
-        const value = this.letterValues[letter] || 0;
-        total += value;
-        consonantBreakdown.push(`${letter}=${value}`);
-      }
-    }
-
-    console.log('🔢 Personality consonant breakdown:', consonantBreakdown.join(', '));
-    console.log('🔢 Personality total before reduction:', total);
-    
-    const result = this.reduceToSingleDigitWithMasters(total);
-    console.log('🔢 Personality result:', result);
-    
-    return result;
+    // personality: ONLY consonants (all A-Z minus vowels)
+    return this.reduceNameParts(fullName, (ch) => /[A-Z]/.test(ch) && !['A', 'E', 'I', 'O', 'U'].includes(ch));
   }
 
   private static calculateBirthday(birthDate: string): number {
