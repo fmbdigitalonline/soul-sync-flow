@@ -1,6 +1,7 @@
 // Human Design calculation module for Blueprint Calculator (refactored using dual ephemeris approach)
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { GATE_TO_CENTER_MAP, CHANNELS, HD_PLANETS, PROFILE_LABELS } from "./human-design-gates.ts";
 
 export async function calculateHumanDesign(
   birthDate,
@@ -82,7 +83,7 @@ export async function calculateHumanDesign(
     const earthDesign = getGateByPlanet(designGatesOrdered, "earth");
     const conscious = sunPersonality?.line || 1;
     const unconscious = earthDesign?.line || 1;
-    const profile = `${conscious}/${unconscious} (${profileLabels[conscious] || ""}/${profileLabels[unconscious] || ""})`;
+    const profile = `${conscious}/${unconscious} (${getProfileLabel(conscious) || ""}/${getProfileLabel(unconscious) || ""})`;
 
     // ---- PATCH: Robust channel graph definition evaluation ----
     function calculateHDDefinition(centers) {
@@ -129,22 +130,7 @@ export async function calculateHumanDesign(
       return "Quadruple Split Definition";
     }
     function getCenterOfGate(gateNum) {
-      // Must match mapping used elsewhere:
-      const gateToCenterMap = {
-        64: 'Head', 61: 'Head', 63: 'Head',
-        47: 'Ajna', 24: 'Ajna', 4: 'Ajna', 17: 'Ajna', 43: 'Ajna', 11: 'Ajna',
-        62: 'Throat', 23: 'Throat', 56: 'Throat', 35: 'Throat', 12: 'Throat',
-        45: 'Throat', 33: 'Throat', 8: 'Throat', 31: 'Throat', 7: 'Throat',
-        1: 'Throat', 13: 'Throat', 10: 'Throat', 20: 'Throat', 16: 'Throat',
-        25: 'G', 46: 'G', 22: 'G', 36: 'G', 2: 'G', 15: 'G', 5: 'G', 14: 'G',
-        21: 'Heart', 40: 'Heart', 26: 'Heart', 51: 'Heart',
-        6: 'Solar Plexus', 37: 'Solar Plexus', 30: 'Solar Plexus', 55: 'Solar Plexus', 49: 'Solar Plexus', 19: 'Solar Plexus', 39: 'Solar Plexus',
-        41: 'Solar Plexus', 22: 'Solar Plexus', 36: 'Solar Plexus',
-        34: 'Sacral', 5: 'Sacral', 14: 'Sacral', 29: 'Sacral', 59: 'Sacral', 9: 'Sacral', 3: 'Sacral', 42: 'Sacral', 27: 'Sacral',
-        48: 'Spleen', 57: 'Spleen', 44: 'Spleen', 50: 'Spleen', 32: 'Spleen', 28: 'Spleen', 18: 'Spleen',
-        53: 'Root', 60: 'Root', 52: 'Root', 19: 'Root', 39: 'Root', 41: 'Root', 58: 'Root', 38: 'Root', 54: 'Root'
-      };
-      return gateToCenterMap[gateNum];
+      return GATE_TO_CENTER_MAP[gateNum];
     }
 
     const definition = calculateHDDefinition(centers);
@@ -457,7 +443,7 @@ function calculateHDProfile(sunGateInfo, designSunGateInfo) {
   };
   const conscious = sunGateInfo.line || 1;
   const unconscious = designSunGateInfo.line || 1;
-  return `${conscious}/${unconscious} (${profileLabels[conscious] || ''}/${profileLabels[unconscious] || ''})`;
+  return `${conscious}/${unconscious} (${getProfileLabel(conscious) || ''}/${getProfileLabel(unconscious) || ''})`;
 }
 
 // REPLACE calculateDefinition with an HD-correct channel graph method:
@@ -525,4 +511,8 @@ function getNotSelfThemeForType(type) {
     'Reflector': 'Disappointment'
   };
   return themes[type] || 'Unknown';
+}
+
+function getProfileLabel(lineNum) {
+  return PROFILE_LABELS[lineNum] || "";
 }
