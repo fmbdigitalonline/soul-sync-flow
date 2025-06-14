@@ -1,24 +1,37 @@
 import { LayeredBlueprint, AgentMode } from '@/types/personality-modules';
+import { CommunicationStyleAdapter, CommunicationStyle } from './communication-style-adapter';
 
 export class PersonalityEngine {
   private blueprint: Partial<LayeredBlueprint>;
+  private communicationStyle: CommunicationStyle | null = null;
 
   constructor(blueprint: Partial<LayeredBlueprint> = {}) {
     this.blueprint = blueprint;
+    this.detectCommunicationStyle();
+  }
+
+  private detectCommunicationStyle() {
+    if (Object.keys(this.blueprint).length > 0) {
+      this.communicationStyle = CommunicationStyleAdapter.detectCommunicationStyle(this.blueprint);
+      console.log('Detected communication style:', this.communicationStyle);
+    }
   }
 
   generateSystemPrompt(mode: AgentMode): string {
     const basePersonality = this.compilePersonalityProfile();
+    const communicationInstructions = this.communicationStyle 
+      ? CommunicationStyleAdapter.generateCommunicationInstructions(this.communicationStyle)
+      : '';
     
     switch (mode) {
       case 'coach':
-        return this.generateCoachPrompt(basePersonality);
+        return this.generateCoachPrompt(basePersonality, communicationInstructions);
       case 'guide':
-        return this.generateGuidePrompt(basePersonality);
+        return this.generateGuidePrompt(basePersonality, communicationInstructions);
       case 'blend':
-        return this.generateBlendPrompt(basePersonality);
+        return this.generateBlendPrompt(basePersonality, communicationInstructions);
       default:
-        return this.generateGuidePrompt(basePersonality);
+        return this.generateGuidePrompt(basePersonality, communicationInstructions);
     }
   }
 
@@ -69,7 +82,7 @@ export class PersonalityEngine {
     return profile;
   }
 
-  private generateCoachPrompt(personality: any): string {
+  private generateCoachPrompt(personality: any, communicationInstructions: string): string {
     return `You are the Soul Coach, a productivity and goal achievement specialist deeply attuned to this user's unique personality blueprint.
 
 USER'S ENRICHED PERSONALITY BLUEPRINT:
@@ -90,6 +103,9 @@ USER'S ENRICHED PERSONALITY BLUEPRINT:
 • Learning Style: ${personality.learningStyle}
 • Current Energy Weather: ${personality.energyWeather}
 • Recent Patterns: ${Array.isArray(personality.recentPatterns) ? personality.recentPatterns.join(', ') : personality.recentPatterns}
+
+PERSONALIZED COMMUNICATION STYLE:
+${communicationInstructions ? `- ${communicationInstructions}` : '- Use clear, supportive communication aligned with their blueprint'}
 
 Your specialized domain:
 - Goal setting aligned with their ${personality.dominantFunction} cognitive strength and ${personality.energyType} energy patterns
@@ -112,7 +128,7 @@ STRICTLY STAY IN PRODUCTIVITY DOMAIN. Personalize every response to their specif
 Always end responses with a concrete, actionable next step that aligns with their natural patterns and current energy conditions.`;
   }
 
-  private generateGuidePrompt(personality: any): string {
+  private generateGuidePrompt(personality: any, communicationInstructions: string): string {
     return `You are the Soul Guide, a personal growth and life wisdom specialist deeply connected to this user's unique soul blueprint. Your role is to help them discover deeper insights about themselves through thoughtful inquiry and personalized guidance.
 
 USER'S ENRICHED SOUL BLUEPRINT:
@@ -132,6 +148,9 @@ USER'S ENRICHED SOUL BLUEPRINT:
 • Authentic Expression: ${personality.publicPersona}
 • Current Transits: ${Array.isArray(personality.currentTransits) ? personality.currentTransits.join(', ') : personality.currentTransits}
 • Energy Weather: ${personality.energyWeather}
+
+PERSONALIZED COMMUNICATION STYLE:
+${communicationInstructions ? `- ${communicationInstructions}` : '- Use empathetic, wisdom-focused communication'}
 
 DISCOVERY-FIRST APPROACH:
 Your primary role is to ASK THOUGHTFUL QUESTIONS that help the user explore their inner landscape. Before giving advice, seek to understand:
@@ -168,7 +187,7 @@ STRICTLY STAY IN PERSONAL GROWTH DOMAIN. Every question and insight must resonat
 Remember: Discovery before direction. Questions before conclusions. Understanding before advice.`;
   }
 
-  private generateBlendPrompt(personality: any): string {
+  private generateBlendPrompt(personality: any, communicationInstructions: string): string {
     return `You are the Soul Companion, an integrated life guide who sees this user's complete blueprint and helps them live in full alignment.
 
 USER'S INTEGRATED BLUEPRINT:
@@ -189,6 +208,9 @@ USER'S INTEGRATED BLUEPRINT:
 • Belief System: ${Array.isArray(personality.coreBeliefs) ? personality.coreBeliefs.join(', ') : personality.coreBeliefs}
 • Current Energy Weather: ${personality.energyWeather}
 • Active Influences: ${Array.isArray(personality.currentTransits) ? personality.currentTransits.join(', ') : personality.currentTransits}
+
+PERSONALIZED COMMUNICATION STYLE:
+${communicationInstructions ? `- ${communicationInstructions}` : '- Use warm, natural communication that honors their processing style'}
 
 Your integrated approach:
 - Treat productivity as soul expression aligned with their ${personality.energyType} nature and ${personality.excitementCompass}
@@ -218,6 +240,12 @@ Always consider both the practical AND soul dimensions, helping them achieve suc
 
   updateBlueprint(updates: Partial<LayeredBlueprint>) {
     this.blueprint = { ...this.blueprint, ...updates };
+    this.detectCommunicationStyle(); // Re-detect style when blueprint updates
     console.log("Updated enriched personality blueprint:", this.blueprint);
+    console.log("Updated communication style:", this.communicationStyle);
+  }
+
+  getCommunicationStyle(): CommunicationStyle | null {
+    return this.communicationStyle;
   }
 }
