@@ -7,6 +7,7 @@ import { Loader2, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { BlueprintHealthChecker } from '@/services/blueprint-health-checker';
 import { blueprintService } from '@/services/blueprint-service';
 import { HumanDesignDebugger } from './HumanDesignDebugger';
+import { Input } from '@/components/ui/input';
 
 interface HealthCheckResult {
   component: string;
@@ -20,6 +21,19 @@ export const BlueprintHealthCheck: React.FC = () => {
   const [results, setResults] = useState<HealthCheckResult[]>([]);
   const [showDebugger, setShowDebugger] = useState(false);
 
+  // New: state for form values
+  const [form, setForm] = useState({
+    full_name: 'Test User',
+    birth_date: '1978-02-12',
+    birth_time_local: '22:00',
+    birth_location: 'Paramaribo, Suriname',
+    timezone: 'America/Paramaribo',
+  });
+
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
   const runHealthCheck = async () => {
     setIsRunning(true);
     setResults([]);
@@ -28,33 +42,23 @@ export const BlueprintHealthCheck: React.FC = () => {
     BlueprintHealthChecker.enableHealthCheckMode();
     
     const checkResults: HealthCheckResult[] = [];
-    
     try {
       // Test 1: Human Design Calculation
       console.log('🔍 Testing Human Design calculation...');
       try {
-        const testData = {
-          full_name: 'Test User',
-          birth_date: '1978-02-12',
-          birth_time_local: '22:00',
-          birth_location: 'Paramaribo, Suriname',
-          timezone: 'America/Paramaribo'
-        };
-        
-        const result = await blueprintService.generateBlueprintFromBirthData(testData);
-        
-        if (result.data?.energy_strategy_human_design.type === 'Projector') {
+        const result = await blueprintService.generateBlueprintFromBirthData(form);
+        if (result.data?.energy_strategy_human_design.type) {
           checkResults.push({
             component: 'Human Design',
             status: 'pass',
-            message: 'Human Design calculation working correctly - returned Projector',
+            message: `Human Design calculation working - returned ${result.data.energy_strategy_human_design.type}`,
             details: result.data.energy_strategy_human_design
           });
         } else {
           checkResults.push({
             component: 'Human Design',
             status: 'fail',
-            message: `Human Design calculation failed - expected Projector, got ${result.data?.energy_strategy_human_design.type || 'null'}`,
+            message: `Human Design calculation failed - no type returned`,
             details: result.data?.energy_strategy_human_design
           });
         }
@@ -70,15 +74,8 @@ export const BlueprintHealthCheck: React.FC = () => {
       // Test 2: Western Astrology
       try {
         console.log('🔍 Testing Western Astrology...');
-        const result = await blueprintService.generateBlueprintFromBirthData({
-          full_name: 'Test User',
-          birth_date: '1990-06-15',
-          birth_time_local: '14:30',
-          birth_location: 'New York, NY',
-          timezone: 'America/New_York'
-        });
-        
-        if (result.data?.archetype_western.sun_sign !== 'Unknown') {
+        const result = await blueprintService.generateBlueprintFromBirthData(form);
+        if (result.data?.archetype_western.sun_sign && result.data.archetype_western.sun_sign !== 'Unknown') {
           checkResults.push({
             component: 'Western Astrology',
             status: 'pass',
@@ -105,15 +102,8 @@ export const BlueprintHealthCheck: React.FC = () => {
       // Test 3: Chinese Zodiac
       try {
         console.log('🔍 Testing Chinese Zodiac...');
-        const result = await blueprintService.generateBlueprintFromBirthData({
-          full_name: 'Test User',
-          birth_date: '1990-06-15',
-          birth_time_local: '14:30',
-          birth_location: 'Beijing, China',
-          timezone: 'Asia/Shanghai'
-        });
-        
-        if (result.data?.archetype_chinese.animal !== 'Unknown') {
+        const result = await blueprintService.generateBlueprintFromBirthData(form);
+        if (result.data?.archetype_chinese.animal && result.data.archetype_chinese.animal !== 'Unknown') {
           checkResults.push({
             component: 'Chinese Zodiac',
             status: 'pass',
@@ -140,19 +130,16 @@ export const BlueprintHealthCheck: React.FC = () => {
       // Test 4: Numerology
       try {
         console.log('🔍 Testing Numerology...');
-        const result = await blueprintService.generateBlueprintFromBirthData({
-          full_name: 'John Doe',
-          birth_date: '1990-06-15',
-          birth_time_local: '14:30',
-          birth_location: 'New York, NY',
-          timezone: 'America/New_York'
-        });
-        
-        if (result.data?.values_life_path.lifePathNumber > 0) {
+        const result = await blueprintService.generateBlueprintFromBirthData(form);
+        if (
+          (result.data?.values_life_path.lifePathNumber ?? result.data?.values_life_path.life_path_number) > 0 ||
+          (result.data?.values_life_path.life_path_number ?? result.data?.values_life_path.lifePathNumber) > 0
+        ) {
+          const num = result.data.values_life_path.lifePathNumber ?? result.data.values_life_path.life_path_number;
           checkResults.push({
             component: 'Numerology',
             status: 'pass',
-            message: `Numerology working - calculated Life Path ${result.data.values_life_path.lifePathNumber}`,
+            message: `Numerology working - calculated Life Path ${num}`,
             details: result.data.values_life_path
           });
         } else {
@@ -172,10 +159,9 @@ export const BlueprintHealthCheck: React.FC = () => {
         });
       }
       
-      // Test 5: Edge Function Connectivity
+      // Test 5: Edge Function Connectivity (remains hardcoded)
       try {
         console.log('🔍 Testing Edge Function connectivity...');
-        // This will be caught by the previous tests, but let's be explicit
         checkResults.push({
           component: 'Edge Function',
           status: 'pass',
@@ -190,7 +176,7 @@ export const BlueprintHealthCheck: React.FC = () => {
           details: error
         });
       }
-      
+
     } finally {
       // Disable health check mode
       BlueprintHealthChecker.disableHealthCheckMode();
@@ -232,9 +218,69 @@ export const BlueprintHealthCheck: React.FC = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            This health check disables all fallback data to reveal which calculations are actually working.
-            Any component using hardcoded fallbacks will fail, showing the true state of the calculation engines.
+            Enter any birth data and run the health check to validate calculations. This disables all fallback data to reveal the real calculation engines.
           </p>
+          {/* New: Input Form */}
+          <form className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-white/50 rounded-md p-4 border mb-2">
+            <div>
+              <label htmlFor="full_name" className="text-xs font-medium">Full Name</label>
+              <Input
+                id="full_name"
+                name="full_name"
+                value={form.full_name}
+                onChange={handleFormChange}
+                className="mt-1"
+                autoComplete="name"
+              />
+            </div>
+            <div>
+              <label htmlFor="birth_date" className="text-xs font-medium">Birth Date</label>
+              <Input
+                id="birth_date"
+                name="birth_date"
+                value={form.birth_date}
+                onChange={handleFormChange}
+                type="date"
+                className="mt-1"
+                autoComplete="bdate"
+              />
+            </div>
+            <div>
+              <label htmlFor="birth_time_local" className="text-xs font-medium">Birth Time (local)</label>
+              <Input
+                id="birth_time_local"
+                name="birth_time_local"
+                value={form.birth_time_local}
+                onChange={handleFormChange}
+                type="time"
+                className="mt-1"
+                autoComplete="off"
+              />
+            </div>
+            <div>
+              <label htmlFor="birth_location" className="text-xs font-medium">Birth Location</label>
+              <Input
+                id="birth_location"
+                name="birth_location"
+                value={form.birth_location}
+                onChange={handleFormChange}
+                className="mt-1"
+                autoComplete="off"
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <label htmlFor="timezone" className="text-xs font-medium">Timezone</label>
+              <Input
+                id="timezone"
+                name="timezone"
+                value={form.timezone}
+                onChange={handleFormChange}
+                className="mt-1"
+                autoComplete="off"
+                placeholder="e.g., America/New_York"
+              />
+            </div>
+          </form>
           
           <div className="flex gap-2">
             <Button 
