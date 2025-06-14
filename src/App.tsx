@@ -15,6 +15,7 @@ import Dreams from "./pages/Dreams";
 import Blueprint from "./pages/Blueprint";
 import SpiritualGrowth from "./pages/SpiritualGrowth";
 import Onboarding from "./pages/Onboarding";
+import HumanDesignDebug from "./pages/HumanDesignDebug";
 import "./App.css";
 
 const queryClient = new QueryClient({
@@ -47,6 +48,7 @@ function App() {
                     <Route path="/dreams" element={<Dreams />} />
                     <Route path="/spiritual-growth" element={<SpiritualGrowth />} />
                     <Route path="/onboarding" element={<Onboarding />} />
+                    <Route path="/human-design-debug" element={<HumanDesignDebug />} />
                   </Routes>
                 </BlueprintCacheProvider>
               </SoulOrbProvider>
