@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ import {
 } from "lucide-react";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 import { format, parseISO, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
+import { TaskCard } from "../task/TaskCard";
 
 interface Task {
   id: string;
@@ -166,58 +168,13 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
     }
   };
 
-  const getEnergyColor = (energy: string) => {
-    switch (energy.toLowerCase()) {
-      case 'low': return 'bg-green-100 text-green-700 border-green-200';
-      case 'medium': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-      case 'high': return 'bg-red-100 text-red-700 border-red-200';
-      default: return 'bg-gray-100 text-gray-700 border-gray-200';
-    }
+  const handleTaskDoubleTap = (task: Task) => {
+    onTaskSelect(task);
   };
 
-  const TaskCard = ({ task, showGoal = false }: { task: Task; showGoal?: boolean }) => {
-    const goal = currentGoals.find(g => g.id === task.goal_id);
-    
-    return (
-      <div
-        className={`p-3 border-2 rounded-lg cursor-pointer transition-all duration-200 ${getStatusColor(task.status)} hover:shadow-md`}
-        draggable
-        onDragStart={() => handleDragStart(task)}
-        onClick={() => onTaskSelect(task)}
-      >
-        <div className="flex items-start justify-between mb-2">
-          <h4 className="font-medium text-sm leading-relaxed">{task.title}</h4>
-          <div className="ml-2 flex-shrink-0 flex items-center gap-1">
-            {getStatusIcon(task.status)}
-            <MessageCircle className="h-3 w-3 text-soul-purple opacity-60" />
-          </div>
-        </div>
-        
-        {task.description && (
-          <p className="text-xs text-muted-foreground mb-2 leading-relaxed">{task.description}</p>
-        )}
-        
-        <div className="flex flex-wrap gap-1 mb-2">
-          <Badge variant="outline" className={`text-xs ${getEnergyColor(task.energy_level_required)}`}>
-            {task.energy_level_required}
-          </Badge>
-          <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-200">
-            {task.estimated_duration}
-          </Badge>
-        </div>
-        
-        {showGoal && goal && (
-          <div className="flex items-center text-xs text-muted-foreground">
-            <Target className="h-3 w-3 mr-1" />
-            <span className="truncate">{goal.title}</span>
-          </div>
-        )}
-        
-        <div className="text-xs text-soul-purple font-medium mt-2 opacity-75">
-          Click to start coaching session →
-        </div>
-      </div>
-    );
+  const handleTaskSingleTap = (task: Task) => {
+    // Optional: Add visual feedback for single tap
+    console.log('Single tap on task:', task.title);
   };
 
   const KanbanColumn = ({ 
@@ -250,7 +207,14 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
         onDrop={(e) => handleDrop(e, status)}
       >
         {tasks.map(task => (
-          <TaskCard key={task.id} task={task} showGoal />
+          <div key={task.id} draggable onDragStart={() => handleDragStart(task)}>
+            <TaskCard 
+              task={task} 
+              onDoubleTap={handleTaskDoubleTap}
+              onSingleTap={handleTaskSingleTap}
+              showGoal 
+            />
+          </div>
         ))}
         
         {tasks.length === 0 && (
@@ -356,8 +320,20 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
 
       {activeView === 'list' && (
         <div className="space-y-3">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold text-gray-800">All Tasks</h3>
+            <Badge variant="outline" className="text-xs">
+              Double-tap for coaching
+            </Badge>
+          </div>
           {filteredTasks.map(task => (
-            <TaskCard key={task.id} task={task} showGoal />
+            <TaskCard 
+              key={task.id} 
+              task={task} 
+              onDoubleTap={handleTaskDoubleTap}
+              onSingleTap={handleTaskSingleTap}
+              showGoal 
+            />
           ))}
           {filteredTasks.length === 0 && (
             <div className="text-center py-12 text-muted-foreground">
@@ -392,7 +368,13 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
                 </div>
               ) : (
                 tasksForSelectedDate.map(task => (
-                  <TaskCard key={task.id} task={task} showGoal />
+                  <TaskCard 
+                    key={task.id} 
+                    task={task} 
+                    onDoubleTap={handleTaskDoubleTap}
+                    onSingleTap={handleTaskSingleTap}
+                    showGoal 
+                  />
                 ))
               )}
             </div>

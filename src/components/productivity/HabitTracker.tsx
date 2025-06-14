@@ -1,275 +1,172 @@
 
-import React, { useState } from "react";
-import { CosmicCard } from "@/components/ui/cosmic-card";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Plus, Check, X, Trash2 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { Plus, CheckCircle, Calendar, TrendingUp, Flame } from "lucide-react";
+import { HabitCard } from "./HabitCard";
+import { HabitDetailPopup } from "./HabitDetailPopup";
 
-type Habit = {
+interface Habit {
   id: string;
-  name: string;
-  completedDates: string[];
-  alignedWith: string[];
+  title: string;
+  description?: string;
+  frequency: 'daily' | 'weekly';
   streak: number;
-};
-
-interface HabitTrackerProps {
-  blueprintTraits?: string[];
+  completedToday: boolean;
+  target: number;
+  category: string;
 }
 
-export const HabitTracker: React.FC<HabitTrackerProps> = ({ blueprintTraits = ["INFJ", "Projector", "Life Path 7"] }) => {
-  const { t } = useLanguage();
+export const HabitTracker: React.FC = () => {
   const [habits, setHabits] = useState<Habit[]>([
     {
-      id: "1",
-      name: "Morning meditation",
-      completedDates: [
-        new Date(Date.now() - 86400000).toISOString().split("T")[0], // yesterday
-      ],
-      alignedWith: ["Projector", "Pisces Moon"],
-      streak: 1,
+      id: '1',
+      title: 'Morning Meditation',
+      description: '10 minutes of mindfulness practice',
+      frequency: 'daily',
+      streak: 7,
+      completedToday: true,
+      target: 30,
+      category: 'wellness'
     },
     {
-      id: "2",
-      name: "Journal writing",
-      completedDates: [
-        new Date(Date.now() - 86400000).toISOString().split("T")[0], // yesterday
-        new Date(Date.now() - 2 * 86400000).toISOString().split("T")[0], // day before yesterday
-        new Date(Date.now() - 3 * 86400000).toISOString().split("T")[0], // 3 days ago
-      ],
-      alignedWith: ["INFJ", "Life Path 7"],
+      id: '2',
+      title: 'Read for 30 minutes',
+      description: 'Personal development or fiction',
+      frequency: 'daily',
       streak: 3,
+      completedToday: false,
+      target: 21,
+      category: 'learning'
     },
+    {
+      id: '3',
+      title: 'Exercise',
+      description: 'Any form of physical activity',
+      frequency: 'daily',
+      streak: 12,
+      completedToday: true,
+      target: 30,
+      category: 'health'
+    }
   ]);
 
-  const [newHabitName, setNewHabitName] = useState("");
-  const { toast } = useToast();
+  const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
 
-  // Suggested habits based on blueprint
-  const suggestedHabits: Record<string, string[]> = {
-    "INFJ": ["Journal writing", "Mindfulness practice", "Creative expression time"],
-    "ENFP": ["Social connection calls", "Idea brainstorming", "Nature walks"],
-    "Projector": ["Rest periods", "Deep focus sessions", "Selective social engagement"],
-    "Generator": ["Physical activity", "Completion celebrations", "Response tracking"],
-    "Pisces Moon": ["Emotional check-ins", "Water intake tracking", "Dream journaling"],
-    "Leo Sun": ["Creative projects", "Social leadership", "Self-expression"],
-    "Life Path 7": ["Spiritual practice", "Learning sessions", "Solitude time"],
-    "Life Path 1": ["Goal tracking", "Leadership practice", "Innovation time"],
+  const handleHabitDoubleTap = (habit: Habit) => {
+    setSelectedHabit(habit);
+    setIsPopupOpen(true);
   };
 
-  const getPersonalizedSuggestions = () => {
-    if (!blueprintTraits || blueprintTraits.length === 0) return [];
-    
-    const suggestions = new Set<string>();
-    
-    blueprintTraits.forEach(trait => {
-      const traitSuggestions = suggestedHabits[trait] || [];
-      traitSuggestions.forEach(suggestion => {
-        suggestions.add(suggestion);
-      });
-    });
-    
-    // Filter out habits already being tracked
-    const existingHabitNames = habits.map(h => h.name);
-    return Array.from(suggestions).filter(s => !existingHabitNames.includes(s));
+  const handleHabitSingleTap = (habit: Habit) => {
+    // Optional: Add visual feedback for single tap
+    console.log('Single tap on habit:', habit.title);
   };
 
-  const today = new Date().toISOString().split("T")[0];
-
-  const toggleHabitCompletion = (habitId: string) => {
-    setHabits(habits.map(habit => {
-      if (habit.id === habitId) {
-        const completedToday = habit.completedDates.includes(today);
-        
-        if (completedToday) {
-          // Remove today's date
-          return {
-            ...habit,
-            completedDates: habit.completedDates.filter(date => date !== today),
-            streak: habit.streak - 1 >= 0 ? habit.streak - 1 : 0
-          };
-        } else {
-          // Add today's date
-          return {
-            ...habit,
-            completedDates: [...habit.completedDates, today],
-            streak: habit.streak + 1
-          };
-        }
-      }
-      return habit;
-    }));
+  const handleMarkComplete = (habitId: string) => {
+    setHabits(prev => prev.map(habit => 
+      habit.id === habitId 
+        ? { 
+            ...habit, 
+            completedToday: true, 
+            streak: habit.completedToday ? habit.streak : habit.streak + 1 
+          }
+        : habit
+    ));
+    setIsPopupOpen(false);
   };
 
-  const addHabit = () => {
-    if (newHabitName.trim() === "") return;
-    
-    // Find aligned traits
-    const alignedTraits = blueprintTraits.filter(trait => {
-      const traitHabits = suggestedHabits[trait] || [];
-      return traitHabits.some(h => 
-        h.toLowerCase().includes(newHabitName.toLowerCase()) ||
-        newHabitName.toLowerCase().includes(h.toLowerCase())
-      );
-    });
-    
-    const newHabit: Habit = {
-      id: Date.now().toString(),
-      name: newHabitName,
-      completedDates: [],
-      alignedWith: alignedTraits,
-      streak: 0,
-    };
-    
-    setHabits([...habits, newHabit]);
-    setNewHabitName("");
-    
-    toast({
-      title: t('habits.created'),
-      description: t('habits.createdDescription', { name: newHabitName }),
-    });
-  };
-
-  const addSuggestedHabit = (habitName: string) => {
-    // Find aligned traits
-    const alignedTraits = blueprintTraits.filter(trait => {
-      const traitHabits = suggestedHabits[trait] || [];
-      return traitHabits.includes(habitName);
-    });
-    
-    const newHabit: Habit = {
-      id: Date.now().toString(),
-      name: habitName,
-      completedDates: [],
-      alignedWith: alignedTraits,
-      streak: 0,
-    };
-    
-    setHabits([...habits, newHabit]);
-    
-    toast({
-      title: t('habits.suggestedAdded'),
-      description: t('habits.suggestedAddedDescription', { name: habitName }),
-    });
-  };
-
-  const deleteHabit = (habitId: string) => {
-    setHabits(habits.filter(habit => habit.id !== habitId));
-    
-    toast({
-      title: t('habits.deleted'),
-      description: t('habits.deletedDescription'),
-    });
-  };
+  const completedToday = habits.filter(h => h.completedToday).length;
+  const totalHabits = habits.length;
+  const completionRate = totalHabits > 0 ? Math.round((completedToday / totalHabits) * 100) : 0;
+  const longestStreak = Math.max(...habits.map(h => h.streak));
 
   return (
-    <CosmicCard className="p-6">
-      <h3 className="text-lg font-medium mb-4">{t('habits.title')}</h3>
-      
-      <div className="flex space-x-2 mb-4">
-        <Input
-          placeholder={t('habits.addPlaceholder')}
-          value={newHabitName}
-          onChange={(e) => setNewHabitName(e.target.value)}
-          className="flex-1"
-        />
-        <Button
-          onClick={addHabit}
-          disabled={newHabitName.trim() === ""}
-          size="icon"
-          variant="outline"
-        >
-          <Plus className="h-4 w-4" />
-        </Button>
-      </div>
-      
-      {habits.length > 0 ? (
-        <div className="space-y-3">
-          {habits.map((habit) => {
-            const completedToday = habit.completedDates.includes(today);
-            
-            return (
-              <div
-                key={habit.id}
-                className="flex items-center justify-between p-3 bg-secondary/30 rounded-md"
-              >
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2">
-                    <span className="font-medium">{habit.name}</span>
-                    <Badge variant="outline" className="bg-purple-100 text-purple-800">
-                      {habit.streak} {habit.streak !== 1 ? t('habits.daysPlural') : t('habits.daysSingular')}
-                    </Badge>
-                  </div>
-                  
-                  {habit.alignedWith.length > 0 && (
-                    <div className="mt-1 flex flex-wrap gap-1">
-                      {habit.alignedWith.map((trait) => (
-                        <div
-                          key={trait}
-                          className="flex items-center space-x-1 bg-secondary rounded-full px-2 py-0.5 text-xs"
-                        >
-                          <span>{trait}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Button
-                    onClick={() => toggleHabitCompletion(habit.id)}
-                    size="icon"
-                    variant="outline"
-                    className={completedToday ? "bg-green-100" : ""}
-                  >
-                    {completedToday ? (
-                      <Check className="h-4 w-4 text-green-600" />
-                    ) : (
-                      <X className="h-4 w-4" />
-                    )}
-                  </Button>
-                  
-                  <Button
-                    onClick={() => deleteHabit(habit.id)}
-                    size="icon"
-                    variant="outline"
-                    className="text-red-500 hover:text-red-600"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            );
-          })}
+    <div className="space-y-4">
+      {/* Header with Stats */}
+      <div className="bg-gradient-to-r from-orange-50 to-red-50 p-4 rounded-xl border border-orange-200">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Flame className="h-5 w-5 text-orange-500" />
+            <h2 className="text-lg font-bold">Daily Habits</h2>
+          </div>
+          <Badge variant="outline" className="bg-white">
+            {completedToday}/{totalHabits} today
+          </Badge>
         </div>
-      ) : (
-        <p className="text-center text-muted-foreground py-6">
-          {t('habits.noHabits')}
-        </p>
-      )}
-      
-      {getPersonalizedSuggestions().length > 0 && (
-        <div className="mt-6">
-          <h4 className="text-sm font-medium text-muted-foreground mb-2">
-            {t('habits.alignedWithBlueprint')}
-          </h4>
-          <div className="flex flex-wrap gap-2">
-            {getPersonalizedSuggestions().slice(0, 3).map((suggestion, index) => (
-              <Badge
-                key={index}
-                variant="outline"
-                className="bg-secondary hover:bg-secondary/80 cursor-pointer"
-                onClick={() => addSuggestedHabit(suggestion)}
-              >
-                <Plus className="h-3 w-3 mr-1" /> {suggestion}
-              </Badge>
-            ))}
+        
+        <Progress value={completionRate} className="h-2 mb-3" />
+        
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="flex items-center gap-2">
+            <CheckCircle className="h-4 w-4 text-green-500" />
+            <span className="text-gray-600">{completionRate}% completed today</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 text-orange-500" />
+            <span className="text-gray-600">{longestStreak} day best streak</span>
           </div>
         </div>
-      )}
-    </CosmicCard>
+      </div>
+
+      {/* Quick Stats */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="bg-green-50 p-3 rounded-lg text-center border border-green-200">
+          <div className="text-lg font-bold text-green-800">{completedToday}</div>
+          <div className="text-xs text-green-600">Today</div>
+        </div>
+        <div className="bg-orange-50 p-3 rounded-lg text-center border border-orange-200">
+          <div className="text-lg font-bold text-orange-800">{longestStreak}</div>
+          <div className="text-xs text-orange-600">Best Streak</div>
+        </div>
+        <div className="bg-blue-50 p-3 rounded-lg text-center border border-blue-200">
+          <div className="text-lg font-bold text-blue-800">{totalHabits}</div>
+          <div className="text-xs text-blue-600">Total Habits</div>
+        </div>
+      </div>
+
+      {/* Habits List */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold text-gray-800">Your Habits</h3>
+          <Badge variant="outline" className="text-xs">
+            Double-tap for details
+          </Badge>
+        </div>
+        
+        <div className="grid grid-cols-1 gap-3">
+          {habits.map((habit) => (
+            <HabitCard
+              key={habit.id}
+              habit={habit}
+              onDoubleTap={handleHabitDoubleTap}
+              onSingleTap={handleHabitSingleTap}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Add Habit Button */}
+      <Button
+        variant="outline"
+        className="w-full border-dashed border-2 h-16 hover:border-orange-500 hover:bg-orange-50 transition-colors"
+      >
+        <Plus className="h-5 w-5 mr-2" />
+        Add New Habit
+      </Button>
+
+      {/* Habit Detail Popup */}
+      <HabitDetailPopup
+        habit={selectedHabit}
+        isOpen={isPopupOpen}
+        onClose={() => {
+          setIsPopupOpen(false);
+          setSelectedHabit(null);
+        }}
+        onMarkComplete={handleMarkComplete}
+      />
+    </div>
   );
 };
