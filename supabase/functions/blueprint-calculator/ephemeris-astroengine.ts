@@ -192,37 +192,53 @@ export async function calculatePlanetaryPositionsWithAstro(
     // CRITICAL FIX: Create proper UTC Date object
     console.log(`🔧 Creating UTC date for: ${year}-${month}-${day} ${hour}:${minute} in timezone ${timezone}`);
     
+    // Diagnostic log before constructing date
+    console.log("🪐 Diagnostic: Building UTC date from values:", {
+      rawDate: date,
+      rawTime: time,
+      location,
+      timezone
+    });
+
     let utcDate;
-    
+
     if (timezone === 'America/Paramaribo' || timezone === 'America/Suriname') {
       // CORRECTED: Paramaribo is UTC-3, so to convert local time to UTC, we ADD 3 hours
-      console.log(`🔧 Converting Paramaribo time ${hour}:${minute} to UTC by adding 3 hours`);
-      
-      // Create UTC date by adding timezone offset
+      const [year, month, day] = date.split('-').map(Number);
+      const [hour, minute] = time.split(':').map(Number);
       const utcHour = hour + 3;
       const utcDay = utcHour >= 24 ? day + 1 : day;
       const finalUtcHour = utcHour >= 24 ? utcHour - 24 : utcHour;
-      
-      console.log(`🔧 UTC conversion: ${hour}:${minute} + 3 hours = ${finalUtcHour}:${minute} on day ${utcDay}`);
-      
-      // Use ISO string format for consistent parsing
       const utcIsoString = `${year}-${month.toString().padStart(2, '0')}-${utcDay.toString().padStart(2, '0')}T${finalUtcHour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:00.000Z`;
       utcDate = new Date(utcIsoString);
-      
-      console.log(`✅ UTC date created: ${utcDate.toISOString()}`);
+
+      // LOG constructed date string and Date object
+      console.log("🪐 Diagnostic: Constructed Paramaribo UTC ISO String:", utcIsoString);
+      console.log("🪐 Diagnostic: Parsed Paramaribo Date object:", utcDate);
+
     } else {
       // For other timezones, treat the provided time as UTC
-      console.log(`🔧 Creating UTC date for non-Paramaribo timezone`);
+      const [year, month, day] = date.split('-').map(Number);
+      const [hour, minute] = time.split(':').map(Number);
       const utcIsoString = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}T${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:00.000Z`;
       utcDate = new Date(utcIsoString);
-      console.log(`✅ UTC date created: ${utcDate.toISOString()}`);
+
+      // LOG constructed date string and Date object
+      console.log("🪐 Diagnostic: Constructed UTC ISO String:", utcIsoString);
+      console.log("🪐 Diagnostic: Parsed Date object:", utcDate);
     }
-    
-    // Validate the UTC date
+
+    // Fail-fast if invalid
     if (!utcDate || isNaN(utcDate.getTime())) {
-      const errorMsg = `Failed to create valid UTC date from: ${year}-${month}-${day} ${hour}:${minute}`;
-      console.error("❌", errorMsg);
-      throw new Error(errorMsg);
+      console.error("🛑 ERROR: Invalid UTC Date constructed!", {
+        rawDate: date,
+        rawTime: time,
+        location,
+        timezone,
+        utcDate: utcDate,
+        toISOString: utcDate && utcDate.toISOString ? utcDate.toISOString() : 'N/A'
+      });
+      throw new Error(`Failed to parse date/time (raw: "${date}" "${time}" timezone: "${timezone}") into a valid UTC Date. See logs for details.`);
     }
     
     // CRITICAL FIX: Create AstroTime using the corrected constructor
