@@ -1,10 +1,12 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { PersonalityFusionService } from "./personality-fusion-service";
 import { PersonalityProfile } from "@/types/personality-fusion";
+import { BlueprintHealthChecker } from "./blueprint-health-checker";
 
 export interface UserProfile {
   full_name: string;
-  preferred_name?: string; // Make this optional
+  preferred_name?: string;
   birth_date: string;
   birth_time_local: string;
   birth_location: string;
@@ -15,7 +17,7 @@ export interface UserProfile {
 
 export interface BlueprintData {
   id?: string;
-  user_id?: string; // Add user_id property
+  user_id?: string;
   user_meta: UserProfile;
   astrology: any;
   human_design: any;
@@ -38,6 +40,13 @@ export interface BlueprintDataResult {
   data: BlueprintData | null;
   error: string | null;
   isPartial?: boolean;
+}
+
+interface CalculationResult {
+  success: boolean;
+  data?: any;
+  error?: string;
+  component: string;
 }
 
 class BlueprintService {
@@ -166,8 +175,8 @@ class BlueprintService {
 
   async generateBlueprintFromBirthData(userProfile: UserProfile): Promise<BlueprintDataResult> {
     try {
-      console.log("Generating blueprint from birth data:", userProfile);
-
+      console.log("🎯 BLUEPRINT ENGINE: Starting calculation with NO FALLBACKS");
+      
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       
       if (userError || !user) {
@@ -180,92 +189,168 @@ class BlueprintService {
         user_id: user.id
       };
 
-      const mockBlueprint: BlueprintData = {
-        user_meta: profileWithDefaults,
-        astrology: {},
-        human_design: {},
-        numerology: {},
-        mbti: {},
-        goal_stack: {},
-        metadata: {
-          calculation_success: false,
-          partial_calculation: true,
-          calculation_date: new Date().toISOString(),
-          engine: "mock_generator",
-          data_sources: { western: "template" }
-        },
-        archetype_western: {
-          sun_sign: "Gemini",
-          sun_keyword: "Communication",
-          moon_sign: "Cancer",
-          moon_keyword: "Nurturing",
-          rising_sign: "Leo",
-          source: "template"
-        },
-        archetype_chinese: {
-          animal: "Dragon",
-          element: "Wood",
-          yin_yang: "Yang",
-          keyword: "Powerful"
-        },
-        values_life_path: {
-          lifePathNumber: 7,
-          lifePathKeyword: "Seeker",
-          expressionNumber: 5,
-          expressionKeyword: "Freedom",
-          soulUrgeNumber: 3,
-          soulUrgeKeyword: "Creative",
-          birthdayNumber: 15,
-          birthdayKeyword: "Healer"
-        },
-        energy_strategy_human_design: {
-          type: "Generator",
-          profile: "2/4",
-          authority: "Sacral",
-          strategy: "Respond",
-          definition: "Single",
-          not_self_theme: "Frustration",
-          life_purpose: "To find satisfaction through right work",
-          gates: {
-            conscious_personality: [],
-            unconscious_design: []
-          },
-          centers: {}
-        },
-        cognition_mbti: {
-          type: "ENFP",
-          core_keywords: ["Enthusiastic", "Creative", "Inspiring"],
-          dominant_function: "Extraverted Intuition",
-          auxiliary_function: "Introverted Feeling"
-        },
-        bashar_suite: {
-          excitement_compass: {
-            principle: "Follow your highest excitement with no expectation of the outcome"
-          },
-          belief_interface: {
-            principle: "Beliefs create reality",
-            reframe_prompt: "What would I rather believe?"
-          },
-          frequency_alignment: {
-            quick_ritual: "Take 3 deep breaths and feel gratitude"
-          }
-        },
-        timing_overlays: {}
-      };
+      // Initialize calculation tracking
+      const calculationResults: CalculationResult[] = [];
+      const calculationErrors: string[] = [];
 
-      return {
-        data: mockBlueprint,
-        error: null,
-        isPartial: true
-      };
+      // Attempt real calculations - NO FALLBACKS
+      console.log("🔧 Calling Supabase Edge Function for real calculations...");
+      
+      const blueprintResult = await this.callBlueprintCalculator(profileWithDefaults);
+      
+      if (blueprintResult.success && blueprintResult.data) {
+        console.log("✅ Real calculations successful");
+        
+        // Validate calculation results
+        const validationResult = this.validateCalculationResults(blueprintResult.data);
+        
+        const finalBlueprint: BlueprintData = {
+          user_meta: profileWithDefaults,
+          metadata: {
+            calculation_success: validationResult.allValid,
+            partial_calculation: !validationResult.allValid,
+            calculation_date: new Date().toISOString(),
+            engine: "supabase_edge_function",
+            data_sources: validationResult.sources,
+            validation_errors: validationResult.errors,
+            health_check_mode: BlueprintHealthChecker.isHealthCheck()
+          },
+          // Map the results from edge function
+          archetype_western: blueprintResult.data.westernProfile || null,
+          archetype_chinese: blueprintResult.data.chineseZodiac || null,
+          values_life_path: blueprintResult.data.numerology || null,
+          energy_strategy_human_design: blueprintResult.data.humanDesign || null,
+          // Legacy fields for compatibility
+          astrology: blueprintResult.data.westernProfile || {},
+          human_design: blueprintResult.data.humanDesign || {},
+          numerology: blueprintResult.data.numerology || {},
+          mbti: {},
+          goal_stack: {},
+          cognition_mbti: {
+            type: "Unknown",
+            core_keywords: [],
+            dominant_function: "Unknown",
+            auxiliary_function: "Unknown"
+          },
+          bashar_suite: {
+            excitement_compass: { principle: "Follow your highest excitement" },
+            belief_interface: { principle: "Beliefs create reality", reframe_prompt: "What would I rather believe?" },
+            frequency_alignment: { quick_ritual: "Take 3 deep breaths and feel gratitude" }
+          },
+          timing_overlays: {}
+        };
+
+        if (validationResult.allValid) {
+          return { data: finalBlueprint, error: null, isPartial: false };
+        } else {
+          return { 
+            data: finalBlueprint, 
+            error: `Partial calculation: ${validationResult.errors.join(', ')}`, 
+            isPartial: true 
+          };
+        }
+      } else {
+        // Real calculation failed - NO FALLBACKS, return error
+        const errorMessage = blueprintResult.error || "Blueprint calculation failed";
+        console.error("❌ Blueprint calculation failed:", errorMessage);
+        
+        if (BlueprintHealthChecker.isHealthCheck()) {
+          BlueprintHealthChecker.failIfHealthCheck("Blueprint Calculator", errorMessage);
+        }
+        
+        return {
+          data: null,
+          error: `Blueprint calculation failed: ${errorMessage}. Please check your birth data and try again.`,
+          isPartial: false
+        };
+      }
     } catch (error) {
-      console.error("Error generating blueprint:", error);
+      console.error("❌ Error in blueprint generation:", error);
+      
+      if (BlueprintHealthChecker.isHealthCheck()) {
+        BlueprintHealthChecker.failIfHealthCheck("Blueprint Service", error.message);
+      }
+      
       return {
         data: null,
         error: error instanceof Error ? error.message : "Unknown error occurred",
         isPartial: false
       };
     }
+  }
+
+  private async callBlueprintCalculator(userProfile: UserProfile): Promise<{ success: boolean; data?: any; error?: string }> {
+    try {
+      console.log("📡 Calling blueprint-calculator edge function...");
+      
+      const { data, error } = await supabase.functions.invoke('blueprint-calculator', {
+        body: {
+          birthDate: userProfile.birth_date,
+          birthTime: userProfile.birth_time_local,
+          birthLocation: userProfile.birth_location,
+          fullName: userProfile.full_name
+        }
+      });
+
+      if (error) {
+        console.error("Edge function error:", error);
+        return { success: false, error: error.message };
+      }
+
+      if (!data?.success) {
+        console.error("Edge function returned unsuccessful result:", data);
+        return { success: false, error: data?.error || "Unknown edge function error" };
+      }
+
+      console.log("✅ Edge function call successful");
+      return { success: true, data: data.data };
+    } catch (error) {
+      console.error("Exception calling edge function:", error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  private validateCalculationResults(data: any): { allValid: boolean; errors: string[]; sources: any } {
+    const errors: string[] = [];
+    const sources: any = {};
+
+    // Validate Western Astrology
+    if (!data.westernProfile?.sun_sign || data.westernProfile.sun_sign === "Unknown") {
+      errors.push("Western astrology calculation failed");
+      sources.western = "failed";
+    } else {
+      sources.western = "calculated";
+    }
+
+    // Validate Chinese Zodiac
+    if (!data.chineseZodiac?.animal || data.chineseZodiac.animal === "Unknown") {
+      errors.push("Chinese zodiac calculation failed");
+      sources.chinese = "failed";
+    } else {
+      sources.chinese = "calculated";
+    }
+
+    // Validate Numerology
+    if (!data.numerology?.lifePathNumber && !data.numerology?.life_path_number) {
+      errors.push("Numerology calculation failed");
+      sources.numerology = "failed";
+    } else {
+      sources.numerology = "calculated";
+    }
+
+    // Validate Human Design
+    if (!data.humanDesign?.type || data.humanDesign.type === "Unknown") {
+      errors.push("Human Design calculation failed");
+      sources.humanDesign = "failed";
+    } else {
+      sources.humanDesign = "calculated";
+    }
+
+    return {
+      allValid: errors.length === 0,
+      errors,
+      sources
+    };
   }
 
   async updateBlueprintRuntimePreferences(preferences: {

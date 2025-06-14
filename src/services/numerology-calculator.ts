@@ -1,3 +1,5 @@
+import { BlueprintHealthChecker } from './blueprint-health-checker';
+
 export interface NumerologyResult {
   lifePathNumber: number;
   expressionNumber: number;
@@ -26,8 +28,18 @@ export class NumerologyCalculator {
     fullName: string,
     filterFn: (letter: string) => boolean
   ): number {
+    // Validate input
+    if (!fullName || typeof fullName !== 'string' || fullName.trim() === '') {
+      BlueprintHealthChecker.failIfHealthCheck('Numerology', 'Invalid or empty name provided');
+    }
+
     // Split into parts (first/middle/last)
     const nameParts = fullName.toUpperCase().split(/\s+/).filter(Boolean);
+    
+    if (nameParts.length === 0) {
+      BlueprintHealthChecker.failIfHealthCheck('Numerology', 'No valid name parts found');
+    }
+
     const reducedParts: number[] = [];
 
     for (const part of nameParts) {
@@ -48,34 +60,61 @@ export class NumerologyCalculator {
   }
 
   static calculateNumerology(fullName: string, birthDate: string): NumerologyResult {
-    console.log('🔢 NUMEROLOGY DEBUG: Starting calculation for:', { fullName, birthDate });
+    console.log('🔢 NUMEROLOGY: Starting calculation with NO FALLBACKS');
+    BlueprintHealthChecker.logValidation('Numerology', `Calculating for: ${fullName}, ${birthDate}`);
     
-    const lifePathNumber = this.calculateLifePath(birthDate);
-    const expressionNumber = this.calculateExpression(fullName);
-    const soulUrgeNumber = this.calculateSoulUrge(fullName);
-    const personalityNumber = this.calculatePersonality(fullName);
-    const birthdayNumber = this.calculateBirthday(birthDate);
+    // Validate inputs
+    if (!fullName || !birthDate) {
+      BlueprintHealthChecker.failIfHealthCheck('Numerology', 'Missing required inputs: fullName or birthDate');
+    }
 
-    console.log('🔢 NUMEROLOGY RESULTS:', {
-      lifePathNumber,
-      expressionNumber,
-      soulUrgeNumber,
-      personalityNumber,
-      birthdayNumber
-    });
+    // Validate birth date format
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) {
+      BlueprintHealthChecker.failIfHealthCheck('Numerology', 'Invalid birth date format. Expected YYYY-MM-DD');
+    }
 
-    return {
-      lifePathNumber,
-      expressionNumber,
-      soulUrgeNumber,
-      personalityNumber,
-      birthdayNumber,
-      lifePathKeyword: this.getLifePathKeyword(lifePathNumber),
-      expressionKeyword: this.getExpressionKeyword(expressionNumber),
-      soulUrgeKeyword: this.getSoulUrgeKeyword(soulUrgeNumber),
-      personalityKeyword: this.getPersonalityKeyword(personalityNumber),
-      birthdayKeyword: this.getBirthdayKeyword(birthdayNumber)
-    };
+    try {
+      const lifePathNumber = this.calculateLifePath(birthDate);
+      const expressionNumber = this.calculateExpression(fullName);
+      const soulUrgeNumber = this.calculateSoulUrge(fullName);
+      const personalityNumber = this.calculatePersonality(fullName);
+      const birthdayNumber = this.calculateBirthday(birthDate);
+
+      // Validate all calculations succeeded
+      const numbers = [lifePathNumber, expressionNumber, soulUrgeNumber, personalityNumber, birthdayNumber];
+      for (const num of numbers) {
+        if (typeof num !== 'number' || isNaN(num) || num < 1) {
+          BlueprintHealthChecker.failIfHealthCheck('Numerology', `Invalid calculation result: ${num}`);
+        }
+      }
+
+      console.log('🔢 NUMEROLOGY RESULTS:', {
+        lifePathNumber,
+        expressionNumber,
+        soulUrgeNumber,
+        personalityNumber,
+        birthdayNumber
+      });
+
+      BlueprintHealthChecker.logValidation('Numerology', 'All calculations completed successfully');
+
+      return {
+        lifePathNumber,
+        expressionNumber,
+        soulUrgeNumber,
+        personalityNumber,
+        birthdayNumber,
+        lifePathKeyword: this.getLifePathKeyword(lifePathNumber),
+        expressionKeyword: this.getExpressionKeyword(expressionNumber),
+        soulUrgeKeyword: this.getSoulUrgeKeyword(soulUrgeNumber),
+        personalityKeyword: this.getPersonalityKeyword(personalityNumber),
+        birthdayKeyword: this.getBirthdayKeyword(birthdayNumber)
+      };
+    } catch (error) {
+      console.error('❌ Numerology calculation failed:', error);
+      BlueprintHealthChecker.failIfHealthCheck('Numerology', `Calculation failed: ${error.message}`);
+      throw error;
+    }
   }
 
   private static calculateLifePath(birthDate: string): number {
@@ -83,6 +122,10 @@ export class NumerologyCalculator {
     
     // Parse date properly (YYYY-MM-DD format)
     const [year, month, day] = birthDate.split('-').map(num => parseInt(num, 10));
+    
+    if (isNaN(year) || isNaN(month) || isNaN(day)) {
+      BlueprintHealthChecker.failIfHealthCheck('Numerology', 'Invalid date components in birth date');
+    }
     
     console.log('🔢 Parsed date:', { year, month, day });
     
@@ -99,6 +142,10 @@ export class NumerologyCalculator {
     
     const result = this.reduceToSingleDigitWithMasters(total);
     console.log('🔢 Life Path result:', result);
+    
+    if (result < 1 || result > 33) {
+      BlueprintHealthChecker.failIfHealthCheck('Numerology', `Invalid Life Path result: ${result}`);
+    }
     
     return result;
   }
@@ -121,6 +168,11 @@ export class NumerologyCalculator {
 
   private static calculateBirthday(birthDate: string): number {
     const [, , day] = birthDate.split('-').map(num => parseInt(num, 10));
+    
+    if (isNaN(day) || day < 1 || day > 31) {
+      BlueprintHealthChecker.failIfHealthCheck('Numerology', `Invalid day in birth date: ${day}`);
+    }
+    
     console.log('🔢 Birthday calculation for day:', day);
     
     const result = this.reduceToSingleDigitWithMasters(day);
@@ -135,6 +187,10 @@ export class NumerologyCalculator {
 
   private static reduceToSingleDigitWithMasters(num: number): number {
     console.log('🔢 Reducing:', num);
+    
+    if (isNaN(num) || num < 0) {
+      BlueprintHealthChecker.failIfHealthCheck('Numerology', `Invalid number for reduction: ${num}`);
+    }
     
     while (num > 9) {
       // Check if current number is a master number before reducing

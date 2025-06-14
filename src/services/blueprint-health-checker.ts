@@ -2,24 +2,55 @@
 // Health checker service to validate blueprint calculations without fallbacks
 export class BlueprintHealthChecker {
   private static isHealthCheckMode = false;
+  private static healthCheckResults: Array<{
+    component: string;
+    status: 'pass' | 'fail' | 'warning';
+    message: string;
+    timestamp: string;
+  }> = [];
   
   static enableHealthCheckMode() {
     this.isHealthCheckMode = true;
-    console.log('🔍 Starting health check mode - no fallbacks enabled');
+    this.healthCheckResults = [];
+    console.log('🔍 HEALTH CHECK MODE ENABLED - No fallbacks, real calculations only');
   }
   
   static disableHealthCheckMode() {
     this.isHealthCheckMode = false;
-    console.log('✅ Health check mode disabled - fallbacks restored');
+    console.log('✅ Health check mode disabled');
   }
   
   static isHealthCheck(): boolean {
     return this.isHealthCheckMode;
   }
   
+  static logHealthCheck(component: string, status: 'pass' | 'fail' | 'warning', message: string) {
+    if (this.isHealthCheckMode) {
+      const result = {
+        component,
+        status,
+        message,
+        timestamp: new Date().toISOString()
+      };
+      this.healthCheckResults.push(result);
+      
+      const icon = status === 'pass' ? '✅' : status === 'fail' ? '❌' : '⚠️';
+      console.log(`${icon} HEALTH CHECK ${component}: ${message}`);
+    }
+  }
+  
+  static getHealthCheckResults() {
+    return [...this.healthCheckResults];
+  }
+  
+  static clearHealthCheckResults() {
+    this.healthCheckResults = [];
+  }
+  
   static failIfHealthCheck(component: string, reason: string): never {
     if (this.isHealthCheckMode) {
       const error = `HEALTH CHECK FAIL: ${component} - ${reason}`;
+      this.logHealthCheck(component, 'fail', reason);
       console.error(`❌ FAILED: ${error}`);
       throw new Error(error);
     }
@@ -37,5 +68,39 @@ export class BlueprintHealthChecker {
     if (this.isHealthCheckMode) {
       console.log(`📍 ${component}: ${message}`);
     }
+  }
+
+  static validateCalculationComponent(
+    component: string, 
+    data: any, 
+    requiredFields: string[]
+  ): { isValid: boolean; errors: string[] } {
+    const errors: string[] = [];
+    
+    if (!data) {
+      errors.push(`${component} data is null or undefined`);
+      if (this.isHealthCheckMode) {
+        this.logHealthCheck(component, 'fail', 'No data returned');
+      }
+      return { isValid: false, errors };
+    }
+
+    for (const field of requiredFields) {
+      if (!data[field] || data[field] === 'Unknown' || data[field] === '') {
+        errors.push(`${component} missing or invalid field: ${field}`);
+      }
+    }
+
+    const isValid = errors.length === 0;
+    
+    if (this.isHealthCheckMode) {
+      if (isValid) {
+        this.logHealthCheck(component, 'pass', `All required fields present and valid`);
+      } else {
+        this.logHealthCheck(component, 'fail', `Validation failed: ${errors.join(', ')}`);
+      }
+    }
+
+    return { isValid, errors };
   }
 }
