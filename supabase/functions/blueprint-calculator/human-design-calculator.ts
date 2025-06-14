@@ -1,3 +1,4 @@
+
 // HDKit-based Human Design calculation: dispatches all logic to Vercel API, expects pre-geocoded coordinates
 
 export async function calculateHumanDesign(
@@ -27,7 +28,7 @@ export async function calculateHumanDesign(
     }
 
     // Step 2: Call the HDKit Vercel API endpoint
-    const hdkitEndpoint = "https://your-vercel-project.vercel.app/api/humandesign"; // <-- CHANGE ME to your deployed endpoint!
+    const hdkitEndpoint = "https://soul-sync-flow-2ojiala23-info-fmbonlinenls-projects.vercel.app/api/humandesign"; // updated to your deployed endpoint
 
     const response = await fetch(hdkitEndpoint, {
       method: "POST",
@@ -103,3 +104,4 @@ async function tryNominatimGeocoding(locationName: string): Promise<string | nul
     return null;
   }
 }
+
