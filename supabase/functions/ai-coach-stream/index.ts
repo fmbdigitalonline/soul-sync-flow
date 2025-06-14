@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 const corsHeaders = {
@@ -11,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message, userId, sessionId, includeBlueprint, agentType, systemPrompt, language = 'en' } = await req.json();
+    const { message, userId, sessionId, includeBlueprint, agentType, systemPrompt, language = 'en', journeyContext } = await req.json();
 
     console.log('AI Coach streaming request:', {
       agentType,
@@ -20,11 +21,13 @@ serve(async (req) => {
       sessionId,
       includeBlueprint,
       hasCustomPrompt: !!systemPrompt,
+      hasJourneyContext: !!journeyContext,
       language
     });
 
     const openAIKey = Deno.env.get('OPENAI_API_KEY');
     if (!openAIKey) {
+      console.error('OpenAI API key not found');
       const errorMessage = language === 'nl' ? 'OpenAI API sleutel niet geconfigureerd' : 'OpenAI API key not configured';
       throw new Error(errorMessage);
     }
@@ -42,10 +45,44 @@ serve(async (req) => {
         : (isNL ? "Bied doordachte begeleiding gebaseerd op het gesprek." 
                 : "Provide thoughtful guidance based on the conversation.");
 
+      // Add journey context if available
+      const contextWithJourney = journeyContext ? `${baseContext}\n\nCurrent Journey Context:${journeyContext}` : baseContext;
+
       switch (agentType) {
+        case 'coach':
+          return isNL 
+            ? `Je bent de Ziel Coach, EXCLUSIEF gericht op productiviteit en het bereiken van doelen. ${contextWithJourney}
+
+DOMEIN: Productiviteit, doelen, verantwoording, actie planning, tijdbeheer.
+STIJL: Direct, gestructureerd, actiegericht. Eindig altijd met concrete volgende stappen.
+GRENZEN: GA NIET in op relaties, emoties, of spirituele onderwerpen.
+
+COACH GEDRAG:
+- Geef korte, directe antwoorden (2-3 zinnen max per punt)
+- Vraag specifieke vragen om duidelijkheid
+- Bied concrete, uitvoerbare acties
+- Houd focus op het huidige doel
+- Gebruik motiverende taal
+- Breek grote taken op in kleine stappen
+
+BELANGRIJK: Reageer ALTIJD in het Nederlands. Gebruik Nederlandse woorden en zinsbouw.`
+            : `You are the Soul Coach, focused EXCLUSIVELY on productivity and goal achievement. ${contextWithJourney}
+
+DOMAIN: Productivity, goals, accountability, action planning, time management.
+STYLE: Direct, structured, action-oriented. Always end with concrete next steps.
+BOUNDARIES: Do NOT venture into relationships, emotions, or spiritual topics.
+
+COACH BEHAVIOR:
+- Give short, direct responses (2-3 sentences max per point)
+- Ask specific questions for clarity
+- Provide concrete, actionable steps
+- Keep focus on the current goal
+- Use motivating language
+- Break down large tasks into small steps`;
+
         case 'guide':
           return isNL 
-            ? `Je bent de Ziel Gids, EXCLUSIEF gericht op persoonlijke groei en levenswijsheid. ${baseContext}
+            ? `Je bent de Ziel Gids, EXCLUSIEF gericht op persoonlijke groei en levenswijsheid. ${contextWithJourney}
 
 NATUURLIJKE CONVERSATIE BENADERING:
 - Reageer op wat de gebruiker daadwerkelijk zegt
@@ -61,7 +98,7 @@ BLUEPRINT GEBRUIK EN UITLEG:
 - Leg uit HOE je tot bepaalde conclusies komt op basis van hun blueprint
 - Maak blueprint concepten toegankelijk door ze uit te leggen in begrijpelijke taal
 
-BELANGRIJRIJK: 
+BELANGRIJK: 
 - Reageer ALTIJD in het Nederlands
 - Gebruik korte alinea's (1-3 zinnen per alinea)
 - Begin elk nieuw punt op een nieuwe regel
@@ -72,7 +109,7 @@ BELANGRIJRIJK:
 DOMEIN: Zelfbegrip, emoties, relaties, levensbetekenis, spirituele groei.
 STIJL: Natuurlijk, empathisch, wijsheid-gericht, responsief, educatief over blueprint.
 GRENZEN: Geef GEEN productiviteitsadvies of doelstellingsstrategieën.`
-            : `You are the Soul Guide, focused EXCLUSIVELY on personal growth and life wisdom. ${baseContext}
+            : `You are the Soul Guide, focused EXCLUSIVELY on personal growth and life wisdom. ${contextWithJourney}
 
 NATURAL CONVERSATION APPROACH:
 - Respond to what the user is actually saying
@@ -100,9 +137,11 @@ STYLE: Natural, empathetic, wisdom-focused, responsive, educational about bluepr
 BOUNDARIES: Do NOT give productivity advice or goal-setting strategies.`;
 
         default:
-          return baseContext;
+          return contextWithJourney;
       }
     };
+
+    console.log('Starting OpenAI streaming request...');
 
     // Create a streaming response
     const stream = new ReadableStream({
@@ -127,41 +166,55 @@ BOUNDARIES: Do NOT give productivity advice or goal-setting strategies.`;
                 }
               ],
               temperature: 0.7,
-              max_tokens: 1000,
+              max_tokens: 800,
               stream: true,
             }),
           });
 
+          console.log('OpenAI response status:', response.status);
+
           if (!response.ok) {
-            throw new Error(`OpenAI API error: ${response.status}`);
+            const errorText = await response.text();
+            console.error('OpenAI API error:', response.status, errorText);
+            throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
           }
 
           const reader = response.body?.getReader();
           if (!reader) {
-            throw new Error('No response body');
+            throw new Error('No response body from OpenAI');
           }
 
           const decoder = new TextDecoder();
+          let buffer = '';
+
+          console.log('Starting to read OpenAI stream...');
 
           try {
             while (true) {
               const { done, value } = await reader.read();
               
               if (done) {
-                // Send final [DONE] message
+                console.log('OpenAI stream completed');
                 const encoder = new TextEncoder();
                 controller.enqueue(encoder.encode("data: [DONE]\n\n"));
                 break;
               }
 
               const chunk = decoder.decode(value, { stream: true });
-              const lines = chunk.split('\n');
+              buffer += chunk;
+              
+              // Process complete lines
+              const lines = buffer.split('\n');
+              buffer = lines.pop() || ''; // Keep incomplete line in buffer
               
               for (const line of lines) {
+                if (line.trim() === '') continue;
+                
                 if (line.startsWith('data: ')) {
                   const data = line.slice(6).trim();
                   
                   if (data === '[DONE]') {
+                    console.log('Received [DONE] from OpenAI');
                     const encoder = new TextEncoder();
                     controller.enqueue(encoder.encode("data: [DONE]\n\n"));
                     controller.close();
@@ -171,12 +224,15 @@ BOUNDARIES: Do NOT give productivity advice or goal-setting strategies.`;
                   if (data && data !== '[DONE]') {
                     try {
                       const parsed = JSON.parse(data);
-                      if (parsed.choices?.[0]?.delta?.content) {
+                      const content = parsed.choices?.[0]?.delta?.content;
+                      
+                      if (content) {
+                        console.log('Streaming content chunk:', content.substring(0, 50) + '...');
                         const encoder = new TextEncoder();
                         controller.enqueue(encoder.encode(`data: ${data}\n\n`));
                       }
-                    } catch (e) {
-                      // Skip invalid JSON
+                    } catch (parseError) {
+                      console.log('Skipping invalid JSON:', data.substring(0, 100));
                     }
                   }
                 }
@@ -187,12 +243,20 @@ BOUNDARIES: Do NOT give productivity advice or goal-setting strategies.`;
           }
         } catch (error) {
           console.error('Streaming error:', error);
+          const encoder = new TextEncoder();
+          const errorData = JSON.stringify({
+            error: true,
+            message: error.message || 'Streaming failed'
+          });
+          controller.enqueue(encoder.encode(`data: ${errorData}\n\n`));
           controller.error(error);
         } finally {
           controller.close();
         }
       }
     });
+
+    console.log('Returning streaming response...');
 
     return new Response(stream, {
       headers: {

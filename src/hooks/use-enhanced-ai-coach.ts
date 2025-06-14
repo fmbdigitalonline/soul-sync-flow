@@ -149,6 +149,13 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
   const sendMessage = async (content: string, useStreaming: boolean = true) => {
     if (!content.trim()) return;
 
+    console.log('useEnhancedAICoach: Sending message:', {
+      contentLength: content.length,
+      useStreaming,
+      currentAgent,
+      hasBlueprint: !!blueprintData
+    });
+
     const userMessage: Message = {
       id: Date.now().toString(),
       content,
@@ -191,6 +198,8 @@ Please remember to:
       try {
         let accumulatedContent = '';
         
+        console.log('useEnhancedAICoach: Starting streaming...');
+        
         await enhancedAICoachService.sendStreamingMessage(
           enhancedContent,
           currentSessionId,
@@ -199,6 +208,7 @@ Please remember to:
           language,
           {
             onChunk: (chunk: string) => {
+              console.log('useEnhancedAICoach: Received chunk:', chunk.substring(0, 50) + '...');
               accumulatedContent += chunk;
               addStreamingChunk(chunk);
               
@@ -211,7 +221,7 @@ Please remember to:
               );
             },
             onComplete: (fullResponse: string) => {
-              console.log('Enhanced streaming complete, full response length:', fullResponse.length);
+              console.log('useEnhancedAICoach: Streaming complete, full response length:', fullResponse.length);
               completeStreaming();
               setMessages(prev => 
                 prev.map(msg => 
@@ -223,7 +233,7 @@ Please remember to:
               setIsLoading(false);
             },
             onError: (error: Error) => {
-              console.error("Enhanced streaming error:", error);
+              console.error("useEnhancedAICoach: Streaming error:", error);
               setMessages(prev => prev.filter(msg => msg.id !== assistantMessageId));
               handleNonStreamingMessage(enhancedContent);
               completeStreaming();
@@ -231,7 +241,7 @@ Please remember to:
           }
         );
       } catch (error) {
-        console.error("Error with enhanced streaming, falling back:", error);
+        console.error("useEnhancedAICoach: Error with streaming, falling back:", error);
         setMessages(prev => prev.filter(msg => msg.id !== assistantMessageId));
         handleNonStreamingMessage(enhancedContent);
         completeStreaming();
@@ -243,6 +253,8 @@ Please remember to:
 
   const handleNonStreamingMessage = async (content: string, existingMessageId?: string) => {
     try {
+      console.log('useEnhancedAICoach: Falling back to non-streaming');
+      
       const response = await enhancedAICoachService.sendMessage(
         content,
         currentSessionId,
@@ -269,7 +281,7 @@ Please remember to:
         setMessages(prev => [...prev, assistantMessage]);
       }
     } catch (error) {
-      console.error("Error sending enhanced message:", error);
+      console.error("useEnhancedAICoach: Error in non-streaming fallback:", error);
       const errorMessage: Message = {
         id: existingMessageId || (Date.now() + 1).toString(),
         content: language === 'nl' ? "Sorry, er is een fout opgetreden. Probeer het later opnieuw." : "Sorry, there was an error. Please try again later.",

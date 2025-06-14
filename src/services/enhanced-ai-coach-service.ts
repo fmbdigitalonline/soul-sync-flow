@@ -300,15 +300,19 @@ class EnhancedAICoachService {
     callbacks: StreamingResponse
   ): Promise<void> {
     try {
-      console.log('Starting enhanced streaming request...');
+      console.log('Enhanced AI Coach: Starting streaming request...', {
+        agentType,
+        messageLength: message.length,
+        includeBlueprint
+      });
       
       const journeyContext = await this.getJourneyContext(agentType);
       const systemPrompt = includeBlueprint 
         ? this.personalityEngine.generateSystemPrompt(agentType as AgentMode)
         : null;
 
-      console.log("Generated personalized system prompt for streaming, length:", systemPrompt?.length || 0);
-      console.log("Journey context for streaming, length:", journeyContext.length);
+      console.log("Enhanced AI Coach: Generated system prompt length:", systemPrompt?.length || 0);
+      console.log("Enhanced AI Coach: Journey context length:", journeyContext.length);
       
       const response = await fetch(`https://qxaajirrqrcnmvtowjbg.supabase.co/functions/v1/ai-coach-stream`, {
         method: 'POST',
@@ -327,26 +331,40 @@ class EnhancedAICoachService {
         }),
       });
 
+      console.log('Enhanced AI Coach: Edge function response status:', response.status);
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.error('Enhanced AI Coach: Edge function error:', response.status, errorText);
+        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
       }
 
       if (!response.body) {
-        throw new Error('No response body');
+        throw new Error('No response body from edge function');
       }
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let fullResponse = '';
+      let buffer = '';
+
+      console.log('Enhanced AI Coach: Starting to read stream...');
 
       try {
         while (true) {
           const { done, value } = await reader.read();
           
-          if (done) break;
+          if (done) {
+            console.log('Enhanced AI Coach: Stream reading completed');
+            break;
+          }
           
           const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split('\n');
+          buffer += chunk;
+          
+          // Process complete lines
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || ''; // Keep incomplete line in buffer
           
           for (const line of lines) {
             if (line.trim() === '') continue;
@@ -355,6 +373,7 @@ class EnhancedAICoachService {
               const data = line.slice(6).trim();
               
               if (data === '[DONE]') {
+                console.log('Enhanced AI Coach: Received [DONE], completing stream');
                 callbacks.onComplete(fullResponse);
                 return;
               }
@@ -362,6 +381,12 @@ class EnhancedAICoachService {
               if (data && data !== '[DONE]') {
                 try {
                   const parsed = JSON.parse(data);
+                  
+                  if (parsed.error) {
+                    console.error('Enhanced AI Coach: Error from stream:', parsed);
+                    throw new Error(parsed.message || 'Stream error');
+                  }
+                  
                   const content = parsed.choices?.[0]?.delta?.content;
                   
                   if (content) {
@@ -369,7 +394,7 @@ class EnhancedAICoachService {
                     callbacks.onChunk(content);
                   }
                 } catch (parseError) {
-                  console.log('Skipping non-JSON data:', data);
+                  console.log('Enhanced AI Coach: Skipping non-JSON data:', data.substring(0, 100));
                 }
               }
             }
@@ -380,10 +405,14 @@ class EnhancedAICoachService {
       }
       
       if (fullResponse) {
+        console.log('Enhanced AI Coach: Stream completed, total response length:', fullResponse.length);
         callbacks.onComplete(fullResponse);
+      } else {
+        console.warn('Enhanced AI Coach: No content received in stream');
+        throw new Error('No content received from AI');
       }
     } catch (error) {
-      console.error("Error in enhanced streaming AI coach service:", error);
+      console.error("Enhanced AI Coach: Streaming error:", error);
       callbacks.onError(error as Error);
     }
   }
