@@ -12,7 +12,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 
 const Coach = () => {
-  const { messages, isLoading, sendMessage, resetConversation } = useEnhancedAICoach("blend");
+  const { messages, isLoading, sendMessage, resetConversation, streamingContent, isStreaming } = useEnhancedAICoach("blend");
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -85,7 +85,7 @@ const Coach = () => {
               <div className="w-6 h-6 bg-gradient-to-br from-soul-purple to-soul-teal rounded-full flex items-center justify-center">
                 <MessageCircle className="h-3 w-3 text-white" />
               </div>
-              <h1 className="text-sm font-medium gradient-text">Soul Guide</h1>
+              <h1 className="text-sm font-medium gradient-text">Soul Companion</h1>
             </div>
             <Button 
               variant="ghost" 
@@ -105,6 +105,8 @@ const Coach = () => {
             isLoading={isLoading}
             onSendMessage={sendMessage}
             messagesEndRef={messagesEndRef}
+            streamingContent={streamingContent}
+            isStreaming={isStreaming}
           />
         </div>
       </div>

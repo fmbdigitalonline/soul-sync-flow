@@ -168,9 +168,11 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
     setIsLoading(true);
     resetStreaming();
 
-    // Enhanced context for better coaching
-    const enhancedContent = currentAgent === "coach" 
-      ? `${content}
+    // Enhanced context for better companionship - keep responses natural and conversational
+    const enhancedContent = currentAgent === "blend" 
+      ? content // Don't add extra instructions for blend mode - let the system prompt handle it
+      : currentAgent === "coach" 
+        ? `${content}
 
 Please remember to:
 - Keep responses conversational and engaging
@@ -179,7 +181,7 @@ Please remember to:
 - Provide specific next steps rather than general advice
 - Use encouraging and motivational language aligned with my personality
 - When suggesting tasks breakdown, be specific about time estimates and energy requirements`
-      : content;
+        : content;
 
     if (useStreaming) {
       const assistantMessageId = (Date.now() + 1).toString();
@@ -208,14 +210,14 @@ Please remember to:
           language,
           {
             onChunk: (chunk: string) => {
-              console.log('useEnhancedAICoach: Received chunk:', chunk.substring(0, 50) + '...');
+              console.log('useEnhancedAICoach: Received chunk:', chunk.substring(0, 20) + '...');
               accumulatedContent += chunk;
               addStreamingChunk(chunk);
               
               setMessages(prev => 
                 prev.map(msg => 
                   msg.id === assistantMessageId 
-                    ? { ...msg, content: accumulatedContent }
+                    ? { ...msg, content: accumulatedContent, isStreaming: true }
                     : msg
                 )
               );
