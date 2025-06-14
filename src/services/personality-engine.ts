@@ -14,6 +14,15 @@ export class PersonalityEngine {
     if (Object.keys(this.blueprint).length > 0) {
       this.communicationStyle = CommunicationStyleAdapter.detectCommunicationStyle(this.blueprint);
       console.log('Detected communication style:', this.communicationStyle);
+      console.log('Blueprint factors analyzed:', {
+        mbti: !!this.blueprint.cognitiveTemperamental?.mbtiType,
+        dominantFunction: !!this.blueprint.cognitiveTemperamental?.dominantFunction,
+        humanDesign: !!this.blueprint.energyDecisionStrategy?.humanDesignType,
+        authority: !!this.blueprint.energyDecisionStrategy?.authority,
+        lifePath: !!this.blueprint.coreValuesNarrative?.lifePath,
+        sunSign: !!this.blueprint.publicArchetype?.sunSign,
+        motivations: !!this.blueprint.motivationBeliefEngine?.motivation
+      });
     }
   }
 
@@ -247,5 +256,26 @@ Always consider both the practical AND soul dimensions, helping them achieve suc
 
   getCommunicationStyle(): CommunicationStyle | null {
     return this.communicationStyle;
+  }
+
+  getBlueprintCompleteness(): number {
+    if (!this.communicationStyle) return 0;
+    return this.communicationStyle.adaptationScore;
+  }
+
+  getCommunicationDebugInfo(): any {
+    return {
+      blueprintFactors: {
+        mbti: this.blueprint.cognitiveTemperamental?.mbtiType,
+        dominantFunction: this.blueprint.cognitiveTemperamental?.dominantFunction,
+        humanDesignType: this.blueprint.energyDecisionStrategy?.humanDesignType,
+        authority: this.blueprint.energyDecisionStrategy?.authority,
+        lifePath: this.blueprint.coreValuesNarrative?.lifePath,
+        sunSign: this.blueprint.publicArchetype?.sunSign,
+        motivations: this.blueprint.motivationBeliefEngine?.motivation
+      },
+      detectedStyle: this.communicationStyle,
+      adaptationConfidence: this.communicationStyle?.adaptationScore || 0
+    };
   }
 }
