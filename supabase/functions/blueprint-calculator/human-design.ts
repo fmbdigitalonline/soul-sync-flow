@@ -45,38 +45,85 @@ export async function calculateHumanDesign(
     // Step 4: Calculate gates for both charts using HD standard wheel
     const personalityGates = calculateHDGatesFromCelestialData(personalityCelestial, "personality");
     const designGates = calculateHDGatesFromCelestialData(designCelestial, "design");
-    console.log(`[HD] Personality gates:`, personalityGates);
-    console.log(`[HD] Design gates:`, designGates);
 
-    // Step 5: Determine centers and channels
-    const centers = calculateCentersFromChannels([...personalityGates, ...designGates]);
+    // Canonical HD order
+    const HD_PLANETS = [
+      "sun", "earth", "north_node", "south_node", "moon", "mercury", "venus", "mars",
+      "jupiter", "saturn", "uranus", "neptune", "pluto"
+    ];
+
+    function canonicalOrder(gatesArray) {
+      // Remove null gates and sort by HD planet order
+      const uniqueGates = [];
+      const keys = new Set();
+      for (const planet of HD_PLANETS) {
+        const found = gatesArray.find(g => g.planet === planet && g.gate && g.line);
+        if (found) {
+          const key = `${found.gate}.${found.line}`;
+          if (!keys.has(key)) {
+            uniqueGates.push({ ...found });
+            keys.add(key);
+          }
+        }
+      }
+      return uniqueGates;
+    }
+
+    const personalityGatesOrdered = canonicalOrder(personalityGates);
+    const designGatesOrdered = canonicalOrder(designGates);
+
+    // Step 5: Determine centers and channels using both gate sets
+    const centers = calculateCentersFromChannels([...personalityGatesOrdered, ...designGatesOrdered]);
 
     // Step 6: Calculate type, authority, profile, strategy, definition, etc.
     const type = determineHDType(centers);
     const authority = determineHDAuthority(centers);
-    const sunGatePersonality = personalityGates.find(g => g.planet === "sun");
-    const sunGateDesign = designGates.find(g => g.planet === "sun");
-    const profile = calculateHDProfile(sunGatePersonality, sunGateDesign);
 
-    // Step 7: Return result in official format
+    // ----------------------------
+    // FIX: Profile per HD standard
+    // Personality: Sun.line = conscious
+    // Design: Earth.line = unconscious
+    function getSunAndEarthGates(gatesArr) {
+      // Always HD_PLANETS[0] = sun, [1] = earth, so look up by planet name
+      const sun = gatesArr.find(g => g.planet === "sun");
+      const earth = gatesArr.find(g => g.planet === "earth");
+      return { sun, earth };
+    }
+    const { sun: personalitySun } = getSunAndEarthGates(personalityGatesOrdered);
+    const { earth: designEarth } = getSunAndEarthGates(designGatesOrdered);
+
+    // HD labels
+    const profileLabels = {
+      1: "Investigator", 2: "Hermit", 3: "Martyr", 4: "Opportunist", 5: "Heretic", 6: "Role Model"
+    };
+
+    let conscious = personalitySun && personalitySun.line ? personalitySun.line : 1;
+    let unconscious = designEarth && designEarth.line ? designEarth.line : 1;
+    const profile = `${conscious}/${unconscious} (${profileLabels[conscious] || ""}/${profileLabels[unconscious] || ""})`;
+    // ----------------------------
+
+    // Step 7: Improve definition calculation (true Split/etc)
+    const definition = calculateHDDefinition(centers);
+
+    // Format output as HD expects (no duplicates, canonical planet order)
     return {
       type,
       profile,
       authority,
       strategy: getStrategyForType(type),
-      definition: calculateDefinition(centers),
+      definition,
       not_self_theme: getNotSelfThemeForType(type),
       life_purpose: generateLifePurpose(type, profile, authority),
       centers,
       gates: {
-        unconscious_design: designGates.map(g => `${g.gate}.${g.line}`),
-        conscious_personality: personalityGates.map(g => `${g.gate}.${g.line}`)
+        unconscious_design: designGatesOrdered.map(g => `${g.gate}.${g.line}`),
+        conscious_personality: personalityGatesOrdered.map(g => `${g.gate}.${g.line}`)
       },
       metadata: {
         personality_time: birthDateTime.toISOString(),
         design_time: designDateTime.toISOString(),
         offset_days: "88.736",
-        calculation_method: "PROPER_HD_METHODOLOGY_V10_DUAL_EPHEMERIS"
+        calculation_method: "PROPER_HD_METHODOLOGY_V11_DUAL_EPHEMERIS_FIXED"
       }
     };
   } catch (error) {
@@ -369,23 +416,53 @@ function calculateHDProfile(sunGateInfo, designSunGateInfo) {
   return `${conscious}/${unconscious} (${profileLabels[conscious] || ''}/${profileLabels[unconscious] || ''})`;
 }
 
-function calculateDefinition(centers) {
-  const definedCenters = Object.values(centers).filter(center => center.defined).length;
-  if (definedCenters === 0) return "No Definition";
-  if (definedCenters <= 3) return "Single Definition";
-  if (definedCenters <= 6) return "Split Definition";
-  return "Triple Split Definition";
-}
+// REPLACE calculateDefinition with an HD-correct channel graph method:
+function calculateHDDefinition(centers) {
+  // Build a graph: nodes = centers, edges = channels
+  // Each connected group of centers = a "definition area"
+  const centerNames = Object.keys(centers);
+  const visited = new Set();
+  let groups = 0;
 
-function generateLifePurpose(type, profile, authority) {
-  const purposes = {
-    'Manifestor': `As a Manifestor with ${profile} profile, your purpose is to initiate and inform, creating impact through your ${authority} authority.`,
-    'Generator': `As a Generator with ${profile} profile, your purpose is to respond and build, using your ${authority} authority to guide sustainable creation.`,
-    'Manifesting Generator': `As a Manifesting Generator with ${profile} profile, your purpose is to respond, initiate, and multi-task, following your ${authority} authority.`,
-    'Projector': `As a Projector with ${profile} profile, your purpose is to guide and direct others, waiting for invitations and using your ${authority} authority.`,
-    'Reflector': `As a Reflector with ${profile} profile, your purpose is to reflect the health of your community, using lunar cycles for major decisions.`
-  };
-  return purposes[type] || `Your purpose is to follow your ${authority} authority as a ${type}.`;
+  function dfs(center) {
+    visited.add(center);
+    // For each channel in this center, visit the connected center
+    centers[center].channels.forEach(([gateA, gateB]) => {
+      const otherGate = centers[center].gates.includes(gateA) ? gateB : gateA;
+      const otherCenter = getCenterOfGate(otherGate);
+      if (otherCenter && centers[otherCenter].defined && !visited.has(otherCenter)) {
+        dfs(otherCenter);
+      }
+    });
+  }
+  function getCenterOfGate(gateNum) {
+    // Must match mapping used in centers calculation:
+    const gateToCenterMap = {
+      64: 'Head', 61: 'Head', 63: 'Head', 47: 'Ajna', 24: 'Ajna', 4: 'Ajna', 17: 'Ajna', 43: 'Ajna', 11: 'Ajna',
+      62: 'Throat', 23: 'Throat', 56: 'Throat', 35: 'Throat', 12: 'Throat', 45: 'Throat', 33: 'Throat', 8: 'Throat',
+      31: 'Throat', 7: 'Throat', 1: 'Throat', 13: 'Throat', 10: 'Throat', 20: 'Throat', 16: 'Throat',
+      25: 'G', 46: 'G', 22: 'G', 36: 'G', 2: 'G', 15: 'G', 5: 'G', 14: 'G',
+      21: 'Heart', 40: 'Heart', 26: 'Heart', 51: 'Heart',
+      6: 'Solar Plexus', 37: 'Solar Plexus', 30: 'Solar Plexus', 55: 'Solar Plexus', 49: 'Solar Plexus', 19: 'Solar Plexus', 39: 'Solar Plexus',
+      41: 'Solar Plexus', 22: 'Solar Plexus', 36: 'Solar Plexus',
+      34: 'Sacral', 5: 'Sacral', 14: 'Sacral', 29: 'Sacral', 59: 'Sacral', 9: 'Sacral', 3: 'Sacral', 42: 'Sacral', 27: 'Sacral',
+      48: 'Spleen', 57: 'Spleen', 44: 'Spleen', 50: 'Spleen', 32: 'Spleen', 28: 'Spleen', 18: 'Spleen',
+      53: 'Root', 60: 'Root', 52: 'Root', 19: 'Root', 39: 'Root', 41: 'Root', 58: 'Root', 38: 'Root', 54: 'Root'
+    };
+    return gateToCenterMap[gateNum];
+  }
+  // For each defined center, start a DFS if not already visited
+  for (const center of centerNames) {
+    if (centers[center].defined && !visited.has(center)) {
+      dfs(center);
+      groups++;
+    }
+  }
+  if (groups === 0) return "No Definition";
+  if (groups === 1) return "Single Definition";
+  if (groups === 2) return "Split Definition";
+  if (groups === 3) return "Triple Split Definition";
+  return "Quadruple Split Definition";
 }
 
 function getStrategyForType(type) {
