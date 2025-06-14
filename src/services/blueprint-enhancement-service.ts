@@ -110,30 +110,51 @@ export class BlueprintEnhancementService {
   }
 
   private static generateNumerologySection(blueprint: BlueprintData) {
+    console.log('🔢 NUMEROLOGY SECTION: Raw blueprint data:', blueprint.values_life_path);
+    
     const num = blueprint.values_life_path;
     
+    // Map snake_case properties to camelCase with fallbacks
+    const numerologyData = {
+      lifePathNumber: num?.life_path_number || num?.lifePathNumber,
+      expressionNumber: num?.expression_number || num?.expressionNumber,
+      soulUrgeNumber: num?.soul_urge_number || num?.soulUrgeNumber,
+      birthdayNumber: num?.birthday_number || num?.birthdayNumber,
+      personalityNumber: num?.personality_number || num?.personalityNumber,
+      birthYear: num?.birth_year || num?.birthYear,
+      birthMonth: num?.birth_month || num?.birthMonth,
+      birthDay: num?.birth_day || num?.birthDay,
+      lifePathKeyword: num?.life_path_keyword || num?.lifePathKeyword,
+      expressionKeyword: num?.expression_keyword || num?.expressionKeyword,
+      soulUrgeKeyword: num?.soul_urge_keyword || num?.soulUrgeKeyword,
+      birthdayKeyword: num?.birthday_keyword || num?.birthdayKeyword,
+      personalityKeyword: num?.personality_keyword || num?.personalityKeyword
+    };
+    
+    console.log('🔢 NUMEROLOGY SECTION: Mapped data:', numerologyData);
+    
     const facts = [
-      `Life Path ${num.lifePathNumber}`,
-      `Expression ${num.expressionNumber}`,
-      `Soul Urge ${num.soulUrgeNumber}`,
-      `Birthday ${num.birthdayNumber}`,
-      `Birth Year ${num.birthYear}`
-    ];
+      `Life Path ${numerologyData.lifePathNumber}`,
+      `Expression ${numerologyData.expressionNumber}`,
+      `Soul Urge ${numerologyData.soulUrgeNumber}`,
+      `Birthday ${numerologyData.birthdayNumber}`,
+      `Birth Year ${numerologyData.birthYear}`
+    ].filter(fact => !fact.includes('undefined'));
 
     return {
       facts,
       narratives: {
-        novice: `Your Life Path ${num.lifePathNumber} means you're here to be a ${num.lifePathKeyword?.toLowerCase() || 'creator'}. Your Expression Number ${num.expressionNumber} shows you're naturally a ${num.expressionKeyword?.toLowerCase() || 'leader'}. Your Soul Urge ${num.soulUrgeNumber} reveals you deeply desire ${num.soulUrgeKeyword?.toLowerCase() || 'success'}.`,
+        novice: `Your Life Path ${numerologyData.lifePathNumber} means you're here to be a ${numerologyData.lifePathKeyword?.toLowerCase() || 'seeker'}. Your Expression Number ${numerologyData.expressionNumber} shows you're naturally a ${numerologyData.expressionKeyword?.toLowerCase() || 'creator'}. Your Soul Urge ${numerologyData.soulUrgeNumber} reveals you deeply desire ${numerologyData.soulUrgeKeyword?.toLowerCase() || 'growth'}.`,
         
-        amateur: `Life Path ${num.lifePathNumber} (${num.lifePathKeyword}) represents your soul's primary lesson and life direction. Expression Number ${num.expressionNumber} (${num.expressionKeyword}) shows your natural talents and how you express yourself in the world. Soul Urge ${num.soulUrgeNumber} (${num.soulUrgeKeyword}) reveals your inner motivations and heart's desires. Birthday Number ${num.birthdayNumber} (${num.birthdayKeyword}) adds special gifts from the day you were born.`,
+        amateur: `Life Path ${numerologyData.lifePathNumber} (${numerologyData.lifePathKeyword || 'Seeker'}) represents your soul's primary lesson and life direction. Expression Number ${numerologyData.expressionNumber} (${numerologyData.expressionKeyword || 'Creator'}) shows your natural talents and how you express yourself in the world. Soul Urge ${numerologyData.soulUrgeNumber} (${numerologyData.soulUrgeKeyword || 'Growth'}) reveals your inner motivations and heart's desires. Birthday Number ${numerologyData.birthdayNumber} (${numerologyData.birthdayKeyword || 'Unique'}) adds special gifts from the day you were born.`,
         
-        pro: `Numerological matrix: Life Path ${num.lifePathNumber} derived from birth date ${num.birthDay}/${num.birthMonth}/${num.birthYear} indicating ${num.lifePathKeyword} karmic lessons. Expression ${num.expressionNumber} calculated from full birth name creating ${num.expressionKeyword} vibrational frequency. Soul Urge ${num.soulUrgeNumber} (${num.soulUrgeKeyword}) from vowels shows core motivation. Birthday ${num.birthdayNumber} (${num.birthdayKeyword}) provides additional talents. Master numbers and reduction patterns create complex numerological mandala.`
+        pro: `Numerological matrix: Life Path ${numerologyData.lifePathNumber} derived from birth date ${numerologyData.birthDay}/${numerologyData.birthMonth}/${numerologyData.birthYear} indicating ${numerologyData.lifePathKeyword || 'Seeker'} karmic lessons. Expression ${numerologyData.expressionNumber} calculated from full birth name creating ${numerologyData.expressionKeyword || 'Creator'} vibrational frequency. Soul Urge ${numerologyData.soulUrgeNumber} (${numerologyData.soulUrgeKeyword || 'Growth'}) from vowels shows core motivation. Birthday ${numerologyData.birthdayNumber} (${numerologyData.birthdayKeyword || 'Unique'}) provides additional talents. Master numbers and reduction patterns create complex numerological mandala.`
       },
       calculations: {
-        lifePathNumber: { value: num.lifePathNumber, method: `${num.birthDay}/${num.birthMonth}/${num.birthYear} reduction` },
-        expressionNumber: { value: num.expressionNumber, method: `Full name: ${blueprint.user_meta.full_name}` },
-        soulUrgeNumber: { value: num.soulUrgeNumber, method: "Vowels in full name" },
-        birthdayNumber: { value: num.birthdayNumber, method: `Birth day: ${num.birthDay}` }
+        lifePathNumber: { value: numerologyData.lifePathNumber, method: `${numerologyData.birthDay}/${numerologyData.birthMonth}/${numerologyData.birthYear} reduction` },
+        expressionNumber: { value: numerologyData.expressionNumber, method: `Full name: ${blueprint.user_meta.full_name}` },
+        soulUrgeNumber: { value: numerologyData.soulUrgeNumber, method: "Vowels in full name" },
+        birthdayNumber: { value: numerologyData.birthdayNumber, method: `Birth day: ${numerologyData.birthDay}` }
       }
     };
   }
