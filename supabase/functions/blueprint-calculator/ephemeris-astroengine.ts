@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 // Test import immediately
@@ -133,7 +134,7 @@ export interface HousesAndAngles {
 
 /**
  * Calculate planetary positions using CORRECTED astronomical calculations
- * CRITICAL FIX: Proper AstroTime creation from UTC components
+ * CRITICAL FIX: Proper AstroTime creation using MakeTime method
  */
 export async function calculatePlanetaryPositionsWithAstro(
   date: string,
@@ -157,7 +158,7 @@ export async function calculatePlanetaryPositionsWithAstro(
     try {
       console.log("🔧 Running self-test with reliable EclipticLongitude...");
       const testDate = new Date('2000-01-01T12:00:00Z'); // J2000 as proper Date
-      const testAstroTime = new Astronomy.AstroTime(testDate);
+      const testAstroTime = Astronomy.MakeTime(testDate);
       
       const testMoonLon = Astronomy.EclipticLongitude("Moon", testAstroTime);
       console.log(`✅ Self-test passed: Moon @ J2000 = ${testMoonLon.toFixed(6)}°`);
@@ -241,15 +242,15 @@ export async function calculatePlanetaryPositionsWithAstro(
       throw new Error(`Failed to parse date/time (raw: "${date}" "${time}" timezone: "${timezone}") into a valid UTC Date. See logs for details.`);
     }
     
-    // CRITICAL FIX: Create AstroTime using the corrected constructor
-    console.log(`🔧 Creating AstroTime from UTC date: ${utcDate.toISOString()}`);
+    // CRITICAL FIX: Use MakeTime instead of AstroTime constructor
+    console.log(`🔧 Creating AstroTime using MakeTime from UTC date: ${utcDate.toISOString()}`);
     
-    const astroTime = new Astronomy.AstroTime(utcDate);
+    const astroTime = Astronomy.MakeTime(utcDate);
     
     // Validate that astroTime was created properly
     if (!astroTime || typeof astroTime.tt !== 'number') {
       console.error("❌ CRITICAL: astroTime is invalid!", JSON.stringify(astroTime));
-      throw new Error("Failed to create valid AstroTime");
+      throw new Error("Failed to create valid AstroTime using MakeTime");
     }
     
     const jd = astroTime.tt;
@@ -457,13 +458,13 @@ export async function calculatePlanetaryPositionsWithAstro(
     
     // Add metadata
     positions["timestamp"] = Date.now();
-    positions["source"] = "astronomy_engine_fixed_astrotime";
+    positions["source"] = "astronomy_engine_fixed_maketime";
     positions["julian_date"] = jd;
     positions["observer"] = {
       latitude: coords.latitude,
       longitude: coords.longitude
     };
-    positions["calculation_method"] = "astrotime_from_utc_date";
+    positions["calculation_method"] = "maketime_from_utc_date";
     
     console.log("✅ All astronomical calculations completed successfully");
     console.log(`🔧 Final position count: ${Object.keys(positions).length}`);
