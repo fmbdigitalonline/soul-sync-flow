@@ -44,6 +44,33 @@
   color: #96A1A8;
 }
 
+/* Mobile-specific fixes */
+@media (max-width: 768px) {
+  #root {
+    padding: 0;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+  
+  body {
+    overflow-x: hidden;
+  }
+  
+  html {
+    overflow-x: hidden;
+  }
+  
+  /* Hide scrollbars on mobile */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 /* Support for high contrast mode */
 @media (forced-colors: active) {
   .card,
