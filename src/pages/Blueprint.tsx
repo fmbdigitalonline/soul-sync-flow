@@ -23,7 +23,7 @@ const Blueprint = () => {
   const [useEnhanced, setUseEnhanced] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { speak } = useSoulOrb();
   const { t } = useLanguage();
   
@@ -41,8 +41,75 @@ const Blueprint = () => {
     return BlueprintEnhancementService.enhanceBlueprintData(blueprintData);
   }, [blueprintData]);
 
-  // Redirect to onboarding if no blueprint exists
-  if (!loading && !hasBlueprint && user) {
+  console.log("Blueprint Page Debug:", {
+    user: !!user,
+    authLoading,
+    loading,
+    hasBlueprint,
+    blueprintData: !!blueprintData,
+    error
+  });
+
+  // Show loading while auth is loading
+  if (authLoading) {
+    return (
+      <MainLayout>
+        <div className="w-full min-h-[80vh] flex flex-col items-center justify-center p-4 sm:p-6">
+          <Loader2 className="h-8 w-8 animate-spin text-soul-purple" />
+          <p className="mt-2 text-sm sm:text-base">Loading...</p>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  // Show sign in required if no user
+  if (!user) {
+    return (
+      <MainLayout>
+        <div className="w-full min-h-[80vh] flex items-center justify-center p-4 sm:p-6">
+          <div className="cosmic-card p-6 sm:p-8 text-center max-w-md w-full">
+            <h1 className="text-xl sm:text-2xl font-bold font-display mb-4">
+              <span className="gradient-text">{t('blueprint.title')}</span>
+            </h1>
+            <p className="mb-6 text-sm sm:text-base">{t('blueprint.signInRequired')}</p>
+            <Button 
+              className="bg-soul-purple hover:bg-soul-purple/90 w-full"
+              onClick={() => navigate('/auth')}
+            >
+              {t('nav.signIn')}
+            </Button>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  // Show loading while blueprint is loading
+  if (loading) {
+    return (
+      <MainLayout>
+        <div className="w-full min-h-[80vh] flex flex-col items-center justify-center p-4 sm:p-6">
+          <Loader2 className="h-8 w-8 animate-spin text-soul-purple" />
+          <p className="mt-2 text-sm sm:text-base">{t('blueprint.loading')}</p>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  // Show error if there's an error
+  if (error) {
+    return (
+      <MainLayout>
+        <div className="w-full min-h-[80vh] flex flex-col items-center justify-center p-4 sm:p-6">
+          <p className="text-red-500 mb-4">{error}</p>
+          <Button onClick={() => refetch()}>Try Again</Button>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  // Redirect to onboarding only if no blueprint exists
+  if (!hasBlueprint) {
     navigate('/onboarding');
     return null;
   }
@@ -141,49 +208,6 @@ const Blueprint = () => {
     setIsGenerating(false);
     setActiveTab("view");
   };
-
-  if (!user) {
-    return (
-      <MainLayout>
-        <div className="w-full min-h-[80vh] flex items-center justify-center p-4 sm:p-6">
-          <div className="cosmic-card p-6 sm:p-8 text-center max-w-md w-full">
-            <h1 className="text-xl sm:text-2xl font-bold font-display mb-4">
-              <span className="gradient-text">{t('blueprint.title')}</span>
-            </h1>
-            <p className="mb-6 text-sm sm:text-base">{t('blueprint.signInRequired')}</p>
-            <Button 
-              className="bg-soul-purple hover:bg-soul-purple/90 w-full"
-              onClick={() => navigate('/auth')}
-            >
-              {t('nav.signIn')}
-            </Button>
-          </div>
-        </div>
-      </MainLayout>
-    );
-  }
-
-  if (loading) {
-    return (
-      <MainLayout>
-        <div className="w-full min-h-[80vh] flex flex-col items-center justify-center p-4 sm:p-6">
-          <Loader2 className="h-8 w-8 animate-spin text-soul-purple" />
-          <p className="mt-2 text-sm sm:text-base">{t('blueprint.loading')}</p>
-        </div>
-      </MainLayout>
-    );
-  }
-
-  if (error) {
-    return (
-      <MainLayout>
-        <div className="w-full min-h-[80vh] flex flex-col items-center justify-center p-4 sm:p-6">
-          <p className="text-red-500 mb-4">{error}</p>
-          <Button onClick={() => refetch()}>Try Again</Button>
-        </div>
-      </MainLayout>
-    );
-  }
 
   return (
     <MainLayout>
