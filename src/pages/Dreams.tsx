@@ -118,105 +118,22 @@ const Dreams = () => {
     setIsCreatingDream(true);
     setCurrentView('decomposing'); // Switch to decomposition loading page
 
-    try {
-      console.log('Starting AI-powered dream creation with form:', dreamForm);
-      
-      // Create goal using AI-powered blueprint-aligned decomposition
-      const aiGoal = await aiGoalDecompositionService.decomposeGoalWithAI(
-        dreamForm.title,
-        dreamForm.description,
-        dreamForm.timeframe,
-        dreamForm.category,
-        blueprintData || {}
-      );
-
-      console.log('AI goal decomposed successfully:', aiGoal);
-
-      // Save to productivity journey
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
-
-      console.log('Saving AI-generated goal for user:', user.id);
-
-      // Convert AI Goal to database format
-      const goalAsJson = {
-        id: aiGoal.id,
-        title: aiGoal.title,
-        description: aiGoal.description,
-        category: aiGoal.category,
-        timeframe: aiGoal.timeframe,
-        target_completion: aiGoal.target_completion,
-        created_at: aiGoal.created_at,
-        milestones: (aiGoal.milestones || []).map(milestone => ({
-          id: milestone.id,
-          title: milestone.title,
-          description: milestone.description,
-          target_date: milestone.target_date,
-          completed: milestone.completed || false,
-          completion_criteria: milestone.completion_criteria || [],
-          blueprint_alignment: milestone.blueprint_alignment
-        })),
-        tasks: (aiGoal.tasks || []).map(task => ({
-          id: task.id,
-          title: task.title,
-          description: task.description,
-          completed: task.completed || false,
-          estimated_duration: task.estimated_duration,
-          energy_level_required: task.energy_level_required,
-          category: task.category,
-          optimal_timing: task.optimal_timing,
-          blueprint_reasoning: task.blueprint_reasoning
-        })),
-        blueprint_insights: aiGoal.blueprint_insights || [],
-        personalization_notes: aiGoal.personalization_notes
-      };
-      
-      const { error } = await supabase
-        .from('productivity_journey')
-        .upsert({
-          user_id: user.id,
-          current_goals: [goalAsJson],
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'user_id'
-        });
-
-      if (error) {
-        console.error('Supabase error saving AI goal:', error);
-        throw new Error(`Database error: ${error.message}`);
-      }
-
-      console.log('AI-generated goal saved successfully to database');
-
-      // Store created goal and move to success page
-      setCreatedGoal(goalAsJson);
-      
-      // Reset form
-      setDreamForm({
-        title: '',
-        description: '',
-        category: 'personal_growth',
-        timeframe: '3 months'
-      });
-
-      // Success will be handled by DreamDecompositionPage onComplete
-    } catch (error) {
-      console.error('Error creating AI dream:', error);
-      toast({
-        title: "Creation Error",
-        description: error instanceof Error ? error.message : "Failed to create your AI dream journey. Please try again.",
-        variant: "destructive"
-      });
-      setCurrentView('create'); // Return to create view on error
-    } finally {
-      setIsCreatingDream(false);
-    }
+    // Don't create the goal here - let the decomposition page handle it
+    setCreatedGoal(null); // Clear any existing goal
   };
 
-  const handleDecompositionComplete = () => {
+  const handleDecompositionComplete = (decomposedGoal: any) => {
+    setCreatedGoal(decomposedGoal);
     setCurrentView('success');
+    setIsCreatingDream(false);
+    
+    // Reset form after successful creation
+    setDreamForm({
+      title: '',
+      description: '',
+      category: 'personal_growth',
+      timeframe: '3 months'
+    });
   };
 
   const handleSuccessTaskStart = (task: any) => {
@@ -515,6 +432,9 @@ const Dreams = () => {
       <MainLayout>
         <DreamDecompositionPage
           dreamTitle={dreamForm.title}
+          dreamDescription={dreamForm.description}
+          dreamCategory={dreamForm.category}
+          dreamTimeframe={dreamForm.timeframe}
           onComplete={handleDecompositionComplete}
           blueprintData={blueprintData}
         />

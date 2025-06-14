@@ -1,14 +1,19 @@
-
 import React, { useState, useEffect } from 'react';
 import { SoulOrb } from '@/components/ui/soul-orb';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useSoulOrb } from '@/contexts/SoulOrbContext';
 import { Brain, Target, MapPin, Sparkles, CheckCircle } from 'lucide-react';
+import { aiGoalDecompositionService } from '@/services/ai-goal-decomposition-service';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface DreamDecompositionPageProps {
   dreamTitle: string;
-  onComplete: () => void;
+  dreamDescription?: string;
+  dreamCategory?: string;
+  dreamTimeframe?: string;
+  onComplete: (decomposedGoal: any) => void;
   blueprintData?: any;
 }
 
@@ -18,17 +23,24 @@ interface DecompositionStage {
   message: string;
   icon: React.ReactNode;
   duration: number;
+  action?: () => Promise<void>;
 }
 
 export const DreamDecompositionPage: React.FC<DreamDecompositionPageProps> = ({
   dreamTitle,
+  dreamDescription = '',
+  dreamCategory = 'personal_growth',
+  dreamTimeframe = '3 months',
   onComplete,
   blueprintData
 }) => {
   const { speak, speaking } = useSoulOrb();
+  const { toast } = useToast();
   const [currentStageIndex, setCurrentStageIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const [completedStages, setCompletedStages] = useState<string[]>([]);
+  const [decomposedGoal, setDecomposedGoal] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Get user type for personalization
   const getUserType = () => {
@@ -57,6 +69,84 @@ export const DreamDecompositionPage: React.FC<DreamDecompositionPageProps> = ({
     return 'unique soul';
   };
 
+  // AI Goal Decomposition Action
+  const decomposeWithAI = async () => {
+    try {
+      console.log('🤖 Starting AI goal decomposition...');
+      
+      const aiGoal = await aiGoalDecompositionService.decomposeGoalWithAI(
+        dreamTitle,
+        dreamDescription,
+        dreamTimeframe,
+        dreamCategory,
+        blueprintData || {}
+      );
+
+      console.log('✅ AI goal decomposed successfully:', aiGoal);
+      setDecomposedGoal(aiGoal);
+      
+      // Save to database
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      const goalAsJson = {
+        id: aiGoal.id,
+        title: aiGoal.title,
+        description: aiGoal.description,
+        category: aiGoal.category,
+        timeframe: aiGoal.timeframe,
+        target_completion: aiGoal.target_completion,
+        created_at: aiGoal.created_at,
+        milestones: (aiGoal.milestones || []).map(milestone => ({
+          id: milestone.id,
+          title: milestone.title,
+          description: milestone.description,
+          target_date: milestone.target_date,
+          completed: milestone.completed || false,
+          completion_criteria: milestone.completion_criteria || [],
+          blueprint_alignment: milestone.blueprint_alignment
+        })),
+        tasks: (aiGoal.tasks || []).map(task => ({
+          id: task.id,
+          title: task.title,
+          description: task.description,
+          completed: task.completed || false,
+          estimated_duration: task.estimated_duration,
+          energy_level_required: task.energy_level_required,
+          category: task.category,
+          optimal_timing: task.optimal_timing,
+          blueprint_reasoning: task.blueprint_reasoning
+        })),
+        blueprint_insights: aiGoal.blueprint_insights || [],
+        personalization_notes: aiGoal.personalization_notes
+      };
+      
+      const { error } = await supabase
+        .from('productivity_journey')
+        .upsert({
+          user_id: user.id,
+          current_goals: [goalAsJson],
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id'
+        });
+
+      if (error) {
+        console.error('Supabase error saving AI goal:', error);
+        throw new Error(`Database error: ${error.message}`);
+      }
+
+      console.log('💾 Goal saved to database successfully');
+      
+    } catch (error) {
+      console.error('❌ Error in AI decomposition:', error);
+      setError(error instanceof Error ? error.message : 'AI decomposition failed');
+      throw error;
+    }
+  };
+
   const stages: DecompositionStage[] = [
     {
       id: 'analyzing',
@@ -70,7 +160,8 @@ export const DreamDecompositionPage: React.FC<DreamDecompositionPageProps> = ({
       title: 'Creating Milestones',
       message: `I'm identifying the perfect milestones for your ${getUserType()} energy. Each one will honor your natural rhythm...`,
       icon: <Target className="h-5 w-5" />,
-      duration: 4000
+      duration: 4000,
+      action: decomposeWithAI // This is where the AI magic happens
     },
     {
       id: 'tasks',
@@ -105,18 +196,42 @@ export const DreamDecompositionPage: React.FC<DreamDecompositionPageProps> = ({
         });
       }, 100);
 
-      // Move to next stage after duration
-      const stageTimer = setTimeout(() => {
-        setCompletedStages(prev => [...prev, stage.id]);
-        
-        if (currentStageIndex < stages.length - 1) {
-          setCurrentStageIndex(prev => prev + 1);
-        } else {
-          // All stages complete
-          setTimeout(() => {
-            speak("Your personalized journey is ready! Let me show you what we've created together...");
-            setTimeout(onComplete, 2000);
-          }, 1000);
+      // Execute stage action (like AI decomposition) and move to next stage
+      const stageTimer = setTimeout(async () => {
+        try {
+          // Execute stage action if it exists (like AI decomposition)
+          if (stage.action) {
+            console.log(`🚀 Executing action for stage: ${stage.title}`);
+            await stage.action();
+          }
+          
+          setCompletedStages(prev => [...prev, stage.id]);
+          
+          if (currentStageIndex < stages.length - 1) {
+            setCurrentStageIndex(prev => prev + 1);
+          } else {
+            // All stages complete - proceed to success page
+            setTimeout(() => {
+              speak("Your personalized journey is ready! Let me show you what we've created together...");
+              setTimeout(() => {
+                if (decomposedGoal) {
+                  onComplete(decomposedGoal);
+                } else {
+                  console.error('❌ No decomposed goal available');
+                  setError('Failed to create goal');
+                }
+              }, 2000);
+            }, 1000);
+          }
+        } catch (error) {
+          console.error(`❌ Error in stage ${stage.title}:`, error);
+          setError(error instanceof Error ? error.message : 'Stage execution failed');
+          
+          toast({
+            title: "Dream Creation Error",
+            description: error instanceof Error ? error.message : "Failed to create your dream journey. Please try again.",
+            variant: "destructive"
+          });
         }
       }, stage.duration);
 
@@ -125,7 +240,30 @@ export const DreamDecompositionPage: React.FC<DreamDecompositionPageProps> = ({
         clearTimeout(stageTimer);
       };
     }
-  }, [currentStageIndex, speak, onComplete]);
+  }, [currentStageIndex, speak, onComplete, decomposedGoal]);
+
+  // Show error state if something went wrong
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-soul-purple/10 via-white to-soul-teal/5 flex items-center justify-center p-4">
+        <div className="max-w-md w-full text-center space-y-6">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto">
+            <Brain className="h-8 w-8 text-red-500" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-gray-800 mb-2">Creation Failed</h2>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <Button 
+              onClick={() => window.location.reload()}
+              className="bg-gradient-to-r from-soul-purple to-soul-teal text-white"
+            >
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-soul-purple/10 via-white to-soul-teal/5 flex items-center justify-center p-4">
