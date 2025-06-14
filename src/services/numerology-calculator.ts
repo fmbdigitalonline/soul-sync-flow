@@ -1,4 +1,3 @@
-
 export interface NumerologyResult {
   lifePathNumber: number;
   expressionNumber: number;
@@ -13,20 +12,31 @@ export interface NumerologyResult {
 }
 
 export class NumerologyCalculator {
+  // Traditional Pythagorean numerology letter values
   private static letterValues: Record<string, number> = {
     'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'F': 6, 'G': 7, 'H': 8, 'I': 9,
     'J': 1, 'K': 2, 'L': 3, 'M': 4, 'N': 5, 'O': 6, 'P': 7, 'Q': 8, 'R': 9,
     'S': 1, 'T': 2, 'U': 3, 'V': 4, 'W': 5, 'X': 6, 'Y': 7, 'Z': 8
   };
 
-  private static vowels = ['A', 'E', 'I', 'O', 'U'];
+  private static vowels = ['A', 'E', 'I', 'O', 'U', 'Y']; // Include Y as vowel
 
   static calculateNumerology(fullName: string, birthDate: string): NumerologyResult {
+    console.log('🔢 NUMEROLOGY DEBUG: Starting calculation for:', { fullName, birthDate });
+    
     const lifePathNumber = this.calculateLifePath(birthDate);
     const expressionNumber = this.calculateExpression(fullName);
     const soulUrgeNumber = this.calculateSoulUrge(fullName);
     const personalityNumber = this.calculatePersonality(fullName);
     const birthdayNumber = this.calculateBirthday(birthDate);
+
+    console.log('🔢 NUMEROLOGY RESULTS:', {
+      lifePathNumber,
+      expressionNumber,
+      soulUrgeNumber,
+      personalityNumber,
+      birthdayNumber
+    });
 
     return {
       lifePathNumber,
@@ -43,58 +53,110 @@ export class NumerologyCalculator {
   }
 
   private static calculateLifePath(birthDate: string): number {
-    // Parse date (YYYY-MM-DD format)
-    const date = new Date(birthDate);
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
-    const year = date.getFullYear();
-
-    // Add all digits together without reducing components first
-    const total = this.addDigits(month) + this.addDigits(day) + this.addDigits(year);
-    return this.reduceToSingleDigitWithMasters(total);
+    console.log('🔢 Life Path calculation for:', birthDate);
+    
+    // Parse date properly (YYYY-MM-DD format)
+    const [year, month, day] = birthDate.split('-').map(num => parseInt(num, 10));
+    
+    console.log('🔢 Parsed date:', { year, month, day });
+    
+    // Traditional method: reduce each component separately first, then add
+    const reducedMonth = this.reduceToSingleDigitWithMasters(month);
+    const reducedDay = this.reduceToSingleDigitWithMasters(day);
+    const reducedYear = this.reduceToSingleDigitWithMasters(year);
+    
+    console.log('🔢 Reduced components:', { reducedMonth, reducedDay, reducedYear });
+    
+    // Add the reduced components
+    const total = reducedMonth + reducedDay + reducedYear;
+    console.log('🔢 Total before final reduction:', total);
+    
+    const result = this.reduceToSingleDigitWithMasters(total);
+    console.log('🔢 Life Path result:', result);
+    
+    return result;
   }
 
   private static calculateExpression(fullName: string): number {
+    console.log('🔢 Expression calculation for:', fullName);
+    
     const cleanName = fullName.toUpperCase().replace(/[^A-Z]/g, '');
+    console.log('🔢 Clean name:', cleanName);
+    
     let total = 0;
+    const letterBreakdown: string[] = [];
 
     for (const letter of cleanName) {
-      total += this.letterValues[letter] || 0;
+      const value = this.letterValues[letter] || 0;
+      total += value;
+      letterBreakdown.push(`${letter}=${value}`);
     }
 
-    return this.reduceToSingleDigitWithMasters(total);
+    console.log('🔢 Expression letter breakdown:', letterBreakdown.join(', '));
+    console.log('🔢 Expression total before reduction:', total);
+    
+    const result = this.reduceToSingleDigitWithMasters(total);
+    console.log('🔢 Expression result:', result);
+    
+    return result;
   }
 
   private static calculateSoulUrge(fullName: string): number {
+    console.log('🔢 Soul Urge calculation for:', fullName);
+    
     const cleanName = fullName.toUpperCase().replace(/[^A-Z]/g, '');
     let total = 0;
+    const vowelBreakdown: string[] = [];
 
     for (const letter of cleanName) {
       if (this.vowels.includes(letter)) {
-        total += this.letterValues[letter] || 0;
+        const value = this.letterValues[letter] || 0;
+        total += value;
+        vowelBreakdown.push(`${letter}=${value}`);
       }
     }
 
-    return this.reduceToSingleDigitWithMasters(total);
+    console.log('🔢 Soul Urge vowel breakdown:', vowelBreakdown.join(', '));
+    console.log('🔢 Soul Urge total before reduction:', total);
+    
+    const result = this.reduceToSingleDigitWithMasters(total);
+    console.log('🔢 Soul Urge result:', result);
+    
+    return result;
   }
 
   private static calculatePersonality(fullName: string): number {
+    console.log('🔢 Personality calculation for:', fullName);
+    
     const cleanName = fullName.toUpperCase().replace(/[^A-Z]/g, '');
     let total = 0;
+    const consonantBreakdown: string[] = [];
 
     for (const letter of cleanName) {
       if (!this.vowels.includes(letter)) {
-        total += this.letterValues[letter] || 0;
+        const value = this.letterValues[letter] || 0;
+        total += value;
+        consonantBreakdown.push(`${letter}=${value}`);
       }
     }
 
-    return this.reduceToSingleDigitWithMasters(total);
+    console.log('🔢 Personality consonant breakdown:', consonantBreakdown.join(', '));
+    console.log('🔢 Personality total before reduction:', total);
+    
+    const result = this.reduceToSingleDigitWithMasters(total);
+    console.log('🔢 Personality result:', result);
+    
+    return result;
   }
 
   private static calculateBirthday(birthDate: string): number {
-    const date = new Date(birthDate);
-    const day = date.getDate();
-    return this.reduceToSingleDigitWithMasters(day);
+    const [, , day] = birthDate.split('-').map(num => parseInt(num, 10));
+    console.log('🔢 Birthday calculation for day:', day);
+    
+    const result = this.reduceToSingleDigitWithMasters(day);
+    console.log('🔢 Birthday result:', result);
+    
+    return result;
   }
 
   private static addDigits(num: number): number {
@@ -102,21 +164,27 @@ export class NumerologyCalculator {
   }
 
   private static reduceToSingleDigitWithMasters(num: number): number {
+    console.log('🔢 Reducing:', num);
+    
     while (num > 9) {
       // Check if current number is a master number before reducing
       if (num === 11 || num === 22 || num === 33) {
+        console.log('🔢 Master number found:', num);
         return num;
       }
       
       // Reduce by adding digits
       num = this.addDigits(num);
+      console.log('🔢 After digit addition:', num);
       
       // Check again if the result is a master number
       if (num === 11 || num === 22 || num === 33) {
+        console.log('🔢 Master number found after reduction:', num);
         return num;
       }
     }
     
+    console.log('🔢 Final reduced number:', num);
     return num;
   }
 
