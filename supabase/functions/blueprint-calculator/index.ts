@@ -85,7 +85,7 @@ serve(async (req) => {
       }
     }
 
-    const { birthDate, birthTime, birthLocation } = requestData;
+    const { birthDate, birthTime, birthLocation, fullName } = requestData;
 
     // Validate required fields for main blueprint calculation
     if (!birthDate || !birthTime || !birthLocation) {
@@ -108,11 +108,12 @@ serve(async (req) => {
     console.log("Blueprint Calculator: Processing request", {
       birthDate,
       birthTime,
-      birthLocation
+      birthLocation,
+      fullName
     });
 
     // Call the enhanced blueprint generation with automatic timezone resolution
-    const result = await generateBlueprintWithAutomaticTimezone(birthDate, birthTime, birthLocation);
+    const result = await generateBlueprintWithAutomaticTimezone(birthDate, birthTime, birthLocation, fullName);
 
     return new Response(JSON.stringify({
       success: true,
@@ -147,7 +148,7 @@ serve(async (req) => {
   }
 });
 
-async function generateBlueprintWithAutomaticTimezone(birthDate: string, birthTime: string, birthLocation: string) {
+async function generateBlueprintWithAutomaticTimezone(birthDate: string, birthTime: string, birthLocation: string, fullName?: string) {
   const VERCEL_API_URL = "https://soul-sync-flow.vercel.app/api/ephemeris";
   
   try {
@@ -214,7 +215,7 @@ async function generateBlueprintWithAutomaticTimezone(birthDate: string, birthTi
     
     // Generate other profile components
     const chineseZodiac = calculateChineseZodiac(new Date(birthDate).getFullYear());
-    const numerology = calculateNumerology(birthDate, "Sample Name");
+    const numerology = calculateNumerology(birthDate, fullName || "Sample Name");
     const humanDesign = await generateHumanDesign(birthDate, birthTime, birthLocation, Intl.DateTimeFormat().resolvedOptions().timeZone);
     
     return {
@@ -522,38 +523,115 @@ function calculateChineseZodiac(year: number) {
 }
 
 function calculateNumerology(birthDate: string, fullName: string) {
-  const dateObj = new Date(birthDate);
-  const month = dateObj.getMonth() + 1;
-  const day = dateObj.getDate();
-  const year = dateObj.getFullYear();
-  
-  // Life Path Number calculation
-  const lifePathSum = month + day + year;
-  const lifePathNumber = reduceToSingleDigit(lifePathSum);
-  
+  // ---- NAME-BY-NAME REDUCTION HELPERS ----
+  const PythagoreanValues: Record<string, number> = {
+    'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'F': 6, 'G': 7, 'H': 8, 'I': 9,
+    'J': 1, 'K': 2, 'L': 3, 'M': 4, 'N': 5, 'O': 6, 'P': 7, 'Q': 8, 'R': 9,
+    'S': 1, 'T': 2, 'U': 3, 'V': 4, 'W': 5, 'X': 6, 'Y': 7, 'Z': 8
+  };
+  const pureVowels = ['A', 'E', 'I', 'O', 'U'];
+
+  function reduceToSingleDigitWithMasters(num: number): number {
+    // Master numbers: 11, 22, 33
+    while (num > 9 && num !== 11 && num !== 22 && num !== 33) {
+      num = num.toString().split('').map(Number).reduce((a, b) => a + b, 0);
+    }
+    return num;
+  }
+
+  function reduceNameParts(fullName: string, filterFn: (letter: string) => boolean): number {
+    const nameParts = fullName.toUpperCase().split(/\s+/).filter(Boolean);
+    const reducedParts: number[] = [];
+
+    for (const part of nameParts) {
+      const letters = part.replace(/[^A-Z]/g, '').split('').filter(filterFn);
+      const sum = letters.reduce((acc, ch) => acc + (PythagoreanValues[ch] || 0), 0);
+      const reduced = reduceToSingleDigitWithMasters(sum);
+      reducedParts.push(reduced);
+    }
+
+    const total = reducedParts.reduce((a, b) => a + b, 0);
+    return reduceToSingleDigitWithMasters(total);
+  }
+
+  // Life Path: sum ALL digits in birthdate, reduce
+  function calculateLifePath(birthDate: string) {
+    // Expects YYYY-MM-DD
+    const digits = birthDate.replace(/[^0-9]/g, '').split('').map(Number);
+    const sum = digits.reduce((a, b) => a + b, 0);
+    return reduceToSingleDigitWithMasters(sum);
+  }
+
+  // Expression: all letters
+  function calculateExpression(fullName: string) {
+    return reduceNameParts(fullName, (ch) => /[A-Z]/.test(ch));
+  }
+  // Soul Urge: vowels only (exclude Y)
+  function calculateSoulUrge(fullName: string) {
+    return reduceNameParts(fullName, (ch) => pureVowels.includes(ch));
+  }
+  // Personality: consonants only (exclude A E I O U)
+  function calculatePersonality(fullName: string) {
+    return reduceNameParts(fullName, (ch) => /[A-Z]/.test(ch) && !pureVowels.includes(ch));
+  }
+  // Birthday Number: reduce day only
+  function calculateBirthday(birthDate: string) {
+    const day = parseInt(birthDate.split('-')[2]);
+    return reduceToSingleDigitWithMasters(day);
+  }
+
+  // Provide keywords
+  const getKeyword = (type: string, number: number) => {
+    const dictionaries: Record<string, Record<number, string>> = {
+      life: {
+        1: 'Leader', 2: 'Cooperator', 3: 'Creative', 4: 'Builder', 5: 'Freedom',
+        6: 'Nurturer', 7: 'Seeker', 8: 'Achiever', 9: 'Humanitarian',
+        11: 'Illuminating Visionary', 22: 'Master Builder', 33: 'Master Teacher'
+      },
+      expression: {
+        1: 'Pioneering Leader', 2: 'Diplomatic Peacemaker', 3: 'Creative Communicator',
+        4: 'Practical Organizer', 5: 'Dynamic Adventurer', 6: 'Compassionate Helper',
+        7: 'Analytical Thinker', 8: 'Executive Achiever', 9: 'Humanitarian Visionary',
+        11: 'Inspirational Visionary (Master)', 22: 'Master Manifestor', 33: 'Universal Healer'
+      },
+      soul: {
+        1: 'Independent Pioneer', 2: 'Harmonious Peacemaker', 3: 'Creative Self-Expression',
+        4: 'Stable Security', 5: 'Adventure Freedom', 6: 'Nurturing Service',
+        7: 'Spiritual Understanding', 8: 'Ambitious Manifestor', 9: 'Universal Love',
+        11: 'Spiritual Insight', 22: 'Global Vision', 33: 'Universal Compassion'
+      },
+      personality: {
+        1: 'Original', 2: 'Sensitive', 3: 'Expressive', 4: 'Practical', 5: 'Versatile',
+        6: 'Responsible', 7: 'Analytical', 8: 'Executive', 9: 'Generous',
+        11: 'Intuitive', 22: 'Master Builder', 33: 'Master Teacher'
+      },
+      birthday: {
+        1: 'Original', 2: 'Sensitive', 3: 'Expressive', 4: 'Practical', 5: 'Versatile',
+        6: 'Responsible', 7: 'Analytical', 8: 'Executive', 9: 'Generous',
+        11: 'Intuitive', 22: 'Master Builder', 33: 'Master Teacher'
+      }
+    };
+    return dictionaries[type]?.[number] || '';
+  };
+
+  // Calculation
+  const lifePathNumber = calculateLifePath(birthDate);
+  const expressionNumber = calculateExpression(fullName);
+  const soulUrgeNumber = calculateSoulUrge(fullName);
+  const personalityNumber = calculatePersonality(fullName);
+  const birthdayNumber = calculateBirthday(birthDate);
+
   return {
     life_path_number: lifePathNumber,
-    life_path_keyword: getLifePathKeyword(lifePathNumber),
-    expression_number: 7, // Temporary
-    expression_keyword: "Seeker",
-    soul_urge_number: 3, // Temporary
-    soul_urge_keyword: "Creative",
-    personality_number: 1, // Temporary
+    life_path_keyword: getKeyword('life', lifePathNumber),
+    expression_number: expressionNumber,
+    expression_keyword: getKeyword('expression', expressionNumber),
+    soul_urge_number: soulUrgeNumber,
+    soul_urge_keyword: getKeyword('soul', soulUrgeNumber),
+    personality_number: personalityNumber,
+    personality_keyword: getKeyword('personality', personalityNumber),
+    birthday_number: birthdayNumber,
+    birthday_keyword: getKeyword('birthday', birthdayNumber),
     source: "calculated"
   };
-}
-
-function reduceToSingleDigit(num: number): number {
-  while (num > 9) {
-    num = num.toString().split('').reduce((sum, digit) => sum + parseInt(digit), 0);
-  }
-  return num;
-}
-
-function getLifePathKeyword(number: number): string {
-  const keywords: Record<number, string> = {
-    1: 'Leader', 2: 'Cooperator', 3: 'Creative', 4: 'Builder', 5: 'Freedom',
-    6: 'Nurturer', 7: 'Seeker', 8: 'Achiever', 9: 'Humanitarian'
-  };
-  return keywords[number] || 'Seeker';
 }
