@@ -14,7 +14,8 @@ import {
   Calendar,
   Focus,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  ArrowDown
 } from "lucide-react";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 import { useOptimizedBlueprintData } from "@/hooks/use-optimized-blueprint-data";
@@ -35,10 +36,10 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({ onTaskCl
   
   if (!mainGoal) {
     return (
-      <div className="p-8 text-center">
-        <Target className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-        <h3 className="text-xl font-semibold mb-2">No Active Dream Journey</h3>
-        <p className="text-muted-foreground mb-6">
+      <div className="p-6 text-center w-full">
+        <Target className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+        <h3 className="text-lg font-semibold mb-2">No Active Dream Journey</h3>
+        <p className="text-muted-foreground text-sm">
           Create your first dream to see your personalized journey map
         </p>
       </div>
@@ -70,8 +71,7 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({ onTaskCl
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', { 
       month: 'short', 
-      day: 'numeric',
-      year: 'numeric'
+      day: 'numeric'
     });
   };
 
@@ -106,21 +106,21 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({ onTaskCl
   };
 
   return (
-    <div className="space-y-6">
-      {/* Journey Header */}
-      <div className="p-4 bg-gradient-to-r from-soul-purple/10 to-blue-500/10 rounded-lg border">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex-1">
-            <h2 className="text-xl font-bold mb-2 flex items-center">
-              <Target className="h-5 w-5 mr-2 text-soul-purple" />
-              {mainGoal.title}
+    <div className="w-full max-w-full overflow-hidden">
+      {/* Mobile-Optimized Journey Header */}
+      <div className="p-3 bg-gradient-to-r from-soul-purple/10 to-blue-500/10 rounded-xl border border-white/20 mb-4 w-full">
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex-1 min-w-0 pr-3">
+            <h2 className="text-base font-bold mb-1 flex items-center leading-tight">
+              <Target className="h-4 w-4 mr-2 text-soul-purple flex-shrink-0" />
+              <span className="truncate">{mainGoal.title}</span>
             </h2>
-            <p className="text-muted-foreground text-sm mb-2">{mainGoal.description}</p>
+            <p className="text-xs text-muted-foreground mb-2 line-clamp-2">{mainGoal.description}</p>
             <p className="text-xs text-soul-purple font-medium">{getBlueprintInsight()}</p>
           </div>
           
-          <div className="text-right ml-4">
-            <div className="text-2xl font-bold text-soul-purple mb-1">{progress}%</div>
+          <div className="text-right flex-shrink-0">
+            <div className="text-xl font-bold text-soul-purple mb-1">{progress}%</div>
             <div className="text-xs text-muted-foreground">Complete</div>
           </div>
         </div>
@@ -132,50 +132,55 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({ onTaskCl
             variant={selectedView === 'overview' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setSelectedView('overview')}
-            className="flex items-center gap-2"
+            className="flex items-center gap-1 text-xs h-8 px-3"
           >
             <MapPin className="h-3 w-3" />
-            Journey Path
+            Timeline
           </Button>
           <Button
             variant={selectedView === 'detailed' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setSelectedView('detailed')}
-            className="flex items-center gap-2"
+            className="flex items-center gap-1 text-xs h-8 px-3"
           >
             <Star className="h-3 w-3" />
-            Current Focus
+            Focus
           </Button>
         </div>
       </div>
 
       {selectedView === 'overview' ? (
-        /* Enhanced Journey Path - Proper progression from start to finish */
-        <div>
-          <h3 className="font-medium mb-4 flex items-center">
+        /* Mobile-First Journey Timeline - Proper Chronological Order */
+        <div className="w-full">
+          <h3 className="font-medium mb-3 flex items-center text-sm">
             <MapPin className="h-4 w-4 mr-2" />
-            Your Journey Timeline
+            Your Journey Path
           </h3>
           
-          <div className="relative">
-            {/* Journey Path - Vertical Timeline (Corrected order) */}
-            <div className="relative">
-              {/* Connecting Line */}
-              <div className="absolute left-5 top-8 bottom-8 w-0.5 bg-gradient-to-b from-gray-300 via-soul-purple to-green-500"></div>
+          <div className="relative w-full">
+            {/* Mobile-Optimized Timeline */}
+            <div className="relative w-full">
+              {/* Connecting Line - Flows Downward */}
+              <div className="absolute left-4 top-6 bottom-6 w-0.5 bg-gradient-to-b from-gray-300 via-soul-purple to-green-500 z-0"></div>
               
-              <div className="space-y-6">
-                {/* Starting Point - Now at the TOP */}
-                <div className="flex items-center space-x-3 relative z-10">
-                  <div className="w-8 h-8 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center shadow-md">
+              <div className="space-y-4 relative z-10 w-full">
+                {/* Starting Point - NOW AT TOP */}
+                <div className="flex items-start space-x-3 w-full">
+                  <div className="w-8 h-8 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center shadow-md flex-shrink-0 mt-1">
                     <CheckCircle2 className="h-4 w-4 text-white" />
                   </div>
-                  <div className="flex-1 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                    <h5 className="font-medium text-gray-600 text-sm">🚀 Journey Started</h5>
-                    <p className="text-xs text-gray-500">Your dream begins here</p>
-                    <p className="text-xs text-gray-400 mt-1">
+                  <div className="flex-1 min-w-0 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <h5 className="font-medium text-gray-600 text-sm mb-1">🚀 Journey Started</h5>
+                    <p className="text-xs text-gray-500 mb-1">Your dream begins here</p>
+                    <p className="text-xs text-gray-400">
                       {formatDate(mainGoal.created_at)}
                     </p>
                   </div>
+                </div>
+
+                {/* Flow Arrow */}
+                <div className="flex justify-center">
+                  <ArrowDown className="h-4 w-4 text-soul-purple animate-bounce" />
                 </div>
                 
                 {/* Milestones in chronological order */}
@@ -186,123 +191,138 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({ onTaskCl
                   const milestoneTasks = mainGoal.tasks?.filter((t: any) => t.milestone_id === milestone.id) || [];
                   
                   return (
-                    <div key={milestone.id} className="flex items-start space-x-3 relative z-10">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-all duration-300 ${
-                        isCompleted ? `bg-gradient-to-br ${getPhaseColor(milestone.phase)} text-white scale-105` : 
-                        isCurrent ? 'bg-blue-500 text-white animate-pulse shadow-lg' : 
-                        'bg-gray-200 text-gray-400'
-                      }`}>
-                        {isCompleted ? (
-                          <CheckCircle2 className="h-4 w-4" />
-                        ) : isCurrent ? (
-                          <Star className="h-4 w-4" />
-                        ) : (
-                          <div className="w-2 h-2 rounded-full bg-current" />
-                        )}
-                      </div>
-                      
-                      <div className="flex-1">
-                        <div 
-                          className="p-3 rounded-lg border transition-all duration-300 hover:shadow-md cursor-pointer" 
-                          onClick={() => toggleMilestoneExpansion(milestone.id)}
-                          style={{
-                            backgroundColor: isCompleted ? '#f8fafc' : isCurrent ? '#dbeafe' : '#f9fafb',
-                            borderColor: isCompleted ? '#e2e8f0' : isCurrent ? '#3b82f6' : '#e5e7eb'
-                          }}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="text-lg">{getPhaseIcon(milestone.phase)}</span>
-                                <h5 className={`font-medium text-sm ${isCompleted ? 'line-through text-muted-foreground' : ''}`}>
-                                  {milestone.title}
-                                </h5>
-                                <Badge variant="outline" className="text-xs">
-                                  {milestone.phase}
-                                </Badge>
-                              </div>
-                              <p className="text-xs text-muted-foreground mb-2">{milestone.description}</p>
-                              
-                              <div className="flex items-center gap-4 text-xs">
-                                <div className="flex items-center gap-1">
-                                  <Calendar className="h-3 w-3 text-muted-foreground" />
-                                  <span>Target: {formatDate(milestone.target_date)}</span>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                  <Clock className="h-3 w-3 text-muted-foreground" />
-                                  <span>{milestoneTasks.length} tasks</span>
-                                </div>
-                                {isCurrent && (
-                                  <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200">
-                                    <MapPin className="h-3 w-3 mr-1" />
-                                    Current
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
-                            
-                            <div className="flex items-center gap-2 ml-3">
-                              {isCurrent && (
-                                <Button
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onMilestoneClick?.(milestone.id);
-                                  }}
-                                  className="bg-blue-500 hover:bg-blue-600"
-                                >
-                                  <Focus className="h-3 w-3 mr-1" />
-                                  Focus
-                                </Button>
-                              )}
-                              {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                            </div>
-                          </div>
+                    <div key={milestone.id} className="w-full">
+                      <div className="flex items-start space-x-3 w-full">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-all duration-300 flex-shrink-0 mt-1 ${
+                          isCompleted ? `bg-gradient-to-br ${getPhaseColor(milestone.phase)} text-white scale-105` : 
+                          isCurrent ? 'bg-blue-500 text-white animate-pulse shadow-lg border-2 border-blue-300' : 
+                          'bg-gray-200 text-gray-400'
+                        }`}>
+                          {isCompleted ? (
+                            <CheckCircle2 className="h-4 w-4" />
+                          ) : isCurrent ? (
+                            <Star className="h-4 w-4" />
+                          ) : (
+                            <div className="w-2 h-2 rounded-full bg-current" />
+                          )}
                         </div>
                         
-                        {/* Expanded Tasks View */}
-                        {isExpanded && milestoneTasks.length > 0 && (
-                          <div className="mt-2 ml-4 space-y-2">
-                            {milestoneTasks.slice(0, 3).map((task: any) => (
-                              <div
-                                key={task.id}
-                                className="flex items-center gap-2 p-2 bg-white rounded border border-gray-100 hover:border-gray-200 cursor-pointer transition-colors"
-                                onClick={() => onTaskClick?.(task.id)}
-                              >
-                                <div className={`w-4 h-4 rounded-full flex items-center justify-center ${
-                                  task.completed ? 'bg-green-500 text-white' : 'bg-gray-200'
-                                }`}>
-                                  {task.completed ? <CheckCircle2 className="h-3 w-3" /> : <div className="w-2 h-2 bg-gray-400 rounded-full" />}
+                        <div className="flex-1 min-w-0 w-full">
+                          <div 
+                            className="p-3 rounded-lg border transition-all duration-300 hover:shadow-md cursor-pointer w-full" 
+                            onClick={() => toggleMilestoneExpansion(milestone.id)}
+                            style={{
+                              backgroundColor: isCompleted ? '#f8fafc' : isCurrent ? '#dbeafe' : '#f9fafb',
+                              borderColor: isCompleted ? '#e2e8f0' : isCurrent ? '#3b82f6' : '#e5e7eb',
+                              borderWidth: isCurrent ? '2px' : '1px'
+                            }}
+                          >
+                            <div className="flex items-start justify-between w-full">
+                              <div className="flex-1 min-w-0 pr-2">
+                                <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                  <span className="text-base flex-shrink-0">{getPhaseIcon(milestone.phase)}</span>
+                                  <h5 className={`font-medium text-sm ${isCompleted ? 'line-through text-muted-foreground' : ''} leading-tight`}>
+                                    {milestone.title}
+                                  </h5>
+                                  <Badge variant="outline" className="text-xs">
+                                    {milestone.phase}
+                                  </Badge>
+                                  {isCurrent && (
+                                    <Badge className="bg-blue-500 text-white text-xs border-0">
+                                      <MapPin className="h-3 w-3 mr-1" />
+                                      Current
+                                    </Badge>
+                                  )}
                                 </div>
-                                <div className="flex-1">
-                                  <p className={`text-xs font-medium ${task.completed ? 'line-through text-muted-foreground' : ''}`}>
-                                    {task.title}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">{task.estimated_duration}</p>
+                                <p className="text-xs text-muted-foreground mb-2 line-clamp-2">{milestone.description}</p>
+                                
+                                <div className="flex items-center gap-3 text-xs flex-wrap">
+                                  <div className="flex items-center gap-1">
+                                    <Calendar className="h-3 w-3 text-muted-foreground" />
+                                    <span>{formatDate(milestone.target_date)}</span>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <Clock className="h-3 w-3 text-muted-foreground" />
+                                    <span>{milestoneTasks.length} tasks</span>
+                                  </div>
                                 </div>
                               </div>
-                            ))}
-                            {milestoneTasks.length > 3 && (
-                              <p className="text-xs text-muted-foreground ml-6">
-                                +{milestoneTasks.length - 3} more tasks
-                              </p>
-                            )}
+                              
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                {isCurrent && (
+                                  <Button
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      onMilestoneClick?.(milestone.id);
+                                    }}
+                                    className="bg-blue-500 hover:bg-blue-600 text-xs h-8 px-2"
+                                  >
+                                    <Focus className="h-3 w-3 mr-1" />
+                                    Focus
+                                  </Button>
+                                )}
+                                {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                              </div>
+                            </div>
                           </div>
-                        )}
+                          
+                          {/* Expanded Tasks View - Mobile Optimized */}
+                          {isExpanded && milestoneTasks.length > 0 && (
+                            <div className="mt-2 ml-2 space-y-2 w-full">
+                              {milestoneTasks.slice(0, 3).map((task: any) => (
+                                <div
+                                  key={task.id}
+                                  className="flex items-center gap-2 p-2 bg-white rounded border border-gray-100 hover:border-gray-200 cursor-pointer transition-colors w-full min-h-[44px]"
+                                  onClick={() => onTaskClick?.(task.id)}
+                                >
+                                  <div className={`w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                    task.completed ? 'bg-green-500 text-white' : 'bg-gray-200'
+                                  }`}>
+                                    {task.completed ? <CheckCircle2 className="h-3 w-3" /> : <div className="w-2 h-2 bg-gray-400 rounded-full" />}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className={`text-xs font-medium ${task.completed ? 'line-through text-muted-foreground' : ''} line-clamp-1`}>
+                                      {task.title}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">{task.estimated_duration}</p>
+                                  </div>
+                                </div>
+                              ))}
+                              {milestoneTasks.length > 3 && (
+                                <p className="text-xs text-muted-foreground ml-6">
+                                  +{milestoneTasks.length - 3} more tasks
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
+
+                      {/* Flow Arrow between milestones */}
+                      {index < sortedMilestones.length - 1 && (
+                        <div className="flex justify-center py-2">
+                          <ArrowDown className="h-3 w-3 text-gray-400" />
+                        </div>
+                      )}
                     </div>
                   );
                 })}
+
+                {/* Final Flow Arrow */}
+                <div className="flex justify-center">
+                  <ArrowDown className="h-4 w-4 text-green-500 animate-bounce" />
+                </div>
                 
-                {/* Dream Achievement - Now at the BOTTOM */}
-                <div className="flex items-center space-x-3 relative z-10">
-                  <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center shadow-lg">
+                {/* Dream Achievement - NOW AT BOTTOM */}
+                <div className="flex items-start space-x-3 w-full">
+                  <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center shadow-lg flex-shrink-0 mt-1">
                     <Target className="h-5 w-5 text-white" />
                   </div>
-                  <div className="flex-1 p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
-                    <h4 className="font-medium text-green-800 text-sm">🎯 Dream Achieved!</h4>
-                    <p className="text-xs text-green-600">{mainGoal.title}</p>
-                    <p className="text-xs text-green-500 mt-1">
+                  <div className="flex-1 min-w-0 p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+                    <h4 className="font-medium text-green-800 text-sm mb-1">🎯 Dream Achieved!</h4>
+                    <p className="text-xs text-green-600 mb-1 line-clamp-1">{mainGoal.title}</p>
+                    <p className="text-xs text-green-500">
                       Target: {formatDate(mainGoal.target_completion)}
                     </p>
                   </div>
@@ -312,23 +332,23 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({ onTaskCl
           </div>
         </div>
       ) : (
-        /* Current Focus View */
-        <div className="space-y-4">
+        /* Current Focus View - Mobile Optimized */
+        <div className="space-y-4 w-full">
           {/* Current Milestone Focus */}
           {currentMilestone && (
-            <div className="p-4 border-blue-200 bg-blue-50/50 rounded-lg border">
-              <h3 className="font-medium mb-3 flex items-center">
+            <div className="p-3 border-blue-200 bg-blue-50/50 rounded-lg border w-full">
+              <h3 className="font-medium mb-3 flex items-center text-sm">
                 <Star className="h-4 w-4 mr-2 text-blue-500" />
                 Current Milestone Focus
               </h3>
-              <div className="bg-white p-3 rounded-lg border border-blue-200 mb-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-lg">{getPhaseIcon(currentMilestone.phase)}</span>
-                  <h4 className="font-medium text-blue-800 text-sm">{currentMilestone.title}</h4>
+              <div className="bg-white p-3 rounded-lg border border-blue-200 mb-3 w-full">
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
+                  <span className="text-base">{getPhaseIcon(currentMilestone.phase)}</span>
+                  <h4 className="font-medium text-blue-800 text-sm flex-1">{currentMilestone.title}</h4>
                   <Badge variant="outline" className="text-xs">{currentMilestone.phase}</Badge>
                 </div>
-                <p className="text-xs text-blue-600 mb-3">{currentMilestone.description}</p>
-                <div className="flex items-center gap-4 text-xs">
+                <p className="text-xs text-blue-600 mb-3 line-clamp-3">{currentMilestone.description}</p>
+                <div className="flex items-center gap-4 text-xs flex-wrap">
                   <div className="flex items-center gap-1">
                     <Calendar className="h-3 w-3 text-blue-500" />
                     <span>Target: {formatDate(currentMilestone.target_date)}</span>
@@ -341,27 +361,27 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({ onTaskCl
             </div>
           )}
           
-          {/* Next Steps */}
-          <div>
-            <h3 className="font-medium mb-3 flex items-center">
+          {/* Next Steps - Mobile Optimized */}
+          <div className="w-full">
+            <h3 className="font-medium mb-3 flex items-center text-sm">
               <Sparkles className="h-4 w-4 mr-2 text-soul-purple" />
               Your Next Steps
             </h3>
             {nextTasks.length > 0 ? (
-              <div className="space-y-2">
+              <div className="space-y-2 w-full">
                 {nextTasks.map((task: any, index: number) => (
                   <div
                     key={task.id}
-                    className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-secondary/20 cursor-pointer transition-all duration-200 hover:shadow-md"
+                    className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-secondary/20 cursor-pointer transition-all duration-200 hover:shadow-md w-full min-h-[60px]"
                     onClick={() => onTaskClick?.(task.id)}
                   >
-                    <div className="w-6 h-6 bg-soul-purple/20 rounded-full flex items-center justify-center text-soul-purple font-medium text-xs">
+                    <div className="w-6 h-6 bg-soul-purple/20 rounded-full flex items-center justify-center text-soul-purple font-medium text-xs flex-shrink-0">
                       {index + 1}
                     </div>
-                    <div className="flex-1">
-                      <h5 className="font-medium text-sm">{task.title}</h5>
-                      <p className="text-xs text-muted-foreground mb-1">{task.description}</p>
-                      <div className="flex gap-1">
+                    <div className="flex-1 min-w-0">
+                      <h5 className="font-medium text-sm line-clamp-1">{task.title}</h5>
+                      <p className="text-xs text-muted-foreground mb-1 line-clamp-2">{task.description}</p>
+                      <div className="flex gap-1 flex-wrap">
                         <Badge variant="outline" className="text-xs">
                           {task.estimated_duration}
                         </Badge>
@@ -370,30 +390,30 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({ onTaskCl
                         </Badge>
                       </div>
                     </div>
-                    <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                    <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <Target className="h-8 w-8 mx-auto mb-4 opacity-50" />
+              <div className="text-center py-6 text-muted-foreground w-full">
+                <Target className="h-8 w-8 mx-auto mb-3 opacity-50" />
                 <p className="text-sm">All tasks completed! Time to celebrate this milestone.</p>
               </div>
             )}
           </div>
           
-          {/* Blueprint Alignment */}
+          {/* Blueprint Alignment - Mobile Optimized */}
           {mainGoal.blueprint_alignment?.length > 0 && (
-            <div>
-              <h3 className="font-medium mb-3 flex items-center">
+            <div className="w-full">
+              <h3 className="font-medium mb-3 flex items-center text-sm">
                 <Sparkles className="h-4 w-4 mr-2 text-green-500" />
                 Soul Blueprint Alignment
               </h3>
-              <div className="grid grid-cols-1 gap-2">
+              <div className="grid grid-cols-1 gap-2 w-full">
                 {mainGoal.blueprint_alignment.map((trait: string, index: number) => (
-                  <div key={index} className="flex items-center p-2 bg-green-50 rounded-lg border border-green-200">
-                    <Star className="h-3 w-3 mr-2 text-green-600" />
-                    <span className="text-xs text-green-800 font-medium">{trait}</span>
+                  <div key={index} className="flex items-center p-2 bg-green-50 rounded-lg border border-green-200 w-full">
+                    <Star className="h-3 w-3 mr-2 text-green-600 flex-shrink-0" />
+                    <span className="text-xs text-green-800 font-medium line-clamp-1">{trait}</span>
                   </div>
                 ))}
               </div>
