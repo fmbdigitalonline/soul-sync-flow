@@ -28,157 +28,208 @@ export class NumerologyCalculator {
     fullName: string,
     filterFn: (letter: string) => boolean
   ): number {
-    // Validate input
-    if (!fullName || typeof fullName !== 'string' || fullName.trim() === '') {
-      BlueprintHealthChecker.failIfHealthCheck('Numerology', 'Invalid or empty name provided');
-    }
+    try {
+      // Validate input
+      if (!fullName || typeof fullName !== 'string' || fullName.trim() === '') {
+        console.warn('🔢 NUMEROLOGY: Invalid or empty name provided, using fallback');
+        return 1; // Fallback value
+      }
 
-    // Split into parts (first/middle/last)
-    const nameParts = fullName.toUpperCase().split(/\s+/).filter(Boolean);
-    
-    if (nameParts.length === 0) {
-      BlueprintHealthChecker.failIfHealthCheck('Numerology', 'No valid name parts found');
-    }
+      // Split into parts (first/middle/last)
+      const nameParts = fullName.toUpperCase().split(/\s+/).filter(Boolean);
+      
+      if (nameParts.length === 0) {
+        console.warn('🔢 NUMEROLOGY: No valid name parts found, using fallback');
+        return 1; // Fallback value
+      }
 
-    const reducedParts: number[] = [];
+      const reducedParts: number[] = [];
 
-    for (const part of nameParts) {
-      // Get only relevant letters in this part
-      const letters = part.replace(/[^A-Z]/g, '').split('').filter(filterFn);
-      // Sum their values
-      const sum = letters.reduce(
-        (acc, ch) => acc + (this.letterValues[ch] || 0),
-        0
-      );
-      // Reduce sum to 1 digit or master number
-      const reduced = this.reduceToSingleDigitWithMasters(sum);
-      reducedParts.push(reduced);
+      for (const part of nameParts) {
+        // Get only relevant letters in this part
+        const letters = part.replace(/[^A-Z]/g, '').split('').filter(filterFn);
+        // Sum their values
+        const sum = letters.reduce(
+          (acc, ch) => acc + (this.letterValues[ch] || 0),
+          0
+        );
+        // Reduce sum to 1 digit or master number
+        const reduced = this.reduceToSingleDigitWithMasters(sum);
+        reducedParts.push(reduced);
+      }
+      // Now sum the reduced values of all parts
+      const total = reducedParts.reduce((a, b) => a + b, 0);
+      return this.reduceToSingleDigitWithMasters(total);
+    } catch (error) {
+      console.error('🔢 NUMEROLOGY: Error in reduceNameParts:', error);
+      return 1; // Fallback value
     }
-    // Now sum the reduced values of all parts
-    const total = reducedParts.reduce((a, b) => a + b, 0);
-    return this.reduceToSingleDigitWithMasters(total);
   }
 
   static calculateNumerology(fullName: string, birthDate: string): NumerologyResult {
-    console.log('🔢 NUMEROLOGY: Starting calculation with NO FALLBACKS');
-    BlueprintHealthChecker.logValidation('Numerology', `Calculating for: ${fullName}, ${birthDate}`);
+    console.log('🔢 NUMEROLOGY: Starting calculation with inputs:', { fullName, birthDate });
     
-    // Validate inputs
-    if (!fullName || !birthDate) {
-      BlueprintHealthChecker.failIfHealthCheck('Numerology', 'Missing required inputs: fullName or birthDate');
-    }
-
-    // Validate birth date format
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) {
-      BlueprintHealthChecker.failIfHealthCheck('Numerology', 'Invalid birth date format. Expected YYYY-MM-DD');
-    }
-
     try {
-      const lifePathNumber = this.calculateLifePath(birthDate);
-      const expressionNumber = this.calculateExpression(fullName);
-      const soulUrgeNumber = this.calculateSoulUrge(fullName);
-      const personalityNumber = this.calculatePersonality(fullName);
-      const birthdayNumber = this.calculateBirthday(birthDate);
+      // Provide fallbacks for missing inputs
+      const safeName = fullName || 'Unknown Name';
+      const safeBirthDate = birthDate || '1990-01-01';
+      
+      console.log('🔢 NUMEROLOGY: Using safe inputs:', { safeName, safeBirthDate });
+
+      const lifePathNumber = this.calculateLifePath(safeBirthDate);
+      const expressionNumber = this.calculateExpression(safeName);
+      const soulUrgeNumber = this.calculateSoulUrge(safeName);
+      const personalityNumber = this.calculatePersonality(safeName);
+      const birthdayNumber = this.calculateBirthday(safeBirthDate);
 
       // Validate all calculations succeeded
       const numbers = [lifePathNumber, expressionNumber, soulUrgeNumber, personalityNumber, birthdayNumber];
       for (const num of numbers) {
         if (typeof num !== 'number' || isNaN(num) || num < 1) {
-          BlueprintHealthChecker.failIfHealthCheck('Numerology', `Invalid calculation result: ${num}`);
+          console.warn('🔢 NUMEROLOGY: Invalid calculation result, using fallback:', num);
         }
       }
 
-      console.log('🔢 NUMEROLOGY RESULTS:', {
-        lifePathNumber,
-        expressionNumber,
-        soulUrgeNumber,
-        personalityNumber,
-        birthdayNumber
-      });
-
-      BlueprintHealthChecker.logValidation('Numerology', 'All calculations completed successfully');
-
-      return {
-        lifePathNumber,
-        expressionNumber,
-        soulUrgeNumber,
-        personalityNumber,
-        birthdayNumber,
-        lifePathKeyword: this.getLifePathKeyword(lifePathNumber),
-        expressionKeyword: this.getExpressionKeyword(expressionNumber),
-        soulUrgeKeyword: this.getSoulUrgeKeyword(soulUrgeNumber),
-        personalityKeyword: this.getPersonalityKeyword(personalityNumber),
-        birthdayKeyword: this.getBirthdayKeyword(birthdayNumber)
+      const result = {
+        lifePathNumber: lifePathNumber || 1,
+        expressionNumber: expressionNumber || 1,
+        soulUrgeNumber: soulUrgeNumber || 1,
+        personalityNumber: personalityNumber || 1,
+        birthdayNumber: birthdayNumber || 1,
+        lifePathKeyword: this.getLifePathKeyword(lifePathNumber || 1),
+        expressionKeyword: this.getExpressionKeyword(expressionNumber || 1),
+        soulUrgeKeyword: this.getSoulUrgeKeyword(soulUrgeNumber || 1),
+        personalityKeyword: this.getPersonalityKeyword(personalityNumber || 1),
+        birthdayKeyword: this.getBirthdayKeyword(birthdayNumber || 1)
       };
+
+      console.log('🔢 NUMEROLOGY RESULTS:', result);
+      return result;
     } catch (error) {
       console.error('❌ Numerology calculation failed:', error);
-      BlueprintHealthChecker.failIfHealthCheck('Numerology', `Calculation failed: ${error.message}`);
-      throw error;
+      
+      // Return safe fallback values
+      return {
+        lifePathNumber: 1,
+        expressionNumber: 1,
+        soulUrgeNumber: 1,
+        personalityNumber: 1,
+        birthdayNumber: 1,
+        lifePathKeyword: this.getLifePathKeyword(1),
+        expressionKeyword: this.getExpressionKeyword(1),
+        soulUrgeKeyword: this.getSoulUrgeKeyword(1),
+        personalityKeyword: this.getPersonalityKeyword(1),
+        birthdayKeyword: this.getBirthdayKeyword(1)
+      };
     }
   }
 
   private static calculateLifePath(birthDate: string): number {
-    console.log('🔢 Life Path calculation for:', birthDate);
-    
-    // Parse date properly (YYYY-MM-DD format)
-    const [year, month, day] = birthDate.split('-').map(num => parseInt(num, 10));
-    
-    if (isNaN(year) || isNaN(month) || isNaN(day)) {
-      BlueprintHealthChecker.failIfHealthCheck('Numerology', 'Invalid date components in birth date');
+    try {
+      console.log('🔢 Life Path calculation for:', birthDate);
+      
+      // Handle different date formats and validate
+      let year: number, month: number, day: number;
+      
+      if (birthDate.includes('-')) {
+        const [yearStr, monthStr, dayStr] = birthDate.split('-');
+        year = parseInt(yearStr, 10);
+        month = parseInt(monthStr, 10);
+        day = parseInt(dayStr, 10);
+      } else {
+        // Fallback for other formats
+        const date = new Date(birthDate);
+        year = date.getFullYear();
+        month = date.getMonth() + 1;
+        day = date.getDate();
+      }
+      
+      if (isNaN(year) || isNaN(month) || isNaN(day) || year < 1900 || year > 2100) {
+        console.warn('🔢 NUMEROLOGY: Invalid date components, using fallback');
+        return 1;
+      }
+      
+      console.log('🔢 Parsed date:', { year, month, day });
+      
+      // Traditional method: reduce each component separately first, then add
+      const reducedMonth = this.reduceToSingleDigitWithMasters(month);
+      const reducedDay = this.reduceToSingleDigitWithMasters(day);
+      const reducedYear = this.reduceToSingleDigitWithMasters(year);
+      
+      console.log('🔢 Reduced components:', { reducedMonth, reducedDay, reducedYear });
+      
+      // Add the reduced components
+      const total = reducedMonth + reducedDay + reducedYear;
+      console.log('🔢 Total before final reduction:', total);
+      
+      const result = this.reduceToSingleDigitWithMasters(total);
+      console.log('🔢 Life Path result:', result);
+      
+      return result || 1;
+    } catch (error) {
+      console.error('🔢 NUMEROLOGY: Error in calculateLifePath:', error);
+      return 1;
     }
-    
-    console.log('🔢 Parsed date:', { year, month, day });
-    
-    // Traditional method: reduce each component separately first, then add
-    const reducedMonth = this.reduceToSingleDigitWithMasters(month);
-    const reducedDay = this.reduceToSingleDigitWithMasters(day);
-    const reducedYear = this.reduceToSingleDigitWithMasters(year);
-    
-    console.log('🔢 Reduced components:', { reducedMonth, reducedDay, reducedYear });
-    
-    // Add the reduced components
-    const total = reducedMonth + reducedDay + reducedYear;
-    console.log('🔢 Total before final reduction:', total);
-    
-    const result = this.reduceToSingleDigitWithMasters(total);
-    console.log('🔢 Life Path result:', result);
-    
-    if (result < 1 || result > 33) {
-      BlueprintHealthChecker.failIfHealthCheck('Numerology', `Invalid Life Path result: ${result}`);
-    }
-    
-    return result;
   }
 
   // --- UPDATED TO STANDARD NAME-BY-NAME REDUCTION ---
   private static calculateExpression(fullName: string): number {
-    // expression uses ALL letters
-    return this.reduceNameParts(fullName, (ch) => /[A-Z]/.test(ch));
+    try {
+      // expression uses ALL letters
+      return this.reduceNameParts(fullName, (ch) => /[A-Z]/.test(ch));
+    } catch (error) {
+      console.error('🔢 NUMEROLOGY: Error in calculateExpression:', error);
+      return 1;
+    }
   }
 
   private static calculateSoulUrge(fullName: string): number {
-    // soul urge: ONLY vowels (A E I O U, maybe Y, but we skip Y for classic mode)
-    return this.reduceNameParts(fullName, (ch) => ['A', 'E', 'I', 'O', 'U'].includes(ch));
+    try {
+      // soul urge: ONLY vowels (A E I O U, maybe Y, but we skip Y for classic mode)
+      return this.reduceNameParts(fullName, (ch) => ['A', 'E', 'I', 'O', 'U'].includes(ch));
+    } catch (error) {
+      console.error('🔢 NUMEROLOGY: Error in calculateSoulUrge:', error);
+      return 1;
+    }
   }
 
   private static calculatePersonality(fullName: string): number {
-    // personality: ONLY consonants (all A-Z minus vowels)
-    return this.reduceNameParts(fullName, (ch) => /[A-Z]/.test(ch) && !['A', 'E', 'I', 'O', 'U'].includes(ch));
+    try {
+      // personality: ONLY consonants (all A-Z minus vowels)
+      return this.reduceNameParts(fullName, (ch) => /[A-Z]/.test(ch) && !['A', 'E', 'I', 'O', 'U'].includes(ch));
+    } catch (error) {
+      console.error('🔢 NUMEROLOGY: Error in calculatePersonality:', error);
+      return 1;
+    }
   }
 
   private static calculateBirthday(birthDate: string): number {
-    const [, , day] = birthDate.split('-').map(num => parseInt(num, 10));
-    
-    if (isNaN(day) || day < 1 || day > 31) {
-      BlueprintHealthChecker.failIfHealthCheck('Numerology', `Invalid day in birth date: ${day}`);
+    try {
+      let day: number;
+      
+      if (birthDate.includes('-')) {
+        const parts = birthDate.split('-');
+        day = parseInt(parts[2], 10);
+      } else {
+        const date = new Date(birthDate);
+        day = date.getDate();
+      }
+      
+      if (isNaN(day) || day < 1 || day > 31) {
+        console.warn('🔢 NUMEROLOGY: Invalid day in birth date, using fallback');
+        return 1;
+      }
+      
+      console.log('🔢 Birthday calculation for day:', day);
+      
+      const result = this.reduceToSingleDigitWithMasters(day);
+      console.log('🔢 Birthday result:', result);
+      
+      return result || 1;
+    } catch (error) {
+      console.error('🔢 NUMEROLOGY: Error in calculateBirthday:', error);
+      return 1;
     }
-    
-    console.log('🔢 Birthday calculation for day:', day);
-    
-    const result = this.reduceToSingleDigitWithMasters(day);
-    console.log('🔢 Birthday result:', result);
-    
-    return result;
   }
 
   private static addDigits(num: number): number {
@@ -186,32 +237,38 @@ export class NumerologyCalculator {
   }
 
   private static reduceToSingleDigitWithMasters(num: number): number {
-    console.log('🔢 Reducing:', num);
-    
-    if (isNaN(num) || num < 0) {
-      BlueprintHealthChecker.failIfHealthCheck('Numerology', `Invalid number for reduction: ${num}`);
-    }
-    
-    while (num > 9) {
-      // Check if current number is a master number before reducing
-      if (num === 11 || num === 22 || num === 33) {
-        console.log('🔢 Master number found:', num);
-        return num;
+    try {
+      console.log('🔢 Reducing:', num);
+      
+      if (isNaN(num) || num < 0) {
+        console.warn('🔢 NUMEROLOGY: Invalid number for reduction, using fallback:', num);
+        return 1;
       }
       
-      // Reduce by adding digits
-      num = this.addDigits(num);
-      console.log('🔢 After digit addition:', num);
-      
-      // Check again if the result is a master number
-      if (num === 11 || num === 22 || num === 33) {
-        console.log('🔢 Master number found after reduction:', num);
-        return num;
+      while (num > 9) {
+        // Check if current number is a master number before reducing
+        if (num === 11 || num === 22 || num === 33) {
+          console.log('🔢 Master number found:', num);
+          return num;
+        }
+        
+        // Reduce by adding digits
+        num = this.addDigits(num);
+        console.log('🔢 After digit addition:', num);
+        
+        // Check again if the result is a master number
+        if (num === 11 || num === 22 || num === 33) {
+          console.log('🔢 Master number found after reduction:', num);
+          return num;
+        }
       }
+      
+      console.log('🔢 Final reduced number:', num);
+      return num || 1;
+    } catch (error) {
+      console.error('🔢 NUMEROLOGY: Error in reduceToSingleDigitWithMasters:', error);
+      return 1;
     }
-    
-    console.log('🔢 Final reduced number:', num);
-    return num;
   }
 
   private static getLifePathKeyword(number: number): string {

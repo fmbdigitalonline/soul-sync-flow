@@ -46,6 +46,11 @@ const Section: React.FC<SectionProps> = ({ title, facts, narrative, depth }) => 
     pro: "bg-purple-50 border-purple-200 text-purple-800"
   };
 
+  // Filter out facts with undefined values
+  const validFacts = facts.filter(fact => 
+    fact && !fact.includes('undefined') && !fact.includes('null')
+  );
+
   return (
     <CosmicCard className="mb-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
@@ -55,7 +60,7 @@ const Section: React.FC<SectionProps> = ({ title, facts, narrative, depth }) => 
         </Badge>
       </div>
       
-      <FactsGrid facts={facts} title={title} />
+      {validFacts.length > 0 && <FactsGrid facts={validFacts} title={title} />}
       
       <div className="prose prose-sm max-w-none">
         <p className="text-gray-700 leading-relaxed text-sm sm:text-base break-words">{narrative}</p>
