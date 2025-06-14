@@ -9,6 +9,7 @@ export const HumanDesignDebugger: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [testResults, setTestResults] = useState<any>(null);
   const [birthData, setBirthData] = useState({
+    fullName: 'Feurion Michael Banel',
     birthDate: '1978-02-12',
     birthTime: '22:00',
     birthLocation: 'Paramaribo, Suriname',
@@ -20,7 +21,7 @@ export const HumanDesignDebugger: React.FC = () => {
     try {
       console.log('🧪 Testing Human Design calculation with known data...');
       
-      // Call the edge function directly
+      // Call the edge function directly, now including fullName
       const { data, error } = await supabase.functions.invoke('blueprint-calculator', {
         body: birthData
       });
@@ -41,7 +42,7 @@ export const HumanDesignDebugger: React.FC = () => {
     try {
       console.log('🧪 Testing Human Design function directly...');
       
-      // Call the test endpoint
+      // Call the test endpoint (doesn't use fullName, for legacy compatibility)
       const { data, error } = await supabase.functions.invoke('blueprint-calculator/test-human-design');
       
       console.log('🧪 Human Design Test Results:', { data, error });
@@ -63,6 +64,15 @@ export const HumanDesignDebugger: React.FC = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2">
+              <label className="block text-sm font-medium mb-1">Full Name</label>
+              <Input
+                value={birthData.fullName}
+                onChange={(e) => setBirthData(prev => ({ ...prev, fullName: e.target.value }))}
+                placeholder="Enter your full name"
+                autoComplete="name"
+              />
+            </div>
             <div>
               <label className="block text-sm font-medium mb-1">Birth Date</label>
               <Input
