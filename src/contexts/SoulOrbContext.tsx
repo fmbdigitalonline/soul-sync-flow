@@ -86,19 +86,25 @@ export const SoulOrbProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setSpeaking(false);
   };
   
-  // Simple speak method without waiting
+  // Enhanced speak method with better timing
   const speak = (message: string) => {
     if (speaking) {
       stopSpeaking();
     }
+    
+    console.log('🗣️ Soul Coach:', message); // Log for development
     setSpeaking(true);
     
-    // Simulate speech with a timer based on message length
-    const speechDuration = message.length * 50; // roughly 50ms per character
+    // Calculate speech duration based on message complexity
+    const baseTime = 2000; // 2 second minimum
+    const wordsPerMinute = 150; // Average speaking speed
+    const words = message.split(' ').length;
+    const calculatedDuration = Math.max(baseTime, (words / wordsPerMinute) * 60 * 1000);
+    const speechDuration = Math.min(calculatedDuration, 8000); // Cap at 8 seconds max
     
     setTimeout(() => {
       setSpeaking(false);
-    }, Math.min(speechDuration, 5000)); // Cap at 5 seconds max
+    }, speechDuration);
   };
 
   const value = {
@@ -108,7 +114,7 @@ export const SoulOrbProvider: React.FC<{ children: React.ReactNode }> = ({ child
     startSpeaking,
     stopSpeaking,
     messages,
-    speak // Add the speak method to the context value
+    speak
   };
 
   return <SoulOrbContext.Provider value={value}>{children}</SoulOrbContext.Provider>;

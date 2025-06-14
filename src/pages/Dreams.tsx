@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MainLayout from "@/components/Layout/MainLayout";
@@ -34,6 +33,8 @@ import { TaskCoachInterface } from "@/components/task/TaskCoachInterface";
 import { PomodoroTimer } from "@/components/productivity/PomodoroTimer";
 import { HabitTracker } from "@/components/productivity/HabitTracker";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { DreamDecompositionPage } from "@/components/dream/DreamDecompositionPage";
+import { DreamSuccessPage } from "@/components/dream/DreamSuccessPage";
 
 interface Task {
   id: string;
@@ -51,7 +52,7 @@ interface Task {
 const Dreams = () => {
   const { messages, isLoading, sendMessage, resetConversation, currentAgent, switchAgent } = useEnhancedAICoach("coach");
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [currentView, setCurrentView] = useState<'create' | 'chat' | 'journey' | 'task-coach'>('create');
+  const [currentView, setCurrentView] = useState<'create' | 'chat' | 'journey' | 'task-coach' | 'decomposing' | 'success'>('create');
   const [activeTab, setActiveTab] = useState<'journey' | 'tasks' | 'focus' | 'habits'>('journey');
   const [focusedMilestone, setFocusedMilestone] = useState<any>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -114,6 +115,7 @@ const Dreams = () => {
     }
 
     setIsCreatingDream(true);
+    setCurrentView('decomposing'); // Switch to decomposition loading page
 
     try {
       console.log('Starting AI-powered dream creation with form:', dreamForm);
@@ -187,12 +189,9 @@ const Dreams = () => {
 
       console.log('AI-generated goal saved successfully to database');
 
-      // Show success and switch to journey view
-      toast({
-        title: "🎯 AI Dream Journey Created!",
-        description: "Your personalized roadmap has been created using your unique blueprint!",
-      });
-
+      // Store created goal and move to success page
+      setCreatedGoal(goalAsJson);
+      
       // Reset form
       setDreamForm({
         title: '',
@@ -201,7 +200,7 @@ const Dreams = () => {
         timeframe: '3 months'
       });
 
-      setCurrentView('journey');
+      // Success will be handled by DreamDecompositionPage onComplete
     } catch (error) {
       console.error('Error creating AI dream:', error);
       toast({
@@ -209,9 +208,23 @@ const Dreams = () => {
         description: error instanceof Error ? error.message : "Failed to create your AI dream journey. Please try again.",
         variant: "destructive"
       });
+      setCurrentView('create'); // Return to create view on error
     } finally {
       setIsCreatingDream(false);
     }
+  };
+
+  const handleDecompositionComplete = () => {
+    setCurrentView('success');
+  };
+
+  const handleSuccessTaskStart = (task: any) => {
+    setSelectedTask(task);
+    setCurrentView('task-coach');
+  };
+
+  const handleSuccessViewJourney = () => {
+    setCurrentView('journey');
   };
 
   const handleStartAIGuidance = () => {
@@ -496,6 +509,30 @@ const Dreams = () => {
   }
 
   // Create Dream View (default) - Mobile Optimized
+  if (currentView === 'decomposing') {
+    return (
+      <MainLayout>
+        <DreamDecompositionPage
+          dreamTitle={dreamForm.title}
+          onComplete={handleDecompositionComplete}
+          blueprintData={blueprintData}
+        />
+      </MainLayout>
+    );
+  }
+
+  if (currentView === 'success' && createdGoal) {
+    return (
+      <MainLayout>
+        <DreamSuccessPage
+          goal={createdGoal}
+          onStartTask={handleSuccessTaskStart}
+          onViewJourney={handleSuccessViewJourney}
+        />
+      </MainLayout>
+    );
+  }
+
   return (
     <MainLayout>
       <div className="min-h-screen bg-gradient-to-br from-soul-purple/10 via-white to-soul-teal/5 w-full max-w-full overflow-x-hidden">
