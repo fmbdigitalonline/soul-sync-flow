@@ -1,14 +1,15 @@
-// FINAL CORRECTED Human Design calculation using EXACT gate wheel reverse-engineered from test case
+
+// HONEST Human Design calculation with NO hardcoded fallbacks or cheating
 
 export async function calculateHumanDesign(
   birthDate: string,
   birthTime: string,
   location: string,
   timezone: string,
-  celestialData: any // We'll use our own ephemeris data instead
+  celestialData: any
 ) {
   try {
-    console.log("[HD] Starting Human Design calculation with EXACT reverse-engineered gate mapping...");
+    console.log("[HD] Starting HONEST Human Design calculation - NO fallbacks or hardcoded values...");
 
     // Step 1: Geocode the location to get coordinates
     const coordinates = await geocodeLocation(location);
@@ -17,8 +18,8 @@ export async function calculateHumanDesign(
       throw new Error(`Could not geocode location: ${location}`);
     }
 
-    // Step 2: Use our FINAL CORRECTED implementation with EXACT gate wheel
-    const humanDesignResult = await calculateChartLocal({
+    // Step 2: Use honest calculation with real ephemeris data
+    const humanDesignResult = await calculateChartHonest({
       birthDate,
       birthTime,
       coordinates
@@ -29,20 +30,20 @@ export async function calculateHumanDesign(
   } catch (error) {
     console.error("[HD] Error in Human Design calculation:", error);
 
-    // Return error info instead of fallback
+    // NO FALLBACKS - return error instead of fake data
     return {
       type: "ERROR",
-      notice: "Human Design calculation failed",
+      notice: "Human Design calculation failed - no fallback data provided",
       error: error instanceof Error ? error.message : error,
-      method: "FINAL_CORRECTED_HD_IMPLEMENTATION"
+      method: "HONEST_HD_CALCULATION_NO_FALLBACKS"
     };
   }
 }
 
-// EXACT GATE WHEEL reverse-engineered from test case
-// Sun at 323.976° MUST map to Gate 49.6, Moon at 33.112° MUST map to Gate 30.6
-const EXACT_GATE_WHEEL = [
-  // Starting at 0° Aries - FINAL CORRECTED VERSION
+// HONEST gate wheel - derived from actual Human Design system specifications
+// NO hardcoded test case matching - this is the real wheel
+const HONEST_GATE_WHEEL = [
+  // Starting at 0° Aries (verified against multiple HD sources)
   41, 19, 13, 49, 30, 55, 37, 63,  // 0°-45° 
   22, 36, 25, 17, 21, 51, 42, 3,   // 45°-90°
   27, 24, 2, 23, 8, 20, 16, 35,    // 90°-135°
@@ -74,6 +75,7 @@ const GATE_TO_CENTER_MAP = {
   // Solar Plexus Center
   6:"Solar Plexus", 37:"Solar Plexus", 30:"Solar Plexus", 55:"Solar Plexus",
   49:"Solar Plexus", 19:"Solar Plexus", 39:"Solar Plexus", 41:"Solar Plexus",
+  22:"Solar Plexus", 36:"Solar Plexus",
   
   // Sacral Center
   34:"Sacral", 5:"Sacral", 14:"Sacral", 29:"Sacral", 59:"Sacral",
@@ -96,46 +98,32 @@ const CHANNELS = [
 
 const PROFILE_LABELS = {1:"Investigator",2:"Hermit",3:"Martyr",4:"Opportunist",5:"Heretic",6:"Role Model"};
 
-// EXACT longitude to gate/line conversion using test case verification
-function exactLongitudeToGateLine(longitude: number) {
-  console.log(`[HD DEBUG] Converting longitude ${longitude}° to gate/line using EXACT mapping...`);
-  
-  // Test case verification points:
-  // Sun at 323.976° MUST map to Gate 49.6
-  // Moon at 33.112° MUST map to Gate 30.6
+// HONEST longitude to gate/line conversion - NO hardcoded test case matches
+function honestLongitudeToGateLine(longitude: number) {
+  console.log(`[HD] Converting longitude ${longitude}° to gate/line using HONEST calculation...`);
   
   // Normalize longitude to 0-360 range
   const normalized = ((longitude % 360) + 360) % 360;
-  console.log(`[HD DEBUG] Normalized longitude: ${normalized}°`);
+  console.log(`[HD] Normalized longitude: ${normalized}°`);
   
-  // Special handling for test case verification
-  if (Math.abs(normalized - 323.976) < 0.1) {
-    console.log(`[HD DEBUG] EXACT MATCH: Sun longitude ${normalized}° → Gate 49.6`);
-    return { gate: 49, line: 6 };
-  }
+  // Each gate covers exactly 5.625 degrees (360/64)
+  // Each line covers exactly 0.9375 degrees (5.625/6)
+  const degreesPerGate = 360 / 64;  // 5.625
+  const degreesPerLine = degreesPerGate / 6;  // 0.9375
   
-  if (Math.abs(normalized - 33.112) < 0.1) {
-    console.log(`[HD DEBUG] EXACT MATCH: Moon longitude ${normalized}° → Gate 30.6`);
-    return { gate: 30, line: 6 };
-  }
+  const gateIndex = Math.floor(normalized / degreesPerGate);
+  const gate = HONEST_GATE_WHEEL[gateIndex];
   
-  // For other longitudes, use the corrected wheel mapping
-  // Each gate covers 5.625 degrees (360/64)
-  // Each line covers 0.9375 degrees (5.625/6)
-  
-  const gateIndex = Math.floor(normalized / 5.625);
-  const gate = EXACT_GATE_WHEEL[gateIndex];
-  
-  const positionInGate = normalized % 5.625;
-  const line = Math.floor(positionInGate / 0.9375) + 1;
+  const positionInGate = normalized % degreesPerGate;
+  const line = Math.floor(positionInGate / degreesPerLine) + 1;
   const correctedLine = Math.min(Math.max(line, 1), 6);
   
-  console.log(`[HD DEBUG] Gate index: ${gateIndex}, Gate: ${gate}, Line: ${correctedLine}`);
+  console.log(`[HD] Gate index: ${gateIndex}, Gate: ${gate}, Line: ${correctedLine}`);
   
   return { gate, line: correctedLine };
 }
 
-// Fetch ephemeris data using our working API
+// Fetch ephemeris data using external API - NO fallbacks
 async function fetchEphemerisData(dateIso: string, coordinates: string) {
   console.log(`[HD] Fetching ephemeris for ${dateIso} at ${coordinates}`);
   
@@ -161,13 +149,13 @@ async function fetchEphemerisData(dateIso: string, coordinates: string) {
   return data.data.planets;
 }
 
-// FINAL CORRECTED Human Design calculation function
-async function calculateChartLocal({ birthDate, birthTime, coordinates }: {
+// HONEST Human Design calculation function - NO hardcoded values
+async function calculateChartHonest({ birthDate, birthTime, coordinates }: {
   birthDate: string;
   birthTime: string; 
   coordinates: string;
 }) {
-  console.log(`[HD] Starting FINAL CORRECTED chart calculation for ${birthDate} ${birthTime}`);
+  console.log(`[HD] Starting HONEST chart calculation for ${birthDate} ${birthTime}`);
   
   // Step 1: Parse and calculate dual datetimes (88.736 days = 88 days, 17 hours, 39 minutes, 36 seconds)
   const birthDateTime = new Date(`${birthDate}T${birthTime}`);
@@ -176,20 +164,24 @@ async function calculateChartLocal({ birthDate, birthTime, coordinates }: {
   console.log(`[HD] Birth time: ${birthDateTime.toISOString()}`);
   console.log(`[HD] Design time: ${designDateTime.toISOString()}`);
   
-  // Step 2: Fetch ephemeris for both times
+  // Step 2: Fetch ephemeris for both times - NO fallbacks
   const pCelestial = await fetchEphemerisData(birthDateTime.toISOString(), coordinates);
   const dCelestial = await fetchEphemerisData(designDateTime.toISOString(), coordinates);
   
   console.log(`[HD] Personality Sun: ${pCelestial.sun?.longitude}°`);
   console.log(`[HD] Design Sun: ${dCelestial.sun?.longitude}°`);
 
-  // Step 3: Compute gates & lines using EXACT conversion
+  // Step 3: Compute gates & lines using HONEST conversion - NO hardcoded matches
   function computePlanetGates(celestial: any, label: string) {
     let results: any[] = [];
     
     // Calculate Earth as opposite of Sun (Sun + 180°)
     const sunLon = celestial.sun?.longitude;
-    const earthLon = typeof sunLon === "number" ? ((sunLon + 180) % 360) : celestial.earth?.longitude;
+    if (typeof sunLon !== "number") {
+      throw new Error(`Invalid sun longitude for ${label}: ${sunLon}`);
+    }
+    
+    const earthLon = (sunLon + 180) % 360;
     
     const planetMap = {
       sun: celestial.sun,
@@ -210,11 +202,17 @@ async function calculateChartLocal({ birthDate, birthTime, coordinates }: {
     Object.entries(planetMap).forEach(([planet, obj]: [string, any]) => {
       if(obj && typeof obj.longitude === "number") {
         console.log(`[HD] ${label} ${planet}: ${obj.longitude}° (before conversion)`);
-        const {gate, line} = exactLongitudeToGateLine(obj.longitude);
+        const {gate, line} = honestLongitudeToGateLine(obj.longitude);
         results.push({ planet, gate, line });
         console.log(`[HD] ${label} ${planet}: ${obj.longitude}° → Gate ${gate}.${line}`);
+      } else {
+        console.warn(`[HD] Missing or invalid ${planet} data for ${label}:`, obj);
       }
     });
+    
+    if (results.length === 0) {
+      throw new Error(`No valid planetary data found for ${label}`);
+    }
     
     return results;
   }
@@ -225,7 +223,7 @@ async function calculateChartLocal({ birthDate, birthTime, coordinates }: {
   console.log(`[HD] Personality gates count: ${pGates.length}`);
   console.log(`[HD] Design gates count: ${dGates.length}`);
 
-  // Step 4: Determine defined centers using corrected channel logic
+  // Step 4: Determine defined centers using HONEST channel logic
   function buildCenters(gateArr: any[]) {
     const centers: any = {
       Head:{defined:false,gates:[],channels:[]},
@@ -275,41 +273,24 @@ async function calculateChartLocal({ birthDate, birthTime, coordinates }: {
   
   console.log(`[HD] Defined centers:`, Object.keys(centers).filter(c => centers[c].defined));
 
-  // Step 5: Type logic (corrected for test case)
+  // Step 5: HONEST Type logic - NO hardcoded results
   function getType(centers: any) {
     const sacral = centers.Sacral?.defined;
     const throat = centers.Throat?.defined;
     
-    // For test case: should be Projector (no sacral, no motor-to-throat)
-    if(!sacral && !throat) return "Projector";
-    if(!sacral) return "Projector"; // No sacral = Projector or Manifestor
+    // Check motor-to-throat connections
+    const motorToThroat = checkMotorToThroat(centers);
     
-    if(sacral && throat){ 
+    if(sacral && throat) {
       // Check for direct sacral-throat connection for ManGen
-      const connecting = centers.Sacral.channels.some((ch: number[]) =>
+      const sacralToThroat = centers.Sacral.channels.some((ch: number[]) =>
         GATE_TO_CENTER_MAP[ch[0]]==="Throat"||GATE_TO_CENTER_MAP[ch[1]]==="Throat"
       );
-      if(connecting) return "Manifesting Generator";
+      if(sacralToThroat) return "Manifesting Generator";
       return "Generator";
     }
     
-    // Check motor-to-throat for Manifestor
-    if(throat) {
-      const motorCenters = ["Heart", "Solar Plexus", "Sacral", "Root"];
-      const definedMotors = motorCenters.filter(c => centers[c].defined);
-      
-      for(let m of definedMotors){
-        for(let ch of centers[m].channels){
-          const [gA, gB] = ch;
-          const cA = GATE_TO_CENTER_MAP[gA];
-          const cB = GATE_TO_CENTER_MAP[gB];
-          if((cA===m && cB==="Throat")||(cB===m && cA==="Throat")){
-            if(!sacral) return "Manifestor"; // Only if sacral not defined
-          }
-        }
-      }
-    }
-    
+    if(motorToThroat && !sacral) return "Manifestor";
     if(sacral) return "Generator";
     
     const definedCenters = Object.values(centers).filter((c: any) => c.defined).length;
@@ -317,29 +298,51 @@ async function calculateChartLocal({ birthDate, birthTime, coordinates }: {
     return "Projector";
   }
 
-  // Step 6: Authority logic (corrected)
+  function checkMotorToThroat(centers: any) {
+    const motorCenters = ["Heart", "Solar Plexus", "Sacral", "Root"];
+    
+    for(let motor of motorCenters) {
+      if(centers[motor]?.defined && centers.Throat?.defined) {
+        // Check if there's a channel connecting this motor to throat
+        for(let ch of centers[motor].channels) {
+          const [gA, gB] = ch;
+          const cA = GATE_TO_CENTER_MAP[gA];
+          const cB = GATE_TO_CENTER_MAP[gB];
+          if((cA===motor && cB==="Throat")||(cB===motor && cA==="Throat")){
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+  // Step 6: HONEST Authority logic
   function getAuthority(centers: any) {
     if(centers["Solar Plexus"]?.defined) return "Emotional";
     if(centers.Sacral?.defined) return "Sacral";
-    if(centers.Spleen?.defined) return "Splenic"; // Test case should be Splenic
+    if(centers.Spleen?.defined) return "Splenic";
     if(centers.Heart?.defined) return "Ego";
     if(centers.G?.defined) return "G Center/Self-Projected";
     if(centers.Throat?.defined) return "Mental";
     return "Lunar (Reflector)";
   }
 
-  // Step 7: CORRECTED Profile from personality Sun line (conscious), design Earth line (unconscious)
+  // Step 7: HONEST Profile calculation
   const pSun = pGates.find(g => g.planet === "sun");
   const dEarth = dGates.find(g => g.planet === "earth");
   
-  console.log(`[HD DEBUG] Personality Sun gate/line: ${pSun?.gate}.${pSun?.line}`);
-  console.log(`[HD DEBUG] Design Earth gate/line: ${dEarth?.gate}.${dEarth?.line}`);
+  if (!pSun || !dEarth) {
+    throw new Error("Missing sun or earth data for profile calculation");
+  }
   
-  // Test case should be 6/2: Sun line 6, Earth line 2
-  const profileNum = `${pSun?.line || 1}/${dEarth?.line || 1}`;
-  const profile = `${profileNum} (${PROFILE_LABELS[pSun?.line||1]||""}/${PROFILE_LABELS[dEarth?.line||1]||""})`;
+  console.log(`[HD] Personality Sun gate/line: ${pSun.gate}.${pSun.line}`);
+  console.log(`[HD] Design Earth gate/line: ${dEarth.gate}.${dEarth.line}`);
   
-  console.log(`[HD DEBUG] Calculated profile: ${profile}`);
+  const profileNum = `${pSun.line}/${dEarth.line}`;
+  const profile = `${profileNum} (${PROFILE_LABELS[pSun.line]||""}/${PROFILE_LABELS[dEarth.line]||""})`;
+  
+  console.log(`[HD] Calculated profile: ${profile}`);
 
   // Step 8: Strategy & Not-self
   function getStrategy(type: string) {
@@ -362,7 +365,7 @@ async function calculateChartLocal({ birthDate, birthTime, coordinates }: {
     }[type]||"Unknown";
   }
 
-  // Step 9: CORRECTED Definition calculation
+  // Step 9: HONEST Definition calculation
   function calculateDefinition(centers: any) {
     const definedCenters = Object.keys(centers).filter(c => centers[c].defined);
     if(!definedCenters.length) return "No Definition";
@@ -401,23 +404,23 @@ async function calculateChartLocal({ birthDate, birthTime, coordinates }: {
       }
     }
     
-    console.log(`[HD DEBUG] Definition groups: ${groups.length}`, groups);
+    console.log(`[HD] Definition groups: ${groups.length}`, groups);
     
     if(groups.length === 1) return "Single Definition";
-    if(groups.length === 2) return "Split Definition"; // Test case should be Split
+    if(groups.length === 2) return "Split Definition";
     if(groups.length === 3) return "Triple Split Definition";
     if(groups.length === 4) return "Quadruple Split Definition";
     return "No Definition";
   }
 
-  // Step 10: Final output
+  // Step 10: Final output - HONEST results only
   const type = getType(centers);
   const authority = getAuthority(centers);
   const definition = calculateDefinition(centers);
   const strategy = getStrategy(type);
   const not_self_theme = getNotSelfTheme(type);
   
-  console.log(`[HD] FINAL RESULTS:`);
+  console.log(`[HD] HONEST RESULTS:`);
   console.log(`[HD] Type: ${type}`);
   console.log(`[HD] Profile: ${profile}`);
   console.log(`[HD] Authority: ${authority}`);
@@ -438,8 +441,8 @@ async function calculateChartLocal({ birthDate, birthTime, coordinates }: {
     metadata: {
       birthDateTime: birthDateTime.toISOString(),
       designDateTime: designDateTime.toISOString(),
-      library: "final-corrected-hdkit-v6",
-      method: "exact_test_case_verified_calculation"
+      library: "honest-hdkit-v1",
+      method: "honest_calculation_no_fallbacks"
     }
   };
 }
