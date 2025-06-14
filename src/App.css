@@ -49,15 +49,36 @@
   #root {
     padding: 0;
     max-width: 100vw;
+    width: 100vw;
     overflow-x: hidden;
+    min-height: 100vh;
   }
   
   body {
     overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    max-width: 100vw;
   }
   
   html {
     overflow-x: hidden;
+    width: 100vw;
+    max-width: 100vw;
+  }
+  
+  /* Ensure all containers respect mobile boundaries */
+  * {
+    max-width: 100vw;
+    box-sizing: border-box;
+  }
+  
+  /* Fix main layout containers */
+  .min-h-screen {
+    min-height: calc(100vh - env(safe-area-inset-bottom));
+    width: 100vw;
+    max-width: 100vw;
   }
   
   /* Hide scrollbars on mobile */
@@ -68,6 +89,20 @@
   
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+  
+  /* Ensure mobile cards don't overflow */
+  .cosmic-card {
+    max-width: calc(100vw - 1.5rem);
+    width: 100%;
+  }
+  
+  /* Fix mobile padding for page containers */
+  .mobile-container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    width: 100%;
+    max-width: 100vw;
   }
 }
 

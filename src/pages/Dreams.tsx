@@ -288,7 +288,7 @@ const Dreams = () => {
   if (currentView === 'task-coach' && selectedTask) {
     return (
       <MainLayout>
-        <div className="h-screen bg-gradient-to-br from-soul-purple/5 to-soul-teal/5">
+        <div className="min-h-screen bg-gradient-to-br from-soul-purple/5 to-soul-teal/5 w-full max-w-full overflow-x-hidden">
           <TaskCoachInterface
             task={selectedTask}
             onBack={handleBackFromTaskCoach}
@@ -302,10 +302,10 @@ const Dreams = () => {
   if (currentView === 'chat') {
     return (
       <MainLayout>
-        <div className="h-screen flex flex-col bg-gradient-to-br from-soul-purple/5 to-white">
+        <div className="min-h-screen flex flex-col bg-gradient-to-br from-soul-purple/5 to-white w-full max-w-full overflow-x-hidden">
           {/* Mobile-Optimized Header */}
-          <div className="bg-white/80 backdrop-blur-lg border-b border-gray-100 p-3 sticky top-0 z-10">
-            <div className="flex items-center justify-between w-full max-w-none">
+          <div className="bg-white/80 backdrop-blur-lg border-b border-gray-100 p-3 sticky top-0 z-10 w-full">
+            <div className="flex items-center justify-between w-full">
               <Button 
                 variant="ghost" 
                 size="sm" 
@@ -341,11 +341,11 @@ const Dreams = () => {
   if (currentView === 'journey') {
     return (
       <MainLayout>
-        <div className="min-h-screen bg-gradient-to-br from-soul-purple/5 via-white to-soul-teal/5">
-          <div className="w-full px-3 py-4">
+        <div className="min-h-screen bg-gradient-to-br from-soul-purple/5 via-white to-soul-teal/5 w-full max-w-full overflow-x-hidden">
+          <div className="w-full mobile-container py-4">
             
             {/* Mobile-Optimized Header */}
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-4 w-full">
               <Button 
                 variant="ghost" 
                 size="sm" 
@@ -363,10 +363,10 @@ const Dreams = () => {
             </div>
 
             {/* Mobile-First Single Card Layout */}
-            <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg border border-white/20 overflow-hidden">
+            <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg border border-white/20 overflow-hidden w-full">
               
               {/* Horizontal Tab Navigation - Always Visible */}
-              <div className="border-b border-gray-100 p-3 bg-white/50">
+              <div className="border-b border-gray-100 p-3 bg-white/50 w-full">
                 <div className="flex gap-1 overflow-x-auto scrollbar-hide">
                   <Button
                     variant={activeTab === 'journey' ? 'default' : 'ghost'}
@@ -426,14 +426,14 @@ const Dreams = () => {
               {/* Single Tab Content Area - No Horizontal Scrolling */}
               <div className="p-4 w-full overflow-hidden">
                 {activeTab === 'journey' && (
-                  <div className="w-full">
+                  <div className="w-full max-w-full">
                     <div className="flex items-center gap-3 mb-4">
                       <div className="w-8 h-8 bg-gradient-to-br from-soul-purple to-soul-teal rounded-xl flex items-center justify-center">
                         <MapPin className="h-4 w-4 text-white" />
                       </div>
-                      <div>
+                      <div className="flex-1 min-w-0">
                         <h2 className="text-base font-semibold text-gray-800">Journey Map</h2>
-                        <p className="text-xs text-gray-500">{getBlueprintInsight()}</p>
+                        <p className="text-xs text-gray-500 truncate">{getBlueprintInsight()}</p>
                       </div>
                     </div>
                     
@@ -447,7 +447,7 @@ const Dreams = () => {
                 )}
 
                 {activeTab === 'tasks' && (
-                  <div className="w-full">
+                  <div className="w-full max-w-full">
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="font-semibold flex items-center gap-2 text-gray-800 text-sm">
                         <Target className="h-4 w-4 text-soul-purple" />
@@ -465,7 +465,7 @@ const Dreams = () => {
                 )}
                 
                 {activeTab === 'focus' && (
-                  <div className="w-full">
+                  <div className="w-full max-w-full">
                     <div className="flex items-center gap-2 mb-3">
                       <Clock className="h-4 w-4 text-soul-purple" />
                       <h3 className="font-semibold text-gray-800 text-sm">Focus Session</h3>
@@ -477,7 +477,7 @@ const Dreams = () => {
                 )}
                 
                 {activeTab === 'habits' && (
-                  <div className="w-full">
+                  <div className="w-full max-w-full">
                     <div className="flex items-center gap-2 mb-3">
                       <CheckCircle className="h-4 w-4 text-soul-purple" />
                       <h3 className="font-semibold text-gray-800 text-sm">Daily Habits</h3>
@@ -498,8 +498,8 @@ const Dreams = () => {
   // Create Dream View (default) - Mobile Optimized
   return (
     <MainLayout>
-      <div className="min-h-screen bg-gradient-to-br from-soul-purple/10 via-white to-soul-teal/5">
-        <div className="w-full px-3 py-6 pb-24 md:pb-8 max-w-md mx-auto">
+      <div className="min-h-screen bg-gradient-to-br from-soul-purple/10 via-white to-soul-teal/5 w-full max-w-full overflow-x-hidden">
+        <div className="w-full mobile-container py-6 pb-24 md:pb-8 max-w-md mx-auto">
           
           {/* Mobile-Optimized Hero Section */}
           <div className="text-center mb-8">
@@ -608,7 +608,7 @@ const Dreams = () => {
           </div>
 
           {/* Mobile-Optimized Alternative Options */}
-          <div className="space-y-3">
+          <div className="space-y-3 w-full">
             <div className="text-center">
               <p className="text-sm text-gray-500 mb-4">Or explore other ways to start</p>
             </div>
