@@ -26,12 +26,22 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   onStatusChange
 }) => {
   const [showModal, setShowModal] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleStartCoach = () => setShowModal(true);
+  const handleStartCoach = () => {
+    if (!isProcessing) {
+      setShowModal(true);
+    }
+  };
 
   const handleReadyGo = () => {
-    setShowModal(false);
-    onDoubleTap(task);
+    if (!isProcessing) {
+      setIsProcessing(true);
+      setShowModal(false);
+      onDoubleTap(task);
+      // Reset processing state after a delay to prevent rapid clicks
+      setTimeout(() => setIsProcessing(false), 1000);
+    }
   };
 
   const handleReadyCancel = () => {
@@ -39,8 +49,16 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   };
 
   const handleStatusChange = (newStatus: 'todo' | 'in_progress' | 'stuck' | 'completed') => {
-    if (onStatusChange) {
+    if (onStatusChange && !isProcessing) {
       onStatusChange(task, newStatus);
+    }
+  };
+
+  const handleMarkDone = () => {
+    if (onMarkDone && !isProcessing) {
+      setIsProcessing(true);
+      onMarkDone(task);
+      setTimeout(() => setIsProcessing(false), 500);
     }
   };
 
@@ -116,22 +134,22 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             <TaskStatusSelector
               currentStatus={task.status || 'todo'}
               onStatusChange={handleStatusChange}
-              disabled={task.completed}
+              disabled={task.completed || isProcessing}
             />
           </div>
 
           <div className="flex gap-2">
             <button
-              className="flex-1 px-2 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors"
-              disabled={task.completed}
-              onClick={() => onMarkDone?.(task)}
+              className="flex-1 px-2 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={task.completed || isProcessing}
+              onClick={handleMarkDone}
             >
               ✅ Mark as Done
             </button>
             <button
-              className="flex-1 px-2 py-2 bg-soul-purple hover:bg-soul-purple/90 text-white rounded-lg font-medium transition-colors"
+              className="flex-1 px-2 py-2 bg-soul-purple hover:bg-soul-purple/90 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={handleStartCoach}
-              disabled={task.completed}
+              disabled={task.completed || isProcessing}
             >
               🔮 Tackle with Coach
             </button>
