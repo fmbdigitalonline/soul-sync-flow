@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -63,9 +64,8 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
   if (!mbtiData || !mbtiData.type || mbtiData.type === "Unknown") {
     const personality = blueprint.user_meta?.personality;
     if (
-      personality &&
+      personality != null &&
       typeof personality === "object" &&
-      personality !== null &&
       "likelyType" in personality
     ) {
       // Cast personality to any to avoid TypeScript null checking issues
