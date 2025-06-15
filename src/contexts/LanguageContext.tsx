@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export type Language = 'en' | 'nl';
@@ -340,6 +339,26 @@ const translations = {
     'profile.status.paused': 'Paused',
     'profile.status.active': 'Active',
     'profile.focusMode': 'Focus Mode',
+    
+    // Index page/homepage
+    'index.welcome': 'Welcome to <span class="gradient-text">Soul Sync</span>',
+    'index.subtitle': 'Live by Design, Understand Yourself and Achieve Through Alignment!',
+    'index.dreams': 'Dreams',
+    'index.dreamsDesc': 'Journey to Success',
+    'index.growth': 'Growth',
+    'index.growthDesc': 'Inner Wisdom',
+    'index.companion': 'Companion',
+    'index.companionDesc': 'AI Guide',
+    'index.demo': 'See How Personalization Works',
+    'index.startJourney': 'Start Your Journey',
+    'index.getStarted': 'Get Started',
+    'index.chatWithCompanion': 'Chat with Soul Companion',
+    'index.signIn': 'Sign In',
+    'index.welcomeBackReady': 'Welcome back! Your Soul Blueprint is ready to explore.',
+    'index.createToGetStarted': "Welcome! Let's create your Soul Blueprint to get started.",
+    'index.readyExplore': 'Your Soul Blueprint is ready! Explore the features below.',
+    'index.profileFeature': 'Profile',
+    'index.backToHome': '← Back to Home',
   },
   
   nl: {
@@ -407,7 +426,7 @@ const translations = {
     'blueprint.mbti': 'MBTI',
     'blueprint.humanDesign': 'Human Design',
     'blueprint.bashar': 'Bashar Suite',
-    'blueprint.numerology': 'Numerologie',
+    'blueprint.numerology': 'Numerology',
     'blueprint.western': 'Westerse Astrologie',
     'blueprint.chinese': 'Chinese Astrologie',
     'blueprint.energyIdentity': 'Energie & Identiteit',
@@ -670,6 +689,26 @@ const translations = {
     'profile.status.paused': 'Gepauzeerd',
     'profile.status.active': 'Actief',
     'profile.focusMode': 'Focus Modus',
+    
+    // Index page/homepage
+    'index.welcome': 'Welkom bij <span class="gradient-text">Soul Sync</span>',
+    'index.subtitle': 'Leef met Ontwerp, Begrijp Jezelf en Bereik door Afstemming!',
+    'index.dreams': 'Dromen',
+    'index.dreamsDesc': 'Reis naar Succes',
+    'index.growth': 'Groei',
+    'index.growthDesc': 'Innerlijke Wijsheid',
+    'index.companion': 'Metgezel',
+    'index.companionDesc': 'AI Gids',
+    'index.demo': 'Bekijk hoe personalisatie werkt',
+    'index.startJourney': 'Begin je Reis',
+    'index.getStarted': 'Begin nu',
+    'index.chatWithCompanion': 'Chat met Ziel Metgezel',
+    'index.signIn': 'Inloggen',
+    'index.welcomeBackReady': 'Welkom terug! Je Ziel Blauwdruk is klaar om te verkennen.',
+    'index.createToGetStarted': 'Welkom! Laten we jouw Ziel Blauwdruk maken om te beginnen.',
+    'index.readyExplore': 'Je Ziel Blauwdruk is klaar! Ontdek hieronder de functies.',
+    'index.profileFeature': 'Profiel',
+    'index.backToHome': '← Terug naar Home',
   }
 };
 
