@@ -61,26 +61,41 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
 
   // Ensure correct typing for fallback usage
   if (!mbtiData || !mbtiData.type || mbtiData.type === "Unknown") {
-    // Check if user_meta.personality exists and is a valid object with likelyType
     const personality = blueprint.user_meta?.personality;
     if (
-      personality != null &&
+      personality &&
       typeof personality === "object" &&
       "likelyType" in personality // Make sure this is not just a string!
     ) {
       mbtiData = {
-        type: (personality != null && ('likelyType' in personality) && personality.likelyType) ? personality.likelyType : "Unknown",
-        core_keywords: personality != null && (personality.mbtiCoreKeywords ?? ("core_keywords" in personality ? personality.core_keywords : [])),
-        dominant_function: personality != null && (personality.dominantFunction ?? ("dominant_function" in personality ? personality.dominant_function : "Unknown")),
-        auxiliary_function: personality != null && (personality.auxiliaryFunction ?? ("auxiliary_function" in personality ? personality.auxiliary_function : "Unknown")),
-        description: personality != null && (personality.description ?? ""),
-        user_confidence: (personality != null && "userConfidence" in personality) ? personality.userConfidence : undefined
+        type: "likelyType" in personality && personality.likelyType ? personality.likelyType : "Unknown",
+        core_keywords:
+          "mbtiCoreKeywords" in personality && Array.isArray(personality.mbtiCoreKeywords)
+            ? personality.mbtiCoreKeywords
+            : "core_keywords" in personality && Array.isArray(personality.core_keywords)
+              ? personality.core_keywords
+              : [],
+        dominant_function:
+          "dominantFunction" in personality && personality.dominantFunction
+            ? personality.dominantFunction
+            : "dominant_function" in personality && personality.dominant_function
+              ? personality.dominant_function
+              : "Unknown",
+        auxiliary_function:
+          "auxiliaryFunction" in personality && personality.auxiliaryFunction
+            ? personality.auxiliaryFunction
+            : "auxiliary_function" in personality && personality.auxiliary_function
+              ? personality.auxiliary_function
+              : "Unknown",
+        description:
+          "description" in personality && typeof personality.description === "string"
+            ? personality.description
+            : "",
+        user_confidence:
+          "userConfidence" in personality
+            ? (personality as any).userConfidence
+            : undefined
       };
-      // Fallbacks for props that might still be undefined
-      if (!mbtiData.core_keywords) mbtiData.core_keywords = [];
-      if (!mbtiData.dominant_function) mbtiData.dominant_function = "Unknown";
-      if (!mbtiData.auxiliary_function) mbtiData.auxiliary_function = "Unknown";
-      if (!mbtiData.description) mbtiData.description = "";
     } else {
       mbtiData = {
         type: "Unknown",
