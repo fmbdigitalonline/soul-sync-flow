@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export type Language = 'en' | 'nl';
@@ -451,16 +450,16 @@ const translations = {
     'growth.title': 'Growth Mode',
     'growth.positionLabel': 'Position:',
     'growth.conversationMessages': 'conversation messages',
-    'growth.headerSubtitle': 'Inner reflection & soul wisdom',
-    'growth.exploringArea': 'Exploring {{area}}',
-    'growth.chooseYourTool': 'Choose Your Growth Tool',
-    'growth.chooseYourToolDescription': 'Start with Soul Guide for a personalized journey, or select any tool above',
+    'growth.headerSubtitle': 'Inner reflection & zielwijsheid',
+    'growth.exploringArea': 'Verkenning van {{area}}',
+    'growth.chooseYourTool': 'Kies je groeigereedschap',
+    'growth.chooseYourToolDescription': 'Begin met Soul Guide voor een persoonlijke reis of selecteer hierboven een hulpmiddel',
     'growth.tools.soulGuide': 'Soul Guide',
-    'growth.tools.moodTracker': 'Mood Tracker',
-    'growth.tools.reflectionPrompts': 'Reflection Prompts',
-    'growth.tools.insightJournal': 'Insight Journal',
-    'growth.tools.weeklyInsights': 'Weekly Insights',
-    'growth.tools.freeChat': 'Free Chat',
+    'growth.tools.moodTracker': 'Stemmingsmeter',
+    'growth.tools.reflectionPrompts': 'Reflectievragen',
+    'growth.tools.insightJournal': 'Inzichtenjournal',
+    'growth.tools.weeklyInsights': 'Wekelijkse Inzichten',
+    'growth.tools.freeChat': 'Vrije Chat',
     'growth.startSoulCheckIn': 'Start Soul Check-in',
   },
   nl: {
