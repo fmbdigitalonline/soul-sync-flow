@@ -102,13 +102,17 @@ Write in second person ("You are..."), be specific about how the systems interac
       integrated_summary: sections[5]?.replace(/^[^:]*:?\s*/, '').trim() || generatedContent.slice(-500) // Fallback to last part
     };
 
-    // Store the report in the database using raw SQL
-    const { data: reportData, error: insertError } = await supabaseClient.rpc('create_personality_report', {
-      p_user_id: userId,
-      p_blueprint_id: blueprint.id || 'unknown',
-      p_report_content: reportContent,
-      p_blueprint_version: '1.0'
-    });
+    // Store the report in the database directly
+    const { data: reportData, error: insertError } = await supabaseClient
+      .from('personality_reports')
+      .insert({
+        user_id: userId,
+        blueprint_id: blueprint.id || 'unknown',
+        report_content: reportContent,
+        blueprint_version: '1.0'
+      })
+      .select()
+      .single();
 
     if (insertError) {
       throw new Error(`Database error: ${insertError.message}`);
@@ -116,18 +120,9 @@ Write in second person ("You are..."), be specific about how the systems interac
 
     console.log('✅ Personality report generated and stored successfully');
 
-    const reportResponse = {
-      id: reportData.id,
-      user_id: userId,
-      blueprint_id: blueprint.id || 'unknown',
-      report_content: reportContent,
-      generated_at: new Date().toISOString(),
-      blueprint_version: '1.0'
-    };
-
     return new Response(JSON.stringify({ 
       success: true, 
-      report: reportResponse 
+      report: reportData 
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
