@@ -21,6 +21,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { FocusModeSessionBanner } from "./FocusModeSessionBanner";
 import { StepChecklistProgress } from "./StepChecklistProgress";
 import { CoachStepMessage } from "./CoachStepMessage";
+import { ArrowRight } from "lucide-react";
 
 interface CoachInterfaceProps {
   messages: Message[];
@@ -118,6 +119,50 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
     onSendMessage(action);
   };
 
+  // Helper to provide extra coach meta/motivation/cta for steps
+  function renderCoachStepsWithContext() {
+    // Find all assistant messages with Step N, render as CoachStepMessage with meta/context
+    const assistantMsgs = messages.filter((m) => m.sender === "assistant");
+    const stepBlocks: React.ReactNode[] = [];
+    let totalSteps = 0;
+    let estimated = estimatedDuration || "~30 min";
+    // Find highest step number for totalSteps
+    const stepCountRegex = /Step\s*(\d+)\s*:/gi;
+    for (const msg of assistantMsgs) {
+      let scMatch;
+      while ((scMatch = stepCountRegex.exec(msg.content))) {
+        const stepNum = parseInt(scMatch[1]);
+        if (stepNum > totalSteps) totalSteps = stepNum;
+      }
+    }
+    // If none, leave as 0 (suppressed)
+    for (const message of assistantMsgs) {
+      // Render step blocks (Step N) as enhanced CoachStepMessage
+      const stepRegex = /Step\s*(\d+)\s*:\s*([^\n]+)\n?([\s\S]+?)(?=Step\s*\d+:|$)/gi;
+      let m;
+      while ((m = stepRegex.exec(message.content))) {
+        // Motivation and CTA defaults
+        const defaultMotivation =
+          "You don’t need to get it perfect — clarity starts by expressing what’s true for you.";
+        const defaultCTA =
+          "💬 When you’re ready, type your thoughts here — I’ll help organize and refine them into a clear direction.";
+        stepBlocks.push(
+          <CoachStepMessage
+            key={`stepbox-${m[1]}`}
+            stepNum={m[1]}
+            title={m[2]}
+            body={m[3].trim()}
+            totalSteps={totalSteps > 1 ? totalSteps : undefined}
+            estimatedDuration={estimated}
+            motivation={defaultMotivation}
+            cta={defaultCTA}
+          />
+        );
+      }
+    }
+    return stepBlocks.length > 0 ? stepBlocks : null;
+  }
+
   return (
     <div className="flex flex-col h-full w-full">
       {/* Session Banner */}
@@ -140,7 +185,7 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
         {messages.length === 0 && (
           <div className="space-y-4">
             <div className="text-center p-4 text-muted-foreground">
-              <Target className={cn("text-green-400 mx-auto mb-4", isMobile ? "h-8 w-8" : "h-12 w-12")} />
+              <ArrowRight className={cn("text-green-400 mx-auto mb-4", isMobile ? "h-8 w-8" : "h-12 w-12")} />
               <h3 className={cn("font-medium mb-1", isMobile ? "text-base" : "text-lg")}>{t('coach.ready')}</h3>
               <p className={cn("max-w-xs mx-auto", isMobile ? "text-xs" : "text-sm")}>
                 {t('coach.readyDescription')}
@@ -151,12 +196,17 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
             <div className="space-y-2">
               <p className="text-xs font-medium text-center text-muted-foreground">{t('coach.quickStart')}</p>
               <div className={cn("gap-2", isMobile ? "grid grid-cols-1" : "grid grid-cols-2")}>
-                {quickActions.map((action, index) => (
+                {[
+                  t('quickAction.breakDownGoal'),
+                  t('quickAction.createRoutine'),
+                  t('quickAction.setupAccountability'),
+                  t('quickAction.planWeek')
+                ].map((action, index) => (
                   <Button
                     key={index}
                     variant="outline"
                     size="sm"
-                    onClick={() => handleQuickAction(action)}
+                    onClick={() => onSendMessage(action)}
                     className={cn("justify-start text-xs", isMobile ? "h-7" : "h-8")}
                   >
                     {action}
@@ -166,29 +216,16 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
             </div>
           </div>
         )}
+        {/* Instead of single message, render enhanced step blocks if detected */}
+        {renderCoachStepsWithContext()}
+        {/* Render rest of message blocks without step patterns */}
         {messages.map((message, idx) => {
-          // If assistant with step pattern, extract and show as step
           if (
             message.sender === "assistant" &&
             /Step\s*\d+:/i.test(message.content)
           ) {
-            // Find all steps in this message
-            const stepMsgs: React.ReactNode[] = [];
-            const stepRegex = /Step\s*(\d+)\s*:\s*([^\n]+)\n?([\s\S]+?)(?=Step\s*\d+:|$)/gi;
-            let m;
-            while ((m = stepRegex.exec(message.content))) {
-              stepMsgs.push(
-                <CoachStepMessage
-                  key={m[1]}
-                  stepNum={m[1]}
-                  title={m[2]}
-                  body={m[3].trim()}
-                />
-              );
-            }
-            return <React.Fragment key={message.id}>{stepMsgs}</React.Fragment>;
+            return null; // rendered above already
           }
-          // Otherwise, default rendering, expand width and font
           return (
             <div
               key={message.id}
@@ -202,9 +239,9 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
               {/* Top: metadata, icon, sender label */}
               <div className="flex items-center gap-2 mb-1">
                 {message.sender === "assistant" ? (
-                  <Target className="h-4 w-4 text-green-400" />
+                  <ArrowRight className="h-4 w-4 text-green-400" />
                 ) : (
-                  <User className="h-4 w-4 text-white" />
+                  <ArrowRight className="h-4 w-4 text-white" />
                 )}
                 <span className="text-xs font-medium">
                   {message.sender === "assistant"
@@ -223,11 +260,11 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
           <div className="flex justify-start">
             <div className={cn("cosmic-card border border-green-200/20 max-w-[80%] rounded-2xl", isMobile ? "p-3" : "p-4")}>
               <div className="flex items-center space-x-2">
-                <Target className="h-4 w-4 text-green-400" />
+                <ArrowRight className="h-4 w-4 text-green-400" />
                 <p className="text-xs font-medium">{t('coach.soulCoach')}</p>
               </div>
               <div className="flex items-center space-x-2 mt-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <ArrowRight className="h-4 w-4 animate-spin" />
                 <p className="text-sm">{t('coach.analyzing')}</p>
               </div>
             </div>
@@ -237,7 +274,7 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
       </div>
       {/* Input Area */}
       <div className="sticky bottom-0 pb-4">
-        <CosmicCard className="flex items-center space-x-2 p-2 border border-green-200/20">
+        <div className="flex items-center space-x-2 p-2 border border-green-200/20 bg-white rounded-2xl shadow">
           <Input
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
@@ -252,9 +289,9 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
             disabled={inputValue.trim() === "" || isLoading}
             className="bg-green-600 hover:bg-green-700"
           >
-            <SendHorizontal className="h-4 w-4" />
+            <ArrowRight className="h-4 w-4" />
           </Button>
-        </CosmicCard>
+        </div>
         <p className="text-xs text-center text-muted-foreground mt-2">
           {t('coach.poweredBy')}
         </p>
