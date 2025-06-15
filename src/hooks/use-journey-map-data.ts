@@ -9,6 +9,7 @@ export const useJourneyMapData = () => {
   const [selectedView, setSelectedView] = useState<'overview' | 'detailed'>('overview');
   const [focusedMilestone, setFocusedMilestone] = useState<any>(null);
   const [preserveSuccessView, setPreserveSuccessView] = useState(false);
+  const [currentDetailView, setCurrentDetailView] = useState<'milestones' | 'tasks' | 'timeline' | null>(null);
   
   const currentGoals = (productivityJourney?.current_goals || []) as any[];
   const mainGoal = currentGoals[0];
@@ -27,7 +28,9 @@ export const useJourneyMapData = () => {
       currentMilestone: null,
       nextTasks: [],
       preserveSuccessView,
-      setPreserveSuccessView
+      setPreserveSuccessView,
+      currentDetailView,
+      setCurrentDetailView
     };
   }
 
@@ -63,6 +66,8 @@ export const useJourneyMapData = () => {
     nextTasks,
     getBlueprintInsight,
     preserveSuccessView,
-    setPreserveSuccessView
+    setPreserveSuccessView,
+    currentDetailView,
+    setCurrentDetailView
   };
 };
