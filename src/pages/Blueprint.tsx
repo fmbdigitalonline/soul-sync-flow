@@ -1,19 +1,17 @@
 import React, { useState, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MainLayout from "@/components/Layout/MainLayout";
-import BlueprintViewer from "@/components/blueprint/BlueprintViewer";
-import EnhancedBlueprintViewer from "@/components/blueprint/EnhancedBlueprintViewer";
+import SimplifiedBlueprintViewer from "@/components/blueprint/SimplifiedBlueprintViewer";
 import BlueprintEditor from "@/components/blueprint/BlueprintEditor";
 import { BlueprintHealthCheck } from "@/components/blueprint/BlueprintHealthCheck";
 import { Button } from "@/components/ui/button";
-import { Loader2, MessageCircle, RefreshCw, ToggleLeft, ToggleRight, Activity } from "lucide-react";
+import { Loader2, MessageCircle, RefreshCw, Activity } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { BlueprintData, blueprintService } from "@/services/blueprint-service";
 import { useNavigate } from "react-router-dom";
 import { BlueprintGenerator } from "@/components/blueprint/BlueprintGenerationFlow";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSoulOrb } from "@/contexts/SoulOrbContext";
-import { BlueprintEnhancementService } from "@/services/blueprint-enhancement-service";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useOptimizedBlueprintData } from "@/hooks/use-optimized-blueprint-data";
 import { isAdminUser } from "@/utils/isAdminUser";
@@ -21,7 +19,6 @@ import { isAdminUser } from "@/utils/isAdminUser";
 const Blueprint = () => {
   const [activeTab, setActiveTab] = useState("view");
   const [isGenerating, setIsGenerating] = useState(false);
-  const [useEnhanced, setUseEnhanced] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
@@ -35,12 +32,6 @@ const Blueprint = () => {
     hasBlueprint, 
     refetch 
   } = useOptimizedBlueprintData();
-
-  // Memoize enhanced blueprint data to prevent unnecessary recalculations
-  const enhancedBlueprint = useMemo(() => {
-    if (!blueprintData) return null;
-    return BlueprintEnhancementService.enhanceBlueprintData(blueprintData);
-  }, [blueprintData]);
 
   console.log("Blueprint Page Debug:", {
     user: !!user,
@@ -115,7 +106,6 @@ const Blueprint = () => {
     return null;
   }
 
-  // 1. New: Admin check
   const isAdmin = isAdminUser(user);
 
   const handleSaveBlueprint = async (updatedBlueprint: BlueprintData) => {
@@ -128,7 +118,7 @@ const Blueprint = () => {
           title: t('blueprint.saved'),
           description: t('blueprint.savedDescription'),
         });
-        await refetch(); // Use the cached refetch
+        await refetch();
         setActiveTab("view");
       } else {
         toast({
@@ -186,7 +176,7 @@ const Blueprint = () => {
       const result = await blueprintService.saveBlueprintData(newBlueprint);
       
       if (result.success) {
-        await refetch(); // Use the cached refetch
+        await refetch();
         toast({
           title: t('blueprint.generated'),
           description: t('blueprint.generatedDescription'),
@@ -222,45 +212,26 @@ const Blueprint = () => {
             <span className="gradient-text">{t('blueprint.title')}</span>
           </h1>
           
-          {/* Enhanced View Toggle - Mobile Stack */}
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center sm:justify-between">
-            <div className="flex items-center justify-center gap-2 order-2 sm:order-1">
-              <span className="text-xs sm:text-sm text-muted-foreground">{t('blueprint.basicView')}</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setUseEnhanced(!useEnhanced)}
-                className="p-1"
-              >
-                {useEnhanced ? 
-                  <ToggleRight className="h-6 w-6 text-soul-purple" /> : 
-                  <ToggleLeft className="h-6 w-6 text-gray-400" />
-                }
-              </Button>
-              <span className="text-xs sm:text-sm text-muted-foreground">{t('blueprint.enhancedView')}</span>
-            </div>
-            
-            {/* Action buttons - Mobile Stack */}
-            <div className="flex flex-col sm:flex-row gap-2 order-1 sm:order-2">
-              {isAdmin && (
-                <Button 
-                  variant="outline"
-                  className="flex items-center justify-center text-sm h-9"
-                  onClick={handleRegenerateBlueprint}
-                  disabled={isGenerating}
-                >
-                  <RefreshCw className="mr-2 h-4 w-4" />
-                  {isGenerating ? t('blueprint.generating') : t('blueprint.regenerate')}
-                </Button>
-              )}
+          {/* Action buttons - Mobile Stack */}
+          <div className="flex flex-col sm:flex-row gap-2">
+            {isAdmin && (
               <Button 
-                className="bg-soul-purple hover:bg-soul-purple/90 flex items-center justify-center text-sm h-9"
-                onClick={() => navigate('/coach')}
+                variant="outline"
+                className="flex items-center justify-center text-sm h-9"
+                onClick={handleRegenerateBlueprint}
+                disabled={isGenerating}
               >
-                <MessageCircle className="mr-2 h-4 w-4" />
-                {t('blueprint.chatWithCoach')}
+                <RefreshCw className="mr-2 h-4 w-4" />
+                {isGenerating ? t('blueprint.generating') : t('blueprint.regenerate')}
               </Button>
-            </div>
+            )}
+            <Button 
+              className="bg-soul-purple hover:bg-soul-purple/90 flex items-center justify-center text-sm h-9"
+              onClick={() => navigate('/coach')}
+            >
+              <MessageCircle className="mr-2 h-4 w-4" />
+              {t('blueprint.chatWithCoach')}
+            </Button>
           </div>
         </div>
 
@@ -285,11 +256,7 @@ const Blueprint = () => {
           
           <TabsContent value="view" className="mt-6">
             {blueprintData && (
-              useEnhanced && enhancedBlueprint ? (
-                <EnhancedBlueprintViewer blueprint={enhancedBlueprint} />
-              ) : (
-                <BlueprintViewer blueprint={blueprintData} />
-              )
+              <SimplifiedBlueprintViewer blueprint={blueprintData} />
             )}
           </TabsContent>
           
@@ -321,7 +288,6 @@ const Blueprint = () => {
             )}
           </TabsContent>
         </Tabs>
-        {/* Remove or restrict 'Regenerate Blueprint' for non-admins */}
       </div>
     </MainLayout>
   );
