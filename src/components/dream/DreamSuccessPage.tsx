@@ -3,10 +3,13 @@ import React, { useState, useEffect } from 'react';
 import { useSoulOrb } from '@/contexts/SoulOrbContext';
 import { CelebrationHeader } from './success/CelebrationHeader';
 import { GuidedTourPanel } from './success/GuidedTourPanel';
-import { JourneyOverview } from './success/JourneyOverview';
+import { InteractiveJourneyOverview } from './success/InteractiveJourneyOverview';
 import { MilestonesRoadmap } from './success/MilestonesRoadmap';
 import { RecommendedTask } from './success/RecommendedTask';
 import { ActionButtons } from './success/ActionButtons';
+import { MilestoneDetailView } from '@/components/journey/MilestoneDetailView';
+import { TimelineDetailView } from '@/components/journey/TimelineDetailView';
+import { TaskViews } from '@/components/journey/TaskViews';
 
 interface DreamSuccessPageProps {
   goal: any;
@@ -23,6 +26,7 @@ export const DreamSuccessPage: React.FC<DreamSuccessPageProps> = ({
   const [tourStep, setTourStep] = useState(0);
   const [showTour, setShowTour] = useState(true);
   const [celebrationComplete, setCelebrationComplete] = useState(false);
+  const [currentView, setCurrentView] = useState<'overview' | 'milestones' | 'tasks' | 'timeline'>('overview');
 
   const tourSteps = [
     {
@@ -87,12 +91,66 @@ export const DreamSuccessPage: React.FC<DreamSuccessPageProps> = ({
     setTourStep(0);
   };
 
+  const handleNavigateToSection = (section: 'milestones' | 'tasks' | 'timeline') => {
+    setCurrentView(section);
+    console.log(`🎯 Navigating to ${section} section`);
+  };
+
+  const handleBackToOverview = () => {
+    setCurrentView('overview');
+  };
+
+  const handleMilestoneSelect = (milestone: any) => {
+    console.log('🎯 Selected milestone:', milestone.title);
+    // You can add milestone focus logic here
+  };
+
   const getRecommendedTask = () => {
     return goal.tasks?.[0] || null;
   };
 
   const currentStep = tourSteps[tourStep];
 
+  // Render different views based on currentView
+  if (currentView === 'milestones') {
+    return (
+      <div className="min-h-screen">
+        <MilestoneDetailView
+          milestones={goal.milestones || []}
+          onBack={handleBackToOverview}
+          onMilestoneSelect={handleMilestoneSelect}
+        />
+      </div>
+    );
+  }
+
+  if (currentView === 'tasks') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-soul-purple/5 via-white to-soul-teal/5">
+        <div className="max-w-4xl mx-auto p-4">
+          <TaskViews
+            focusedMilestone={null}
+            onBackToJourney={handleBackToOverview}
+            onTaskSelect={onStartTask}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (currentView === 'timeline') {
+    return (
+      <div className="min-h-screen">
+        <TimelineDetailView
+          goal={goal}
+          milestones={goal.milestones || []}
+          onBack={handleBackToOverview}
+        />
+      </div>
+    );
+  }
+
+  // Default overview view
   return (
     <div className="min-h-screen bg-gradient-to-br from-soul-purple/5 via-white to-soul-teal/5 p-4">
       <div className="max-w-4xl mx-auto space-y-6">
@@ -112,11 +170,12 @@ export const DreamSuccessPage: React.FC<DreamSuccessPageProps> = ({
           onSkipTour={handleSkipTour}
         />
 
-        <JourneyOverview
+        <InteractiveJourneyOverview
           milestonesCount={goal.milestones?.length || 0}
           tasksCount={goal.tasks?.length || 0}
           timeframe={goal.timeframe}
           isHighlighted={currentStep?.highlight === 'overview'}
+          onNavigateToSection={handleNavigateToSection}
         />
 
         <MilestonesRoadmap
