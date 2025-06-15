@@ -18,6 +18,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
+import { LanguageSelector } from "@/components/ui/language-selector";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -78,17 +79,20 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
               Soul Guide
             </span>
           </Link>
-          
-          {user && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden rounded-xl"
-            >
-              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
-          )}
+          {/* Language selector on mobile top right */}
+          <div className="flex items-center space-x-2">
+            <LanguageSelector />
+            {user && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="md:hidden rounded-xl"
+              >
+                {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </Button>
+            )}
+          </div>
         </div>
         
         {/* Mobile Menu Dropdown */}
@@ -110,14 +114,18 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
         {/* Desktop Sidebar */}
         {user && (
           <div className="hidden md:flex w-64 min-h-full bg-white/80 backdrop-blur-lg border-r border-gray-100 flex-col">
-            {/* Logo */}
-            <div className="p-6 border-b border-gray-100">
+            {/* Logo and Language Selector */}
+            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
               <Link to="/" className="flex items-center space-x-3">
                 <SoulOrbAvatar size="md" />
                 <span className="font-display font-bold text-xl gradient-text">
                   Soul Guide
                 </span>
               </Link>
+              {/* Language Selector on desktop, top right of sidebar */}
+              <div className="ml-2">
+                <LanguageSelector />
+              </div>
             </div>
 
             {/* Navigation */}

@@ -107,9 +107,6 @@ const SpiritualGrowth = () => {
     return (
       <MainLayout>
         <div className="flex flex-col h-[calc(100vh-5rem)] w-full p-4 items-center justify-center">
-          <div className="w-full flex justify-end mb-5">
-            <LanguageSelector />
-          </div>
           <CosmicCard className="p-6 text-center w-full">
             <Heart className="h-8 w-8 text-soul-purple mx-auto mb-4" />
             <h1 className="text-2xl font-bold font-display mb-2">
@@ -131,7 +128,7 @@ const SpiritualGrowth = () => {
   return (
     <MainLayout>
       <div className="flex flex-col h-[calc(100vh-5rem)] w-full p-4">
-        {/* Header with language selector */}
+        {/* Header with NO LanguageSelector; now handled in MainLayout */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4 w-full">
           <div className="text-center sm:text-left">
             <h1 className="text-2xl font-bold font-display mb-1">
@@ -145,9 +142,6 @@ const SpiritualGrowth = () => {
                 Position: {growthJourney.current_position} • {messages.length} conversation messages
               </p>
             )}
-          </div>
-          <div className="self-center sm:self-auto">
-            <LanguageSelector />
           </div>
         </div>
 
