@@ -262,6 +262,8 @@ const Dreams = () => {
               isLoading={isLoading}
               onSendMessage={sendMessage}
               messagesEndRef={messagesEndRef}
+              taskTitle="Dream Coaching"
+              estimatedDuration="~30 min"
             />
           </div>
         </div>

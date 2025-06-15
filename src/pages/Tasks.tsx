@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
@@ -345,6 +344,8 @@ const Tasks = () => {
                       isLoading={isLoading}
                       onSendMessage={sendMessage}
                       messagesEndRef={messagesEndRef}
+                      taskTitle="General Coaching"
+                      estimatedDuration="~30 min"
                     />
                   </div>
                 </div>
