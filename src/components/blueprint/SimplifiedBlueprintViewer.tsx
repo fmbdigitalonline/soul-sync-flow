@@ -65,7 +65,8 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
     if (
       personality &&
       typeof personality === "object" &&
-      "likelyType" in personality // Make sure this is not just a string!
+      personality !== null &&
+      "likelyType" in personality
     ) {
       // Cast personality to any to avoid TypeScript null checking issues
       const validPersonality = personality as any;
