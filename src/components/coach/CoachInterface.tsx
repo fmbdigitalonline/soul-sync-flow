@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,15 +22,17 @@ import { FocusModeSessionBanner } from "./FocusModeSessionBanner";
 import { StepChecklistProgress } from "./StepChecklistProgress";
 import { CoachStepMessage } from "./CoachStepMessage";
 import { ArrowRight } from "lucide-react";
+import { CoachLoadingMessage } from "./CoachLoadingMessage";
 
 interface CoachInterfaceProps {
   messages: Message[];
   isLoading: boolean;
   onSendMessage: (message: string) => void;
   messagesEndRef: React.RefObject<HTMLDivElement>;
-  /** These are now required for session banner */
   taskTitle: string;
   estimatedDuration: string;
+  /** Optional: Used by TaskCoachInterface to signal waiting for the first reply */
+  awaitingFirstAssistantReply?: boolean;
 }
 
 export const CoachInterface: React.FC<CoachInterfaceProps> = ({
@@ -40,6 +42,7 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
   messagesEndRef,
   taskTitle,
   estimatedDuration,
+  awaitingFirstAssistantReply = false,
 }) => {
   const [inputValue, setInputValue] = useState("");
   const { t } = useLanguage();
@@ -92,6 +95,34 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
       setCurrentStepIdx(0);
     }
   }, [messages, parseStepsFromMessages]);
+
+  // Fallback state in case the assistant takes too long
+  const [isFallbackTimeout, setIsFallbackTimeout] = useState(false);
+
+  useEffect(() => {
+    // Only trigger on first waiting, and only when no messages yet, and is loading
+    if (isLoading && messages.length === 0 && awaitingFirstAssistantReply) {
+      setIsFallbackTimeout(false);
+      const timeout = setTimeout(() => setIsFallbackTimeout(true), 15000); // 15 second fallback
+      return () => clearTimeout(timeout);
+    } else {
+      setIsFallbackTimeout(false);
+    }
+  }, [isLoading, messages.length, awaitingFirstAssistantReply]);
+
+  // Show loading state before first assistant message
+  if (isLoading && messages.length === 0 && awaitingFirstAssistantReply) {
+    return (
+      <CoachLoadingMessage
+        message={
+          isFallbackTimeout
+            ? "This is taking a moment — the coach is working deeply to shape your next step…"
+            : "Coach is preparing your plan..."
+        }
+        showSpinner={!isFallbackTimeout}
+      />
+    );
+  }
 
   const handleSendMessage = () => {
     if (inputValue.trim() === "") return;

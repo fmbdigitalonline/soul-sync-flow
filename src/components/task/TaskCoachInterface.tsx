@@ -52,6 +52,7 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
   const [focusTime, setFocusTime] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [taskProgress, setTaskProgress] = useState(0);
+  const [awaitingFirstAssistantReply, setAwaitingFirstAssistantReply] = useState(false);
 
   // Timer effect
   useEffect(() => {
@@ -100,6 +101,8 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
   const handleStartSession = () => {
     setSessionStarted(true);
     setIsTimerRunning(true);
+    setAwaitingFirstAssistantReply(true);
+
     const initialMessage = `I'm ready to work on this task: "${task.title}". ${task.description ? `Description: ${task.description}. ` : ''}This task requires ${task.energy_level_required} energy and should take about ${task.estimated_duration}. 
 
 As my coach, please help me by:
@@ -110,7 +113,10 @@ As my coach, please help me by:
 
 Let's start with the first concrete step I should take right now.`;
     
-    sendMessage(initialMessage);
+    sendMessage(initialMessage).then(() => {
+      // As soon as at least one new message from assistant arrives, disable waiting state
+      setAwaitingFirstAssistantReply(false);
+    });
   };
 
   const handleQuickAction = (actionId: string, message: string) => {
@@ -270,6 +276,7 @@ Let's start with the first concrete step I should take right now.`;
                 messagesEndRef={messagesEndRef}
                 taskTitle={task.title}
                 estimatedDuration={task.estimated_duration}
+                awaitingFirstAssistantReply={awaitingFirstAssistantReply}
               />
             </div>
           )}
