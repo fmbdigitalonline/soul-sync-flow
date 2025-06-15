@@ -3,7 +3,7 @@ import React, { useRef, useEffect, useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
-import { Heart, Sparkles, Moon, BookOpen, Calendar, MessageCircle } from "lucide-react";
+import { Heart, Sparkles, Moon, BookOpen, Calendar, MessageCircle, Compass } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useEnhancedAICoach } from "@/hooks/use-enhanced-ai-coach";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,15 +12,18 @@ import { MoodTracker } from "@/components/coach/MoodTracker";
 import { ReflectionPrompts } from "@/components/coach/ReflectionPrompts";
 import { InsightJournal } from "@/components/coach/InsightJournal";
 import { WeeklyInsights } from "@/components/coach/WeeklyInsights";
+import { LifeAreaSelector, LifeArea } from "@/components/growth/LifeAreaSelector";
+import { JourneyEngine } from "@/components/growth/JourneyEngine";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 
-type ActiveTool = 'mood' | 'reflection' | 'insight' | 'weekly' | 'chat' | null;
+type ActiveTool = 'mood' | 'reflection' | 'insight' | 'weekly' | 'chat' | 'journey' | null;
 
 const SpiritualGrowth = () => {
   const { messages, isLoading, sendMessage, resetConversation } = useEnhancedAICoach("guide");
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [activeTool, setActiveTool] = useState<ActiveTool>(null);
+  const [activeTool, setActiveTool] = useState<ActiveTool>('journey'); // Default to journey mode
+  const [selectedLifeArea, setSelectedLifeArea] = useState<LifeArea | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -76,14 +79,28 @@ const SpiritualGrowth = () => {
 
   const toggleTool = (tool: ActiveTool) => {
     setActiveTool(activeTool === tool ? null : tool);
+    // Reset life area selection when switching tools
+    if (tool !== 'journey') {
+      setSelectedLifeArea(null);
+    }
+  };
+
+  const handleLifeAreaSelect = (area: LifeArea) => {
+    setSelectedLifeArea(area);
+    console.log('Selected life area:', area.name);
+  };
+
+  const handleBackToLifeAreas = () => {
+    setSelectedLifeArea(null);
   };
 
   const tools = [
+    { id: 'journey' as ActiveTool, name: 'Soul Guide', icon: Compass },
     { id: 'mood' as ActiveTool, name: 'Mood Tracker', icon: Heart },
     { id: 'reflection' as ActiveTool, name: 'Reflection Prompts', icon: Sparkles },
     { id: 'insight' as ActiveTool, name: 'Insight Journal', icon: BookOpen },
     { id: 'weekly' as ActiveTool, name: 'Weekly Insights', icon: Calendar },
-    { id: 'chat' as ActiveTool, name: 'Soul Guide', icon: MessageCircle },
+    { id: 'chat' as ActiveTool, name: 'Free Chat', icon: MessageCircle },
   ];
 
   if (!isAuthenticated) {
@@ -116,7 +133,9 @@ const SpiritualGrowth = () => {
           <h1 className="text-2xl font-bold font-display mb-1">
             <span className="gradient-text">Growth Mode</span>
           </h1>
-          <p className="text-sm text-muted-foreground">Inner reflection & soul wisdom</p>
+          <p className="text-sm text-muted-foreground">
+            {selectedLifeArea ? `Exploring ${selectedLifeArea.name}` : 'Inner reflection & soul wisdom'}
+          </p>
           {growthJourney && (
             <p className="text-xs text-muted-foreground mt-1">
               Position: {growthJourney.current_position} • {messages.length} conversation messages
@@ -125,7 +144,7 @@ const SpiritualGrowth = () => {
         </div>
 
         {/* Tool Toggle Buttons */}
-        <div className="grid grid-cols-2 gap-2 mb-4 w-full">
+        <div className="grid grid-cols-3 gap-2 mb-4 w-full">
           {tools.map((tool) => {
             const Icon = tool.icon;
             return (
@@ -144,6 +163,17 @@ const SpiritualGrowth = () => {
 
         {/* Active Tool Content */}
         <div className="flex-1 w-full">
+          {activeTool === 'journey' && (
+            selectedLifeArea ? (
+              <JourneyEngine 
+                selectedArea={selectedLifeArea} 
+                onBack={handleBackToLifeAreas}
+              />
+            ) : (
+              <LifeAreaSelector onAreaSelect={handleLifeAreaSelect} />
+            )
+          )}
+
           {activeTool === 'mood' && (
             <MoodTracker onMoodSave={handleMoodSave} />
           )}
@@ -200,10 +230,10 @@ const SpiritualGrowth = () => {
           
           {!activeTool && (
             <CosmicCard className="p-8 text-center h-full flex flex-col items-center justify-center">
-              <Heart className="h-12 w-12 text-soul-purple/50 mb-4" />
+              <Compass className="h-12 w-12 text-soul-purple/50 mb-4" />
               <h3 className="text-lg font-medium mb-2">Choose Your Growth Tool</h3>
               <p className="text-sm text-muted-foreground">
-                Select a tool above to begin your inner reflection journey
+                Start with Soul Guide for a personalized journey, or select any tool above
               </p>
             </CosmicCard>
           )}
