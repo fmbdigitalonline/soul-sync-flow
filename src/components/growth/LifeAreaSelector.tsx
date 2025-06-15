@@ -1,4 +1,3 @@
-
 import React from "react";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
@@ -18,49 +17,49 @@ const lifeAreas: LifeArea[] = [
     name: 'Home',
     icon: Heart,
     description: 'Family, living space, domestic harmony',
-    color: 'bg-gradient-to-br from-soul-purple/10 to-soul-lavender/20 text-soul-purple border-soul-purple/30 hover:from-soul-purple/20 hover:to-soul-lavender/30'
+    color: 'border-soul-purple text-soul-purple hover:bg-soul-purple/5'
   },
   {
     id: 'career',
     name: 'Career',
     icon: Briefcase,
     description: 'Purpose, professional growth, impact',
-    color: 'bg-gradient-to-br from-soul-teal/10 to-soul-blue/20 text-soul-teal border-soul-teal/30 hover:from-soul-teal/20 hover:to-soul-blue/30'
+    color: 'border-soul-teal text-soul-teal hover:bg-soul-teal/5'
   },
   {
     id: 'finances',
     name: 'Finances',
     icon: DollarSign,
     description: 'Abundance, security, money mindset',
-    color: 'bg-gradient-to-br from-soul-gold/10 to-soul-gold/20 text-soul-gold border-soul-gold/40 hover:from-soul-gold/20 hover:to-soul-gold/30'
+    color: 'border-soul-gold text-soul-gold hover:bg-soul-gold/5'
   },
   {
     id: 'relationships',
     name: 'Relationships',
     icon: Users,
     description: 'Love, friendship, community connection',
-    color: 'bg-gradient-to-br from-soul-lavender/10 to-soul-purple/20 text-soul-lavender border-soul-lavender/30 hover:from-soul-lavender/20 hover:to-soul-purple/30'
+    color: 'border-soul-lavender text-soul-lavender hover:bg-soul-lavender/5'
   },
   {
     id: 'wellbeing',
     name: 'Well-being',
     icon: Flower,
     description: 'Health, energy, mental clarity',
-    color: 'bg-gradient-to-br from-soul-pewter/10 to-soul-teal/20 text-soul-pewter border-soul-pewter/30 hover:from-soul-pewter/20 hover:to-soul-teal/30'
+    color: 'border-soul-pewter text-soul-pewter hover:bg-soul-pewter/5'
   },
   {
     id: 'creativity',
     name: 'Creativity',
     icon: Palette,
     description: 'Expression, art, innovation, play',
-    color: 'bg-gradient-to-br from-soul-indigo/10 to-soul-blue/20 text-soul-indigo border-soul-indigo/30 hover:from-soul-indigo/20 hover:to-soul-blue/30'
+    color: 'border-soul-indigo text-soul-indigo hover:bg-soul-indigo/5'
   },
   {
     id: 'spirituality',
     name: 'Spirituality',
     icon: Sparkles,
     description: 'Inner wisdom, connection, transcendence',
-    color: 'bg-gradient-to-br from-soul-purple/10 to-soul-indigo/20 text-soul-purple border-soul-purple/30 hover:from-soul-purple/20 hover:to-soul-indigo/30'
+    color: 'border-soul-purple text-soul-purple hover:bg-soul-purple/5'
   }
 ];
 
@@ -88,7 +87,7 @@ export const LifeAreaSelector: React.FC<LifeAreaSelectorProps> = ({ onAreaSelect
               key={area.id}
               variant="outline"
               onClick={() => onAreaSelect(area)}
-              className={`h-auto p-4 flex flex-col items-center space-y-3 hover:scale-105 transition-all duration-200 ${area.color}`}
+              className={`h-auto p-4 flex flex-col items-center space-y-3 hover:scale-105 transition-all duration-200 border-2 ${area.color}`}
             >
               <Icon className="h-8 w-8" />
               <div className="text-center">
