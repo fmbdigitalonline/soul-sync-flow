@@ -8,6 +8,7 @@ import { CosmicCard } from "@/components/ui/cosmic-card";
 import { FileText, Sparkles } from "lucide-react";
 import AIPersonalityReport from "./AIPersonalityReport";
 import { require } from "module";
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface SimplifiedBlueprintViewerProps {
   blueprint: BlueprintData;
@@ -54,7 +55,7 @@ function isValidPersonality(personality: any): personality is {
 export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ blueprint }) => {
   const [activeTab, setActiveTab] = useState("overview");
   const [showAIReport, setShowAIReport] = useState(false);
-  const { t } = require('@/contexts/LanguageContext').useLanguage();
+  const { t } = useLanguage();
 
   // --- Numerology Data Mapping (same as previous fix) ---
   const rawNumerology = blueprint.values_life_path || blueprint.numerology || {};
