@@ -16,9 +16,8 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
   const [activeTab, setActiveTab] = useState("overview");
   const [showAIReport, setShowAIReport] = useState(false);
 
-  // --- SMART numerology data mapping: support snake_case & camelCase ---
+  // --- Numerology Data Mapping (same as previous fix) ---
   const rawNumerology = blueprint.values_life_path || blueprint.numerology || {};
-  // If keys are in snake_case, convert/copy to camelCase for frontend use
   const numerologyData = {
     lifePathNumber: rawNumerology.lifePathNumber ?? rawNumerology.life_path_number ?? "",
     lifePathKeyword: rawNumerology.lifePathKeyword ?? rawNumerology.life_path_keyword ?? "",
@@ -31,6 +30,37 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
     personalityNumber: rawNumerology.personalityNumber ?? rawNumerology.personality_number ?? "",
     personalityKeyword: rawNumerology.personalityKeyword ?? rawNumerology.personality_keyword ?? ""
   };
+
+  // --- MBTI Data Extraction with Robust Fallbacks ---
+  let mbtiData = blueprint.cognition_mbti && blueprint.cognition_mbti.type && blueprint.cognition_mbti.type !== "Unknown"
+    ? blueprint.cognition_mbti
+    : blueprint.mbti && blueprint.mbti.type && blueprint.mbti.type !== "Unknown"
+      ? blueprint.mbti
+      : null;
+
+  // Fallback: try user_meta.personality.likelyType if previous failed
+  if (!mbtiData || !mbtiData.type || mbtiData.type === "Unknown") {
+    // Combine info from user_meta.personality if present
+    if (blueprint.user_meta?.personality) {
+      const personality = blueprint.user_meta.personality;
+      mbtiData = {
+        type: personality.likelyType || "Unknown",
+        core_keywords: personality.mbtiCoreKeywords || personality.core_keywords || [],
+        dominant_function: personality.dominantFunction || personality.dominant_function || "Unknown",
+        auxiliary_function: personality.auxiliaryFunction || personality.auxiliary_function || "Unknown",
+        description: personality.description || "",
+        user_confidence: personality.userConfidence || undefined
+      };
+    } else {
+      mbtiData = {
+        type: "Unknown",
+        core_keywords: [],
+        dominant_function: "Unknown",
+        auxiliary_function: "Unknown",
+        description: "",
+      };
+    }
+  }
 
   console.log("NUMEROLOGY DEBUG", { numerologyData, rawNumerology, blueprint });
 
@@ -75,13 +105,6 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
     moon_keyword: "Unknown",
     rising_sign: "Unknown",
     source: "template"
-  };
-
-  const mbtiData = blueprint.cognition_mbti || blueprint.mbti || {
-    type: "ENFP",
-    core_keywords: ["Enthusiastic", "Creative"],
-    dominant_function: "Extraverted Intuition",
-    auxiliary_function: "Introverted Feeling"
   };
 
   const humanDesignData = blueprint.energy_strategy_human_design || blueprint.human_design || {
@@ -184,8 +207,10 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
                   </div>
                   <div className="text-center">
                     <h4 className="font-semibold">MBTI Type</h4>
-                    <p className="text-lg text-soul-purple">{mbtiData.type}</p>
-                    <p className="text-sm text-gray-600">{mbtiData.core_keywords?.join(", ")}</p>
+                    <p className="text-lg text-soul-purple">{mbtiData.type || "Unknown"}</p>
+                    <p className="text-sm text-gray-600">{Array.isArray(mbtiData.core_keywords) && mbtiData.core_keywords.length
+                      ? mbtiData.core_keywords.join(", ")
+                      : (mbtiData.description || "Unknown")}</p>
                   </div>
                   <div className="text-center">
                     <h4 className="font-semibold">Life Path</h4>
@@ -207,17 +232,24 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
             <CardContent>
               <div className="space-y-3">
                 <div>
-                  <span className="font-semibold">Type:</span> {mbtiData.type}
+                  <span className="font-semibold">Type:</span> {mbtiData.type || "Unknown"}
                 </div>
                 <div>
-                  <span className="font-semibold">Core Keywords:</span> {mbtiData.core_keywords?.join(", ")}
+                  <span className="font-semibold">Core Keywords:</span> {Array.isArray(mbtiData.core_keywords) && mbtiData.core_keywords.length
+                      ? mbtiData.core_keywords.join(", ")
+                      : (mbtiData.description || "Unknown")}
                 </div>
                 <div>
-                  <span className="font-semibold">Dominant Function:</span> {mbtiData.dominant_function}
+                  <span className="font-semibold">Dominant Function:</span> {mbtiData.dominant_function || "Unknown"}
                 </div>
                 <div>
-                  <span className="font-semibold">Auxiliary Function:</span> {mbtiData.auxiliary_function}
+                  <span className="font-semibold">Auxiliary Function:</span> {mbtiData.auxiliary_function || "Unknown"}
                 </div>
+                {mbtiData.user_confidence !== undefined && (
+                  <div>
+                    <span className="font-semibold">Self-assessment confidence:</span> {Math.round(mbtiData.user_confidence * 100)}%
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
