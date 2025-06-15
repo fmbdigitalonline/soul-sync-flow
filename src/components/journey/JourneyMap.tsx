@@ -16,7 +16,10 @@ interface JourneyMapProps {
   onMilestoneClick?: (milestoneId: string) => void;
 }
 
-export const JourneyMap: React.FC<JourneyMapProps> = ({ onTaskClick, onMilestoneClick }) => {
+export const JourneyMap: React.FC<JourneyMapProps> = ({
+  onTaskClick,
+  onMilestoneClick,
+}) => {
   const {
     mainGoal,
     selectedView,
@@ -29,7 +32,7 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({ onTaskClick, onMilestone
     nextTasks,
     getBlueprintInsight,
     currentDetailView,
-    setCurrentDetailView
+    setCurrentDetailView,
   } = useJourneyMapData();
 
   if (!mainGoal) {
@@ -38,17 +41,17 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({ onTaskClick, onMilestone
 
   const handleFocusMode = (milestone: any) => {
     setFocusedMilestone(milestone);
-    console.log('🎯 Entering focus mode for milestone:', milestone.title);
+    console.log("[Focus] Entering focus mode for milestone:", milestone.title);
   };
 
   const exitFocusMode = () => {
     setFocusedMilestone(null);
-    console.log('↩️ Exiting focus mode');
+    console.log("[Focus] Exiting focus mode");
   };
 
-  const handleNavigateToSection = (section: 'milestones' | 'tasks' | 'timeline') => {
+  const handleNavigateToSection = (section: "milestones" | "tasks" | "timeline") => {
     setCurrentDetailView(section);
-    console.log(`🎯 Navigating to ${section} section from Journey Map`);
+    console.log(`[Navigate] To ${section} section from Journey Map`);
   };
 
   const handleBackToOverview = () => {
@@ -56,14 +59,13 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({ onTaskClick, onMilestone
   };
 
   const handleMilestoneSelect = (milestone: any) => {
-    console.log('🎯 Selected milestone:', milestone.title);
     if (onMilestoneClick) {
       onMilestoneClick(milestone.id);
     }
   };
 
   // Show detailed views when requested
-  if (currentDetailView === 'milestones') {
+  if (currentDetailView === "milestones") {
     return (
       <div className="min-h-screen">
         <MilestoneDetailView
@@ -75,7 +77,7 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({ onTaskClick, onMilestone
     );
   }
 
-  if (currentDetailView === 'tasks') {
+  if (currentDetailView === "tasks") {
     return (
       <div className="min-h-screen bg-gradient-to-br from-soul-purple/5 via-white to-soul-teal/5">
         <div className="max-w-4xl mx-auto p-4">
@@ -89,7 +91,7 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({ onTaskClick, onMilestone
     );
   }
 
-  if (currentDetailView === 'timeline') {
+  if (currentDetailView === "timeline") {
     return (
       <div className="min-h-screen">
         <TimelineDetailView
@@ -133,7 +135,7 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({ onTaskClick, onMilestone
         setSelectedView={setSelectedView}
       />
 
-      {selectedView === 'overview' ? (
+      {selectedView === "overview" ? (
         <JourneyOverview
           mainGoal={mainGoal}
           completedMilestones={completedMilestones}
