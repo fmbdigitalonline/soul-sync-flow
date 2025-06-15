@@ -5,6 +5,7 @@ import { DecompositionProgress } from './decomposition/DecompositionProgress';
 import { BlueprintInsight } from './decomposition/BlueprintInsight';
 import { ErrorDisplay } from './decomposition/ErrorDisplay';
 import { useDecompositionLogic } from './decomposition/useDecompositionLogic';
+import { motion } from '@/lib/framer-motion';
 
 interface DreamDecompositionPageProps {
   dreamTitle: string;
@@ -47,7 +48,13 @@ export const DreamDecompositionPage: React.FC<DreamDecompositionPageProps> = ({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-soul-purple/10 via-white to-soul-teal/5 flex items-center justify-center p-4">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.5 }}
+      className="min-h-screen bg-gradient-to-br from-soul-purple/10 via-white to-soul-teal/5 flex items-center justify-center p-4"
+    >
       <div className="max-w-md w-full text-center space-y-8">
         
         <DecompositionStageDisplay
@@ -56,6 +63,7 @@ export const DreamDecompositionPage: React.FC<DreamDecompositionPageProps> = ({
           currentStageIndex={currentStageIndex}
           totalStages={stages.length}
           completedStages={completedStages}
+          dreamTitle={dreamTitle}
         />
 
         <DecompositionProgress
@@ -71,6 +79,6 @@ export const DreamDecompositionPage: React.FC<DreamDecompositionPageProps> = ({
           getUserType={getUserType}
         />
       </div>
-    </div>
+    </motion.div>
   );
 };
