@@ -80,9 +80,7 @@ const Index = () => {
             Welcome to <span className="gradient-text">Soul Sync</span>
           </h1>
           
-          <p className="text-lg sm:text-xl mb-6 sm:mb-8 px-4 text-muted-foreground">
-            Your personal guide to achieving your dreams through soul-aligned action.
-          </p>
+          <p className="text-lg sm:text-xl mb-6 sm:mb-8 px-4 text-muted-foreground">Live by Design, Understand Yourself and Achieve Through Alignment!</p>
 
           {user && <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
               <Link to="/dreams" className="block">
