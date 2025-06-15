@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, CheckCircle2, Clock, Target, BookOpen, Brain, Heart, Sparkles } from "lucide-react";
 import { LifeArea } from "./LifeAreaSelector";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
-import { useEnhancedAICoach } from "@/hooks/use-enhanced-ai-coach";
+import { useAICoach } from "@/hooks/use-ai-coach";
 import { useBlueprintData } from "@/hooks/use-blueprint-data";
 
 interface JourneyStep {
@@ -33,7 +32,7 @@ export const JourneyEngine: React.FC<JourneyEngineProps> = ({ selectedArea, onBa
   const [isProcessingResponse, setIsProcessingResponse] = useState(false);
   
   const { growthJourney, addReflectionEntry, addInsightEntry } = useJourneyTracking();
-  const { sendMessage, isLoading } = useEnhancedAICoach("guide");
+  const { sendMessage, isLoading, messages } = useAICoach();
   const { blueprintData } = useBlueprintData();
 
   useEffect(() => {
@@ -95,13 +94,18 @@ Format as JSON with this structure:
   ]
 }`;
 
-      const response = await sendMessage(prompt);
+      // Send the message and wait for response
+      await sendMessage(prompt);
+      
+      // Get the latest AI response from messages
+      const latestMessage = messages[messages.length - 1];
+      const aiResponse = latestMessage?.sender === 'assistant' ? latestMessage.content : '';
       
       // Try to parse AI response as JSON, fallback to structured creation if needed
       let aiSteps;
       try {
-        if (response) {
-          const jsonMatch = response.match(/\{[\s\S]*\}/);
+        if (aiResponse) {
+          const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
           if (jsonMatch) {
             const parsed = JSON.parse(jsonMatch[0]);
             aiSteps = parsed.steps;
@@ -201,7 +205,11 @@ Provide brief, insightful guidance that:
 
 Be warm, wise, and encouraging.`;
 
-      const aiGuidance = await sendMessage(guidancePrompt);
+      await sendMessage(guidancePrompt);
+      
+      // Get the latest AI response from messages
+      const latestMessage = messages[messages.length - 1];
+      const aiGuidance = latestMessage?.sender === 'assistant' ? latestMessage.content : undefined;
       
       // Update step with response and guidance
       const updatedSteps = [...steps];
@@ -209,7 +217,7 @@ Be warm, wise, and encouraging.`;
         ...step,
         completed: true,
         userResponse: response,
-        aiGuidance: aiGuidance || undefined
+        aiGuidance: aiGuidance
       };
       setSteps(updatedSteps);
 
