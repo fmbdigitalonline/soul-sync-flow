@@ -64,18 +64,23 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
     // Check if user_meta.personality exists and is a valid object with likelyType
     const personality = blueprint.user_meta?.personality;
     if (
-      personality &&
+      personality != null &&
       typeof personality === "object" &&
       "likelyType" in personality // Make sure this is not just a string!
     ) {
       mbtiData = {
-        type: personality.likelyType || "Unknown",
-        core_keywords: personality.mbtiCoreKeywords || ("core_keywords" in personality ? personality.core_keywords : []),
-        dominant_function: personality.dominantFunction || ("dominant_function" in personality ? personality.dominant_function : "Unknown"),
-        auxiliary_function: personality.auxiliaryFunction || ("auxiliary_function" in personality ? personality.auxiliary_function : "Unknown"),
-        description: personality.description || "",
-        user_confidence: "userConfidence" in personality ? personality.userConfidence : undefined
+        type: (personality != null && ('likelyType' in personality) && personality.likelyType) ? personality.likelyType : "Unknown",
+        core_keywords: personality != null && (personality.mbtiCoreKeywords ?? ("core_keywords" in personality ? personality.core_keywords : [])),
+        dominant_function: personality != null && (personality.dominantFunction ?? ("dominant_function" in personality ? personality.dominant_function : "Unknown")),
+        auxiliary_function: personality != null && (personality.auxiliaryFunction ?? ("auxiliary_function" in personality ? personality.auxiliary_function : "Unknown")),
+        description: personality != null && (personality.description ?? ""),
+        user_confidence: (personality != null && "userConfidence" in personality) ? personality.userConfidence : undefined
       };
+      // Fallbacks for props that might still be undefined
+      if (!mbtiData.core_keywords) mbtiData.core_keywords = [];
+      if (!mbtiData.dominant_function) mbtiData.dominant_function = "Unknown";
+      if (!mbtiData.auxiliary_function) mbtiData.auxiliary_function = "Unknown";
+      if (!mbtiData.description) mbtiData.description = "";
     } else {
       mbtiData = {
         type: "Unknown",
