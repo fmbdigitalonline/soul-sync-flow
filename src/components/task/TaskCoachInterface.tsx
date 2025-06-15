@@ -268,6 +268,8 @@ Let's start with the first concrete step I should take right now.`;
                 isLoading={isLoading}
                 onSendMessage={handleCoachMessage}
                 messagesEndRef={messagesEndRef}
+                taskTitle={task.title}
+                estimatedDuration={task.estimated_duration}
               />
             </div>
           )}

@@ -27,6 +27,9 @@ interface CoachInterfaceProps {
   isLoading: boolean;
   onSendMessage: (message: string) => void;
   messagesEndRef: React.RefObject<HTMLDivElement>;
+  /** These are now required for session banner */
+  taskTitle: string;
+  estimatedDuration: string;
 }
 
 export const CoachInterface: React.FC<CoachInterfaceProps> = ({
@@ -34,6 +37,8 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
   isLoading,
   onSendMessage,
   messagesEndRef,
+  taskTitle,
+  estimatedDuration,
 }) => {
   const [inputValue, setInputValue] = useState("");
   const { t } = useLanguage();
@@ -93,6 +98,14 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
     setInputValue("");
   };
 
+  // Added to fix missing handler error
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
   // Quick action suggestions for productivity
   const quickActions = [
     t('quickAction.breakDownGoal'),
@@ -109,8 +122,8 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
     <div className="flex flex-col h-full w-full">
       {/* Session Banner */}
       <FocusModeSessionBanner 
-        taskTitle={messages.find(m => m.taskTitle)?.taskTitle || "Task Session"}
-        estimatedDuration={messages.find(m => m.estimatedDuration)?.estimatedDuration || "~30 min"}
+        taskTitle={taskTitle || "Task Session"}
+        estimatedDuration={estimatedDuration || "~30 min"}
       />
 
       {/* Steps Progress checklist */}
