@@ -27,6 +27,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
 }) => {
   const [showModal, setShowModal] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [localStatus, setLocalStatus] = useState(task.status || 'todo');
 
   const handleStartCoach = () => {
     if (!isProcessing) {
@@ -39,7 +40,6 @@ export const TaskCard: React.FC<TaskCardProps> = ({
       setIsProcessing(true);
       setShowModal(false);
       onDoubleTap(task);
-      // Reset processing state after a delay to prevent rapid clicks
       setTimeout(() => setIsProcessing(false), 1000);
     }
   };
@@ -48,19 +48,36 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     setShowModal(false);
   };
 
-  const handleStatusChange = (newStatus: 'todo' | 'in_progress' | 'stuck' | 'completed') => {
+  const handleStatusChange = async (newStatus: 'todo' | 'in_progress' | 'stuck' | 'completed') => {
     if (onStatusChange && !isProcessing) {
-      onStatusChange(task, newStatus);
+      console.log('TaskCard: Status changing from', localStatus, 'to', newStatus);
+      
+      // Optimistic update
+      setLocalStatus(newStatus);
+      
+      try {
+        await onStatusChange(task, newStatus);
+        console.log('TaskCard: Status change successful');
+      } catch (error) {
+        console.error('TaskCard: Status change failed, reverting', error);
+        // Revert on error
+        setLocalStatus(task.status || 'todo');
+      }
     }
   };
 
   const handleMarkDone = () => {
     if (onMarkDone && !isProcessing) {
       setIsProcessing(true);
+      setLocalStatus('completed');
       onMarkDone(task);
       setTimeout(() => setIsProcessing(false), 500);
     }
   };
+
+  // Use local status for optimistic updates, but fall back to task status
+  const currentStatus = localStatus;
+  const isCompleted = currentStatus === 'completed' || task.completed;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -84,12 +101,12 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     <>
       <Card
         className={`cursor-pointer transition-all duration-200 hover:shadow-md transform active:scale-[0.98] ${getStatusColor(
-          task.status
+          currentStatus
         )}`}
       >
         <CardContent className="p-4">
           <div className="flex items-center gap-3 mb-2">
-            {task.completed || task.status === "completed" ? (
+            {isCompleted ? (
               <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
             ) : (
               <Circle className="h-5 w-5 text-gray-400 flex-shrink-0" />
@@ -97,7 +114,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             <div className="flex-1 min-w-0">
               <h4
                 className={`font-bold text-base truncate ${
-                  task.completed || task.status === "completed"
+                  isCompleted
                     ? "line-through text-gray-500"
                     : "text-gray-800"
                 }`}
@@ -132,16 +149,16 @@ export const TaskCard: React.FC<TaskCardProps> = ({
           {/* Status Selector */}
           <div className="mb-3">
             <TaskStatusSelector
-              currentStatus={task.status || 'todo'}
+              currentStatus={currentStatus}
               onStatusChange={handleStatusChange}
-              disabled={task.completed || isProcessing}
+              disabled={isCompleted || isProcessing}
             />
           </div>
 
           <div className="flex gap-2">
             <button
               className="flex-1 px-2 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={task.completed || isProcessing}
+              disabled={isCompleted || isProcessing}
               onClick={handleMarkDone}
             >
               ✅ Mark as Done
@@ -149,7 +166,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             <button
               className="flex-1 px-2 py-2 bg-soul-purple hover:bg-soul-purple/90 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={handleStartCoach}
-              disabled={task.completed || isProcessing}
+              disabled={isCompleted || isProcessing}
             >
               🔮 Tackle with Coach
             </button>

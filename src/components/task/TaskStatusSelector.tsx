@@ -31,16 +31,6 @@ export const TaskStatusSelector: React.FC<TaskStatusSelectorProps> = ({
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'todo': return 'text-slate-600 bg-slate-50 border-slate-200';
-      case 'in_progress': return 'text-blue-600 bg-blue-50 border-blue-200';
-      case 'stuck': return 'text-amber-600 bg-amber-50 border-amber-200';
-      case 'completed': return 'text-emerald-600 bg-emerald-50 border-emerald-200';
-      default: return 'text-slate-600 bg-slate-50 border-slate-200';
-    }
-  };
-
   const getStatusLabel = (status: string) => {
     switch (status) {
       case 'todo': return 'To Do';
@@ -51,10 +41,17 @@ export const TaskStatusSelector: React.FC<TaskStatusSelectorProps> = ({
     }
   };
 
+  const handleValueChange = (value: string) => {
+    console.log('TaskStatusSelector: Value changing from', currentStatus, 'to', value);
+    onStatusChange(value as 'todo' | 'in_progress' | 'stuck' | 'completed');
+  };
+
+  console.log('TaskStatusSelector: Rendering with currentStatus:', currentStatus, 'disabled:', disabled);
+
   return (
     <Select
       value={currentStatus}
-      onValueChange={(value) => onStatusChange(value as 'todo' | 'in_progress' | 'stuck' | 'completed')}
+      onValueChange={handleValueChange}
       disabled={disabled}
     >
       <SelectTrigger className="w-full h-8 text-xs">
@@ -65,7 +62,7 @@ export const TaskStatusSelector: React.FC<TaskStatusSelectorProps> = ({
           </div>
         </SelectValue>
       </SelectTrigger>
-      <SelectContent className="bg-white">
+      <SelectContent className="bg-white z-50">
         <SelectItem value="todo">
           <div className="flex items-center gap-2">
             <Circle className="h-3 w-3 text-slate-600" />
