@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { SoulOrb } from '@/components/ui/soul-orb';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, Brain } from 'lucide-react';
 import { DynamicLoadingStages } from './DynamicLoadingStages';
 import { useEnhancedLoadingLogic } from './useEnhancedLoadingLogic';
 
@@ -35,6 +35,37 @@ export const DecompositionStageDisplay: React.FC<DecompositionStageDisplayProps>
     currentStageIndex,
     totalStages
   });
+
+  // Fallback state when currentStage is undefined
+  if (!currentStage) {
+    return (
+      <div className="flex justify-center mb-6">
+        <div className="relative">
+          <SoulOrb 
+            speaking={false}
+            stage="generating"
+            size="lg"
+            pulse={true}
+          />
+          <div className="absolute inset-0 rounded-full border-2 border-soul-purple/20 animate-ping" 
+               style={{ animationDuration: '2s' }} />
+        </div>
+        <div className="space-y-3 mb-8 mt-4">
+          <div className="flex items-center justify-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-soul-purple to-soul-teal rounded-full flex items-center justify-center text-white animate-pulse">
+              <Brain className="h-5 w-5" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-800 animate-fade-in">
+              Initializing...
+            </h2>
+          </div>
+          <p className="text-gray-600 leading-relaxed px-4 text-center animate-fade-in">
+            Preparing your dream analysis...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>

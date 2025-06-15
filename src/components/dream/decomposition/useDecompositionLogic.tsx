@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useSoulOrb } from '@/contexts/SoulOrbContext';
 import { aiGoalDecompositionService } from '@/services/ai-goal-decomposition-service';
@@ -177,7 +176,8 @@ export const useDecompositionLogic = ({
     }
   ];
 
-  const currentStage = stages[currentStageIndex];
+  // Safe currentStage access with fallback
+  const currentStage = stages[currentStageIndex] || stages[0];
 
   useEffect(() => {
     if (currentStageIndex < stages.length) {
