@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,6 +33,23 @@ const MBTI_COG_FUNCTIONS: Record<string, { dominant: string; auxiliary: string }
   ESTP: { dominant: "Se (Extraverted Sensing)", auxiliary: "Ti (Introverted Thinking)" }
 };
 
+// Type guard function to check if personality has the required structure
+function isValidPersonality(personality: any): personality is {
+  likelyType: string;
+  mbtiCoreKeywords?: string[];
+  core_keywords?: string[];
+  dominantFunction?: string;
+  dominant_function?: string;
+  auxiliaryFunction?: string;
+  auxiliary_function?: string;
+  description?: string;
+  userConfidence?: number;
+} {
+  return personality != null && 
+         typeof personality === "object" && 
+         "likelyType" in personality;
+}
+
 export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ blueprint }) => {
   const [activeTab, setActiveTab] = useState("overview");
   const [showAIReport, setShowAIReport] = useState(false);
@@ -60,41 +76,32 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
       ? blueprint.mbti
       : null;
 
-  // Ensure correct typing for fallback usage
+  // Use type guard for safe personality access
   if (!mbtiData || !mbtiData.type || mbtiData.type === "Unknown") {
     const personality = blueprint.user_meta?.personality;
-    if (
-      personality != null &&
-      typeof personality === "object" &&
-      "likelyType" in personality
-    ) {
-      // Cast personality to any to avoid TypeScript null checking issues
-      const validPersonality = personality as any;
+    
+    if (isValidPersonality(personality)) {
       mbtiData = {
-        type: validPersonality.likelyType ? validPersonality.likelyType : "Unknown",
+        type: personality.likelyType || "Unknown",
         core_keywords:
-          validPersonality.mbtiCoreKeywords && Array.isArray(validPersonality.mbtiCoreKeywords)
-            ? validPersonality.mbtiCoreKeywords
-            : validPersonality.core_keywords && Array.isArray(validPersonality.core_keywords)
-              ? validPersonality.core_keywords
+          personality.mbtiCoreKeywords && Array.isArray(personality.mbtiCoreKeywords)
+            ? personality.mbtiCoreKeywords
+            : personality.core_keywords && Array.isArray(personality.core_keywords)
+              ? personality.core_keywords
               : [],
         dominant_function:
-          validPersonality.dominantFunction
-            ? validPersonality.dominantFunction
-            : validPersonality.dominant_function
-              ? validPersonality.dominant_function
-              : "Unknown",
+          personality.dominantFunction ||
+          personality.dominant_function ||
+          "Unknown",
         auxiliary_function:
-          validPersonality.auxiliaryFunction
-            ? validPersonality.auxiliaryFunction
-            : validPersonality.auxiliary_function
-              ? validPersonality.auxiliary_function
-              : "Unknown",
+          personality.auxiliaryFunction ||
+          personality.auxiliary_function ||
+          "Unknown",
         description:
-          validPersonality.description && typeof validPersonality.description === "string"
-            ? validPersonality.description
+          personality.description && typeof personality.description === "string"
+            ? personality.description
             : "",
-        user_confidence: validPersonality.userConfidence
+        user_confidence: personality.userConfidence
       };
     } else {
       mbtiData = {
