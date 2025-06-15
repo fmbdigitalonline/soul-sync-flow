@@ -18,49 +18,49 @@ const lifeAreas: LifeArea[] = [
     name: 'Home',
     icon: Heart,
     description: 'Family, living space, domestic harmony',
-    color: 'bg-rose-100 text-rose-700 border-rose-200'
+    color: 'bg-gradient-to-br from-soul-purple/10 to-soul-lavender/20 text-soul-purple border-soul-purple/30 hover:from-soul-purple/20 hover:to-soul-lavender/30'
   },
   {
     id: 'career',
     name: 'Career',
     icon: Briefcase,
     description: 'Purpose, professional growth, impact',
-    color: 'bg-blue-100 text-blue-700 border-blue-200'
+    color: 'bg-gradient-to-br from-soul-teal/10 to-soul-blue/20 text-soul-teal border-soul-teal/30 hover:from-soul-teal/20 hover:to-soul-blue/30'
   },
   {
     id: 'finances',
     name: 'Finances',
     icon: DollarSign,
     description: 'Abundance, security, money mindset',
-    color: 'bg-green-100 text-green-700 border-green-200'
+    color: 'bg-gradient-to-br from-soul-gold/10 to-soul-gold/20 text-soul-gold border-soul-gold/40 hover:from-soul-gold/20 hover:to-soul-gold/30'
   },
   {
     id: 'relationships',
     name: 'Relationships',
     icon: Users,
     description: 'Love, friendship, community connection',
-    color: 'bg-pink-100 text-pink-700 border-pink-200'
+    color: 'bg-gradient-to-br from-soul-lavender/10 to-soul-purple/20 text-soul-lavender border-soul-lavender/30 hover:from-soul-lavender/20 hover:to-soul-purple/30'
   },
   {
     id: 'wellbeing',
     name: 'Well-being',
     icon: Flower,
     description: 'Health, energy, mental clarity',
-    color: 'bg-emerald-100 text-emerald-700 border-emerald-200'
+    color: 'bg-gradient-to-br from-soul-pewter/10 to-soul-teal/20 text-soul-pewter border-soul-pewter/30 hover:from-soul-pewter/20 hover:to-soul-teal/30'
   },
   {
     id: 'creativity',
     name: 'Creativity',
     icon: Palette,
     description: 'Expression, art, innovation, play',
-    color: 'bg-orange-100 text-orange-700 border-orange-200'
+    color: 'bg-gradient-to-br from-soul-indigo/10 to-soul-blue/20 text-soul-indigo border-soul-indigo/30 hover:from-soul-indigo/20 hover:to-soul-blue/30'
   },
   {
     id: 'spirituality',
     name: 'Spirituality',
     icon: Sparkles,
     description: 'Inner wisdom, connection, transcendence',
-    color: 'bg-purple-100 text-purple-700 border-purple-200'
+    color: 'bg-gradient-to-br from-soul-purple/10 to-soul-indigo/20 text-soul-purple border-soul-purple/30 hover:from-soul-purple/20 hover:to-soul-indigo/30'
   }
 ];
 
