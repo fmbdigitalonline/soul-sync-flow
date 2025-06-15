@@ -165,7 +165,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
       </div>
 
       {/* Mobile Bottom Navigation */}
-      {user && (
+      {/* Show for all users on home page, and for authenticated users everywhere else */}
+      {(user || location.pathname === "/") && (
         <div className="md:hidden fixed bottom-0 left-0 right-0 z-50">
           <div className="bg-white/95 backdrop-blur-lg border-t border-gray-100 px-2 py-2 shadow-lg">
             <div className="flex justify-around items-center max-w-md mx-auto">
@@ -205,3 +206,4 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
 };
 
 export default MainLayout;
+
