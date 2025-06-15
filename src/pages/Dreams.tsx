@@ -200,14 +200,14 @@ const Dreams = () => {
               <Heart className="h-8 w-8 text-white" />
             </div>
             <h1 className="text-2xl font-bold mb-3 bg-gradient-to-r from-soul-purple to-soul-teal bg-clip-text text-transparent">
-              Dreams & Goals
+              {t("dreams.title")}
             </h1>
-            <p className="mb-8 text-gray-600 leading-relaxed">Transform your biggest dreams into achievable milestones with AI-powered guidance</p>
+            <p className="mb-8 text-gray-600 leading-relaxed">{t("dreams.description")}</p>
             <Button 
               className="w-full bg-gradient-to-r from-soul-purple to-soul-teal hover:shadow-lg transition-all duration-300 rounded-2xl h-12 text-white font-medium"
               onClick={() => window.location.href = '/auth'}
             >
-              Get Started
+              {t("dreams.getStarted")}
             </Button>
           </div>
         </div>
@@ -286,11 +286,11 @@ const Dreams = () => {
                 className="flex items-center gap-2 text-gray-600 hover:text-soul-purple rounded-xl px-2 py-1"
               >
                 <ArrowLeft className="h-4 w-4" />
-                {!isMobile ? "New Dream" : "New"}
+                {!isMobile ? t("dreams.newDream") : t("dreams.new")}
               </Button>
               <div className="text-center flex-1">
-                <h1 className="text-lg font-bold text-gray-800">Your Journey</h1>
-                <p className="text-xs text-gray-500">Track progress & stay focused</p>
+                <h1 className="text-lg font-bold text-gray-800">{t("dreams.yourJourney")}</h1>
+                <p className="text-xs text-gray-500">{t("dreams.trackProgress")}</p>
               </div>
               <div className="w-16" />
             </div>
@@ -312,7 +312,7 @@ const Dreams = () => {
                     }`}
                   >
                     <MapPin className="h-3 w-3" />
-                    Journey
+                    {t("dreams.tabs.journey")}
                   </Button>
                   <Button
                     variant={activeTab === 'tasks' ? 'default' : 'ghost'}
@@ -325,7 +325,7 @@ const Dreams = () => {
                     }`}
                   >
                     <Target className="h-3 w-3" />
-                    Tasks
+                    {t("dreams.tabs.tasks")}
                   </Button>
                   <Button
                     variant={activeTab === 'focus' ? 'default' : 'ghost'}
@@ -338,7 +338,7 @@ const Dreams = () => {
                     }`}
                   >
                     <Clock className="h-3 w-3" />
-                    Focus
+                    {t("dreams.tabs.focus")}
                   </Button>
                   <Button
                     variant={activeTab === 'habits' ? 'default' : 'ghost'}
@@ -351,7 +351,7 @@ const Dreams = () => {
                     }`}
                   >
                     <CheckCircle className="h-3 w-3" />
-                    Habits
+                    {t("dreams.tabs.habits")}
                   </Button>
                 </div>
               </div>
@@ -384,7 +384,7 @@ const Dreams = () => {
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="font-semibold flex items-center gap-2 text-gray-800 text-sm">
                         <Target className="h-4 w-4 text-soul-purple" />
-                        Your Tasks
+                        {t("dreams.tab.yourTasks")}
                       </h3>
                     </div>
                     <div className="w-full overflow-hidden">
@@ -401,7 +401,7 @@ const Dreams = () => {
                   <div className="w-full max-w-full">
                     <div className="flex items-center gap-2 mb-3">
                       <Clock className="h-4 w-4 text-soul-purple" />
-                      <h3 className="font-semibold text-gray-800 text-sm">Focus Session</h3>
+                      <h3 className="font-semibold text-gray-800 text-sm">{t("dreams.tab.focusSession")}</h3>
                     </div>
                     <div className="w-full">
                       <PomodoroTimer />
@@ -413,7 +413,7 @@ const Dreams = () => {
                   <div className="w-full max-w-full">
                     <div className="flex items-center gap-2 mb-3">
                       <CheckCircle className="h-4 w-4 text-soul-purple" />
-                      <h3 className="font-semibold text-gray-800 text-sm">Daily Habits</h3>
+                      <h3 className="font-semibold text-gray-800 text-sm">{t("dreams.tab.habits")}</h3>
                     </div>
                     <div className="w-full">
                       <HabitTracker />
@@ -467,10 +467,10 @@ const Dreams = () => {
               <Sparkles className="h-10 w-10 text-white" />
             </div>
             <h1 className="text-2xl font-bold mb-3 bg-gradient-to-r from-soul-purple to-soul-teal bg-clip-text text-transparent">
-              What's Your Dream?
+              {t("dreams.whatsYourDream")}
             </h1>
             <p className="text-gray-600 text-base leading-relaxed mb-3 px-2">
-              Turn your biggest aspiration into a personalized, step-by-step journey
+              {t("dreams.heroDescription")}
             </p>
             <div className="inline-flex items-center gap-2 bg-soul-purple/10 px-3 py-2 rounded-full">
               <div className="w-2 h-2 bg-soul-purple rounded-full animate-pulse"></div>
@@ -483,9 +483,9 @@ const Dreams = () => {
             <div className="space-y-4">
               {/* Dream Input */}
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700 block">Your Dream or Goal</label>
+                <label className="text-sm font-semibold text-gray-700 block">{t("dreams.whatsYourDream")}</label>
                 <Input
-                  placeholder="Launch my creative business, get fit..."
+                  placeholder={t("dreams.placeholderDream")}
                   value={dreamForm.title}
                   onChange={(e) => setDreamForm(prev => ({ ...prev, title: e.target.value }))}
                   className="text-sm border-gray-200 rounded-xl h-10 focus:border-soul-purple focus:ring-soul-purple/20 w-full"
@@ -494,9 +494,9 @@ const Dreams = () => {
 
               {/* Why Input */}
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700 block">Why is this important?</label>
+                <label className="text-sm font-semibold text-gray-700 block">{t("dreams.whyImportant")}</label>
                 <Textarea
-                  placeholder="Share what drives this dream..."
+                  placeholder={t("dreams.placeholderWhy")}
                   value={dreamForm.description}
                   onChange={(e) => setDreamForm(prev => ({ ...prev, description: e.target.value }))}
                   className="text-sm border-gray-200 rounded-xl min-h-[80px] focus:border-soul-purple focus:ring-soul-purple/20 resize-none w-full"
@@ -506,7 +506,7 @@ const Dreams = () => {
               {/* Category & Timeline - Stacked for Mobile */}
               <div className="space-y-3">
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-gray-700 block">Category</label>
+                  <label className="text-sm font-semibold text-gray-700 block">{t("dreams.category")}</label>
                   <Select 
                     value={dreamForm.category} 
                     onValueChange={(value) => setDreamForm(prev => ({ ...prev, category: value }))}
@@ -515,19 +515,19 @@ const Dreams = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl border-gray-200">
-                      <SelectItem value="personal_growth" className="rounded-lg">Personal Growth</SelectItem>
-                      <SelectItem value="career" className="rounded-lg">Career</SelectItem>
-                      <SelectItem value="health" className="rounded-lg">Health & Fitness</SelectItem>
-                      <SelectItem value="relationships" className="rounded-lg">Relationships</SelectItem>
-                      <SelectItem value="creativity" className="rounded-lg">Creativity</SelectItem>
-                      <SelectItem value="financial" className="rounded-lg">Financial</SelectItem>
-                      <SelectItem value="spiritual" className="rounded-lg">Spiritual</SelectItem>
+                      <SelectItem value="personal_growth" className="rounded-lg">{t("goals.categoryPersonal")}</SelectItem>
+                      <SelectItem value="career" className="rounded-lg">{t("goals.categoryCareer")}</SelectItem>
+                      <SelectItem value="health" className="rounded-lg">{t("goals.categoryHealth")}</SelectItem>
+                      <SelectItem value="relationships" className="rounded-lg">{t("goals.categoryRelationships")}</SelectItem>
+                      <SelectItem value="creativity" className="rounded-lg">{t("goals.categoryCreative")}</SelectItem>
+                      <SelectItem value="financial" className="rounded-lg">{t("goals.categoryFinancial")}</SelectItem>
+                      <SelectItem value="spiritual" className="rounded-lg">{t("goals.categorySpiritual")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-gray-700 block">Timeline</label>
+                  <label className="text-sm font-semibold text-gray-700 block">{t("dreams.timeline")}</label>
                   <Select 
                     value={dreamForm.timeframe} 
                     onValueChange={(value) => setDreamForm(prev => ({ ...prev, timeframe: value }))}
@@ -536,11 +536,11 @@ const Dreams = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl border-gray-200">
-                      <SelectItem value="1 month" className="rounded-lg">1 Month</SelectItem>
-                      <SelectItem value="3 months" className="rounded-lg">3 Months</SelectItem>
-                      <SelectItem value="6 months" className="rounded-lg">6 Months</SelectItem>
-                      <SelectItem value="1 year" className="rounded-lg">1 Year</SelectItem>
-                      <SelectItem value="2 years" className="rounded-lg">2+ Years</SelectItem>
+                      <SelectItem value="1 month" className="rounded-lg">{t("goals.targetDate") + " - 1 Month"}</SelectItem>
+                      <SelectItem value="3 months" className="rounded-lg">{t("goals.targetDate") + " - 3 Months"}</SelectItem>
+                      <SelectItem value="6 months" className="rounded-lg">{t("goals.targetDate") + " - 6 Months"}</SelectItem>
+                      <SelectItem value="1 year" className="rounded-lg">{t("goals.targetDate") + " - 1 Year"}</SelectItem>
+                      <SelectItem value="2 years" className="rounded-lg">{t("goals.targetDate") + " - 2+ Years"}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -555,12 +555,12 @@ const Dreams = () => {
                 {isCreatingDream ? (
                   <>
                     <Brain className="h-4 w-4 mr-2 animate-pulse" />
-                    Creating Your AI Journey...
+                    {t("dreams.creatingJourney")}
                   </>
                 ) : (
                   <>
                     <Sparkles className="h-4 w-4 mr-2" />
-                    Create My Dream Journey
+                    {t("dreams.createJourney")}
                   </>
                 )}
               </Button>
@@ -570,7 +570,7 @@ const Dreams = () => {
           {/* Mobile-Optimized Alternative Options */}
           <div className="space-y-3 w-full">
             <div className="text-center">
-              <p className="text-sm text-gray-500 mb-4">Or explore other ways to start</p>
+              <p className="text-sm text-gray-500 mb-4">{t("dreams.aiInsighLabel")}</p>
             </div>
             
             <div className="space-y-3 w-full">
@@ -584,8 +584,8 @@ const Dreams = () => {
                     <Zap className="h-4 w-4 text-soul-teal" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-gray-800 text-sm">Talk with AI Dream Coach</div>
-                    <div className="text-xs text-gray-500">Explore dreams through conversation</div>
+                    <div className="font-semibold text-gray-800 text-sm">{t("dreams.aiButtonTitle")}</div>
+                    <div className="text-xs text-gray-500">{t("dreams.aiButtonDesc")}</div>
                   </div>
                 </div>
               </Button>
@@ -600,8 +600,8 @@ const Dreams = () => {
                     <MapPin className="h-4 w-4 text-soul-purple" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-gray-800 text-sm">View Current Journey</div>
-                    <div className="text-xs text-gray-500">Continue your dream progress</div>
+                    <div className="font-semibold text-gray-800 text-sm">{t("dreams.journeyButtonTitle")}</div>
+                    <div className="text-xs text-gray-500">{t("dreams.journeyButtonDesc")}</div>
                   </div>
                 </div>
               </Button>
