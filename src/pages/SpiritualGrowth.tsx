@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
@@ -16,6 +15,7 @@ import { LifeAreaSelector, LifeArea } from "@/components/growth/LifeAreaSelector
 import { JourneyEngine } from "@/components/growth/JourneyEngine";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
+import { LanguageSelector } from "@/components/ui/language-selector";
 
 type ActiveTool = 'mood' | 'reflection' | 'insight' | 'weekly' | 'chat' | 'journey' | null;
 
@@ -107,6 +107,9 @@ const SpiritualGrowth = () => {
     return (
       <MainLayout>
         <div className="flex flex-col h-[calc(100vh-5rem)] w-full p-4 items-center justify-center">
+          <div className="w-full flex justify-end mb-5">
+            <LanguageSelector />
+          </div>
           <CosmicCard className="p-6 text-center w-full">
             <Heart className="h-8 w-8 text-soul-purple mx-auto mb-4" />
             <h1 className="text-2xl font-bold font-display mb-2">
@@ -128,19 +131,24 @@ const SpiritualGrowth = () => {
   return (
     <MainLayout>
       <div className="flex flex-col h-[calc(100vh-5rem)] w-full p-4">
-        {/* Growth Header */}
-        <div className="text-center mb-4 w-full">
-          <h1 className="text-2xl font-bold font-display mb-1">
-            <span className="gradient-text">Growth Mode</span>
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {selectedLifeArea ? `Exploring ${selectedLifeArea.name}` : 'Inner reflection & soul wisdom'}
-          </p>
-          {growthJourney && (
-            <p className="text-xs text-muted-foreground mt-1">
-              Position: {growthJourney.current_position} • {messages.length} conversation messages
+        {/* Header with language selector */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4 w-full">
+          <div className="text-center sm:text-left">
+            <h1 className="text-2xl font-bold font-display mb-1">
+              <span className="gradient-text">Growth Mode</span>
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {selectedLifeArea ? `Exploring ${selectedLifeArea.name}` : 'Inner reflection & soul wisdom'}
             </p>
-          )}
+            {growthJourney && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Position: {growthJourney.current_position} • {messages.length} conversation messages
+              </p>
+            )}
+          </div>
+          <div className="self-center sm:self-auto">
+            <LanguageSelector />
+          </div>
         </div>
 
         {/* Tool Toggle Buttons */}
