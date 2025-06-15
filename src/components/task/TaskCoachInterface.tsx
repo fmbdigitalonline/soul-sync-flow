@@ -40,10 +40,10 @@ interface TaskCoachInterfaceProps {
   onTaskComplete: (taskId: string) => void;
 }
 
-export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({ 
-  task, 
-  onBack, 
-  onTaskComplete 
+export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
+  task,
+  onBack,
+  onTaskComplete
 }) => {
   const { messages, isLoading, sendMessage, resetConversation } = useEnhancedAICoach("coach");
   const { productivityJourney } = useJourneyTracking();
@@ -146,7 +146,7 @@ Let's start with the first concrete step I should take right now.`;
   const totalDays = getTotalDays(task.estimated_duration);
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col animate-fade-in transition-all duration-300">
       {/* Task Header - More compact */}
       <div className="border-b bg-background p-3">
         <div className="flex items-center justify-between mb-3">
