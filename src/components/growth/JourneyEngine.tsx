@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, CheckCircle2, Clock, Target, BookOpen, Brain, Heart, Sparkles2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Clock, Target, BookOpen, Brain, Heart, Sparkles } from "lucide-react";
 import { LifeArea } from "./LifeAreaSelector";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 import { useEnhancedAICoach } from "@/hooks/use-enhanced-ai-coach";
@@ -100,10 +100,12 @@ Format as JSON with this structure:
       // Try to parse AI response as JSON, fallback to structured creation if needed
       let aiSteps;
       try {
-        const jsonMatch = response.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          const parsed = JSON.parse(jsonMatch[0]);
-          aiSteps = parsed.steps;
+        if (response) {
+          const jsonMatch = response.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            const parsed = JSON.parse(jsonMatch[0]);
+            aiSteps = parsed.steps;
+          }
         }
       } catch (parseError) {
         console.log('JSON parsing failed, creating structured steps from AI response');
@@ -207,12 +209,12 @@ Be warm, wise, and encouraging.`;
         ...step,
         completed: true,
         userResponse: response,
-        aiGuidance: aiGuidance
+        aiGuidance: aiGuidance || undefined
       };
       setSteps(updatedSteps);
 
       // Log the interaction
-      if (step.type === 'reflection' || step.type === 'insight') {
+      if (step.type === 'reflection') {
         addReflectionEntry(step.title, response);
       } else if (step.type === 'insight') {
         addInsightEntry(response, [selectedArea.name, step.type]);
@@ -241,11 +243,11 @@ Be warm, wise, and encouraging.`;
   const getStepIcon = (type: string) => {
     switch (type) {
       case 'reflection': return Brain;
-      case 'integration': return Sparkles2;
+      case 'integration': return Sparkles;
       case 'somatic': return Heart;
       case 'insight': return BookOpen;
       case 'action': return Target;
-      case 'pattern': return Sparkles2;
+      case 'pattern': return Sparkles;
       default: return BookOpen;
     }
   };
@@ -340,7 +342,7 @@ Be warm, wise, and encouraging.`;
               {currentStepData.completed && currentStepData.aiGuidance && (
                 <div className="mt-4 p-4 bg-soul-purple/5 rounded-lg border border-soul-purple/20">
                   <div className="flex items-center gap-2 text-soul-purple text-sm font-medium mb-2">
-                    <Sparkles2 className="h-4 w-4" />
+                    <Sparkles className="h-4 w-4" />
                     Guidance
                   </div>
                   <p className="text-sm text-muted-foreground">{currentStepData.aiGuidance}</p>
