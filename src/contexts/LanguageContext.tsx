@@ -396,8 +396,23 @@ const translations = {
     "dreams.taskCompletedDesc": "Great work! The task has been marked as complete.",
     "dreams.dreamRequired": "Dream Required",
     "dreams.dreamRequiredDesc": "Please enter your dream or goal",
+
+    // --- Growth/SpiritualGrowth Page ---
+    'growth.title': 'Growth Mode',
+    'growth.positionLabel': 'Position:',
+    'growth.conversationMessages': 'conversation messages',
+    'growth.headerSubtitle': 'Inner reflection & soul wisdom',
+    'growth.exploringArea': 'Exploring {{area}}',
+    'growth.chooseYourTool': 'Choose Your Growth Tool',
+    'growth.chooseYourToolDescription': 'Start with Soul Guide for a personalized journey, or select any tool above',
+    'growth.tools.soulGuide': 'Soul Guide',
+    'growth.tools.moodTracker': 'Mood Tracker',
+    'growth.tools.reflectionPrompts': 'Reflection Prompts',
+    'growth.tools.insightJournal': 'Insight Journal',
+    'growth.tools.weeklyInsights': 'Weekly Insights',
+    'growth.tools.freeChat': 'Free Chat',
+    'growth.startSoulCheckIn': 'Start Soul Check-in',
   },
-  
   nl: {
     // Authentication
     'auth.createAccount': 'Account Aanmaken',
@@ -783,6 +798,22 @@ const translations = {
     "dreams.taskCompletedDesc": "Goed gedaan! De taak is als voltooid gemarkeerd.",
     "dreams.dreamRequired": "Droom verplicht",
     "dreams.dreamRequiredDesc": "Vul je droom of doel in",
+
+    // --- Growth/SpiritualGrowth Page ---
+    'growth.title': 'Groei Modus',
+    'growth.positionLabel': 'Positie:',
+    'growth.conversationMessages': 'gespreksberichten',
+    'growth.headerSubtitle': 'Innerlijke reflectie & zielswijsheid',
+    'growth.exploringArea': 'Verkennen van {{area}}',
+    'growth.chooseYourTool': 'Kies Jouw Groeihulpmiddel',
+    'growth.chooseYourToolDescription': 'Begin met Ziel Gids voor een gepersonaliseerde reis, of selecteer een hulpmiddel hierboven',
+    'growth.tools.soulGuide': 'Ziel Gids',
+    'growth.tools.moodTracker': 'Stemmingsmeter',
+    'growth.tools.reflectionPrompts': 'Reflectie Vragen',
+    'growth.tools.insightJournal': 'Inzichten Dagboek',
+    'growth.tools.weeklyInsights': 'Wekelijkse Inzichten',
+    'growth.tools.freeChat': 'Vrije Chat',
+    'growth.startSoulCheckIn': 'Begin Ziel Check-in',
   }
 };
 

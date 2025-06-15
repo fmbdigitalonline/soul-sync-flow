@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
@@ -15,7 +16,6 @@ import { LifeAreaSelector, LifeArea } from "@/components/growth/LifeAreaSelector
 import { JourneyEngine } from "@/components/growth/JourneyEngine";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
-import { LanguageSelector } from "@/components/ui/language-selector";
 
 type ActiveTool = 'mood' | 'reflection' | 'insight' | 'weekly' | 'chat' | 'journey' | null;
 
@@ -95,12 +95,12 @@ const SpiritualGrowth = () => {
   };
 
   const tools = [
-    { id: 'journey' as ActiveTool, name: 'Soul Guide', icon: Compass },
-    { id: 'mood' as ActiveTool, name: 'Mood Tracker', icon: Heart },
-    { id: 'reflection' as ActiveTool, name: 'Reflection Prompts', icon: Sparkles },
-    { id: 'insight' as ActiveTool, name: 'Insight Journal', icon: BookOpen },
-    { id: 'weekly' as ActiveTool, name: 'Weekly Insights', icon: Calendar },
-    { id: 'chat' as ActiveTool, name: 'Free Chat', icon: MessageCircle },
+    { id: 'journey' as ActiveTool, name: t('growth.tools.soulGuide'), icon: Compass },
+    { id: 'mood' as ActiveTool, name: t('growth.tools.moodTracker'), icon: Heart },
+    { id: 'reflection' as ActiveTool, name: t('growth.tools.reflectionPrompts'), icon: Sparkles },
+    { id: 'insight' as ActiveTool, name: t('growth.tools.insightJournal'), icon: BookOpen },
+    { id: 'weekly' as ActiveTool, name: t('growth.tools.weeklyInsights'), icon: Calendar },
+    { id: 'chat' as ActiveTool, name: t('growth.tools.freeChat'), icon: MessageCircle },
   ];
 
   if (!isAuthenticated) {
@@ -110,7 +110,7 @@ const SpiritualGrowth = () => {
           <CosmicCard className="p-6 text-center w-full">
             <Heart className="h-8 w-8 text-soul-purple mx-auto mb-4" />
             <h1 className="text-2xl font-bold font-display mb-2">
-              <span className="gradient-text">Growth Mode</span>
+              <span className="gradient-text">{t('growth.title')}</span>
             </h1>
             <p className="mb-6">{t('coach.signInRequired')}</p>
             <Button 
@@ -132,14 +132,17 @@ const SpiritualGrowth = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4 w-full">
           <div className="text-center sm:text-left">
             <h1 className="text-2xl font-bold font-display mb-1">
-              <span className="gradient-text">Growth Mode</span>
+              <span className="gradient-text">{t('growth.title')}</span>
             </h1>
             <p className="text-sm text-muted-foreground">
-              {selectedLifeArea ? `Exploring ${selectedLifeArea.name}` : 'Inner reflection & soul wisdom'}
+              {selectedLifeArea
+                ? t('growth.exploringArea', { area: selectedLifeArea.name })
+                : t('growth.headerSubtitle')
+              }
             </p>
             {growthJourney && (
               <p className="text-xs text-muted-foreground mt-1">
-                Position: {growthJourney.current_position} • {messages.length} conversation messages
+                {t('growth.positionLabel')} {growthJourney.current_position} • {messages.length} {t('growth.conversationMessages')}
               </p>
             )}
           </div>
@@ -205,18 +208,18 @@ const SpiritualGrowth = () => {
                   onClick={handleNewConversation}
                   className="text-xs"
                 >
-                  New Chat
+                  {t('coach.newConversation')}
                 </Button>
               </div>
               
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => sendMessage("Help me check in with my current emotional and spiritual state")}
+                onClick={() => sendMessage(t('growth.startSoulCheckIn'))}
                 className="w-full text-xs border-soul-purple/30 hover:bg-soul-purple/10 mb-4"
               >
                 <Moon className="h-3 w-3 mr-2" />
-                Start Soul Check-in
+                {t('growth.startSoulCheckIn')}
               </Button>
               
               <div className="flex-1">
@@ -233,9 +236,9 @@ const SpiritualGrowth = () => {
           {!activeTool && (
             <CosmicCard className="p-8 text-center h-full flex flex-col items-center justify-center">
               <Compass className="h-12 w-12 text-soul-purple/50 mb-4" />
-              <h3 className="text-lg font-medium mb-2">Choose Your Growth Tool</h3>
+              <h3 className="text-lg font-medium mb-2">{t('growth.chooseYourTool')}</h3>
               <p className="text-sm text-muted-foreground">
-                Start with Soul Guide for a personalized journey, or select any tool above
+                {t('growth.chooseYourToolDescription')}
               </p>
             </CosmicCard>
           )}
@@ -246,3 +249,5 @@ const SpiritualGrowth = () => {
 };
 
 export default SpiritualGrowth;
+
+// ... end of file
