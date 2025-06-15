@@ -7,7 +7,6 @@ import { BlueprintData } from "@/services/blueprint-service";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { FileText, Sparkles } from "lucide-react";
 import AIPersonalityReport from "./AIPersonalityReport";
-import { require } from "module";
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface SimplifiedBlueprintViewerProps {
