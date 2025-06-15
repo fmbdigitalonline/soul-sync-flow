@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSoulOrb } from '@/contexts/SoulOrbContext';
-import { aiGoalDecompositionService } from '@/services/ai-goal-decomposition-service';
+import { aiGoalDecompositionService, AIGeneratedGoal } from '@/services/ai-goal-decomposition-service';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Brain, Target, MapPin, Sparkles } from 'lucide-react';
@@ -82,7 +82,7 @@ export const useDecompositionLogic = ({
     
     try {
       // Set a timeout for the AI decomposition (2 minutes max)
-      const timeoutPromise = new Promise((_, reject) => {
+      const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(() => reject(new Error('AI decomposition timeout after 2 minutes')), 120000);
       });
 
@@ -95,7 +95,7 @@ export const useDecompositionLogic = ({
       );
 
       // Race between the actual call and timeout
-      const aiGoal = await Promise.race([decompositionPromise, timeoutPromise]);
+      const aiGoal = await Promise.race([decompositionPromise, timeoutPromise]) as AIGeneratedGoal;
 
       const aiEndTime = Date.now();
       const aiDuration = aiEndTime - aiStartTime;
