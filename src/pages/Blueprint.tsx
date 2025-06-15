@@ -16,6 +16,7 @@ import { useSoulOrb } from "@/contexts/SoulOrbContext";
 import { BlueprintEnhancementService } from "@/services/blueprint-enhancement-service";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useOptimizedBlueprintData } from "@/hooks/use-optimized-blueprint-data";
+import { isAdminUser } from "@/utils/isAdminUser";
 
 const Blueprint = () => {
   const [activeTab, setActiveTab] = useState("view");
@@ -113,6 +114,9 @@ const Blueprint = () => {
     navigate('/onboarding');
     return null;
   }
+
+  // 1. New: Admin check
+  const isAdmin = isAdminUser(user);
 
   const handleSaveBlueprint = async (updatedBlueprint: BlueprintData) => {
     try {
@@ -238,15 +242,17 @@ const Blueprint = () => {
             
             {/* Action buttons - Mobile Stack */}
             <div className="flex flex-col sm:flex-row gap-2 order-1 sm:order-2">
-              <Button 
-                variant="outline"
-                className="flex items-center justify-center text-sm h-9"
-                onClick={handleRegenerateBlueprint}
-                disabled={isGenerating}
-              >
-                <RefreshCw className="mr-2 h-4 w-4" />
-                {isGenerating ? t('blueprint.generating') : t('blueprint.regenerate')}
-              </Button>
+              {isAdmin && (
+                <Button 
+                  variant="outline"
+                  className="flex items-center justify-center text-sm h-9"
+                  onClick={handleRegenerateBlueprint}
+                  disabled={isGenerating}
+                >
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  {isGenerating ? t('blueprint.generating') : t('blueprint.regenerate')}
+                </Button>
+              )}
               <Button 
                 className="bg-soul-purple hover:bg-soul-purple/90 flex items-center justify-center text-sm h-9"
                 onClick={() => navigate('/coach')}
@@ -262,12 +268,16 @@ const Blueprint = () => {
           {/* Mobile-responsive tabs */}
           <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full max-w-4xl mx-auto h-auto p-1">
             <TabsTrigger value="view" className="text-xs sm:text-sm py-2">{t('blueprint.viewTab')}</TabsTrigger>
-            <TabsTrigger value="edit" className="text-xs sm:text-sm py-2">{t('blueprint.editTab')}</TabsTrigger>
-            <TabsTrigger value="health-check" className="text-xs sm:text-sm py-2 flex items-center gap-1">
-              <Activity className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Health Check</span>
-              <span className="sm:hidden">Health</span>
-            </TabsTrigger>
+            {isAdmin && (
+              <TabsTrigger value="edit" className="text-xs sm:text-sm py-2">{t('blueprint.editTab')}</TabsTrigger>
+            )}
+            {isAdmin && (
+              <TabsTrigger value="health-check" className="text-xs sm:text-sm py-2 flex items-center gap-1">
+                <Activity className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Health Check</span>
+                <span className="sm:hidden">Health</span>
+              </TabsTrigger>
+            )}
             <TabsTrigger value="generating" disabled={!isGenerating} className="text-xs sm:text-sm py-2">
               {t('blueprint.generatingTab')}
             </TabsTrigger>
@@ -283,13 +293,17 @@ const Blueprint = () => {
             )}
           </TabsContent>
           
-          <TabsContent value="edit" className="mt-6">
-            <BlueprintEditor onSave={handleSaveBlueprint} initialBlueprint={blueprintData || undefined} />
-          </TabsContent>
+          {isAdmin && (
+            <TabsContent value="edit" className="mt-6">
+              <BlueprintEditor onSave={handleSaveBlueprint} initialBlueprint={blueprintData || undefined} />
+            </TabsContent>
+          )}
 
-          <TabsContent value="health-check" className="mt-6">
-            <BlueprintHealthCheck />
-          </TabsContent>
+          {isAdmin && (
+            <TabsContent value="health-check" className="mt-6">
+              <BlueprintHealthCheck />
+            </TabsContent>
+          )}
 
           <TabsContent value="generating" className="mt-6">
             {isGenerating && blueprintData && (
@@ -307,6 +321,7 @@ const Blueprint = () => {
             )}
           </TabsContent>
         </Tabs>
+        {/* Remove or restrict 'Regenerate Blueprint' for non-admins */}
       </div>
     </MainLayout>
   );

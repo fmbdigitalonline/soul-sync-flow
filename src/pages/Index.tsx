@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -11,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import PersonalityDemo from "@/components/personality/PersonalityDemo";
 import { useOptimizedBlueprintData } from "@/hooks/use-optimized-blueprint-data";
+import { isAdminUser } from "@/utils/isAdminUser";
 
 const Index = () => {
   const { user } = useAuth();
@@ -18,7 +18,8 @@ const Index = () => {
   const navigate = useNavigate();
   const [showDemo, setShowDemo] = useState(false);
   const { hasBlueprint, loading } = useOptimizedBlueprintData();
-  
+  const isAdmin = isAdminUser(user);
+
   // Memoize the welcome message logic to prevent re-renders
   const welcomeMessage = useMemo(() => {
     if (!user) return null;
@@ -117,16 +118,19 @@ const Index = () => {
             </div>
           )}
 
-          <div className="mb-4 sm:mb-6 px-4">
-            <Button 
-              variant="outline" 
-              onClick={() => setShowDemo(true)}
-              className="mb-4 w-full sm:w-auto text-sm sm:text-base h-10 sm:h-11"
-            >
-              <Brain className="mr-2 h-4 w-4" />
-              See How Personalization Works
-            </Button>
-          </div>
+          {/* Show the demo button only for admin */}
+          {isAdmin && (
+            <div className="mb-4 sm:mb-6 px-4">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowDemo(true)}
+                className="mb-4 w-full sm:w-auto text-sm sm:text-base h-10 sm:h-11"
+              >
+                <Brain className="mr-2 h-4 w-4" />
+                See How Personalization Works
+              </Button>
+            </div>
+          )}
           
           <div className="flex flex-col gap-3 sm:gap-4 px-4 max-w-md mx-auto">
             {user ? (
