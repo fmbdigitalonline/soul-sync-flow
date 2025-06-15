@@ -67,33 +67,35 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
       typeof personality === "object" &&
       "likelyType" in personality // Make sure this is not just a string!
     ) {
+      // Type is now narrowed for validPersonality
+      const validPersonality = personality;
       mbtiData = {
-        type: "likelyType" in personality && personality.likelyType ? personality.likelyType : "Unknown",
+        type: validPersonality.likelyType ? validPersonality.likelyType : "Unknown",
         core_keywords:
-          "mbtiCoreKeywords" in personality && Array.isArray(personality.mbtiCoreKeywords)
-            ? personality.mbtiCoreKeywords
-            : "core_keywords" in personality && Array.isArray(personality.core_keywords)
-              ? personality.core_keywords
+          "mbtiCoreKeywords" in validPersonality && Array.isArray(validPersonality.mbtiCoreKeywords)
+            ? validPersonality.mbtiCoreKeywords
+            : "core_keywords" in validPersonality && Array.isArray(validPersonality.core_keywords)
+              ? validPersonality.core_keywords
               : [],
         dominant_function:
-          "dominantFunction" in personality && personality.dominantFunction
-            ? personality.dominantFunction
-            : "dominant_function" in personality && personality.dominant_function
-              ? personality.dominant_function
+          "dominantFunction" in validPersonality && validPersonality.dominantFunction
+            ? validPersonality.dominantFunction
+            : "dominant_function" in validPersonality && validPersonality.dominant_function
+              ? validPersonality.dominant_function
               : "Unknown",
         auxiliary_function:
-          "auxiliaryFunction" in personality && personality.auxiliaryFunction
-            ? personality.auxiliaryFunction
-            : "auxiliary_function" in personality && personality.auxiliary_function
-              ? personality.auxiliary_function
+          "auxiliaryFunction" in validPersonality && validPersonality.auxiliaryFunction
+            ? validPersonality.auxiliaryFunction
+            : "auxiliary_function" in validPersonality && validPersonality.auxiliary_function
+              ? validPersonality.auxiliary_function
               : "Unknown",
         description:
-          "description" in personality && typeof personality.description === "string"
-            ? personality.description
+          "description" in validPersonality && typeof validPersonality.description === "string"
+            ? validPersonality.description
             : "",
         user_confidence:
-          "userConfidence" in personality
-            ? (personality as any).userConfidence
+          "userConfidence" in validPersonality
+            ? (validPersonality as any).userConfidence
             : undefined
       };
     } else {
