@@ -211,7 +211,6 @@ const Blueprint = () => {
           <h1 className="text-2xl sm:text-3xl font-bold font-display">
             <span className="gradient-text">{t('blueprint.title')}</span>
           </h1>
-          
           {/* Action buttons - Mobile Stack */}
           <div className="flex flex-col sm:flex-row gap-2">
             {isAdmin && (
@@ -245,8 +244,8 @@ const Blueprint = () => {
             {isAdmin && (
               <TabsTrigger value="health-check" className="text-xs sm:text-sm py-2 flex items-center gap-1">
                 <Activity className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">Health Check</span>
-                <span className="sm:hidden">Health</span>
+                <span className="hidden sm:inline">{t('blueprint.healthCheckTab')}</span>
+                <span className="sm:hidden">{t('blueprint.healthCheckShort')}</span>
               </TabsTrigger>
             )}
             <TabsTrigger value="generating" disabled={!isGenerating} className="text-xs sm:text-sm py-2">
