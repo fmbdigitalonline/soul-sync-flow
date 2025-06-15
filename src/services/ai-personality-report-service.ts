@@ -44,7 +44,7 @@ class AIPersonalityReportService {
   // REMOVE TYPESAFE SUPABASE FROM RAW STRING TABLE, CAST TO any TO FIX BUILD
   async getStoredReport(userId: string): Promise<{ success: boolean; report?: PersonalityReport; error?: string }> {
     try {
-      // @ts-expect-error - bypass supabase type checking for missing table
+      // Query the personality_reports table directly, bypassing supabase type checking for the table
       const { data, error } = await (supabase as any)
         .from('personality_reports')
         .select('*')
@@ -71,7 +71,7 @@ class AIPersonalityReportService {
 
   async hasExistingReport(userId: string): Promise<boolean> {
     try {
-      // @ts-expect-error - bypass supabase type checking for missing table
+      // Query the personality_reports table directly
       const { data, error } = await (supabase as any)
         .from('personality_reports')
         .select('id')

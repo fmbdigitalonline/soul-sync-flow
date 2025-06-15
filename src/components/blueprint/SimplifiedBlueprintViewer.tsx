@@ -16,19 +16,23 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
   const [activeTab, setActiveTab] = useState("overview");
   const [showAIReport, setShowAIReport] = useState(false);
 
-  // --- DEBUGGING: log numerology data! ---
-  const numerologyData = blueprint.values_life_path || blueprint.numerology || {
-    lifePathNumber: 1,
-    lifePathKeyword: "Leader",
-    expressionNumber: 1,
-    expressionKeyword: "Independent",
-    soulUrgeNumber: 1,
-    soulUrgeKeyword: "Ambitious",
-    birthdayNumber: 1,
-    birthdayKeyword: "Pioneer"
+  // --- SMART numerology data mapping: support snake_case & camelCase ---
+  const rawNumerology = blueprint.values_life_path || blueprint.numerology || {};
+  // If keys are in snake_case, convert/copy to camelCase for frontend use
+  const numerologyData = {
+    lifePathNumber: rawNumerology.lifePathNumber ?? rawNumerology.life_path_number ?? "",
+    lifePathKeyword: rawNumerology.lifePathKeyword ?? rawNumerology.life_path_keyword ?? "",
+    expressionNumber: rawNumerology.expressionNumber ?? rawNumerology.expression_number ?? "",
+    expressionKeyword: rawNumerology.expressionKeyword ?? rawNumerology.expression_keyword ?? "",
+    soulUrgeNumber: rawNumerology.soulUrgeNumber ?? rawNumerology.soul_urge_number ?? "",
+    soulUrgeKeyword: rawNumerology.soulUrgeKeyword ?? rawNumerology.soul_urge_keyword ?? "",
+    birthdayNumber: rawNumerology.birthdayNumber ?? rawNumerology.birthday_number ?? "",
+    birthdayKeyword: rawNumerology.birthdayKeyword ?? rawNumerology.birthday_keyword ?? "",
+    personalityNumber: rawNumerology.personalityNumber ?? rawNumerology.personality_number ?? "",
+    personalityKeyword: rawNumerology.personalityKeyword ?? rawNumerology.personality_keyword ?? ""
   };
 
-  console.log("NUMEROLOGY DEBUG", { numerologyData, blueprint });
+  console.log("NUMEROLOGY DEBUG", { numerologyData, rawNumerology, blueprint });
 
   if (showAIReport) {
     return (
@@ -258,6 +262,11 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
                   <h4 className="font-semibold text-soul-purple">Expression Number</h4>
                   <p className="text-3xl font-bold text-soul-purple">{numerologyData.expressionNumber}</p>
                   <p className="text-sm text-gray-600">{numerologyData.expressionKeyword || "Your natural talents and abilities"}</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-soul-purple">Personality Number</h4>
+                  <p className="text-3xl font-bold text-soul-purple">{numerologyData.personalityNumber}</p>
+                  <p className="text-sm text-gray-600">{numerologyData.personalityKeyword || "Key aspect of your persona"}</p>
                 </div>
               </div>
               <div className="space-y-4">
