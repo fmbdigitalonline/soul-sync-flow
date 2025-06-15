@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +15,20 @@ interface SimplifiedBlueprintViewerProps {
 export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ blueprint }) => {
   const [activeTab, setActiveTab] = useState("overview");
   const [showAIReport, setShowAIReport] = useState(false);
+
+  // --- DEBUGGING: log numerology data! ---
+  const numerologyData = blueprint.values_life_path || blueprint.numerology || {
+    lifePathNumber: 1,
+    lifePathKeyword: "Leader",
+    expressionNumber: 1,
+    expressionKeyword: "Independent",
+    soulUrgeNumber: 1,
+    soulUrgeKeyword: "Ambitious",
+    birthdayNumber: 1,
+    birthdayKeyword: "Pioneer"
+  };
+
+  console.log("NUMEROLOGY DEBUG", { numerologyData, blueprint });
 
   if (showAIReport) {
     return (
@@ -51,17 +64,6 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
     "Template Data";
   
   // Get data with fallbacks for backwards compatibility
-  const numerologyData = blueprint.values_life_path || blueprint.numerology || {
-    lifePathNumber: 1,
-    lifePathKeyword: "Leader",
-    expressionNumber: 1,
-    expressionKeyword: "Independent",
-    soulUrgeNumber: 1,
-    soulUrgeKeyword: "Ambitious",
-    birthdayNumber: 1,
-    birthdayKeyword: "Pioneer"
-  };
-
   const westernData = blueprint.archetype_western || blueprint.astrology || {
     sun_sign: "Unknown",
     sun_keyword: "Unknown",
