@@ -44,13 +44,10 @@ class AIPersonalityReportService {
 
   async getStoredReport(userId: string): Promise<{ success: boolean; report?: PersonalityReport; error?: string }> {
     try {
-      const { data, error } = await supabase
-        .from('personality_reports')
-        .select('*')
-        .eq('user_id', userId)
-        .order('generated_at', { ascending: false })
-        .limit(1)
-        .single();
+      // Use raw SQL query to handle the case where the table might not exist yet
+      const { data, error } = await supabase.rpc('get_personality_report', { 
+        user_id: userId 
+      }).single();
 
       if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned"
         console.error('Error fetching stored report:', error);
@@ -61,7 +58,7 @@ class AIPersonalityReportService {
         return { success: true, report: undefined };
       }
 
-      return { success: true, report: data };
+      return { success: true, report: data as PersonalityReport };
     } catch (error) {
       console.error('Service error fetching stored report:', error);
       return { success: false, error: String(error) };
@@ -70,18 +67,17 @@ class AIPersonalityReportService {
 
   async hasExistingReport(userId: string): Promise<boolean> {
     try {
-      const { data, error } = await supabase
-        .from('personality_reports')
-        .select('id')
-        .eq('user_id', userId)
-        .limit(1);
+      // Use raw SQL query to check for existing reports
+      const { data, error } = await supabase.rpc('check_personality_report_exists', { 
+        user_id: userId 
+      });
 
       if (error) {
         console.error('Error checking for existing report:', error);
         return false;
       }
 
-      return data && data.length > 0;
+      return data || false;
     } catch (error) {
       console.error('Service error checking existing report:', error);
       return false;
