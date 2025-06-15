@@ -12,6 +12,27 @@ interface SimplifiedBlueprintViewerProps {
   blueprint: BlueprintData;
 }
 
+// --- MBTI Cognitive Function Table (fallback for missing data) ---
+const MBTI_COG_FUNCTIONS: Record<string, { dominant: string; auxiliary: string }> = {
+  // Dominant and Auxiliary for each of the 16 MBTI types (standard order)
+  INFJ: { dominant: "Ni (Introverted Intuition)", auxiliary: "Fe (Extraverted Feeling)" },
+  INFP: { dominant: "Fi (Introverted Feeling)", auxiliary: "Ne (Extraverted Intuition)" },
+  INTJ: { dominant: "Ni (Introverted Intuition)", auxiliary: "Te (Extraverted Thinking)" },
+  INTP: { dominant: "Ti (Introverted Thinking)", auxiliary: "Ne (Extraverted Intuition)" },
+  ISFJ: { dominant: "Si (Introverted Sensing)", auxiliary: "Fe (Extraverted Feeling)" },
+  ISFP: { dominant: "Fi (Introverted Feeling)", auxiliary: "Se (Extraverted Sensing)" },
+  ISTJ: { dominant: "Si (Introverted Sensing)", auxiliary: "Te (Extraverted Thinking)" },
+  ISTP: { dominant: "Ti (Introverted Thinking)", auxiliary: "Se (Extraverted Sensing)" },
+  ENFJ: { dominant: "Fe (Extraverted Feeling)", auxiliary: "Ni (Introverted Intuition)" },
+  ENFP: { dominant: "Ne (Extraverted Intuition)", auxiliary: "Fi (Introverted Feeling)" },
+  ENTJ: { dominant: "Te (Extraverted Thinking)", auxiliary: "Ni (Introverted Intuition)" },
+  ENTP: { dominant: "Ne (Extraverted Intuition)", auxiliary: "Ti (Introverted Thinking)" },
+  ESFJ: { dominant: "Fe (Extraverted Feeling)", auxiliary: "Si (Introverted Sensing)" },
+  ESFP: { dominant: "Se (Extraverted Sensing)", auxiliary: "Fi (Introverted Feeling)" },
+  ESTJ: { dominant: "Te (Extraverted Thinking)", auxiliary: "Si (Introverted Sensing)" },
+  ESTP: { dominant: "Se (Extraverted Sensing)", auxiliary: "Ti (Introverted Thinking)" }
+};
+
 export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ blueprint }) => {
   const [activeTab, setActiveTab] = useState("overview");
   const [showAIReport, setShowAIReport] = useState(false);
@@ -32,24 +53,28 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
   };
 
   // --- MBTI Data Extraction with Robust Fallbacks ---
-  let mbtiData = blueprint.cognition_mbti && blueprint.cognition_mbti.type && blueprint.cognition_mbti.type !== "Unknown"
+  let mbtiData = blueprint.cognition_mbti && typeof blueprint.cognition_mbti === "object" && blueprint.cognition_mbti.type && blueprint.cognition_mbti.type !== "Unknown"
     ? blueprint.cognition_mbti
-    : blueprint.mbti && blueprint.mbti.type && blueprint.mbti.type !== "Unknown"
+    : blueprint.mbti && typeof blueprint.mbti === "object" && blueprint.mbti.type && blueprint.mbti.type !== "Unknown"
       ? blueprint.mbti
       : null;
 
-  // Fallback: try user_meta.personality.likelyType if previous failed
+  // Ensure correct typing for fallback usage
   if (!mbtiData || !mbtiData.type || mbtiData.type === "Unknown") {
-    // Combine info from user_meta.personality if present
-    if (blueprint.user_meta?.personality) {
-      const personality = blueprint.user_meta.personality;
+    // Check if user_meta.personality exists and is a valid object with likelyType
+    const personality = blueprint.user_meta?.personality;
+    if (
+      personality &&
+      typeof personality === "object" &&
+      "likelyType" in personality // Make sure this is not just a string!
+    ) {
       mbtiData = {
         type: personality.likelyType || "Unknown",
-        core_keywords: personality.mbtiCoreKeywords || personality.core_keywords || [],
-        dominant_function: personality.dominantFunction || personality.dominant_function || "Unknown",
-        auxiliary_function: personality.auxiliaryFunction || personality.auxiliary_function || "Unknown",
+        core_keywords: personality.mbtiCoreKeywords || ("core_keywords" in personality ? personality.core_keywords : []),
+        dominant_function: personality.dominantFunction || ("dominant_function" in personality ? personality.dominant_function : "Unknown"),
+        auxiliary_function: personality.auxiliaryFunction || ("auxiliary_function" in personality ? personality.auxiliary_function : "Unknown"),
         description: personality.description || "",
-        user_confidence: personality.userConfidence || undefined
+        user_confidence: "userConfidence" in personality ? personality.userConfidence : undefined
       };
     } else {
       mbtiData = {
@@ -59,6 +84,28 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
         auxiliary_function: "Unknown",
         description: "",
       };
+    }
+  }
+
+  // === Apply MBTI Cognitive Function Fallback ===
+  // Only if the type is recognized and functions are missing/Unknown
+  if (
+    mbtiData &&
+    typeof mbtiData.type === "string" &&
+    MBTI_COG_FUNCTIONS[mbtiData.type.toUpperCase()]
+  ) {
+    const cog = MBTI_COG_FUNCTIONS[mbtiData.type.toUpperCase()];
+    if (
+      !mbtiData.dominant_function ||
+      mbtiData.dominant_function === "Unknown"
+    ) {
+      mbtiData.dominant_function = cog.dominant;
+    }
+    if (
+      !mbtiData.auxiliary_function ||
+      mbtiData.auxiliary_function === "Unknown"
+    ) {
+      mbtiData.auxiliary_function = cog.auxiliary;
     }
   }
 
