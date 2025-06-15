@@ -1,4 +1,3 @@
-
 import { enhancedAICoachService } from './enhanced-ai-coach-service';
 import { BlueprintData } from './blueprint-service';
 import { v4 as uuidv4 } from 'uuid';
@@ -50,7 +49,13 @@ class AIGoalDecompositionService {
     category: string,
     blueprintData: BlueprintData
   ): Promise<AIGeneratedGoal> {
-    console.log('Starting AI-powered goal decomposition for:', goalTitle);
+    const startTime = Date.now();
+    console.log('🤖 Starting AI-powered goal decomposition for:', {
+      goalTitle,
+      category,
+      timeframe,
+      timestamp: startTime
+    });
     
     // Create comprehensive prompt for AI goal decomposition
     const decompositionPrompt = this.createDecompositionPrompt(
@@ -65,6 +70,12 @@ class AIGoalDecompositionService {
       // Use the enhanced AI coach service with coach mode for goal breakdown
       const sessionId = enhancedAICoachService.createNewSession('coach');
       
+      console.log('📤 Sending request to AI coach service...', {
+        sessionId,
+        promptLength: decompositionPrompt.length,
+        timestamp: Date.now()
+      });
+      
       const response = await enhancedAICoachService.sendMessage(
         decompositionPrompt,
         sessionId,
@@ -73,7 +84,12 @@ class AIGoalDecompositionService {
         'en'
       );
 
-      console.log('AI response received, parsing goal structure...');
+      const aiResponseTime = Date.now();
+      console.log('📥 AI response received, parsing goal structure...', {
+        responseLength: response.response?.length || 0,
+        processingTime: aiResponseTime - startTime,
+        timestamp: aiResponseTime
+      });
       
       // Parse AI response and create structured goal
       const parsedGoal = await this.parseAIResponse(
@@ -84,10 +100,34 @@ class AIGoalDecompositionService {
         category
       );
 
+      const endTime = Date.now();
+      console.log('✅ Goal decomposition completed successfully', {
+        totalTime: endTime - startTime,
+        goalId: parsedGoal.id,
+        milestonesCount: parsedGoal.milestones.length,
+        tasksCount: parsedGoal.tasks.length,
+        timestamp: endTime
+      });
+
       return parsedGoal;
     } catch (error) {
-      console.error('Error in AI goal decomposition:', error);
-      // Fallback to simplified structure if AI fails
+      const errorTime = Date.now();
+      console.error('❌ Error in AI goal decomposition:', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        processingTime: errorTime - startTime,
+        timestamp: errorTime
+      });
+      
+      // Check if it's a timeout or network error
+      if (error instanceof Error) {
+        if (error.message.includes('timeout') || error.message.includes('network')) {
+          console.log('🔄 Network/timeout error detected, creating enhanced fallback...');
+          return this.createEnhancedFallbackGoal(goalTitle, goalDescription, timeframe, category, blueprintData);
+        }
+      }
+      
+      // For other errors, still provide a fallback but log it as unexpected
+      console.log('🔄 Unexpected error, creating basic fallback...');
       return this.createFallbackGoal(goalTitle, goalDescription, timeframe, category);
     }
   }
@@ -162,16 +202,21 @@ Please format your response as a detailed breakdown I can follow, making it spec
     timeframe: string,
     category: string
   ): Promise<AIGeneratedGoal> {
-    console.log('Parsing AI response into structured goal format...');
+    console.log('🔍 Parsing AI response into structured goal format...');
     
     const goalId = uuidv4();
     const targetDate = this.calculateTargetDate(timeframe);
     
     // Extract milestones and tasks from AI response
-    // This is a simplified parser - in production, you might want more sophisticated parsing
     const milestones = this.extractMilestonesFromResponse(aiResponse);
     const tasks = this.extractTasksFromResponse(aiResponse, milestones);
     const insights = this.extractInsightsFromResponse(aiResponse);
+    
+    console.log('📊 Parsed AI response structure:', {
+      milestonesExtracted: milestones.length,
+      tasksExtracted: tasks.length,
+      insightsExtracted: insights.length
+    });
     
     return {
       id: goalId,
@@ -319,13 +364,133 @@ Please format your response as a detailed breakdown I can follow, making it spec
     }
   }
 
+  private createEnhancedFallbackGoal(
+    goalTitle: string,
+    goalDescription: string,
+    timeframe: string,
+    category: string,
+    blueprintData: BlueprintData
+  ): AIGeneratedGoal {
+    console.log('🔧 Creating enhanced fallback goal with blueprint context...');
+    
+    const goalId = uuidv4();
+    const targetDate = this.calculateTargetDate(timeframe);
+    
+    // Create blueprint-aware fallback milestones
+    const userType = this.getUserTypeFromBlueprint(blueprintData);
+    const milestones = this.createBlueprintAwareMilestones(goalTitle, userType);
+    const tasks = this.createBlueprintAwareTasks(milestones, userType);
+    const insights = this.createBlueprintInsights(blueprintData);
+    
+    return {
+      id: goalId,
+      title: goalTitle,
+      description: goalDescription || `Enhanced journey for ${userType}: ${goalTitle}`,
+      category,
+      timeframe,
+      target_completion: targetDate,
+      created_at: new Date().toISOString(),
+      milestones,
+      tasks,
+      blueprint_insights: insights,
+      personalization_notes: `This goal was created with your ${userType} profile in mind. While AI personalization was temporarily unavailable, we've used your blueprint to create a structured approach.`
+    };
+  }
+
+  private getUserTypeFromBlueprint(blueprintData: BlueprintData): string {
+    if (!blueprintData) return 'focused individual';
+    
+    const mbti = blueprintData?.cognition_mbti?.type;
+    const hdType = blueprintData?.energy_strategy_human_design?.type;
+    
+    if (mbti && mbti !== 'Unknown') return `${mbti} type`;
+    if (hdType && hdType !== 'Unknown') return `${hdType} energy`;
+    
+    return 'unique blueprint';
+  }
+
+  private createBlueprintAwareMilestones(goalTitle: string, userType: string): AIGeneratedMilestone[] {
+    return [
+      {
+        id: uuidv4(),
+        title: "Foundation & Research",
+        description: `Establish solid groundwork for "${goalTitle}" using your ${userType} approach to information gathering`,
+        target_date: this.calculateMilestoneDate(0, 3),
+        completed: false,
+        completion_criteria: ["Research completed", "Resources identified", "Initial plan created"],
+        blueprint_alignment: `Designed for your ${userType} preference for thorough preparation`,
+        order: 1
+      },
+      {
+        id: uuidv4(),
+        title: "Implementation & Action",
+        description: `Execute core activities with momentum that matches your ${userType} energy patterns`,
+        target_date: this.calculateMilestoneDate(1, 3),
+        completed: false,
+        completion_criteria: ["Key actions initiated", "Progress tracking active", "Adjustments made"],
+        blueprint_alignment: `Aligned with your ${userType} execution style`,
+        order: 2
+      },
+      {
+        id: uuidv4(),
+        title: "Completion & Integration",
+        description: `Finalize "${goalTitle}" and integrate learnings using your ${userType} closure process`,
+        target_date: this.calculateMilestoneDate(2, 3),
+        completed: false,
+        completion_criteria: ["Goal achieved", "Results evaluated", "Next steps identified"],
+        blueprint_alignment: `Honors your ${userType} approach to completion`,
+        order: 3
+      }
+    ];
+  }
+
+  private createBlueprintAwareTasks(milestones: AIGeneratedMilestone[], userType: string): AIGeneratedTask[] {
+    const tasks: AIGeneratedTask[] = [];
+    
+    milestones.forEach((milestone, milestoneIndex) => {
+      for (let i = 0; i < 3; i++) {
+        tasks.push({
+          id: uuidv4(),
+          title: `${userType}-optimized task ${i + 1} for ${milestone.title}`,
+          description: `Task designed to work with your ${userType} cognitive and energy patterns`,
+          milestone_id: milestone.id,
+          completed: false,
+          estimated_duration: ["30 minutes", "1 hour", "2 hours"][i] || "1 hour",
+          energy_level_required: (["low", "medium", "high"] as const)[i % 3],
+          category: milestone.title.toLowerCase().includes("foundation") ? "planning" : "execution",
+          optimal_timing: ["morning", "afternoon", "evening"],
+          blueprint_reasoning: `Tailored for your ${userType} work style and preferences`,
+          order: i + 1
+        });
+      }
+    });
+
+    return tasks;
+  }
+
+  private createBlueprintInsights(blueprintData: BlueprintData): string[] {
+    const insights = [];
+    
+    if (blueprintData?.cognition_mbti?.type) {
+      insights.push(`Tasks structured for your ${blueprintData.cognition_mbti.type} cognitive functions`);
+    }
+    if (blueprintData?.energy_strategy_human_design?.strategy) {
+      insights.push(`Energy management aligned with your ${blueprintData.energy_strategy_human_design.strategy} strategy`);
+    }
+    if (blueprintData?.values_life_path?.lifePathNumber) {
+      insights.push(`Goal approach honors your Life Path ${blueprintData.values_life_path.lifePathNumber} themes`);
+    }
+    
+    return insights.length > 0 ? insights : ["Blueprint-aware structure created for optimal alignment"];
+  }
+
   private createFallbackGoal(
     goalTitle: string,
     goalDescription: string,
     timeframe: string,
     category: string
   ): AIGeneratedGoal {
-    console.log('Creating fallback goal structure...');
+    console.log('🔧 Creating basic fallback goal structure...');
     
     const goalId = uuidv4();
     const targetDate = this.calculateTargetDate(timeframe);
@@ -333,15 +498,15 @@ Please format your response as a detailed breakdown I can follow, making it spec
     return {
       id: goalId,
       title: goalTitle,
-      description: goalDescription || `Fallback journey: ${goalTitle}`,
+      description: goalDescription || `Basic journey: ${goalTitle}`,
       category,
       timeframe,
       target_completion: targetDate,
       created_at: new Date().toISOString(),
-      milestones: [], // Will be populated by extractMilestonesFromResponse
+      milestones: [],
       tasks: [],
       blueprint_insights: ["Basic structure created - AI personalization temporarily unavailable"],
-      personalization_notes: "Fallback goal created. Try again for full AI personalization."
+      personalization_notes: "Fallback goal created. AI services will be restored shortly."
     };
   }
 }
