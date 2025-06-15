@@ -8,8 +8,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { SoulOrbAvatar } from "@/components/ui/avatar";
+import { LanguageSelector } from "@/components/ui/language-selector";
 
 export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
@@ -22,12 +24,12 @@ export default function Auth() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, loading: authLoading } = useAuth();
+  const { t } = useLanguage();
 
   const from = location.state?.from?.pathname || "/";
 
   useEffect(() => {
     if (!authLoading && user) {
-      // For existing users, redirect to where they came from or home
       navigate(from, { replace: true });
     }
   }, [user, authLoading, navigate, from]);
@@ -37,8 +39,8 @@ export default function Auth() {
     
     if (password !== confirmPassword) {
       toast({
-        title: "Error",
-        description: "Passwords do not match",
+        title: t('error'),
+        description: t('auth.passwordsDontMatch'),
         variant: "destructive",
       });
       return;
@@ -46,8 +48,8 @@ export default function Auth() {
 
     if (password.length < 6) {
       toast({
-        title: "Error",
-        description: "Password must be at least 6 characters long",
+        title: t('error'),
+        description: t('auth.passwordTooShort'),
         variant: "destructive",
       });
       return;
@@ -69,18 +71,17 @@ export default function Auth() {
       if (error) throw error;
 
       toast({
-        title: "Success!",
-        description: "Check your email for the confirmation link, then you'll be redirected to create your Soul Blueprint.",
+        title: t('auth.success'),
+        description: t('auth.signUpSuccess'),
       });
 
-      // For new users, redirect to onboarding immediately
       navigate("/onboarding", { replace: true });
       
     } catch (error: any) {
       console.error("Sign up error:", error);
       toast({
-        title: "Error",
-        description: error.message || "Failed to create account",
+        title: t('error'),
+        description: error.message || t('auth.signUpFailed'),
         variant: "destructive",
       });
     } finally {
@@ -101,18 +102,17 @@ export default function Auth() {
       if (error) throw error;
 
       toast({
-        title: "Welcome back!",
-        description: "You have been signed in successfully.",
+        title: t('auth.welcomeBack'),
+        description: t('auth.welcomeBackMessage'),
       });
 
-      // For existing users, navigate to where they came from or home
       navigate(from, { replace: true });
       
     } catch (error: any) {
       console.error("Sign in error:", error);
       toast({
-        title: "Error",
-        description: error.message || "Failed to sign in",
+        title: t('error'),
+        description: error.message || t('auth.signInFailed'),
         variant: "destructive",
       });
     } finally {
@@ -132,45 +132,46 @@ export default function Auth() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-soul-black to-soul-purple/20 p-4">
       <Card className="w-full max-w-md bg-card/50 backdrop-blur-sm border-white/10">
         <CardHeader className="space-y-4 text-center">
+          <div className="flex justify-end">
+            <LanguageSelector />
+          </div>
+          
           <div className="flex justify-center">
             <SoulOrbAvatar size="md" />
           </div>
           <div>
             <CardTitle className="text-2xl font-display">
-              {isSignUp ? "Create Account" : "Welcome Back"}
+              {isSignUp ? t('auth.createAccount') : t('auth.welcomeBack')}
             </CardTitle>
             <CardDescription>
-              {isSignUp 
-                ? "Start your journey of self-discovery" 
-                : "Sign in to continue your journey"
-              }
+              {isSignUp ? t('auth.startJourney') : t('auth.continueJourney')}
             </CardDescription>
           </div>
         </CardHeader>
         <CardContent>
           <form onSubmit={isSignUp ? handleSignUp : handleSignIn} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('auth.email')}</Label>
               <Input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
+                placeholder={t('auth.enterEmail')}
                 required
                 disabled={isLoading}
               />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t('auth.password')}</Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
+                  placeholder={t('auth.enterPassword')}
                   required
                   disabled={isLoading}
                   minLength={6}
@@ -194,13 +195,13 @@ export default function Auth() {
 
             {isSignUp && (
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Label htmlFor="confirmPassword">{t('auth.confirmPassword')}</Label>
                 <Input
                   id="confirmPassword"
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirm your password"
+                  placeholder={t('auth.confirmPasswordPlaceholder')}
                   required
                   disabled={isLoading}
                   minLength={6}
@@ -214,7 +215,7 @@ export default function Auth() {
               disabled={isLoading}
             >
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isSignUp ? "Create Account" : "Sign In"}
+              {isSignUp ? t('auth.createAccount') : t('nav.signIn')}
             </Button>
           </form>
 
@@ -229,10 +230,7 @@ export default function Auth() {
               disabled={isLoading}
               className="text-soul-purple hover:text-soul-purple/80"
             >
-              {isSignUp 
-                ? "Already have an account? Sign in" 
-                : "Need an account? Sign up"
-              }
+              {isSignUp ? t('auth.alreadyHaveAccount') : t('auth.needAccount')}
             </Button>
           </div>
         </CardContent>

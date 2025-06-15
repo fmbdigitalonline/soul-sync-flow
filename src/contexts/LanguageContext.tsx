@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export type Language = 'en' | 'nl';
@@ -12,6 +13,27 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 const translations = {
   en: {
+    // Authentication
+    'auth.createAccount': 'Create Account',
+    'auth.welcomeBack': 'Welcome Back',
+    'auth.startJourney': 'Start your journey of self-discovery',
+    'auth.continueJourney': 'Sign in to continue your journey',
+    'auth.email': 'Email',
+    'auth.password': 'Password',
+    'auth.confirmPassword': 'Confirm Password',
+    'auth.enterEmail': 'Enter your email',
+    'auth.enterPassword': 'Enter your password',
+    'auth.confirmPasswordPlaceholder': 'Confirm your password',
+    'auth.alreadyHaveAccount': 'Already have an account? Sign in',
+    'auth.needAccount': 'Need an account? Sign up',
+    'auth.passwordsDontMatch': 'Passwords do not match',
+    'auth.passwordTooShort': 'Password must be at least 6 characters long',
+    'auth.signUpSuccess': 'Check your email for the confirmation link, then you\'ll be redirected to create your Soul Blueprint.',
+    'auth.welcomeBackMessage': 'You have been signed in successfully.',
+    'auth.signUpFailed': 'Failed to create account',
+    'auth.signInFailed': 'Failed to sign in',
+    'auth.success': 'Success!',
+    
     // Navigation
     'nav.home': 'Home',
     'nav.blueprint': 'Blueprint',
@@ -321,6 +343,27 @@ const translations = {
   },
   
   nl: {
+    // Authentication
+    'auth.createAccount': 'Account Aanmaken',
+    'auth.welcomeBack': 'Welkom Terug',
+    'auth.startJourney': 'Begin je reis van zelfontdekking',
+    'auth.continueJourney': 'Log in om je reis voort te zetten',
+    'auth.email': 'Email',
+    'auth.password': 'Wachtwoord',
+    'auth.confirmPassword': 'Bevestig Wachtwoord',
+    'auth.enterEmail': 'Voer je email in',
+    'auth.enterPassword': 'Voer je wachtwoord in',
+    'auth.confirmPasswordPlaceholder': 'Bevestig je wachtwoord',
+    'auth.alreadyHaveAccount': 'Heb je al een account? Log in',
+    'auth.needAccount': 'Heb je een account nodig? Registreer',
+    'auth.passwordsDontMatch': 'Wachtwoorden komen niet overeen',
+    'auth.passwordTooShort': 'Wachtwoord moet minimaal 6 tekens lang zijn',
+    'auth.signUpSuccess': 'Controleer je email voor de bevestigingslink, dan word je doorgestuurd om je Ziel Blauwdruk te maken.',
+    'auth.welcomeBackMessage': 'Je bent succesvol ingelogd.',
+    'auth.signUpFailed': 'Aanmaken account mislukt',
+    'auth.signInFailed': 'Inloggen mislukt',
+    'auth.success': 'Succes!',
+    
     // Navigation
     'nav.home': 'Home',
     'nav.blueprint': 'Blauwdruk',

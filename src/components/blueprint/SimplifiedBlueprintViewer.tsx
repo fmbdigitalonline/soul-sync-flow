@@ -67,36 +67,33 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
       typeof personality === "object" &&
       "likelyType" in personality // Make sure this is not just a string!
     ) {
-      // Type is now narrowed for validPersonality
-      const validPersonality = personality;
+      // Cast personality to any to avoid TypeScript null checking issues
+      const validPersonality = personality as any;
       mbtiData = {
         type: validPersonality.likelyType ? validPersonality.likelyType : "Unknown",
         core_keywords:
-          "mbtiCoreKeywords" in validPersonality && Array.isArray(validPersonality.mbtiCoreKeywords)
+          validPersonality.mbtiCoreKeywords && Array.isArray(validPersonality.mbtiCoreKeywords)
             ? validPersonality.mbtiCoreKeywords
-            : "core_keywords" in validPersonality && Array.isArray(validPersonality.core_keywords)
+            : validPersonality.core_keywords && Array.isArray(validPersonality.core_keywords)
               ? validPersonality.core_keywords
               : [],
         dominant_function:
-          "dominantFunction" in validPersonality && validPersonality.dominantFunction
+          validPersonality.dominantFunction
             ? validPersonality.dominantFunction
-            : "dominant_function" in validPersonality && validPersonality.dominant_function
+            : validPersonality.dominant_function
               ? validPersonality.dominant_function
               : "Unknown",
         auxiliary_function:
-          "auxiliaryFunction" in validPersonality && validPersonality.auxiliaryFunction
+          validPersonality.auxiliaryFunction
             ? validPersonality.auxiliaryFunction
-            : "auxiliary_function" in validPersonality && validPersonality.auxiliary_function
+            : validPersonality.auxiliary_function
               ? validPersonality.auxiliary_function
               : "Unknown",
         description:
-          "description" in validPersonality && typeof validPersonality.description === "string"
+          validPersonality.description && typeof validPersonality.description === "string"
             ? validPersonality.description
             : "",
-        user_confidence:
-          "userConfidence" in validPersonality
-            ? (validPersonality as any).userConfidence
-            : undefined
+        user_confidence: validPersonality.userConfidence
       };
     } else {
       mbtiData = {
