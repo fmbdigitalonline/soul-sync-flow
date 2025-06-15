@@ -6,6 +6,7 @@ import { CheckCircle2, Circle, Clock, Zap, Info } from "lucide-react";
 import { useDoubleTap } from "@/hooks/use-double-tap";
 import { TaskPreview } from "./TaskPreview";
 import { ReadyToBeginModal } from "./ReadyToBeginModal";
+import { TaskStatusSelector } from "./TaskStatusSelector";
 
 interface TaskCardProps {
   task: any;
@@ -13,6 +14,7 @@ interface TaskCardProps {
   onSingleTap?: (task: any) => void;
   showGoal?: boolean;
   onMarkDone?: (task: any) => void;
+  onStatusChange?: (task: any, status: 'todo' | 'in_progress' | 'stuck' | 'completed') => void;
 }
 
 export const TaskCard: React.FC<TaskCardProps> = ({
@@ -20,7 +22,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   onDoubleTap,
   onSingleTap,
   showGoal = false,
-  onMarkDone
+  onMarkDone,
+  onStatusChange
 }) => {
   const [showModal, setShowModal] = useState(false);
 
@@ -35,7 +38,12 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     setShowModal(false);
   };
 
-  // Compose base info
+  const handleStatusChange = (newStatus: 'todo' | 'in_progress' | 'stuck' | 'completed') => {
+    if (onStatusChange) {
+      onStatusChange(task, newStatus);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "completed": return "border-green-200 bg-green-50";
@@ -86,6 +94,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             </div>
             <Info className="h-4 w-4 text-gray-400 flex-shrink-0 ml-2" />
           </div>
+          
           <div className="flex flex-wrap gap-2 mb-2">
             <Badge variant="secondary" className="text-xs bg-soul-purple/20 text-soul-purple">
               🧩 This task is aligned to your blueprint
@@ -99,9 +108,19 @@ export const TaskCard: React.FC<TaskCardProps> = ({
               {task.estimated_duration}
             </Badge>
           </div>
+          
           <TaskPreview task={task} />
 
-          <div className="flex gap-2 mt-4">
+          {/* Status Selector */}
+          <div className="mb-3">
+            <TaskStatusSelector
+              currentStatus={task.status || 'todo'}
+              onStatusChange={handleStatusChange}
+              disabled={task.completed}
+            />
+          </div>
+
+          <div className="flex gap-2">
             <button
               className="flex-1 px-2 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors"
               disabled={task.completed}

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -132,6 +131,14 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
     });
   };
 
+  const handleTaskStatusChange = (task: Task, newStatus: 'todo' | 'in_progress' | 'stuck' | 'completed') => {
+    updateTaskStatus(task.id, newStatus);
+  };
+
+  const handleTaskMarkDone = (task: Task) => {
+    updateTaskStatus(task.id, 'completed');
+  };
+
   const handleDragStart = (task: Task) => {
     setDraggedTask(task);
   };
@@ -212,6 +219,8 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
               task={task} 
               onDoubleTap={handleTaskDoubleTap}
               onSingleTap={handleTaskSingleTap}
+              onStatusChange={handleTaskStatusChange}
+              onMarkDone={handleTaskMarkDone}
               showGoal 
             />
           </div>
@@ -332,6 +341,8 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
               task={task} 
               onDoubleTap={handleTaskDoubleTap}
               onSingleTap={handleTaskSingleTap}
+              onStatusChange={handleTaskStatusChange}
+              onMarkDone={handleTaskMarkDone}
               showGoal 
             />
           ))}
@@ -373,6 +384,8 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
                     task={task} 
                     onDoubleTap={handleTaskDoubleTap}
                     onSingleTap={handleTaskSingleTap}
+                    onStatusChange={handleTaskStatusChange}
+                    onMarkDone={handleTaskMarkDone}
                     showGoal 
                   />
                 ))
