@@ -100,17 +100,50 @@ export const useJourneyTracking = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { error } = await supabase
+      // Check if productivity journey exists
+      const { data: existingJourney } = await supabase
         .from('productivity_journey')
-        .upsert({
-          user_id: user.id,
-          ...updates,
-          updated_at: new Date().toISOString()
-        });
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
 
-      if (error) {
-        console.error('Error updating productivity journey:', error);
-        return;
+      if (existingJourney) {
+        // Update existing record
+        const { error } = await supabase
+          .from('productivity_journey')
+          .update({
+            ...updates,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', user.id);
+
+        if (error) {
+          console.error('Error updating productivity journey:', error);
+          return;
+        }
+      } else {
+        // Insert new record
+        const { error } = await supabase
+          .from('productivity_journey')
+          .insert({
+            user_id: user.id,
+            current_goals: [],
+            completed_goals: [],
+            current_tasks: [],
+            completed_tasks: [],
+            focus_sessions: [],
+            productivity_metrics: {},
+            journey_milestones: [],
+            current_position: '',
+            last_activity_date: new Date().toISOString(),
+            ...updates,
+            updated_at: new Date().toISOString()
+          });
+
+        if (error) {
+          console.error('Error creating productivity journey:', error);
+          return;
+        }
       }
 
       await fetchJourneys();
@@ -124,17 +157,49 @@ export const useJourneyTracking = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { error } = await supabase
+      // Check if growth journey exists
+      const { data: existingJourney } = await supabase
         .from('growth_journey')
-        .upsert({
-          user_id: user.id,
-          ...updates,
-          updated_at: new Date().toISOString()
-        });
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
 
-      if (error) {
-        console.error('Error updating growth journey:', error);
-        return;
+      if (existingJourney) {
+        // Update existing record
+        const { error } = await supabase
+          .from('growth_journey')
+          .update({
+            ...updates,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', user.id);
+
+        if (error) {
+          console.error('Error updating growth journey:', error);
+          return;
+        }
+      } else {
+        // Insert new record
+        const { error } = await supabase
+          .from('growth_journey')
+          .insert({
+            user_id: user.id,
+            mood_entries: [],
+            reflection_entries: [],
+            insight_entries: [],
+            spiritual_practices: [],
+            growth_milestones: [],
+            current_focus_areas: [],
+            current_position: '',
+            last_reflection_date: new Date().toISOString(),
+            ...updates,
+            updated_at: new Date().toISOString()
+          });
+
+        if (error) {
+          console.error('Error creating growth journey:', error);
+          return;
+        }
       }
 
       await fetchJourneys();
