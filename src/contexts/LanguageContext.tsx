@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export type Language = 'en' | 'nl';
@@ -576,22 +577,48 @@ const translations = {
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [language, setLanguage] = useState<Language>(() => {
     const stored = localStorage.getItem('language');
-    return (stored as Language) || 'en';
+    // Only allow 'en' or 'nl'
+    if (stored === 'nl' || stored === 'en') {
+      return stored;
+    }
+    return 'en';
   });
 
   useEffect(() => {
-    localStorage.setItem('language', language);
+    // Only store a supported language in localStorage
+    if (language === 'en' || language === 'nl') {
+      localStorage.setItem('language', language);
+    } else {
+      // fallback for unsupported
+      setLanguage('en');
+      localStorage.setItem('language', 'en');
+    }
   }, [language]);
 
   const t = (key: string, params?: Record<string, string>): string => {
-    let translation = translations[language][key] || key;
-    
+    // fallback if language is not supported
+    let resolvedLang: Language = (language === 'en' || language === 'nl') ? language : 'en';
+    let translation = translations[resolvedLang][key];
+    // Logging for debugging: what language, key, and value?
+    if (process.env.NODE_ENV !== 'production') {
+      // eslint-disable-next-line no-console
+      console.log(`[i18n] language: ${resolvedLang}, key: ${key}, translation:`, translation);
+    }
+
+    if (!translation) {
+      // Optionally warn in dev mode
+      if (process.env.NODE_ENV !== 'production') {
+        // eslint-disable-next-line no-console
+        console.warn(`[i18n] Missing translation for key="${key}" in "${resolvedLang}". Falling back to key.`);
+      }
+      translation = key;
+    }
+
     if (params) {
       Object.entries(params).forEach(([param, value]) => {
         translation = translation.replace(`{{${param}}}`, value);
       });
     }
-    
     return translation;
   };
 
