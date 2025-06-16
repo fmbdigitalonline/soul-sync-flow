@@ -16,7 +16,7 @@ const languages: { code: Language; name: string; flag: string }[] = [
 ];
 
 export const LanguageSelector: React.FC = () => {
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
 
   const currentLanguage = languages.find(lang => lang.code === language);
 
@@ -26,7 +26,7 @@ export const LanguageSelector: React.FC = () => {
         <Button variant="ghost" size="sm" className="gap-2">
           <Globe className="h-4 w-4" />
           <span>{currentLanguage?.flag}</span>
-          <span className="hidden sm:inline">{currentLanguage?.name}</span>
+          <span className="hidden sm:inline">{t(`language.${language === 'en' ? 'english' : 'dutch'}`)}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
@@ -37,7 +37,7 @@ export const LanguageSelector: React.FC = () => {
             className={language === lang.code ? "bg-accent" : ""}
           >
             <span className="mr-2">{lang.flag}</span>
-            {lang.name}
+            {t(`language.${lang.code === 'en' ? 'english' : 'dutch'}`)}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

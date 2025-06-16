@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export type Language = 'en' | 'nl';
@@ -144,6 +145,17 @@ const translations = {
     'coach.soulCompanion': 'Soul Companion',
     'coach.newConversation': 'New Conversation',
     'coach.blueprintSettings': 'Blueprint Settings',
+    'coach.soulCompanionHeader': 'Soul Companion',
+    'coach.sessionBanner': 'Focus Session',
+    'coach.estimatedTime': 'Estimated time',
+    'coach.stepProgress': 'Step {{current}} of {{total}}',
+    'coach.completionProgress': '{{completed}} of {{steps}} steps complete',
+    'coach.motivation.default': "You don't need to get it perfect — clarity starts by expressing what's true for you.",
+    'coach.cta.default': '💬 When you\'re ready, type your thoughts here — I\'ll help organize and refine them into a clear direction.',
+    'coach.fallbackTimeout': 'This is taking a moment — the coach is working deeply to shape your next step…',
+    'coach.preparingPlan': 'Coach is preparing your plan...',
+    'coach.taskSession': 'Task Session',
+    'coach.defaultDuration': '~30 min',
     
     // Agent Selector
     'agent.chooseStyle': 'Choose Your Guidance Style',
@@ -314,6 +326,9 @@ const translations = {
     'habits.deletedDescription': 'The habit has been removed from your tracker.',
     'habits.daysSingular': 'day',
     'habits.daysPlural': 'days',
+    'habits.streak': '{{count}} {{unit}} streak',
+    'habits.doubleTapDetails': 'Double-tap for details',
+    'habits.frequency': 'Daily',
     
     // Goal Setting
     'goals.smartGoals': 'SMART Goals',
@@ -410,7 +425,7 @@ const translations = {
     'index.profileFeature': 'Profile',
     'index.backToHome': '← Back to Home',
     
-    // Dreams Page (NEW KEYS for /dreams)
+    // Dreams Page
     "dreams.title": "Dreams & Goals",
     "dreams.description": "Transform your biggest dreams into achievable milestones with AI-powered guidance",
     "dreams.getStarted": "Get Started",
@@ -447,52 +462,50 @@ const translations = {
     "dreams.dreamRequired": "Dream Required",
     "dreams.dreamRequiredDesc": "Please enter your dream or goal",
 
-    // --- Growth/SpiritualGrowth Page ---
+    // Growth/SpiritualGrowth Page
     'growth.title': 'Growth Mode',
     'growth.positionLabel': 'Position:',
     'growth.conversationMessages': 'conversation messages',
-    'growth.headerSubtitle': 'Inner reflection & zielwijsheid',
-    'growth.exploringArea': 'Verkenning van {{area}}',
-    'growth.chooseYourTool': 'Kies je groeigereedschap',
-    'growth.chooseYourToolDescription': 'Begin met Soul Guide voor een persoonlijke reis of selecteer hierboven een hulpmiddel',
+    'growth.headerSubtitle': 'Inner reflection & soul wisdom',
+    'growth.exploringArea': 'Exploring {{area}}',
+    'growth.chooseYourTool': 'Choose your growth tool',
+    'growth.chooseYourToolDescription': 'Start with Soul Guide for a personal journey or select a tool above',
     'growth.tools.soulGuide': 'Soul Guide',
-    'growth.tools.moodTracker': 'Stemmingsmeter',
-    'growth.tools.reflectionPrompts': 'Reflectievragen',
-    'growth.tools.insightJournal': 'Inzichtenjournal',
-    'growth.tools.weeklyInsights': 'Wekelijkse Inzichten',
-    'growth.tools.freeChat': 'Vrije Chat',
+    'growth.tools.moodTracker': 'Mood Tracker',
+    'growth.tools.reflectionPrompts': 'Reflection Prompts',
+    'growth.tools.insightJournal': 'Insight Journal',
+    'growth.tools.weeklyInsights': 'Weekly Insights',
+    'growth.tools.freeChat': 'Free Chat',
     'growth.startSoulCheckIn': 'Start Soul Check-in',
     
-    // Coach Session specific keys
-    'coach.taskSession': 'Task Session',
-    'coach.defaultDuration': '~30 min',
-    'coach.soulCompanionHeader': 'Soul Companion',
-    'coach.sessionBanner': 'Focus Session',
-    'coach.estimatedTime': 'Estimated time',
-    'coach.stepProgress': 'Step {{current}} of {{total}}',
-    'coach.completionProgress': '{{completed}} of {{steps}} steps complete',
-    'coach.motivation.default': "You don't need to get it perfect — clarity starts by expressing what's true for you.",
-    'coach.cta.default': '💬 When you\'re ready, type your thoughts here — I\'ll help organize and refine them into a clear direction.',
-    'coach.fallbackTimeout': 'This is taking a moment — the coach is working deeply to shape your next step…',
-    'coach.preparingPlan': 'Coach is preparing your plan...',
-    
     // Life Area Selector
-    'lifeArea.selector.title': 'Welk deel van je leven wil je vandaag verkennen?',
-    'lifeArea.selector.subtitle': 'Kies een gebied voor gepersonaliseerde reflectie en groei',
-    'lifeArea.home.name': 'Thuis',
-    'lifeArea.home.description': 'Familie, woonruimte, huiselijke harmonie',
-    'lifeArea.career.name': 'Carrière',
-    'lifeArea.career.description': 'Doel, professionele groei, impact',
-    'lifeArea.finances.name': 'Financiën',
-    'lifeArea.finances.description': 'Overvloed, zekerheid, geld mindset',
-    'lifeArea.relationships.name': 'Relaties',
-    'lifeArea.relationships.description': 'Liefde, vriendschap, gemeenschapsverbinding',
-    'lifeArea.wellbeing.name': 'Welzijn',
-    'lifeArea.wellbeing.description': 'Gezondheid, energie, mentale helderheid',
-    'lifeArea.creativity.name': 'Creativiteit',
-    'lifeArea.creativity.description': 'Expressie, kunst, innovatie, spel',
-    'lifeArea.spirituality.name': 'Spiritualiteit',
-    'lifeArea.spirituality.description': 'Innerlijke wijsheid, verbinding, transcendentie',
+    'lifeArea.selector.title': 'Which part of your life would you like to explore today?',
+    'lifeArea.selector.subtitle': 'Choose an area for personalized reflection and growth',
+    'lifeArea.home.name': 'Home',
+    'lifeArea.home.description': 'Family, living space, domestic harmony',
+    'lifeArea.career.name': 'Career',
+    'lifeArea.career.description': 'Purpose, professional growth, impact',
+    'lifeArea.finances.name': 'Finances',
+    'lifeArea.finances.description': 'Abundance, security, money mindset',
+    'lifeArea.relationships.name': 'Relationships',
+    'lifeArea.relationships.description': 'Love, friendship, community connection',
+    'lifeArea.wellbeing.name': 'Wellbeing',
+    'lifeArea.wellbeing.description': 'Health, energy, mental clarity',
+    'lifeArea.creativity.name': 'Creativity',
+    'lifeArea.creativity.description': 'Expression, art, innovation, play',
+    'lifeArea.spirituality.name': 'Spirituality',
+    'lifeArea.spirituality.description': 'Inner wisdom, connection, transcendence',
+
+    // Ready to Begin Modal
+    'modal.readyToBegin': 'Ready to Begin?',
+    'modal.sessionDuration': 'This session will take about {{duration}}.',
+    'modal.coachGuide': 'Your Coach will guide you step by step.',
+    'modal.readyToFocus': 'Are you ready to focus?',
+    'modal.letsGo': "Let's Go!",
+
+    // Language Selector
+    'language.english': 'English',
+    'language.dutch': 'Nederlands',
   },
   nl: {
     // Authentication
@@ -627,6 +640,17 @@ const translations = {
     'coach.soulCompanion': 'Ziel Metgezel',
     'coach.newConversation': 'Nieuw Gesprek',
     'coach.blueprintSettings': 'Blauwdruk Instellingen',
+    'coach.soulCompanionHeader': 'Ziel Metgezel',
+    'coach.sessionBanner': 'Focus Sessie',
+    'coach.estimatedTime': 'Geschatte tijd',
+    'coach.stepProgress': 'Stap {{current}} van {{total}}',
+    'coach.completionProgress': '{{completed}} van {{steps}} stappen voltooid',
+    'coach.motivation.default': 'Je hoeft het niet perfect te krijgen — helderheid begint door uit te drukken wat waar is voor jou.',
+    'coach.cta.default': '💬 Wanneer je klaar bent, typ hier je gedachten — ik help ze organiseren en verfijnen tot een duidelijke richting.',
+    'coach.fallbackTimeout': 'Dit duurt even — de coach werkt diep om je volgende stap vorm te geven…',
+    'coach.preparingPlan': 'Coach bereidt je plan voor...',
+    'coach.taskSession': 'Taak Sessie',
+    'coach.defaultDuration': '~30 min',
     
     // Agent Selector
     'agent.chooseStyle': 'Kies je begeleidingsstijl',
@@ -797,6 +821,9 @@ const translations = {
     'habits.deletedDescription': 'De gewoonte is verwijderd uit je tracker.',
     'habits.daysSingular': 'dag',
     'habits.daysPlural': 'dagen',
+    'habits.streak': '{{count}} {{unit}} reeks',
+    'habits.doubleTapDetails': 'Dubbelklik voor details',
+    'habits.frequency': 'Dagelijks',
     
     // Goal Setting
     'goals.smartGoals': 'SMART Doelen',
@@ -937,7 +964,7 @@ const translations = {
     'growth.headerSubtitle': 'Innerlijke reflectie & zielwijsheid',
     'growth.exploringArea': 'Verkenning van {{area}}',
     'growth.chooseYourTool': 'Kies je groeigereedschap',
-    'growth.chooseYourToolDescription': 'Begin met Soul Guide voor een persoonlijke reis of selecteer hierboven een hulpmiddel',
+    'growth.chooseYourToolDescription': 'Begin met Ziel Gids voor een persoonlijke reis of selecteer hierboven een hulpmiddel',
     'growth.tools.soulGuide': 'Ziel Gids',
     'growth.tools.moodTracker': 'Stemmingsmeter',
     'growth.tools.reflectionPrompts': 'Reflectievragen',
@@ -963,6 +990,17 @@ const translations = {
     'lifeArea.creativity.description': 'Expressie, kunst, innovatie, spel',
     'lifeArea.spirituality.name': 'Spiritualiteit',
     'lifeArea.spirituality.description': 'Innerlijke wijsheid, verbinding, transcendentie',
+
+    // Ready to Begin Modal
+    'modal.readyToBegin': 'Klaar om te Beginnen?',
+    'modal.sessionDuration': 'Deze sessie duurt ongeveer {{duration}}.',
+    'modal.coachGuide': 'Je Coach begeleidt je stap voor stap.',
+    'modal.readyToFocus': 'Ben je klaar om te focussen?',
+    'modal.letsGo': 'Laten we gaan!',
+
+    // Language Selector
+    'language.english': 'Engels',
+    'language.dutch': 'Nederlands',
   }
 };
 

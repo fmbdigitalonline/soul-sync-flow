@@ -249,5 +249,3 @@ const SpiritualGrowth = () => {
 };
 
 export default SpiritualGrowth;
-
-// ... end of file

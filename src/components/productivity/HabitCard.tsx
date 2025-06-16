@@ -2,8 +2,9 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Circle, Flame, Calendar, Info } from "lucide-react";
+import { CheckCircle2, Circle, Flame, Info } from "lucide-react";
 import { useDoubleTap } from "@/hooks/use-double-tap";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface HabitCardProps {
   habit: any;
@@ -17,6 +18,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({ habit, onDoubleTap, onSing
     onSingleTap: () => onSingleTap?.(habit),
     delay: 300
   });
+  const { t } = useLanguage();
 
   const todayCompleted = habit.completedToday || false;
   const streak = habit.streak || 0;
@@ -44,15 +46,20 @@ export const HabitCard: React.FC<HabitCardProps> = ({ habit, onDoubleTap, onSing
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1">
             <Flame className="h-3 w-3 text-orange-500" />
-            <span className="text-xs text-gray-600">{streak} day streak</span>
+            <span className="text-xs text-gray-600">
+              {t('habits.streak', { 
+                count: streak.toString(), 
+                unit: streak === 1 ? t('habits.daysSingular') : t('habits.daysPlural')
+              })}
+            </span>
           </div>
           <Badge variant="outline" className="text-xs">
-            {habit.frequency || 'Daily'}
+            {habit.frequency || t('habits.frequency')}
           </Badge>
         </div>
 
         <div className="text-center">
-          <p className="text-xs text-gray-400">Double-tap for details</p>
+          <p className="text-xs text-gray-400">{t('habits.doubleTapDetails')}</p>
         </div>
       </CardContent>
     </Card>
