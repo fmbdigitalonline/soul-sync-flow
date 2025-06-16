@@ -20,7 +20,7 @@ export const TypewriterText: React.FC<TypewriterTextProps> = ({
   }, [text]);
 
   return (
-    <div className="text-sm leading-relaxed whitespace-pre-wrap">
+    <div className="text-sm leading-relaxed whitespace-pre-wrap text-left">
       {displayText}
       {isStreaming && (
         <span className="inline-block w-1 h-4 bg-soul-purple/60 ml-1 animate-pulse" />

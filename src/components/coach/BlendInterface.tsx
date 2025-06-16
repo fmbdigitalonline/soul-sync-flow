@@ -119,15 +119,17 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
                 </p>
               </div>
               
-              {message.isStreaming ? (
-                <TypewriterText 
-                  text={message.content} 
-                  isStreaming={true}
-                  speed={25}
-                />
-              ) : (
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
-              )}
+              <div className="text-left">
+                {message.isStreaming ? (
+                  <TypewriterText 
+                    text={message.content} 
+                    isStreaming={true}
+                    speed={25}
+                  />
+                ) : (
+                  <p className="text-sm leading-relaxed whitespace-pre-wrap text-left">{message.content}</p>
+                )}
+              </div>
             </div>
           </div>
         ))}
