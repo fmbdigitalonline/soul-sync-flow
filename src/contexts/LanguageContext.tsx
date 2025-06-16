@@ -78,6 +78,33 @@ const translations = {
     'index.getStarted': 'Get Started',
     'index.signIn': 'Sign In',
     
+    // Rotating subtitle messages
+    'index.rotatingMessages': [
+      'Feeling stuck? SoulSync shows you the next right step.',
+      'Lost in the noise? Discover guidance that speaks your truth.',
+      'Overthinking your path? Align, act, and breathe again.',
+      'When nothing works, your design holds the key.',
+      'SoulSync ends the cycle of forcing what doesn\'t fit.',
+      'Not lazy. Not broken. Just misaligned.',
+      'You\'re not behind — you\'re off-track. SoulSync resets your course.',
+      'No more plans that ignore who you are.',
+      'Goals aren\'t the problem. Strategy that ignores your soul is.',
+      'When burnout wins, SoulSync realigns you with joy. Break down your dream — not your spirit.',
+      'Turn chaos into clarity, one soul-aligned task at a time.',
+      'Productivity that honors your wiring.',
+      'From blueprint to action — one aligned step at a time.',
+      'Finally: a task system built for your energy, not against it.',
+      'Your goals, your rhythm, your way.',
+      'Dream big. Then let SoulSync reverse-engineer your path.',
+      'Every task in tune with who you are.',
+      'Clarity. Strategy. Action. All from your inner code.',
+      'Soul-led productivity — so you can actually follow through. SoulSync helps when you\'re tired of guessing.',
+      'When you\'re stuck, it\'s not more willpower you need — it\'s more alignment.',
+      'Feel known. Make progress.',
+      'Real growth starts with self-understanding.',
+      'It\'s not about doing more — it\'s about doing what\'s right for you.'
+    ],
+    
     // Onboarding
     'onboarding.welcome': 'Welcome to SoulSync',
     'onboarding.welcomeDesc': 'I\'m your personal astrology guide. Let me help you discover your cosmic blueprint.',
@@ -411,6 +438,33 @@ const translations = {
     'index.backToHome': 'Terug naar Home',
     'index.getStarted': 'Begin Nu',
     'index.signIn': 'Inloggen',
+    
+    // Rotating subtitle messages
+    'index.rotatingMessages': [
+      'Vastzittend? SoulSync toont je de volgende juiste stap.',
+      'Verloren in de ruis? Ontdek begeleiding die tot je ziel spreekt.',
+      'Te veel nadenken over je pad? Stem af, handel en adem weer.',
+      'Als niets werkt, heeft je ontwerp de sleutel.',
+      'SoulSync beëindigt de cyclus van forceren wat niet past.',
+      'Niet lui. Niet kapot. Gewoon niet op één lijn.',
+      'Je bent niet achterop — je bent van koers. SoulSync zet je koers weer uit.',
+      'Geen plannen meer die negeren wie je bent.',
+      'Doelen zijn niet het probleem. Strategie die je ziel negeert wel.',
+      'Als burnout wint, brengt SoulSync je terug in lijn met vreugde. Breek je droom af — niet je geest.',
+      'Verander chaos in helderheid, één ziel-afgestemde taak tegelijk.',
+      'Productiviteit die je bedrading eert.',
+      'Van blauwdruk naar actie — één afgestemde stap tegelijk.',
+      'Eindelijk: een takensysteem gebouwd voor je energie, niet ertegen.',
+      'Je doelen, je ritme, jouw manier.',
+      'Droom groot. Laat SoulSync dan je pad reverse-engineeren.',
+      'Elke taak in harmonie met wie je bent.',
+      'Helderheid. Strategie. Actie. Alles vanuit je innerlijke code.',
+      'Ziel-geleide productiviteit — zodat je daadwerkelijk kunt doorzetten. SoulSync helpt als je moe bent van gissen.',
+      'Als je vastloopt, heb je geen meer wilskracht nodig — meer afstemming.',
+      'Voel je gekend. Maak vooruitgang.',
+      'Echte groei begint met zelfbegrip.',
+      'Het gaat er niet om meer te doen — het gaat erom wat goed voor je is te doen.'
+    ],
     
     // Onboarding
     'onboarding.welcome': 'Welkom bij SoulSync',

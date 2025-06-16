@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -41,32 +42,8 @@ const Index = () => {
     }
   }, [user, hasBlueprint, t]);
 
-  // Dynamic subtitle messages
-  const subtitleMessages = [
-    "Feeling stuck? SoulSync shows you the next right step.",
-    "Lost in the noise? Discover guidance that speaks your truth.",
-    "Overthinking your path? Align, act, and breathe again.",
-    "When nothing works, your design holds the key.",
-    "SoulSync ends the cycle of forcing what doesn't fit.",
-    "Not lazy. Not broken. Just misaligned.",
-    "You're not behind — you're off-track. SoulSync resets your course.",
-    "No more plans that ignore who you are.",
-    "Goals aren't the problem. Strategy that ignores your soul is.",
-    "When burnout wins, SoulSync realigns you with joy. Break down your dream — not your spirit.",
-    "Turn chaos into clarity, one soul-aligned task at a time.",
-    "Productivity that honors your wiring.",
-    "From blueprint to action — one aligned step at a time.",
-    "Finally: a task system built for your energy, not against it.",
-    "Your goals, your rhythm, your way.",
-    "Dream big. Then let SoulSync reverse-engineer your path.",
-    "Every task in tune with who you are.",
-    "Clarity. Strategy. Action. All from your inner code.",
-    "Soul-led productivity — so you can actually follow through. SoulSync helps when you're tired of guessing.",
-    "When you're stuck, it's not more willpower you need — it's more alignment.",
-    "Feel known. Make progress.",
-    "Real growth starts with self-understanding.",
-    "It's not about doing more — it's about doing what's right for you."
-  ];
+  // Get dynamic subtitle messages from translations
+  const subtitleMessages = t("index.rotatingMessages") as string[];
 
   // Only speak welcome message once when user and blueprint data are loaded
   useEffect(() => {
