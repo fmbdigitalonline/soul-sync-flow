@@ -34,7 +34,7 @@ export class VoiceTokenGenerator {
 
   private static extractUserName(blueprint: Partial<LayeredBlueprint>): string {
     try {
-      const userMeta = (blueprint as any)?.user_meta;
+      const userMeta = blueprint.user_meta;
       return userMeta?.preferred_name || 
              userMeta?.full_name?.split(' ')[0] || 
              'friend';
@@ -47,16 +47,16 @@ export class VoiceTokenGenerator {
     const mbtiType = blueprint.cognitiveTemperamental?.mbtiType;
     const humanDesignType = blueprint.energyDecisionStrategy?.humanDesignType;
 
-    let sentenceLength: 'short' | 'medium' | 'long' = 'medium';
-    let pauseFrequency: 'frequent' | 'occasional' | 'thoughtful' = 'occasional';
-    let rhythmPattern: 'steady' | 'varied' | 'dynamic' = 'steady';
+    let sentenceLength: 'short' | 'medium' | 'flowing' | 'elaborate' = 'medium';
+    let pauseFrequency: 'minimal' | 'thoughtful' | 'dramatic' = 'thoughtful';
+    let rhythmPattern: 'steady' | 'varied' | 'staccato' | 'melodic' = 'steady';
 
     if (mbtiType && ['ISTJ', 'ESTJ', 'INTJ', 'ENTJ'].includes(mbtiType)) {
       sentenceLength = 'short';
-      pauseFrequency = 'frequent';
+      pauseFrequency = 'minimal';
     } else if (mbtiType && ['ISFP', 'ESFP', 'INFP', 'ENFP'].includes(mbtiType)) {
-      sentenceLength = 'long';
-      pauseFrequency = 'occasional';
+      sentenceLength = 'flowing';
+      pauseFrequency = 'thoughtful';
     }
 
     if (humanDesignType === 'Projector') {
@@ -64,7 +64,7 @@ export class VoiceTokenGenerator {
       rhythmPattern = 'varied';
     } else if (humanDesignType === 'Generator') {
       sentenceLength = 'medium';
-      rhythmPattern = 'dynamic';
+      rhythmPattern = 'melodic';
     }
 
     return {
@@ -78,12 +78,12 @@ export class VoiceTokenGenerator {
     const sunSign = blueprint.publicArchetype?.sunSign;
     const lifePath = blueprint.coreValuesNarrative?.lifePath;
 
-    let emojiFrequency: 'high' | 'occasional' | 'minimal' = 'occasional';
-    let emphasisStyle: 'subtle' | 'moderate' | 'strong' = 'moderate';
-    let exclamationTendency: 'balanced' | 'enthusiastic' | 'restrained' = 'balanced';
+    let emojiFrequency: 'none' | 'rare' | 'occasional' | 'frequent' = 'occasional';
+    let emphasisStyle: 'bold' | 'italic' | 'caps' | 'punctuation' | 'subtle' = 'punctuation';
+    let exclamationTendency: 'reserved' | 'balanced' | 'enthusiastic' = 'balanced';
 
     if (sunSign && ['Leo', 'Sagittarius', 'Gemini'].includes(sunSign)) {
-      emojiFrequency = 'high';
+      emojiFrequency = 'frequent';
       exclamationTendency = 'enthusiastic';
     } else if (sunSign && ['Cancer', 'Pisces', 'Libra'].includes(sunSign)) {
       emojiFrequency = 'occasional';
@@ -91,11 +91,11 @@ export class VoiceTokenGenerator {
     }
 
     if (lifePath && [3, 5, 8].includes(lifePath)) {
-      emphasisStyle = 'strong';
+      emphasisStyle = 'bold';
       exclamationTendency = 'enthusiastic';
     } else if (lifePath && [2, 6, 9].includes(lifePath)) {
       emphasisStyle = 'subtle';
-      exclamationTendency = 'restrained';
+      exclamationTendency = 'reserved';
     }
 
     return {
@@ -109,22 +109,22 @@ export class VoiceTokenGenerator {
     const mbtiType = blueprint.cognitiveTemperamental?.mbtiType;
     const archetype = blueprint.publicArchetype?.sunSign;
 
-    let formalityLevel: 'formal' | 'conversational' | 'informal' = 'conversational';
-    let metaphorUsage: 'frequent' | 'occasional' | 'rare' = 'occasional';
-    let technicalDepth: 'high' | 'balanced' | 'basic' = 'balanced';
+    let formalityLevel: 'casual' | 'conversational' | 'professional' | 'academic' = 'conversational';
+    let metaphorUsage: 'literal' | 'occasional' | 'frequent' | 'poetic' = 'occasional';
+    let technicalDepth: 'simplified' | 'balanced' | 'detailed' | 'expert' = 'balanced';
 
     if (mbtiType && ['INTJ', 'ENTJ', 'INTP', 'ENTP'].includes(mbtiType)) {
-      formalityLevel = 'formal';
-      technicalDepth = 'high';
+      formalityLevel = 'professional';
+      technicalDepth = 'detailed';
     } else if (mbtiType && ['ISFP', 'ESFP', 'INFP', 'ENFP'].includes(mbtiType)) {
-      formalityLevel = 'informal';
+      formalityLevel = 'casual';
       metaphorUsage = 'frequent';
     }
 
     if (archetype && ['Aquarius', 'Scorpio', 'Capricorn'].includes(archetype)) {
-      technicalDepth = 'high';
+      technicalDepth = 'detailed';
     } else if (archetype && ['Taurus', 'Virgo', 'Cancer'].includes(archetype)) {
-      technicalDepth = 'basic';
+      technicalDepth = 'simplified';
     }
 
     return {
@@ -138,24 +138,24 @@ export class VoiceTokenGenerator {
     const humanDesignType = blueprint.energyDecisionStrategy?.humanDesignType;
     const lifePath = blueprint.coreValuesNarrative?.lifePath;
 
-    let questionAsking: 'exploratory' | 'directive' | 'reflective' = 'exploratory';
-    let responseLength: 'concise' | 'thorough' | 'balanced' = 'thorough';
-    let personalSharing: 'relevant' | 'frequent' | 'minimal' = 'relevant';
+    let questionAsking: 'direct' | 'exploratory' | 'socratic' | 'supportive' = 'exploratory';
+    let responseLength: 'concise' | 'thorough' | 'comprehensive' | 'storytelling' = 'thorough';
+    let personalSharing: 'minimal' | 'relevant' | 'warm' | 'intimate' = 'relevant';
 
     if (humanDesignType === 'Manifestor') {
-      questionAsking = 'directive';
+      questionAsking = 'direct';
       responseLength = 'concise';
     } else if (humanDesignType === 'Reflector') {
-      questionAsking = 'reflective';
-      responseLength = 'thorough';
+      questionAsking = 'supportive';
+      responseLength = 'comprehensive';
     }
 
     if (lifePath && [1, 5, 7].includes(lifePath)) {
       personalSharing = 'minimal';
       responseLength = 'concise';
     } else if (lifePath && [4, 6, 9].includes(lifePath)) {
-      personalSharing = 'frequent';
-      questionAsking = 'reflective';
+      personalSharing = 'warm';
+      questionAsking = 'supportive';
     }
 
     return {

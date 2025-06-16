@@ -25,8 +25,8 @@ export class PersonalityEngine {
    */
   private extractUserFirstName() {
     try {
-      if (this.blueprint && (this.blueprint as any).user_meta) {
-        const userMeta = (this.blueprint as any).user_meta;
+      if (this.blueprint && this.blueprint.user_meta) {
+        const userMeta = this.blueprint.user_meta;
         
         // Try preferred_name first, then extract from full_name
         this.userFirstName = userMeta.preferred_name || 
@@ -168,7 +168,7 @@ export class PersonalityEngine {
   private getFallbackPersona(mode: AgentMode): CompiledPersona {
     console.log('🔧 Personality Engine: Creating fallback persona for mode:', mode);
     
-    const fallback = PersonalityErrorHandler.getFallbackPersona(mode);
+    const fallback = PersonalityErrorHandler.getFallbackPersona(mode, this.userFirstName || 'friend');
     
     return {
       userId: this.userId || 'anonymous',
@@ -234,7 +234,7 @@ export class PersonalityEngine {
       };
 
       // Build enhanced profile with existing + new auto-generated fields
-      const profile = {
+      const profile: any = {
         cognitiveStyle: cognitiveTemperamental?.taskApproach || "systematic and thoughtful",
         dominantFunction: cognitiveTemperamental?.dominantFunction || "balanced processing",
         auxiliaryFunction: cognitiveTemperamental?.auxiliaryFunction || "supportive awareness",
@@ -311,6 +311,12 @@ export class PersonalityEngine {
       // Return basic fallback profile with name
       return {
         firstName: this.userFirstName || 'friend',
+        personalizedGreeting: this.userFirstName ? `Hello ${this.userFirstName}` : 'Hello',
+        nameBasedTransitions: this.userFirstName ? [
+          `Now ${this.userFirstName}`,
+          `Let's explore this together, ${this.userFirstName}`,
+          `Consider this, ${this.userFirstName}`
+        ] : ['Now', 'Let\'s explore this together', 'Consider this'],
         cognitiveStyle: "systematic and thoughtful",
         communicationStyle: "clear and considerate",
         humorStyle: 'warm-nurturer',
@@ -344,7 +350,7 @@ export class PersonalityEngine {
       console.error("❌ Personality Engine: Error generating system prompt:", error);
       
       // Return fallback system prompt
-      const fallback = PersonalityErrorHandler.getFallbackPersona(mode);
+      const fallback = PersonalityErrorHandler.getFallbackPersona(mode, this.userFirstName || 'friend');
       return fallback.systemPrompt;
     }
   }
@@ -392,7 +398,7 @@ VOICE CHARACTERISTICS:
 - Emoji Usage: ${personality.voiceExpressiveness?.emojiFrequency || 'occasional'}
 - Personal Sharing: ${personality.conversationApproach?.personalSharing || 'relevant'}
 
-Stay in PRODUCTIVITY domain. Use ${userName}'s name throughout to make every goal personally relevant. End with concrete next steps in your distinctive voice, addressing ${userName} directly.`;
+Stay focused on PRODUCTIVITY and GOAL ACHIEVEMENT. Use ${userName}'s name throughout to make every goal personally relevant. End with concrete next steps for ${userName}.`;
   }
 
   private generateGuidePrompt(personality: any, communicationInstructions: string): string {

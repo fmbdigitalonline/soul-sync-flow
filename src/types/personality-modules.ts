@@ -1,4 +1,3 @@
-
 // Modular Personality Framework Types
 export interface PersonalityModule {
   id: string;
@@ -163,6 +162,12 @@ export interface LayeredBlueprint {
     moodLog: string[];
     recentPatterns: string[];
     triggerEvents: string[];
+  };
+  // NEW: User meta information including name
+  user_meta?: {
+    preferred_name?: string;
+    full_name?: string;
+    [key: string]: any;
   };
   // NEW: Auto-Generated Personality Components
   humorProfile: HumorProfile;
