@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { enhancedAICoachService, AgentType } from "@/services/enhanced-ai-coach-service";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -61,7 +60,7 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
     initializeAuth();
   }, [user]);
 
-  // Enhanced blueprint integration with persona system
+  // Enhanced blueprint integration with persona system and name extraction
   useEffect(() => {
     if (!authInitialized || !blueprintData) {
       console.log("⏳ Enhanced AI Coach Hook: Waiting for auth/blueprint data");
@@ -71,6 +70,13 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
     console.log("🎭 Enhanced AI Coach Hook: Processing blueprint data for persona generation");
     
     try {
+      // Extract user's first name from blueprint
+      const userFirstName = blueprintData.user_meta?.preferred_name || 
+                           blueprintData.user_meta?.full_name?.split(' ')[0] || 
+                           null;
+      
+      console.log("👤 Enhanced AI Coach Hook: Extracted user name:", userFirstName);
+
       // Convert blueprint data to LayeredBlueprint format
       const layeredBlueprint: Partial<LayeredBlueprint> = {
         cognitiveTemperamental: {
@@ -140,13 +146,18 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
           optimalTimings: blueprintData.timing_overlays?.optimal_timings || [],
           energyWeather: blueprintData.timing_overlays?.energy_weather || "stable growth",
         },
+        user_meta: {
+          preferred_name: userFirstName,
+          full_name: blueprintData.user_meta?.full_name,
+          ...blueprintData.user_meta
+        }
       };
 
       // Update the AI service with the user's blueprint - this triggers persona regeneration
       enhancedAICoachService.updateUserBlueprint(layeredBlueprint);
       setPersonaReady(true);
       
-      console.log("✅ Enhanced AI Coach Hook: Blueprint processed and persona system ready");
+      console.log("✅ Enhanced AI Coach Hook: Blueprint processed with user name and persona system ready");
     } catch (error) {
       console.error("❌ Enhanced AI Coach Hook: Blueprint processing error:", error);
       setPersonaReady(true); // Allow fallback to non-personalized responses
@@ -198,7 +209,8 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
       currentAgent,
       hasBlueprint: !!blueprintData,
       personaReady,
-      authInitialized
+      authInitialized,
+      hasUserName: !!(blueprintData?.user_meta?.preferred_name || blueprintData?.user_meta?.full_name)
     });
 
     const userMessage: Message = {

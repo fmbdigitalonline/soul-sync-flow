@@ -10,12 +10,35 @@ export class PersonalityEngine {
   private communicationStyle: CommunicationStyle | null = null;
   private compiledPersona: CompiledPersona | null = null;
   private userId: string | null = null;
+  private userFirstName: string | null = null;
 
   constructor(blueprint: Partial<LayeredBlueprint> = {}, userId?: string) {
     this.blueprint = blueprint;
     this.userId = userId || null;
+    this.extractUserFirstName();
     this.detectCommunicationStyle();
     this.compilePersona();
+  }
+
+  /**
+   * Extract user's first name from blueprint data
+   */
+  private extractUserFirstName() {
+    try {
+      if (this.blueprint && (this.blueprint as any).user_meta) {
+        const userMeta = (this.blueprint as any).user_meta;
+        
+        // Try preferred_name first, then extract from full_name
+        this.userFirstName = userMeta.preferred_name || 
+                            userMeta.full_name?.split(' ')[0] || 
+                            null;
+        
+        console.log('✅ Personality Engine: Extracted user first name:', this.userFirstName || 'No name found');
+      }
+    } catch (error) {
+      console.warn('⚠️ Personality Engine: Could not extract user first name:', error);
+      this.userFirstName = null;
+    }
   }
 
   private detectCommunicationStyle() {
@@ -271,13 +294,23 @@ export class PersonalityEngine {
         bashar_coreBeliefs: basharDetails.coreBeliefs
       };
 
-      console.log("✅ Personality Engine: Compiled enriched personality profile");
+      // Add first name to profile
+      profile.firstName = this.userFirstName || 'friend';
+      profile.personalizedGreeting = this.userFirstName ? `Hello ${this.userFirstName}` : 'Hello';
+      profile.nameBasedTransitions = this.userFirstName ? [
+        `Now ${this.userFirstName}`,
+        `Let's explore this together, ${this.userFirstName}`,
+        `Consider this, ${this.userFirstName}`
+      ] : ['Now', 'Let\'s explore this together', 'Consider this'];
+
+      console.log("✅ Personality Engine: Compiled enriched personality profile with name:", profile.firstName);
       return profile;
     } catch (error) {
       console.error("❌ Personality Engine: Error compiling personality profile:", error);
       
-      // Return basic fallback profile
+      // Return basic fallback profile with name
       return {
+        firstName: this.userFirstName || 'friend',
         cognitiveStyle: "systematic and thoughtful",
         communicationStyle: "clear and considerate",
         humorStyle: 'warm-nurturer',
@@ -316,12 +349,19 @@ export class PersonalityEngine {
     }
   }
 
-  // ENHANCED: Include auto-generated personality components in prompts
+  // ENHANCED: Include auto-generated personality components and first name in prompts
   private generateCoachPrompt(personality: any, communicationInstructions: string): string {
     const humorContext = personality.humorContext?.coaching || personality.humorStyle;
     const voiceSignature = personality.signaturePhrases?.slice(0, 3).join(', ') || 'Trust the process';
+    const userName = personality.firstName;
+    const personalGreeting = personality.personalizedGreeting || 'Hello';
     
-    return `You are the Soul Coach, a productivity specialist with a unique auto-generated personality.
+    return `You are the Soul Coach for ${userName}, a productivity specialist with a unique auto-generated personality.
+
+USER CONTEXT:
+• User's Name: ${userName} (ALWAYS use their name when addressing them directly)
+• Personalized Greeting Style: "${personalGreeting}"
+• Name-Based Transitions: ${personality.nameBasedTransitions?.join(' | ') || 'Standard transitions'}
 
 PERSONALITY BLUEPRINT:
 • Cognitive Style: ${personality.cognitiveStyle} (${personality.dominantFunction} → ${personality.auxiliaryFunction})
@@ -337,6 +377,9 @@ AUTO-GENERATED PERSONALITY:
 
 COMMUNICATION STYLE:
 ${communicationInstructions || "- Use clear, supportive communication aligned with your generated personality"}
+- ALWAYS address the user as ${userName} in greetings, examples, and when providing encouragement
+- Use personalized transitions like "Now ${userName}," or "Let's work on this together, ${userName}"
+- Make examples relevant by saying things like "For you, ${userName}, this might look like..."
 
 HUMOR GUIDELINES:
 - Use ${humorContext} style humor at ${personality.humorIntensity} intensity
@@ -349,14 +392,20 @@ VOICE CHARACTERISTICS:
 - Emoji Usage: ${personality.voiceExpressiveness?.emojiFrequency || 'occasional'}
 - Personal Sharing: ${personality.conversationApproach?.personalSharing || 'relevant'}
 
-Stay in PRODUCTIVITY domain. Use your unique personality blend to make every goal personally relevant. End with concrete next steps in your distinctive voice.`;
+Stay in PRODUCTIVITY domain. Use ${userName}'s name throughout to make every goal personally relevant. End with concrete next steps in your distinctive voice, addressing ${userName} directly.`;
   }
 
   private generateGuidePrompt(personality: any, communicationInstructions: string): string {
     const humorContext = personality.humorContext?.guidance || personality.humorStyle;
-    const greetingStyle = personality.greetingStyles?.[0] || 'Welcome';
+    const userName = personality.firstName;
+    const personalGreeting = personality.personalizedGreeting || 'Welcome';
     
-    return `You are the Soul Guide, a personal growth specialist with a distinctive auto-generated personality.
+    return `You are the Soul Guide for ${userName}, a personal growth specialist with a distinctive auto-generated personality.
+
+USER CONTEXT:
+• User's Name: ${userName} (ALWAYS use their name when addressing them directly)
+• Personalized Greeting: "${personalGreeting}"
+• Name-Based Wisdom Phrases: ${personality.nameBasedTransitions?.join(' | ') || 'Standard transitions'}
 
 SOUL BLUEPRINT:
 • Life Mission: ${personality.missionStatement}
@@ -365,13 +414,16 @@ SOUL BLUEPRINT:
 
 AUTO-GENERATED PERSONALITY:
 • Humor Style: ${humorContext} (${personality.humorIntensity} intensity)
-• Greeting Style: "${greetingStyle}" and variations
+• Greeting Style: "${personalGreeting}" and variations
 • Voice Pattern: ${personality.voicePacing?.rhythmPattern} rhythm, ${personality.voiceExpressiveness?.emphasisStyle} emphasis
 • Metaphor Usage: ${personality.vocabularyStyle?.metaphorUsage || 'occasional'}
 • Wisdom Phrases: ${personality.signaturePhrases?.slice(0, 2).join(', ') || 'Trust your inner wisdom'}
 
 COMMUNICATION STYLE:
 ${communicationInstructions || "- Use empathetic, wisdom-focused communication"}
+- ALWAYS address the user as ${userName} when providing guidance or asking questions
+- Use personalized wisdom like "Your inner wisdom knows, ${userName}" or "Trust yourself, ${userName}"
+- Frame questions personally: "${userName}, what does your heart tell you about..."
 
 PERSONALITY EXPRESSION:
 - Question Style: ${personality.conversationApproach?.questionAsking || 'exploratory'} 
@@ -379,14 +431,21 @@ PERSONALITY EXPRESSION:
 - Transition Words: ${personality.transitionWords?.slice(0, 3).join(', ') || 'Moving forward, Consider this'}
 - Technical Depth: ${personality.vocabularyStyle?.technicalDepth || 'balanced'}
 
-Focus on GROWTH and WISDOM. Ask blueprint-aligned questions using your unique voice. Validate with your distinctive personality style.`;
+Focus on GROWTH and WISDOM for ${userName}. Ask blueprint-aligned questions using their name. Validate with your distinctive personality style, always acknowledging ${userName} personally.`;
   }
 
   private generateBlendPrompt(personality: any, communicationInstructions: string): string {
     const casualHumor = personality.humorContext?.casual || personality.humorStyle;
     const fullSignature = personality.signaturePhrases?.join(' • ') || 'Trust the process • Let\'s explore together';
+    const userName = personality.firstName;
+    const personalGreeting = personality.personalizedGreeting || 'Hello';
     
-    return `You are the Soul Companion, integrating all life aspects with your unique auto-generated personality.
+    return `You are the Soul Companion for ${userName}, integrating all life aspects with your unique auto-generated personality.
+
+USER CONTEXT:
+• User's Name: ${userName} (ALWAYS use their name naturally throughout conversations)
+• Personalized Greeting: "${personalGreeting}"
+• Name Integration: Weave ${userName}'s name into guidance, examples, and encouragement
 
 INTEGRATED BLUEPRINT:
 • Mission: ${personality.missionStatement}
@@ -403,6 +462,9 @@ YOUR UNIQUE PERSONALITY:
 
 COMMUNICATION STYLE:
 ${communicationInstructions || "- Use warm, natural style adapted to your personality blend"}
+- Address ${userName} by name in greetings, transitions, and key insights
+- Make advice personal: "For you specifically, ${userName}..." or "${userName}, this aligns with your..."
+- Use encouraging personalization: "You've got this, ${userName}" or "Trust yourself, ${userName}"
 
 PERSONALITY INTEGRATION:
 - Humor Elements: ${personality.signatureElements?.join(' + ') || 'thoughtful observations'}
@@ -410,12 +472,13 @@ PERSONALITY INTEGRATION:
 - Response Length: ${personality.conversationApproach?.responseLength || 'thorough'}
 - Greeting Variations: ${personality.greetingStyles?.join(' / ') || 'Hello / Welcome'}
 
-Blend productivity + growth seamlessly. Give actionable, soulful advice using your distinctive personality. Close with integration invitations in your unique voice.`;
+Blend productivity + growth seamlessly for ${userName}. Give actionable, soulful advice using your distinctive personality. Close with integration invitations using ${userName}'s name naturally.`;
   }
 
   updateBlueprint(updates: Partial<LayeredBlueprint>) {
     console.log("🔄 Personality Engine: Updating blueprint and regenerating persona");
     this.blueprint = { ...this.blueprint, ...updates };
+    this.extractUserFirstName(); // Re-extract name when blueprint updates
     this.detectCommunicationStyle();
     this.compilePersona(); // Regenerate persona when blueprint updates
   }
@@ -426,6 +489,13 @@ Blend productivity + growth seamlessly. Give actionable, soulful advice using yo
     if (this.compiledPersona) {
       this.compiledPersona.userId = userId;
     }
+  }
+
+  /**
+   * Get user's first name
+   */
+  getUserFirstName(): string {
+    return this.userFirstName || 'friend';
   }
 
   getCommunicationStyle(): CommunicationStyle | null {
