@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -30,7 +29,7 @@ const Index = () => {
     loading
   } = useOptimizedBlueprintData();
   const isAdmin = isAdminUser(user);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   // Memoize the welcome message logic to prevent re-renders
   const welcomeMessage = useMemo(() => {
@@ -42,8 +41,16 @@ const Index = () => {
     }
   }, [user, hasBlueprint, t]);
 
-  // Get dynamic subtitle messages from translations
-  const subtitleMessages = t("index.rotatingMessages") as string[];
+  // Get dynamic subtitle messages from translations - access the raw translation object
+  const subtitleMessages = useMemo(() => {
+    const messages = t("index.rotatingMessages");
+    // Handle both string and array cases safely
+    if (Array.isArray(messages)) {
+      return messages;
+    }
+    // Fallback to a default message if translation fails
+    return [t("index.subtitle") || "Discover your authentic path through personalized AI guidance and spiritual growth tools."];
+  }, [t, language]);
 
   // Only speak welcome message once when user and blueprint data are loaded
   useEffect(() => {
