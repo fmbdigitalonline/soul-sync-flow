@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 export type Language = 'en' | 'nl';
@@ -37,6 +38,25 @@ const translations = {
     'coach.soulGuide': 'Soul Guide',
     'coach.newConversation': 'New Conversation',
     'newConversationStarted': 'New conversation started with {{agent}}',
+    
+    // Index/Home Page
+    'index.welcome': 'Welcome to Your <br /><span class="text-soul-purple">Soul Journey</span>',
+    'index.subtitle': 'Discover your authentic path through personalized AI guidance and spiritual growth tools.',
+    'index.dreams': 'Dreams & Goals',
+    'index.dreamsDesc': 'Transform dreams into reality',
+    'index.growth': 'Spiritual Growth',
+    'index.growthDesc': 'Inner wisdom & reflection',
+    'index.companion': 'AI Companion',
+    'index.companionDesc': 'Personalized guidance & chat',
+    'index.demo': 'View Personality Demo',
+    'index.startJourney': 'Start Your Journey',
+    'index.chatWithCompanion': 'Chat with AI Companion',
+    'index.welcomeBackReady': 'Welcome back! Your soul companion is ready to guide you further on your journey.',
+    'index.createToGetStarted': 'Welcome! Let\'s create your personal blueprint to get started on your soul journey.',
+    'index.readyExplore': 'Perfect! You\'re all set up. Let\'s explore your growth tools and continue your journey.',
+    'index.backToHome': 'Back to Home',
+    'index.getStarted': 'Get Started',
+    'index.signIn': 'Sign In',
     
     // Growth
     'growth.title': 'Growth Mode',
@@ -251,6 +271,25 @@ const translations = {
     'coach.soulGuide': 'Zielgids',
     'coach.newConversation': 'Nieuw Gesprek',
     'newConversationStarted': 'Nieuw gesprek gestart met {{agent}}',
+    
+    // Index/Home Page
+    'index.welcome': 'Welkom bij Je <br /><span class="text-soul-purple">Zielreis</span>',
+    'index.subtitle': 'Ontdek je authentieke pad door gepersonaliseerde AI-begeleiding en spirituele groeitools.',
+    'index.dreams': 'Dromen & Doelen',
+    'index.dreamsDesc': 'Transformeer dromen naar realiteit',
+    'index.growth': 'Spirituele Groei',
+    'index.growthDesc': 'Innerlijke wijsheid & reflectie',
+    'index.companion': 'AI Metgezel',
+    'index.companionDesc': 'Gepersonaliseerde begeleiding & chat',
+    'index.demo': 'Bekijk Persoonlijkheidsdemo',
+    'index.startJourney': 'Start Je Reis',
+    'index.chatWithCompanion': 'Chat met AI Metgezel',
+    'index.welcomeBackReady': 'Welkom terug! Je zielmetgezel is klaar om je verder te begeleiden op je reis.',
+    'index.createToGetStarted': 'Welkom! Laten we je persoonlijke blauwdruk maken om te beginnen aan je zielreis.',
+    'index.readyExplore': 'Perfect! Je bent helemaal klaar. Laten we je groeitools verkennen en je reis voortzetten.',
+    'index.backToHome': 'Terug naar Home',
+    'index.getStarted': 'Begin Nu',
+    'index.signIn': 'Inloggen',
     
     // Growth
     'growth.title': 'Groei Modus',
