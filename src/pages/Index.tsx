@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import PersonalityDemo from "@/components/personality/PersonalityDemo";
 import { useOptimizedBlueprintData } from "@/hooks/use-optimized-blueprint-data";
 import { isAdminUser } from "@/utils/isAdminUser";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { LanguageSelector } from "@/components/ui/language-selector";
 
 const Index = () => {
   const {
@@ -73,6 +75,11 @@ const Index = () => {
     </MainLayout>;
   }
   return <MainLayout hideNav>
+    {/* Language Selector positioned in top right */}
+    <div className="absolute top-4 right-4 z-10">
+      <LanguageSelector />
+    </div>
+
     <div className="w-full min-h-[90vh] flex flex-col justify-center p-4 sm:p-6">
       <div className="w-full max-w-4xl mx-auto text-center">
         <div className="flex justify-center mb-6 sm:mb-8">
