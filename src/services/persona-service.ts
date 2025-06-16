@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { CompiledPersona } from '@/types/personality-modules';
+import { CompiledPersona, VoiceTokens, HumorProfile } from '@/types/personality-modules';
 
 export class PersonaService {
   
@@ -25,12 +25,17 @@ export class PersonaService {
         return null;
       }
 
+      // Type-safe parsing of JSON fields
+      const voiceTokens = this.parseVoiceTokens(data.voice_tokens);
+      const humorProfile = this.parseHumorProfile(data.humor_profile);
+      const functionPermissions = this.parseFunctionPermissions(data.function_permissions);
+
       return {
         userId: data.user_id,
         systemPrompt: data.system_prompt,
-        voiceTokens: data.voice_tokens,
-        humorProfile: data.humor_profile,
-        functionPermissions: data.function_permissions,
+        voiceTokens,
+        humorProfile,
+        functionPermissions,
         generatedAt: new Date(data.generated_at),
         blueprintVersion: data.blueprint_version
       };
@@ -50,9 +55,9 @@ export class PersonaService {
         .upsert({
           user_id: persona.userId,
           system_prompt: persona.systemPrompt,
-          voice_tokens: persona.voiceTokens,
-          humor_profile: persona.humorProfile,
-          function_permissions: persona.functionPermissions,
+          voice_tokens: persona.voiceTokens as any,
+          humor_profile: persona.humorProfile as any,
+          function_permissions: persona.functionPermissions as any,
           generated_at: persona.generatedAt.toISOString(),
           blueprint_version: persona.blueprintVersion,
           updated_at: new Date().toISOString()
@@ -130,5 +135,116 @@ export class PersonaService {
       console.error('Error checking persona regeneration need:', error);
       return true; // Default to regeneration on error
     }
+  }
+
+  /**
+   * Parse voice tokens from database JSON
+   */
+  private static parseVoiceTokens(data: any): VoiceTokens {
+    if (!data || typeof data !== 'object') {
+      return this.getDefaultVoiceTokens();
+    }
+
+    try {
+      return {
+        pacing: data.pacing || this.getDefaultVoiceTokens().pacing,
+        expressiveness: data.expressiveness || this.getDefaultVoiceTokens().expressiveness,
+        vocabulary: data.vocabulary || this.getDefaultVoiceTokens().vocabulary,
+        conversationStyle: data.conversationStyle || this.getDefaultVoiceTokens().conversationStyle,
+        signaturePhrases: Array.isArray(data.signaturePhrases) ? data.signaturePhrases : [],
+        greetingStyles: Array.isArray(data.greetingStyles) ? data.greetingStyles : [],
+        transitionWords: Array.isArray(data.transitionWords) ? data.transitionWords : []
+      };
+    } catch (error) {
+      console.error('Error parsing voice tokens:', error);
+      return this.getDefaultVoiceTokens();
+    }
+  }
+
+  /**
+   * Parse humor profile from database JSON
+   */
+  private static parseHumorProfile(data: any): HumorProfile {
+    if (!data || typeof data !== 'object') {
+      return this.getDefaultHumorProfile();
+    }
+
+    try {
+      return {
+        primaryStyle: data.primaryStyle || 'warm-nurturer',
+        secondaryStyle: data.secondaryStyle,
+        intensity: data.intensity || 'moderate',
+        appropriatenessLevel: data.appropriatenessLevel || 'balanced',
+        contextualAdaptation: data.contextualAdaptation || {
+          coaching: 'warm-nurturer',
+          guidance: 'philosophical-sage',
+          casual: 'playful-storyteller'
+        },
+        avoidancePatterns: Array.isArray(data.avoidancePatterns) ? data.avoidancePatterns : [],
+        signatureElements: Array.isArray(data.signatureElements) ? data.signatureElements : []
+      };
+    } catch (error) {
+      console.error('Error parsing humor profile:', error);
+      return this.getDefaultHumorProfile();
+    }
+  }
+
+  /**
+   * Parse function permissions from database JSON
+   */
+  private static parseFunctionPermissions(data: any): string[] {
+    if (Array.isArray(data)) {
+      return data.filter(item => typeof item === 'string');
+    }
+    return [];
+  }
+
+  /**
+   * Get default voice tokens
+   */
+  private static getDefaultVoiceTokens(): VoiceTokens {
+    return {
+      pacing: {
+        sentenceLength: 'medium',
+        pauseFrequency: 'thoughtful',
+        rhythmPattern: 'steady'
+      },
+      expressiveness: {
+        emojiFrequency: 'occasional',
+        emphasisStyle: 'subtle',
+        exclamationTendency: 'balanced'
+      },
+      vocabulary: {
+        formalityLevel: 'conversational',
+        metaphorUsage: 'occasional',
+        technicalDepth: 'balanced'
+      },
+      conversationStyle: {
+        questionAsking: 'exploratory',
+        responseLength: 'thorough',
+        personalSharing: 'relevant'
+      },
+      signaturePhrases: [],
+      greetingStyles: [],
+      transitionWords: []
+    };
+  }
+
+  /**
+   * Get default humor profile
+   */
+  private static getDefaultHumorProfile(): HumorProfile {
+    return {
+      primaryStyle: 'warm-nurturer',
+      intensity: 'moderate',
+      appropriatenessLevel: 'balanced',
+      contextualAdaptation: {
+        coaching: 'warm-nurturer',
+        guidance: 'philosophical-sage',
+        casual: 'playful-storyteller'
+      },
+      avoidancePatterns: [],
+      signatureElements: []
+    };
   }
 }
