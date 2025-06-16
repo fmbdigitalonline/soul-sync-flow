@@ -69,6 +69,10 @@ const translations = {
     'lifeArea.relationships.description': 'Love, friendship, community connection',
     'lifeArea.wellbeing.name': 'Wellbeing',
     'lifeArea.wellbeing.description': 'Health, energy, mental clarity',
+    'lifeArea.creativity.name': 'Creativity',
+    'lifeArea.creativity.description': 'Artistic expression, innovation, imagination',
+    'lifeArea.spirituality.name': 'Spirituality',
+    'lifeArea.spirituality.description': 'Soul connection, inner wisdom, sacred practices',
     
     // Mood Tracker
     'mood.title': 'Daily Mood & Energy Check-in',
@@ -239,6 +243,10 @@ const translations = {
     'lifeArea.relationships.description': 'Liefde, vriendschap, gemeenschapsverbinding',
     'lifeArea.wellbeing.name': 'Welzijn',
     'lifeArea.wellbeing.description': 'Gezondheid, energie, mentale helderheid',
+    'lifeArea.creativity.name': 'Creativiteit',
+    'lifeArea.creativity.description': 'Artistieke expressie, innovatie, verbeelding',
+    'lifeArea.spirituality.name': 'Spiritualiteit',
+    'lifeArea.spirituality.description': 'Zielverbinding, innerlijke wijsheid, heilige praktijken',
     
     // Mood Tracker
     'mood.title': 'Dagelijkse Stemming & Energie Check-in',
