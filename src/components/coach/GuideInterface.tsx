@@ -90,7 +90,7 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handleToolAction(t('guide.checkInMessage'))}
+                onClick={() => handleToolAction("I want to check in with my current mood and energy. Help me understand what I'm feeling right now.")}
                 className="text-xs h-7 border-soul-purple/30"
               >
                 <Heart className="h-3 w-3 mr-1" />
@@ -99,7 +99,7 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handleToolAction(t('guide.reflectMessage'))}
+                onClick={() => handleToolAction("I want to explore some deep reflection questions about my life and growth. What should I be asking myself?")}
                 className="text-xs h-7 border-soul-purple/30"
               >
                 <Sparkles className="h-3 w-3 mr-1" />
@@ -108,7 +108,7 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handleToolAction(t('guide.journalMessage'))}
+                onClick={() => handleToolAction("I have some insights I'd like to explore deeper. Help me understand what I'm learning about myself.")}
                 className="text-xs h-7 border-soul-purple/30"
               >
                 <Star className="h-3 w-3 mr-1" />
