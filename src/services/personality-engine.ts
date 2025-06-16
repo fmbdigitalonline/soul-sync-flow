@@ -2,14 +2,17 @@ import { LayeredBlueprint, AgentMode, CompiledPersona } from '@/types/personalit
 import { CommunicationStyleAdapter, CommunicationStyle } from './communication-style-adapter';
 import { HumorPaletteDetector } from './humor-palette-detector';
 import { VoiceTokenGenerator } from './voice-token-generator';
+import { PersonaService } from './persona-service';
 
 export class PersonalityEngine {
   private blueprint: Partial<LayeredBlueprint>;
   private communicationStyle: CommunicationStyle | null = null;
   private compiledPersona: CompiledPersona | null = null;
+  private userId: string | null = null;
 
-  constructor(blueprint: Partial<LayeredBlueprint> = {}) {
+  constructor(blueprint: Partial<LayeredBlueprint> = {}, userId?: string) {
     this.blueprint = blueprint;
+    this.userId = userId || null;
     this.detectCommunicationStyle();
     this.compilePersona();
   }
@@ -35,6 +38,72 @@ export class PersonalityEngine {
       
       console.log('✅ Generated humor profile:', humorProfile.primaryStyle);
       console.log('✅ Generated voice tokens:', voiceTokens.pacing.sentenceLength, 'sentences,', voiceTokens.expressiveness.emojiFrequency, 'emojis');
+
+      // Create compiled persona object
+      if (this.userId) {
+        this.compiledPersona = {
+          userId: this.userId,
+          systemPrompt: '', // Will be generated for specific mode
+          voiceTokens,
+          humorProfile,
+          functionPermissions: ['general_conversation', 'goal_setting', 'emotional_support'],
+          generatedAt: new Date(),
+          blueprintVersion: '1.0.0'
+        };
+      }
+    }
+  }
+
+  /**
+   * Get or generate persona for user
+   */
+  async getOrGeneratePersona(mode: AgentMode): Promise<CompiledPersona | null> {
+    if (!this.userId) {
+      console.warn('No user ID provided, cannot retrieve/save persona');
+      return this.getCompiledPersona();
+    }
+
+    try {
+      // Check if persona exists and is current
+      const needsRegeneration = await PersonaService.needsRegeneration(this.userId, '1.0.0');
+      
+      if (!needsRegeneration) {
+        // Use existing persona
+        const existingPersona = await PersonaService.getUserPersona(this.userId);
+        if (existingPersona) {
+          console.log('✅ Using existing persona for user:', this.userId);
+          return {
+            ...existingPersona,
+            systemPrompt: this.generateSystemPrompt(mode)
+          };
+        }
+      }
+
+      // Generate new persona
+      const newPersona = this.getCompiledPersona();
+      if (newPersona) {
+        newPersona.systemPrompt = this.generateSystemPrompt(mode);
+        
+        // Save to database
+        const saved = await PersonaService.saveUserPersona(newPersona);
+        if (saved) {
+          console.log('✅ Generated and saved new persona for user:', this.userId);
+        } else {
+          console.warn('⚠️ Failed to save persona to database');
+        }
+        
+        return newPersona;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error in getOrGeneratePersona:', error);
+      // Fallback to in-memory persona
+      const fallbackPersona = this.getCompiledPersona();
+      if (fallbackPersona) {
+        fallbackPersona.systemPrompt = this.generateSystemPrompt(mode);
+      }
+      return fallbackPersona;
     }
   }
 
@@ -282,6 +351,13 @@ Blend productivity + growth seamlessly. Give actionable, soulful advice using yo
     console.log("Updated personality blueprint and regenerated persona");
   }
 
+  setUserId(userId: string) {
+    this.userId = userId;
+    if (this.compiledPersona) {
+      this.compiledPersona.userId = userId;
+    }
+  }
+
   getCommunicationStyle(): CommunicationStyle | null {
     return this.communicationStyle;
   }
@@ -311,7 +387,7 @@ Blend productivity + growth seamlessly. Give actionable, soulful advice using yo
   getCompiledPersona(): CompiledPersona | null {
     if (!this.compiledPersona && Object.keys(this.blueprint).length > 0) {
       this.compiledPersona = {
-        userId: '', // Will be set by caller
+        userId: this.userId || 'anonymous',
         systemPrompt: '', // Will be generated for specific mode
         voiceTokens: this.blueprint.voiceTokens || VoiceTokenGenerator.generateVoiceTokens(this.blueprint),
         humorProfile: this.blueprint.humorProfile || HumorPaletteDetector.detectHumorProfile(this.blueprint),

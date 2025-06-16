@@ -4,6 +4,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useBlueprintData } from "./use-blueprint-data";
 import { LayeredBlueprint } from "@/types/personality-modules";
 import { useStreamingMessage } from "./use-streaming-message";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface Message {
   id: string;
@@ -30,6 +31,23 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
     completeStreaming,
     resetStreaming,
   } = useStreamingMessage();
+
+  // Set current user when component mounts
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await enhancedAICoachService.setCurrentUser(user.id);
+          console.log('Set current user for persona system:', user.id);
+        }
+      } catch (error) {
+        console.error('Error setting current user:', error);
+      }
+    };
+
+    getCurrentUser();
+  }, []);
 
   // Convert blueprint data to LayeredBlueprint format and update the AI service
   useEffect(() => {

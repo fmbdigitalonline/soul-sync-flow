@@ -1,7 +1,7 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { PersonalityEngine } from "./personality-engine";
 import { LayeredBlueprint, AgentMode } from "@/types/personality-modules";
+import { PersonaService } from "./persona-service";
 
 export type AgentType = "coach" | "guide" | "blend";
 
@@ -62,6 +62,7 @@ class EnhancedAICoachService {
   private sessions: Map<string, string> = new Map();
   private personalityEngine: PersonalityEngine;
   private conversationCache: Map<string, ChatMessage[]> = new Map();
+  private currentUserId: string | null = null;
 
   constructor() {
     this.personalityEngine = new PersonalityEngine();
@@ -76,6 +77,12 @@ class EnhancedAICoachService {
   updateUserBlueprint(blueprint: Partial<LayeredBlueprint>) {
     this.personalityEngine.updateBlueprint(blueprint);
     console.log("Updated user blueprint in enhanced AI coach service:", blueprint);
+  }
+
+  async setCurrentUser(userId: string) {
+    this.currentUserId = userId;
+    this.personalityEngine.setUserId(userId);
+    console.log("Set current user for enhanced AI coach service:", userId);
   }
 
   async loadConversationHistory(mode: AgentType): Promise<ChatMessage[]> {
@@ -260,11 +267,16 @@ class EnhancedAICoachService {
     try {
       const journeyContext = await this.getJourneyContext(agentType);
       
-      const systemPrompt = includeBlueprint 
-        ? this.personalityEngine.generateSystemPrompt(agentType as AgentMode)
-        : null;
+      // Get personalized system prompt using persona system
+      let systemPrompt: string | null = null;
+      
+      if (includeBlueprint && this.currentUserId) {
+        console.log("Generating personalized system prompt using persona system...");
+        const persona = await this.personalityEngine.getOrGeneratePersona(agentType as AgentMode);
+        systemPrompt = persona?.systemPrompt || null;
+        console.log("Generated personalized system prompt length:", systemPrompt?.length || 0);
+      }
 
-      console.log("Generated personalized system prompt length:", systemPrompt?.length || 0);
       console.log("Journey context length:", journeyContext.length);
 
       const { data, error } = await supabase.functions.invoke("ai-coach", {
@@ -303,15 +315,22 @@ class EnhancedAICoachService {
       console.log('Enhanced AI Coach: Starting streaming request...', {
         agentType,
         messageLength: message.length,
-        includeBlueprint
+        includeBlueprint,
+        hasUserId: !!this.currentUserId
       });
       
       const journeyContext = await this.getJourneyContext(agentType);
-      const systemPrompt = includeBlueprint 
-        ? this.personalityEngine.generateSystemPrompt(agentType as AgentMode)
-        : null;
+      
+      // Get personalized system prompt using persona system
+      let systemPrompt: string | null = null;
+      
+      if (includeBlueprint && this.currentUserId) {
+        console.log("Generating personalized system prompt using persona system...");
+        const persona = await this.personalityEngine.getOrGeneratePersona(agentType as AgentMode);
+        systemPrompt = persona?.systemPrompt || null;
+        console.log("Enhanced AI Coach: Generated system prompt length:", systemPrompt?.length || 0);
+      }
 
-      console.log("Enhanced AI Coach: Generated system prompt length:", systemPrompt?.length || 0);
       console.log("Enhanced AI Coach: Journey context length:", journeyContext.length);
       
       const response = await fetch(`https://qxaajirrqrcnmvtowjbg.supabase.co/functions/v1/ai-coach-stream`, {

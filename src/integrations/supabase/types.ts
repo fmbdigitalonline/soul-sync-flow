@@ -391,6 +391,45 @@ export type Database = {
           },
         ]
       }
+      personas: {
+        Row: {
+          blueprint_version: string
+          created_at: string
+          function_permissions: Json
+          generated_at: string
+          humor_profile: Json
+          id: string
+          system_prompt: string
+          updated_at: string
+          user_id: string
+          voice_tokens: Json
+        }
+        Insert: {
+          blueprint_version?: string
+          created_at?: string
+          function_permissions?: Json
+          generated_at?: string
+          humor_profile?: Json
+          id?: string
+          system_prompt: string
+          updated_at?: string
+          user_id: string
+          voice_tokens?: Json
+        }
+        Update: {
+          blueprint_version?: string
+          created_at?: string
+          function_permissions?: Json
+          generated_at?: string
+          humor_profile?: Json
+          id?: string
+          system_prompt?: string
+          updated_at?: string
+          user_id?: string
+          voice_tokens?: Json
+        }
+        Relationships: []
+      }
       productivity_journey: {
         Row: {
           completed_goals: Json | null
