@@ -47,7 +47,7 @@ const AvatarFallback = React.forwardRef<
 ))
 AvatarFallback.displayName = AvatarPrimitive.Fallback.displayName
 
-// Enhanced SoulOrbAvatar component that prevents clipping
+// Enhanced SoulOrbAvatar component that prevents clipping while maintaining perfect circle
 const SoulOrbAvatar = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & {
@@ -56,19 +56,11 @@ const SoulOrbAvatar = React.forwardRef<
     stage?: "welcome" | "collecting" | "generating" | "complete";
   }
 >(({ className, speaking = false, size = "sm", stage = "welcome", ...props }, ref) => {
-  // Size mapping with proper spacing for effects
-  const containerSizeMap = {
-    sm: "w-24 h-24", // Increased from w-16 h-16 to accommodate effects
-    md: "w-32 h-32", // Increased from w-24 h-24 to accommodate effects
-    lg: "w-40 h-40", // Increased from w-32 h-32 to accommodate effects
-  };
-
   return (
     <div
       ref={ref}
       className={cn(
-        "relative flex items-center justify-center",
-        containerSizeMap[size],
+        "relative flex items-center justify-center p-4", // Added padding to prevent clipping
         className
       )}
       {...props}
