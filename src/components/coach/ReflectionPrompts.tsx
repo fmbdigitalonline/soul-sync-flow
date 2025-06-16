@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Sparkles, Heart, Moon, Star, Compass, Eye, Save, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ReflectionPromptsProps {
   onReflectionSave: (prompt: string, response: string) => void;
@@ -15,36 +16,37 @@ export const ReflectionPrompts: React.FC<ReflectionPromptsProps> = ({ onReflecti
   const [reflection, setReflection] = useState<string>("");
   const [saved, setSaved] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const dailyPrompts = [
     {
-      category: "Daily Reflection",
+      category: t('reflection.dailyReflection'),
       icon: Moon,
       prompts: [
-        "What brought me the most joy today?",
-        "What challenged me and what did I learn?",
-        "How did I honor my authentic self today?",
-        "What am I grateful for right now?"
+        t('reflection.daily.joy'),
+        t('reflection.daily.challenge'),
+        t('reflection.daily.authentic'),
+        t('reflection.daily.gratitude')
       ]
     },
     {
-      category: "Deep Insight",
+      category: t('reflection.deepInsight'),
       icon: Eye,
       prompts: [
-        "What pattern keeps showing up in my life?",
-        "What is my soul trying to tell me?",
-        "How am I growing beyond my comfort zone?",
-        "What does my blueprint reveal about this situation?"
+        t('reflection.insight.pattern'),
+        t('reflection.insight.soul'),
+        t('reflection.insight.comfort'),
+        t('reflection.insight.blueprint')
       ]
     },
     {
-      category: "Life Direction",
+      category: t('reflection.lifeDirection'),
       icon: Compass,
       prompts: [
-        "What feels most aligned with my purpose?",
-        "Where am I resisting my natural flow?",
-        "What would I do if I fully trusted myself?",
-        "How can I honor my authentic energy today?"
+        t('reflection.direction.aligned'),
+        t('reflection.direction.resisting'),
+        t('reflection.direction.trust'),
+        t('reflection.direction.energy')
       ]
     }
   ];
@@ -71,7 +73,7 @@ export const ReflectionPrompts: React.FC<ReflectionPromptsProps> = ({ onReflecti
     <CosmicCard className="p-4 mb-4">
       <h3 className="text-sm font-medium mb-3 flex items-center">
         <Sparkles className="h-4 w-4 mr-2 text-soul-purple" />
-        Reflection & Growth Tracking
+        {t('reflection.title')}
       </h3>
       
       <div className="space-y-4">
@@ -108,14 +110,14 @@ export const ReflectionPrompts: React.FC<ReflectionPromptsProps> = ({ onReflecti
         {selectedPrompt && !saved && (
           <div className="space-y-3">
             <div className="p-3 bg-soul-purple/5 rounded-md">
-              <p className="text-sm font-medium text-soul-purple mb-1">Reflecting on:</p>
+              <p className="text-sm font-medium text-soul-purple mb-1">{t('reflection.reflecting')}</p>
               <p className="text-sm">{selectedPrompt}</p>
             </div>
             
             <Textarea
               value={reflection}
               onChange={(e) => setReflection(e.target.value)}
-              placeholder="Write your thoughts and insights here..."
+              placeholder={t('reflection.placeholder')}
               className="min-h-24 text-sm"
             />
             
@@ -126,7 +128,7 @@ export const ReflectionPrompts: React.FC<ReflectionPromptsProps> = ({ onReflecti
                 onClick={() => setSelectedPrompt("")}
                 className="flex-1"
               >
-                Back
+                {t('back')}
               </Button>
               <Button
                 size="sm"
@@ -135,7 +137,7 @@ export const ReflectionPrompts: React.FC<ReflectionPromptsProps> = ({ onReflecti
                 className="flex-1 bg-soul-purple hover:bg-soul-purple/90"
               >
                 <Save className="h-3 w-3 mr-2" />
-                Save Reflection
+                {t('reflection.saveReflection')}
               </Button>
             </div>
           </div>
@@ -144,13 +146,13 @@ export const ReflectionPrompts: React.FC<ReflectionPromptsProps> = ({ onReflecti
         {saved && (
           <div className="flex items-center justify-center p-4 bg-green-50 rounded-md">
             <Check className="h-4 w-4 text-green-600 mr-2" />
-            <span className="text-sm text-green-700">Reflection saved to your growth patterns!</span>
+            <span className="text-sm text-green-700">{t('reflection.saved')}</span>
           </div>
         )}
       </div>
       
       <p className="text-xs text-muted-foreground mt-3">
-        Your reflections build a personal growth database for weekly insights and pattern recognition.
+        {t('reflection.description')}
       </p>
     </CosmicCard>
   );

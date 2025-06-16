@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { BookOpen, Save, Sparkles, Heart, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface InsightJournalProps {
   onInsightSave: (insight: string, tags: string[]) => void;
@@ -16,10 +17,17 @@ export const InsightJournal: React.FC<InsightJournalProps> = ({ onInsightSave })
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [saved, setSaved] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const insightTags = [
-    "Breakthrough", "Pattern", "Gratitude", "Challenge", 
-    "Growth", "Clarity", "Alignment", "Wisdom"
+    { key: "breakthrough", label: t('journal.tags.breakthrough') },
+    { key: "pattern", label: t('journal.tags.pattern') },
+    { key: "gratitude", label: t('journal.tags.gratitude') },
+    { key: "challenge", label: t('journal.tags.challenge') },
+    { key: "growth", label: t('journal.tags.growth') },
+    { key: "clarity", label: t('journal.tags.clarity') },
+    { key: "alignment", label: t('journal.tags.alignment') },
+    { key: "wisdom", label: t('journal.tags.wisdom') }
   ];
 
   const toggleTag = (tag: string) => {
@@ -52,7 +60,7 @@ export const InsightJournal: React.FC<InsightJournalProps> = ({ onInsightSave })
     <CosmicCard className="p-4 mb-4">
       <h3 className="text-sm font-medium mb-3 flex items-center">
         <BookOpen className="h-4 w-4 mr-2 text-soul-purple" />
-        Soul Insights Journal
+        {t('journal.title')}
       </h3>
       
       <div className="space-y-3">
@@ -61,22 +69,22 @@ export const InsightJournal: React.FC<InsightJournalProps> = ({ onInsightSave })
             <Textarea
               value={journalEntry}
               onChange={(e) => setJournalEntry(e.target.value)}
-              placeholder="Capture your insights, realizations, or aha moments..."
+              placeholder={t('journal.placeholder')}
               className="min-h-20 text-sm"
             />
             
             <div>
-              <p className="text-xs text-muted-foreground mb-2">Tag this insight:</p>
+              <p className="text-xs text-muted-foreground mb-2">{t('journal.tagLabel')}</p>
               <div className="flex flex-wrap gap-1">
                 {insightTags.map((tag) => (
                   <Badge
-                    key={tag}
-                    variant={selectedTags.includes(tag) ? "default" : "outline"}
+                    key={tag.key}
+                    variant={selectedTags.includes(tag.key) ? "default" : "outline"}
                     className="text-xs cursor-pointer hover:bg-soul-purple/20"
-                    onClick={() => toggleTag(tag)}
+                    onClick={() => toggleTag(tag.key)}
                   >
-                    {selectedTags.includes(tag) && <Sparkles className="h-3 w-3 mr-1" />}
-                    {tag}
+                    {selectedTags.includes(tag.key) && <Sparkles className="h-3 w-3 mr-1" />}
+                    {tag.label}
                   </Badge>
                 ))}
               </div>
@@ -89,7 +97,7 @@ export const InsightJournal: React.FC<InsightJournalProps> = ({ onInsightSave })
                 className="w-full bg-soul-purple hover:bg-soul-purple/90"
               >
                 <Save className="h-3 w-3 mr-2" />
-                Save to Journal
+                {t('journal.saveButton')}
               </Button>
             )}
           </>
@@ -98,13 +106,13 @@ export const InsightJournal: React.FC<InsightJournalProps> = ({ onInsightSave })
         {saved && (
           <div className="flex items-center justify-center p-4 bg-green-50 rounded-md">
             <Check className="h-4 w-4 text-green-600 mr-2" />
-            <span className="text-sm text-green-700">Insight saved to your journal!</span>
+            <span className="text-sm text-green-700">{t('journal.saved')}</span>
           </div>
         )}
       </div>
       
       <p className="text-xs text-muted-foreground mt-3">
-        Your insights create a personal knowledge base for pattern recognition and growth tracking.
+        {t('journal.description')}
       </p>
     </CosmicCard>
   );
