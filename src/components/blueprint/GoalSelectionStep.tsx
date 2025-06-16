@@ -84,9 +84,10 @@ export function GoalSelectionStep({ onComplete }: GoalSelectionStepProps) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <div className="flex-1 overflow-y-auto px-4 pt-4 pb-20">
-        <div className="space-y-6 max-w-md mx-auto">
+    <div className="h-screen flex flex-col bg-soul-black overflow-hidden">
+      {/* Scrollable Content Area */}
+      <div className="flex-1 overflow-y-auto px-4 pt-4 pb-4">
+        <div className="space-y-6 max-w-md mx-auto pb-32">
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 space-y-6">
             {/* Primary Goal Selection */}
             <div className="space-y-4">
@@ -175,8 +176,8 @@ export function GoalSelectionStep({ onComplete }: GoalSelectionStepProps) {
         </div>
       </div>
 
-      {/* Fixed Submit Button */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-soul-black via-soul-black/90 to-transparent">
+      {/* Fixed Submit Button - Always Visible */}
+      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-soul-black via-soul-black/95 to-transparent backdrop-blur-sm border-t border-white/10">
         <div className="max-w-md mx-auto">
           <Button 
             onClick={handleSubmit}
