@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 export type Language = 'en' | 'nl';
@@ -92,6 +91,23 @@ const translations = {
     'mood.energy.steady': 'Steady Energy',
     'mood.energy.low': 'Low Energy',
     'mood.energy.depleted': 'Depleted',
+    
+    // MoodTracker specific
+    'moodTracker.title': 'Daily Mood & Energy Check-in',
+    'moodTracker.emotionalState': 'How are you feeling right now?',
+    'moodTracker.energyLevel': 'What\'s your energy like?',
+    'moodTracker.joyful': 'Joyful',
+    'moodTracker.content': 'Content',
+    'moodTracker.neutral': 'Neutral',
+    'moodTracker.reflective': 'Reflective',
+    'moodTracker.challenged': 'Challenged',
+    'moodTracker.high': 'High Energy',
+    'moodTracker.steady': 'Steady Energy',
+    'moodTracker.low': 'Low Energy',
+    'moodTracker.moodTracked': 'Mood tracked',
+    'moodTracker.moodSaved': 'mood with {{energy}} energy saved',
+    'moodTracker.saveToPatterns': 'Save to Patterns',
+    'moodTracker.patternsHelp': 'Your mood patterns help identify emotional trends and triggers.',
     
     // Guide Interface
     'guide.innerCompass': 'Inner Compass',
@@ -245,6 +261,23 @@ const translations = {
     'mood.energy.steady': 'Stabiele Energie',
     'mood.energy.low': 'Lage Energie',
     'mood.energy.depleted': 'Uitgeput',
+    
+    // MoodTracker specific
+    'moodTracker.title': 'Dagelijkse Stemming & Energie Check-in',
+    'moodTracker.emotionalState': 'Hoe voel je je nu?',
+    'moodTracker.energyLevel': 'Hoe is je energie?',
+    'moodTracker.joyful': 'Vreugdevol',
+    'moodTracker.content': 'Tevreden',
+    'moodTracker.neutral': 'Neutraal',
+    'moodTracker.reflective': 'Nadenkend',
+    'moodTracker.challenged': 'Uitgedaagd',
+    'moodTracker.high': 'Hoge Energie',
+    'moodTracker.steady': 'Stabiele Energie',
+    'moodTracker.low': 'Lage Energie',
+    'moodTracker.moodTracked': 'Stemming bijgehouden',
+    'moodTracker.moodSaved': 'stemming met {{energy}} energie opgeslagen',
+    'moodTracker.saveToPatterns': 'Opslaan in Patronen',
+    'moodTracker.patternsHelp': 'Je stemmingspatronen helpen emotionele trends en triggers te identificeren.',
     
     // Guide Interface
     'guide.innerCompass': 'Innerlijk Kompas',
