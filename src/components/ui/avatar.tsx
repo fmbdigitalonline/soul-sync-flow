@@ -47,7 +47,7 @@ const AvatarFallback = React.forwardRef<
 ))
 AvatarFallback.displayName = AvatarPrimitive.Fallback.displayName
 
-// New SoulOrbAvatar component that uses our SoulOrb component
+// Enhanced SoulOrbAvatar component that prevents clipping
 const SoulOrbAvatar = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & {
@@ -55,15 +55,28 @@ const SoulOrbAvatar = React.forwardRef<
     size?: "sm" | "md" | "lg";
     stage?: "welcome" | "collecting" | "generating" | "complete";
   }
->(({ className, speaking = false, size = "sm", stage = "welcome", ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn("relative overflow-hidden rounded-full", className)}
-    {...props}
-  >
-    <SoulOrb speaking={speaking} size={size} stage={stage} />
-  </div>
-))
+>(({ className, speaking = false, size = "sm", stage = "welcome", ...props }, ref) => {
+  // Size mapping with proper spacing for effects
+  const containerSizeMap = {
+    sm: "w-24 h-24", // Increased from w-16 h-16 to accommodate effects
+    md: "w-32 h-32", // Increased from w-24 h-24 to accommodate effects
+    lg: "w-40 h-40", // Increased from w-32 h-32 to accommodate effects
+  };
+
+  return (
+    <div
+      ref={ref}
+      className={cn(
+        "relative flex items-center justify-center",
+        containerSizeMap[size],
+        className
+      )}
+      {...props}
+    >
+      <SoulOrb speaking={speaking} size={size} stage={stage} />
+    </div>
+  )
+})
 SoulOrbAvatar.displayName = "SoulOrbAvatar"
 
 export { Avatar, AvatarImage, AvatarFallback, SoulOrbAvatar }
