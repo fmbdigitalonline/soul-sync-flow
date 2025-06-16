@@ -98,8 +98,9 @@ const Index = () => {
         </div>
         
         <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 px-4">
-          Welcome to Your <br /><span className="text-soul-purple">SoulSync</span>
+          Welcome to <br /><span className="text-soul-purple">SoulSync</span>
         </h1>
+        
         <RotatingText 
           texts={subtitleMessages}
           className="text-lg sm:text-xl mb-6 sm:mb-8 px-4 text-muted-foreground min-h-[3.5rem] flex items-center justify-center"
