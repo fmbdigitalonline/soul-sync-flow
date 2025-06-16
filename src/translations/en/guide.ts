@@ -1,0 +1,21 @@
+
+export const guideTranslations = {
+  'guide.innerCompass': 'Inner Compass',
+  'guide.reflectionMode': 'Reflection Mode',
+  'guide.checkIn': 'Check In',
+  'guide.reflect': 'Reflect',
+  'guide.journal': 'Journal',
+  'guide.description': 'Your personal guide for soul-level conversations and deep insights.',
+  'guide.awaits': 'Your Guide Awaits',
+  'guide.awaitsDescription': 'Share what\'s on your heart and mind. Your guide is here to listen and offer wisdom.',
+  'guide.inputPlaceholder': 'What\'s stirring in your soul today?',
+  'guide.reflecting': 'Reflecting on your words...',
+  'guide.poweredBy': 'Powered by intuitive AI with deep wisdom',
+  'guide.exploreDeeper': 'Explore Deeper',
+  'guide.blueprintLink': 'Blueprint Link',
+  'guide.tellMore': 'Tell me more about this insight and how it connects to my deeper patterns.',
+  'guide.howConnect': 'How does this connect to my soul blueprint and life purpose?',
+  'guide.checkInMessage': 'I\'d like to check in with myself and see how I\'m feeling right now.',
+  'guide.reflectMessage': 'Help me reflect on what\'s happening in my life and what it means.',
+  'guide.journalMessage': 'I want to journal about my thoughts and insights today.',
+};

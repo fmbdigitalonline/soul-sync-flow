@@ -1,0 +1,21 @@
+
+export const guideTranslations = {
+  'guide.innerCompass': 'Innerlijk Kompas',
+  'guide.reflectionMode': 'Reflectiemodus',
+  'guide.checkIn': 'Check In',
+  'guide.reflect': 'Reflecteren',
+  'guide.journal': 'Journaal',
+  'guide.description': 'Je persoonlijke gids voor gesprekken op zielniveau en diepe inzichten.',
+  'guide.awaits': 'Je Gids Wacht',
+  'guide.awaitsDescription': 'Deel wat er in je hart en geest speelt. Je gids is hier om te luisteren en wijsheid te bieden.',
+  'guide.inputPlaceholder': 'Wat roert er vandaag in je ziel?',
+  'guide.reflecting': 'Reflecterend op je woorden...',
+  'guide.poweredBy': 'Aangedreven door intuïtieve AI met diepe wijsheid',
+  'guide.exploreDeeper': 'Verken Dieper',
+  'guide.blueprintLink': 'Blauwdruk Link',
+  'guide.tellMore': 'Vertel me meer over dit inzicht en hoe het verbindt met mijn diepere patronen.',
+  'guide.howConnect': 'Hoe verbindt dit met mijn zielblauwdruk en levensdoel?',
+  'guide.checkInMessage': 'Ik wil even bij mezelf inchecken en kijken hoe ik me nu voel.',
+  'guide.reflectMessage': 'Help me reflecteren op wat er in mijn leven gebeurt en wat het betekent.',
+  'guide.journalMessage': 'Ik wil vandaag journaal schrijven over mijn gedachten en inzichten.',
+};
