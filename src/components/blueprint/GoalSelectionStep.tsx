@@ -84,108 +84,116 @@ export function GoalSelectionStep({ onComplete }: GoalSelectionStepProps) {
   };
 
   return (
-    <div className="space-y-6 max-w-md mx-auto px-4">
-      <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 space-y-6">
-        {/* Primary Goal Selection */}
-        <div className="space-y-4">
-          <Label className="text-base font-medium text-center block">
-            What's your primary focus area?
-          </Label>
-          <RadioGroup value={primaryGoal} onValueChange={setPrimaryGoal} disabled={isSubmitting}>
-            <div className="space-y-3">
-              {goals.map((goal) => (
-                <div key={goal.id} className="flex items-start space-x-3 p-2 rounded-lg hover:bg-white/5 transition-colors">
-                  <RadioGroupItem value={goal.id} id={goal.id} className="mt-1 flex-shrink-0" />
-                  <Label 
-                    htmlFor={goal.id} 
-                    className="text-sm cursor-pointer leading-relaxed flex-1"
-                  >
-                    {goal.label}
-                  </Label>
-                  {primaryGoal === goal.id && (
-                    <CheckCircle2 className="w-4 h-4 text-soul-purple mt-1 flex-shrink-0" />
-                  )}
+    <div className="min-h-screen flex flex-col">
+      <div className="flex-1 overflow-y-auto px-4 pt-4 pb-20">
+        <div className="space-y-6 max-w-md mx-auto">
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 space-y-6">
+            {/* Primary Goal Selection */}
+            <div className="space-y-4">
+              <Label className="text-base font-medium text-center block">
+                What's your primary focus area?
+              </Label>
+              <RadioGroup value={primaryGoal} onValueChange={setPrimaryGoal} disabled={isSubmitting}>
+                <div className="space-y-3">
+                  {goals.map((goal) => (
+                    <div key={goal.id} className="flex items-start space-x-3 p-2 rounded-lg hover:bg-white/5 transition-colors">
+                      <RadioGroupItem value={goal.id} id={goal.id} className="mt-1 flex-shrink-0" />
+                      <Label 
+                        htmlFor={goal.id} 
+                        className="text-sm cursor-pointer leading-relaxed flex-1"
+                      >
+                        {goal.label}
+                      </Label>
+                      {primaryGoal === goal.id && (
+                        <CheckCircle2 className="w-4 h-4 text-soul-purple mt-1 flex-shrink-0" />
+                      )}
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </RadioGroup>
             </div>
-          </RadioGroup>
-        </div>
 
-        {/* Support Style */}
-        <div className="space-y-4">
-          <Label className="text-base font-medium text-center block">
-            How much guidance do you prefer?
-          </Label>
-          <div className="space-y-3">
-            <div className="text-center">
-              <span className="text-lg font-medium text-soul-purple">
-                {supportStyle[0]}/5
-              </span>
+            {/* Support Style */}
+            <div className="space-y-4">
+              <Label className="text-base font-medium text-center block">
+                How much guidance do you prefer?
+              </Label>
+              <div className="space-y-3">
+                <div className="text-center">
+                  <span className="text-lg font-medium text-soul-purple">
+                    {supportStyle[0]}/5
+                  </span>
+                </div>
+                <Slider
+                  value={supportStyle}
+                  onValueChange={setSupportStyle}
+                  max={5}
+                  min={1}
+                  step={1}
+                  className="w-full"
+                  disabled={isSubmitting}
+                />
+                <div className="flex justify-between text-xs text-white/60 px-1">
+                  <span>Light touch</span>
+                  <span>Structured guidance</span>
+                </div>
+                {supportStyle[0] && (
+                  <p className="text-xs text-white/80 text-center px-2">
+                    {getSupportStyleDescription(supportStyle[0])}
+                  </p>
+                )}
+              </div>
             </div>
-            <Slider
-              value={supportStyle}
-              onValueChange={setSupportStyle}
-              max={5}
-              min={1}
-              step={1}
-              className="w-full"
-              disabled={isSubmitting}
-            />
-            <div className="flex justify-between text-xs text-white/60 px-1">
-              <span>Light touch</span>
-              <span>Structured guidance</span>
-            </div>
-            {supportStyle[0] && (
-              <p className="text-xs text-white/80 text-center px-2">
-                {getSupportStyleDescription(supportStyle[0])}
-              </p>
+
+            {/* Selection Summary */}
+            {primaryGoal && (
+              <div className="bg-white/5 rounded-lg p-4 space-y-2">
+                <h4 className="text-sm font-medium text-soul-purple">Your Selections:</h4>
+                <div className="text-xs space-y-1">
+                  <p><span className="text-white/60">Focus:</span> {selectedGoalLabel}</p>
+                  <p><span className="text-white/60">Guidance Level:</span> {supportStyle[0]}/5</p>
+                </div>
+              </div>
             )}
           </div>
-        </div>
 
-        {/* Selection Summary */}
-        {primaryGoal && (
-          <div className="bg-white/5 rounded-lg p-4 space-y-2">
-            <h4 className="text-sm font-medium text-soul-purple">Your Selections:</h4>
-            <div className="text-xs space-y-1">
-              <p><span className="text-white/60">Focus:</span> {selectedGoalLabel}</p>
-              <p><span className="text-white/60">Guidance Level:</span> {supportStyle[0]}/5</p>
+          {/* Error Message */}
+          {submitError && (
+            <div className="bg-red-900/20 border border-red-500/50 rounded-xl p-4 space-y-3">
+              <div className="text-red-300 text-sm">
+                <strong>Error:</strong> {submitError}
+              </div>
+              <Button 
+                onClick={handleRetry}
+                variant="outline"
+                className="w-full border-red-500/50 text-red-300 hover:bg-red-900/30"
+              >
+                Try Again
+              </Button>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
-      {/* Error Message */}
-      {submitError && (
-        <div className="bg-red-900/20 border border-red-500/50 rounded-xl p-4 space-y-3">
-          <div className="text-red-300 text-sm">
-            <strong>Error:</strong> {submitError}
-          </div>
+      {/* Fixed Submit Button */}
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-soul-black via-soul-black/90 to-transparent">
+        <div className="max-w-md mx-auto">
           <Button 
-            onClick={handleRetry}
-            variant="outline"
-            className="w-full border-red-500/50 text-red-300 hover:bg-red-900/30"
+            onClick={handleSubmit}
+            disabled={!isValid}
+            className="w-full bg-soul-purple hover:bg-soul-purple/90 disabled:opacity-50 py-3 text-base font-medium"
           >
-            Try Again
+            {isSubmitting ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Saving...
+              </div>
+            ) : (
+              "Complete Setup"
+            )}
           </Button>
         </div>
-      )}
-
-      {/* Submit Button */}
-      <Button 
-        onClick={handleSubmit}
-        disabled={!isValid}
-        className="w-full bg-soul-purple hover:bg-soul-purple/90 disabled:opacity-50 py-3 text-base font-medium"
-      >
-        {isSubmitting ? (
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            Saving...
-          </div>
-        ) : (
-          "Complete Setup"
-        )}
-      </Button>
+      </div>
     </div>
   );
 }
