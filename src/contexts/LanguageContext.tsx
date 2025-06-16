@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export type Language = 'en' | 'nl';
@@ -463,6 +462,37 @@ const translations = {
     'growth.tools.weeklyInsights': 'Wekelijkse Inzichten',
     'growth.tools.freeChat': 'Vrije Chat',
     'growth.startSoulCheckIn': 'Start Soul Check-in',
+    
+    // Coach Session specific keys
+    'coach.taskSession': 'Task Session',
+    'coach.defaultDuration': '~30 min',
+    'coach.soulCompanionHeader': 'Soul Companion',
+    'coach.sessionBanner': 'Focus Session',
+    'coach.estimatedTime': 'Estimated time',
+    'coach.stepProgress': 'Step {{current}} of {{total}}',
+    'coach.completionProgress': '{{completed}} of {{steps}} steps complete',
+    'coach.motivation.default': "You don't need to get it perfect — clarity starts by expressing what's true for you.",
+    'coach.cta.default': '💬 When you\'re ready, type your thoughts here — I\'ll help organize and refine them into a clear direction.',
+    'coach.fallbackTimeout': 'This is taking a moment — the coach is working deeply to shape your next step…',
+    'coach.preparingPlan': 'Coach is preparing your plan...',
+    
+    // Life Area Selector
+    'lifeArea.selector.title': 'Welk deel van je leven wil je vandaag verkennen?',
+    'lifeArea.selector.subtitle': 'Kies een gebied voor gepersonaliseerde reflectie en groei',
+    'lifeArea.home.name': 'Thuis',
+    'lifeArea.home.description': 'Familie, woonruimte, huiselijke harmonie',
+    'lifeArea.career.name': 'Carrière',
+    'lifeArea.career.description': 'Doel, professionele groei, impact',
+    'lifeArea.finances.name': 'Financiën',
+    'lifeArea.finances.description': 'Overvloed, zekerheid, geld mindset',
+    'lifeArea.relationships.name': 'Relaties',
+    'lifeArea.relationships.description': 'Liefde, vriendschap, gemeenschapsverbinding',
+    'lifeArea.wellbeing.name': 'Welzijn',
+    'lifeArea.wellbeing.description': 'Gezondheid, energie, mentale helderheid',
+    'lifeArea.creativity.name': 'Creativiteit',
+    'lifeArea.creativity.description': 'Expressie, kunst, innovatie, spel',
+    'lifeArea.spirituality.name': 'Spiritualiteit',
+    'lifeArea.spirituality.description': 'Innerlijke wijsheid, verbinding, transcendentie',
   },
   nl: {
     // Authentication

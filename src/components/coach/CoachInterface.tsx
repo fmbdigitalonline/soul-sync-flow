@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
@@ -116,8 +117,8 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
       <CoachLoadingMessage
         message={
           isFallbackTimeout
-            ? "This is taking a moment — the coach is working deeply to shape your next step…"
-            : "Coach is preparing your plan..."
+            ? t('coach.fallbackTimeout')
+            : t('coach.preparingPlan')
         }
         showSpinner={!isFallbackTimeout}
       />
@@ -156,7 +157,7 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
     const assistantMsgs = messages.filter((m) => m.sender === "assistant");
     const stepBlocks: React.ReactNode[] = [];
     let totalSteps = 0;
-    let estimated = estimatedDuration || "~30 min";
+    let estimated = estimatedDuration || t('coach.defaultDuration');
     // Find highest step number for totalSteps
     const stepCountRegex = /Step\s*(\d+)\s*:/gi;
     for (const msg of assistantMsgs) {
@@ -173,10 +174,8 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
       let m;
       while ((m = stepRegex.exec(message.content))) {
         // Motivation and CTA defaults
-        const defaultMotivation =
-          "You don’t need to get it perfect — clarity starts by expressing what’s true for you.";
-        const defaultCTA =
-          "💬 When you’re ready, type your thoughts here — I’ll help organize and refine them into a clear direction.";
+        const defaultMotivation = t('coach.motivation.default');
+        const defaultCTA = t('coach.cta.default');
         stepBlocks.push(
           <CoachStepMessage
             key={`stepbox-${m[1]}`}
@@ -198,8 +197,8 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
     <div className="flex flex-col h-full w-full">
       {/* Session Banner */}
       <FocusModeSessionBanner 
-        taskTitle={taskTitle || "Task Session"}
-        estimatedDuration={estimatedDuration || "~30 min"}
+        taskTitle={taskTitle || t('coach.taskSession')}
+        estimatedDuration={estimatedDuration || t('coach.defaultDuration')}
       />
 
       {/* Steps Progress checklist */}

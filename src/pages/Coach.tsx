@@ -1,4 +1,5 @@
 
+
 import React, { useRef, useEffect, useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
@@ -85,7 +86,7 @@ const Coach = () => {
               <div className="w-6 h-6 bg-gradient-to-br from-soul-purple to-soul-teal rounded-full flex items-center justify-center">
                 <MessageCircle className="h-3 w-3 text-white" />
               </div>
-              <h1 className="text-sm font-medium gradient-text">Soul Companion</h1>
+              <h1 className="text-sm font-medium gradient-text">{t('coach.soulCompanionHeader')}</h1>
             </div>
             <Button 
               variant="ghost" 
@@ -115,3 +116,4 @@ const Coach = () => {
 };
 
 export default Coach;
+
