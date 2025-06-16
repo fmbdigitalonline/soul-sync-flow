@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Heart, Smile, Meh, Frown, Sun, Moon, Zap, Leaf, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface MoodTrackerProps {
   onMoodSave: (mood: string, energy: string) => void;
@@ -15,19 +16,20 @@ export const MoodTracker: React.FC<MoodTrackerProps> = ({ onMoodSave }) => {
   const [selectedEnergy, setSelectedEnergy] = useState<string>("");
   const [saved, setSaved] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const moods = [
-    { name: "Joyful", icon: Smile, color: "text-yellow-400" },
-    { name: "Content", icon: Heart, color: "text-green-400" },
-    { name: "Neutral", icon: Meh, color: "text-gray-400" },
-    { name: "Reflective", icon: Moon, color: "text-blue-400" },
-    { name: "Challenged", icon: Frown, color: "text-purple-400" },
+    { name: t('moodTracker.joyful'), icon: Smile, color: "text-yellow-400" },
+    { name: t('moodTracker.content'), icon: Heart, color: "text-green-400" },
+    { name: t('moodTracker.neutral'), icon: Meh, color: "text-gray-400" },
+    { name: t('moodTracker.reflective'), icon: Moon, color: "text-blue-400" },
+    { name: t('moodTracker.challenged'), icon: Frown, color: "text-purple-400" },
   ];
 
   const energyLevels = [
-    { name: "High", icon: Zap, color: "text-orange-400" },
-    { name: "Steady", icon: Sun, color: "text-yellow-400" },
-    { name: "Low", icon: Leaf, color: "text-green-400" },
+    { name: t('moodTracker.high'), icon: Zap, color: "text-orange-400" },
+    { name: t('moodTracker.steady'), icon: Sun, color: "text-yellow-400" },
+    { name: t('moodTracker.low'), icon: Leaf, color: "text-green-400" },
   ];
 
   const handleSave = () => {
@@ -35,8 +37,8 @@ export const MoodTracker: React.FC<MoodTrackerProps> = ({ onMoodSave }) => {
       onMoodSave(selectedMood, selectedEnergy);
       setSaved(true);
       toast({
-        title: "Mood tracked",
-        description: `${selectedMood} mood with ${selectedEnergy} energy saved to your patterns`,
+        title: t('moodTracker.moodTracked'),
+        description: `${selectedMood} ${t('moodTracker.moodSaved', { energy: selectedEnergy })}`,
       });
       
       // Reset after 2 seconds
@@ -52,12 +54,12 @@ export const MoodTracker: React.FC<MoodTrackerProps> = ({ onMoodSave }) => {
     <CosmicCard className="p-4 mb-4">
       <h3 className="text-sm font-medium mb-3 flex items-center">
         <Heart className="h-4 w-4 mr-2 text-soul-purple" />
-        Track Your Current State
+        {t('moodTracker.title')}
       </h3>
       
       <div className="space-y-4">
         <div>
-          <p className="text-xs text-muted-foreground mb-2">Emotional state:</p>
+          <p className="text-xs text-muted-foreground mb-2">{t('moodTracker.emotionalState')}</p>
           <div className="flex flex-wrap gap-2">
             {moods.map((mood) => {
               const Icon = mood.icon;
@@ -79,7 +81,7 @@ export const MoodTracker: React.FC<MoodTrackerProps> = ({ onMoodSave }) => {
         </div>
 
         <div>
-          <p className="text-xs text-muted-foreground mb-2">Energy level:</p>
+          <p className="text-xs text-muted-foreground mb-2">{t('moodTracker.energyLevel')}</p>
           <div className="flex gap-2">
             {energyLevels.map((energy) => {
               const Icon = energy.icon;
@@ -107,20 +109,20 @@ export const MoodTracker: React.FC<MoodTrackerProps> = ({ onMoodSave }) => {
             className="w-full bg-soul-purple hover:bg-soul-purple/90"
           >
             <Heart className="h-3 w-3 mr-2" />
-            Save to Patterns
+            {t('moodTracker.saveToPatterns')}
           </Button>
         )}
 
         {saved && (
           <div className="flex items-center justify-center p-2 bg-green-50 rounded-md">
             <Check className="h-4 w-4 text-green-600 mr-2" />
-            <span className="text-sm text-green-700">Mood tracked!</span>
+            <span className="text-sm text-green-700">{t('moodTracker.moodTracked')}!</span>
           </div>
         )}
       </div>
       
       <p className="text-xs text-muted-foreground mt-3">
-        Your mood patterns help generate personalized insights and weekly summaries.
+        {t('moodTracker.patternsHelp')}
       </p>
     </CosmicCard>
   );

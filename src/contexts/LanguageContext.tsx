@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export type Language = 'en' | 'nl';
@@ -506,6 +505,58 @@ const translations = {
     // Language Selector
     'language.english': 'English',
     'language.dutch': 'Nederlands',
+    
+    // MoodTracker specific translations
+    'moodTracker.title': 'Track Your Current State',
+    'moodTracker.emotionalState': 'Emotional state:',
+    'moodTracker.energyLevel': 'Energy level:',
+    'moodTracker.joyful': 'Joyful',
+    'moodTracker.content': 'Content', 
+    'moodTracker.neutral': 'Neutral',
+    'moodTracker.reflective': 'Reflective',
+    'moodTracker.challenged': 'Challenged',
+    'moodTracker.high': 'High',
+    'moodTracker.steady': 'Steady',
+    'moodTracker.low': 'Low',
+    'moodTracker.saveToPatterns': 'Save to Patterns',
+    'moodTracker.moodTracked': 'Mood tracked',
+    'moodTracker.moodSaved': 'mood with {{energy}} energy saved to your patterns',
+    'moodTracker.patternsHelp': 'Your mood patterns help generate personalized insights and weekly summaries.',
+
+    // ReflectionPrompts translations
+    'reflectionPrompts.title': 'Daily Reflection',
+    'reflectionPrompts.choosePrompt': 'Choose a reflection prompt:',
+    'reflectionPrompts.yourResponse': 'Your response:',
+    'reflectionPrompts.writeThoughts': 'Write your thoughts...',
+    'reflectionPrompts.saveReflection': 'Save Reflection',
+    'reflectionPrompts.reflectionSaved': 'Reflection saved',
+    'reflectionPrompts.reflectionSavedDesc': 'Your reflection has been saved to your growth patterns',
+    'reflectionPrompts.deeperInsights': 'Regular reflection creates deeper insights and self-awareness over time.',
+
+    // InsightJournal translations
+    'insightJournal.title': 'Capture Your Insights',
+    'insightJournal.insight': 'Your insight:',
+    'insightJournal.insightPlaceholder': 'What have you discovered about yourself today?',
+    'insightJournal.tags': 'Tags (optional):',
+    'insightJournal.addTag': 'Add tag',
+    'insightJournal.saveInsight': 'Save Insight',
+    'insightJournal.insightSaved': 'Insight saved',
+    'insightJournal.insightSavedDesc': 'Your insight has been added to your personal collection',
+    'insightJournal.buildLibrary': 'Build your personal library of wisdom and self-discoveries.',
+
+    // WeeklyInsights translations
+    'weeklyInsights.title': 'Your Weekly Patterns',
+    'weeklyInsights.thisWeek': 'This Week\'s Insights',
+    'weeklyInsights.moodTrends': 'Mood Trends',
+    'weeklyInsights.dominantMood': 'Dominant mood:',
+    'weeklyInsights.energyPattern': 'Energy pattern:',
+    'weeklyInsights.reflectionThemes': 'Reflection Themes',
+    'weeklyInsights.insightTags': 'Insight Tags',
+    'weeklyInsights.growthPatterns': 'Growth Patterns',
+    'weeklyInsights.weeklyScore': 'Weekly Growth Score',
+    'weeklyInsights.noDataYet': 'No data yet',
+    'weeklyInsights.startTracking': 'Start tracking your mood and reflections to see patterns',
+    'weeklyInsights.basedOnData': 'Based on your mood tracking, reflections, and insights this week',
   },
   nl: {
     // Authentication
@@ -1001,6 +1052,58 @@ const translations = {
     // Language Selector
     'language.english': 'Engels',
     'language.dutch': 'Nederlands',
+    
+    // MoodTracker specific translations
+    'moodTracker.title': 'Volg je huidige staat',
+    'moodTracker.emotionalState': 'Emotionele staat:',
+    'moodTracker.energyLevel': 'Energieniveau:',
+    'moodTracker.joyful': 'Vreugdevol',
+    'moodTracker.content': 'Tevreden',
+    'moodTracker.neutral': 'Neutraal',
+    'moodTracker.reflective': 'Reflectief',
+    'moodTracker.challenged': 'Uitgedaagd',
+    'moodTracker.high': 'Hoog',
+    'moodTracker.steady': 'Stabiel',
+    'moodTracker.low': 'Laag',
+    'moodTracker.saveToPatterns': 'Opslaan in patronen',
+    'moodTracker.moodTracked': 'Stemming bijgehouden',
+    'moodTracker.moodSaved': 'stemming met {{energy}} energie opgeslagen in je patronen',
+    'moodTracker.patternsHelp': 'Je stemmingspatronen helpen bij het genereren van gepersonaliseerde inzichten en wekelijkse samenvattingen.',
+
+    // ReflectionPrompts translations
+    'reflectionPrompts.title': 'Dagelijkse reflectie',
+    'reflectionPrompts.choosePrompt': 'Kies een reflectievraag:',
+    'reflectionPrompts.yourResponse': 'Je antwoord:',
+    'reflectionPrompts.writeThoughts': 'Schrijf je gedachten...',
+    'reflectionPrompts.saveReflection': 'Reflectie opslaan',
+    'reflectionPrompts.reflectionSaved': 'Reflectie opgeslagen',
+    'reflectionPrompts.reflectionSavedDesc': 'Je reflectie is opgeslagen in je groeipatronen',
+    'reflectionPrompts.deeperInsights': 'Regelmatige reflectie creëert diepere inzichten en zelfbewustzijn over tijd.',
+
+    // InsightJournal translations
+    'insightJournal.title': 'Leg je inzichten vast',
+    'insightJournal.insight': 'Je inzicht:',
+    'insightJournal.insightPlaceholder': 'Wat heb je vandaag over jezelf ontdekt?',
+    'insightJournal.tags': 'Tags (optioneel):',
+    'insightJournal.addTag': 'Tag toevoegen',
+    'insightJournal.saveInsight': 'Inzicht opslaan',
+    'insightJournal.insightSaved': 'Inzicht opgeslagen',
+    'insightJournal.insightSavedDesc': 'Je inzicht is toegevoegd aan je persoonlijke collectie',
+    'insightJournal.buildLibrary': 'Bouw je persoonlijke bibliotheek van wijsheid en selfontdekkingen.',
+
+    // WeeklyInsights translations
+    'weeklyInsights.title': 'Je wekelijkse patronen',
+    'weeklyInsights.thisWeek': 'Inzichten van deze week',
+    'weeklyInsights.moodTrends': 'Stemmingstrends',
+    'weeklyInsights.dominantMood': 'Dominante stemming:',
+    'weeklyInsights.energyPattern': 'Energiepatroon:',
+    'weeklyInsights.reflectionThemes': 'Reflectiethema\'s',
+    'weeklyInsights.insightTags': 'Inzicht Tags',
+    'weeklyInsights.growthPatterns': 'Groeipatronen',
+    'weeklyInsights.weeklyScore': 'Wekelijkse groei score',
+    'weeklyInsights.noDataYet': 'Nog geen gegevens',
+    'weeklyInsights.startTracking': 'Begin met het volgen van je stemming en reflecties om patronen te zien',
+    'weeklyInsights.basedOnData': 'Gebaseerd op je stemmingsvolging, reflecties en inzichten van deze week',
   }
 };
 
