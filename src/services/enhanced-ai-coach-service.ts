@@ -63,6 +63,7 @@ class EnhancedAICoachService {
   private personalityEngine: PersonalityEngine;
   private conversationCache: Map<string, ChatMessage[]> = new Map();
   private currentUserId: string | null = null;
+  private userPersonaCache: Map<string, any> = new Map();
 
   constructor() {
     this.personalityEngine = new PersonalityEngine();
@@ -75,14 +76,68 @@ class EnhancedAICoachService {
   }
 
   updateUserBlueprint(blueprint: Partial<LayeredBlueprint>) {
+    console.log("🎭 Enhanced AI Coach: Updating user blueprint and triggering persona regeneration");
     this.personalityEngine.updateBlueprint(blueprint);
-    console.log("Updated user blueprint in enhanced AI coach service:", blueprint);
+    
+    // Clear persona cache to force regeneration
+    if (this.currentUserId) {
+      this.userPersonaCache.delete(this.currentUserId);
+      console.log("🔄 Cleared persona cache for user:", this.currentUserId);
+    }
+    
+    console.log("✅ Enhanced AI Coach: Blueprint updated successfully");
   }
 
   async setCurrentUser(userId: string) {
+    console.log("👤 Enhanced AI Coach: Setting current user:", userId);
     this.currentUserId = userId;
     this.personalityEngine.setUserId(userId);
-    console.log("Set current user for enhanced AI coach service:", userId);
+    
+    // Pre-load user's persona if available
+    try {
+      const existingPersona = await PersonaService.getUserPersona(userId);
+      if (existingPersona) {
+        this.userPersonaCache.set(userId, existingPersona);
+        console.log("✅ Enhanced AI Coach: Pre-loaded existing persona for user");
+      }
+    } catch (error) {
+      console.warn("⚠️ Enhanced AI Coach: Could not pre-load persona:", error);
+    }
+  }
+
+  async generatePersonalizedSystemPrompt(agentType: AgentType): Promise<string | null> {
+    if (!this.currentUserId) {
+      console.warn("⚠️ Enhanced AI Coach: No user ID available for persona generation");
+      return null;
+    }
+
+    try {
+      console.log("🎭 Enhanced AI Coach: Generating personalized system prompt for", agentType);
+      
+      // Check cache first
+      const cacheKey = `${this.currentUserId}_${agentType}`;
+      if (this.userPersonaCache.has(cacheKey)) {
+        const cachedPersona = this.userPersonaCache.get(cacheKey);
+        console.log("⚡ Enhanced AI Coach: Using cached persona");
+        return cachedPersona.systemPrompt;
+      }
+
+      // Generate or retrieve persona
+      const persona = await this.personalityEngine.getOrGeneratePersona(agentType as AgentMode);
+      
+      if (persona && persona.systemPrompt) {
+        // Cache the persona
+        this.userPersonaCache.set(cacheKey, persona);
+        console.log("✅ Enhanced AI Coach: Generated personalized system prompt:", persona.systemPrompt.length, "characters");
+        return persona.systemPrompt;
+      }
+
+      console.warn("⚠️ Enhanced AI Coach: Failed to generate persona, falling back to default");
+      return null;
+    } catch (error) {
+      console.error("❌ Enhanced AI Coach: Error generating personalized system prompt:", error);
+      return null;
+    }
   }
 
   async loadConversationHistory(mode: AgentType): Promise<ChatMessage[]> {
@@ -265,19 +320,24 @@ class EnhancedAICoachService {
     language: string = "en"
   ): Promise<{ response: string; conversationId: string }> {
     try {
+      console.log("📤 Enhanced AI Coach: Sending message with persona integration");
+      
       const journeyContext = await this.getJourneyContext(agentType);
       
-      // Get personalized system prompt using persona system
+      // Get personalized system prompt using the enhanced persona system
       let systemPrompt: string | null = null;
       
       if (includeBlueprint && this.currentUserId) {
-        console.log("Generating personalized system prompt using persona system...");
-        const persona = await this.personalityEngine.getOrGeneratePersona(agentType as AgentMode);
-        systemPrompt = persona?.systemPrompt || null;
-        console.log("Generated personalized system prompt length:", systemPrompt?.length || 0);
+        systemPrompt = await this.generatePersonalizedSystemPrompt(agentType);
       }
 
-      console.log("Journey context length:", journeyContext.length);
+      console.log("📋 Enhanced AI Coach: Context prepared:", {
+        hasSystemPrompt: !!systemPrompt,
+        systemPromptLength: systemPrompt?.length || 0,
+        journeyContextLength: journeyContext.length,
+        agentType,
+        userId: this.currentUserId
+      });
 
       const { data, error } = await supabase.functions.invoke("ai-coach", {
         body: {
@@ -293,12 +353,13 @@ class EnhancedAICoachService {
 
       if (error) throw error;
 
+      console.log("✅ Enhanced AI Coach: Message sent successfully");
       return {
         response: data.response,
         conversationId: data.conversationId || sessionId,
       };
     } catch (error) {
-      console.error("Error in enhanced AI coach service:", error);
+      console.error("❌ Enhanced AI Coach: Error in sendMessage:", error);
       throw error;
     }
   }
@@ -312,7 +373,7 @@ class EnhancedAICoachService {
     callbacks: StreamingResponse
   ): Promise<void> {
     try {
-      console.log('Enhanced AI Coach: Starting streaming request...', {
+      console.log('📡 Enhanced AI Coach: Starting streaming request with persona integration', {
         agentType,
         messageLength: message.length,
         includeBlueprint,
@@ -321,17 +382,18 @@ class EnhancedAICoachService {
       
       const journeyContext = await this.getJourneyContext(agentType);
       
-      // Get personalized system prompt using persona system
+      // Get personalized system prompt using the enhanced persona system
       let systemPrompt: string | null = null;
       
       if (includeBlueprint && this.currentUserId) {
-        console.log("Generating personalized system prompt using persona system...");
-        const persona = await this.personalityEngine.getOrGeneratePersona(agentType as AgentMode);
-        systemPrompt = persona?.systemPrompt || null;
-        console.log("Enhanced AI Coach: Generated system prompt length:", systemPrompt?.length || 0);
+        systemPrompt = await this.generatePersonalizedSystemPrompt(agentType);
       }
 
-      console.log("Enhanced AI Coach: Journey context length:", journeyContext.length);
+      console.log("📋 Enhanced AI Coach: Streaming context prepared:", {
+        hasSystemPrompt: !!systemPrompt,
+        systemPromptLength: systemPrompt?.length || 0,
+        journeyContextLength: journeyContext.length
+      });
       
       const response = await fetch(`https://qxaajirrqrcnmvtowjbg.supabase.co/functions/v1/ai-coach-stream`, {
         method: 'POST',
@@ -350,11 +412,11 @@ class EnhancedAICoachService {
         }),
       });
 
-      console.log('Enhanced AI Coach: Edge function response status:', response.status);
+      console.log('📡 Enhanced AI Coach: Edge function response status:', response.status);
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Enhanced AI Coach: Edge function error:', response.status, errorText);
+        console.error('❌ Enhanced AI Coach: Edge function error:', response.status, errorText);
         throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
       }
 
@@ -367,14 +429,14 @@ class EnhancedAICoachService {
       let fullResponse = '';
       let buffer = '';
 
-      console.log('Enhanced AI Coach: Starting to read stream...');
+      console.log('📡 Enhanced AI Coach: Starting to read stream...');
 
       try {
         while (true) {
           const { done, value } = await reader.read();
           
           if (done) {
-            console.log('Enhanced AI Coach: Stream reading completed');
+            console.log('✅ Enhanced AI Coach: Stream reading completed');
             break;
           }
           
@@ -392,7 +454,7 @@ class EnhancedAICoachService {
               const data = line.slice(6).trim();
               
               if (data === '[DONE]') {
-                console.log('Enhanced AI Coach: Received [DONE], completing stream');
+                console.log('✅ Enhanced AI Coach: Received [DONE], completing stream');
                 callbacks.onComplete(fullResponse);
                 return;
               }
@@ -402,7 +464,7 @@ class EnhancedAICoachService {
                   const parsed = JSON.parse(data);
                   
                   if (parsed.error) {
-                    console.error('Enhanced AI Coach: Error from stream:', parsed);
+                    console.error('❌ Enhanced AI Coach: Error from stream:', parsed);
                     throw new Error(parsed.message || 'Stream error');
                   }
                   
@@ -413,7 +475,7 @@ class EnhancedAICoachService {
                     callbacks.onChunk(content);
                   }
                 } catch (parseError) {
-                  console.log('Enhanced AI Coach: Skipping non-JSON data:', data.substring(0, 100));
+                  // Skip non-JSON data silently
                 }
               }
             }
@@ -424,20 +486,22 @@ class EnhancedAICoachService {
       }
       
       if (fullResponse) {
-        console.log('Enhanced AI Coach: Stream completed, total response length:', fullResponse.length);
+        console.log('✅ Enhanced AI Coach: Stream completed, total response length:', fullResponse.length);
         callbacks.onComplete(fullResponse);
       } else {
-        console.warn('Enhanced AI Coach: No content received in stream');
+        console.warn('⚠️ Enhanced AI Coach: No content received in stream');
         throw new Error('No content received from AI');
       }
     } catch (error) {
-      console.error("Enhanced AI Coach: Streaming error:", error);
+      console.error("❌ Enhanced AI Coach: Streaming error:", error);
       callbacks.onError(error as Error);
     }
   }
 
   clearConversationCache() {
     this.conversationCache.clear();
+    this.userPersonaCache.clear();
+    console.log("🧹 Enhanced AI Coach: Cleared all caches");
   }
 }
 

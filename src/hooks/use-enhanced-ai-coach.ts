@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { enhancedAICoachService, AgentType } from "@/services/enhanced-ai-coach-service";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -5,6 +6,7 @@ import { useBlueprintData } from "./use-blueprint-data";
 import { LayeredBlueprint } from "@/types/personality-modules";
 import { useStreamingMessage } from "./use-streaming-message";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 export interface Message {
   id: string;
@@ -20,8 +22,11 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentAgent, setCurrentAgent] = useState<AgentType>(defaultAgent);
   const [currentSessionId] = useState(() => enhancedAICoachService.createNewSession(defaultAgent));
+  const [authInitialized, setAuthInitialized] = useState(false);
+  const [personaReady, setPersonaReady] = useState(false);
   const { language } = useLanguage();
   const { blueprintData } = useBlueprintData();
+  const { user } = useAuth();
   
   const {
     streamingContent,
@@ -32,29 +37,41 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
     resetStreaming,
   } = useStreamingMessage();
 
-  // Set current user when component mounts
+  // Enhanced authentication and user setup
   useEffect(() => {
-    const getCurrentUser = async () => {
+    const initializeAuth = async () => {
       try {
+        console.log("🔐 Enhanced AI Coach Hook: Initializing authentication");
         const { data: { user } } = await supabase.auth.getUser();
+        
         if (user) {
+          console.log("👤 Enhanced AI Coach Hook: User authenticated:", user.id);
           await enhancedAICoachService.setCurrentUser(user.id);
-          console.log('Set current user for persona system:', user.id);
+          setAuthInitialized(true);
+        } else {
+          console.log("👤 Enhanced AI Coach Hook: No authenticated user");
+          setAuthInitialized(true);
         }
       } catch (error) {
-        console.error('Error setting current user:', error);
+        console.error("❌ Enhanced AI Coach Hook: Auth initialization error:", error);
+        setAuthInitialized(true); // Still mark as initialized to prevent blocking
       }
     };
 
-    getCurrentUser();
-  }, []);
+    initializeAuth();
+  }, [user]);
 
-  // Convert blueprint data to LayeredBlueprint format and update the AI service
+  // Enhanced blueprint integration with persona system
   useEffect(() => {
-    if (blueprintData) {
-      console.log("Converting blueprint data for enhanced personality engine:", blueprintData);
-      
-      // Convert the raw blueprint data to LayeredBlueprint format
+    if (!authInitialized || !blueprintData) {
+      console.log("⏳ Enhanced AI Coach Hook: Waiting for auth/blueprint data");
+      return;
+    }
+
+    console.log("🎭 Enhanced AI Coach Hook: Processing blueprint data for persona generation");
+    
+    try {
+      // Convert blueprint data to LayeredBlueprint format
       const layeredBlueprint: Partial<LayeredBlueprint> = {
         cognitiveTemperamental: {
           mbtiType: blueprintData.cognition_mbti?.type || "Unknown",
@@ -125,53 +142,63 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
         },
       };
 
-      // Update the AI service with the user's blueprint
+      // Update the AI service with the user's blueprint - this triggers persona regeneration
       enhancedAICoachService.updateUserBlueprint(layeredBlueprint);
-      console.log("Updated enhanced AI service with layered blueprint");
+      setPersonaReady(true);
+      
+      console.log("✅ Enhanced AI Coach Hook: Blueprint processed and persona system ready");
+    } catch (error) {
+      console.error("❌ Enhanced AI Coach Hook: Blueprint processing error:", error);
+      setPersonaReady(true); // Allow fallback to non-personalized responses
     }
-  }, [blueprintData]);
+  }, [authInitialized, blueprintData]);
 
   // Load conversation history when component mounts or agent changes
   useEffect(() => {
+    if (!authInitialized) return;
+    
     const loadHistory = async () => {
       try {
+        console.log("📚 Enhanced AI Coach Hook: Loading conversation history for", currentAgent);
         const history = await enhancedAICoachService.loadConversationHistory(currentAgent);
         setMessages(history);
-        console.log(`Loaded ${history.length} messages for ${currentAgent} mode`);
+        console.log(`✅ Enhanced AI Coach Hook: Loaded ${history.length} messages for ${currentAgent} mode`);
       } catch (error) {
-        console.error("Error loading conversation history:", error);
+        console.error("❌ Enhanced AI Coach Hook: Error loading conversation history:", error);
       }
     };
 
     loadHistory();
-  }, [currentAgent]);
+  }, [currentAgent, authInitialized]);
 
   // Save conversation history when messages change
   useEffect(() => {
-    if (messages.length > 0) {
-      const saveHistory = async () => {
-        try {
-          await enhancedAICoachService.saveConversationHistory(currentAgent, messages);
-          console.log(`Saved ${messages.length} messages for ${currentAgent} mode`);
-        } catch (error) {
-          console.error("Error saving conversation history:", error);
-        }
-      };
+    if (!authInitialized || messages.length === 0) return;
+    
+    const saveHistory = async () => {
+      try {
+        await enhancedAICoachService.saveConversationHistory(currentAgent, messages);
+        console.log(`💾 Enhanced AI Coach Hook: Saved ${messages.length} messages for ${currentAgent} mode`);
+      } catch (error) {
+        console.error("❌ Enhanced AI Coach Hook: Error saving conversation history:", error);
+      }
+    };
 
-      // Debounce saving to avoid excessive database calls
-      const timeoutId = setTimeout(saveHistory, 1000);
-      return () => clearTimeout(timeoutId);
-    }
-  }, [messages, currentAgent]);
+    // Debounce saving to avoid excessive database calls
+    const timeoutId = setTimeout(saveHistory, 1000);
+    return () => clearTimeout(timeoutId);
+  }, [messages, currentAgent, authInitialized]);
 
   const sendMessage = async (content: string, useStreaming: boolean = true) => {
     if (!content.trim()) return;
 
-    console.log('useEnhancedAICoach: Sending message:', {
+    console.log('📤 Enhanced AI Coach Hook: Sending message:', {
       contentLength: content.length,
       useStreaming,
       currentAgent,
-      hasBlueprint: !!blueprintData
+      hasBlueprint: !!blueprintData,
+      personaReady,
+      authInitialized
     });
 
     const userMessage: Message = {
@@ -186,19 +213,19 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
     setIsLoading(true);
     resetStreaming();
 
-    // Enhanced context for better companionship - keep responses natural and conversational
+    // Enhanced context for better companionship with persona integration
     const enhancedContent = currentAgent === "blend" 
-      ? content // Don't add extra instructions for blend mode - let the system prompt handle it
+      ? content // Let the persona system handle the personality for blend mode
       : currentAgent === "coach" 
         ? `${content}
 
 Please remember to:
-- Keep responses conversational and engaging
+- Keep responses conversational and engaging using my unique personality
 - Break down advice into small, actionable chunks
 - Ask follow-up questions to maintain engagement
 - Provide specific next steps rather than general advice
-- Use encouraging and motivational language aligned with my personality
-- When suggesting tasks breakdown, be specific about time estimates and energy requirements`
+- Use encouraging and motivational language aligned with my personality blueprint
+- When suggesting task breakdowns, be specific about time estimates and energy requirements`
         : content;
 
     if (useStreaming) {
@@ -218,17 +245,16 @@ Please remember to:
       try {
         let accumulatedContent = '';
         
-        console.log('useEnhancedAICoach: Starting streaming...');
+        console.log('📡 Enhanced AI Coach Hook: Starting streaming with persona integration...');
         
         await enhancedAICoachService.sendStreamingMessage(
           enhancedContent,
           currentSessionId,
-          true,
+          personaReady, // Use persona system when ready
           currentAgent,
           language,
           {
             onChunk: (chunk: string) => {
-              console.log('useEnhancedAICoach: Received chunk:', chunk.substring(0, 20) + '...');
               accumulatedContent += chunk;
               addStreamingChunk(chunk);
               
@@ -241,7 +267,7 @@ Please remember to:
               );
             },
             onComplete: (fullResponse: string) => {
-              console.log('useEnhancedAICoach: Streaming complete, full response length:', fullResponse.length);
+              console.log('✅ Enhanced AI Coach Hook: Streaming complete, response length:', fullResponse.length);
               completeStreaming();
               setMessages(prev => 
                 prev.map(msg => 
@@ -253,7 +279,7 @@ Please remember to:
               setIsLoading(false);
             },
             onError: (error: Error) => {
-              console.error("useEnhancedAICoach: Streaming error:", error);
+              console.error("❌ Enhanced AI Coach Hook: Streaming error:", error);
               setMessages(prev => prev.filter(msg => msg.id !== assistantMessageId));
               handleNonStreamingMessage(enhancedContent);
               completeStreaming();
@@ -261,7 +287,7 @@ Please remember to:
           }
         );
       } catch (error) {
-        console.error("useEnhancedAICoach: Error with streaming, falling back:", error);
+        console.error("❌ Enhanced AI Coach Hook: Error with streaming, falling back:", error);
         setMessages(prev => prev.filter(msg => msg.id !== assistantMessageId));
         handleNonStreamingMessage(enhancedContent);
         completeStreaming();
@@ -273,12 +299,12 @@ Please remember to:
 
   const handleNonStreamingMessage = async (content: string, existingMessageId?: string) => {
     try {
-      console.log('useEnhancedAICoach: Falling back to non-streaming');
+      console.log('📤 Enhanced AI Coach Hook: Falling back to non-streaming with persona integration');
       
       const response = await enhancedAICoachService.sendMessage(
         content,
         currentSessionId,
-        true, // Always include blueprint for personalized responses
+        personaReady, // Use persona system when ready
         currentAgent,
         language
       );
@@ -301,10 +327,12 @@ Please remember to:
         setMessages(prev => [...prev, assistantMessage]);
       }
     } catch (error) {
-      console.error("useEnhancedAICoach: Error in non-streaming fallback:", error);
+      console.error("❌ Enhanced AI Coach Hook: Error in non-streaming fallback:", error);
       const errorMessage: Message = {
         id: existingMessageId || (Date.now() + 1).toString(),
-        content: language === 'nl' ? "Sorry, er is een fout opgetreden. Probeer het later opnieuw." : "Sorry, there was an error. Please try again later.",
+        content: language === 'nl' ? 
+          "Sorry, er is een fout opgetreden. Probeer het later opnieuw." : 
+          "Sorry, there was an error. Please try again later.",
         sender: "assistant",
         timestamp: new Date(),
         agentType: currentAgent,
@@ -325,11 +353,13 @@ Please remember to:
   };
 
   const resetConversation = () => {
+    console.log("🔄 Enhanced AI Coach Hook: Resetting conversation");
     setMessages([]);
     enhancedAICoachService.clearConversationCache();
   };
 
   const switchAgent = (newAgent: AgentType) => {
+    console.log("🔄 Enhanced AI Coach Hook: Switching agent from", currentAgent, "to", newAgent);
     setCurrentAgent(newAgent);
   };
 
@@ -342,5 +372,7 @@ Please remember to:
     switchAgent,
     streamingContent,
     isStreaming,
+    personaReady,
+    authInitialized,
   };
 };
