@@ -7,6 +7,58 @@ export interface PersonalityModule {
   output: string;
 }
 
+// Humor Profile Types
+export type HumorStyle = 
+  | 'witty-inventor'
+  | 'dry-strategist' 
+  | 'playful-storyteller'
+  | 'warm-nurturer'
+  | 'observational-analyst'
+  | 'spontaneous-entertainer'
+  | 'philosophical-sage'
+  | 'gentle-empath';
+
+export interface HumorProfile {
+  primaryStyle: HumorStyle;
+  secondaryStyle?: HumorStyle;
+  intensity: 'subtle' | 'moderate' | 'vibrant';
+  appropriatenessLevel: 'conservative' | 'balanced' | 'playful';
+  contextualAdaptation: {
+    coaching: HumorStyle;
+    guidance: HumorStyle;
+    casual: HumorStyle;
+  };
+  avoidancePatterns: string[];
+  signatureElements: string[];
+}
+
+// Voice Token Types
+export interface VoiceTokens {
+  pacing: {
+    sentenceLength: 'short' | 'medium' | 'flowing' | 'elaborate';
+    pauseFrequency: 'minimal' | 'thoughtful' | 'dramatic';
+    rhythmPattern: 'steady' | 'varied' | 'staccato' | 'melodic';
+  };
+  expressiveness: {
+    emojiFrequency: 'none' | 'rare' | 'occasional' | 'frequent';
+    emphasisStyle: 'bold' | 'italic' | 'caps' | 'punctuation' | 'subtle';
+    exclamationTendency: 'reserved' | 'balanced' | 'enthusiastic';
+  };
+  vocabulary: {
+    formalityLevel: 'casual' | 'conversational' | 'professional' | 'academic';
+    metaphorUsage: 'literal' | 'occasional' | 'frequent' | 'poetic';
+    technicalDepth: 'simplified' | 'balanced' | 'detailed' | 'expert';
+  };
+  conversationStyle: {
+    questionAsking: 'direct' | 'exploratory' | 'socratic' | 'supportive';
+    responseLength: 'concise' | 'thorough' | 'comprehensive' | 'storytelling';
+    personalSharing: 'minimal' | 'relevant' | 'warm' | 'intimate';
+  };
+  signaturePhrases: string[];
+  greetingStyles: string[];
+  transitionWords: string[];
+}
+
 export interface LayeredBlueprint {
   cognitiveTemperamental: {
     mbtiType: string;
@@ -112,6 +164,9 @@ export interface LayeredBlueprint {
     recentPatterns: string[];
     triggerEvents: string[];
   };
+  // NEW: Auto-Generated Personality Components
+  humorProfile: HumorProfile;
+  voiceTokens: VoiceTokens;
 }
 
 export type AgentMode = 'coach' | 'guide' | 'blend';
@@ -143,4 +198,15 @@ export interface EnrichmentData {
     cyclicalPhase: string;
     optimalWindows: string[];
   };
+}
+
+// Compiled Persona Interface
+export interface CompiledPersona {
+  userId: string;
+  systemPrompt: string;
+  voiceTokens: VoiceTokens;
+  humorProfile: HumorProfile;
+  functionPermissions: string[];
+  generatedAt: Date;
+  blueprintVersion: string;
 }
