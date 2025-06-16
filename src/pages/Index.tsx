@@ -13,6 +13,7 @@ import { useOptimizedBlueprintData } from "@/hooks/use-optimized-blueprint-data"
 import { isAdminUser } from "@/utils/isAdminUser";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { LanguageSelector } from "@/components/ui/language-selector";
+import { RotatingText } from "@/components/ui/rotating-text";
 
 const Index = () => {
   const {
@@ -39,6 +40,33 @@ const Index = () => {
       return t("index.createToGetStarted");
     }
   }, [user, hasBlueprint, t]);
+
+  // Dynamic subtitle messages
+  const subtitleMessages = [
+    "Feeling stuck? SoulSync shows you the next right step.",
+    "Lost in the noise? Discover guidance that speaks your truth.",
+    "Overthinking your path? Align, act, and breathe again.",
+    "When nothing works, your design holds the key.",
+    "SoulSync ends the cycle of forcing what doesn't fit.",
+    "Not lazy. Not broken. Just misaligned.",
+    "You're not behind — you're off-track. SoulSync resets your course.",
+    "No more plans that ignore who you are.",
+    "Goals aren't the problem. Strategy that ignores your soul is.",
+    "When burnout wins, SoulSync realigns you with joy. Break down your dream — not your spirit.",
+    "Turn chaos into clarity, one soul-aligned task at a time.",
+    "Productivity that honors your wiring.",
+    "From blueprint to action — one aligned step at a time.",
+    "Finally: a task system built for your energy, not against it.",
+    "Your goals, your rhythm, your way.",
+    "Dream big. Then let SoulSync reverse-engineer your path.",
+    "Every task in tune with who you are.",
+    "Clarity. Strategy. Action. All from your inner code.",
+    "Soul-led productivity — so you can actually follow through. SoulSync helps when you're tired of guessing.",
+    "When you're stuck, it's not more willpower you need — it's more alignment.",
+    "Feel known. Make progress.",
+    "Real growth starts with self-understanding.",
+    "It's not about doing more — it's about doing what's right for you."
+  ];
 
   // Only speak welcome message once when user and blueprint data are loaded
   useEffect(() => {
@@ -89,9 +117,11 @@ const Index = () => {
           className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 px-4"
           dangerouslySetInnerHTML={{ __html: t("index.welcome") }}
         />
-        <p className="text-lg sm:text-xl mb-6 sm:mb-8 px-4 text-muted-foreground">
-          {t("index.subtitle")}
-        </p>
+        <RotatingText 
+          texts={subtitleMessages}
+          className="text-lg sm:text-xl mb-6 sm:mb-8 px-4 text-muted-foreground min-h-[3.5rem] flex items-center justify-center"
+          interval={4000}
+        />
 
         {user && <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
               <Link to="/dreams" className="block">
