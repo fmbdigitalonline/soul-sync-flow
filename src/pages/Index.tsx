@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -83,7 +82,7 @@ const Index = () => {
     <div className="w-full min-h-[90vh] flex flex-col justify-center p-4 sm:p-6">
       <div className="w-full max-w-4xl mx-auto text-center">
         <div className="flex justify-center mb-6 sm:mb-8">
-          <SoulOrbAvatar size="lg" className="h-20 w-20 sm:h-24 sm:w-24" />
+          <SoulOrbAvatar size="lg" />
         </div>
         
         <h1

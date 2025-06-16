@@ -1,4 +1,3 @@
-
 import * as React from "react"
 import * as AvatarPrimitive from "@radix-ui/react-avatar"
 import { SoulOrb } from "@/components/ui/soul-orb"
@@ -47,7 +46,7 @@ const AvatarFallback = React.forwardRef<
 ))
 AvatarFallback.displayName = AvatarPrimitive.Fallback.displayName
 
-// Enhanced SoulOrbAvatar component that prevents clipping while maintaining perfect circle
+// Enhanced SoulOrbAvatar component that maintains perfect circle shape
 const SoulOrbAvatar = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & {
@@ -56,11 +55,19 @@ const SoulOrbAvatar = React.forwardRef<
     stage?: "welcome" | "collecting" | "generating" | "complete";
   }
 >(({ className, speaking = false, size = "sm", stage = "welcome", ...props }, ref) => {
+  // Size mapping for square containers to maintain aspect ratio
+  const containerSizeMap = {
+    sm: "w-20 h-20", // 80px x 80px
+    md: "w-28 h-28", // 112px x 112px  
+    lg: "w-36 h-36", // 144px x 144px
+  };
+
   return (
     <div
       ref={ref}
       className={cn(
-        "relative flex items-center justify-center p-4", // Added padding to prevent clipping
+        "relative flex items-center justify-center",
+        containerSizeMap[size],
         className
       )}
       {...props}
