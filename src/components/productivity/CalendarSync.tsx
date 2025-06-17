@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Calendar, ExternalLink, CheckCircle2, AlertCircle, Sync } from "lucide-react";
+import { Calendar, ExternalLink, CheckCircle2, AlertCircle, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface CalendarIntegration {
@@ -157,7 +157,7 @@ export const CalendarSync: React.FC = () => {
                 onClick={handleManualSync}
                 disabled={isSyncing}
               >
-                <Sync className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
                 {isSyncing ? 'Syncing...' : 'Sync Now'}
               </Button>
             )}
