@@ -38,7 +38,9 @@ export const MilestonesRoadmap: React.FC<MilestonesRoadmapProps> = ({
               <p className="text-sm text-gray-600 mb-2">{milestone.description}</p>
               {milestone.blueprint_alignment && (
                 <p className="text-xs text-soul-purple bg-soul-purple/10 rounded-lg px-2 py-1 inline-block">
-                  💡 {milestone.blueprint_alignment}
+                  💡 {typeof milestone.blueprint_alignment === 'string' 
+                    ? milestone.blueprint_alignment 
+                    : milestone.blueprint_alignment.recommendations?.[0] || 'Blueprint optimized for your energy type'}
                 </p>
               )}
             </div>
