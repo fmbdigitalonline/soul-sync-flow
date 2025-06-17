@@ -42,7 +42,6 @@ export const useDecompositionLogic = ({
   const [processingStartTime] = useState(Date.now());
   const [aiProcessingTime, setAiProcessingTime] = useState<number | null>(null);
   const [hasTimedOut, setHasTimedOut] = useState(false);
-  const [showSkipOption, setShowSkipOption] = useState(false);
 
   // Memoize user type to prevent infinite re-rendering
   const getUserType = useCallback(() => {
@@ -50,17 +49,18 @@ export const useDecompositionLogic = ({
       return 'powerful soul';
     }
     
-    // Fixed: Use correct blueprint data structure
-    const mbti = blueprintData?.mbti?.type || blueprintData?.cognition_mbti?.type;
-    const hdType = blueprintData?.human_design?.type || blueprintData?.energy_strategy_human_design?.type;
+    // Fixed: Use correct blueprint data structure for MBTI
+    const mbti = blueprintData?.cognition_mbti?.type;
+    const hdType = blueprintData?.energy_strategy_human_design?.type;
     
     // Return the first available type with better fallbacks
     if (mbti && mbti !== 'Unknown') return mbti;
     if (hdType && hdType !== 'Unknown' && hdType !== 'Generator') return hdType;
     
     // Improved fallback based on available data
-    if (blueprintData?.astrology?.sun_sign && blueprintData.astrology.sun_sign !== 'Unknown') {
-      return `${blueprintData.astrology.sun_sign} soul`;
+    const sunSign = blueprintData?.archetype_western?.sun_sign;
+    if (sunSign && sunSign !== 'Unknown') {
+      return `${sunSign} soul`;
     }
     
     return 'unique soul';
@@ -233,49 +233,6 @@ export const useDecompositionLogic = ({
     }
   }, [dreamTitle, dreamDescription, dreamTimeframe, dreamCategory, blueprintData, hasTimedOut, userType]);
 
-  // Emergency skip function
-  const skipProcessing = useCallback(() => {
-    const fallbackGoal = {
-      id: Date.now().toString(),
-      title: dreamTitle,
-      description: dreamDescription,
-      category: dreamCategory,
-      timeframe: dreamTimeframe,
-      target_completion: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
-      created_at: new Date().toISOString(),
-      milestones: [
-        {
-          id: '1',
-          title: `${dreamTitle} - Getting Started`,
-          description: 'Begin your journey with simple first steps',
-          target_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-          completed: false,
-          completion_criteria: ['Take first action', 'Build momentum'],
-          blueprint_alignment: `Designed for your ${userType} approach`
-        }
-      ],
-      tasks: [
-        {
-          id: '1',
-          title: 'Take the first step',
-          description: 'Start with one small action toward your dream',
-          completed: false,
-          estimated_duration: '30 minutes',
-          energy_level_required: 'Low',
-          category: 'action',
-          optimal_timing: ['morning', 'afternoon'],
-          blueprint_reasoning: `Simple start for your ${userType} energy`
-        }
-      ],
-      blueprint_insights: [`This basic plan respects your ${userType} preferences`],
-      personalization_notes: 'Simplified plan created for immediate progress'
-    };
-    
-    setDecomposedGoal(fallbackGoal);
-    setCurrentStageIndex(3); // Jump to final stage
-    console.log('⏭️ Skipped to manual completion');
-  }, [dreamTitle, dreamDescription, dreamCategory, dreamTimeframe, userType]);
-
   const stages: DecompositionStage[] = useMemo(() => [
     {
       id: 'analyzing',
@@ -310,15 +267,6 @@ export const useDecompositionLogic = ({
 
   // Safe currentStage access with fallback
   const currentStage = stages[currentStageIndex] || stages[0];
-
-  // Show skip option after 30 seconds
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowSkipOption(true);
-    }, 30000);
-    
-    return () => clearTimeout(timer);
-  }, []);
 
   useEffect(() => {
     if (currentStageIndex < stages.length) {
@@ -436,8 +384,6 @@ export const useDecompositionLogic = ({
     stages,
     getUserType: () => userType, // Return memoized value
     processingStartTime,
-    aiProcessingTime,
-    showSkipOption,
-    skipProcessing
+    aiProcessingTime
   };
 };
