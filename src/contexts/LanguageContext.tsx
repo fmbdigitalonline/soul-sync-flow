@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 export type Language = 'en' | 'nl';
@@ -785,8 +786,7 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [language, setLanguage] = useState<Language>('en');
 
   const t = (key: string, params?: Record<string, string>): string => {
-    console.log(`[i18n] language: ${language}, key: ${key}, translation: ${translations[language][key] || key}`);
-    
+    // Removed excessive debug logging that was cluttering the console
     let translation = translations[language][key] || translations['en'][key] || key;
     
     if (params) {
