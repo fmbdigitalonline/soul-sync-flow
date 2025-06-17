@@ -15,12 +15,13 @@ import {
   Pause,
   RotateCcw
 } from "lucide-react";
-import { useEnhancedAICoach } from "@/hooks/use-enhanced-ai-coach";
+import { useTaskAwareCoach } from "@/hooks/use-task-aware-coach";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 import { CoachInterface } from "@/components/coach/CoachInterface";
 import { SubTaskManager } from "./SubTaskManager";
 import { QuickActions } from "./QuickActions";
 import { SessionProgress } from "./SessionProgress";
+import { taskCoachIntegrationService, TaskContext } from "@/services/task-coach-integration-service";
 
 interface Task {
   id: string;
@@ -46,7 +47,21 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
   onBack,
   onTaskComplete
 }) => {
-  const { messages, isLoading, sendMessage, resetConversation } = useEnhancedAICoach("coach");
+  const taskContext: TaskContext = {
+    ...task,
+    progress: 0,
+    sub_tasks: []
+  };
+
+  const { 
+    messages, 
+    isLoading, 
+    sendMessage, 
+    resetConversation, 
+    currentTask,
+    quickTaskActions
+  } = useTaskAwareCoach(taskContext);
+  
   const { productivityJourney, updateProductivityJourney } = useJourneyTracking();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [sessionStarted, setSessionStarted] = useState(false);
@@ -66,6 +81,23 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
     }
     return () => clearInterval(interval);
   }, [isTimerRunning]);
+
+  // Sync task progress with current task state
+  useEffect(() => {
+    if (currentTask) {
+      setTaskProgress(currentTask.progress);
+    }
+  }, [currentTask]);
+
+  // Set up task completion callback
+  useEffect(() => {
+    taskCoachIntegrationService.onTaskComplete((taskId) => {
+      console.log('🎉 Task completed via coach integration:', taskId);
+      setTaskCompleted(true);
+      setIsTimerRunning(false);
+      onTaskComplete(taskId);
+    });
+  }, [onTaskComplete]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -90,16 +122,6 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'todo': return 'bg-slate-100 text-slate-700';
-      case 'in_progress': return 'bg-blue-100 text-blue-700';
-      case 'stuck': return 'bg-amber-100 text-amber-700';
-      case 'completed': return 'bg-emerald-100 text-emerald-700';
-      default: return 'bg-slate-100 text-slate-700';
-    }
-  };
-
   const handleStartSession = () => {
     setSessionStarted(true);
     setIsTimerRunning(true);
@@ -110,22 +132,17 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
     const currentGoal = currentGoals.find(goal => goal.id === task.goal_id);
     const goalContext = currentGoal ? `\n\nThis task is part of your goal: "${currentGoal.title}" - ${currentGoal.description}` : '';
 
-    const initialMessage = `I'm ready to work on this specific task: "${task.title}".
-${task.description ? `Task Description: ${task.description}` : ''}
+    const initialMessage = `I'm ready to start working on "${task.title}". This is a ${task.energy_level_required} energy task that should take ${task.estimated_duration}.
 
-Task Details:
-- Energy Level Required: ${task.energy_level_required}
-- Estimated Duration: ${task.estimated_duration}
-- Category: ${task.category}
-- Optimal Time: ${task.optimal_time_of_day?.join(', ') || 'Any time'}${goalContext}
+${task.description ? `Task Description: ${task.description}` : ''}${goalContext}
 
-As my productivity coach, please help me by:
-1. Breaking this specific task down into 3-5 actionable sub-tasks
-2. Providing a structured step-by-step approach
-3. Keeping responses focused and interactive
-4. Using my cognitive patterns and energy type for personalized guidance
+As my productivity coach with task management capabilities, please help me by:
+1. Breaking this into 3-5 actionable sub-tasks 
+2. Creating a step-by-step plan
+3. Using your task management functions to track progress
+4. Providing personalized guidance based on my blueprint
 
-Start by acknowledging this specific task and give me the first concrete step I should take right now.`;
+Let's get started! What's the first step?`;
     
     sendMessage(initialMessage).then(() => {
       setAwaitingFirstAssistantReply(false);
@@ -133,73 +150,27 @@ Start by acknowledging this specific task and give me the first concrete step I 
   };
 
   const handleQuickAction = (actionId: string, message: string) => {
-    // Prevent duplicate messages by checking if already loading
     if (!isLoading) {
       sendMessage(message);
     }
   };
 
   const handleSubTaskComplete = (subTaskId: string) => {
-    console.log('Sub-task completed:', subTaskId);
-    // Update progress and notify coach
-    const progressUpdate = `I've completed a sub-task (${subTaskId}). What should I focus on next?`;
-    if (!isLoading) {
-      sendMessage(progressUpdate);
-    }
+    console.log('🎯 Sub-task completed, notifying coach:', subTaskId);
+    quickTaskActions.markSubTaskComplete(subTaskId);
   };
 
   const handleAllSubTasksComplete = () => {
-    setTaskProgress(100);
-    const completionMessage = `I've completed all the sub-tasks! Can you help me review what I've accomplished and determine if the main task "${task.title}" is fully complete?`;
-    if (!isLoading) {
-      sendMessage(completionMessage);
-    }
+    console.log('🏁 All sub-tasks completed, checking with coach');
+    sendMessage("I've completed all the sub-tasks! Can you verify if the main task is fully complete and mark it as done?");
   };
 
   const handleCompleteTask = async () => {
-    setIsTimerRunning(false);
-    setTaskCompleted(true);
-    
-    // Update task status in the database
-    const updatedGoals = (productivityJourney?.current_goals || []).map(goal => ({
-      ...goal,
-      tasks: goal.tasks.map(t => 
-        t.id === task.id ? { 
-          ...t, 
-          status: 'completed' as const,
-          completed: true,
-          completion_time: new Date().toISOString(),
-          actual_duration: focusTime
-        } : t
-      )
-    }));
-
-    await updateProductivityJourney({
-      current_goals: updatedGoals
-    });
-
-    onTaskComplete(task.id);
-    
-    const reflectionMessage = `Excellent! I've completed the task "${task.title}". 
-
-Task Statistics:
-- Planned Duration: ${task.estimated_duration}
-- Actual Duration: ${formatTime(focusTime)}
-- Energy Level: ${task.energy_level_required}
-
-Can you help me reflect on:
-1. What went well during this task?
-2. What I learned about my working style?
-3. How this contributes to my overall goals?
-4. Any insights for future similar tasks?`;
-    
-    if (!isLoading) {
-      sendMessage(reflectionMessage);
-    }
+    console.log('✅ Manually completing task via coach');
+    await quickTaskActions.markTaskComplete();
   };
 
   const handleCoachMessage = (message: string) => {
-    // Prevent duplicate messages
     if (!isLoading && message.trim()) {
       sendMessage(message);
     }
@@ -293,6 +264,17 @@ Can you help me reflect on:
               </Badge>
             )}
           </div>
+          
+          {/* Progress Bar */}
+          {sessionStarted && (
+            <div className="space-y-1">
+              <div className="flex justify-between text-xs">
+                <span>Progress</span>
+                <span>{taskProgress}%</span>
+              </div>
+              <Progress value={taskProgress} className="h-2" />
+            </div>
+          )}
         </div>
       </div>
 
@@ -332,7 +314,7 @@ Can you help me reflect on:
                 </div>
                 <h3 className="text-xl font-semibold mb-2">Ready to Focus?</h3>
                 <p className="text-muted-foreground mb-6">
-                  Start a personalized coaching session for "{task.title}" with guidance tailored to your blueprint and this specific task.
+                  Start a personalized coaching session with integrated task management for "{task.title}".
                 </p>
                 <Button 
                   onClick={handleStartSession}
