@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { PersonalityEngine } from "./personality-engine";
 import { LayeredBlueprint, AgentMode } from "@/types/personality-modules";
@@ -77,6 +78,16 @@ class EnhancedAICoachService {
 
   updateUserBlueprint(blueprint: Partial<LayeredBlueprint>) {
     console.log("🎭 Enhanced AI Coach: Updating user blueprint and triggering persona regeneration");
+    console.log("🔍 Blueprint Debug in Service:", {
+      hasCognitiveData: !!blueprint.cognitiveTemperamental,
+      mbtiType: blueprint.cognitiveTemperamental?.mbtiType,
+      hasEnergyData: !!blueprint.energyDecisionStrategy,
+      humanDesignType: blueprint.energyDecisionStrategy?.humanDesignType,
+      hasValuesData: !!blueprint.coreValuesNarrative,
+      actualMissionStatement: blueprint.coreValuesNarrative?.missionStatement,
+      userName: blueprint.user_meta?.preferred_name
+    });
+    
     this.personalityEngine.updateBlueprint(blueprint);
     
     // Clear persona cache to force regeneration
@@ -128,7 +139,12 @@ class EnhancedAICoachService {
       if (persona && persona.systemPrompt) {
         // Cache the persona
         this.userPersonaCache.set(cacheKey, persona);
-        console.log("✅ Enhanced AI Coach: Generated personalized system prompt:", persona.systemPrompt.length, "characters");
+        console.log("✅ Enhanced AI Coach: Generated personalized system prompt:", {
+          promptLength: persona.systemPrompt.length,
+          agentType,
+          userId: this.currentUserId
+        });
+        console.log("🔍 System Prompt Preview:", persona.systemPrompt.substring(0, 500) + "...");
         return persona.systemPrompt;
       }
 
@@ -329,6 +345,11 @@ class EnhancedAICoachService {
       
       if (includeBlueprint && this.currentUserId) {
         systemPrompt = await this.generatePersonalizedSystemPrompt(agentType);
+        console.log("📋 Enhanced AI Coach: System prompt generated:", {
+          hasSystemPrompt: !!systemPrompt,
+          systemPromptLength: systemPrompt?.length || 0,
+          agentType
+        });
       }
 
       console.log("📋 Enhanced AI Coach: Context prepared:", {
@@ -387,6 +408,11 @@ class EnhancedAICoachService {
       
       if (includeBlueprint && this.currentUserId) {
         systemPrompt = await this.generatePersonalizedSystemPrompt(agentType);
+        console.log("📋 Enhanced AI Coach: Streaming system prompt generated:", {
+          hasSystemPrompt: !!systemPrompt,
+          systemPromptLength: systemPrompt?.length || 0,
+          agentType
+        });
       }
 
       console.log("📋 Enhanced AI Coach: Streaming context prepared:", {

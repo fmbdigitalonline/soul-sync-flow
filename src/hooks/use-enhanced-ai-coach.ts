@@ -1,4 +1,5 @@
 
+
 import { useState, useEffect, useRef } from "react";
 import { enhancedAICoachService, AgentType } from "@/services/enhanced-ai-coach-service";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -64,11 +65,26 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
   // Enhanced blueprint integration with persona system and name extraction
   useEffect(() => {
     if (!authInitialized || !blueprintData) {
-      console.log("⏳ Enhanced AI Coach Hook: Waiting for auth/blueprint data");
+      console.log("⏳ Enhanced AI Coach Hook: Waiting for auth/blueprint data", {
+        authInitialized,
+        hasBlueprintData: !!blueprintData,
+        blueprintKeys: blueprintData ? Object.keys(blueprintData) : []
+      });
       return;
     }
 
     console.log("🎭 Enhanced AI Coach Hook: Processing blueprint data for persona generation");
+    console.log("🔍 Blueprint Data Debug:", {
+      hasUserMeta: !!blueprintData.user_meta,
+      userMetaKeys: blueprintData.user_meta ? Object.keys(blueprintData.user_meta) : [],
+      hasCognitionMBTI: !!blueprintData.cognition_mbti,
+      mbtiType: blueprintData.cognition_mbti?.type,
+      hasEnergyStrategy: !!blueprintData.energy_strategy_human_design,
+      humanDesignType: blueprintData.energy_strategy_human_design?.type,
+      hasBasharSuite: !!blueprintData.bashar_suite,
+      hasValuesLifePath: !!blueprintData.values_life_path,
+      missionStatement: blueprintData.values_life_path?.mission_statement
+    });
     
     try {
       // Extract user's first name from blueprint
@@ -154,6 +170,13 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
         }
       };
 
+      console.log("📊 Enhanced AI Coach Hook: Layered Blueprint created:", {
+        mbtiType: layeredBlueprint.cognitiveTemperamental?.mbtiType,
+        humanDesignType: layeredBlueprint.energyDecisionStrategy?.humanDesignType,
+        actualMissionStatement: layeredBlueprint.coreValuesNarrative?.missionStatement,
+        userName: layeredBlueprint.user_meta?.preferred_name
+      });
+
       // Update the AI service with the user's blueprint - this triggers persona regeneration
       enhancedAICoachService.updateUserBlueprint(layeredBlueprint);
       setPersonaReady(true);
@@ -211,7 +234,13 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
       hasBlueprint: !!blueprintData,
       personaReady,
       authInitialized,
-      hasUserName: !!(blueprintData?.user_meta?.preferred_name || blueprintData?.user_meta?.full_name)
+      hasUserName: !!(blueprintData?.user_meta?.preferred_name || blueprintData?.user_meta?.full_name),
+      actualBlueprintData: blueprintData ? {
+        mbtiType: blueprintData.cognition_mbti?.type,
+        humanDesignType: blueprintData.energy_strategy_human_design?.type,
+        missionStatement: blueprintData.values_life_path?.mission_statement,
+        userName: blueprintData.user_meta?.preferred_name || blueprintData.user_meta?.full_name
+      } : null
     });
 
     const userMessage: Message = {
@@ -258,7 +287,11 @@ Please remember to:
       try {
         let accumulatedContent = '';
         
-        console.log('📡 Enhanced AI Coach Hook: Starting streaming with persona integration...');
+        console.log('📡 Enhanced AI Coach Hook: Starting streaming with persona integration...', {
+          personaReady,
+          hasBlueprintData: !!blueprintData,
+          currentAgent
+        });
         
         await enhancedAICoachService.sendStreamingMessage(
           enhancedContent,
