@@ -1,9 +1,10 @@
 
 import React from 'react';
 import { SoulOrb } from '@/components/ui/soul-orb';
-import { CheckCircle, Brain } from 'lucide-react';
+import { CheckCircle, Brain, AlertTriangle, SkipForward } from 'lucide-react';
 import { DynamicLoadingStages } from './DynamicLoadingStages';
 import { useEnhancedLoadingLogic } from './useEnhancedLoadingLogic';
+import { Button } from '@/components/ui/button';
 
 interface DecompositionStage {
   id: string;
@@ -21,6 +22,8 @@ interface DecompositionStageDisplayProps {
   totalStages: number;
   completedStages: string[];
   dreamTitle: string;
+  showSkipOption?: boolean;
+  onSkip?: () => void;
 }
 
 export const DecompositionStageDisplay: React.FC<DecompositionStageDisplayProps> = ({
@@ -29,7 +32,9 @@ export const DecompositionStageDisplay: React.FC<DecompositionStageDisplayProps>
   currentStageIndex,
   totalStages,
   completedStages,
-  dreamTitle
+  dreamTitle,
+  showSkipOption = false,
+  onSkip
 }) => {
   const { hasBeenLoadingLong } = useEnhancedLoadingLogic({
     currentStageIndex,
@@ -102,6 +107,30 @@ export const DecompositionStageDisplay: React.FC<DecompositionStageDisplayProps>
           {currentStage.message}
         </p>
       </div>
+
+      {/* Skip Option - Show after timeout */}
+      {showSkipOption && onSkip && (
+        <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl animate-fade-in">
+          <div className="flex items-center gap-3 mb-3">
+            <AlertTriangle className="h-5 w-5 text-amber-600" />
+            <div className="flex-1">
+              <h3 className="font-medium text-amber-800 text-sm">Taking longer than expected?</h3>
+              <p className="text-amber-700 text-xs mt-1">
+                You can skip the AI processing and start with a basic plan that you can customize later.
+              </p>
+            </div>
+          </div>
+          <Button
+            onClick={onSkip}
+            size="sm"
+            variant="outline"
+            className="w-full border-amber-300 text-amber-700 hover:bg-amber-100"
+          >
+            <SkipForward className="h-4 w-4 mr-2" />
+            Skip to Basic Plan
+          </Button>
+        </div>
+      )}
 
       {/* Dynamic Loading Content */}
       <DynamicLoadingStages

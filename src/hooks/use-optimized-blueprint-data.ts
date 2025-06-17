@@ -1,5 +1,6 @@
 
 import { useBlueprintCache } from '@/contexts/BlueprintCacheContext';
+import { useMemo } from 'react';
 
 export const useOptimizedBlueprintData = () => {
   const {
@@ -10,75 +11,86 @@ export const useOptimizedBlueprintData = () => {
     hasBlueprint
   } = useBlueprintCache();
 
-  const getPersonalityTraits = () => {
+  const getPersonalityTraits = useMemo(() => {
     if (!blueprintData) return [];
 
     const traits = [];
     
-    if (blueprintData.archetype_western?.sun_sign) {
-      traits.push(`${blueprintData.archetype_western.sun_sign} Sun`);
+    // Fixed: Use correct blueprint data structure
+    const sunSign = blueprintData.astrology?.sun_sign || blueprintData.archetype_western?.sun_sign;
+    if (sunSign) {
+      traits.push(`${sunSign} Sun`);
     }
     
-    if (blueprintData.cognition_mbti?.type) {
-      traits.push(blueprintData.cognition_mbti.type);
+    const mbtiType = blueprintData.mbti?.type || blueprintData.cognition_mbti?.type;
+    if (mbtiType) {
+      traits.push(mbtiType);
     }
     
-    if (blueprintData.energy_strategy_human_design?.type) {
-      traits.push(blueprintData.energy_strategy_human_design.type);
+    const hdType = blueprintData.human_design?.type || blueprintData.energy_strategy_human_design?.type;
+    if (hdType) {
+      traits.push(hdType);
     }
 
     return traits;
-  };
+  }, [blueprintData]);
 
-  const getDisplayName = () => {
+  const getDisplayName = useMemo(() => {
     return blueprintData?.user_meta?.preferred_name || 
            blueprintData?.user_meta?.full_name?.split(' ')[0] || 
            'User';
-  };
+  }, [blueprintData]);
 
-  const getBlueprintCompletionPercentage = () => {
+  const getBlueprintCompletionPercentage = useMemo(() => {
     if (!blueprintData) return 0;
     
     let completedFields = 0;
     const totalFields = 7;
     
-    if (blueprintData.archetype_western?.sun_sign !== 'Unknown') completedFields++;
-    if (blueprintData.archetype_chinese?.animal !== 'Unknown') completedFields++;
-    if (blueprintData.values_life_path?.lifePathNumber) completedFields++;
-    if (blueprintData.energy_strategy_human_design?.type !== 'Generator') completedFields++;
-    if (blueprintData.cognition_mbti?.type) completedFields++;
+    // Fixed: Use correct blueprint data structure
+    const sunSign = blueprintData.astrology?.sun_sign || blueprintData.archetype_western?.sun_sign;
+    if (sunSign && sunSign !== 'Unknown') completedFields++;
+    
+    const animal = blueprintData.astrology?.animal || blueprintData.archetype_chinese?.animal;
+    if (animal && animal !== 'Unknown') completedFields++;
+    
+    const lifePathNumber = blueprintData.numerology?.lifePathNumber || blueprintData.values_life_path?.lifePathNumber;
+    if (lifePathNumber) completedFields++;
+    
+    const hdType = blueprintData.human_design?.type || blueprintData.energy_strategy_human_design?.type;
+    if (hdType && hdType !== 'Generator') completedFields++;
+    
+    const mbtiType = blueprintData.mbti?.type || blueprintData.cognition_mbti?.type;
+    if (mbtiType) completedFields++;
+    
     if (blueprintData.bashar_suite) completedFields++;
     if (blueprintData.timing_overlays) completedFields++;
     
     return Math.round((completedFields / totalFields) * 100);
-  };
+  }, [blueprintData]);
 
-  // Add debug logging for user type detection
-  const getPersonalityType = () => {
-    console.log('🎯 Getting personality type from optimized blueprint data:', blueprintData);
-    
+  // Fixed: Prevent infinite re-rendering by memoizing the personality type
+  const getPersonalityType = useMemo(() => {
     if (!blueprintData) {
-      console.log('❌ No blueprint data available in optimized hook');
       return 'powerful soul';
     }
     
-    const mbti = blueprintData?.cognition_mbti?.type;
-    const hdType = blueprintData?.energy_strategy_human_design?.type;
-    
-    console.log('🔍 Optimized MBTI type found:', mbti);
-    console.log('🔍 Optimized Human Design type found:', hdType);
+    // Fixed: Use correct blueprint data structure
+    const mbti = blueprintData?.mbti?.type || blueprintData?.cognition_mbti?.type;
+    const hdType = blueprintData?.human_design?.type || blueprintData?.energy_strategy_human_design?.type;
     
     // Return the first available type with better fallbacks
     if (mbti && mbti !== 'Unknown') return mbti;
     if (hdType && hdType !== 'Unknown' && hdType !== 'Generator') return hdType;
     
     // Improved fallback based on available data
-    if (blueprintData?.archetype_western?.sun_sign && blueprintData.archetype_western.sun_sign !== 'Unknown') {
-      return `${blueprintData.archetype_western.sun_sign} soul`;
+    const sunSign = blueprintData?.astrology?.sun_sign || blueprintData?.archetype_western?.sun_sign;
+    if (sunSign && sunSign !== 'Unknown') {
+      return `${sunSign} soul`;
     }
     
     return 'unique soul';
-  };
+  }, [blueprintData]);
 
   return {
     blueprintData,

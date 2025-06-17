@@ -32,7 +32,9 @@ export const DreamDecompositionPage: React.FC<DreamDecompositionPageProps> = ({
     completedStages,
     error,
     stages,
-    getUserType
+    getUserType,
+    showSkipOption,
+    skipProcessing
   } = useDecompositionLogic({
     dreamTitle,
     dreamDescription,
@@ -64,6 +66,8 @@ export const DreamDecompositionPage: React.FC<DreamDecompositionPageProps> = ({
           totalStages={stages.length}
           completedStages={completedStages}
           dreamTitle={dreamTitle}
+          showSkipOption={showSkipOption}
+          onSkip={skipProcessing}
         />
 
         <DecompositionProgress
