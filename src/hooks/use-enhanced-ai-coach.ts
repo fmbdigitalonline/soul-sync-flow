@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { enhancedAICoachService, AgentType } from "@/services/enhanced-ai-coach-service";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -225,7 +226,7 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
     setIsLoading(true);
     resetStreaming();
 
-    // Enhanced context for better companionship with persona integration
+    // Enhanced content for better companionship with persona integration
     const enhancedContent = currentAgent === "blend" 
       ? content // Let the persona system handle the personality for blend mode
       : currentAgent === "coach" 
@@ -284,7 +285,7 @@ Please remember to:
               setMessages(prev => 
                 prev.map(msg => 
                   msg.id === assistantMessageId 
-                    ? { ...msg, content: fullResponse, isStreaming: false }
+                    ? { ...msg, content: fullResponse || accumulatedContent, isStreaming: false }
                     : msg
                 )
               );
@@ -292,17 +293,29 @@ Please remember to:
             },
             onError: (error: Error) => {
               console.error("❌ Enhanced AI Coach Hook: Streaming error:", error);
-              setMessages(prev => prev.filter(msg => msg.id !== assistantMessageId));
-              handleNonStreamingMessage(enhancedContent);
               completeStreaming();
+              setMessages(prev => 
+                prev.map(msg => 
+                  msg.id === assistantMessageId 
+                    ? { ...msg, content: accumulatedContent || "Sorry, there was an error. Please try again.", isStreaming: false }
+                    : msg
+                )
+              );
+              setIsLoading(false);
             }
           }
         );
       } catch (error) {
-        console.error("❌ Enhanced AI Coach Hook: Error with streaming, falling back:", error);
-        setMessages(prev => prev.filter(msg => msg.id !== assistantMessageId));
-        handleNonStreamingMessage(enhancedContent);
+        console.error("❌ Enhanced AI Coach Hook: Error with streaming:", error);
         completeStreaming();
+        setMessages(prev => 
+          prev.map(msg => 
+            msg.id === assistantMessageId 
+              ? { ...msg, content: "Sorry, there was an error. Please try again.", isStreaming: false }
+              : msg
+          )
+        );
+        setIsLoading(false);
       }
     } else {
       handleNonStreamingMessage(enhancedContent);

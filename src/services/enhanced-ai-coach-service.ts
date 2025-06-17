@@ -475,22 +475,24 @@ class EnhancedAICoachService {
                     callbacks.onChunk(content);
                   }
                 } catch (parseError) {
-                  // Skip non-JSON data silently
+                  // Skip non-JSON data silently - could be connection keep-alive
+                  console.log('📡 Enhanced AI Coach: Skipping non-JSON chunk:', data.substring(0, 50));
                 }
               }
             }
           }
         }
+        
+        // If we exit the loop without receiving [DONE], complete with what we have
+        if (fullResponse) {
+          console.log('✅ Enhanced AI Coach: Stream completed naturally, total response length:', fullResponse.length);
+          callbacks.onComplete(fullResponse);
+        } else {
+          console.warn('⚠️ Enhanced AI Coach: Stream ended with no content');
+          callbacks.onError(new Error('Stream ended with no content'));
+        }
       } finally {
         reader.releaseLock();
-      }
-      
-      if (fullResponse) {
-        console.log('✅ Enhanced AI Coach: Stream completed, total response length:', fullResponse.length);
-        callbacks.onComplete(fullResponse);
-      } else {
-        console.warn('⚠️ Enhanced AI Coach: No content received in stream');
-        throw new Error('No content received from AI');
       }
     } catch (error) {
       console.error("❌ Enhanced AI Coach: Streaming error:", error);
