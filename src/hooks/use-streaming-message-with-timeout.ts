@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 
 interface StreamingMessageState {
   streamingContent: string;
@@ -25,7 +25,7 @@ export const useStreamingMessageWithTimeout = (timeoutMs: number = 30000): UseSt
     isTimeout: false,
   });
 
-  let timeoutId: NodeJS.Timeout | null = null;
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const addStreamingChunk = useCallback((chunk: string) => {
     setState(prev => ({
@@ -36,10 +36,10 @@ export const useStreamingMessageWithTimeout = (timeoutMs: number = 30000): UseSt
     }));
     
     // Reset timeout when we receive data
-    if (timeoutId) {
-      clearTimeout(timeoutId);
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
     }
-    timeoutId = setTimeout(() => {
+    timeoutRef.current = setTimeout(() => {
       setState(prev => ({
         ...prev,
         isTimeout: true,
@@ -59,7 +59,7 @@ export const useStreamingMessageWithTimeout = (timeoutMs: number = 30000): UseSt
     }));
     
     // Start timeout
-    timeoutId = setTimeout(() => {
+    timeoutRef.current = setTimeout(() => {
       setState(prev => ({
         ...prev,
         isTimeout: true,
@@ -70,9 +70,9 @@ export const useStreamingMessageWithTimeout = (timeoutMs: number = 30000): UseSt
   }, [timeoutMs]);
 
   const completeStreaming = useCallback(() => {
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-      timeoutId = null;
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
     }
     setState(prev => ({
       ...prev,
@@ -83,9 +83,9 @@ export const useStreamingMessageWithTimeout = (timeoutMs: number = 30000): UseSt
   }, []);
 
   const resetStreaming = useCallback(() => {
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-      timeoutId = null;
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
     }
     setState({
       streamingContent: '',
@@ -96,9 +96,9 @@ export const useStreamingMessageWithTimeout = (timeoutMs: number = 30000): UseSt
   }, []);
 
   const setError = useCallback((error: string) => {
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-      timeoutId = null;
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
     }
     setState(prev => ({
       ...prev,
