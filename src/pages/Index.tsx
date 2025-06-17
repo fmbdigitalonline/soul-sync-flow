@@ -62,6 +62,7 @@ const Index = () => {
       return () => clearTimeout(timer);
     }
   }, [user, loading, welcomeMessage, speak]);
+  
   const handleGetStarted = () => {
     if (user) {
       if (hasBlueprint) {
@@ -73,6 +74,7 @@ const Index = () => {
       navigate("/auth");
     }
   };
+  
   if (showDemo) {
     return <MainLayout>
       <div className="w-full min-h-screen p-4 sm:p-6">
@@ -85,12 +87,8 @@ const Index = () => {
       </div>
     </MainLayout>;
   }
+  
   return <MainLayout hideNav>
-    {/* Language Selector positioned in top right */}
-    <div className="absolute top-4 right-4 z-10">
-      <LanguageSelector />
-    </div>
-
     <div className="w-full min-h-[90vh] flex flex-col justify-center p-4 sm:p-6">
       <div className="w-full max-w-4xl mx-auto text-center">
         <div className="flex justify-center mb-6 sm:mb-8">
@@ -140,6 +138,11 @@ const Index = () => {
             {t("index.demo")}
           </Button>
         </div>}
+        
+        {/* Language Selector - positioned above the action buttons */}
+        <div className="flex justify-center mb-6 px-4">
+          <LanguageSelector />
+        </div>
         
         <div className="flex flex-col gap-3 sm:gap-4 px-4 max-w-md mx-auto">
           {user ? <>
