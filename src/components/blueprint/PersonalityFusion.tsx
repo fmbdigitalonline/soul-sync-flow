@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,6 +5,7 @@ import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "@/lib/framer-motion";
 import { Sparkles, User, Home, Calendar } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface PersonalityFusionProps {
   value: any;
@@ -51,34 +51,35 @@ export const PersonalityFusion: React.FC<PersonalityFusionProps> = ({
   onComplete,
   seedData 
 }) => {
+  const { t } = useLanguage();
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<MicroAnswer[]>([]);
   const [confidenceRating, setConfidenceRating] = useState([3]);
   const [personalityEstimate, setPersonalityEstimate] = useState<PersonalityEstimate | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Micro-interaction steps
+  // Micro-interaction steps with translations
   const steps = [
     {
       id: "energy_source",
-      title: "I recharge best when...",
+      title: t('personality.energySource'),
       icon: <User className="h-5 w-5" />,
-      leftOption: { label: "Being alone 🧘", value: -1, trait: "extraversion" },
-      rightOption: { label: "Being with people 🎉", value: 1, trait: "extraversion" }
+      leftOption: { label: t('personality.beingAlone'), value: -1, trait: "extraversion" },
+      rightOption: { label: t('personality.beingWithPeople'), value: 1, trait: "extraversion" }
     },
     {
       id: "workspace_style",
-      title: "My workspace is usually...",
+      title: t('personality.workspaceStyle'),
       icon: <Home className="h-5 w-5" />,
-      leftOption: { label: "Tidy & organized 📐", value: 1, trait: "conscientiousness" },
-      rightOption: { label: "Creative chaos 🎨", value: -1, trait: "conscientiousness" }
+      leftOption: { label: t('personality.tidyOrganized'), value: 1, trait: "conscientiousness" },
+      rightOption: { label: t('personality.creativeChaos'), value: -1, trait: "conscientiousness" }
     },
     {
       id: "planning_style",
-      title: "Planning a weekend trip, I...",
+      title: t('personality.planningStyle'),
       icon: <Calendar className="h-5 w-5" />,
-      leftOption: { label: "Book everything in advance", value: 1, trait: "conscientiousness" },
-      rightOption: { label: "See what happens on the day", value: -1, trait: "conscientiousness" }
+      leftOption: { label: t('personality.bookInAdvance'), value: 1, trait: "conscientiousness" },
+      rightOption: { label: t('personality.seeWhatHappens'), value: -1, trait: "conscientiousness" }
     }
   ];
 
@@ -338,7 +339,7 @@ export const PersonalityFusion: React.FC<PersonalityFusionProps> = ({
             <h3 className="text-lg font-medium">{step.title}</h3>
           </div>
           <p className="text-sm text-muted-foreground">
-            Quick question {currentStep + 1} of {steps.length}
+            {t('personality.quickQuestion', { current: (currentStep + 1).toString(), total: steps.length.toString() })}
           </p>
         </div>
         
@@ -391,7 +392,7 @@ export const PersonalityFusion: React.FC<PersonalityFusionProps> = ({
         <div className="text-center">
           <div className="flex items-center justify-center gap-2 mb-3">
             <Sparkles className="h-5 w-5 text-soul-purple" />
-            <h3 className="text-lg font-medium">Your Personality Profile</h3>
+            <h3 className="text-lg font-medium">{t('personality.yourPersonalityProfile')}</h3>
           </div>
         </div>
         
@@ -399,9 +400,9 @@ export const PersonalityFusion: React.FC<PersonalityFusionProps> = ({
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-base">
-                Likely Style: {personalityEstimate.likelyType}
+                {t('personality.likelyStyle')} {personalityEstimate.likelyType}
               </CardTitle>
-              <Badge variant="secondary">{confidence}% sure</Badge>
+              <Badge variant="secondary">{t('personality.confidence', { confidence: confidence.toString() })}</Badge>
             </div>
           </CardHeader>
           <CardContent>
@@ -411,7 +412,7 @@ export const PersonalityFusion: React.FC<PersonalityFusionProps> = ({
             
             <div className="space-y-3">
               <div className="text-xs text-muted-foreground">
-                <strong>Top MBTI matches:</strong>
+                <strong>{t('personality.topMbtiMatches')}</strong>
               </div>
               <div className="flex flex-wrap gap-2">
                 {Object.entries(personalityEstimate.mbtiProbabilities)
@@ -429,11 +430,11 @@ export const PersonalityFusion: React.FC<PersonalityFusionProps> = ({
         
         <div className="space-y-4">
           <div className="text-center">
-            <label className="text-sm font-medium">How accurate does this feel?</label>
+            <label className="text-sm font-medium">{t('personality.howAccurate')}</label>
             <div className="flex items-center justify-center gap-2 mt-2 text-xs text-muted-foreground">
-              <span>Not quite right</span>
+              <span>{t('personality.notQuiteRight')}</span>
               <span>•</span>
-              <span>Spot on!</span>
+              <span>{t('personality.spotOn')}</span>
             </div>
           </div>
           
@@ -453,7 +454,7 @@ export const PersonalityFusion: React.FC<PersonalityFusionProps> = ({
                 {['😕', '😐', '🙂', '😊', '🤩'][confidenceRating[0] - 1]}
               </div>
               <div className="text-xs text-muted-foreground">
-                {confidenceRating[0]} out of 5 stars
+                {t('personality.outOfStars', { rating: confidenceRating[0].toString() })}
               </div>
             </div>
           </div>
@@ -466,15 +467,15 @@ export const PersonalityFusion: React.FC<PersonalityFusionProps> = ({
             {isSubmitting ? (
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Processing...
+                {t('personality.processing')}
               </div>
             ) : (
-              "Continue with this profile"
+              t('personality.continueWithProfile')
             )}
           </Button>
           
           <p className="text-xs text-center text-muted-foreground">
-            Don't worry - we'll keep refining this as you use the app!
+            {t('personality.keepRefining')}
           </p>
         </div>
       </div>
