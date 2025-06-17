@@ -26,38 +26,19 @@ export function BlueprintCacheProvider({ children }: { children: React.ReactNode
     queryKey: ['blueprint', user?.id],
     queryFn: async () => {
       if (!user) return { data: null, error: 'No user' };
-      console.log('🔄 BlueprintCache: Fetching blueprint data for user:', user.id);
-      const result = await blueprintService.getActiveBlueprintData();
-      console.log('📊 BlueprintCache: Fetch result:', { 
-        hasData: !!result.data, 
-        error: result.error,
-        userId: user.id 
-      });
-      return result;
+      return await blueprintService.getActiveBlueprintData();
     },
     enabled: !!user,
-    staleTime: 2 * 60 * 1000, // Reduced to 2 minutes for faster updates
-    gcTime: 5 * 60 * 1000, // Reduced to 5 minutes
-    refetchOnWindowFocus: true, // Enable refetch on focus
-    refetchOnMount: true, // Always refetch on mount
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
     retry: 1
   });
 
   const refetch = async () => {
-    console.log('🔄 BlueprintCache: Manual refetch triggered');
     await queryRefetch();
   };
-
-  // Add effect to log state changes
-  useEffect(() => {
-    console.log('📈 BlueprintCache State Update:', {
-      hasUser: !!user,
-      loading: isLoading,
-      hasData: !!blueprintResult?.data,
-      hasBlueprint: !!blueprintResult?.data,
-      error: blueprintResult?.error || (error as Error)?.message
-    });
-  }, [user, isLoading, blueprintResult, error]);
 
   const value: BlueprintCacheContextType = {
     blueprintData: blueprintResult?.data || null,

@@ -25,32 +25,12 @@ const Index = () => {
   } = useSoulOrb();
   const navigate = useNavigate();
   const [showDemo, setShowDemo] = useState(false);
-  const [isNavigating, setIsNavigating] = useState(false);
   const {
     hasBlueprint,
-    loading,
-    refetch
+    loading
   } = useOptimizedBlueprintData();
   const isAdmin = isAdminUser(user);
   const { t, language } = useLanguage();
-
-  // Refresh blueprint data when user changes or when returning from onboarding
-  useEffect(() => {
-    if (user && !loading) {
-      console.log('🔄 Index: Refreshing blueprint data for user state check');
-      refetch();
-    }
-  }, [user, refetch]);
-
-  // Log current state for debugging
-  useEffect(() => {
-    console.log('🏠 Index Page State:', {
-      hasUser: !!user,
-      hasBlueprint,
-      loading,
-      userId: user?.id
-    });
-  }, [user, hasBlueprint, loading]);
 
   // Memoize the welcome message logic to prevent re-renders
   const welcomeMessage = useMemo(() => {
@@ -84,35 +64,19 @@ const Index = () => {
     }
   }, [user, loading, welcomeMessage, speak]);
   
-  const handleGetStarted = async () => {
-    if (isNavigating) {
-      console.log('🚫 Already navigating, ignoring click');
-      return;
-    }
-
-    setIsNavigating(true);
-    console.log('🎯 Get Started clicked:', { hasUser: !!user, hasBlueprint, loading });
-
-    try {
-      if (user) {
-        if (hasBlueprint) {
-          // User has blueprint - start tutorial mode
-          console.log('📚 Starting tutorial mode for existing blueprint user');
-          speak(t("index.startingTutorial"));
-          navigate("/coach?tutorial=true");
-        } else {
-          console.log('🚀 Navigating to onboarding for new user');
-          navigate("/onboarding");
-        }
+  const handleGetStarted = () => {
+    if (user) {
+      if (hasBlueprint) {
+        // User has blueprint - start tutorial mode
+        speak(t("index.startingTutorial"));
+        // For now, navigate to coach with tutorial mode
+        // TODO: Implement proper tutorial mode
+        navigate("/coach?tutorial=true");
       } else {
-        console.log('🔐 No user, navigating to auth');
-        navigate("/auth");
+        navigate("/onboarding");
       }
-    } catch (error) {
-      console.error('❌ Error in handleGetStarted:', error);
-    } finally {
-      // Reset navigation state after a delay
-      setTimeout(() => setIsNavigating(false), 1000);
+    } else {
+      navigate("/auth");
     }
   };
   
@@ -188,18 +152,8 @@ const Index = () => {
         
         <div className="flex flex-col gap-3 sm:gap-4 px-4 max-w-md mx-auto">
           {user ? <>
-            <Button 
-              size="lg" 
-              className="bg-soul-purple hover:bg-soul-purple/90 w-full h-12 text-base" 
-              onClick={handleGetStarted}
-              disabled={loading || isNavigating}
-            >
-              {isNavigating ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  {t("index.loading")}
-                </div>
-              ) : hasBlueprint ? (
+            <Button size="lg" className="bg-soul-purple hover:bg-soul-purple/90 w-full h-12 text-base" onClick={handleGetStarted}>
+              {hasBlueprint ? (
                 <>
                   <BookOpen className="mr-2 h-4 w-4" />
                   {t("index.takeTour")}
@@ -218,23 +172,9 @@ const Index = () => {
               </Button>
             </Link>
           </> : <>
-            <Button 
-              size="lg" 
-              className="bg-soul-purple hover:bg-soul-purple/90 w-full h-12 text-base" 
-              onClick={handleGetStarted}
-              disabled={isNavigating}
-            >
-              {isNavigating ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  {t("index.loading")}
-                </div>
-              ) : (
-                <>
-                  {t("index.getStarted")}
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </>
-              )}
+            <Button size="lg" className="bg-soul-purple hover:bg-soul-purple/90 w-full h-12 text-base" onClick={handleGetStarted}>
+              {t("index.getStarted")}
+              <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
             
             <Link to="/auth" className="block">
