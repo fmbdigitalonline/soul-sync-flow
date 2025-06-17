@@ -123,7 +123,8 @@ const PersonalityDemo = () => {
       proactiveContext: personalityEnrichmentService.generateProactiveContext(profile)
     };
 
-    const engine = new PersonalityEngine(enrichedProfile);
+    const engine = new PersonalityEngine();
+    engine.updateBlueprint(enrichedProfile);
     return engine.generateSystemPrompt(mode);
   };
 

@@ -165,7 +165,15 @@ class EnhancedAICoachService {
         // Test personas table access
         try {
           console.log("🔧 Testing personas table access by attempting to save persona...");
-          const saved = await PersonaService.saveUserPersona(persona);
+          const userPersona: Partial<UserPersona> = {
+            user_id: this.currentUserId,
+            system_prompt: persona.systemPrompt,
+            voice_tokens: persona.voiceTokens,
+            humor_profile: persona.humorProfile,
+            function_permissions: persona.functionPermissions,
+            blueprint_version: '1.0.0'
+          };
+          const saved = await PersonaService.saveUserPersona(userPersona);
           if (saved) {
             console.log("✅ Personas table access working - saved persona successfully");
           } else {
