@@ -16,8 +16,14 @@ export const useEnhancedLoadingLogic = ({
   const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
   const [dynamicProgress, setDynamicProgress] = useState(0);
 
-  // Track long loading states
+  // Track long loading states with better logging
   useEffect(() => {
+    console.log('🕐 Enhanced loading logic initialized:', {
+      currentStage: currentStageIndex,
+      totalStages,
+      startTime: loadingStartTime
+    });
+
     const timer1 = setTimeout(() => {
       setHasBeenLoadingLong(true);
       console.log('⏰ Loading has taken longer than expected (8s)', {
@@ -47,11 +53,17 @@ export const useEnhancedLoadingLogic = ({
       clearTimeout(timer2);
       clearTimeout(timer3);
     };
-  }, [loadingStartTime, currentStageIndex]);
+  }, [loadingStartTime, currentStageIndex, totalStages]);
 
-  // Smooth progress animation
+  // Smooth progress animation with better stage tracking
   useEffect(() => {
     const targetProgress = ((currentStageIndex + 1) / totalStages) * 100;
+    
+    console.log('📊 Progress update:', {
+      currentStage: currentStageIndex,
+      targetProgress,
+      currentProgress: dynamicProgress
+    });
     
     const progressInterval = setInterval(() => {
       setDynamicProgress(prev => {
@@ -62,7 +74,7 @@ export const useEnhancedLoadingLogic = ({
     }, 50);
 
     return () => clearInterval(progressInterval);
-  }, [currentStageIndex, totalStages]);
+  }, [currentStageIndex, totalStages, dynamicProgress]);
 
   const loadingDuration = Date.now() - loadingStartTime;
 

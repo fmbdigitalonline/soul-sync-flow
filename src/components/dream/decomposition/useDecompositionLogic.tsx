@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSoulOrb } from '@/contexts/SoulOrbContext';
-import { aiGoalDecompositionService, AIGeneratedGoal } from '@/services/ai-goal-decomposition-service';
+import { soulGoalDecompositionService, SoulGeneratedGoal } from '@/services/soul-goal-decomposition-service';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Brain, Target, MapPin, Sparkles } from 'lucide-react';
@@ -39,6 +39,7 @@ export const useDecompositionLogic = ({
   const [completedStages, setCompletedStages] = useState<string[]>([]);
   const [decomposedGoal, setDecomposedGoal] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [actionExecuted, setActionExecuted] = useState(false);
 
   // Memoized user type to prevent infinite re-rendering
   const userType = useMemo(() => {
@@ -46,15 +47,12 @@ export const useDecompositionLogic = ({
       return 'powerful soul';
     }
     
-    // Fixed: Use correct blueprint data structure
     const mbti = blueprintData?.cognition_mbti?.type;
     const hdType = blueprintData?.energy_strategy_human_design?.type;
     
-    // Return the first available type with better fallbacks
     if (mbti && mbti !== 'Unknown') return mbti;
     if (hdType && hdType !== 'Unknown' && hdType !== 'Generator') return hdType;
     
-    // Improved fallback based on available data
     const sunSign = blueprintData?.archetype_western?.sun_sign;
     if (sunSign && sunSign !== 'Unknown') {
       return `${sunSign} soul`;
@@ -63,19 +61,19 @@ export const useDecompositionLogic = ({
     return 'unique soul';
   }, [blueprintData]);
 
-  // Enhanced AI Goal Decomposition with better error handling
-  const decomposeWithAI = useCallback(async () => {
-    const aiStartTime = Date.now();
-    console.log('🤖 Starting AI goal decomposition...', {
+  // Enhanced Soul Goal Decomposition with better error handling
+  const decomposeWithSoul = useCallback(async () => {
+    const startTime = Date.now();
+    console.log('🎯 Starting Soul goal decomposition...', {
       dreamTitle,
       dreamDescription,
       dreamCategory,
       dreamTimeframe,
-      timestamp: aiStartTime
+      timestamp: startTime
     });
     
     try {
-      const aiGoal = await aiGoalDecompositionService.decomposeGoalWithAI(
+      const soulGoal = await soulGoalDecompositionService.decomposeGoalWithSoul(
         dreamTitle,
         dreamDescription,
         dreamTimeframe,
@@ -83,33 +81,34 @@ export const useDecompositionLogic = ({
         blueprintData || {}
       );
 
-      const aiEndTime = Date.now();
-      const aiDuration = aiEndTime - aiStartTime;
+      const endTime = Date.now();
+      const duration = endTime - startTime;
       
-      console.log('✅ AI goal decomposed successfully:', {
-        goal: aiGoal,
-        processingTime: aiDuration,
-        timestamp: aiEndTime
+      console.log('✅ Soul goal decomposed successfully:', {
+        goal: soulGoal,
+        processingTime: duration,
+        timestamp: endTime
       });
       
-      setDecomposedGoal(aiGoal);
+      setDecomposedGoal(soulGoal);
       
       // Save to database with error handling
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
-          throw new Error('User not authenticated');
+          console.warn('⚠️ No user authenticated for database save');
+          return; // Continue without database save
         }
 
         const goalAsJson = {
-          id: aiGoal.id,
-          title: aiGoal.title,
-          description: aiGoal.description,
-          category: aiGoal.category,
-          timeframe: aiGoal.timeframe,
-          target_completion: aiGoal.target_completion,
-          created_at: aiGoal.created_at,
-          milestones: (aiGoal.milestones || []).map(milestone => ({
+          id: soulGoal.id,
+          title: soulGoal.title,
+          description: soulGoal.description,
+          category: soulGoal.category,
+          timeframe: soulGoal.timeframe,
+          target_completion: soulGoal.target_completion,
+          created_at: soulGoal.created_at,
+          milestones: (soulGoal.milestones || []).map(milestone => ({
             id: milestone.id,
             title: milestone.title,
             description: milestone.description,
@@ -118,7 +117,7 @@ export const useDecompositionLogic = ({
             completion_criteria: milestone.completion_criteria || [],
             blueprint_alignment: milestone.blueprint_alignment
           })),
-          tasks: (aiGoal.tasks || []).map(task => ({
+          tasks: (soulGoal.tasks || []).map(task => ({
             id: task.id,
             title: task.title,
             description: task.description,
@@ -129,8 +128,8 @@ export const useDecompositionLogic = ({
             optimal_timing: task.optimal_timing,
             blueprint_reasoning: task.blueprint_reasoning
           })),
-          blueprint_insights: aiGoal.blueprint_insights || [],
-          personalization_notes: aiGoal.personalization_notes
+          blueprint_insights: soulGoal.blueprint_insights || [],
+          personalization_notes: soulGoal.personalization_notes
         };
         
         const { error: dbError } = await supabase
@@ -144,7 +143,7 @@ export const useDecompositionLogic = ({
           });
 
         if (dbError) {
-          console.error('Supabase error saving AI goal:', dbError);
+          console.error('Database save error:', dbError);
           console.warn('Goal created but database save failed - continuing with success flow');
         } else {
           console.log('💾 Goal saved to database successfully');
@@ -155,17 +154,16 @@ export const useDecompositionLogic = ({
       }
       
     } catch (error) {
-      const aiEndTime = Date.now();
-      const aiDuration = aiEndTime - aiStartTime;
+      const endTime = Date.now();
+      const duration = endTime - startTime;
       
-      console.error('❌ Error in AI decomposition:', {
+      console.error('❌ Error in Soul decomposition:', {
         error: error instanceof Error ? error.message : 'Unknown error',
-        processingTime: aiDuration,
-        timestamp: aiEndTime
+        processingTime: duration,
+        timestamp: endTime
       });
       
-      setError(error instanceof Error ? error.message : 'AI decomposition failed');
-      throw error;
+      throw error; // Re-throw to be caught by stage handler
     }
   }, [dreamTitle, dreamDescription, dreamTimeframe, dreamCategory, blueprintData]);
 
@@ -183,7 +181,7 @@ export const useDecompositionLogic = ({
       message: `I'm identifying the perfect milestones for your ${userType} energy. Each one will honor your natural rhythm...`,
       icon: <Target className="h-5 w-5" />,
       duration: 4000,
-      action: decomposeWithAI
+      action: decomposeWithSoul
     },
     {
       id: 'tasks',
@@ -199,88 +197,105 @@ export const useDecompositionLogic = ({
       icon: <Sparkles className="h-5 w-5" />,
       duration: 2500
     }
-  ], [dreamTitle, userType, decomposeWithAI]);
+  ], [dreamTitle, userType, decomposeWithSoul]);
 
   // Safe currentStage access with fallback
   const currentStage = stages[currentStageIndex] || stages[0];
 
   useEffect(() => {
-    if (currentStageIndex < stages.length) {
-      const stage = stages[currentStageIndex];
-      
-      // Speak the current stage message
-      speak(stage.message);
-      
-      // Progress animation
-      const progressInterval = setInterval(() => {
-        setProgress(prev => {
-          const stageProgress = ((currentStageIndex * 100) + (prev % 100)) / stages.length;
-          return Math.min(stageProgress + 2, ((currentStageIndex + 1) * 100) / stages.length);
-        });
-      }, 100);
+    if (currentStageIndex >= stages.length || error) {
+      return; // Don't process if we're done or have an error
+    }
 
-      // Execute stage action and move to next stage
-      const stageTimer = setTimeout(async () => {
-        try {
-          // Execute stage action if it exists (like AI decomposition)
-          if (stage.action) {
-            const actionStartTime = Date.now();
-            console.log(`🚀 Executing action for stage: ${stage.title}`, {
-              stageIndex: currentStageIndex,
-              timestamp: actionStartTime
-            });
-            
-            await stage.action();
-            
-            const actionEndTime = Date.now();
-            console.log(`✅ Stage action completed: ${stage.title}`, {
-              duration: actionEndTime - actionStartTime,
-              timestamp: actionEndTime
-            });
-          }
+    const stage = stages[currentStageIndex];
+    
+    console.log(`🚀 Processing stage ${currentStageIndex}: ${stage.title}`, {
+      hasAction: !!stage.action,
+      actionExecuted,
+      timestamp: Date.now()
+    });
+    
+    // Speak the current stage message
+    speak(stage.message);
+    
+    // Progress animation
+    const progressInterval = setInterval(() => {
+      setProgress(prev => {
+        const stageProgress = ((currentStageIndex * 100) + (prev % 100)) / stages.length;
+        return Math.min(stageProgress + 2, ((currentStageIndex + 1) * 100) / stages.length);
+      });
+    }, 100);
+
+    // Execute stage action and move to next stage
+    const stageTimer = setTimeout(async () => {
+      try {
+        // Execute stage action if it exists and hasn't been executed yet
+        if (stage.action && !actionExecuted) {
+          console.log(`🎯 Executing action for stage: ${stage.title}`);
+          setActionExecuted(true);
           
-          setCompletedStages(prev => [...prev, stage.id]);
+          const actionStartTime = Date.now();
+          await stage.action();
+          const actionEndTime = Date.now();
           
-          if (currentStageIndex < stages.length - 1) {
-            setCurrentStageIndex(prev => prev + 1);
-          } else {
-            // All stages complete - proceed to success page
-            console.log('🎉 All stages completed');
-            
-            setTimeout(() => {
-              speak("Your personalized journey is ready! Let me show you what we've created together...");
-              setTimeout(() => {
-                if (decomposedGoal) {
-                  onComplete(decomposedGoal);
-                } else {
-                  console.error('❌ No decomposed goal available');
-                  setError('Failed to create goal');
-                }
-              }, 2000);
-            }, 1000);
-          }
-        } catch (error) {
-          console.error(`❌ Error in stage ${stage.title}:`, {
-            error: error instanceof Error ? error.message : 'Unknown error',
-            stageIndex: currentStageIndex
-          });
-          
-          setError(error instanceof Error ? error.message : 'Stage execution failed');
-          
-          toast({
-            title: "Dream Creation Error",
-            description: error instanceof Error ? error.message : "Failed to create your dream journey. Please try again.",
-            variant: "destructive"
+          console.log(`✅ Stage action completed: ${stage.title}`, {
+            duration: actionEndTime - actionStartTime,
+            timestamp: actionEndTime
           });
         }
-      }, stage.duration);
+        
+        // Mark stage as completed
+        setCompletedStages(prev => {
+          if (!prev.includes(stage.id)) {
+            return [...prev, stage.id];
+          }
+          return prev;
+        });
+        
+        // Move to next stage or complete
+        if (currentStageIndex < stages.length - 1) {
+          console.log(`⏭️ Moving to next stage: ${currentStageIndex + 1}`);
+          setCurrentStageIndex(prev => prev + 1);
+          setActionExecuted(false); // Reset for next stage
+        } else {
+          // All stages complete - proceed to success page
+          console.log('🎉 All stages completed');
+          
+          setTimeout(() => {
+            speak("Your personalized journey is ready! Let me show you what we've created together...");
+            setTimeout(() => {
+              if (decomposedGoal) {
+                console.log('🚀 Completing with decomposed goal:', decomposedGoal);
+                onComplete(decomposedGoal);
+              } else {
+                console.error('❌ No decomposed goal available');
+                setError('Failed to create goal - no result from Soul decomposition');
+              }
+            }, 2000);
+          }, 1000);
+        }
+      } catch (stageError) {
+        console.error(`❌ Error in stage ${stage.title}:`, {
+          error: stageError instanceof Error ? stageError.message : 'Unknown error',
+          stageIndex: currentStageIndex
+        });
+        
+        const errorMessage = stageError instanceof Error ? stageError.message : 'Stage execution failed';
+        setError(errorMessage);
+        
+        toast({
+          title: "Dream Creation Error",
+          description: errorMessage,
+          variant: "destructive"
+        });
+      }
+    }, stage.duration);
 
-      return () => {
-        clearInterval(progressInterval);
-        clearTimeout(stageTimer);
-      };
-    }
-  }, [currentStageIndex, speak, onComplete, decomposedGoal, stages, toast]);
+    return () => {
+      clearInterval(progressInterval);
+      clearTimeout(stageTimer);
+    };
+  }, [currentStageIndex, speak, onComplete, decomposedGoal, stages, toast, error, actionExecuted]);
 
   return {
     speaking,
