@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export interface SoulGeneratedGoal {
@@ -49,7 +50,7 @@ class SoulGoalDecompositionService {
     });
 
     try {
-      const { data, error } = await supabase.functions.invoke('soul-coach', {
+      const { data, error } = await supabase.functions.invoke('ai-coach', {
         body: {
           message: `Please help me break down this dream into actionable milestones and tasks:
           
