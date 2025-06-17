@@ -16,12 +16,14 @@ import { useOnboarding3D } from "@/hooks/use-onboarding-3d";
 import { useSoulOrb } from "@/contexts/SoulOrbContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { PersonalityFusion } from "@/components/blueprint/PersonalityFusion";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Onboarding() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { speak } = useSoulOrb();
   const { user, loading: authLoading } = useAuth();
+  const { t } = useLanguage();
   
   // Detect development mode
   const isDevelopment = import.meta.env.DEV;
@@ -69,7 +71,7 @@ export default function Onboarding() {
   const navigationTriggeredRef = useRef(false);
   const goalSelectionTriggeredRef = useRef(false);
 
-  // Generate months array
+  // Generate months array with translations
   const months = [
     { value: "01", label: "January" },
     { value: "02", label: "February" },
@@ -145,11 +147,11 @@ export default function Onboarding() {
     }
     
     toast({
-      title: "Blueprint Generated Successfully",
-      description: "Your soul blueprint has been created and is ready to explore!",
+      title: t('blueprint.generated'),
+      description: t('blueprint.generatedDesc'),
     });
     
-    speak("Your soul blueprint has been generated! Now let's set up your coaching preferences.");
+    speak(t('blueprint.generatedDesc'));
     
     setTimeout(() => {
       goToNextStep();
@@ -184,11 +186,11 @@ export default function Onboarding() {
       if (success) {
         console.log("Blueprint updated with coaching preferences successfully");
         toast({
-          title: "Welcome to SoulSync!",
-          description: "Your Soul Blueprint is complete. Welcome to your personalized journey.",
+          title: t('goals.welcomeComplete'),
+          description: t('goals.welcomeCompleteDesc'),
         });
         
-        speak("Perfect! Your Soul Blueprint is complete. Welcome to SoulSync!");
+        speak(t('goals.welcomeCompleteDesc'));
         
         // Redirect to home page after onboarding is fully complete
         setTimeout(() => {
@@ -203,7 +205,7 @@ export default function Onboarding() {
       const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
       
       toast({
-        title: "Error Saving Preferences",
+        title: t('goals.errorSaving'),
         description: errorMessage,
         variant: "destructive",
       });
@@ -241,13 +243,13 @@ export default function Onboarding() {
     if (currentStep === 6 && !authLoading && !user) {
       console.log("User not authenticated, redirecting to auth page");
       toast({
-        title: "Authentication Required",
-        description: "Please sign in to generate your Soul Blueprint.",
+        title: t('onboarding.authRequired'),
+        description: t('onboarding.authRequiredDesc'),
         variant: "destructive",
       });
       navigate("/auth");
     }
-  }, [currentStep, user, authLoading, navigate, toast]);
+  }, [currentStep, user, authLoading, navigate, toast, t]);
 
   useEffect(() => {
     const checkExistingBlueprint = async () => {
@@ -266,15 +268,15 @@ export default function Onboarding() {
             console.log("Development mode: Existing blueprint found but allowing onboarding continuation");
             toast({
               title: "Development Mode",
-              description: "Existing blueprint found. You can continue with onboarding or go to home page.",
+              description: t('onboarding.devMode'),
             });
             return;
           }
           
           console.log("Existing blueprint found, redirecting to home page");
           toast({
-            title: "Welcome Back!",
-            description: "You already have a Soul Blueprint. Welcome to your personalized journey.",
+            title: t('index.welcomeBackReady'),
+            description: t('goals.welcomeCompleteDesc'),
           });
           
           setTimeout(() => {
@@ -293,7 +295,7 @@ export default function Onboarding() {
       const timer = setTimeout(checkExistingBlueprint, 1500);
       return () => clearTimeout(timer);
     }
-  }, [user, authLoading, currentStep, navigate, toast, isDevelopment]);
+  }, [user, authLoading, currentStep, navigate, toast, isDevelopment, t]);
 
   // Render the appropriate content based on the current step
   const renderStepContent = () => {
@@ -301,13 +303,13 @@ export default function Onboarding() {
       case 0: // Welcome
         return (
           <div className="space-y-4 max-w-md mx-auto text-center">
-            <h2 className="text-2xl font-display font-bold">Welcome to SoulSync</h2>
+            <h2 className="text-2xl font-display font-bold">{t('onboarding.welcome')}</h2>
             <p className="text-white/80">
-              I'm your personal astrology guide. Let me help you discover your cosmic blueprint.
+              {t('onboarding.welcomeDesc')}
             </p>
             {isDevelopment && (
               <p className="text-xs text-yellow-400 bg-yellow-900/20 p-2 rounded">
-                Dev Mode: Multiple onboarding attempts supported
+                {t('onboarding.devMode')}
               </p>
             )}
             <div className="pt-4">
@@ -315,7 +317,7 @@ export default function Onboarding() {
                 className="w-full bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-colors"
                 onClick={goToNextStep}
               >
-                Begin My Journey
+                {t('onboarding.beginJourney')}
               </Button>
             </div>
           </div>
@@ -323,40 +325,40 @@ export default function Onboarding() {
       case 1: // Full Name
         return (
           <div className="space-y-4 max-w-md mx-auto">
-            <h2 className="text-xl font-display font-bold text-center mb-2">What's your name?</h2>
+            <h2 className="text-xl font-display font-bold text-center mb-2">{t('onboarding.whatsYourName')}</h2>
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
+                <Label htmlFor="fullName">{t('onboarding.fullName')}</Label>
                 <Input
                   id="fullName"
                   type="text"
                   value={formData.name}
                   onChange={(e) => updateFormData({ name: e.target.value })}
-                  placeholder="Enter your full name"
+                  placeholder={t('onboarding.fullNamePlaceholder')}
                   className="bg-white/5 border-white/10"
                   required
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="preferredName">Preferred Name (optional)</Label>
+                <Label htmlFor="preferredName">{t('onboarding.preferredName')}</Label>
                 <Input
                   id="preferredName"
                   type="text"
                   value={formData.preferredName}
                   onChange={(e) => updateFormData({ preferredName: e.target.value })}
-                  placeholder="How would you like to be addressed?"
+                  placeholder={t('onboarding.preferredNamePlaceholder')}
                   className="bg-white/5 border-white/10"
                 />
               </div>
             </div>
             <div className="flex justify-between pt-4">
-              <Button variant="ghost" onClick={goToPrevStep}>Back</Button>
+              <Button variant="ghost" onClick={goToPrevStep}>{t('back')}</Button>
               <Button 
                 disabled={!formData.name}
                 onClick={goToNextStep}
               >
-                Continue
+                {t('continue')}
               </Button>
             </div>
           </div>
@@ -364,13 +366,13 @@ export default function Onboarding() {
       case 2: // Birth Date
         return (
           <div className="space-y-4 max-w-md mx-auto">
-            <h2 className="text-xl font-display font-bold text-center mb-2">When were you born?</h2>
+            <h2 className="text-xl font-display font-bold text-center mb-2">{t('onboarding.whenWereBorn')}</h2>
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 space-y-4">
               <div className="space-y-3">
-                <Label>Birth Date</Label>
+                <Label>{t('onboarding.birthDate')}</Label>
                 <div className="grid grid-cols-3 gap-2">
                   <div>
-                    <Label htmlFor="day" className="text-sm text-white/70">Day</Label>
+                    <Label htmlFor="day" className="text-sm text-white/70">{t('onboarding.day')}</Label>
                     <Input
                       id="day"
                       type="number"
@@ -383,10 +385,10 @@ export default function Onboarding() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="month" className="text-sm text-white/70">Month</Label>
+                    <Label htmlFor="month" className="text-sm text-white/70">{t('onboarding.month')}</Label>
                     <Select value={birthDateComponents.month} onValueChange={(value) => updateBirthDateComponent('month', value)}>
                       <SelectTrigger className="bg-white/5 border-white/10">
-                        <SelectValue placeholder="Month" />
+                        <SelectValue placeholder={t('onboarding.month')} />
                       </SelectTrigger>
                       <SelectContent>
                         {months.map((month) => (
@@ -398,7 +400,7 @@ export default function Onboarding() {
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="year" className="text-sm text-white/70">Year</Label>
+                    <Label htmlFor="year" className="text-sm text-white/70">{t('onboarding.year')}</Label>
                     <Select value={birthDateComponents.year} onValueChange={(value) => updateBirthDateComponent('year', value)}>
                       <SelectTrigger className="bg-white/5 border-white/10">
                         <SelectValue placeholder="YYYY" />
@@ -414,17 +416,17 @@ export default function Onboarding() {
                   </div>
                 </div>
                 <p className="text-sm text-white/60">
-                  Select your exact birth date for accurate calculations
+                  {t('onboarding.selectExactDate')}
                 </p>
               </div>
             </div>
             <div className="flex justify-between pt-4">
-              <Button variant="ghost" onClick={goToPrevStep}>Back</Button>
+              <Button variant="ghost" onClick={goToPrevStep}>{t('back')}</Button>
               <Button 
                 disabled={!isValidBirthDate()}
                 onClick={goToNextStep}
               >
-                Continue
+                {t('continue')}
               </Button>
             </div>
           </div>
@@ -432,10 +434,10 @@ export default function Onboarding() {
       case 3: // Birth Time
         return (
           <div className="space-y-4 max-w-md mx-auto">
-            <h2 className="text-xl font-display font-bold text-center mb-2">What time were you born?</h2>
+            <h2 className="text-xl font-display font-bold text-center mb-2">{t('onboarding.whatTimeWereBorn')}</h2>
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
               <div className="space-y-2">
-                <Label htmlFor="birthTime">Birth Time (Local Time)</Label>
+                <Label htmlFor="birthTime">{t('onboarding.birthTime')}</Label>
                 <Input
                   id="birthTime"
                   type="time"
@@ -445,17 +447,17 @@ export default function Onboarding() {
                   required
                 />
                 <p className="text-sm text-white/60">
-                  Enter the local time where you were born - we'll automatically handle timezone conversion
+                  {t('onboarding.birthTimeDesc')}
                 </p>
               </div>
             </div>
             <div className="flex justify-between pt-4">
-              <Button variant="ghost" onClick={goToPrevStep}>Back</Button>
+              <Button variant="ghost" onClick={goToPrevStep}>{t('back')}</Button>
               <Button 
                 disabled={!formData.birthTime}
                 onClick={goToNextStep}
               >
-                Continue
+                {t('continue')}
               </Button>
             </div>
           </div>
@@ -463,31 +465,31 @@ export default function Onboarding() {
       case 4: // Birth Location
         return (
           <div className="space-y-4 max-w-md mx-auto">
-            <h2 className="text-xl font-display font-bold text-center mb-2">Where were you born?</h2>
+            <h2 className="text-xl font-display font-bold text-center mb-2">{t('onboarding.whereWereBorn')}</h2>
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
               <div className="space-y-2">
-                <Label htmlFor="birthLocation">Birth Location</Label>
+                <Label htmlFor="birthLocation">{t('onboarding.birthLocation')}</Label>
                 <Input
                   id="birthLocation"
                   type="text"
                   value={formData.birthLocation}
                   onChange={(e) => updateFormData({ birthLocation: e.target.value })}
-                  placeholder="City, Country (e.g., Paramaribo, Suriname)"
+                  placeholder={t('onboarding.birthLocationPlaceholder')}
                   className="bg-white/5 border-white/10"
                   required
                 />
                 <p className="text-sm text-white/60">
-                  We'll automatically find the exact coordinates and historical timezone
+                  {t('onboarding.birthLocationDesc')}
                 </p>
               </div>
             </div>
             <div className="flex justify-between pt-4">
-              <Button variant="ghost" onClick={goToPrevStep}>Back</Button>
+              <Button variant="ghost" onClick={goToPrevStep}>{t('back')}</Button>
               <Button 
                 disabled={!formData.birthLocation}
                 onClick={goToNextStep}
               >
-                Continue
+                {t('continue')}
               </Button>
             </div>
           </div>
@@ -495,7 +497,7 @@ export default function Onboarding() {
       case 5: // Personality
         return (
           <div className="space-y-4 max-w-md mx-auto">
-            <h2 className="text-xl font-display font-bold text-center mb-2">Tell us about your personality</h2>
+            <h2 className="text-xl font-display font-bold text-center mb-2">{t('onboarding.tellPersonality')}</h2>
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
               <PersonalityFusion 
                 value={formData.personality}
@@ -514,7 +516,7 @@ export default function Onboarding() {
               />
             </div>
             <div className="flex justify-between pt-4">
-              <Button variant="ghost" onClick={goToPrevStep}>Back</Button>
+              <Button variant="ghost" onClick={goToPrevStep}>{t('back')}</Button>
               {/* Remove the continue button since PersonalityFusion handles completion */}
             </div>
           </div>
@@ -523,10 +525,10 @@ export default function Onboarding() {
         if (!user && !authLoading) {
           return (
             <div className="space-y-6 text-center max-w-md mx-auto">
-              <h2 className="text-xl font-display font-bold">Authentication Required</h2>
-              <p className="text-white/80">Please sign in to generate your Soul Blueprint.</p>
+              <h2 className="text-xl font-display font-bold">{t('onboarding.authRequired')}</h2>
+              <p className="text-white/80">{t('onboarding.authRequiredDesc')}</p>
               <Button onClick={() => navigate("/auth")} className="bg-soul-purple hover:bg-soul-purple/90">
-                Sign In
+                {t('auth.signIn')}
               </Button>
             </div>
           );
@@ -534,7 +536,7 @@ export default function Onboarding() {
 
         return (
           <div className="space-y-6 text-center max-w-md mx-auto">
-            <h2 className="text-xl font-display font-bold">Generating Your Soul Blueprint</h2>
+            <h2 className="text-xl font-display font-bold">{t('onboarding.generatingBlueprint')}</h2>
             <BlueprintGenerator 
               key={`blueprint-generator-${blueprintGenerated ? 'complete' : 'active'}`}
               userProfile={{
@@ -554,12 +556,12 @@ export default function Onboarding() {
       case 7: // Goal Selection
         return (
           <div className="space-y-6 text-center max-w-md mx-auto">
-            <h2 className="text-xl font-display font-bold">Choose Your Path</h2>
-            <p className="text-white/80">Let's set up your coaching preferences to personalize your experience.</p>
+            <h2 className="text-xl font-display font-bold">{t('onboarding.choosePath')}</h2>
+            <p className="text-white/80">{t('onboarding.choosePathDesc')}</p>
             <GoalSelectionStep onComplete={handleGoalSelectionComplete} />
             {isDevelopment && (
               <p className="text-xs text-blue-400 bg-blue-900/20 p-2 rounded">
-                Dev Mode: Preferences will be stored in goal_stack
+                {t('onboarding.devModePrefs')}
               </p>
             )}
           </div>
@@ -597,7 +599,7 @@ export default function Onboarding() {
             ))}
           </div>
           <div className="text-center text-sm text-white/60">
-            Step {currentStep + 1} of {steps.length}: {steps[currentStep]}
+            {t('onboarding.step')} {currentStep + 1} {t('onboarding.of')} {steps.length}: {steps[currentStep]}
           </div>
         </div>
 
