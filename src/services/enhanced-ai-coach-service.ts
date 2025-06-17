@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { PersonalityEngine } from "./personality-engine";
 import { LayeredBlueprint, AgentMode } from "@/types/personality-modules";
-import { PersonaService } from "./persona-service";
+import { PersonaService, UserPersona } from "./persona-service";
 
 export type AgentType = "coach" | "guide" | "blend";
 
@@ -394,7 +394,8 @@ class EnhancedAICoachService {
           hasSystemPrompt: !!systemPrompt,
           systemPromptLength: systemPrompt?.length || 0,
           agentType,
-          promptPreview: systemPrompt?.substring(0, 200) + "..."
+          containsPersonality: systemPrompt?.includes('MBTI') || systemPrompt?.includes('Sun sign'),
+          promptStart: systemPrompt?.substring(0, 100) + "..."
         });
       } else {
         console.log("⚠️ SERVICE: Skipping persona generation:", {
