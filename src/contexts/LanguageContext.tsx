@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export type Language = 'en' | 'nl';
@@ -5,8 +6,7 @@ export type Language = 'en' | 'nl';
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: string, variables?: Record<string, string>) => string;
-  tArray: (key: string) => string[];
+  t: (key: string) => string;
 }
 
 const translations = {
@@ -25,8 +25,6 @@ const translations = {
     "cancel": "Cancel",
     "loading": "Loading...",
     "error": "Error",
-    "thinking": "Thinking...",
-    "tryAgain": "Try Again",
 
     // Index page
     "index.welcome": "Welcome to <span class='text-soul-purple'>Soul Sync</span>",
@@ -103,18 +101,6 @@ const translations = {
     "personality.processing": "Processing...",
     "personality.continueWithProfile": "Continue with this profile",
     "personality.keepRefining": "We'll keep refining your profile as we learn more about you.",
-
-    // Coach and Growth
-    "coach.aiResponseError": "I'm having trouble connecting right now. Please try again.",
-    "growth.howAreYouFeeling": "How are you feeling today on a scale of {min} to {max}?",
-    "growth.selectMood": "Select your current mood",
-    
-    // Tasks and Productivity
-    "tasks.allTasksCompleted": "All tasks completed! Well done.",
-    "tasks.readyToBegin": "Ready to begin your {type} session?",
-    
-    // Habits
-    "habits.streakDays": "{count} days"
   },
   nl: {
     // Language names
@@ -131,8 +117,6 @@ const translations = {
     "cancel": "Annuleren",
     "loading": "Laden...",
     "error": "Fout",
-    "thinking": "Denken...",
-    "tryAgain": "Probeer Opnieuw",
 
     // Index page
     "index.welcome": "Welkom bij <span class='text-soul-purple'>Soul Sync</span>",
@@ -209,18 +193,6 @@ const translations = {
     "personality.processing": "Verwerken...",
     "personality.continueWithProfile": "Ga verder met dit profiel",
     "personality.keepRefining": "We blijven je profiel verfijnen naarmate we meer over je leren.",
-
-    // Coach and Growth
-    "coach.aiResponseError": "Ik heb momenteel problemen met verbinden. Probeer het opnieuw.",
-    "growth.howAreYouFeeling": "Hoe voel je je vandaag op een schaal van {min} tot {max}?",
-    "growth.selectMood": "Selecteer je huidige stemming",
-    
-    // Tasks and Productivity
-    "tasks.allTasksCompleted": "Alle taken voltooid! Goed gedaan.",
-    "tasks.readyToBegin": "Klaar om je {type} sessie te beginnen?",
-    
-    // Habits
-    "habits.streakDays": "{count} dagen"
   }
 };
 
@@ -236,80 +208,23 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('language', language);
   }, [language]);
 
-  const getTranslation = (lang: Language, translationKey: string): any => {
-    const keys = translationKey.split('.');
-    let value: any = translations[lang];
+  const t = (key: string): any => {
+    const keys = key.split('.');
+    let value: any = translations[language];
     
     for (const k of keys) {
       if (value && typeof value === 'object') {
         value = value[k];
       } else {
-        return undefined;
+        return translations.en[key as keyof typeof translations.en] || key;
       }
     }
     
-    return value;
-  };
-
-  const t = (key: string, variables?: Record<string, string>): string => {
-    // Try to get translation in current language
-    let value = getTranslation(language, key);
-    
-    // If not found, fallback to English
-    if (value === undefined) {
-      value = getTranslation('en', key);
-    }
-    
-    // If still not found, return the key
-    if (value === undefined) {
-      return key;
-    }
-    
-    // Ensure we return a string (not an array)
-    if (Array.isArray(value)) {
-      console.warn(`Translation key "${key}" returned an array but was expected to be a string. Use tArray() instead.`);
-      return key;
-    }
-    
-    // Handle template variable substitution for strings
-    if (typeof value === 'string' && variables) {
-      return value.replace(/\{(\w+)\}/g, (match, variableName) => {
-        return variables[variableName] || match;
-      });
-    }
-    
-    return typeof value === 'string' ? value : key;
-  };
-
-  const tArray = (key: string): string[] => {
-    // Try to get translation in current language
-    let value = getTranslation(language, key);
-    
-    // If not found, fallback to English
-    if (value === undefined) {
-      value = getTranslation('en', key);
-    }
-    
-    // If still not found, return empty array
-    if (value === undefined) {
-      return [];
-    }
-    
-    // Ensure we return an array
-    if (Array.isArray(value)) {
-      return value;
-    }
-    
-    // If it's a string, wrap it in an array
-    if (typeof value === 'string') {
-      return [value];
-    }
-    
-    return [];
+    return value !== undefined ? value : translations.en[key as keyof typeof translations.en] || key;
   };
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t, tArray }}>
+    <LanguageContext.Provider value={{ language, setLanguage, t }}>
       {children}
     </LanguageContext.Provider>
   );
