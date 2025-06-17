@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface SoulGeneratedGoal {
@@ -50,14 +49,10 @@ class SoulGoalDecompositionService {
     });
 
     try {
-      // Try calling the soul-coach edge function, but with better error handling
-      let soulResponse = null;
-      
-      try {
-        const { data, error } = await supabase.functions.invoke('soul-coach', {
-          body: {
-            message: `Please help me break down this dream into actionable milestones and tasks:
-            
+      const { data, error } = await supabase.functions.invoke('soul-coach', {
+        body: {
+          message: `Please help me break down this dream into actionable milestones and tasks:
+          
 Dream: ${title}
 Description: ${description}
 Timeframe: ${timeframe}
@@ -69,21 +64,22 @@ Please create a structured breakdown with:
 3. Blueprint-aligned insights and optimal timing suggestions
 
 Blueprint Data: ${JSON.stringify(blueprintData, null, 2)}`,
-            context: 'goal_decomposition',
-            blueprintData
-          }
-        });
-
-        if (error) {
-          console.warn('⚠️ Soul Coach function error, using fallback:', error);
-        } else {
-          soulResponse = data?.response;
+          context: 'goal_decomposition',
+          blueprintData
         }
-      } catch (edgeFunctionError) {
-        console.warn('⚠️ Soul Coach edge function not available, using fallback:', edgeFunctionError);
+      });
+
+      if (error) {
+        console.error('❌ Soul Coach function error:', error);
+        throw new Error(`Soul Coach service error: ${error.message}`);
       }
 
-      // Create structured goal (with or without Soul Coach response)
+      if (!data?.response) {
+        console.error('❌ No response from Soul Coach service');
+        throw new Error('No response from Soul Coach service');
+      }
+
+      // Parse the Soul Coach response and structure it
       const goalId = `goal_${Date.now()}`;
       const targetDate = new Date();
       
@@ -101,6 +97,7 @@ Blueprint Data: ${JSON.stringify(blueprintData, null, 2)}`,
         targetDate.setMonth(targetDate.getMonth() + 3); // Default 3 months
       }
 
+      // Create structured goal from Soul Coach response
       const soulGoal: SoulGeneratedGoal = {
         id: goalId,
         title,
@@ -111,7 +108,7 @@ Blueprint Data: ${JSON.stringify(blueprintData, null, 2)}`,
         created_at: new Date().toISOString(),
         milestones: this.generateMilestones(title, timeframe, blueprintData),
         tasks: this.generateTasks(title, category, blueprintData),
-        blueprint_insights: this.generateBlueprintInsights(blueprintData, soulResponse),
+        blueprint_insights: this.generateBlueprintInsights(blueprintData),
         personalization_notes: `This goal has been personalized for your ${this.getUserType(blueprintData)} energy type.`
       };
 
@@ -120,7 +117,7 @@ Blueprint Data: ${JSON.stringify(blueprintData, null, 2)}`,
 
     } catch (error) {
       console.error('❌ Soul Goal Decomposition Service error:', error);
-      throw new Error(`Goal decomposition failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw error;
     }
   }
 
@@ -207,17 +204,12 @@ Blueprint Data: ${JSON.stringify(blueprintData, null, 2)}`,
     return tasks;
   }
 
-  private generateBlueprintInsights(blueprintData: any, soulResponse?: string): string[] {
+  private generateBlueprintInsights(blueprintData: any): string[] {
     const insights = [
       `Your ${this.getUserType(blueprintData)} energy type is perfectly suited for this journey`,
       'Consider breaking larger tasks into smaller, manageable chunks',
       'Schedule important work during your peak energy periods'
     ];
-
-    // Add insights from Soul Coach if available
-    if (soulResponse) {
-      insights.push('Enhanced with personalized Soul Coach guidance');
-    }
 
     return insights;
   }
