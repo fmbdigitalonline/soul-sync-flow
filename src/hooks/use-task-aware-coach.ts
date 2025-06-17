@@ -46,7 +46,28 @@ As my productivity coach with access to my task management system, please help m
 Please provide guidance while being aware of my current task state and progress.`;
 
     console.log('📤 Sending task-aware message to coach');
+    
+    // Send the message and wait for response
     await sendMessage(enhancedMessage);
+    
+    // After sending, check the latest assistant message for actions
+    setTimeout(() => {
+      checkForCoachActions();
+    }, 1000);
+  };
+
+  // Check recent messages for coach actions
+  const checkForCoachActions = () => {
+    if (messages.length === 0) return;
+    
+    const latestMessage = messages[messages.length - 1];
+    if (latestMessage.sender === 'assistant') {
+      const action = parseCoachResponse(latestMessage.content);
+      if (action) {
+        console.log('🎬 Auto-executing detected coach action:', action);
+        executeCoachAction(action);
+      }
+    }
   };
 
   // Execute coach-initiated task actions

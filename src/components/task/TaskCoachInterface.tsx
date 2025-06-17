@@ -20,6 +20,7 @@ import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 import { CoachInterface } from "@/components/coach/CoachInterface";
 import { SubTaskManager } from "./SubTaskManager";
 import { QuickActions } from "./QuickActions";
+import { SmartQuickActions } from "./SmartQuickActions";
 import { SessionProgress } from "./SessionProgress";
 import { taskCoachIntegrationService, TaskContext } from "@/services/task-coach-integration-service";
 
@@ -297,10 +298,19 @@ Let's get started! What's the first step?`;
           />
           
           {sessionStarted && (
-            <QuickActions
-              onAction={handleQuickAction}
-              isLoading={isLoading}
-            />
+            <>
+              <SmartQuickActions
+                onAction={handleQuickAction}
+                isLoading={isLoading}
+                currentProgress={taskProgress}
+                hasSubTasks={!!(currentTask?.sub_tasks && currentTask.sub_tasks.length > 0)}
+              />
+              
+              <QuickActions
+                onAction={handleQuickAction}
+                isLoading={isLoading}
+              />
+            </>
           )}
         </div>
 
