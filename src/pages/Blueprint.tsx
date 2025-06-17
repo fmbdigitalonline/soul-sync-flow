@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MainLayout from "@/components/Layout/MainLayout";
@@ -61,14 +62,14 @@ const Blueprint = () => {
         <div className="w-full min-h-[80vh] flex items-center justify-center p-4 sm:p-6">
           <div className="cosmic-card p-6 sm:p-8 text-center max-w-md w-full">
             <h1 className="text-xl sm:text-2xl font-bold font-display mb-4">
-              <span className="gradient-text">{t('blueprint.title')}</span>
+              <span className="gradient-text">Soul Blueprint</span>
             </h1>
-            <p className="mb-6 text-sm sm:text-base">{t('blueprint.signInRequired')}</p>
+            <p className="mb-6 text-sm sm:text-base">Please sign in to view your blueprint</p>
             <Button 
               className="bg-soul-purple hover:bg-soul-purple/90 w-full"
               onClick={() => navigate('/auth')}
             >
-              {t('nav.signIn')}
+              Sign In
             </Button>
           </div>
         </div>
@@ -82,7 +83,7 @@ const Blueprint = () => {
       <MainLayout>
         <div className="w-full min-h-[80vh] flex flex-col items-center justify-center p-4 sm:p-6">
           <Loader2 className="h-8 w-8 animate-spin text-soul-purple" />
-          <p className="mt-2 text-sm sm:text-base">{t('blueprint.loading')}</p>
+          <p className="mt-2 text-sm sm:text-base">Loading blueprint...</p>
         </div>
       </MainLayout>
     );
@@ -115,15 +116,15 @@ const Blueprint = () => {
       
       if (result.success) {
         toast({
-          title: t('blueprint.saved'),
-          description: t('blueprint.savedDescription'),
+          title: "Blueprint Saved",
+          description: "Your blueprint has been updated successfully",
         });
         await refetch();
         setActiveTab("view");
       } else {
         toast({
-          title: t('blueprint.errorSaving'),
-          description: result.error || t('blueprint.errorSaving'),
+          title: "Error Saving Blueprint",
+          description: result.error || "Failed to save blueprint",
           variant: "destructive"
         });
       }
@@ -131,7 +132,7 @@ const Blueprint = () => {
     } catch (err) {
       console.error("Error in save handler:", err);
       toast({
-        title: t('error'),
+        title: "Error",
         description: String(err),
         variant: "destructive"
       });
@@ -145,15 +146,15 @@ const Blueprint = () => {
       setActiveTab("generating");
       
       toast({
-        title: t('blueprint.regenerating'),
-        description: t('blueprint.regeneratingDescription'),
+        title: "Regenerating Blueprint",
+        description: "Your blueprint is being recalculated with fresh data",
       });
       
-      speak(t('blueprint.regeneratingDescription'));
+      speak("Your blueprint is being recalculated with fresh data");
     } else {
       toast({
-        title: t('error'),
-        description: t('blueprint.errorLoading'),
+        title: "Error",
+        description: "Blueprint data not loaded",
         variant: "destructive"
       });
     }
@@ -163,8 +164,8 @@ const Blueprint = () => {
     try {
       if (!newBlueprint) {
         toast({
-          title: t('error'),
-          description: t('blueprint.errorGenerating'),
+          title: "Error",
+          description: "Failed to generate new blueprint",
           variant: "destructive"
         });
         setIsGenerating(false);
@@ -178,22 +179,22 @@ const Blueprint = () => {
       if (result.success) {
         await refetch();
         toast({
-          title: t('blueprint.generated'),
-          description: t('blueprint.generatedDescription'),
+          title: "Blueprint Generated",
+          description: "Your new blueprint has been generated successfully",
         });
         
-        speak(t('blueprint.generatedDescription'));
+        speak("Your new blueprint has been generated successfully");
       } else {
         toast({
-          title: t('blueprint.errorGenerating'),
-          description: result.error || t('blueprint.errorGenerating'),
+          title: "Error Generating Blueprint",
+          description: result.error || "Failed to generate blueprint",
           variant: "destructive"
         });
       }
     } catch (error) {
       console.error("Error handling generation completion:", error);
       toast({
-        title: t('error'),
+        title: "Error",
         description: String(error),
         variant: "destructive"
       });
@@ -209,7 +210,7 @@ const Blueprint = () => {
         {/* Mobile-friendly header */}
         <div className="flex flex-col gap-4 mb-6">
           <h1 className="text-2xl sm:text-3xl font-bold font-display">
-            <span className="gradient-text">{t('blueprint.title')}</span>
+            <span className="gradient-text">Soul Blueprint</span>
           </h1>
           {/* Action buttons - Mobile Stack */}
           <div className="flex flex-col sm:flex-row gap-2">
@@ -221,7 +222,7 @@ const Blueprint = () => {
                 disabled={isGenerating}
               >
                 <RefreshCw className="mr-2 h-4 w-4" />
-                {isGenerating ? t('blueprint.generating') : t('blueprint.regenerate')}
+                {isGenerating ? "Generating..." : "Regenerate"}
               </Button>
             )}
             <Button 
@@ -229,7 +230,7 @@ const Blueprint = () => {
               onClick={() => navigate('/coach')}
             >
               <MessageCircle className="mr-2 h-4 w-4" />
-              {t('blueprint.chatWithCoach')}
+              Chat with Coach
             </Button>
           </div>
         </div>
@@ -237,19 +238,19 @@ const Blueprint = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
           {/* Mobile-responsive tabs */}
           <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full max-w-4xl mx-auto h-auto p-1">
-            <TabsTrigger value="view" className="text-xs sm:text-sm py-2">{t('blueprint.viewTab')}</TabsTrigger>
+            <TabsTrigger value="view" className="text-xs sm:text-sm py-2">View</TabsTrigger>
             {isAdmin && (
-              <TabsTrigger value="edit" className="text-xs sm:text-sm py-2">{t('blueprint.editTab')}</TabsTrigger>
+              <TabsTrigger value="edit" className="text-xs sm:text-sm py-2">Edit</TabsTrigger>
             )}
             {isAdmin && (
               <TabsTrigger value="health-check" className="text-xs sm:text-sm py-2 flex items-center gap-1">
                 <Activity className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">{t('blueprint.healthCheckTab')}</span>
-                <span className="sm:hidden">{t('blueprint.healthCheckShort')}</span>
+                <span className="hidden sm:inline">Health Check</span>
+                <span className="sm:hidden">Health</span>
               </TabsTrigger>
             )}
             <TabsTrigger value="generating" disabled={!isGenerating} className="text-xs sm:text-sm py-2">
-              {t('blueprint.generatingTab')}
+              Generating
             </TabsTrigger>
           </TabsList>
           

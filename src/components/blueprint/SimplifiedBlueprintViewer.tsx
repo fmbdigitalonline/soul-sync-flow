@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,9 +14,8 @@ interface SimplifiedBlueprintViewerProps {
   blueprint: BlueprintData;
 }
 
-// --- MBTI Cognitive Function Table (fallback for missing data) ---
+// MBTI Cognitive Function Table (fallback for missing data)
 const MBTI_COG_FUNCTIONS: Record<string, { dominant: string; auxiliary: string }> = {
-  // Dominant and Auxiliary for each of the 16 MBTI types (standard order)
   INFJ: { dominant: "Ni (Introverted Intuition)", auxiliary: "Fe (Extraverted Feeling)" },
   INFP: { dominant: "Fi (Introverted Feeling)", auxiliary: "Ne (Extraverted Intuition)" },
   INTJ: { dominant: "Ni (Introverted Intuition)", auxiliary: "Te (Extraverted Thinking)" },
@@ -34,7 +34,7 @@ const MBTI_COG_FUNCTIONS: Record<string, { dominant: string; auxiliary: string }
   ESTP: { dominant: "Se (Extraverted Sensing)", auxiliary: "Ti (Introverted Thinking)" }
 };
 
-// Type guard function to check if personality has the required structure
+// Type guard function
 function isValidPersonality(personality: any): personality is {
   likelyType: string;
   mbtiCoreKeywords?: string[];
@@ -56,7 +56,7 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
   const [showAIReport, setShowAIReport] = useState(false);
   const { t } = useLanguage();
 
-  // --- Numerology Data Mapping (same as previous fix) ---
+  // Numerology Data Mapping
   const rawNumerology = blueprint.values_life_path || blueprint.numerology || {};
   const numerologyData = {
     lifePathNumber: rawNumerology.lifePathNumber ?? rawNumerology.life_path_number ?? "",
@@ -71,7 +71,7 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
     personalityKeyword: rawNumerology.personalityKeyword ?? rawNumerology.personality_keyword ?? ""
   };
 
-  // --- MBTI Data Extraction with Robust Fallbacks ---
+  // MBTI Data Extraction with Robust Fallbacks
   let mbtiData = blueprint.cognition_mbti && typeof blueprint.cognition_mbti === "object" && blueprint.cognition_mbti.type && blueprint.cognition_mbti.type !== "Unknown"
     ? blueprint.cognition_mbti
     : blueprint.mbti && typeof blueprint.mbti === "object" && blueprint.mbti.type && blueprint.mbti.type !== "Unknown"
@@ -116,8 +116,7 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
     }
   }
 
-  // === Apply MBTI Cognitive Function Fallback ===
-  // Only if the type is recognized and functions are missing/Unknown
+  // Apply MBTI Cognitive Function Fallback
   if (
     mbtiData &&
     typeof mbtiData.type === "string" &&
@@ -137,8 +136,6 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
       mbtiData.auxiliary_function = cog.auxiliary;
     }
   }
-
-  console.log("NUMEROLOGY DEBUG", { numerologyData, rawNumerology, blueprint });
 
   if (showAIReport) {
     return (
@@ -198,41 +195,30 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <div>
           <h2 className="text-2xl font-bold">
-            {t('blueprint.viewer.heading', { name: blueprint.user_meta.preferred_name })}
+            Soul Blueprint for {blueprint.user_meta.preferred_name}
           </h2>
           <p className="text-sm text-muted-foreground">
-            {(() => {
-              if (isRealCalculation) {
-                return t('blueprint.viewer.calculatedOn', {
-                  date: new Date(calculationDate).toLocaleDateString(),
-                  engine: t('blueprint.viewer.engine.' + (
-                    metadata.engine?.includes("swiss_ephemeris")
-                      ? 'swiss'
-                      : metadata.engine?.includes("vercel")
-                        ? 'vercel'
-                        : 'default'
-                    ))
-                });
-              }
-              return t('blueprint.viewer.usingTemplate');
-            })()}
+            {isRealCalculation ? 
+              `Calculated on ${new Date(calculationDate).toLocaleDateString()} using ${calculationEngine}` : 
+              "Using template data"
+            }
           </p>
         </div>
         
         <div className="flex flex-col sm:flex-row gap-2">
           {isRealCalculation && (
             <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-              {t('blueprint.realCalculations')}
+              ✅ Real Calculations
             </Badge>
           )}
           {metadata.partial_calculation && (
             <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-              {t('blueprint.partialData')}
+              ⚠️ Partial Data
             </Badge>
           )}
           {!isRealCalculation && (
             <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
-              {t('blueprint.templateDataBadge')}
+              📋 Template Data
             </Badge>
           )}
         </div>
@@ -243,10 +229,10 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="text-left">
             <h3 className="font-semibold text-lg gradient-text mb-1">
-              {t('blueprint.viewer.getReadingTitle')}
+              Get Your Full Personality Reading
             </h3>
             <p className="text-sm text-muted-foreground">
-              {t('blueprint.viewer.getReadingDesc')}
+              Discover deep insights about your personality, strengths, and life path
             </p>
           </div>
           <Button
@@ -254,61 +240,61 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
             className="bg-soul-purple hover:bg-soul-purple/90 whitespace-nowrap"
           >
             <FileText className="h-4 w-4 mr-2" />
-            {t('blueprint.viewer.viewFullReading')}
+            View Full Reading
           </Button>
         </div>
       </CosmicCard>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="w-full">
-          <TabsTrigger value="overview">{t('blueprint.viewer.overview')}</TabsTrigger>
-          <TabsTrigger value="mbti">{t('blueprint.viewer.mbti')}</TabsTrigger>
-          <TabsTrigger value="humanDesign">{t('blueprint.viewer.humanDesign')}</TabsTrigger>
-          <TabsTrigger value="numerology">{t('blueprint.viewer.numerology')}</TabsTrigger>
-          <TabsTrigger value="western">{t('blueprint.viewer.astrology')}</TabsTrigger>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="mbti">MBTI</TabsTrigger>
+          <TabsTrigger value="humanDesign">Human Design</TabsTrigger>
+          <TabsTrigger value="numerology">Numerology</TabsTrigger>
+          <TabsTrigger value="western">Astrology</TabsTrigger>
         </TabsList>
         
         <TabsContent value="overview" className="mt-6">
           <Card>
             <CardHeader>
-              <CardTitle>{t('blueprint.viewer.overview')}</CardTitle>
-              <CardDescription>{t('blueprint.viewer.overviewDesc')}</CardDescription>
+              <CardTitle>Overview</CardTitle>
+              <CardDescription>A summary of your Soul Blueprint</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <p>
-                  {t('blueprint.viewer.welcome', { name: blueprint.user_meta.preferred_name })}
+                  Welcome to your Soul Blueprint, {blueprint.user_meta.preferred_name}!
                 </p>
                 {isRealCalculation ? (
                   <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <h4 className="font-semibold text-green-800 mb-2">{t('blueprint.viewer.accurateCalculationsShort')}</h4>
+                    <h4 className="font-semibold text-green-800 mb-2">✅ Accurate Calculations</h4>
                     <p className="text-green-700">
-                      {t('blueprint.viewer.accurateCalculations')}
+                      Your blueprint was generated using precise astronomical calculations from the Swiss Ephemeris, taking into account your exact birth time, location, and historical timezone data.
                     </p>
                   </div>
                 ) : (
                   <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                    <h4 className="font-semibold text-gray-800 mb-2">{t('blueprint.viewer.templateDataShort')}</h4>
+                    <h4 className="font-semibold text-gray-800 mb-2">📋 Template Data</h4>
                     <p className="text-gray-700">
-                      {t('blueprint.viewer.templateDataDesc')}
+                      This blueprint uses template data. For accurate calculations based on your birth details, please regenerate your blueprint.
                     </p>
                   </div>
                 )}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
                   <div className="text-center">
-                    <h4 className="font-semibold">{t('blueprint.viewer.sunSign')}</h4>
+                    <h4 className="font-semibold">Sun Sign</h4>
                     <p className="text-lg text-soul-purple">{westernData.sun_sign}</p>
                     <p className="text-sm text-gray-600">{westernData.sun_keyword}</p>
                   </div>
                   <div className="text-center">
-                    <h4 className="font-semibold">{t('blueprint.viewer.mbtiType')}</h4>
-                    <p className="text-lg text-soul-purple">{mbtiData.type || t('unknown')}</p>
+                    <h4 className="font-semibold">MBTI Type</h4>
+                    <p className="text-lg text-soul-purple">{mbtiData.type || 'Unknown'}</p>
                     <p className="text-sm text-gray-600">{Array.isArray(mbtiData.core_keywords) && mbtiData.core_keywords.length
                       ? mbtiData.core_keywords.join(", ")
-                      : (mbtiData.description || t('unknown'))}</p>
+                      : (mbtiData.description || 'Unknown')}</p>
                   </div>
                   <div className="text-center">
-                    <h4 className="font-semibold">{t('blueprint.viewer.lifePath')}</h4>
+                    <h4 className="font-semibold">Life Path</h4>
                     <p className="text-lg text-soul-purple">{numerologyData.lifePathNumber}</p>
                     <p className="text-sm text-gray-600">{numerologyData.lifePathKeyword}</p>
                   </div>
@@ -317,114 +303,118 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
             </CardContent>
           </Card>
         </TabsContent>
+        
         <TabsContent value="mbti" className="mt-6">
           <Card>
             <CardHeader>
-              <CardTitle>{t('blueprint.viewer.mbtiProfile')}</CardTitle>
-              <CardDescription>{t('blueprint.viewer.mbtiDesc')}</CardDescription>
+              <CardTitle>MBTI Profile</CardTitle>
+              <CardDescription>Understanding your cognitive functions</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
                 <div>
-                  <span className="font-semibold">{t('blueprint.viewer.mbtiType')}:</span> {mbtiData.type || t('unknown')}
+                  <span className="font-semibold">Type:</span> {mbtiData.type || 'Unknown'}
                 </div>
                 <div>
-                  <span className="font-semibold">{t('blueprint.viewer.coreKeywords')}:</span>{" "}
+                  <span className="font-semibold">Core Keywords:</span>{" "}
                   {Array.isArray(mbtiData.core_keywords) && mbtiData.core_keywords.length
                     ? mbtiData.core_keywords.join(", ")
-                    : (mbtiData.description || t('unknown'))}
+                    : (mbtiData.description || 'Unknown')}
                 </div>
                 <div>
-                  <span className="font-semibold">{t('blueprint.viewer.dominantFunction')}:</span> {mbtiData.dominant_function || t('unknown')}
+                  <span className="font-semibold">Dominant Function:</span> {mbtiData.dominant_function || 'Unknown'}
                 </div>
                 <div>
-                  <span className="font-semibold">{t('blueprint.viewer.auxiliaryFunction')}:</span> {mbtiData.auxiliary_function || t('unknown')}
+                  <span className="font-semibold">Auxiliary Function:</span> {mbtiData.auxiliary_function || 'Unknown'}
                 </div>
                 {mbtiData.user_confidence !== undefined && (
                   <div>
-                    <span className="font-semibold">{t('blueprint.viewer.selfAssessment')}:</span> {Math.round(mbtiData.user_confidence * 100)}%
+                    <span className="font-semibold">Self-Assessment Confidence:</span> {Math.round(mbtiData.user_confidence * 100)}%
                   </div>
                 )}
               </div>
             </CardContent>
           </Card>
         </TabsContent>
+        
         <TabsContent value="humanDesign" className="mt-6">
           <Card>
             <CardHeader>
-              <CardTitle>{t('blueprint.viewer.humanDesign')}</CardTitle>
-              <CardDescription>{t('blueprint.viewer.humanDesignDesc')}</CardDescription>
+              <CardTitle>Human Design</CardTitle>
+              <CardDescription>Your energy type and strategy</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
                 <div>
-                  <span className="font-semibold">{t('blueprint.viewer.hdType')}:</span> {humanDesignData.type}
+                  <span className="font-semibold">Type:</span> {humanDesignData.type}
                 </div>
                 <div>
-                  <span className="font-semibold">{t('blueprint.viewer.profile')}:</span> {humanDesignData.profile}
+                  <span className="font-semibold">Profile:</span> {humanDesignData.profile}
                 </div>
                 <div>
-                  <span className="font-semibold">{t('blueprint.viewer.authority')}:</span> {humanDesignData.authority}
+                  <span className="font-semibold">Authority:</span> {humanDesignData.authority}
                 </div>
                 <div>
-                  <span className="font-semibold">{t('blueprint.viewer.strategy')}:</span> {humanDesignData.strategy}
+                  <span className="font-semibold">Strategy:</span> {humanDesignData.strategy}
                 </div>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
+        
         <TabsContent value="numerology" className="mt-6">
           <CosmicCard>
-            <h3 className="text-xl font-display font-bold mb-4">{t('blueprint.viewer.numerologyProfile')}</h3>
+            <h3 className="text-xl font-display font-bold mb-4">Numerology Profile</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <div>
-                  <h4 className="font-semibold text-soul-purple">{t('blueprint.viewer.lifePathNumber')}</h4>
+                  <h4 className="font-semibold text-soul-purple">Life Path Number</h4>
                   <p className="text-3xl font-bold text-soul-purple">{numerologyData.lifePathNumber}</p>
-                  <p className="text-sm text-gray-600">{numerologyData.lifePathKeyword || t('blueprint.viewer.lifePurpose')}</p>
+                  <p className="text-sm text-gray-600">{numerologyData.lifePathKeyword || "Your life's purpose and journey"}</p>
                 </div>
                 <div>
-                  <h4 className="font-semibold text-soul-purple">{t('blueprint.viewer.expressionNumber')}</h4>
+                  <h4 className="font-semibold text-soul-purple">Expression Number</h4>
                   <p className="text-3xl font-bold text-soul-purple">{numerologyData.expressionNumber}</p>
-                  <p className="text-sm text-gray-600">{numerologyData.expressionKeyword || t('blueprint.viewer.talent')}</p>
+                  <p className="text-sm text-gray-600">{numerologyData.expressionKeyword || "Your natural talents and abilities"}</p>
                 </div>
                 <div>
-                  <h4 className="font-semibold text-soul-purple">{t('blueprint.viewer.personalityNumber')}</h4>
+                  <h4 className="font-semibold text-soul-purple">Personality Number</h4>
                   <p className="text-3xl font-bold text-soul-purple">{numerologyData.personalityNumber}</p>
-                  <p className="text-sm text-gray-600">{numerologyData.personalityKeyword || t('blueprint.viewer.keyAspect')}</p>
+                  <p className="text-sm text-gray-600">{numerologyData.personalityKeyword || "Key personality aspect"}</p>
                 </div>
               </div>
               <div className="space-y-4">
                 <div>
-                  <h4 className="font-semibold text-soul-purple">{t('blueprint.viewer.soulUrgeNumber')}</h4>
+                  <h4 className="font-semibold text-soul-purple">Soul Urge Number</h4>
                   <p className="text-3xl font-bold text-soul-purple">{numerologyData.soulUrgeNumber}</p>
-                  <p className="text-sm text-gray-600">{numerologyData.soulUrgeKeyword || t('blueprint.viewer.innerDesires')}</p>
+                  <p className="text-sm text-gray-600">{numerologyData.soulUrgeKeyword || "Your inner desires and motivations"}</p>
                 </div>
                 <div>
-                  <h4 className="font-semibold text-soul-purple">{t('blueprint.viewer.birthdayNumber')}</h4>
+                  <h4 className="font-semibold text-soul-purple">Birthday Number</h4>
                   <p className="text-3xl font-bold text-soul-purple">{numerologyData.birthdayNumber}</p>
-                  <p className="text-sm text-gray-600">{numerologyData.birthdayKeyword || t('blueprint.viewer.birthdayTalent')}</p>
+                  <p className="text-sm text-gray-600">{numerologyData.birthdayKeyword || "Special talents from your birth day"}</p>
                 </div>
               </div>
             </div>
           </CosmicCard>
         </TabsContent>
+        
         <TabsContent value="western" className="mt-6">
           <Card>
             <CardHeader>
-              <CardTitle>{t('blueprint.viewer.astrology')}</CardTitle>
-              <CardDescription>{t('blueprint.viewer.astrologyDesc')}</CardDescription>
+              <CardTitle>Western Astrology</CardTitle>
+              <CardDescription>Planetary positions and aspects</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
                 <div>
-                  <span className="font-semibold">{t('blueprint.viewer.sunSign')}:</span> {westernData.sun_sign} - {westernData.sun_keyword}
+                  <span className="font-semibold">Sun Sign:</span> {westernData.sun_sign} - {westernData.sun_keyword}
                 </div>
                 <div>
-                  <span className="font-semibold">{t('blueprint.viewer.moonSign')}:</span> {westernData.moon_sign} - {westernData.moon_keyword}
+                  <span className="font-semibold">Moon Sign:</span> {westernData.moon_sign} - {westernData.moon_keyword}
                 </div>
                 <div>
-                  <span className="font-semibold">{t('blueprint.viewer.risingSign')}:</span> {westernData.rising_sign}
+                  <span className="font-semibold">Rising Sign:</span> {westernData.rising_sign}
                 </div>
               </div>
             </CardContent>
