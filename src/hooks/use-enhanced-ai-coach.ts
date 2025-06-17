@@ -1,5 +1,3 @@
-
-
 import { useState, useEffect, useRef } from "react";
 import { enhancedAICoachService, AgentType } from "@/services/enhanced-ai-coach-service";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -38,7 +36,7 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
     resetStreaming,
   } = useStreamingMessage();
 
-  // Enhanced authentication and user setup
+  // Enhanced authentication and user setup with debugging
   useEffect(() => {
     const initializeAuth = async () => {
       try {
@@ -47,6 +45,7 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
         
         if (user) {
           console.log("👤 Enhanced AI Coach Hook: User authenticated:", user.id);
+          console.log("👤 User email:", user.email);
           await enhancedAICoachService.setCurrentUser(user.id);
           setAuthInitialized(true);
         } else {
@@ -62,39 +61,50 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
     initializeAuth();
   }, [user]);
 
-  // Enhanced blueprint integration with persona system and name extraction
+  // Enhanced blueprint integration with comprehensive debugging
   useEffect(() => {
     if (!authInitialized || !blueprintData) {
       console.log("⏳ Enhanced AI Coach Hook: Waiting for auth/blueprint data", {
         authInitialized,
         hasBlueprintData: !!blueprintData,
-        blueprintKeys: blueprintData ? Object.keys(blueprintData) : []
+        blueprintKeys: blueprintData ? Object.keys(blueprintData) : [],
+        user: user ? { id: user.id, email: user.email } : null
       });
       return;
     }
 
     console.log("🎭 Enhanced AI Coach Hook: Processing blueprint data for persona generation");
-    console.log("🔍 Blueprint Data Debug:", {
+    console.log("🔍 FULL Blueprint Data Debug:", JSON.stringify(blueprintData, null, 2));
+    
+    // Log specific sections that should contain personality data
+    console.log("🧠 Personality Data Breakdown:", {
       hasUserMeta: !!blueprintData.user_meta,
-      userMetaKeys: blueprintData.user_meta ? Object.keys(blueprintData.user_meta) : [],
+      userMeta: blueprintData.user_meta,
       hasCognitionMBTI: !!blueprintData.cognition_mbti,
-      mbtiType: blueprintData.cognition_mbti?.type,
+      cognitionMBTI: blueprintData.cognition_mbti,
       hasEnergyStrategy: !!blueprintData.energy_strategy_human_design,
-      humanDesignType: blueprintData.energy_strategy_human_design?.type,
+      energyStrategy: blueprintData.energy_strategy_human_design,
       hasBasharSuite: !!blueprintData.bashar_suite,
+      basharSuite: blueprintData.bashar_suite,
       hasValuesLifePath: !!blueprintData.values_life_path,
-      missionStatement: blueprintData.values_life_path?.mission_statement
+      valuesLifePath: blueprintData.values_life_path,
+      // Check raw personality data in user_meta
+      rawPersonality: blueprintData.user_meta?.personality
     });
     
     try {
-      // Extract user's first name from blueprint
+      // Extract user's first name from blueprint with detailed logging
       const userFirstName = blueprintData.user_meta?.preferred_name || 
                            blueprintData.user_meta?.full_name?.split(' ')[0] || 
                            null;
       
-      console.log("👤 Enhanced AI Coach Hook: Extracted user name:", userFirstName);
+      console.log("👤 Enhanced AI Coach Hook: User name extraction:", {
+        preferredName: blueprintData.user_meta?.preferred_name,
+        fullName: blueprintData.user_meta?.full_name,
+        extractedFirstName: userFirstName
+      });
 
-      // Convert blueprint data to LayeredBlueprint format
+      // Convert blueprint data to LayeredBlueprint format with detailed logging
       const layeredBlueprint: Partial<LayeredBlueprint> = {
         cognitiveTemperamental: {
           mbtiType: blueprintData.cognition_mbti?.type || "Unknown",
@@ -174,10 +184,21 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
         mbtiType: layeredBlueprint.cognitiveTemperamental?.mbtiType,
         humanDesignType: layeredBlueprint.energyDecisionStrategy?.humanDesignType,
         actualMissionStatement: layeredBlueprint.coreValuesNarrative?.missionStatement,
-        userName: layeredBlueprint.user_meta?.preferred_name
+        userName: layeredBlueprint.user_meta?.preferred_name,
+        sunSign: layeredBlueprint.publicArchetype?.sunSign,
+        lifePath: layeredBlueprint.coreValuesNarrative?.lifePath
       });
 
+      console.log("🎯 DETAILED BLUEPRINT VERIFICATION:");
+      console.log("- MBTI Type:", layeredBlueprint.cognitiveTemperamental?.mbtiType);
+      console.log("- Human Design Type:", layeredBlueprint.energyDecisionStrategy?.humanDesignType);
+      console.log("- Sun Sign:", layeredBlueprint.publicArchetype?.sunSign);
+      console.log("- Life Path:", layeredBlueprint.coreValuesNarrative?.lifePath);
+      console.log("- Mission Statement:", layeredBlueprint.coreValuesNarrative?.missionStatement);
+      console.log("- User Name:", layeredBlueprint.user_meta?.preferred_name);
+
       // Update the AI service with the user's blueprint - this triggers persona regeneration
+      console.log("🔄 Calling enhancedAICoachService.updateUserBlueprint...");
       enhancedAICoachService.updateUserBlueprint(layeredBlueprint);
       setPersonaReady(true);
       
@@ -227,7 +248,7 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
   const sendMessage = async (content: string, useStreaming: boolean = true) => {
     if (!content.trim()) return;
 
-    console.log('📤 Enhanced AI Coach Hook: Sending message:', {
+    console.log('📤 Enhanced AI Coach Hook: Sending message with DETAILED DEBUG:', {
       contentLength: content.length,
       useStreaming,
       currentAgent,
@@ -235,12 +256,13 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
       personaReady,
       authInitialized,
       hasUserName: !!(blueprintData?.user_meta?.preferred_name || blueprintData?.user_meta?.full_name),
-      actualBlueprintData: blueprintData ? {
-        mbtiType: blueprintData.cognition_mbti?.type,
-        humanDesignType: blueprintData.energy_strategy_human_design?.type,
-        missionStatement: blueprintData.values_life_path?.mission_statement,
-        userName: blueprintData.user_meta?.preferred_name || blueprintData.user_meta?.full_name
-      } : null
+      actualUserName: blueprintData?.user_meta?.preferred_name || blueprintData?.user_meta?.full_name,
+      mbtiType: blueprintData?.cognition_mbti?.type,
+      sunSign: blueprintData?.archetype_western?.sun_sign,
+      humanDesignType: blueprintData?.energy_strategy_human_design?.type,
+      missionStatement: blueprintData?.values_life_path?.mission_statement,
+      currentUserId: user?.id,
+      serviceCurrentUser: 'will check in service'
     });
 
     const userMessage: Message = {
@@ -287,10 +309,11 @@ Please remember to:
       try {
         let accumulatedContent = '';
         
-        console.log('📡 Enhanced AI Coach Hook: Starting streaming with persona integration...', {
+        console.log('📡 Enhanced AI Coach Hook: Starting streaming with FULL PERSONA INTEGRATION DEBUG...', {
           personaReady,
           hasBlueprintData: !!blueprintData,
-          currentAgent
+          currentAgent,
+          willUsePersona: personaReady
         });
         
         await enhancedAICoachService.sendStreamingMessage(
@@ -314,6 +337,12 @@ Please remember to:
             },
             onComplete: (fullResponse: string) => {
               console.log('✅ Enhanced AI Coach Hook: Streaming complete, response length:', fullResponse.length);
+              console.log('🎯 RESPONSE ANALYSIS:', {
+                containsUserName: !!(blueprintData?.user_meta?.preferred_name && fullResponse.includes(blueprintData.user_meta.preferred_name)),
+                containsPersonalityTraits: fullResponse.includes('MBTI') || fullResponse.includes('Human Design'),
+                isGeneric: fullResponse.includes('powerful soul') || fullResponse.includes('Feurion'),
+                responsePreview: fullResponse.substring(0, 200)
+              });
               completeStreaming();
               setMessages(prev => 
                 prev.map(msg => 
