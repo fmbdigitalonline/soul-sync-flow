@@ -40,6 +40,7 @@ export const useDecompositionLogic = ({
   const [decomposedGoal, setDecomposedGoal] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [actionExecuted, setActionExecuted] = useState(false);
+  const [allStagesCompleted, setAllStagesCompleted] = useState(false);
 
   // Memoized user type to prevent infinite re-rendering
   const userType = useMemo(() => {
@@ -90,6 +91,7 @@ export const useDecompositionLogic = ({
         timestamp: endTime
       });
       
+      console.log('🔄 Setting decomposedGoal state with data:', soulGoal);
       setDecomposedGoal(soulGoal);
       
       // Save to database with error handling
@@ -202,6 +204,34 @@ export const useDecompositionLogic = ({
   // Safe currentStage access with fallback
   const currentStage = stages[currentStageIndex] || stages[0];
 
+  // Dedicated completion effect that watches for decomposedGoal updates
+  useEffect(() => {
+    console.log('🔍 Completion watch effect triggered:', {
+      allStagesCompleted,
+      hasDecomposedGoal: !!decomposedGoal,
+      decomposedGoalId: decomposedGoal?.id,
+      error
+    });
+
+    // Only proceed if all stages are completed, we have a goal, and no error
+    if (allStagesCompleted && decomposedGoal && !error) {
+      console.log('🎉 All conditions met for completion - proceeding with final steps');
+      
+      setTimeout(() => {
+        speak("Your personalized journey is ready! Let me show you what we've created together...");
+        setTimeout(() => {
+          console.log('🚀 Completing with decomposed goal:', decomposedGoal);
+          onComplete(decomposedGoal);
+        }, 2000);
+      }, 1000);
+    } else if (allStagesCompleted && !decomposedGoal && !error) {
+      // This shouldn't happen but let's handle it gracefully
+      console.error('❌ All stages completed but no decomposed goal available');
+      setError('Failed to create goal - no result from Soul decomposition');
+    }
+  }, [allStagesCompleted, decomposedGoal, error, speak, onComplete]);
+
+  // Main stage processing effect (without completion logic)
   useEffect(() => {
     if (currentStageIndex >= stages.length || error) {
       return; // Don't process if we're done or have an error
@@ -252,27 +282,15 @@ export const useDecompositionLogic = ({
           return prev;
         });
         
-        // Move to next stage or complete
+        // Move to next stage or mark all stages complete
         if (currentStageIndex < stages.length - 1) {
           console.log(`⏭️ Moving to next stage: ${currentStageIndex + 1}`);
           setCurrentStageIndex(prev => prev + 1);
           setActionExecuted(false); // Reset for next stage
         } else {
-          // All stages complete - proceed to success page
-          console.log('🎉 All stages completed');
-          
-          setTimeout(() => {
-            speak("Your personalized journey is ready! Let me show you what we've created together...");
-            setTimeout(() => {
-              if (decomposedGoal) {
-                console.log('🚀 Completing with decomposed goal:', decomposedGoal);
-                onComplete(decomposedGoal);
-              } else {
-                console.error('❌ No decomposed goal available');
-                setError('Failed to create goal - no result from Soul decomposition');
-              }
-            }, 2000);
-          }, 1000);
+          // All stages complete - set flag for completion watch
+          console.log('🏁 All stages completed - setting completion flag');
+          setAllStagesCompleted(true);
         }
       } catch (stageError) {
         console.error(`❌ Error in stage ${stage.title}:`, {
@@ -295,7 +313,7 @@ export const useDecompositionLogic = ({
       clearInterval(progressInterval);
       clearTimeout(stageTimer);
     };
-  }, [currentStageIndex, speak, onComplete, decomposedGoal, stages, toast, error, actionExecuted]);
+  }, [currentStageIndex, speak, stages, toast, error, actionExecuted]);
 
   return {
     speaking,
