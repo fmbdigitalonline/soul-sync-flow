@@ -35,11 +35,16 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
     setCurrentDetailView,
   } = useJourneyMapData();
 
+  // Add debugging to see if mainGoal has the problematic structure
+  console.log('🗺️ JourneyMap mainGoal structure:', mainGoal);
+
   if (!mainGoal) {
     return <JourneyEmptyState />;
   }
 
   const handleFocusMode = (milestone: any) => {
+    // Log milestone structure to check for blueprint_alignment issues
+    console.log('🎯 Focusing on milestone:', milestone);
     setFocusedMilestone(milestone);
     console.log("[Focus] Entering focus mode for milestone:", milestone.title);
   };
@@ -59,6 +64,8 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
   };
 
   const handleMilestoneSelect = (milestone: any) => {
+    // Log milestone to check for rendering issues
+    console.log('🏁 Selecting milestone:', milestone);
     if (onMilestoneClick) {
       onMilestoneClick(milestone.id);
     }

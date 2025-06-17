@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface SoulGeneratedGoal {
@@ -131,7 +130,11 @@ Blueprint Data: ${JSON.stringify(blueprintData, null, 2)}`,
         target_date: this.calculateMilestoneDate(timeframe, 0.25),
         completed: false,
         completion_criteria: ['Research completed', 'Initial plan created', 'Resources identified'],
-        blueprint_alignment: this.getBlueprintAlignment(blueprintData, 'foundation')
+        blueprint_alignment: {
+          phase: 'foundation',
+          energyType: this.getUserType(blueprintData),
+          recommendations: [`Optimized for foundation activities based on your blueprint`]
+        }
       },
       {
         id: `milestone_2_${Date.now() + 1}`,
@@ -140,7 +143,11 @@ Blueprint Data: ${JSON.stringify(blueprintData, null, 2)}`,
         target_date: this.calculateMilestoneDate(timeframe, 0.5),
         completed: false,
         completion_criteria: ['Core components implemented', 'Initial testing completed', 'Feedback incorporated'],
-        blueprint_alignment: this.getBlueprintAlignment(blueprintData, 'development')
+        blueprint_alignment: {
+          phase: 'development',
+          energyType: this.getUserType(blueprintData),
+          recommendations: [`Optimized for development activities based on your blueprint`]
+        }
       },
       {
         id: `milestone_3_${Date.now() + 2}`,
@@ -149,7 +156,11 @@ Blueprint Data: ${JSON.stringify(blueprintData, null, 2)}`,
         target_date: this.calculateMilestoneDate(timeframe, 0.75),
         completed: false,
         completion_criteria: ['Quality improvements made', 'Performance optimized', 'Documentation completed'],
-        blueprint_alignment: this.getBlueprintAlignment(blueprintData, 'refinement')
+        blueprint_alignment: {
+          phase: 'refinement',
+          energyType: this.getUserType(blueprintData),
+          recommendations: [`Optimized for refinement activities based on your blueprint`]
+        }
       },
       {
         id: `milestone_4_${Date.now() + 3}`,
@@ -158,7 +169,11 @@ Blueprint Data: ${JSON.stringify(blueprintData, null, 2)}`,
         target_date: this.calculateMilestoneDate(timeframe, 1.0),
         completed: false,
         completion_criteria: ['All objectives met', 'Final review completed', 'Success celebrated'],
-        blueprint_alignment: this.getBlueprintAlignment(blueprintData, 'completion')
+        blueprint_alignment: {
+          phase: 'completion',
+          energyType: this.getUserType(blueprintData),
+          recommendations: [`Optimized for completion activities based on your blueprint`]
+        }
       }
     ];
 
