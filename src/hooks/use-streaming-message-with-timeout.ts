@@ -25,7 +25,7 @@ export const useStreamingMessageWithTimeout = (timeoutMs: number = 30000): UseSt
     isTimeout: false,
   });
 
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const timeoutRef = useRef<number | null>(null);
 
   const addStreamingChunk = useCallback((chunk: string) => {
     setState(prev => ({
@@ -36,10 +36,10 @@ export const useStreamingMessageWithTimeout = (timeoutMs: number = 30000): UseSt
     }));
     
     // Reset timeout when we receive data
-    if (timeoutRef.current) {
+    if (timeoutRef.current !== null) {
       clearTimeout(timeoutRef.current);
     }
-    timeoutRef.current = setTimeout(() => {
+    timeoutRef.current = window.setTimeout(() => {
       setState(prev => ({
         ...prev,
         isTimeout: true,
@@ -59,7 +59,7 @@ export const useStreamingMessageWithTimeout = (timeoutMs: number = 30000): UseSt
     }));
     
     // Start timeout
-    timeoutRef.current = setTimeout(() => {
+    timeoutRef.current = window.setTimeout(() => {
       setState(prev => ({
         ...prev,
         isTimeout: true,
@@ -70,7 +70,7 @@ export const useStreamingMessageWithTimeout = (timeoutMs: number = 30000): UseSt
   }, [timeoutMs]);
 
   const completeStreaming = useCallback(() => {
-    if (timeoutRef.current) {
+    if (timeoutRef.current !== null) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
@@ -83,7 +83,7 @@ export const useStreamingMessageWithTimeout = (timeoutMs: number = 30000): UseSt
   }, []);
 
   const resetStreaming = useCallback(() => {
-    if (timeoutRef.current) {
+    if (timeoutRef.current !== null) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
@@ -96,7 +96,7 @@ export const useStreamingMessageWithTimeout = (timeoutMs: number = 30000): UseSt
   }, []);
 
   const setError = useCallback((error: string) => {
-    if (timeoutRef.current) {
+    if (timeoutRef.current !== null) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
