@@ -104,7 +104,7 @@ export function GoalSelectionStep({ onComplete, onBack }: GoalSelectionStepProps
 
       {/* Scrollable Content Area */}
       <div className="flex-1 overflow-y-auto px-4 pt-4 pb-4">
-        <div className="space-y-6 max-w-md mx-auto pb-32">
+        <div className="space-y-6 max-w-md mx-auto">
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 space-y-6">
             {/* Primary Goal Selection */}
             <div className="space-y-4">
@@ -162,18 +162,34 @@ export function GoalSelectionStep({ onComplete, onBack }: GoalSelectionStepProps
                 )}
               </div>
             </div>
-
-            {/* Selection Summary */}
-            {primaryGoal && (
-              <div className="bg-white/5 rounded-lg p-4 space-y-2">
-                <h4 className="text-sm font-medium text-soul-purple">{t('goals.yourSelections')}</h4>
-                <div className="text-xs space-y-1">
-                  <p><span className="text-white/60">{t('goals.focus')}</span> {selectedGoalLabel}</p>
-                  <p><span className="text-white/60">{t('goals.guidanceLevelLabel')}</span> {supportStyle[0]}/5</p>
-                </div>
-              </div>
-            )}
           </div>
+
+          {/* Selection Summary */}
+          {primaryGoal && (
+            <div className="bg-white/5 rounded-lg p-4 space-y-2">
+              <h4 className="text-sm font-medium text-soul-purple">{t('goals.yourSelections')}</h4>
+              <div className="text-xs space-y-1">
+                <p><span className="text-white/60">{t('goals.focus')}</span> {selectedGoalLabel}</p>
+                <p><span className="text-white/60">{t('goals.guidanceLevelLabel')}</span> {supportStyle[0]}/5</p>
+              </div>
+            </div>
+          )}
+
+          {/* Submit Button - Now positioned right after the summary */}
+          <Button 
+            onClick={handleSubmit}
+            disabled={!isValid}
+            className="w-full bg-soul-purple hover:bg-soul-purple/90 disabled:opacity-50 py-3 text-base font-medium"
+          >
+            {isSubmitting ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                {t('goals.saving')}
+              </div>
+            ) : (
+              t('goals.completeSetup')
+            )}
+          </Button>
 
           {/* Error Message */}
           {submitError && (
@@ -190,26 +206,6 @@ export function GoalSelectionStep({ onComplete, onBack }: GoalSelectionStepProps
               </Button>
             </div>
           )}
-        </div>
-      </div>
-
-      {/* Fixed Submit Button - Always Visible */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-soul-black via-soul-black/95 to-transparent backdrop-blur-sm border-t border-white/10">
-        <div className="max-w-md mx-auto">
-          <Button 
-            onClick={handleSubmit}
-            disabled={!isValid}
-            className="w-full bg-soul-purple hover:bg-soul-purple/90 disabled:opacity-50 py-3 text-base font-medium"
-          >
-            {isSubmitting ? (
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                {t('goals.saving')}
-              </div>
-            ) : (
-              t('goals.completeSetup')
-            )}
-          </Button>
         </div>
       </div>
     </div>
