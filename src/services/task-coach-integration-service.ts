@@ -33,6 +33,51 @@ interface Goal {
   tasks?: TaskContext[];
 }
 
+// Helper functions for safe type conversion
+const isValidGoal = (obj: any): obj is Goal => {
+  return obj && typeof obj === 'object' && 
+         typeof obj.id === 'string' && 
+         typeof obj.title === 'string';
+};
+
+const isValidTask = (obj: any): obj is TaskContext => {
+  return obj && typeof obj === 'object' && 
+         typeof obj.id === 'string' && 
+         typeof obj.title === 'string' && 
+         typeof obj.status === 'string';
+};
+
+const parseGoalsFromJson = (json: any): Goal[] => {
+  if (!Array.isArray(json)) return [];
+  return json.filter(isValidGoal);
+};
+
+const parseTasksFromJson = (json: any): TaskContext[] => {
+  if (!Array.isArray(json)) return [];
+  return json.filter(isValidTask);
+};
+
+const serializeGoalsToJson = (goals: Goal[]): any => {
+  return goals.map(goal => ({
+    id: goal.id,
+    title: goal.title,
+    description: goal.description,
+    tasks: goal.tasks ? goal.tasks.map(task => ({
+      id: task.id,
+      title: task.title,
+      description: task.description,
+      status: task.status,
+      estimated_duration: task.estimated_duration,
+      energy_level_required: task.energy_level_required,
+      category: task.category,
+      goal_id: task.goal_id,
+      progress: task.progress,
+      sub_tasks: task.sub_tasks || [],
+      completed: task.status === 'completed'
+    })) : []
+  }));
+};
+
 class TaskCoachIntegrationService {
   private currentTask: TaskContext | null = null;
   private onTaskUpdateCallback?: (task: TaskContext) => void;
@@ -113,6 +158,9 @@ class TaskCoachIntegrationService {
       progress: newProgress
     };
 
+    // Update in database
+    await this.updateTaskInDatabase(this.currentTask);
+
     // Notify callbacks
     if (this.onTaskUpdateCallback) {
       this.onTaskUpdateCallback(this.currentTask);
@@ -162,6 +210,9 @@ class TaskCoachIntegrationService {
       progress: Math.min(100, Math.max(0, progress))
     };
 
+    // Update in database
+    await this.updateTaskInDatabase(this.currentTask);
+
     if (this.onTaskUpdateCallback) {
       this.onTaskUpdateCallback(this.currentTask);
     }
@@ -188,6 +239,9 @@ class TaskCoachIntegrationService {
       ...this.currentTask,
       sub_tasks: [...(this.currentTask.sub_tasks || []), newSubTask]
     };
+
+    // Update in database
+    await this.updateTaskInDatabase(this.currentTask);
 
     if (this.onTaskUpdateCallback) {
       this.onTaskUpdateCallback(this.currentTask);
@@ -217,12 +271,12 @@ class TaskCoachIntegrationService {
         return { success: false, message: 'No goals found' };
       }
 
-      // Safely handle the current_goals as an array
-      const currentGoals = Array.isArray(journey.current_goals) ? journey.current_goals as Goal[] : [];
+      // Safely parse goals from database
+      const currentGoals = parseGoalsFromJson(journey.current_goals);
 
       // Find next incomplete task
       for (const goal of currentGoals) {
-        if (goal.tasks && Array.isArray(goal.tasks)) {
+        if (goal.tasks && goal.tasks.length > 0) {
           const nextTask = goal.tasks.find((task: TaskContext) => 
             task.status !== 'completed' && task.id !== this.currentTask?.id
           );
@@ -239,6 +293,7 @@ class TaskCoachIntegrationService {
 
       return { success: false, message: 'No more tasks available' };
     } catch (error) {
+      console.error('Failed to get next task:', error);
       return { success: false, message: 'Failed to get next task' };
     }
   }
@@ -254,8 +309,9 @@ class TaskCoachIntegrationService {
         .eq('user_id', user.id)
         .single();
 
-      if (journey?.current_goals && Array.isArray(journey.current_goals)) {
-        const currentGoals = journey.current_goals as Goal[];
+      if (journey?.current_goals) {
+        // Safely parse and update goals
+        const currentGoals = parseGoalsFromJson(journey.current_goals);
         
         const updatedGoals = currentGoals.map((goal: Goal) => ({
           ...goal,
@@ -264,16 +320,20 @@ class TaskCoachIntegrationService {
               ...t,
               status: task.status,
               progress: task.progress,
-              completed: task.status === 'completed',
               sub_tasks: task.sub_tasks
             } : t
           ) : []
         }));
 
+        // Serialize goals for database storage
+        const serializedGoals = serializeGoalsToJson(updatedGoals);
+
         await supabase
           .from('productivity_journey')
-          .update({ current_goals: updatedGoals })
+          .update({ current_goals: serializedGoals })
           .eq('user_id', user.id);
+
+        console.log('🔄 TaskCoach Integration: Task updated in database');
       }
     } catch (error) {
       console.error('Failed to update task in database:', error);
