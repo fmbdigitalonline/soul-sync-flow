@@ -6,7 +6,7 @@ export type Language = 'en' | 'nl';
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: string) => string;
+  t: (key: string, variables?: Record<string, string>) => string;
 }
 
 const translations = {
@@ -25,6 +25,8 @@ const translations = {
     "cancel": "Cancel",
     "loading": "Loading...",
     "error": "Error",
+    "thinking": "Thinking...",
+    "tryAgain": "Try Again",
 
     // Index page
     "index.welcome": "Welcome to <span class='text-soul-purple'>Soul Sync</span>",
@@ -101,6 +103,18 @@ const translations = {
     "personality.processing": "Processing...",
     "personality.continueWithProfile": "Continue with this profile",
     "personality.keepRefining": "We'll keep refining your profile as we learn more about you.",
+
+    // Coach and Growth
+    "coach.aiResponseError": "I'm having trouble connecting right now. Please try again.",
+    "growth.howAreYouFeeling": "How are you feeling today on a scale of {min} to {max}?",
+    "growth.selectMood": "Select your current mood",
+    
+    // Tasks and Productivity
+    "tasks.allTasksCompleted": "All tasks completed! Well done.",
+    "tasks.readyToBegin": "Ready to begin your {type} session?",
+    
+    // Habits
+    "habits.streakDays": "{count} days"
   },
   nl: {
     // Language names
@@ -117,6 +131,8 @@ const translations = {
     "cancel": "Annuleren",
     "loading": "Laden...",
     "error": "Fout",
+    "thinking": "Denken...",
+    "tryAgain": "Probeer Opnieuw",
 
     // Index page
     "index.welcome": "Welkom bij <span class='text-soul-purple'>Soul Sync</span>",
@@ -193,6 +209,18 @@ const translations = {
     "personality.processing": "Verwerken...",
     "personality.continueWithProfile": "Ga verder met dit profiel",
     "personality.keepRefining": "We blijven je profiel verfijnen naarmate we meer over je leren.",
+
+    // Coach and Growth
+    "coach.aiResponseError": "Ik heb momenteel problemen met verbinden. Probeer het opnieuw.",
+    "growth.howAreYouFeeling": "Hoe voel je je vandaag op een schaal van {min} tot {max}?",
+    "growth.selectMood": "Selecteer je huidige stemming",
+    
+    // Tasks and Productivity
+    "tasks.allTasksCompleted": "Alle taken voltooid! Goed gedaan.",
+    "tasks.readyToBegin": "Klaar om je {type} sessie te beginnen?",
+    
+    // Habits
+    "habits.streakDays": "{count} dagen"
   }
 };
 
@@ -208,7 +236,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('language', language);
   }, [language]);
 
-  const t = (key: string): any => {
+  const t = (key: string, variables?: Record<string, string>): string => {
     const keys = key.split('.');
     let value: any = translations[language];
     
@@ -216,11 +244,29 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       if (value && typeof value === 'object') {
         value = value[k];
       } else {
-        return translations.en[key as keyof typeof translations.en] || key;
+        // Fallback to English if not found
+        const fallbackKeys = key.split('.');
+        let fallbackValue: any = translations.en;
+        for (const fallbackK of fallbackKeys) {
+          if (fallbackValue && typeof fallbackValue === 'object') {
+            fallbackValue = fallbackValue[fallbackK];
+          } else {
+            return key; // Return key if no translation found
+          }
+        }
+        value = fallbackValue;
+        break;
       }
     }
     
-    return value !== undefined ? value : translations.en[key as keyof typeof translations.en] || key;
+    // Handle template variable substitution
+    if (typeof value === 'string' && variables) {
+      return value.replace(/\{(\w+)\}/g, (match, variableName) => {
+        return variables[variableName] || match;
+      });
+    }
+    
+    return typeof value === 'string' ? value : (typeof value !== 'undefined' ? value : key);
   };
 
   return (
