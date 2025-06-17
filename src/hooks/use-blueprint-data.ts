@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { blueprintService } from '@/services/blueprint-service';
 
@@ -20,10 +21,14 @@ export const useBlueprintData = () => {
       if (data) {
         console.log('🔍 Raw blueprint data received:', data);
         
-        // Fixed: Properly map personality data to MBTI section with type safety
+        // Fixed: Properly map personality data to MBTI section with proper type checking
         const personalityData = data.user_meta?.personality;
-        const mbtiType = personalityData?.likelyType || 'Unknown';
-        const mbtiDescription = personalityData?.description || 'No description available';
+        
+        // Ensure personalityData is an object, not a string
+        const personalityObj = (typeof personalityData === 'object' && personalityData !== null) ? personalityData : {};
+        
+        const mbtiType = personalityObj?.likelyType || 'Unknown';
+        const mbtiDescription = personalityObj?.description || 'No description available';
         
         // Extract core traits from description for keywords
         const extractKeywords = (description: string) => {
@@ -68,16 +73,16 @@ export const useBlueprintData = () => {
           archetype_chinese: data.archetype_chinese || data.astrology,
           values_life_path: data.values_life_path || data.numerology,
           energy_strategy_human_design: data.energy_strategy_human_design || data.human_design,
-          // Fixed: Properly populate MBTI data from personality assessment with type safety
+          // Fixed: Properly populate MBTI data from personality assessment with proper type safety
           cognition_mbti: {
             type: mbtiType,
             core_keywords: extractKeywords(mbtiDescription),
             dominant_function: functions.dominant,
             auxiliary_function: functions.auxiliary,
             description: mbtiDescription,
-            confidence: personalityData?.userConfidence || 0.5,
-            big_five: personalityData?.bigFive || {},
-            probabilities: personalityData?.mbtiProbabilities || {}
+            confidence: personalityObj?.userConfidence || 0.5,
+            big_five: personalityObj?.bigFive || {},
+            probabilities: personalityObj?.mbtiProbabilities || {}
           },
           bashar_suite: data.bashar_suite || {},
           timing_overlays: data.timing_overlays || {}
