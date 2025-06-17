@@ -28,23 +28,9 @@ export default function Onboarding() {
   // Detect development mode
   const isDevelopment = import.meta.env.DEV;
   
-  // Get the onboarding 3D functionality
-  const {
-    is3DMode,
-    currentStep,
-    steps,
-    showSpeechBubble,
-    sceneRef,
-    stage,
-    speaking,
-    interactionStage,
-    isTransitioning,
-    cardOpacity,
-    goToNextStep,
-    goToPrevStep,
-    handleOrbClick,
-    switchToInputStage
-  } = useOnboarding3D();
+  // Use simple navigation instead of 3D navigation for better mobile experience
+  const [currentStep, setCurrentStep] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   // Form data state - update personality to store full profile
   const [formData, setFormData] = useState({
@@ -71,6 +57,18 @@ export default function Onboarding() {
   const navigationTriggeredRef = useRef(false);
   const goalSelectionTriggeredRef = useRef(false);
 
+  // Steps mapping
+  const steps = [
+    t('onboarding.welcome'),
+    t('onboarding.whatsYourName'),
+    t('onboarding.whenWereBorn'),
+    t('onboarding.whatTimeWereBorn'),
+    t('onboarding.whereWereBorn'),
+    t('onboarding.tellPersonality'),
+    t('onboarding.generatingBlueprint'),
+    t('onboarding.choosePath'),
+  ];
+
   // Generate months array with translations
   const months = [
     { value: "01", label: "January" },
@@ -90,6 +88,25 @@ export default function Onboarding() {
   // Generate years array (from 1920 to current year)
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: currentYear - 1919 }, (_, i) => currentYear - i);
+
+  // Navigation functions
+  const goToNextStep = () => {
+    if (isTransitioning || currentStep >= steps.length - 1) return;
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrentStep(prev => prev + 1);
+      setIsTransitioning(false);
+    }, 300);
+  };
+
+  const goToPrevStep = () => {
+    if (isTransitioning || currentStep <= 0) return;
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrentStep(prev => prev - 1);
+      setIsTransitioning(false);
+    }, 300);
+  };
 
   // Update birth date when components change
   useEffect(() => {
@@ -159,7 +176,7 @@ export default function Onboarding() {
     }, 1500);
   };
 
-  // Handle goal selection completion - MODIFIED to redirect to home page
+  // Handle goal selection completion with back navigation support
   const handleGoalSelectionComplete = async (preferences: { 
     primary_goal: string; 
     support_style: number; 
@@ -555,15 +572,11 @@ export default function Onboarding() {
         );
       case 7: // Goal Selection
         return (
-          <div className="space-y-6 text-center max-w-md mx-auto">
-            <h2 className="text-xl font-display font-bold">{t('onboarding.choosePath')}</h2>
-            <p className="text-white/80">{t('onboarding.choosePathDesc')}</p>
-            <GoalSelectionStep onComplete={handleGoalSelectionComplete} />
-            {isDevelopment && (
-              <p className="text-xs text-blue-400 bg-blue-900/20 p-2 rounded">
-                {t('onboarding.devModePrefs')}
-              </p>
-            )}
+          <div className="fixed inset-0 bg-soul-black">
+            <GoalSelectionStep 
+              onComplete={handleGoalSelectionComplete}
+              onBack={goToPrevStep}
+            />
           </div>
         );
       default:
@@ -571,67 +584,36 @@ export default function Onboarding() {
     }
   };
 
-  // Determine whether to show speech bubble or form input
-  const showInput = interactionStage === 'input' && !isTransitioning;
-  const orbAnimation = speaking ? "speaking" : isTransitioning ? "transitioning" : "idle";
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-soul-black to-soul-purple/20 text-white relative overflow-hidden">
-      <Onboarding3DScene
-        speaking={speaking}
-        stage={stage}
-        interactionStage={interactionStage}
-        isCalculating={currentStep === 6}
-      >
-        <div className="absolute top-4 left-0 right-0 px-4">
-          <div className="w-full max-w-md mx-auto flex justify-between mb-1">
-            {steps.map((_, index) => (
-              <div 
-                key={index} 
-                className={`w-3 h-3 rounded-full ${
-                  index < currentStep 
-                    ? "bg-white" 
-                    : index === currentStep 
-                    ? "bg-white/80 animate-pulse" 
-                    : "bg-white/30"
-                }`}
-              ></div>
-            ))}
-          </div>
-          <div className="text-center text-sm text-white/60">
-            {t('onboarding.step')} {currentStep + 1} {t('onboarding.of')} {steps.length}: {steps[currentStep]}
-          </div>
+      <div className="absolute top-4 left-0 right-0 px-4 z-10">
+        <div className="w-full max-w-md mx-auto flex justify-between mb-1">
+          {steps.map((_, index) => (
+            <div 
+              key={index} 
+              className={`w-3 h-3 rounded-full ${
+                index < currentStep 
+                  ? "bg-white" 
+                  : index === currentStep 
+                  ? "bg-white/80 animate-pulse" 
+                  : "bg-white/30"
+              }`}
+            ></div>
+          ))}
         </div>
+        <div className="text-center text-sm text-white/60">
+          {t('onboarding.step')} {currentStep + 1} {t('onboarding.of')} {steps.length}: {steps[currentStep]}
+        </div>
+      </div>
 
+      <div className="flex items-center justify-center min-h-screen px-4 pt-16">
         <motion.div
-          ref={sceneRef}
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="w-full max-w-md mx-auto p-4"
-          style={{ 
-            pointerEvents: 'auto',
-            perspective: '1000px'
-          }}
+          animate={{ opacity: isTransitioning ? 0.5 : 1 }}
+          className="w-full max-w-md mx-auto"
         >
-          <motion.div 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: cardOpacity }}
-            transition={{ duration: 0.3 }}
-            className={`${showInput ? 'block' : 'hidden'}`}
-          >
-            {renderStepContent()}
-          </motion.div>
+          {renderStepContent()}
         </motion.div>
-      </Onboarding3DScene>
-      
-      <div 
-        className="fixed bottom-10 right-10 cursor-pointer"
-        onClick={handleOrbClick}
-        aria-label="Toggle orb interaction"
-      >
-        <div className="w-12 h-12 rounded-full bg-soul-purple/30 flex items-center justify-center">
-          <div className="w-8 h-8 rounded-full bg-soul-purple animate-pulse"></div>
-        </div>
       </div>
     </div>
   );

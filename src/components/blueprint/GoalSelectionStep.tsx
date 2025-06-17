@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Slider } from '@/components/ui/slider';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, ArrowLeft } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface GoalSelectionStepProps {
   onComplete: (preferences: {
@@ -12,22 +13,24 @@ interface GoalSelectionStepProps {
     support_style: number;
     time_horizon: string;
   }) => void;
+  onBack?: () => void;
 }
 
-export function GoalSelectionStep({ onComplete }: GoalSelectionStepProps) {
+export function GoalSelectionStep({ onComplete, onBack }: GoalSelectionStepProps) {
+  const { t } = useLanguage();
   const [primaryGoal, setPrimaryGoal] = useState('');
   const [supportStyle, setSupportStyle] = useState([3]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const goals = [
-    { id: 'exploring', label: "I'm still exploring and figuring things out" },
-    { id: 'personal_growth', label: 'Personal Growth & Self-Discovery' },
-    { id: 'career_success', label: 'Career Success & Professional Development' },
-    { id: 'relationships', label: 'Relationships & Communication' },
-    { id: 'health_wellness', label: 'Health & Wellness' },
-    { id: 'creativity', label: 'Creativity & Self-Expression' },
-    { id: 'spiritual_development', label: 'Spiritual Development' }
+    { id: 'exploring', label: t('goals.exploring') },
+    { id: 'personal_growth', label: t('goals.personalGrowth') },
+    { id: 'career_success', label: t('goals.careerSuccess') },
+    { id: 'relationships', label: t('goals.relationships') },
+    { id: 'health_wellness', label: t('goals.healthWellness') },
+    { id: 'creativity', label: t('goals.creativity') },
+    { id: 'spiritual_development', label: t('goals.spiritualDevelopment') }
   ];
 
   const handleSubmit = async () => {
@@ -56,7 +59,7 @@ export function GoalSelectionStep({ onComplete }: GoalSelectionStepProps) {
       console.error('GoalSelectionStep: Error during submission:', error);
       
       setIsSubmitting(false);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to save preferences';
+      const errorMessage = error instanceof Error ? error.message : t('goals.errorSaving');
       setSubmitError(errorMessage);
     }
   };
@@ -74,17 +77,31 @@ export function GoalSelectionStep({ onComplete }: GoalSelectionStepProps) {
   // Get support style description
   const getSupportStyleDescription = (level: number) => {
     const descriptions = {
-      1: 'Minimal guidance - I prefer to explore independently',
-      2: 'Light guidance - Occasional suggestions and insights',
-      3: 'Balanced approach - Regular guidance with flexibility',
-      4: 'Active guidance - Structured support and recommendations',
-      5: 'Maximum guidance - Comprehensive coaching and direction'
+      1: t('goals.guidance1'),
+      2: t('goals.guidance2'),
+      3: t('goals.guidance3'),
+      4: t('goals.guidance4'),
+      5: t('goals.guidance5')
     };
     return descriptions[level as keyof typeof descriptions] || '';
   };
 
   return (
     <div className="h-screen flex flex-col bg-soul-black overflow-hidden">
+      {/* Back Button */}
+      {onBack && (
+        <div className="p-4 border-b border-white/10">
+          <Button
+            variant="ghost"
+            onClick={onBack}
+            className="flex items-center gap-2 text-white/80 hover:text-white"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            {t('back')}
+          </Button>
+        </div>
+      )}
+
       {/* Scrollable Content Area */}
       <div className="flex-1 overflow-y-auto px-4 pt-4 pb-4">
         <div className="space-y-6 max-w-md mx-auto pb-32">
@@ -92,7 +109,7 @@ export function GoalSelectionStep({ onComplete }: GoalSelectionStepProps) {
             {/* Primary Goal Selection */}
             <div className="space-y-4">
               <Label className="text-base font-medium text-center block">
-                What's your primary focus area?
+                {t('goals.primaryFocus')}
               </Label>
               <RadioGroup value={primaryGoal} onValueChange={setPrimaryGoal} disabled={isSubmitting}>
                 <div className="space-y-3">
@@ -117,7 +134,7 @@ export function GoalSelectionStep({ onComplete }: GoalSelectionStepProps) {
             {/* Support Style */}
             <div className="space-y-4">
               <Label className="text-base font-medium text-center block">
-                How much guidance do you prefer?
+                {t('goals.guidanceLevel')}
               </Label>
               <div className="space-y-3">
                 <div className="text-center">
@@ -135,8 +152,8 @@ export function GoalSelectionStep({ onComplete }: GoalSelectionStepProps) {
                   disabled={isSubmitting}
                 />
                 <div className="flex justify-between text-xs text-white/60 px-1">
-                  <span>Light touch</span>
-                  <span>Structured guidance</span>
+                  <span>{t('goals.lightTouch')}</span>
+                  <span>{t('goals.structuredGuidance')}</span>
                 </div>
                 {supportStyle[0] && (
                   <p className="text-xs text-white/80 text-center px-2">
@@ -149,10 +166,10 @@ export function GoalSelectionStep({ onComplete }: GoalSelectionStepProps) {
             {/* Selection Summary */}
             {primaryGoal && (
               <div className="bg-white/5 rounded-lg p-4 space-y-2">
-                <h4 className="text-sm font-medium text-soul-purple">Your Selections:</h4>
+                <h4 className="text-sm font-medium text-soul-purple">{t('goals.yourSelections')}</h4>
                 <div className="text-xs space-y-1">
-                  <p><span className="text-white/60">Focus:</span> {selectedGoalLabel}</p>
-                  <p><span className="text-white/60">Guidance Level:</span> {supportStyle[0]}/5</p>
+                  <p><span className="text-white/60">{t('goals.focus')}</span> {selectedGoalLabel}</p>
+                  <p><span className="text-white/60">{t('goals.guidanceLevelLabel')}</span> {supportStyle[0]}/5</p>
                 </div>
               </div>
             )}
@@ -162,14 +179,14 @@ export function GoalSelectionStep({ onComplete }: GoalSelectionStepProps) {
           {submitError && (
             <div className="bg-red-900/20 border border-red-500/50 rounded-xl p-4 space-y-3">
               <div className="text-red-300 text-sm">
-                <strong>Error:</strong> {submitError}
+                <strong>{t('error')}:</strong> {submitError}
               </div>
               <Button 
                 onClick={handleRetry}
                 variant="outline"
                 className="w-full border-red-500/50 text-red-300 hover:bg-red-900/30"
               >
-                Try Again
+                {t('goals.tryAgain')}
               </Button>
             </div>
           )}
@@ -187,10 +204,10 @@ export function GoalSelectionStep({ onComplete }: GoalSelectionStepProps) {
             {isSubmitting ? (
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Saving...
+                {t('goals.saving')}
               </div>
             ) : (
-              "Complete Setup"
+              t('goals.completeSetup')
             )}
           </Button>
         </div>

@@ -572,7 +572,7 @@ const translations = {
     'lifeArea.career.name': 'Carrière',
     'lifeArea.career.description': 'Doel, professionele groei, impact',
     'lifeArea.finances.name': 'Financiën',
-    'lifeArea.finances.description': 'Overvloed, zekerheid, geld mindset',
+    'lifeArea.finances.description': 'Abundance, zekerheid, geld mindset',
     'lifeArea.relationships.name': 'Relaties',
     'lifeArea.relationships.description': 'Liefde, vriendschap, gemeenschapsverbinding',
     'lifeArea.wellbeing.name': 'Welzijn',
