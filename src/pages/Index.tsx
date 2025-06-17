@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -95,9 +96,10 @@ const Index = () => {
           <SoulOrbAvatar size="lg" />
         </div>
         
-        <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 px-4">
-          Welcome to <br /><span className="text-soul-purple">SoulSync</span>
-        </h1>
+        <h1 
+          className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 px-4"
+          dangerouslySetInnerHTML={{ __html: t('index.welcome') }}
+        />
         
         <RotatingText 
           texts={subtitleMessages}

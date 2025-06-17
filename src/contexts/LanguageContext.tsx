@@ -60,7 +60,7 @@ const translations = {
     'newConversationStarted': 'New conversation started with {{agent}}',
     
     // Index/Home Page
-    'index.welcome': 'Welcome to Your <br /><span class="text-soul-purple">Soul Journey</span>',
+    'index.welcome': 'Welcome to <br /><span class="text-soul-purple">SoulSync</span>',
     'index.subtitle': 'Discover your authentic path through personalized AI guidance and spiritual growth tools.',
     'index.dreams': 'Dreams & Goals',
     'index.dreamsDesc': 'Transform dreams into reality',
@@ -421,7 +421,7 @@ const translations = {
     'newConversationStarted': 'Nieuw gesprek gestart met {{agent}}',
     
     // Index/Home Page
-    'index.welcome': 'Welkom bij Je <br /><span class="text-soul-purple">Zielreis</span>',
+    'index.welcome': 'Welkom bij <br /><span class="text-soul-purple">SoulSync</span>',
     'index.subtitle': 'Ontdek je authentieke pad door gepersonaliseerde AI-begeleiding en spirituele groeitools.',
     'index.dreams': 'Dromen & Doelen',
     'index.dreamsDesc': 'Transformeer dromen naar realiteit',
