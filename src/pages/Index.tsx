@@ -31,7 +31,7 @@ const Index = () => {
     refetch
   } = useOptimizedBlueprintData();
   const isAdmin = isAdminUser(user);
-  const { t, language } = useLanguage();
+  const { t, tArray, language } = useLanguage();
 
   // Refresh blueprint data when user changes or when returning from onboarding
   useEffect(() => {
@@ -61,17 +61,16 @@ const Index = () => {
     }
   }, [user, hasBlueprint, t]);
 
-  // Get dynamic subtitle messages from translations - handle both string and array returns
+  // Get dynamic subtitle messages from translations using tArray for array translations
   const subtitleMessages = useMemo(() => {
-    const messages = t("index.rotatingMessages");
-    // Handle both string and array cases safely
-    if (Array.isArray(messages)) {
-      return messages;
+    const messages = tArray("index.rotatingMessages");
+    // If no array found, fallback to subtitle
+    if (messages.length === 0) {
+      const fallbackMessage = t("index.subtitle");
+      return [fallbackMessage || "Discover your authentic path through personalized AI guidance and spiritual growth tools."];
     }
-    // Fallback to a default message if translation is a string or fails
-    const fallbackMessage = typeof messages === 'string' ? messages : "Discover your authentic path through personalized AI guidance and spiritual growth tools.";
-    return [fallbackMessage];
-  }, [t, language]);
+    return messages;
+  }, [t, tArray, language]);
 
   // Only speak welcome message once when user and blueprint data are loaded
   useEffect(() => {

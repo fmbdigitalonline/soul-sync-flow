@@ -5,7 +5,8 @@ export type Language = 'en' | 'nl';
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: string, variables?: Record<string, string>) => string | string[];
+  t: (key: string, variables?: Record<string, string>) => string;
+  tArray: (key: string) => string[];
 }
 
 const translations = {
@@ -235,22 +236,22 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('language', language);
   }, [language]);
 
-  const t = (key: string, variables?: Record<string, string>): string | string[] => {
-    const getTranslation = (lang: Language, translationKey: string): any => {
-      const keys = translationKey.split('.');
-      let value: any = translations[lang];
-      
-      for (const k of keys) {
-        if (value && typeof value === 'object') {
-          value = value[k];
-        } else {
-          return undefined;
-        }
+  const getTranslation = (lang: Language, translationKey: string): any => {
+    const keys = translationKey.split('.');
+    let value: any = translations[lang];
+    
+    for (const k of keys) {
+      if (value && typeof value === 'object') {
+        value = value[k];
+      } else {
+        return undefined;
       }
-      
-      return value;
-    };
+    }
+    
+    return value;
+  };
 
+  const t = (key: string, variables?: Record<string, string>): string => {
     // Try to get translation in current language
     let value = getTranslation(language, key);
     
@@ -264,9 +265,10 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       return key;
     }
     
-    // Handle arrays (return as-is for arrays like rotatingMessages)
+    // Ensure we return a string (not an array)
     if (Array.isArray(value)) {
-      return value;
+      console.warn(`Translation key "${key}" returned an array but was expected to be a string. Use tArray() instead.`);
+      return key;
     }
     
     // Handle template variable substitution for strings
@@ -279,8 +281,35 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     return typeof value === 'string' ? value : key;
   };
 
+  const tArray = (key: string): string[] => {
+    // Try to get translation in current language
+    let value = getTranslation(language, key);
+    
+    // If not found, fallback to English
+    if (value === undefined) {
+      value = getTranslation('en', key);
+    }
+    
+    // If still not found, return empty array
+    if (value === undefined) {
+      return [];
+    }
+    
+    // Ensure we return an array
+    if (Array.isArray(value)) {
+      return value;
+    }
+    
+    // If it's a string, wrap it in an array
+    if (typeof value === 'string') {
+      return [value];
+    }
+    
+    return [];
+  };
+
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language, setLanguage, t, tArray }}>
       {children}
     </LanguageContext.Provider>
   );
