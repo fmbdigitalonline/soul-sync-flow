@@ -204,42 +204,56 @@ export const useDecompositionLogic = ({
   // Safe currentStage access with fallback
   const currentStage = stages[currentStageIndex] || stages[0];
 
-  // Dedicated completion effect that watches for decomposedGoal updates
+  // DEDICATED COMPLETION EFFECT - This watches for decomposedGoal updates
   useEffect(() => {
-    console.log('🔍 Completion watch effect triggered:', {
+    console.log('🔍 COMPLETION WATCH - State check:', {
       allStagesCompleted,
       hasDecomposedGoal: !!decomposedGoal,
       decomposedGoalId: decomposedGoal?.id,
-      error
+      error,
+      timestamp: Date.now()
     });
 
     // Only proceed if all stages are completed, we have a goal, and no error
     if (allStagesCompleted && decomposedGoal && !error) {
-      console.log('🎉 All conditions met for completion - proceeding with final steps');
+      console.log('🎉 COMPLETION TRIGGERED - All conditions met, proceeding with final steps');
       
-      setTimeout(() => {
+      // Small delay to ensure state is stable, then complete
+      const completionTimer = setTimeout(() => {
+        console.log('🗣️ Speaking completion message...');
         speak("Your personalized journey is ready! Let me show you what we've created together...");
-        setTimeout(() => {
-          console.log('🚀 Completing with decomposed goal:', decomposedGoal);
+        
+        // Final completion with the goal data
+        const finalTimer = setTimeout(() => {
+          console.log('🚀 FINAL COMPLETION - Calling onComplete with goal:', decomposedGoal);
           onComplete(decomposedGoal);
         }, 2000);
+
+        return () => clearTimeout(finalTimer);
       }, 1000);
+
+      return () => clearTimeout(completionTimer);
     } else if (allStagesCompleted && !decomposedGoal && !error) {
       // This shouldn't happen but let's handle it gracefully
-      console.error('❌ All stages completed but no decomposed goal available');
+      console.error('❌ COMPLETION ERROR - All stages completed but no decomposed goal available');
       setError('Failed to create goal - no result from Soul decomposition');
     }
   }, [allStagesCompleted, decomposedGoal, error, speak, onComplete]);
 
-  // Main stage processing effect (without completion logic)
+  // MAIN STAGE PROCESSING EFFECT - No completion logic here
   useEffect(() => {
     if (currentStageIndex >= stages.length || error) {
+      console.log('🛑 Stage processing stopped:', { 
+        currentStageIndex, 
+        stagesLength: stages.length, 
+        hasError: !!error 
+      });
       return; // Don't process if we're done or have an error
     }
 
     const stage = stages[currentStageIndex];
     
-    console.log(`🚀 Processing stage ${currentStageIndex}: ${stage.title}`, {
+    console.log(`🚀 STAGE PROCESSING - Stage ${currentStageIndex}: ${stage.title}`, {
       hasAction: !!stage.action,
       actionExecuted,
       timestamp: Date.now()
@@ -261,14 +275,14 @@ export const useDecompositionLogic = ({
       try {
         // Execute stage action if it exists and hasn't been executed yet
         if (stage.action && !actionExecuted) {
-          console.log(`🎯 Executing action for stage: ${stage.title}`);
+          console.log(`🎯 EXECUTING ACTION - Stage: ${stage.title}`);
           setActionExecuted(true);
           
           const actionStartTime = Date.now();
           await stage.action();
           const actionEndTime = Date.now();
           
-          console.log(`✅ Stage action completed: ${stage.title}`, {
+          console.log(`✅ ACTION COMPLETED - Stage: ${stage.title}`, {
             duration: actionEndTime - actionStartTime,
             timestamp: actionEndTime
           });
@@ -277,25 +291,28 @@ export const useDecompositionLogic = ({
         // Mark stage as completed
         setCompletedStages(prev => {
           if (!prev.includes(stage.id)) {
-            return [...prev, stage.id];
+            const newCompleted = [...prev, stage.id];
+            console.log(`✅ STAGE COMPLETED - ${stage.id}`, { completedStages: newCompleted });
+            return newCompleted;
           }
           return prev;
         });
         
         // Move to next stage or mark all stages complete
         if (currentStageIndex < stages.length - 1) {
-          console.log(`⏭️ Moving to next stage: ${currentStageIndex + 1}`);
+          console.log(`⏭️ NEXT STAGE - Moving from ${currentStageIndex} to ${currentStageIndex + 1}`);
           setCurrentStageIndex(prev => prev + 1);
           setActionExecuted(false); // Reset for next stage
         } else {
           // All stages complete - set flag for completion watch
-          console.log('🏁 All stages completed - setting completion flag');
+          console.log('🏁 ALL STAGES COMPLETED - Setting completion flag');
           setAllStagesCompleted(true);
         }
       } catch (stageError) {
-        console.error(`❌ Error in stage ${stage.title}:`, {
+        console.error(`❌ STAGE ERROR - ${stage.title}:`, {
           error: stageError instanceof Error ? stageError.message : 'Unknown error',
-          stageIndex: currentStageIndex
+          stageIndex: currentStageIndex,
+          timestamp: Date.now()
         });
         
         const errorMessage = stageError instanceof Error ? stageError.message : 'Stage execution failed';
