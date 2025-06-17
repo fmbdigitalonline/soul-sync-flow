@@ -41,6 +41,7 @@ export const useDecompositionLogic = ({
   const [error, setError] = useState<string | null>(null);
   const [actionExecuted, setActionExecuted] = useState(false);
   const [allStagesCompleted, setAllStagesCompleted] = useState(false);
+  const [stageProcessing, setStageProcessing] = useState(false);
 
   // Memoized user type to prevent infinite re-rendering
   const userType = useMemo(() => {
@@ -240,15 +241,17 @@ export const useDecompositionLogic = ({
     }
   }, [allStagesCompleted, decomposedGoal, error, speak, onComplete]);
 
-  // MAIN STAGE PROCESSING EFFECT - No completion logic here
+  // MAIN STAGE PROCESSING EFFECT - Fixed dependencies and logic
   useEffect(() => {
-    if (currentStageIndex >= stages.length || error) {
+    // Prevent infinite loops by checking if we're already processing
+    if (stageProcessing || currentStageIndex >= stages.length || error) {
       console.log('🛑 Stage processing stopped:', { 
         currentStageIndex, 
         stagesLength: stages.length, 
-        hasError: !!error 
+        hasError: !!error,
+        stageProcessing
       });
-      return; // Don't process if we're done or have an error
+      return;
     }
 
     const stage = stages[currentStageIndex];
@@ -258,6 +261,9 @@ export const useDecompositionLogic = ({
       actionExecuted,
       timestamp: Date.now()
     });
+    
+    // Set processing flag to prevent re-entry
+    setStageProcessing(true);
     
     // Speak the current stage message
     speak(stage.message);
@@ -303,10 +309,12 @@ export const useDecompositionLogic = ({
           console.log(`⏭️ NEXT STAGE - Moving from ${currentStageIndex} to ${currentStageIndex + 1}`);
           setCurrentStageIndex(prev => prev + 1);
           setActionExecuted(false); // Reset for next stage
+          setStageProcessing(false); // Allow next stage to process
         } else {
           // All stages complete - set flag for completion watch
           console.log('🏁 ALL STAGES COMPLETED - Setting completion flag');
           setAllStagesCompleted(true);
+          setStageProcessing(false);
         }
       } catch (stageError) {
         console.error(`❌ STAGE ERROR - ${stage.title}:`, {
@@ -317,6 +325,7 @@ export const useDecompositionLogic = ({
         
         const errorMessage = stageError instanceof Error ? stageError.message : 'Stage execution failed';
         setError(errorMessage);
+        setStageProcessing(false);
         
         toast({
           title: "Dream Creation Error",
@@ -329,8 +338,9 @@ export const useDecompositionLogic = ({
     return () => {
       clearInterval(progressInterval);
       clearTimeout(stageTimer);
+      setStageProcessing(false);
     };
-  }, [currentStageIndex, speak, stages, toast, error, actionExecuted]);
+  }, [currentStageIndex, error]); // Simplified dependencies - only what actually changes
 
   return {
     speaking,
