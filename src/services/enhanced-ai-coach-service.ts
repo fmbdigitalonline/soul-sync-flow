@@ -157,9 +157,24 @@ class EnhancedAICoachService {
           promptLength: persona.systemPrompt.length,
           agentType,
           userId: this.currentUserId,
-          hasRealPersonalityData: persona.systemPrompt.includes('MBTI') || persona.systemPrompt.includes('Sun sign')
+          hasRealPersonalityData: persona.systemPrompt.includes('MBTI') || persona.systemPrompt.includes('Sun sign'),
+          containsUserName: persona.systemPrompt.includes(this.personalityEngine.getUserFirstName() || 'user')
         });
         console.log("🔍 SERVICE System Prompt Preview (first 500 chars):", persona.systemPrompt.substring(0, 500) + "...");
+        
+        // Test personas table access
+        try {
+          console.log("🔧 Testing personas table access by attempting to save persona...");
+          const saved = await PersonaService.saveUserPersona(persona);
+          if (saved) {
+            console.log("✅ Personas table access working - saved persona successfully");
+          } else {
+            console.error("❌ Failed to save persona to database - RLS might still be blocking");
+          }
+        } catch (saveError) {
+          console.error("❌ Error testing personas table access:", saveError);
+        }
+        
         return persona.systemPrompt;
       }
 
@@ -521,8 +536,9 @@ class EnhancedAICoachService {
                 console.log('✅ Enhanced AI Coach SERVICE: Received [DONE], completing stream');
                 console.log('🎯 FINAL RESPONSE ANALYSIS:', {
                   responseLength: fullResponse.length,
-                  hasPersonalizedContent: fullResponse.includes('MBTI') || fullResponse.includes('Sun sign'),
-                  responseStart: fullResponse.substring(0, 200)
+                  hasPersonalizedContent: fullResponse.includes('MBTI') || fullResponse.includes('Sun sign') || fullResponse.includes('ENFP') || fullResponse.includes('Projector'),
+                  isGeneric: fullResponse.includes('powerful soul') || fullResponse.includes('Feurion') && fullResponse.includes('powerful soul'),
+                  responsePreview: fullResponse.substring(0, 200)
                 });
                 callbacks.onComplete(fullResponse);
                 return;

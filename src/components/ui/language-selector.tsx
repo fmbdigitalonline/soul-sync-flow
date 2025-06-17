@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { 
   DropdownMenu,
@@ -18,7 +18,23 @@ const languages: { code: Language; name: string; flag: string }[] = [
 export const LanguageSelector: React.FC = () => {
   const { language, setLanguage, t } = useLanguage();
 
-  const currentLanguage = languages.find(lang => lang.code === language);
+  // Memoize language lookups to prevent excessive re-renders
+  const currentLanguage = useMemo(() => 
+    languages.find(lang => lang.code === language), 
+    [language]
+  );
+
+  const englishLabel = useMemo(() => t('language.english'), [t]);
+  const dutchLabel = useMemo(() => t('language.dutch'), [t]);
+
+  const getLanguageLabel = useMemo(() => (langCode: Language) => {
+    return langCode === 'en' ? englishLabel : dutchLabel;
+  }, [englishLabel, dutchLabel]);
+
+  const currentLanguageLabel = useMemo(() => 
+    getLanguageLabel(language), 
+    [getLanguageLabel, language]
+  );
 
   return (
     <DropdownMenu>
@@ -26,7 +42,7 @@ export const LanguageSelector: React.FC = () => {
         <Button variant="ghost" size="sm" className="gap-2">
           <Globe className="h-4 w-4" />
           <span>{currentLanguage?.flag}</span>
-          <span className="hidden sm:inline">{t(`language.${language === 'en' ? 'english' : 'dutch'}`)}</span>
+          <span className="hidden sm:inline">{currentLanguageLabel}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
@@ -37,7 +53,7 @@ export const LanguageSelector: React.FC = () => {
             className={language === lang.code ? "bg-accent" : ""}
           >
             <span className="mr-2">{lang.flag}</span>
-            {t(`language.${lang.code === 'en' ? 'english' : 'dutch'}`)}
+            {getLanguageLabel(lang.code)}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

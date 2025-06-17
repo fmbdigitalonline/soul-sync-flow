@@ -21,6 +21,21 @@ export class PersonalityEngine {
   }
 
   /**
+   * Set user ID for this personality engine instance
+   */
+  setUserId(userId: string) {
+    console.log("👤 Personality Engine: Setting user ID:", userId);
+    this.userId = userId;
+  }
+
+  /**
+   * Get user's first name
+   */
+  getUserFirstName(): string | null {
+    return this.userFirstName;
+  }
+
+  /**
    * Extract user's first name from blueprint data
    */
   private extractUserFirstName() {
@@ -39,6 +54,14 @@ export class PersonalityEngine {
       console.warn('⚠️ Personality Engine: Could not extract user first name:', error);
       this.userFirstName = null;
     }
+  }
+
+  updateBlueprint(updates: Partial<LayeredBlueprint>) {
+    console.log("🔄 Personality Engine: Updating blueprint and regenerating persona");
+    this.blueprint = { ...this.blueprint, ...updates };
+    this.extractUserFirstName(); // Re-extract name when blueprint updates
+    this.detectCommunicationStyle();
+    this.compilePersona(); // Regenerate persona when blueprint updates
   }
 
   private detectCommunicationStyle() {
@@ -301,7 +324,7 @@ export class PersonalityEngine {
         `Now ${this.userFirstName}`,
         `Let's explore this together, ${this.userFirstName}`,
         `Consider this, ${this.userFirstName}`
-      ] : ['Now', 'Let\'s explore this together', 'Consider this'];
+      ] : ['Now', 'Let\'s explore this together', 'Consider this'],
 
       console.log("✅ Personality Engine: Compiled enriched personality profile with name:", profile.firstName);
       return profile;
@@ -479,29 +502,6 @@ PERSONALITY INTEGRATION:
 - Greeting Variations: ${personality.greetingStyles?.join(' / ') || 'Hello / Welcome'}
 
 Blend productivity + growth seamlessly for ${userName}. Give actionable, soulful advice using your distinctive personality. Close with integration invitations using ${userName}'s name naturally.`;
-  }
-
-  updateBlueprint(updates: Partial<LayeredBlueprint>) {
-    console.log("🔄 Personality Engine: Updating blueprint and regenerating persona");
-    this.blueprint = { ...this.blueprint, ...updates };
-    this.extractUserFirstName(); // Re-extract name when blueprint updates
-    this.detectCommunicationStyle();
-    this.compilePersona(); // Regenerate persona when blueprint updates
-  }
-
-  setUserId(userId: string) {
-    console.log("👤 Personality Engine: Setting user ID:", userId);
-    this.userId = userId;
-    if (this.compiledPersona) {
-      this.compiledPersona.userId = userId;
-    }
-  }
-
-  /**
-   * Get user's first name
-   */
-  getUserFirstName(): string {
-    return this.userFirstName || 'friend';
   }
 
   getCommunicationStyle(): CommunicationStyle | null {
