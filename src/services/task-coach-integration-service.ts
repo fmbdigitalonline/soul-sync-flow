@@ -26,6 +26,13 @@ export interface TaskAction {
   payload: any;
 }
 
+interface Goal {
+  id: string;
+  title: string;
+  description?: string;
+  tasks?: TaskContext[];
+}
+
 class TaskCoachIntegrationService {
   private currentTask: TaskContext | null = null;
   private onTaskUpdateCallback?: (task: TaskContext) => void;
@@ -210,18 +217,23 @@ class TaskCoachIntegrationService {
         return { success: false, message: 'No goals found' };
       }
 
+      // Safely handle the current_goals as an array
+      const currentGoals = Array.isArray(journey.current_goals) ? journey.current_goals as Goal[] : [];
+
       // Find next incomplete task
-      for (const goal of journey.current_goals) {
-        const nextTask = goal.tasks?.find((task: any) => 
-          task.status !== 'completed' && task.id !== this.currentTask?.id
-        );
-        
-        if (nextTask) {
-          return {
-            success: true,
-            message: `Next task: "${nextTask.title}"`,
-            data: nextTask
-          };
+      for (const goal of currentGoals) {
+        if (goal.tasks && Array.isArray(goal.tasks)) {
+          const nextTask = goal.tasks.find((task: TaskContext) => 
+            task.status !== 'completed' && task.id !== this.currentTask?.id
+          );
+          
+          if (nextTask) {
+            return {
+              success: true,
+              message: `Next task: "${nextTask.title}"`,
+              data: nextTask
+            };
+          }
         }
       }
 
@@ -242,10 +254,12 @@ class TaskCoachIntegrationService {
         .eq('user_id', user.id)
         .single();
 
-      if (journey?.current_goals) {
-        const updatedGoals = journey.current_goals.map((goal: any) => ({
+      if (journey?.current_goals && Array.isArray(journey.current_goals)) {
+        const currentGoals = journey.current_goals as Goal[];
+        
+        const updatedGoals = currentGoals.map((goal: Goal) => ({
           ...goal,
-          tasks: goal.tasks.map((t: any) => 
+          tasks: goal.tasks ? goal.tasks.map((t: TaskContext) => 
             t.id === task.id ? {
               ...t,
               status: task.status,
@@ -253,7 +267,7 @@ class TaskCoachIntegrationService {
               completed: task.status === 'completed',
               sub_tasks: task.sub_tasks
             } : t
-          )
+          ) : []
         }));
 
         await supabase
