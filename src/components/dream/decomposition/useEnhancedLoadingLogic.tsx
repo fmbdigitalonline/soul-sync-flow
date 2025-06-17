@@ -16,7 +16,7 @@ export const useEnhancedLoadingLogic = ({
   const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
   const [dynamicProgress, setDynamicProgress] = useState(0);
 
-  // Track long loading states with more granular feedback
+  // Track long loading states
   useEffect(() => {
     const timer1 = setTimeout(() => {
       setHasBeenLoadingLong(true);
@@ -24,7 +24,7 @@ export const useEnhancedLoadingLogic = ({
         currentStage: currentStageIndex,
         totalTime: Date.now() - loadingStartTime
       });
-    }, 8000); // 8 seconds
+    }, 8000);
 
     const timer2 = setTimeout(() => {
       setShowReassurance(true);
@@ -32,7 +32,7 @@ export const useEnhancedLoadingLogic = ({
         currentStage: currentStageIndex,
         totalTime: Date.now() - loadingStartTime
       });
-    }, 15000); // 15 seconds
+    }, 15000);
 
     const timer3 = setTimeout(() => {
       setShowTechnicalDetails(true);
@@ -40,64 +40,31 @@ export const useEnhancedLoadingLogic = ({
         currentStage: currentStageIndex,
         totalTime: Date.now() - loadingStartTime
       });
-    }, 60000); // 1 minute
-
-    // Log milestone timings
-    const timer4 = setTimeout(() => {
-      console.log('⚠️ LONG PROCESSING DETECTED (2 minutes)', {
-        currentStage: currentStageIndex,
-        totalTime: Date.now() - loadingStartTime,
-        suggestion: 'Consider implementing retry logic or fallback'
-      });
-    }, 120000); // 2 minutes
+    }, 60000);
 
     return () => {
       clearTimeout(timer1);
       clearTimeout(timer2);
       clearTimeout(timer3);
-      clearTimeout(timer4);
     };
   }, [loadingStartTime, currentStageIndex]);
 
-  // Smooth progress animation with acceleration for long waits
+  // Smooth progress animation
   useEffect(() => {
     const targetProgress = ((currentStageIndex + 1) / totalStages) * 100;
-    const currentTime = Date.now();
-    const elapsedTime = currentTime - loadingStartTime;
-    
-    // Accelerate progress for very long waits to show activity
-    const accelerationFactor = elapsedTime > 60000 ? 0.2 : 0.1;
     
     const progressInterval = setInterval(() => {
       setDynamicProgress(prev => {
         const diff = targetProgress - prev;
         if (Math.abs(diff) < 0.5) return targetProgress;
-        return prev + (diff * accelerationFactor);
+        return prev + (diff * 0.1);
       });
     }, 50);
 
     return () => clearInterval(progressInterval);
-  }, [currentStageIndex, totalStages, loadingStartTime]);
+  }, [currentStageIndex, totalStages]);
 
   const loadingDuration = Date.now() - loadingStartTime;
-
-  // Log performance metrics every 30 seconds
-  useEffect(() => {
-    const performanceLogger = setInterval(() => {
-      const elapsed = Date.now() - loadingStartTime;
-      console.log('📊 Decomposition Performance Metrics', {
-        elapsedSeconds: Math.floor(elapsed / 1000),
-        currentStage: currentStageIndex + 1,
-        totalStages,
-        progressPercent: Math.round(dynamicProgress),
-        hasBeenLoadingLong,
-        showReassurance,
-        timestamp: new Date().toISOString()
-      });
-    }, 30000);
-
-    return () => clearInterval(performanceLogger);
-  }, [loadingStartTime, currentStageIndex, totalStages, dynamicProgress, hasBeenLoadingLong, showReassurance]);
 
   return {
     hasBeenLoadingLong,

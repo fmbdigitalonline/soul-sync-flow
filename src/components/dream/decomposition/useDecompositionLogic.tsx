@@ -39,17 +39,14 @@ export const useDecompositionLogic = ({
   const [completedStages, setCompletedStages] = useState<string[]>([]);
   const [decomposedGoal, setDecomposedGoal] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
-  const [processingStartTime] = useState(Date.now());
-  const [aiProcessingTime, setAiProcessingTime] = useState<number | null>(null);
-  const [hasTimedOut, setHasTimedOut] = useState(false);
 
-  // Memoize user type to prevent infinite re-rendering
-  const getUserType = useCallback(() => {
+  // Memoized user type to prevent infinite re-rendering
+  const userType = useMemo(() => {
     if (!blueprintData) {
       return 'powerful soul';
     }
     
-    // Fixed: Use correct blueprint data structure for MBTI
+    // Fixed: Use correct blueprint data structure
     const mbti = blueprintData?.cognition_mbti?.type;
     const hdType = blueprintData?.energy_strategy_human_design?.type;
     
@@ -66,10 +63,7 @@ export const useDecompositionLogic = ({
     return 'unique soul';
   }, [blueprintData]);
 
-  // Memoize the user type result to prevent recalculation
-  const userType = useMemo(() => getUserType(), [getUserType]);
-
-  // Enhanced AI Goal Decomposition with timeout and better error handling
+  // Enhanced AI Goal Decomposition with better error handling
   const decomposeWithAI = useCallback(async () => {
     const aiStartTime = Date.now();
     console.log('🤖 Starting AI goal decomposition...', {
@@ -81,15 +75,7 @@ export const useDecompositionLogic = ({
     });
     
     try {
-      // Set a timeout for the AI decomposition (90 seconds max)
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => {
-          setHasTimedOut(true);
-          reject(new Error('AI decomposition timeout after 90 seconds'));
-        }, 90000);
-      });
-
-      const decompositionPromise = aiGoalDecompositionService.decomposeGoalWithAI(
+      const aiGoal = await aiGoalDecompositionService.decomposeGoalWithAI(
         dreamTitle,
         dreamDescription,
         dreamTimeframe,
@@ -97,12 +83,8 @@ export const useDecompositionLogic = ({
         blueprintData || {}
       );
 
-      // Race between the actual call and timeout
-      const aiGoal = await Promise.race([decompositionPromise, timeoutPromise]) as AIGeneratedGoal;
-
       const aiEndTime = Date.now();
       const aiDuration = aiEndTime - aiStartTime;
-      setAiProcessingTime(aiDuration);
       
       console.log('✅ AI goal decomposed successfully:', {
         goal: aiGoal,
@@ -163,7 +145,6 @@ export const useDecompositionLogic = ({
 
         if (dbError) {
           console.error('Supabase error saving AI goal:', dbError);
-          // Don't throw here - goal was created successfully, just db save failed
           console.warn('Goal created but database save failed - continuing with success flow');
         } else {
           console.log('💾 Goal saved to database successfully');
@@ -171,13 +152,11 @@ export const useDecompositionLogic = ({
         
       } catch (dbError) {
         console.error('❌ Database save error (continuing anyway):', dbError);
-        // Don't fail the entire flow for database issues
       }
       
     } catch (error) {
       const aiEndTime = Date.now();
       const aiDuration = aiEndTime - aiStartTime;
-      setAiProcessingTime(aiDuration);
       
       console.error('❌ Error in AI decomposition:', {
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -185,53 +164,10 @@ export const useDecompositionLogic = ({
         timestamp: aiEndTime
       });
       
-      if (hasTimedOut) {
-        // Create a fallback goal for timeout scenarios
-        const fallbackGoal = {
-          id: Date.now().toString(),
-          title: dreamTitle,
-          description: dreamDescription,
-          category: dreamCategory,
-          timeframe: dreamTimeframe,
-          target_completion: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
-          created_at: new Date().toISOString(),
-          milestones: [
-            {
-              id: '1',
-              title: `${dreamTitle} - Phase 1`,
-              description: 'Initial planning and preparation phase',
-              target_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-              completed: false,
-              completion_criteria: ['Define specific requirements', 'Create action plan'],
-              blueprint_alignment: `Aligned with your ${userType} energy`
-            }
-          ],
-          tasks: [
-            {
-              id: '1',
-              title: 'Plan your approach',
-              description: 'Break down your dream into actionable steps',
-              completed: false,
-              estimated_duration: '2-3 hours',
-              energy_level_required: 'Medium',
-              category: 'planning',
-              optimal_timing: ['morning'],
-              blueprint_reasoning: `Perfect for your ${userType} style`
-            }
-          ],
-          blueprint_insights: [`This journey is tailored for your ${userType} nature`],
-          personalization_notes: 'Created with basic personalization due to processing timeout'
-        };
-        
-        setDecomposedGoal(fallbackGoal);
-        console.log('🔧 Using fallback goal due to timeout');
-        return;
-      }
-      
       setError(error instanceof Error ? error.message : 'AI decomposition failed');
       throw error;
     }
-  }, [dreamTitle, dreamDescription, dreamTimeframe, dreamCategory, blueprintData, hasTimedOut, userType]);
+  }, [dreamTitle, dreamDescription, dreamTimeframe, dreamCategory, blueprintData]);
 
   const stages: DecompositionStage[] = useMemo(() => [
     {
@@ -247,7 +183,7 @@ export const useDecompositionLogic = ({
       message: `I'm identifying the perfect milestones for your ${userType} energy. Each one will honor your natural rhythm...`,
       icon: <Target className="h-5 w-5" />,
       duration: 4000,
-      action: decomposeWithAI // This is where the AI magic happens
+      action: decomposeWithAI
     },
     {
       id: 'tasks',
@@ -283,7 +219,7 @@ export const useDecompositionLogic = ({
         });
       }, 100);
 
-      // Execute stage action (like AI decomposition) and move to next stage
+      // Execute stage action and move to next stage
       const stageTimer = setTimeout(async () => {
         try {
           // Execute stage action if it exists (like AI decomposition)
@@ -309,12 +245,7 @@ export const useDecompositionLogic = ({
             setCurrentStageIndex(prev => prev + 1);
           } else {
             // All stages complete - proceed to success page
-            const totalTime = Date.now() - processingStartTime;
-            console.log('🎉 All stages completed', {
-              totalProcessingTime: totalTime,
-              aiProcessingTime,
-              timestamp: Date.now()
-            });
+            console.log('🎉 All stages completed');
             
             setTimeout(() => {
               speak("Your personalized journey is ready! Let me show you what we've created together...");
@@ -329,41 +260,18 @@ export const useDecompositionLogic = ({
             }, 1000);
           }
         } catch (error) {
-          const totalTime = Date.now() - processingStartTime;
           console.error(`❌ Error in stage ${stage.title}:`, {
             error: error instanceof Error ? error.message : 'Unknown error',
-            stageIndex: currentStageIndex,
-            totalTime,
-            aiProcessingTime,
-            timestamp: Date.now()
+            stageIndex: currentStageIndex
           });
           
-          if (hasTimedOut) {
-            // For timeout, continue to next stage with fallback goal
-            setCompletedStages(prev => [...prev, stage.id]);
-            if (currentStageIndex < stages.length - 1) {
-              setCurrentStageIndex(prev => prev + 1);
-            } else {
-              setTimeout(() => {
-                speak("I've created a basic plan to get you started!");
-                setTimeout(() => {
-                  if (decomposedGoal) {
-                    onComplete(decomposedGoal);
-                  } else {
-                    setError('Failed to create goal');
-                  }
-                }, 2000);
-              }, 1000);
-            }
-          } else {
-            setError(error instanceof Error ? error.message : 'Stage execution failed');
-            
-            toast({
-              title: "Dream Creation Error",
-              description: error instanceof Error ? error.message : "Failed to create your dream journey. Please try again.",
-              variant: "destructive"
-            });
-          }
+          setError(error instanceof Error ? error.message : 'Stage execution failed');
+          
+          toast({
+            title: "Dream Creation Error",
+            description: error instanceof Error ? error.message : "Failed to create your dream journey. Please try again.",
+            variant: "destructive"
+          });
         }
       }, stage.duration);
 
@@ -372,7 +280,7 @@ export const useDecompositionLogic = ({
         clearTimeout(stageTimer);
       };
     }
-  }, [currentStageIndex, speak, onComplete, decomposedGoal, stages, hasTimedOut, aiProcessingTime, processingStartTime, toast]);
+  }, [currentStageIndex, speak, onComplete, decomposedGoal, stages, toast]);
 
   return {
     speaking,
@@ -382,8 +290,6 @@ export const useDecompositionLogic = ({
     completedStages,
     error,
     stages,
-    getUserType: () => userType, // Return memoized value
-    processingStartTime,
-    aiProcessingTime
+    getUserType: () => userType
   };
 };
