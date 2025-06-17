@@ -4,131 +4,109 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Calendar, ExternalLink, CheckCircle2, AlertCircle, RefreshCw } from "lucide-react";
+import { Calendar, CheckCircle2, AlertCircle, RefreshCw, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useJourneyTracking } from "@/hooks/use-journey-tracking";
+import { format, parseISO, isValid } from "date-fns";
 
-interface CalendarIntegration {
-  id: string;
-  name: string;
-  provider: 'google' | 'outlook' | 'apple';
-  connected: boolean;
-  syncEnabled: boolean;
-  lastSync?: Date;
+interface CalendarSettings {
+  autoScheduleTasks: boolean;
+  blockFocusTime: boolean;
+  showDeadlines: boolean;
+  reminderNotifications: boolean;
 }
 
 export const CalendarSync: React.FC = () => {
   const { toast } = useToast();
-  const [integrations, setIntegrations] = useState<CalendarIntegration[]>([
-    {
-      id: '1',
-      name: 'Google Calendar',
-      provider: 'google',
-      connected: false,
-      syncEnabled: false
-    },
-    {
-      id: '2',
-      name: 'Outlook Calendar',
-      provider: 'outlook',
-      connected: false,
-      syncEnabled: false
-    },
-    {
-      id: '3',
-      name: 'Apple Calendar',
-      provider: 'apple',
-      connected: false,
-      syncEnabled: false
-    }
-  ]);
-  
+  const { productivityJourney, updateProductivityJourney } = useJourneyTracking();
   const [isSyncing, setIsSyncing] = useState(false);
+  const [settings, setSettings] = useState<CalendarSettings>({
+    autoScheduleTasks: true,
+    blockFocusTime: true,
+    showDeadlines: true,
+    reminderNotifications: false
+  });
+
+  const currentGoals = (productivityJourney?.current_goals || []) as any[];
+  const allTasks = currentGoals.flatMap(goal => goal.tasks || []);
   
-  const handleConnect = async (integrationId: string) => {
+  // Calculate calendar statistics
+  const tasksWithDates = allTasks.filter(task => task.due_date);
+  const upcomingTasks = tasksWithDates.filter(task => {
+    if (!task.due_date) return false;
+    try {
+      const taskDate = parseISO(task.due_date);
+      return isValid(taskDate) && taskDate > new Date();
+    } catch {
+      return false;
+    }
+  });
+  
+  const overdueTasks = tasksWithDates.filter(task => {
+    if (!task.due_date) return false;
+    try {
+      const taskDate = parseISO(task.due_date);
+      return isValid(taskDate) && taskDate < new Date() && !task.completed;
+    } catch {
+      return false;
+    }
+  });
+
+  const handleSettingToggle = (setting: keyof CalendarSettings, enabled: boolean) => {
+    setSettings(prev => ({ ...prev, [setting]: enabled }));
+    
+    toast({
+      title: enabled ? "Setting Enabled" : "Setting Disabled",
+      description: getSettingDescription(setting, enabled),
+    });
+  };
+
+  const getSettingDescription = (setting: keyof CalendarSettings, enabled: boolean) => {
+    const descriptions = {
+      autoScheduleTasks: enabled 
+        ? "Tasks will automatically appear on your calendar based on due dates."
+        : "Tasks won't be automatically scheduled on the calendar.",
+      blockFocusTime: enabled
+        ? "Focus sessions will block time on your calendar."
+        : "Focus sessions won't create calendar blocks.",
+      showDeadlines: enabled
+        ? "Task deadlines will be highlighted on the calendar."
+        : "Task deadlines won't be visually emphasized.",
+      reminderNotifications: enabled
+        ? "You'll receive reminders for upcoming tasks."
+        : "Task reminders are disabled."
+    };
+    return descriptions[setting];
+  };
+
+  const handleCalendarSync = async () => {
     setIsSyncing(true);
     
-    // Simulate OAuth flow
+    // Simulate calendar sync process
     await new Promise(resolve => setTimeout(resolve, 2000));
     
-    setIntegrations(prev => prev.map(integration => 
-      integration.id === integrationId 
-        ? { 
-            ...integration, 
-            connected: true, 
-            lastSync: new Date(),
-            syncEnabled: true 
-          }
-        : integration
-    ));
+    // Update tasks to ensure they have proper calendar data
+    const updatedGoals = currentGoals.map(goal => ({
+      ...goal,
+      tasks: goal.tasks?.map((task: any) => ({
+        ...task,
+        calendar_synced: true,
+        last_sync: new Date().toISOString()
+      })) || []
+    }));
+
+    await updateProductivityJourney({
+      current_goals: updatedGoals
+    });
     
     setIsSyncing(false);
     
     toast({
-      title: "Calendar Connected",
-      description: "Your calendar has been successfully connected and is now syncing.",
+      title: "Calendar Sync Complete",
+      description: "All tasks have been synchronized with your calendar view.",
     });
   };
-  
-  const handleDisconnect = async (integrationId: string) => {
-    setIntegrations(prev => prev.map(integration => 
-      integration.id === integrationId 
-        ? { 
-            ...integration, 
-            connected: false, 
-            syncEnabled: false,
-            lastSync: undefined 
-          }
-        : integration
-    ));
-    
-    toast({
-      title: "Calendar Disconnected",
-      description: "Calendar integration has been removed.",
-    });
-  };
-  
-  const handleToggleSync = (integrationId: string, enabled: boolean) => {
-    setIntegrations(prev => prev.map(integration => 
-      integration.id === integrationId 
-        ? { ...integration, syncEnabled: enabled }
-        : integration
-    ));
-    
-    toast({
-      title: enabled ? "Sync Enabled" : "Sync Disabled",
-      description: enabled 
-        ? "Tasks will now sync to your calendar automatically."
-        : "Automatic sync has been disabled.",
-    });
-  };
-  
-  const handleManualSync = async () => {
-    setIsSyncing(true);
-    
-    // Simulate sync process
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    
-    setIntegrations(prev => prev.map(integration => 
-      integration.connected 
-        ? { ...integration, lastSync: new Date() }
-        : integration
-    ));
-    
-    setIsSyncing(false);
-    
-    toast({
-      title: "Sync Complete",
-      description: "All connected calendars have been synchronized.",
-    });
-  };
-  
-  const getProviderIcon = (provider: string) => {
-    // In a real app, these would be actual provider icons
-    return <Calendar className="h-5 w-5" />;
-  };
-  
-  const connectedCount = integrations.filter(i => i.connected).length;
-  
+
   return (
     <Card>
       <CardHeader>
@@ -137,124 +115,142 @@ export const CalendarSync: React.FC = () => {
           Calendar Integration
         </CardTitle>
         <CardDescription>
-          Sync your tasks and focus sessions with your calendar apps
+          Sync your tasks with the built-in calendar view for better planning
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Status Overview */}
+        {/* Calendar Status Overview */}
         <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
           <div>
-            <p className="font-medium">Sync Status</p>
+            <p className="font-medium">Calendar Status</p>
             <p className="text-sm text-muted-foreground">
-              {connectedCount} of {integrations.length} calendars connected
+              {tasksWithDates.length} tasks scheduled • {overdueTasks.length} overdue
             </p>
           </div>
           <div className="flex items-center gap-2">
-            {connectedCount > 0 && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleManualSync}
-                disabled={isSyncing}
-              >
-                <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
-                {isSyncing ? 'Syncing...' : 'Sync Now'}
-              </Button>
-            )}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleCalendarSync}
+              disabled={isSyncing}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+              {isSyncing ? 'Syncing...' : 'Sync Calendar'}
+            </Button>
           </div>
         </div>
-        
-        {/* Integration List */}
-        <div className="space-y-4">
-          {integrations.map(integration => (
-            <div key={integration.id} className="border rounded-lg p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  {getProviderIcon(integration.provider)}
-                  <div>
-                    <h4 className="font-medium">{integration.name}</h4>
-                    <p className="text-sm text-muted-foreground">
-                      {integration.connected 
-                        ? `Last sync: ${integration.lastSync ? integration.lastSync.toLocaleTimeString() : 'Never'}`
-                        : 'Not connected'
-                      }
-                    </p>
+
+        {/* Calendar Statistics */}
+        <div className="grid grid-cols-3 gap-4">
+          <div className="text-center p-3 bg-blue-50 rounded-lg">
+            <p className="text-2xl font-bold text-blue-600">{tasksWithDates.length}</p>
+            <p className="text-xs text-blue-600">Scheduled Tasks</p>
+          </div>
+          <div className="text-center p-3 bg-green-50 rounded-lg">
+            <p className="text-2xl font-bold text-green-600">{upcomingTasks.length}</p>
+            <p className="text-xs text-green-600">Upcoming</p>
+          </div>
+          <div className="text-center p-3 bg-red-50 rounded-lg">
+            <p className="text-2xl font-bold text-red-600">{overdueTasks.length}</p>
+            <p className="text-xs text-red-600">Overdue</p>
+          </div>
+        </div>
+
+        {/* Calendar Settings */}
+        <div className="border rounded-lg p-4 space-y-4">
+          <h4 className="font-medium">Calendar Preferences</h4>
+          
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-sm font-medium">Auto-schedule tasks</span>
+                <p className="text-xs text-muted-foreground">Show tasks on calendar based on due dates</p>
+              </div>
+              <Switch
+                checked={settings.autoScheduleTasks}
+                onCheckedChange={(checked) => handleSettingToggle('autoScheduleTasks', checked)}
+              />
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-sm font-medium">Block focus time</span>
+                <p className="text-xs text-muted-foreground">Reserve calendar time for focus sessions</p>
+              </div>
+              <Switch
+                checked={settings.blockFocusTime}
+                onCheckedChange={(checked) => handleSettingToggle('blockFocusTime', checked)}
+              />
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-sm font-medium">Highlight deadlines</span>
+                <p className="text-xs text-muted-foreground">Visually emphasize task deadlines</p>
+              </div>
+              <Switch
+                checked={settings.showDeadlines}
+                onCheckedChange={(checked) => handleSettingToggle('showDeadlines', checked)}
+              />
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-sm font-medium">Task reminders</span>
+                <p className="text-xs text-muted-foreground">Get notified before tasks are due</p>
+              </div>
+              <Switch
+                checked={settings.reminderNotifications}
+                onCheckedChange={(checked) => handleSettingToggle('reminderNotifications', checked)}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="border rounded-lg p-4">
+          <h4 className="font-medium mb-3">Calendar Actions</h4>
+          <div className="grid grid-cols-2 gap-3">
+            <Button variant="outline" size="sm" className="flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              Schedule Focus
+            </Button>
+            <Button variant="outline" size="sm" className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4" />
+              Review Today
+            </Button>
+          </div>
+        </div>
+
+        {/* Recent Calendar Activity */}
+        {allTasks.length > 0 && (
+          <div className="border rounded-lg p-4">
+            <h4 className="font-medium mb-3">Recent Calendar Activity</h4>
+            <div className="space-y-2">
+              {allTasks.slice(0, 3).map((task, index) => (
+                <div key={task.id || index} className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    {task.completed ? (
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <AlertCircle className="h-4 w-4 text-amber-500" />
+                    )}
+                    <span className="truncate">{task.title}</span>
                   </div>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  {integration.connected ? (
-                    <Badge className="bg-green-100 text-green-800">
-                      <CheckCircle2 className="h-3 w-3 mr-1" />
-                      Connected
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline">
-                      <AlertCircle className="h-3 w-3 mr-1" />
-                      Disconnected
-                    </Badge>
+                  {task.due_date && (
+                    <span className="text-xs text-muted-foreground">
+                      {(() => {
+                        try {
+                          const date = parseISO(task.due_date);
+                          return isValid(date) ? format(date, 'MMM d') : '';
+                        } catch {
+                          return '';
+                        }
+                      })()}
+                    </span>
                   )}
                 </div>
-              </div>
-              
-              {integration.connected && (
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-medium">Auto-sync tasks</span>
-                  <Switch
-                    checked={integration.syncEnabled}
-                    onCheckedChange={(checked) => handleToggleSync(integration.id, checked)}
-                  />
-                </div>
-              )}
-              
-              <div className="flex gap-2">
-                {integration.connected ? (
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => handleDisconnect(integration.id)}
-                  >
-                    Disconnect
-                  </Button>
-                ) : (
-                  <Button 
-                    size="sm" 
-                    onClick={() => handleConnect(integration.id)}
-                    disabled={isSyncing}
-                    className="bg-soul-purple hover:bg-soul-purple/90"
-                  >
-                    <ExternalLink className="h-3 w-3 mr-1" />
-                    Connect
-                  </Button>
-                )}
-                
-                {integration.connected && (
-                  <Button variant="outline" size="sm">
-                    Settings
-                  </Button>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-        
-        {/* Sync Settings */}
-        {connectedCount > 0 && (
-          <div className="border rounded-lg p-4 space-y-3">
-            <h4 className="font-medium">Sync Preferences</h4>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Create calendar events for scheduled tasks</span>
-                <Switch defaultChecked />
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Block focus time in calendar</span>
-                <Switch defaultChecked />
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Import existing events as tasks</span>
-                <Switch />
-              </div>
+              ))}
             </div>
           </div>
         )}
