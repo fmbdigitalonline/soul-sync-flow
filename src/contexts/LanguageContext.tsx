@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export type Language = 'en' | 'nl';
@@ -6,7 +5,7 @@ export type Language = 'en' | 'nl';
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: string, variables?: Record<string, string>) => string;
+  t: (key: string, variables?: Record<string, string>) => string | string[];
 }
 
 const translations = {
@@ -236,37 +235,48 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('language', language);
   }, [language]);
 
-  const t = (key: string, variables?: Record<string, string>): string => {
-    const keys = key.split('.');
-    let value: any = translations[language];
-    
-    for (const k of keys) {
-      if (value && typeof value === 'object') {
-        value = value[k];
-      } else {
-        // Fallback to English if not found
-        const fallbackKeys = key.split('.');
-        let fallbackValue: any = translations.en;
-        for (const fallbackK of fallbackKeys) {
-          if (fallbackValue && typeof fallbackValue === 'object') {
-            fallbackValue = fallbackValue[fallbackK];
-          } else {
-            return key; // Return key if no translation found
-          }
+  const t = (key: string, variables?: Record<string, string>): string | string[] => {
+    const getTranslation = (lang: Language, translationKey: string): any => {
+      const keys = translationKey.split('.');
+      let value: any = translations[lang];
+      
+      for (const k of keys) {
+        if (value && typeof value === 'object') {
+          value = value[k];
+        } else {
+          return undefined;
         }
-        value = fallbackValue;
-        break;
       }
+      
+      return value;
+    };
+
+    // Try to get translation in current language
+    let value = getTranslation(language, key);
+    
+    // If not found, fallback to English
+    if (value === undefined) {
+      value = getTranslation('en', key);
     }
     
-    // Handle template variable substitution
+    // If still not found, return the key
+    if (value === undefined) {
+      return key;
+    }
+    
+    // Handle arrays (return as-is for arrays like rotatingMessages)
+    if (Array.isArray(value)) {
+      return value;
+    }
+    
+    // Handle template variable substitution for strings
     if (typeof value === 'string' && variables) {
       return value.replace(/\{(\w+)\}/g, (match, variableName) => {
         return variables[variableName] || match;
       });
     }
     
-    return typeof value === 'string' ? value : (typeof value !== 'undefined' ? value : key);
+    return typeof value === 'string' ? value : key;
   };
 
   return (

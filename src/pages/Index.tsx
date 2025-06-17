@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -62,15 +61,16 @@ const Index = () => {
     }
   }, [user, hasBlueprint, t]);
 
-  // Get dynamic subtitle messages from translations - access the raw translation object
+  // Get dynamic subtitle messages from translations - handle both string and array returns
   const subtitleMessages = useMemo(() => {
     const messages = t("index.rotatingMessages");
     // Handle both string and array cases safely
     if (Array.isArray(messages)) {
       return messages;
     }
-    // Fallback to a default message if translation fails
-    return [t("index.subtitle") || "Discover your authentic path through personalized AI guidance and spiritual growth tools."];
+    // Fallback to a default message if translation is a string or fails
+    const fallbackMessage = typeof messages === 'string' ? messages : "Discover your authentic path through personalized AI guidance and spiritual growth tools.";
+    return [fallbackMessage];
   }, [t, language]);
 
   // Only speak welcome message once when user and blueprint data are loaded
