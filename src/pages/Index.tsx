@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { SoulOrbAvatar } from "@/components/ui/avatar";
 import MainLayout from "@/components/Layout/MainLayout";
-import { ArrowRight, LogIn, Heart, Sparkles, Brain } from "lucide-react";
+import { ArrowRight, LogIn, Heart, Sparkles, Brain, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useSoulOrb } from "@/contexts/SoulOrbContext";
 import { useNavigate } from "react-router-dom";
@@ -67,7 +67,11 @@ const Index = () => {
   const handleGetStarted = () => {
     if (user) {
       if (hasBlueprint) {
-        speak(t("index.readyExplore"));
+        // User has blueprint - start tutorial mode
+        speak(t("index.startingTutorial"));
+        // For now, navigate to coach with tutorial mode
+        // TODO: Implement proper tutorial mode
+        navigate("/coach?tutorial=true");
       } else {
         navigate("/onboarding");
       }
@@ -149,8 +153,17 @@ const Index = () => {
         <div className="flex flex-col gap-3 sm:gap-4 px-4 max-w-md mx-auto">
           {user ? <>
             <Button size="lg" className="bg-soul-purple hover:bg-soul-purple/90 w-full h-12 text-base" onClick={handleGetStarted}>
-              {t("index.startJourney")}
-              <ArrowRight className="ml-2 h-4 w-4" />
+              {hasBlueprint ? (
+                <>
+                  <BookOpen className="mr-2 h-4 w-4" />
+                  {t("index.takeTour")}
+                </>
+              ) : (
+                <>
+                  {t("index.startJourney")}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </>
+              )}
             </Button>
             
             <Link to="/coach" className="block">
