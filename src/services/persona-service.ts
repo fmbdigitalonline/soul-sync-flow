@@ -1,250 +1,110 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { CompiledPersona, VoiceTokens, HumorProfile } from '@/types/personality-modules';
+import { supabase } from "@/integrations/supabase/client";
+
+export interface UserPersona {
+  id: string;
+  user_id: string;
+  system_prompt: string;
+  voice_tokens: Record<string, any>;
+  humor_profile: Record<string, any>;
+  function_permissions: string[];
+  generated_at: string;
+  blueprint_version: string;
+  created_at: string;
+  updated_at: string;
+}
 
 export class PersonaService {
-  
-  /**
-   * Get user's compiled persona from database
-   */
-  static async getUserPersona(userId: string): Promise<CompiledPersona | null> {
+  static async getUserPersona(userId: string): Promise<UserPersona | null> {
     try {
+      console.log("🔧 Testing personas table access - attempting to fetch persona for user:", userId);
+      
       const { data, error } = await supabase
         .from('personas')
         .select('*')
         .eq('user_id', userId)
-        .single();
-
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching user persona:', error);
+        .maybeSingle();
+      
+      if (error) {
+        console.error("❌ Personas table access error:", error);
+        console.error("❌ Error details:", {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
         return null;
       }
-
-      if (!data) {
-        console.log('No persona found for user:', userId);
+      
+      if (data) {
+        console.log("✅ Personas table access working - found persona for user");
+        return data as UserPersona;
+      } else {
+        console.log("ℹ️ No persona found for user (this is normal for first-time users)");
         return null;
       }
-
-      // Type-safe parsing of JSON fields
-      const voiceTokens = this.parseVoiceTokens(data.voice_tokens);
-      const humorProfile = this.parseHumorProfile(data.humor_profile);
-      const functionPermissions = this.parseFunctionPermissions(data.function_permissions);
-
-      return {
-        userId: data.user_id,
-        systemPrompt: data.system_prompt,
-        voiceTokens,
-        humorProfile,
-        functionPermissions,
-        generatedAt: new Date(data.generated_at),
-        blueprintVersion: data.blueprint_version
-      };
     } catch (error) {
-      console.error('Error in getUserPersona:', error);
+      console.error("❌ PersonaService.getUserPersona error:", error);
       return null;
     }
   }
 
-  /**
-   * Save compiled persona to database
-   */
-  static async saveUserPersona(persona: CompiledPersona): Promise<boolean> {
+  static async saveUserPersona(persona: Partial<UserPersona>): Promise<boolean> {
     try {
-      const { error } = await supabase
+      console.log("🔧 Testing personas table access - attempting to save persona for user:", persona.user_id);
+      
+      const { data, error } = await supabase
         .from('personas')
         .upsert({
-          user_id: persona.userId,
-          system_prompt: persona.systemPrompt,
-          voice_tokens: persona.voiceTokens as any,
-          humor_profile: persona.humorProfile as any,
-          function_permissions: persona.functionPermissions as any,
-          generated_at: persona.generatedAt.toISOString(),
-          blueprint_version: persona.blueprintVersion,
-          updated_at: new Date().toISOString()
+          user_id: persona.user_id,
+          system_prompt: persona.system_prompt,
+          voice_tokens: persona.voice_tokens || {},
+          humor_profile: persona.humor_profile || {},
+          function_permissions: persona.function_permissions || [],
+          generated_at: new Date().toISOString(),
+          blueprint_version: persona.blueprint_version || '1.0.0'
         }, {
           onConflict: 'user_id'
-        });
-
+        })
+        .select()
+        .single();
+      
       if (error) {
-        console.error('Error saving user persona:', error);
+        console.error("❌ Personas table save error:", error);
+        console.error("❌ Save error details:", {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
         return false;
       }
-
-      console.log('✅ Persona saved successfully for user:', persona.userId);
+      
+      console.log("✅ Personas table save working - persona saved successfully");
       return true;
     } catch (error) {
-      console.error('Error in saveUserPersona:', error);
+      console.error("❌ PersonaService.saveUserPersona error:", error);
       return false;
     }
   }
 
-  /**
-   * Delete user's persona (triggers regeneration)
-   */
   static async deleteUserPersona(userId: string): Promise<boolean> {
     try {
       const { error } = await supabase
         .from('personas')
         .delete()
         .eq('user_id', userId);
-
+      
       if (error) {
-        console.error('Error deleting user persona:', error);
+        console.error("❌ Personas table delete error:", error);
         return false;
       }
-
-      console.log('✅ Persona deleted for user:', userId);
+      
+      console.log("✅ Personas table delete working - persona deleted successfully");
       return true;
     } catch (error) {
-      console.error('Error in deleteUserPersona:', error);
+      console.error("❌ PersonaService.deleteUserPersona error:", error);
       return false;
     }
-  }
-
-  /**
-   * Check if user's persona needs regeneration
-   */
-  static async needsRegeneration(userId: string, currentBlueprintVersion: string): Promise<boolean> {
-    try {
-      const persona = await this.getUserPersona(userId);
-      
-      if (!persona) {
-        return true; // No persona exists, needs generation
-      }
-
-      // Check if blueprint version has changed
-      if (persona.blueprintVersion !== currentBlueprintVersion) {
-        console.log('Persona needs regeneration due to version mismatch:', {
-          stored: persona.blueprintVersion,
-          current: currentBlueprintVersion
-        });
-        return true;
-      }
-
-      // Check if persona is older than 7 days (optional refresh)
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      
-      if (persona.generatedAt < sevenDaysAgo) {
-        console.log('Persona needs regeneration due to age');
-        return true;
-      }
-
-      return false;
-    } catch (error) {
-      console.error('Error checking persona regeneration need:', error);
-      return true; // Default to regeneration on error
-    }
-  }
-
-  /**
-   * Parse voice tokens from database JSON
-   */
-  private static parseVoiceTokens(data: any): VoiceTokens {
-    if (!data || typeof data !== 'object') {
-      return this.getDefaultVoiceTokens();
-    }
-
-    try {
-      return {
-        pacing: data.pacing || this.getDefaultVoiceTokens().pacing,
-        expressiveness: data.expressiveness || this.getDefaultVoiceTokens().expressiveness,
-        vocabulary: data.vocabulary || this.getDefaultVoiceTokens().vocabulary,
-        conversationStyle: data.conversationStyle || this.getDefaultVoiceTokens().conversationStyle,
-        signaturePhrases: Array.isArray(data.signaturePhrases) ? data.signaturePhrases : [],
-        greetingStyles: Array.isArray(data.greetingStyles) ? data.greetingStyles : [],
-        transitionWords: Array.isArray(data.transitionWords) ? data.transitionWords : []
-      };
-    } catch (error) {
-      console.error('Error parsing voice tokens:', error);
-      return this.getDefaultVoiceTokens();
-    }
-  }
-
-  /**
-   * Parse humor profile from database JSON
-   */
-  private static parseHumorProfile(data: any): HumorProfile {
-    if (!data || typeof data !== 'object') {
-      return this.getDefaultHumorProfile();
-    }
-
-    try {
-      return {
-        primaryStyle: data.primaryStyle || 'warm-nurturer',
-        secondaryStyle: data.secondaryStyle,
-        intensity: data.intensity || 'moderate',
-        appropriatenessLevel: data.appropriatenessLevel || 'balanced',
-        contextualAdaptation: data.contextualAdaptation || {
-          coaching: 'warm-nurturer',
-          guidance: 'philosophical-sage',
-          casual: 'playful-storyteller'
-        },
-        avoidancePatterns: Array.isArray(data.avoidancePatterns) ? data.avoidancePatterns : [],
-        signatureElements: Array.isArray(data.signatureElements) ? data.signatureElements : []
-      };
-    } catch (error) {
-      console.error('Error parsing humor profile:', error);
-      return this.getDefaultHumorProfile();
-    }
-  }
-
-  /**
-   * Parse function permissions from database JSON
-   */
-  private static parseFunctionPermissions(data: any): string[] {
-    if (Array.isArray(data)) {
-      return data.filter(item => typeof item === 'string');
-    }
-    return [];
-  }
-
-  /**
-   * Get default voice tokens
-   */
-  private static getDefaultVoiceTokens(): VoiceTokens {
-    return {
-      pacing: {
-        sentenceLength: 'medium',
-        pauseFrequency: 'thoughtful',
-        rhythmPattern: 'steady'
-      },
-      expressiveness: {
-        emojiFrequency: 'occasional',
-        emphasisStyle: 'subtle',
-        exclamationTendency: 'balanced'
-      },
-      vocabulary: {
-        formalityLevel: 'conversational',
-        metaphorUsage: 'occasional',
-        technicalDepth: 'balanced'
-      },
-      conversationStyle: {
-        questionAsking: 'exploratory',
-        responseLength: 'thorough',
-        personalSharing: 'relevant'
-      },
-      signaturePhrases: [],
-      greetingStyles: [],
-      transitionWords: []
-    };
-  }
-
-  /**
-   * Get default humor profile
-   */
-  private static getDefaultHumorProfile(): HumorProfile {
-    return {
-      primaryStyle: 'warm-nurturer',
-      intensity: 'moderate',
-      appropriatenessLevel: 'balanced',
-      contextualAdaptation: {
-        coaching: 'warm-nurturer',
-        guidance: 'philosophical-sage',
-        casual: 'playful-storyteller'
-      },
-      avoidancePatterns: [],
-      signatureElements: []
-    };
   }
 }
