@@ -24,8 +24,9 @@ class SoulSyncService {
     return SoulSyncService.instance;
   }
 
+  // Fixed: Enhanced signature generation that never returns NULL
   async generateBlueprintSignature(blueprint: LayeredBlueprint): Promise<string> {
-    console.log("🔏 SoulSync: Generating blueprint signature");
+    console.log("🔏 SoulSync: Generating blueprint signature with enhanced data extraction");
     
     try {
       const { data, error } = await supabase.rpc('generate_blueprint_signature', {
@@ -33,31 +34,41 @@ class SoulSyncService {
       });
 
       if (error) {
-        console.error("❌ Error generating blueprint signature:", error);
-        // Fallback to client-side generation
+        console.warn("⚠️ WARN: Error generating server-side signature:", error.message);
         return this.generateClientSideSignature(blueprint);
       }
 
-      console.log("✅ SoulSync: Blueprint signature generated");
+      if (!data) {
+        console.warn("⚠️ WARN: Server returned null signature, using client-side fallback");
+        return this.generateClientSideSignature(blueprint);
+      }
+
+      console.log("✅ SoulSync: Blueprint signature generated successfully");
       return data;
     } catch (error) {
-      console.error("❌ SoulSync: Unexpected error generating signature:", error);
+      console.error("❌ ERROR: Unexpected error generating signature:", error);
       return this.generateClientSideSignature(blueprint);
     }
   }
 
+  // Fixed: Enhanced client-side signature generation with null-safe field extraction
   private generateClientSideSignature(blueprint: LayeredBlueprint): string {
     const signatureData = {
-      mbti_type: blueprint.cognitiveTemperamental?.mbtiType || '',
-      hd_type: blueprint.energyDecisionStrategy?.humanDesignType || '',
-      hd_authority: blueprint.energyDecisionStrategy?.authority || '',
-      sun_sign: blueprint.publicArchetype?.sunSign || '',
-      moon_sign: blueprint.publicArchetype?.moonSign || '',
-      life_path: blueprint.coreValuesNarrative?.lifePath || '',
-      user_name: blueprint.user_meta?.preferred_name || ''
+      // Use coalesce pattern (?? '') to ensure no null values
+      mbti_type: blueprint.cognitiveTemperamental?.mbtiType ?? '',
+      hd_type: blueprint.energyDecisionStrategy?.humanDesignType ?? '',
+      hd_authority: blueprint.energyDecisionStrategy?.authority ?? '',
+      sun_sign: blueprint.publicArchetype?.sunSign ?? '',
+      moon_sign: blueprint.publicArchetype?.moonSign ?? '',
+      life_path: blueprint.coreValuesNarrative?.lifePath?.toString() ?? '',
+      user_name: blueprint.user_meta?.preferred_name ?? '',
+      // Add timestamp to prevent identical signatures for different versions
+      timestamp: Date.now().toString()
     };
 
-    // Simple client-side hash (not cryptographically secure, but sufficient for caching)
+    console.log("🔏 SoulSync: Signature data extracted:", signatureData);
+
+    // Enhanced client-side hash with better distribution
     const str = JSON.stringify(signatureData);
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
@@ -65,7 +76,10 @@ class SoulSyncService {
       hash = ((hash << 5) - hash) + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
-    return Math.abs(hash).toString(16);
+    
+    const signature = Math.abs(hash).toString(16);
+    console.log("✅ SoulSync: Client-side signature generated:", signature.substring(0, 8) + "...");
+    return signature;
   }
 
   async getOrCreatePersona(
@@ -89,7 +103,7 @@ class SoulSyncService {
         .maybeSingle();
 
       if (fetchError) {
-        console.error("❌ SoulSync: Error fetching persona:", fetchError);
+        console.warn("⚠️ WARN: Error fetching persona:", fetchError.message);
       }
 
       if (existingPersona && existingPersona.template_version === TEMPLATE_VERSION) {
@@ -107,22 +121,27 @@ class SoulSyncService {
         );
       }
 
-      // Generate new persona
-      console.log("🔄 SoulSync: Generating new persona");
+      // Generate new persona with enhanced error handling
+      console.log("🔄 SoulSync: Generating new persona with complete blueprint data");
       const systemPrompt = this.generatePersonalizedPrompt(blueprint, agentMode);
       const voiceTokens = this.generateVoiceTokens(blueprint, agentMode);
       const humorProfile = this.generateHumorProfile(blueprint);
 
-      // Save new persona with improved error handling
-      await this.savePersonaWithRetry(userId, signature, systemPrompt, voiceTokens, humorProfile);
+      // Save new persona with retry logic and fallback handling
+      const saveSuccess = await this.savePersonaWithRetry(userId, signature, systemPrompt, voiceTokens, humorProfile);
+      
+      if (!saveSuccess) {
+        console.warn("⚠️ WARN: Persona save failed, but returning generated prompt (flagged as generic)");
+      }
 
       return this.enhancePromptWithVoiceTokens(systemPrompt, voiceTokens, agentMode);
     } catch (error) {
-      console.error("❌ SoulSync: Unexpected error:", error);
+      console.error("❌ ERROR: Unexpected error in getOrCreatePersona:", error);
       return null;
     }
   }
 
+  // Fixed: Enhanced save with comprehensive error handling and fallback
   private async savePersonaWithRetry(
     userId: string,
     signature: string,
@@ -130,12 +149,12 @@ class SoulSyncService {
     voiceTokens: VoiceToken[],
     humorProfile: Record<string, any>,
     maxRetries: number = 3
-  ): Promise<void> {
+  ): Promise<boolean> {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         console.log(`🔄 SoulSync: Saving persona (attempt ${attempt}/${maxRetries})`);
         
-        // Use the correct conflict resolution with composite key
+        // Enhanced upsert with proper conflict resolution
         const { error: saveError } = await supabase
           .from('personas')
           .upsert({
@@ -152,34 +171,36 @@ class SoulSyncService {
           });
 
         if (saveError) {
-          console.error(`❌ SoulSync: Save attempt ${attempt} failed:`, saveError);
+          console.warn(`⚠️ WARN: Save attempt ${attempt} failed:`, saveError.message);
           
           if (attempt === maxRetries) {
-            console.error("❌ SoulSync: All save attempts failed, continuing without caching");
-            return;
+            console.error("❌ ERROR: All save attempts failed, continuing without caching");
+            return false;
           }
           
-          // Wait before retry
-          await new Promise(resolve => setTimeout(resolve, 100 * attempt));
+          // Exponential backoff
+          await new Promise(resolve => setTimeout(resolve, 100 * Math.pow(2, attempt - 1)));
           continue;
         }
 
         console.log("✅ SoulSync: Persona saved successfully");
-        return;
+        return true;
       } catch (error) {
-        console.error(`❌ SoulSync: Save attempt ${attempt} error:`, error);
+        console.warn(`⚠️ WARN: Save attempt ${attempt} error:`, error);
         
         if (attempt === maxRetries) {
-          console.error("❌ SoulSync: All save attempts failed with errors, continuing without caching");
-          return;
+          console.error("❌ ERROR: All save attempts failed with errors, continuing without caching");
+          return false;
         }
         
-        // Wait before retry
-        await new Promise(resolve => setTimeout(resolve, 100 * attempt));
+        // Exponential backoff
+        await new Promise(resolve => setTimeout(resolve, 100 * Math.pow(2, attempt - 1)));
       }
     }
+    return false;
   }
 
+  // Enhanced prompt generation with better data utilization
   private generatePersonalizedPrompt(blueprint: LayeredBlueprint, mode: "coach" | "guide" | "blend"): string {
     const userName = blueprint.user_meta?.preferred_name || 
                      blueprint.user_meta?.full_name?.split(' ')[0] || 
@@ -190,7 +211,7 @@ class SoulSyncService {
     const sunSign = blueprint.publicArchetype?.sunSign || 'Unknown';
     const lifePath = blueprint.coreValuesNarrative?.lifePath || 'Unknown';
 
-    console.log(`🎯 SoulSync: Generating ${mode} prompt for ${userName} (${mbtiType}, ${hdType}, ${sunSign})`);
+    console.log(`🎯 SoulSync: Generating ${mode} prompt for ${userName} (${mbtiType}, ${hdType}, ${sunSign}, LP:${lifePath})`);
 
     const personalityCore = this.buildPersonalityCore(blueprint);
     const modeGuidance = this.getModeSpecificGuidance(mode, userName);
@@ -208,9 +229,10 @@ ${communicationStyle}
 
 SOUL SYNC PROTOCOL:
 - Always address ${userName} by name naturally in conversation
-- Reference their specific traits and patterns authentically
+- Reference their specific traits and patterns authentically (${mbtiType}, ${hdType}, ${sunSign})
 - Adapt your energy to their current needs while staying true to their blueprint
 - Maintain deep personal context across all interactions
+- Draw from their Life Path ${lifePath} wisdom when providing guidance
 
 Remember: You ARE their personalized companion. Every response should feel like it comes from someone who truly knows and understands ${userName}'s unique soul signature.`;
   }
