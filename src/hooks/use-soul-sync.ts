@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { soulSyncService } from '@/services/soul-sync-service';
 import { enhancedAICoachService } from '@/services/enhanced-ai-coach-service';
@@ -19,28 +18,34 @@ export function useSoulSync() {
       }
 
       try {
-        console.log("🔄 SoulSync: Initializing with natural conversation approach");
+        console.log("🔄 SoulSync: Initializing with comprehensive blueprint extraction");
         
-        // Map blueprint data properly
+        // Map blueprint data with ALL available fields
         const layeredBlueprint = mapToLayeredBlueprint(blueprintData);
         
-        console.log("🎯 SoulSync: Mapped blueprint for natural conversation:", {
+        console.log("🎯 SoulSync: Complete blueprint mapped:", {
           mbtiType: layeredBlueprint.cognitiveTemperamental?.mbtiType,
           hdType: layeredBlueprint.energyDecisionStrategy?.humanDesignType,
           authority: layeredBlueprint.energyDecisionStrategy?.authority,
+          profile: layeredBlueprint.energyDecisionStrategy?.profile,
           sunSign: layeredBlueprint.publicArchetype?.sunSign,
           moonSign: layeredBlueprint.publicArchetype?.moonSign,
+          risingSign: layeredBlueprint.publicArchetype?.risingSign,
           lifePath: layeredBlueprint.coreValuesNarrative?.lifePath,
+          expressionNumber: layeredBlueprint.coreValuesNarrative?.expressionNumber,
+          soulUrgeNumber: layeredBlueprint.coreValuesNarrative?.soulUrgeNumber,
+          personalityNumber: layeredBlueprint.coreValuesNarrative?.personalityNumber,
+          birthdayNumber: layeredBlueprint.coreValuesNarrative?.birthdayNumber,
           userName: layeredBlueprint.user_meta?.preferred_name
         });
 
-        // Update both services with blueprint data for natural conversation
+        // Update both services with complete blueprint data
         enhancedAICoachService.updateUserBlueprint(layeredBlueprint);
         await enhancedAICoachService.setCurrentUser(user.id);
         
         setIsSoulSyncReady(true);
         setSoulSyncError(null);
-        console.log("✅ SoulSync: Natural conversation system ready");
+        console.log("✅ SoulSync: Complete blueprint system ready");
       } catch (error) {
         console.error("❌ SoulSync: Initialization error:", error);
         setSoulSyncError(error instanceof Error ? error.message : 'Unknown error');
@@ -59,34 +64,89 @@ export function useSoulSync() {
   };
 }
 
-// Fixed: Proper data mapping function with consistent field names
+// Enhanced comprehensive data mapping function
 function mapToLayeredBlueprint(blueprintData: any) {
-  console.log("🗺️ Mapping blueprint data to LayeredBlueprint structure");
+  console.log("🗺️ Mapping complete blueprint data to LayeredBlueprint structure");
   
-  // Extract data from the actual blueprint structure
+  // Extract comprehensive data from the actual blueprint structure
   const mbtiType = blueprintData?.user_meta?.personality?.likelyType || 'Unknown';
+  const mbtiProbabilities = blueprintData?.user_meta?.personality?.mbtiProbabilities || {};
+  const bigFive = blueprintData?.user_meta?.personality?.bigFive || {};
+  const description = blueprintData?.user_meta?.personality?.description || '';
+  
   const hdType = blueprintData?.energy_strategy_human_design?.type || 'Unknown';
   const hdAuthority = blueprintData?.energy_strategy_human_design?.authority || 'Unknown';
+  const hdStrategy = blueprintData?.energy_strategy_human_design?.strategy || 'Unknown';
+  const hdProfile = blueprintData?.energy_strategy_human_design?.profile || 'Unknown';
+  const hdDefinition = blueprintData?.energy_strategy_human_design?.definition || 'Unknown';
+  const hdNotSelfTheme = blueprintData?.energy_strategy_human_design?.not_self_theme || 'Unknown';
+  const hdGates = blueprintData?.energy_strategy_human_design?.gates || [];
+  const hdChannels = blueprintData?.energy_strategy_human_design?.channels || [];
+  const hdCenters = blueprintData?.energy_strategy_human_design?.centers || [];
+  
   const sunSign = blueprintData?.archetype_western?.sun_sign || 'Unknown';
   const moonSign = blueprintData?.archetype_western?.moon_sign || 'Unknown';
+  const risingSign = blueprintData?.archetype_western?.rising_sign || 'Unknown';
+  const sunKeyword = blueprintData?.archetype_western?.sun_keyword || '';
+  const moonKeyword = blueprintData?.archetype_western?.moon_keyword || '';
+  
+  const chineseAnimal = blueprintData?.archetype_chinese?.animal || 'Unknown';
+  const chineseElement = blueprintData?.archetype_chinese?.element || 'Unknown';
+  const chineseYinYang = blueprintData?.archetype_chinese?.yin_yang || 'Unknown';
+  const chineseKeyword = blueprintData?.archetype_chinese?.keyword || '';
+  
+  // Comprehensive numerology extraction
   const lifePath = Number(blueprintData?.values_life_path?.life_path_number ?? 0);
+  const expressionNumber = Number(blueprintData?.values_life_path?.expression_number ?? 0);
+  const soulUrgeNumber = Number(blueprintData?.values_life_path?.soul_urge_number ?? 0);
+  const personalityNumber = Number(blueprintData?.values_life_path?.personality_number ?? 0);
+  const birthdayNumber = Number(blueprintData?.values_life_path?.birthday_number ?? 0);
+  const lifePathKeyword = blueprintData?.values_life_path?.life_path_keyword || '';
+  const expressionKeyword = blueprintData?.values_life_path?.expression_keyword || '';
+  const soulUrgeKeyword = blueprintData?.values_life_path?.soul_urge_keyword || '';
+  const personalityKeyword = blueprintData?.values_life_path?.personality_keyword || '';
+  const birthdayKeyword = blueprintData?.values_life_path?.birthday_keyword || '';
+  
+  // Bashar Suite extraction
+  const basharBeliefInterface = blueprintData?.bashar_suite?.belief_interface || {};
+  const basharExcitementCompass = blueprintData?.bashar_suite?.excitement_compass || {};
+  const basharFrequencyAlignment = blueprintData?.bashar_suite?.frequency_alignment || {};
+  
+  // Goal Stack extraction
+  const goalStack = blueprintData?.goal_stack || {};
+  const primaryGoal = goalStack?.primary_goal || '';
+  const timeHorizon = goalStack?.time_horizon || '';
+  const supportStyle = goalStack?.support_style || '';
+  
   const preferredName = blueprintData?.user_meta?.preferred_name || 'Unknown';
   
-  console.log("📊 Extracted raw data:", {
-    mbtiType,
-    hdType,
-    hdAuthority,
-    sunSign,
-    moonSign,
-    lifePath,
+  console.log("📊 Extracted comprehensive data:", {
+    mbtiType, mbtiProbabilities, bigFive, description,
+    hdType, hdAuthority, hdStrategy, hdProfile, hdDefinition, hdNotSelfTheme,
+    sunSign, moonSign, risingSign, sunKeyword, moonKeyword,
+    chineseAnimal, chineseElement, chineseYinYang, chineseKeyword,
+    lifePath, expressionNumber, soulUrgeNumber, personalityNumber, birthdayNumber,
+    lifePathKeyword, expressionKeyword, soulUrgeKeyword, personalityKeyword, birthdayKeyword,
+    basharBeliefInterface, basharExcitementCompass, basharFrequencyAlignment,
+    primaryGoal, timeHorizon, supportStyle,
     preferredName
   });
   
   return {
-    user_meta: blueprintData.user_meta || {},
-    // Fixed: Map to cognitiveTemperamental (what PersonalityEngine expects)
+    user_meta: {
+      ...blueprintData.user_meta,
+      personality: {
+        likelyType: mbtiType,
+        description: description,
+        mbtiProbabilities: mbtiProbabilities,
+        bigFive: bigFive
+      }
+    },
     cognitiveTemperamental: {
       mbtiType: mbtiType,
+      mbtiProbabilities: mbtiProbabilities,
+      bigFive: bigFive,
+      description: description,
       functions: [],
       dominantFunction: getMBTIFunctions(mbtiType).dominant,
       auxiliaryFunction: getMBTIFunctions(mbtiType).auxiliary,
@@ -95,26 +155,28 @@ function mapToLayeredBlueprint(blueprintData: any) {
       communicationStyle: 'adaptive',
       decisionMaking: 'analytical',
       informationProcessing: 'sequential',
-      coreKeywords: extractKeywords(blueprintData?.user_meta?.personality?.description || '')
+      coreKeywords: extractKeywords(description)
     },
-    // Fixed: Map to energyDecisionStrategy (what PersonalityEngine expects)
     energyDecisionStrategy: {
       humanDesignType: hdType,
       authority: hdAuthority,
+      strategy: hdStrategy,
+      profile: hdProfile,
+      definition: hdDefinition,
+      notSelfTheme: hdNotSelfTheme,
       decisionStyle: 'intuitive',
       pacing: 'steady',
       energyType: 'sustainable',
-      strategy: blueprintData.energy_strategy_human_design?.strategy || 'To Respond',
-      profile: blueprintData.energy_strategy_human_design?.profile || '1/3',
-      centers: blueprintData.energy_strategy_human_design?.centers || [],
-      gates: blueprintData.energy_strategy_human_design?.gates || [],
-      channels: blueprintData.energy_strategy_human_design?.channels || []
+      centers: hdCenters,
+      gates: hdGates,
+      channels: hdChannels
     },
-    // Fixed: Map to publicArchetype (what PersonalityEngine expects)
     publicArchetype: {
       sunSign: cleanAstrologySign(sunSign),
       moonSign: cleanAstrologySign(moonSign),
-      risingSign: cleanAstrologySign(blueprintData.archetype_western?.rising_sign) || 'Unknown',
+      risingSign: cleanAstrologySign(risingSign),
+      sunKeyword: sunKeyword,
+      moonKeyword: moonKeyword,
       socialStyle: 'authentic',
       publicVibe: 'approachable',
       publicPersona: 'genuine',
@@ -122,9 +184,17 @@ function mapToLayeredBlueprint(blueprintData: any) {
       socialMask: 'minimal',
       externalExpression: 'natural'
     },
-    // Fixed: Map to coreValuesNarrative with consistent lifePath field
     coreValuesNarrative: {
       lifePath: lifePath,
+      lifePathKeyword: lifePathKeyword,
+      expressionNumber: expressionNumber,
+      expressionKeyword: expressionKeyword,
+      soulUrgeNumber: soulUrgeNumber,
+      soulUrgeKeyword: soulUrgeKeyword,
+      personalityNumber: personalityNumber,
+      personalityKeyword: personalityKeyword,
+      birthdayNumber: birthdayNumber,
+      birthdayKeyword: birthdayKeyword,
       meaningfulAreas: blueprintData.values_life_path?.meaningful_areas || [],
       anchoringVision: 'personal growth',
       lifeThemes: blueprintData.values_life_path?.themes || [],
@@ -133,6 +203,25 @@ function mapToLayeredBlueprint(blueprintData: any) {
       missionStatement: blueprintData.values_life_path?.mission_statement || 'Live authentically',
       purposeAlignment: 'high',
       core_values: blueprintData.values_life_path?.core_values || []
+    },
+    generationalCode: {
+      chineseZodiac: chineseAnimal,
+      element: chineseElement,
+      yinYang: chineseYinYang,
+      keyword: chineseKeyword,
+      cohortTint: 'optimistic',
+      generationalThemes: [],
+      collectiveInfluence: 'moderate'
+    },
+    basharSuite: {
+      beliefInterface: basharBeliefInterface,
+      excitementCompass: basharExcitementCompass,
+      frequencyAlignment: basharFrequencyAlignment
+    },
+    goalStack: {
+      primaryGoal: primaryGoal,
+      timeHorizon: timeHorizon,
+      supportStyle: supportStyle
     },
     motivationBeliefEngine: {
       mindset: 'growth-oriented',
@@ -144,13 +233,6 @@ function mapToLayeredBlueprint(blueprintData: any) {
       frequencyAlignment: 'high',
       beliefInterface: ['positive possibility'],
       resistancePatterns: []
-    },
-    generationalCode: {
-      chineseZodiac: blueprintData.archetype_chinese?.animal || 'Unknown',
-      element: blueprintData.archetype_chinese?.element || 'Unknown',
-      cohortTint: 'optimistic',
-      generationalThemes: [],
-      collectiveInfluence: 'moderate'
     },
     surfaceExpression: {
       observableStyle: 'authentic',
@@ -241,7 +323,6 @@ function cleanAstrologySign(signString: string): string {
   if (!signString || signString === 'Unknown' || signString === 'Calculating...') {
     return 'Unknown';
   }
-  // Extract just the sign name (e.g., "Cancer 13.1°" -> "Cancer")
   return signString.split(' ')[0];
 }
 
@@ -252,7 +333,6 @@ function getMBTIFunctions(type: string) {
     'ENFP': { dominant: 'Extraverted Intuition', auxiliary: 'Introverted Feeling' },
     'INFJ': { dominant: 'Introverted Intuition', auxiliary: 'Extraverted Feeling' },
     'ENFJ': { dominant: 'Extraverted Feeling', auxiliary: 'Introverted Intuition' },
-    // ... keep existing code for other types
   };
   return functionMap[type] || { dominant: 'Unknown', auxiliary: 'Unknown' };
 }

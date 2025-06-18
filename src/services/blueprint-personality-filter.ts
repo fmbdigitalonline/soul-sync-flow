@@ -1,3 +1,4 @@
+
 import { LayeredBlueprint } from '@/types/personality-modules';
 
 interface PersonalityFilterOptions {
@@ -21,23 +22,19 @@ export class BlueprintPersonalityFilter {
     this.userName = blueprint.user_meta?.preferred_name || 'friend';
   }
 
-  /**
-   * Main filtering method - enhances LLM response with personality-aware touches
-   */
   filterResponse(
     originalResponse: string, 
     userMessage: string, 
     options: PersonalityFilterOptions = {}
   ): FilteredResponse {
-    console.log("🎭 Blueprint Filter: Processing response for personalization");
+    console.log("🎭 Blueprint Filter: Processing response for comprehensive personalization");
     
-    // Check if this is a direct blueprint request
     if (this.isDirectBlueprintRequest(userMessage)) {
       console.log("🎯 Blueprint Filter: Detected direct blueprint request");
       return {
         content: this.handleDirectBlueprintRequest(userMessage, originalResponse),
-        personalTouches: ['Direct blueprint data provided'],
-        blueprintReferences: ['Full blueprint data']
+        personalTouches: ['Complete blueprint data provided'],
+        blueprintReferences: ['Comprehensive blueprint data']
       };
     }
     
@@ -45,27 +42,21 @@ export class BlueprintPersonalityFilter {
     const personalTouches: string[] = [];
     const blueprintReferences: string[] = [];
 
-    // Step 1: Add natural name integration
     filteredContent = this.addNamePersonalization(filteredContent);
-
-    // Step 2: Enhance tone based on personality type
     filteredContent = this.adjustToneForPersonality(filteredContent, options.tone);
 
-    // Step 3: Add relevant blueprint insights where they naturally fit
     const insights = this.generateRelevantInsights(userMessage, originalResponse);
     if (insights.length > 0) {
       filteredContent = this.integrateInsights(filteredContent, insights);
       blueprintReferences.push(...insights);
     }
 
-    // Step 4: Add personality-specific examples or metaphors
     const examples = this.addPersonalityExamples(filteredContent, userMessage);
     if (examples) {
       filteredContent = examples;
       personalTouches.push('Added personality-specific examples');
     }
 
-    // Step 5: Adjust communication style
     filteredContent = this.adjustCommunicationStyle(filteredContent);
 
     return {
@@ -75,18 +66,153 @@ export class BlueprintPersonalityFilter {
     };
   }
 
-  // NEW: Detect direct blueprint requests
   private isDirectBlueprintRequest(userMessage: string): boolean {
     const lowerMessage = userMessage.toLowerCase();
     return lowerMessage.includes('full blueprint') || 
            lowerMessage.includes('my blueprint') || 
-           lowerMessage.includes('tell me my') && (lowerMessage.includes('mbti') || lowerMessage.includes('human design') || lowerMessage.includes('personality'));
+           lowerMessage.includes('more numerology') ||
+           lowerMessage.includes('is there more') ||
+           (lowerMessage.includes('tell me my') && (lowerMessage.includes('mbti') || lowerMessage.includes('human design') || lowerMessage.includes('personality')));
   }
 
-  // NEW: Handle direct blueprint requests with actual data
   private handleDirectBlueprintRequest(userMessage: string, originalResponse: string): string {
-    console.log("🎯 Blueprint Filter: Providing actual blueprint data");
+    console.log("🎯 Blueprint Filter: Providing comprehensive blueprint data");
     
+    // Handle specific "is there more" or "more numerology" requests
+    const lowerMessage = userMessage.toLowerCase();
+    if (lowerMessage.includes('more numerology') || lowerMessage.includes('numerology numbers')) {
+      return this.handleNumerologyRequest();
+    }
+    
+    if (lowerMessage.includes('is there more')) {
+      return this.handleIsThereMoreRequest();
+    }
+
+    // Handle full blueprint requests
+    return this.handleFullBlueprintRequest();
+  }
+
+  private handleNumerologyRequest(): string {
+    console.log("🔢 Blueprint Filter: Handling numerology request");
+    
+    const numerologyData = [];
+    const missingData = [];
+
+    if (this.blueprint.coreValuesNarrative?.lifePath && this.blueprint.coreValuesNarrative.lifePath > 0) {
+      const keyword = this.blueprint.coreValuesNarrative.lifePathKeyword || this.getLifePathKeyword(this.blueprint.coreValuesNarrative.lifePath);
+      numerologyData.push(`**Life Path ${this.blueprint.coreValuesNarrative.lifePath}** ("${keyword}") - Your life's main purpose and journey`);
+    } else {
+      missingData.push('Life Path Number');
+    }
+
+    if (this.blueprint.coreValuesNarrative?.expressionNumber && this.blueprint.coreValuesNarrative.expressionNumber > 0) {
+      const keyword = this.blueprint.coreValuesNarrative.expressionKeyword || this.getExpressionKeyword(this.blueprint.coreValuesNarrative.expressionNumber);
+      numerologyData.push(`**Expression ${this.blueprint.coreValuesNarrative.expressionNumber}** ("${keyword}") - Your natural talents and abilities`);
+    } else {
+      missingData.push('Expression Number');
+    }
+
+    if (this.blueprint.coreValuesNarrative?.soulUrgeNumber && this.blueprint.coreValuesNarrative.soulUrgeNumber > 0) {
+      const keyword = this.blueprint.coreValuesNarrative.soulUrgeKeyword || this.getSoulUrgeKeyword(this.blueprint.coreValuesNarrative.soulUrgeNumber);
+      numerologyData.push(`**Soul Urge ${this.blueprint.coreValuesNarrative.soulUrgeNumber}** ("${keyword}") - What your heart truly desires`);
+    } else {
+      missingData.push('Soul Urge Number');
+    }
+
+    if (this.blueprint.coreValuesNarrative?.personalityNumber && this.blueprint.coreValuesNarrative.personalityNumber > 0) {
+      const keyword = this.blueprint.coreValuesNarrative.personalityKeyword || this.getPersonalityKeyword(this.blueprint.coreValuesNarrative.personalityNumber);
+      numerologyData.push(`**Personality ${this.blueprint.coreValuesNarrative.personalityNumber}** ("${keyword}") - How others see you`);
+    } else {
+      missingData.push('Personality Number');
+    }
+
+    if (this.blueprint.coreValuesNarrative?.birthdayNumber && this.blueprint.coreValuesNarrative.birthdayNumber > 0) {
+      const keyword = this.blueprint.coreValuesNarrative.birthdayKeyword || this.getBirthdayKeyword(this.blueprint.coreValuesNarrative.birthdayNumber);
+      numerologyData.push(`**Birthday ${this.blueprint.coreValuesNarrative.birthdayNumber}** ("${keyword}") - Your special gift to the world`);
+    } else {
+      missingData.push('Birthday Number');
+    }
+
+    let response = `You're absolutely right, ${this.userName}! There should be more numerology detail. Here's what I have for you:\n\n`;
+
+    if (numerologyData.length > 0) {
+      response += numerologyData.join('\n\n');
+    }
+
+    if (missingData.length > 0) {
+      response += `\n\n**Missing from your profile:** ${missingData.join(', ')}`;
+      response += `\n\nWould you like help calculating these missing numbers? I can guide you through the process, or you can update your profile to get the complete picture.`;
+    } else if (numerologyData.length > 0) {
+      response += `\n\nYour numerology profile is complete! Each number reveals a different aspect of your soul's journey. Would you like me to explain how any of these show up in your daily life?`;
+    }
+
+    return response;
+  }
+
+  private handleIsThereMoreRequest(): string {
+    console.log("🔍 Blueprint Filter: Handling 'is there more' request");
+    
+    let response = `You're right to ask, ${this.userName}! Let me check what additional blueprint information I have for you:\n\n`;
+
+    const additionalSections = [];
+
+    // Check for detailed Human Design info
+    if (this.blueprint.energyDecisionStrategy?.profile && this.blueprint.energyDecisionStrategy.profile !== 'Unknown') {
+      additionalSections.push(`**Human Design Profile:** ${this.blueprint.energyDecisionStrategy.profile}`);
+    }
+
+    if (this.blueprint.energyDecisionStrategy?.definition && this.blueprint.energyDecisionStrategy.definition !== 'Unknown') {
+      additionalSections.push(`**Human Design Definition:** ${this.blueprint.energyDecisionStrategy.definition}`);
+    }
+
+    if (this.blueprint.energyDecisionStrategy?.gates && this.blueprint.energyDecisionStrategy.gates.length > 0) {
+      additionalSections.push(`**Active Gates:** ${this.blueprint.energyDecisionStrategy.gates.slice(0, 10).join(', ')}${this.blueprint.energyDecisionStrategy.gates.length > 10 ? '...' : ''}`);
+    }
+
+    // Check for Big Five data
+    if (this.blueprint.cognitiveTemperamental?.bigFive && Object.keys(this.blueprint.cognitiveTemperamental.bigFive).length > 0) {
+      const bigFive = this.blueprint.cognitiveTemperamental.bigFive;
+      additionalSections.push(`**Big Five Personality:** Openness ${Math.round((bigFive.openness || 0) * 100)}%, Conscientiousness ${Math.round((bigFive.conscientiousness || 0) * 100)}%, Extraversion ${Math.round((bigFive.extraversion || 0) * 100)}%, Agreeableness ${Math.round((bigFive.agreeableness || 0) * 100)}%, Neuroticism ${Math.round((bigFive.neuroticism || 0) * 100)}%`);
+    }
+
+    // Check for complete astrology
+    if (this.blueprint.publicArchetype?.risingSign && this.blueprint.publicArchetype.risingSign !== 'Unknown') {
+      additionalSections.push(`**Rising Sign:** ${this.blueprint.publicArchetype.risingSign} (your outer personality)`);
+    }
+
+    // Check for Chinese astrology
+    if (this.blueprint.generationalCode?.chineseZodiac && this.blueprint.generationalCode.chineseZodiac !== 'Unknown') {
+      let chineseInfo = `**Chinese Astrology:** ${this.blueprint.generationalCode.chineseZodiac}`;
+      if (this.blueprint.generationalCode.element && this.blueprint.generationalCode.element !== 'Unknown') {
+        chineseInfo += ` ${this.blueprint.generationalCode.element}`;
+      }
+      if (this.blueprint.generationalCode.keyword) {
+        chineseInfo += ` ("${this.blueprint.generationalCode.keyword}")`;
+      }
+      additionalSections.push(chineseInfo);
+    }
+
+    // Check for goal stack
+    if (this.blueprint.goalStack?.primaryGoal) {
+      additionalSections.push(`**Current Goal Focus:** ${this.blueprint.goalStack.primaryGoal}`);
+    }
+
+    // Check for Bashar Suite
+    if (this.blueprint.basharSuite?.beliefInterface?.principle) {
+      additionalSections.push(`**Belief Principle:** "${this.blueprint.basharSuite.beliefInterface.principle}"`);
+    }
+
+    if (additionalSections.length > 0) {
+      response += additionalSections.join('\n\n');
+      response += `\n\nThere's definitely more depth here! Would you like me to explain any of these in detail, or help you explore how they work together?`;
+    } else {
+      response += `I've shown you the main elements I have access to. If you're expecting specific information that's missing, it might need to be calculated or added to your profile. What specific aspect were you looking for?`;
+    }
+
+    return response;
+  }
+
+  private handleFullBlueprintRequest(): string {
     const mbtiType = this.blueprint.cognitiveTemperamental?.mbtiType || 'Unknown';
     const hdType = this.blueprint.energyDecisionStrategy?.humanDesignType || 'Unknown';
     const hdAuthority = this.blueprint.energyDecisionStrategy?.authority || 'Unknown';
@@ -144,9 +270,7 @@ Would you like me to dive deeper into any specific aspect of your blueprint? I c
   }
 
   private addNamePersonalization(content: string): string {
-    // Natural name integration without being excessive
     if (!content.includes(this.userName) && Math.random() < 0.3) {
-      // Add name to beginning occasionally
       if (content.match(/^(I understand|That makes sense|I can see)/)) {
         content = content.replace(/^(I understand|That makes sense|I can see)/, 
           `$1, ${this.userName},`);
@@ -160,16 +284,15 @@ Would you like me to dive deeper into any specific aspect of your blueprint? I c
     
     if (!mbtiType) return content;
 
-    // Adjust tone based on MBTI preferences
-    if (mbtiType.includes('F')) { // Feeling types
+    if (mbtiType.includes('F')) {
       content = this.softenLanguage(content);
     }
     
-    if (mbtiType.includes('I')) { // Introverted types
+    if (mbtiType.includes('I')) {
       content = this.addReflectiveSpace(content);
     }
 
-    if (mbtiType.includes('N')) { // Intuitive types
+    if (mbtiType.includes('N')) {
       content = this.addBigPictureContext(content);
     }
 
@@ -180,9 +303,7 @@ Would you like me to dive deeper into any specific aspect of your blueprint? I c
     const insights: string[] = [];
     const mbtiType = this.blueprint.cognitiveTemperamental?.mbtiType;
     const hdType = this.blueprint.energyDecisionStrategy?.humanDesignType;
-    const sunSign = this.blueprint.publicArchetype?.sunSign;
 
-    // Only add insights if they're contextually relevant
     if (this.isDecisionRelated(userMessage)) {
       if (hdType && hdType !== 'Unknown') {
         insights.push(this.getHumanDesignDecisionInsight(hdType));
@@ -201,7 +322,7 @@ Would you like me to dive deeper into any specific aspect of your blueprint? I c
       }
     }
 
-    return insights.slice(0, 1); // Maximum 1 insight per response to avoid overwhelm
+    return insights.slice(0, 1);
   }
 
   private integrateInsights(content: string, insights: string[]): string {
@@ -209,16 +330,13 @@ Would you like me to dive deeper into any specific aspect of your blueprint? I c
     
     const insight = insights[0];
     
-    // Find natural integration points
     const sentences = content.split('. ');
     if (sentences.length > 1) {
-      // Insert insight after first or second sentence
       const insertPoint = Math.min(1, sentences.length - 1);
       sentences.splice(insertPoint + 1, 0, insight);
       return sentences.join('. ');
     }
     
-    // Add as a new paragraph if content is short
     return `${content}\n\n${insight}`;
   }
 
@@ -227,7 +345,6 @@ Would you like me to dive deeper into any specific aspect of your blueprint? I c
     
     if (!mbtiType) return null;
 
-    // Add examples based on cognitive functions
     if (mbtiType.startsWith('IN') && this.isAboutPlanning(userMessage)) {
       return content.replace(
         /planning/gi,
@@ -243,20 +360,19 @@ Would you like me to dive deeper into any specific aspect of your blueprint? I c
     
     if (!mbtiType) return content;
 
-    // Adjust based on communication preferences
-    if (mbtiType.includes('P')) { // Perceiving types prefer flexibility
+    if (mbtiType.includes('P')) {
       content = content.replace(/must do|should do/gi, 'might consider');
       content = content.replace(/the answer is/gi, 'one possibility is');
     }
 
-    if (mbtiType.includes('J')) { // Judging types like structure
+    if (mbtiType.includes('J')) {
       content = this.addStructureElements(content);
     }
 
     return content;
   }
 
-  // Helper methods for content analysis
+  // Helper methods
   private isDecisionRelated(message: string): boolean {
     return /decide|choice|choose|should I|what do you think/i.test(message);
   }
@@ -287,7 +403,6 @@ Would you like me to dive deeper into any specific aspect of your blueprint? I c
   }
 
   private addBigPictureContext(content: string): string {
-    // Intuitive types appreciate broader context
     return content;
   }
 
@@ -303,9 +418,8 @@ Would you like me to dive deeper into any specific aspect of your blueprint? I c
   }
 
   private addStructureElements(content: string): string {
-    // Add slight structure cues for Judging types
     if (content.includes('\n\n')) {
-      return content; // Already has structure
+      return content;
     }
     
     const sentences = content.split('. ');
@@ -316,9 +430,89 @@ Would you like me to dive deeper into any specific aspect of your blueprint? I c
     return content;
   }
 
-  /**
-   * Handles direct blueprint questions with detailed explanations
-   */
+  // Comprehensive keyword methods
+  private getLifePathKeyword(path: number): string {
+    const keywords = {
+      1: 'Leader', 2: 'Collaborator', 3: 'Expresser', 4: 'Builder', 5: 'Explorer',
+      6: 'Nurturer', 7: 'Seeker', 8: 'Achiever', 9: 'Humanitarian'
+    };
+    return keywords[path as keyof typeof keywords] || 'Unique Path';
+  }
+
+  private getExpressionKeyword(num: number): string {
+    const keywords = {
+      1: 'Pioneer', 2: 'Diplomat', 3: 'Communicator', 4: 'Organizer', 5: 'Adventurer',
+      6: 'Caregiver', 7: 'Analyst', 8: 'Executive', 9: 'Humanitarian'
+    };
+    return keywords[num as keyof typeof keywords] || 'Unique Expression';
+  }
+
+  private getSoulUrgeKeyword(num: number): string {
+    const keywords = {
+      1: 'Independence', 2: 'Harmony', 3: 'Creativity', 4: 'Stability', 5: 'Freedom',
+      6: 'Service', 7: 'Knowledge', 8: 'Achievement', 9: 'Compassion'
+    };
+    return keywords[num as keyof typeof keywords] || 'Unique Desire';
+  }
+
+  private getPersonalityKeyword(num: number): string {
+    const keywords = {
+      1: 'Strong-willed', 2: 'Gentle', 3: 'Charming', 4: 'Practical', 5: 'Dynamic',
+      6: 'Responsible', 7: 'Mysterious', 8: 'Powerful', 9: 'Generous'
+    };
+    return keywords[num as keyof typeof keywords] || 'Unique Personality';
+  }
+
+  private getBirthdayKeyword(num: number): string {
+    const keywords = {
+      1: 'Independent', 2: 'Cooperative', 3: 'Creative', 4: 'Methodical', 5: 'Versatile',
+      6: 'Nurturing', 7: 'Introspective', 8: 'Ambitious', 9: 'Compassionate'
+    };
+    return keywords[num as keyof typeof keywords] || 'Unique Gift';
+  }
+
+  private getMBTIInsight(type: string): string {
+    const insights = {
+      'INFP': 'process internally and value authenticity above all',
+      'ENFP': 'energize through possibilities and connecting with others',
+      'INFJ': 'see patterns and focus on meaningful impact',
+      'ENFJ': 'naturally guide others toward their potential',
+      'INTJ': 'think strategically and work toward long-term visions',
+      'ENTJ': 'lead through organizing people and resources efficiently'
+    };
+    return insights[type as keyof typeof insights] || 'approach life through your unique cognitive lens';
+  }
+
+  private getHumanDesignStrategy(type: string): string {
+    const strategies = {
+      'Generator': 'respond to what lights you up and follow your gut',
+      'Projector': 'wait for invitation and recognition before sharing your gifts',
+      'Manifestor': 'initiate when you feel the urge, but inform others of your actions',
+      'Reflector': 'wait a full lunar cycle before making major decisions'
+    };
+    return strategies[type as keyof typeof strategies] || 'follow your natural energy flow';
+  }
+
+  private getAuthorityGuidance(authority: string): string {
+    const guidance = {
+      'Sacral': 'trust your gut response - yes/no feelings in your body',
+      'Emotional': 'ride your emotional wave before making decisions',
+      'Splenic': 'trust your immediate intuitive hits',
+      'Self-Projected': 'talk it out and listen to what you hear yourself say'
+    };
+    return guidance[authority as keyof typeof guidance] || 'make decisions from your center';
+  }
+
+  private getSunSignQuality(sign: string): string {
+    const qualities = {
+      'Cancer': 'nurturing and emotionally intuitive',
+      'Leo': 'creative and heart-centered',
+      'Virgo': 'practical and service-oriented',
+      'Libra': 'harmonious and relationship-focused'
+    };
+    return qualities[sign as keyof typeof qualities] || 'your unique solar';
+  }
+
   handleDirectBlueprintQuestion(question: string, originalResponse: string): string {
     console.log("🎯 Blueprint Filter: Handling direct blueprint question");
     
@@ -354,14 +548,13 @@ Would you like me to dive deeper into any specific aspect of your blueprint? I c
     const hdType = this.blueprint.energyDecisionStrategy?.humanDesignType;
     if (!hdType || hdType === 'Unknown') return response;
     
-    return `${response}\n\nIn your daily life, ${this.userName}, this Generator energy might show up as feeling most alive when you're doing work that excites you, and feeling drained when you're pushing through things that don't spark joy.`;
+    return `${response}\n\nIn your daily life, ${this.userName}, this ${hdType} energy might show up as feeling most alive when you're doing work that excites you, and feeling drained when you're pushing through things that don't spark joy.`;
   }
 
   private enhanceLifePathExplanation(response: string): string {
     const lifePath = this.blueprint.coreValuesNarrative?.lifePath;
     if (!lifePath) return response;
     
-    // Fixed: Ensure lifePath is converted to number
     const lifePathNumber = typeof lifePath === 'string' ? parseInt(lifePath, 10) : lifePath;
     return `${response}\n\nYour Life Path ${lifePathNumber} journey is about ${this.getLifePathTheme(lifePathNumber)}, ${this.userName}. Notice how this plays out in the choices that feel most meaningful to you.`;
   }
@@ -388,16 +581,6 @@ Would you like me to dive deeper into any specific aspect of your blueprint? I c
       5: 'freedom and exploring possibilities'
     };
     return themes[path as keyof typeof themes] || 'discovering your unique purpose';
-  }
-
-  private getSunSignQuality(sign: string): string {
-    const qualities = {
-      'Cancer': 'nurturing and emotionally intuitive',
-      'Leo': 'creative and heart-centered',
-      'Virgo': 'practical and service-oriented',
-      'Libra': 'harmonious and relationship-focused'
-    };
-    return qualities[sign as keyof typeof qualities] || 'your unique solar';
   }
 }
 

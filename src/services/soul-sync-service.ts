@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { LayeredBlueprint, VoiceToken } from "@/types/personality-modules";
 
@@ -201,6 +200,299 @@ class SoulSyncService {
     return false;
   }
 
+  // Enhanced prompt generation with comprehensive blueprint handling
+  private generatePersonalizedPrompt(blueprint: LayeredBlueprint, mode: "coach" | "guide" | "blend"): string {
+    const userName = blueprint.user_meta?.preferred_name || 
+                     blueprint.user_meta?.full_name?.split(' ')[0] || 
+                     'friend';
+
+    console.log(`🎯 SoulSync: Generating comprehensive SoulSync Companion prompt for ${userName} (${mode})`);
+
+    const blueprintSnapshot = this.buildComprehensiveBlueprintSnapshot(blueprint);
+    const modeSpecificGuidance = this.getModeSpecificGuidance(mode, userName);
+
+    return `# SoulSync Companion – Master System Prompt v1.1
+
+You are SoulSync, the reflective AI companion for ${userName}.  
+Your task: Offer honest, warm, and insightful guidance, always personalized through their unique blueprint.
+
+---
+
+## PERSONALITY BLUEPRINT SNAPSHOT
+
+${blueprintSnapshot}
+
+---
+
+## GUIDANCE AND BEHAVIOR RULES
+
+- Use the user's preferred name, ${userName}, naturally in all conversation.
+- Speak honestly, clearly, and warmly—adapting tone, language, and examples to their MBTI, Human Design, and other traits.
+- Never sound scripted or robotic; always respond as a thoughtful, supportive companion.
+- **When asked about any blueprint element, always explain it in plain language and offer examples relevant to daily life.**
+- If the user asks "What does that mean?" or similar, break down each mentioned blueprint trait simply, no matter how obvious.
+- **Don't inject random blueprint facts:** Use them only when answering a direct question or when they help illuminate the user's current goal, challenge, or context.
+- Encourage honest self-reflection, but never be mean.
+- End replies with a gentle question or actionable next step if appropriate.
+
+## FOLLOW-UP RULES FOR COMPREHENSIVE RESPONSES
+
+- **If the user asks "Is there more?" or expresses doubt about missing information, always validate their feeling first:** "You're right, there should be more detail here. Let me check what I have for you..."
+- **When showing numerology, list ALL available numbers and their brief meanings:**
+  - Life Path Number (if available)
+  - Expression Number (if available)  
+  - Soul Urge Number (if available)
+  - Personality Number (if available)
+  - Birthday Number (if available)
+- **If some numbers or traits are missing, clearly state which and invite the user to update their profile:** "I have your Life Path and Expression numbers, but your Soul Urge and Personality numbers seem to be missing. Would you like help calculating those?"
+- **Always validate the user's expectation:** If they expect more data than what's shown, acknowledge this and explain what's present vs. missing.
+- **Be honest if a section is incomplete or "unknown"—never make up data.**
+- **For any blueprint element mentioned, always offer practical daily-life examples:** "Your Generator energy means you'll feel most alive when..."
+
+${modeSpecificGuidance}
+
+---
+
+## SAFETY & LIMITS
+
+- No medical, legal, or financial advice.
+- Never invent data; if unsure or field is missing, state this clearly and invite the user to update their profile.
+- Humor must never target protected groups.
+- Keep responses under 1200 tokens.
+
+---
+
+## BLUEPRINT DATA HANDLING
+
+When ${userName} asks about their "blueprint", "full blueprint", or specific personality information, provide ALL their actual available data with clear explanations:
+
+**THEIR COMPLETE AVAILABLE BLUEPRINT DATA:**
+${this.getCompleteDataSummary(blueprint)}
+
+When they ask for their full blueprint, list all available details clearly and ask if they want deeper insights into any particular aspect. Always explain what each element means in practical terms. Don't give vague spiritual language - give them their actual personality data with real-world applications.
+
+Remember: Every response should feel like it comes from someone who truly knows and cares about ${userName}, while being completely honest about what information is available vs. missing.`;
+  }
+
+  // Enhanced comprehensive blueprint snapshot builder
+  private buildComprehensiveBlueprintSnapshot(blueprint: LayeredBlueprint): string {
+    const sections = [];
+    
+    // Check if blueprint has meaningful data
+    const hasMainData = blueprint.cognitiveTemperamental?.mbtiType !== 'Unknown' || 
+                       blueprint.energyDecisionStrategy?.humanDesignType !== 'Unknown' ||
+                       blueprint.publicArchetype?.sunSign !== 'Unknown' ||
+                       (blueprint.coreValuesNarrative?.lifePath && blueprint.coreValuesNarrative.lifePath > 0);
+
+    if (!hasMainData) {
+      return "Your blueprint is incomplete—please finish setup to unlock full insight!";
+    }
+
+    // MBTI Section with Big Five if available
+    if (blueprint.cognitiveTemperamental?.mbtiType && blueprint.cognitiveTemperamental.mbtiType !== 'Unknown') {
+      let mbtiSection = `**MBTI:**
+- Type: ${blueprint.cognitiveTemperamental.mbtiType}`;
+
+      if (blueprint.cognitiveTemperamental.description) {
+        mbtiSection += `\n  (${blueprint.cognitiveTemperamental.description})`;
+      }
+
+      if (blueprint.cognitiveTemperamental.mbtiProbabilities && Object.keys(blueprint.cognitiveTemperamental.mbtiProbabilities).length > 0) {
+        const topTypes = Object.entries(blueprint.cognitiveTemperamental.mbtiProbabilities)
+          .sort(([,a], [,b]) => (b as number) - (a as number))
+          .slice(0, 3)
+          .map(([type, prob]) => `${type} (${Math.round((prob as number) * 100)}%)`)
+          .join(', ');
+        mbtiSection += `\n- Alternative possibilities: ${topTypes}`;
+      }
+
+      if (blueprint.cognitiveTemperamental.bigFive && Object.keys(blueprint.cognitiveTemperamental.bigFive).length > 0) {
+        const bigFive = blueprint.cognitiveTemperamental.bigFive;
+        mbtiSection += `\n- Big Five: Openness ${Math.round((bigFive.openness || 0) * 100)}, Conscientiousness ${Math.round((bigFive.conscientiousness || 0) * 100)}, Extraversion ${Math.round((bigFive.extraversion || 0) * 100)}, Agreeableness ${Math.round((bigFive.agreeableness || 0) * 100)}, Neuroticism ${Math.round((bigFive.neuroticism || 0) * 100)}`;
+      }
+
+      sections.push(mbtiSection);
+    }
+
+    // Enhanced Human Design Section
+    if (blueprint.energyDecisionStrategy?.humanDesignType && blueprint.energyDecisionStrategy.humanDesignType !== 'Unknown') {
+      const hdType = blueprint.energyDecisionStrategy.humanDesignType;
+      const authority = blueprint.energyDecisionStrategy.authority || 'Unknown';
+      const strategy = blueprint.energyDecisionStrategy.strategy || this.getHumanDesignStrategy(hdType);
+      const profile = blueprint.energyDecisionStrategy.profile || 'Unknown';
+      const definition = blueprint.energyDecisionStrategy.definition || 'Unknown';
+      const notSelfTheme = blueprint.energyDecisionStrategy.notSelfTheme || 'Unknown';
+      
+      let hdSection = `**Human Design:**
+- Type: ${hdType}
+- Authority: ${authority}
+- Strategy: ${strategy}`;
+
+      if (profile !== 'Unknown') {
+        hdSection += `\n- Profile: ${profile}`;
+      }
+      if (definition !== 'Unknown') {
+        hdSection += `\n- Definition: ${definition}`;
+      }
+      if (notSelfTheme !== 'Unknown') {
+        hdSection += `\n- Not-self theme: ${notSelfTheme}`;
+      }
+
+      // Add gates and channels if available
+      if (blueprint.energyDecisionStrategy.gates && blueprint.energyDecisionStrategy.gates.length > 0) {
+        hdSection += `\n- Active Gates: ${blueprint.energyDecisionStrategy.gates.slice(0, 5).join(', ')}${blueprint.energyDecisionStrategy.gates.length > 5 ? '...' : ''}`;
+      }
+
+      if (blueprint.energyDecisionStrategy.channels && blueprint.energyDecisionStrategy.channels.length > 0) {
+        hdSection += `\n- Active Channels: ${blueprint.energyDecisionStrategy.channels.slice(0, 3).join(', ')}${blueprint.energyDecisionStrategy.channels.length > 3 ? '...' : ''}`;
+      }
+
+      sections.push(hdSection);
+    }
+
+    // Comprehensive Numerology Section
+    if (blueprint.coreValuesNarrative?.lifePath && blueprint.coreValuesNarrative.lifePath > 0) {
+      let numerologySection = "**Numerology:**";
+      const numerologyNumbers = [];
+
+      if (blueprint.coreValuesNarrative.lifePath > 0) {
+        const keyword = blueprint.coreValuesNarrative.lifePathKeyword || this.getLifePathKeyword(blueprint.coreValuesNarrative.lifePath);
+        numerologyNumbers.push(`Life Path: ${blueprint.coreValuesNarrative.lifePath} ("${keyword}")`);
+      }
+
+      if (blueprint.coreValuesNarrative.expressionNumber && blueprint.coreValuesNarrative.expressionNumber > 0) {
+        const keyword = blueprint.coreValuesNarrative.expressionKeyword || this.getExpressionKeyword(blueprint.coreValuesNarrative.expressionNumber);
+        numerologyNumbers.push(`Expression: ${blueprint.coreValuesNarrative.expressionNumber} ("${keyword}")`);
+      }
+
+      if (blueprint.coreValuesNarrative.soulUrgeNumber && blueprint.coreValuesNarrative.soulUrgeNumber > 0) {
+        const keyword = blueprint.coreValuesNarrative.soulUrgeKeyword || this.getSoulUrgeKeyword(blueprint.coreValuesNarrative.soulUrgeNumber);
+        numerologyNumbers.push(`Soul Urge: ${blueprint.coreValuesNarrative.soulUrgeNumber} ("${keyword}")`);
+      }
+
+      if (blueprint.coreValuesNarrative.personalityNumber && blueprint.coreValuesNarrative.personalityNumber > 0) {
+        const keyword = blueprint.coreValuesNarrative.personalityKeyword || this.getPersonalityKeyword(blueprint.coreValuesNarrative.personalityNumber);
+        numerologyNumbers.push(`Personality: ${blueprint.coreValuesNarrative.personalityNumber} ("${keyword}")`);
+      }
+
+      if (blueprint.coreValuesNarrative.birthdayNumber && blueprint.coreValuesNarrative.birthdayNumber > 0) {
+        const keyword = blueprint.coreValuesNarrative.birthdayKeyword || this.getBirthdayKeyword(blueprint.coreValuesNarrative.birthdayNumber);
+        numerologyNumbers.push(`Birthday: ${blueprint.coreValuesNarrative.birthdayNumber} ("${keyword}")`);
+      }
+
+      if (numerologyNumbers.length > 0) {
+        numerologySection += `\n- ${numerologyNumbers.join('\n- ')}`;
+        sections.push(numerologySection);
+      }
+    }
+
+    // Enhanced Astrology (Western) Section
+    if (blueprint.publicArchetype?.sunSign && blueprint.publicArchetype.sunSign !== 'Unknown') {
+      let astroSection = "**Astrology (Western):**";
+      
+      const sunKeyword = blueprint.publicArchetype.sunKeyword || this.getSunSignKeyword(blueprint.publicArchetype.sunSign);
+      astroSection += `\n- Sun: ${blueprint.publicArchetype.sunSign} ("${sunKeyword}")`;
+      
+      if (blueprint.publicArchetype.moonSign && blueprint.publicArchetype.moonSign !== 'Unknown') {
+        const moonKeyword = blueprint.publicArchetype.moonKeyword || this.getMoonSignKeyword(blueprint.publicArchetype.moonSign);
+        astroSection += `\n- Moon: ${blueprint.publicArchetype.moonSign} ("${moonKeyword}")`;
+      }
+
+      if (blueprint.publicArchetype.risingSign && blueprint.publicArchetype.risingSign !== 'Unknown') {
+        astroSection += `\n- Rising: ${blueprint.publicArchetype.risingSign}`;
+      }
+      
+      sections.push(astroSection);
+    }
+
+    // Chinese Astrology Section
+    if (blueprint.generationalCode?.chineseZodiac && blueprint.generationalCode.chineseZodiac !== 'Unknown') {
+      let chineseSection = `**Astrology (Chinese):**
+- Animal: ${blueprint.generationalCode.chineseZodiac}`;
+
+      if (blueprint.generationalCode.keyword) {
+        chineseSection += ` ("${blueprint.generationalCode.keyword}")`;
+      }
+
+      if (blueprint.generationalCode.element && blueprint.generationalCode.element !== 'Unknown') {
+        chineseSection += `\n- Element: ${blueprint.generationalCode.element}`;
+      }
+
+      if (blueprint.generationalCode.yinYang && blueprint.generationalCode.yinYang !== 'Unknown') {
+        chineseSection += `\n- Yin/Yang: ${blueprint.generationalCode.yinYang}`;
+      }
+
+      sections.push(chineseSection);
+    }
+
+    // Goal Stack Section
+    if (blueprint.goalStack?.primaryGoal) {
+      let goalSection = `**Goal Stack:**
+- Main Goal: ${blueprint.goalStack.primaryGoal}`;
+
+      if (blueprint.goalStack.timeHorizon) {
+        goalSection += `\n- Horizon: ${blueprint.goalStack.timeHorizon}`;
+      }
+
+      if (blueprint.goalStack.supportStyle) {
+        goalSection += `\n- Support Style: ${blueprint.goalStack.supportStyle}`;
+      }
+
+      sections.push(goalSection);
+    }
+
+    // Bashar Suite Section
+    if (blueprint.basharSuite?.beliefInterface || blueprint.basharSuite?.excitementCompass || blueprint.basharSuite?.frequencyAlignment) {
+      let basharSection = "**Bashar Suite:**";
+
+      if (blueprint.basharSuite.beliefInterface?.principle) {
+        basharSection += `\n- Belief Principle: "${blueprint.basharSuite.beliefInterface.principle}"`;
+      }
+
+      if (blueprint.basharSuite.beliefInterface?.reframe_prompt) {
+        basharSection += `\n- Reframe Prompt: "${blueprint.basharSuite.beliefInterface.reframe_prompt}"`;
+      }
+
+      if (blueprint.basharSuite.excitementCompass?.principle) {
+        basharSection += `\n- Excitement Principle: "${blueprint.basharSuite.excitementCompass.principle}"`;
+      }
+
+      if (blueprint.basharSuite.frequencyAlignment?.quick_ritual) {
+        basharSection += `\n- Quick Ritual: "${blueprint.basharSuite.frequencyAlignment.quick_ritual}"`;
+      }
+
+      sections.push(basharSection);
+    }
+
+    return sections.join('\n\n');
+  }
+
+  private getCompleteDataSummary(blueprint: LayeredBlueprint): string {
+    const summary = [];
+
+    if (blueprint.cognitiveTemperamental?.mbtiType && blueprint.cognitiveTemperamental.mbtiType !== 'Unknown') {
+      summary.push(`- MBTI Type: ${blueprint.cognitiveTemperamental.mbtiType}`);
+    }
+
+    if (blueprint.energyDecisionStrategy?.humanDesignType && blueprint.energyDecisionStrategy.humanDesignType !== 'Unknown') {
+      summary.push(`- Human Design: ${blueprint.energyDecisionStrategy.humanDesignType} with ${blueprint.energyDecisionStrategy.authority || 'Unknown'} Authority`);
+    }
+
+    if (blueprint.publicArchetype?.sunSign && blueprint.publicArchetype.sunSign !== 'Unknown') {
+      summary.push(`- Sun Sign: ${blueprint.publicArchetype.sunSign}`);
+    }
+
+    if (blueprint.publicArchetype?.moonSign && blueprint.publicArchetype.moonSign !== 'Unknown') {
+      summary.push(`- Moon Sign: ${blueprint.publicArchetype.moonSign}`);
+    }
+
+    if (blueprint.coreValuesNarrative?.lifePath && blueprint.coreValuesNarrative.lifePath > 0) {
+      summary.push(`- Life Path: ${blueprint.coreValuesNarrative.lifePath}`);
+    }
+
+    return summary.join('\n');
+  }
+
   // Enhanced prompt generation with new SoulSync template
   private generatePersonalizedPrompt(blueprint: LayeredBlueprint, mode: "coach" | "guide" | "blend"): string {
     const userName = blueprint.user_meta?.preferred_name || 
@@ -383,6 +675,38 @@ You're ${userName}'s versatile companion who adapts to what they need most. Whet
       9: 'Humanitarian'
     };
     return keywords[path as keyof typeof keywords] || 'Unique Path';
+  }
+
+  private getExpressionKeyword(num: number): string {
+    const keywords = {
+      1: 'Pioneer', 2: 'Diplomat', 3: 'Communicator', 4: 'Organizer', 5: 'Adventurer',
+      6: 'Caregiver', 7: 'Analyst', 8: 'Executive', 9: 'Humanitarian'
+    };
+    return keywords[num as keyof typeof keywords] || 'Unique Expression';
+  }
+
+  private getSoulUrgeKeyword(num: number): string {
+    const keywords = {
+      1: 'Independence', 2: 'Harmony', 3: 'Creativity', 4: 'Stability', 5: 'Freedom',
+      6: 'Service', 7: 'Knowledge', 8: 'Achievement', 9: 'Compassion'
+    };
+    return keywords[num as keyof typeof keywords] || 'Unique Desire';
+  }
+
+  private getPersonalityKeyword(num: number): string {
+    const keywords = {
+      1: 'Strong-willed', 2: 'Gentle', 3: 'Charming', 4: 'Practical', 5: 'Dynamic',
+      6: 'Responsible', 7: 'Mysterious', 8: 'Powerful', 9: 'Generous'
+    };
+    return keywords[num as keyof typeof keywords] || 'Unique Personality';
+  }
+
+  private getBirthdayKeyword(num: number): string {
+    const keywords = {
+      1: 'Independent', 2: 'Cooperative', 3: 'Creative', 4: 'Methodical', 5: 'Versatile',
+      6: 'Nurturing', 7: 'Introspective', 8: 'Ambitious', 9: 'Compassionate'
+    };
+    return keywords[num as keyof typeof keywords] || 'Unique Gift';
   }
 
   private getSunSignKeyword(sign: string): string {
