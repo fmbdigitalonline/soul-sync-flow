@@ -19,12 +19,12 @@ export function useSoulSync() {
       }
 
       try {
-        console.log("🔄 SoulSync: Initializing with blueprint data");
+        console.log("🔄 SoulSync: Initializing with natural conversation approach");
         
-        // Fixed: Proper data mapping using correct paths from blueprintData
+        // Map blueprint data properly
         const layeredBlueprint = mapToLayeredBlueprint(blueprintData);
         
-        console.log("🎯 SoulSync: Mapped blueprint data:", {
+        console.log("🎯 SoulSync: Mapped blueprint for natural conversation:", {
           mbtiType: layeredBlueprint.cognitiveTemperamental?.mbtiType,
           hdType: layeredBlueprint.energyDecisionStrategy?.humanDesignType,
           authority: layeredBlueprint.energyDecisionStrategy?.authority,
@@ -34,13 +34,13 @@ export function useSoulSync() {
           userName: layeredBlueprint.user_meta?.preferred_name
         });
 
-        // Update both services with blueprint data
+        // Update both services with blueprint data for natural conversation
         enhancedAICoachService.updateUserBlueprint(layeredBlueprint);
         await enhancedAICoachService.setCurrentUser(user.id);
         
         setIsSoulSyncReady(true);
         setSoulSyncError(null);
-        console.log("✅ SoulSync: Successfully initialized with proper data mapping");
+        console.log("✅ SoulSync: Natural conversation system ready");
       } catch (error) {
         console.error("❌ SoulSync: Initialization error:", error);
         setSoulSyncError(error instanceof Error ? error.message : 'Unknown error');

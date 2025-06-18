@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { PersonalityEngine } from "./personality-engine";
 import { soulSyncService } from "./soul-sync-service";
+import { createBlueprintFilter } from "./blueprint-personality-filter";
 import { LayeredBlueprint, AgentMode } from "@/types/personality-modules";
 
 export type AgentType = "coach" | "guide" | "blend";
@@ -97,15 +98,15 @@ class EnhancedAICoachService {
     }
 
     try {
-      console.log("🎭 SoulSync: Fetching or creating persona...");
+      console.log("🎭 SoulSync: Fetching or creating natural conversation persona...");
       
       const blueprint = await this.getBlueprintFromCache();
       if (!blueprint) {
-        console.log("⚠️ SoulSync: No blueprint available, falling back to personality engine");
+        console.log("⚠️ SoulSync: No blueprint available, using basic personality engine");
         return this.personalityEngine.generateSystemPrompt(agentType as AgentMode);
       }
 
-      // Use SoulSync service to get personalized prompt
+      // Use SoulSync service to get personalized prompt with natural conversation approach
       const personalizedPrompt = await soulSyncService.getOrCreatePersona(
         this.currentUserId,
         blueprint,
@@ -113,7 +114,7 @@ class EnhancedAICoachService {
       );
 
       if (personalizedPrompt) {
-        console.log("✅ SoulSync: Personalized prompt generated successfully");
+        console.log("✅ SoulSync: Natural conversation persona ready");
         return personalizedPrompt;
       } else {
         console.log("⚠️ SoulSync: Failed to generate persona, falling back");
@@ -121,7 +122,6 @@ class EnhancedAICoachService {
       }
     } catch (error) {
       console.error("❌ SoulSync: Error in persona generation:", error);
-      // Fall back to personality engine
       return this.personalityEngine.generateSystemPrompt(agentType as AgentMode);
     }
   }
@@ -170,9 +170,13 @@ class EnhancedAICoachService {
     callbacks: StreamingResponse
   ): Promise<void> {
     try {
-      console.log(`📡 Enhanced AI Coach Service: Starting streaming (${agentType}, SoulSync: ${usePersona})`);
+      console.log(`📡 Enhanced AI Coach Service: Starting natural streaming (${agentType}, SoulSync: ${usePersona})`);
       
       const systemPrompt = await this.getOrCreatePersona(usePersona, agentType);
+      
+      // Get blueprint for filtering if available
+      const blueprint = usePersona ? await this.getBlueprintFromCache() : null;
+      const blueprintFilter = blueprint ? createBlueprintFilter(blueprint) : null;
       
       const response = await fetch(`https://qxaajirrqrcnmvtowjbg.supabase.co/functions/v1/ai-coach-stream`, {
         method: 'POST',
@@ -187,6 +191,7 @@ class EnhancedAICoachService {
           agentType,
           language,
           systemPrompt,
+          enableBlueprintFiltering: !!blueprintFilter
         }),
       });
 
@@ -201,6 +206,7 @@ class EnhancedAICoachService {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let fullResponse = '';
+      let lastChunk = '';
 
       try {
         while (true) {
@@ -218,6 +224,19 @@ class EnhancedAICoachService {
               const data = line.slice(6).trim();
               
               if (data === '[DONE]') {
+                // Apply blueprint filtering to complete response if available
+                if (blueprintFilter && fullResponse) {
+                  console.log("🎭 Applying blueprint personality filter to complete response");
+                  const filtered = blueprintFilter.filterResponse(fullResponse, message);
+                  
+                  // If significant enhancement, replace the content
+                  if (filtered.content !== fullResponse && filtered.personalTouches.length > 0) {
+                    console.log("✨ Blueprint filter enhanced response with:", filtered.personalTouches);
+                    callbacks.onComplete(filtered.content);
+                    return;
+                  }
+                }
+                
                 callbacks.onComplete(fullResponse);
                 return;
               }
@@ -229,6 +248,7 @@ class EnhancedAICoachService {
                   
                   if (content) {
                     fullResponse += content;
+                    lastChunk = content;
                     callbacks.onChunk(content);
                   }
                 } catch (parseError) {
@@ -243,10 +263,18 @@ class EnhancedAICoachService {
       }
       
       if (fullResponse) {
+        // Apply final blueprint filtering if available
+        if (blueprintFilter) {
+          const filtered = blueprintFilter.filterResponse(fullResponse, message);
+          if (filtered.content !== fullResponse) {
+            callbacks.onComplete(filtered.content);
+            return;
+          }
+        }
         callbacks.onComplete(fullResponse);
       }
     } catch (error) {
-      console.error("❌ Enhanced AI Coach Service: Error in streaming:", error);
+      console.error("❌ Enhanced AI Coach Service: Error in natural streaming:", error);
       callbacks.onError(error as Error);
     }
   }
