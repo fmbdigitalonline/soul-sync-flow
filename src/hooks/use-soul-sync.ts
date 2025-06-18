@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { soulSyncService } from '@/services/soul-sync-service';
 import { enhancedAICoachService } from '@/services/enhanced-ai-coach-service';
@@ -22,6 +23,16 @@ export function useSoulSync() {
         
         // Fixed: Proper data mapping using correct paths from blueprintData
         const layeredBlueprint = mapToLayeredBlueprint(blueprintData);
+        
+        console.log("🎯 SoulSync: Mapped blueprint data:", {
+          mbtiType: layeredBlueprint.cognitiveTemperamental?.mbtiType,
+          hdType: layeredBlueprint.energyDecisionStrategy?.humanDesignType,
+          authority: layeredBlueprint.energyDecisionStrategy?.authority,
+          sunSign: layeredBlueprint.publicArchetype?.sunSign,
+          moonSign: layeredBlueprint.publicArchetype?.moonSign,
+          lifePath: layeredBlueprint.coreValuesNarrative?.lifePath,
+          userName: layeredBlueprint.user_meta?.preferred_name
+        });
 
         // Update both services with blueprint data
         enhancedAICoachService.updateUserBlueprint(layeredBlueprint);
@@ -50,28 +61,46 @@ export function useSoulSync() {
 
 // Fixed: Proper data mapping function that correctly extracts data from blueprintData
 function mapToLayeredBlueprint(blueprintData: any) {
-  // Extract personality data from correct path
-  const personalityData = blueprintData?.user_meta?.personality || {};
+  console.log("🗺️ Mapping blueprint data to LayeredBlueprint structure");
+  
+  // Extract data from the actual blueprint structure
+  const mbtiType = blueprintData?.user_meta?.personality?.likelyType || 'Unknown';
+  const hdType = blueprintData?.energy_strategy_human_design?.type || 'Unknown';
+  const hdAuthority = blueprintData?.energy_strategy_human_design?.authority || 'Unknown';
+  const sunSign = blueprintData?.archetype_western?.sun_sign || 'Unknown';
+  const moonSign = blueprintData?.archetype_western?.moon_sign || 'Unknown';
+  const lifePath = blueprintData?.values_life_path?.life_path_number || 'Unknown';
+  const preferredName = blueprintData?.user_meta?.preferred_name || 'Unknown';
+  
+  console.log("📊 Extracted raw data:", {
+    mbtiType,
+    hdType,
+    hdAuthority,
+    sunSign,
+    moonSign,
+    lifePath,
+    preferredName
+  });
   
   return {
     user_meta: blueprintData.user_meta || {},
-    // Fixed: Correct mapping from user_meta.personality.likelyType instead of cognition_mbti
+    // Fixed: Map to cognitiveTemperamental (what PersonalityEngine expects)
     cognitiveTemperamental: {
-      mbtiType: personalityData.likelyType || 'Unknown',
+      mbtiType: mbtiType,
       functions: [],
-      dominantFunction: getMBTIFunctions(personalityData.likelyType || 'Unknown').dominant,
-      auxiliaryFunction: getMBTIFunctions(personalityData.likelyType || 'Unknown').auxiliary,
+      dominantFunction: getMBTIFunctions(mbtiType).dominant,
+      auxiliaryFunction: getMBTIFunctions(mbtiType).auxiliary,
       cognitiveStack: [],
       taskApproach: 'balanced',
       communicationStyle: 'adaptive',
       decisionMaking: 'analytical',
       informationProcessing: 'sequential',
-      coreKeywords: extractKeywords(personalityData.description || '')
+      coreKeywords: extractKeywords(blueprintData?.user_meta?.personality?.description || '')
     },
-    // Fixed: Correct mapping from energy_strategy_human_design instead of human_design
+    // Fixed: Map to energyDecisionStrategy (what PersonalityEngine expects)
     energyDecisionStrategy: {
-      humanDesignType: blueprintData.energy_strategy_human_design?.type || 'Generator',
-      authority: blueprintData.energy_strategy_human_design?.authority || 'Sacral',
+      humanDesignType: hdType,
+      authority: hdAuthority,
       decisionStyle: 'intuitive',
       pacing: 'steady',
       energyType: 'sustainable',
@@ -81,11 +110,11 @@ function mapToLayeredBlueprint(blueprintData: any) {
       gates: blueprintData.energy_strategy_human_design?.gates || [],
       channels: blueprintData.energy_strategy_human_design?.channels || []
     },
-    // Fixed: Correct mapping from archetype_western instead of astrology
+    // Fixed: Map to publicArchetype (what PersonalityEngine expects)
     publicArchetype: {
-      sunSign: blueprintData.archetype_western?.sun_sign || 'Unknown',
-      moonSign: blueprintData.archetype_western?.moon_sign || 'Unknown',
-      risingSign: blueprintData.archetype_western?.rising_sign || 'Unknown',
+      sunSign: cleanAstrologySign(sunSign),
+      moonSign: cleanAstrologySign(moonSign),
+      risingSign: cleanAstrologySign(blueprintData.archetype_western?.rising_sign) || 'Unknown',
       socialStyle: 'authentic',
       publicVibe: 'approachable',
       publicPersona: 'genuine',
@@ -93,10 +122,9 @@ function mapToLayeredBlueprint(blueprintData: any) {
       socialMask: 'minimal',
       externalExpression: 'natural'
     },
-    // Fixed: Correct mapping from values_life_path instead of numerology
+    // Fixed: Map to coreValuesNarrative (what PersonalityEngine expects)
     coreValuesNarrative: {
-      lifePath: blueprintData.values_life_path?.lifePathNumber || 
-                blueprintData.values_life_path?.life_path_number || 'Unknown',
+      lifePath: lifePath,
       meaningfulAreas: blueprintData.values_life_path?.meaningful_areas || [],
       anchoringVision: 'personal growth',
       lifeThemes: blueprintData.values_life_path?.themes || [],
@@ -118,8 +146,8 @@ function mapToLayeredBlueprint(blueprintData: any) {
       resistancePatterns: []
     },
     generationalCode: {
-      chineseZodiac: blueprintData.timing_overlays?.chinese_zodiac || 'Unknown',
-      element: blueprintData.timing_overlays?.element || 'Unknown',
+      chineseZodiac: blueprintData.archetype_chinese?.animal || 'Unknown',
+      element: blueprintData.archetype_chinese?.element || 'Unknown',
       cohortTint: 'optimistic',
       generationalThemes: [],
       collectiveInfluence: 'moderate'
@@ -206,6 +234,15 @@ function mapToLayeredBlueprint(blueprintData: any) {
       transitionWords: []
     }
   };
+}
+
+// Helper function to clean astrology signs (remove degrees)
+function cleanAstrologySign(signString: string): string {
+  if (!signString || signString === 'Unknown' || signString === 'Calculating...') {
+    return 'Unknown';
+  }
+  // Extract just the sign name (e.g., "Cancer 13.1°" -> "Cancer")
+  return signString.split(' ')[0];
 }
 
 // Helper functions
