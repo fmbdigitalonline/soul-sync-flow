@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { LayeredBlueprint, VoiceToken } from "@/types/personality-modules";
 
@@ -114,32 +113,70 @@ class SoulSyncService {
       const voiceTokens = this.generateVoiceTokens(blueprint, agentMode);
       const humorProfile = this.generateHumorProfile(blueprint);
 
-      // Save new persona - cast voice tokens as JSON
-      const { error: saveError } = await supabase
-        .from('personas')
-        .upsert({
-          user_id: userId,
-          system_prompt: systemPrompt,
-          voice_tokens: voiceTokens as any, // Cast to JSON
-          humor_profile: humorProfile as any, // Cast to JSON
-          blueprint_signature: signature,
-          template_version: TEMPLATE_VERSION,
-          blueprint_version: TEMPLATE_VERSION,
-          function_permissions: [] as any
-        }, {
-          onConflict: 'user_id,blueprint_signature'
-        });
-
-      if (saveError) {
-        console.error("❌ SoulSync: Error saving persona:", saveError);
-      } else {
-        console.log("✅ SoulSync: New persona saved successfully");
-      }
+      // Save new persona with improved error handling
+      await this.savePersonaWithRetry(userId, signature, systemPrompt, voiceTokens, humorProfile);
 
       return this.enhancePromptWithVoiceTokens(systemPrompt, voiceTokens, agentMode);
     } catch (error) {
       console.error("❌ SoulSync: Unexpected error:", error);
       return null;
+    }
+  }
+
+  private async savePersonaWithRetry(
+    userId: string,
+    signature: string,
+    systemPrompt: string,
+    voiceTokens: VoiceToken[],
+    humorProfile: Record<string, any>,
+    maxRetries: number = 3
+  ): Promise<void> {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`🔄 SoulSync: Saving persona (attempt ${attempt}/${maxRetries})`);
+        
+        // Use the correct conflict resolution with composite key
+        const { error: saveError } = await supabase
+          .from('personas')
+          .upsert({
+            user_id: userId,
+            system_prompt: systemPrompt,
+            voice_tokens: voiceTokens as any,
+            humor_profile: humorProfile as any,
+            blueprint_signature: signature,
+            template_version: TEMPLATE_VERSION,
+            blueprint_version: TEMPLATE_VERSION,
+            function_permissions: [] as any
+          }, {
+            onConflict: 'user_id,blueprint_signature'
+          });
+
+        if (saveError) {
+          console.error(`❌ SoulSync: Save attempt ${attempt} failed:`, saveError);
+          
+          if (attempt === maxRetries) {
+            console.error("❌ SoulSync: All save attempts failed, continuing without caching");
+            return;
+          }
+          
+          // Wait before retry
+          await new Promise(resolve => setTimeout(resolve, 100 * attempt));
+          continue;
+        }
+
+        console.log("✅ SoulSync: Persona saved successfully");
+        return;
+      } catch (error) {
+        console.error(`❌ SoulSync: Save attempt ${attempt} error:`, error);
+        
+        if (attempt === maxRetries) {
+          console.error("❌ SoulSync: All save attempts failed with errors, continuing without caching");
+          return;
+        }
+        
+        // Wait before retry
+        await new Promise(resolve => setTimeout(resolve, 100 * attempt));
+      }
     }
   }
 
