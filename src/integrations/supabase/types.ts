@@ -393,6 +393,7 @@ export type Database = {
       }
       personas: {
         Row: {
+          blueprint_signature: string | null
           blueprint_version: string
           created_at: string
           function_permissions: Json
@@ -400,11 +401,13 @@ export type Database = {
           humor_profile: Json
           id: string
           system_prompt: string
+          template_version: string | null
           updated_at: string
           user_id: string
           voice_tokens: Json
         }
         Insert: {
+          blueprint_signature?: string | null
           blueprint_version?: string
           created_at?: string
           function_permissions?: Json
@@ -412,11 +415,13 @@ export type Database = {
           humor_profile?: Json
           id?: string
           system_prompt: string
+          template_version?: string | null
           updated_at?: string
           user_id: string
           voice_tokens?: Json
         }
         Update: {
+          blueprint_signature?: string | null
           blueprint_version?: string
           created_at?: string
           function_permissions?: Json
@@ -424,6 +429,7 @@ export type Database = {
           humor_profile?: Json
           id?: string
           system_prompt?: string
+          template_version?: string | null
           updated_at?: string
           user_id?: string
           voice_tokens?: Json
@@ -705,6 +711,10 @@ export type Database = {
       check_admin_status: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      generate_blueprint_signature: {
+        Args: { blueprint_data: Json }
+        Returns: string
       }
       get_active_user_blueprint: {
         Args: { user_uuid: string }
