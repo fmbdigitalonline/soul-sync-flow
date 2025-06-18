@@ -215,7 +215,7 @@ class SoulSyncService {
 
     const personalityContext = this.buildPersonalityContext(blueprint);
     const conversationGuidelines = this.getConversationGuidelines(mode, userName);
-    const clarificationRule = this.getClarificationRule();
+    const clarificationRule = this.getClarificationRule(userName);
 
     return `You are ${userName}'s AI companion, deeply attuned to who they are at their core. You know ${userName} as someone who is ${mbtiType}, ${hdType}, ${sunSign}, with a Life Path ${lifePath}.
 
@@ -262,7 +262,9 @@ Remember: Every response should feel like it comes from someone who truly knows 
     // Life Path Context
     if (blueprint.coreValuesNarrative?.lifePath) {
       const path = blueprint.coreValuesNarrative.lifePath;
-      context.push(`🎯 Life Path ${path}: ${this.getLifePathContext(path)}`);
+      // Fixed: Ensure path is converted to number
+      const pathNumber = typeof path === 'string' ? parseInt(path, 10) : path;
+      context.push(`🎯 Life Path ${pathNumber}: ${this.getLifePathContext(pathNumber)}`);
     }
 
     return context.join('\n');
@@ -287,9 +289,9 @@ You're ${userName}'s versatile companion who adapts to what they need most. Whet
     }
   }
 
-  private getClarificationRule(): string {
+  private getClarificationRule(userName: string): string {
     return `CLARIFICATION RULE:
-When ${this.blueprint?.user_meta?.preferred_name || 'the user'} asks vague questions like "help me" or "what should I do", don't immediately ask what they mean. Instead:
+When ${userName} asks vague questions like "help me" or "what should I do", don't immediately ask what they mean. Instead:
 1. Acknowledge their request warmly
 2. Offer 2-3 specific areas you could help with based on their situation
 3. Let them choose or clarify what resonates

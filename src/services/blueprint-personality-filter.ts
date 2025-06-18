@@ -1,4 +1,3 @@
-
 import { LayeredBlueprint } from '@/types/personality-modules';
 
 interface PersonalityFilterOptions {
@@ -284,7 +283,9 @@ export class BlueprintPersonalityFilter {
     const lifePath = this.blueprint.coreValuesNarrative?.lifePath;
     if (!lifePath) return response;
     
-    return `${response}\n\nYour Life Path ${lifePath} journey is about ${this.getLifePathTheme(lifePath)}, ${this.userName}. Notice how this plays out in the choices that feel most meaningful to you.`;
+    // Fixed: Ensure lifePath is converted to number
+    const lifePathNumber = typeof lifePath === 'string' ? parseInt(lifePath, 10) : lifePath;
+    return `${response}\n\nYour Life Path ${lifePathNumber} journey is about ${this.getLifePathTheme(lifePathNumber)}, ${this.userName}. Notice how this plays out in the choices that feel most meaningful to you.`;
   }
 
   private enhanceAstrologyExplanation(response: string): string {
