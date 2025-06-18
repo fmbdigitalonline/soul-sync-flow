@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { LayeredBlueprint, VoiceToken } from "@/types/personality-modules";
 
@@ -572,77 +573,6 @@ Apply these voice patterns naturally in your responses to maintain authentic per
     if (blueprint.cognitiveTemperamental?.mbtiType?.includes('F')) return 'warm';
     if (blueprint.cognitiveTemperamental?.mbtiType?.includes('T')) return 'clever';
     return 'gentle';
-  }
-
-  // Personality description methods
-  private getMBTIDescription(type: string): string {
-    const descriptions: { [key: string]: string } = {
-      'INFP': 'Authentic dreamer seeking meaning and harmony',
-      'ENFP': 'Inspiring catalyst sparking possibilities in others',
-      'INFJ': 'Visionary advocate for human potential',
-      'ENFJ': 'Charismatic teacher nurturing growth in others',
-      'INTJ': 'Strategic architect of systematic change',
-      'ENTJ': 'Bold leader driving ambitious visions',
-      'INTP': 'Curious explorer of theoretical landscapes',
-      'ENTP': 'Innovative debater connecting unexpected ideas'
-    };
-    return descriptions[type] || 'Unique cognitive pattern';
-  }
-
-  private getHumanDesignDescription(type: string): string {
-    const descriptions: { [key: string]: string } = {
-      'Generator': 'Sustainable life force responding to what lights you up',
-      'Projector': 'Natural guide waiting for recognition and invitation',
-      'Manifestor': 'Powerful initiator informing before taking action',
-      'Reflector': 'Wise mirror sampling life and waiting for clarity'
-    };
-    return descriptions[type] || 'Unique energy signature';
-  }
-
-  private getSunSignDescription(sign: string): string {
-    const descriptions: { [key: string]: string } = {
-      'Aries': 'Bold pioneer blazing new trails',
-      'Taurus': 'Steady builder creating lasting beauty',
-      'Gemini': 'Curious communicator connecting ideas',
-      'Cancer': 'Nurturing protector honoring emotional depths'
-    };
-    return descriptions[sign] || 'Unique solar essence';
-  }
-
-  private getLifePathDescription(path: number | string): string {
-    const descriptions: { [key: string]: string } = {
-      '1': 'Independent leader pioneering new paths',
-      '2': 'Diplomatic collaborator building bridges',
-      '3': 'Creative expresser sharing joy and inspiration',
-      '4': 'Systematic builder creating stable foundations',
-      '5': 'Freedom-loving adventurer exploring possibilities'
-    };
-    return descriptions[path.toString()] || 'Unique life purpose';
-  }
-
-  private getMBTICommunicationStyle(type: string): string {
-    if (type.includes('E')) return 'Energetic and expressive communication';
-    if (type.includes('I')) return 'Thoughtful and reflective dialogue';
-    return 'Balanced communication approach';
-  }
-
-  private getHumanDesignCommunicationStrategy(type: string): string {
-    const strategies: { [key: string]: string } = {
-      'Generator': 'Respond from gut feeling and authentic excitement',
-      'Projector': 'Share wisdom when recognized and invited',
-      'Manifestor': 'Inform others before initiating communication',
-      'Reflector': 'Reflect the energy of the conversation environment'
-    };
-    return strategies[type] || 'Natural communication flow';
-  }
-
-  private getAstrologicalCommunicationStyle(sign: string): string {
-    const styles: { [key: string]: string } = {
-      'Cancer': 'Emotionally attuned and nurturing language',
-      'Leo': 'Warm, generous, and confident expression',
-      'Virgo': 'Precise, helpful, and detail-oriented communication'
-    };
-    return styles[sign] || 'Authentic astrological expression';
   }
 }
 
