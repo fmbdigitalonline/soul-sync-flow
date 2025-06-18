@@ -1,3 +1,4 @@
+
 import { LayeredBlueprint, AgentMode } from "@/types/personality-modules";
 
 export class PersonalityEngine {
@@ -87,7 +88,7 @@ IMPORTANT: This is ${userName}'s personalized experience. Always speak as if you
 
     if (this.blueprint.publicArchetype?.sunSign) {
       const sun = this.blueprint.publicArchetype.sunSign;
-      insights.push(`With ${sun} energy, they ${this.getSunSignTraits(sun)}.`);
+      insights.push(`With ${sun} Sun energy, they ${this.getSunSignTraits(sun)}.`);
     }
 
     return insights.length > 0 ? `\nPERSONALITY INSIGHTS:\n${insights.join('\n')}\n` : '';
@@ -152,8 +153,6 @@ IMPORTANT: This is ${userName}'s personalized experience. Always speak as if you
   }
 
   private getSunSignDescription(sign: string): string {
-    // Handle signs with degrees (e.g., "Cancer 13.1°")
-    const cleanSign = sign.split(' ')[0];
     const descriptions: { [key: string]: string } = {
       'Aries': '(Bold, pioneering, action-oriented)',
       'Taurus': '(Stable, practical, sensual)',
@@ -161,14 +160,8 @@ IMPORTANT: This is ${userName}'s personalized experience. Always speak as if you
       'Cancer': '(Nurturing, intuitive, protective)',
       'Leo': '(Creative, confident, generous)',
       'Virgo': '(Analytical, helpful, perfectionist)',
-      'Libra': '(Harmonious, diplomatic, aesthetic)',
-      'Scorpio': '(Intense, transformative, mysterious)',
-      'Sagittarius': '(Adventurous, philosophical, optimistic)',
-      'Capricorn': '(Ambitious, disciplined, responsible)',
-      'Aquarius': '(Innovative, humanitarian, independent)',
-      'Pisces': '(Compassionate, intuitive, artistic)',
     };
-    return descriptions[cleanSign] || '(Unique solar energy)';
+    return descriptions[sign] || '(Unique solar energy)';
   }
 
   private getLifePathDescription(path: number | string): string {
@@ -178,13 +171,6 @@ IMPORTANT: This is ${userName}'s personalized experience. Always speak as if you
       '3': '(Creative expression, communication, joy)',
       '4': '(Building, stability, hard work)',
       '5': '(Freedom, adventure, versatility)',
-      '6': '(Nurturing, responsibility, service)',
-      '7': '(Spiritual seeking, analysis, introspection)',
-      '8': '(Material mastery, authority, achievement)',
-      '9': '(Universal service, completion, wisdom)',
-      '11': '(Illumination, inspiration, intuition)',
-      '22': '(Master builder, practical visionary)',
-      '33': '(Master teacher, spiritual service)',
     };
     return descriptions[path.toString()] || '(Unique life purpose)';
   }
@@ -220,14 +206,12 @@ IMPORTANT: This is ${userName}'s personalized experience. Always speak as if you
   }
 
   private getSunSignTraits(sign: string): string {
-    // Handle signs with degrees
-    const cleanSign = sign.split(' ')[0];
     const traits: { [key: string]: string } = {
       'Cancer': 'are naturally nurturing and deeply intuitive',
       'Leo': 'have a generous heart and natural creativity',
       'Virgo': 'are detail-oriented and service-focused',
     };
-    return traits[cleanSign] || 'have unique solar qualities';
+    return traits[sign] || 'have unique solar qualities';
   }
 
   private getCommunicationStyle(type: string): string {
