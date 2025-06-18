@@ -140,6 +140,57 @@ function mapToLayeredBlueprint(blueprintData: any) {
         description: description,
         mbtiProbabilities: mbtiProbabilities,
         bigFive: bigFive
+      },
+      // ADD NUMEROLOGY DATA HERE FOR SOULSYNC SERVICE ACCESS
+      values_life_path: {
+        life_path_number: lifePath,
+        life_path_keyword: lifePathKeyword,
+        expression_number: expressionNumber,
+        expression_keyword: expressionKeyword,
+        soul_urge_number: soulUrgeNumber,
+        soul_urge_keyword: soulUrgeKeyword,
+        personality_number: personalityNumber,
+        personality_keyword: personalityKeyword,
+        birthday_number: birthdayNumber,
+        birthday_keyword: birthdayKeyword,
+        meaningful_areas: blueprintData.values_life_path?.meaningful_areas || [],
+        themes: blueprintData.values_life_path?.themes || [],
+        mission_statement: blueprintData.values_life_path?.mission_statement || 'Live authentically',
+        core_values: blueprintData.values_life_path?.core_values || []
+      },
+      energy_strategy_human_design: {
+        type: hdType,
+        authority: hdAuthority,
+        strategy: hdStrategy,
+        profile: hdProfile,
+        definition: hdDefinition,
+        not_self_theme: hdNotSelfTheme,
+        gates: hdGates,
+        channels: hdChannels,
+        centers: hdCenters
+      },
+      archetype_western: {
+        sun_sign: sunSign,
+        sun_keyword: sunKeyword,
+        moon_sign: moonSign,
+        moon_keyword: moonKeyword,
+        rising_sign: risingSign
+      },
+      archetype_chinese: {
+        animal: chineseAnimal,
+        element: chineseElement,
+        yin_yang: chineseYinYang,
+        keyword: chineseKeyword
+      },
+      goal_stack: {
+        primary_goal: primaryGoal,
+        time_horizon: timeHorizon,
+        support_style: supportStyle
+      },
+      bashar_suite: {
+        belief_interface: basharBeliefInterface,
+        excitement_compass: basharExcitementCompass,
+        frequency_alignment: basharFrequencyAlignment
       }
     },
     cognitiveTemperamental: {

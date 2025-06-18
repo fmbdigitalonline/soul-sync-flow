@@ -261,6 +261,15 @@ Remember: Every response should feel like it comes from someone who truly knows 
   }
 
   private buildComprehensiveBlueprintSnapshot(blueprint: LayeredBlueprint): string {
+    console.log("🔍 Building comprehensive blueprint snapshot. Available data:", {
+      coreValuesNarrative: !!blueprint.coreValuesNarrative,
+      lifePath: blueprint.coreValuesNarrative?.lifePath,
+      expressionNumber: blueprint.coreValuesNarrative?.expressionNumber,
+      userMeta: !!blueprint.user_meta,
+      valuesLifePath: !!blueprint.user_meta?.values_life_path,
+      valuesLifePathData: blueprint.user_meta?.values_life_path
+    });
+
     const sections = [];
     
     // Check if blueprint has meaningful data
@@ -339,44 +348,10 @@ Remember: Every response should feel like it comes from someone who truly knows 
       sections.push(hdSection);
     }
 
-    // Comprehensive Numerology Section
-    const lifePath = blueprint.coreValuesNarrative?.lifePath;
-    if (lifePath && ((typeof lifePath === 'number' && lifePath > 0) || (typeof lifePath === 'string' && parseInt(lifePath, 10) > 0))) {
-      let numerologySection = "**Numerology:**";
-      const numerologyNumbers = [];
-
-      const lifePathNum = typeof lifePath === 'string' ? parseInt(lifePath, 10) : lifePath;
-      if (lifePathNum > 0) {
-        const keyword = this.getLifePathKeyword(lifePathNum);
-        numerologyNumbers.push(`Life Path: ${lifePathNum} ("${keyword}")`);
-      }
-
-      // Get additional numerology from user_meta
-      const valuesData = blueprint.user_meta?.values_life_path;
-      if (valuesData?.expression_number && valuesData.expression_number > 0) {
-        const keyword = this.getExpressionKeyword(valuesData.expression_number);
-        numerologyNumbers.push(`Expression: ${valuesData.expression_number} ("${keyword}")`);
-      }
-
-      if (valuesData?.soul_urge_number && valuesData.soul_urge_number > 0) {
-        const keyword = this.getSoulUrgeKeyword(valuesData.soul_urge_number);
-        numerologyNumbers.push(`Soul Urge: ${valuesData.soul_urge_number} ("${keyword}")`);
-      }
-
-      if (valuesData?.personality_number && valuesData.personality_number > 0) {
-        const keyword = this.getPersonalityKeyword(valuesData.personality_number);
-        numerologyNumbers.push(`Personality: ${valuesData.personality_number} ("${keyword}")`);
-      }
-
-      if (valuesData?.birthday_number && valuesData.birthday_number > 0) {
-        const keyword = this.getBirthdayKeyword(valuesData.birthday_number);
-        numerologyNumbers.push(`Birthday: ${valuesData.birthday_number} ("${keyword}")`);
-      }
-
-      if (numerologyNumbers.length > 0) {
-        numerologySection += `\n- ${numerologyNumbers.join('\n- ')}`;
-        sections.push(numerologySection);
-      }
+    // FIXED: Comprehensive Numerology Section with proper fallbacks
+    const numerologySection = this.buildNumerologySection(blueprint);
+    if (numerologySection) {
+      sections.push(numerologySection);
     }
 
     // Enhanced Astrology (Western) Section
@@ -463,6 +438,77 @@ Remember: Every response should feel like it comes from someone who truly knows 
     }
 
     return sections.join('\n\n');
+  }
+
+  // NEW: Separate method for building numerology section with proper fallbacks
+  private buildNumerologySection(blueprint: LayeredBlueprint): string | null {
+    console.log("🔢 Building numerology section. Checking data sources...");
+    
+    // Try to get numerology from multiple sources with fallbacks
+    const numerologyNumbers = [];
+    
+    // Primary source: coreValuesNarrative
+    let lifePath = blueprint.coreValuesNarrative?.lifePath;
+    let expressionNumber = blueprint.coreValuesNarrative?.expressionNumber;
+    let soulUrgeNumber = blueprint.coreValuesNarrative?.soulUrgeNumber;
+    let personalityNumber = blueprint.coreValuesNarrative?.personalityNumber;
+    let birthdayNumber = blueprint.coreValuesNarrative?.birthdayNumber;
+    
+    // Fallback source: user_meta.values_life_path
+    const valuesData = blueprint.user_meta?.values_life_path;
+    if (!lifePath && valuesData?.life_path_number) {
+      lifePath = valuesData.life_path_number;
+    }
+    if (!expressionNumber && valuesData?.expression_number) {
+      expressionNumber = valuesData.expression_number;
+    }
+    if (!soulUrgeNumber && valuesData?.soul_urge_number) {
+      soulUrgeNumber = valuesData.soul_urge_number;
+    }
+    if (!personalityNumber && valuesData?.personality_number) {
+      personalityNumber = valuesData.personality_number;
+    }
+    if (!birthdayNumber && valuesData?.birthday_number) {
+      birthdayNumber = valuesData.birthday_number;
+    }
+
+    console.log("🔢 Numerology data found:", {
+      lifePath, expressionNumber, soulUrgeNumber, personalityNumber, birthdayNumber
+    });
+
+    // Build numerology entries
+    if (lifePath && ((typeof lifePath === 'number' && lifePath > 0) || (typeof lifePath === 'string' && parseInt(lifePath, 10) > 0))) {
+      const lifePathNum = typeof lifePath === 'string' ? parseInt(lifePath, 10) : lifePath;
+      const keyword = this.getLifePathKeyword(lifePathNum);
+      numerologyNumbers.push(`Life Path: ${lifePathNum} ("${keyword}")`);
+    }
+
+    if (expressionNumber && expressionNumber > 0) {
+      const keyword = this.getExpressionKeyword(expressionNumber);
+      numerologyNumbers.push(`Expression: ${expressionNumber} ("${keyword}")`);
+    }
+
+    if (soulUrgeNumber && soulUrgeNumber > 0) {
+      const keyword = this.getSoulUrgeKeyword(soulUrgeNumber);
+      numerologyNumbers.push(`Soul Urge: ${soulUrgeNumber} ("${keyword}")`);
+    }
+
+    if (personalityNumber && personalityNumber > 0) {
+      const keyword = this.getPersonalityKeyword(personalityNumber);
+      numerologyNumbers.push(`Personality: ${personalityNumber} ("${keyword}")`);
+    }
+
+    if (birthdayNumber && birthdayNumber > 0) {
+      const keyword = this.getBirthdayKeyword(birthdayNumber);
+      numerologyNumbers.push(`Birthday: ${birthdayNumber} ("${keyword}")`);
+    }
+
+    if (numerologyNumbers.length > 0) {
+      return `**Numerology:**\n- ${numerologyNumbers.join('\n- ')}`;
+    }
+
+    console.log("⚠️ No valid numerology numbers found");
+    return null;
   }
 
   private getCompleteDataSummary(blueprint: LayeredBlueprint): string {
