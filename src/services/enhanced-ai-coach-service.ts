@@ -258,14 +258,17 @@ class EnhancedAICoachService {
         return [];
       }
 
+      // Fix the type checking issue here
       const messages = data?.messages || [];
-      const chatMessages: ChatMessage[] = messages.map((msg: any) => ({
-        id: msg.id || `msg_${Date.now()}_${Math.random()}`,
-        content: msg.content || '',
-        sender: msg.sender || 'user',
-        timestamp: new Date(msg.timestamp || Date.now()),
-        agentType: agentType,
-      }));
+      const chatMessages: ChatMessage[] = Array.isArray(messages) 
+        ? messages.map((msg: any) => ({
+            id: msg.id || `msg_${Date.now()}_${Math.random()}`,
+            content: msg.content || '',
+            sender: msg.sender || 'user',
+            timestamp: new Date(msg.timestamp || Date.now()),
+            agentType: agentType,
+          }))
+        : [];
 
       this.conversationCache.set(cacheKey, chatMessages);
       return chatMessages;
