@@ -1,3 +1,4 @@
+
 // Modular Personality Framework Types
 export interface PersonalityModule {
   id: string;
@@ -31,7 +32,14 @@ export interface HumorProfile {
   signatureElements: string[];
 }
 
-// Voice Token Types
+// Voice Token Types - made JSON serializable
+export interface VoiceToken {
+  pattern: string;
+  replacement: string;
+  context: "all" | "coach" | "guide" | "blend";
+  confidence: number;
+}
+
 export interface VoiceTokens {
   pacing: {
     sentenceLength: 'short' | 'medium' | 'flowing' | 'elaborate';
@@ -69,6 +77,7 @@ export interface LayeredBlueprint {
     communicationStyle: string;
     decisionMaking: string;
     informationProcessing: string;
+    coreKeywords?: string[];
   };
   energyDecisionStrategy: {
     humanDesignType: string;
@@ -94,7 +103,7 @@ export interface LayeredBlueprint {
     resistancePatterns: string[];
   };
   coreValuesNarrative: {
-    lifePath: number;
+    lifePath: number | string;
     meaningfulAreas: string[];
     anchoringVision: string;
     lifeThemes: string[];
@@ -102,9 +111,12 @@ export interface LayeredBlueprint {
     northStar: string;
     missionStatement: string;
     purposeAlignment: string;
+    core_values?: string[];
   };
   publicArchetype: {
     sunSign: string;
+    moonSign: string;
+    risingSign?: string;
     socialStyle: string;
     publicVibe: string;
     publicPersona: string;

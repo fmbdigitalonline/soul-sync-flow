@@ -1,15 +1,7 @@
-
 import { supabase } from "@/integrations/supabase/client";
-import { LayeredBlueprint } from "@/types/personality-modules";
+import { LayeredBlueprint, VoiceToken } from "@/types/personality-modules";
 
 const TEMPLATE_VERSION = "1.0.0";
-
-export interface VoiceToken {
-  pattern: string;
-  replacement: string;
-  context: "all" | "coach" | "guide" | "blend";
-  confidence: number;
-}
 
 export interface SoulSyncPersona {
   id: string;
@@ -102,9 +94,15 @@ class SoulSyncService {
 
       if (existingPersona && existingPersona.template_version === TEMPLATE_VERSION) {
         console.log("✅ SoulSync: Found cached persona with matching signature");
+        
+        // Parse voice tokens safely
+        const voiceTokens = Array.isArray(existingPersona.voice_tokens) 
+          ? existingPersona.voice_tokens as VoiceToken[]
+          : [];
+          
         return this.enhancePromptWithVoiceTokens(
           existingPersona.system_prompt,
-          existingPersona.voice_tokens || [],
+          voiceTokens,
           agentMode
         );
       }
@@ -115,18 +113,18 @@ class SoulSyncService {
       const voiceTokens = this.generateVoiceTokens(blueprint, agentMode);
       const humorProfile = this.generateHumorProfile(blueprint);
 
-      // Save new persona
+      // Save new persona - cast voice tokens as JSON
       const { error: saveError } = await supabase
         .from('personas')
         .upsert({
           user_id: userId,
           system_prompt: systemPrompt,
-          voice_tokens: voiceTokens,
-          humor_profile: humorProfile,
+          voice_tokens: voiceTokens as any, // Cast to JSON
+          humor_profile: humorProfile as any, // Cast to JSON
           blueprint_signature: signature,
           template_version: TEMPLATE_VERSION,
           blueprint_version: TEMPLATE_VERSION,
-          function_permissions: []
+          function_permissions: [] as any
         }, {
           onConflict: 'user_id,blueprint_signature'
         });
