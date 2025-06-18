@@ -59,6 +59,23 @@ export const PersonaCleanupTest: React.FC = () => {
     }
   };
 
+  // Helper function to safely extract personality data
+  const getPersonalityData = () => {
+    if (!blueprintData?.user_meta?.personality) return null;
+    
+    // Handle case where personality might be a string or object
+    const personality = blueprintData.user_meta.personality;
+    if (typeof personality === 'string') {
+      return { type: personality };
+    }
+    if (typeof personality === 'object' && personality !== null) {
+      return personality;
+    }
+    return null;
+  };
+
+  const personalityData = getPersonalityData();
+
   return (
     <div className="p-6 space-y-6 max-w-4xl mx-auto">
       <Card>
@@ -188,7 +205,7 @@ export const PersonaCleanupTest: React.FC = () => {
               {blueprintData && (
                 <div className="text-sm space-y-1">
                   <div><strong>User:</strong> {blueprintData.user_meta?.preferred_name || 'Unknown'}</div>
-                  <div><strong>MBTI:</strong> {blueprintData.user_meta?.personality?.likelyType || 'Unknown'}</div>
+                  <div><strong>MBTI:</strong> {personalityData?.likelyType || personalityData?.type || 'Unknown'}</div>
                   <div><strong>HD Type:</strong> {blueprintData.energy_strategy_human_design?.type || 'Unknown'}</div>
                   <div><strong>Sun Sign:</strong> {blueprintData.archetype_western?.sun_sign || 'Unknown'}</div>
                 </div>
