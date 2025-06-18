@@ -115,7 +115,7 @@ export interface LayeredBlueprint {
   };
   publicArchetype: {
     sunSign: string;
-    moonSign: string;
+    moonSign?: string; // Made optional to fix existing usage
     risingSign?: string;
     socialStyle: string;
     publicVibe: string;

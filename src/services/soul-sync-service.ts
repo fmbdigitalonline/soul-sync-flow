@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { LayeredBlueprint, VoiceToken } from "@/types/personality-modules";
 
@@ -95,9 +96,9 @@ class SoulSyncService {
       if (existingPersona && existingPersona.template_version === TEMPLATE_VERSION) {
         console.log("✅ SoulSync: Found cached persona with matching signature");
         
-        // Parse voice tokens safely
+        // Parse voice tokens safely with proper type casting
         const voiceTokens = Array.isArray(existingPersona.voice_tokens) 
-          ? existingPersona.voice_tokens as VoiceToken[]
+          ? (existingPersona.voice_tokens as unknown as VoiceToken[])
           : [];
           
         return this.enhancePromptWithVoiceTokens(

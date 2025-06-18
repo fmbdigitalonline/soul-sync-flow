@@ -1,3 +1,4 @@
+
 import { LayeredBlueprint, VoiceTokens } from '@/types/personality-modules';
 
 export class VoiceTokenGenerator {
@@ -90,10 +91,12 @@ export class VoiceTokenGenerator {
       emphasisStyle = 'subtle';
     }
 
-    if (lifePath && [3, 5, 8].includes(lifePath)) {
+    // Convert lifePath to number safely
+    const lifePathNumber = typeof lifePath === 'string' ? parseInt(lifePath) : lifePath;
+    if (typeof lifePathNumber === 'number' && [3, 5, 8].includes(lifePathNumber)) {
       emphasisStyle = 'bold';
       exclamationTendency = 'enthusiastic';
-    } else if (lifePath && [2, 6, 9].includes(lifePath)) {
+    } else if (typeof lifePathNumber === 'number' && [2, 6, 9].includes(lifePathNumber)) {
       emphasisStyle = 'subtle';
       exclamationTendency = 'reserved';
     }
@@ -150,10 +153,12 @@ export class VoiceTokenGenerator {
       responseLength = 'comprehensive';
     }
 
-    if (lifePath && [1, 5, 7].includes(lifePath)) {
+    // Convert lifePath to number safely
+    const lifePathNumber = typeof lifePath === 'string' ? parseInt(lifePath) : lifePath;
+    if (typeof lifePathNumber === 'number' && [1, 5, 7].includes(lifePathNumber)) {
       personalSharing = 'minimal';
       responseLength = 'concise';
-    } else if (lifePath && [4, 6, 9].includes(lifePath)) {
+    } else if (typeof lifePathNumber === 'number' && [4, 6, 9].includes(lifePathNumber)) {
       personalSharing = 'warm';
       questionAsking = 'supportive';
     }
@@ -247,9 +252,11 @@ export class VoiceTokenGenerator {
       baseTransitions = ['Also', 'Additionally', 'On the other hand'];
     }
 
-    if (lifePath && [3, 5, 8].includes(lifePath)) {
+    // Convert lifePath to number safely
+    const lifePathNumber = typeof lifePath === 'string' ? parseInt(lifePath) : lifePath;
+    if (typeof lifePathNumber === 'number' && [3, 5, 8].includes(lifePathNumber)) {
       baseTransitions = ['Let\'s jump in', 'Excitingly', 'Onward'];
-    } else if (lifePath && [2, 6, 9].includes(lifePath)) {
+    } else if (typeof lifePathNumber === 'number' && [2, 6, 9].includes(lifePathNumber)) {
       baseTransitions = ['Gently', 'Reflectively', 'Patiently'];
     }
 
