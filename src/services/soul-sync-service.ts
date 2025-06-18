@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { LayeredBlueprint, VoiceToken } from "@/types/personality-modules";
 
-const TEMPLATE_VERSION = "1.0.0";
+const TEMPLATE_VERSION = "1.1.0";
 
 export interface SoulSyncPersona {
   id: string;
@@ -200,93 +200,143 @@ class SoulSyncService {
     return false;
   }
 
-  // Enhanced prompt generation with natural conversation focus
+  // Enhanced prompt generation with new SoulSync template
   private generatePersonalizedPrompt(blueprint: LayeredBlueprint, mode: "coach" | "guide" | "blend"): string {
     const userName = blueprint.user_meta?.preferred_name || 
                      blueprint.user_meta?.full_name?.split(' ')[0] || 
                      'friend';
 
-    const mbtiType = blueprint.cognitiveTemperamental?.mbtiType || 'Unknown';
-    const hdType = blueprint.energyDecisionStrategy?.humanDesignType || 'Unknown';
-    const hdAuthority = blueprint.energyDecisionStrategy?.authority || 'Unknown';
-    const sunSign = blueprint.publicArchetype?.sunSign || 'Unknown';
-    const moonSign = blueprint.publicArchetype?.moonSign || 'Unknown';
-    const lifePath = blueprint.coreValuesNarrative?.lifePath || 'Unknown';
+    console.log(`🎯 SoulSync: Generating SoulSync Companion prompt for ${userName} (${mode})`);
 
-    console.log(`🎯 SoulSync: Generating natural ${mode} prompt for ${userName} (${mbtiType}, ${hdType}, ${sunSign}, LP:${lifePath})`);
+    // Build blueprint snapshot with conditional rendering
+    const blueprintSnapshot = this.buildBlueprintSnapshot(blueprint);
+    const modeSpecificGuidance = this.getModeSpecificGuidance(mode, userName);
 
-    const personalityContext = this.buildPersonalityContext(blueprint);
-    const conversationGuidelines = this.getConversationGuidelines(mode, userName);
-    const clarificationRule = this.getClarificationRule(userName);
-    const blueprintDataRule = this.getBlueprintDataRule(userName, mbtiType, hdType, hdAuthority, sunSign, moonSign, lifePath);
+    return `# SoulSync Companion – Master System Prompt v1.1
 
-    return `You are ${userName}'s AI companion, deeply attuned to who they are at their core. You know ${userName} as someone who is ${mbtiType}, ${hdType}, ${sunSign}, with a Life Path ${lifePath}.
+You are SoulSync, the reflective AI companion for ${userName}.  
+Your task: Offer honest, warm, and insightful guidance, always personalized through their unique blueprint.
 
-PERSONALITY CONTEXT:
-${personalityContext}
+---
 
-${conversationGuidelines}
+## PERSONALITY BLUEPRINT SNAPSHOT
 
-CONVERSATION APPROACH:
-- Respond naturally and conversationally to whatever ${userName} shares with you
-- Listen first, understand their current situation, then offer insights
-- Reference their personality traits only when it adds genuine value to the conversation
-- Ask thoughtful follow-up questions when you need clarification
-- Be their reflective companion who helps them align with their authentic self
+${blueprintSnapshot}
 
-${blueprintDataRule}
+---
 
-${clarificationRule}
+## GUIDANCE AND BEHAVIOR RULES
 
-IMPORTANT: Your goal is to be genuinely helpful and personally relevant, not to demonstrate knowledge about their blueprint. Use their personality information to understand and support them better, not to lecture about it.
+- Use the user's preferred name, ${userName}, naturally in all conversation.
+- Speak honestly, clearly, and warmly—adapting tone, language, and examples to their MBTI, Human Design, and other traits.
+- Never sound scripted or robotic; always respond as a thoughtful, supportive companion.
+- **When asked about any blueprint element, always explain it in plain language and offer examples relevant to daily life.**
+- If the user asks "What does that mean?" or similar, break down each mentioned blueprint trait simply, no matter how obvious.
+- **Don't inject random blueprint facts:** Use them only when answering a direct question or when they help illuminate the user's current goal, challenge, or context.
+- Encourage honest self-reflection, but never be mean.
+- End replies with a gentle question or actionable next step if appropriate.
+
+${modeSpecificGuidance}
+
+---
+
+## SAFETY & LIMITS
+
+- No medical, legal, or financial advice.
+- Never invent data; if unsure or field is missing, state this clearly and invite the user to update their profile.
+- Humor must never target protected groups.
+- Keep responses under 1200 tokens.
+
+---
+
+## BLUEPRINT DATA HANDLING
+
+When ${userName} asks about their "blueprint", "full blueprint", or specific personality information, provide their actual data:
+
+**THEIR ACTUAL BLUEPRINT DATA:**
+- MBTI Type: ${blueprint.cognitiveTemperamental?.mbtiType || 'Unknown'}
+- Human Design: ${blueprint.energyDecisionStrategy?.humanDesignType || 'Unknown'} with ${blueprint.energyDecisionStrategy?.authority || 'Unknown'} Authority
+- Sun Sign: ${blueprint.publicArchetype?.sunSign || 'Unknown'}
+- Moon Sign: ${blueprint.publicArchetype?.moonSign || 'Unknown'}
+- Life Path: ${blueprint.coreValuesNarrative?.lifePath || 'Unknown'}
+
+When they ask for their full blueprint, list these specific details clearly and ask if they want deeper insights into any particular aspect. Don't give vague spiritual language - give them their actual personality data.
 
 Remember: Every response should feel like it comes from someone who truly knows and cares about ${userName}.`;
   }
 
-  private buildPersonalityContext(blueprint: LayeredBlueprint): string {
-    const context = [];
+  private buildBlueprintSnapshot(blueprint: LayeredBlueprint): string {
+    const sections = [];
+    
+    // Check if blueprint is complete
+    const hasMainData = blueprint.cognitiveTemperamental?.mbtiType || 
+                       blueprint.energyDecisionStrategy?.humanDesignType ||
+                       blueprint.publicArchetype?.sunSign ||
+                       blueprint.coreValuesNarrative?.lifePath;
 
-    // MBTI Context
+    if (!hasMainData) {
+      return "Your blueprint is incomplete—please finish setup to unlock full insight!";
+    }
+
+    // MBTI Section
     if (blueprint.cognitiveTemperamental?.mbtiType) {
-      const mbti = blueprint.cognitiveTemperamental.mbtiType;
-      context.push(`🧠 ${mbti}: ${this.getMBTIContext(mbti)}`);
+      sections.push(`**MBTI:**
+- Type: ${blueprint.cognitiveTemperamental.mbtiType}
+  (${this.getMBTIDescription(blueprint.cognitiveTemperamental.mbtiType)})`);
     }
 
-    // Human Design Context
+    // Human Design Section
     if (blueprint.energyDecisionStrategy?.humanDesignType) {
-      const hd = blueprint.energyDecisionStrategy.humanDesignType;
-      context.push(`⚡ ${hd}: ${this.getHumanDesignContext(hd)}`);
+      const hdType = blueprint.energyDecisionStrategy.humanDesignType;
+      const authority = blueprint.energyDecisionStrategy.authority || 'Unknown';
+      const strategy = this.getHumanDesignStrategy(hdType);
+      
+      sections.push(`**Human Design:**
+- Type: ${hdType}
+- Authority: ${authority}
+- Strategy: ${strategy}`);
     }
 
-    // Astrological Context
-    if (blueprint.publicArchetype?.sunSign) {
-      const sun = blueprint.publicArchetype.sunSign;
-      context.push(`☀️ ${sun}: ${this.getAstrologyContext(sun)}`);
-    }
-
-    // Life Path Context
+    // Numerology Section
     if (blueprint.coreValuesNarrative?.lifePath) {
-      const path = blueprint.coreValuesNarrative.lifePath;
-      // Fixed: Ensure path is converted to number
-      const pathNumber = typeof path === 'string' ? parseInt(path, 10) : path;
-      context.push(`🎯 Life Path ${pathNumber}: ${this.getLifePathContext(pathNumber)}`);
+      const lifePath = typeof blueprint.coreValuesNarrative.lifePath === 'string' 
+        ? parseInt(blueprint.coreValuesNarrative.lifePath, 10) 
+        : blueprint.coreValuesNarrative.lifePath;
+      
+      sections.push(`**Numerology:**
+- Life Path: ${lifePath} ("${this.getLifePathKeyword(lifePath)}")`);
     }
 
-    return context.join('\n');
+    // Astrology (Western) Section
+    if (blueprint.publicArchetype?.sunSign || blueprint.publicArchetype?.moonSign) {
+      let astroSection = "**Astrology (Western):**";
+      
+      if (blueprint.publicArchetype.sunSign) {
+        astroSection += `\n- Sun: ${blueprint.publicArchetype.sunSign} ("${this.getSunSignKeyword(blueprint.publicArchetype.sunSign)}")`;
+      }
+      
+      if (blueprint.publicArchetype.moonSign) {
+        astroSection += `\n- Moon: ${blueprint.publicArchetype.moonSign} ("${this.getMoonSignKeyword(blueprint.publicArchetype.moonSign)}")`;
+      }
+      
+      sections.push(astroSection);
+    }
+
+    return sections.join('\n\n');
   }
 
-  private getConversationGuidelines(mode: "coach" | "guide" | "blend", userName: string): string {
+  private getModeSpecificGuidance(mode: "coach" | "guide" | "blend", userName: string): string {
     switch (mode) {
       case 'coach':
-        return `ROLE: Productivity Coach
+        return `## ROLE: Productivity Coach
 You help ${userName} achieve their goals through practical action steps and accountability. Focus on what they want to accomplish and how their natural traits can support their productivity. When they're stuck, help them break through with personalized strategies.`;
 
       case 'guide':
-        return `ROLE: Personal Growth Guide
+        return `## ROLE: Personal Growth Guide
 You help ${userName} navigate life's deeper questions and challenges. Focus on self-understanding, relationships, and life meaning. Use their blueprint to offer insights about patterns and growth opportunities.`;
 
       case 'blend':
-        return `ROLE: Integrated Companion
+        return `## ROLE: Integrated Companion
 You're ${userName}'s versatile companion who adapts to what they need most. Whether they want practical productivity help or deeper life guidance, you meet them where they are and support their whole journey.`;
 
       default:
@@ -294,70 +344,80 @@ You're ${userName}'s versatile companion who adapts to what they need most. Whet
     }
   }
 
-  private getClarificationRule(userName: string): string {
-    return `CLARIFICATION RULE:
-When ${userName} asks vague questions like "help me" or "what should I do", don't immediately ask what they mean. Instead:
-1. Acknowledge their request warmly
-2. Offer 2-3 specific areas you could help with based on their situation
-3. Let them choose or clarify what resonates
-
-Example: "I'm here to support you! Are you looking for help with productivity and getting things done, or are you navigating something more personal like relationships or life direction? Or maybe something else entirely?"`;
-  }
-
-  // NEW: Explicit blueprint data handling rule
-  private getBlueprintDataRule(userName: string, mbtiType: string, hdType: string, hdAuthority: string, sunSign: string, moonSign: string, lifePath: string | number): string {
-    return `BLUEPRINT DATA HANDLING:
-When ${userName} asks about their "blueprint", "full blueprint", or specific personality information, provide their actual data:
-
-THEIR ACTUAL BLUEPRINT DATA:
-- MBTI Type: ${mbtiType}
-- Human Design: ${hdType} with ${hdAuthority} Authority
-- Sun Sign: ${sunSign}
-- Moon Sign: ${moonSign}
-- Life Path: ${lifePath}
-
-When they ask for their full blueprint, list these specific details clearly and ask if they want deeper insights into any particular aspect. Don't give vague spiritual language - give them their actual personality data.`;
-  }
-
-  // Simplified context methods
-  private getMBTIContext(type: string): string {
-    const contexts = {
-      'INFP': 'Values authenticity, needs meaning in their work, processes internally',
-      'ENFP': 'Thrives on possibilities, energized by people, needs variety',
-      'INFJ': 'Seeks purpose, intuitive about others, needs alone time to recharge',
-      'ENFJ': 'Natural helper, reads people well, motivated by growth'
+  // Helper methods for blueprint descriptions
+  private getMBTIDescription(type: string): string {
+    const descriptions: { [key: string]: string } = {
+      'INFP': 'Authentic dreamer seeking meaning and harmony',
+      'ENFP': 'Inspiring catalyst sparking possibilities in others',
+      'INFJ': 'Visionary advocate for human potential',
+      'ENFJ': 'Charismatic teacher nurturing growth in others',
+      'INTJ': 'Strategic architect of systematic change',
+      'ENTJ': 'Bold leader driving ambitious visions',
+      'INTP': 'Curious explorer of theoretical landscapes',
+      'ENTP': 'Innovative debater connecting unexpected ideas'
     };
-    return contexts[type as keyof typeof contexts] || 'Unique cognitive approach to life';
+    return descriptions[type] || 'Unique cognitive pattern';
   }
 
-  private getHumanDesignContext(type: string): string {
-    const contexts = {
-      'Generator': 'Sustainable energy when following excitement, designed to respond',
-      'Projector': 'Natural guide, needs invitation and recognition, masters of systems',
-      'Manifestor': 'Independent initiator, designed to inform before acting',
-      'Reflector': 'Wise observer, needs time for clarity, samples energy around them'
+  private getHumanDesignStrategy(type: string): string {
+    const strategies = {
+      'Generator': 'respond to what lights you up and follow your gut',
+      'Projector': 'wait for invitation and recognition before sharing your gifts',
+      'Manifestor': 'initiate when you feel the urge, but inform others of your actions',
+      'Reflector': 'wait a full lunar cycle before making major decisions'
     };
-    return contexts[type as keyof typeof contexts] || 'Unique energy signature';
+    return strategies[type as keyof typeof strategies] || 'follow your natural energy flow';
   }
 
-  private getAstrologyContext(sign: string): string {
-    const contexts = {
-      'Cancer': 'Nurturing, emotionally intuitive, values home and security',
-      'Leo': 'Creative, generous, needs appreciation and self-expression',
-      'Virgo': 'Detail-oriented, service-minded, seeks improvement and efficiency'
+  private getLifePathKeyword(path: number): string {
+    const keywords = {
+      1: 'Leader',
+      2: 'Collaborator',
+      3: 'Expresser',
+      4: 'Builder',
+      5: 'Explorer',
+      6: 'Nurturer',
+      7: 'Seeker',
+      8: 'Achiever',
+      9: 'Humanitarian'
     };
-    return contexts[sign as keyof typeof contexts] || 'Unique solar expression';
+    return keywords[path as keyof typeof keywords] || 'Unique Path';
   }
 
-  private getLifePathContext(path: number): string {
-    const contexts = {
-      1: 'Natural leader, pioneering spirit, learns independence',
-      2: 'Cooperative nature, diplomatic, learns partnership',
-      3: 'Creative expression, communication gifts, learns authentic self-expression',
-      4: 'Builder of foundations, systematic approach, learns stability',
-      5: 'Freedom seeker, adventurous, learns constructive use of freedom'
+  private getSunSignKeyword(sign: string): string {
+    const keywords = {
+      'Aries': 'Pioneer',
+      'Taurus': 'Builder',
+      'Gemini': 'Communicator',
+      'Cancer': 'Nurturer',
+      'Leo': 'Creator',
+      'Virgo': 'Perfecter',
+      'Libra': 'Harmonizer',
+      'Scorpio': 'Transformer',
+      'Sagittarius': 'Explorer',
+      'Capricorn': 'Achiever',
+      'Aquarius': 'Innovator',
+      'Pisces': 'Dreamer'
     };
-    return contexts[path as keyof typeof contexts] || 'Unique life purpose';
+    return keywords[sign as keyof typeof keywords] || 'Unique Solar';
+  }
+
+  private getMoonSignKeyword(sign: string): string {
+    const keywords = {
+      'Aries': 'Instinctive',
+      'Taurus': 'Grounded',
+      'Gemini': 'Curious',
+      'Cancer': 'Intuitive',
+      'Leo': 'Expressive',
+      'Virgo': 'Analytical',
+      'Libra': 'Harmonious',
+      'Scorpio': 'Intense',
+      'Sagittarius': 'Adventurous',
+      'Capricorn': 'Structured',
+      'Aquarius': 'Independent',
+      'Pisces': 'Empathetic'
+    };
+    return keywords[sign as keyof typeof keywords] || 'Unique Lunar';
   }
 
   private generateVoiceTokens(blueprint: LayeredBlueprint, mode: "coach" | "guide" | "blend"): VoiceToken[] {
