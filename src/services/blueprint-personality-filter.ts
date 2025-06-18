@@ -31,6 +31,16 @@ export class BlueprintPersonalityFilter {
   ): FilteredResponse {
     console.log("🎭 Blueprint Filter: Processing response for personalization");
     
+    // Check if this is a direct blueprint request
+    if (this.isDirectBlueprintRequest(userMessage)) {
+      console.log("🎯 Blueprint Filter: Detected direct blueprint request");
+      return {
+        content: this.handleDirectBlueprintRequest(userMessage, originalResponse),
+        personalTouches: ['Direct blueprint data provided'],
+        blueprintReferences: ['Full blueprint data']
+      };
+    }
+    
     let filteredContent = originalResponse;
     const personalTouches: string[] = [];
     const blueprintReferences: string[] = [];
@@ -63,6 +73,74 @@ export class BlueprintPersonalityFilter {
       personalTouches,
       blueprintReferences
     };
+  }
+
+  // NEW: Detect direct blueprint requests
+  private isDirectBlueprintRequest(userMessage: string): boolean {
+    const lowerMessage = userMessage.toLowerCase();
+    return lowerMessage.includes('full blueprint') || 
+           lowerMessage.includes('my blueprint') || 
+           lowerMessage.includes('tell me my') && (lowerMessage.includes('mbti') || lowerMessage.includes('human design') || lowerMessage.includes('personality'));
+  }
+
+  // NEW: Handle direct blueprint requests with actual data
+  private handleDirectBlueprintRequest(userMessage: string, originalResponse: string): string {
+    console.log("🎯 Blueprint Filter: Providing actual blueprint data");
+    
+    const mbtiType = this.blueprint.cognitiveTemperamental?.mbtiType || 'Unknown';
+    const hdType = this.blueprint.energyDecisionStrategy?.humanDesignType || 'Unknown';
+    const hdAuthority = this.blueprint.energyDecisionStrategy?.authority || 'Unknown';
+    const sunSign = this.blueprint.publicArchetype?.sunSign || 'Unknown';
+    const moonSign = this.blueprint.publicArchetype?.moonSign || 'Unknown';
+    const lifePath = this.blueprint.coreValuesNarrative?.lifePath || 'Unknown';
+
+    return `Here's your complete personality blueprint, ${this.userName}:
+
+**Core Personality Architecture:**
+• **MBTI Type:** ${mbtiType}
+• **Human Design:** ${hdType} with ${hdAuthority} Authority
+• **Astrological Profile:** ${sunSign} Sun, ${moonSign} Moon
+• **Life Path:** ${lifePath}
+
+**What This Means For You:**
+- Your ${mbtiType} nature means you ${this.getMBTIInsight(mbtiType)}
+- As a ${hdType}, your strategy is to ${this.getHumanDesignStrategy(hdType)}
+- Your ${hdAuthority} Authority guides you to ${this.getAuthorityGuidance(hdAuthority)}
+- Your ${sunSign} Sun brings ${this.getSunSignQuality(sunSign)} energy to your public expression
+
+Would you like me to dive deeper into any specific aspect of your blueprint? I can explain how these different parts work together in your daily life.`;
+  }
+
+  private getMBTIInsight(type: string): string {
+    const insights = {
+      'INFP': 'process internally and value authenticity above all',
+      'ENFP': 'energize through possibilities and connecting with others',
+      'INFJ': 'see patterns and focus on meaningful impact',
+      'ENFJ': 'naturally guide others toward their potential',
+      'INTJ': 'think strategically and work toward long-term visions',
+      'ENTJ': 'lead through organizing people and resources efficiently'
+    };
+    return insights[type as keyof typeof insights] || 'approach life through your unique cognitive lens';
+  }
+
+  private getHumanDesignStrategy(type: string): string {
+    const strategies = {
+      'Generator': 'respond to what lights you up and follow your gut',
+      'Projector': 'wait for invitation and recognition before sharing your gifts',
+      'Manifestor': 'initiate when you feel the urge, but inform others of your actions',
+      'Reflector': 'wait a full lunar cycle before making major decisions'
+    };
+    return strategies[type as keyof typeof strategies] || 'follow your natural energy flow';
+  }
+
+  private getAuthorityGuidance(authority: string): string {
+    const guidance = {
+      'Sacral': 'trust your gut response - yes/no feelings in your body',
+      'Emotional': 'ride your emotional wave before making decisions',
+      'Splenic': 'trust your immediate intuitive hits',
+      'Self-Projected': 'talk it out and listen to what you hear yourself say'
+    };
+    return guidance[authority as keyof typeof guidance] || 'make decisions from your center';
   }
 
   private addNamePersonalization(content: string): string {

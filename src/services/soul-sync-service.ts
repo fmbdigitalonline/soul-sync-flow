@@ -208,7 +208,9 @@ class SoulSyncService {
 
     const mbtiType = blueprint.cognitiveTemperamental?.mbtiType || 'Unknown';
     const hdType = blueprint.energyDecisionStrategy?.humanDesignType || 'Unknown';
+    const hdAuthority = blueprint.energyDecisionStrategy?.authority || 'Unknown';
     const sunSign = blueprint.publicArchetype?.sunSign || 'Unknown';
+    const moonSign = blueprint.publicArchetype?.moonSign || 'Unknown';
     const lifePath = blueprint.coreValuesNarrative?.lifePath || 'Unknown';
 
     console.log(`🎯 SoulSync: Generating natural ${mode} prompt for ${userName} (${mbtiType}, ${hdType}, ${sunSign}, LP:${lifePath})`);
@@ -216,6 +218,7 @@ class SoulSyncService {
     const personalityContext = this.buildPersonalityContext(blueprint);
     const conversationGuidelines = this.getConversationGuidelines(mode, userName);
     const clarificationRule = this.getClarificationRule(userName);
+    const blueprintDataRule = this.getBlueprintDataRule(userName, mbtiType, hdType, hdAuthority, sunSign, moonSign, lifePath);
 
     return `You are ${userName}'s AI companion, deeply attuned to who they are at their core. You know ${userName} as someone who is ${mbtiType}, ${hdType}, ${sunSign}, with a Life Path ${lifePath}.
 
@@ -230,6 +233,8 @@ CONVERSATION APPROACH:
 - Reference their personality traits only when it adds genuine value to the conversation
 - Ask thoughtful follow-up questions when you need clarification
 - Be their reflective companion who helps them align with their authentic self
+
+${blueprintDataRule}
 
 ${clarificationRule}
 
@@ -297,6 +302,21 @@ When ${userName} asks vague questions like "help me" or "what should I do", don'
 3. Let them choose or clarify what resonates
 
 Example: "I'm here to support you! Are you looking for help with productivity and getting things done, or are you navigating something more personal like relationships or life direction? Or maybe something else entirely?"`;
+  }
+
+  // NEW: Explicit blueprint data handling rule
+  private getBlueprintDataRule(userName: string, mbtiType: string, hdType: string, hdAuthority: string, sunSign: string, moonSign: string, lifePath: string | number): string {
+    return `BLUEPRINT DATA HANDLING:
+When ${userName} asks about their "blueprint", "full blueprint", or specific personality information, provide their actual data:
+
+THEIR ACTUAL BLUEPRINT DATA:
+- MBTI Type: ${mbtiType}
+- Human Design: ${hdType} with ${hdAuthority} Authority
+- Sun Sign: ${sunSign}
+- Moon Sign: ${moonSign}
+- Life Path: ${lifePath}
+
+When they ask for their full blueprint, list these specific details clearly and ask if they want deeper insights into any particular aspect. Don't give vague spiritual language - give them their actual personality data.`;
   }
 
   // Simplified context methods
