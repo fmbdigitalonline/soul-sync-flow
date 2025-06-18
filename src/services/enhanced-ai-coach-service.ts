@@ -24,6 +24,7 @@ class EnhancedAICoachService {
   private personalityEngine: PersonalityEngine;
   private currentUserId: string | null = null;
   private conversationCache: Map<string, ChatMessage[]> = new Map();
+  private currentBlueprint: Partial<LayeredBlueprint> | null = null;
 
   constructor() {
     this.personalityEngine = new PersonalityEngine();
@@ -44,7 +45,35 @@ class EnhancedAICoachService {
   updateUserBlueprint(blueprint: Partial<LayeredBlueprint>) {
     console.log("🎭 Enhanced AI Coach Service: Updating user blueprint");
     console.log("🔍 Blueprint data keys:", Object.keys(blueprint));
+    
+    // Store the blueprint for immediate use
+    this.currentBlueprint = blueprint;
+    
+    // Update the personality engine
     this.personalityEngine.updateBlueprint(blueprint);
+    
+    // Force regeneration of persona by clearing any cached versions
+    this.clearPersonaCache();
+  }
+
+  private async clearPersonaCache() {
+    if (!this.currentUserId) return;
+    
+    try {
+      console.log("🧹 Clearing persona cache for fresh generation");
+      const { error } = await supabase
+        .from('personas')
+        .delete()
+        .eq('user_id', this.currentUserId);
+        
+      if (error) {
+        console.error("Error clearing persona cache:", error);
+      } else {
+        console.log("✅ Persona cache cleared successfully");
+      }
+    } catch (error) {
+      console.error("Unexpected error clearing persona cache:", error);
+    }
   }
 
   private async getOrCreatePersona(usePersona: boolean, agentType: AgentType): Promise<string | null> {
@@ -54,9 +83,38 @@ class EnhancedAICoachService {
     }
 
     try {
-      console.log("🎭 Fetching persona from database...");
+      console.log("🎭 Getting or creating persona...");
       
-      // Try to get existing persona
+      // Always generate fresh persona using current blueprint data
+      if (this.currentBlueprint && Object.keys(this.currentBlueprint).length > 0) {
+        console.log("🔄 Generating fresh persona from current blueprint");
+        const systemPrompt = this.personalityEngine.generateSystemPrompt(agentType as AgentMode);
+        
+        if (systemPrompt) {
+          // Save the newly generated persona
+          const { error: insertError } = await supabase
+            .from('personas')
+            .upsert({
+              user_id: this.currentUserId,
+              system_prompt: systemPrompt,
+              voice_tokens: {},
+              humor_profile: {},
+              function_permissions: [],
+              blueprint_version: '1.0.0'
+            });
+
+          if (insertError) {
+            console.error("❌ Error saving persona:", insertError);
+          } else {
+            console.log("✅ Successfully saved fresh persona");
+          }
+          
+          return systemPrompt;
+        }
+      }
+
+      // Fallback: try to get existing persona
+      console.log("🔍 Attempting to fetch existing persona...");
       const { data: existingPersona, error: fetchError } = await supabase
         .from('personas')
         .select('system_prompt, voice_tokens, humor_profile')
@@ -65,43 +123,20 @@ class EnhancedAICoachService {
 
       if (fetchError) {
         console.error("❌ Error fetching persona:", fetchError);
-        // Fall back to personality engine generation
         return this.personalityEngine.generateSystemPrompt(agentType as AgentMode);
       }
 
       if (existingPersona?.system_prompt) {
-        console.log("✅ Found existing persona, using cached version");
+        console.log("✅ Found existing persona");
         return existingPersona.system_prompt;
       }
 
-      // Generate new persona using personality engine
-      console.log("🔄 No existing persona found, generating new one");
-      const systemPrompt = this.personalityEngine.generateSystemPrompt(agentType as AgentMode);
+      // Final fallback: generate basic persona
+      console.log("🔄 No persona found, generating basic one");
+      return this.personalityEngine.generateSystemPrompt(agentType as AgentMode);
       
-      if (systemPrompt) {
-        // Save the generated persona
-        const { error: insertError } = await supabase
-          .from('personas')
-          .upsert({
-            user_id: this.currentUserId,
-            system_prompt: systemPrompt,
-            voice_tokens: {},
-            humor_profile: {},
-            function_permissions: [],
-            blueprint_version: '1.0.0'
-          });
-
-        if (insertError) {
-          console.error("❌ Error saving persona:", insertError);
-        } else {
-          console.log("✅ Successfully saved new persona");
-        }
-      }
-
-      return systemPrompt;
     } catch (error) {
       console.error("❌ Unexpected error in persona handling:", error);
-      // Fall back to personality engine
       return this.personalityEngine.generateSystemPrompt(agentType as AgentMode);
     }
   }
@@ -153,6 +188,8 @@ class EnhancedAICoachService {
       console.log(`📡 Enhanced AI Coach Service: Starting streaming (${agentType}, persona: ${usePersona})`);
       
       const systemPrompt = await this.getOrCreatePersona(usePersona, agentType);
+      
+      console.log("🎯 Using system prompt:", systemPrompt ? "Custom persona" : "Generic");
       
       const response = await fetch(`https://qxaajirrqrcnmvtowjbg.supabase.co/functions/v1/ai-coach-stream`, {
         method: 'POST',
@@ -258,7 +295,6 @@ class EnhancedAICoachService {
         return [];
       }
 
-      // Fix the type checking issue here
       const messages = data?.messages || [];
       const chatMessages: ChatMessage[] = Array.isArray(messages) 
         ? messages.map((msg: any) => ({
