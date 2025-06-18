@@ -1,4 +1,5 @@
 
+
 import { LayeredBlueprint } from '@/types/personality-modules';
 
 interface PersonalityFilterOptions {
@@ -98,37 +99,47 @@ export class BlueprintPersonalityFilter {
     const numerologyData = [];
     const missingData = [];
 
-    if (this.blueprint.coreValuesNarrative?.lifePath && this.blueprint.coreValuesNarrative.lifePath > 0) {
-      const keyword = this.blueprint.coreValuesNarrative.lifePathKeyword || this.getLifePathKeyword(this.blueprint.coreValuesNarrative.lifePath);
-      numerologyData.push(`**Life Path ${this.blueprint.coreValuesNarrative.lifePath}** ("${keyword}") - Your life's main purpose and journey`);
+    // Access life path number properly with type conversion
+    const lifePath = this.blueprint.coreValuesNarrative?.lifePath;
+    const lifePathNum = typeof lifePath === 'string' ? parseInt(lifePath, 10) : lifePath;
+    if (lifePathNum && lifePathNum > 0) {
+      const keyword = this.getLifePathKeyword(lifePathNum);
+      numerologyData.push(`**Life Path ${lifePathNum}** ("${keyword}") - Your life's main purpose and journey`);
     } else {
       missingData.push('Life Path Number');
     }
 
-    if (this.blueprint.coreValuesNarrative?.expressionNumber && this.blueprint.coreValuesNarrative.expressionNumber > 0) {
-      const keyword = this.blueprint.coreValuesNarrative.expressionKeyword || this.getExpressionKeyword(this.blueprint.coreValuesNarrative.expressionNumber);
-      numerologyData.push(`**Expression ${this.blueprint.coreValuesNarrative.expressionNumber}** ("${keyword}") - Your natural talents and abilities`);
+    // Check for additional numerology numbers from the raw blueprint data
+    const valuesLifePath = this.blueprint.user_meta?.values_life_path || {};
+    
+    if (valuesLifePath.expression_number) {
+      const expressionNum = Number(valuesLifePath.expression_number);
+      const keyword = this.getExpressionKeyword(expressionNum);
+      numerologyData.push(`**Expression ${expressionNum}** ("${keyword}") - Your natural talents and abilities`);
     } else {
       missingData.push('Expression Number');
     }
 
-    if (this.blueprint.coreValuesNarrative?.soulUrgeNumber && this.blueprint.coreValuesNarrative.soulUrgeNumber > 0) {
-      const keyword = this.blueprint.coreValuesNarrative.soulUrgeKeyword || this.getSoulUrgeKeyword(this.blueprint.coreValuesNarrative.soulUrgeNumber);
-      numerologyData.push(`**Soul Urge ${this.blueprint.coreValuesNarrative.soulUrgeNumber}** ("${keyword}") - What your heart truly desires`);
+    if (valuesLifePath.soul_urge_number) {
+      const soulUrgeNum = Number(valuesLifePath.soul_urge_number);
+      const keyword = this.getSoulUrgeKeyword(soulUrgeNum);
+      numerologyData.push(`**Soul Urge ${soulUrgeNum}** ("${keyword}") - What your heart truly desires`);
     } else {
       missingData.push('Soul Urge Number');
     }
 
-    if (this.blueprint.coreValuesNarrative?.personalityNumber && this.blueprint.coreValuesNarrative.personalityNumber > 0) {
-      const keyword = this.blueprint.coreValuesNarrative.personalityKeyword || this.getPersonalityKeyword(this.blueprint.coreValuesNarrative.personalityNumber);
-      numerologyData.push(`**Personality ${this.blueprint.coreValuesNarrative.personalityNumber}** ("${keyword}") - How others see you`);
+    if (valuesLifePath.personality_number) {
+      const personalityNum = Number(valuesLifePath.personality_number);
+      const keyword = this.getPersonalityKeyword(personalityNum);
+      numerologyData.push(`**Personality ${personalityNum}** ("${keyword}") - How others see you`);
     } else {
       missingData.push('Personality Number');
     }
 
-    if (this.blueprint.coreValuesNarrative?.birthdayNumber && this.blueprint.coreValuesNarrative.birthdayNumber > 0) {
-      const keyword = this.blueprint.coreValuesNarrative.birthdayKeyword || this.getBirthdayKeyword(this.blueprint.coreValuesNarrative.birthdayNumber);
-      numerologyData.push(`**Birthday ${this.blueprint.coreValuesNarrative.birthdayNumber}** ("${keyword}") - Your special gift to the world`);
+    if (valuesLifePath.birthday_number) {
+      const birthdayNum = Number(valuesLifePath.birthday_number);
+      const keyword = this.getBirthdayKeyword(birthdayNum);
+      numerologyData.push(`**Birthday ${birthdayNum}** ("${keyword}") - Your special gift to the world`);
     } else {
       missingData.push('Birthday Number');
     }
@@ -157,21 +168,25 @@ export class BlueprintPersonalityFilter {
     const additionalSections = [];
 
     // Check for detailed Human Design info
-    if (this.blueprint.energyDecisionStrategy?.profile && this.blueprint.energyDecisionStrategy.profile !== 'Unknown') {
-      additionalSections.push(`**Human Design Profile:** ${this.blueprint.energyDecisionStrategy.profile}`);
+    const energyStrategy = this.blueprint.energyDecisionStrategy;
+    if (energyStrategy?.profile && energyStrategy.profile !== 'Unknown') {
+      additionalSections.push(`**Human Design Profile:** ${energyStrategy.profile}`);
     }
 
-    if (this.blueprint.energyDecisionStrategy?.definition && this.blueprint.energyDecisionStrategy.definition !== 'Unknown') {
-      additionalSections.push(`**Human Design Definition:** ${this.blueprint.energyDecisionStrategy.definition}`);
+    // Check for definition from raw data
+    const hdData = this.blueprint.user_meta?.energy_strategy_human_design;
+    if (hdData?.definition && hdData.definition !== 'Unknown') {
+      additionalSections.push(`**Human Design Definition:** ${hdData.definition}`);
     }
 
-    if (this.blueprint.energyDecisionStrategy?.gates && this.blueprint.energyDecisionStrategy.gates.length > 0) {
-      additionalSections.push(`**Active Gates:** ${this.blueprint.energyDecisionStrategy.gates.slice(0, 10).join(', ')}${this.blueprint.energyDecisionStrategy.gates.length > 10 ? '...' : ''}`);
+    if (energyStrategy?.gates && energyStrategy.gates.length > 0) {
+      additionalSections.push(`**Active Gates:** ${energyStrategy.gates.slice(0, 10).join(', ')}${energyStrategy.gates.length > 10 ? '...' : ''}`);
     }
 
-    // Check for Big Five data
-    if (this.blueprint.cognitiveTemperamental?.bigFive && Object.keys(this.blueprint.cognitiveTemperamental.bigFive).length > 0) {
-      const bigFive = this.blueprint.cognitiveTemperamental.bigFive;
+    // Check for Big Five data from raw user_meta
+    const cognitiveData = this.blueprint.user_meta?.personality;
+    if (cognitiveData?.bigFive && Object.keys(cognitiveData.bigFive).length > 0) {
+      const bigFive = cognitiveData.bigFive;
       additionalSections.push(`**Big Five Personality:** Openness ${Math.round((bigFive.openness || 0) * 100)}%, Conscientiousness ${Math.round((bigFive.conscientiousness || 0) * 100)}%, Extraversion ${Math.round((bigFive.extraversion || 0) * 100)}%, Agreeableness ${Math.round((bigFive.agreeableness || 0) * 100)}%, Neuroticism ${Math.round((bigFive.neuroticism || 0) * 100)}%`);
     }
 
@@ -587,3 +602,4 @@ Would you like me to dive deeper into any specific aspect of your blueprint? I c
 export const createBlueprintFilter = (blueprint: LayeredBlueprint) => {
   return new BlueprintPersonalityFilter(blueprint);
 };
+
