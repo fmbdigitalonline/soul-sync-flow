@@ -59,7 +59,7 @@ export function useSoulSync() {
   };
 }
 
-// Fixed: Proper data mapping function that correctly extracts data from blueprintData
+// Fixed: Proper data mapping function with consistent field names
 function mapToLayeredBlueprint(blueprintData: any) {
   console.log("🗺️ Mapping blueprint data to LayeredBlueprint structure");
   
@@ -69,7 +69,7 @@ function mapToLayeredBlueprint(blueprintData: any) {
   const hdAuthority = blueprintData?.energy_strategy_human_design?.authority || 'Unknown';
   const sunSign = blueprintData?.archetype_western?.sun_sign || 'Unknown';
   const moonSign = blueprintData?.archetype_western?.moon_sign || 'Unknown';
-  const lifePath = blueprintData?.values_life_path?.life_path_number || 'Unknown';
+  const lifePath = Number(blueprintData?.values_life_path?.life_path_number ?? 0);
   const preferredName = blueprintData?.user_meta?.preferred_name || 'Unknown';
   
   console.log("📊 Extracted raw data:", {
@@ -122,7 +122,7 @@ function mapToLayeredBlueprint(blueprintData: any) {
       socialMask: 'minimal',
       externalExpression: 'natural'
     },
-    // Fixed: Map to coreValuesNarrative (what PersonalityEngine expects)
+    // Fixed: Map to coreValuesNarrative with consistent lifePath field
     coreValuesNarrative: {
       lifePath: lifePath,
       meaningfulAreas: blueprintData.values_life_path?.meaningful_areas || [],
