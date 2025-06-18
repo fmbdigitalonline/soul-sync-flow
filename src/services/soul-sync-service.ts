@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { LayeredBlueprint, VoiceToken } from "@/types/personality-modules";
 
@@ -384,11 +383,11 @@ Remember: Every response should feel like it comes from someone who truly knows 
     if (blueprint.publicArchetype?.sunSign && blueprint.publicArchetype.sunSign !== 'Unknown') {
       let astroSection = "**Astrology (Western):**";
       
-      const sunKeyword = blueprint.publicArchetype.sunKeyword || this.getSunSignKeyword(blueprint.publicArchetype.sunSign);
+      const sunKeyword = this.getSunSignKeyword(blueprint.publicArchetype.sunSign);
       astroSection += `\n- Sun: ${blueprint.publicArchetype.sunSign} ("${sunKeyword}")`;
       
       if (blueprint.publicArchetype.moonSign && blueprint.publicArchetype.moonSign !== 'Unknown') {
-        const moonKeyword = blueprint.publicArchetype.moonKeyword || this.getMoonSignKeyword(blueprint.publicArchetype.moonSign);
+        const moonKeyword = this.getMoonSignKeyword(blueprint.publicArchetype.moonSign);
         astroSection += `\n- Moon: ${blueprint.publicArchetype.moonSign} ("${moonKeyword}")`;
       }
 
