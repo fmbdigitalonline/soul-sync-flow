@@ -1,5 +1,4 @@
 
-
 import { LayeredBlueprint } from '@/types/personality-modules';
 
 interface PersonalityFilterOptions {
@@ -99,17 +98,17 @@ export class BlueprintPersonalityFilter {
     const numerologyData = [];
     const missingData = [];
 
-    // Access life path number properly with type conversion
+    // Access life path number safely
     const lifePath = this.blueprint.coreValuesNarrative?.lifePath;
-    const lifePathNum = typeof lifePath === 'string' ? parseInt(lifePath, 10) : lifePath;
-    if (lifePathNum && lifePathNum > 0) {
+    if (lifePath && ((typeof lifePath === 'number' && lifePath > 0) || (typeof lifePath === 'string' && parseInt(lifePath, 10) > 0))) {
+      const lifePathNum = typeof lifePath === 'string' ? parseInt(lifePath, 10) : lifePath;
       const keyword = this.getLifePathKeyword(lifePathNum);
       numerologyData.push(`**Life Path ${lifePathNum}** ("${keyword}") - Your life's main purpose and journey`);
     } else {
       missingData.push('Life Path Number');
     }
 
-    // Check for additional numerology numbers from the raw blueprint data
+    // Check for additional numerology numbers from user_meta
     const valuesLifePath = this.blueprint.user_meta?.values_life_path || {};
     
     if (valuesLifePath.expression_number) {
@@ -173,7 +172,7 @@ export class BlueprintPersonalityFilter {
       additionalSections.push(`**Human Design Profile:** ${energyStrategy.profile}`);
     }
 
-    // Check for definition from raw data
+    // Check for definition from user_meta
     const hdData = this.blueprint.user_meta?.energy_strategy_human_design;
     if (hdData?.definition && hdData.definition !== 'Unknown') {
       additionalSections.push(`**Human Design Definition:** ${hdData.definition}`);
@@ -183,7 +182,7 @@ export class BlueprintPersonalityFilter {
       additionalSections.push(`**Active Gates:** ${energyStrategy.gates.slice(0, 10).join(', ')}${energyStrategy.gates.length > 10 ? '...' : ''}`);
     }
 
-    // Check for Big Five data from raw user_meta
+    // Check for Big Five data from user_meta
     const cognitiveData = this.blueprint.user_meta?.personality;
     if (cognitiveData?.bigFive && Object.keys(cognitiveData.bigFive).length > 0) {
       const bigFive = cognitiveData.bigFive;
@@ -201,20 +200,24 @@ export class BlueprintPersonalityFilter {
       if (this.blueprint.generationalCode.element && this.blueprint.generationalCode.element !== 'Unknown') {
         chineseInfo += ` ${this.blueprint.generationalCode.element}`;
       }
-      if (this.blueprint.generationalCode.keyword) {
-        chineseInfo += ` ("${this.blueprint.generationalCode.keyword}")`;
+      // Get keyword from user_meta if available
+      const chineseData = this.blueprint.user_meta?.archetype_chinese;
+      if (chineseData?.keyword) {
+        chineseInfo += ` ("${chineseData.keyword}")`;
       }
       additionalSections.push(chineseInfo);
     }
 
-    // Check for goal stack
-    if (this.blueprint.goalStack?.primaryGoal) {
-      additionalSections.push(`**Current Goal Focus:** ${this.blueprint.goalStack.primaryGoal}`);
+    // Check for goal stack from user_meta
+    const goalData = this.blueprint.user_meta?.goal_stack;
+    if (goalData?.primary_goal) {
+      additionalSections.push(`**Current Goal Focus:** ${goalData.primary_goal}`);
     }
 
-    // Check for Bashar Suite
-    if (this.blueprint.basharSuite?.beliefInterface?.principle) {
-      additionalSections.push(`**Belief Principle:** "${this.blueprint.basharSuite.beliefInterface.principle}"`);
+    // Check for Bashar Suite from user_meta
+    const basharData = this.blueprint.user_meta?.bashar_suite;
+    if (basharData?.belief_interface?.principle) {
+      additionalSections.push(`**Belief Principle:** "${basharData.belief_interface.principle}"`);
     }
 
     if (additionalSections.length > 0) {
@@ -445,7 +448,7 @@ Would you like me to dive deeper into any specific aspect of your blueprint? I c
     return content;
   }
 
-  // Comprehensive keyword methods
+  // Keyword methods
   private getLifePathKeyword(path: number): string {
     const keywords = {
       1: 'Leader', 2: 'Collaborator', 3: 'Expresser', 4: 'Builder', 5: 'Explorer',
@@ -484,38 +487,6 @@ Would you like me to dive deeper into any specific aspect of your blueprint? I c
       6: 'Nurturing', 7: 'Introspective', 8: 'Ambitious', 9: 'Compassionate'
     };
     return keywords[num as keyof typeof keywords] || 'Unique Gift';
-  }
-
-  private getMBTIInsight(type: string): string {
-    const insights = {
-      'INFP': 'process internally and value authenticity above all',
-      'ENFP': 'energize through possibilities and connecting with others',
-      'INFJ': 'see patterns and focus on meaningful impact',
-      'ENFJ': 'naturally guide others toward their potential',
-      'INTJ': 'think strategically and work toward long-term visions',
-      'ENTJ': 'lead through organizing people and resources efficiently'
-    };
-    return insights[type as keyof typeof insights] || 'approach life through your unique cognitive lens';
-  }
-
-  private getHumanDesignStrategy(type: string): string {
-    const strategies = {
-      'Generator': 'respond to what lights you up and follow your gut',
-      'Projector': 'wait for invitation and recognition before sharing your gifts',
-      'Manifestor': 'initiate when you feel the urge, but inform others of your actions',
-      'Reflector': 'wait a full lunar cycle before making major decisions'
-    };
-    return strategies[type as keyof typeof strategies] || 'follow your natural energy flow';
-  }
-
-  private getAuthorityGuidance(authority: string): string {
-    const guidance = {
-      'Sacral': 'trust your gut response - yes/no feelings in your body',
-      'Emotional': 'ride your emotional wave before making decisions',
-      'Splenic': 'trust your immediate intuitive hits',
-      'Self-Projected': 'talk it out and listen to what you hear yourself say'
-    };
-    return guidance[authority as keyof typeof guidance] || 'make decisions from your center';
   }
 
   private getSunSignQuality(sign: string): string {
@@ -602,4 +573,3 @@ Would you like me to dive deeper into any specific aspect of your blueprint? I c
 export const createBlueprintFilter = (blueprint: LayeredBlueprint) => {
   return new BlueprintPersonalityFilter(blueprint);
 };
-

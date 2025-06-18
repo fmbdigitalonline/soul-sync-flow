@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { LayeredBlueprint, VoiceToken } from "@/types/personality-modules";
 
@@ -24,7 +25,6 @@ class SoulSyncService {
     return SoulSyncService.instance;
   }
 
-  // Fixed: Enhanced signature generation that never returns NULL
   async generateBlueprintSignature(blueprint: LayeredBlueprint): Promise<string> {
     console.log("🔏 SoulSync: Generating blueprint signature with enhanced data extraction");
     
@@ -51,10 +51,8 @@ class SoulSyncService {
     }
   }
 
-  // Fixed: Enhanced client-side signature generation with null-safe field extraction
   private generateClientSideSignature(blueprint: LayeredBlueprint): string {
     const signatureData = {
-      // Use coalesce pattern (?? '') to ensure no null values
       mbti_type: blueprint.cognitiveTemperamental?.mbtiType ?? '',
       hd_type: blueprint.energyDecisionStrategy?.humanDesignType ?? '',
       hd_authority: blueprint.energyDecisionStrategy?.authority ?? '',
@@ -62,19 +60,17 @@ class SoulSyncService {
       moon_sign: blueprint.publicArchetype?.moonSign ?? '',
       life_path: blueprint.coreValuesNarrative?.lifePath?.toString() ?? '',
       user_name: blueprint.user_meta?.preferred_name ?? '',
-      // Add timestamp to prevent identical signatures for different versions
       timestamp: Date.now().toString()
     };
 
     console.log("🔏 SoulSync: Signature data extracted:", signatureData);
 
-    // Enhanced client-side hash with better distribution
     const str = JSON.stringify(signatureData);
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);
       hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32-bit integer
+      hash = hash & hash;
     }
     
     const signature = Math.abs(hash).toString(16);
@@ -93,7 +89,6 @@ class SoulSyncService {
       const signature = await this.generateBlueprintSignature(blueprint);
       console.log("🔏 Blueprint signature:", signature.substring(0, 8) + "...");
 
-      // Check for existing persona with this signature
       const { data: existingPersona, error: fetchError } = await supabase
         .from('personas')
         .select('system_prompt, voice_tokens, template_version')
@@ -109,7 +104,6 @@ class SoulSyncService {
       if (existingPersona && existingPersona.template_version === TEMPLATE_VERSION) {
         console.log("✅ SoulSync: Found cached persona with matching signature");
         
-        // Parse voice tokens safely with proper type casting
         const voiceTokens = Array.isArray(existingPersona.voice_tokens) 
           ? (existingPersona.voice_tokens as unknown as VoiceToken[])
           : [];
@@ -121,13 +115,11 @@ class SoulSyncService {
         );
       }
 
-      // Generate new persona with enhanced error handling
       console.log("🔄 SoulSync: Generating new persona with complete blueprint data");
       const systemPrompt = this.generatePersonalizedPrompt(blueprint, agentMode);
       const voiceTokens = this.generateVoiceTokens(blueprint, agentMode);
       const humorProfile = this.generateHumorProfile(blueprint);
 
-      // Save new persona with retry logic and fallback handling
       const saveSuccess = await this.savePersonaWithRetry(userId, signature, systemPrompt, voiceTokens, humorProfile);
       
       if (!saveSuccess) {
@@ -141,7 +133,6 @@ class SoulSyncService {
     }
   }
 
-  // Fixed: Enhanced save with comprehensive error handling and fallback
   private async savePersonaWithRetry(
     userId: string,
     signature: string,
@@ -154,7 +145,6 @@ class SoulSyncService {
       try {
         console.log(`🔄 SoulSync: Saving persona (attempt ${attempt}/${maxRetries})`);
         
-        // Enhanced upsert with proper conflict resolution
         const { error: saveError } = await supabase
           .from('personas')
           .upsert({
@@ -178,7 +168,6 @@ class SoulSyncService {
             return false;
           }
           
-          // Exponential backoff
           await new Promise(resolve => setTimeout(resolve, 100 * Math.pow(2, attempt - 1)));
           continue;
         }
@@ -193,14 +182,12 @@ class SoulSyncService {
           return false;
         }
         
-        // Exponential backoff
         await new Promise(resolve => setTimeout(resolve, 100 * Math.pow(2, attempt - 1)));
       }
     }
     return false;
   }
 
-  // Enhanced prompt generation with comprehensive blueprint handling
   private generatePersonalizedPrompt(blueprint: LayeredBlueprint, mode: "coach" | "guide" | "blend"): string {
     const userName = blueprint.user_meta?.preferred_name || 
                      blueprint.user_meta?.full_name?.split(' ')[0] || 
@@ -274,7 +261,6 @@ When they ask for their full blueprint, list all available details clearly and a
 Remember: Every response should feel like it comes from someone who truly knows and cares about ${userName}, while being completely honest about what information is available vs. missing.`;
   }
 
-  // Enhanced comprehensive blueprint snapshot builder
   private buildComprehensiveBlueprintSnapshot(blueprint: LayeredBlueprint): string {
     const sections = [];
     
@@ -282,7 +268,7 @@ Remember: Every response should feel like it comes from someone who truly knows 
     const hasMainData = blueprint.cognitiveTemperamental?.mbtiType !== 'Unknown' || 
                        blueprint.energyDecisionStrategy?.humanDesignType !== 'Unknown' ||
                        blueprint.publicArchetype?.sunSign !== 'Unknown' ||
-                       (blueprint.coreValuesNarrative?.lifePath && blueprint.coreValuesNarrative.lifePath > 0);
+                       (blueprint.coreValuesNarrative?.lifePath && ((typeof blueprint.coreValuesNarrative.lifePath === 'number' && blueprint.coreValuesNarrative.lifePath > 0) || (typeof blueprint.coreValuesNarrative.lifePath === 'string' && parseInt(blueprint.coreValuesNarrative.lifePath, 10) > 0)));
 
     if (!hasMainData) {
       return "Your blueprint is incomplete—please finish setup to unlock full insight!";
@@ -293,12 +279,14 @@ Remember: Every response should feel like it comes from someone who truly knows 
       let mbtiSection = `**MBTI:**
 - Type: ${blueprint.cognitiveTemperamental.mbtiType}`;
 
-      if (blueprint.cognitiveTemperamental.description) {
-        mbtiSection += `\n  (${blueprint.cognitiveTemperamental.description})`;
+      // Get description from user_meta if available
+      const personalityData = blueprint.user_meta?.personality;
+      if (personalityData?.description) {
+        mbtiSection += `\n  (${personalityData.description})`;
       }
 
-      if (blueprint.cognitiveTemperamental.mbtiProbabilities && Object.keys(blueprint.cognitiveTemperamental.mbtiProbabilities).length > 0) {
-        const topTypes = Object.entries(blueprint.cognitiveTemperamental.mbtiProbabilities)
+      if (personalityData?.mbtiProbabilities && Object.keys(personalityData.mbtiProbabilities).length > 0) {
+        const topTypes = Object.entries(personalityData.mbtiProbabilities)
           .sort(([,a], [,b]) => (b as number) - (a as number))
           .slice(0, 3)
           .map(([type, prob]) => `${type} (${Math.round((prob as number) * 100)}%)`)
@@ -306,8 +294,8 @@ Remember: Every response should feel like it comes from someone who truly knows 
         mbtiSection += `\n- Alternative possibilities: ${topTypes}`;
       }
 
-      if (blueprint.cognitiveTemperamental.bigFive && Object.keys(blueprint.cognitiveTemperamental.bigFive).length > 0) {
-        const bigFive = blueprint.cognitiveTemperamental.bigFive;
+      if (personalityData?.bigFive && Object.keys(personalityData.bigFive).length > 0) {
+        const bigFive = personalityData.bigFive;
         mbtiSection += `\n- Big Five: Openness ${Math.round((bigFive.openness || 0) * 100)}, Conscientiousness ${Math.round((bigFive.conscientiousness || 0) * 100)}, Extraversion ${Math.round((bigFive.extraversion || 0) * 100)}, Agreeableness ${Math.round((bigFive.agreeableness || 0) * 100)}, Neuroticism ${Math.round((bigFive.neuroticism || 0) * 100)}`;
       }
 
@@ -320,8 +308,11 @@ Remember: Every response should feel like it comes from someone who truly knows 
       const authority = blueprint.energyDecisionStrategy.authority || 'Unknown';
       const strategy = blueprint.energyDecisionStrategy.strategy || this.getHumanDesignStrategy(hdType);
       const profile = blueprint.energyDecisionStrategy.profile || 'Unknown';
-      const definition = blueprint.energyDecisionStrategy.definition || 'Unknown';
-      const notSelfTheme = blueprint.energyDecisionStrategy.notSelfTheme || 'Unknown';
+      
+      // Get additional data from user_meta
+      const hdData = blueprint.user_meta?.energy_strategy_human_design;
+      const definition = hdData?.definition || 'Unknown';
+      const notSelfTheme = hdData?.not_self_theme || 'Unknown';
       
       let hdSection = `**Human Design:**
 - Type: ${hdType}
@@ -338,7 +329,6 @@ Remember: Every response should feel like it comes from someone who truly knows 
         hdSection += `\n- Not-self theme: ${notSelfTheme}`;
       }
 
-      // Add gates and channels if available
       if (blueprint.energyDecisionStrategy.gates && blueprint.energyDecisionStrategy.gates.length > 0) {
         hdSection += `\n- Active Gates: ${blueprint.energyDecisionStrategy.gates.slice(0, 5).join(', ')}${blueprint.energyDecisionStrategy.gates.length > 5 ? '...' : ''}`;
       }
@@ -351,33 +341,37 @@ Remember: Every response should feel like it comes from someone who truly knows 
     }
 
     // Comprehensive Numerology Section
-    if (blueprint.coreValuesNarrative?.lifePath && blueprint.coreValuesNarrative.lifePath > 0) {
+    const lifePath = blueprint.coreValuesNarrative?.lifePath;
+    if (lifePath && ((typeof lifePath === 'number' && lifePath > 0) || (typeof lifePath === 'string' && parseInt(lifePath, 10) > 0))) {
       let numerologySection = "**Numerology:**";
       const numerologyNumbers = [];
 
-      if (blueprint.coreValuesNarrative.lifePath > 0) {
-        const keyword = blueprint.coreValuesNarrative.lifePathKeyword || this.getLifePathKeyword(blueprint.coreValuesNarrative.lifePath);
-        numerologyNumbers.push(`Life Path: ${blueprint.coreValuesNarrative.lifePath} ("${keyword}")`);
+      const lifePathNum = typeof lifePath === 'string' ? parseInt(lifePath, 10) : lifePath;
+      if (lifePathNum > 0) {
+        const keyword = this.getLifePathKeyword(lifePathNum);
+        numerologyNumbers.push(`Life Path: ${lifePathNum} ("${keyword}")`);
       }
 
-      if (blueprint.coreValuesNarrative.expressionNumber && blueprint.coreValuesNarrative.expressionNumber > 0) {
-        const keyword = blueprint.coreValuesNarrative.expressionKeyword || this.getExpressionKeyword(blueprint.coreValuesNarrative.expressionNumber);
-        numerologyNumbers.push(`Expression: ${blueprint.coreValuesNarrative.expressionNumber} ("${keyword}")`);
+      // Get additional numerology from user_meta
+      const valuesData = blueprint.user_meta?.values_life_path;
+      if (valuesData?.expression_number && valuesData.expression_number > 0) {
+        const keyword = this.getExpressionKeyword(valuesData.expression_number);
+        numerologyNumbers.push(`Expression: ${valuesData.expression_number} ("${keyword}")`);
       }
 
-      if (blueprint.coreValuesNarrative.soulUrgeNumber && blueprint.coreValuesNarrative.soulUrgeNumber > 0) {
-        const keyword = blueprint.coreValuesNarrative.soulUrgeKeyword || this.getSoulUrgeKeyword(blueprint.coreValuesNarrative.soulUrgeNumber);
-        numerologyNumbers.push(`Soul Urge: ${blueprint.coreValuesNarrative.soulUrgeNumber} ("${keyword}")`);
+      if (valuesData?.soul_urge_number && valuesData.soul_urge_number > 0) {
+        const keyword = this.getSoulUrgeKeyword(valuesData.soul_urge_number);
+        numerologyNumbers.push(`Soul Urge: ${valuesData.soul_urge_number} ("${keyword}")`);
       }
 
-      if (blueprint.coreValuesNarrative.personalityNumber && blueprint.coreValuesNarrative.personalityNumber > 0) {
-        const keyword = blueprint.coreValuesNarrative.personalityKeyword || this.getPersonalityKeyword(blueprint.coreValuesNarrative.personalityNumber);
-        numerologyNumbers.push(`Personality: ${blueprint.coreValuesNarrative.personalityNumber} ("${keyword}")`);
+      if (valuesData?.personality_number && valuesData.personality_number > 0) {
+        const keyword = this.getPersonalityKeyword(valuesData.personality_number);
+        numerologyNumbers.push(`Personality: ${valuesData.personality_number} ("${keyword}")`);
       }
 
-      if (blueprint.coreValuesNarrative.birthdayNumber && blueprint.coreValuesNarrative.birthdayNumber > 0) {
-        const keyword = blueprint.coreValuesNarrative.birthdayKeyword || this.getBirthdayKeyword(blueprint.coreValuesNarrative.birthdayNumber);
-        numerologyNumbers.push(`Birthday: ${blueprint.coreValuesNarrative.birthdayNumber} ("${keyword}")`);
+      if (valuesData?.birthday_number && valuesData.birthday_number > 0) {
+        const keyword = this.getBirthdayKeyword(valuesData.birthday_number);
+        numerologyNumbers.push(`Birthday: ${valuesData.birthday_number} ("${keyword}")`);
       }
 
       if (numerologyNumbers.length > 0) {
@@ -410,55 +404,60 @@ Remember: Every response should feel like it comes from someone who truly knows 
       let chineseSection = `**Astrology (Chinese):**
 - Animal: ${blueprint.generationalCode.chineseZodiac}`;
 
-      if (blueprint.generationalCode.keyword) {
-        chineseSection += ` ("${blueprint.generationalCode.keyword}")`;
+      // Get keyword from user_meta
+      const chineseData = blueprint.user_meta?.archetype_chinese;
+      if (chineseData?.keyword) {
+        chineseSection += ` ("${chineseData.keyword}")`;
       }
 
       if (blueprint.generationalCode.element && blueprint.generationalCode.element !== 'Unknown') {
         chineseSection += `\n- Element: ${blueprint.generationalCode.element}`;
       }
 
-      if (blueprint.generationalCode.yinYang && blueprint.generationalCode.yinYang !== 'Unknown') {
-        chineseSection += `\n- Yin/Yang: ${blueprint.generationalCode.yinYang}`;
+      // Get yin/yang from user_meta
+      if (chineseData?.yin_yang && chineseData.yin_yang !== 'Unknown') {
+        chineseSection += `\n- Yin/Yang: ${chineseData.yin_yang}`;
       }
 
       sections.push(chineseSection);
     }
 
     // Goal Stack Section
-    if (blueprint.goalStack?.primaryGoal) {
+    const goalData = blueprint.user_meta?.goal_stack;
+    if (goalData?.primary_goal) {
       let goalSection = `**Goal Stack:**
-- Main Goal: ${blueprint.goalStack.primaryGoal}`;
+- Main Goal: ${goalData.primary_goal}`;
 
-      if (blueprint.goalStack.timeHorizon) {
-        goalSection += `\n- Horizon: ${blueprint.goalStack.timeHorizon}`;
+      if (goalData.time_horizon) {
+        goalSection += `\n- Horizon: ${goalData.time_horizon}`;
       }
 
-      if (blueprint.goalStack.supportStyle) {
-        goalSection += `\n- Support Style: ${blueprint.goalStack.supportStyle}`;
+      if (goalData.support_style) {
+        goalSection += `\n- Support Style: ${goalData.support_style}`;
       }
 
       sections.push(goalSection);
     }
 
     // Bashar Suite Section
-    if (blueprint.basharSuite?.beliefInterface || blueprint.basharSuite?.excitementCompass || blueprint.basharSuite?.frequencyAlignment) {
+    const basharData = blueprint.user_meta?.bashar_suite;
+    if (basharData?.belief_interface || basharData?.excitement_compass || basharData?.frequency_alignment) {
       let basharSection = "**Bashar Suite:**";
 
-      if (blueprint.basharSuite.beliefInterface?.principle) {
-        basharSection += `\n- Belief Principle: "${blueprint.basharSuite.beliefInterface.principle}"`;
+      if (basharData.belief_interface?.principle) {
+        basharSection += `\n- Belief Principle: "${basharData.belief_interface.principle}"`;
       }
 
-      if (blueprint.basharSuite.beliefInterface?.reframe_prompt) {
-        basharSection += `\n- Reframe Prompt: "${blueprint.basharSuite.beliefInterface.reframe_prompt}"`;
+      if (basharData.belief_interface?.reframe_prompt) {
+        basharSection += `\n- Reframe Prompt: "${basharData.belief_interface.reframe_prompt}"`;
       }
 
-      if (blueprint.basharSuite.excitementCompass?.principle) {
-        basharSection += `\n- Excitement Principle: "${blueprint.basharSuite.excitementCompass.principle}"`;
+      if (basharData.excitement_compass?.principle) {
+        basharSection += `\n- Excitement Principle: "${basharData.excitement_compass.principle}"`;
       }
 
-      if (blueprint.basharSuite.frequencyAlignment?.quick_ritual) {
-        basharSection += `\n- Quick Ritual: "${blueprint.basharSuite.frequencyAlignment.quick_ritual}"`;
+      if (basharData.frequency_alignment?.quick_ritual) {
+        basharSection += `\n- Quick Ritual: "${basharData.frequency_alignment.quick_ritual}"`;
       }
 
       sections.push(basharSection);
@@ -486,136 +485,12 @@ Remember: Every response should feel like it comes from someone who truly knows 
       summary.push(`- Moon Sign: ${blueprint.publicArchetype.moonSign}`);
     }
 
-    if (blueprint.coreValuesNarrative?.lifePath && blueprint.coreValuesNarrative.lifePath > 0) {
-      summary.push(`- Life Path: ${blueprint.coreValuesNarrative.lifePath}`);
+    const lifePath = blueprint.coreValuesNarrative?.lifePath;
+    if (lifePath && ((typeof lifePath === 'number' && lifePath > 0) || (typeof lifePath === 'string' && parseInt(lifePath, 10) > 0))) {
+      summary.push(`- Life Path: ${lifePath}`);
     }
 
     return summary.join('\n');
-  }
-
-  // Enhanced prompt generation with new SoulSync template
-  private generatePersonalizedPrompt(blueprint: LayeredBlueprint, mode: "coach" | "guide" | "blend"): string {
-    const userName = blueprint.user_meta?.preferred_name || 
-                     blueprint.user_meta?.full_name?.split(' ')[0] || 
-                     'friend';
-
-    console.log(`🎯 SoulSync: Generating SoulSync Companion prompt for ${userName} (${mode})`);
-
-    // Build blueprint snapshot with conditional rendering
-    const blueprintSnapshot = this.buildBlueprintSnapshot(blueprint);
-    const modeSpecificGuidance = this.getModeSpecificGuidance(mode, userName);
-
-    return `# SoulSync Companion – Master System Prompt v1.1
-
-You are SoulSync, the reflective AI companion for ${userName}.  
-Your task: Offer honest, warm, and insightful guidance, always personalized through their unique blueprint.
-
----
-
-## PERSONALITY BLUEPRINT SNAPSHOT
-
-${blueprintSnapshot}
-
----
-
-## GUIDANCE AND BEHAVIOR RULES
-
-- Use the user's preferred name, ${userName}, naturally in all conversation.
-- Speak honestly, clearly, and warmly—adapting tone, language, and examples to their MBTI, Human Design, and other traits.
-- Never sound scripted or robotic; always respond as a thoughtful, supportive companion.
-- **When asked about any blueprint element, always explain it in plain language and offer examples relevant to daily life.**
-- If the user asks "What does that mean?" or similar, break down each mentioned blueprint trait simply, no matter how obvious.
-- **Don't inject random blueprint facts:** Use them only when answering a direct question or when they help illuminate the user's current goal, challenge, or context.
-- Encourage honest self-reflection, but never be mean.
-- End replies with a gentle question or actionable next step if appropriate.
-
-${modeSpecificGuidance}
-
----
-
-## SAFETY & LIMITS
-
-- No medical, legal, or financial advice.
-- Never invent data; if unsure or field is missing, state this clearly and invite the user to update their profile.
-- Humor must never target protected groups.
-- Keep responses under 1200 tokens.
-
----
-
-## BLUEPRINT DATA HANDLING
-
-When ${userName} asks about their "blueprint", "full blueprint", or specific personality information, provide their actual data:
-
-**THEIR ACTUAL BLUEPRINT DATA:**
-- MBTI Type: ${blueprint.cognitiveTemperamental?.mbtiType || 'Unknown'}
-- Human Design: ${blueprint.energyDecisionStrategy?.humanDesignType || 'Unknown'} with ${blueprint.energyDecisionStrategy?.authority || 'Unknown'} Authority
-- Sun Sign: ${blueprint.publicArchetype?.sunSign || 'Unknown'}
-- Moon Sign: ${blueprint.publicArchetype?.moonSign || 'Unknown'}
-- Life Path: ${blueprint.coreValuesNarrative?.lifePath || 'Unknown'}
-
-When they ask for their full blueprint, list these specific details clearly and ask if they want deeper insights into any particular aspect. Don't give vague spiritual language - give them their actual personality data.
-
-Remember: Every response should feel like it comes from someone who truly knows and cares about ${userName}.`;
-  }
-
-  private buildBlueprintSnapshot(blueprint: LayeredBlueprint): string {
-    const sections = [];
-    
-    // Check if blueprint is complete
-    const hasMainData = blueprint.cognitiveTemperamental?.mbtiType || 
-                       blueprint.energyDecisionStrategy?.humanDesignType ||
-                       blueprint.publicArchetype?.sunSign ||
-                       blueprint.coreValuesNarrative?.lifePath;
-
-    if (!hasMainData) {
-      return "Your blueprint is incomplete—please finish setup to unlock full insight!";
-    }
-
-    // MBTI Section
-    if (blueprint.cognitiveTemperamental?.mbtiType) {
-      sections.push(`**MBTI:**
-- Type: ${blueprint.cognitiveTemperamental.mbtiType}
-  (${this.getMBTIDescription(blueprint.cognitiveTemperamental.mbtiType)})`);
-    }
-
-    // Human Design Section
-    if (blueprint.energyDecisionStrategy?.humanDesignType) {
-      const hdType = blueprint.energyDecisionStrategy.humanDesignType;
-      const authority = blueprint.energyDecisionStrategy.authority || 'Unknown';
-      const strategy = this.getHumanDesignStrategy(hdType);
-      
-      sections.push(`**Human Design:**
-- Type: ${hdType}
-- Authority: ${authority}
-- Strategy: ${strategy}`);
-    }
-
-    // Numerology Section
-    if (blueprint.coreValuesNarrative?.lifePath) {
-      const lifePath = typeof blueprint.coreValuesNarrative.lifePath === 'string' 
-        ? parseInt(blueprint.coreValuesNarrative.lifePath, 10) 
-        : blueprint.coreValuesNarrative.lifePath;
-      
-      sections.push(`**Numerology:**
-- Life Path: ${lifePath} ("${this.getLifePathKeyword(lifePath)}")`);
-    }
-
-    // Astrology (Western) Section
-    if (blueprint.publicArchetype?.sunSign || blueprint.publicArchetype?.moonSign) {
-      let astroSection = "**Astrology (Western):**";
-      
-      if (blueprint.publicArchetype.sunSign) {
-        astroSection += `\n- Sun: ${blueprint.publicArchetype.sunSign} ("${this.getSunSignKeyword(blueprint.publicArchetype.sunSign)}")`;
-      }
-      
-      if (blueprint.publicArchetype.moonSign) {
-        astroSection += `\n- Moon: ${blueprint.publicArchetype.moonSign} ("${this.getMoonSignKeyword(blueprint.publicArchetype.moonSign)}")`;
-      }
-      
-      sections.push(astroSection);
-    }
-
-    return sections.join('\n\n');
   }
 
   private getModeSpecificGuidance(mode: "coach" | "guide" | "blend", userName: string): string {
@@ -635,21 +510,6 @@ You're ${userName}'s versatile companion who adapts to what they need most. Whet
       default:
         return '';
     }
-  }
-
-  // Helper methods for blueprint descriptions
-  private getMBTIDescription(type: string): string {
-    const descriptions: { [key: string]: string } = {
-      'INFP': 'Authentic dreamer seeking meaning and harmony',
-      'ENFP': 'Inspiring catalyst sparking possibilities in others',
-      'INFJ': 'Visionary advocate for human potential',
-      'ENFJ': 'Charismatic teacher nurturing growth in others',
-      'INTJ': 'Strategic architect of systematic change',
-      'ENTJ': 'Bold leader driving ambitious visions',
-      'INTP': 'Curious explorer of theoretical landscapes',
-      'ENTP': 'Innovative debater connecting unexpected ideas'
-    };
-    return descriptions[type] || 'Unique cognitive pattern';
   }
 
   private getHumanDesignStrategy(type: string): string {
