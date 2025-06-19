@@ -22,7 +22,9 @@ import { SessionProgress } from "./SessionProgress";
 import { SubTaskManager } from "./SubTaskManager";
 import { SmartQuickActions } from "./SmartQuickActions";
 import { QuickActions } from "./QuickActions";
-import { taskCoachIntegrationService, TaskContext } from "@/services/task-coach-integration-service";
+import { enhancedTaskCoachIntegrationService } from "@/services/enhanced-task-coach-integration-service";
+import { dreamActivityLogger } from "@/services/dream-activity-logger";
+import { TaskContext } from "@/services/task-coach-integration-service";
 
 interface Task {
   id: string;
@@ -60,7 +62,8 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
     sendMessage, 
     resetConversation, 
     currentTask,
-    quickTaskActions
+    quickTaskActions,
+    sessionStats
   } = useTaskAwareCoach(taskContext);
   
   const { productivityJourney, updateProductivityJourney } = useJourneyTracking();
@@ -72,33 +75,91 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
   const [awaitingFirstAssistantReply, setAwaitingFirstAssistantReply] = useState(false);
   const [taskCompleted, setTaskCompleted] = useState(false);
 
-  // Timer effect
+  // Log component mount
+  useEffect(() => {
+    dreamActivityLogger.logActivity('task_coach_interface_mounted', {
+      task_id: task.id,
+      task_title: task.title,
+      task_status: task.status,
+      estimated_duration: task.estimated_duration
+    });
+
+    return () => {
+      dreamActivityLogger.logActivity('task_coach_interface_unmounted', {
+        task_id: task.id,
+        session_duration: sessionStats.sessionDuration,
+        messages_sent: sessionStats.messageCount,
+        actions_executed: sessionStats.actionCount
+      });
+    };
+  }, [task.id, task.title, task.status, task.estimated_duration, sessionStats]);
+
+  // Timer effect with logging
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isTimerRunning) {
       interval = setInterval(() => {
-        setFocusTime(prev => prev + 1);
+        setFocusTime(prev => {
+          const newTime = prev + 1;
+          
+          // Log focus milestones
+          if (newTime % 300 === 0) { // Every 5 minutes
+            dreamActivityLogger.logActivity('focus_milestone_reached', {
+              task_id: task.id,
+              focus_time_seconds: newTime,
+              milestone_minutes: Math.floor(newTime / 60)
+            });
+          }
+          
+          return newTime;
+        });
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isTimerRunning]);
+  }, [isTimerRunning, task.id]);
 
   // Sync task progress with current task state
   useEffect(() => {
     if (currentTask) {
+      const previousProgress = taskProgress;
       setTaskProgress(currentTask.progress);
+      
+      if (previousProgress !== currentTask.progress) {
+        dreamActivityLogger.logActivity('task_progress_updated', {
+          task_id: currentTask.id,
+          previous_progress: previousProgress,
+          new_progress: currentTask.progress,
+          progress_change: currentTask.progress - previousProgress
+        });
+      }
     }
-  }, [currentTask]);
+  }, [currentTask, taskProgress]);
 
-  // Set up task completion callback
+  // Set up task completion callback with logging
   useEffect(() => {
-    taskCoachIntegrationService.onTaskComplete((taskId) => {
+    const unsubscribe = enhancedTaskCoachIntegrationService.onTaskComplete((taskId) => {
       console.log('🎉 Task completed via coach integration:', taskId);
+      
+      dreamActivityLogger.logActivity('task_completed_notification', {
+        task_id: taskId,
+        completion_method: 'coach_integration',
+        focus_time_seconds: focusTime,
+        session_duration: sessionStats.sessionDuration,
+        messages_exchanged: sessionStats.messageCount,
+        actions_executed: sessionStats.actionCount
+      });
+      
       setTaskCompleted(true);
       setIsTimerRunning(false);
       onTaskComplete(taskId);
     });
-  }, [onTaskComplete]);
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [onTaskComplete, focusTime, sessionStats]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -123,7 +184,13 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
     }
   };
 
-  const handleStartSession = () => {
+  const handleStartSession = useCallback(async () => {
+    await dreamActivityLogger.logActivity('session_start_clicked', {
+      task_id: task.id,
+      task_title: task.title,
+      user_click_timestamp: new Date().toISOString()
+    });
+
     setSessionStarted(true);
     setIsTimerRunning(true);
     setAwaitingFirstAssistantReply(true);
@@ -145,37 +212,117 @@ As my productivity coach with task management capabilities, please help me by:
 
 Let's get started! What's the first step?`;
     
+    await dreamActivityLogger.logActivity('initial_coaching_message_sent', {
+      task_id: task.id,
+      message_length: initialMessage.length,
+      includes_goal_context: !!goalContext,
+      includes_task_description: !!task.description
+    });
+    
     sendMessage(initialMessage).then(() => {
       setAwaitingFirstAssistantReply(false);
     });
-  };
+  }, [task, productivityJourney, sendMessage]);
 
-  const handleQuickAction = (actionId: string, message: string) => {
+  const handleQuickAction = useCallback(async (actionId: string, message: string) => {
     if (!isLoading) {
+      await dreamActivityLogger.logActivity('quick_action_clicked', {
+        action_id: actionId,
+        message_preview: message.substring(0, 100),
+        task_id: task.id,
+        is_loading: isLoading
+      });
+      
       sendMessage(message);
     }
-  };
+  }, [isLoading, sendMessage, task.id]);
 
-  const handleSubTaskComplete = (subTaskId: string) => {
+  const handleSubTaskComplete = useCallback(async (subTaskId: string) => {
     console.log('🎯 Sub-task completed, notifying coach:', subTaskId);
+    
+    await dreamActivityLogger.logActivity('subtask_completion_clicked', {
+      subtask_id: subTaskId,
+      task_id: task.id,
+      current_progress: taskProgress
+    });
+    
     quickTaskActions.markSubTaskComplete(subTaskId);
-  };
+  }, [quickTaskActions, task.id, taskProgress]);
 
-  const handleAllSubTasksComplete = () => {
+  const handleAllSubTasksComplete = useCallback(async () => {
     console.log('🏁 All sub-tasks completed, checking with coach');
+    
+    await dreamActivityLogger.logActivity('all_subtasks_completed', {
+      task_id: task.id,
+      completion_check_requested: true,
+      current_progress: taskProgress
+    });
+    
     sendMessage("I've completed all the sub-tasks! Can you verify if the main task is fully complete and mark it as done?");
-  };
+  }, [sendMessage, task.id, taskProgress]);
 
-  const handleCompleteTask = async () => {
+  const handleCompleteTask = useCallback(async () => {
     console.log('✅ Manually completing task via coach');
+    
+    await dreamActivityLogger.logActivity('manual_task_completion_clicked', {
+      task_id: task.id,
+      completion_method: 'manual_button_click',
+      current_progress: taskProgress,
+      focus_time_seconds: focusTime
+    });
+    
     await quickTaskActions.markTaskComplete();
-  };
+  }, [quickTaskActions, task.id, taskProgress, focusTime]);
 
-  const handleCoachMessage = (message: string) => {
+  const handleCoachMessage = useCallback(async (message: string) => {
     if (!isLoading && message.trim()) {
+      await dreamActivityLogger.logActivity('coach_message_typed', {
+        message_length: message.length,
+        task_id: task.id,
+        message_number: sessionStats.messageCount + 1,
+        is_loading: isLoading
+      });
+      
       sendMessage(message);
     }
-  };
+  }, [isLoading, sendMessage, task.id, sessionStats.messageCount]);
+
+  const handleTimerToggle = useCallback(async () => {
+    const newTimerState = !isTimerRunning;
+    setIsTimerRunning(newTimerState);
+    
+    await dreamActivityLogger.logActivity('timer_toggled', {
+      task_id: task.id,
+      timer_action: newTimerState ? 'started' : 'paused',
+      current_focus_time: focusTime,
+      session_started: sessionStarted
+    });
+  }, [isTimerRunning, task.id, focusTime, sessionStarted]);
+
+  const handleTimerReset = useCallback(async () => {
+    const previousFocusTime = focusTime;
+    setFocusTime(0);
+    setIsTimerRunning(false);
+    
+    await dreamActivityLogger.logActivity('timer_reset', {
+      task_id: task.id,
+      previous_focus_time: previousFocusTime,
+      session_started: sessionStarted
+    });
+  }, [focusTime, task.id, sessionStarted]);
+
+  const handleBackClick = useCallback(async () => {
+    await dreamActivityLogger.logActivity('back_button_clicked', {
+      task_id: task.id,
+      session_duration: sessionStats.sessionDuration,
+      focus_time_seconds: focusTime,
+      messages_sent: sessionStats.messageCount,
+      actions_executed: sessionStats.actionCount,
+      task_completed: taskCompleted
+    });
+    
+    onBack();
+  }, [onBack, task.id, sessionStats, focusTime, taskCompleted]);
 
   const getTotalDays = (duration: string): number => {
     const dayMatch = duration.match(/(\d+)\s*days?/i);
@@ -192,7 +339,7 @@ Let's get started! What's the first step?`;
           <Button 
             variant="ghost" 
             size="sm" 
-            onClick={onBack}
+            onClick={handleBackClick}
             className="flex items-center gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -203,7 +350,7 @@ Let's get started! What's the first step?`;
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setIsTimerRunning(!isTimerRunning)}
+              onClick={handleTimerToggle}
               disabled={!sessionStarted}
               className="flex items-center gap-2"
             >
@@ -214,10 +361,7 @@ Let's get started! What's the first step?`;
             <Button
               variant="outline"
               size="sm"
-              onClick={() => {
-                setFocusTime(0);
-                setIsTimerRunning(false);
-              }}
+              onClick={handleTimerReset}
               disabled={!sessionStarted}
             >
               <RotateCcw className="h-3 w-3" />
@@ -277,6 +421,14 @@ Let's get started! What's the first step?`;
             </div>
           )}
         </div>
+        
+        {/* Debug Info (only in development) */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="mt-2 p-2 bg-gray-100 rounded text-xs">
+            <strong>Debug:</strong> Session {sessionStats.sessionId.substring(0, 8)}, 
+            Messages: {sessionStats.messageCount}, Actions: {sessionStats.actionCount}
+          </div>
+        )}
       </div>
 
       {/* Main Content */}

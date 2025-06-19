@@ -249,6 +249,48 @@ export type Database = {
         }
         Relationships: []
       }
+      coach_action_logs: {
+        Row: {
+          action_payload: Json
+          action_type: string
+          correlation_id: string | null
+          duplicate_detection: Json | null
+          execution_result: Json
+          execution_time_ms: number | null
+          id: string
+          session_id: string
+          timestamp: string
+          triggered_by: string | null
+          user_id: string
+        }
+        Insert: {
+          action_payload?: Json
+          action_type: string
+          correlation_id?: string | null
+          duplicate_detection?: Json | null
+          execution_result?: Json
+          execution_time_ms?: number | null
+          id?: string
+          session_id: string
+          timestamp?: string
+          triggered_by?: string | null
+          user_id: string
+        }
+        Update: {
+          action_payload?: Json
+          action_type?: string
+          correlation_id?: string | null
+          duplicate_detection?: Json | null
+          execution_result?: Json
+          execution_time_ms?: number | null
+          id?: string
+          session_id?: string
+          timestamp?: string
+          triggered_by?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       conversation_memory: {
         Row: {
           created_at: string | null
@@ -275,6 +317,45 @@ export type Database = {
           mode?: string | null
           session_id?: string
           updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      dream_activity_logs: {
+        Row: {
+          activity_data: Json
+          activity_type: string
+          correlation_id: string | null
+          error_info: Json | null
+          id: string
+          page_url: string | null
+          session_id: string
+          timestamp: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          activity_data?: Json
+          activity_type: string
+          correlation_id?: string | null
+          error_info?: Json | null
+          id?: string
+          page_url?: string | null
+          session_id: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          activity_data?: Json
+          activity_type?: string
+          correlation_id?: string | null
+          error_info?: Json | null
+          id?: string
+          page_url?: string | null
+          session_id?: string
+          timestamp?: string
+          user_agent?: string | null
           user_id?: string
         }
         Relationships: []
@@ -480,6 +561,48 @@ export type Database = {
           last_activity_date?: string | null
           productivity_metrics?: Json | null
           updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      task_coach_session_logs: {
+        Row: {
+          actions_executed: number | null
+          id: string
+          messages_count: number | null
+          performance_metrics: Json | null
+          session_data: Json
+          session_end: string | null
+          session_id: string
+          session_start: string
+          task_id: string
+          task_title: string
+          user_id: string
+        }
+        Insert: {
+          actions_executed?: number | null
+          id?: string
+          messages_count?: number | null
+          performance_metrics?: Json | null
+          session_data?: Json
+          session_end?: string | null
+          session_id: string
+          session_start?: string
+          task_id: string
+          task_title: string
+          user_id: string
+        }
+        Update: {
+          actions_executed?: number | null
+          id?: string
+          messages_count?: number | null
+          performance_metrics?: Json | null
+          session_data?: Json
+          session_end?: string | null
+          session_id?: string
+          session_start?: string
+          task_id?: string
+          task_title?: string
           user_id?: string
         }
         Relationships: []
