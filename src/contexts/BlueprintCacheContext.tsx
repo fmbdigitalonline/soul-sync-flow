@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { blueprintService, BlueprintData } from '@/services/blueprint-service';
@@ -241,42 +242,42 @@ function convertToLayeredBlueprint(rawData: BlueprintData): LayeredBlueprint {
       energyWeather: rawData.timing_overlays?.energy_weather || "stable growth",
     },
     user_meta: {
-      preferred_name: rawData.user_meta?.preferred_name || rawData.user_meta?.display_name,
+      preferred_name: rawData.user_meta?.preferred_name,
       full_name: rawData.user_meta?.full_name,
       ...rawData.user_meta
     },
     humorProfile: {
-      primaryStyle: 'warm-nurturer',
-      intensity: 'moderate',
-      appropriatenessLevel: 'balanced',
+      primaryStyle: 'warm-nurturer' as const,
+      intensity: 'moderate' as const,
+      appropriatenessLevel: 'balanced' as const,
       contextualAdaptation: {
-        coaching: 'warm-nurturer',
-        guidance: 'warm-nurturer',
-        casual: 'warm-nurturer'
+        coaching: 'warm-nurturer' as const,
+        guidance: 'warm-nurturer' as const,
+        casual: 'warm-nurturer' as const
       },
       avoidancePatterns: [],
       signatureElements: []
     },
     voiceTokens: {
       pacing: {
-        sentenceLength: 'medium',
-        pauseFrequency: 'thoughtful',
-        rhythmPattern: 'steady'
+        sentenceLength: 'medium' as const,
+        pauseFrequency: 'thoughtful' as const,
+        rhythmPattern: 'steady' as const
       },
       expressiveness: {
-        emojiFrequency: 'occasional',
-        emphasisStyle: 'subtle',
-        exclamationTendency: 'balanced'
+        emojiFrequency: 'occasional' as const,
+        emphasisStyle: 'subtle' as const,
+        exclamationTendency: 'balanced' as const
       },
       vocabulary: {
-        formalityLevel: 'conversational',
-        metaphorUsage: 'occasional',
-        technicalDepth: 'balanced'
+        formalityLevel: 'conversational' as const,
+        metaphorUsage: 'occasional' as const,
+        technicalDepth: 'balanced' as const
       },
       conversationStyle: {
-        questionAsking: 'supportive',
-        responseLength: 'thorough',
-        personalSharing: 'warm'
+        questionAsking: 'supportive' as const,
+        responseLength: 'thorough' as const,
+        personalSharing: 'warm' as const
       },
       signaturePhrases: [],
       greetingStyles: [],
