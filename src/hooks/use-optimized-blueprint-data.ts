@@ -1,5 +1,6 @@
 
 import { useBlueprintCache } from '@/contexts/BlueprintCacheContext';
+import { UnifiedBlueprintService } from '@/services/unified-blueprint-service';
 import { useMemo } from 'react';
 
 export const useOptimizedBlueprintData = () => {
@@ -11,13 +12,17 @@ export const useOptimizedBlueprintData = () => {
     hasBlueprint
   } = useBlueprintCache();
 
+  const blueprintValidation = useMemo(() => {
+    return UnifiedBlueprintService.validateBlueprint(blueprintData);
+  }, [blueprintData]);
+
   const getPersonalityTraits = useMemo(() => {
     if (!blueprintData) return [];
 
     console.log('🎯 Extracting personality traits from LayeredBlueprint:', {
       hasCognitive: !!blueprintData.cognitiveTemperamental,
-      hasEnergyStrategy: !!blueprintData.energyDecisionStrategy,
-      hasPublicArchetype: !!blueprintData.publicArchetype,
+      hasEnergy: !!blueprintData.energyDecisionStrategy,
+      hasArchetype: !!blueprintData.publicArchetype,
       cognitiveType: blueprintData.cognitiveTemperamental?.mbtiType,
       energyType: blueprintData.energyDecisionStrategy?.humanDesignType,
       sunSign: blueprintData.publicArchetype?.sunSign,
@@ -56,35 +61,8 @@ export const useOptimizedBlueprintData = () => {
   }, [blueprintData]);
 
   const getBlueprintCompletionPercentage = useMemo(() => {
-    if (!blueprintData) return 0;
-    
-    let completedFields = 0;
-    const totalFields = 7;
-    
-    // Check each major section using LayeredBlueprint structure
-    const checks = [
-      { name: 'Sun Sign', value: blueprintData.publicArchetype?.sunSign, condition: (v: any) => v && v !== 'Unknown' },
-      { name: 'Chinese Animal', value: blueprintData.generationalCode?.chineseZodiac, condition: (v: any) => v && v !== 'Unknown' },
-      { name: 'Life Path', value: blueprintData.coreValuesNarrative?.lifePath, condition: (v: any) => !!v },
-      { name: 'Human Design', value: blueprintData.energyDecisionStrategy?.humanDesignType, condition: (v: any) => v && v !== 'Generator' },
-      { name: 'MBTI', value: blueprintData.cognitiveTemperamental?.mbtiType, condition: (v: any) => v && v !== 'Unknown' },
-      { name: 'Motivation Engine', value: blueprintData.motivationBeliefEngine, condition: (v: any) => !!v },
-      { name: 'Timing Overlays', value: blueprintData.timingOverlays, condition: (v: any) => !!v },
-    ];
-    
-    checks.forEach(check => {
-      if (check.condition(check.value)) {
-        completedFields++;
-        console.log(`✅ ${check.name}: Completed`);
-      } else {
-        console.log(`❌ ${check.name}: Not completed (${check.value})`);
-      }
-    });
-    
-    const percentage = Math.round((completedFields / totalFields) * 100);
-    console.log(`📊 Blueprint completion: ${percentage}% (${completedFields}/${totalFields})`);
-    return percentage;
-  }, [blueprintData]);
+    return blueprintValidation.completionPercentage;
+  }, [blueprintValidation]);
 
   const getPersonalityType = useMemo(() => {
     if (!blueprintData) {
@@ -116,6 +94,11 @@ export const useOptimizedBlueprintData = () => {
     return 'unique soul';
   }, [blueprintData]);
 
+  const getBlueprintSummary = useMemo(() => {
+    if (!blueprintData) return 'No blueprint data available';
+    return UnifiedBlueprintService.extractBlueprintSummary(blueprintData);
+  }, [blueprintData]);
+
   return {
     blueprintData,
     loading,
@@ -125,6 +108,8 @@ export const useOptimizedBlueprintData = () => {
     getPersonalityTraits,
     getDisplayName,
     getBlueprintCompletionPercentage,
-    getPersonalityType
+    getPersonalityType,
+    getBlueprintSummary,
+    blueprintValidation, // Expose validation details
   };
 };

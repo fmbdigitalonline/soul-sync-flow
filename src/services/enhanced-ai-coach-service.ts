@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { PersonalityEngine } from "./personality-engine";
 import { soulSyncService } from "./soul-sync-service";
 import { createBlueprintFilter } from "./blueprint-personality-filter";
+import { UnifiedBlueprintService } from "./unified-blueprint-service";
 import { LayeredBlueprint, AgentMode } from "@/types/personality-modules";
 
 export type AgentType = "coach" | "guide" | "blend";
@@ -46,9 +47,7 @@ class EnhancedAICoachService {
   }
 
   updateUserBlueprint(blueprint: Partial<LayeredBlueprint>) {
-    console.log("🎭 Enhanced AI Coach Service: Updating user blueprint");
-    console.log("🔍 Blueprint data keys:", Object.keys(blueprint));
-    this.personalityEngine.updateBlueprint(blueprint);
+    console.log("🎭 Enhanced AI Coach Service: Updating user blueprint with validation");
     
     // Update cached blueprint
     if (this.blueprintCache) {
@@ -56,6 +55,13 @@ class EnhancedAICoachService {
     } else {
       this.blueprintCache = blueprint as LayeredBlueprint;
     }
+
+    // Validate the blueprint
+    const validation = UnifiedBlueprintService.validateBlueprint(this.blueprintCache);
+    console.log("📊 Blueprint validation result:", validation);
+    
+    // Update personality engine
+    this.personalityEngine.updateBlueprint(blueprint);
   }
 
   private async getBlueprintFromCache(): Promise<LayeredBlueprint | null> {
@@ -64,6 +70,7 @@ class EnhancedAICoachService {
     }
 
     if (!this.currentUserId) {
+      console.log("⚠️ No user ID available for blueprint cache");
       return null;
     }
 
@@ -84,6 +91,7 @@ class EnhancedAICoachService {
       }
 
       this.blueprintCache = data.blueprint as unknown as LayeredBlueprint;
+      console.log("✅ Blueprint loaded from database cache");
       return this.blueprintCache;
     } catch (error) {
       console.error("❌ Error fetching blueprint:", error);
@@ -98,7 +106,7 @@ class EnhancedAICoachService {
     }
 
     try {
-      console.log("🎭 SoulSync: Fetching or creating natural conversation persona...");
+      console.log("🎭 SoulSync: Fetching or creating comprehensive persona...");
       
       const blueprint = await this.getBlueprintFromCache();
       if (!blueprint) {
@@ -106,20 +114,19 @@ class EnhancedAICoachService {
         return this.personalityEngine.generateSystemPrompt(agentType as AgentMode);
       }
 
-      // Use SoulSync service to get personalized prompt with natural conversation approach
-      const personalizedPrompt = await soulSyncService.getOrCreatePersona(
-        this.currentUserId,
-        blueprint,
-        agentType
-      );
+      // Validate blueprint before use
+      const validation = UnifiedBlueprintService.validateBlueprint(blueprint);
+      console.log("📊 Blueprint validation for persona generation:", validation);
 
-      if (personalizedPrompt) {
-        console.log("✅ SoulSync: Natural conversation persona ready");
-        return personalizedPrompt;
-      } else {
-        console.log("⚠️ SoulSync: Failed to generate persona, falling back");
-        return this.personalityEngine.generateSystemPrompt(agentType as AgentMode);
+      if (!validation.isComplete) {
+        console.log("⚠️ Blueprint incomplete, but proceeding with available data");
       }
+
+      // Generate comprehensive AI prompt using unified service
+      const comprehensivePrompt = UnifiedBlueprintService.formatBlueprintForAI(blueprint, agentType);
+      
+      console.log("✅ SoulSync: Comprehensive persona ready with full blueprint context");
+      return comprehensivePrompt;
     } catch (error) {
       console.error("❌ SoulSync: Error in persona generation:", error);
       return this.personalityEngine.generateSystemPrompt(agentType as AgentMode);
@@ -134,9 +141,13 @@ class EnhancedAICoachService {
     language: string = "en"
   ): Promise<{ response: string; conversationId: string }> {
     try {
-      console.log(`📤 Enhanced AI Coach Service: Sending message (${agentType}, SoulSync: ${usePersona})`);
+      console.log(`📤 Enhanced AI Coach Service: Sending message (${agentType}, Full Blueprint: ${usePersona})`);
       
       const systemPrompt = await this.getOrCreatePersona(usePersona, agentType);
+      
+      if (systemPrompt && usePersona) {
+        console.log("🎯 Using comprehensive blueprint context in message");
+      }
       
       const { data, error } = await supabase.functions.invoke("ai-coach", {
         body: {
@@ -146,6 +157,7 @@ class EnhancedAICoachService {
           agentType,
           language,
           systemPrompt,
+          maxTokens: 4000, // Increased for complete responses
         },
       });
 
@@ -170,13 +182,19 @@ class EnhancedAICoachService {
     callbacks: StreamingResponse
   ): Promise<void> {
     try {
-      console.log(`📡 Enhanced AI Coach Service: Starting natural streaming (${agentType}, SoulSync: ${usePersona})`);
+      console.log(`📡 Enhanced AI Coach Service: Starting comprehensive streaming (${agentType}, Full Blueprint: ${usePersona})`);
       
       const systemPrompt = await this.getOrCreatePersona(usePersona, agentType);
       
       // Get blueprint for filtering if available
       const blueprint = usePersona ? await this.getBlueprintFromCache() : null;
       const blueprintFilter = blueprint ? createBlueprintFilter(blueprint) : null;
+      
+      if (systemPrompt && usePersona) {
+        console.log("🎯 Using comprehensive blueprint context in streaming");
+        const validation = UnifiedBlueprintService.validateBlueprint(blueprint);
+        console.log("📊 Blueprint completeness for streaming:", validation.completionPercentage + "%");
+      }
       
       const response = await fetch(`https://qxaajirrqrcnmvtowjbg.supabase.co/functions/v1/ai-coach-stream`, {
         method: 'POST',
@@ -192,7 +210,7 @@ class EnhancedAICoachService {
           language,
           systemPrompt,
           enableBlueprintFiltering: !!blueprintFilter,
-          maxTokens: 4000, // Increase max tokens for complete responses
+          maxTokens: 4000, // Increased for complete responses
           temperature: 0.7
         }),
       });
@@ -208,7 +226,6 @@ class EnhancedAICoachService {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let fullResponse = '';
-      let lastChunk = '';
 
       try {
         while (true) {
@@ -251,7 +268,6 @@ class EnhancedAICoachService {
                   
                   if (content) {
                     fullResponse += content;
-                    lastChunk = content;
                     callbacks.onChunk(content);
                   }
                 } catch (parseError) {
@@ -278,7 +294,7 @@ class EnhancedAICoachService {
         callbacks.onComplete(fullResponse);
       }
     } catch (error) {
-      console.error("❌ Enhanced AI Coach Service: Error in natural streaming:", error);
+      console.error("❌ Enhanced AI Coach Service: Error in comprehensive streaming:", error);
       callbacks.onError(error as Error);
     }
   }
@@ -370,6 +386,28 @@ class EnhancedAICoachService {
     this.conversationCache.clear();
     this.blueprintCache = null;
     console.log("🧹 Enhanced AI Coach Service: Conversation cache cleared");
+  }
+
+  // New method to get blueprint status for UI
+  async getBlueprintStatus(): Promise<{ isAvailable: boolean; completionPercentage: number; summary: string }> {
+    const blueprint = await this.getBlueprintFromCache();
+    
+    if (!blueprint) {
+      return {
+        isAvailable: false,
+        completionPercentage: 0,
+        summary: 'No blueprint data available'
+      };
+    }
+
+    const validation = UnifiedBlueprintService.validateBlueprint(blueprint);
+    const summary = UnifiedBlueprintService.extractBlueprintSummary(blueprint);
+
+    return {
+      isAvailable: validation.isComplete,
+      completionPercentage: validation.completionPercentage,
+      summary
+    };
   }
 }
 

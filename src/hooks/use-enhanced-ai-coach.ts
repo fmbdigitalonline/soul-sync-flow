@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { enhancedAICoachService, AgentType } from "@/services/enhanced-ai-coach-service";
+import { UnifiedBlueprintService } from "@/services/unified-blueprint-service";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useBlueprintCache } from "@/contexts/BlueprintCacheContext";
 import { useStreamingMessage } from "./use-streaming-message";
@@ -22,6 +23,12 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
   const [currentAgent, setCurrentAgent] = useState<AgentType>(defaultAgent);
   const [currentSessionId] = useState(() => enhancedAICoachService.createNewSession(defaultAgent));
   const [authInitialized, setAuthInitialized] = useState(false);
+  const [blueprintStatus, setBlueprintStatus] = useState<{
+    isAvailable: boolean;
+    completionPercentage: number;
+    summary: string;
+  }>({ isAvailable: false, completionPercentage: 0, summary: 'Loading...' });
+  
   const { language } = useLanguage();
   const { blueprintData, hasBlueprint, loading: blueprintLoading } = useBlueprintCache();
   const { user } = useAuth();
@@ -66,26 +73,37 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
       return;
     }
 
-    if (hasBlueprint && blueprintData) {
-      console.log("🎭 Enhanced AI Coach Hook: Blueprint available, updating AI service with COMPLETE DATA:", {
-        hasUserMeta: !!blueprintData.user_meta,
-        userName: blueprintData.user_meta?.preferred_name,
-        hasCognitive: !!blueprintData.cognitiveTemperamental,
-        mbtiType: blueprintData.cognitiveTemperamental?.mbtiType,
-        hasEnergy: !!blueprintData.energyDecisionStrategy,
-        humanDesignType: blueprintData.energyDecisionStrategy?.humanDesignType,
-        hasValues: !!blueprintData.coreValuesNarrative,
-        lifePath: blueprintData.coreValuesNarrative?.lifePath,
-        expressionNumber: blueprintData.coreValuesNarrative?.expressionNumber,
-        hasArchetype: !!blueprintData.publicArchetype,
-        sunSign: blueprintData.publicArchetype?.sunSign
-      });
-      
-      // Update the AI service with complete blueprint
-      enhancedAICoachService.updateUserBlueprint(blueprintData);
-    } else {
-      console.log("⚠️ Enhanced AI Coach Hook: No blueprint data available");
-    }
+    const updateBlueprintStatus = async () => {
+      if (hasBlueprint && blueprintData) {
+        console.log("🎭 Enhanced AI Coach Hook: Blueprint available, updating AI service with COMPREHENSIVE DATA");
+        
+        // Validate blueprint completeness
+        const validation = UnifiedBlueprintService.validateBlueprint(blueprintData);
+        console.log("📊 Blueprint validation result:", validation);
+        
+        // Update the AI service with complete blueprint
+        enhancedAICoachService.updateUserBlueprint(blueprintData);
+        
+        // Update status for UI
+        const summary = UnifiedBlueprintService.extractBlueprintSummary(blueprintData);
+        setBlueprintStatus({
+          isAvailable: validation.isComplete,
+          completionPercentage: validation.completionPercentage,
+          summary
+        });
+        
+        console.log("✅ Blueprint system fully initialized with", validation.completionPercentage + "% complete data");
+      } else {
+        console.log("⚠️ Enhanced AI Coach Hook: No blueprint data available");
+        setBlueprintStatus({
+          isAvailable: false,
+          completionPercentage: 0,
+          summary: 'No blueprint data available'
+        });
+      }
+    };
+
+    updateBlueprintStatus();
   }, [authInitialized, hasBlueprint, blueprintData, blueprintLoading]);
 
   // Load conversation history when component mounts or agent changes
@@ -126,20 +144,19 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
   const sendMessage = async (content: string, useStreaming: boolean = true) => {
     if (!content.trim()) return;
 
-    // Check if we have blueprint data available
-    const canUsePersona = hasBlueprint && !!blueprintData;
+    // Use comprehensive blueprint data when available
+    const canUsePersona = hasBlueprint && !!blueprintData && blueprintStatus.completionPercentage > 0;
     
-    console.log('📤 Enhanced AI Coach Hook: Sending message with BLUEPRINT STATUS:', {
+    console.log('📤 Enhanced AI Coach Hook: Sending message with COMPREHENSIVE BLUEPRINT STATUS:', {
       contentLength: content.length,
       useStreaming,
       currentAgent,
       hasBlueprint,
       canUsePersona,
+      blueprintCompletionPercentage: blueprintStatus.completionPercentage,
       authInitialized,
       blueprintLoading,
-      userName: blueprintData?.user_meta?.preferred_name,
-      hasCognitive: !!blueprintData?.cognitiveTemperamental,
-      hasValues: !!blueprintData?.coreValuesNarrative
+      blueprintSummary: blueprintStatus.summary
     });
 
     const userMessage: Message = {
@@ -171,16 +188,17 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
       try {
         let accumulatedContent = '';
         
-        console.log('📡 Enhanced AI Coach Hook: Starting streaming with PERSONA STATUS:', {
+        console.log('📡 Enhanced AI Coach Hook: Starting streaming with COMPREHENSIVE BLUEPRINT:', {
           canUsePersona,
-          hasCompleteBlueprint: canUsePersona,
-          currentAgent
+          blueprintCompletionPercentage: blueprintStatus.completionPercentage,
+          currentAgent,
+          blueprintAvailable: blueprintStatus.isAvailable
         });
         
         await enhancedAICoachService.sendStreamingMessage(
           content,
           currentSessionId,
-          canUsePersona, // Use persona only when we have complete blueprint
+          canUsePersona, // Use comprehensive blueprint when available
           currentAgent,
           language,
           {
@@ -198,11 +216,13 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
             },
             onComplete: (fullResponse: string) => {
               console.log('✅ Enhanced AI Coach Hook: Streaming complete, response length:', fullResponse.length);
-              console.log('🎯 RESPONSE ANALYSIS:', {
+              console.log('🎯 COMPREHENSIVE RESPONSE ANALYSIS:', {
                 hasPersonalizedContent: fullResponse.includes(blueprintData?.user_meta?.preferred_name || ''),
                 containsPersonalityTraits: fullResponse.includes('MBTI') || fullResponse.includes('Human Design') || fullResponse.includes('Life Path'),
                 isGeneric: fullResponse.includes('Creating a full blueprint') || fullResponse.includes('I don\'t have access'),
-                responsePreview: fullResponse.substring(0, 200)
+                responsePreview: fullResponse.substring(0, 200),
+                usedBlueprintData: canUsePersona,
+                blueprintCompleteness: blueprintStatus.completionPercentage
               });
               completeStreaming();
               setMessages(prev => 
@@ -242,7 +262,7 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
       }
     } else {
       try {
-        console.log('📤 Enhanced AI Coach Hook: Sending non-streaming message with persona integration');
+        console.log('📤 Enhanced AI Coach Hook: Sending non-streaming message with comprehensive blueprint integration');
         
         const response = await enhancedAICoachService.sendMessage(
           content,
@@ -300,7 +320,8 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
     switchAgent,
     streamingContent,
     isStreaming,
-    personaReady: hasBlueprint && !blueprintLoading,
+    personaReady: hasBlueprint && !blueprintLoading && blueprintStatus.completionPercentage > 0,
     authInitialized,
+    blueprintStatus, // Expose blueprint status for UI
   };
 };
