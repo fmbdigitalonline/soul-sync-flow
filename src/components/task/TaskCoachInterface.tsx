@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +18,10 @@ import {
 import { useTaskAwareCoach } from "@/hooks/use-task-aware-coach";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 import { EnhancedCoachInterface } from "@/components/coach/EnhancedCoachInterface";
+import { SessionProgress } from "./SessionProgress";
+import { SubTaskManager } from "./SubTaskManager";
+import { SmartQuickActions } from "./SmartQuickActions";
+import { QuickActions } from "./QuickActions";
 import { taskCoachIntegrationService, TaskContext } from "@/services/task-coach-integration-service";
 
 interface Task {
