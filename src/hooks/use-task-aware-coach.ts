@@ -27,10 +27,11 @@ export const useTaskAwareCoach = (initialTask?: TaskContext) => {
     };
   }, []);
 
-  // Enhanced send message with task context
+  // Enhanced send message with task context - but display only user's original message
   const sendTaskAwareMessage = async (message: string) => {
     const taskContext = taskCoachIntegrationService.generateCoachContext();
     
+    // Create enhanced message for AI (with task context)
     const enhancedMessage = `${message}
 
 CURRENT TASK CONTEXT:
@@ -47,8 +48,9 @@ Please provide guidance while being aware of my current task state and progress.
 
     console.log('📤 Sending task-aware message to coach');
     
-    // Send the message and wait for response
-    await sendMessage(enhancedMessage);
+    // Send only the original user message to be displayed in chat
+    // The enhanced message goes to AI, but the UI shows the clean user message
+    await sendMessage(enhancedMessage, true, message); // Pass original message as display message
     
     // After sending, check the latest assistant message for actions
     setTimeout(() => {

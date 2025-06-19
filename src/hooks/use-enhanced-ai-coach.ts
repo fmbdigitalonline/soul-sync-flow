@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { enhancedAICoachService, AgentType } from "@/services/enhanced-ai-coach-service";
 import { UnifiedBlueprintService } from "@/services/unified-blueprint-service";
@@ -141,7 +140,7 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
     return () => clearTimeout(timeoutId);
   }, [messages, currentAgent, authInitialized]);
 
-  const sendMessage = async (content: string, useStreaming: boolean = true) => {
+  const sendMessage = async (content: string, useStreaming: boolean = true, displayMessage?: string) => {
     if (!content.trim()) return;
 
     // Use comprehensive blueprint data when available
@@ -159,9 +158,12 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
       blueprintSummary: blueprintStatus.summary
     });
 
+    // Use displayMessage if provided (for clean UI display), otherwise use the full content
+    const messageToDisplay = displayMessage || content;
+
     const userMessage: Message = {
       id: Date.now().toString(),
-      content,
+      content: messageToDisplay, // Show clean message in UI
       sender: "user",
       timestamp: new Date(),
       agentType: currentAgent,
@@ -195,10 +197,11 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
           blueprintAvailable: blueprintStatus.isAvailable
         });
         
+        // Send the full content to AI (with task context), but display clean message in UI
         await enhancedAICoachService.sendStreamingMessage(
-          content,
+          content, // Full enhanced message to AI
           currentSessionId,
-          canUsePersona, // Use comprehensive blueprint when available
+          canUsePersona,
           currentAgent,
           language,
           {
@@ -216,14 +219,6 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
             },
             onComplete: (fullResponse: string) => {
               console.log('✅ Enhanced AI Coach Hook: Streaming complete, response length:', fullResponse.length);
-              console.log('🎯 COMPREHENSIVE RESPONSE ANALYSIS:', {
-                hasPersonalizedContent: fullResponse.includes(blueprintData?.user_meta?.preferred_name || ''),
-                containsPersonalityTraits: fullResponse.includes('MBTI') || fullResponse.includes('Human Design') || fullResponse.includes('Life Path'),
-                isGeneric: fullResponse.includes('Creating a full blueprint') || fullResponse.includes('I don\'t have access'),
-                responsePreview: fullResponse.substring(0, 200),
-                usedBlueprintData: canUsePersona,
-                blueprintCompleteness: blueprintStatus.completionPercentage
-              });
               completeStreaming();
               setMessages(prev => 
                 prev.map(msg => 
@@ -265,7 +260,7 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
         console.log('📤 Enhanced AI Coach Hook: Sending non-streaming message with comprehensive blueprint integration');
         
         const response = await enhancedAICoachService.sendMessage(
-          content,
+          content, // Send full content to AI
           currentSessionId,
           canUsePersona,
           currentAgent,
@@ -322,6 +317,6 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
     isStreaming,
     personaReady: hasBlueprint && !blueprintLoading && blueprintStatus.completionPercentage > 0,
     authInitialized,
-    blueprintStatus, // Expose blueprint status for UI
+    blueprintStatus,
   };
 };
