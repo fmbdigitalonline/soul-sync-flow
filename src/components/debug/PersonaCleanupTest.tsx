@@ -211,9 +211,9 @@ export const PersonaCleanupTest: React.FC = () => {
               {blueprintData && (
                 <div className="text-sm space-y-1">
                   <div><strong>User:</strong> {blueprintData.user_meta?.preferred_name || 'Unknown'}</div>
-                  <div><strong>MBTI:</strong> {personalityData?.type || 'Unknown'}</div>
-                  <div><strong>HD Type:</strong> {blueprintData.energy_strategy_human_design?.type || 'Unknown'}</div>
-                  <div><strong>Sun Sign:</strong> {blueprintData.archetype_western?.sun_sign || 'Unknown'}</div>
+                  <div><strong>MBTI:</strong> {personalityData?.type || blueprintData.cognitiveTemperamental?.mbtiType || 'Unknown'}</div>
+                  <div><strong>HD Type:</strong> {blueprintData.energyDecisionStrategy?.humanDesignType || 'Unknown'}</div>
+                  <div><strong>Sun Sign:</strong> {blueprintData.publicArchetype?.sunSign || 'Unknown'}</div>
                 </div>
               )}
             </div>

@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MainLayout from "@/components/Layout/MainLayout";
@@ -109,10 +108,40 @@ const Blueprint = () => {
 
   const isAdmin = isAdminUser(user);
 
-  const handleSaveBlueprint = async (updatedBlueprint: BlueprintData) => {
+  // Convert LayeredBlueprint to BlueprintData format for save operations
+  const convertToSaveFormat = (layeredBlueprint: any) => {
+    return {
+      user_meta: layeredBlueprint.user_meta || {},
+      astrology: {
+        sun_sign: layeredBlueprint.publicArchetype?.sunSign || 'Unknown',
+        moon_sign: layeredBlueprint.publicArchetype?.moonSign || 'Unknown',
+        rising_sign: layeredBlueprint.publicArchetype?.risingSign || 'Unknown'
+      },
+      human_design: {
+        type: layeredBlueprint.energyDecisionStrategy?.humanDesignType || 'Unknown',
+        authority: layeredBlueprint.energyDecisionStrategy?.authority || 'Unknown'
+      },
+      numerology: {
+        lifePathNumber: layeredBlueprint.coreValuesNarrative?.lifePath || 1,
+        expressionNumber: layeredBlueprint.coreValuesNarrative?.expressionNumber || 1
+      },
+      mbti: {
+        type: layeredBlueprint.cognitiveTemperamental?.mbtiType || 'Unknown'
+      },
+      chinese_zodiac: {
+        animal: layeredBlueprint.generationalCode?.chineseZodiac || 'Unknown',
+        element: layeredBlueprint.generationalCode?.element || 'Unknown'
+      },
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+  };
+
+  const handleSaveBlueprint = async (updatedBlueprint: any) => {
     try {
       console.log("Saving blueprint:", updatedBlueprint);
-      const result = await blueprintService.saveBlueprintData(updatedBlueprint);
+      const saveFormat = convertToSaveFormat(updatedBlueprint);
+      const result = await blueprintService.saveBlueprintData(saveFormat);
       
       if (result.success) {
         toast({
@@ -160,7 +189,7 @@ const Blueprint = () => {
     }
   };
 
-  const handleGenerationComplete = async (newBlueprint?: BlueprintData) => {
+  const handleGenerationComplete = async (newBlueprint?: any) => {
     try {
       if (!newBlueprint) {
         toast({
@@ -174,7 +203,8 @@ const Blueprint = () => {
       }
       
       console.log("Generation complete, saving new blueprint");
-      const result = await blueprintService.saveBlueprintData(newBlueprint);
+      const saveFormat = convertToSaveFormat(newBlueprint);
+      const result = await blueprintService.saveBlueprintData(saveFormat);
       
       if (result.success) {
         await refetch();
@@ -256,13 +286,13 @@ const Blueprint = () => {
           
           <TabsContent value="view" className="mt-6">
             {blueprintData && (
-              <SimplifiedBlueprintViewer blueprint={blueprintData} />
+              <SimplifiedBlueprintViewer blueprint={convertToSaveFormat(blueprintData)} />
             )}
           </TabsContent>
           
           {isAdmin && (
             <TabsContent value="edit" className="mt-6">
-              <BlueprintEditor onSave={handleSaveBlueprint} initialBlueprint={blueprintData || undefined} />
+              <BlueprintEditor onSave={handleSaveBlueprint} initialBlueprint={blueprintData ? convertToSaveFormat(blueprintData) : undefined} />
             </TabsContent>
           )}
 
@@ -275,13 +305,13 @@ const Blueprint = () => {
           <TabsContent value="generating" className="mt-6">
             {isGenerating && blueprintData && (
               <BlueprintGenerator 
-                userProfile={blueprintData?.user_meta || {
-                  full_name: "",
-                  preferred_name: "",
-                  birth_date: "",
-                  birth_time_local: "",
-                  birth_location: "",
-                  timezone: ""
+                userProfile={{
+                  full_name: blueprintData.user_meta?.full_name || "",
+                  preferred_name: blueprintData.user_meta?.preferred_name || "",
+                  birth_date: blueprintData.user_meta?.birth_date || "",
+                  birth_time_local: blueprintData.user_meta?.birth_time_local || "",
+                  birth_location: blueprintData.user_meta?.birth_location || "",
+                  timezone: blueprintData.user_meta?.timezone || ""
                 }}
                 onComplete={handleGenerationComplete}
               />

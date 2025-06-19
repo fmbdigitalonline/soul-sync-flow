@@ -14,31 +14,31 @@ export const useOptimizedBlueprintData = () => {
   const getPersonalityTraits = useMemo(() => {
     if (!blueprintData) return [];
 
-    console.log('🎯 Extracting personality traits from blueprint:', {
-      hasCognitionMBTI: !!blueprintData.cognition_mbti,
-      hasEnergyStrategy: !!blueprintData.energy_strategy_human_design,
-      hasArchetypeWestern: !!blueprintData.archetype_western,
-      cognitionMBTI: blueprintData.cognition_mbti,
-      energyStrategy: blueprintData.energy_strategy_human_design,
-      archetypeWestern: blueprintData.archetype_western,
+    console.log('🎯 Extracting personality traits from LayeredBlueprint:', {
+      hasCognitive: !!blueprintData.cognitiveTemperamental,
+      hasEnergyStrategy: !!blueprintData.energyDecisionStrategy,
+      hasPublicArchetype: !!blueprintData.publicArchetype,
+      cognitiveType: blueprintData.cognitiveTemperamental?.mbtiType,
+      energyType: blueprintData.energyDecisionStrategy?.humanDesignType,
+      sunSign: blueprintData.publicArchetype?.sunSign,
     });
 
     const traits = [];
     
-    // MBTI Type from cognition_mbti
-    const mbtiType = blueprintData.cognition_mbti?.type;
+    // MBTI Type from cognitiveTemperamental
+    const mbtiType = blueprintData.cognitiveTemperamental?.mbtiType;
     if (mbtiType && mbtiType !== 'Unknown') {
       traits.push(mbtiType);
     }
     
-    // Human Design Type from energy_strategy_human_design
-    const hdType = blueprintData.energy_strategy_human_design?.type;
+    // Human Design Type from energyDecisionStrategy
+    const hdType = blueprintData.energyDecisionStrategy?.humanDesignType;
     if (hdType && hdType !== 'Unknown') {
       traits.push(hdType);
     }
     
-    // Sun Sign from archetype_western
-    const sunSign = blueprintData.archetype_western?.sun_sign;
+    // Sun Sign from publicArchetype
+    const sunSign = blueprintData.publicArchetype?.sunSign;
     if (sunSign && sunSign !== 'Unknown') {
       traits.push(`${sunSign} Sun`);
     }
@@ -61,15 +61,15 @@ export const useOptimizedBlueprintData = () => {
     let completedFields = 0;
     const totalFields = 7;
     
-    // Check each major section
+    // Check each major section using LayeredBlueprint structure
     const checks = [
-      { name: 'Sun Sign', value: blueprintData.archetype_western?.sun_sign, condition: (v: any) => v && v !== 'Unknown' },
-      { name: 'Chinese Animal', value: blueprintData.archetype_chinese?.animal, condition: (v: any) => v && v !== 'Unknown' },
-      { name: 'Life Path', value: blueprintData.values_life_path?.lifePathNumber, condition: (v: any) => !!v },
-      { name: 'Human Design', value: blueprintData.energy_strategy_human_design?.type, condition: (v: any) => v && v !== 'Generator' },
-      { name: 'MBTI', value: blueprintData.cognition_mbti?.type, condition: (v: any) => v && v !== 'Unknown' },
-      { name: 'Bashar Suite', value: blueprintData.bashar_suite, condition: (v: any) => !!v },
-      { name: 'Timing Overlays', value: blueprintData.timing_overlays, condition: (v: any) => !!v },
+      { name: 'Sun Sign', value: blueprintData.publicArchetype?.sunSign, condition: (v: any) => v && v !== 'Unknown' },
+      { name: 'Chinese Animal', value: blueprintData.generationalCode?.chineseZodiac, condition: (v: any) => v && v !== 'Unknown' },
+      { name: 'Life Path', value: blueprintData.coreValuesNarrative?.lifePath, condition: (v: any) => !!v },
+      { name: 'Human Design', value: blueprintData.energyDecisionStrategy?.humanDesignType, condition: (v: any) => v && v !== 'Generator' },
+      { name: 'MBTI', value: blueprintData.cognitiveTemperamental?.mbtiType, condition: (v: any) => v && v !== 'Unknown' },
+      { name: 'Motivation Engine', value: blueprintData.motivationBeliefEngine, condition: (v: any) => !!v },
+      { name: 'Timing Overlays', value: blueprintData.timingOverlays, condition: (v: any) => !!v },
     ];
     
     checks.forEach(check => {
@@ -91,22 +91,22 @@ export const useOptimizedBlueprintData = () => {
       return 'powerful soul';
     }
     
-    // Get the actual MBTI type from cognition_mbti
-    const mbti = blueprintData?.cognition_mbti?.type;
+    // Get the actual MBTI type from cognitiveTemperamental
+    const mbti = blueprintData?.cognitiveTemperamental?.mbtiType;
     if (mbti && mbti !== 'Unknown') {
       console.log('🎯 Using MBTI type:', mbti);
       return mbti;
     }
     
     // Fallback to Human Design type
-    const hdType = blueprintData?.energy_strategy_human_design?.type;
+    const hdType = blueprintData?.energyDecisionStrategy?.humanDesignType;
     if (hdType && hdType !== 'Unknown' && hdType !== 'Generator') {
       console.log('🎯 Using Human Design type:', hdType);
       return hdType;
     }
     
     // Fallback to sun sign
-    const sunSign = blueprintData?.archetype_western?.sun_sign;
+    const sunSign = blueprintData?.publicArchetype?.sunSign;
     if (sunSign && sunSign !== 'Unknown') {
       console.log('🎯 Using Sun Sign:', `${sunSign} soul`);
       return `${sunSign} soul`;

@@ -63,8 +63,8 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({ onTaskCl
     if (!blueprintData) return "Your journey is uniquely yours";
     
     const traits = [];
-    if (blueprintData.cognition_mbti?.type) traits.push(blueprintData.cognition_mbti.type);
-    if (blueprintData.energy_strategy_human_design?.type) traits.push(blueprintData.energy_strategy_human_design.type);
+    if (blueprintData.cognitiveTemperamental?.mbtiType) traits.push(blueprintData.cognitiveTemperamental.mbtiType);
+    if (blueprintData.energyDecisionStrategy?.humanDesignType) traits.push(blueprintData.energyDecisionStrategy.humanDesignType);
     
     return `Optimized for your ${traits.slice(0, 2).join(' & ')} blueprint`;
   };
