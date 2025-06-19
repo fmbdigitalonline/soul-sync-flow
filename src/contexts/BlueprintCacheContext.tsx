@@ -31,13 +31,23 @@ export function BlueprintCacheProvider({ children }: { children: React.ReactNode
       const result = await blueprintService.getActiveBlueprintData();
       
       if (result.data) {
-        console.log('✅ Blueprint Cache: Data received:', {
+        console.log('✅ Blueprint Cache: Data received with COMPLETE SECTIONS:', {
           hasUserMeta: !!result.data.user_meta,
           hasCognitionMBTI: !!result.data.cognition_mbti,
           hasEnergyStrategy: !!result.data.energy_strategy_human_design,
           hasArchetypeWestern: !!result.data.archetype_western,
+          hasArchetypeChinese: !!result.data.archetype_chinese,
+          hasBasharSuite: !!result.data.bashar_suite,
           hasValuesLifePath: !!result.data.values_life_path,
+          hasTimingOverlays: !!result.data.timing_overlays,
           userMetaKeys: result.data.user_meta ? Object.keys(result.data.user_meta) : [],
+          numerologyData: result.data.values_life_path ? {
+            hasLifePath: !!result.data.values_life_path.lifePathNumber,
+            hasExpression: !!result.data.values_life_path.expressionNumber,
+            hasSoulUrge: !!result.data.values_life_path.soulUrgeNumber,
+            hasPersonality: !!result.data.values_life_path.personalityNumber,
+            hasBirthday: !!result.data.values_life_path.birthdayNumber,
+          } : null
         });
       } else {
         console.log('⚠️ Blueprint Cache: No data received, error:', result.error);
@@ -46,11 +56,12 @@ export function BlueprintCacheProvider({ children }: { children: React.ReactNode
       return result;
     },
     enabled: !!user,
-    staleTime: 2 * 60 * 1000, // 2 minutes - shorter for better responsiveness
-    gcTime: 5 * 60 * 1000, // 5 minutes
-    refetchOnWindowFocus: false,
+    staleTime: 30 * 1000, // 30 seconds - very short for immediate updates
+    gcTime: 2 * 60 * 1000, // 2 minutes
+    refetchOnWindowFocus: true, // Ensure fresh data when window focused
     refetchOnMount: true, // Ensure fresh data on mount
-    retry: 2
+    retry: 3, // More retries for reliability
+    retryDelay: 1000 // 1 second retry delay
   });
 
   const refetch = async () => {
@@ -63,7 +74,7 @@ export function BlueprintCacheProvider({ children }: { children: React.ReactNode
     loading: isLoading,
     error: blueprintResult?.error || (error as Error)?.message || null,
     refetch,
-    hasBlueprint: !!blueprintResult?.data
+    hasBlueprint: !!blueprintResult?.data && !blueprintResult?.error
   };
 
   // Log state changes for debugging
@@ -73,6 +84,7 @@ export function BlueprintCacheProvider({ children }: { children: React.ReactNode
       loading: value.loading,
       hasError: !!value.error,
       hasBlueprint: value.hasBlueprint,
+      dataKeys: value.blueprintData ? Object.keys(value.blueprintData) : []
     });
   }, [value.blueprintData, value.loading, value.error, value.hasBlueprint]);
 

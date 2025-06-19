@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { enhancedAICoachService, AgentType } from "@/services/enhanced-ai-coach-service";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useBlueprintData } from "./use-blueprint-data";
+import { useBlueprintCache } from "@/contexts/BlueprintCacheContext";
 import { LayeredBlueprint } from "@/types/personality-modules";
 import { useStreamingMessage } from "./use-streaming-message";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,6 +26,7 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
   const [personaReady, setPersonaReady] = useState(false);
   const { language } = useLanguage();
   const { blueprintData } = useBlueprintData();
+  const { blueprintData: cacheBlueprint, hasBlueprint } = useBlueprintCache();
   const { user } = useAuth();
   
   const {
@@ -61,153 +63,166 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
     initializeAuth();
   }, [user]);
 
-  // Enhanced blueprint integration with comprehensive debugging
+  // Enhanced blueprint integration with comprehensive debugging - use both sources
   useEffect(() => {
-    if (!authInitialized || !blueprintData) {
-      console.log("⏳ Enhanced AI Coach Hook: Waiting for auth/blueprint data", {
-        authInitialized,
-        hasBlueprintData: !!blueprintData,
-        blueprintKeys: blueprintData ? Object.keys(blueprintData) : [],
-        user: user ? { id: user.id, email: user.email } : null
-      });
+    if (!authInitialized) {
+      console.log("⏳ Enhanced AI Coach Hook: Waiting for auth initialization");
+      return;
+    }
+
+    // Use blueprint from cache context first, fallback to direct hook
+    const activeBlueprint = cacheBlueprint || blueprintData;
+    const hasBlueprintData = hasBlueprint || !!blueprintData;
+
+    console.log("🎭 Enhanced AI Coach Hook: Blueprint Integration Debug:", {
+      authInitialized,
+      hasCacheBlueprintData: !!cacheBlueprint,
+      hasDirectBlueprintData: !!blueprintData,
+      hasBlueprint,
+      activeBlueprint: !!activeBlueprint,
+      user: user ? { id: user.id, email: user.email } : null
+    });
+
+    if (!hasBlueprintData || !activeBlueprint) {
+      console.log("⏳ Enhanced AI Coach Hook: No blueprint data available yet");
+      setPersonaReady(false);
       return;
     }
 
     console.log("🎭 Enhanced AI Coach Hook: Processing blueprint data for persona generation");
-    console.log("🔍 FULL Blueprint Data Debug:", JSON.stringify(blueprintData, null, 2));
-    
-    // Log specific sections that should contain personality data
-    console.log("🧠 Personality Data Breakdown:", {
-      hasUserMeta: !!blueprintData.user_meta,
-      userMeta: blueprintData.user_meta,
-      hasCognitionMBTI: !!blueprintData.cognition_mbti,
-      cognitionMBTI: blueprintData.cognition_mbti,
-      hasEnergyStrategy: !!blueprintData.energy_strategy_human_design,
-      energyStrategy: blueprintData.energy_strategy_human_design,
-      hasBasharSuite: !!blueprintData.bashar_suite,
-      basharSuite: blueprintData.bashar_suite,
-      hasValuesLifePath: !!blueprintData.values_life_path,
-      valuesLifePath: blueprintData.values_life_path,
-      // Check raw personality data in user_meta
-      rawPersonality: blueprintData.user_meta?.personality
+    console.log("🔍 ACTIVE Blueprint Data Debug:", {
+      hasUserMeta: !!activeBlueprint.user_meta,
+      userMeta: activeBlueprint.user_meta,
+      hasCognitionMBTI: !!activeBlueprint.cognition_mbti,
+      hasEnergyStrategy: !!activeBlueprint.energy_strategy_human_design,
+      hasBasharSuite: !!activeBlueprint.bashar_suite,
+      hasValuesLifePath: !!activeBlueprint.values_life_path,
+      hasArchetypeWestern: !!activeBlueprint.archetype_western,
+      hasArchetypeChinese: !!activeBlueprint.archetype_chinese,
     });
     
     try {
       // Extract user's first name from blueprint with detailed logging
-      const userFirstName = blueprintData.user_meta?.preferred_name || 
-                           blueprintData.user_meta?.full_name?.split(' ')[0] || 
+      const userFirstName = activeBlueprint.user_meta?.preferred_name || 
+                           activeBlueprint.user_meta?.full_name?.split(' ')[0] || 
                            null;
       
       console.log("👤 Enhanced AI Coach Hook: User name extraction:", {
-        preferredName: blueprintData.user_meta?.preferred_name,
-        fullName: blueprintData.user_meta?.full_name,
+        preferredName: activeBlueprint.user_meta?.preferred_name,
+        fullName: activeBlueprint.user_meta?.full_name,
         extractedFirstName: userFirstName
       });
 
       // Convert blueprint data to LayeredBlueprint format with detailed logging
       const layeredBlueprint: Partial<LayeredBlueprint> = {
         cognitiveTemperamental: {
-          mbtiType: blueprintData.cognition_mbti?.type || "Unknown",
-          functions: blueprintData.cognition_mbti?.functions || [],
-          dominantFunction: blueprintData.cognition_mbti?.dominant_function || "Unknown",
-          auxiliaryFunction: blueprintData.cognition_mbti?.auxiliary_function || "Unknown",
-          cognitiveStack: blueprintData.cognition_mbti?.cognitive_stack || [],
-          taskApproach: blueprintData.cognition_mbti?.task_approach || "systematic",
-          communicationStyle: blueprintData.cognition_mbti?.communication_style || "clear",
-          decisionMaking: blueprintData.cognition_mbti?.decision_making || "logical",
-          informationProcessing: blueprintData.cognition_mbti?.information_processing || "sequential",
+          mbtiType: activeBlueprint.cognition_mbti?.type || "Unknown",
+          functions: activeBlueprint.cognition_mbti?.functions || [],
+          dominantFunction: activeBlueprint.cognition_mbti?.dominant_function || "Unknown",
+          auxiliaryFunction: activeBlueprint.cognition_mbti?.auxiliary_function || "Unknown",
+          cognitiveStack: activeBlueprint.cognition_mbti?.cognitive_stack || [],
+          taskApproach: activeBlueprint.cognition_mbti?.task_approach || "systematic",
+          communicationStyle: activeBlueprint.cognition_mbti?.communication_style || "clear",
+          decisionMaking: activeBlueprint.cognition_mbti?.decision_making || "logical",
+          informationProcessing: activeBlueprint.cognition_mbti?.information_processing || "sequential",
         },
         energyDecisionStrategy: {
-          humanDesignType: blueprintData.energy_strategy_human_design?.type || "Generator",
-          authority: blueprintData.energy_strategy_human_design?.authority || "Sacral",
-          decisionStyle: blueprintData.energy_strategy_human_design?.decision_style || "intuitive",
-          pacing: blueprintData.energy_strategy_human_design?.pacing || "steady",
-          energyType: blueprintData.energy_strategy_human_design?.energy_type || "sustainable",
-          strategy: blueprintData.energy_strategy_human_design?.strategy || "respond",
-          profile: blueprintData.energy_strategy_human_design?.profile || "1/3",
-          centers: blueprintData.energy_strategy_human_design?.centers || [],
-          gates: blueprintData.energy_strategy_human_design?.gates || [],
-          channels: blueprintData.energy_strategy_human_design?.channels || [],
+          humanDesignType: activeBlueprint.energy_strategy_human_design?.type || "Generator",
+          authority: activeBlueprint.energy_strategy_human_design?.authority || "Sacral",
+          decisionStyle: activeBlueprint.energy_strategy_human_design?.decision_style || "intuitive",
+          pacing: activeBlueprint.energy_strategy_human_design?.pacing || "steady",
+          energyType: activeBlueprint.energy_strategy_human_design?.energy_type || "sustainable",
+          strategy: activeBlueprint.energy_strategy_human_design?.strategy || "respond",
+          profile: activeBlueprint.energy_strategy_human_design?.profile || "1/3",
+          centers: activeBlueprint.energy_strategy_human_design?.centers || [],
+          gates: activeBlueprint.energy_strategy_human_design?.gates || [],
+          channels: activeBlueprint.energy_strategy_human_design?.channels || [],
         },
         motivationBeliefEngine: {
-          mindset: blueprintData.bashar_suite?.mindset || "growth",
-          motivation: blueprintData.bashar_suite?.motivation || ["growth", "authenticity"],
-          stateManagement: blueprintData.bashar_suite?.state_management || "awareness",
-          coreBeliefs: blueprintData.bashar_suite?.core_beliefs || ["potential"],
-          drivingForces: blueprintData.bashar_suite?.driving_forces || ["purpose"],
-          excitementCompass: blueprintData.bashar_suite?.excitement_compass || "follow joy",
-          frequencyAlignment: blueprintData.bashar_suite?.frequency_alignment || "authentic self",
-          beliefInterface: blueprintData.bashar_suite?.belief_interface || [],
-          resistancePatterns: blueprintData.bashar_suite?.resistance_patterns || [],
+          mindset: activeBlueprint.bashar_suite?.mindset || "growth",
+          motivation: activeBlueprint.bashar_suite?.motivation || ["growth", "authenticity"],
+          stateManagement: activeBlueprint.bashar_suite?.state_management || "awareness",
+          coreBeliefs: activeBlueprint.bashar_suite?.core_beliefs || ["potential"],
+          drivingForces: activeBlueprint.bashar_suite?.driving_forces || ["purpose"],
+          excitementCompass: activeBlueprint.bashar_suite?.excitement_compass || "follow joy",
+          frequencyAlignment: activeBlueprint.bashar_suite?.frequency_alignment || "authentic self",
+          beliefInterface: activeBlueprint.bashar_suite?.belief_interface || [],
+          resistancePatterns: activeBlueprint.bashar_suite?.resistance_patterns || [],
         },
         coreValuesNarrative: {
-          lifePath: blueprintData.values_life_path?.lifePathNumber || 1,
-          meaningfulAreas: blueprintData.values_life_path?.meaningful_areas || ["growth"],
-          anchoringVision: blueprintData.values_life_path?.anchoring_vision || "authentic contribution",
-          lifeThemes: blueprintData.values_life_path?.life_themes || ["self-discovery"],
-          valueSystem: blueprintData.values_life_path?.value_system || "integrity",
-          northStar: blueprintData.values_life_path?.north_star || "purposeful living",
-          missionStatement: blueprintData.values_life_path?.mission_statement || "live authentically",
-          purposeAlignment: blueprintData.values_life_path?.purpose_alignment || "high",
+          lifePath: activeBlueprint.values_life_path?.lifePathNumber || activeBlueprint.values_life_path?.lifePath || 1,
+          lifePathKeyword: activeBlueprint.values_life_path?.lifePathKeyword,
+          expressionNumber: activeBlueprint.values_life_path?.expressionNumber,
+          expressionKeyword: activeBlueprint.values_life_path?.expressionKeyword,
+          soulUrgeNumber: activeBlueprint.values_life_path?.soulUrgeNumber,
+          soulUrgeKeyword: activeBlueprint.values_life_path?.soulUrgeKeyword,
+          personalityNumber: activeBlueprint.values_life_path?.personalityNumber,
+          personalityKeyword: activeBlueprint.values_life_path?.personalityKeyword,
+          birthdayNumber: activeBlueprint.values_life_path?.birthdayNumber,
+          birthdayKeyword: activeBlueprint.values_life_path?.birthdayKeyword,
+          meaningfulAreas: activeBlueprint.values_life_path?.meaningful_areas || ["growth"],
+          anchoringVision: activeBlueprint.values_life_path?.anchoring_vision || "authentic contribution",
+          lifeThemes: activeBlueprint.values_life_path?.life_themes || ["self-discovery"],
+          valueSystem: activeBlueprint.values_life_path?.value_system || "integrity",
+          northStar: activeBlueprint.values_life_path?.north_star || "purposeful living",
+          missionStatement: activeBlueprint.values_life_path?.mission_statement || "live authentically",
+          purposeAlignment: activeBlueprint.values_life_path?.purpose_alignment || "high",
         },
         publicArchetype: {
-          sunSign: blueprintData.archetype_western?.sun_sign || "Unknown",
-          socialStyle: blueprintData.archetype_western?.social_style || "warm",
-          publicVibe: blueprintData.archetype_western?.public_vibe || "approachable",
-          publicPersona: blueprintData.archetype_western?.public_persona || "genuine",
-          leadershipStyle: blueprintData.archetype_western?.leadership_style || "collaborative",
-          socialMask: blueprintData.archetype_western?.social_mask || "authentic",
-          externalExpression: blueprintData.archetype_western?.external_expression || "natural",
+          sunSign: activeBlueprint.archetype_western?.sun_sign || "Unknown",
+          moonSign: activeBlueprint.archetype_western?.moon_sign,
+          risingSign: activeBlueprint.archetype_western?.rising_sign,
+          socialStyle: activeBlueprint.archetype_western?.social_style || "warm",
+          publicVibe: activeBlueprint.archetype_western?.public_vibe || "approachable",
+          publicPersona: activeBlueprint.archetype_western?.public_persona || "genuine",
+          leadershipStyle: activeBlueprint.archetype_western?.leadership_style || "collaborative",
+          socialMask: activeBlueprint.archetype_western?.social_mask || "authentic",
+          externalExpression: activeBlueprint.archetype_western?.external_expression || "natural",
         },
         generationalCode: {
-          chineseZodiac: blueprintData.archetype_chinese?.animal || "Unknown",
-          element: blueprintData.archetype_chinese?.element || "Unknown",
-          cohortTint: blueprintData.archetype_chinese?.cohort_tint || "balanced",
-          generationalThemes: blueprintData.archetype_chinese?.generational_themes || [],
-          collectiveInfluence: blueprintData.archetype_chinese?.collective_influence || "moderate",
+          chineseZodiac: activeBlueprint.archetype_chinese?.animal || "Unknown",
+          element: activeBlueprint.archetype_chinese?.element || "Unknown",
+          cohortTint: activeBlueprint.archetype_chinese?.cohort_tint || "balanced",
+          generationalThemes: activeBlueprint.archetype_chinese?.generational_themes || [],
+          collectiveInfluence: activeBlueprint.archetype_chinese?.collective_influence || "moderate",
         },
         timingOverlays: {
-          currentTransits: blueprintData.timing_overlays?.current_transits || [],
-          seasonalInfluences: blueprintData.timing_overlays?.seasonal_influences || [],
-          cyclicalPatterns: blueprintData.timing_overlays?.cyclical_patterns || [],
-          optimalTimings: blueprintData.timing_overlays?.optimal_timings || [],
-          energyWeather: blueprintData.timing_overlays?.energy_weather || "stable growth",
+          currentTransits: activeBlueprint.timing_overlays?.current_transits || [],
+          seasonalInfluences: activeBlueprint.timing_overlays?.seasonal_influences || [],
+          cyclicalPatterns: activeBlueprint.timing_overlays?.cyclical_patterns || [],
+          optimalTimings: activeBlueprint.timing_overlays?.optimal_timings || [],
+          energyWeather: activeBlueprint.timing_overlays?.energy_weather || "stable growth",
         },
         user_meta: {
           preferred_name: userFirstName,
-          full_name: blueprintData.user_meta?.full_name,
-          ...blueprintData.user_meta
+          full_name: activeBlueprint.user_meta?.full_name,
+          ...activeBlueprint.user_meta
         }
       };
 
-      console.log("📊 Enhanced AI Coach Hook: Layered Blueprint created:", {
+      console.log("📊 Enhanced AI Coach Hook: Layered Blueprint created with FULL DATA:", {
         mbtiType: layeredBlueprint.cognitiveTemperamental?.mbtiType,
         humanDesignType: layeredBlueprint.energyDecisionStrategy?.humanDesignType,
-        actualMissionStatement: layeredBlueprint.coreValuesNarrative?.missionStatement,
+        missionStatement: layeredBlueprint.coreValuesNarrative?.missionStatement,
         userName: layeredBlueprint.user_meta?.preferred_name,
         sunSign: layeredBlueprint.publicArchetype?.sunSign,
-        lifePath: layeredBlueprint.coreValuesNarrative?.lifePath
+        lifePath: layeredBlueprint.coreValuesNarrative?.lifePath,
+        expressionNumber: layeredBlueprint.coreValuesNarrative?.expressionNumber,
+        chineseZodiac: layeredBlueprint.generationalCode?.chineseZodiac,
+        hasCompleteData: true
       });
 
-      console.log("🎯 DETAILED BLUEPRINT VERIFICATION:");
-      console.log("- MBTI Type:", layeredBlueprint.cognitiveTemperamental?.mbtiType);
-      console.log("- Human Design Type:", layeredBlueprint.energyDecisionStrategy?.humanDesignType);
-      console.log("- Sun Sign:", layeredBlueprint.publicArchetype?.sunSign);
-      console.log("- Life Path:", layeredBlueprint.coreValuesNarrative?.lifePath);
-      console.log("- Mission Statement:", layeredBlueprint.coreValuesNarrative?.missionStatement);
-      console.log("- User Name:", layeredBlueprint.user_meta?.preferred_name);
-
       // Update the AI service with the user's blueprint - this triggers persona regeneration
-      console.log("🔄 Calling enhancedAICoachService.updateUserBlueprint...");
+      console.log("🔄 Calling enhancedAICoachService.updateUserBlueprint with COMPLETE DATA...");
       enhancedAICoachService.updateUserBlueprint(layeredBlueprint);
       setPersonaReady(true);
       
-      console.log("✅ Enhanced AI Coach Hook: Blueprint processed with user name and persona system ready");
+      console.log("✅ Enhanced AI Coach Hook: Blueprint processed with COMPLETE user data and persona system ready");
     } catch (error) {
       console.error("❌ Enhanced AI Coach Hook: Blueprint processing error:", error);
-      setPersonaReady(true); // Allow fallback to non-personalized responses
+      setPersonaReady(false); // Don't allow fallback if blueprint should be available
     }
-  }, [authInitialized, blueprintData]);
+  }, [authInitialized, blueprintData, cacheBlueprint, hasBlueprint]);
 
   // Load conversation history when component mounts or agent changes
   useEffect(() => {
@@ -248,21 +263,15 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
   const sendMessage = async (content: string, useStreaming: boolean = true) => {
     if (!content.trim()) return;
 
-    console.log('📤 Enhanced AI Coach Hook: Sending message with DETAILED DEBUG:', {
+    console.log('📤 Enhanced AI Coach Hook: Sending message with BLUEPRINT ACCESS DEBUG:', {
       contentLength: content.length,
       useStreaming,
       currentAgent,
-      hasBlueprint: !!blueprintData,
+      hasBlueprint: hasBlueprint || !!blueprintData,
       personaReady,
       authInitialized,
-      hasUserName: !!(blueprintData?.user_meta?.preferred_name || blueprintData?.user_meta?.full_name),
-      actualUserName: blueprintData?.user_meta?.preferred_name || blueprintData?.user_meta?.full_name,
-      mbtiType: blueprintData?.cognition_mbti?.type,
-      sunSign: blueprintData?.archetype_western?.sun_sign,
-      humanDesignType: blueprintData?.energy_strategy_human_design?.type,
-      missionStatement: blueprintData?.values_life_path?.mission_statement,
-      currentUserId: user?.id,
-      serviceCurrentUser: 'will check in service'
+      hasUserName: !!(cacheBlueprint?.user_meta?.preferred_name || blueprintData?.user_meta?.preferred_name),
+      willUsePersona: personaReady && (hasBlueprint || !!blueprintData)
     });
 
     const userMessage: Message = {
@@ -311,15 +320,15 @@ Please remember to:
         
         console.log('📡 Enhanced AI Coach Hook: Starting streaming with FULL PERSONA INTEGRATION DEBUG...', {
           personaReady,
-          hasBlueprintData: !!blueprintData,
+          hasBlueprintData: hasBlueprint || !!blueprintData,
           currentAgent,
-          willUsePersona: personaReady
+          willUsePersona: personaReady && (hasBlueprint || !!blueprintData)
         });
         
         await enhancedAICoachService.sendStreamingMessage(
           enhancedContent,
           currentSessionId,
-          personaReady, // Use persona system when ready
+          personaReady && (hasBlueprint || !!blueprintData), // Use persona system when ready AND data available
           currentAgent,
           language,
           {
@@ -338,9 +347,9 @@ Please remember to:
             onComplete: (fullResponse: string) => {
               console.log('✅ Enhanced AI Coach Hook: Streaming complete, response length:', fullResponse.length);
               console.log('🎯 RESPONSE ANALYSIS:', {
-                containsUserName: !!(blueprintData?.user_meta?.preferred_name && fullResponse.includes(blueprintData.user_meta.preferred_name)),
-                containsPersonalityTraits: fullResponse.includes('MBTI') || fullResponse.includes('Human Design'),
-                isGeneric: fullResponse.includes('powerful soul') || fullResponse.includes('Feurion'),
+                hasPersonalizedContent: fullResponse.includes(cacheBlueprint?.user_meta?.preferred_name || blueprintData?.user_meta?.preferred_name || ''),
+                containsPersonalityTraits: fullResponse.includes('MBTI') || fullResponse.includes('Human Design') || fullResponse.includes('Life Path'),
+                isGeneric: fullResponse.includes('Creating a full blueprint') || fullResponse.includes('deep dive into various facets'),
                 responsePreview: fullResponse.substring(0, 200)
               });
               completeStreaming();
@@ -391,7 +400,7 @@ Please remember to:
       const response = await enhancedAICoachService.sendMessage(
         content,
         currentSessionId,
-        personaReady, // Use persona system when ready
+        personaReady && (hasBlueprint || !!blueprintData), // Use persona system when ready AND data available
         currentAgent,
         language
       );
@@ -459,7 +468,7 @@ Please remember to:
     switchAgent,
     streamingContent,
     isStreaming,
-    personaReady,
+    personaReady: personaReady && (hasBlueprint || !!blueprintData),
     authInitialized,
   };
 };
