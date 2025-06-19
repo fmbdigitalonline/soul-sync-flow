@@ -122,13 +122,36 @@ export function useBlueprintCache() {
 // Helper function to convert raw blueprint to LayeredBlueprint format
 function convertToLayeredBlueprint(rawData: BlueprintData): LayeredBlueprint {
   console.log('🔧 Converting raw data to LayeredBlueprint...');
+  console.log('🗂️ Raw data keys available:', Object.keys(rawData));
+  console.log('🔍 DETAILED RAW DATA INSPECTION:');
+  console.log('  - Type of rawData:', typeof rawData);
+  console.log('  - Is array?', Array.isArray(rawData));
+  console.log('  - Raw data sample:', JSON.stringify(rawData, null, 2).substring(0, 500) + '...');
+  
+  // Log each potential data section in detail
+  const sections = [
+    'cognition_mbti', 'mbti', 'personality',
+    'energy_strategy_human_design', 'human_design',
+    'values_life_path', 'numerology',
+    'archetype_western', 'astrology', 
+    'archetype_chinese',
+    'user_meta'
+  ];
+  
+  sections.forEach(section => {
+    const data = rawData[section as keyof BlueprintData];
+    console.log(`📊 ${section}:`, data ? Object.keys(data) : 'NOT FOUND');
+    if (data && typeof data === 'object') {
+      console.log(`   Sample data:`, JSON.stringify(data, null, 2).substring(0, 200));
+    }
+  });
   
   // Try multiple possible paths for each data type
   const mbtiData = rawData.cognition_mbti || rawData.mbti || rawData.personality || {};
-  const hdData = rawData.energy_strategy_human_design || rawData.human_design || rawData.humanDesign || {};
-  const numerologyData = rawData.values_life_path || rawData.numerology || rawData.lifePathData || {};
-  const westernAstroData = rawData.archetype_western || rawData.astrology || rawData.westernAstrology || {};
-  const chineseAstroData = rawData.archetype_chinese || rawData.chineseAstrology || {};
+  const hdData = rawData.energy_strategy_human_design || rawData.human_design || {};
+  const numerologyData = rawData.values_life_path || rawData.numerology || {};
+  const westernAstroData = rawData.archetype_western || rawData.astrology || {};
+  const chineseAstroData = rawData.archetype_chinese || {};
   
   console.log('🔍 Data extraction results:', {
     mbtiData: mbtiData ? Object.keys(mbtiData) : 'NO MBTI DATA',
@@ -218,12 +241,10 @@ function convertToLayeredBlueprint(rawData: BlueprintData): LayeredBlueprint {
       energyWeather: rawData.timing_overlays?.energy_weather || "stable growth",
     },
     user_meta: {
-      preferred_name: rawData.user_meta?.preferred_name || rawData.user_meta?.name || rawData.preferred_name,
-      full_name: rawData.user_meta?.full_name || rawData.user_meta?.fullName || rawData.full_name,
+      preferred_name: rawData.user_meta?.preferred_name || rawData.user_meta?.display_name,
+      full_name: rawData.user_meta?.full_name,
       ...rawData.user_meta
     },
-    
-    // ... keep existing code (auto-generated components with defaults)
     humorProfile: {
       primaryStyle: 'warm-nurturer',
       intensity: 'moderate',
@@ -275,7 +296,7 @@ function convertToLayeredBlueprint(rawData: BlueprintData): LayeredBlueprint {
       influenceStyle: "collaborative"
     },
     goalPersona: {
-      currentMode: 'blend',
+      currentMode: 'blend' as const,
       serviceRole: "supportive guide",
       coachingTone: "encouraging",
       nudgeStyle: "gentle",
