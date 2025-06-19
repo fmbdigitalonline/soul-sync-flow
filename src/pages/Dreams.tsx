@@ -107,6 +107,16 @@ const Dreams = () => {
     setCurrentView('chat');
   }, [sendMessage]);
 
+  // Add the missing success page handlers
+  const handleSuccessTaskStart = useCallback((task: any) => {
+    setSelectedTask(task);
+    setCurrentView('task-coach');
+  }, []);
+
+  const handleSuccessViewJourney = useCallback(() => {
+    setCurrentView('journey');
+  }, []);
+
   const getBlueprintInsight = useCallback(() => {
     if (!blueprintData) return "Your journey will be personalized once your blueprint is complete";
     
