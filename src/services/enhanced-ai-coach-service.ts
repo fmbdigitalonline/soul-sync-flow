@@ -191,7 +191,9 @@ class EnhancedAICoachService {
           agentType,
           language,
           systemPrompt,
-          enableBlueprintFiltering: !!blueprintFilter
+          enableBlueprintFiltering: !!blueprintFilter,
+          maxTokens: 4000, // Increase max tokens for complete responses
+          temperature: 0.7
         }),
       });
 
@@ -237,6 +239,7 @@ class EnhancedAICoachService {
                   }
                 }
                 
+                console.log(`📏 Final response length: ${fullResponse.length} characters`);
                 callbacks.onComplete(fullResponse);
                 return;
               }
@@ -271,6 +274,7 @@ class EnhancedAICoachService {
             return;
           }
         }
+        console.log(`📏 Final response length: ${fullResponse.length} characters`);
         callbacks.onComplete(fullResponse);
       }
     } catch (error) {

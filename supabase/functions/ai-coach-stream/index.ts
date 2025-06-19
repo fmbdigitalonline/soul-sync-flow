@@ -1,10 +1,11 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+};
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -14,250 +15,108 @@ serve(async (req) => {
   try {
     const { 
       message, 
-      userId, 
       sessionId, 
-      includeBlueprint, 
-      agentType, 
-      systemPrompt, 
-      language = 'en', 
-      journeyContext,
-      enableBlueprintFiltering = false
+      includeBlueprint = false, 
+      agentType = "guide", 
+      language = "en",
+      systemPrompt,
+      enableBlueprintFiltering = false,
+      maxTokens = 4000,
+      temperature = 0.7
     } = await req.json();
 
-    console.log('AI Coach streaming request:', {
-      agentType,
-      messageLength: message?.length,
-      userId: userId?.substring(0, 8) + '...',
-      sessionId,
-      includeBlueprint,
-      hasCustomPrompt: !!systemPrompt,
-      hasJourneyContext: !!journeyContext,
-      enableBlueprintFiltering,
-      language
-    });
+    console.log(`🚀 Starting streaming chat completion (${agentType}, Blueprint: ${includeBlueprint}, MaxTokens: ${maxTokens})`);
 
-    const openAIKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openAIKey) {
-      console.error('OpenAI API key not found');
-      const errorMessage = language === 'nl' ? 'OpenAI API sleutel niet geconfigureerd' : 'OpenAI API key not configured';
-      throw new Error(errorMessage);
+    // Build messages array
+    const messages = [];
+    
+    if (systemPrompt) {
+      console.log(`📝 Using custom system prompt (length: ${systemPrompt.length})`);
+      messages.push({ role: 'system', content: systemPrompt });
+    } else {
+      // Fallback system prompt
+      messages.push({ 
+        role: 'system', 
+        content: `You are a helpful AI assistant focused on ${agentType === 'coach' ? 'productivity and goal achievement' : 'personal growth and guidance'}. Provide thoughtful, complete responses.` 
+      });
     }
 
-    const getSystemPrompt = (agentType: string, language: string) => {
-      if (systemPrompt) {
-        return systemPrompt;
-      }
+    messages.push({ role: 'user', content: message });
 
-      const isNL = language === 'nl';
-      
-      const baseContext = includeBlueprint 
-        ? (isNL ? "Je hebt toegang tot de persoonlijkheidscontext van de gebruiker. Gebruik deze informatie om natuurlijk en gepersonaliseerd te reageren." 
-                : "You have access to the user's personality context. Use this information to respond naturally and personally.")
-        : (isNL ? "Reageer natuurlijk en ondersteunend op basis van het gesprek." 
-                : "Respond naturally and supportively based on the conversation.");
+    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: messages,
+        temperature: temperature,
+        max_tokens: maxTokens,
+        stream: true,
+      }),
+    });
 
-      // Add journey context if available
-      const contextWithJourney = journeyContext ? `${baseContext}\n\nCurrent Journey Context:${journeyContext}` : baseContext;
+    if (!openAIResponse.ok) {
+      throw new Error(`OpenAI API error: ${openAIResponse.status}`);
+    }
 
-      switch (agentType) {
-        case 'coach':
-          return isNL 
-            ? `Je bent een persoonlijke productiviteitscoach. ${contextWithJourney}
-
-AANPAK:
-- Luister eerst naar wat de gebruiker deelt
-- Reageer natuurlijk en ondersteunend
-- Bied praktische hulp gericht op hun doelen
-- Houd het gesprek gefocust op actie en vooruitgang
-- Stel verduidelijkende vragen als je meer context nodig hebt
-
-STIJL: Natuurlijk, bemoedigend, gericht op resultaten
-TAAL: Reageer ALTIJD in het Nederlands`
-            : `You are a personal productivity coach. ${contextWithJourney}
-
-APPROACH:
-- Listen first to what the user is sharing
-- Respond naturally and supportively  
-- Offer practical help focused on their goals
-- Keep conversation focused on action and progress
-- Ask clarifying questions when you need more context
-
-STYLE: Natural, encouraging, results-focused`;
-
-        case 'guide':
-          return isNL 
-            ? `Je bent een persoonlijke groei-gids. ${contextWithJourney}
-
-AANPAK:
-- Luister diep naar wat de gebruiker deelt
-- Reageer natuurlijk en met empathie
-- Help hen inzichten te krijgen over zichzelf
-- Ondersteun hen bij levensvragen en persoonlijke groei
-- Gebruik hun persoonlijkheidscontext om relevante inzichten te bieden
-
-STIJL: Natuurlijk, empathisch, reflectief
-TAAL: Reageer ALTIJD in het Nederlands`
-            : `You are a personal growth guide. ${contextWithJourney}
-
-APPROACH:
-- Listen deeply to what the user is sharing
-- Respond naturally and with empathy
-- Help them gain insights about themselves
-- Support them with life questions and personal growth
-- Use their personality context to offer relevant insights
-
-STYLE: Natural, empathetic, reflective`;
-
-        case 'blend':
-        default:
-          return isNL 
-            ? `Je bent een persoonlijke levenscompagnon. ${contextWithJourney}
-
-AANPAK:
-- Luister eerst naar wat ze delen en waar ze mee zitten
-- Reageer natuurlijk alsof je een goede vriend bent die hen goed kent
-- Pas je hulp aan wat ze nodig hebben - praktisch of emotioneel
-- Gebruik hun persoonlijkheid om hen beter te begrijpen en te ondersteunen
-
-GESPREKSSTIJL:
-- Natuurlijk en warm
-- Stel slechts één vraag per keer als je verduidelijking nodig hebt
-- Bied inzichten waar die waardevol zijn, niet standaard
-- Reageer op waar ze nu mee bezig zijn
-
-TAAL: Reageer ALTIJD in het Nederlands`
-            : `You are a personal life companion. ${contextWithJourney}
-
-APPROACH:
-- Listen first to what they're sharing and what they're dealing with
-- Respond naturally like a good friend who knows them well
-- Adapt your help to what they need - practical or emotional
-- Use their personality to better understand and support them
-
-CONVERSATION STYLE:
-- Natural and warm
-- Ask only one question at a time if you need clarification
-- Offer insights where they're valuable, not by default
-- Respond to what they're dealing with right now`;
-      }
-    };
-
-    console.log('Starting OpenAI streaming request with natural conversation approach...');
-
-    // Create a streaming response
+    // Create a ReadableStream for the response
     const stream = new ReadableStream({
       async start(controller) {
+        const reader = openAIResponse.body?.getReader();
+        const decoder = new TextDecoder();
+
+        if (!reader) {
+          controller.close();
+          return;
+        }
+
         try {
-          const response = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${openAIKey}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              model: 'gpt-4o-mini',
-              messages: [
-                {
-                  role: 'system',
-                  content: getSystemPrompt(agentType || 'blend', language)
-                },
-                {
-                  role: 'user',
-                  content: message
-                }
-              ],
-              temperature: 0.8, // Slightly higher for more natural conversation
-              max_tokens: 200, // Increased for more complete responses
-              stream: true,
-            }),
-          });
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
 
-          console.log('OpenAI response status:', response.status);
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split('\n');
 
-          if (!response.ok) {
-            const errorText = await response.text();
-            console.error('OpenAI API error:', response.status, errorText);
-            throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
-          }
-
-          const reader = response.body?.getReader();
-          if (!reader) {
-            throw new Error('No response body from OpenAI');
-          }
-
-          const decoder = new TextDecoder();
-          let buffer = '';
-
-          console.log('Starting to read OpenAI stream for natural conversation...');
-
-          try {
-            while (true) {
-              const { done, value } = await reader.read();
+            for (const line of lines) {
+              if (line.trim() === '') continue;
               
-              if (done) {
-                console.log('OpenAI stream completed');
-                const encoder = new TextEncoder();
-                controller.enqueue(encoder.encode("data: [DONE]\n\n"));
-                break;
-              }
-
-              const chunk = decoder.decode(value, { stream: true });
-              buffer += chunk;
-              
-              // Process complete lines
-              const lines = buffer.split('\n');
-              buffer = lines.pop() || ''; // Keep incomplete line in buffer
-              
-              for (const line of lines) {
-                if (line.trim() === '') continue;
+              if (line.startsWith('data: ')) {
+                const data = line.slice(6);
                 
-                if (line.startsWith('data: ')) {
-                  const data = line.slice(6).trim();
+                if (data.trim() === '[DONE]') {
+                  console.log('📤 Streaming complete - sending [DONE]');
+                  controller.enqueue(new TextEncoder().encode(`data: [DONE]\n\n`));
+                  controller.close();
+                  return;
+                }
+                
+                try {
+                  const parsed = JSON.parse(data);
+                  const content = parsed.choices?.[0]?.delta?.content;
                   
-                  if (data === '[DONE]') {
-                    console.log('Received [DONE] from OpenAI');
-                    const encoder = new TextEncoder();
-                    controller.enqueue(encoder.encode("data: [DONE]\n\n"));
-                    controller.close();
-                    return;
+                  if (content) {
+                    console.log(`📡 Streaming content chunk: ${content.slice(0, 50)}...`);
+                    controller.enqueue(new TextEncoder().encode(`data: ${data}\n\n`));
                   }
-                  
-                  if (data && data !== '[DONE]') {
-                    try {
-                      const parsed = JSON.parse(data);
-                      const content = parsed.choices?.[0]?.delta?.content;
-                      
-                      if (content) {
-                        console.log('Streaming natural content chunk:', content.substring(0, 50) + '...');
-                        const encoder = new TextEncoder();
-                        controller.enqueue(encoder.encode(`data: ${data}\n\n`));
-                      }
-                    } catch (parseError) {
-                      console.log('Skipping invalid JSON:', data.substring(0, 100));
-                    }
-                  }
+                } catch (e) {
+                  // Skip invalid JSON
+                  continue;
                 }
               }
             }
-          } finally {
-            reader.releaseLock();
           }
         } catch (error) {
-          console.error('Streaming error:', error);
-          const encoder = new TextEncoder();
-          const errorData = JSON.stringify({
-            error: true,
-            message: error.message || 'Streaming failed'
-          });
-          controller.enqueue(encoder.encode(`data: ${errorData}\n\n`));
+          console.error('❌ Streaming error:', error);
           controller.error(error);
         } finally {
-          controller.close();
+          reader.releaseLock();
         }
-      }
+      },
     });
-
-    console.log('Returning natural conversation streaming response...');
 
     return new Response(stream, {
       headers: {
@@ -269,16 +128,10 @@ CONVERSATION STYLE:
     });
 
   } catch (error) {
-    console.error('Error in AI Coach streaming function:', error);
-    
-    return new Response(
-      JSON.stringify({
-        error: error.message || 'Internal server error',
-      }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
+    console.error('❌ Error in ai-coach-stream function:', error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 });

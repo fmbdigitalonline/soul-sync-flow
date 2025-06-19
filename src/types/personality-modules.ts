@@ -1,4 +1,3 @@
-
 // Modular Personality Framework Types
 export interface PersonalityModule {
   id: string;
@@ -104,6 +103,15 @@ export interface LayeredBlueprint {
   };
   coreValuesNarrative: {
     lifePath: number | string;
+    lifePathKeyword?: string;
+    expressionNumber?: number;
+    expressionKeyword?: string;
+    soulUrgeNumber?: number;
+    soulUrgeKeyword?: string;
+    personalityNumber?: number;
+    personalityKeyword?: string;
+    birthdayNumber?: number;
+    birthdayKeyword?: string;
     meaningfulAreas: string[];
     anchoringVision: string;
     lifeThemes: string[];
