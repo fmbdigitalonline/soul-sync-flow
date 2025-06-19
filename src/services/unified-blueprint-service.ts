@@ -1,5 +1,3 @@
-
-
 import { LayeredBlueprint } from '@/types/personality-modules';
 
 export interface BlueprintValidationResult {
@@ -35,6 +33,14 @@ export class UnifiedBlueprintService {
     }
 
     console.log('🔍 Blueprint Validation: Analyzing blueprint completeness');
+    console.log('📊 Raw blueprint data for validation:', {
+      userMeta: blueprint.user_meta,
+      cognitiveTemperamental: blueprint.cognitiveTemperamental,
+      energyDecisionStrategy: blueprint.energyDecisionStrategy,
+      coreValuesNarrative: blueprint.coreValuesNarrative,
+      publicArchetype: blueprint.publicArchetype,
+      generationalCode: blueprint.generationalCode
+    });
     
     const lifePath = blueprint.coreValuesNarrative?.lifePath;
     let hasValidLifePath = false;
@@ -55,6 +61,36 @@ export class UnifiedBlueprintService {
       hasArchetype: !!(blueprint.publicArchetype?.sunSign && blueprint.publicArchetype.sunSign !== 'Unknown'),
       hasGenerational: !!(blueprint.generationalCode?.chineseZodiac && blueprint.generationalCode.chineseZodiac !== 'Unknown'),
     };
+
+    console.log('🔍 Individual field validation results:', {
+      personalInfo: {
+        hasInfo: checks.hasPersonalInfo,
+        preferredName: blueprint.user_meta?.preferred_name,
+        fullName: blueprint.user_meta?.full_name
+      },
+      cognitive: {
+        hasCognitive: checks.hasCognitive,
+        mbtiType: blueprint.cognitiveTemperamental?.mbtiType
+      },
+      energy: {
+        hasEnergy: checks.hasEnergy,
+        hdType: blueprint.energyDecisionStrategy?.humanDesignType
+      },
+      values: {
+        hasValues: checks.hasValues,
+        lifePath: lifePath,
+        lifePathType: typeof lifePath,
+        hasValidLifePath
+      },
+      archetype: {
+        hasArchetype: checks.hasArchetype,
+        sunSign: blueprint.publicArchetype?.sunSign
+      },
+      generational: {
+        hasGenerational: checks.hasGenerational,
+        chineseZodiac: blueprint.generationalCode?.chineseZodiac
+      }
+    });
 
     const completedCount = Object.values(checks).filter(Boolean).length;
     const totalCount = Object.keys(checks).length;

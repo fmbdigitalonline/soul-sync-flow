@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { blueprintService, BlueprintData } from '@/services/blueprint-service';
@@ -33,17 +32,36 @@ export function BlueprintCacheProvider({ children }: { children: React.ReactNode
       
       if (result.data) {
         console.log('✅ Blueprint Cache: Raw data received');
+        console.log('🔬 RAW BLUEPRINT DATA STRUCTURE:', JSON.stringify(result.data, null, 2));
+        
+        // Log all top-level keys to understand the structure
+        console.log('📋 Available top-level keys:', Object.keys(result.data));
+        
+        // Log specific sections we're interested in
+        console.log('🧠 MBTI Section:', result.data.cognition_mbti || result.data.mbti || 'NOT FOUND');
+        console.log('⚡ Human Design Section:', result.data.energy_strategy_human_design || result.data.human_design || 'NOT FOUND');
+        console.log('🔢 Numerology Section:', result.data.values_life_path || result.data.numerology || 'NOT FOUND');
+        console.log('🌟 Western Astrology Section:', result.data.archetype_western || result.data.astrology || 'NOT FOUND');
+        console.log('🐉 Chinese Astrology Section:', result.data.archetype_chinese || 'NOT FOUND');
+        console.log('👤 User Meta Section:', result.data.user_meta || 'NOT FOUND');
+        
         // Convert raw blueprint to LayeredBlueprint format
         const layeredBlueprint = convertToLayeredBlueprint(result.data);
-        console.log('🎯 Blueprint Cache: Converted to LayeredBlueprint with complete data:', {
+        console.log('🎯 Blueprint Cache: Converted to LayeredBlueprint');
+        console.log('📊 CONVERTED BLUEPRINT SAMPLE:', {
           hasUserMeta: !!layeredBlueprint.user_meta,
           userName: layeredBlueprint.user_meta?.preferred_name,
           hasCognitive: !!layeredBlueprint.cognitiveTemperamental,
+          mbtiType: layeredBlueprint.cognitiveTemperamental?.mbtiType,
           hasEnergy: !!layeredBlueprint.energyDecisionStrategy,
+          hdType: layeredBlueprint.energyDecisionStrategy?.humanDesignType,
           hasValues: !!layeredBlueprint.coreValuesNarrative,
           lifePath: layeredBlueprint.coreValuesNarrative?.lifePath,
-          expressionNumber: layeredBlueprint.coreValuesNarrative?.expressionNumber
+          expressionNumber: layeredBlueprint.coreValuesNarrative?.expressionNumber,
+          hasArchetype: !!layeredBlueprint.publicArchetype,
+          sunSign: layeredBlueprint.publicArchetype?.sunSign
         });
+        
         return { data: layeredBlueprint, error: null };
       } else {
         console.log('⚠️ Blueprint Cache: No data received, error:', result.error);
@@ -80,7 +98,9 @@ export function BlueprintCacheProvider({ children }: { children: React.ReactNode
       hasError: !!value.error,
       hasBlueprint: value.hasBlueprint,
       userName: value.blueprintData?.user_meta?.preferred_name,
-      lifePath: value.blueprintData?.coreValuesNarrative?.lifePath
+      lifePath: value.blueprintData?.coreValuesNarrative?.lifePath,
+      mbtiType: value.blueprintData?.cognitiveTemperamental?.mbtiType,
+      sunSign: value.blueprintData?.publicArchetype?.sunSign
     });
   }, [value.blueprintData, value.loading, value.error, value.hasBlueprint]);
 
@@ -101,29 +121,46 @@ export function useBlueprintCache() {
 
 // Helper function to convert raw blueprint to LayeredBlueprint format
 function convertToLayeredBlueprint(rawData: BlueprintData): LayeredBlueprint {
-  return {
+  console.log('🔧 Converting raw data to LayeredBlueprint...');
+  
+  // Try multiple possible paths for each data type
+  const mbtiData = rawData.cognition_mbti || rawData.mbti || rawData.personality || {};
+  const hdData = rawData.energy_strategy_human_design || rawData.human_design || rawData.humanDesign || {};
+  const numerologyData = rawData.values_life_path || rawData.numerology || rawData.lifePathData || {};
+  const westernAstroData = rawData.archetype_western || rawData.astrology || rawData.westernAstrology || {};
+  const chineseAstroData = rawData.archetype_chinese || rawData.chineseAstrology || {};
+  
+  console.log('🔍 Data extraction results:', {
+    mbtiData: mbtiData ? Object.keys(mbtiData) : 'NO MBTI DATA',
+    hdData: hdData ? Object.keys(hdData) : 'NO HD DATA',
+    numerologyData: numerologyData ? Object.keys(numerologyData) : 'NO NUMEROLOGY DATA',
+    westernAstroData: westernAstroData ? Object.keys(westernAstroData) : 'NO WESTERN ASTRO DATA',
+    chineseAstroData: chineseAstroData ? Object.keys(chineseAstroData) : 'NO CHINESE ASTRO DATA'
+  });
+
+  const converted = {
     cognitiveTemperamental: {
-      mbtiType: rawData.cognition_mbti?.type || rawData.mbti?.type || "Unknown",
-      functions: rawData.cognition_mbti?.functions || [],
-      dominantFunction: rawData.cognition_mbti?.dominant_function || "Unknown",
-      auxiliaryFunction: rawData.cognition_mbti?.auxiliary_function || "Unknown",
-      cognitiveStack: rawData.cognition_mbti?.cognitive_stack || [],
-      taskApproach: rawData.cognition_mbti?.task_approach || "systematic",
-      communicationStyle: rawData.cognition_mbti?.communication_style || "clear",
-      decisionMaking: rawData.cognition_mbti?.decision_making || "logical",
-      informationProcessing: rawData.cognition_mbti?.information_processing || "sequential",
+      mbtiType: mbtiData?.type || mbtiData?.mbti_type || mbtiData?.personality_type || "Unknown",
+      functions: mbtiData?.functions || [],
+      dominantFunction: mbtiData?.dominant_function || mbtiData?.dominantFunction || "Unknown",
+      auxiliaryFunction: mbtiData?.auxiliary_function || mbtiData?.auxiliaryFunction || "Unknown",
+      cognitiveStack: mbtiData?.cognitive_stack || mbtiData?.cognitiveStack || [],
+      taskApproach: mbtiData?.task_approach || mbtiData?.taskApproach || "systematic",
+      communicationStyle: mbtiData?.communication_style || mbtiData?.communicationStyle || "clear",
+      decisionMaking: mbtiData?.decision_making || mbtiData?.decisionMaking || "logical",
+      informationProcessing: mbtiData?.information_processing || mbtiData?.informationProcessing || "sequential",
     },
     energyDecisionStrategy: {
-      humanDesignType: rawData.energy_strategy_human_design?.type || rawData.human_design?.type || "Generator",
-      authority: rawData.energy_strategy_human_design?.authority || "Sacral",
-      decisionStyle: rawData.energy_strategy_human_design?.decision_style || "intuitive",
-      pacing: rawData.energy_strategy_human_design?.pacing || "steady",
-      energyType: rawData.energy_strategy_human_design?.energy_type || "sustainable",
-      strategy: rawData.energy_strategy_human_design?.strategy || "respond",
-      profile: rawData.energy_strategy_human_design?.profile || "1/3",
-      centers: rawData.energy_strategy_human_design?.centers || [],
-      gates: rawData.energy_strategy_human_design?.gates || [],
-      channels: rawData.energy_strategy_human_design?.channels || [],
+      humanDesignType: hdData?.type || hdData?.design_type || hdData?.humanDesignType || "Generator",
+      authority: hdData?.authority || hdData?.inner_authority || "Sacral",
+      decisionStyle: hdData?.decision_style || hdData?.decisionStyle || "intuitive",
+      pacing: hdData?.pacing || "steady",
+      energyType: hdData?.energy_type || hdData?.energyType || "sustainable",
+      strategy: hdData?.strategy || "respond",
+      profile: hdData?.profile || "1/3",
+      centers: hdData?.centers || [],
+      gates: hdData?.gates || [],
+      channels: hdData?.channels || [],
     },
     motivationBeliefEngine: {
       mindset: rawData.bashar_suite?.mindset || "growth",
@@ -137,41 +174,41 @@ function convertToLayeredBlueprint(rawData: BlueprintData): LayeredBlueprint {
       resistancePatterns: rawData.bashar_suite?.resistance_patterns || [],
     },
     coreValuesNarrative: {
-      lifePath: rawData.values_life_path?.lifePathNumber || rawData.values_life_path?.lifePath || rawData.numerology?.lifePathNumber || 1,
-      lifePathKeyword: rawData.values_life_path?.lifePathKeyword,
-      expressionNumber: rawData.values_life_path?.expressionNumber || rawData.numerology?.expressionNumber,
-      expressionKeyword: rawData.values_life_path?.expressionKeyword,
-      soulUrgeNumber: rawData.values_life_path?.soulUrgeNumber || rawData.numerology?.soulUrgeNumber,
-      soulUrgeKeyword: rawData.values_life_path?.soulUrgeKeyword,
-      personalityNumber: rawData.values_life_path?.personalityNumber || rawData.numerology?.personalityNumber,
-      personalityKeyword: rawData.values_life_path?.personalityKeyword,
-      birthdayNumber: rawData.values_life_path?.birthdayNumber || rawData.numerology?.birthdayNumber,
-      birthdayKeyword: rawData.values_life_path?.birthdayKeyword,
-      meaningfulAreas: rawData.values_life_path?.meaningful_areas || ["growth"],
-      anchoringVision: rawData.values_life_path?.anchoring_vision || "authentic contribution",
-      lifeThemes: rawData.values_life_path?.life_themes || ["self-discovery"],
-      valueSystem: rawData.values_life_path?.value_system || "integrity",
-      northStar: rawData.values_life_path?.north_star || "purposeful living",
-      missionStatement: rawData.values_life_path?.mission_statement || "live authentically",
-      purposeAlignment: rawData.values_life_path?.purpose_alignment || "high",
+      lifePath: numerologyData?.life_path_number || numerologyData?.lifePathNumber || numerologyData?.lifePath || 1,
+      lifePathKeyword: numerologyData?.life_path_keyword || numerologyData?.lifePathKeyword,
+      expressionNumber: numerologyData?.expression_number || numerologyData?.expressionNumber,
+      expressionKeyword: numerologyData?.expression_keyword || numerologyData?.expressionKeyword,
+      soulUrgeNumber: numerologyData?.soul_urge_number || numerologyData?.soulUrgeNumber,
+      soulUrgeKeyword: numerologyData?.soul_urge_keyword || numerologyData?.soulUrgeKeyword,
+      personalityNumber: numerologyData?.personality_number || numerologyData?.personalityNumber,
+      personalityKeyword: numerologyData?.personality_keyword || numerologyData?.personalityKeyword,
+      birthdayNumber: numerologyData?.birthday_number || numerologyData?.birthdayNumber,
+      birthdayKeyword: numerologyData?.birthday_keyword || numerologyData?.birthdayKeyword,
+      meaningfulAreas: numerologyData?.meaningful_areas || ["growth"],
+      anchoringVision: numerologyData?.anchoring_vision || "authentic contribution",
+      lifeThemes: numerologyData?.life_themes || ["self-discovery"],
+      valueSystem: numerologyData?.value_system || "integrity",
+      northStar: numerologyData?.north_star || "purposeful living",
+      missionStatement: numerologyData?.mission_statement || "live authentically",
+      purposeAlignment: numerologyData?.purpose_alignment || "high",
     },
     publicArchetype: {
-      sunSign: rawData.archetype_western?.sun_sign || rawData.astrology?.sun_sign || "Unknown",
-      moonSign: rawData.archetype_western?.moon_sign || rawData.astrology?.moon_sign,
-      risingSign: rawData.archetype_western?.rising_sign || rawData.astrology?.rising_sign,
-      socialStyle: rawData.archetype_western?.social_style || "warm",
-      publicVibe: rawData.archetype_western?.public_vibe || "approachable",
-      publicPersona: rawData.archetype_western?.public_persona || "genuine",
-      leadershipStyle: rawData.archetype_western?.leadership_style || "collaborative",
-      socialMask: rawData.archetype_western?.social_mask || "authentic",
-      externalExpression: rawData.archetype_western?.external_expression || "natural",
+      sunSign: westernAstroData?.sun_sign || westernAstroData?.sunSign || westernAstroData?.sun || "Unknown",
+      moonSign: westernAstroData?.moon_sign || westernAstroData?.moonSign || westernAstroData?.moon,
+      risingSign: westernAstroData?.rising_sign || westernAstroData?.risingSign || westernAstroData?.rising,
+      socialStyle: westernAstroData?.social_style || westernAstroData?.socialStyle || "warm",
+      publicVibe: westernAstroData?.public_vibe || westernAstroData?.publicVibe || "approachable",
+      publicPersona: westernAstroData?.public_persona || westernAstroData?.publicPersona || "genuine",
+      leadershipStyle: westernAstroData?.leadership_style || westernAstroData?.leadershipStyle || "collaborative",
+      socialMask: westernAstroData?.social_mask || westernAstroData?.socialMask || "authentic",
+      externalExpression: westernAstroData?.external_expression || westernAstroData?.externalExpression || "natural",
     },
     generationalCode: {
-      chineseZodiac: rawData.archetype_chinese?.animal || "Unknown",
-      element: rawData.archetype_chinese?.element || "Unknown",
-      cohortTint: rawData.archetype_chinese?.cohort_tint || "balanced",
-      generationalThemes: rawData.archetype_chinese?.generational_themes || [],
-      collectiveInfluence: rawData.archetype_chinese?.collective_influence || "moderate",
+      chineseZodiac: chineseAstroData?.animal || chineseAstroData?.zodiac_animal || chineseAstroData?.sign || "Unknown",
+      element: chineseAstroData?.element || "Unknown",
+      cohortTint: chineseAstroData?.cohort_tint || chineseAstroData?.cohortTint || "balanced",
+      generationalThemes: chineseAstroData?.generational_themes || chineseAstroData?.generationalThemes || [],
+      collectiveInfluence: chineseAstroData?.collective_influence || chineseAstroData?.collectiveInfluence || "moderate",
     },
     timingOverlays: {
       currentTransits: rawData.timing_overlays?.current_transits || [],
@@ -181,11 +218,12 @@ function convertToLayeredBlueprint(rawData: BlueprintData): LayeredBlueprint {
       energyWeather: rawData.timing_overlays?.energy_weather || "stable growth",
     },
     user_meta: {
-      preferred_name: rawData.user_meta?.preferred_name,
-      full_name: rawData.user_meta?.full_name,
+      preferred_name: rawData.user_meta?.preferred_name || rawData.user_meta?.name || rawData.preferred_name,
+      full_name: rawData.user_meta?.full_name || rawData.user_meta?.fullName || rawData.full_name,
       ...rawData.user_meta
     },
-    // Auto-generated components - will be enhanced later
+    
+    // ... keep existing code (auto-generated components with defaults)
     humorProfile: {
       primaryStyle: 'warm-nurturer',
       intensity: 'moderate',
@@ -223,7 +261,6 @@ function convertToLayeredBlueprint(rawData: BlueprintData): LayeredBlueprint {
       greetingStyles: [],
       transitionWords: []
     },
-    // Required fields with defaults
     surfaceExpression: {
       observableStyle: "authentic",
       realWorldImpact: "positive",
@@ -262,4 +299,15 @@ function convertToLayeredBlueprint(rawData: BlueprintData): LayeredBlueprint {
       triggerEvents: []
     }
   };
+
+  console.log('✅ Conversion complete. Final values check:', {
+    mbtiType: converted.cognitiveTemperamental.mbtiType,
+    hdType: converted.energyDecisionStrategy.humanDesignType,
+    lifePath: converted.coreValuesNarrative.lifePath,
+    sunSign: converted.publicArchetype.sunSign,
+    chineseZodiac: converted.generationalCode.chineseZodiac,
+    userName: converted.user_meta.preferred_name
+  });
+
+  return converted;
 }
