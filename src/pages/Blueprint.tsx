@@ -132,6 +132,12 @@ const Blueprint = () => {
         animal: layeredBlueprint.generationalCode?.chineseZodiac || 'Unknown',
         element: layeredBlueprint.generationalCode?.element || 'Unknown'
       },
+      goal_stack: layeredBlueprint.goal_stack || {},
+      metadata: layeredBlueprint.metadata || {
+        calculation_success: true,
+        calculation_date: new Date().toISOString(),
+        engine: "layered_blueprint_conversion"
+      },
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
