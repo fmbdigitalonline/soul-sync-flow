@@ -1,4 +1,3 @@
-
 import { LayeredBlueprint } from '@/types/personality-modules';
 import { useBlueprintCache } from '@/contexts/BlueprintCacheContext';
 
@@ -40,7 +39,11 @@ export class UnifiedBlueprintService {
       hasPersonalInfo: !!(blueprint.user_meta?.preferred_name || blueprint.user_meta?.full_name),
       hasCognitive: !!(blueprint.cognitiveTemperamental?.mbtiType && blueprint.cognitiveTemperamental.mbtiType !== 'Unknown'),
       hasEnergy: !!(blueprint.energyDecisionStrategy?.humanDesignType && blueprint.energyDecisionStrategy.humanDesignType !== 'Unknown'),
-      hasValues: !!(blueprint.coreValuesNarrative?.lifePath && blueprint.coreValuesNarrative.lifePath > 0),
+      hasValues: !!(blueprint.coreValuesNarrative?.lifePath && (
+        typeof blueprint.coreValuesNarrative.lifePath === 'number' 
+          ? blueprint.coreValuesNarrative.lifePath > 0 
+          : blueprint.coreValuesNarrative.lifePath !== 'Unknown' && blueprint.coreValuesNarrative.lifePath.trim() !== ''
+      )),
       hasArchetype: !!(blueprint.publicArchetype?.sunSign && blueprint.publicArchetype.sunSign !== 'Unknown'),
       hasGenerational: !!(blueprint.generationalCode?.chineseZodiac && blueprint.generationalCode.chineseZodiac !== 'Unknown'),
     };
