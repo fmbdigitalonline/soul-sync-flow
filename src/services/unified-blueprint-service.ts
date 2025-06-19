@@ -1,4 +1,5 @@
 
+
 import { LayeredBlueprint } from '@/types/personality-modules';
 
 export interface BlueprintValidationResult {
@@ -36,16 +37,21 @@ export class UnifiedBlueprintService {
     console.log('🔍 Blueprint Validation: Analyzing blueprint completeness');
     
     const lifePath = blueprint.coreValuesNarrative?.lifePath;
-    const hasValidLifePath = lifePath && (
-      (typeof lifePath === 'number' && lifePath > 0) ||
-      (typeof lifePath === 'string' && lifePath !== 'Unknown' && lifePath.trim() !== '')
-    );
+    let hasValidLifePath = false;
+    
+    if (lifePath !== undefined && lifePath !== null) {
+      if (typeof lifePath === 'number') {
+        hasValidLifePath = lifePath > 0;
+      } else if (typeof lifePath === 'string') {
+        hasValidLifePath = lifePath !== 'Unknown' && lifePath.trim() !== '';
+      }
+    }
 
     const checks = {
       hasPersonalInfo: !!(blueprint.user_meta?.preferred_name || blueprint.user_meta?.full_name),
       hasCognitive: !!(blueprint.cognitiveTemperamental?.mbtiType && blueprint.cognitiveTemperamental.mbtiType !== 'Unknown'),
       hasEnergy: !!(blueprint.energyDecisionStrategy?.humanDesignType && blueprint.energyDecisionStrategy.humanDesignType !== 'Unknown'),
-      hasValues: !!hasValidLifePath,
+      hasValues: hasValidLifePath,
       hasArchetype: !!(blueprint.publicArchetype?.sunSign && blueprint.publicArchetype.sunSign !== 'Unknown'),
       hasGenerational: !!(blueprint.generationalCode?.chineseZodiac && blueprint.generationalCode.chineseZodiac !== 'Unknown'),
     };
