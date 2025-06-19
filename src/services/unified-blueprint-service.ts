@@ -1,5 +1,5 @@
+
 import { LayeredBlueprint } from '@/types/personality-modules';
-import { useBlueprintCache } from '@/contexts/BlueprintCacheContext';
 
 export interface BlueprintValidationResult {
   isComplete: boolean;
@@ -35,15 +35,17 @@ export class UnifiedBlueprintService {
 
     console.log('🔍 Blueprint Validation: Analyzing blueprint completeness');
     
+    const lifePath = blueprint.coreValuesNarrative?.lifePath;
+    const hasValidLifePath = lifePath && (
+      (typeof lifePath === 'number' && lifePath > 0) ||
+      (typeof lifePath === 'string' && lifePath !== 'Unknown' && lifePath.trim() !== '')
+    );
+
     const checks = {
       hasPersonalInfo: !!(blueprint.user_meta?.preferred_name || blueprint.user_meta?.full_name),
       hasCognitive: !!(blueprint.cognitiveTemperamental?.mbtiType && blueprint.cognitiveTemperamental.mbtiType !== 'Unknown'),
       hasEnergy: !!(blueprint.energyDecisionStrategy?.humanDesignType && blueprint.energyDecisionStrategy.humanDesignType !== 'Unknown'),
-      hasValues: !!(blueprint.coreValuesNarrative?.lifePath && (
-        typeof blueprint.coreValuesNarrative.lifePath === 'number' 
-          ? blueprint.coreValuesNarrative.lifePath > 0 
-          : blueprint.coreValuesNarrative.lifePath !== 'Unknown' && blueprint.coreValuesNarrative.lifePath.trim() !== ''
-      )),
+      hasValues: !!hasValidLifePath,
       hasArchetype: !!(blueprint.publicArchetype?.sunSign && blueprint.publicArchetype.sunSign !== 'Unknown'),
       hasGenerational: !!(blueprint.generationalCode?.chineseZodiac && blueprint.generationalCode.chineseZodiac !== 'Unknown'),
     };
