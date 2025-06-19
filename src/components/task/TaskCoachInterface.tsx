@@ -1,5 +1,4 @@
-
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -17,11 +16,7 @@ import {
 } from "lucide-react";
 import { useTaskAwareCoach } from "@/hooks/use-task-aware-coach";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
-import { CoachInterface } from "@/components/coach/CoachInterface";
-import { SubTaskManager } from "./SubTaskManager";
-import { QuickActions } from "./QuickActions";
-import { SmartQuickActions } from "./SmartQuickActions";
-import { SessionProgress } from "./SessionProgress";
+import { EnhancedCoachInterface } from "@/components/coach/EnhancedCoachInterface";
 import { taskCoachIntegrationService, TaskContext } from "@/services/task-coach-integration-service";
 
 interface Task {
@@ -338,7 +333,7 @@ Let's get started! What's the first step?`;
             </div>
           ) : (
             <div className="flex-1 min-h-0">
-              <CoachInterface
+              <EnhancedCoachInterface
                 messages={messages}
                 isLoading={isLoading}
                 onSendMessage={handleCoachMessage}
