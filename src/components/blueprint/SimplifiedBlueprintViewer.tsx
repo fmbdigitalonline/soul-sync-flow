@@ -31,8 +31,31 @@ const MBTI_COG_FUNCTIONS: Record<string, { dominant: string; auxiliary: string }
   ESFJ: { dominant: "Fe (Extraverted Feeling)", auxiliary: "Si (Introverted Sensing)" },
   ESFP: { dominant: "Se (Extraverted Sensing)", auxiliary: "Fi (Introverted Feeling)" },
   ESTJ: { dominant: "Te (Extraverted Thinking)", auxiliary: "Si (Introverted Sensing)" },
-  ESTP: { dominant: "Se (Extraverted Sensing)", auxiliary: "Ti (Introverted Thinking)" }
+  ESTP: { dominant: "Se (Extraverated Sensing)", auxiliary: "Ti (Introverted Thinking)" }
 };
+
+// Helper function to safely extract nested data with multiple fallbacks
+function extractData(obj: any, paths: string[]): any {
+  for (const path of paths) {
+    const keys = path.split('.');
+    let current = obj;
+    let found = true;
+    
+    for (const key of keys) {
+      if (current && typeof current === 'object' && key in current) {
+        current = current[key];
+      } else {
+        found = false;
+        break;
+      }
+    }
+    
+    if (found && current !== null && current !== undefined && current !== '') {
+      return current;
+    }
+  }
+  return null;
+}
 
 // Type guard function
 function isValidPersonality(personality: any): personality is {
@@ -56,22 +79,76 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
   const [showAIReport, setShowAIReport] = useState(false);
   const { t } = useLanguage();
 
-  // Numerology Data Mapping
+  console.log('🔍 Blueprint data received:', blueprint);
+
+  // Enhanced Numerology Data Extraction with multiple fallback paths
   const rawNumerology = blueprint.values_life_path || blueprint.numerology || {};
   const numerologyData = {
-    lifePathNumber: rawNumerology.lifePathNumber ?? rawNumerology.life_path_number ?? "",
-    lifePathKeyword: rawNumerology.lifePathKeyword ?? rawNumerology.life_path_keyword ?? "",
-    expressionNumber: rawNumerology.expressionNumber ?? rawNumerology.expression_number ?? "",
-    expressionKeyword: rawNumerology.expressionKeyword ?? rawNumerology.expression_keyword ?? "",
-    soulUrgeNumber: rawNumerology.soulUrgeNumber ?? rawNumerology.soul_urge_number ?? "",
-    soulUrgeKeyword: rawNumerology.soulUrgeKeyword ?? rawNumerology.soul_urge_keyword ?? "",
-    birthdayNumber: rawNumerology.birthdayNumber ?? rawNumerology.birthday_number ?? "",
-    birthdayKeyword: rawNumerology.birthdayKeyword ?? rawNumerology.birthday_keyword ?? "",
-    personalityNumber: rawNumerology.personalityNumber ?? rawNumerology.personality_number ?? "",
-    personalityKeyword: rawNumerology.personalityKeyword ?? rawNumerology.personality_keyword ?? ""
+    lifePathNumber: extractData(blueprint, [
+      'values_life_path.lifePathNumber',
+      'values_life_path.life_path_number', 
+      'numerology.lifePathNumber',
+      'numerology.life_path_number'
+    ]) || "",
+    lifePathKeyword: extractData(blueprint, [
+      'values_life_path.lifePathKeyword',
+      'values_life_path.life_path_keyword',
+      'numerology.lifePathKeyword', 
+      'numerology.life_path_keyword'
+    ]) || "Your life's purpose and journey",
+    expressionNumber: extractData(blueprint, [
+      'values_life_path.expressionNumber',
+      'values_life_path.expression_number',
+      'numerology.expressionNumber',
+      'numerology.expression_number'
+    ]) || "",
+    expressionKeyword: extractData(blueprint, [
+      'values_life_path.expressionKeyword',
+      'values_life_path.expression_keyword',
+      'numerology.expressionKeyword',
+      'numerology.expression_keyword'
+    ]) || "Your natural talents and abilities",
+    soulUrgeNumber: extractData(blueprint, [
+      'values_life_path.soulUrgeNumber',
+      'values_life_path.soul_urge_number',
+      'numerology.soulUrgeNumber',
+      'numerology.soul_urge_number'
+    ]) || "",
+    soulUrgeKeyword: extractData(blueprint, [
+      'values_life_path.soulUrgeKeyword',
+      'values_life_path.soul_urge_keyword',
+      'numerology.soulUrgeKeyword',
+      'numerology.soul_urge_keyword'  
+    ]) || "Your inner desires and motivations",
+    birthdayNumber: extractData(blueprint, [
+      'values_life_path.birthdayNumber',
+      'values_life_path.birthday_number',
+      'numerology.birthdayNumber',
+      'numerology.birthday_number'
+    ]) || "",
+    birthdayKeyword: extractData(blueprint, [
+      'values_life_path.birthdayKeyword',
+      'values_life_path.birthday_keyword',
+      'numerology.birthdayKeyword',
+      'numerology.birthday_keyword'
+    ]) || "Special talents from your birth day",
+    personalityNumber: extractData(blueprint, [
+      'values_life_path.personalityNumber',
+      'values_life_path.personality_number',
+      'numerology.personalityNumber',
+      'numerology.personality_number'
+    ]) || "",
+    personalityKeyword: extractData(blueprint, [
+      'values_life_path.personalityKeyword',
+      'values_life_path.personality_keyword',
+      'numerology.personalityKeyword',
+      'numerology.personality_keyword'
+    ]) || "Key personality aspect"
   };
 
-  // MBTI Data Extraction with Robust Fallbacks
+  console.log('📊 Extracted numerology data:', numerologyData);
+
+  // Enhanced MBTI Data Extraction with Robust Fallbacks
   let mbtiData = blueprint.cognition_mbti && typeof blueprint.cognition_mbti === "object" && blueprint.cognition_mbti.type && blueprint.cognition_mbti.type !== "Unknown"
     ? blueprint.cognition_mbti
     : blueprint.mbti && typeof blueprint.mbti === "object" && blueprint.mbti.type && blueprint.mbti.type !== "Unknown"
@@ -105,6 +182,15 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
             : "",
         user_confidence: personality.userConfidence
       };
+    } else if (typeof personality === 'string') {
+      // Handle case where personality is just a string (MBTI type)
+      mbtiData = {
+        type: personality,
+        core_keywords: [],
+        dominant_function: "Unknown",
+        auxiliary_function: "Unknown",
+        description: "",
+      };
     } else {
       mbtiData = {
         type: "Unknown",
@@ -136,6 +222,8 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
       mbtiData.auxiliary_function = cog.auxiliary;
     }
   }
+
+  console.log('🧠 Extracted MBTI data:', mbtiData);
 
   if (showAIReport) {
     return (
@@ -170,7 +258,7 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
      "Accurate Astronomical Calculations") : 
     "Template Data";
   
-  // Get data with fallbacks for backwards compatibility
+  // Enhanced Western Astrology data extraction
   const westernData = blueprint.archetype_western || blueprint.astrology || {
     sun_sign: "Unknown",
     sun_keyword: "Unknown",
@@ -180,15 +268,44 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
     source: "template"
   };
 
-  const humanDesignData = blueprint.energy_strategy_human_design || blueprint.human_design || {
-    type: "Generator",
-    profile: "2/4",
-    authority: "Sacral",
-    strategy: "Respond",
-    definition: "Single",
-    not_self_theme: "Frustration",
-    life_purpose: "To find satisfaction"
+  // Enhanced Human Design data extraction
+  const humanDesignData = blueprint.energy_strategy_human_design || blueprint.human_design || {};
+  const hdData = {
+    type: extractData(blueprint, [
+      'energy_strategy_human_design.type',
+      'human_design.type',
+      'energy_strategy_human_design.design_type',
+      'human_design.design_type'
+    ]) || "Generator",
+    profile: extractData(blueprint, [
+      'energy_strategy_human_design.profile',
+      'human_design.profile'
+    ]) || "2/4",
+    authority: extractData(blueprint, [
+      'energy_strategy_human_design.authority',
+      'human_design.authority',
+      'energy_strategy_human_design.inner_authority',
+      'human_design.inner_authority'
+    ]) || "Sacral",
+    strategy: extractData(blueprint, [
+      'energy_strategy_human_design.strategy',
+      'human_design.strategy'
+    ]) || "Respond",
+    definition: extractData(blueprint, [
+      'energy_strategy_human_design.definition',
+      'human_design.definition'
+    ]) || "Single",
+    not_self_theme: extractData(blueprint, [
+      'energy_strategy_human_design.not_self_theme',
+      'human_design.not_self_theme'
+    ]) || "Frustration",
+    life_purpose: extractData(blueprint, [
+      'energy_strategy_human_design.life_purpose',
+      'human_design.life_purpose'
+    ]) || "To find satisfaction"
   };
+
+  console.log('🎯 Enhanced Human Design data:', hdData);
 
   return (
     <div className="space-y-6">
@@ -284,18 +401,18 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
                   <div className="text-center">
                     <h4 className="font-semibold">Sun Sign</h4>
                     <p className="text-lg text-soul-purple">{westernData.sun_sign}</p>
-                    <p className="text-sm text-gray-600">{westernData.sun_keyword}</p>
+                    <p className="text-sm text-gray-600">{westernData.sun_keyword || 'Sun energy'}</p>
                   </div>
                   <div className="text-center">
                     <h4 className="font-semibold">MBTI Type</h4>
                     <p className="text-lg text-soul-purple">{mbtiData.type || 'Unknown'}</p>
                     <p className="text-sm text-gray-600">{Array.isArray(mbtiData.core_keywords) && mbtiData.core_keywords.length
                       ? mbtiData.core_keywords.join(", ")
-                      : (mbtiData.description || 'Unknown')}</p>
+                      : (mbtiData.description || 'Personality type')}</p>
                   </div>
                   <div className="text-center">
                     <h4 className="font-semibold">Life Path</h4>
-                    <p className="text-lg text-soul-purple">{numerologyData.lifePathNumber}</p>
+                    <p className="text-lg text-soul-purple">{numerologyData.lifePathNumber || 'Unknown'}</p>
                     <p className="text-sm text-gray-600">{numerologyData.lifePathKeyword}</p>
                   </div>
                 </div>
@@ -319,7 +436,7 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
                   <span className="font-semibold">Core Keywords:</span>{" "}
                   {Array.isArray(mbtiData.core_keywords) && mbtiData.core_keywords.length
                     ? mbtiData.core_keywords.join(", ")
-                    : (mbtiData.description || 'Unknown')}
+                    : (mbtiData.description || 'Personality traits')}
                 </div>
                 <div>
                   <span className="font-semibold">Dominant Function:</span> {mbtiData.dominant_function || 'Unknown'}
@@ -346,16 +463,22 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
             <CardContent>
               <div className="space-y-3">
                 <div>
-                  <span className="font-semibold">Type:</span> {humanDesignData.type}
+                  <span className="font-semibold">Type:</span> {hdData.type}
                 </div>
                 <div>
-                  <span className="font-semibold">Profile:</span> {humanDesignData.profile}
+                  <span className="font-semibold">Profile:</span> {hdData.profile}
                 </div>
                 <div>
-                  <span className="font-semibold">Authority:</span> {humanDesignData.authority}
+                  <span className="font-semibold">Authority:</span> {hdData.authority}
                 </div>
                 <div>
-                  <span className="font-semibold">Strategy:</span> {humanDesignData.strategy}
+                  <span className="font-semibold">Strategy:</span> {hdData.strategy}
+                </div>
+                <div>
+                  <span className="font-semibold">Definition:</span> {hdData.definition}
+                </div>
+                <div>
+                  <span className="font-semibold">Not-Self Theme:</span> {hdData.not_self_theme}
                 </div>
               </div>
             </CardContent>
@@ -369,30 +492,30 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
               <div className="space-y-4">
                 <div>
                   <h4 className="font-semibold text-soul-purple">Life Path Number</h4>
-                  <p className="text-3xl font-bold text-soul-purple">{numerologyData.lifePathNumber}</p>
-                  <p className="text-sm text-gray-600">{numerologyData.lifePathKeyword || "Your life's purpose and journey"}</p>
+                  <p className="text-3xl font-bold text-soul-purple">{numerologyData.lifePathNumber || '?'}</p>
+                  <p className="text-sm text-gray-600">{numerologyData.lifePathKeyword}</p>
                 </div>
                 <div>
                   <h4 className="font-semibold text-soul-purple">Expression Number</h4>
-                  <p className="text-3xl font-bold text-soul-purple">{numerologyData.expressionNumber}</p>
-                  <p className="text-sm text-gray-600">{numerologyData.expressionKeyword || "Your natural talents and abilities"}</p>
+                  <p className="text-3xl font-bold text-soul-purple">{numerologyData.expressionNumber || '?'}</p>
+                  <p className="text-sm text-gray-600">{numerologyData.expressionKeyword}</p>
                 </div>
                 <div>
                   <h4 className="font-semibold text-soul-purple">Personality Number</h4>
-                  <p className="text-3xl font-bold text-soul-purple">{numerologyData.personalityNumber}</p>
-                  <p className="text-sm text-gray-600">{numerologyData.personalityKeyword || "Key personality aspect"}</p>
+                  <p className="text-3xl font-bold text-soul-purple">{numerologyData.personalityNumber || '?'}</p>
+                  <p className="text-sm text-gray-600">{numerologyData.personalityKeyword}</p>
                 </div>
               </div>
               <div className="space-y-4">
                 <div>
                   <h4 className="font-semibold text-soul-purple">Soul Urge Number</h4>
-                  <p className="text-3xl font-bold text-soul-purple">{numerologyData.soulUrgeNumber}</p>
-                  <p className="text-sm text-gray-600">{numerologyData.soulUrgeKeyword || "Your inner desires and motivations"}</p>
+                  <p className="text-3xl font-bold text-soul-purple">{numerologyData.soulUrgeNumber || '?'}</p>
+                  <p className="text-sm text-gray-600">{numerologyData.soulUrgeKeyword}</p>
                 </div>
                 <div>
                   <h4 className="font-semibold text-soul-purple">Birthday Number</h4>
-                  <p className="text-3xl font-bold text-soul-purple">{numerologyData.birthdayNumber}</p>
-                  <p className="text-sm text-gray-600">{numerologyData.birthdayKeyword || "Special talents from your birth day"}</p>
+                  <p className="text-3xl font-bold text-soul-purple">{numerologyData.birthdayNumber || '?'}</p>
+                  <p className="text-sm text-gray-600">{numerologyData.birthdayKeyword}</p>
                 </div>
               </div>
             </div>
@@ -408,13 +531,13 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
             <CardContent>
               <div className="space-y-3">
                 <div>
-                  <span className="font-semibold">Sun Sign:</span> {westernData.sun_sign} - {westernData.sun_keyword}
+                  <span className="font-semibold">Sun Sign:</span> {westernData.sun_sign} {westernData.sun_keyword ? `- ${westernData.sun_keyword}` : ''}
                 </div>
                 <div>
-                  <span className="font-semibold">Moon Sign:</span> {westernData.moon_sign} - {westernData.moon_keyword}
+                  <span className="font-semibold">Moon Sign:</span> {westernData.moon_sign} {westernData.moon_keyword ? `- ${westernData.moon_keyword}` : ''}
                 </div>
                 <div>
-                  <span className="font-semibold">Rising Sign:</span> {westernData.rising_sign}
+                  <span className="font-semibold">Rising Sign:</span> {westernData.rising_sign || 'Calculating...'}
                 </div>
               </div>
             </CardContent>
