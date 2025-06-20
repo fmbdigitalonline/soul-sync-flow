@@ -39,7 +39,13 @@ const Blueprint = () => {
     loading,
     hasBlueprint,
     blueprintData: !!blueprintData,
-    error
+    error,
+    blueprintPreview: blueprintData ? {
+      userName: blueprintData.user_meta?.preferred_name,
+      mbtiType: blueprintData.cognitiveTemperamental?.mbtiType,
+      sunSign: blueprintData.publicArchetype?.sunSign,
+      lifePath: blueprintData.coreValuesNarrative?.lifePath
+    } : null
   });
 
   // Show loading while auth is loading
@@ -93,15 +99,30 @@ const Blueprint = () => {
     return (
       <MainLayout>
         <div className="w-full min-h-[80vh] flex flex-col items-center justify-center p-4 sm:p-6">
-          <p className="text-red-500 mb-4">{error}</p>
-          <Button onClick={() => refetch()}>Try Again</Button>
+          <div className="cosmic-card p-6 sm:p-8 text-center max-w-md w-full">
+            <h2 className="text-lg font-semibold mb-4 text-red-500">Blueprint Error</h2>
+            <p className="text-red-500 mb-4">{error}</p>
+            <div className="space-y-2">
+              <Button onClick={() => refetch()} className="w-full">
+                Try Again
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => navigate('/onboarding')} 
+                className="w-full"
+              >
+                Create New Blueprint
+              </Button>
+            </div>
+          </div>
         </div>
       </MainLayout>
     );
   }
 
-  // Redirect to onboarding only if no blueprint exists
-  if (!hasBlueprint) {
+  // If no blueprint exists, redirect to onboarding
+  if (!hasBlueprint || !blueprintData) {
+    console.log("No blueprint found, redirecting to onboarding");
     navigate('/onboarding');
     return null;
   }

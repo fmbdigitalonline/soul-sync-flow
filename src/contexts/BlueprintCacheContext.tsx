@@ -35,17 +35,6 @@ export function BlueprintCacheProvider({ children }: { children: React.ReactNode
         console.log('✅ Blueprint Cache: Raw data received');
         console.log('🔬 RAW BLUEPRINT DATA STRUCTURE:', JSON.stringify(result.data, null, 2));
         
-        // Log all top-level keys to understand the structure
-        console.log('📋 Available top-level keys:', Object.keys(result.data));
-        
-        // Log specific sections we're interested in
-        console.log('🧠 MBTI Section:', result.data.cognition_mbti || result.data.mbti || 'NOT FOUND');
-        console.log('⚡ Human Design Section:', result.data.energy_strategy_human_design || result.data.human_design || 'NOT FOUND');
-        console.log('🔢 Numerology Section:', result.data.values_life_path || result.data.numerology || 'NOT FOUND');
-        console.log('🌟 Western Astrology Section:', result.data.archetype_western || result.data.astrology || 'NOT FOUND');
-        console.log('🐉 Chinese Astrology Section:', result.data.archetype_chinese || 'NOT FOUND');
-        console.log('👤 User Meta Section:', result.data.user_meta || 'NOT FOUND');
-        
         // Convert raw blueprint to LayeredBlueprint format
         const layeredBlueprint = convertToLayeredBlueprint(result.data);
         console.log('🎯 Blueprint Cache: Converted to LayeredBlueprint');
@@ -58,7 +47,6 @@ export function BlueprintCacheProvider({ children }: { children: React.ReactNode
           hdType: layeredBlueprint.energyDecisionStrategy?.humanDesignType,
           hasValues: !!layeredBlueprint.coreValuesNarrative,
           lifePath: layeredBlueprint.coreValuesNarrative?.lifePath,
-          expressionNumber: layeredBlueprint.coreValuesNarrative?.expressionNumber,
           hasArchetype: !!layeredBlueprint.publicArchetype,
           sunSign: layeredBlueprint.publicArchetype?.sunSign
         });
@@ -70,9 +58,9 @@ export function BlueprintCacheProvider({ children }: { children: React.ReactNode
       }
     },
     enabled: !!user,
-    staleTime: 5 * 60 * 1000, // 5 minutes - reasonable for static data
+    staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
-    refetchOnWindowFocus: false, // Don't refetch on focus for static data
+    refetchOnWindowFocus: false,
     refetchOnMount: true,
     retry: 2,
     retryDelay: 1000
@@ -124,47 +112,37 @@ export function useBlueprintCache() {
 function convertToLayeredBlueprint(rawData: BlueprintData): LayeredBlueprint {
   console.log('🔧 Converting raw data to LayeredBlueprint...');
   console.log('🗂️ Raw data keys available:', Object.keys(rawData));
-  console.log('🔍 DETAILED RAW DATA INSPECTION:');
-  console.log('  - Type of rawData:', typeof rawData);
-  console.log('  - Is array?', Array.isArray(rawData));
-  console.log('  - Raw data sample:', JSON.stringify(rawData, null, 2).substring(0, 500) + '...');
   
-  // Log each potential data section in detail
-  const sections = [
-    'cognition_mbti', 'mbti', 'personality',
-    'energy_strategy_human_design', 'human_design',
-    'values_life_path', 'numerology',
-    'archetype_western', 'astrology', 
-    'archetype_chinese',
-    'user_meta'
-  ];
-  
-  sections.forEach(section => {
-    const data = rawData[section as keyof BlueprintData];
-    console.log(`📊 ${section}:`, data ? Object.keys(data) : 'NOT FOUND');
-    if (data && typeof data === 'object') {
-      console.log(`   Sample data:`, JSON.stringify(data, null, 2).substring(0, 200));
-    }
-  });
-  
-  // Try multiple possible paths for each data type
+  // Handle MBTI data - check multiple possible sources
   const mbtiData = rawData.cognition_mbti || rawData.mbti || rawData.personality || {};
+  let mbtiType = "Unknown";
+  
+  // Extract MBTI type from user personality data if available
+  if (rawData.user_meta?.personality?.likelyType) {
+    mbtiType = rawData.user_meta.personality.likelyType;
+    console.log('🎯 Using MBTI from user personality:', mbtiType);
+  } else if (mbtiData?.type) {
+    mbtiType = mbtiData.type;
+    console.log('🎯 Using MBTI from cognition_mbti:', mbtiType);
+  }
+  
+  // Extract other data sections
   const hdData = rawData.energy_strategy_human_design || rawData.human_design || {};
   const numerologyData = rawData.values_life_path || rawData.numerology || {};
   const westernAstroData = rawData.archetype_western || rawData.astrology || {};
   const chineseAstroData = rawData.archetype_chinese || {};
   
   console.log('🔍 Data extraction results:', {
-    mbtiData: mbtiData ? Object.keys(mbtiData) : 'NO MBTI DATA',
-    hdData: hdData ? Object.keys(hdData) : 'NO HD DATA',
-    numerologyData: numerologyData ? Object.keys(numerologyData) : 'NO NUMEROLOGY DATA',
-    westernAstroData: westernAstroData ? Object.keys(westernAstroData) : 'NO WESTERN ASTRO DATA',
-    chineseAstroData: chineseAstroData ? Object.keys(chineseAstroData) : 'NO CHINESE ASTRO DATA'
+    mbtiType,
+    hdType: hdData?.type || "Unknown",
+    lifePath: numerologyData?.life_path_number || numerologyData?.lifePathNumber || 1,
+    sunSign: westernAstroData?.sun_sign || westernAstroData?.sunSign || "Unknown",
+    chineseAnimal: chineseAstroData?.animal || "Unknown"
   });
 
   const converted = {
     cognitiveTemperamental: {
-      mbtiType: mbtiData?.type || mbtiData?.mbti_type || mbtiData?.personality_type || "Unknown",
+      mbtiType: mbtiType,
       functions: mbtiData?.functions || [],
       dominantFunction: mbtiData?.dominant_function || mbtiData?.dominantFunction || "Unknown",
       auxiliaryFunction: mbtiData?.auxiliary_function || mbtiData?.auxiliaryFunction || "Unknown",
@@ -322,13 +300,16 @@ function convertToLayeredBlueprint(rawData: BlueprintData): LayeredBlueprint {
     }
   };
 
-  console.log('✅ Conversion complete. Final values check:', {
+  console.log('✅ Conversion complete. Final validation:', {
     mbtiType: converted.cognitiveTemperamental.mbtiType,
     hdType: converted.energyDecisionStrategy.humanDesignType,
     lifePath: converted.coreValuesNarrative.lifePath,
     sunSign: converted.publicArchetype.sunSign,
     chineseZodiac: converted.generationalCode.chineseZodiac,
-    userName: converted.user_meta.preferred_name
+    userName: converted.user_meta.preferred_name,
+    hasValidData: converted.cognitiveTemperamental.mbtiType !== "Unknown" ||
+                  converted.energyDecisionStrategy.humanDesignType !== "Generator" ||
+                  converted.publicArchetype.sunSign !== "Unknown"
   });
 
   return converted;
