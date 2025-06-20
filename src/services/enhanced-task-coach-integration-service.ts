@@ -63,7 +63,7 @@ class EnhancedTaskCoachIntegrationService {
       await dreamActivityLogger.logActivity('task_action_attempt', {
         action_type: action.type,
         action_payload: action.payload,
-        triggered_by
+        triggered_by: triggeredBy
       });
 
       // Check for rate limiting
@@ -80,7 +80,7 @@ class EnhancedTaskCoachIntegrationService {
           action_payload: action.payload,
           execution_result: result,
           execution_time_ms: Date.now() - startTime,
-          triggered_by,
+          triggered_by: triggeredBy,
           duplicate_detection: {
             rate_limited: true,
             execution_count: this.actionExecutionCount.get(this.generateActionKey(action))
@@ -105,7 +105,7 @@ class EnhancedTaskCoachIntegrationService {
         action_payload: action.payload,
         execution_result: result,
         execution_time_ms: executionTime,
-        triggered_by
+        triggered_by: triggeredBy
       });
 
       // Log specific action results
@@ -134,7 +134,7 @@ class EnhancedTaskCoachIntegrationService {
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
         execution_time_ms: executionTime,
-        triggered_by
+        triggered_by: triggeredBy
       });
 
       return {

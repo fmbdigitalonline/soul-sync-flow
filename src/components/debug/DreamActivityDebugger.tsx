@@ -159,7 +159,7 @@ export const DreamActivityDebugger: React.FC = () => {
             {Object.entries(actionStats.actions_by_type || {}).map(([action, count]) => (
               <div key={action} className="text-sm">
                 <div className="font-medium">{action}</div>
-                <div className="text-gray-600">{count} times</div>
+                <div className="text-gray-600">{String(count)} times</div>
               </div>
             ))}
           </div>

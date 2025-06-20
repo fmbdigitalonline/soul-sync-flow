@@ -42,7 +42,7 @@ export const useTaskAwareCoach = (initialTask?: TaskContext) => {
 
   // Set up task update callbacks with logging
   useEffect(() => {
-    const unsubscribe = enhancedTaskCoachIntegrationService.onTaskUpdate((updatedTask) => {
+    const unsubscribeFunction = enhancedTaskCoachIntegrationService.onTaskUpdate((updatedTask) => {
       console.log('🔄 Task update received:', updatedTask);
       
       dreamActivityLogger.logActivity('task_state_updated', {
@@ -57,8 +57,8 @@ export const useTaskAwareCoach = (initialTask?: TaskContext) => {
     });
 
     return () => {
-      if (unsubscribe) {
-        unsubscribe();
+      if (typeof unsubscribeFunction === 'function') {
+        unsubscribeFunction();
       }
     };
   }, [currentTask]);
@@ -223,7 +223,7 @@ Please provide guidance while being aware of my current task state and progress.
       const match = response.match(actionRegex);
       
       if (!match) {
-        await dreamActivityLogger.logActivity('no_action_found_in_response', {
+        dreamActivityLogger.logActivity('no_action_found_in_response', {
           response_preview: response.substring(0, 200),
           response_length: response.length
         });
@@ -252,7 +252,7 @@ Please provide guidance while being aware of my current task state and progress.
           action = { type: 'get_next_task', payload: {} };
           break;
         default:
-          await dreamActivityLogger.logActivity('unknown_action_type', {
+          dreamActivityLogger.logActivity('unknown_action_type', {
             action_type: actionType,
             action_payload: actionPayload
           });
@@ -260,7 +260,7 @@ Please provide guidance while being aware of my current task state and progress.
       }
 
       if (action) {
-        await dreamActivityLogger.logActivity('action_parsed_successfully', {
+        dreamActivityLogger.logActivity('action_parsed_successfully', {
           action_type: action.type,
           has_payload: Object.keys(action.payload).length > 0
         });
@@ -268,7 +268,7 @@ Please provide guidance while being aware of my current task state and progress.
 
       return action;
     } catch (error) {
-      await dreamActivityLogger.logError('action_parsing_error', {
+      dreamActivityLogger.logError('action_parsing_error', {
         response_preview: response.substring(0, 200),
         error: error instanceof Error ? error.message : String(error)
       });

@@ -132,13 +132,23 @@ class DreamActivityLogger {
 
       console.log(`🎯 Task Coach Session:`, sessionData);
 
+      // Convert Date objects to ISO strings for database storage
+      const dbData = {
+        user_id: user.id,
+        session_id: this.currentSessionId,
+        task_id: sessionData.task_id || '',
+        task_title: sessionData.task_title || '',
+        session_start: sessionData.session_start?.toISOString(),
+        session_end: sessionData.session_end?.toISOString(),
+        messages_count: sessionData.messages_count || 0,
+        actions_executed: sessionData.actions_executed || 0,
+        session_data: sessionData.session_data || {},
+        performance_metrics: sessionData.performance_metrics || {}
+      };
+
       const { error } = await supabase
         .from('task_coach_session_logs')
-        .insert({
-          user_id: user.id,
-          session_id: this.currentSessionId,
-          ...sessionData
-        });
+        .insert(dbData);
 
       if (error) {
         console.error('Failed to log task coach session:', error);
