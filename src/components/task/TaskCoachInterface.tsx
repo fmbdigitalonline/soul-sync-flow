@@ -137,7 +137,7 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
 
   // Set up task completion callback with logging
   useEffect(() => {
-    const unsubscribeFunction = enhancedTaskCoachIntegrationService.onTaskComplete((taskId) => {
+    const unsubscribeComplete = enhancedTaskCoachIntegrationService.onTaskComplete((taskId) => {
       console.log('🎉 Task completed via coach integration:', taskId);
       
       dreamActivityLogger.logActivity('task_completed_notification', {
@@ -155,9 +155,7 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
     });
 
     return () => {
-      if (typeof unsubscribeFunction === 'function') {
-        unsubscribeFunction();
-      }
+      unsubscribeComplete();
     };
   }, [onTaskComplete, focusTime, sessionStats]);
 

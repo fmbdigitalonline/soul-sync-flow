@@ -42,7 +42,7 @@ export const useTaskAwareCoach = (initialTask?: TaskContext) => {
 
   // Set up task update callbacks with logging
   useEffect(() => {
-    const unsubscribeFunction = enhancedTaskCoachIntegrationService.onTaskUpdate((updatedTask) => {
+    const unsubscribeUpdate = enhancedTaskCoachIntegrationService.onTaskUpdate((updatedTask) => {
       console.log('🔄 Task update received:', updatedTask);
       
       dreamActivityLogger.logActivity('task_state_updated', {
@@ -57,9 +57,7 @@ export const useTaskAwareCoach = (initialTask?: TaskContext) => {
     });
 
     return () => {
-      if (typeof unsubscribeFunction === 'function') {
-        unsubscribeFunction();
-      }
+      unsubscribeUpdate();
     };
   }, [currentTask]);
 

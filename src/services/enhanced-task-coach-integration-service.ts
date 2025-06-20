@@ -169,7 +169,7 @@ class EnhancedTaskCoachIntegrationService {
     return context;
   }
 
-  onTaskUpdate(callback: (task: TaskContext) => void) {
+  onTaskUpdate(callback: (task: TaskContext) => void): () => void {
     const wrappedCallback = (task: TaskContext) => {
       dreamActivityLogger.logActivity('task_update_received', {
         task_id: task.id,
@@ -182,10 +182,12 @@ class EnhancedTaskCoachIntegrationService {
       callback(task);
     };
 
-    return taskCoachIntegrationService.onTaskUpdate(wrappedCallback);
+    // Call the original service and return its unsubscribe function (or create a no-op if it returns void)
+    const unsubscribe = taskCoachIntegrationService.onTaskUpdate(wrappedCallback);
+    return typeof unsubscribe === 'function' ? unsubscribe : () => {};
   }
 
-  onTaskComplete(callback: (taskId: string) => void) {
+  onTaskComplete(callback: (taskId: string) => void): () => void {
     const wrappedCallback = (taskId: string) => {
       dreamActivityLogger.logActivity('task_completion_received', {
         task_id: taskId,
@@ -195,7 +197,9 @@ class EnhancedTaskCoachIntegrationService {
       callback(taskId);
     };
 
-    return taskCoachIntegrationService.onTaskComplete(wrappedCallback);
+    // Call the original service and return its unsubscribe function (or create a no-op if it returns void)
+    const unsubscribe = taskCoachIntegrationService.onTaskComplete(wrappedCallback);
+    return typeof unsubscribe === 'function' ? unsubscribe : () => {};
   }
 
   // Circuit breaker methods
