@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BlueprintData } from "@/services/blueprint-service";
 import { CosmicCard } from "@/components/ui/cosmic-card";
-import { FileText, Sparkles } from "lucide-react";
+import { FileText } from "lucide-react";
 import AIPersonalityReport from "./AIPersonalityReport";
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -39,89 +39,110 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
   const [showAIReport, setShowAIReport] = useState(false);
   const { t } = useLanguage();
 
-  console.log('🔍 Blueprint data received:', blueprint);
+  console.log('🔍 Blueprint data received in SimplifiedBlueprintViewer:', blueprint);
 
-  // Extract MBTI Data - prioritize user personality data over empty cognition_mbti
-  const personalityData = blueprint.user_meta?.personality;
-  let mbtiData = {
-    type: "Unknown",
-    core_keywords: [] as string[],
-    dominant_function: "Unknown",
-    auxiliary_function: "Unknown",
-    description: "",
-    user_confidence: 0
-  };
+  // Enhanced extraction function with multiple fallback paths
+  const extractData = (blueprint: BlueprintData) => {
+    console.log('🔧 Extracting data from blueprint...');
+    console.log('🗂️ Available blueprint keys:', Object.keys(blueprint));
 
-  // Get MBTI type from user personality data first
-  if (personalityData && typeof personalityData === 'object') {
-    const personality = personalityData as any;
-    if (personality.likelyType) {
-      mbtiData.type = personality.likelyType;
-      mbtiData.description = personality.description || "";
-      mbtiData.user_confidence = personality.userConfidence || 0;
-      
-      // Extract keywords from description
-      const description = personality.description || "";
-      const extractedKeywords = [];
-      if (description.includes('Enthusiastic')) extractedKeywords.push('Enthusiastic');
-      if (description.includes('creative')) extractedKeywords.push('Creative');
-      if (description.includes('possibilities')) extractedKeywords.push('Visionary');
-      if (description.includes('inspiring')) extractedKeywords.push('Inspiring');
-      mbtiData.core_keywords = extractedKeywords.length > 0 ? extractedKeywords : ['Dynamic', 'Inspiring'];
+    // Extract MBTI Data - prioritize user personality data
+    const personalityData = blueprint.user_meta?.personality;
+    let mbtiData = {
+      type: "Unknown",
+      core_keywords: [] as string[],
+      dominant_function: "Unknown",
+      auxiliary_function: "Unknown",
+      description: "",
+      user_confidence: 0
+    };
+
+    if (personalityData && typeof personalityData === 'object') {
+      const personality = personalityData as any;
+      if (personality.likelyType) {
+        mbtiData.type = personality.likelyType;
+        mbtiData.description = personality.description || "";
+        mbtiData.user_confidence = personality.userConfidence || 0;
+        
+        // Extract keywords from description
+        const description = personality.description || "";
+        const extractedKeywords = [];
+        if (description.includes('Enthusiastic')) extractedKeywords.push('Enthusiastic');
+        if (description.includes('creative')) extractedKeywords.push('Creative');
+        if (description.includes('possibilities')) extractedKeywords.push('Visionary');
+        if (description.includes('inspiring')) extractedKeywords.push('Inspiring');
+        mbtiData.core_keywords = extractedKeywords.length > 0 ? extractedKeywords : ['Dynamic', 'Inspiring'];
+      }
     }
-  }
 
-  // Apply cognitive functions based on MBTI type
-  if (mbtiData.type !== "Unknown" && MBTI_COG_FUNCTIONS[mbtiData.type]) {
-    const functions = MBTI_COG_FUNCTIONS[mbtiData.type];
-    mbtiData.dominant_function = functions.dominant;
-    mbtiData.auxiliary_function = functions.auxiliary;
-  }
+    // Apply cognitive functions based on MBTI type
+    if (mbtiData.type !== "Unknown" && MBTI_COG_FUNCTIONS[mbtiData.type]) {
+      const functions = MBTI_COG_FUNCTIONS[mbtiData.type];
+      mbtiData.dominant_function = functions.dominant;
+      mbtiData.auxiliary_function = functions.auxiliary;
+    }
 
-  console.log('🧠 Final MBTI data:', mbtiData);
+    console.log('🧠 Final MBTI data:', mbtiData);
 
-  // Extract Numerology Data - use the rich numerology object directly
-  const numerologySource = blueprint.numerology || blueprint.values_life_path || {};
-  const numerologyData = {
-    lifePathNumber: numerologySource.life_path_number || numerologySource.lifePathNumber || "Unknown",
-    lifePathKeyword: numerologySource.life_path_keyword || numerologySource.lifePathKeyword || "Your life's purpose",
-    expressionNumber: numerologySource.expression_number || numerologySource.expressionNumber || "Unknown", 
-    expressionKeyword: numerologySource.expression_keyword || numerologySource.expressionKeyword || "Your talents",
-    soulUrgeNumber: numerologySource.soul_urge_number || numerologySource.soulUrgeNumber || "Unknown",
-    soulUrgeKeyword: numerologySource.soul_urge_keyword || numerologySource.soulUrgeKeyword || "Your desires",
-    birthdayNumber: numerologySource.birthday_number || numerologySource.birthdayNumber || "Unknown",
-    birthdayKeyword: numerologySource.birthday_keyword || numerologySource.birthdayKeyword || "Special talents",
-    personalityNumber: numerologySource.personality_number || numerologySource.personalityNumber || "Unknown",
-    personalityKeyword: numerologySource.personality_keyword || numerologySource.personalityKeyword || "Key traits"
+    // Extract Numerology Data with multiple fallback paths
+    // Try numerology first, then values_life_path as fallback
+    const numerologySource = blueprint.numerology || blueprint.values_life_path || {};
+    console.log('📊 Raw numerology source data:', numerologySource);
+    
+    const numerologyData = {
+      lifePathNumber: numerologySource.life_path_number || numerologySource.lifePathNumber || "Unknown",
+      lifePathKeyword: numerologySource.life_path_keyword || numerologySource.lifePathKeyword || "Your life's purpose",
+      expressionNumber: numerologySource.expression_number || numerologySource.expressionNumber || "Unknown",
+      expressionKeyword: numerologySource.expression_keyword || numerologySource.expressionKeyword || "Your talents",
+      soulUrgeNumber: numerologySource.soul_urge_number || numerologySource.soulUrgeNumber || "Unknown",
+      soulUrgeKeyword: numerologySource.soul_urge_keyword || numerologySource.soulUrgeKeyword || "Your desires",
+      birthdayNumber: numerologySource.birthday_number || numerologySource.birthdayNumber || "Unknown",
+      birthdayKeyword: numerologySource.birthday_keyword || numerologySource.birthdayKeyword || "Special talents",
+      personalityNumber: numerologySource.personality_number || numerologySource.personalityNumber || "Unknown",
+      personalityKeyword: numerologySource.personality_keyword || numerologySource.personalityKeyword || "Key traits"
+    };
+
+    console.log('📊 Final numerology data:', numerologyData);
+
+    // Extract Human Design Data
+    const hdSource = blueprint.human_design || blueprint.energy_strategy_human_design || {};
+    const hdData = {
+      type: hdSource.type || "Generator",
+      profile: hdSource.profile || "2/4",
+      authority: hdSource.authority || "Sacral",
+      strategy: hdSource.strategy || "Respond",
+      definition: hdSource.definition || "Single",
+      not_self_theme: hdSource.not_self_theme || "Frustration"
+    };
+
+    console.log('🎯 Final Human Design data:', hdData);
+
+    // Extract Western Astrology Data
+    const westernData = blueprint.astrology || blueprint.archetype_western || {
+      sun_sign: "Unknown",
+      moon_sign: "Unknown", 
+      rising_sign: "Unknown"
+    };
+
+    // Extract Chinese Zodiac Data - fix the TypeScript error
+    const chineseData = (blueprint as any).chinese_zodiac || blueprint.archetype_chinese || {
+      animal: "Unknown",
+      element: "Unknown"
+    };
+
+    console.log('🐉 Final Chinese Zodiac data:', chineseData);
+
+    return {
+      mbtiData,
+      numerologyData,
+      hdData,
+      westernData,
+      chineseData
+    };
   };
 
-  console.log('📊 Extracted numerology data:', numerologyData);
-
-  // Extract Human Design Data - use the rich human_design object
-  const hdSource = blueprint.human_design || blueprint.energy_strategy_human_design || {};
-  const hdData = {
-    type: hdSource.type || "Generator",
-    profile: hdSource.profile || "2/4",
-    authority: hdSource.authority || "Sacral",
-    strategy: hdSource.strategy || "Respond",
-    definition: hdSource.definition || "Single",
-    not_self_theme: hdSource.not_self_theme || "Frustration"
-  };
-
-  console.log('🎯 Extracted Human Design data:', hdData);
-
-  // Extract Western Astrology Data
-  const westernData = blueprint.astrology || blueprint.archetype_western || {
-    sun_sign: "Unknown",
-    moon_sign: "Unknown", 
-    rising_sign: "Unknown"
-  };
-
-  // Extract Chinese Zodiac Data
-  const chineseData = blueprint.chinese_zodiac || blueprint.archetype_chinese || {
-    animal: "Unknown",
-    element: "Unknown"
-  };
+  const extractedData = extractData(blueprint);
+  const { mbtiData, numerologyData, hdData, westernData, chineseData } = extractedData;
 
   // Extract calculation metadata
   const metadata = blueprint?.metadata || {
