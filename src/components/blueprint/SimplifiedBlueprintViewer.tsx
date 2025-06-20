@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,11 +30,13 @@ const MBTI_COG_FUNCTIONS: Record<string, { dominant: string; auxiliary: string }
   ESFJ: { dominant: "Fe (Extraverted Feeling)", auxiliary: "Si (Introverted Sensing)" },
   ESFP: { dominant: "Se (Extraverted Sensing)", auxiliary: "Fi (Introverted Feeling)" },
   ESTJ: { dominant: "Te (Extraverted Thinking)", auxiliary: "Si (Introverted Sensing)" },
-  ESTP: { dominant: "Se (Extraverated Sensing)", auxiliary: "Ti (Introverted Thinking)" }
+  ESTP: { dominant: "Se (Extraverted Sensing)", auxiliary: "Ti (Introverted Thinking)" }
 };
 
 // Helper function to safely extract nested data with multiple fallbacks
 function extractData(obj: any, paths: string[]): any {
+  console.log('🔍 Extracting data with paths:', paths, 'from object keys:', obj ? Object.keys(obj) : 'null');
+  
   for (const path of paths) {
     const keys = path.split('.');
     let current = obj;
@@ -51,9 +52,11 @@ function extractData(obj: any, paths: string[]): any {
     }
     
     if (found && current !== null && current !== undefined && current !== '') {
+      console.log('✅ Found data for path:', path, 'value:', current);
       return current;
     }
   }
+  console.log('❌ No data found for any path');
   return null;
 }
 
@@ -80,73 +83,78 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
   const { t } = useLanguage();
 
   console.log('🔍 Blueprint data received:', blueprint);
+  console.log('🔍 Raw values_life_path data:', blueprint?.values_life_path);
+  console.log('🔍 Raw numerology data:', blueprint?.numerology);
 
-  // Enhanced Numerology Data Extraction with multiple fallback paths
+  // Enhanced Numerology Data Extraction with comprehensive logging
   const rawNumerology = blueprint.values_life_path || blueprint.numerology || {};
+  console.log('🔢 Raw numerology object:', rawNumerology);
+  console.log('🔢 Raw numerology keys:', Object.keys(rawNumerology));
+
   const numerologyData = {
     lifePathNumber: extractData(blueprint, [
-      'values_life_path.lifePathNumber',
-      'values_life_path.life_path_number', 
-      'numerology.lifePathNumber',
-      'numerology.life_path_number'
-    ]) || "",
+      'values_life_path.life_path_number',
+      'values_life_path.lifePathNumber', 
+      'numerology.life_path_number',
+      'numerology.lifePathNumber'
+    ]) || "Unknown",
     lifePathKeyword: extractData(blueprint, [
-      'values_life_path.lifePathKeyword',
       'values_life_path.life_path_keyword',
-      'numerology.lifePathKeyword', 
-      'numerology.life_path_keyword'
+      'values_life_path.lifePathKeyword',
+      'numerology.life_path_keyword', 
+      'numerology.lifePathKeyword'
     ]) || "Your life's purpose and journey",
     expressionNumber: extractData(blueprint, [
-      'values_life_path.expressionNumber',
       'values_life_path.expression_number',
-      'numerology.expressionNumber',
-      'numerology.expression_number'
-    ]) || "",
+      'values_life_path.expressionNumber',
+      'numerology.expression_number',
+      'numerology.expressionNumber'
+    ]) || "Unknown",
     expressionKeyword: extractData(blueprint, [
-      'values_life_path.expressionKeyword',
       'values_life_path.expression_keyword',
-      'numerology.expressionKeyword',
-      'numerology.expression_keyword'
+      'values_life_path.expressionKeyword',
+      'numerology.expression_keyword',
+      'numerology.expressionKeyword'
     ]) || "Your natural talents and abilities",
     soulUrgeNumber: extractData(blueprint, [
-      'values_life_path.soulUrgeNumber',
       'values_life_path.soul_urge_number',
-      'numerology.soulUrgeNumber',
-      'numerology.soul_urge_number'
-    ]) || "",
+      'values_life_path.soulUrgeNumber',
+      'numerology.soul_urge_number',
+      'numerology.soulUrgeNumber'
+    ]) || "Unknown",
     soulUrgeKeyword: extractData(blueprint, [
-      'values_life_path.soulUrgeKeyword',
       'values_life_path.soul_urge_keyword',
-      'numerology.soulUrgeKeyword',
-      'numerology.soul_urge_keyword'  
+      'values_life_path.soulUrgeKeyword',
+      'numerology.soul_urge_keyword',
+      'numerology.soulUrgeKeyword'  
     ]) || "Your inner desires and motivations",
     birthdayNumber: extractData(blueprint, [
-      'values_life_path.birthdayNumber',
       'values_life_path.birthday_number',
-      'numerology.birthdayNumber',
-      'numerology.birthday_number'
-    ]) || "",
+      'values_life_path.birthdayNumber',
+      'numerology.birthday_number',
+      'numerology.birthdayNumber'
+    ]) || "Unknown",
     birthdayKeyword: extractData(blueprint, [
-      'values_life_path.birthdayKeyword',
       'values_life_path.birthday_keyword',
-      'numerology.birthdayKeyword',
-      'numerology.birthday_keyword'
+      'values_life_path.birthdayKeyword',
+      'numerology.birthday_keyword',
+      'numerology.birthdayKeyword'
     ]) || "Special talents from your birth day",
     personalityNumber: extractData(blueprint, [
-      'values_life_path.personalityNumber',
       'values_life_path.personality_number',
-      'numerology.personalityNumber',
-      'numerology.personality_number'
-    ]) || "",
+      'values_life_path.personalityNumber',
+      'numerology.personality_number',
+      'numerology.personalityNumber'
+    ]) || "Unknown",
     personalityKeyword: extractData(blueprint, [
-      'values_life_path.personalityKeyword',
       'values_life_path.personality_keyword',
-      'numerology.personalityKeyword',
-      'numerology.personality_keyword'
+      'values_life_path.personalityKeyword',
+      'numerology.personality_keyword',
+      'numerology.personalityKeyword'
     ]) || "Key personality aspect"
   };
 
-  console.log('📊 Extracted numerology data:', numerologyData);
+  console.log('📊 Final extracted numerology data:', numerologyData);
 
   // Enhanced MBTI Data Extraction with Robust Fallbacks
   let mbtiData = blueprint.cognition_mbti && typeof blueprint.cognition_mbti === "object" && blueprint.cognition_mbti.type && blueprint.cognition_mbti.type !== "Unknown"
@@ -412,7 +420,7 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
                   </div>
                   <div className="text-center">
                     <h4 className="font-semibold">Life Path</h4>
-                    <p className="text-lg text-soul-purple">{numerologyData.lifePathNumber || 'Unknown'}</p>
+                    <p className="text-lg text-soul-purple">{numerologyData.lifePathNumber}</p>
                     <p className="text-sm text-gray-600">{numerologyData.lifePathKeyword}</p>
                   </div>
                 </div>
@@ -492,29 +500,29 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
               <div className="space-y-4">
                 <div>
                   <h4 className="font-semibold text-soul-purple">Life Path Number</h4>
-                  <p className="text-3xl font-bold text-soul-purple">{numerologyData.lifePathNumber || '?'}</p>
+                  <p className="text-3xl font-bold text-soul-purple">{numerologyData.lifePathNumber}</p>
                   <p className="text-sm text-gray-600">{numerologyData.lifePathKeyword}</p>
                 </div>
                 <div>
                   <h4 className="font-semibold text-soul-purple">Expression Number</h4>
-                  <p className="text-3xl font-bold text-soul-purple">{numerologyData.expressionNumber || '?'}</p>
+                  <p className="text-3xl font-bold text-soul-purple">{numerologyData.expressionNumber}</p>
                   <p className="text-sm text-gray-600">{numerologyData.expressionKeyword}</p>
                 </div>
                 <div>
                   <h4 className="font-semibold text-soul-purple">Personality Number</h4>
-                  <p className="text-3xl font-bold text-soul-purple">{numerologyData.personalityNumber || '?'}</p>
+                  <p className="text-3xl font-bold text-soul-purple">{numerologyData.personalityNumber}</p>
                   <p className="text-sm text-gray-600">{numerologyData.personalityKeyword}</p>
                 </div>
               </div>
               <div className="space-y-4">
                 <div>
                   <h4 className="font-semibold text-soul-purple">Soul Urge Number</h4>
-                  <p className="text-3xl font-bold text-soul-purple">{numerologyData.soulUrgeNumber || '?'}</p>
+                  <p className="text-3xl font-bold text-soul-purple">{numerologyData.soulUrgeNumber}</p>
                   <p className="text-sm text-gray-600">{numerologyData.soulUrgeKeyword}</p>
                 </div>
                 <div>
                   <h4 className="font-semibold text-soul-purple">Birthday Number</h4>
-                  <p className="text-3xl font-bold text-soul-purple">{numerologyData.birthdayNumber || '?'}</p>
+                  <p className="text-3xl font-bold text-soul-purple">{numerologyData.birthdayNumber}</p>
                   <p className="text-sm text-gray-600">{numerologyData.birthdayKeyword}</p>
                 </div>
               </div>
