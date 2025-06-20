@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,205 +34,109 @@ const MBTI_COG_FUNCTIONS: Record<string, { dominant: string; auxiliary: string }
   ESTP: { dominant: "Se (Extraverted Sensing)", auxiliary: "Ti (Introverted Thinking)" }
 };
 
-// Helper function to safely extract nested data with multiple fallbacks
-function extractData(obj: any, paths: string[]): any {
-  console.log('🔍 Extracting data with paths:', paths, 'from object keys:', obj ? Object.keys(obj) : 'null');
-  
-  for (const path of paths) {
-    const keys = path.split('.');
-    let current = obj;
-    let found = true;
-    
-    for (const key of keys) {
-      if (current && typeof current === 'object' && key in current) {
-        current = current[key];
-      } else {
-        found = false;
-        break;
-      }
-    }
-    
-    if (found && current !== null && current !== undefined && current !== '') {
-      console.log('✅ Found data for path:', path, 'value:', current);
-      return current;
-    }
-  }
-  console.log('❌ No data found for any path');
-  return null;
-}
-
-// Type guard function
-function isValidPersonality(personality: any): personality is {
-  likelyType: string;
-  mbtiCoreKeywords?: string[];
-  core_keywords?: string[];
-  dominantFunction?: string;
-  dominant_function?: string;
-  auxiliaryFunction?: string;
-  auxiliary_function?: string;
-  description?: string;
-  userConfidence?: number;
-} {
-  return personality != null && 
-         typeof personality === "object" && 
-         "likelyType" in personality;
-}
-
 export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ blueprint }) => {
   const [activeTab, setActiveTab] = useState("overview");
   const [showAIReport, setShowAIReport] = useState(false);
   const { t } = useLanguage();
 
   console.log('🔍 Blueprint data received:', blueprint);
-  console.log('🔍 Raw values_life_path data:', blueprint?.values_life_path);
-  console.log('🔍 Raw numerology data:', blueprint?.numerology);
 
-  // Enhanced Numerology Data Extraction with comprehensive logging
-  const rawNumerology = blueprint.values_life_path || blueprint.numerology || {};
-  console.log('🔢 Raw numerology object:', rawNumerology);
-  console.log('🔢 Raw numerology keys:', Object.keys(rawNumerology));
-
-  const numerologyData = {
-    lifePathNumber: extractData(blueprint, [
-      'values_life_path.life_path_number',
-      'values_life_path.lifePathNumber', 
-      'numerology.life_path_number',
-      'numerology.lifePathNumber'
-    ]) || "Unknown",
-    lifePathKeyword: extractData(blueprint, [
-      'values_life_path.life_path_keyword',
-      'values_life_path.lifePathKeyword',
-      'numerology.life_path_keyword', 
-      'numerology.lifePathKeyword'
-    ]) || "Your life's purpose and journey",
-    expressionNumber: extractData(blueprint, [
-      'values_life_path.expression_number',
-      'values_life_path.expressionNumber',
-      'numerology.expression_number',
-      'numerology.expressionNumber'
-    ]) || "Unknown",
-    expressionKeyword: extractData(blueprint, [
-      'values_life_path.expression_keyword',
-      'values_life_path.expressionKeyword',
-      'numerology.expression_keyword',
-      'numerology.expressionKeyword'
-    ]) || "Your natural talents and abilities",
-    soulUrgeNumber: extractData(blueprint, [
-      'values_life_path.soul_urge_number',
-      'values_life_path.soulUrgeNumber',
-      'numerology.soul_urge_number',
-      'numerology.soulUrgeNumber'
-    ]) || "Unknown",
-    soulUrgeKeyword: extractData(blueprint, [
-      'values_life_path.soul_urge_keyword',
-      'values_life_path.soulUrgeKeyword',
-      'numerology.soul_urge_keyword',
-      'numerology.soulUrgeKeyword'  
-    ]) || "Your inner desires and motivations",
-    birthdayNumber: extractData(blueprint, [
-      'values_life_path.birthday_number',
-      'values_life_path.birthdayNumber',
-      'numerology.birthday_number',
-      'numerology.birthdayNumber'
-    ]) || "Unknown",
-    birthdayKeyword: extractData(blueprint, [
-      'values_life_path.birthday_keyword',
-      'values_life_path.birthdayKeyword',
-      'numerology.birthday_keyword',
-      'numerology.birthdayKeyword'
-    ]) || "Special talents from your birth day",
-    personalityNumber: extractData(blueprint, [
-      'values_life_path.personality_number',
-      'values_life_path.personalityNumber',
-      'numerology.personality_number',
-      'numerology.personalityNumber'
-    ]) || "Unknown",
-    personalityKeyword: extractData(blueprint, [
-      'values_life_path.personality_keyword',
-      'values_life_path.personalityKeyword',
-      'numerology.personality_keyword',
-      'numerology.personalityKeyword'
-    ]) || "Key personality aspect"
+  // Extract MBTI Data - prioritize user personality data over empty cognition_mbti
+  const personalityData = blueprint.user_meta?.personality;
+  let mbtiData = {
+    type: "Unknown",
+    core_keywords: [] as string[],
+    dominant_function: "Unknown",
+    auxiliary_function: "Unknown",
+    description: "",
+    user_confidence: 0
   };
 
-  console.log('📊 Final extracted numerology data:', numerologyData);
-
-  // Enhanced MBTI Data Extraction with Robust Fallbacks
-  let mbtiData = blueprint.cognition_mbti && typeof blueprint.cognition_mbti === "object" && blueprint.cognition_mbti.type && blueprint.cognition_mbti.type !== "Unknown"
-    ? blueprint.cognition_mbti
-    : blueprint.mbti && typeof blueprint.mbti === "object" && blueprint.mbti.type && blueprint.mbti.type !== "Unknown"
-      ? blueprint.mbti
-      : null;
-
-  // Use type guard for safe personality access
-  if (!mbtiData || !mbtiData.type || mbtiData.type === "Unknown") {
-    const personality = blueprint.user_meta?.personality;
-    
-    if (isValidPersonality(personality)) {
-      mbtiData = {
-        type: personality.likelyType || "Unknown",
-        core_keywords:
-          personality.mbtiCoreKeywords && Array.isArray(personality.mbtiCoreKeywords)
-            ? personality.mbtiCoreKeywords
-            : personality.core_keywords && Array.isArray(personality.core_keywords)
-              ? personality.core_keywords
-              : [],
-        dominant_function:
-          personality.dominantFunction ||
-          personality.dominant_function ||
-          "Unknown",
-        auxiliary_function:
-          personality.auxiliaryFunction ||
-          personality.auxiliary_function ||
-          "Unknown",
-        description:
-          personality.description && typeof personality.description === "string"
-            ? personality.description
-            : "",
-        user_confidence: personality.userConfidence
-      };
-    } else if (typeof personality === 'string') {
-      // Handle case where personality is just a string (MBTI type)
-      mbtiData = {
-        type: personality,
-        core_keywords: [],
-        dominant_function: "Unknown",
-        auxiliary_function: "Unknown",
-        description: "",
-      };
-    } else {
-      mbtiData = {
-        type: "Unknown",
-        core_keywords: [],
-        dominant_function: "Unknown",
-        auxiliary_function: "Unknown",
-        description: "",
-      };
+  // Get MBTI type from user personality data first
+  if (personalityData && typeof personalityData === 'object') {
+    const personality = personalityData as any;
+    if (personality.likelyType) {
+      mbtiData.type = personality.likelyType;
+      mbtiData.description = personality.description || "";
+      mbtiData.user_confidence = personality.userConfidence || 0;
+      
+      // Extract keywords from description
+      const description = personality.description || "";
+      const extractedKeywords = [];
+      if (description.includes('Enthusiastic')) extractedKeywords.push('Enthusiastic');
+      if (description.includes('creative')) extractedKeywords.push('Creative');
+      if (description.includes('possibilities')) extractedKeywords.push('Visionary');
+      if (description.includes('inspiring')) extractedKeywords.push('Inspiring');
+      mbtiData.core_keywords = extractedKeywords.length > 0 ? extractedKeywords : ['Dynamic', 'Inspiring'];
     }
   }
 
-  // Apply MBTI Cognitive Function Fallback
-  if (
-    mbtiData &&
-    typeof mbtiData.type === "string" &&
-    MBTI_COG_FUNCTIONS[mbtiData.type.toUpperCase()]
-  ) {
-    const cog = MBTI_COG_FUNCTIONS[mbtiData.type.toUpperCase()];
-    if (
-      !mbtiData.dominant_function ||
-      mbtiData.dominant_function === "Unknown"
-    ) {
-      mbtiData.dominant_function = cog.dominant;
-    }
-    if (
-      !mbtiData.auxiliary_function ||
-      mbtiData.auxiliary_function === "Unknown"
-    ) {
-      mbtiData.auxiliary_function = cog.auxiliary;
-    }
+  // Apply cognitive functions based on MBTI type
+  if (mbtiData.type !== "Unknown" && MBTI_COG_FUNCTIONS[mbtiData.type]) {
+    const functions = MBTI_COG_FUNCTIONS[mbtiData.type];
+    mbtiData.dominant_function = functions.dominant;
+    mbtiData.auxiliary_function = functions.auxiliary;
   }
 
-  console.log('🧠 Extracted MBTI data:', mbtiData);
+  console.log('🧠 Final MBTI data:', mbtiData);
+
+  // Extract Numerology Data - use the rich numerology object directly
+  const numerologySource = blueprint.numerology || blueprint.values_life_path || {};
+  const numerologyData = {
+    lifePathNumber: numerologySource.life_path_number || numerologySource.lifePathNumber || "Unknown",
+    lifePathKeyword: numerologySource.life_path_keyword || numerologySource.lifePathKeyword || "Your life's purpose",
+    expressionNumber: numerologySource.expression_number || numerologySource.expressionNumber || "Unknown", 
+    expressionKeyword: numerologySource.expression_keyword || numerologySource.expressionKeyword || "Your talents",
+    soulUrgeNumber: numerologySource.soul_urge_number || numerologySource.soulUrgeNumber || "Unknown",
+    soulUrgeKeyword: numerologySource.soul_urge_keyword || numerologySource.soulUrgeKeyword || "Your desires",
+    birthdayNumber: numerologySource.birthday_number || numerologySource.birthdayNumber || "Unknown",
+    birthdayKeyword: numerologySource.birthday_keyword || numerologySource.birthdayKeyword || "Special talents",
+    personalityNumber: numerologySource.personality_number || numerologySource.personalityNumber || "Unknown",
+    personalityKeyword: numerologySource.personality_keyword || numerologySource.personalityKeyword || "Key traits"
+  };
+
+  console.log('📊 Extracted numerology data:', numerologyData);
+
+  // Extract Human Design Data - use the rich human_design object
+  const hdSource = blueprint.human_design || blueprint.energy_strategy_human_design || {};
+  const hdData = {
+    type: hdSource.type || "Generator",
+    profile: hdSource.profile || "2/4",
+    authority: hdSource.authority || "Sacral",
+    strategy: hdSource.strategy || "Respond",
+    definition: hdSource.definition || "Single",
+    not_self_theme: hdSource.not_self_theme || "Frustration"
+  };
+
+  console.log('🎯 Extracted Human Design data:', hdData);
+
+  // Extract Western Astrology Data
+  const westernData = blueprint.astrology || blueprint.archetype_western || {
+    sun_sign: "Unknown",
+    moon_sign: "Unknown", 
+    rising_sign: "Unknown"
+  };
+
+  // Extract Chinese Zodiac Data
+  const chineseData = blueprint.chinese_zodiac || blueprint.archetype_chinese || {
+    animal: "Unknown",
+    element: "Unknown"
+  };
+
+  // Extract calculation metadata
+  const metadata = blueprint?.metadata || {
+    calculation_success: false,
+    partial_calculation: false,
+    calculation_date: "",
+    engine: "",
+    data_sources: { western: "" }
+  };
+  
+  const calculationDate = metadata.calculation_date || "Unknown";
+  const isRealCalculation = metadata.calculation_success || metadata.engine?.includes("supabase_edge_function");
+  const calculationEngine = isRealCalculation ? 
+    (metadata.engine?.includes("supabase_edge_function") ? "Swiss Ephemeris via Supabase" : "Accurate Calculations") : 
+    "Template Data";
 
   if (showAIReport) {
     return (
@@ -243,84 +148,12 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
     );
   }
 
-  // Extract calculation metadata with proper typing
-  const metadata = blueprint?.metadata || {
-    calculation_success: false,
-    partial_calculation: false,
-    calculation_date: "",
-    engine: "",
-    data_sources: { western: "" }
-  };
-  
-  const calculationDate = metadata.calculation_date || "Unknown";
-  
-  // Better detection of real vs template data
-  const isRealCalculation = metadata.calculation_success || 
-    metadata.engine?.includes("swiss_ephemeris") || 
-    metadata.engine?.includes("vercel") ||
-    metadata.data_sources?.western === "calculated";
-  
-  const calculationEngine = isRealCalculation ? 
-    (metadata.engine?.includes("swiss_ephemeris") ? "Swiss Ephemeris via Vercel API" : 
-     metadata.engine?.includes("vercel") ? "Vercel Ephemeris API" :
-     "Accurate Astronomical Calculations") : 
-    "Template Data";
-  
-  // Enhanced Western Astrology data extraction
-  const westernData = blueprint.archetype_western || blueprint.astrology || {
-    sun_sign: "Unknown",
-    sun_keyword: "Unknown",
-    moon_sign: "Unknown", 
-    moon_keyword: "Unknown",
-    rising_sign: "Unknown",
-    source: "template"
-  };
-
-  // Enhanced Human Design data extraction
-  const humanDesignData = blueprint.energy_strategy_human_design || blueprint.human_design || {};
-  const hdData = {
-    type: extractData(blueprint, [
-      'energy_strategy_human_design.type',
-      'human_design.type',
-      'energy_strategy_human_design.design_type',
-      'human_design.design_type'
-    ]) || "Generator",
-    profile: extractData(blueprint, [
-      'energy_strategy_human_design.profile',
-      'human_design.profile'
-    ]) || "2/4",
-    authority: extractData(blueprint, [
-      'energy_strategy_human_design.authority',
-      'human_design.authority',
-      'energy_strategy_human_design.inner_authority',
-      'human_design.inner_authority'
-    ]) || "Sacral",
-    strategy: extractData(blueprint, [
-      'energy_strategy_human_design.strategy',
-      'human_design.strategy'
-    ]) || "Respond",
-    definition: extractData(blueprint, [
-      'energy_strategy_human_design.definition',
-      'human_design.definition'
-    ]) || "Single",
-    not_self_theme: extractData(blueprint, [
-      'energy_strategy_human_design.not_self_theme',
-      'human_design.not_self_theme'
-    ]) || "Frustration",
-    life_purpose: extractData(blueprint, [
-      'energy_strategy_human_design.life_purpose',
-      'human_design.life_purpose'
-    ]) || "To find satisfaction"
-  };
-
-  console.log('🎯 Enhanced Human Design data:', hdData);
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <div>
           <h2 className="text-2xl font-bold">
-            Soul Blueprint for {blueprint.user_meta.preferred_name}
+            Soul Blueprint for {blueprint.user_meta?.preferred_name || blueprint.user_meta?.full_name}
           </h2>
           <p className="text-sm text-muted-foreground">
             {isRealCalculation ? 
@@ -388,13 +221,13 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
             <CardContent>
               <div className="space-y-4">
                 <p>
-                  Welcome to your Soul Blueprint, {blueprint.user_meta.preferred_name}!
+                  Welcome to your Soul Blueprint, {blueprint.user_meta?.preferred_name || 'there'}!
                 </p>
                 {isRealCalculation ? (
                   <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                     <h4 className="font-semibold text-green-800 mb-2">✅ Accurate Calculations</h4>
                     <p className="text-green-700">
-                      Your blueprint was generated using precise astronomical calculations from the Swiss Ephemeris, taking into account your exact birth time, location, and historical timezone data.
+                      Your blueprint was generated using precise astronomical calculations, taking into account your exact birth details.
                     </p>
                   </div>
                 ) : (
@@ -409,14 +242,12 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
                   <div className="text-center">
                     <h4 className="font-semibold">Sun Sign</h4>
                     <p className="text-lg text-soul-purple">{westernData.sun_sign}</p>
-                    <p className="text-sm text-gray-600">{westernData.sun_keyword || 'Sun energy'}</p>
+                    <p className="text-sm text-gray-600">{westernData.sun_keyword || 'Solar energy'}</p>
                   </div>
                   <div className="text-center">
                     <h4 className="font-semibold">MBTI Type</h4>
-                    <p className="text-lg text-soul-purple">{mbtiData.type || 'Unknown'}</p>
-                    <p className="text-sm text-gray-600">{Array.isArray(mbtiData.core_keywords) && mbtiData.core_keywords.length
-                      ? mbtiData.core_keywords.join(", ")
-                      : (mbtiData.description || 'Personality type')}</p>
+                    <p className="text-lg text-soul-purple">{mbtiData.type}</p>
+                    <p className="text-sm text-gray-600">{mbtiData.core_keywords.join(", ") || 'Personality type'}</p>
                   </div>
                   <div className="text-center">
                     <h4 className="font-semibold">Life Path</h4>
@@ -438,23 +269,25 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
             <CardContent>
               <div className="space-y-3">
                 <div>
-                  <span className="font-semibold">Type:</span> {mbtiData.type || 'Unknown'}
+                  <span className="font-semibold">Type:</span> {mbtiData.type}
                 </div>
                 <div>
-                  <span className="font-semibold">Core Keywords:</span>{" "}
-                  {Array.isArray(mbtiData.core_keywords) && mbtiData.core_keywords.length
-                    ? mbtiData.core_keywords.join(", ")
-                    : (mbtiData.description || 'Personality traits')}
+                  <span className="font-semibold">Core Keywords:</span> {mbtiData.core_keywords.join(", ") || 'Traits based on type'}
                 </div>
                 <div>
-                  <span className="font-semibold">Dominant Function:</span> {mbtiData.dominant_function || 'Unknown'}
+                  <span className="font-semibold">Dominant Function:</span> {mbtiData.dominant_function}
                 </div>
                 <div>
-                  <span className="font-semibold">Auxiliary Function:</span> {mbtiData.auxiliary_function || 'Unknown'}
+                  <span className="font-semibold">Auxiliary Function:</span> {mbtiData.auxiliary_function}
                 </div>
-                {mbtiData.user_confidence !== undefined && (
+                {mbtiData.description && (
                   <div>
-                    <span className="font-semibold">Self-Assessment Confidence:</span> {Math.round(mbtiData.user_confidence * 100)}%
+                    <span className="font-semibold">Description:</span> {mbtiData.description}
+                  </div>
+                )}
+                {mbtiData.user_confidence > 0 && (
+                  <div>
+                    <span className="font-semibold">Assessment Confidence:</span> {Math.round(mbtiData.user_confidence * 100)}%
                   </div>
                 )}
               </div>
@@ -545,8 +378,15 @@ export const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps>
                   <span className="font-semibold">Moon Sign:</span> {westernData.moon_sign} {westernData.moon_keyword ? `- ${westernData.moon_keyword}` : ''}
                 </div>
                 <div>
-                  <span className="font-semibold">Rising Sign:</span> {westernData.rising_sign || 'Calculating...'}
+                  <span className="font-semibold">Rising Sign:</span> {westernData.rising_sign}
                 </div>
+                {chineseData.animal !== 'Unknown' && (
+                  <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                    <h4 className="font-semibold mb-2">Chinese Zodiac</h4>
+                    <p><span className="font-medium">Animal:</span> {chineseData.animal}</p>
+                    <p><span className="font-medium">Element:</span> {chineseData.element}</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
