@@ -8,7 +8,7 @@ import { ModeProvider } from '@/contexts/ModeContext';
 import { SoulOrbProvider } from '@/contexts/SoulOrbContext';
 import { BlueprintCacheProvider } from '@/contexts/BlueprintCacheContext';
 import { Toaster } from '@/components/ui/sonner';
-import ErrorBoundary from '@/components/ErrorBoundary';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
 // Page imports

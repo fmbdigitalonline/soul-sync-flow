@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { MainLayout } from '@/components/Layout/MainLayout';
+import MainLayout from '@/components/Layout/MainLayout';
 import SevenLayerPersonalityTest from '@/components/debug/SevenLayerPersonalityTest';
 
 const SevenLayerTest: React.FC = () => {
