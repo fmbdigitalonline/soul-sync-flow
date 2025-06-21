@@ -2,10 +2,14 @@
 import { SevenLayerPersonalityEngine } from "./seven-layer-personality-engine";
 import { LayeredBlueprint } from "@/types/personality-modules";
 import { HolisticContext } from "@/types/seven-layer-personality";
+import { AdvancedHolisticPromptGenerator, UserState } from "./advanced-holistic-prompt-generator";
+
+export type CoachMode = "growth" | "companion" | "dream";
 
 class HolisticCoachService {
   private personalityEngine: SevenLayerPersonalityEngine;
   private currentUserId: string | null = null;
+  private currentMode: CoachMode = "growth";
 
   constructor() {
     this.personalityEngine = new SevenLayerPersonalityEngine();
@@ -15,6 +19,11 @@ class HolisticCoachService {
   setCurrentUser(userId: string) {
     this.currentUserId = userId;
     console.log("👤 Holistic Coach Service: User set:", userId);
+  }
+
+  setMode(mode: CoachMode) {
+    this.currentMode = mode;
+    console.log("🎯 Holistic Coach Service: Mode set to:", mode);
   }
 
   updateBlueprint(blueprint: Partial<LayeredBlueprint>) {
@@ -27,9 +36,45 @@ class HolisticCoachService {
     this.personalityEngine.updateContext(context);
   }
 
-  generateSystemPrompt(): string {
-    console.log("📝 Holistic Coach Service: Generating holistic system prompt");
+  generateSystemPrompt(userMessage?: string): string {
+    console.log(`📝 Holistic Coach Service: Generating system prompt for ${this.currentMode} mode`);
+    
+    // Only use advanced system prompt for growth mode
+    if (this.currentMode === "growth" && userMessage) {
+      return this.generateAdvancedSystemPrompt(userMessage);
+    }
+    
+    // Fall back to basic system prompt for companion and dream modes
     return this.personalityEngine.generateHolisticSystemPrompt();
+  }
+
+  private generateAdvancedSystemPrompt(userMessage: string): string {
+    const personality = this.personalityEngine.getPersonality();
+    const context = this.personalityEngine.getContext();
+    
+    if (!personality) {
+      console.log("⚠️ No personality data available, using basic prompt");
+      return this.personalityEngine.generateHolisticSystemPrompt();
+    }
+
+    console.log("🚀 Generating advanced holistic system prompt for growth mode");
+    
+    // Analyze user state from message
+    const userState = AdvancedHolisticPromptGenerator.analyzeUserState(userMessage, context);
+    
+    console.log("📊 User state analysis:", userState);
+    
+    // Generate advanced system prompt with dynamic layer integration
+    const advancedPrompt = AdvancedHolisticPromptGenerator.generateAdvancedSystemPrompt(
+      personality,
+      userMessage,
+      userState,
+      context
+    );
+    
+    console.log("✅ Advanced system prompt generated, length:", advancedPrompt.length);
+    
+    return advancedPrompt;
   }
 
   getPersonalityInsights() {
@@ -47,7 +92,8 @@ class HolisticCoachService {
         expression: personality.expressionLayer
       },
       metadata: personality.metadata,
-      context: this.personalityEngine.getContext()
+      context: this.personalityEngine.getContext(),
+      mode: this.currentMode
     };
   }
 

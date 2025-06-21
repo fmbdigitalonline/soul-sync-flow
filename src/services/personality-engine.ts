@@ -1,5 +1,6 @@
 
 import { LayeredBlueprint, AgentMode } from "@/types/personality-modules";
+import { holisticCoachService } from "./holistic-coach-service";
 
 export class PersonalityEngine {
   private blueprint: Partial<LayeredBlueprint> = {};
@@ -10,6 +11,9 @@ export class PersonalityEngine {
     
     // Deep merge the updates
     this.blueprint = { ...this.blueprint, ...updates };
+    
+    // Also update the holistic coach service for growth mode
+    holisticCoachService.updateBlueprint(updates);
     
     // Log the updated blueprint structure
     console.log("✅ Personality Engine: Blueprint updated with data:", {
@@ -27,9 +31,16 @@ export class PersonalityEngine {
     });
   }
 
-  generateSystemPrompt(mode: AgentMode): string {
+  generateSystemPrompt(mode: AgentMode, userMessage?: string): string {
     console.log(`🎯 Personality Engine: Generating system prompt for ${mode} mode`);
     
+    // For guide mode (growth), use the advanced holistic coach service
+    if (mode === 'guide' && userMessage) {
+      holisticCoachService.setMode("growth");
+      return holisticCoachService.generateSystemPrompt(userMessage);
+    }
+    
+    // For other modes (coach, blend), use the original logic
     if (!this.blueprint || Object.keys(this.blueprint).length === 0) {
       console.log("⚠️ No blueprint data available, using generic prompt");
       return this.getGenericPrompt(mode);

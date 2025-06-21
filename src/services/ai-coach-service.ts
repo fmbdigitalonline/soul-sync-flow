@@ -46,8 +46,11 @@ class AICoachService {
   ): Promise<{ response: string; conversationId: string }> {
     try {
       // Generate personalized system prompt using the personality engine
+      // For growth mode, pass the user message for advanced prompt generation
       const systemPrompt = includeBlueprint 
-        ? this.personalityEngine.generateSystemPrompt(agentType as AgentMode)
+        ? (agentType === "guide" 
+            ? this.personalityEngine.generateSystemPrompt("guide", message) // Pass message for growth mode
+            : this.personalityEngine.generateSystemPrompt(agentType as AgentMode))
         : null;
 
       console.log("Generated personalized system prompt length:", systemPrompt?.length || 0);
@@ -86,8 +89,11 @@ class AICoachService {
     try {
       console.log('Starting streaming request...');
       
+      // For growth mode, pass the user message for advanced prompt generation
       const systemPrompt = includeBlueprint 
-        ? this.personalityEngine.generateSystemPrompt(agentType as AgentMode)
+        ? (agentType === "guide" 
+            ? this.personalityEngine.generateSystemPrompt("guide", message) // Pass message for growth mode
+            : this.personalityEngine.generateSystemPrompt(agentType as AgentMode))
         : null;
 
       console.log("Generated personalized system prompt for streaming, length:", systemPrompt?.length || 0);

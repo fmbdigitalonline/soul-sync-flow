@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,8 +9,10 @@ export const SevenLayerPersonalityTest: React.FC = () => {
   const { blueprintData, loading } = useBlueprintCache();
   const [testResults, setTestResults] = useState<any>(null);
   const [systemPrompt, setSystemPrompt] = useState<string>('');
+  const [advancedSystemPrompt, setAdvancedSystemPrompt] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [rawBlueprintSample, setRawBlueprintSample] = useState<any>(null);
+  const [phase2Results, setPhase2Results] = useState<any>(null);
 
   const runEndToEndTest = () => {
     console.log('🧪 Starting Seven Layer Personality E2E Test');
@@ -69,6 +70,35 @@ export const SevenLayerPersonalityTest: React.FC = () => {
       console.log('🔍 Step 7: Validating data authenticity');
       const authenticityCheck = validateDataAuthenticity(insights, blueprintData);
 
+      // Step 8: Test Phase 2 Advanced System Prompt Generation
+      console.log('🚀 Step 8: Testing Phase 2 Advanced System Prompt Generation');
+      holisticCoachService.setMode("growth");
+      
+      // Test with different user message scenarios
+      const testMessages = [
+        "I'm feeling stuck and don't know what to do next",
+        "I have this amazing idea for a creative project",
+        "I need clarity on my life purpose and direction",
+        "Let's brainstorm some new possibilities"
+      ];
+
+      const advancedPrompts = testMessages.map(message => {
+        const prompt = holisticCoachService.generateSystemPrompt(message);
+        return { message, prompt, length: prompt.length };
+      });
+
+      setAdvancedSystemPrompt(advancedPrompts[0].prompt); // Show first one
+      
+      setPhase2Results({
+        advancedPromptsGenerated: advancedPrompts.length,
+        promptLengths: advancedPrompts.map(p => p.length),
+        avgLength: Math.round(advancedPrompts.reduce((sum, p) => sum + p.length, 0) / advancedPrompts.length),
+        shadowDetection: advancedPrompts.some(p => p.prompt.includes('Shadow/Gift Reframing')),
+        dynamicLayerActivation: advancedPrompts.some(p => p.prompt.includes('Dynamic Layer Activation')),
+        geneKeysIntegration: advancedPrompts.some(p => p.prompt.includes('Gene Keys')),
+        contextAnalysis: advancedPrompts.every(p => p.prompt.includes('Current Context'))
+      });
+
       setTestResults({
         step1_blueprintLoaded: !!blueprintData,
         step2_serviceUpdated: true,
@@ -77,6 +107,8 @@ export const SevenLayerPersonalityTest: React.FC = () => {
         step5_insightsGenerated: !!insights,
         step6_structureValid: validation.isValid,
         step7_dataAuthentic: authenticityCheck.isAuthentic,
+        step8_phase2Advanced: true,
+        phase2Results: phase2Results,
         validation: validation,
         authenticityCheck: authenticityCheck,
         insights: insights,
@@ -84,7 +116,7 @@ export const SevenLayerPersonalityTest: React.FC = () => {
         timestamp: new Date().toISOString()
       });
 
-      console.log('✅ E2E Test completed successfully');
+      console.log('✅ E2E Test completed successfully with Phase 2');
 
     } catch (err) {
       console.error('❌ E2E Test failed:', err);
@@ -170,7 +202,7 @@ export const SevenLayerPersonalityTest: React.FC = () => {
     <div className="space-y-6 p-6">
       <Card>
         <CardHeader>
-          <CardTitle>Seven Layer Personality - End to End Test</CardTitle>
+          <CardTitle>Seven Layer Personality - End to End Test (Phase 1 + Phase 2)</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -180,7 +212,7 @@ export const SevenLayerPersonalityTest: React.FC = () => {
                 disabled={loading}
                 className="bg-blue-600 hover:bg-blue-700"
               >
-                {loading ? 'Loading Blueprint...' : 'Run E2E Test'}
+                {loading ? 'Loading Blueprint...' : 'Run E2E Test (Phase 1 + 2)'}
               </Button>
               {blueprintData && (
                 <Badge className="bg-blue-100 text-blue-800">
@@ -345,6 +377,64 @@ export const SevenLayerPersonalityTest: React.FC = () => {
                       </div>
                       <div className="mt-2 text-sm text-gray-600">
                         Length: {systemPrompt.length} characters
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {phase2Results && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>🚀 Phase 2: Advanced System Prompt Generation</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="flex items-center justify-between">
+                            <span>Advanced Prompts Generated</span>
+                            <Badge className="bg-green-100 text-green-800">
+                              {phase2Results.advancedPromptsGenerated} scenarios
+                            </Badge>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span>Shadow Detection</span>
+                            {getStatusBadge(phase2Results.shadowDetection)}
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span>Dynamic Layer Activation</span>
+                            {getStatusBadge(phase2Results.dynamicLayerActivation)}
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span>Gene Keys Integration</span>
+                            {getStatusBadge(phase2Results.geneKeysIntegration)}
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span>Context Analysis</span>
+                            {getStatusBadge(phase2Results.contextAnalysis)}
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span>Average Prompt Length</span>
+                            <Badge className="bg-blue-100 text-blue-800">
+                              {phase2Results.avgLength} chars
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {advancedSystemPrompt && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>🚀 Phase 2: Advanced System Prompt Sample</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="bg-gray-50 p-4 rounded-lg max-h-96 overflow-y-auto">
+                        <pre className="text-sm whitespace-pre-wrap">{advancedSystemPrompt}</pre>
+                      </div>
+                      <div className="mt-2 text-sm text-gray-600">
+                        Length: {advancedSystemPrompt.length} characters
                       </div>
                     </CardContent>
                   </Card>
