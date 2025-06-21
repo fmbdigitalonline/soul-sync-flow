@@ -1,3 +1,4 @@
+
 import { LayeredBlueprint } from "@/types/personality-modules";
 import { 
   SevenLayerPersonality, 
@@ -129,7 +130,7 @@ export class SevenLayerPersonalityEngine {
       : values?.lifePath || 1;
     
     const soulUrgeNumber = typeof values?.soulUrgeNumber === 'string'
-      ? parseInt(values.soulUrgeNumber.toString(), 10) || 1
+      ? parseInt(values.soulUrgeNumber, 10) || 1
       : values?.soulUrgeNumber || 1;
 
     return {
