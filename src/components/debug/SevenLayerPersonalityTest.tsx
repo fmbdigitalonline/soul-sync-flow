@@ -11,6 +11,7 @@ export const SevenLayerPersonalityTest: React.FC = () => {
   const [testResults, setTestResults] = useState<any>(null);
   const [systemPrompt, setSystemPrompt] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
+  const [rawBlueprintSample, setRawBlueprintSample] = useState<any>(null);
 
   const runEndToEndTest = () => {
     console.log('🧪 Starting Seven Layer Personality E2E Test');
@@ -23,6 +24,20 @@ export const SevenLayerPersonalityTest: React.FC = () => {
 
       console.log('📊 Step 1: Blueprint data loaded');
       console.log('Blueprint keys:', Object.keys(blueprintData));
+      
+      // Capture raw blueprint sample to prove we're using real data
+      const rawSample = {
+        userName: blueprintData.user_meta?.preferred_name || blueprintData.user_meta?.full_name,
+        mbtiType: blueprintData.cognitiveTemperamental?.mbtiType,
+        hdType: blueprintData.energyDecisionStrategy?.humanDesignType,
+        sunSign: blueprintData.publicArchetype?.sunSign,
+        lifePath: blueprintData.coreValuesNarrative?.lifePath,
+        chineseZodiac: blueprintData.generationalCode?.chineseZodiac,
+        hasRealData: true,
+        blueprintKeys: Object.keys(blueprintData),
+        totalDataPoints: Object.keys(blueprintData).length
+      };
+      setRawBlueprintSample(rawSample);
 
       // Step 2: Update the holistic coach with blueprint data
       console.log('🔄 Step 2: Updating holistic coach service');
@@ -50,6 +65,10 @@ export const SevenLayerPersonalityTest: React.FC = () => {
       console.log('🏗️ Step 6: Validating 7-layer structure');
       const validation = validateSevenLayerStructure(insights);
 
+      // Step 7: Validate data authenticity (not hardcoded)
+      console.log('🔍 Step 7: Validating data authenticity');
+      const authenticityCheck = validateDataAuthenticity(insights, blueprintData);
+
       setTestResults({
         step1_blueprintLoaded: !!blueprintData,
         step2_serviceUpdated: true,
@@ -57,8 +76,11 @@ export const SevenLayerPersonalityTest: React.FC = () => {
         step4_promptGenerated: prompt.length > 100,
         step5_insightsGenerated: !!insights,
         step6_structureValid: validation.isValid,
+        step7_dataAuthentic: authenticityCheck.isAuthentic,
         validation: validation,
+        authenticityCheck: authenticityCheck,
         insights: insights,
+        rawBlueprintSample: rawSample,
         timestamp: new Date().toISOString()
       });
 
@@ -98,6 +120,43 @@ export const SevenLayerPersonalityTest: React.FC = () => {
         shadow: insights.layers.shadow ? Object.keys(insights.layers.shadow) : [],
         expression: insights.layers.expression ? Object.keys(insights.layers.expression) : []
       }
+    };
+  };
+
+  const validateDataAuthenticity = (insights: any, blueprintData: any) => {
+    console.log('🔍 Validating data authenticity against raw blueprint');
+    
+    if (!insights || !blueprintData) {
+      return { isAuthentic: false, reason: 'Missing data for comparison' };
+    }
+
+    const checks = [];
+    
+    // Check if MBTI matches
+    const mbtiMatch = insights.layers?.traits?.mbtiType === blueprintData.cognitiveTemperamental?.mbtiType;
+    checks.push({ test: 'MBTI Type Match', passed: mbtiMatch, expected: blueprintData.cognitiveTemperamental?.mbtiType, actual: insights.layers?.traits?.mbtiType });
+
+    // Check if HD type matches
+    const hdMatch = insights.layers?.energy?.humanDesignType === blueprintData.energyDecisionStrategy?.humanDesignType;
+    checks.push({ test: 'Human Design Type Match', passed: hdMatch, expected: blueprintData.energyDecisionStrategy?.humanDesignType, actual: insights.layers?.energy?.humanDesignType });
+
+    // Check if life path matches
+    const lifePathMatch = insights.layers?.motivation?.lifePath === blueprintData.coreValuesNarrative?.lifePath;
+    checks.push({ test: 'Life Path Match', passed: lifePathMatch, expected: blueprintData.coreValuesNarrative?.lifePath, actual: insights.layers?.motivation?.lifePath });
+
+    // Check if sun sign matches
+    const sunSignMatch = insights.layers?.archetypal?.sunSign === blueprintData.publicArchetype?.sunSign;
+    checks.push({ test: 'Sun Sign Match', passed: sunSignMatch, expected: blueprintData.publicArchetype?.sunSign, actual: insights.layers?.archetypal?.sunSign });
+
+    const passedChecks = checks.filter(check => check.passed).length;
+    const totalChecks = checks.length;
+
+    return {
+      isAuthentic: passedChecks >= Math.ceil(totalChecks * 0.75), // At least 75% of checks must pass
+      passedChecks,
+      totalChecks,
+      checks,
+      reason: passedChecks < Math.ceil(totalChecks * 0.75) ? 'Too many data mismatches detected' : 'Data authenticity verified'
     };
   };
 
@@ -167,8 +226,64 @@ export const SevenLayerPersonalityTest: React.FC = () => {
                       <span>7-Layer Structure Valid</span>
                       {getStatusBadge(testResults.step6_structureValid)}
                     </div>
+                    <div className="flex items-center justify-between">
+                      <span>Data Authenticity</span>
+                      {getStatusBadge(testResults.step7_dataAuthentic)}
+                    </div>
                   </div>
                 </div>
+
+                {rawBlueprintSample && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>📊 Raw Blueprint Data Proof</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2 text-sm">
+                        <div><strong>User Name:</strong> {rawBlueprintSample.userName}</div>
+                        <div><strong>MBTI Type:</strong> {rawBlueprintSample.mbtiType}</div>
+                        <div><strong>HD Type:</strong> {rawBlueprintSample.hdType}</div>
+                        <div><strong>Sun Sign:</strong> {rawBlueprintSample.sunSign}</div>
+                        <div><strong>Life Path:</strong> {rawBlueprintSample.lifePath}</div>
+                        <div><strong>Chinese Zodiac:</strong> {rawBlueprintSample.chineseZodiac}</div>
+                        <div><strong>Total Data Points:</strong> {rawBlueprintSample.totalDataPoints}</div>
+                        <div><strong>Blueprint Keys:</strong> {rawBlueprintSample.blueprintKeys?.join(', ')}</div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {testResults.authenticityCheck && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>🔍 Data Authenticity Check</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span>Authenticity Score:</span>
+                          <Badge className={testResults.authenticityCheck.isAuthentic ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+                            {testResults.authenticityCheck.passedChecks}/{testResults.authenticityCheck.totalChecks} checks passed
+                          </Badge>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          {testResults.authenticityCheck.checks?.map((check: any, index: number) => (
+                            <div key={index} className="flex items-center justify-between text-sm">
+                              <span>{check.test}</span>
+                              <div className="flex items-center gap-2">
+                                {getStatusBadge(check.passed)}
+                                <span className="text-xs text-gray-500">
+                                  {check.expected} → {check.actual}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
                 {testResults.validation && (
                   <Card>
