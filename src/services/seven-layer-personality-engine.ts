@@ -1,4 +1,3 @@
-
 import { LayeredBlueprint } from "@/types/personality-modules";
 import { 
   SevenLayerPersonality, 
@@ -124,12 +123,21 @@ export class SevenLayerPersonalityEngine {
     const values = blueprint.coreValuesNarrative;
     const motivation = blueprint.motivationBeliefEngine;
 
+    // Convert string/number to number with proper fallback
+    const lifePathNumber = typeof values?.lifePath === 'string' 
+      ? parseInt(values.lifePath, 10) || 1 
+      : values?.lifePath || 1;
+    
+    const soulUrgeNumber = typeof values?.soulUrgeNumber === 'string'
+      ? parseInt(values.soulUrgeNumber.toString(), 10) || 1
+      : values?.soulUrgeNumber || 1;
+
     return {
-      lifePath: values?.lifePath || 1,
+      lifePath: lifePathNumber,
       lifePathKeyword: values?.lifePathKeyword || 'Leadership',
-      soulUrge: values?.soulUrgeNumber || 1,
+      soulUrge: soulUrgeNumber,
       soulUrgeKeyword: values?.soulUrgeKeyword || 'Independence',
-      guidingGoalTree: this.mapLifePathToGoals(values?.lifePath || 1),
+      guidingGoalTree: this.mapLifePathToGoals(lifePathNumber),
       coreValues: motivation?.coreBeliefs || ['Growth', 'Authenticity'],
       copingStyles: ['Creative expression', 'Social connection', 'Intellectual exploration'],
       adaptiveStrategies: ['Reframe challenges as opportunities', 'Seek novel perspectives', 'Connect with like-minded people']
