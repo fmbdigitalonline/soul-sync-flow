@@ -13,9 +13,10 @@ export const SevenLayerPersonalityTest: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [rawBlueprintSample, setRawBlueprintSample] = useState<any>(null);
   const [phase2Results, setPhase2Results] = useState<any>(null);
+  const [dynamicTestResults, setDynamicTestResults] = useState<any>(null);
 
   const runEndToEndTest = () => {
-    console.log('🧪 Starting Seven Layer Personality E2E Test');
+    console.log('🧪 Starting Seven Layer Personality E2E Test with Enhanced Phase 2 Validation');
     setError(null);
     
     try {
@@ -70,34 +71,92 @@ export const SevenLayerPersonalityTest: React.FC = () => {
       console.log('🔍 Step 7: Validating data authenticity');
       const authenticityCheck = validateDataAuthenticity(insights, blueprintData);
 
-      // Step 8: Test Phase 2 Advanced System Prompt Generation
-      console.log('🚀 Step 8: Testing Phase 2 Advanced System Prompt Generation');
+      // Step 8: Enhanced Phase 2 Dynamic Testing
+      console.log('🚀 Step 8: Enhanced Phase 2 Dynamic System Prompt Testing');
       holisticCoachService.setMode("growth");
       
-      // Test with different user message scenarios
-      const testMessages = [
-        "I'm feeling stuck and don't know what to do next",
-        "I have this amazing idea for a creative project",
-        "I need clarity on my life purpose and direction",
-        "Let's brainstorm some new possibilities"
+      // Test with diverse real-world scenarios
+      const testScenarios = [
+        {
+          message: "I'm feeling stuck and don't know what to do next with my career",
+          expectedLayers: ['shadow', 'energy'],
+          expectedFeatures: ['Shadow/Gift Reframing', 'Dynamic Layer Activation']
+        },
+        {
+          message: "I have this amazing idea for a creative project and want to brainstorm possibilities",
+          expectedLayers: ['traits', 'expression'],
+          expectedFeatures: ['Dynamic Layer Activation', 'excitement compass']
+        },
+        {
+          message: "I need clarity on my life purpose and direction for the next year",
+          expectedLayers: ['motivation', 'archetypal'],
+          expectedFeatures: ['Life Path', 'sun sign', 'purpose alignment']
+        },
+        {
+          message: "I'm overwhelmed and feel like I can't handle all these responsibilities",
+          expectedLayers: ['shadow', 'energy'],
+          expectedFeatures: ['Shadow/Gift Reframing', 'Gene Keys', 'Human Design']
+        },
+        {
+          message: "Let's explore some new possibilities and creative solutions",
+          expectedLayers: ['traits', 'expression'],
+          expectedFeatures: ['ENFP', 'brainstorming', 'signature phrases']
+        }
       ];
 
-      const advancedPrompts = testMessages.map(message => {
-        const prompt = holisticCoachService.generateSystemPrompt(message);
-        return { message, prompt, length: prompt.length };
+      const dynamicResults = testScenarios.map((scenario, index) => {
+        console.log(`Testing scenario ${index + 1}: ${scenario.message.substring(0, 50)}...`);
+        
+        const generatedPrompt = holisticCoachService.generateSystemPrompt(scenario.message);
+        
+        // Validate dynamic content integration
+        const hasUserMessage = generatedPrompt.includes(scenario.message);
+        const hasDynamicLayers = generatedPrompt.includes('Dynamic Layer Activation');
+        const hasContextAnalysis = generatedPrompt.includes('Current Context');
+        const hasRealPersonalityData = validateRealPersonalityDataIntegration(generatedPrompt, blueprintData);
+        const hasShadowReframing = scenario.expectedLayers.includes('shadow') ? 
+          generatedPrompt.includes('Shadow/Gift Reframing') : true;
+        
+        // Check for specific expected features
+        const featureValidation = scenario.expectedFeatures.map(feature => ({
+          feature,
+          present: generatedPrompt.toLowerCase().includes(feature.toLowerCase())
+        }));
+        
+        return {
+          scenario: scenario.message,
+          promptLength: generatedPrompt.length,
+          hasUserMessage,
+          hasDynamicLayers,
+          hasContextAnalysis,
+          hasRealPersonalityData,
+          hasShadowReframing,
+          featureValidation,
+          isValid: hasUserMessage && hasDynamicLayers && hasContextAnalysis && 
+                   hasRealPersonalityData.isValid && hasShadowReframing &&
+                   featureValidation.every(f => f.present),
+          prompt: generatedPrompt // Store for analysis
+        };
       });
 
-      setAdvancedSystemPrompt(advancedPrompts[0].prompt); // Show first one
-      
-      setPhase2Results({
-        advancedPromptsGenerated: advancedPrompts.length,
-        promptLengths: advancedPrompts.map(p => p.length),
-        avgLength: Math.round(advancedPrompts.reduce((sum, p) => sum + p.length, 0) / advancedPrompts.length),
-        shadowDetection: advancedPrompts.some(p => p.prompt.includes('Shadow/Gift Reframing')),
-        dynamicLayerActivation: advancedPrompts.some(p => p.prompt.includes('Dynamic Layer Activation')),
-        geneKeysIntegration: advancedPrompts.some(p => p.prompt.includes('Gene Keys')),
-        contextAnalysis: advancedPrompts.every(p => p.prompt.includes('Current Context'))
-      });
+      setDynamicTestResults(dynamicResults);
+      setAdvancedSystemPrompt(dynamicResults[0].prompt); // Show first scenario
+
+      // Enhanced Phase 2 validation
+      const phase2ValidationResults = {
+        totalScenarios: dynamicResults.length,
+        passedScenarios: dynamicResults.filter(r => r.isValid).length,
+        averagePromptLength: Math.round(dynamicResults.reduce((sum, r) => sum + r.promptLength, 0) / dynamicResults.length),
+        realDataIntegration: dynamicResults.every(r => r.hasRealPersonalityData.isValid),
+        dynamicLayerActivation: dynamicResults.every(r => r.hasDynamicLayers),
+        contextAnalysis: dynamicResults.every(r => r.hasContextAnalysis),
+        shadowReframingCapability: dynamicResults.filter(r => r.hasShadowReframing).length,
+        userMessageIntegration: dynamicResults.every(r => r.hasUserMessage),
+        uniquePromptGeneration: new Set(dynamicResults.map(r => r.prompt)).size === dynamicResults.length,
+        personalityDataPoints: validatePersonalityDataPoints(dynamicResults, blueprintData)
+      };
+
+      setPhase2Results(phase2ValidationResults);
 
       setTestResults({
         step1_blueprintLoaded: !!blueprintData,
@@ -107,21 +166,99 @@ export const SevenLayerPersonalityTest: React.FC = () => {
         step5_insightsGenerated: !!insights,
         step6_structureValid: validation.isValid,
         step7_dataAuthentic: authenticityCheck.isAuthentic,
-        step8_phase2Advanced: true,
-        phase2Results: phase2Results,
+        step8_phase2Enhanced: phase2ValidationResults.passedScenarios === phase2ValidationResults.totalScenarios,
         validation: validation,
         authenticityCheck: authenticityCheck,
         insights: insights,
         rawBlueprintSample: rawSample,
+        phase2ValidationResults,
         timestamp: new Date().toISOString()
       });
 
-      console.log('✅ E2E Test completed successfully with Phase 2');
+      console.log('✅ Enhanced E2E Test completed successfully with Phase 2 dynamic validation');
 
     } catch (err) {
       console.error('❌ E2E Test failed:', err);
       setError(err instanceof Error ? err.message : 'Unknown error');
     }
+  };
+
+  const validateRealPersonalityDataIntegration = (prompt: string, blueprint: any) => {
+    const dataPoints = [];
+    
+    // Check for real MBTI integration
+    const mbtiType = blueprint.cognitiveTemperamental?.mbtiType;
+    if (mbtiType && mbtiType !== 'Unknown') {
+      dataPoints.push({
+        type: 'MBTI',
+        value: mbtiType,
+        found: prompt.includes(mbtiType)
+      });
+    }
+
+    // Check for real Human Design integration
+    const hdType = blueprint.energyDecisionStrategy?.humanDesignType;
+    if (hdType && hdType !== 'Unknown') {
+      dataPoints.push({
+        type: 'Human Design',
+        value: hdType,
+        found: prompt.includes(hdType)
+      });
+    }
+
+    // Check for real Life Path integration
+    const lifePath = blueprint.coreValuesNarrative?.lifePath;
+    if (lifePath) {
+      dataPoints.push({
+        type: 'Life Path',
+        value: lifePath.toString(),
+        found: prompt.includes(lifePath.toString()) || prompt.includes(`Life Path ${lifePath}`)
+      });
+    }
+
+    // Check for real Sun Sign integration
+    const sunSign = blueprint.publicArchetype?.sunSign;
+    if (sunSign && sunSign !== 'Unknown') {
+      dataPoints.push({
+        type: 'Sun Sign',
+        value: sunSign,
+        found: prompt.includes(sunSign)
+      });
+    }
+
+    const validDataPoints = dataPoints.filter(dp => dp.found);
+    
+    return {
+      isValid: validDataPoints.length >= Math.ceil(dataPoints.length * 0.75),
+      dataPoints,
+      validDataPoints: validDataPoints.length,
+      totalDataPoints: dataPoints.length,
+      integrationScore: dataPoints.length > 0 ? (validDataPoints.length / dataPoints.length) * 100 : 0
+    };
+  };
+
+  const validatePersonalityDataPoints = (dynamicResults: any[], blueprint: any) => {
+    const allPrompts = dynamicResults.map(r => r.prompt).join(' ');
+    
+    const personalityElements = [
+      blueprint.cognitiveTemperamental?.mbtiType,
+      blueprint.energyDecisionStrategy?.humanDesignType,
+      blueprint.coreValuesNarrative?.lifePath?.toString(),
+      blueprint.publicArchetype?.sunSign,
+      blueprint.generationalCode?.chineseZodiac
+    ].filter(Boolean);
+
+    const integratedElements = personalityElements.filter(element => 
+      allPrompts.includes(element)
+    );
+
+    return {
+      totalElements: personalityElements.length,
+      integratedElements: integratedElements.length,
+      integrationRate: personalityElements.length > 0 ? 
+        (integratedElements.length / personalityElements.length) * 100 : 0,
+      missingElements: personalityElements.filter(element => !allPrompts.includes(element))
+    };
   };
 
   const validateSevenLayerStructure = (insights: any) => {
@@ -202,7 +339,7 @@ export const SevenLayerPersonalityTest: React.FC = () => {
     <div className="space-y-6 p-6">
       <Card>
         <CardHeader>
-          <CardTitle>Seven Layer Personality - End to End Test (Phase 1 + Phase 2)</CardTitle>
+          <CardTitle>Seven Layer Personality - Enhanced Phase 2 Dynamic Test</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -212,7 +349,7 @@ export const SevenLayerPersonalityTest: React.FC = () => {
                 disabled={loading}
                 className="bg-blue-600 hover:bg-blue-700"
               >
-                {loading ? 'Loading Blueprint...' : 'Run E2E Test (Phase 1 + 2)'}
+                {loading ? 'Loading Blueprint...' : 'Run Enhanced Dynamic Test'}
               </Button>
               {blueprintData && (
                 <Badge className="bg-blue-100 text-blue-800">
@@ -231,7 +368,7 @@ export const SevenLayerPersonalityTest: React.FC = () => {
             {testResults && (
               <div className="space-y-4">
                 <div className="bg-green-50 border border-green-200 p-4 rounded-lg">
-                  <h4 className="font-semibold text-green-800 mb-4">🧪 Test Results</h4>
+                  <h4 className="font-semibold text-green-800 mb-4">🧪 Enhanced Test Results</h4>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex items-center justify-between">
@@ -261,6 +398,10 @@ export const SevenLayerPersonalityTest: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <span>Data Authenticity</span>
                       {getStatusBadge(testResults.step7_dataAuthentic)}
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span>Phase 2 Enhanced Dynamic</span>
+                      {getStatusBadge(testResults.step8_phase2Enhanced)}
                     </div>
                   </div>
                 </div>
@@ -385,40 +526,78 @@ export const SevenLayerPersonalityTest: React.FC = () => {
                 {phase2Results && (
                   <Card>
                     <CardHeader>
-                      <CardTitle>🚀 Phase 2: Advanced System Prompt Generation</CardTitle>
+                      <CardTitle>🚀 Phase 2: Enhanced Dynamic Validation Results</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-3">
+                      <div className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="flex items-center justify-between">
-                            <span>Advanced Prompts Generated</span>
-                            <Badge className="bg-green-100 text-green-800">
-                              {phase2Results.advancedPromptsGenerated} scenarios
+                            <span>Test Scenarios</span>
+                            <Badge className="bg-blue-100 text-blue-800">
+                              {phase2Results.passedScenarios}/{phase2Results.totalScenarios} passed
                             </Badge>
                           </div>
                           <div className="flex items-center justify-between">
-                            <span>Shadow Detection</span>
-                            {getStatusBadge(phase2Results.shadowDetection)}
+                            <span>Real Data Integration</span>
+                            {getStatusBadge(phase2Results.realDataIntegration)}
                           </div>
                           <div className="flex items-center justify-between">
                             <span>Dynamic Layer Activation</span>
                             {getStatusBadge(phase2Results.dynamicLayerActivation)}
                           </div>
                           <div className="flex items-center justify-between">
-                            <span>Gene Keys Integration</span>
-                            {getStatusBadge(phase2Results.geneKeysIntegration)}
-                          </div>
-                          <div className="flex items-center justify-between">
                             <span>Context Analysis</span>
                             {getStatusBadge(phase2Results.contextAnalysis)}
                           </div>
                           <div className="flex items-center justify-between">
-                            <span>Average Prompt Length</span>
-                            <Badge className="bg-blue-100 text-blue-800">
-                              {phase2Results.avgLength} chars
-                            </Badge>
+                            <span>User Message Integration</span>
+                            {getStatusBadge(phase2Results.userMessageIntegration)}
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span>Unique Prompt Generation</span>
+                            {getStatusBadge(phase2Results.uniquePromptGeneration)}
                           </div>
                         </div>
+                        <div className="mt-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-semibold">Personality Data Integration:</span>
+                            <Badge className="bg-green-100 text-green-800">
+                              {phase2Results.personalityDataPoints.integrationRate.toFixed(1)}% integrated
+                            </Badge>
+                          </div>
+                          <div className="text-sm text-gray-600">
+                            {phase2Results.personalityDataPoints.integratedElements}/{phase2Results.personalityDataPoints.totalElements} personality elements found in generated prompts
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {dynamicTestResults && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>🔬 Dynamic Test Scenarios Breakdown</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {dynamicTestResults.map((result: any, index: number) => (
+                          <div key={index} className="border rounded-lg p-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-semibold text-sm">Scenario {index + 1}</span>
+                              {getStatusBadge(result.isValid)}
+                            </div>
+                            <div className="text-xs text-gray-600 mb-2">
+                              "{result.scenario.substring(0, 80)}..."
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                              <div>Prompt Length: {result.promptLength}</div>
+                              <div>User Message: {result.hasUserMessage ? '✅' : '❌'}</div>
+                              <div>Dynamic Layers: {result.hasDynamicLayers ? '✅' : '❌'}</div>
+                              <div>Real Data: {result.hasRealPersonalityData.isValid ? '✅' : '❌'}</div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </CardContent>
                   </Card>
@@ -427,7 +606,7 @@ export const SevenLayerPersonalityTest: React.FC = () => {
                 {advancedSystemPrompt && (
                   <Card>
                     <CardHeader>
-                      <CardTitle>🚀 Phase 2: Advanced System Prompt Sample</CardTitle>
+                      <CardTitle>🚀 Phase 2: Dynamic System Prompt Sample</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="bg-gray-50 p-4 rounded-lg max-h-96 overflow-y-auto">
