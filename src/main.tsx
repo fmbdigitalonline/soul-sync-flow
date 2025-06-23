@@ -20,6 +20,7 @@ import HumanDesignDebug from "./pages/HumanDesignDebug";
 import TestEphemeris from "./pages/TestEphemeris";
 import PersonaTest from "./pages/PersonaTest";
 import SevenLayerTest from "./pages/SevenLayerTest";
+import Phase3MemoryTestPage from "./pages/Phase3MemoryTest";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -67,6 +68,7 @@ const router = createBrowserRouter([
       { path: "human-design-debug", element: <HumanDesignDebug /> },
       { path: "persona-test", element: <PersonaTest /> },
       { path: "seven-layer-test", element: <ProtectedRoute><SevenLayerTest /></ProtectedRoute> },
+      { path: "phase3-memory-test", element: <ProtectedRoute><Phase3MemoryTestPage /></ProtectedRoute> },
       { path: "*", element: <NotFound /> }
     ]
   }
