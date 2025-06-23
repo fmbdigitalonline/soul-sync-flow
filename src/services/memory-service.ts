@@ -321,20 +321,46 @@ class MemoryService {
 
       console.log('🌱 Updating life context:', context.context_category);
 
-      const { error } = await supabase
+      // First try to update existing record
+      const { data: existingContext } = await supabase
         .from('user_life_context')
-        .upsert({
-          user_id: user.id,
-          context_category: context.context_category,
-          current_focus: context.current_focus,
-          recent_progress: context.recent_progress,
-          ongoing_challenges: context.ongoing_challenges,
-          celebration_moments: context.celebration_moments,
-          next_steps: context.next_steps,
-          last_updated: new Date().toISOString()
-        }, {
-          onConflict: 'user_id,context_category'
-        });
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('context_category', context.context_category)
+        .single();
+
+      let error;
+
+      if (existingContext) {
+        // Update existing record
+        const { error: updateError } = await supabase
+          .from('user_life_context')
+          .update({
+            current_focus: context.current_focus,
+            recent_progress: context.recent_progress,
+            ongoing_challenges: context.ongoing_challenges,
+            celebration_moments: context.celebration_moments,
+            next_steps: context.next_steps,
+            last_updated: new Date().toISOString()
+          })
+          .eq('id', existingContext.id);
+        error = updateError;
+      } else {
+        // Insert new record
+        const { error: insertError } = await supabase
+          .from('user_life_context')
+          .insert({
+            user_id: user.id,
+            context_category: context.context_category,
+            current_focus: context.current_focus,
+            recent_progress: context.recent_progress,
+            ongoing_challenges: context.ongoing_challenges,
+            celebration_moments: context.celebration_moments,
+            next_steps: context.next_steps,
+            last_updated: new Date().toISOString()
+          });
+        error = insertError;
+      }
 
       if (error) {
         console.error('Failed to update life context:', error);
