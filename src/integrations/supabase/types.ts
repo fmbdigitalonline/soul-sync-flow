@@ -405,6 +405,51 @@ export type Database = {
         }
         Relationships: []
       }
+      micro_action_reminders: {
+        Row: {
+          action_description: string | null
+          action_title: string
+          completion_notes: string | null
+          created_at: string
+          id: string
+          reminder_type: string
+          scheduled_for: string
+          session_id: string
+          snooze_until: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          action_description?: string | null
+          action_title: string
+          completion_notes?: string | null
+          created_at?: string
+          id?: string
+          reminder_type?: string
+          scheduled_for: string
+          session_id: string
+          snooze_until?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          action_description?: string | null
+          action_title?: string
+          completion_notes?: string | null
+          created_at?: string
+          id?: string
+          reminder_type?: string
+          scheduled_for?: string
+          session_id?: string
+          snooze_until?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       personality_answers: {
         Row: {
           answer: string
@@ -565,6 +610,39 @@ export type Database = {
         }
         Relationships: []
       }
+      session_feedback: {
+        Row: {
+          created_at: string
+          feedback_text: string | null
+          id: string
+          improvement_suggestions: Json | null
+          rating: number
+          session_id: string
+          session_summary: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          feedback_text?: string | null
+          id?: string
+          improvement_suggestions?: Json | null
+          rating: number
+          session_id: string
+          session_summary?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          feedback_text?: string | null
+          id?: string
+          improvement_suggestions?: Json | null
+          rating?: number
+          session_id?: string
+          session_summary?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       task_coach_session_logs: {
         Row: {
           actions_executed: number | null
@@ -706,6 +784,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_life_context: {
+        Row: {
+          celebration_moments: Json | null
+          context_category: string
+          created_at: string
+          current_focus: string | null
+          id: string
+          last_updated: string
+          next_steps: Json | null
+          ongoing_challenges: Json | null
+          recent_progress: Json | null
+          user_id: string
+        }
+        Insert: {
+          celebration_moments?: Json | null
+          context_category: string
+          created_at?: string
+          current_focus?: string | null
+          id?: string
+          last_updated?: string
+          next_steps?: Json | null
+          ongoing_challenges?: Json | null
+          recent_progress?: Json | null
+          user_id: string
+        }
+        Update: {
+          celebration_moments?: Json | null
+          context_category?: string
+          created_at?: string
+          current_focus?: string | null
+          id?: string
+          last_updated?: string
+          next_steps?: Json | null
+          ongoing_challenges?: Json | null
+          recent_progress?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_profiles: {
         Row: {
           avatar_url: string | null
@@ -729,6 +846,42 @@ export type Database = {
           display_name?: string | null
           id?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_session_memory: {
+        Row: {
+          context_summary: string | null
+          created_at: string
+          id: string
+          importance_score: number | null
+          last_referenced: string | null
+          memory_data: Json
+          memory_type: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          context_summary?: string | null
+          created_at?: string
+          id?: string
+          importance_score?: number | null
+          last_referenced?: string | null
+          memory_data?: Json
+          memory_type: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          context_summary?: string | null
+          created_at?: string
+          id?: string
+          importance_score?: number | null
+          last_referenced?: string | null
+          memory_data?: Json
+          memory_type?: string
+          session_id?: string
           user_id?: string
         }
         Relationships: []
@@ -834,6 +987,10 @@ export type Database = {
       check_admin_status: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      cleanup_old_memories: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       generate_blueprint_signature: {
         Args: { blueprint_data: Json }
