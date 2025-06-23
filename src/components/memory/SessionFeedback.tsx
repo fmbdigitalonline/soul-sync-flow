@@ -49,6 +49,7 @@ export const SessionFeedback: React.FC<SessionFeedbackProps> = ({
 
     try {
       const success = await memoryService.saveFeedback({
+        user_id: '', // Will be set by the service
         session_id: sessionId,
         rating,
         feedback_text: feedback.trim() || undefined,

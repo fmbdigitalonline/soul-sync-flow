@@ -9,7 +9,7 @@ import {
   Bell, 
   Clock, 
   CheckCircle, 
-  Snooze, 
+  Moon, 
   Calendar,
   AlertCircle,
   Play,
@@ -137,7 +137,7 @@ export const MicroActionReminders: React.FC<MicroActionRemindersProps> = ({
       case 'pending': return <Clock className="h-4 w-4 text-blue-500" />;
       case 'sent': return <Bell className="h-4 w-4 text-orange-500" />;
       case 'completed': return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'snoozed': return <Snooze className="h-4 w-4 text-gray-500" />;
+      case 'snoozed': return <Moon className="h-4 w-4 text-gray-500" />;
       default: return <AlertCircle className="h-4 w-4 text-red-500" />;
     }
   };
@@ -250,7 +250,7 @@ export const MicroActionReminders: React.FC<MicroActionRemindersProps> = ({
                       <Dialog>
                         <DialogTrigger asChild>
                           <Button size="sm" variant="outline">
-                            <Snooze className="h-4 w-4 mr-1" />
+                            <Moon className="h-4 w-4 mr-1" />
                             Snooze
                           </Button>
                         </DialogTrigger>

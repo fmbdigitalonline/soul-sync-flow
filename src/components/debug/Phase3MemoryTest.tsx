@@ -20,9 +20,63 @@ import { useAuth } from '@/contexts/AuthContext';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
 
+interface TestResults {
+  timestamp: string;
+  user_id: string;
+  session_id: string;
+  tests: {
+    memory_persistence: {
+      save_memory: boolean;
+      retrieve_recent_memories: boolean;
+      memory_importance_scoring: boolean;
+      memory_type_categorization: boolean;
+      overall_success: boolean;
+    };
+    session_feedback: {
+      save_feedback: boolean;
+      retrieve_feedback_history: boolean;
+      rating_validation: boolean;
+      feedback_memory_integration: boolean;
+      overall_success: boolean;
+    };
+    micro_action_reminders: {
+      create_reminder: boolean;
+      retrieve_active_reminders: boolean;
+      update_reminder_status: boolean;
+      snooze_functionality: boolean;
+      reminder_memory_integration: boolean;
+      overall_success: boolean;
+    };
+    life_context_management: {
+      update_life_context: boolean;
+      retrieve_life_context: boolean;
+      multiple_categories: boolean;
+      context_persistence: boolean;
+      overall_success: boolean;
+    };
+    welcome_message_generation: {
+      basic_welcome_generation: boolean;
+      memory_integration: boolean;
+      personalization: boolean;
+      context_awareness: boolean;
+      overall_success: boolean;
+    };
+    memory_search_and_retrieval: {
+      search_functionality: boolean;
+      relevance_scoring: boolean;
+      search_accuracy: boolean;
+      memory_referencing: boolean;
+      overall_success: boolean;
+    };
+  };
+  overall_success_rate: number;
+  passed_categories: number;
+  total_categories: number;
+}
+
 export const Phase3MemoryTest: React.FC = () => {
   const { user } = useAuth();
-  const [testResults, setTestResults] = useState<any>(null);
+  const [testResults, setTestResults] = useState<TestResults | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [currentSessionId] = useState(uuidv4());
   const [testMemories, setTestMemories] = useState<SessionMemory[]>([]);
@@ -41,7 +95,7 @@ export const Phase3MemoryTest: React.FC = () => {
     }
 
     try {
-      const results = {
+      const results: TestResults = {
         timestamp: new Date().toISOString(),
         user_id: user.id,
         session_id: currentSessionId,
@@ -52,13 +106,16 @@ export const Phase3MemoryTest: React.FC = () => {
           life_context_management: await testLifeContextManagement(),
           welcome_message_generation: await testWelcomeMessageGeneration(),
           memory_search_and_retrieval: await testMemorySearchAndRetrieval()
-        }
+        },
+        overall_success_rate: 0,
+        passed_categories: 0,
+        total_categories: 0
       };
 
       // Calculate overall success rate
       const testCategories = Object.keys(results.tests);
       const passedTests = testCategories.filter(category => 
-        results.tests[category].overall_success
+        results.tests[category as keyof typeof results.tests].overall_success
       ).length;
       
       results.overall_success_rate = (passedTests / testCategories.length) * 100;
@@ -175,6 +232,7 @@ export const Phase3MemoryTest: React.FC = () => {
     try {
       // Test 1: Save session feedback
       const feedbackData = {
+        user_id: user!.id,
         session_id: currentSessionId,
         rating: 5,
         feedback_text: 'Very helpful session, great insights on career planning',
