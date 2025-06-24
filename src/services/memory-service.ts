@@ -492,6 +492,47 @@ class MemoryService {
     }
   }
 
+  // Find next bedtime action
+  async getNextBedtimeAction(): Promise<MicroActionReminder | null> {
+    try {
+      const user = await this.getAuthenticatedUser();
+      if (!user) {
+        console.warn('⚠️ Cannot get bedtime action: No authenticated user');
+        return null;
+      }
+
+      console.log('🌙 Finding next bedtime action for user:', user.id);
+
+      const now = new Date().toISOString();
+      const { data, error } = await supabase
+        .from('micro_action_reminders')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'pending')
+        .or(`action_title.ilike.%bedtime%,action_title.ilike.%sleep%,action_title.ilike.%night%`)
+        .gte('scheduled_for', now)
+        .order('scheduled_for', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) {
+        console.error('❌ Failed to fetch bedtime action:', error.message);
+        return null;
+      }
+
+      if (data) {
+        console.log('✅ Found next bedtime action:', data.action_title);
+      } else {
+        console.log('ℹ️ No upcoming bedtime actions found');
+      }
+
+      return data as MicroActionReminder | null;
+    } catch (error) {
+      console.error('❌ Error fetching bedtime action:', error);
+      return null;
+    }
+  }
+
   // Life Context Management with enhanced auth handling
   async updateLifeContext(context: Omit<UserLifeContext, 'id' | 'created_at'>): Promise<boolean> {
     try {
