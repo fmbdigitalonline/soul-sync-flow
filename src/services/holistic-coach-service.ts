@@ -93,6 +93,10 @@ class HolisticCoachService {
 
   private convertBlueprintToSevenLayer(blueprint: Partial<LayeredBlueprint>) {
     // Convert LayeredBlueprint to SevenLayerPersonality format
+    // Ensure lifePath is converted to number type
+    const lifePathValue = blueprint.coreValuesNarrative?.lifePath;
+    const lifePath = typeof lifePathValue === 'string' ? parseInt(lifePathValue, 10) || 3 : (lifePathValue || 3);
+    
     return {
       physioNeuralHardware: {
         brainWiringPatterns: ['creative-bursts', 'ideation-focused'],
@@ -124,12 +128,12 @@ class HolisticCoachService {
         }
       },
       motivationAdaptations: {
-        lifePath: blueprint.coreValuesNarrative?.lifePath || 3,
+        lifePath: lifePath, // Now guaranteed to be number
         lifePathKeyword: 'Creative Expression',
         soulUrge: 6,
         soulUrgeKeyword: 'Nurturing',
         guidingGoalTree: ['inspire others', 'create beauty', 'foster connection'],
-        coreValues: blueprint.coreValuesNarrative?.coreValues || ['creativity', 'authenticity', 'growth'],
+        coreValues: blueprint.coreValuesNarrative?.core_values || ['creativity', 'authenticity', 'growth'], // Use correct property name
         copingStyles: ['brainstorming', 'seeking support', 'reframing'],
         adaptiveStrategies: ['flexibility', 'perspective-taking', 'solution-finding']
       },
