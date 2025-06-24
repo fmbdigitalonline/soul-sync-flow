@@ -121,8 +121,8 @@ export const GracefulDegradationTester: React.FC = () => {
     try {
       // Test with blueprint missing MBTI data
       const testBlueprint = blueprintData ? { ...blueprintData } : {};
-      if (testBlueprint.cognition_mbti) {
-        delete testBlueprint.cognition_mbti;
+      if (testBlueprint.cognitiveTemperamental) {
+        delete testBlueprint.cognitiveTemperamental;
       }
       
       holisticCoachService.updateBlueprint(testBlueprint);
@@ -138,8 +138,19 @@ export const GracefulDegradationTester: React.FC = () => {
   const testIncompleteHumanDesign = async (): Promise<boolean> => {
     try {
       const testBlueprint = blueprintData ? { ...blueprintData } : {};
-      if (testBlueprint.energy_strategy_human_design) {
-        testBlueprint.energy_strategy_human_design = { type: 'Generator' }; // Incomplete data
+      if (testBlueprint.energyDecisionStrategy) {
+        testBlueprint.energyDecisionStrategy = { 
+          humanDesignType: 'Generator',
+          authority: '',
+          decisionStyle: '',
+          pacing: '',
+          energyType: '',
+          strategy: '',
+          profile: '',
+          centers: [],
+          gates: [],
+          channels: []
+        }; // Incomplete data
       }
       
       holisticCoachService.updateBlueprint(testBlueprint);
@@ -155,11 +166,11 @@ export const GracefulDegradationTester: React.FC = () => {
   const testMissingBirthData = async (): Promise<boolean> => {
     try {
       const testBlueprint = blueprintData ? { ...blueprintData } : {};
-      if (testBlueprint.archetype_western) {
-        delete testBlueprint.archetype_western;
+      if (testBlueprint.publicArchetype) {
+        delete testBlueprint.publicArchetype;
       }
-      if (testBlueprint.archetype_chinese) {
-        delete testBlueprint.archetype_chinese;
+      if (testBlueprint.generationalCode) {
+        delete testBlueprint.generationalCode;
       }
       
       holisticCoachService.updateBlueprint(testBlueprint);
@@ -177,7 +188,7 @@ export const GracefulDegradationTester: React.FC = () => {
       holisticCoachService.updateBlueprint({});
       const prompt = holisticCoachService.generateSystemPrompt("test message");
       
-      return prompt.length > 0 && prompt.includes('default') || prompt.includes('basic');
+      return prompt.length > 0 && (prompt.includes('default') || prompt.includes('basic'));
     } catch (error) {
       console.error('Empty blueprint degradation test error:', error);
       return false;
@@ -187,10 +198,10 @@ export const GracefulDegradationTester: React.FC = () => {
   const testCorruptedBlueprint = async (): Promise<boolean> => {
     try {
       const corruptedBlueprint = {
-        cognition_mbti: "invalid_string_instead_of_object",
-        energy_strategy_human_design: null,
-        archetype_western: { invalid: "structure" }
-      };
+        cognitiveTemperamental: "invalid_string_instead_of_object",
+        energyDecisionStrategy: null,
+        publicArchetype: { invalid: "structure" }
+      } as any;
       
       holisticCoachService.updateBlueprint(corruptedBlueprint);
       const prompt = holisticCoachService.generateSystemPrompt("test message");

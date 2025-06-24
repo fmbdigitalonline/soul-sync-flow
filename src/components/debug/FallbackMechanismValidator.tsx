@@ -22,36 +22,42 @@ export const FallbackMechanismValidator: React.FC = () => {
     {
       name: 'Personality Engine Fallback',
       description: 'Test basic personality responses when advanced engine fails',
+      status: 'pending',
       category: 'personality',
       fallbackLevel: 'graceful'
     },
     {
       name: 'Memory System Fallback',
       description: 'Test conversation continuity when memory system is unavailable',
+      status: 'pending',
       category: 'memory',
       fallbackLevel: 'basic'
     },
     {
       name: 'AI Service Fallback',
       description: 'Test response generation when primary AI service fails',
+      status: 'pending',
       category: 'ai',
       fallbackLevel: 'critical'
     },
     {
       name: 'Blueprint Processing Fallback',
       description: 'Test default responses when blueprint processing fails',
+      status: 'pending',
       category: 'personality',
       fallbackLevel: 'basic'
     },
     {
       name: 'Authentication Fallback',
       description: 'Test anonymous mode when authentication fails',
+      status: 'pending',
       category: 'system',
       fallbackLevel: 'minimal'
     },
     {
       name: 'Network Connectivity Fallback',
       description: 'Test offline behavior and cached responses',
+      status: 'pending',
       category: 'system',
       fallbackLevel: 'minimal'
     }

@@ -21,30 +21,35 @@ export const LayerActivationConflictTester: React.FC = () => {
     {
       name: 'Introvert vs Extrovert Expression',
       description: 'Test conflict between MBTI introversion and expressive personality traits',
+      status: 'pending',
       conflictType: 'trait',
       severity: 'medium'
     },
     {
       name: 'Human Design vs MBTI Energy',
       description: 'Test energy conflicts between HD Generator and MBTI Perceiver',
+      status: 'pending',
       conflictType: 'energy',
       severity: 'high'
     },
     {
       name: 'Motivation Direction Conflicts',
       description: 'Test opposing motivational drives from different systems',
+      status: 'pending',
       conflictType: 'motivation',
       severity: 'high'
     },
     {
       name: 'Communication Style Contradictions',
       description: 'Test conflicts in communication preferences across modules',
+      status: 'pending',
       conflictType: 'expression',
       severity: 'medium'
     },
     {
       name: 'Decision-Making Authority Conflicts',
       description: 'Test conflicts between different decision-making strategies',
+      status: 'pending',
       conflictType: 'energy',
       severity: 'high'
     }
@@ -146,9 +151,16 @@ export const LayerActivationConflictTester: React.FC = () => {
       // Create conflicting personality data
       const conflictBlueprint = {
         ...blueprintData,
-        cognition_mbti: { ...blueprintData.cognition_mbti, type: 'INFP' }, // Introverted
+        cognitiveTemperamental: { 
+          ...blueprintData.cognitiveTemperamental, 
+          mbtiType: 'INFP',
+          communicationStyle: 'introverted'
+        }, // Introverted
         // Simulate extroverted traits in other modules
-        energy_strategy_human_design: { ...blueprintData.energy_strategy_human_design, channels: ['social_channels'] }
+        energyDecisionStrategy: { 
+          ...blueprintData.energyDecisionStrategy, 
+          channels: ['social_channels'] 
+        }
       };
 
       holisticCoachService.updateBlueprint(conflictBlueprint);
@@ -169,8 +181,22 @@ export const LayerActivationConflictTester: React.FC = () => {
 
       const conflictBlueprint = {
         ...blueprintData,
-        cognition_mbti: { ...blueprintData.cognition_mbti, type: 'ENFP' }, // High energy
-        energy_strategy_human_design: { type: 'Reflector', authority: 'Lunar' } // Low consistent energy
+        cognitiveTemperamental: { 
+          ...blueprintData.cognitiveTemperamental, 
+          mbtiType: 'ENFP' 
+        }, // High energy
+        energyDecisionStrategy: { 
+          humanDesignType: 'Reflector', 
+          authority: 'Lunar',
+          decisionStyle: '',
+          pacing: '',
+          energyType: '',
+          strategy: '',
+          profile: '',
+          centers: [],
+          gates: [],
+          channels: []
+        } // Low consistent energy
       };
 
       holisticCoachService.updateBlueprint(conflictBlueprint);
@@ -189,8 +215,23 @@ export const LayerActivationConflictTester: React.FC = () => {
 
       const conflictBlueprint = {
         ...blueprintData,
-        values_life_path: { lifePathNumber: 1, description: 'Leadership and independence' },
-        cognition_mbti: { type: 'ISFJ', description: 'Service and support to others' }
+        coreValuesNarrative: { 
+          ...blueprintData.coreValuesNarrative,
+          lifePath: 1, 
+          lifePathKeyword: 'Leadership and independence',
+          meaningfulAreas: ['leadership'],
+          anchoringVision: 'independence',
+          lifeThemes: ['leadership'],
+          valueSystem: 'individual achievement',
+          northStar: 'personal success',
+          missionStatement: 'lead and achieve',
+          purposeAlignment: 'self-focused'
+        },
+        cognitiveTemperamental: { 
+          ...blueprintData.cognitiveTemperamental,
+          mbtiType: 'ISFJ',
+          communicationStyle: 'Service and support to others'
+        }
       };
 
       holisticCoachService.updateBlueprint(conflictBlueprint);
@@ -209,8 +250,22 @@ export const LayerActivationConflictTester: React.FC = () => {
 
       const conflictBlueprint = {
         ...blueprintData,
-        cognition_mbti: { type: 'INTJ' }, // Direct, analytical communication
-        archetype_western: { sun_sign: 'Pisces', moon_sign: 'Cancer' } // Emotional, intuitive communication
+        cognitiveTemperamental: { 
+          ...blueprintData.cognitiveTemperamental,
+          mbtiType: 'INTJ',
+          communicationStyle: 'direct, analytical'
+        }, // Direct, analytical communication
+        publicArchetype: { 
+          sunSign: 'Pisces', 
+          moonSign: 'Cancer',
+          risingSign: 'Pisces',
+          socialStyle: 'emotional, intuitive',
+          publicVibe: 'empathetic',
+          publicPersona: 'sensitive',
+          leadershipStyle: 'collaborative',
+          socialMask: 'caring',
+          externalExpression: 'emotional'
+        } // Emotional, intuitive communication
       };
 
       holisticCoachService.updateBlueprint(conflictBlueprint);
@@ -229,8 +284,15 @@ export const LayerActivationConflictTester: React.FC = () => {
 
       const conflictBlueprint = {
         ...blueprintData,
-        cognition_mbti: { type: 'ESTJ' }, // Thinking-based decisions
-        energy_strategy_human_design: { authority: 'Emotional' } // Emotion-based decisions
+        cognitiveTemperamental: { 
+          ...blueprintData.cognitiveTemperamental,
+          mbtiType: 'ESTJ',
+          decisionMaking: 'thinking-based'
+        }, // Thinking-based decisions
+        energyDecisionStrategy: { 
+          ...blueprintData.energyDecisionStrategy,
+          authority: 'Emotional' 
+        } // Emotion-based decisions
       };
 
       holisticCoachService.updateBlueprint(conflictBlueprint);

@@ -19,23 +19,28 @@ export const MemoryFailureRecoveryTester: React.FC = () => {
   const [tests, setTests] = useState<MemoryRecoveryTest[]>([
     {
       name: 'Database Connection Failure',
-      description: 'Test memory system behavior when database is unavailable'
+      description: 'Test memory system behavior when database is unavailable',
+      status: 'pending'
     },
     {
       name: 'Search Timeout Recovery',
-      description: 'Test recovery from memory search timeouts'
+      description: 'Test recovery from memory search timeouts',
+      status: 'pending'
     },
     {
       name: 'Corrupted Memory Data',
-      description: 'Test handling of corrupted memory entries'
+      description: 'Test handling of corrupted memory entries',
+      status: 'pending'
     },
     {
       name: 'Memory Quota Exceeded',
-      description: 'Test behavior when memory storage limits are reached'
+      description: 'Test behavior when memory storage limits are reached',
+      status: 'pending'
     },
     {
       name: 'Progressive Search Fallback',
-      description: 'Test fallback to simpler search when advanced search fails'
+      description: 'Test fallback to simpler search when advanced search fails',
+      status: 'pending'
     }
   ]);
 
