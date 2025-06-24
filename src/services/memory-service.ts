@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface SessionMemory {
@@ -171,6 +170,27 @@ class MemoryService {
         return false;
       }
 
+      // Create feedback memory entry immediately after saving feedback
+      try {
+        await this.saveMemory({
+          user_id: user.id,
+          session_id: feedback.session_id,
+          memory_type: 'interaction',
+          memory_data: {
+            type: 'session_feedback',
+            rating: feedback.rating,
+            feedback_text: feedback.feedback_text,
+            suggestions: feedback.improvement_suggestions
+          },
+          context_summary: `Session rated ${feedback.rating}/5 stars`,
+          importance_score: feedback.rating >= 4 ? 8 : 6
+        });
+        console.log('✅ Feedback memory integration successful');
+      } catch (memoryError) {
+        console.error('Failed to create feedback memory:', memoryError);
+        // Don't fail the whole operation if memory creation fails
+      }
+
       return true;
     } catch (error) {
       console.error('Error saving feedback:', error);
@@ -206,7 +226,10 @@ class MemoryService {
   async createReminder(reminder: Omit<MicroActionReminder, 'id' | 'created_at' | 'updated_at'>): Promise<MicroActionReminder | null> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
+      if (!user) {
+        console.error('No authenticated user for reminder creation');
+        return null;
+      }
 
       console.log('⏰ Creating micro-action reminder:', reminder.action_title);
 
@@ -219,16 +242,18 @@ class MemoryService {
           action_description: reminder.action_description,
           reminder_type: reminder.reminder_type,
           scheduled_for: reminder.scheduled_for,
-          status: reminder.status
+          status: reminder.status || 'pending'
         })
         .select()
         .single();
 
       if (error) {
         console.error('Failed to create reminder:', error);
+        console.error('Error details:', error.message, error.details);
         return null;
       }
 
+      console.log('✅ Reminder created successfully:', data.id);
       return data as MicroActionReminder;
     } catch (error) {
       console.error('Error creating reminder:', error);
@@ -265,6 +290,12 @@ class MemoryService {
 
   async updateReminderStatus(id: string, status: MicroActionReminder['status'], completion_notes?: string): Promise<boolean> {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.error('No authenticated user for reminder update');
+        return false;
+      }
+
       console.log(`⏰ Updating reminder ${id} status to: ${status}`);
 
       const { error } = await supabase
@@ -274,13 +305,16 @@ class MemoryService {
           completion_notes,
           updated_at: new Date().toISOString()
         })
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', user.id); // Ensure user can only update their own reminders
 
       if (error) {
         console.error('Failed to update reminder status:', error);
+        console.error('Error details:', error.message, error.details);
         return false;
       }
 
+      console.log('✅ Reminder status updated successfully');
       return true;
     } catch (error) {
       console.error('Error updating reminder status:', error);
