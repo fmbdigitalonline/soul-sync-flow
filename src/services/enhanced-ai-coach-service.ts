@@ -4,6 +4,7 @@ import { soulSyncService } from "./soul-sync-service";
 import { createBlueprintFilter } from "./blueprint-personality-filter";
 import { UnifiedBlueprintService } from "./unified-blueprint-service";
 import { LayeredBlueprint, AgentMode } from "@/types/personality-modules";
+import { memoryInformedConversationService } from "./memory-informed-conversation-service";
 
 export type AgentType = "coach" | "guide" | "blend";
 
@@ -35,7 +36,6 @@ class EnhancedAICoachService {
   async setCurrentUser(userId: string) {
     console.log("🔐 Enhanced AI Coach Service: Setting current user:", userId);
     this.currentUserId = userId;
-    // Clear blueprint cache when user changes
     this.blueprintCache = null;
   }
 
@@ -49,18 +49,15 @@ class EnhancedAICoachService {
   updateUserBlueprint(blueprint: Partial<LayeredBlueprint>) {
     console.log("🎭 Enhanced AI Coach Service: Updating user blueprint with validation");
     
-    // Update cached blueprint
     if (this.blueprintCache) {
       this.blueprintCache = { ...this.blueprintCache, ...blueprint };
     } else {
       this.blueprintCache = blueprint as LayeredBlueprint;
     }
 
-    // Validate the blueprint
     const validation = UnifiedBlueprintService.validateBlueprint(this.blueprintCache);
     console.log("📊 Blueprint validation result:", validation);
     
-    // Update personality engine
     this.personalityEngine.updateBlueprint(blueprint);
   }
 
@@ -75,7 +72,6 @@ class EnhancedAICoachService {
     }
 
     try {
-      // Fetch blueprint from database
       const { data, error } = await supabase
         .from('user_blueprints')
         .select('blueprint')
@@ -99,14 +95,14 @@ class EnhancedAICoachService {
     }
   }
 
-  private async getOrCreatePersona(usePersona: boolean, agentType: AgentType): Promise<string | null> {
+  private async getOrCreatePersona(usePersona: boolean, agentType: AgentType, userMessage?: string): Promise<string | null> {
     if (!usePersona || !this.currentUserId) {
       console.log("⚠️ Persona not requested or no user ID available");
       return null;
     }
 
     try {
-      console.log("🎭 SoulSync: Fetching or creating comprehensive persona...");
+      console.log("🎭 SoulSync: Fetching or creating comprehensive persona with memory context...");
       
       const blueprint = await this.getBlueprintFromCache();
       if (!blueprint) {
@@ -114,7 +110,6 @@ class EnhancedAICoachService {
         return this.personalityEngine.generateSystemPrompt(agentType as AgentMode);
       }
 
-      // Validate blueprint before use
       const validation = UnifiedBlueprintService.validateBlueprint(blueprint);
       console.log("📊 Blueprint validation for persona generation:", validation);
 
@@ -122,10 +117,34 @@ class EnhancedAICoachService {
         console.log("⚠️ Blueprint incomplete, but proceeding with available data");
       }
 
-      // Generate comprehensive AI prompt using unified service
-      const comprehensivePrompt = UnifiedBlueprintService.formatBlueprintForAI(blueprint, agentType);
+      let comprehensivePrompt = UnifiedBlueprintService.formatBlueprintForAI(blueprint, agentType);
       
-      console.log("✅ SoulSync: Comprehensive persona ready with full blueprint context");
+      // MEMORY INTEGRATION: Enhance prompt with memory context if user message provided
+      if (userMessage) {
+        console.log("🧠 Integrating memory context into persona generation");
+        const sessionId = this.sessions.get(this.currentUserId) || 'default';
+        
+        try {
+          const memoryContext = await memoryInformedConversationService.buildMemoryContext(
+            userMessage,
+            sessionId,
+            this.currentUserId
+          );
+          
+          comprehensivePrompt = await memoryInformedConversationService.enhanceSystemPromptWithMemory(
+            comprehensivePrompt,
+            memoryContext,
+            userMessage
+          );
+          
+          console.log("✅ Memory context integrated into persona");
+        } catch (error) {
+          console.error("❌ Error integrating memory context:", error);
+          // Continue with basic prompt if memory integration fails
+        }
+      }
+      
+      console.log("✅ SoulSync: Comprehensive persona ready with full blueprint and memory context");
       return comprehensivePrompt;
     } catch (error) {
       console.error("❌ SoulSync: Error in persona generation:", error);
@@ -141,12 +160,12 @@ class EnhancedAICoachService {
     language: string = "en"
   ): Promise<{ response: string; conversationId: string }> {
     try {
-      console.log(`📤 Enhanced AI Coach Service: Sending message (${agentType}, Full Blueprint: ${usePersona})`);
+      console.log(`📤 Enhanced AI Coach Service: Sending message with memory integration (${agentType}, Full Blueprint: ${usePersona})`);
       
-      const systemPrompt = await this.getOrCreatePersona(usePersona, agentType);
+      const systemPrompt = await this.getOrCreatePersona(usePersona, agentType, message);
       
       if (systemPrompt && usePersona) {
-        console.log("🎯 Using comprehensive blueprint context in message");
+        console.log("🎯 Using comprehensive blueprint and memory context in message");
       }
       
       const { data, error } = await supabase.functions.invoke("ai-coach", {
@@ -157,11 +176,31 @@ class EnhancedAICoachService {
           agentType,
           language,
           systemPrompt,
-          maxTokens: 4000, // Increased for complete responses
+          maxTokens: 4000,
         },
       });
 
       if (error) throw error;
+
+      // Track memory application after successful response
+      if (usePersona && this.currentUserId) {
+        try {
+          const memoryContext = await memoryInformedConversationService.buildMemoryContext(
+            message,
+            sessionId,
+            this.currentUserId
+          );
+          
+          await memoryInformedConversationService.trackMemoryApplication(
+            sessionId,
+            memoryContext,
+            message,
+            data.response
+          );
+        } catch (error) {
+          console.error("❌ Error tracking memory application:", error);
+        }
+      }
 
       return {
         response: data.response,
@@ -182,16 +221,15 @@ class EnhancedAICoachService {
     callbacks: StreamingResponse
   ): Promise<void> {
     try {
-      console.log(`📡 Enhanced AI Coach Service: Starting comprehensive streaming (${agentType}, Full Blueprint: ${usePersona})`);
+      console.log(`📡 Enhanced AI Coach Service: Starting streaming with memory integration (${agentType}, Full Blueprint: ${usePersona})`);
       
-      const systemPrompt = await this.getOrCreatePersona(usePersona, agentType);
+      const systemPrompt = await this.getOrCreatePersona(usePersona, agentType, message);
       
-      // Get blueprint for filtering if available
       const blueprint = usePersona ? await this.getBlueprintFromCache() : null;
       const blueprintFilter = blueprint ? createBlueprintFilter(blueprint) : null;
       
       if (systemPrompt && usePersona) {
-        console.log("🎯 Using comprehensive blueprint context in streaming");
+        console.log("🎯 Using comprehensive blueprint and memory context in streaming");
         const validation = UnifiedBlueprintService.validateBlueprint(blueprint);
         console.log("📊 Blueprint completeness for streaming:", validation.completionPercentage + "%");
       }
@@ -210,7 +248,7 @@ class EnhancedAICoachService {
           language,
           systemPrompt,
           enableBlueprintFiltering: !!blueprintFilter,
-          maxTokens: 4000, // Increased for complete responses
+          maxTokens: 4000,
           temperature: 0.7
         }),
       });
@@ -243,21 +281,59 @@ class EnhancedAICoachService {
               const data = line.slice(6).trim();
               
               if (data === '[DONE]') {
-                // Apply blueprint filtering to complete response if available
                 if (blueprintFilter && fullResponse) {
                   console.log("🎭 Applying blueprint personality filter to complete response");
                   const filtered = blueprintFilter.filterResponse(fullResponse, message);
                   
-                  // If significant enhancement, replace the content
                   if (filtered.content !== fullResponse && filtered.personalTouches.length > 0) {
                     console.log("✨ Blueprint filter enhanced response with:", filtered.personalTouches);
                     callbacks.onComplete(filtered.content);
+                    
+                    // Track memory application after successful response
+                    if (usePersona && this.currentUserId) {
+                      try {
+                        const memoryContext = await memoryInformedConversationService.buildMemoryContext(
+                          message,
+                          sessionId,
+                          this.currentUserId
+                        );
+                        
+                        await memoryInformedConversationService.trackMemoryApplication(
+                          sessionId,
+                          memoryContext,
+                          message,
+                          filtered.content
+                        );
+                      } catch (error) {
+                        console.error("❌ Error tracking memory application:", error);
+                      }
+                    }
                     return;
                   }
                 }
                 
                 console.log(`📏 Final response length: ${fullResponse.length} characters`);
                 callbacks.onComplete(fullResponse);
+                
+                // Track memory application after successful response
+                if (usePersona && this.currentUserId) {
+                  try {
+                    const memoryContext = await memoryInformedConversationService.buildMemoryContext(
+                      message,
+                      sessionId,
+                      this.currentUserId
+                    );
+                    
+                    await memoryInformedConversationService.trackMemoryApplication(
+                      sessionId,
+                      memoryContext,
+                      message,
+                      fullResponse
+                    );
+                  } catch (error) {
+                    console.error("❌ Error tracking memory application:", error);
+                  }
+                }
                 return;
               }
               
@@ -282,7 +358,6 @@ class EnhancedAICoachService {
       }
       
       if (fullResponse) {
-        // Apply final blueprint filtering if available
         if (blueprintFilter) {
           const filtered = blueprintFilter.filterResponse(fullResponse, message);
           if (filtered.content !== fullResponse) {
@@ -385,10 +460,10 @@ class EnhancedAICoachService {
   clearConversationCache() {
     this.conversationCache.clear();
     this.blueprintCache = null;
-    console.log("🧹 Enhanced AI Coach Service: Conversation cache cleared");
+    memoryInformedConversationService.clearCache();
+    console.log("🧹 Enhanced AI Coach Service: All caches cleared");
   }
 
-  // New method to get blueprint status for UI
   async getBlueprintStatus(): Promise<{ isAvailable: boolean; completionPercentage: number; summary: string }> {
     const blueprint = await this.getBlueprintFromCache();
     

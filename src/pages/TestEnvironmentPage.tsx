@@ -10,7 +10,8 @@ import {
   Zap, 
   CheckCircle,
   PlayCircle,
-  Brain
+  Brain,
+  MessageCircle
 } from 'lucide-react';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { Phase3MemoryTest } from '@/components/debug/Phase3MemoryTest';
@@ -18,6 +19,7 @@ import { AutomatedTestRunner } from '@/components/debug/AutomatedTestRunner';
 import { PerformanceMonitor } from '@/components/debug/PerformanceMonitor';
 import { IntegrationTestPanel } from '@/components/debug/IntegrationTestPanel';
 import { MemoryConsistencyMonitor } from '@/components/debug/MemoryConsistencyMonitor';
+import { MemoryInformedConversationTest } from '@/components/debug/MemoryInformedConversationTest';
 
 const TestEnvironmentPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('manual');
@@ -32,7 +34,7 @@ const TestEnvironmentPage: React.FC = () => {
               Test Environment Dashboard
             </h1>
             <p className="text-lg text-gray-600">
-              Comprehensive testing suite for Phase 3 memory system and integrations
+              Comprehensive testing suite with enhanced memory-informed conversation testing
             </p>
           </div>
 
@@ -45,7 +47,7 @@ const TestEnvironmentPage: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
                 <div className="text-center">
                   <div className="flex items-center justify-center mb-2">
                     <CheckCircle className="h-6 w-6 text-green-600" />
@@ -83,7 +85,15 @@ const TestEnvironmentPage: React.FC = () => {
                     <Brain className="h-6 w-6 text-red-600" />
                   </div>
                   <div className="text-sm font-medium">Memory Monitor</div>
-                  <Badge className="bg-red-100 text-red-800">New</Badge>
+                  <Badge className="bg-red-100 text-red-800">Enhanced</Badge>
+                </div>
+
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <MessageCircle className="h-6 w-6 text-indigo-600" />
+                  </div>
+                  <div className="text-sm font-medium">Conversation Test</div>
+                  <Badge className="bg-indigo-100 text-indigo-800">New</Badge>
                 </div>
               </div>
             </CardContent>
@@ -91,7 +101,7 @@ const TestEnvironmentPage: React.FC = () => {
 
           {/* Test Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="manual" className="flex items-center gap-2">
                 <TestTube className="h-4 w-4" />
                 Manual Tests
@@ -111,6 +121,10 @@ const TestEnvironmentPage: React.FC = () => {
               <TabsTrigger value="consistency" className="flex items-center gap-2">
                 <Brain className="h-4 w-4" />
                 Memory Monitor
+              </TabsTrigger>
+              <TabsTrigger value="conversation" className="flex items-center gap-2">
+                <MessageCircle className="h-4 w-4" />
+                Conversation Test
               </TabsTrigger>
             </TabsList>
 
@@ -162,6 +176,16 @@ const TestEnvironmentPage: React.FC = () => {
                 </p>
               </div>
               <MemoryConsistencyMonitor />
+            </TabsContent>
+
+            <TabsContent value="conversation" className="space-y-6">
+              <div className="mb-4">
+                <h2 className="text-2xl font-semibold mb-2">Memory-Informed Conversation Testing</h2>
+                <p className="text-gray-600">
+                  Test enhanced contextual memory application, progressive conversation building, and memory-informed personalization with real dynamic data.
+                </p>
+              </div>
+              <MemoryInformedConversationTest />
             </TabsContent>
           </Tabs>
         </div>
