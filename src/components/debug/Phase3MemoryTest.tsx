@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -60,7 +59,7 @@ export const Phase3MemoryTest: React.FC = () => {
     setTestResults(prev => ({
       ...prev,
       [test]: status,
-      error_details: error ? [...prev.error_details, `${test}: ${error}`] : prev.error_details
+      error_details: error ? [...prev.error_details.filter(e => !e.startsWith(`${test}:`)), `${test}: ${error}`] : prev.error_details.filter(e => !e.startsWith(`${test}:`))
     }));
   };
 
@@ -115,7 +114,7 @@ export const Phase3MemoryTest: React.FC = () => {
       console.log('🧠 Testing memory persistence...');
       
       if (!memoryInput.trim()) {
-        throw new Error('Memory input is required');
+        throw new Error('Memory input is required - please enter some test content');
       }
 
       const testMemory = await memoryService.saveMemory({
@@ -151,7 +150,7 @@ export const Phase3MemoryTest: React.FC = () => {
       console.log('📝 Testing session feedback...');
       
       if (!feedbackText.trim()) {
-        throw new Error('Feedback text is required');
+        throw new Error('Feedback text is required - please enter some feedback');
       }
 
       const success = await memoryService.saveFeedback({
@@ -183,7 +182,7 @@ export const Phase3MemoryTest: React.FC = () => {
       console.log('⏰ Testing micro-action reminders...');
       
       if (!reminderTitle.trim()) {
-        throw new Error('Reminder title is required');
+        throw new Error('Reminder title is required - please enter a reminder title');
       }
 
       const scheduledFor = addHours(new Date(), 1); // Schedule for 1 hour from now
@@ -316,14 +315,75 @@ export const Phase3MemoryTest: React.FC = () => {
     setLoading(true);
     toast.info('Running comprehensive Phase 3 memory tests...');
     
+    // Pre-populate test data for automated run
+    const autoMemoryInput = `Automated test memory: ${new Date().toISOString()}`;
+    const autoFeedbackText = `Automated test feedback: ${new Date().toISOString()}`;
+    const autoReminderTitle = `Automated test reminder: ${new Date().toISOString()}`;
+    
     try {
-      await testMemoryPersistence();
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Brief pause between tests
+      // Test memory persistence with auto data
+      console.log('🧠 Testing memory persistence with auto data...');
+      const testMemory = await memoryService.saveMemory({
+        user_id: '',
+        session_id: sessionId,
+        memory_type: 'interaction',
+        memory_data: {
+          test_content: autoMemoryInput,
+          test_timestamp: new Date().toISOString(),
+          test_type: 'phase3_automated_test'
+        },
+        context_summary: `Automated Phase 3 test: ${autoMemoryInput.substring(0, 50)}`,
+        importance_score: 8
+      });
       
-      await testSessionFeedback();
+      if (testMemory) {
+        updateTestResult('memory_persistence', 'success');
+        console.log('✅ Memory persistence test passed');
+      } else {
+        throw new Error('Memory save returned null');
+      }
+      
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      await testMicroActionReminders();
+      // Test session feedback with auto data
+      console.log('📝 Testing session feedback with auto data...');
+      const feedbackSuccess = await memoryService.saveFeedback({
+        user_id: '',
+        session_id: sessionId,
+        rating: 5,
+        feedback_text: autoFeedbackText,
+        session_summary: `Automated Phase 3 test session - ${new Date().toISOString()}`,
+        improvement_suggestions: ['Automated test suggestion 1', 'Automated test suggestion 2']
+      });
+      
+      if (feedbackSuccess) {
+        updateTestResult('session_feedback', 'success');
+        console.log('✅ Session feedback test passed');
+      } else {
+        throw new Error('Feedback save returned false');
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Test micro-action reminders with auto data
+      console.log('⏰ Testing micro-action reminders with auto data...');
+      const reminder = await memoryService.createReminder({
+        user_id: '',
+        session_id: sessionId,
+        action_title: autoReminderTitle,
+        action_description: 'Automated test reminder description',
+        reminder_type: 'in_app',
+        scheduled_for: addHours(new Date(), 1).toISOString(),
+        status: 'pending'
+      });
+      
+      if (reminder) {
+        updateTestResult('micro_action_reminders', 'success');
+        console.log('✅ Micro-action reminder test passed');
+      } else {
+        throw new Error('Reminder creation returned null');
+      }
+      
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       await testBedtimeActionRetrieval();
@@ -331,7 +391,8 @@ export const Phase3MemoryTest: React.FC = () => {
       
       await testLifeContextManagement();
       
-      toast.success('All Phase 3 tests completed!');
+      await loadRealTimeData(); // Final refresh
+      toast.success('All Phase 3 tests completed successfully!');
     } catch (error) {
       console.error('❌ Test suite error:', error);
       toast.error('Test suite encountered an error');
