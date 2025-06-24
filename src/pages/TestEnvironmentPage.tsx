@@ -9,13 +9,15 @@ import {
   Network, 
   Zap, 
   CheckCircle,
-  PlayCircle
+  PlayCircle,
+  Brain
 } from 'lucide-react';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { Phase3MemoryTest } from '@/components/debug/Phase3MemoryTest';
 import { AutomatedTestRunner } from '@/components/debug/AutomatedTestRunner';
 import { PerformanceMonitor } from '@/components/debug/PerformanceMonitor';
 import { IntegrationTestPanel } from '@/components/debug/IntegrationTestPanel';
+import { MemoryConsistencyMonitor } from '@/components/debug/MemoryConsistencyMonitor';
 
 const TestEnvironmentPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('manual');
@@ -43,7 +45,7 @@ const TestEnvironmentPage: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <div className="text-center">
                   <div className="flex items-center justify-center mb-2">
                     <CheckCircle className="h-6 w-6 text-green-600" />
@@ -75,13 +77,21 @@ const TestEnvironmentPage: React.FC = () => {
                   <div className="text-sm font-medium">Integration</div>
                   <Badge className="bg-orange-100 text-orange-800">Active</Badge>
                 </div>
+
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <Brain className="h-6 w-6 text-red-600" />
+                  </div>
+                  <div className="text-sm font-medium">Memory Monitor</div>
+                  <Badge className="bg-red-100 text-red-800">New</Badge>
+                </div>
               </div>
             </CardContent>
           </Card>
 
           {/* Test Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="manual" className="flex items-center gap-2">
                 <TestTube className="h-4 w-4" />
                 Manual Tests
@@ -97,6 +107,10 @@ const TestEnvironmentPage: React.FC = () => {
               <TabsTrigger value="integration" className="flex items-center gap-2">
                 <Network className="h-4 w-4" />
                 Integration
+              </TabsTrigger>
+              <TabsTrigger value="consistency" className="flex items-center gap-2">
+                <Brain className="h-4 w-4" />
+                Memory Monitor
               </TabsTrigger>
             </TabsList>
 
@@ -138,6 +152,16 @@ const TestEnvironmentPage: React.FC = () => {
                 </p>
               </div>
               <IntegrationTestPanel />
+            </TabsContent>
+
+            <TabsContent value="consistency" className="space-y-6">
+              <div className="mb-4">
+                <h2 className="text-2xl font-semibold mb-2">Memory & Blueprint Consistency Monitor</h2>
+                <p className="text-gray-600">
+                  Monitor AI memory consistency, blueprint recognition, and identify root causes of inconsistent behavior.
+                </p>
+              </div>
+              <MemoryConsistencyMonitor />
             </TabsContent>
           </Tabs>
         </div>
