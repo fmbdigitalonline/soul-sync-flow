@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export interface SessionMemory {
@@ -233,23 +234,28 @@ class MemoryService {
 
       console.log('⏰ Creating micro-action reminder:', reminder.action_title);
 
+      // Ensure all required fields are properly set
+      const reminderData = {
+        user_id: user.id,
+        session_id: reminder.session_id,
+        action_title: reminder.action_title,
+        action_description: reminder.action_description || null,
+        reminder_type: reminder.reminder_type || 'in_app',
+        scheduled_for: reminder.scheduled_for,
+        status: reminder.status || 'pending'
+      };
+
+      console.log('⏰ Reminder data to insert:', reminderData);
+
       const { data, error } = await supabase
         .from('micro_action_reminders')
-        .insert({
-          user_id: user.id,
-          session_id: reminder.session_id,
-          action_title: reminder.action_title,
-          action_description: reminder.action_description,
-          reminder_type: reminder.reminder_type,
-          scheduled_for: reminder.scheduled_for,
-          status: reminder.status || 'pending'
-        })
+        .insert(reminderData)
         .select()
         .single();
 
       if (error) {
         console.error('Failed to create reminder:', error);
-        console.error('Error details:', error.message, error.details);
+        console.error('Error details:', error.message, error.details, error.hint);
         return null;
       }
 
@@ -298,6 +304,19 @@ class MemoryService {
 
       console.log(`⏰ Updating reminder ${id} status to: ${status}`);
 
+      // First verify the reminder exists and belongs to the user
+      const { data: existingReminder, error: fetchError } = await supabase
+        .from('micro_action_reminders')
+        .select('id, user_id')
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .single();
+
+      if (fetchError || !existingReminder) {
+        console.error('Reminder not found or not owned by user:', fetchError);
+        return false;
+      }
+
       const { error } = await supabase
         .from('micro_action_reminders')
         .update({ 
@@ -306,11 +325,11 @@ class MemoryService {
           updated_at: new Date().toISOString()
         })
         .eq('id', id)
-        .eq('user_id', user.id); // Ensure user can only update their own reminders
+        .eq('user_id', user.id);
 
       if (error) {
         console.error('Failed to update reminder status:', error);
-        console.error('Error details:', error.message, error.details);
+        console.error('Error details:', error.message, error.details, error.hint);
         return false;
       }
 
@@ -355,46 +374,21 @@ class MemoryService {
 
       console.log('🌱 Updating life context:', context.context_category);
 
-      // First try to update existing record
-      const { data: existingContext } = await supabase
+      // Use upsert to handle both insert and update cases
+      const { error } = await supabase
         .from('user_life_context')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('context_category', context.context_category)
-        .single();
-
-      let error;
-
-      if (existingContext) {
-        // Update existing record
-        const { error: updateError } = await supabase
-          .from('user_life_context')
-          .update({
-            current_focus: context.current_focus,
-            recent_progress: context.recent_progress,
-            ongoing_challenges: context.ongoing_challenges,
-            celebration_moments: context.celebration_moments,
-            next_steps: context.next_steps,
-            last_updated: new Date().toISOString()
-          })
-          .eq('id', existingContext.id);
-        error = updateError;
-      } else {
-        // Insert new record
-        const { error: insertError } = await supabase
-          .from('user_life_context')
-          .insert({
-            user_id: user.id,
-            context_category: context.context_category,
-            current_focus: context.current_focus,
-            recent_progress: context.recent_progress,
-            ongoing_challenges: context.ongoing_challenges,
-            celebration_moments: context.celebration_moments,
-            next_steps: context.next_steps,
-            last_updated: new Date().toISOString()
-          });
-        error = insertError;
-      }
+        .upsert({
+          user_id: user.id,
+          context_category: context.context_category,
+          current_focus: context.current_focus,
+          recent_progress: context.recent_progress,
+          ongoing_challenges: context.ongoing_challenges,
+          celebration_moments: context.celebration_moments,
+          next_steps: context.next_steps,
+          last_updated: new Date().toISOString()
+        }, {
+          onConflict: 'user_id,context_category'
+        });
 
       if (error) {
         console.error('Failed to update life context:', error);
@@ -435,36 +429,59 @@ class MemoryService {
   // Generate session welcome message with memory context
   async generateWelcomeMessage(userName: string): Promise<string> {
     try {
-      const memories = await this.getRecentMemories(5);
-      const lifeContext = await this.getLifeContext();
-      const activeReminders = await this.getActiveReminders();
+      console.log('👋 Generating welcome message for:', userName);
+      
+      // Parallel fetch of all context data with proper error handling
+      const [memories, lifeContext, activeReminders] = await Promise.allSettled([
+        this.getRecentMemories(5),
+        this.getLifeContext(),
+        this.getActiveReminders()
+      ]);
 
-      if (memories.length === 0) {
+      const memoriesData = memories.status === 'fulfilled' ? memories.value : [];
+      const lifeContextData = lifeContext.status === 'fulfilled' ? lifeContext.value : [];
+      const activeRemindersData = activeReminders.status === 'fulfilled' ? activeReminders.value : [];
+
+      console.log('👋 Context data loaded:', {
+        memories: memoriesData.length,
+        lifeContext: lifeContextData.length,
+        activeReminders: activeRemindersData.length
+      });
+
+      if (memoriesData.length === 0 && lifeContextData.length === 0 && activeRemindersData.length === 0) {
         return `Welcome, ${userName}! I'm excited to start our journey together. What would you like to explore today?`;
       }
 
       let welcomeMessage = `Welcome back, ${userName}! `;
 
       // Add context from recent memories
-      const recentInteraction = memories.find(m => m.memory_type === 'interaction');
+      const recentInteraction = memoriesData.find(m => m.memory_type === 'interaction');
       if (recentInteraction && recentInteraction.context_summary) {
         welcomeMessage += `Last time we spoke about ${recentInteraction.context_summary.toLowerCase()}. `;
       }
 
       // Add micro-action follow-up
-      const pendingAction = memories.find(m => m.memory_type === 'micro_action');
+      const pendingAction = memoriesData.find(m => m.memory_type === 'micro_action');
       if (pendingAction && pendingAction.memory_data.action_title) {
         welcomeMessage += `I'm curious to know how your "${pendingAction.memory_data.action_title}" action went. `;
       }
 
       // Add active reminders context
-      if (activeReminders.length > 0) {
-        welcomeMessage += `You have ${activeReminders.length} action${activeReminders.length > 1 ? 's' : ''} coming up. `;
+      if (activeRemindersData.length > 0) {
+        welcomeMessage += `You have ${activeRemindersData.length} action${activeRemindersData.length > 1 ? 's' : ''} coming up. `;
+      }
+
+      // Add life context insights
+      if (lifeContextData.length > 0) {
+        const recentContext = lifeContextData[0];
+        if (recentContext.current_focus) {
+          welcomeMessage += `I see you're focusing on ${recentContext.current_focus} in your ${recentContext.context_category} area. `;
+        }
       }
 
       welcomeMessage += `What would you like to focus on today?`;
 
-      console.log('👋 Generated personalized welcome message');
+      console.log('👋 Generated personalized welcome message with context awareness');
       return welcomeMessage;
     } catch (error) {
       console.error('Error generating welcome message:', error);
