@@ -12,13 +12,15 @@ import {
   LogOut, 
   Menu, 
   X,
-  Star
+  Star,
+  TestTube
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
 import { LanguageSelector } from "@/components/ui/language-selector";
+import { isAdminUser } from "@/utils/isAdminUser";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -50,13 +52,18 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
     }
   };
 
-  const navItems = [
+  const baseNavItems = [
     { to: "/", icon: Home, label: t('nav.home') },
     { to: "/blueprint", icon: Star, label: "Blueprint" },
     { to: "/dreams", icon: Heart, label: "Dreams" },
     { to: "/spiritual-growth", icon: Sparkles, label: t('nav.growth') },
     { to: "/coach", icon: MessageCircle, label: t('nav.coach') },
   ];
+
+  // Add Test Environment for admin users
+  const navItems = user && isAdminUser(user.email) 
+    ? [...baseNavItems, { to: "/test-environment", icon: TestTube, label: "Test Environment" }]
+    : baseNavItems;
 
   const isActive = (path: string) => {
     if (path === "/" && location.pathname === "/") return true;
@@ -178,7 +185,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
         <div className="md:hidden fixed bottom-0 left-0 right-0 z-50">
           <div className="bg-white/95 backdrop-blur-lg border-t border-gray-100 px-2 py-2 shadow-lg">
             <div className="flex justify-around items-center max-w-md mx-auto">
-              {navItems.map((item) => {
+              {navItems.slice(0, 5).map((item) => {
                 const Icon = item.icon;
                 const active = isActive(item.to);
                 return (
@@ -214,4 +221,3 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
 };
 
 export default MainLayout;
-

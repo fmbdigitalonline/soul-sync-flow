@@ -21,6 +21,7 @@ import TestEphemeris from "./pages/TestEphemeris";
 import PersonaTest from "./pages/PersonaTest";
 import SevenLayerTest from "./pages/SevenLayerTest";
 import Phase3MemoryTestPage from "./pages/Phase3MemoryTest";
+import TestEnvironmentPage from "./pages/TestEnvironmentPage";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -69,6 +70,7 @@ const router = createBrowserRouter([
       { path: "persona-test", element: <PersonaTest /> },
       { path: "seven-layer-test", element: <ProtectedRoute><SevenLayerTest /></ProtectedRoute> },
       { path: "phase3-memory-test", element: <ProtectedRoute><Phase3MemoryTestPage /></ProtectedRoute> },
+      { path: "test-environment", element: <ProtectedRoute><TestEnvironmentPage /></ProtectedRoute> },
       { path: "*", element: <NotFound /> }
     ]
   }
