@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MainLayout from "@/components/Layout/MainLayout";
@@ -313,7 +314,7 @@ const Blueprint = () => {
           
           <TabsContent value="view" className="mt-6">
             {blueprintData && (
-              <SimplifiedBlueprintViewer blueprint={convertToSaveFormat(blueprintData)} />
+              <SimplifiedBlueprintViewer blueprint={blueprintData} />
             )}
           </TabsContent>
           

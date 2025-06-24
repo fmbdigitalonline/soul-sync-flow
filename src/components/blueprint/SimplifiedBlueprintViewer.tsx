@@ -4,100 +4,92 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CosmicCard } from "@/components/ui/cosmic-card";
-import { BlueprintData } from "@/services/blueprint-service";
+import { LayeredBlueprint } from "@/types/personality-modules";
 
 interface SimplifiedBlueprintViewerProps {
-  blueprint: BlueprintData;
+  blueprint: LayeredBlueprint;
 }
 
 const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ blueprint }) => {
-  console.log('🎯 SimplifiedBlueprintViewer received blueprint:', blueprint);
+  console.log('🎯 SimplifiedBlueprintViewer received LayeredBlueprint:', blueprint);
 
-  // Extract calculation metadata
-  const metadata = blueprint?.metadata || {
-    calculation_success: false,
-    partial_calculation: false,
-    calculation_date: "",
-    engine: "",
-    data_sources: { western: "" }
-  };
+  // Extract user metadata
+  const userMeta = blueprint?.user_meta || {};
+  const userName = userMeta.preferred_name || userMeta.full_name || 'User';
   
-  const calculationDate = metadata.calculation_date || "Unknown";
-  
-  // Better detection of real vs template data
-  const isRealCalculation = metadata.calculation_success || 
-    metadata.engine?.includes("swiss_ephemeris") || 
-    metadata.engine?.includes("vercel") ||
-    metadata.data_sources?.western === "calculated";
-  
-  const calculationEngine = isRealCalculation ? 
-    (metadata.engine?.includes("swiss_ephemeris") ? "Swiss Ephemeris via Vercel API" : 
-     metadata.engine?.includes("vercel") ? "Vercel Ephemeris API" :
-     "Accurate Astronomical Calculations") : 
-    "Template Data";
+  // Extract MBTI/Cognitive data
+  const cognitiveData = blueprint?.cognitiveTemperamental || {};
+  const mbtiType = cognitiveData.mbtiType || 'Unknown';
+  const dominantFunction = cognitiveData.dominantFunction || 'Unknown';
+  const auxiliaryFunction = cognitiveData.auxiliaryFunction || 'Unknown';
+  const taskApproach = cognitiveData.taskApproach || 'systematic';
+  const communicationStyle = cognitiveData.communicationStyle || 'clear';
+  const decisionMaking = cognitiveData.decisionMaking || 'logical';
 
-  // Extract numerology data - check both old and new structures
-  const numerologyData = blueprint.values_life_path || blueprint.numerology || {
-    lifePathNumber: 1,
-    lifePathKeyword: "Leader",
-    expressionNumber: 1,
-    expressionKeyword: "Independent",
-    soulUrgeNumber: 1,
-    soulUrgeKeyword: "Ambitious",
-    personalityNumber: 1,
-    personalityKeyword: "Original",
-    birthdayNumber: 1,
-    birthdayKeyword: "Pioneer"
-  };
+  // Extract Human Design data
+  const energyData = blueprint?.energyDecisionStrategy || {};
+  const hdType = energyData.humanDesignType || 'Generator';
+  const authority = energyData.authority || 'Sacral';
+  const strategy = energyData.strategy || 'respond';
+  const profile = energyData.profile || '1/3';
+  const pacing = energyData.pacing || 'steady';
+  const energyType = energyData.energyType || 'sustainable';
 
-  console.log('🔢 Extracted numerology data:', numerologyData);
+  // Extract Numerology data
+  const numerologyData = blueprint?.coreValuesNarrative || {};
+  const lifePath = numerologyData.lifePath || 1;
+  const lifePathKeyword = numerologyData.lifePathKeyword || 'Leader';
+  const expressionNumber = numerologyData.expressionNumber || 1;
+  const expressionKeyword = numerologyData.expressionKeyword || 'Independent';
+  const soulUrgeNumber = numerologyData.soulUrgeNumber || 1;
+  const soulUrgeKeyword = numerologyData.soulUrgeKeyword || 'Ambitious';
+  const personalityNumber = numerologyData.personalityNumber || 1;
+  const personalityKeyword = numerologyData.personalityKeyword || 'Original';
+  const birthdayNumber = numerologyData.birthdayNumber || 1;
+  const birthdayKeyword = numerologyData.birthdayKeyword || 'Pioneer';
 
-  // Extract other blueprint sections
-  const westernData = blueprint.archetype_western || blueprint.astrology || {
-    sun_sign: "Unknown",
-    moon_sign: "Unknown", 
-    rising_sign: "Unknown"
-  };
+  // Extract Astrology data
+  const astrologyData = blueprint?.publicArchetype || {};
+  const sunSign = astrologyData.sunSign || 'Unknown';
+  const moonSign = astrologyData.moonSign || 'Unknown';
+  const risingSign = astrologyData.risingSign || 'Unknown';
+  const socialStyle = astrologyData.socialStyle || 'warm';
+  const publicVibe = astrologyData.publicVibe || 'approachable';
+  const leadershipStyle = astrologyData.leadershipStyle || 'collaborative';
 
-  const mbtiData = blueprint.cognition_mbti || blueprint.mbti || {
-    type: "ENFP",
-    core_keywords: ["Enthusiastic", "Creative"],
-    dominant_function: "Extraverted Intuition",
-    auxiliary_function: "Introverted Feeling"
-  };
+  // Extract Chinese astrology
+  const generationalData = blueprint?.generationalCode || {};
+  const chineseZodiac = generationalData.chineseZodiac || 'Unknown';
+  const element = generationalData.element || 'Unknown';
 
-  const humanDesignData = blueprint.energy_strategy_human_design || blueprint.human_design || {
-    type: "Generator",
-    profile: "2/4",
-    authority: "Sacral",
-    strategy: "Respond"
-  };
+  // Check if we have real calculated data
+  const hasRealData = mbtiType !== 'Unknown' || sunSign !== 'Unknown' || lifePath > 1;
+
+  console.log('🔍 Extracted blueprint data:', {
+    mbtiType, hdType, lifePath, sunSign, hasRealData,
+    dominantFunction, authority, expressionNumber, moonSign
+  });
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-2xl font-bold">Soul Blueprint for {blueprint.user_meta?.preferred_name || 'User'}</h2>
+          <h2 className="text-2xl font-bold">Soul Blueprint for {userName}</h2>
           <p className="text-sm text-muted-foreground">
-            {isRealCalculation ? 
-              <>Calculated on {new Date(calculationDate).toLocaleDateString()} using {calculationEngine}</> : 
-              "Using default template data"
+            {hasRealData ? 
+              "Calculated using advanced personality analysis" : 
+              "Using template data - create your profile for personalized results"
             }
           </p>
         </div>
         
         <div className="flex gap-2">
-          {isRealCalculation && (
+          {hasRealData && (
             <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-              ✅ Real Calculations
+              ✅ Personalized Data
             </Badge>
           )}
-          {metadata.partial_calculation && (
-            <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-              ⚠️ Partial Data
-            </Badge>
-          )}
-          {!isRealCalculation && (
+          {!hasRealData && (
             <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
               📋 Template Data
             </Badge>
@@ -108,7 +100,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
       <Tabs defaultValue="overview" className="w-full">
         <TabsList className="w-full">
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="mbti">MBTI</TabsTrigger>
+          <TabsTrigger value="mbti">MBTI Details</TabsTrigger>
           <TabsTrigger value="humanDesign">Human Design</TabsTrigger>
           <TabsTrigger value="numerology">Numerology</TabsTrigger>
           <TabsTrigger value="astrology">Astrology</TabsTrigger>
@@ -117,22 +109,37 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
         <TabsContent value="overview" className="mt-6">
           <Card>
             <CardHeader>
-              <CardTitle>Overview</CardTitle>
+              <CardTitle>Personality Overview</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="text-center">
-                  <h4 className="font-semibold">Sun Sign</h4>
-                  <p className="text-lg text-soul-purple">{westernData.sun_sign}</p>
+                  <h4 className="font-semibold text-soul-purple">MBTI Type</h4>
+                  <p className="text-2xl font-bold text-soul-purple">{mbtiType}</p>
+                  <p className="text-sm text-gray-600">{dominantFunction}</p>
                 </div>
                 <div className="text-center">
-                  <h4 className="font-semibold">MBTI Type</h4>
-                  <p className="text-lg text-soul-purple">{mbtiData.type}</p>
+                  <h4 className="font-semibold text-soul-purple">Life Path</h4>
+                  <p className="text-2xl font-bold text-soul-purple">{lifePath}</p>
+                  <p className="text-sm text-gray-600">{lifePathKeyword}</p>
                 </div>
                 <div className="text-center">
-                  <h4 className="font-semibold">Life Path</h4>
-                  <p className="text-lg text-soul-purple">{numerologyData.lifePathNumber}</p>
-                  <p className="text-sm text-gray-600">{numerologyData.lifePathKeyword}</p>
+                  <h4 className="font-semibold text-soul-purple">Sun Sign</h4>
+                  <p className="text-2xl font-bold text-soul-purple">{sunSign}</p>
+                  <p className="text-sm text-gray-600">Core identity</p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                <div className="text-center">
+                  <h4 className="font-semibold text-soul-purple">Human Design</h4>
+                  <p className="text-lg font-bold text-soul-purple">{hdType}</p>
+                  <p className="text-sm text-gray-600">{authority} Authority</p>
+                </div>
+                <div className="text-center">
+                  <h4 className="font-semibold text-soul-purple">Chinese Zodiac</h4>
+                  <p className="text-lg font-bold text-soul-purple">{chineseZodiac}</p>
+                  <p className="text-sm text-gray-600">{element} Element</p>
                 </div>
               </div>
             </CardContent>
@@ -142,21 +149,35 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
         <TabsContent value="mbti" className="mt-6">
           <Card>
             <CardHeader>
-              <CardTitle>MBTI Profile</CardTitle>
+              <CardTitle>MBTI Cognitive Profile</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                <div>
-                  <span className="font-semibold">Type:</span> {mbtiData.type}
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="font-semibold text-soul-purple mb-2">Personality Type</h4>
+                    <p className="text-3xl font-bold text-soul-purple">{mbtiType}</p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-soul-purple mb-2">Cognitive Functions</h4>
+                    <p className="text-sm"><strong>Dominant:</strong> {dominantFunction}</p>
+                    <p className="text-sm"><strong>Auxiliary:</strong> {auxiliaryFunction}</p>
+                  </div>
                 </div>
-                <div>
-                  <span className="font-semibold">Core Keywords:</span> {mbtiData.core_keywords?.join(", ")}
-                </div>
-                <div>
-                  <span className="font-semibold">Dominant Function:</span> {mbtiData.dominant_function}
-                </div>
-                <div>
-                  <span className="font-semibold">Auxiliary Function:</span> {mbtiData.auxiliary_function}
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <h5 className="font-semibold text-gray-700 mb-1">Task Approach</h5>
+                    <p className="text-sm text-gray-600 capitalize">{taskApproach}</p>
+                  </div>
+                  <div>
+                    <h5 className="font-semibold text-gray-700 mb-1">Communication</h5>
+                    <p className="text-sm text-gray-600 capitalize">{communicationStyle}</p>
+                  </div>
+                  <div>
+                    <h5 className="font-semibold text-gray-700 mb-1">Decision Making</h5>
+                    <p className="text-sm text-gray-600 capitalize">{decisionMaking}</p>
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -166,21 +187,36 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
         <TabsContent value="humanDesign" className="mt-6">
           <Card>
             <CardHeader>
-              <CardTitle>Human Design</CardTitle>
+              <CardTitle>Human Design Profile</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                <div>
-                  <span className="font-semibold">Type:</span> {humanDesignData.type}
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="font-semibold text-soul-purple mb-2">Energy Type</h4>
+                    <p className="text-3xl font-bold text-soul-purple">{hdType}</p>
+                    <p className="text-sm text-gray-600">{energyType} energy</p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-soul-purple mb-2">Decision Authority</h4>
+                    <p className="text-xl font-bold text-soul-purple">{authority}</p>
+                    <p className="text-sm text-gray-600">Inner authority</p>
+                  </div>
                 </div>
-                <div>
-                  <span className="font-semibold">Profile:</span> {humanDesignData.profile}
-                </div>
-                <div>
-                  <span className="font-semibold">Authority:</span> {humanDesignData.authority}
-                </div>
-                <div>
-                  <span className="font-semibold">Strategy:</span> {humanDesignData.strategy}
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <h5 className="font-semibold text-gray-700 mb-1">Strategy</h5>
+                    <p className="text-sm text-gray-600 capitalize">{strategy}</p>
+                  </div>
+                  <div>
+                    <h5 className="font-semibold text-gray-700 mb-1">Profile</h5>
+                    <p className="text-sm text-gray-600">{profile}</p>
+                  </div>
+                  <div>
+                    <h5 className="font-semibold text-gray-700 mb-1">Pacing</h5>
+                    <p className="text-sm text-gray-600 capitalize">{pacing}</p>
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -189,41 +225,46 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
 
         <TabsContent value="numerology" className="mt-6">
           <CosmicCard>
-            <h3 className="text-xl font-display font-bold mb-4">Numerology Profile</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
+            <h3 className="text-xl font-display font-bold mb-6">Complete Numerology Profile</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-6">
                 <div>
                   <h4 className="font-semibold text-soul-purple">Life Path Number</h4>
-                  <p className="text-3xl font-bold text-soul-purple">{numerologyData.lifePathNumber}</p>
-                  <p className="text-sm text-gray-600">{numerologyData.lifePathKeyword || "Your life's purpose"}</p>
+                  <p className="text-4xl font-bold text-soul-purple">{lifePath}</p>
+                  <p className="text-sm text-gray-600 font-medium">{lifePathKeyword}</p>
+                  <p className="text-xs text-gray-500">Your life's core purpose and direction</p>
                 </div>
                 <div>
                   <h4 className="font-semibold text-soul-purple">Expression Number</h4>
-                  <p className="text-3xl font-bold text-soul-purple">{numerologyData.expressionNumber}</p>
-                  <p className="text-sm text-gray-600">{numerologyData.expressionKeyword || "Your talents"}</p>
+                  <p className="text-3xl font-bold text-soul-purple">{expressionNumber}</p>
+                  <p className="text-sm text-gray-600 font-medium">{expressionKeyword}</p>
+                  <p className="text-xs text-gray-500">Your natural talents and abilities</p>
                 </div>
                 <div>
                   <h4 className="font-semibold text-soul-purple">Soul Urge Number</h4>
-                  <p className="text-3xl font-bold text-soul-purple">{numerologyData.soulUrgeNumber}</p>
-                  <p className="text-sm text-gray-600">{numerologyData.soulUrgeKeyword || "Your desires"}</p>
+                  <p className="text-3xl font-bold text-soul-purple">{soulUrgeNumber}</p>
+                  <p className="text-sm text-gray-600 font-medium">{soulUrgeKeyword}</p>
+                  <p className="text-xs text-gray-500">Your heart's deepest desires</p>
                 </div>
               </div>
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div>
                   <h4 className="font-semibold text-soul-purple">Personality Number</h4>
-                  <p className="text-3xl font-bold text-soul-purple">{numerologyData.personalityNumber}</p>
-                  <p className="text-sm text-gray-600">{numerologyData.personalityKeyword || "Key traits"}</p>
+                  <p className="text-3xl font-bold text-soul-purple">{personalityNumber}</p>
+                  <p className="text-sm text-gray-600 font-medium">{personalityKeyword}</p>
+                  <p className="text-xs text-gray-500">How others perceive you</p>
                 </div>
                 <div>
                   <h4 className="font-semibold text-soul-purple">Birthday Number</h4>
-                  <p className="text-3xl font-bold text-soul-purple">{numerologyData.birthdayNumber}</p>
-                  <p className="text-sm text-gray-600">{numerologyData.birthdayKeyword || "Special talents"}</p>
+                  <p className="text-3xl font-bold text-soul-purple">{birthdayNumber}</p>
+                  <p className="text-sm text-gray-600 font-medium">{birthdayKeyword}</p>
+                  <p className="text-xs text-gray-500">Special talents from birth date</p>
                 </div>
               </div>
             </div>
-            <div className="mt-6 pt-4 border-t border-gray-200">
-              <p className="text-sm text-gray-500">
-                Calculated from: {blueprint.user_meta?.full_name} • Born: {new Date(blueprint.user_meta?.birth_date || '').toLocaleDateString()}
+            <div className="mt-8 pt-6 border-t border-gray-200">
+              <p className="text-sm text-gray-500 text-center">
+                Calculated from: {userMeta.full_name} • Born: {userMeta.birth_date ? new Date(userMeta.birth_date).toLocaleDateString() : 'Date on file'}
               </p>
             </div>
           </CosmicCard>
@@ -232,18 +273,47 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
         <TabsContent value="astrology" className="mt-6">
           <Card>
             <CardHeader>
-              <CardTitle>Western Astrology</CardTitle>
+              <CardTitle>Astrological Profile</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                <div>
-                  <span className="font-semibold">Sun Sign:</span> {westernData.sun_sign}
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="text-center">
+                    <h4 className="font-semibold text-soul-purple">Sun Sign</h4>
+                    <p className="text-3xl font-bold text-soul-purple">{sunSign}</p>
+                    <p className="text-sm text-gray-600">Core identity & ego</p>
+                  </div>
+                  <div className="text-center">
+                    <h4 className="font-semibold text-soul-purple">Moon Sign</h4>
+                    <p className="text-3xl font-bold text-soul-purple">{moonSign}</p>
+                    <p className="text-sm text-gray-600">Emotional nature</p>
+                  </div>
+                  <div className="text-center">
+                    <h4 className="font-semibold text-soul-purple">Rising Sign</h4>
+                    <p className="text-3xl font-bold text-soul-purple">{risingSign}</p>
+                    <p className="text-sm text-gray-600">First impression</p>
+                  </div>
                 </div>
-                <div>
-                  <span className="font-semibold">Moon Sign:</span> {westernData.moon_sign}
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+                  <div>
+                    <h5 className="font-semibold text-gray-700 mb-1">Social Style</h5>
+                    <p className="text-sm text-gray-600 capitalize">{socialStyle}</p>
+                  </div>
+                  <div>
+                    <h5 className="font-semibold text-gray-700 mb-1">Public Vibe</h5>
+                    <p className="text-sm text-gray-600 capitalize">{publicVibe}</p>
+                  </div>
+                  <div>
+                    <h5 className="font-semibold text-gray-700 mb-1">Leadership Style</h5>
+                    <p className="text-sm text-gray-600 capitalize">{leadershipStyle}</p>
+                  </div>
                 </div>
-                <div>
-                  <span className="font-semibold">Rising Sign:</span> {westernData.rising_sign}
+
+                <div className="mt-6 p-4 bg-soul-purple/5 rounded-lg">
+                  <h5 className="font-semibold text-soul-purple mb-2">Generational Influence</h5>
+                  <p className="text-lg font-bold text-soul-purple">{chineseZodiac} {element}</p>
+                  <p className="text-sm text-gray-600">Chinese astrology adds generational wisdom to your profile</p>
                 </div>
               </div>
             </CardContent>
