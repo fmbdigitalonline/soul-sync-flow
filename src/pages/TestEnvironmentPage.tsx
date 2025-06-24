@@ -16,7 +16,9 @@ import {
   Target,
   GitBranch,
   Database,
-  Heart
+  Heart,
+  Sparkles,
+  Shuffle
 } from 'lucide-react';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { Phase3MemoryTest } from '@/components/debug/Phase3MemoryTest';
@@ -36,6 +38,8 @@ import { CrossSessionMemoryContinuityTester } from '@/components/debug/CrossSess
 import { MemoryImportanceScoringTester } from '@/components/debug/MemoryImportanceScoringTester';
 import { GrowthMode7LayerTester } from '@/components/debug/GrowthMode7LayerTester';
 import { CompanionModeConsistencyTester } from '@/components/debug/CompanionModeConsistencyTester';
+import { DreamCoachBlueprintTester } from '@/components/debug/DreamCoachBlueprintTester';
+import { ModeSwitchingCoherenceTester } from '@/components/debug/ModeSwitchingCoherenceTester';
 
 const TestEnvironmentPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('architecture');
@@ -63,7 +67,7 @@ const TestEnvironmentPage: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-12 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-14 gap-4">
                 <div className="text-center">
                   <div className="flex items-center justify-center mb-2">
                     <Layers className="h-6 w-6 text-purple-600" />
@@ -167,13 +171,29 @@ const TestEnvironmentPage: React.FC = () => {
                   <div className="text-sm font-medium">Companion</div>
                   <Badge className="bg-rose-100 text-rose-800">Consistent</Badge>
                 </div>
+
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <Sparkles className="h-6 w-6 text-purple-600" />
+                  </div>
+                  <div className="text-sm font-medium">Dream Coach</div>
+                  <Badge className="bg-purple-100 text-purple-800">Blueprint</Badge>
+                </div>
+
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <Shuffle className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div className="text-sm font-medium">Mode Switch</div>
+                  <Badge className="bg-blue-100 text-blue-800">Coherent</Badge>
+                </div>
               </div>
             </CardContent>
           </Card>
 
           {/* Test Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-16">
+            <TabsList className="grid w-full grid-cols-18">
               <TabsTrigger value="architecture" className="flex items-center gap-2">
                 <Layers className="h-4 w-4" />
                 Architecture
@@ -237,6 +257,14 @@ const TestEnvironmentPage: React.FC = () => {
               <TabsTrigger value="companion-mode" className="flex items-center gap-2">
                 <Heart className="h-4 w-4" />
                 Companion
+              </TabsTrigger>
+              <TabsTrigger value="dream-coach" className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4" />
+                Dream Coach
+              </TabsTrigger>
+              <TabsTrigger value="mode-switching" className="flex items-center gap-2">
+                <Shuffle className="h-4 w-4" />
+                Mode Switch
               </TabsTrigger>
             </TabsList>
 
@@ -399,6 +427,26 @@ const TestEnvironmentPage: React.FC = () => {
                 </p>
               </div>
               <CompanionModeConsistencyTester />
+            </TabsContent>
+
+            <TabsContent value="dream-coach" className="space-y-6">
+              <div className="mb-4">
+                <h2 className="text-2xl font-semibold mb-2">Dream Coach Blueprint Integration Testing</h2>
+                <p className="text-gray-600">
+                  Test dream-focused coaching with personality blueprint integration and visionary guidance elements.
+                </p>
+              </div>
+              <DreamCoachBlueprintTester />
+            </TabsContent>
+
+            <TabsContent value="mode-switching" className="space-y-6">
+              <div className="mb-4">
+                <h2 className="text-2xl font-semibold mb-2">Mode Switching Coherence Testing</h2>
+                <p className="text-gray-600">
+                  Test personality consistency and context preservation across coach mode transitions.
+                </p>
+              </div>
+              <ModeSwitchingCoherenceTester />
             </TabsContent>
           </Tabs>
         </div>
