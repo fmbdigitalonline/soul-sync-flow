@@ -111,10 +111,12 @@ export const Phase3MemoryTest: React.FC = () => {
 
   const testMemoryPersistence = async () => {
     try {
-      console.log('🧠 Testing memory persistence...');
+      console.log('🧠 Testing memory persistence with input:', memoryInput);
       
-      if (!memoryInput.trim()) {
-        throw new Error('Memory input is required - please enter some test content');
+      // More lenient validation - check if input exists and has meaningful content
+      const trimmedInput = memoryInput?.trim();
+      if (!trimmedInput || trimmedInput.length < 3) {
+        throw new Error('Please enter at least 3 characters of memory content for testing');
       }
 
       const testMemory = await memoryService.saveMemory({
@@ -122,11 +124,12 @@ export const Phase3MemoryTest: React.FC = () => {
         session_id: sessionId,
         memory_type: 'interaction',
         memory_data: {
-          test_content: memoryInput,
+          test_content: trimmedInput,
           test_timestamp: new Date().toISOString(),
-          test_type: 'phase3_memory_test'
+          test_type: 'phase3_manual_test',
+          user_input: true
         },
-        context_summary: `Phase 3 test: ${memoryInput.substring(0, 50)}`,
+        context_summary: `Manual Phase 3 test: ${trimmedInput.substring(0, 50)}`,
         importance_score: 8
       });
 
@@ -134,55 +137,66 @@ export const Phase3MemoryTest: React.FC = () => {
         console.log('✅ Memory saved successfully:', testMemory.id);
         updateTestResult('memory_persistence', 'success');
         await loadRealTimeData(); // Refresh data
-        toast.success('Memory persistence test passed!');
+        toast.success('Memory persistence test passed with your input!');
+        setMemoryInput(''); // Clear input on success
       } else {
         throw new Error('Memory save returned null');
       }
     } catch (error) {
       console.error('❌ Memory persistence test failed:', error);
       updateTestResult('memory_persistence', 'failed', String(error));
-      toast.error('Memory persistence test failed');
+      toast.error(`Memory persistence test failed: ${error}`);
     }
   };
 
   const testSessionFeedback = async () => {
     try {
-      console.log('📝 Testing session feedback...');
+      console.log('📝 Testing session feedback with input:', feedbackText);
       
-      if (!feedbackText.trim()) {
-        throw new Error('Feedback text is required - please enter some feedback');
+      // More lenient validation - check if feedback text exists and has meaningful content
+      const trimmedFeedback = feedbackText?.trim();
+      if (!trimmedFeedback || trimmedFeedback.length < 5) {
+        throw new Error('Please enter at least 5 characters of feedback text for testing');
+      }
+
+      // Validate rating is within range
+      if (feedbackRating < 1 || feedbackRating > 5) {
+        throw new Error('Rating must be between 1 and 5');
       }
 
       const success = await memoryService.saveFeedback({
         user_id: '',
         session_id: sessionId,
         rating: feedbackRating,
-        feedback_text: feedbackText,
-        session_summary: `Phase 3 test session - ${new Date().toISOString()}`,
-        improvement_suggestions: ['Test suggestion 1', 'Test suggestion 2']
+        feedback_text: trimmedFeedback,
+        session_summary: `Manual Phase 3 test session - ${new Date().toISOString()}`,
+        improvement_suggestions: ['Manual test suggestion 1', 'Manual test suggestion 2']
       });
 
       if (success) {
         console.log('✅ Feedback saved successfully');
         updateTestResult('session_feedback', 'success');
         await loadRealTimeData(); // Refresh data
-        toast.success('Session feedback test passed!');
+        toast.success('Session feedback test passed with your input!');
+        setFeedbackText(''); // Clear input on success
       } else {
         throw new Error('Feedback save returned false');
       }
     } catch (error) {
       console.error('❌ Session feedback test failed:', error);
       updateTestResult('session_feedback', 'failed', String(error));
-      toast.error('Session feedback test failed');
+      toast.error(`Session feedback test failed: ${error}`);
     }
   };
 
   const testMicroActionReminders = async () => {
     try {
-      console.log('⏰ Testing micro-action reminders...');
+      console.log('⏰ Testing micro-action reminders with input:', reminderTitle);
       
-      if (!reminderTitle.trim()) {
-        throw new Error('Reminder title is required - please enter a reminder title');
+      // More lenient validation - check if title exists and has meaningful content
+      const trimmedTitle = reminderTitle?.trim();
+      if (!trimmedTitle || trimmedTitle.length < 3) {
+        throw new Error('Please enter at least 3 characters for the reminder title');
       }
 
       const scheduledFor = addHours(new Date(), 1); // Schedule for 1 hour from now
@@ -190,8 +204,8 @@ export const Phase3MemoryTest: React.FC = () => {
       const reminder = await memoryService.createReminder({
         user_id: '',
         session_id: sessionId,
-        action_title: reminderTitle,
-        action_description: reminderDescription || undefined,
+        action_title: trimmedTitle,
+        action_description: reminderDescription?.trim() || undefined,
         reminder_type: 'in_app',
         scheduled_for: scheduledFor.toISOString(),
         status: 'pending'
@@ -201,14 +215,16 @@ export const Phase3MemoryTest: React.FC = () => {
         console.log('✅ Reminder created successfully:', reminder.id);
         updateTestResult('micro_action_reminders', 'success');
         await loadRealTimeData(); // Refresh data
-        toast.success('Micro-action reminder test passed!');
+        toast.success('Micro-action reminder test passed with your input!');
+        setReminderTitle(''); // Clear inputs on success
+        setReminderDescription('');
       } else {
         throw new Error('Reminder creation returned null');
       }
     } catch (error) {
       console.error('❌ Micro-action reminder test failed:', error);
       updateTestResult('micro_action_reminders', 'failed', String(error));
-      toast.error('Micro-action reminder test failed');
+      toast.error(`Micro-action reminder test failed: ${error}`);
     }
   };
 
@@ -483,7 +499,7 @@ export const Phase3MemoryTest: React.FC = () => {
             </CardHeader>
             <CardContent className="space-y-3">
               <Textarea
-                placeholder="Enter test memory content..."
+                placeholder="Enter test memory content (at least 3 characters)..."
                 value={memoryInput}
                 onChange={(e) => setMemoryInput(e.target.value)}
                 rows={3}
@@ -524,7 +540,7 @@ export const Phase3MemoryTest: React.FC = () => {
                 </div>
               </div>
               <Textarea
-                placeholder="Enter feedback text..."
+                placeholder="Enter feedback text (at least 5 characters)..."
                 value={feedbackText}
                 onChange={(e) => setFeedbackText(e.target.value)}
                 rows={2}
@@ -546,7 +562,7 @@ export const Phase3MemoryTest: React.FC = () => {
             </CardHeader>
             <CardContent className="space-y-3">
               <Input
-                placeholder="Reminder title..."
+                placeholder="Reminder title (at least 3 characters)..."
                 value={reminderTitle}
                 onChange={(e) => setReminderTitle(e.target.value)}
               />
