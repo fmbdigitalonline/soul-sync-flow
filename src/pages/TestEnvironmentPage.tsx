@@ -31,6 +31,8 @@ import { LayerIntegrationTester } from '@/components/debug/LayerIntegrationTeste
 import { ModuleCompletenessValidator } from '@/components/debug/ModuleCompletenessValidator';
 import { MemorySearchAccuracyTester } from '@/components/debug/MemorySearchAccuracyTester';
 import { MemoryPersonalityFusionTester } from '@/components/debug/MemoryPersonalityFusionTester';
+import { CrossSessionMemoryContinuityTester } from '@/components/debug/CrossSessionMemoryContinuityTester';
+import { MemoryImportanceScoringTester } from '@/components/debug/MemoryImportanceScoringTester';
 
 const TestEnvironmentPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('architecture');
@@ -135,8 +137,16 @@ const TestEnvironmentPage: React.FC = () => {
                   <div className="flex items-center justify-center mb-2">
                     <MessageCircle className="h-6 w-6 text-indigo-600" />
                   </div>
-                  <div className="text-sm font-medium">Search Accuracy</div>
+                  <div className="text-sm font-medium">Cross-Session</div>
                   <Badge className="bg-indigo-100 text-indigo-800">Testing</Badge>
+                </div>
+
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <Target className="h-6 w-6 text-purple-600" />
+                  </div>
+                  <div className="text-sm font-medium">Importance</div>
+                  <Badge className="bg-purple-100 text-purple-800">Scoring</Badge>
                 </div>
               </div>
             </CardContent>
@@ -144,7 +154,7 @@ const TestEnvironmentPage: React.FC = () => {
 
           {/* Test Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-12">
+            <TabsList className="grid w-full grid-cols-14">
               <TabsTrigger value="architecture" className="flex items-center gap-2">
                 <Layers className="h-4 w-4" />
                 Architecture
@@ -192,6 +202,14 @@ const TestEnvironmentPage: React.FC = () => {
               <TabsTrigger value="memory-fusion" className="flex items-center gap-2">
                 <MessageCircle className="h-4 w-4" />
                 Fusion Test
+              </TabsTrigger>
+              <TabsTrigger value="cross-session" className="flex items-center gap-2">
+                <MessageCircle className="h-4 w-4" />
+                Cross-Session
+              </TabsTrigger>
+              <TabsTrigger value="importance" className="flex items-center gap-2">
+                <Target className="h-4 w-4" />
+                Importance
               </TabsTrigger>
             </TabsList>
 
@@ -314,6 +332,26 @@ const TestEnvironmentPage: React.FC = () => {
                 </p>
               </div>
               <MemoryPersonalityFusionTester />
+            </TabsContent>
+
+            <TabsContent value="cross-session" className="space-y-6">
+              <div className="mb-4">
+                <h2 className="text-2xl font-semibold mb-2">Cross-Session Memory Continuity Testing</h2>
+                <p className="text-gray-600">
+                  Test memory application across multiple user sessions with actual conversation history and context preservation.
+                </p>
+              </div>
+              <CrossSessionMemoryContinuityTester />
+            </TabsContent>
+
+            <TabsContent value="importance" className="space-y-6">
+              <div className="mb-4">
+                <h2 className="text-2xl font-semibold mb-2">Memory Importance Scoring Validation</h2>
+                <p className="text-gray-600">
+                  Validate automatic importance calculation using actual conversation patterns and emotional content analysis.
+                </p>
+              </div>
+              <MemoryImportanceScoringTester />
             </TabsContent>
           </Tabs>
         </div>
