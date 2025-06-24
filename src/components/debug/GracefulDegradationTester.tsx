@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +6,7 @@ import { AlertTriangle, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBlueprintCache } from '@/contexts/BlueprintCacheContext';
 import { holisticCoachService } from '@/services/holistic-coach-service';
+import { LayeredBlueprint } from '@/types/personality-modules';
 
 interface DegradationTest {
   name: string;
@@ -120,7 +120,7 @@ export const GracefulDegradationTester: React.FC = () => {
   const testMissingMBTI = async (): Promise<boolean> => {
     try {
       // Test with blueprint missing MBTI data
-      const testBlueprint = blueprintData ? { ...blueprintData } : {};
+      const testBlueprint: Partial<LayeredBlueprint> = blueprintData ? { ...blueprintData } : {};
       if (testBlueprint.cognitiveTemperamental) {
         delete testBlueprint.cognitiveTemperamental;
       }
@@ -137,7 +137,7 @@ export const GracefulDegradationTester: React.FC = () => {
 
   const testIncompleteHumanDesign = async (): Promise<boolean> => {
     try {
-      const testBlueprint = blueprintData ? { ...blueprintData } : {};
+      const testBlueprint: Partial<LayeredBlueprint> = blueprintData ? { ...blueprintData } : {};
       if (testBlueprint.energyDecisionStrategy) {
         testBlueprint.energyDecisionStrategy = { 
           humanDesignType: 'Generator',
@@ -165,7 +165,7 @@ export const GracefulDegradationTester: React.FC = () => {
 
   const testMissingBirthData = async (): Promise<boolean> => {
     try {
-      const testBlueprint = blueprintData ? { ...blueprintData } : {};
+      const testBlueprint: Partial<LayeredBlueprint> = blueprintData ? { ...blueprintData } : {};
       if (testBlueprint.publicArchetype) {
         delete testBlueprint.publicArchetype;
       }
