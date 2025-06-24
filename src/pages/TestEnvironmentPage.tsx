@@ -29,6 +29,8 @@ import { RealTimeIntelligenceMonitor } from '@/components/debug/RealTimeIntellig
 import { EndToEndFlowTester } from '@/components/debug/EndToEndFlowTester';
 import { LayerIntegrationTester } from '@/components/debug/LayerIntegrationTester';
 import { ModuleCompletenessValidator } from '@/components/debug/ModuleCompletenessValidator';
+import { MemorySearchAccuracyTester } from '@/components/debug/MemorySearchAccuracyTester';
+import { MemoryPersonalityFusionTester } from '@/components/debug/MemoryPersonalityFusionTester';
 
 const TestEnvironmentPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('architecture');
@@ -56,7 +58,7 @@ const TestEnvironmentPage: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-10 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-12 gap-4">
                 <div className="text-center">
                   <div className="flex items-center justify-center mb-2">
                     <Layers className="h-6 w-6 text-purple-600" />
@@ -123,18 +125,18 @@ const TestEnvironmentPage: React.FC = () => {
 
                 <div className="text-center">
                   <div className="flex items-center justify-center mb-2">
-                    <Brain className="h-6 w-6 text-red-600" />
+                    <Brain className="h-6 w-6 text-pink-600" />
                   </div>
-                  <div className="text-sm font-medium">Memory Monitor</div>
-                  <Badge className="bg-red-100 text-red-800">Enhanced</Badge>
+                  <div className="text-sm font-medium">Memory Fusion</div>
+                  <Badge className="bg-pink-100 text-pink-800">Active</Badge>
                 </div>
 
                 <div className="text-center">
                   <div className="flex items-center justify-center mb-2">
-                    <MessageCircle className="h-6 w-6 text-teal-600" />
+                    <MessageCircle className="h-6 w-6 text-indigo-600" />
                   </div>
-                  <div className="text-sm font-medium">Conversation Test</div>
-                  <Badge className="bg-teal-100 text-teal-800">Active</Badge>
+                  <div className="text-sm font-medium">Search Accuracy</div>
+                  <Badge className="bg-indigo-100 text-indigo-800">Testing</Badge>
                 </div>
               </div>
             </CardContent>
@@ -142,7 +144,7 @@ const TestEnvironmentPage: React.FC = () => {
 
           {/* Test Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-10">
+            <TabsList className="grid w-full grid-cols-12">
               <TabsTrigger value="architecture" className="flex items-center gap-2">
                 <Layers className="h-4 w-4" />
                 Architecture
@@ -182,6 +184,14 @@ const TestEnvironmentPage: React.FC = () => {
               <TabsTrigger value="memory" className="flex items-center gap-2">
                 <Brain className="h-4 w-4" />
                 Memory
+              </TabsTrigger>
+              <TabsTrigger value="memory-deep" className="flex items-center gap-2">
+                <Brain className="h-4 w-4" />
+                Memory Deep
+              </TabsTrigger>
+              <TabsTrigger value="memory-fusion" className="flex items-center gap-2">
+                <MessageCircle className="h-4 w-4" />
+                Fusion Test
               </TabsTrigger>
             </TabsList>
 
@@ -284,6 +294,26 @@ const TestEnvironmentPage: React.FC = () => {
               </div>
               <MemoryConsistencyMonitor />
               <MemoryInformedConversationTest />
+            </TabsContent>
+
+            <TabsContent value="memory-deep" className="space-y-6">
+              <div className="mb-4">
+                <h2 className="text-2xl font-semibold mb-2">Memory System Deep Testing</h2>
+                <p className="text-gray-600">
+                  Progressive search strategies, memory accuracy validation, and importance scoring with real conversation data.
+                </p>
+              </div>
+              <MemorySearchAccuracyTester />
+            </TabsContent>
+
+            <TabsContent value="memory-fusion" className="space-y-6">
+              <div className="mb-4">
+                <h2 className="text-2xl font-semibold mb-2">Memory-Personality Fusion Testing</h2>
+                <p className="text-gray-600">
+                  Test how retrieved memories enhance personality-driven responses with real conversation flows.
+                </p>
+              </div>
+              <MemoryPersonalityFusionTester />
             </TabsContent>
           </Tabs>
         </div>
