@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface SessionMemory {
@@ -171,9 +170,9 @@ class MemoryService {
         return false;
       }
 
-      // Create feedback memory entry immediately after saving feedback
+      // Create feedback memory entry with better error handling
       try {
-        await this.saveMemory({
+        const memoryResult = await this.saveMemory({
           user_id: user.id,
           session_id: feedback.session_id,
           memory_type: 'interaction',
@@ -186,7 +185,12 @@ class MemoryService {
           context_summary: `Session rated ${feedback.rating}/5 stars`,
           importance_score: feedback.rating >= 4 ? 8 : 6
         });
-        console.log('✅ Feedback memory integration successful');
+        
+        if (memoryResult) {
+          console.log('✅ Feedback memory integration successful');
+        } else {
+          console.warn('⚠️ Feedback saved but memory integration failed');
+        }
       } catch (memoryError) {
         console.error('Failed to create feedback memory:', memoryError);
         // Don't fail the whole operation if memory creation fails
@@ -234,12 +238,18 @@ class MemoryService {
 
       console.log('⏰ Creating micro-action reminder:', reminder.action_title);
 
-      // Ensure all required fields are properly set
+      // Validate required fields
+      if (!reminder.action_title || !reminder.session_id || !reminder.scheduled_for) {
+        console.error('Missing required fields for reminder creation');
+        return null;
+      }
+
+      // Ensure proper data types and values
       const reminderData = {
         user_id: user.id,
         session_id: reminder.session_id,
-        action_title: reminder.action_title,
-        action_description: reminder.action_description || null,
+        action_title: reminder.action_title.trim(),
+        action_description: reminder.action_description?.trim() || null,
         reminder_type: reminder.reminder_type || 'in_app',
         scheduled_for: reminder.scheduled_for,
         status: reminder.status || 'pending'
@@ -304,32 +314,43 @@ class MemoryService {
 
       console.log(`⏰ Updating reminder ${id} status to: ${status}`);
 
-      // First verify the reminder exists and belongs to the user
+      // Validate the reminder exists and belongs to the user first
       const { data: existingReminder, error: fetchError } = await supabase
         .from('micro_action_reminders')
-        .select('id, user_id')
+        .select('id, user_id, action_title')
         .eq('id', id)
         .eq('user_id', user.id)
         .single();
 
-      if (fetchError || !existingReminder) {
-        console.error('Reminder not found or not owned by user:', fetchError);
+      if (fetchError) {
+        console.error('Failed to fetch reminder for validation:', fetchError);
         return false;
       }
 
-      const { error } = await supabase
+      if (!existingReminder) {
+        console.error('Reminder not found or access denied');
+        return false;
+      }
+
+      // Perform the update
+      const updateData: any = { 
+        status,
+        updated_at: new Date().toISOString()
+      };
+
+      if (completion_notes !== undefined) {
+        updateData.completion_notes = completion_notes;
+      }
+
+      const { error: updateError } = await supabase
         .from('micro_action_reminders')
-        .update({ 
-          status,
-          completion_notes,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', id)
         .eq('user_id', user.id);
 
-      if (error) {
-        console.error('Failed to update reminder status:', error);
-        console.error('Error details:', error.message, error.details, error.hint);
+      if (updateError) {
+        console.error('Failed to update reminder status:', updateError);
+        console.error('Error details:', updateError.message, updateError.details, updateError.hint);
         return false;
       }
 
@@ -374,25 +395,51 @@ class MemoryService {
 
       console.log('🌱 Updating life context:', context.context_category);
 
-      // Use upsert to handle both insert and update cases
-      const { error } = await supabase
+      // Instead of upsert, check if record exists first
+      const { data: existing } = await supabase
         .from('user_life_context')
-        .upsert({
-          user_id: user.id,
-          context_category: context.context_category,
-          current_focus: context.current_focus,
-          recent_progress: context.recent_progress,
-          ongoing_challenges: context.ongoing_challenges,
-          celebration_moments: context.celebration_moments,
-          next_steps: context.next_steps,
-          last_updated: new Date().toISOString()
-        }, {
-          onConflict: 'user_id,context_category'
-        });
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('context_category', context.context_category)
+        .single();
 
-      if (error) {
-        console.error('Failed to update life context:', error);
-        return false;
+      if (existing) {
+        // Update existing record
+        const { error } = await supabase
+          .from('user_life_context')
+          .update({
+            current_focus: context.current_focus,
+            recent_progress: context.recent_progress,
+            ongoing_challenges: context.ongoing_challenges,
+            celebration_moments: context.celebration_moments,
+            next_steps: context.next_steps,
+            last_updated: new Date().toISOString()
+          })
+          .eq('id', existing.id);
+
+        if (error) {
+          console.error('Failed to update life context:', error);
+          return false;
+        }
+      } else {
+        // Insert new record
+        const { error } = await supabase
+          .from('user_life_context')
+          .insert({
+            user_id: user.id,
+            context_category: context.context_category,
+            current_focus: context.current_focus,
+            recent_progress: context.recent_progress,
+            ongoing_challenges: context.ongoing_challenges,
+            celebration_moments: context.celebration_moments,
+            next_steps: context.next_steps,
+            last_updated: new Date().toISOString()
+          });
+
+        if (error) {
+          console.error('Failed to insert life context:', error);
+          return false;
+        }
       }
 
       return true;
@@ -405,7 +452,12 @@ class MemoryService {
   async getLifeContext(): Promise<UserLifeContext[]> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return [];
+      if (!user) {
+        console.error('No authenticated user for life context retrieval');
+        return [];
+      }
+
+      console.log('🌱 Retrieving life context for user:', user.id);
 
       const { data, error } = await supabase
         .from('user_life_context')
@@ -415,11 +467,12 @@ class MemoryService {
 
       if (error) {
         console.error('Failed to fetch life context:', error);
+        console.error('Error details:', error.message, error.details, error.hint);
         return [];
       }
 
-      console.log(`🌱 Retrieved life context for ${data.length} categories`);
-      return data as UserLifeContext[];
+      console.log(`🌱 Retrieved life context for ${data?.length || 0} categories`);
+      return (data as UserLifeContext[]) || [];
     } catch (error) {
       console.error('Error fetching life context:', error);
       return [];
@@ -431,23 +484,39 @@ class MemoryService {
     try {
       console.log('👋 Generating welcome message for:', userName);
       
-      // Parallel fetch of all context data with proper error handling
-      const [memories, lifeContext, activeReminders] = await Promise.allSettled([
-        this.getRecentMemories(5),
-        this.getLifeContext(),
-        this.getActiveReminders()
-      ]);
+      // Fetch all context data with individual error handling
+      let memoriesData: SessionMemory[] = [];
+      let lifeContextData: UserLifeContext[] = [];
+      let activeRemindersData: MicroActionReminder[] = [];
 
-      const memoriesData = memories.status === 'fulfilled' ? memories.value : [];
-      const lifeContextData = lifeContext.status === 'fulfilled' ? lifeContext.value : [];
-      const activeRemindersData = activeReminders.status === 'fulfilled' ? activeReminders.value : [];
+      try {
+        memoriesData = await this.getRecentMemories(5);
+        console.log('👋 Memories loaded:', memoriesData.length);
+      } catch (error) {
+        console.warn('Failed to load memories for welcome message:', error);
+      }
 
-      console.log('👋 Context data loaded:', {
+      try {
+        lifeContextData = await this.getLifeContext();
+        console.log('👋 Life context loaded:', lifeContextData.length);
+      } catch (error) {
+        console.warn('Failed to load life context for welcome message:', error);
+      }
+
+      try {
+        activeRemindersData = await this.getActiveReminders();
+        console.log('👋 Active reminders loaded:', activeRemindersData.length);
+      } catch (error) {
+        console.warn('Failed to load active reminders for welcome message:', error);
+      }
+
+      console.log('👋 Context data summary:', {
         memories: memoriesData.length,
         lifeContext: lifeContextData.length,
         activeReminders: activeRemindersData.length
       });
 
+      // Generate welcome message based on available data
       if (memoriesData.length === 0 && lifeContextData.length === 0 && activeRemindersData.length === 0) {
         return `Welcome, ${userName}! I'm excited to start our journey together. What would you like to explore today?`;
       }
@@ -456,13 +525,16 @@ class MemoryService {
 
       // Add context from recent memories
       const recentInteraction = memoriesData.find(m => m.memory_type === 'interaction');
-      if (recentInteraction && recentInteraction.context_summary) {
+      if (recentInteraction?.context_summary) {
         welcomeMessage += `Last time we spoke about ${recentInteraction.context_summary.toLowerCase()}. `;
       }
 
       // Add micro-action follow-up
-      const pendingAction = memoriesData.find(m => m.memory_type === 'micro_action');
-      if (pendingAction && pendingAction.memory_data.action_title) {
+      const pendingAction = memoriesData.find(m => 
+        m.memory_type === 'micro_action' && 
+        m.memory_data?.action_title
+      );
+      if (pendingAction?.memory_data?.action_title) {
         welcomeMessage += `I'm curious to know how your "${pendingAction.memory_data.action_title}" action went. `;
       }
 
@@ -474,7 +546,7 @@ class MemoryService {
       // Add life context insights
       if (lifeContextData.length > 0) {
         const recentContext = lifeContextData[0];
-        if (recentContext.current_focus) {
+        if (recentContext?.current_focus) {
           welcomeMessage += `I see you're focusing on ${recentContext.current_focus} in your ${recentContext.context_category} area. `;
         }
       }
