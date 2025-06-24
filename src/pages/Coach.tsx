@@ -7,6 +7,7 @@ import { Sparkles, MessageCircle, RotateCcw, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useEnhancedAICoach } from "@/hooks/use-enhanced-ai-coach";
 import { useSoulSync } from "@/hooks/use-soul-sync";
+import { useBlueprintCache } from "@/contexts/BlueprintCacheContext";
 import { supabase } from "@/integrations/supabase/client";
 import { BlendInterface } from "@/components/coach/BlendInterface";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -14,7 +15,8 @@ import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 
 const Coach = () => {
   const { messages, isLoading, sendMessage, resetConversation, streamingContent, isStreaming } = useEnhancedAICoach("blend");
-  const { isSoulSyncReady, soulSyncError, hasBlueprint } = useSoulSync();
+  const { isSoulSyncReady, soulSyncError } = useSoulSync();
+  const { hasBlueprint, blueprintData } = useBlueprintCache();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -39,6 +41,17 @@ const Coach = () => {
     };
   }, []);
 
+  // Debug logging
+  useEffect(() => {
+    console.log('🎯 Coach Component State:', {
+      isAuthenticated,
+      hasBlueprint,
+      isSoulSyncReady,
+      soulSyncError,
+      blueprintDataExists: !!blueprintData
+    });
+  }, [isAuthenticated, hasBlueprint, isSoulSyncReady, soulSyncError, blueprintData]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -50,8 +63,8 @@ const Coach = () => {
   const handleNewConversation = () => {
     resetConversation();
     toast({
-      title: t('coach.newConversation'),
-      description: t('newConversationStarted', { agent: t('coach.soulCompanion') }),
+      title: "New Conversation",
+      description: "Started a new conversation with your Soul Companion",
     });
   };
 
@@ -67,14 +80,14 @@ const Coach = () => {
           <CosmicCard className="p-6 text-center">
             <Sparkles className="h-8 w-8 text-soul-purple mx-auto mb-4" />
             <h1 className="text-2xl font-bold font-display mb-2">
-              <span className="gradient-text">{t('coach.soulCompanion')}</span>
+              <span className="gradient-text">Soul Companion</span>
             </h1>
-            <p className="mb-6">{t('coach.signInRequired')}</p>
+            <p className="mb-6">Please sign in to access your AI coach</p>
             <Button 
               className="bg-soul-purple hover:bg-soul-purple/90"
               onClick={() => window.location.href = '/auth'}
             >
-              {t('nav.signIn')}
+              Sign In
             </Button>
           </CosmicCard>
         </div>
@@ -103,7 +116,7 @@ const Coach = () => {
               </div>
               <div className="flex flex-col">
                 <h1 className="text-sm font-medium gradient-text">
-                  {isSoulSyncReady ? 'SoulSync Active' : t('coach.soulCompanionHeader')}
+                  {isSoulSyncReady ? 'SoulSync Active' : 'Soul Companion'}
                 </h1>
                 {isSoulSyncReady && (
                   <span className="text-xs text-green-600">Personalized AI Ready</span>
@@ -123,13 +136,18 @@ const Coach = () => {
             </Button>
           </div>
           
-          {/* SoulSync Status Banner */}
+          {/* SoulSync Status Banner - Only show if no blueprint detected */}
           {!hasBlueprint && (
             <div className="mt-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg">
               <div className="flex items-center gap-2 text-xs text-amber-700">
                 <Sparkles className="h-3 w-3" />
                 <span>Create your Blueprint to unlock personalized AI responses</span>
-                <Button size="sm" variant="outline" className="ml-auto h-6 text-xs">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="ml-auto h-6 text-xs"
+                  onClick={() => window.location.href = '/blueprint'}
+                >
                   Create Blueprint
                 </Button>
               </div>
