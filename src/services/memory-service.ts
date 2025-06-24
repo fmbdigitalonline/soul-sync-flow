@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export interface SessionMemory {
@@ -376,7 +377,7 @@ class MemoryService {
       // Validate the reminder exists and belongs to the user
       const { data: existingReminder, error: fetchError } = await supabase
         .from('micro_action_reminders')
-        .select('id, user_id, action_title, status')
+        .select('id, user_id, action_title, action_description, session_id, status')
         .eq('id', id.trim())
         .eq('user_id', user.id)
         .maybeSingle();
@@ -414,6 +415,39 @@ class MemoryService {
       }
 
       console.log('✅ Reminder status updated successfully');
+
+      // FIX: Create memory entry when reminder is completed
+      if (status === 'completed') {
+        console.log('🧠 Creating memory entry for completed reminder...');
+        
+        try {
+          const memoryResult = await this.saveMemory({
+            user_id: user.id,
+            session_id: existingReminder.session_id,
+            memory_type: 'micro_action',
+            memory_data: {
+              action_title: existingReminder.action_title,
+              action_description: existingReminder.action_description,
+              status: 'completed',
+              completion_notes: completion_notes,
+              reminder_id: existingReminder.id,
+              completed_at: new Date().toISOString()
+            },
+            context_summary: `Completed micro-action: ${existingReminder.action_title}`,
+            importance_score: 7
+          });
+
+          if (memoryResult) {
+            console.log('✅ Reminder completion memory created successfully:', memoryResult.id);
+          } else {
+            console.warn('⚠️ Failed to create reminder completion memory');
+          }
+        } catch (memoryError) {
+          console.error('❌ Error creating reminder completion memory:', memoryError);
+          // Don't fail the reminder update if memory creation fails
+        }
+      }
+
       return true;
     } catch (error) {
       console.error('❌ Unexpected error updating reminder status:', error);
