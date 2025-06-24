@@ -15,7 +15,8 @@ import {
   Layers,
   Target,
   GitBranch,
-  Database
+  Database,
+  Heart
 } from 'lucide-react';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { Phase3MemoryTest } from '@/components/debug/Phase3MemoryTest';
@@ -33,6 +34,8 @@ import { MemorySearchAccuracyTester } from '@/components/debug/MemorySearchAccur
 import { MemoryPersonalityFusionTester } from '@/components/debug/MemoryPersonalityFusionTester';
 import { CrossSessionMemoryContinuityTester } from '@/components/debug/CrossSessionMemoryContinuityTester';
 import { MemoryImportanceScoringTester } from '@/components/debug/MemoryImportanceScoringTester';
+import { GrowthMode7LayerTester } from '@/components/debug/GrowthMode7LayerTester';
+import { CompanionModeConsistencyTester } from '@/components/debug/CompanionModeConsistencyTester';
 
 const TestEnvironmentPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('architecture');
@@ -148,13 +151,29 @@ const TestEnvironmentPage: React.FC = () => {
                   <div className="text-sm font-medium">Importance</div>
                   <Badge className="bg-purple-100 text-purple-800">Scoring</Badge>
                 </div>
+
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <Brain className="h-6 w-6 text-violet-600" />
+                  </div>
+                  <div className="text-sm font-medium">Growth Mode</div>
+                  <Badge className="bg-violet-100 text-violet-800">7-Layer</Badge>
+                </div>
+
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <Heart className="h-6 w-6 text-rose-600" />
+                  </div>
+                  <div className="text-sm font-medium">Companion</div>
+                  <Badge className="bg-rose-100 text-rose-800">Consistent</Badge>
+                </div>
               </div>
             </CardContent>
           </Card>
 
           {/* Test Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-14">
+            <TabsList className="grid w-full grid-cols-16">
               <TabsTrigger value="architecture" className="flex items-center gap-2">
                 <Layers className="h-4 w-4" />
                 Architecture
@@ -210,6 +229,14 @@ const TestEnvironmentPage: React.FC = () => {
               <TabsTrigger value="importance" className="flex items-center gap-2">
                 <Target className="h-4 w-4" />
                 Importance
+              </TabsTrigger>
+              <TabsTrigger value="growth-mode" className="flex items-center gap-2">
+                <Brain className="h-4 w-4" />
+                Growth Mode
+              </TabsTrigger>
+              <TabsTrigger value="companion-mode" className="flex items-center gap-2">
+                <Heart className="h-4 w-4" />
+                Companion
               </TabsTrigger>
             </TabsList>
 
@@ -352,6 +379,26 @@ const TestEnvironmentPage: React.FC = () => {
                 </p>
               </div>
               <MemoryImportanceScoringTester />
+            </TabsContent>
+
+            <TabsContent value="growth-mode" className="space-y-6">
+              <div className="mb-4">
+                <h2 className="text-2xl font-semibold mb-2">Growth Mode 7-Layer Integration Testing</h2>
+                <p className="text-gray-600">
+                  Test advanced holistic prompt generation with real blueprint data and dynamic layer integration.
+                </p>
+              </div>
+              <GrowthMode7LayerTester />
+            </TabsContent>
+
+            <TabsContent value="companion-mode" className="space-y-6">
+              <div className="mb-4">
+                <h2 className="text-2xl font-semibold mb-2">Companion Mode Consistency Testing</h2>
+                <p className="text-gray-600">
+                  Validate basic personality engine functionality with consistent companion responses and warmth levels.
+                </p>
+              </div>
+              <CompanionModeConsistencyTester />
             </TabsContent>
           </Tabs>
         </div>
