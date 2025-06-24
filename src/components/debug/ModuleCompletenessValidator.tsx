@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -80,7 +79,7 @@ export const ModuleCompletenessValidator: React.FC = () => {
     setIsLoading(true);
     try {
       // Get user blueprint
-      const { data: blueprint } = await supabase
+      const { data: blueprintRecord } = await supabase
         .from('user_blueprints')
         .select('*')
         .eq('user_id', userId)
@@ -89,14 +88,14 @@ export const ModuleCompletenessValidator: React.FC = () => {
         .limit(1)
         .maybeSingle();
 
-      if (!blueprint?.blueprint) {
+      if (!blueprintRecord?.blueprint) {
         console.log('⚠️ No blueprint data available');
         setIsLoading(false);
         return;
       }
 
-      const blueprintData = blueprint.blueprint as any;
-      const moduleData = await analyzeModules(blueprintData);
+      const blueprintData = blueprintRecord.blueprint as any;
+      const moduleData = await analyzeModules(blueprintData, blueprintRecord);
       
       setModules(moduleData);
       
@@ -121,7 +120,7 @@ export const ModuleCompletenessValidator: React.FC = () => {
     }
   };
 
-  const analyzeModules = async (blueprintData: any): Promise<PersonalityModule[]> => {
+  const analyzeModules = async (blueprintData: any, blueprintRecord: any): Promise<PersonalityModule[]> => {
     const moduleDefinitions = [
       {
         id: 'cognitive-temperamental',
@@ -228,7 +227,7 @@ export const ModuleCompletenessValidator: React.FC = () => {
         isActive: !!moduleData && Object.keys(moduleData).length > 0,
         completeness,
         dataQuality,
-        lastUpdated: blueprint?.updated_at,
+        lastUpdated: blueprintRecord?.updated_at,
         data: moduleData || {},
         requiredFields: moduleDef.requiredFields,
         missingFields
