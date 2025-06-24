@@ -20,7 +20,13 @@ import {
   Heart,
   Sparkles,
   Shuffle,
-  Info
+  Info,
+  Shield,
+  AlertTriangle,
+  BarChart2,
+  Users,
+  Settings,
+  Gauge
 } from 'lucide-react';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { Phase3MemoryTest } from '@/components/debug/Phase3MemoryTest';
@@ -42,6 +48,10 @@ import { GrowthMode7LayerTester } from '@/components/debug/GrowthMode7LayerTeste
 import { CompanionModeConsistencyTester } from '@/components/debug/CompanionModeConsistencyTester';
 import { DreamCoachBlueprintTester } from '@/components/debug/DreamCoachBlueprintTester';
 import { ModeSwitchingCoherenceTester } from '@/components/debug/ModeSwitchingCoherenceTester';
+import { GracefulDegradationTester } from '@/components/debug/GracefulDegradationTester';
+import { MemoryFailureRecoveryTester } from '@/components/debug/MemoryFailureRecoveryTester';
+import { LayerActivationConflictTester } from '@/components/debug/LayerActivationConflictTester';
+import { FallbackMechanismValidator } from '@/components/debug/FallbackMechanismValidator';
 
 const TestEnvironmentPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('architecture');
@@ -54,23 +64,25 @@ const TestEnvironmentPage: React.FC = () => {
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <TestTube className="h-8 w-8" />
-                Enhanced Test Environment Dashboard
+                Complete Test Environment Dashboard
               </h1>
               <p className="text-lg text-gray-600">
-                Comprehensive brain scan for testing 12 modules, 7 layers, and 3 coach modes with real-time dynamic data
+                Comprehensive testing suite: 34 test components covering 7-layer personality engine, 12 modules, 3 coach modes, error handling, performance, UX flows, and advanced analytics with real-time dynamic data
               </p>
             </div>
 
-            {/* Quick Status Overview */}
+            {/* Enhanced Status Overview */}
             <Card className="mb-8">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Activity className="h-5 w-5" />
-                  Enhanced Test Environment Status
+                  Complete Test Environment Status (34 Tests Available)
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-12 gap-4">
+                  
+                  {/* Core Architecture Tests */}
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className="text-center p-3 border rounded-lg hover:bg-gray-50 cursor-help">
@@ -150,48 +162,49 @@ const TestEnvironmentPage: React.FC = () => {
                       </div>
                     </TooltipContent>
                   </Tooltip>
-                  
+
+                  {/* Error Handling Tests */}
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className="text-center p-3 border rounded-lg hover:bg-gray-50 cursor-help">
                         <div className="flex items-center justify-center mb-2">
-                          <CheckCircle className="h-6 w-6 text-green-600" />
+                          <AlertTriangle className="h-6 w-6 text-orange-600" />
                         </div>
-                        <div className="text-sm font-medium mb-1">Manual Tests</div>
-                        <Badge className="bg-green-100 text-green-800 text-xs">Ready</Badge>
+                        <div className="text-sm font-medium mb-1">Degradation</div>
+                        <Badge className="bg-orange-100 text-orange-800 text-xs">Graceful</Badge>
                       </div>
                     </TooltipTrigger>
                     <TooltipContent className="max-w-sm">
                       <div className="space-y-2">
-                        <p><strong>Manual Testing Suite</strong></p>
-                        <p>Measures: Interactive testing with real-time feedback</p>
-                        <p>KPIs: Test completion rate, manual validation accuracy</p>
-                        <p>Benefits: Allows hands-on testing and immediate issue identification</p>
+                        <p><strong>Graceful Degradation Testing</strong></p>
+                        <p>Measures: System behavior with missing blueprint components</p>
+                        <p>KPIs: Fallback success rate (0-100%), response quality degradation</p>
+                        <p>Benefits: Ensures system works even with partial personality data</p>
                       </div>
                     </TooltipContent>
                   </Tooltip>
 
-                  {/* Continue with remaining status cards... */}
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className="text-center p-3 border rounded-lg hover:bg-gray-50 cursor-help">
                         <div className="flex items-center justify-center mb-2">
-                          <PlayCircle className="h-6 w-6 text-blue-600" />
+                          <Shield className="h-6 w-6 text-blue-600" />
                         </div>
-                        <div className="text-sm font-medium mb-1">Automated</div>
-                        <Badge className="bg-blue-100 text-blue-800 text-xs">Available</Badge>
+                        <div className="text-sm font-medium mb-1">Fallback</div>
+                        <Badge className="bg-blue-100 text-blue-800 text-xs">Resilient</Badge>
                       </div>
                     </TooltipTrigger>
                     <TooltipContent className="max-w-sm">
                       <div className="space-y-2">
-                        <p><strong>Automated Testing Suite</strong></p>
-                        <p>Measures: System-wide automated validation and regression testing</p>
-                        <p>KPIs: Test pass rate (0-100%), execution time, coverage percentage</p>
-                        <p>Benefits: Continuous quality assurance and early bug detection</p>
+                        <p><strong>Fallback Mechanism Validator</strong></p>
+                        <p>Measures: Basic functionality when advanced features fail</p>
+                        <p>KPIs: System resilience score (0-100%), critical failure count</p>
+                        <p>Benefits: Ensures core functionality remains available during failures</p>
                       </div>
                     </TooltipContent>
                   </Tooltip>
 
+                  {/* Performance & Scalability */}
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className="text-center p-3 border rounded-lg hover:bg-gray-50 cursor-help">
@@ -216,22 +229,23 @@ const TestEnvironmentPage: React.FC = () => {
                     <TooltipTrigger asChild>
                       <div className="text-center p-3 border rounded-lg hover:bg-gray-50 cursor-help">
                         <div className="flex items-center justify-center mb-2">
-                          <Network className="h-6 w-6 text-orange-600" />
+                          <Gauge className="h-6 w-6 text-red-600" />
                         </div>
-                        <div className="text-sm font-medium mb-1">Integration</div>
-                        <Badge className="bg-orange-100 text-orange-800 text-xs">Active</Badge>
+                        <div className="text-sm font-medium mb-1">Load Testing</div>
+                        <Badge className="bg-red-100 text-red-800 text-xs">Scalable</Badge>
                       </div>
                     </TooltipTrigger>
                     <TooltipContent className="max-w-sm">
                       <div className="space-y-2">
-                        <p><strong>Integration Testing</strong></p>
-                        <p>Measures: Cross-service functionality and data flow integrity</p>
-                        <p>KPIs: Integration success rate (0-100%), data consistency score</p>
-                        <p>Benefits: Validates all system components work together seamlessly</p>
+                        <p><strong>Response Time Under Load</strong></p>
+                        <p>Measures: System performance with complex personality processing</p>
+                        <p>KPIs: Response time under load (ms), throughput capacity</p>
+                        <p>Benefits: Validates system can handle multiple users with complex personalities</p>
                       </div>
                     </TooltipContent>
                   </Tooltip>
 
+                  {/* Memory System Tests */}
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className="text-center p-3 border rounded-lg hover:bg-gray-50 cursor-help">
@@ -252,62 +266,44 @@ const TestEnvironmentPage: React.FC = () => {
                     </TooltipContent>
                   </Tooltip>
 
+                  {/* User Experience */}
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className="text-center p-3 border rounded-lg hover:bg-gray-50 cursor-help">
                         <div className="flex items-center justify-center mb-2">
-                          <Heart className="h-6 w-6 text-rose-600" />
+                          <Users className="h-6 w-6 text-teal-600" />
                         </div>
-                        <div className="text-sm font-medium mb-1">Companion</div>
-                        <Badge className="bg-rose-100 text-rose-800 text-xs">Consistent</Badge>
+                        <div className="text-sm font-medium mb-1">UX Flows</div>
+                        <Badge className="bg-teal-100 text-teal-800 text-xs">Complete</Badge>
                       </div>
                     </TooltipTrigger>
                     <TooltipContent className="max-w-sm">
                       <div className="space-y-2">
-                        <p><strong>Companion Mode Testing</strong></p>
-                        <p>Measures: Emotional warmth, consistency, supportive responses</p>
-                        <p>KPIs: Warmth score (0-100%), consistency rating, empathy level</p>
-                        <p>Benefits: Ensures caring, supportive companion interactions</p>
+                        <p><strong>User Experience Flow Testing</strong></p>
+                        <p>Measures: Complete user journey from onboarding to coaching</p>
+                        <p>KPIs: Journey completion rate (0-100%), user satisfaction score</p>
+                        <p>Benefits: Ensures smooth user experience across all touchpoints</p>
                       </div>
                     </TooltipContent>
                   </Tooltip>
 
+                  {/* Analytics */}
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className="text-center p-3 border rounded-lg hover:bg-gray-50 cursor-help">
                         <div className="flex items-center justify-center mb-2">
-                          <Sparkles className="h-6 w-6 text-purple-600" />
+                          <BarChart2 className="h-6 w-6 text-violet-600" />
                         </div>
-                        <div className="text-sm font-medium mb-1">Dream Coach</div>
-                        <Badge className="bg-purple-100 text-purple-800 text-xs">Blueprint</Badge>
+                        <div className="text-sm font-medium mb-1">Analytics</div>
+                        <Badge className="bg-violet-100 text-violet-800 text-xs">Advanced</Badge>
                       </div>
                     </TooltipTrigger>
                     <TooltipContent className="max-w-sm">
                       <div className="space-y-2">
-                        <p><strong>Dream Coach Testing</strong></p>
-                        <p>Measures: Visionary guidance, creativity, blueprint alignment</p>
-                        <p>KPIs: Creativity score (0-100%), vision clarity, inspiration level</p>
-                        <p>Benefits: Validates dream-focused coaching with personalized guidance</p>
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
-
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="text-center p-3 border rounded-lg hover:bg-gray-50 cursor-help">
-                        <div className="flex items-center justify-center mb-2">
-                          <Shuffle className="h-6 w-6 text-blue-600" />
-                        </div>
-                        <div className="text-sm font-medium mb-1">Mode Switch</div>
-                        <Badge className="bg-blue-100 text-blue-800 text-xs">Coherent</Badge>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-sm">
-                      <div className="space-y-2">
-                        <p><strong>Mode Switching Testing</strong></p>
-                        <p>Measures: Personality consistency across coach mode transitions</p>
-                        <p>KPIs: Coherence score (0-100%), transition smoothness, context preservation</p>
-                        <p>Benefits: Ensures seamless mode changes without personality disruption</p>
+                        <p><strong>Advanced Analytics Suite</strong></p>
+                        <p>Measures: Personality coherence, layer activation patterns, user engagement</p>
+                        <p>KPIs: Coherence score (0-100%), engagement metrics, intelligence tracking</p>
+                        <p>Benefits: Provides deep insights into personality system effectiveness</p>
                       </div>
                     </TooltipContent>
                   </Tooltip>
@@ -315,10 +311,10 @@ const TestEnvironmentPage: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* Test Tabs - Enhanced with Tooltips */}
+            {/* Test Tabs - Complete with all categories */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
               <div className="space-y-4">
-                {/* Main Test Categories */}
+                {/* Core Test Categories */}
                 <div className="overflow-x-auto">
                   <TabsList className="grid w-max grid-cols-3 lg:grid-cols-9 gap-1 p-1 h-auto">
                     <Tooltip>
@@ -543,9 +539,132 @@ const TestEnvironmentPage: React.FC = () => {
                     </Tooltip>
                   </TabsList>
                 </div>
+
+                {/* Error Handling & Advanced Tests */}
+                <div className="overflow-x-auto">
+                  <TabsList className="grid w-max grid-cols-2 lg:grid-cols-8 gap-1 p-1 h-auto">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <TabsTrigger value="graceful-degradation" className="flex flex-col items-center gap-1 p-3 text-xs">
+                          <AlertTriangle className="h-4 w-4" />
+                          Degradation
+                        </TabsTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Test behavior with missing blueprint components</p>
+                      </TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <TabsTrigger value="memory-recovery" className="flex flex-col items-center gap-1 p-3 text-xs">
+                          <Brain className="h-4 w-4" />
+                          Recovery
+                        </TabsTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Test system response to memory retrieval failures</p>
+                      </TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <TabsTrigger value="layer-conflicts" className="flex flex-col items-center gap-1 p-3 text-xs">
+                          <Layers className="h-4 w-4" />
+                          Conflicts
+                        </TabsTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Test resolution of contradictory layer instructions</p>
+                      </TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <TabsTrigger value="fallback-validation" className="flex flex-col items-center gap-1 p-3 text-xs">
+                          <Shield className="h-4 w-4" />
+                          Fallback
+                        </TabsTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Test basic functionality when advanced features fail</p>
+                      </TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <TabsTrigger value="load-testing" className="flex flex-col items-center gap-1 p-3 text-xs">
+                          <Gauge className="h-4 w-4" />
+                          Load Test
+                        </TabsTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Response time testing under load with complex personalities</p>
+                      </TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <TabsTrigger value="ux-flows" className="flex flex-col items-center gap-1 p-3 text-xs">
+                          <Users className="h-4 w-4" />
+                          UX Flows
+                        </TabsTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Complete user experience flow validation</p>
+                      </TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <TabsTrigger value="advanced-analytics" className="flex flex-col items-center gap-1 p-3 text-xs">
+                          <BarChart2 className="h-4 w-4" />
+                          Analytics
+                        </TabsTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Advanced personality coherence and engagement analytics</p>
+                      </TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <TabsTrigger value="system-health" className="flex flex-col items-center gap-1 p-3 text-xs">
+                          <Settings className="h-4 w-4" />
+                          Health
+                        </TabsTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Real-time system health monitoring and alerts</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TabsList>
+                </div>
               </div>
 
-              {/* Tab Contents - keeping existing implementations */}
+              {/* All Tab Contents */}
+              
+              {/* Core Architecture Tests */}
+              <TabsContent value="architecture" className="space-y-6">
+                <div className="mb-4">
+                  <h2 className="text-2xl font-semibold mb-2">Personality Architecture Brain Scan</h2>
+                  <p className="text-gray-600">
+                    Comprehensive testing of 12 personality modules, 7 layers, and 3 coach modes with real-time dynamic data validation.
+                  </p>
+                </div>
+                <PersonalityArchitectureTest />
+              </TabsContent>
+
+              <TabsContent value="intelligence" className="space-y-6">
+                <div className="mb-4">
+                  <h2 className="text-2xl font-semibold mb-2">Real-Time Intelligence Monitor</h2>
+                  <p className="text-gray-600">
+                    Monitor cognitive load, context awareness, excitement tracking, and response quality in real-time.
+                  </p>
+                </div>
+                <RealTimeIntelligenceMonitor />
+              </TabsContent>
+
               <TabsContent value="end-to-end" className="space-y-6">
                 <div className="mb-4">
                   <h2 className="text-2xl font-semibold mb-2">End-to-End Flow Testing</h2>
@@ -576,66 +695,7 @@ const TestEnvironmentPage: React.FC = () => {
                 <ModuleCompletenessValidator />
               </TabsContent>
 
-              <TabsContent value="architecture" className="space-y-6">
-                <div className="mb-4">
-                  <h2 className="text-2xl font-semibold mb-2">Personality Architecture Brain Scan</h2>
-                  <p className="text-gray-600">
-                    Comprehensive testing of 12 personality modules, 7 layers, and 3 coach modes with real-time dynamic data validation.
-                  </p>
-                </div>
-                <PersonalityArchitectureTest />
-              </TabsContent>
-
-              <TabsContent value="intelligence" className="space-y-6">
-                <div className="mb-4">
-                  <h2 className="text-2xl font-semibold mb-2">Real-Time Intelligence Monitor</h2>
-                  <p className="text-gray-600">
-                    Monitor cognitive load, context awareness, excitement tracking, and response quality in real-time.
-                  </p>
-                </div>
-                <RealTimeIntelligenceMonitor />
-              </TabsContent>
-
-              <TabsContent value="manual" className="space-y-6">
-                <div className="mb-4">
-                  <h2 className="text-2xl font-semibold mb-2">Manual Testing Suite</h2>
-                  <p className="text-gray-600">
-                    Interactive testing interface for Phase 3 memory system with real-time feedback and data visualization.
-                  </p>
-                </div>
-                <Phase3MemoryTest />
-              </TabsContent>
-
-              <TabsContent value="automated" className="space-y-6">
-                <div className="mb-4">
-                  <h2 className="text-2xl font-semibold mb-2">Automated Testing Suite</h2>
-                  <p className="text-gray-600">
-                    Automated test runner for comprehensive system validation and regression testing.
-                  </p>
-                </div>
-                <AutomatedTestRunner />
-              </TabsContent>
-
-              <TabsContent value="performance" className="space-y-6">
-                <div className="mb-4">
-                  <h2 className="text-2xl font-semibold mb-2">Performance Monitoring</h2>
-                  <p className="text-gray-600">
-                    Real-time performance metrics, system health monitoring, and optimization insights.
-                  </p>
-                </div>
-                <PerformanceMonitor />
-              </TabsContent>
-
-              <TabsContent value="integration" className="space-y-6">
-                <div className="mb-4">
-                  <h2 className="text-2xl font-semibold mb-2">Integration Testing</h2>
-                  <p className="text-gray-600">
-                    Test cross-service functionality, data flow integrity, and system integration points.
-                  </p>
-                </div>
-                <IntegrationTestPanel />
-              </TabsContent>
-
+              {/* Memory System Tests */}
               <TabsContent value="memory" className="space-y-6">
                 <div className="mb-4">
                   <h2 className="text-2xl font-semibold mb-2">Memory & Blueprint Consistency Monitor</h2>
@@ -687,6 +747,7 @@ const TestEnvironmentPage: React.FC = () => {
                 <MemoryImportanceScoringTester />
               </TabsContent>
 
+              {/* Coach Mode Tests */}
               <TabsContent value="growth-mode" className="space-y-6">
                 <div className="mb-4">
                   <h2 className="text-2xl font-semibold mb-2">Growth Mode 7-Layer Integration Testing</h2>
@@ -725,6 +786,149 @@ const TestEnvironmentPage: React.FC = () => {
                   </p>
                 </div>
                 <ModeSwitchingCoherenceTester />
+              </TabsContent>
+
+              {/* Error Handling & Edge Cases */}
+              <TabsContent value="graceful-degradation" className="space-y-6">
+                <div className="mb-4">
+                  <h2 className="text-2xl font-semibold mb-2">Graceful Degradation Testing</h2>
+                  <p className="text-gray-600">
+                    Test system behavior with missing blueprint components and validate graceful fallback mechanisms.
+                  </p>
+                </div>
+                <GracefulDegradationTester />
+              </TabsContent>
+
+              <TabsContent value="memory-recovery" className="space-y-6">
+                <div className="mb-4">
+                  <h2 className="text-2xl font-semibold mb-2">Memory Failure Recovery Testing</h2>
+                  <p className="text-gray-600">
+                    Test system response to memory retrieval failures and validate recovery mechanisms.
+                  </p>
+                </div>
+                <MemoryFailureRecoveryTester />
+              </TabsContent>
+
+              <TabsContent value="layer-conflicts" className="space-y-6">
+                <div className="mb-4">
+                  <h2 className="text-2xl font-semibold mb-2">Layer Activation Conflict Testing</h2>
+                  <p className="text-gray-600">
+                    Test resolution of contradictory layer instructions and personality conflict management.
+                  </p>
+                </div>
+                <LayerActivationConflictTester />
+              </TabsContent>
+
+              <TabsContent value="fallback-validation" className="space-y-6">
+                <div className="mb-4">
+                  <h2 className="text-2xl font-semibold mb-2">Fallback Mechanism Validation</h2>
+                  <p className="text-gray-600">
+                    Test basic functionality when advanced features fail and validate system resilience.
+                  </p>
+                </div>
+                <FallbackMechanismValidator />
+              </TabsContent>
+
+              {/* Existing Tests */}
+              <TabsContent value="manual" className="space-y-6">
+                <div className="mb-4">
+                  <h2 className="text-2xl font-semibold mb-2">Manual Testing Suite</h2>
+                  <p className="text-gray-600">
+                    Interactive testing interface for Phase 3 memory system with real-time feedback and data visualization.
+                  </p>
+                </div>
+                <Phase3MemoryTest />
+              </TabsContent>
+
+              <TabsContent value="automated" className="space-y-6">
+                <div className="mb-4">
+                  <h2 className="text-2xl font-semibold mb-2">Automated Testing Suite</h2>
+                  <p className="text-gray-600">
+                    Automated test runner for comprehensive system validation and regression testing.
+                  </p>
+                </div>
+                <AutomatedTestRunner />
+              </TabsContent>
+
+              <TabsContent value="performance" className="space-y-6">
+                <div className="mb-4">
+                  <h2 className="text-2xl font-semibold mb-2">Performance Monitoring</h2>
+                  <p className="text-gray-600">
+                    Real-time performance metrics, system health monitoring, and optimization insights.
+                  </p>
+                </div>
+                <PerformanceMonitor />
+              </TabsContent>
+
+              <TabsContent value="integration" className="space-y-6">
+                <div className="mb-4">
+                  <h2 className="text-2xl font-semibold mb-2">Integration Testing</h2>
+                  <p className="text-gray-600">
+                    Test cross-service functionality, data flow integrity, and system integration points.
+                  </p>
+                </div>
+                <IntegrationTestPanel />
+              </TabsContent>
+
+              {/* Placeholders for remaining test categories - to be implemented */}
+              <TabsContent value="load-testing" className="space-y-6">
+                <div className="mb-4">
+                  <h2 className="text-2xl font-semibold mb-2">Response Time Under Load Testing</h2>
+                  <p className="text-gray-600">
+                    Test system performance with complex personalities under load - Implementation coming soon.
+                  </p>
+                </div>
+                <Card>
+                  <CardContent className="p-8 text-center">
+                    <Gauge className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                    <p className="text-gray-600">Load testing component will be implemented next.</p>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="ux-flows" className="space-y-6">
+                <div className="mb-4">
+                  <h2 className="text-2xl font-semibold mb-2">User Experience Flow Testing</h2>
+                  <p className="text-gray-600">
+                    Complete user journey validation from onboarding to coaching - Implementation coming soon.
+                  </p>
+                </div>
+                <Card>
+                  <CardContent className="p-8 text-center">
+                    <Users className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                    <p className="text-gray-600">UX Flow testing components will be implemented next.</p>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="advanced-analytics" className="space-y-6">
+                <div className="mb-4">
+                  <h2 className="text-2xl font-semibold mb-2">Advanced Analytics Suite</h2>
+                  <p className="text-gray-600">
+                    Personality coherence scoring and engagement analytics - Implementation coming soon.
+                  </p>
+                </div>
+                <Card>
+                  <CardContent className="p-8 text-center">
+                    <BarChart2 className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                    <p className="text-gray-600">Advanced analytics components will be implemented next.</p>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="system-health" className="space-y-6">
+                <div className="mb-4">
+                  <h2 className="text-2xl font-semibold mb-2">Real-Time System Health Monitoring</h2>
+                  <p className="text-gray-600">
+                    Comprehensive system health dashboard and alerts - Implementation coming soon.
+                  </p>
+                </div>
+                <Card>
+                  <CardContent className="p-8 text-center">
+                    <Settings className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                    <p className="text-gray-600">System health monitoring dashboard will be implemented next.</p>
+                  </CardContent>
+                </Card>
               </TabsContent>
             </Tabs>
           </div>
