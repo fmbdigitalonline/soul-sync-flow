@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,7 +13,9 @@ import {
   MessageCircle,
   Eye,
   Layers,
-  Target
+  Target,
+  GitBranch,
+  Database
 } from 'lucide-react';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { Phase3MemoryTest } from '@/components/debug/Phase3MemoryTest';
@@ -25,6 +26,9 @@ import { MemoryConsistencyMonitor } from '@/components/debug/MemoryConsistencyMo
 import { MemoryInformedConversationTest } from '@/components/debug/MemoryInformedConversationTest';
 import { PersonalityArchitectureTest } from '@/components/debug/PersonalityArchitectureTest';
 import { RealTimeIntelligenceMonitor } from '@/components/debug/RealTimeIntelligenceMonitor';
+import { EndToEndFlowTester } from '@/components/debug/EndToEndFlowTester';
+import { LayerIntegrationTester } from '@/components/debug/LayerIntegrationTester';
+import { ModuleCompletenessValidator } from '@/components/debug/ModuleCompletenessValidator';
 
 const TestEnvironmentPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('architecture');
@@ -52,7 +56,7 @@ const TestEnvironmentPage: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-8 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-10 gap-4">
                 <div className="text-center">
                   <div className="flex items-center justify-center mb-2">
                     <Layers className="h-6 w-6 text-purple-600" />
@@ -67,6 +71,22 @@ const TestEnvironmentPage: React.FC = () => {
                   </div>
                   <div className="text-sm font-medium">Intelligence</div>
                   <Badge className="bg-indigo-100 text-indigo-800">Real-Time</Badge>
+                </div>
+                
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <GitBranch className="h-6 w-6 text-emerald-600" />
+                  </div>
+                  <div className="text-sm font-medium">End-to-End</div>
+                  <Badge className="bg-emerald-100 text-emerald-800">Dynamic</Badge>
+                </div>
+                
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <Database className="h-6 w-6 text-cyan-600" />
+                  </div>
+                  <div className="text-sm font-medium">12-Module</div>
+                  <Badge className="bg-cyan-100 text-cyan-800">Validated</Badge>
                 </div>
                 
                 <div className="text-center">
@@ -122,7 +142,7 @@ const TestEnvironmentPage: React.FC = () => {
 
           {/* Test Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-8">
+            <TabsList className="grid w-full grid-cols-10">
               <TabsTrigger value="architecture" className="flex items-center gap-2">
                 <Layers className="h-4 w-4" />
                 Architecture
@@ -131,9 +151,21 @@ const TestEnvironmentPage: React.FC = () => {
                 <Eye className="h-4 w-4" />
                 Intelligence
               </TabsTrigger>
+              <TabsTrigger value="end-to-end" className="flex items-center gap-2">
+                <GitBranch className="h-4 w-4" />
+                End-to-End
+              </TabsTrigger>
+              <TabsTrigger value="layer-integration" className="flex items-center gap-2">
+                <Target className="h-4 w-4" />
+                7-Layer
+              </TabsTrigger>
+              <TabsTrigger value="module-validation" className="flex items-center gap-2">
+                <Database className="h-4 w-4" />
+                12-Module
+              </TabsTrigger>
               <TabsTrigger value="manual" className="flex items-center gap-2">
                 <TestTube className="h-4 w-4" />
-                Manual Tests
+                Manual
               </TabsTrigger>
               <TabsTrigger value="automated" className="flex items-center gap-2">
                 <PlayCircle className="h-4 w-4" />
@@ -147,15 +179,41 @@ const TestEnvironmentPage: React.FC = () => {
                 <Network className="h-4 w-4" />
                 Integration
               </TabsTrigger>
-              <TabsTrigger value="consistency" className="flex items-center gap-2">
+              <TabsTrigger value="memory" className="flex items-center gap-2">
                 <Brain className="h-4 w-4" />
                 Memory
               </TabsTrigger>
-              <TabsTrigger value="conversation" className="flex items-center gap-2">
-                <MessageCircle className="h-4 w-4" />
-                Conversation
-              </TabsTrigger>
             </TabsList>
+
+            <TabsContent value="end-to-end" className="space-y-6">
+              <div className="mb-4">
+                <h2 className="text-2xl font-semibold mb-2">End-to-End Flow Testing</h2>
+                <p className="text-gray-600">
+                  Complete user journey validation: Blueprint → 7-Layer Engine → Personalized Response → Memory Storage with real dynamic data.
+                </p>
+              </div>
+              <EndToEndFlowTester />
+            </TabsContent>
+
+            <TabsContent value="layer-integration" className="space-y-6">
+              <div className="mb-4">
+                <h2 className="text-2xl font-semibold mb-2">7-Layer Integration Deep Testing</h2>
+                <p className="text-gray-600">
+                  Comprehensive testing of PhysioNeural → TraitOS → MotivationEngine integration chain with real-time coherence validation.
+                </p>
+              </div>
+              <LayerIntegrationTester />
+            </TabsContent>
+
+            <TabsContent value="module-validation" className="space-y-6">
+              <div className="mb-4">
+                <h2 className="text-2xl font-semibred mb-2">12-Module Validation & Completeness</h2>
+                <p className="text-gray-600">
+                  Real-time validation of all 12 personality modules with data quality assessment and synergy analysis.
+                </p>
+              </div>
+              <ModuleCompletenessValidator />
+            </TabsContent>
 
             <TabsContent value="architecture" className="space-y-6">
               <div className="mb-4">
@@ -217,7 +275,7 @@ const TestEnvironmentPage: React.FC = () => {
               <IntegrationTestPanel />
             </TabsContent>
 
-            <TabsContent value="consistency" className="space-y-6">
+            <TabsContent value="memory" className="space-y-6">
               <div className="mb-4">
                 <h2 className="text-2xl font-semibold mb-2">Memory & Blueprint Consistency Monitor</h2>
                 <p className="text-gray-600">
@@ -225,15 +283,6 @@ const TestEnvironmentPage: React.FC = () => {
                 </p>
               </div>
               <MemoryConsistencyMonitor />
-            </TabsContent>
-
-            <TabsContent value="conversation" className="space-y-6">
-              <div className="mb-4">
-                <h2 className="text-2xl font-semibold mb-2">Memory-Informed Conversation Testing</h2>
-                <p className="text-gray-600">
-                  Test enhanced contextual memory application, progressive conversation building, and memory-informed personalization.
-                </p>
-              </div>
               <MemoryInformedConversationTest />
             </TabsContent>
           </Tabs>
