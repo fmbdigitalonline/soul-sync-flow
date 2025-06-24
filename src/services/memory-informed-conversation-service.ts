@@ -27,11 +27,11 @@ class MemoryInformedConversationService {
   ): Promise<MemoryContext> {
     console.log('🧠 Building memory context for conversation:', { userMessage: userMessage.substring(0, 50), sessionId, userId });
 
-    try {
-      // Step 1: Extract keywords from user message for memory search
-      const searchKeywords = this.extractKeywords(userMessage);
-      console.log('🔍 Extracted keywords:', searchKeywords);
+    // Step 1: Extract keywords from user message for memory search
+    const searchKeywords = this.extractKeywords(userMessage);
+    console.log('🔍 Extracted keywords:', searchKeywords);
 
+    try {
       // Step 2: Progressive memory search with real data
       const memorySearchResults = await enhancedMemoryService.performProgressiveSearch(
         searchKeywords.join(' '),
@@ -87,7 +87,7 @@ class MemoryInformedConversationService {
       // Return empty context instead of failing
       return {
         relevantMemories: [],
-        memorySearchQuery: searchKeywords?.join(' ') || '',
+        memorySearchQuery: searchKeywords.join(' '),
         contextSummary: "No previous conversation context available.",
         lastMemoryUpdate: new Date().toISOString()
       };

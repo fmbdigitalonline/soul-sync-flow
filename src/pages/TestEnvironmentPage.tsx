@@ -11,7 +11,10 @@ import {
   CheckCircle,
   PlayCircle,
   Brain,
-  MessageCircle
+  MessageCircle,
+  Eye,
+  Layers,
+  Target
 } from 'lucide-react';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { Phase3MemoryTest } from '@/components/debug/Phase3MemoryTest';
@@ -20,9 +23,11 @@ import { PerformanceMonitor } from '@/components/debug/PerformanceMonitor';
 import { IntegrationTestPanel } from '@/components/debug/IntegrationTestPanel';
 import { MemoryConsistencyMonitor } from '@/components/debug/MemoryConsistencyMonitor';
 import { MemoryInformedConversationTest } from '@/components/debug/MemoryInformedConversationTest';
+import { PersonalityArchitectureTest } from '@/components/debug/PersonalityArchitectureTest';
+import { RealTimeIntelligenceMonitor } from '@/components/debug/RealTimeIntelligenceMonitor';
 
 const TestEnvironmentPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('manual');
+  const [activeTab, setActiveTab] = useState('architecture');
 
   return (
     <AuthProvider>
@@ -31,10 +36,10 @@ const TestEnvironmentPage: React.FC = () => {
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-4 flex items-center gap-2">
               <TestTube className="h-8 w-8" />
-              Test Environment Dashboard
+              Enhanced Test Environment Dashboard
             </h1>
             <p className="text-lg text-gray-600">
-              Comprehensive testing suite with enhanced memory-informed conversation testing
+              Comprehensive brain scan for testing 12 modules, 7 layers, and 3 coach modes with real-time dynamic data
             </p>
           </div>
 
@@ -43,11 +48,27 @@ const TestEnvironmentPage: React.FC = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Activity className="h-5 w-5" />
-                Test Environment Status
+                Enhanced Test Environment Status
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-8 gap-4">
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <Layers className="h-6 w-6 text-purple-600" />
+                  </div>
+                  <div className="text-sm font-medium">Architecture</div>
+                  <Badge className="bg-purple-100 text-purple-800">Enhanced</Badge>
+                </div>
+                
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <Eye className="h-6 w-6 text-indigo-600" />
+                  </div>
+                  <div className="text-sm font-medium">Intelligence</div>
+                  <Badge className="bg-indigo-100 text-indigo-800">Real-Time</Badge>
+                </div>
+                
                 <div className="text-center">
                   <div className="flex items-center justify-center mb-2">
                     <CheckCircle className="h-6 w-6 text-green-600" />
@@ -66,10 +87,10 @@ const TestEnvironmentPage: React.FC = () => {
                 
                 <div className="text-center">
                   <div className="flex items-center justify-center mb-2">
-                    <Zap className="h-6 w-6 text-purple-600" />
+                    <Zap className="h-6 w-6 text-yellow-600" />
                   </div>
                   <div className="text-sm font-medium">Performance</div>
-                  <Badge className="bg-purple-100 text-purple-800">Monitoring</Badge>
+                  <Badge className="bg-yellow-100 text-yellow-800">Monitoring</Badge>
                 </div>
                 
                 <div className="text-center">
@@ -90,10 +111,10 @@ const TestEnvironmentPage: React.FC = () => {
 
                 <div className="text-center">
                   <div className="flex items-center justify-center mb-2">
-                    <MessageCircle className="h-6 w-6 text-indigo-600" />
+                    <MessageCircle className="h-6 w-6 text-teal-600" />
                   </div>
                   <div className="text-sm font-medium">Conversation Test</div>
-                  <Badge className="bg-indigo-100 text-indigo-800">New</Badge>
+                  <Badge className="bg-teal-100 text-teal-800">Active</Badge>
                 </div>
               </div>
             </CardContent>
@@ -101,14 +122,22 @@ const TestEnvironmentPage: React.FC = () => {
 
           {/* Test Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-6">
+            <TabsList className="grid w-full grid-cols-8">
+              <TabsTrigger value="architecture" className="flex items-center gap-2">
+                <Layers className="h-4 w-4" />
+                Architecture
+              </TabsTrigger>
+              <TabsTrigger value="intelligence" className="flex items-center gap-2">
+                <Eye className="h-4 w-4" />
+                Intelligence
+              </TabsTrigger>
               <TabsTrigger value="manual" className="flex items-center gap-2">
                 <TestTube className="h-4 w-4" />
                 Manual Tests
               </TabsTrigger>
               <TabsTrigger value="automated" className="flex items-center gap-2">
                 <PlayCircle className="h-4 w-4" />
-                Automated Tests
+                Automated
               </TabsTrigger>
               <TabsTrigger value="performance" className="flex items-center gap-2">
                 <Zap className="h-4 w-4" />
@@ -120,13 +149,33 @@ const TestEnvironmentPage: React.FC = () => {
               </TabsTrigger>
               <TabsTrigger value="consistency" className="flex items-center gap-2">
                 <Brain className="h-4 w-4" />
-                Memory Monitor
+                Memory
               </TabsTrigger>
               <TabsTrigger value="conversation" className="flex items-center gap-2">
                 <MessageCircle className="h-4 w-4" />
-                Conversation Test
+                Conversation
               </TabsTrigger>
             </TabsList>
+
+            <TabsContent value="architecture" className="space-y-6">
+              <div className="mb-4">
+                <h2 className="text-2xl font-semibold mb-2">Personality Architecture Brain Scan</h2>
+                <p className="text-gray-600">
+                  Comprehensive testing of 12 personality modules, 7 layers, and 3 coach modes with real-time dynamic data validation.
+                </p>
+              </div>
+              <PersonalityArchitectureTest />
+            </TabsContent>
+
+            <TabsContent value="intelligence" className="space-y-6">
+              <div className="mb-4">
+                <h2 className="text-2xl font-semibold mb-2">Real-Time Intelligence Monitor</h2>
+                <p className="text-gray-600">
+                  Monitor cognitive load, context awareness, excitement tracking, and response quality in real-time.
+                </p>
+              </div>
+              <RealTimeIntelligenceMonitor />
+            </TabsContent>
 
             <TabsContent value="manual" className="space-y-6">
               <div className="mb-4">
@@ -182,7 +231,7 @@ const TestEnvironmentPage: React.FC = () => {
               <div className="mb-4">
                 <h2 className="text-2xl font-semibold mb-2">Memory-Informed Conversation Testing</h2>
                 <p className="text-gray-600">
-                  Test enhanced contextual memory application, progressive conversation building, and memory-informed personalization with real dynamic data.
+                  Test enhanced contextual memory application, progressive conversation building, and memory-informed personalization.
                 </p>
               </div>
               <MemoryInformedConversationTest />
