@@ -258,14 +258,29 @@ class MemoryService {
       }
 
       console.log('⏰ Creating micro-action reminder:', reminder.action_title);
+      console.log('⏰ User ID:', user.id);
+      console.log('⏰ Full reminder object:', JSON.stringify(reminder, null, 2));
 
-      // Validate required fields
-      if (!reminder.action_title?.trim() || !reminder.session_id?.trim() || !reminder.scheduled_for) {
-        console.error('❌ Missing required fields for reminder creation:', {
-          hasTitle: !!reminder.action_title?.trim(),
-          hasSessionId: !!reminder.session_id?.trim(),
-          hasScheduledFor: !!reminder.scheduled_for
-        });
+      // Enhanced validation with detailed logging
+      if (!reminder.action_title?.trim()) {
+        console.error('❌ Missing action_title:', reminder.action_title);
+        return null;
+      }
+      
+      if (!reminder.session_id?.trim()) {
+        console.error('❌ Missing session_id:', reminder.session_id);
+        return null;
+      }
+      
+      if (!reminder.scheduled_for) {
+        console.error('❌ Missing scheduled_for:', reminder.scheduled_for);
+        return null;
+      }
+
+      // Validate scheduled_for is a valid date
+      const scheduledDate = new Date(reminder.scheduled_for);
+      if (isNaN(scheduledDate.getTime())) {
+        console.error('❌ Invalid scheduled_for date:', reminder.scheduled_for);
         return null;
       }
 
@@ -276,12 +291,28 @@ class MemoryService {
         action_title: reminder.action_title.trim(),
         action_description: reminder.action_description?.trim() || null,
         reminder_type: reminder.reminder_type || 'in_app',
-        scheduled_for: reminder.scheduled_for,
+        scheduled_for: scheduledDate.toISOString(),
         status: reminder.status || 'pending'
       };
 
-      console.log('⏰ Inserting reminder data:', reminderData);
+      console.log('⏰ Sanitized reminder data:', JSON.stringify(reminderData, null, 2));
 
+      // Test database connection first
+      console.log('⏰ Testing database connection...');
+      const { data: testData, error: testError } = await supabase
+        .from('micro_action_reminders')
+        .select('count')
+        .limit(1);
+
+      if (testError) {
+        console.error('❌ Database connection test failed:', testError);
+        return null;
+      }
+
+      console.log('✅ Database connection successful');
+
+      // Attempt the insert with detailed error logging
+      console.log('⏰ Attempting reminder insert...');
       const { data, error } = await supabase
         .from('micro_action_reminders')
         .insert(reminderData)
@@ -289,15 +320,38 @@ class MemoryService {
         .single();
 
       if (error) {
-        console.error('❌ Failed to create reminder:', error.message, error.details, error.hint);
+        console.error('❌ Failed to create reminder - Full error object:', JSON.stringify(error, null, 2));
+        console.error('❌ Error message:', error.message);
+        console.error('❌ Error details:', error.details);
+        console.error('❌ Error hint:', error.hint);
         console.error('❌ Error code:', error.code);
+        
+        // Check for specific error types
+        if (error.message?.includes('violates row-level security')) {
+          console.error('❌ RLS Policy violation detected');
+        }
+        if (error.message?.includes('duplicate key')) {
+          console.error('❌ Duplicate key constraint violation');
+        }
+        if (error.message?.includes('foreign key')) {
+          console.error('❌ Foreign key constraint violation');
+        }
+        
+        return null;
+      }
+
+      if (!data) {
+        console.error('❌ Insert succeeded but no data returned');
         return null;
       }
 
       console.log('✅ Reminder created successfully:', data.id);
+      console.log('✅ Created reminder data:', JSON.stringify(data, null, 2));
+      
       return data as MicroActionReminder;
     } catch (error) {
-      console.error('❌ Error creating reminder:', error);
+      console.error('❌ Unexpected error creating reminder:', error);
+      console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace');
       return null;
     }
   }
@@ -340,26 +394,56 @@ class MemoryService {
       }
 
       console.log(`⏰ Updating reminder ${id} status to: ${status}`);
+      console.log('⏰ User ID:', user.id);
+      console.log('⏰ Completion notes:', completion_notes);
+
+      // Enhanced validation with detailed logging
+      if (!id?.trim()) {
+        console.error('❌ Missing reminder ID');
+        return false;
+      }
 
       // Validate the reminder exists and belongs to the user first
+      console.log('⏰ Validating reminder exists and belongs to user...');
       const { data: existingReminder, error: fetchError } = await supabase
         .from('micro_action_reminders')
-        .select('id, user_id, action_title')
-        .eq('id', id)
+        .select('id, user_id, action_title, status')
+        .eq('id', id.trim())
         .eq('user_id', user.id)
-        .maybeSingle(); // Use maybeSingle instead of single to avoid errors when no data
+        .maybeSingle(); // Use maybeSingle to avoid errors when no data
 
       if (fetchError) {
-        console.error('❌ Failed to fetch reminder for validation:', fetchError.message, fetchError.details, fetchError.hint);
+        console.error('❌ Failed to fetch reminder for validation:', JSON.stringify(fetchError, null, 2));
+        console.error('❌ Fetch error message:', fetchError.message);
+        console.error('❌ Fetch error details:', fetchError.details);
+        console.error('❌ Fetch error hint:', fetchError.hint);
         return false;
       }
 
       if (!existingReminder) {
         console.error('❌ Reminder not found or access denied for ID:', id);
+        console.log('⏰ Attempting to fetch reminder without user filter for debugging...');
+        
+        // Debug: Check if reminder exists at all
+        const { data: debugReminder, error: debugError } = await supabase
+          .from('micro_action_reminders')
+          .select('id, user_id, action_title')
+          .eq('id', id.trim())
+          .maybeSingle();
+          
+        if (debugError) {
+          console.error('❌ Debug fetch also failed:', debugError);
+        } else if (debugReminder) {
+          console.log('⏰ Reminder exists but belongs to different user:', debugReminder.user_id, 'vs current user:', user.id);
+        } else {
+          console.log('⏰ Reminder does not exist in database');
+        }
+        
         return false;
       }
 
       console.log('✅ Reminder found and validated:', existingReminder.action_title);
+      console.log('✅ Current status:', existingReminder.status);
 
       // Perform the update
       const updateData: any = { 
@@ -371,6 +455,8 @@ class MemoryService {
         updateData.completion_notes = completion_notes;
       }
 
+      console.log('⏰ Update data:', JSON.stringify(updateData, null, 2));
+
       const { error: updateError } = await supabase
         .from('micro_action_reminders')
         .update(updateData)
@@ -378,14 +464,18 @@ class MemoryService {
         .eq('user_id', user.id);
 
       if (updateError) {
-        console.error('❌ Failed to update reminder status:', updateError.message, updateError.details, updateError.hint);
+        console.error('❌ Failed to update reminder status:', JSON.stringify(updateError, null, 2));
+        console.error('❌ Update error message:', updateError.message);
+        console.error('❌ Update error details:', updateError.details);
+        console.error('❌ Update error hint:', updateError.hint);
         return false;
       }
 
       console.log('✅ Reminder status updated successfully');
       return true;
     } catch (error) {
-      console.error('❌ Error updating reminder status:', error);
+      console.error('❌ Unexpected error updating reminder status:', error);
+      console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace');
       return false;
     }
   }
