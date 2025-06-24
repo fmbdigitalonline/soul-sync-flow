@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { holisticCoachService } from '@/services/holistic-coach-service';
+import { LayeredBlueprint } from '@/types/personality-modules';
 
 interface GrowthModeTest {
   id: string;
@@ -124,8 +125,9 @@ export const GrowthMode7LayerTester: React.FC = () => {
         return;
       }
 
-      // Update holistic coach service with blueprint
-      holisticCoachService.updateBlueprint(blueprintData.blueprint);
+      // Update holistic coach service with blueprint - properly cast Json to LayeredBlueprint
+      const blueprint = blueprintData.blueprint as unknown as Partial<LayeredBlueprint>;
+      holisticCoachService.updateBlueprint(blueprint);
 
       for (const scenario of testScenarios) {
         const testId = `growth_7layer_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
