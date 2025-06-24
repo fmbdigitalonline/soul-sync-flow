@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,7 +33,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
   const energyType = blueprint?.energyDecisionStrategy?.energyType || 'sustainable';
 
   // Extract Numerology data with proper fallbacks
-  const lifePath = blueprint?.coreValuesNarrative?.lifePath || 1;
+  const lifePath = Number(blueprint?.coreValuesNarrative?.lifePath || 1);
   const lifePathKeyword = blueprint?.coreValuesNarrative?.lifePathKeyword || 'Leader';
   const expressionNumber = blueprint?.coreValuesNarrative?.expressionNumber || 1;
   const expressionKeyword = blueprint?.coreValuesNarrative?.expressionKeyword || 'Independent';
