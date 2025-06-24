@@ -17,50 +17,45 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
   const userMeta = blueprint?.user_meta || {};
   const userName = userMeta.preferred_name || userMeta.full_name || 'User';
   
-  // Extract MBTI/Cognitive data
-  const cognitiveData = blueprint?.cognitiveTemperamental || {};
-  const mbtiType = cognitiveData.mbtiType || 'Unknown';
-  const dominantFunction = cognitiveData.dominantFunction || 'Unknown';
-  const auxiliaryFunction = cognitiveData.auxiliaryFunction || 'Unknown';
-  const taskApproach = cognitiveData.taskApproach || 'systematic';
-  const communicationStyle = cognitiveData.communicationStyle || 'clear';
-  const decisionMaking = cognitiveData.decisionMaking || 'logical';
+  // Extract MBTI/Cognitive data with proper fallbacks
+  const mbtiType = blueprint?.cognitiveTemperamental?.mbtiType || 'Unknown';
+  const dominantFunction = blueprint?.cognitiveTemperamental?.dominantFunction || 'Unknown';
+  const auxiliaryFunction = blueprint?.cognitiveTemperamental?.auxiliaryFunction || 'Unknown';
+  const taskApproach = blueprint?.cognitiveTemperamental?.taskApproach || 'systematic';
+  const communicationStyle = blueprint?.cognitiveTemperamental?.communicationStyle || 'clear';
+  const decisionMaking = blueprint?.cognitiveTemperamental?.decisionMaking || 'logical';
 
-  // Extract Human Design data
-  const energyData = blueprint?.energyDecisionStrategy || {};
-  const hdType = energyData.humanDesignType || 'Generator';
-  const authority = energyData.authority || 'Sacral';
-  const strategy = energyData.strategy || 'respond';
-  const profile = energyData.profile || '1/3';
-  const pacing = energyData.pacing || 'steady';
-  const energyType = energyData.energyType || 'sustainable';
+  // Extract Human Design data with proper fallbacks
+  const hdType = blueprint?.energyDecisionStrategy?.humanDesignType || 'Generator';
+  const authority = blueprint?.energyDecisionStrategy?.authority || 'Sacral';
+  const strategy = blueprint?.energyDecisionStrategy?.strategy || 'respond';
+  const profile = blueprint?.energyDecisionStrategy?.profile || '1/3';
+  const pacing = blueprint?.energyDecisionStrategy?.pacing || 'steady';
+  const energyType = blueprint?.energyDecisionStrategy?.energyType || 'sustainable';
 
-  // Extract Numerology data
-  const numerologyData = blueprint?.coreValuesNarrative || {};
-  const lifePath = numerologyData.lifePath || 1;
-  const lifePathKeyword = numerologyData.lifePathKeyword || 'Leader';
-  const expressionNumber = numerologyData.expressionNumber || 1;
-  const expressionKeyword = numerologyData.expressionKeyword || 'Independent';
-  const soulUrgeNumber = numerologyData.soulUrgeNumber || 1;
-  const soulUrgeKeyword = numerologyData.soulUrgeKeyword || 'Ambitious';
-  const personalityNumber = numerologyData.personalityNumber || 1;
-  const personalityKeyword = numerologyData.personalityKeyword || 'Original';
-  const birthdayNumber = numerologyData.birthdayNumber || 1;
-  const birthdayKeyword = numerologyData.birthdayKeyword || 'Pioneer';
+  // Extract Numerology data with proper fallbacks
+  const lifePath = blueprint?.coreValuesNarrative?.lifePath || 1;
+  const lifePathKeyword = blueprint?.coreValuesNarrative?.lifePathKeyword || 'Leader';
+  const expressionNumber = blueprint?.coreValuesNarrative?.expressionNumber || 1;
+  const expressionKeyword = blueprint?.coreValuesNarrative?.expressionKeyword || 'Independent';
+  const soulUrgeNumber = blueprint?.coreValuesNarrative?.soulUrgeNumber || 1;
+  const soulUrgeKeyword = blueprint?.coreValuesNarrative?.soulUrgeKeyword || 'Ambitious';
+  const personalityNumber = blueprint?.coreValuesNarrative?.personalityNumber || 1;
+  const personalityKeyword = blueprint?.coreValuesNarrative?.personalityKeyword || 'Original';
+  const birthdayNumber = blueprint?.coreValuesNarrative?.birthdayNumber || 1;
+  const birthdayKeyword = blueprint?.coreValuesNarrative?.birthdayKeyword || 'Pioneer';
 
-  // Extract Astrology data
-  const astrologyData = blueprint?.publicArchetype || {};
-  const sunSign = astrologyData.sunSign || 'Unknown';
-  const moonSign = astrologyData.moonSign || 'Unknown';
-  const risingSign = astrologyData.risingSign || 'Unknown';
-  const socialStyle = astrologyData.socialStyle || 'warm';
-  const publicVibe = astrologyData.publicVibe || 'approachable';
-  const leadershipStyle = astrologyData.leadershipStyle || 'collaborative';
+  // Extract Astrology data with proper fallbacks
+  const sunSign = blueprint?.publicArchetype?.sunSign || 'Unknown';
+  const moonSign = blueprint?.publicArchetype?.moonSign || 'Unknown';
+  const risingSign = blueprint?.publicArchetype?.risingSign || 'Unknown';
+  const socialStyle = blueprint?.publicArchetype?.socialStyle || 'warm';
+  const publicVibe = blueprint?.publicArchetype?.publicVibe || 'approachable';
+  const leadershipStyle = blueprint?.publicArchetype?.leadershipStyle || 'collaborative';
 
-  // Extract Chinese astrology
-  const generationalData = blueprint?.generationalCode || {};
-  const chineseZodiac = generationalData.chineseZodiac || 'Unknown';
-  const element = generationalData.element || 'Unknown';
+  // Extract Chinese astrology with proper fallbacks
+  const chineseZodiac = blueprint?.generationalCode?.chineseZodiac || 'Unknown';
+  const element = blueprint?.generationalCode?.element || 'Unknown';
 
   // Check if we have real calculated data
   const hasRealData = mbtiType !== 'Unknown' || sunSign !== 'Unknown' || lifePath > 1;
