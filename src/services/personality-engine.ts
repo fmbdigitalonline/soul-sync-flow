@@ -3,6 +3,35 @@ import { LayeredBlueprint } from '@/types/personality-modules';
 import { supabase } from '@/integrations/supabase/client';
 
 export class PersonalityEngine {
+  private blueprint: Partial<LayeredBlueprint> | null = null;
+
+  updateBlueprint(blueprint: Partial<LayeredBlueprint>) {
+    console.log('🎭 Personality Engine: Updating blueprint');
+    this.blueprint = blueprint;
+  }
+
+  generateSystemPrompt(mode: 'coach' | 'guide' | 'blend' = 'guide', userMessage?: string): string {
+    console.log(`📝 Personality Engine: Generating system prompt for ${mode} mode`);
+    
+    if (!this.blueprint) {
+      return `You are a helpful AI ${mode}. Respond in a supportive and understanding way.`;
+    }
+
+    const personality = this.extractPersonalityTraits(this.blueprint);
+    const adaptations = this.generateContextualAdaptations(personality, mode);
+    
+    return `You are a personalized AI ${mode} with the following characteristics:
+
+Personality Traits: ${personality.join(', ')}
+Mode Adaptations: ${adaptations.join(', ')}
+
+${mode === 'coach' ? 'Focus on growth, motivation, and actionable guidance.' : ''}
+${mode === 'guide' ? 'Provide gentle guidance and supportive insights.' : ''}
+${mode === 'blend' ? 'Balance coaching motivation with gentle guidance.' : ''}
+
+Always respond in alignment with these personality characteristics while being helpful and supportive.`;
+  }
+
   async generatePersonalityProfile(blueprint: Partial<LayeredBlueprint>, userId: string) {
     console.log('🎭 Personality Engine: Generating personality profile for user:', userId);
     

@@ -1,7 +1,47 @@
 
 import { LayeredBlueprint } from '@/types/personality-modules';
+import { HolisticContext } from '@/types/seven-layer-personality';
 
 export class SevenLayerPersonalityEngine {
+  private blueprint: Partial<LayeredBlueprint> | null = null;
+  private context: Partial<HolisticContext> | null = null;
+
+  updateBlueprint(blueprint: Partial<LayeredBlueprint>) {
+    console.log('🎭 Seven Layer Engine: Updating blueprint');
+    this.blueprint = blueprint;
+  }
+
+  updateContext(context: Partial<HolisticContext>) {
+    console.log('🎯 Seven Layer Engine: Updating context');
+    this.context = context;
+  }
+
+  getPersonality() {
+    return this.blueprint;
+  }
+
+  getContext() {
+    return this.context;
+  }
+
+  generateHolisticSystemPrompt(): string {
+    console.log('📝 Seven Layer Engine: Generating holistic system prompt');
+    
+    if (!this.blueprint) {
+      return 'You are a holistic AI guide. Respond with wisdom and compassion.';
+    }
+
+    const personality = this.extractPersonalityLayers(this.blueprint);
+    
+    return `You are a holistic AI guide with deep personality integration:
+
+${personality.join('\n')}
+
+Context: ${this.context ? JSON.stringify(this.context, null, 2) : 'No specific context'}
+
+Respond with wisdom, compassion, and authentic guidance tailored to this unique personality profile.`;
+  }
+
   async generatePersonalityLayers(blueprint: Partial<LayeredBlueprint>, userId: string) {
     console.log('🎭 Seven Layer Engine: Generating personality layers for user:', userId);
     
@@ -123,6 +163,28 @@ export class SevenLayerPersonalityEngine {
         message: 'Conflict resolution test failed'
       };
     }
+  }
+
+  private extractPersonalityLayers(blueprint: Partial<LayeredBlueprint>): string[] {
+    const layers = [];
+    
+    if (blueprint.cognitiveTemperamental?.mbtiType) {
+      layers.push(`Layer 1 - Core Identity: ${blueprint.cognitiveTemperamental.mbtiType} with ${blueprint.cognitiveTemperamental.dominantFunction}`);
+    }
+    
+    if (blueprint.energyDecisionStrategy?.humanDesignType) {
+      layers.push(`Layer 2 - Energy Strategy: ${blueprint.energyDecisionStrategy.humanDesignType} with ${blueprint.energyDecisionStrategy.authority} authority`);
+    }
+    
+    if (blueprint.publicArchetype?.sunSign) {
+      layers.push(`Layer 3 - Public Archetype: ${blueprint.publicArchetype.sunSign} sun sign`);
+    }
+    
+    if (blueprint.coreValuesNarrative?.lifePath) {
+      layers.push(`Layer 4 - Values Narrative: Life Path ${blueprint.coreValuesNarrative.lifePath}`);
+    }
+    
+    return layers;
   }
 }
 
