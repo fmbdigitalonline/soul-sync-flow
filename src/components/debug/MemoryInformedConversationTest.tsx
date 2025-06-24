@@ -133,7 +133,7 @@ export const MemoryInformedConversationTest: React.FC = () => {
       await memoryService.saveMemory({
         user_id: userId,
         session_id: sessionId,
-        memory_type: 'conversation',
+        memory_type: 'interaction', // Changed from 'conversation' to 'interaction'
         memory_data: {
           topic: 'fatigue_management',
           content: 'User mentioned feeling tired and wanting help with creative projects',
