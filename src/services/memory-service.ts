@@ -52,26 +52,43 @@ export interface UserLifeContext {
 }
 
 class MemoryService {
-  // Helper method to verify user authentication
-  private async getAuthenticatedUser() {
-    const { data: { user }, error } = await supabase.auth.getUser();
-    if (error) {
-      console.error('Authentication error:', error);
+  // Enhanced auth check with retry logic for session stability
+  private async getAuthenticatedUser(retryCount = 0): Promise<any> {
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      
+      if (error) {
+        console.error('🔐 Authentication error:', error.message);
+        // If auth error and we haven't retried, try once more after a brief delay
+        if (retryCount === 0 && error.message?.includes('session')) {
+          console.log('🔐 Retrying auth check after session error...');
+          await new Promise(resolve => setTimeout(resolve, 500));
+          return this.getAuthenticatedUser(1);
+        }
+        return null;
+      }
+      
+      if (!user) {
+        console.error('🔐 No authenticated user found (session may be transitioning)');
+        return null;
+      }
+      
+      console.log('✅ Authenticated user verified:', user.id);
+      return user;
+    } catch (error) {
+      console.error('🔐 Unexpected auth error:', error);
       return null;
     }
-    if (!user) {
-      console.error('No authenticated user found');
-      return null;
-    }
-    console.log('✅ Authenticated user verified:', user.id);
-    return user;
   }
 
-  // Session Memory Management
+  // Session Memory Management with enhanced error handling
   async saveMemory(memory: Omit<SessionMemory, 'id' | 'created_at' | 'last_referenced'>): Promise<SessionMemory | null> {
     try {
       const user = await this.getAuthenticatedUser();
-      if (!user) return null;
+      if (!user) {
+        console.warn('⚠️ Cannot save memory: No authenticated user');
+        return null;
+      }
 
       console.log('💾 Saving session memory:', memory.memory_type, memory.context_summary);
 
@@ -89,7 +106,7 @@ class MemoryService {
         .single();
 
       if (error) {
-        console.error('❌ Failed to save memory:', error.message, error.details, error.hint);
+        console.error('❌ Failed to save memory:', error.message);
         return null;
       }
 
@@ -168,11 +185,14 @@ class MemoryService {
     }
   }
 
-  // Session Feedback Management
+  // Session Feedback Management with enhanced stability
   async saveFeedback(feedback: Omit<SessionFeedback, 'id' | 'created_at'>): Promise<boolean> {
     try {
       const user = await this.getAuthenticatedUser();
-      if (!user) return false;
+      if (!user) {
+        console.warn('⚠️ Cannot save feedback: No authenticated user');
+        return false;
+      }
 
       console.log('📝 Saving session feedback:', feedback.rating, feedback.feedback_text);
 
@@ -188,11 +208,11 @@ class MemoryService {
         });
 
       if (error) {
-        console.error('❌ Failed to save feedback:', error.message, error.details, error.hint);
+        console.error('❌ Failed to save feedback:', error.message);
         return false;
       }
 
-      // Create feedback memory entry with better error handling
+      // Create feedback memory entry with graceful error handling
       try {
         const memoryResult = await this.saveMemory({
           user_id: user.id,
@@ -212,8 +232,7 @@ class MemoryService {
           console.log('✅ Feedback memory integration successful');
         }
       } catch (memoryError) {
-        console.error('⚠️ Failed to create feedback memory:', memoryError);
-        // Don't fail the whole operation if memory creation fails
+        console.warn('⚠️ Feedback saved but memory creation failed:', memoryError);
       }
 
       console.log('✅ Feedback saved successfully');
@@ -248,43 +267,39 @@ class MemoryService {
     }
   }
 
-  // Micro-Action Reminders Management
+  // Enhanced reminder creation with better session handling
   async createReminder(reminder: Omit<MicroActionReminder, 'id' | 'created_at' | 'updated_at'>): Promise<MicroActionReminder | null> {
     try {
       const user = await this.getAuthenticatedUser();
       if (!user) {
-        console.error('❌ No authenticated user for reminder creation');
+        console.warn('⚠️ Cannot create reminder: No authenticated user (session may be transitioning)');
         return null;
       }
 
       console.log('⏰ Creating micro-action reminder:', reminder.action_title);
-      console.log('⏰ User ID:', user.id);
-      console.log('⏰ Full reminder object:', JSON.stringify(reminder, null, 2));
 
-      // Enhanced validation with detailed logging
+      // Enhanced validation
       if (!reminder.action_title?.trim()) {
-        console.error('❌ Missing action_title:', reminder.action_title);
+        console.error('❌ Missing action_title');
         return null;
       }
       
       if (!reminder.session_id?.trim()) {
-        console.error('❌ Missing session_id:', reminder.session_id);
+        console.error('❌ Missing session_id');
         return null;
       }
       
       if (!reminder.scheduled_for) {
-        console.error('❌ Missing scheduled_for:', reminder.scheduled_for);
+        console.error('❌ Missing scheduled_for');
         return null;
       }
 
-      // Validate scheduled_for is a valid date
       const scheduledDate = new Date(reminder.scheduled_for);
       if (isNaN(scheduledDate.getTime())) {
-        console.error('❌ Invalid scheduled_for date:', reminder.scheduled_for);
+        console.error('❌ Invalid scheduled_for date');
         return null;
       }
 
-      // Ensure proper data types and values
       const reminderData = {
         user_id: user.id,
         session_id: reminder.session_id.trim(),
@@ -295,24 +310,6 @@ class MemoryService {
         status: reminder.status || 'pending'
       };
 
-      console.log('⏰ Sanitized reminder data:', JSON.stringify(reminderData, null, 2));
-
-      // Test database connection first
-      console.log('⏰ Testing database connection...');
-      const { data: testData, error: testError } = await supabase
-        .from('micro_action_reminders')
-        .select('count')
-        .limit(1);
-
-      if (testError) {
-        console.error('❌ Database connection test failed:', testError);
-        return null;
-      }
-
-      console.log('✅ Database connection successful');
-
-      // Attempt the insert with detailed error logging
-      console.log('⏰ Attempting reminder insert...');
       const { data, error } = await supabase
         .from('micro_action_reminders')
         .insert(reminderData)
@@ -320,38 +317,14 @@ class MemoryService {
         .single();
 
       if (error) {
-        console.error('❌ Failed to create reminder - Full error object:', JSON.stringify(error, null, 2));
-        console.error('❌ Error message:', error.message);
-        console.error('❌ Error details:', error.details);
-        console.error('❌ Error hint:', error.hint);
-        console.error('❌ Error code:', error.code);
-        
-        // Check for specific error types
-        if (error.message?.includes('violates row-level security')) {
-          console.error('❌ RLS Policy violation detected');
-        }
-        if (error.message?.includes('duplicate key')) {
-          console.error('❌ Duplicate key constraint violation');
-        }
-        if (error.message?.includes('foreign key')) {
-          console.error('❌ Foreign key constraint violation');
-        }
-        
-        return null;
-      }
-
-      if (!data) {
-        console.error('❌ Insert succeeded but no data returned');
+        console.error('❌ Failed to create reminder:', error.message);
         return null;
       }
 
       console.log('✅ Reminder created successfully:', data.id);
-      console.log('✅ Created reminder data:', JSON.stringify(data, null, 2));
-      
       return data as MicroActionReminder;
     } catch (error) {
       console.error('❌ Unexpected error creating reminder:', error);
-      console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace');
       return null;
     }
   }
@@ -389,63 +362,37 @@ class MemoryService {
     try {
       const user = await this.getAuthenticatedUser();
       if (!user) {
-        console.error('❌ No authenticated user for reminder update');
+        console.warn('⚠️ Cannot update reminder: No authenticated user');
         return false;
       }
 
       console.log(`⏰ Updating reminder ${id} status to: ${status}`);
-      console.log('⏰ User ID:', user.id);
-      console.log('⏰ Completion notes:', completion_notes);
 
-      // Enhanced validation with detailed logging
       if (!id?.trim()) {
         console.error('❌ Missing reminder ID');
         return false;
       }
 
-      // Validate the reminder exists and belongs to the user first
-      console.log('⏰ Validating reminder exists and belongs to user...');
+      // Validate the reminder exists and belongs to the user
       const { data: existingReminder, error: fetchError } = await supabase
         .from('micro_action_reminders')
         .select('id, user_id, action_title, status')
         .eq('id', id.trim())
         .eq('user_id', user.id)
-        .maybeSingle(); // Use maybeSingle to avoid errors when no data
+        .maybeSingle();
 
       if (fetchError) {
-        console.error('❌ Failed to fetch reminder for validation:', JSON.stringify(fetchError, null, 2));
-        console.error('❌ Fetch error message:', fetchError.message);
-        console.error('❌ Fetch error details:', fetchError.details);
-        console.error('❌ Fetch error hint:', fetchError.hint);
+        console.error('❌ Failed to fetch reminder for validation:', fetchError.message);
         return false;
       }
 
       if (!existingReminder) {
-        console.error('❌ Reminder not found or access denied for ID:', id);
-        console.log('⏰ Attempting to fetch reminder without user filter for debugging...');
-        
-        // Debug: Check if reminder exists at all
-        const { data: debugReminder, error: debugError } = await supabase
-          .from('micro_action_reminders')
-          .select('id, user_id, action_title')
-          .eq('id', id.trim())
-          .maybeSingle();
-          
-        if (debugError) {
-          console.error('❌ Debug fetch also failed:', debugError);
-        } else if (debugReminder) {
-          console.log('⏰ Reminder exists but belongs to different user:', debugReminder.user_id, 'vs current user:', user.id);
-        } else {
-          console.log('⏰ Reminder does not exist in database');
-        }
-        
+        console.error('❌ Reminder not found or access denied');
         return false;
       }
 
-      console.log('✅ Reminder found and validated:', existingReminder.action_title);
-      console.log('✅ Current status:', existingReminder.status);
+      console.log('✅ Reminder validated:', existingReminder.action_title);
 
-      // Perform the update
       const updateData: any = { 
         status,
         updated_at: new Date().toISOString()
@@ -455,8 +402,6 @@ class MemoryService {
         updateData.completion_notes = completion_notes;
       }
 
-      console.log('⏰ Update data:', JSON.stringify(updateData, null, 2));
-
       const { error: updateError } = await supabase
         .from('micro_action_reminders')
         .update(updateData)
@@ -464,10 +409,7 @@ class MemoryService {
         .eq('user_id', user.id);
 
       if (updateError) {
-        console.error('❌ Failed to update reminder status:', JSON.stringify(updateError, null, 2));
-        console.error('❌ Update error message:', updateError.message);
-        console.error('❌ Update error details:', updateError.details);
-        console.error('❌ Update error hint:', updateError.hint);
+        console.error('❌ Failed to update reminder status:', updateError.message);
         return false;
       }
 
@@ -475,7 +417,6 @@ class MemoryService {
       return true;
     } catch (error) {
       console.error('❌ Unexpected error updating reminder status:', error);
-      console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace');
       return false;
     }
   }
@@ -505,15 +446,17 @@ class MemoryService {
     }
   }
 
-  // Life Context Management
+  // Life Context Management with enhanced auth handling
   async updateLifeContext(context: Omit<UserLifeContext, 'id' | 'created_at'>): Promise<boolean> {
     try {
       const user = await this.getAuthenticatedUser();
-      if (!user) return false;
+      if (!user) {
+        console.warn('⚠️ Cannot update life context: No authenticated user');
+        return false;
+      }
 
       console.log('🌱 Updating life context:', context.context_category);
 
-      // Check if record exists first using maybeSingle to avoid errors
       const { data: existing, error: fetchError } = await supabase
         .from('user_life_context')
         .select('id')
@@ -522,12 +465,11 @@ class MemoryService {
         .maybeSingle();
 
       if (fetchError) {
-        console.error('❌ Failed to check existing life context:', fetchError.message, fetchError.details, fetchError.hint);
+        console.error('❌ Failed to check existing life context:', fetchError.message);
         return false;
       }
 
       if (existing) {
-        // Update existing record
         const { error } = await supabase
           .from('user_life_context')
           .update({
@@ -541,13 +483,10 @@ class MemoryService {
           .eq('id', existing.id);
 
         if (error) {
-          console.error('❌ Failed to update life context:', error.message, error.details, error.hint);
+          console.error('❌ Failed to update life context:', error.message);
           return false;
         }
-
-        console.log('✅ Life context updated successfully');
       } else {
-        // Insert new record
         const { error } = await supabase
           .from('user_life_context')
           .insert({
@@ -562,13 +501,12 @@ class MemoryService {
           });
 
         if (error) {
-          console.error('❌ Failed to insert life context:', error.message, error.details, error.hint);
+          console.error('❌ Failed to insert life context:', error.message);
           return false;
         }
-
-        console.log('✅ Life context created successfully');
       }
 
+      console.log('✅ Life context updated successfully');
       return true;
     } catch (error) {
       console.error('❌ Error updating life context:', error);
@@ -580,7 +518,7 @@ class MemoryService {
     try {
       const user = await this.getAuthenticatedUser();
       if (!user) {
-        console.error('❌ No authenticated user for life context retrieval');
+        console.warn('⚠️ Cannot get life context: No authenticated user');
         return [];
       }
 
@@ -593,7 +531,7 @@ class MemoryService {
         .order('last_updated', { ascending: false });
 
       if (error) {
-        console.error('❌ Failed to fetch life context:', error.message, error.details, error.hint);
+        console.error('❌ Failed to fetch life context:', error.message);
         return [];
       }
 
@@ -605,19 +543,16 @@ class MemoryService {
     }
   }
 
-  // Generate session welcome message with memory context
   async generateWelcomeMessage(userName: string): Promise<string> {
     try {
       console.log('👋 Generating welcome message for:', userName);
       
-      // Fetch all context data with individual error handling using Promise.allSettled
       const [memoriesResult, lifeContextResult, activeRemindersResult] = await Promise.allSettled([
         this.getRecentMemories(5),
         this.getLifeContext(),
         this.getActiveReminders()
       ]);
 
-      // Extract data from settled promises
       const memoriesData = memoriesResult.status === 'fulfilled' ? memoriesResult.value : [];
       const lifeContextData = lifeContextResult.status === 'fulfilled' ? lifeContextResult.value : [];
       const activeRemindersData = activeRemindersResult.status === 'fulfilled' ? activeRemindersResult.value : [];
@@ -628,20 +563,17 @@ class MemoryService {
         activeReminders: activeRemindersData.length
       });
 
-      // Generate welcome message based on available data
       if (memoriesData.length === 0 && lifeContextData.length === 0 && activeRemindersData.length === 0) {
         return `Welcome, ${userName}! I'm excited to start our journey together. What would you like to explore today?`;
       }
 
       let welcomeMessage = `Welcome back, ${userName}! `;
 
-      // Add context from recent memories
       const recentInteraction = memoriesData.find(m => m.memory_type === 'interaction');
       if (recentInteraction?.context_summary) {
         welcomeMessage += `Last time we spoke about ${recentInteraction.context_summary.toLowerCase()}. `;
       }
 
-      // Add micro-action follow-up
       const pendingAction = memoriesData.find(m => 
         m.memory_type === 'micro_action' && 
         m.memory_data?.action_title
@@ -650,12 +582,10 @@ class MemoryService {
         welcomeMessage += `I'm curious to know how your "${pendingAction.memory_data.action_title}" action went. `;
       }
 
-      // Add active reminders context
       if (activeRemindersData.length > 0) {
         welcomeMessage += `You have ${activeRemindersData.length} action${activeRemindersData.length > 1 ? 's' : ''} coming up. `;
       }
 
-      // Add life context insights
       if (lifeContextData.length > 0) {
         const recentContext = lifeContextData[0];
         if (recentContext?.current_focus) {
@@ -665,7 +595,7 @@ class MemoryService {
 
       welcomeMessage += `What would you like to focus on today?`;
 
-      console.log('✅ Generated personalized welcome message with context awareness');
+      console.log('✅ Generated personalized welcome message with context');
       return welcomeMessage;
     } catch (error) {
       console.error('❌ Error generating welcome message:', error);

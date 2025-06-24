@@ -18,29 +18,65 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up the auth state listener
+    console.log('🔐 AuthProvider: Initializing auth state management');
+    
+    // Set up the auth state listener with enhanced stability
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+        console.log('🔐 Auth state change:', event, session?.user?.email || 'no user');
+        
+        // Only update state if there's an actual change to prevent unnecessary re-renders
+        if (event === 'SIGNED_OUT' || !session) {
+          setSession(null);
+          setUser(null);
+        } else if (session && (!user || user.id !== session.user.id)) {
+          // Only update if user actually changed
+          console.log('🔐 Setting new user session:', session.user.email);
+          setSession(session);
+          setUser(session.user);
+        }
+        
         setLoading(false);
       }
     );
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    // Get initial session with retry logic for stability
+    const getInitialSession = async () => {
+      try {
+        console.log('🔐 AuthProvider: Getting initial session');
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('🔐 Error getting initial session:', error);
+        } else if (session) {
+          console.log('🔐 Initial session found:', session.user.email);
+          setSession(session);
+          setUser(session.user);
+        } else {
+          console.log('🔐 No initial session found');
+        }
+      } catch (error) {
+        console.error('🔐 Error in getInitialSession:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getInitialSession();
 
     return () => {
+      console.log('🔐 AuthProvider: Cleaning up auth listener');
       subscription.unsubscribe();
     };
   }, []);
 
   const signOut = async () => {
+    console.log('🔐 AuthProvider: Signing out user');
+    setLoading(true);
     await supabase.auth.signOut();
+    setSession(null);
+    setUser(null);
+    setLoading(false);
   };
 
   return (
