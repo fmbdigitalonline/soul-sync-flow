@@ -119,10 +119,10 @@ class EnhancedAICoachService {
 
       let comprehensivePrompt = UnifiedBlueprintService.formatBlueprintForAI(blueprint, agentType);
       
-      // MEMORY INTEGRATION: Enhance prompt with memory context if user message provided
-      if (userMessage) {
+      // ENHANCED MEMORY INTEGRATION: Always try to enhance with memory context
+      if (userMessage && this.currentUserId) {
         console.log("🧠 Integrating memory context into persona generation");
-        const sessionId = this.sessions.get(this.currentUserId) || 'default';
+        const sessionId = Array.from(this.sessions.keys()).find(key => key.includes(this.currentUserId!)) || 'default';
         
         try {
           const memoryContext = await memoryInformedConversationService.buildMemoryContext(
@@ -131,17 +131,25 @@ class EnhancedAICoachService {
             this.currentUserId
           );
           
+          console.log('📖 Memory context retrieved:', {
+            memoriesFound: memoryContext.relevantMemories.length,
+            searchQuery: memoryContext.memorySearchQuery,
+            contextSummary: memoryContext.contextSummary.substring(0, 100)
+          });
+          
           comprehensivePrompt = await memoryInformedConversationService.enhanceSystemPromptWithMemory(
             comprehensivePrompt,
             memoryContext,
             userMessage
           );
           
-          console.log("✅ Memory context integrated into persona");
+          console.log("✅ Memory context successfully integrated into persona");
         } catch (error) {
           console.error("❌ Error integrating memory context:", error);
           // Continue with basic prompt if memory integration fails
         }
+      } else {
+        console.log("⚠️ No user message provided for memory context integration");
       }
       
       console.log("✅ SoulSync: Comprehensive persona ready with full blueprint and memory context");
@@ -182,7 +190,7 @@ class EnhancedAICoachService {
 
       if (error) throw error;
 
-      // Track memory application after successful response
+      // ENHANCED MEMORY TRACKING: Track memory application after successful response
       if (usePersona && this.currentUserId) {
         try {
           const memoryContext = await memoryInformedConversationService.buildMemoryContext(
@@ -197,6 +205,8 @@ class EnhancedAICoachService {
             message,
             data.response
           );
+          
+          console.log("✅ Memory application tracked successfully");
         } catch (error) {
           console.error("❌ Error tracking memory application:", error);
         }
@@ -237,7 +247,7 @@ class EnhancedAICoachService {
       const response = await fetch(`https://qxaajirrqrcnmvtowjbg.supabase.co/functions/v1/ai-coach-stream`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4YWFqaXJycXJjbm12dG93amJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM5NzQ1NDcsImV4cCI6MjA1OTU1MDU0N30.HZRTlihPe3PNQVWxNHCrwjoa9R6Wvo8WOKlQVGunYIw`,
+          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4YWFqaXJycXJjbm12dG93amJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE0NDE5NzQ1NDcsImV4cCI6MjA1OTU1MDU0N30.HZRTlihPe3PNQVWxNHCrwjoa9R6Wvo8WOKlQVGunYIw`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -315,7 +325,7 @@ class EnhancedAICoachService {
                 console.log(`📏 Final response length: ${fullResponse.length} characters`);
                 callbacks.onComplete(fullResponse);
                 
-                // Track memory application after successful response
+                // ENHANCED MEMORY TRACKING: Track memory application after successful response
                 if (usePersona && this.currentUserId) {
                   try {
                     const memoryContext = await memoryInformedConversationService.buildMemoryContext(
@@ -330,6 +340,8 @@ class EnhancedAICoachService {
                       message,
                       fullResponse
                     );
+                    
+                    console.log("✅ Memory application tracked for streaming response");
                   } catch (error) {
                     console.error("❌ Error tracking memory application:", error);
                   }

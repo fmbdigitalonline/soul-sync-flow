@@ -1,4 +1,3 @@
-
 import { enhancedMemoryService } from "./enhanced-memory-service";
 import { SessionMemory } from "./memory-service";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,56 +25,140 @@ class MemoryInformedConversationService {
     sessionId: string,
     userId: string
   ): Promise<MemoryContext> {
-    console.log('🧠 Building memory context for conversation:', { userMessage: userMessage.substring(0, 50), sessionId });
+    console.log('🧠 Building memory context for conversation:', { userMessage: userMessage.substring(0, 50), sessionId, userId });
 
-    // Step 1: Extract keywords from user message for memory search
-    const searchKeywords = this.extractKeywords(userMessage);
-    console.log('🔍 Extracted keywords:', searchKeywords);
+    try {
+      // Step 1: Extract keywords from user message for memory search
+      const searchKeywords = this.extractKeywords(userMessage);
+      console.log('🔍 Extracted keywords:', searchKeywords);
 
-    // Step 2: Progressive memory search with real data
-    const memorySearchResults = await enhancedMemoryService.performProgressiveSearch(
-      searchKeywords.join(' '),
-      8 // Get up to 8 relevant memories
-    );
+      // Step 2: Progressive memory search with real data
+      const memorySearchResults = await enhancedMemoryService.performProgressiveSearch(
+        searchKeywords.join(' '),
+        8 // Get up to 8 relevant memories
+      );
 
-    console.log('📚 Memory search results:', {
-      strategy: memorySearchResults.searchStrategy,
-      count: memorySearchResults.matchCount,
-      executionTime: memorySearchResults.executionTime
-    });
+      console.log('📚 Memory search results:', {
+        strategy: memorySearchResults.searchStrategy,
+        count: memorySearchResults.matchCount,
+        executionTime: memorySearchResults.executionTime
+      });
 
-    // Step 3: Get session-specific memories
-    const sessionMemories = await enhancedMemoryService.getMemoriesBySession(sessionId);
-    console.log('📝 Session memories found:', sessionMemories.length);
+      // Step 3: Get session-specific memories
+      const sessionMemories = await enhancedMemoryService.getMemoriesBySession(sessionId);
+      console.log('📝 Session memories found:', sessionMemories.length);
 
-    // Step 4: Combine and prioritize memories
-    const allRelevantMemories = this.prioritizeMemories([
-      ...memorySearchResults.memories,
-      ...sessionMemories
-    ]);
+      // Step 4: Get cross-session context for continuity
+      const crossSessionMemories = await this.getCrossSessionContext(userId, sessionId, 3);
+      console.log('🔄 Cross-session memories found:', crossSessionMemories.length);
 
-    // Step 5: Create context summary
-    const contextSummary = this.createContextSummary(allRelevantMemories, userMessage);
+      // Step 5: Combine and prioritize memories
+      const allRelevantMemories = this.prioritizeMemories([
+        ...memorySearchResults.memories,
+        ...sessionMemories,
+        ...crossSessionMemories
+      ]);
 
-    // Step 6: Update memory state
-    await this.updateMemoryState(sessionId, allRelevantMemories);
+      console.log('🎯 Total prioritized memories:', allRelevantMemories.length);
 
-    const memoryContext: MemoryContext = {
-      relevantMemories: allRelevantMemories,
-      memorySearchQuery: searchKeywords.join(' '),
-      contextSummary,
-      lastMemoryUpdate: new Date().toISOString()
-    };
+      // Step 6: Create context summary
+      const contextSummary = this.createContextSummary(allRelevantMemories, userMessage);
 
-    // Cache for performance
-    this.memoryContextCache.set(`${sessionId}_${Date.now()}`, memoryContext);
-    console.log('✅ Memory context built successfully');
+      // Step 7: Update memory state
+      await this.updateMemoryState(sessionId, allRelevantMemories);
 
-    return memoryContext;
+      // Step 8: Save current interaction as memory for future reference
+      await this.saveCurrentInteraction(userId, sessionId, userMessage);
+
+      const memoryContext: MemoryContext = {
+        relevantMemories: allRelevantMemories,
+        memorySearchQuery: searchKeywords.join(' '),
+        contextSummary,
+        lastMemoryUpdate: new Date().toISOString()
+      };
+
+      // Cache for performance
+      this.memoryContextCache.set(`${sessionId}_${Date.now()}`, memoryContext);
+      console.log('✅ Memory context built successfully with', allRelevantMemories.length, 'memories');
+
+      return memoryContext;
+    } catch (error) {
+      console.error('❌ Error building memory context:', error);
+      // Return empty context instead of failing
+      return {
+        relevantMemories: [],
+        memorySearchQuery: searchKeywords?.join(' ') || '',
+        contextSummary: "No previous conversation context available.",
+        lastMemoryUpdate: new Date().toISOString()
+      };
+    }
+  }
+
+  private async saveCurrentInteraction(userId: string, sessionId: string, userMessage: string): Promise<void> {
+    try {
+      // Extract key topics from the message for better memory retrieval
+      const topics = this.extractKeywords(userMessage);
+      
+      const { error } = await supabase
+        .from('user_session_memory')
+        .insert({
+          user_id: userId,
+          session_id: sessionId,
+          memory_type: 'interaction',
+          memory_data: {
+            user_message: userMessage,
+            topics: topics,
+            interaction_timestamp: new Date().toISOString(),
+            message_intent: this.analyzeMessageIntent(userMessage)
+          },
+          context_summary: `User interaction: ${userMessage.substring(0, 100)}${userMessage.length > 100 ? '...' : ''}`,
+          importance_score: this.calculateImportanceScore(userMessage)
+        });
+
+      if (error) {
+        console.error('❌ Error saving current interaction:', error);
+      } else {
+        console.log('✅ Current interaction saved as memory');
+      }
+    } catch (error) {
+      console.error('❌ Unexpected error saving interaction:', error);
+    }
+  }
+
+  private analyzeMessageIntent(message: string): string {
+    const lowerMessage = message.toLowerCase();
+    
+    if (lowerMessage.includes('stuck') || lowerMessage.includes('frustrated') || lowerMessage.includes('confused')) {
+      return 'seeking_support';
+    } else if (lowerMessage.includes('thank') || lowerMessage.includes('help') || lowerMessage.includes('appreciate')) {
+      return 'expressing_gratitude';
+    } else if (lowerMessage.includes('question') || lowerMessage.includes('how') || lowerMessage.includes('what') || lowerMessage.includes('why')) {
+      return 'seeking_information';
+    } else if (lowerMessage.includes('feel') || lowerMessage.includes('emotion') || lowerMessage.includes('mood')) {
+      return 'sharing_emotions';
+    } else {
+      return 'general_conversation';
+    }
+  }
+
+  private calculateImportanceScore(message: string): number {
+    let score = 5; // base score
+    
+    const emotionalWords = ['stuck', 'frustrated', 'excited', 'happy', 'sad', 'angry', 'worried', 'grateful'];
+    const problemWords = ['problem', 'issue', 'challenge', 'difficulty', 'struggle'];
+    const goalWords = ['goal', 'dream', 'aspiration', 'want', 'wish', 'hope'];
+    
+    const lowerMessage = message.toLowerCase();
+    
+    if (emotionalWords.some(word => lowerMessage.includes(word))) score += 2;
+    if (problemWords.some(word => lowerMessage.includes(word))) score += 3;
+    if (goalWords.some(word => lowerMessage.includes(word))) score += 2;
+    if (message.length > 100) score += 1; // longer messages often more important
+    
+    return Math.min(score, 10); // cap at 10
   }
 
   private extractKeywords(message: string): string[] {
-    // Extract meaningful keywords from user message
     const stopWords = ['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'can', 'i', 'you', 'he', 'she', 'it', 'we', 'they', 'my', 'your', 'his', 'her', 'its', 'our', 'their'];
     
     const words = message.toLowerCase()
@@ -83,45 +166,42 @@ class MemoryInformedConversationService {
       .split(/\s+/)
       .filter(word => word.length > 2 && !stopWords.includes(word));
     
-    // Return unique keywords, prioritizing longer ones
     return [...new Set(words)].sort((a, b) => b.length - a.length).slice(0, 5);
   }
 
   private prioritizeMemories(memories: SessionMemory[]): SessionMemory[] {
-    // Remove duplicates and sort by importance and recency
     const uniqueMemories = memories.filter((memory, index, self) => 
       index === self.findIndex(m => m.id === memory.id)
     );
 
     return uniqueMemories
       .sort((a, b) => {
-        // Primary sort: importance score
         const importanceDiff = (b.importance_score || 5) - (a.importance_score || 5);
         if (importanceDiff !== 0) return importanceDiff;
         
-        // Secondary sort: recency
         return new Date(b.last_referenced || b.created_at).getTime() - 
                new Date(a.last_referenced || a.created_at).getTime();
       })
-      .slice(0, 6); // Keep top 6 most relevant memories
+      .slice(0, 6);
   }
 
   private createContextSummary(memories: SessionMemory[], userMessage: string): string {
     if (memories.length === 0) {
-      return "No relevant memories found for this conversation.";
+      return "This appears to be a new conversation topic with no directly related previous discussions.";
     }
 
-    const memoryTopics = memories.map(memory => {
+    const recentMemories = memories.slice(0, 3);
+    const memoryTopics = recentMemories.map(memory => {
       const summary = memory.context_summary || 'General conversation';
       const importance = memory.importance_score || 5;
-      return `${summary} (importance: ${importance})`;
+      const date = new Date(memory.created_at).toLocaleDateString();
+      return `${summary} (${date}, importance: ${importance})`;
     });
 
-    return `Based on ${memories.length} relevant memories: ${memoryTopics.slice(0, 3).join(', ')}. Most recent memory from ${memories[0]?.created_at ? new Date(memories[0].created_at).toLocaleDateString() : 'unknown date'}.`;
+    return `Building on ${memories.length} previous interactions: ${memoryTopics.join('; ')}. Most recent relevant memory from ${memories[0]?.created_at ? new Date(memories[0].created_at).toLocaleDateString() : 'unknown date'}.`;
   }
 
   private async updateMemoryState(sessionId: string, memories: SessionMemory[]): Promise<void> {
-    // Update last_referenced timestamp for accessed memories
     const memoryIds = memories.map(m => m.id);
     
     if (memoryIds.length > 0) {
@@ -148,6 +228,7 @@ class MemoryInformedConversationService {
     userMessage: string
   ): Promise<string> {
     if (memoryContext.relevantMemories.length === 0) {
+      console.log('⚠️ No memories to enhance prompt with');
       return basePrompt;
     }
 
@@ -155,33 +236,35 @@ class MemoryInformedConversationService {
     
     const enhancedPrompt = `${basePrompt}
 
-## RELEVANT CONVERSATION MEMORIES
+## CONVERSATION MEMORY CONTEXT
 ${memorySection}
 
-## MEMORY CONTEXT
-User's current question/topic: "${userMessage}"
-Context summary: ${memoryContext.contextSummary}
+## CURRENT CONVERSATION CONTEXT
+User's current message: "${userMessage}"
+Memory context summary: ${memoryContext.contextSummary}
 
-## INSTRUCTIONS FOR MEMORY USE
-- Reference relevant memories naturally in your response
-- Build upon previous conversations when appropriate
-- Avoid repeating information you've already provided
-- Show continuity and progression in the conversation
-- If mentioning past discussions, be specific about what was discussed`;
+## MEMORY-INFORMED RESPONSE INSTRUCTIONS
+- Acknowledge and build upon relevant previous conversations when appropriate
+- Reference past discussions naturally if they relate to the current topic
+- Show continuity in the relationship by remembering what we've discussed before
+- If the user mentioned being "stuck" before, acknowledge this ongoing theme
+- Avoid repeating identical advice - build upon what was previously shared
+- Demonstrate that you remember the user's journey and growth over time`;
 
-    console.log('🎯 Enhanced system prompt with memory context');
+    console.log('🎯 Enhanced system prompt with', memoryContext.relevantMemories.length, 'memories');
     return enhancedPrompt;
   }
 
   private formatMemoriesForPrompt(memories: SessionMemory[]): string {
     return memories.map((memory, index) => {
       const memoryData = memory.memory_data || {};
-      const content = memoryData.content || memoryData.summary || 'No content available';
+      const content = memoryData.content || memoryData.user_message || memoryData.summary || 'No content available';
       const date = new Date(memory.created_at).toLocaleDateString();
+      const topics = memoryData.topics ? ` Topics: ${memoryData.topics.join(', ')}` : '';
       
-      return `Memory ${index + 1} (${date}, importance: ${memory.importance_score}):
+      return `Previous Interaction ${index + 1} (${date}, importance: ${memory.importance_score}):
 Context: ${memory.context_summary || 'General conversation'}
-Content: ${content}`;
+User Message: ${content}${topics}`;
     }).join('\n\n');
   }
 
@@ -191,17 +274,16 @@ Content: ${content}`;
     userMessage: string,
     aiResponse: string
   ): Promise<void> {
-    // Track how memories were used in the conversation
     try {
       const { error } = await supabase
         .from('user_session_memory')
         .insert({
           user_id: '', // Will be set by RLS
           session_id: sessionId,
-          memory_type: 'memory_application_tracking',
+          memory_type: 'interaction',
           memory_data: {
             user_message: userMessage,
-            ai_response: aiResponse.substring(0, 500), // Truncate for storage
+            ai_response: aiResponse.substring(0, 500),
             memories_used: memoryContext.relevantMemories.length,
             memory_search_query: memoryContext.memorySearchQuery,
             context_summary: memoryContext.contextSummary,
@@ -221,7 +303,6 @@ Content: ${content}`;
     }
   }
 
-  // Method to get conversation continuity across sessions
   async getCrossSessionContext(userId: string, currentSessionId: string, limit: number = 5): Promise<SessionMemory[]> {
     console.log('🔄 Getting cross-session context for user');
     
@@ -231,7 +312,7 @@ Content: ${content}`;
         .select('*')
         .eq('user_id', userId)
         .neq('session_id', currentSessionId)
-        .gte('importance_score', 6) // Only high-importance memories
+        .gte('importance_score', 6)
         .order('last_referenced', { ascending: false })
         .order('importance_score', { ascending: false })
         .limit(limit);
