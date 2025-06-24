@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface SessionMemory {
@@ -93,21 +92,24 @@ class MemoryService {
 
       console.log('💾 Saving session memory:', memory.memory_type, memory.context_summary);
 
+      // Ensure all required fields are present and valid
+      const memoryData = {
+        user_id: user.id,
+        session_id: memory.session_id,
+        memory_type: memory.memory_type,
+        memory_data: memory.memory_data || {},
+        context_summary: memory.context_summary || null,
+        importance_score: Math.max(1, Math.min(10, memory.importance_score || 5)) // Ensure valid range
+      };
+
       const { data, error } = await supabase
         .from('user_session_memory')
-        .insert({
-          user_id: user.id,
-          session_id: memory.session_id,
-          memory_type: memory.memory_type,
-          memory_data: memory.memory_data,
-          context_summary: memory.context_summary,
-          importance_score: memory.importance_score
-        })
+        .insert(memoryData)
         .select()
         .single();
 
       if (error) {
-        console.error('❌ Failed to save memory:', error.message);
+        console.error('❌ Failed to save memory:', error.message, error.details);
         return null;
       }
 
@@ -213,8 +215,10 @@ class MemoryService {
         return false;
       }
 
-      // Create feedback memory entry with graceful error handling
+      // Create feedback memory entry with improved error handling and independence
       try {
+        console.log('🧠 Creating feedback memory integration...');
+        
         const memoryResult = await this.saveMemory({
           user_id: user.id,
           session_id: feedback.session_id,
@@ -223,17 +227,21 @@ class MemoryService {
             type: 'session_feedback',
             rating: feedback.rating,
             feedback_text: feedback.feedback_text,
-            suggestions: feedback.improvement_suggestions
+            suggestions: feedback.improvement_suggestions,
+            timestamp: new Date().toISOString()
           },
           context_summary: `Session rated ${feedback.rating}/5 stars`,
           importance_score: feedback.rating >= 4 ? 8 : 6
         });
         
         if (memoryResult) {
-          console.log('✅ Feedback memory integration successful');
+          console.log('✅ Feedback memory integration successful:', memoryResult.id);
+        } else {
+          console.warn('⚠️ Feedback memory integration failed but feedback saved');
         }
       } catch (memoryError) {
-        console.warn('⚠️ Feedback saved but memory creation failed:', memoryError);
+        console.error('❌ Feedback memory integration error:', memoryError);
+        // Don't fail feedback saving if memory creation fails
       }
 
       console.log('✅ Feedback saved successfully');
@@ -416,11 +424,14 @@ class MemoryService {
 
       console.log('✅ Reminder status updated successfully');
 
-      // FIX: Create memory entry when reminder is completed
+      // Create memory entry when reminder is completed - with improved isolation
       if (status === 'completed') {
         console.log('🧠 Creating memory entry for completed reminder...');
         
         try {
+          // Add small delay to avoid any potential race conditions
+          await new Promise(resolve => setTimeout(resolve, 100));
+          
           const memoryResult = await this.saveMemory({
             user_id: user.id,
             session_id: existingReminder.session_id,
@@ -431,7 +442,8 @@ class MemoryService {
               status: 'completed',
               completion_notes: completion_notes,
               reminder_id: existingReminder.id,
-              completed_at: new Date().toISOString()
+              completed_at: new Date().toISOString(),
+              source: 'reminder_completion'
             },
             context_summary: `Completed micro-action: ${existingReminder.action_title}`,
             importance_score: 7
