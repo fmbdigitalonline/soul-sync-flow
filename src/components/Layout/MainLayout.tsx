@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -61,7 +60,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
   ];
 
   // Add Test Environment for admin users
-  const navItems = user && isAdminUser(user.email) 
+  const navItems = user && isAdminUser(user) 
     ? [...baseNavItems, { to: "/test-environment", icon: TestTube, label: "Test Environment" }]
     : baseNavItems;
 
