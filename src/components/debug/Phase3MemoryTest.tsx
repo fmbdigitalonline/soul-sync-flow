@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { memoryService, SessionMemory, MicroActionReminder, SessionFeedback } from '@/services/memory-service';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
 
