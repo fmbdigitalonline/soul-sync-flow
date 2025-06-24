@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -99,7 +98,15 @@ export const RealTimeIntelligenceMonitor: React.FC = () => {
         .limit(1)
         .maybeSingle();
 
-      // Calculate real metrics
+      // Calculate real metrics with proper type checking
+      const excitementScoreCount = blueprint?.blueprint && 
+        typeof blueprint.blueprint === 'object' && 
+        blueprint.blueprint !== null &&
+        'excitement_scores' in blueprint.blueprint &&
+        Array.isArray(blueprint.blueprint.excitement_scores) 
+        ? blueprint.blueprint.excitement_scores.length 
+        : 0;
+
       const intelligenceMetrics: IntelligenceMetric[] = [
         {
           name: 'Memory Coherence',
@@ -131,8 +138,7 @@ export const RealTimeIntelligenceMonitor: React.FC = () => {
         },
         {
           name: 'Excitement Tracking',
-          value: blueprint?.blueprint?.excitement_scores?.length ? 
-            Math.min((blueprint.blueprint.excitement_scores.length / 5) * 100, 100) : 0,
+          value: excitementScoreCount > 0 ? Math.min((excitementScoreCount / 5) * 100, 100) : 0,
           trend: 'stable',
           description: 'How well system tracks user excitement levels',
           lastUpdate: blueprint?.updated_at || new Date().toISOString()
