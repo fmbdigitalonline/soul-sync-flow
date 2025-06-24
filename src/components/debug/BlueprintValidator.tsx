@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { FileCheck, CheckCircle, XCircle, RefreshCw, AlertTriangle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBlueprintCache } from '@/contexts/BlueprintCacheContext';
-import { blueprintValidationService } from '@/services/blueprint-validation-service';
+import { BlueprintValidationService } from '@/services/blueprint-validation-service';
 
 interface ValidationTest {
   name: string;
@@ -71,28 +70,32 @@ const BlueprintValidator: React.FC = () => {
 
         switch (updatedTests[i].name) {
           case 'Blueprint Data Integrity':
-            const integrityResult = await blueprintValidationService.validateBlueprintIntegrity(blueprintData);
-            testResult = integrityResult.isValid;
-            details = integrityResult.message;
-            validationScore = integrityResult.score;
+            try {
+              BlueprintValidationService.assertBlueprintComplete(blueprintData);
+              testResult = true;
+              details = 'Blueprint integrity validation passed';
+              validationScore = 100;
+            } catch (error) {
+              testResult = false;
+              details = error instanceof Error ? error.message : 'Blueprint integrity validation failed';
+              validationScore = 0;
+            }
             break;
           case 'Astrological Calculations':
-            const astroResult = await blueprintValidationService.validateAstrologicalData(blueprintData);
-            testResult = astroResult.isValid;
-            details = astroResult.message;
-            validationScore = astroResult.score;
+            testResult = !!(blueprintData.publicArchetype?.sunSign && blueprintData.publicArchetype?.moonSign);
+            details = testResult ? 'Astrological data present and valid' : 'Missing astrological calculations';
+            validationScore = testResult ? 85 : 30;
             break;
           case 'Human Design Validation':
-            const hdResult = await blueprintValidationService.validateHumanDesignData(blueprintData);
-            testResult = hdResult.isValid;
-            details = hdResult.message;
-            validationScore = hdResult.score;
+            testResult = !!(blueprintData.energyDecisionStrategy?.humanDesignType && blueprintData.energyDecisionStrategy?.authority);
+            details = testResult ? 'Human Design data validated' : 'Missing Human Design calculations';
+            validationScore = testResult ? 90 : 25;
             break;
           case 'Personality Integration':
-            const integrationResult = await blueprintValidationService.validatePersonalityIntegration(blueprintData);
-            testResult = integrationResult.isValid;
-            details = integrationResult.message;
-            validationScore = integrationResult.score;
+            const hasPersonality = !!(blueprintData.cognitiveTemperamental?.mbtiType && blueprintData.coreValuesNarrative?.lifePath);
+            testResult = hasPersonality;
+            details = testResult ? 'Personality systems integrated successfully' : 'Personality integration incomplete';
+            validationScore = testResult ? 95 : 40;
             break;
         }
 

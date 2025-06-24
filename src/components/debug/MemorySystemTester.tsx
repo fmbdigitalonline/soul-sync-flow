@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Brain, CheckCircle, XCircle, RefreshCw, AlertTriangle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { enhancedMemoryService } from '@/services/enhanced-memory-service';
+import { memoryService } from '@/services/memory-service';
 
 interface MemoryTest {
   name: string;
@@ -120,20 +120,23 @@ const MemorySystemTester: React.FC = () => {
 
   const testMemoryCreation = async () => {
     try {
-      const testMemory = await enhancedMemoryService.createMemory({
-        userId: user!.id,
-        content: 'Test memory creation for system validation',
-        sessionId: `test-session-${Date.now()}`,
-        memoryType: 'conversation',
-        importance: 0.8,
-        emotional_tone: 'neutral',
-        tags: ['test', 'validation']
+      const testMemory = await memoryService.saveMemory({
+        user_id: user!.id,
+        session_id: `test-session-${Date.now()}`,
+        memory_type: 'interaction',
+        memory_data: {
+          test_type: 'memory_creation_test',
+          content: 'Test memory creation for system validation',
+          timestamp: new Date().toISOString()
+        },
+        context_summary: 'Memory creation test',
+        importance_score: 8
       });
 
       return {
-        success: testMemory.success,
-        details: testMemory.success ? 'Memory creation successful' : 'Memory creation failed',
-        score: testMemory.success ? 100 : 0
+        success: !!testMemory,
+        details: testMemory ? 'Memory creation successful' : 'Memory creation failed',
+        score: testMemory ? 100 : 0
       };
     } catch (error) {
       return {
@@ -147,7 +150,7 @@ const MemorySystemTester: React.FC = () => {
   const testMemoryRetrieval = async () => {
     try {
       const startTime = Date.now();
-      const memories = await enhancedMemoryService.retrieveRecentMemories(user!.id, 5);
+      const memories = await memoryService.getRecentMemories(5);
       const retrievalTime = Date.now() - startTime;
 
       const performanceScore = retrievalTime < 1000 ? 100 : Math.max(0, 100 - (retrievalTime - 1000) / 10);
@@ -210,7 +213,7 @@ const MemorySystemTester: React.FC = () => {
         (flowTest.creationTest ? 25 : 0) +
         (flowTest.retrievalTest ? 25 : 0) +
         (flowTest.searchTest ? 25 : 0) +
-        (flowTest.consistencyTest ? 25 : 0)
+        (flowTest.sessionTest ? 25 : 0)
       );
 
       return {
