@@ -63,7 +63,7 @@ const UXFlowTester: React.FC = () => {
   const [testResults, setTestResults] = useState<any>(null);
   const [realTimeMetrics, setRealTimeMetrics] = useState({
     activeUsers: 0,
-    completionRates: {},
+    completionRates: {} as Record<string, number>,
     averageEngagement: 0,
     criticalIssues: 0
   });
@@ -251,7 +251,7 @@ const UXFlowTester: React.FC = () => {
         // Calculate metrics
         const activeUsers = profilesData?.length || 0;
         const averageEngagement = feedbackData?.length > 0 
-          ? feedbackData.reduce((sum, f) => sum + f.rating, 0) / feedbackData.length
+          ? feedbackData.reduce((sum, f) => sum + (f.rating || 0), 0) / feedbackData.length
           : 0;
 
         setRealTimeMetrics({
@@ -441,6 +441,12 @@ const UXFlowTester: React.FC = () => {
 
   const selectedJourneyData = journeys.find(j => j.id === selectedJourney);
 
+  // Calculate average completion rate safely
+  const completionRatesValues = Object.values(realTimeMetrics.completionRates);
+  const averageCompletion = completionRatesValues.length > 0 
+    ? (completionRatesValues.reduce((a: number, b: number) => a + b, 0) / completionRatesValues.length).toFixed(1)
+    : '0';
+
   return (
     <div className="space-y-6">
       {/* Real-Time Metrics Dashboard */}
@@ -463,9 +469,7 @@ const UXFlowTester: React.FC = () => {
             </div>
             <div className="text-center p-3 border rounded-lg">
               <div className="text-2xl font-bold text-purple-600">
-                {Object.values(realTimeMetrics.completionRates).length > 0 
-                  ? (Object.values(realTimeMetrics.completionRates).reduce((a, b) => a + b, 0) / Object.values(realTimeMetrics.completionRates).length).toFixed(1)
-                  : '0'}%
+                {averageCompletion}%
               </div>
               <div className="text-sm text-gray-600">Avg Completion</div>
             </div>
