@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -126,7 +125,7 @@ export const RealTimeMonitoringDashboard: React.FC = () => {
       holisticCoachService.updateContext({
         currentMood: 'medium',
         energyLevel: 'stable',
-        contextType: 'reflective',
+        contextType: 'analytical', // Fixed: changed from 'reflective' to 'analytical'
         excitementLevel: 5
       });
       const coachPrompt = holisticCoachService.generateSystemPrompt('Monitoring test message');
