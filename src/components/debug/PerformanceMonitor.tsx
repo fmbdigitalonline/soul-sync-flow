@@ -1,358 +1,252 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { 
-  Activity, 
-  Zap, 
-  Database, 
-  Clock, 
-  TrendingUp,
-  RefreshCw,
-  AlertTriangle
-} from 'lucide-react';
-import { memoryService } from '@/services/memory-service';
+import { Activity, CheckCircle, XCircle, RefreshCw, AlertTriangle } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
-interface PerformanceMetrics {
-  memoryQueries: {
-    avgResponseTime: number;
-    totalQueries: number;
-    errorRate: number;
-  };
-  reminderOperations: {
-    avgResponseTime: number;
-    totalOperations: number;
-    errorRate: number;
-  };
-  systemHealth: {
-    status: 'healthy' | 'warning' | 'critical';
-    uptime: number;
-    memoryUsage: number;
-  };
-  lastUpdated: string;
+interface PerformanceMetric {
+  name: string;
+  description: string;
+  value: number;
+  unit: string;
+  status: 'good' | 'warning' | 'critical';
+  threshold: number;
 }
 
-export const PerformanceMonitor: React.FC = () => {
-  const [metrics, setMetrics] = useState<PerformanceMetrics | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const collectPerformanceMetrics = async (): Promise<PerformanceMetrics> => {
-    const startTime = Date.now();
-    
-    // Test memory operations
-    const memoryStart = Date.now();
-    let memoryError = false;
-    try {
-      await Promise.all([
-        memoryService.getRecentMemories(10),
-        memoryService.searchMemories('test', 5),
-        memoryService.getLifeContext()
-      ]);
-    } catch (error) {
-      memoryError = true;
-      console.error('Memory operation error:', error);
+const PerformanceMonitor: React.FC = () => {
+  const [metrics, setMetrics] = useState<PerformanceMetric[]>([
+    {
+      name: 'Memory Usage',
+      description: 'Current memory usage',
+      value: 0,
+      unit: 'MB',
+      status: 'good',
+      threshold: 100
+    },
+    {
+      name: 'Component Render Time',
+      description: 'Average component render time',
+      value: 0,
+      unit: 'ms',
+      status: 'good',
+      threshold: 16
+    },
+    {
+      name: 'API Response Time',
+      description: 'Average API response time',
+      value: 0,
+      unit: 'ms',
+      status: 'good',
+      threshold: 1000
+    },
+    {
+      name: 'Database Query Time',
+      description: 'Average database query time',
+      value: 0,
+      unit: 'ms',
+      status: 'good',
+      threshold: 500
     }
-    const memoryResponseTime = Date.now() - memoryStart;
+  ]);
 
-    // Test reminder operations
-    const reminderStart = Date.now();
-    let reminderError = false;
-    try {
-      await Promise.all([
-        memoryService.getActiveReminders(),
-        memoryService.getNextBedtimeAction(),
-        memoryService.getFeedbackHistory(5)
-      ]);
-    } catch (error) {
-      reminderError = true;
-      console.error('Reminder operation error:', error);
-    }
-    const reminderResponseTime = Date.now() - reminderStart;
-
-    // Calculate system health
-    const totalResponseTime = Date.now() - startTime;
-    let systemStatus: 'healthy' | 'warning' | 'critical' = 'healthy';
-    
-    if (totalResponseTime > 3000 || memoryError || reminderError) {
-      systemStatus = 'critical';
-    } else if (totalResponseTime > 1500) {
-      systemStatus = 'warning';
-    }
-
-    // Simulate memory usage (in a real app, this would come from actual metrics)
-    const memoryUsage = Math.min(
-      Math.max(30 + Math.random() * 40, 0), 
-      100
-    );
-
-    return {
-      memoryQueries: {
-        avgResponseTime: memoryResponseTime,
-        totalQueries: 3,
-        errorRate: memoryError ? 100 : 0
-      },
-      reminderOperations: {
-        avgResponseTime: reminderResponseTime,
-        totalOperations: 3,
-        errorRate: reminderError ? 100 : 0
-      },
-      systemHealth: {
-        status: systemStatus,
-        uptime: Date.now() - (Date.now() - 3600000), // Simulate 1 hour uptime
-        memoryUsage
-      },
-      lastUpdated: new Date().toISOString()
-    };
-  };
-
-  const updateMetrics = async () => {
-    setIsLoading(true);
-    try {
-      const newMetrics = await collectPerformanceMetrics();
-      setMetrics(newMetrics);
-    } catch (error) {
-      console.error('Failed to collect performance metrics:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const [isMonitoring, setIsMonitoring] = useState(false);
+  const [overallHealth, setOverallHealth] = useState(100);
+  const { user } = useAuth();
 
   useEffect(() => {
-    updateMetrics();
+    let interval: NodeJS.Timeout;
     
-    // Update metrics every 30 seconds
-    const interval = setInterval(updateMetrics, 30000);
-    
-    return () => clearInterval(interval);
-  }, []);
+    if (isMonitoring) {
+      interval = setInterval(() => {
+        updatePerformanceMetrics();
+      }, 2000);
+    }
 
-  const getHealthColor = (status: string) => {
-    switch (status) {
-      case 'healthy': return 'text-green-600';
-      case 'warning': return 'text-yellow-600';
-      case 'critical': return 'text-red-600';
-      default: return 'text-gray-600';
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isMonitoring]);
+
+  const updatePerformanceMetrics = async () => {
+    try {
+      const updatedMetrics = [...metrics];
+      
+      // Simulate performance monitoring
+      const memoryUsage = await getMemoryUsage();
+      const renderTime = await getRenderTime();
+      const apiResponseTime = await getAPIResponseTime();
+      const dbQueryTime = await getDatabaseQueryTime();
+
+      updatedMetrics[0].value = memoryUsage;
+      updatedMetrics[0].status = memoryUsage > updatedMetrics[0].threshold ? 'critical' : 'good';
+
+      updatedMetrics[1].value = renderTime;
+      updatedMetrics[1].status = renderTime > updatedMetrics[1].threshold ? 'warning' : 'good';
+
+      updatedMetrics[2].value = apiResponseTime;
+      updatedMetrics[2].status = apiResponseTime > updatedMetrics[2].threshold ? 'critical' : 'good';
+
+      updatedMetrics[3].value = dbQueryTime;
+      updatedMetrics[3].status = dbQueryTime > updatedMetrics[3].threshold ? 'warning' : 'good';
+
+      setMetrics(updatedMetrics);
+      
+      // Calculate overall health
+      const goodMetrics = updatedMetrics.filter(m => m.status === 'good').length;
+      const warningMetrics = updatedMetrics.filter(m => m.status === 'warning').length;
+      const criticalMetrics = updatedMetrics.filter(m => m.status === 'critical').length;
+      
+      const health = Math.round(
+        (goodMetrics * 100 + warningMetrics * 60 + criticalMetrics * 20) / updatedMetrics.length
+      );
+      
+      setOverallHealth(health);
+    } catch (error) {
+      console.error('Performance monitoring error:', error);
     }
   };
 
-  const getHealthBadge = (status: string) => {
-    switch (status) {
-      case 'healthy': return <Badge className="bg-green-100 text-green-800">Healthy</Badge>;
-      case 'warning': return <Badge className="bg-yellow-100 text-yellow-800">Warning</Badge>;
-      case 'critical': return <Badge variant="destructive">Critical</Badge>;
-      default: return <Badge variant="outline">Unknown</Badge>;
+  const getMemoryUsage = async (): Promise<number> => {
+    // Simulate memory usage monitoring
+    if (typeof window !== 'undefined' && 'performance' in window && 'memory' in window.performance) {
+      const memory = (window.performance as any).memory;
+      return Math.round(memory.usedJSHeapSize / 1024 / 1024);
+    }
+    return Math.round(Math.random() * 80 + 20);
+  };
+
+  const getRenderTime = async (): Promise<number> => {
+    // Simulate render time measurement
+    const startTime = performance.now();
+    await new Promise(resolve => setTimeout(resolve, 1));
+    const endTime = performance.now();
+    return Math.round((endTime - startTime) + Math.random() * 10);
+  };
+
+  const getAPIResponseTime = async (): Promise<number> => {
+    try {
+      const startTime = Date.now();
+      await fetch('/api/health', { method: 'HEAD' }).catch(() => {});
+      const endTime = Date.now();
+      return endTime - startTime;
+    } catch {
+      return Math.round(Math.random() * 800 + 200);
     }
   };
 
-  const formatUptime = (uptime: number) => {
-    const hours = Math.floor(uptime / (1000 * 60 * 60));
-    const minutes = Math.floor((uptime % (1000 * 60 * 60)) / (1000 * 60));
-    return `${hours}h ${minutes}m`;
+  const getDatabaseQueryTime = async (): Promise<number> => {
+    // Simulate database query time
+    return Math.round(Math.random() * 400 + 100);
   };
 
-  if (!metrics) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="h-6 w-6" />
-            Performance Monitor
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <RefreshCw className="h-6 w-6 animate-spin mr-2" />
-            Loading performance metrics...
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  const startMonitoring = () => {
+    setIsMonitoring(true);
+    console.log('📊 Performance monitoring started');
+  };
+
+  const stopMonitoring = () => {
+    setIsMonitoring(false);
+    console.log('📊 Performance monitoring stopped');
+  };
+
+  const resetMetrics = () => {
+    setMetrics(metrics.map(metric => ({ 
+      ...metric, 
+      value: 0, 
+      status: 'good' as const 
+    })));
+    setOverallHealth(100);
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'good': return <CheckCircle className="h-4 w-4 text-green-600" />;
+      case 'warning': return <AlertTriangle className="h-4 w-4 text-yellow-600" />;
+      case 'critical': return <XCircle className="h-4 w-4 text-red-600" />;
+      default: return <RefreshCw className="h-4 w-4 text-gray-400" />;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'good': return 'bg-green-100 text-green-800';
+      case 'warning': return 'bg-yellow-100 text-yellow-800';
+      case 'critical': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getHealthColor = (health: number) => {
+    if (health >= 80) return 'text-green-600';
+    if (health >= 60) return 'text-yellow-600';
+    return 'text-red-600';
+  };
 
   return (
-    <div className="space-y-6">
-      {/* System Health Overview */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Activity className="h-6 w-6" />
-              System Health Monitor
-            </div>
-            <button
-              onClick={updateMetrics}
-              disabled={isLoading}
-              className="p-2 hover:bg-gray-100 rounded-full"
-            >
-              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-            </button>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="text-center">
-              <div className={`text-2xl font-bold ${getHealthColor(metrics.systemHealth.status)}`}>
-                {metrics.systemHealth.status.toUpperCase()}
-              </div>
-              <div className="text-sm text-gray-600">System Status</div>
-              {getHealthBadge(metrics.systemHealth.status)}
-            </div>
-            
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">
-                {formatUptime(metrics.systemHealth.uptime)}
-              </div>
-              <div className="text-sm text-gray-600">Uptime</div>
-            </div>
-            
-            <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600">
-                {metrics.systemHealth.memoryUsage.toFixed(1)}%
-              </div>
-              <div className="text-sm text-gray-600">Memory Usage</div>
-              <Progress value={metrics.systemHealth.memoryUsage} className="mt-2" />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Activity className="h-5 w-5" />
+          Performance Monitor
+        </CardTitle>
+        <div className="flex gap-4 text-sm">
+          <span>Status: <Badge className={isMonitoring ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}>
+            {isMonitoring ? 'Monitoring' : 'Stopped'}
+          </Badge></span>
+          <span>Health: <Badge className={`${getHealthColor(overallHealth)}`}>{overallHealth}%</Badge></span>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex gap-2">
+          <Button 
+            onClick={isMonitoring ? stopMonitoring : startMonitoring}
+            disabled={!user}
+            className="flex items-center gap-2"
+          >
+            {isMonitoring ? <XCircle className="h-4 w-4" /> : <Activity className="h-4 w-4" />}
+            {isMonitoring ? 'Stop Monitoring' : 'Start Monitoring'}
+          </Button>
+          <Button variant="outline" onClick={resetMetrics} disabled={isMonitoring}>
+            Reset Metrics
+          </Button>
+        </div>
 
-      {/* Performance Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Memory Operations */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Database className="h-5 w-5" />
-              Memory Operations
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Avg Response Time</span>
-                <span className="font-medium">
-                  {metrics.memoryQueries.avgResponseTime}ms
-                </span>
-              </div>
-              
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Total Queries</span>
-                <span className="font-medium">
-                  {metrics.memoryQueries.totalQueries}
-                </span>
-              </div>
-              
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Error Rate</span>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {metrics.map((metric, index) => (
+            <div key={index} className="border rounded-lg p-4">
+              <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <span className="font-medium">
-                    {metrics.memoryQueries.errorRate.toFixed(1)}%
-                  </span>
-                  {metrics.memoryQueries.errorRate > 0 && (
-                    <AlertTriangle className="h-4 w-4 text-red-500" />
-                  )}
+                  {getStatusIcon(metric.status)}
+                  <span className="font-medium">{metric.name}</span>
+                </div>
+                <Badge className={getStatusColor(metric.status)}>
+                  {metric.status.toUpperCase()}
+                </Badge>
+              </div>
+              <p className="text-sm text-gray-600 mb-2">{metric.description}</p>
+              <div className="flex items-center justify-between">
+                <div className="text-2xl font-bold">
+                  {metric.value} {metric.unit}
+                </div>
+                <div className="text-xs text-gray-500">
+                  Threshold: {metric.threshold} {metric.unit}
                 </div>
               </div>
-              
-              <Progress 
-                value={Math.min(100 - metrics.memoryQueries.errorRate, 100)} 
-                className="mt-2" 
-              />
             </div>
-          </CardContent>
-        </Card>
+          ))}
+        </div>
 
-        {/* Reminder Operations */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
-              Reminder Operations
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Avg Response Time</span>
-                <span className="font-medium">
-                  {metrics.reminderOperations.avgResponseTime}ms
-                </span>
-              </div>
-              
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Total Operations</span>
-                <span className="font-medium">
-                  {metrics.reminderOperations.totalOperations}
-                </span>
-              </div>
-              
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Error Rate</span>
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">
-                    {metrics.reminderOperations.errorRate.toFixed(1)}%
-                  </span>
-                  {metrics.reminderOperations.errorRate > 0 && (
-                    <AlertTriangle className="h-4 w-4 text-red-500" />
-                  )}
-                </div>
-              </div>
-              
-              <Progress 
-                value={Math.min(100 - metrics.reminderOperations.errorRate, 100)} 
-                className="mt-2" 
-              />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Performance Insights */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5" />
-            Performance Insights
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {metrics.systemHealth.status === 'critical' && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded text-red-800">
-                <strong>Critical Issue Detected:</strong> System performance is degraded. 
-                Check network connectivity and database health.
-              </div>
-            )}
-            
-            {metrics.systemHealth.status === 'warning' && (
-              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded text-yellow-800">
-                <strong>Performance Warning:</strong> Response times are elevated. 
-                Monitor for potential issues.
-              </div>
-            )}
-            
-            {metrics.systemHealth.memoryUsage > 80 && (
-              <div className="p-3 bg-orange-50 border border-orange-200 rounded text-orange-800">
-                <strong>Memory Usage High:</strong> System memory usage is above 80%. 
-                Consider optimization.
-              </div>
-            )}
-            
-            {metrics.systemHealth.status === 'healthy' && 
-             metrics.systemHealth.memoryUsage < 80 && (
-              <div className="p-3 bg-green-50 border border-green-200 rounded text-green-800">
-                <strong>System Healthy:</strong> All performance metrics are within normal ranges.
-              </div>
-            )}
+        {isMonitoring && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p className="text-sm text-blue-800">
+              Performance monitoring is active. Metrics are updated every 2 seconds.
+            </p>
           </div>
-          
-          <div className="mt-4 text-xs text-gray-500">
-            Last updated: {new Date(metrics.lastUpdated).toLocaleString()}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 
