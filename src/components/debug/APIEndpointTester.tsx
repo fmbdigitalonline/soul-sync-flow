@@ -235,7 +235,7 @@ export const APIEndpointTester: React.FC = () => {
       // Test session validity
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
-      return !sessionError && authUser && session;
+      return !sessionError && !!authUser && !!session;
     } catch (error) {
       console.error('Auth API test error:', error);
       return false;
