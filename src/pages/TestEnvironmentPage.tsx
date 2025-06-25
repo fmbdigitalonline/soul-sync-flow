@@ -52,6 +52,7 @@ import { GracefulDegradationTester } from '@/components/debug/GracefulDegradatio
 import { MemoryFailureRecoveryTester } from '@/components/debug/MemoryFailureRecoveryTester';
 import { LayerActivationConflictTester } from '@/components/debug/LayerActivationConflictTester';
 import { FallbackMechanismValidator } from '@/components/debug/FallbackMechanismValidator';
+import { ResponseTimeLoadTester } from '@/components/debug/ResponseTimeLoadTester';
 
 const TestEnvironmentPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('architecture');
@@ -875,15 +876,10 @@ const TestEnvironmentPage: React.FC = () => {
                 <div className="mb-4">
                   <h2 className="text-2xl font-semibold mb-2">Response Time Under Load Testing</h2>
                   <p className="text-gray-600">
-                    Test system performance with complex personalities under load - Implementation coming soon.
+                    Test system performance with complex personality processing under concurrent load with real-time metrics.
                   </p>
                 </div>
-                <Card>
-                  <CardContent className="p-8 text-center">
-                    <Gauge className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                    <p className="text-gray-600">Load testing component will be implemented next.</p>
-                  </CardContent>
-                </Card>
+                <ResponseTimeLoadTester />
               </TabsContent>
 
               <TabsContent value="ux-flows" className="space-y-6">
