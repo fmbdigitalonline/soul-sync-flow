@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -56,6 +57,20 @@ export const APIEndpointTester: React.FC = () => {
   ]);
 
   const [isRunning, setIsRunning] = useState(false);
+  const [apiHealth, setApiHealth] = useState<{
+    overallHealth: number;
+    workingEndpoints: number;
+    failingEndpoints: number;
+    averageResponseTime: number;
+    criticalIssues: number;
+  }>({ 
+    overallHealth: 0, 
+    workingEndpoints: 0, 
+    failingEndpoints: 0, 
+    averageResponseTime: 0,
+    criticalIssues: 0
+  });
+
   const { user } = useAuth();
 
   const runAPITests = async () => {
@@ -68,6 +83,10 @@ export const APIEndpointTester: React.FC = () => {
     console.log('🌐 Starting API endpoint tests');
 
     const updatedTests = [...tests];
+    const responseTimes: number[] = [];
+    let workingEndpoints = 0;
+    let failingEndpoints = 0;
+    let criticalIssues = 0;
 
     for (let i = 0; i < updatedTests.length; i++) {
       updatedTests[i].status = 'testing';
@@ -83,18 +102,22 @@ export const APIEndpointTester: React.FC = () => {
             testResult = await testAICoachEndpoint();
             details = testResult ? 'AI Coach endpoint responding correctly' : 'AI Coach endpoint issues detected';
             break;
+
           case 'blueprint-calculator':
             testResult = await testBlueprintCalculatorEndpoint();
             details = testResult ? 'Blueprint calculator endpoint working' : 'Blueprint calculator endpoint failed';
             break;
+
           case 'auth':
             testResult = await testAuthAPI();
             details = testResult ? 'Authentication API functioning correctly' : 'Authentication API has issues';
             break;
+
           case 'database':
             testResult = await testDatabaseAPI();
             details = testResult ? 'Database API endpoints working' : 'Database API endpoints failing';
             break;
+
           case 'realtime':
             testResult = await testRealtimeConnection();
             details = testResult ? 'Real-time connection established successfully' : 'Real-time connection failed';
@@ -102,21 +125,45 @@ export const APIEndpointTester: React.FC = () => {
         }
 
         const responseTime = Date.now() - startTime;
+        responseTimes.push(responseTime);
         
         updatedTests[i].status = testResult ? 'passed' : 'failed';
         updatedTests[i].details = details;
         updatedTests[i].responseTime = responseTime;
+
+        if (testResult) workingEndpoints++;
+        else {
+          failingEndpoints++;
+          if (['ai-coach', 'auth', 'database'].includes(updatedTests[i].endpoint)) {
+            criticalIssues++;
+          }
+        }
 
       } catch (error) {
         console.error(`❌ API test failed: ${updatedTests[i].name}`, error);
         updatedTests[i].status = 'failed';
         updatedTests[i].details = `Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
         updatedTests[i].responseTime = Date.now();
+        failingEndpoints++;
+        criticalIssues++;
       }
 
       setTests([...updatedTests]);
       await new Promise(resolve => setTimeout(resolve, 800));
     }
+
+    // Calculate API health metrics
+    const totalTests = updatedTests.length;
+    const overallHealth = Math.round((workingEndpoints / totalTests) * 100);
+    const averageResponseTime = responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
+
+    setApiHealth({
+      overallHealth,
+      workingEndpoints,
+      failingEndpoints,
+      averageResponseTime: Math.round(averageResponseTime),
+      criticalIssues
+    });
 
     setIsRunning(false);
     console.log('✅ API endpoint tests completed');
@@ -148,6 +195,7 @@ export const APIEndpointTester: React.FC = () => {
 
   const testBlueprintCalculatorEndpoint = async (): Promise<boolean> => {
     try {
+      // Test blueprint calculator with minimal data
       const testProfile = {
         full_name: "API Test User",
         birth_date: "1990-01-01",
@@ -159,7 +207,7 @@ export const APIEndpointTester: React.FC = () => {
       const { data, error } = await supabase.functions.invoke('blueprint-calculator', {
         body: {
           userProfile: testProfile,
-          skipValidation: true
+          skipValidation: true // For testing purposes
         }
       });
 
@@ -184,9 +232,10 @@ export const APIEndpointTester: React.FC = () => {
         return false;
       }
 
+      // Test session validity
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
-      return !sessionError && !!authUser && !!session;
+      return !sessionError && authUser && session;
     } catch (error) {
       console.error('Auth API test error:', error);
       return false;
@@ -195,6 +244,7 @@ export const APIEndpointTester: React.FC = () => {
 
   const testDatabaseAPI = async (): Promise<boolean> => {
     try {
+      // Test basic database connectivity
       const { data, error } = await supabase
         .from('user_profiles')
         .select('id')
@@ -206,6 +256,7 @@ export const APIEndpointTester: React.FC = () => {
         return false;
       }
 
+      // Test another table to ensure general connectivity
       const { error: blueprintError } = await supabase
         .from('user_blueprints')
         .select('id')
@@ -254,6 +305,13 @@ export const APIEndpointTester: React.FC = () => {
       details: undefined, 
       responseTime: undefined 
     })));
+    setApiHealth({ 
+      overallHealth: 0, 
+      workingEndpoints: 0, 
+      failingEndpoints: 0, 
+      averageResponseTime: 0,
+      criticalIssues: 0
+    });
   };
 
   const getStatusIcon = (status: string) => {
@@ -279,58 +337,93 @@ export const APIEndpointTester: React.FC = () => {
   const totalTests = tests.length;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Globe className="h-5 w-5" />
-          API Endpoint Testing
-        </CardTitle>
-        <div className="flex gap-4 text-sm">
-          <span>Working: <Badge className="bg-green-100 text-green-800">{passedTests}/{totalTests}</Badge></span>
-          <span>Failing: <Badge className="bg-red-100 text-red-800">{failedTests}/{totalTests}</Badge></span>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex gap-2">
-          <Button 
-            onClick={runAPITests} 
-            disabled={isRunning || !user}
-            className="flex items-center gap-2"
-          >
-            {isRunning ? <RefreshCw className="h-4 w-4 animate-spin" /> : null}
-            {isRunning ? 'Testing APIs...' : 'Run API Tests'}
-          </Button>
-          <Button variant="outline" onClick={resetTests} disabled={isRunning}>
-            Reset Tests
-          </Button>
-        </div>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Globe className="h-5 w-5" />
+            API Endpoint Testing
+          </CardTitle>
+          <div className="flex gap-4 text-sm">
+            <span>Working: <Badge className="bg-green-100 text-green-800">{passedTests}/{totalTests}</Badge></span>
+            <span>Failing: <Badge className="bg-red-100 text-red-800">{failedTests}/{totalTests}</Badge></span>
+            <span>API Health: <Badge>{apiHealth.overallHealth}%</Badge></span>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex gap-2">
+            <Button 
+              onClick={runAPITests} 
+              disabled={isRunning || !user}
+              className="flex items-center gap-2"
+            >
+              {isRunning ? <RefreshCw className="h-4 w-4 animate-spin" /> : null}
+              {isRunning ? 'Testing APIs...' : 'Run API Tests'}
+            </Button>
+            <Button variant="outline" onClick={resetTests} disabled={isRunning}>
+              Reset Tests
+            </Button>
+          </div>
 
-        <div className="space-y-3">
-          {tests.map((test, index) => (
-            <div key={index} className="border rounded-lg p-4">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  {getStatusIcon(test.status)}
-                  <span className="font-medium">{test.name}</span>
-                  <Badge className={getMethodBadgeColor(test.method)}>
-                    {test.method}
-                  </Badge>
-                  <Badge variant="outline" className="text-xs">{test.endpoint}</Badge>
-                  {test.responseTime && (
-                    <Badge variant="outline">{test.responseTime}ms</Badge>
-                  )}
+          {apiHealth.overallHealth > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">API Health Dashboard</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
+                  <div>
+                    <div className="text-2xl font-bold text-blue-600">{apiHealth.overallHealth}%</div>
+                    <div className="text-sm text-gray-600">Overall Health</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-green-600">{apiHealth.workingEndpoints}</div>
+                    <div className="text-sm text-gray-600">Working</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-red-600">{apiHealth.failingEndpoints}</div>
+                    <div className="text-sm text-gray-600">Failing</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-orange-600">{apiHealth.criticalIssues}</div>
+                    <div className="text-sm text-gray-600">Critical Issues</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-purple-600">{apiHealth.averageResponseTime}ms</div>
+                    <div className="text-sm text-gray-600">Avg Response</div>
+                  </div>
                 </div>
+              </CardContent>
+            </Card>
+          )}
+
+          <div className="space-y-3">
+            {tests.map((test, index) => (
+              <div key={index} className="border rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    {getStatusIcon(test.status)}
+                    <span className="font-medium">{test.name}</span>
+                    <Badge className={getMethodBadgeColor(test.method)}>
+                      {test.method}
+                    </Badge>
+                    <Badge variant="outline" className="text-xs">{test.endpoint}</Badge>
+                    {test.responseTime && (
+                      <Badge variant="outline">{test.responseTime}ms</Badge>
+                    )}
+                  </div>
+                </div>
+                <p className="text-sm text-gray-600 mb-2">{test.description}</p>
+                {test.details && (
+                  <p className="text-xs bg-gray-50 p-2 rounded">
+                    {test.details}
+                  </p>
+                )}
               </div>
-              <p className="text-sm text-gray-600 mb-2">{test.description}</p>
-              {test.details && (
-                <p className="text-xs bg-gray-50 p-2 rounded">
-                  {test.details}
-                </p>
-              )}
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
