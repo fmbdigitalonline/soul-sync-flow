@@ -223,9 +223,9 @@ const ABTestingFramework: React.FC = () => {
         .eq('user_id', user.id)
         .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
 
-      // Get conversation data for engagement analysis
+      // Get conversation data for engagement analysis - using correct table name
       const { data: conversations } = await supabase
-        .from('conversation_memories')
+        .from('conversation_memory')
         .select('*')
         .eq('user_id', user.id)
         .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
@@ -237,11 +237,11 @@ const ABTestingFramework: React.FC = () => {
         .eq('user_id', user.id)
         .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
 
-      // Get user profile for personality data
+      // Get user profile data
       const { data: profile } = await supabase
         .from('user_profiles')
-        .select('personality_blueprint')
-        .eq('id', user.id)
+        .select('*')
+        .eq('user_id', user.id)
         .single();
 
       // Calculate test metrics based on real data

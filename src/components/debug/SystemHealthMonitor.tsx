@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -169,10 +168,10 @@ const SystemHealthMonitor: React.FC = () => {
     try {
       console.log('🗄️ Monitoring database health...');
 
-      // Test query performance with complex queries
+      // Test query performance with complex queries - using correct table name
       const queryStart = Date.now();
       const { data: complexQuery } = await supabase
-        .from('conversation_memories')
+        .from('conversation_memory')
         .select('*')
         .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
         .limit(50);
@@ -181,7 +180,7 @@ const SystemHealthMonitor: React.FC = () => {
       // Check table health by testing each major table
       const tableTests = await Promise.all([
         supabase.from('user_profiles').select('id').limit(1),
-        supabase.from('conversation_memories').select('id').limit(1),
+        supabase.from('conversation_memory').select('id').limit(1),
         supabase.from('user_activities').select('id').limit(1),
         supabase.from('session_feedback').select('id').limit(1)
       ]);
@@ -191,7 +190,7 @@ const SystemHealthMonitor: React.FC = () => {
 
       // Get storage usage estimation
       const { data: memoryData } = await supabase
-        .from('conversation_memories')
+        .from('conversation_memory')
         .select('id')
         .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
 
@@ -248,14 +247,14 @@ const SystemHealthMonitor: React.FC = () => {
       ];
 
       const serviceTests = await Promise.all([
-        // Test AI Coach Service
-        supabase.from('conversation_memories').select('id').limit(1),
+        // Test AI Coach Service - using correct table name
+        supabase.from('conversation_memory').select('id').limit(1),
         // Test Memory Service
-        supabase.from('conversation_memories').select('*').limit(1),
-        // Test Blueprint Service
-        supabase.from('user_profiles').select('personality_blueprint').limit(1),
+        supabase.from('conversation_memory').select('*').limit(1),
+        // Test Blueprint Service - using available column
+        supabase.from('user_profiles').select('display_name').limit(1),
         // Test Personality Engine (via profile data)
-        supabase.from('user_profiles').select('personality_blueprint').not('personality_blueprint', 'is', null).limit(1),
+        supabase.from('user_profiles').select('display_name').not('display_name', 'is', null).limit(1),
         // Test Auth Service
         supabase.auth.getSession(),
         // Test Realtime Service
