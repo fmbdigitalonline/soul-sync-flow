@@ -53,6 +53,7 @@ import { MemoryFailureRecoveryTester } from '@/components/debug/MemoryFailureRec
 import { LayerActivationConflictTester } from '@/components/debug/LayerActivationConflictTester';
 import { FallbackMechanismValidator } from '@/components/debug/FallbackMechanismValidator';
 import ResponseTimeLoadTester from '@/components/debug/ResponseTimeLoadTester';
+import UXFlowTester from '@/components/debug/UXFlowTester';
 
 const TestEnvironmentPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('architecture');
@@ -68,7 +69,7 @@ const TestEnvironmentPage: React.FC = () => {
                 Complete Test Environment Dashboard
               </h1>
               <p className="text-lg text-gray-600">
-                Comprehensive testing suite: 34 test components covering 7-layer personality engine, 12 modules, 3 coach modes, error handling, performance, UX flows, and advanced analytics with real-time dynamic data
+                Comprehensive testing suite: 35 test components covering 7-layer personality engine, 12 modules, 3 coach modes, error handling, performance, UX flows, and advanced analytics with real-time dynamic data
               </p>
             </div>
 
@@ -77,7 +78,7 @@ const TestEnvironmentPage: React.FC = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Activity className="h-5 w-5" />
-                  Complete Test Environment Status (34 Tests Available)
+                  Complete Test Environment Status (35 Tests Available)
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -886,15 +887,10 @@ const TestEnvironmentPage: React.FC = () => {
                 <div className="mb-4">
                   <h2 className="text-2xl font-semibold mb-2">User Experience Flow Testing</h2>
                   <p className="text-gray-600">
-                    Complete user journey validation from onboarding to coaching - Implementation coming soon.
+                    Complete user journey validation from onboarding to coaching with real-time dynamic data and comprehensive flow analysis.
                   </p>
                 </div>
-                <Card>
-                  <CardContent className="p-8 text-center">
-                    <Users className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                    <p className="text-gray-600">UX Flow testing components will be implemented next.</p>
-                  </CardContent>
-                </Card>
+                <UXFlowTester />
               </TabsContent>
 
               <TabsContent value="advanced-analytics" className="space-y-6">
