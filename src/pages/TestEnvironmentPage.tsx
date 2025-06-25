@@ -52,7 +52,7 @@ import { GracefulDegradationTester } from '@/components/debug/GracefulDegradatio
 import { MemoryFailureRecoveryTester } from '@/components/debug/MemoryFailureRecoveryTester';
 import { LayerActivationConflictTester } from '@/components/debug/LayerActivationConflictTester';
 import { FallbackMechanismValidator } from '@/components/debug/FallbackMechanismValidator';
-import { ResponseTimeLoadTester } from '@/components/debug/ResponseTimeLoadTester';
+import ResponseTimeLoadTester from '@/components/debug/ResponseTimeLoadTester';
 
 const TestEnvironmentPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('architecture');
