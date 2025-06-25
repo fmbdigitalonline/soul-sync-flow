@@ -5,374 +5,297 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { 
-  Monitor, 
   Activity, 
-  Database, 
-  Cpu, 
-  Clock,
+  BarChart3, 
+  TrendingUp, 
   AlertTriangle,
   CheckCircle,
-  RefreshCw,
-  TrendingUp,
-  Zap
+  Clock,
+  Cpu,
+  Database,
+  Zap,
+  RefreshCw
 } from 'lucide-react';
 import { memoryService } from '@/services/memory-service';
 import { enhancedMemoryService } from '@/services/enhanced-memory-service';
 import { holisticCoachService } from '@/services/holistic-coach-service';
+import { PersonalityEngine } from '@/services/personality-engine';
 
 interface SystemMetrics {
-  memorySystem: {
-    responseTime: number;
-    queryCount: number;
-    errorRate: number;
+  timestamp: number;
+  memoryOperations: {
+    totalQueries: number;
+    averageResponseTime: number;
     cacheHitRate: number;
-    status: 'healthy' | 'warning' | 'critical';
+    errorRate: number;
   };
   personalityEngine: {
-    processingTime: number;
-    blueprintCount: number;
-    conversionRate: number;
+    activeBlueprints: number;
+    averageProcessingTime: number;
     systemPromptGeneration: number;
-    status: 'healthy' | 'warning' | 'critical';
+    errorRate: number;
   };
-  searchOptimization: {
-    averageSearchTime: number;
-    indexEfficiency: number;
-    progressiveSearchHits: number;
-    optimizationScore: number;
-    status: 'healthy' | 'warning' | 'critical';
-  };
-  overallHealth: {
-    systemStatus: 'healthy' | 'warning' | 'critical';
-    uptime: number;
-    totalOperations: number;
+  holisticCoach: {
+    activeSessions: number;
     averageResponseTime: number;
-    lastUpdated: string;
+    contextSwitches: number;
+    promptGenerations: number;
+  };
+  systemHealth: {
+    overallScore: number;
+    memoryHealth: number;
+    personalityHealth: number;
+    coachHealth: number;
   };
 }
 
-interface RealTimeAlert {
+interface Alert {
   id: string;
-  type: 'info' | 'warning' | 'error';
+  type: 'warning' | 'error' | 'info';
   message: string;
-  timestamp: string;
-  component: string;
+  timestamp: number;
+  resolved: boolean;
 }
 
 export const RealTimeMonitoringDashboard: React.FC = () => {
-  const [metrics, setMetrics] = useState<SystemMetrics | null>(null);
-  const [alerts, setAlerts] = useState<RealTimeAlert[]>([]);
   const [isMonitoring, setIsMonitoring] = useState(false);
-  const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
+  const [metrics, setMetrics] = useState<SystemMetrics[]>([]);
+  const [currentMetrics, setCurrentMetrics] = useState<SystemMetrics | null>(null);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [refreshInterval, setRefreshInterval] = useState<NodeJS.Timeout | null>(null);
 
-  const collectSystemMetrics = async (): Promise<SystemMetrics> => {
+  const generateSystemMetrics = async (): Promise<SystemMetrics> => {
+    const timestamp = Date.now();
+    
     console.log('📊 RealTimeMonitoringDashboard: Collecting system metrics');
-    
-    const startTime = Date.now();
-    
-    // Memory System Metrics
-    const memoryMetrics = await collectMemoryMetrics();
-    
-    // Personality Engine Metrics
-    const personalityMetrics = await collectPersonalityMetrics();
-    
-    // Search Optimization Metrics
-    const searchMetrics = await collectSearchMetrics();
-    
-    const totalTime = Date.now() - startTime;
-    
-    // Calculate overall health
-    const systemStatuses = [
-      memoryMetrics.status,
-      personalityMetrics.status,
-      searchMetrics.status
-    ];
-    
-    let overallStatus: 'healthy' | 'warning' | 'critical' = 'healthy';
-    if (systemStatuses.includes('critical')) {
-      overallStatus = 'critical';
-    } else if (systemStatuses.includes('warning')) {
-      overallStatus = 'warning';
-    }
 
-    return {
-      memorySystem: memoryMetrics,
-      personalityEngine: personalityMetrics,
-      searchOptimization: searchMetrics,
-      overallHealth: {
-        systemStatus: overallStatus,
-        uptime: Date.now() - (Date.now() - 3600000), // Simulate 1 hour uptime
-        totalOperations: memoryMetrics.queryCount + personalityMetrics.blueprintCount + searchMetrics.progressiveSearchHits,
-        averageResponseTime: Math.round(totalTime / 3),
-        lastUpdated: new Date().toISOString()
-      }
-    };
-  };
-
-  const collectMemoryMetrics = async () => {
-    const startTime = Date.now();
-    let queryCount = 0;
-    let errorCount = 0;
-    
     try {
       // Test memory operations
-      const operations = [
+      const memoryStartTime = Date.now();
+      const [recentMemories, activeReminders] = await Promise.all([
         memoryService.getRecentMemories(5),
-        memoryService.getActiveReminders(),
-        memoryService.getLifeContext(),
-        enhancedMemoryService.performProgressiveSearch('monitoring test', 3)
-      ];
-      
-      const results = await Promise.allSettled(operations);
-      queryCount = operations.length;
-      errorCount = results.filter(r => r.status === 'rejected').length;
-      
-      const responseTime = Date.now() - startTime;
-      const errorRate = (errorCount / queryCount) * 100;
-      const cacheHitRate = Math.random() * 30 + 70; // Simulate 70-100% cache hit rate
-      
-      let status: 'healthy' | 'warning' | 'critical' = 'healthy';
-      if (errorRate > 20 || responseTime > 2000) {
-        status = 'critical';
-      } else if (errorRate > 10 || responseTime > 1000) {
-        status = 'warning';
-      }
-      
-      return {
-        responseTime,
-        queryCount,
-        errorRate: Math.round(errorRate * 100) / 100,
-        cacheHitRate: Math.round(cacheHitRate * 100) / 100,
-        status
-      };
-    } catch (error) {
-      console.error('❌ Memory metrics collection failed:', error);
-      return {
-        responseTime: Date.now() - startTime,
-        queryCount: 0,
-        errorRate: 100,
-        cacheHitRate: 0,
-        status: 'critical' as const
-      };
-    }
-  };
+        memoryService.getActiveReminders()
+      ]);
+      const memoryResponseTime = Date.now() - memoryStartTime;
 
-  const collectPersonalityMetrics = async () => {
-    const startTime = Date.now();
-    let blueprintCount = 0;
-    let conversionErrors = 0;
-    
-    try {
-      // Test personality engine operations
+      // Test search performance
+      const searchStartTime = Date.now();
+      const searchResult = await enhancedMemoryService.performProgressiveSearch('test monitoring', 3);
+      const searchResponseTime = Date.now() - searchStartTime;
+
+      // Test personality engine
+      const personalityStartTime = Date.now();
+      const personalityEngine = new PersonalityEngine();
       const testBlueprint = {
-        user_meta: { user_id: 'test', full_name: 'Test User' },
-        cognitiveTemperamental: { mbtiType: 'ENFP' },
-        energyDecisionStrategy: { humanDesignType: 'Projector' }
-      };
-      
-      const operations = [
-        holisticCoachService.updateBlueprint(testBlueprint),
-        holisticCoachService.generateSystemPrompt('Test monitoring message'),
-        holisticCoachService.getPersonalityInsights()
-      ];
-      
-      const results = await Promise.allSettled(operations.map(op => Promise.resolve(op)));
-      blueprintCount = 3;
-      conversionErrors = results.filter(r => r.status === 'rejected').length;
-      
-      const processingTime = Date.now() - startTime;
-      const conversionRate = ((blueprintCount - conversionErrors) / blueprintCount) * 100;
-      const systemPromptGeneration = processingTime / blueprintCount;
-      
-      let status: 'healthy' | 'warning' | 'critical' = 'healthy';
-      if (conversionRate < 80 || processingTime > 3000) {
-        status = 'critical';
-      } else if (conversionRate < 90 || processingTime > 1500) {
-        status = 'warning';
-      }
-      
-      return {
-        processingTime,
-        blueprintCount,
-        conversionRate: Math.round(conversionRate * 100) / 100,
-        systemPromptGeneration: Math.round(systemPromptGeneration),
-        status
-      };
-    } catch (error) {
-      console.error('❌ Personality metrics collection failed:', error);
-      return {
-        processingTime: Date.now() - startTime,
-        blueprintCount: 0,
-        conversionRate: 0,
-        systemPromptGeneration: 0,
-        status: 'critical' as const
-      };
-    }
-  };
-
-  const collectSearchMetrics = async () => {
-    const startTime = Date.now();
-    let searchCount = 0;
-    let optimizedSearches = 0;
-    
-    try {
-      // Test search operations
-      const searchQueries = ['test', 'monitoring', 'performance'];
-      const searchPromises = searchQueries.map(query => 
-        enhancedMemoryService.performProgressiveSearch(query, 3)
-      );
-      
-      const searchResults = await Promise.allSettled(searchPromises);
-      searchCount = searchQueries.length;
-      
-      // Count optimized searches (exact or fuzzy strategy)
-      searchResults.forEach(result => {
-        if (result.status === 'fulfilled') {
-          const strategy = result.value.searchStrategy;
-          if (strategy === 'exact' || strategy === 'fuzzy') {
-            optimizedSearches++;
-          }
+        user_meta: {
+          user_id: `monitor-test-${timestamp}`,
+          full_name: 'Monitor Test User'
+        },
+        cognitiveTemperamental: {
+          mbtiType: 'INFP',
+          functions: ['Fi', 'Ne', 'Si', 'Te'],
+          dominantFunction: 'Fi (Introverted Feeling)',
+          auxiliaryFunction: 'Ne (Extraverted Intuition)',
+          cognitiveStack: ['Fi-dominant', 'Ne-auxiliary', 'Si-tertiary', 'Te-inferior'],
+          taskApproach: 'reflective',
+          communicationStyle: 'authentic',
+          decisionMaking: 'values-based',
+          informationProcessing: 'holistic'
+        },
+        energyDecisionStrategy: {
+          humanDesignType: 'Generator',
+          authority: 'Sacral',
+          decisionStyle: 'responsive',
+          pacing: 'sustainable',
+          energyType: 'sustainable',
+          strategy: 'Respond',
+          profile: '1/3',
+          centers: ['Sacral', 'Throat'],
+          gates: ['5', '15', '27'],
+          channels: ['Channel 5-15']
         }
-      });
-      
-      const averageSearchTime = (Date.now() - startTime) / searchCount;
-      const indexEfficiency = (optimizedSearches / searchCount) * 100;
-      const optimizationScore = Math.min(100, (indexEfficiency + (1000 / Math.max(averageSearchTime, 1))) / 2);
-      
-      let status: 'healthy' | 'warning' | 'critical' = 'healthy';
-      if (averageSearchTime > 1000 || indexEfficiency < 50) {
-        status = 'critical';
-      } else if (averageSearchTime > 500 || indexEfficiency < 70) {
-        status = 'warning';
-      }
-      
-      return {
-        averageSearchTime: Math.round(averageSearchTime),
-        indexEfficiency: Math.round(indexEfficiency * 100) / 100,
-        progressiveSearchHits: optimizedSearches,
-        optimizationScore: Math.round(optimizationScore * 100) / 100,
-        status
       };
+      
+      personalityEngine.updateBlueprint(testBlueprint);
+      const systemPrompt = personalityEngine.generateSystemPrompt('guide', 'Test monitoring message');
+      const personalityResponseTime = Date.now() - personalityStartTime;
+
+      // Test holistic coach service
+      const coachStartTime = Date.now();
+      holisticCoachService.updateBlueprint(testBlueprint);
+      holisticCoachService.updateContext({
+        currentMood: 'medium',
+        energyLevel: 'stable',
+        contextType: 'reflective',
+        excitementLevel: 5
+      });
+      const coachPrompt = holisticCoachService.generateSystemPrompt('Monitoring test message');
+      const coachResponseTime = Date.now() - coachStartTime;
+
+      // Calculate health scores
+      const memoryHealth = memoryResponseTime < 500 ? 100 : Math.max(0, 100 - (memoryResponseTime - 500) / 10);
+      const personalityHealth = personalityResponseTime < 300 ? 100 : Math.max(0, 100 - (personalityResponseTime - 300) / 10);
+      const coachHealth = coachResponseTime < 800 ? 100 : Math.max(0, 100 - (coachResponseTime - 800) / 10);
+      const overallScore = Math.round((memoryHealth + personalityHealth + coachHealth) / 3);
+
+      const systemMetrics: SystemMetrics = {
+        timestamp,
+        memoryOperations: {
+          totalQueries: recentMemories.length + activeReminders.length + searchResult.memories.length,
+          averageResponseTime: Math.round((memoryResponseTime + searchResponseTime) / 2),
+          cacheHitRate: Math.random() * 30 + 70, // Simulated cache performance
+          errorRate: 0
+        },
+        personalityEngine: {
+          activeBlueprints: 1,
+          averageProcessingTime: personalityResponseTime,
+          systemPromptGeneration: systemPrompt ? 1 : 0,
+          errorRate: systemPrompt ? 0 : 100
+        },
+        holisticCoach: {
+          activeSessions: 1,
+          averageResponseTime: coachResponseTime,
+          contextSwitches: 1,
+          promptGenerations: coachPrompt ? 1 : 0
+        },
+        systemHealth: {
+          overallScore,
+          memoryHealth: Math.round(memoryHealth),
+          personalityHealth: Math.round(personalityHealth),
+          coachHealth: Math.round(coachHealth)
+        }
+      };
+
+      console.log('✅ System metrics collected:', systemMetrics);
+      return systemMetrics;
+
     } catch (error) {
-      console.error('❌ Search metrics collection failed:', error);
+      console.error('❌ Error collecting system metrics:', error);
+      
+      // Return degraded metrics on error
       return {
-        averageSearchTime: Date.now() - startTime,
-        indexEfficiency: 0,
-        progressiveSearchHits: 0,
-        optimizationScore: 0,
-        status: 'critical' as const
+        timestamp,
+        memoryOperations: {
+          totalQueries: 0,
+          averageResponseTime: 9999,
+          cacheHitRate: 0,
+          errorRate: 100
+        },
+        personalityEngine: {
+          activeBlueprints: 0,
+          averageProcessingTime: 9999,
+          systemPromptGeneration: 0,
+          errorRate: 100
+        },
+        holisticCoach: {
+          activeSessions: 0,
+          averageResponseTime: 9999,
+          contextSwitches: 0,
+          promptGenerations: 0
+        },
+        systemHealth: {
+          overallScore: 0,
+          memoryHealth: 0,
+          personalityHealth: 0,
+          coachHealth: 0
+        }
       };
     }
   };
 
-  const generateAlerts = (metrics: SystemMetrics) => {
-    const newAlerts: RealTimeAlert[] = [];
-    const timestamp = new Date().toISOString();
-    
-    // Memory system alerts
-    if (metrics.memorySystem.status === 'critical') {
+  const checkForAlerts = (metrics: SystemMetrics) => {
+    const newAlerts: Alert[] = [];
+
+    // Check for performance alerts
+    if (metrics.memoryOperations.averageResponseTime > 1000) {
       newAlerts.push({
-        id: `memory-${Date.now()}`,
-        type: 'error',
-        message: `Memory system critical: ${metrics.memorySystem.errorRate}% error rate`,
-        timestamp,
-        component: 'Memory System'
-      });
-    } else if (metrics.memorySystem.status === 'warning') {
-      newAlerts.push({
-        id: `memory-${Date.now()}`,
+        id: `memory-slow-${Date.now()}`,
         type: 'warning',
-        message: `Memory system performance degraded: ${metrics.memorySystem.responseTime}ms response time`,
-        timestamp,
-        component: 'Memory System'
+        message: `Memory operations are slow (${metrics.memoryOperations.averageResponseTime}ms)`,
+        timestamp: Date.now(),
+        resolved: false
       });
     }
-    
-    // Personality engine alerts
-    if (metrics.personalityEngine.status === 'critical') {
+
+    if (metrics.personalityEngine.averageProcessingTime > 800) {
       newAlerts.push({
-        id: `personality-${Date.now()}`,
+        id: `personality-slow-${Date.now()}`,
+        type: 'warning',
+        message: `Personality engine processing is slow (${metrics.personalityEngine.averageProcessingTime}ms)`,
+        timestamp: Date.now(),
+        resolved: false
+      });
+    }
+
+    if (metrics.systemHealth.overallScore < 70) {
+      newAlerts.push({
+        id: `health-low-${Date.now()}`,
         type: 'error',
-        message: `Personality engine critical: ${metrics.personalityEngine.conversionRate}% conversion rate`,
-        timestamp,
-        component: 'Personality Engine'
+        message: `System health score is low (${metrics.systemHealth.overallScore}%)`,
+        timestamp: Date.now(),
+        resolved: false
       });
     }
-    
-    // Search optimization alerts
-    if (metrics.searchOptimization.status === 'critical') {
+
+    if (metrics.memoryOperations.cacheHitRate < 50) {
       newAlerts.push({
-        id: `search-${Date.now()}`,
-        type: 'error',
-        message: `Search optimization critical: ${metrics.searchOptimization.indexEfficiency}% efficiency`,
-        timestamp,
-        component: 'Search System'
-      });
-    }
-    
-    // Add performance info alert
-    if (newAlerts.length === 0) {
-      newAlerts.push({
-        id: `info-${Date.now()}`,
+        id: `cache-low-${Date.now()}`,
         type: 'info',
-        message: `All systems healthy - Average response: ${metrics.overallHealth.averageResponseTime}ms`,
-        timestamp,
-        component: 'System Monitor'
+        message: `Memory cache hit rate is below optimal (${metrics.memoryOperations.cacheHitRate.toFixed(1)}%)`,
+        timestamp: Date.now(),
+        resolved: false
       });
     }
-    
-    setAlerts(prev => [...newAlerts, ...prev.slice(0, 9)]);
+
+    setAlerts(prev => [...newAlerts, ...prev.slice(0, 10)]);
   };
 
-  const refreshMetrics = async () => {
-    try {
-      const newMetrics = await collectSystemMetrics();
-      setMetrics(newMetrics);
-      setLastRefresh(new Date());
-      generateAlerts(newMetrics);
-      console.log('✅ System metrics updated:', newMetrics);
-    } catch (error) {
-      console.error('❌ Failed to refresh metrics:', error);
-    }
-  };
-
-  const startMonitoring = () => {
+  const startMonitoring = async () => {
     setIsMonitoring(true);
-    refreshMetrics();
-    
-    // Set up auto-refresh every 30 seconds
-    const interval = setInterval(refreshMetrics, 30000);
-    
-    return () => clearInterval(interval);
+    console.log('🔄 Starting real-time monitoring');
+
+    // Initial metrics collection
+    const initialMetrics = await generateSystemMetrics();
+    setCurrentMetrics(initialMetrics);
+    setMetrics(prev => [initialMetrics, ...prev.slice(0, 19)]);
+    checkForAlerts(initialMetrics);
+
+    // Set up periodic monitoring
+    const interval = setInterval(async () => {
+      const newMetrics = await generateSystemMetrics();
+      setCurrentMetrics(newMetrics);
+      setMetrics(prev => [newMetrics, ...prev.slice(0, 19)]);
+      checkForAlerts(newMetrics);
+    }, 5000); // Update every 5 seconds
+
+    setRefreshInterval(interval);
   };
 
   const stopMonitoring = () => {
     setIsMonitoring(false);
+    if (refreshInterval) {
+      clearInterval(refreshInterval);
+      setRefreshInterval(null);
+    }
+    console.log('⏹️ Monitoring stopped');
   };
 
-  useEffect(() => {
-    if (isMonitoring) {
-      const cleanup = startMonitoring();
-      return cleanup;
-    }
-  }, [isMonitoring]);
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'healthy': return 'text-green-600';
-      case 'warning': return 'text-yellow-600';
-      case 'critical': return 'text-red-600';
-      default: return 'text-gray-600';
-    }
+  const resolveAlert = (alertId: string) => {
+    setAlerts(prev => prev.map(alert => 
+      alert.id === alertId ? { ...alert, resolved: true } : alert
+    ));
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'healthy': return <Badge className="bg-green-100 text-green-800">Healthy</Badge>;
-      case 'warning': return <Badge className="bg-yellow-100 text-yellow-800">Warning</Badge>;
-      case 'critical': return <Badge variant="destructive">Critical</Badge>;
-      default: return <Badge variant="outline">Unknown</Badge>;
-    }
+  const getHealthColor = (score: number) => {
+    if (score >= 80) return 'text-green-600';
+    if (score >= 60) return 'text-yellow-600';
+    return 'text-red-600';
+  };
+
+  const getHealthBadge = (score: number) => {
+    if (score >= 80) return <Badge className="bg-green-100 text-green-800">Healthy</Badge>;
+    if (score >= 60) return <Badge className="bg-yellow-100 text-yellow-800">Warning</Badge>;
+    return <Badge variant="destructive">Critical</Badge>;
   };
 
   const getAlertIcon = (type: string) => {
@@ -380,225 +303,239 @@ export const RealTimeMonitoringDashboard: React.FC = () => {
       case 'error': return <AlertTriangle className="h-4 w-4 text-red-500" />;
       case 'warning': return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
       case 'info': return <CheckCircle className="h-4 w-4 text-blue-500" />;
-      default: return <Activity className="h-4 w-4 text-gray-500" />;
+      default: return <AlertTriangle className="h-4 w-4 text-gray-500" />;
     }
   };
 
-  const formatUptime = (uptime: number) => {
-    const hours = Math.floor(uptime / (1000 * 60 * 60));
-    const minutes = Math.floor((uptime % (1000 * 60 * 60)) / (1000 * 60));
-    return `${hours}h ${minutes}m`;
-  };
+  useEffect(() => {
+    return () => {
+      if (refreshInterval) {
+        clearInterval(refreshInterval);
+      }
+    };
+  }, [refreshInterval]);
 
   return (
     <div className="space-y-6">
-      {/* Control Panel */}
+      {/* Monitoring Controls */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Monitor className="h-6 w-6" />
-              Real-Time Monitoring Dashboard
-            </div>
-            <div className="flex items-center gap-2">
-              {lastRefresh && (
-                <span className="text-sm text-gray-600">
-                  Updated: {lastRefresh.toLocaleTimeString()}
-                </span>
-              )}
-              <Button
-                onClick={isMonitoring ? stopMonitoring : () => setIsMonitoring(true)}
-                variant={isMonitoring ? "destructive" : "default"}
-                size="sm"
-              >
-                {isMonitoring ? 'Stop Monitoring' : 'Start Monitoring'}
-              </Button>
-              <Button
-                onClick={refreshMetrics}
-                variant="outline"
-                size="sm"
-                disabled={!isMonitoring}
-              >
-                <RefreshCw className="h-4 w-4" />
-              </Button>
-            </div>
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="h-6 w-6" />
+            Real-Time System Monitoring
           </CardTitle>
         </CardHeader>
+        <CardContent>
+          <div className="flex gap-4">
+            <Button
+              onClick={isMonitoring ? stopMonitoring : startMonitoring}
+              variant={isMonitoring ? "destructive" : "default"}
+              className="flex items-center gap-2"
+            >
+              {isMonitoring ? (
+                <>
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                  Stop Monitoring
+                </>
+              ) : (
+                <>
+                  <BarChart3 className="h-4 w-4" />
+                  Start Monitoring
+                </>
+              )}
+            </Button>
+            
+            {currentMetrics && (
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Clock className="h-4 w-4" />
+                Last updated: {new Date(currentMetrics.timestamp).toLocaleTimeString()}
+              </div>
+            )}
+          </div>
+        </CardContent>
       </Card>
 
       {/* System Health Overview */}
-      {metrics && (
+      {currentMetrics && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Activity className="h-5 w-5" />
+                <TrendingUp className="h-5 w-5" />
                 System Health Overview
               </div>
-              {getStatusBadge(metrics.overallHealth.systemStatus)}
+              {getHealthBadge(currentMetrics.systemHealth.overallScore)}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
               <div className="text-center">
-                <div className={`text-2xl font-bold ${getStatusColor(metrics.overallHealth.systemStatus)}`}>
-                  {metrics.overallHealth.systemStatus.toUpperCase()}
+                <div className={`text-3xl font-bold ${getHealthColor(currentMetrics.systemHealth.overallScore)}`}>
+                  {currentMetrics.systemHealth.overallScore}%
                 </div>
-                <div className="text-sm text-gray-600">System Status</div>
+                <div className="text-sm text-gray-600">Overall Health</div>
+                <Progress value={currentMetrics.systemHealth.overallScore} className="mt-2" />
               </div>
               
               <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">
-                  {formatUptime(metrics.overallHealth.uptime)}
+                <div className={`text-2xl font-bold ${getHealthColor(currentMetrics.systemHealth.memoryHealth)}`}>
+                  {currentMetrics.systemHealth.memoryHealth}%
                 </div>
-                <div className="text-sm text-gray-600">Uptime</div>
+                <div className="text-sm text-gray-600">Memory System</div>
+                <Progress value={currentMetrics.systemHealth.memoryHealth} className="mt-2" />
               </div>
               
               <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600">
-                  {metrics.overallHealth.totalOperations}
+                <div className={`text-2xl font-bold ${getHealthColor(currentMetrics.systemHealth.personalityHealth)}`}>
+                  {currentMetrics.systemHealth.personalityHealth}%
                 </div>
-                <div className="text-sm text-gray-600">Total Operations</div>
+                <div className="text-sm text-gray-600">Personality Engine</div>
+                <Progress value={currentMetrics.systemHealth.personalityHealth} className="mt-2" />
               </div>
               
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">
-                  {metrics.overallHealth.averageResponseTime}ms
+                <div className={`text-2xl font-bold ${getHealthColor(currentMetrics.systemHealth.coachHealth)}`}>
+                  {currentMetrics.systemHealth.coachHealth}%
                 </div>
-                <div className="text-sm text-gray-600">Avg Response</div>
+                <div className="text-sm text-gray-600">Holistic Coach</div>
+                <Progress value={currentMetrics.systemHealth.coachHealth} className="mt-2" />
               </div>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Component Metrics Grid */}
-      {metrics && (
+      {/* Performance Metrics */}
+      {currentMetrics && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Memory System */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Database className="h-5 w-5" />
-                  Memory System
-                </div>
-                {getStatusBadge(metrics.memorySystem.status)}
+              <CardTitle className="flex items-center gap-2">
+                <Database className="h-5 w-5" />
+                Memory Operations
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Response Time</span>
-                  <span className="font-medium">{metrics.memorySystem.responseTime}ms</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Query Count</span>
-                  <span className="font-medium">{metrics.memorySystem.queryCount}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Error Rate</span>
-                  <span className="font-medium">{metrics.memorySystem.errorRate}%</span>
+                  <span className="text-sm text-gray-600">Average Response</span>
+                  <span className="font-medium">{currentMetrics.memoryOperations.averageResponseTime}ms</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">Cache Hit Rate</span>
-                  <span className="font-medium">{metrics.memorySystem.cacheHitRate}%</span>
+                  <span className="font-medium">{currentMetrics.memoryOperations.cacheHitRate.toFixed(1)}%</span>
                 </div>
-                <Progress value={100 - metrics.memorySystem.errorRate} className="mt-2" />
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Total Queries</span>
+                  <span className="font-medium">{currentMetrics.memoryOperations.totalQueries}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Error Rate</span>
+                  <span className="font-medium">{currentMetrics.memoryOperations.errorRate.toFixed(1)}%</span>
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Personality Engine */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Cpu className="h-5 w-5" />
-                  Personality Engine
-                </div>
-                {getStatusBadge(metrics.personalityEngine.status)}
+              <CardTitle className="flex items-center gap-2">
+                <Cpu className="h-5 w-5" />
+                Personality Engine
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">Processing Time</span>
-                  <span className="font-medium">{metrics.personalityEngine.processingTime}ms</span>
+                  <span className="font-medium">{currentMetrics.personalityEngine.averageProcessingTime}ms</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Blueprint Count</span>
-                  <span className="font-medium">{metrics.personalityEngine.blueprintCount}</span>
+                  <span className="text-sm text-gray-600">Active Blueprints</span>
+                  <span className="font-medium">{currentMetrics.personalityEngine.activeBlueprints}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Conversion Rate</span>
-                  <span className="font-medium">{metrics.personalityEngine.conversionRate}%</span>
+                  <span className="text-sm text-gray-600">Prompt Generations</span>
+                  <span className="font-medium">{currentMetrics.personalityEngine.systemPromptGeneration}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Prompt Generation</span>
-                  <span className="font-medium">{metrics.personalityEngine.systemPromptGeneration}ms</span>
+                  <span className="text-sm text-gray-600">Error Rate</span>
+                  <span className="font-medium">{currentMetrics.personalityEngine.errorRate.toFixed(1)}%</span>
                 </div>
-                <Progress value={metrics.personalityEngine.conversionRate} className="mt-2" />
               </div>
             </CardContent>
           </Card>
 
-          {/* Search Optimization */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Zap className="h-5 w-5" />
-                  Search System
-                </div>
-                {getStatusBadge(metrics.searchOptimization.status)}
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="h-5 w-5" />
+                Holistic Coach
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Avg Search Time</span>
-                  <span className="font-medium">{metrics.searchOptimization.averageSearchTime}ms</span>
+                  <span className="text-sm text-gray-600">Response Time</span>
+                  <span className="font-medium">{currentMetrics.holisticCoach.averageResponseTime}ms</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Index Efficiency</span>
-                  <span className="font-medium">{metrics.searchOptimization.indexEfficiency}%</span>
+                  <span className="text-sm text-gray-600">Active Sessions</span>
+                  <span className="font-medium">{currentMetrics.holisticCoach.activeSessions}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Search Hits</span>
-                  <span className="font-medium">{metrics.searchOptimization.progressiveSearchHits}</span>
+                  <span className="text-sm text-gray-600">Context Switches</span>
+                  <span className="font-medium">{currentMetrics.holisticCoach.contextSwitches}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Optimization Score</span>
-                  <span className="font-medium">{metrics.searchOptimization.optimizationScore}%</span>
+                  <span className="text-sm text-gray-600">Prompt Generations</span>
+                  <span className="font-medium">{currentMetrics.holisticCoach.promptGenerations}</span>
                 </div>
-                <Progress value={metrics.searchOptimization.optimizationScore} className="mt-2" />
               </div>
             </CardContent>
           </Card>
         </div>
       )}
 
-      {/* Real-time Alerts */}
+      {/* Alerts Panel */}
       {alerts.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
-              Real-time Alerts
+              <AlertTriangle className="h-5 w-5" />
+              System Alerts ({alerts.filter(a => !a.resolved).length} active)
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2 max-h-64 overflow-y-auto">
-              {alerts.map((alert) => (
-                <div key={alert.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded">
-                  {getAlertIcon(alert.type)}
-                  <div className="flex-1">
-                    <div className="font-medium">{alert.message}</div>
-                    <div className="text-sm text-gray-600">
-                      {alert.component} • {new Date(alert.timestamp).toLocaleTimeString()}
+            <div className="space-y-2">
+              {alerts.slice(0, 5).map((alert) => (
+                <div key={alert.id} className={`flex items-center justify-between p-3 rounded ${
+                  alert.resolved ? 'bg-gray-50' : 
+                  alert.type === 'error' ? 'bg-red-50 border border-red-200' :
+                  alert.type === 'warning' ? 'bg-yellow-50 border border-yellow-200' :
+                  'bg-blue-50 border border-blue-200'
+                }`}>
+                  <div className="flex items-center gap-3">
+                    {getAlertIcon(alert.type)}
+                    <div>
+                      <div className={`font-medium ${alert.resolved ? 'line-through text-gray-500' : ''}`}>
+                        {alert.message}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {new Date(alert.timestamp).toLocaleTimeString()}
+                      </div>
                     </div>
                   </div>
+                  
+                  {!alert.resolved && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => resolveAlert(alert.id)}
+                    >
+                      Resolve
+                    </Button>
+                  )}
                 </div>
               ))}
             </div>

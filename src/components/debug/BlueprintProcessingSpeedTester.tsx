@@ -47,35 +47,50 @@ export const BlueprintProcessingSpeedTester: React.FC = () => {
   const [progress, setProgress] = useState(0);
   const [realTimeMetrics, setRealTimeMetrics] = useState<ProcessingSpeedMetrics[]>([]);
 
-  // Generate realistic test blueprint data
+  // Generate realistic test blueprint data with complete LayeredBlueprint structure
   const generateTestBlueprint = (complexity: 'simple' | 'medium' | 'complex'): Partial<LayeredBlueprint> => {
     const baseBlueprint: Partial<LayeredBlueprint> = {
       user_meta: {
         user_id: `test-user-${Date.now()}`,
         full_name: 'Test User',
-        preferred_name: 'Test',
-        birth_date: '1990-01-01',
-        birth_time: '12:00:00',
-        birth_location: 'New York, NY'
+        preferred_name: 'Test'
       },
       cognitiveTemperamental: {
         mbtiType: 'ENFP',
+        functions: ['Ne', 'Fi', 'Te', 'Si'],
         dominantFunction: 'Ne (Extraverted Intuition)',
-        auxiliaryFunction: 'Fi (Introverted Feeling)'
+        auxiliaryFunction: 'Fi (Introverted Feeling)',
+        cognitiveStack: ['Ne-dominant', 'Fi-auxiliary', 'Te-tertiary', 'Si-inferior'],
+        taskApproach: 'exploratory',
+        communicationStyle: 'enthusiastic',
+        decisionMaking: 'values-based',
+        informationProcessing: 'big-picture'
       },
       energyDecisionStrategy: {
         humanDesignType: 'Projector',
-        strategy: 'Wait for Invitation',
         authority: 'Splenic',
+        decisionStyle: 'intuitive',
+        pacing: 'steady',
+        energyType: 'focused',
+        strategy: 'Wait for Invitation',
         profile: '2/4',
-        gates: [1, 13, 55]
+        centers: ['Spleen', 'Heart'],
+        gates: ['1', '13', '55'],
+        channels: ['Channel 1-8']
       }
     };
 
     if (complexity === 'medium' || complexity === 'complex') {
       baseBlueprint.motivationBeliefEngine = {
+        mindset: 'growth',
+        motivation: ['Learning', 'Connection'],
+        stateManagement: 'adaptive',
         coreBeliefs: ['Growth', 'Authenticity', 'Connection'],
-        limitingBeliefs: ['Not good enough', 'Too sensitive']
+        drivingForces: ['Curiosity', 'Impact'],
+        excitementCompass: 'high',
+        frequencyAlignment: 'aligned',
+        beliefInterface: ['Empowering', 'Supportive'],
+        resistancePatterns: ['Perfectionism', 'Overwhelm']
       };
       
       baseBlueprint.coreValuesNarrative = {
@@ -83,7 +98,13 @@ export const BlueprintProcessingSpeedTester: React.FC = () => {
         lifePathKeyword: 'Expression',
         soulUrgeNumber: 7,
         soulUrgeKeyword: 'Seeker',
-        missionStatement: 'To inspire authentic creative expression'
+        meaningfulAreas: ['creativity', 'relationships'],
+        anchoringVision: 'inspiring authentic expression',
+        lifeThemes: ['growth', 'connection'],
+        valueSystem: 'authentic',
+        northStar: 'creative fulfillment',
+        missionStatement: 'To inspire authentic creative expression',
+        purposeAlignment: 'high'
       };
     }
 
@@ -91,20 +112,60 @@ export const BlueprintProcessingSpeedTester: React.FC = () => {
       baseBlueprint.publicArchetype = {
         sunSign: 'Aquarius',
         moonSign: 'Cancer',
-        risingSign: 'Leo'
+        risingSign: 'Leo',
+        socialStyle: 'innovative',
+        publicVibe: 'inspiring',
+        publicPersona: 'visionary',
+        leadershipStyle: 'collaborative',
+        socialMask: 'confident',
+        externalExpression: 'creative'
       };
       
       baseBlueprint.generationalCode = {
         chineseZodiac: 'Horse',
-        element: 'Metal'
+        element: 'Metal',
+        cohortTint: 'millennial',
+        generationalThemes: ['technology', 'change'],
+        collectiveInfluence: 'transformative'
       };
       
       baseBlueprint.voiceTokens = {
+        pacing: {
+          sentenceLength: 'flowing',
+          pauseFrequency: 'thoughtful',
+          rhythmPattern: 'varied'
+        },
+        expressiveness: {
+          emojiFrequency: 'occasional',
+          emphasisStyle: 'italic',
+          exclamationTendency: 'balanced'
+        },
+        vocabulary: {
+          formalityLevel: 'conversational',
+          metaphorUsage: 'frequent',
+          technicalDepth: 'balanced'
+        },
         conversationStyle: {
-          personalSharing: 'warm',
-          questioningStyle: 'curious',
-          energyLevel: 'enthusiastic'
-        }
+          questionAsking: 'exploratory',
+          responseLength: 'thorough',
+          personalSharing: 'warm'
+        },
+        signaturePhrases: ['That resonates with me', 'I\'m curious about'],
+        greetingStyles: ['Hey there!', 'How are you feeling today?'],
+        transitionWords: ['Speaking of which', 'On that note']
+      };
+
+      baseBlueprint.humorProfile = {
+        primaryStyle: 'playful-storyteller',
+        intensity: 'moderate',
+        appropriatenessLevel: 'balanced',
+        contextualAdaptation: {
+          coaching: 'gentle-empath',
+          guidance: 'philosophical-sage',
+          casual: 'spontaneous-entertainer'
+        },
+        avoidancePatterns: ['sarcasm', 'dark humor'],
+        signatureElements: ['wordplay', 'observations']
       };
     }
 
@@ -241,7 +302,7 @@ export const BlueprintProcessingSpeedTester: React.FC = () => {
           sevenLayerEngine.updateBlueprint(complexBlueprint);
           sevenLayerEngine.updateContext({
             currentMood: 'high',
-            energyLevel: 'energized',
+            energyLevel: 'vibrant',
             contextType: 'creative',
             excitementLevel: 8
           });
@@ -264,7 +325,7 @@ export const BlueprintProcessingSpeedTester: React.FC = () => {
         async () => {
           holisticCoachService.updateBlueprint(complexBlueprint);
           holisticCoachService.updateContext({
-            currentMood: 'focused',
+            currentMood: 'medium',
             energyLevel: 'stable',
             contextType: 'analytical',
             excitementLevel: 6
