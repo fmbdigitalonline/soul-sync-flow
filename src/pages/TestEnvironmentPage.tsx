@@ -54,6 +54,9 @@ import { LayerActivationConflictTester } from '@/components/debug/LayerActivatio
 import { FallbackMechanismValidator } from '@/components/debug/FallbackMechanismValidator';
 import ResponseTimeLoadTester from '@/components/debug/ResponseTimeLoadTester';
 import UXFlowTester from '@/components/debug/UXFlowTester';
+import AdvancedAnalyticsSuite from '@/components/debug/AdvancedAnalyticsSuite';
+import SystemHealthMonitor from '@/components/debug/SystemHealthMonitor';
+import ABTestingFramework from '@/components/debug/ABTestingFramework';
 
 const TestEnvironmentPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('architecture');
@@ -897,30 +900,31 @@ const TestEnvironmentPage: React.FC = () => {
                 <div className="mb-4">
                   <h2 className="text-2xl font-semibold mb-2">Advanced Analytics Suite</h2>
                   <p className="text-gray-600">
-                    Personality coherence scoring and engagement analytics - Implementation coming soon.
+                    Comprehensive personality coherence analytics, engagement tracking, and system intelligence monitoring with real-time dynamic data.
                   </p>
                 </div>
-                <Card>
-                  <CardContent className="p-8 text-center">
-                    <BarChart2 className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                    <p className="text-gray-600">Advanced analytics components will be implemented next.</p>
-                  </CardContent>
-                </Card>
+                <AdvancedAnalyticsSuite />
               </TabsContent>
 
               <TabsContent value="system-health" className="space-y-6">
                 <div className="mb-4">
                   <h2 className="text-2xl font-semibold mb-2">Real-Time System Health Monitoring</h2>
                   <p className="text-gray-600">
-                    Comprehensive system health dashboard and alerts - Implementation coming soon.
+                    Comprehensive system health dashboard with real-time metrics, service monitoring, and automated alerting.
                   </p>
                 </div>
-                <Card>
-                  <CardContent className="p-8 text-center">
-                    <Settings className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                    <p className="text-gray-600">System health monitoring dashboard will be implemented next.</p>
-                  </CardContent>
-                </Card>
+                <SystemHealthMonitor />
+              </TabsContent>
+
+              {/* New A/B Testing Framework */}
+              <TabsContent value="ab-testing" className="space-y-6">
+                <div className="mb-4">
+                  <h2 className="text-2xl font-semibold mb-2">A/B Testing Framework</h2>
+                  <p className="text-gray-600">
+                    Advanced A/B testing for personality expressions, memory integration, and coaching effectiveness with real-time statistical analysis.
+                  </p>
+                </div>
+                <ABTestingFramework />
               </TabsContent>
             </Tabs>
           </div>
