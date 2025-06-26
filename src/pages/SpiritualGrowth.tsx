@@ -3,7 +3,7 @@ import React, { useRef, useEffect, useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
-import { Heart, Sparkles, Moon, BookOpen, Calendar, MessageCircle, Compass, TrendingUp } from "lucide-react";
+import { Heart, Sparkles, Moon, BookOpen, Calendar, MessageCircle, Compass, TrendingUp, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useEnhancedAICoach } from "@/hooks/use-enhanced-ai-coach";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,17 +13,18 @@ import { ReflectionPrompts } from "@/components/coach/ReflectionPrompts";
 import { InsightJournal } from "@/components/coach/InsightJournal";
 import { WeeklyInsights } from "@/components/coach/WeeklyInsights";
 import { GrowthProgramInterface } from "@/components/growth/GrowthProgramInterface";
+import { GrowthCoachWelcome } from "@/components/growth/GrowthCoachWelcome";
 import { programAwareCoachService } from "@/services/program-aware-coach-service";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 import { ProgramWeek } from "@/types/growth-program";
 
-type ActiveTool = 'growth_program' | 'mood' | 'reflection' | 'insight' | 'weekly' | 'chat' | null;
+type ActiveView = 'welcome' | 'growth_program' | 'coach_chat' | 'tools' | 'mood' | 'reflection' | 'insight' | 'weekly' | null;
 
 const SpiritualGrowth = () => {
   const { messages, isLoading, sendMessage, resetConversation } = useEnhancedAICoach("guide");
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [activeTool, setActiveTool] = useState<ActiveTool>('growth_program');
+  const [activeView, setActiveView] = useState<ActiveView>('welcome');
   const [selectedWeek, setSelectedWeek] = useState<ProgramWeek | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -68,12 +69,23 @@ const SpiritualGrowth = () => {
     scrollToBottom();
   }, [messages]);
 
-  const handleNewConversation = () => {
+  // Growth Coach Welcome handlers
+  const handleStartProgram = () => {
+    setActiveView('growth_program');
+  };
+
+  const handleTalkToCoach = () => {
+    setActiveView('coach_chat');
     resetConversation();
-    toast({
-      title: t('coach.newConversation'),
-      description: t('newConversationStarted', { agent: t('coach.soulGuide') }),
-    });
+  };
+
+  const handleGoToTools = () => {
+    setActiveView('tools');
+  };
+
+  const handleBackToWelcome = () => {
+    setActiveView('welcome');
+    setSelectedWeek(null);
   };
 
   // Enhanced program-aware message sending
@@ -121,23 +133,6 @@ const SpiritualGrowth = () => {
     setSelectedWeek(null);
   };
 
-  const toggleTool = (tool: ActiveTool) => {
-    setActiveTool(activeTool === tool ? null : tool);
-    // Reset week selection when switching tools
-    if (tool !== 'growth_program') {
-      setSelectedWeek(null);
-    }
-  };
-
-  const tools = [
-    { id: 'growth_program' as ActiveTool, name: 'Growth Program', icon: TrendingUp },
-    { id: 'mood' as ActiveTool, name: t('growth.tools.moodTracker'), icon: Heart },
-    { id: 'reflection' as ActiveTool, name: t('growth.tools.reflectionPrompts'), icon: Sparkles },
-    { id: 'insight' as ActiveTool, name: t('growth.tools.insightJournal'), icon: BookOpen },
-    { id: 'weekly' as ActiveTool, name: t('growth.tools.weeklyInsights'), icon: Calendar },
-    { id: 'chat' as ActiveTool, name: t('growth.tools.freeChat'), icon: MessageCircle },
-  ];
-
   if (!isAuthenticated) {
     return (
       <MainLayout>
@@ -160,7 +155,7 @@ const SpiritualGrowth = () => {
     );
   }
 
-  // Handle week selection view (now integrated into the main interface)
+  // Handle week selection view
   if (selectedWeek) {
     return (
       <MainLayout>
@@ -171,7 +166,8 @@ const SpiritualGrowth = () => {
               onClick={handleBackToProgram}
               className="mb-4"
             >
-              ← Back to Growth Program
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Growth Program
             </Button>
             
             <CosmicCard>
@@ -221,92 +217,45 @@ const SpiritualGrowth = () => {
   return (
     <MainLayout>
       <div className="flex flex-col h-[calc(100vh-5rem)] w-full p-4">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4 w-full">
-          <div className="text-center sm:text-left">
-            <h1 className="text-2xl font-bold font-display mb-1">
-              <span className="gradient-text">{t('growth.title')}</span>
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              {activeTool === 'growth_program' 
-                ? "Your personalized growth journey based on your blueprint"
-                : t('growth.headerSubtitle')
-              }
-            </p>
-            {growthJourney && (
-              <p className="text-xs text-muted-foreground mt-1">
-                {t('growth.positionLabel')} {growthJourney.current_position} • {messages.length} {t('growth.conversationMessages')}
-              </p>
-            )}
+        {/* Header with Back Button */}
+        {activeView !== 'welcome' && (
+          <div className="mb-4">
+            <Button 
+              variant="outline" 
+              onClick={handleBackToWelcome}
+              className="mb-2"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Growth Coach
+            </Button>
           </div>
-        </div>
+        )}
 
-        {/* Tool Toggle Buttons */}
-        <div className="grid grid-cols-3 gap-2 mb-4 w-full">
-          {tools.map((tool) => {
-            const Icon = tool.icon;
-            return (
-              <Button
-                key={tool.id}
-                variant={activeTool === tool.id ? "default" : "outline"}
-                onClick={() => toggleTool(tool.id)}
-                className="h-12 flex-col gap-1 text-xs"
-              >
-                <Icon className="h-4 w-4" />
-                {tool.name}
-              </Button>
-            );
-          })}
-        </div>
-
-        {/* Active Tool Content */}
+        {/* Main Content Area */}
         <div className="flex-1 w-full">
-          {activeTool === 'growth_program' && (
+          {/* Growth Coach Welcome */}
+          {activeView === 'welcome' && (
+            <GrowthCoachWelcome
+              onStartProgram={handleStartProgram}
+              onTalkToCoach={handleTalkToCoach}
+              onGoToTools={handleGoToTools}
+            />
+          )}
+
+          {/* Growth Program */}
+          {activeView === 'growth_program' && (
             <GrowthProgramInterface onWeekSelect={handleWeekSelect} />
           )}
 
-          {activeTool === 'mood' && (
-            <MoodTracker onMoodSave={handleMoodSave} />
-          )}
-          
-          {activeTool === 'reflection' && (
-            <ReflectionPrompts onReflectionSave={handleReflectionSave} />
-          )}
-          
-          {activeTool === 'insight' && (
-            <InsightJournal onInsightSave={handleInsightSave} />
-          )}
-          
-          {activeTool === 'weekly' && (
-            <WeeklyInsights />
-          )}
-          
-          {activeTool === 'chat' && (
+          {/* Coach Chat - Step by Step */}
+          {activeView === 'coach_chat' && (
             <CosmicCard className="p-4 h-full flex flex-col">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-medium flex items-center">
                   <Heart className="h-4 w-4 mr-2 text-soul-purple" />
-                  {t('coach.soulGuide')} - Program Aware
+                  Growth Coach - Step by Step Guidance
                 </h3>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleNewConversation}
-                  className="text-xs"
-                >
-                  {t('coach.newConversation')}
-                </Button>
               </div>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleProgramAwareMessage(t('growth.startSoulCheckIn'))}
-                className="w-full text-xs border-soul-purple/30 hover:bg-soul-purple/10 mb-4"
-              >
-                <Moon className="h-3 w-3 mr-2" />
-                {t('growth.startSoulCheckIn')}
-              </Button>
               
               <div className="flex-1">
                 <GuideInterface
@@ -318,15 +267,63 @@ const SpiritualGrowth = () => {
               </div>
             </CosmicCard>
           )}
+
+          {/* Growth Tools Menu */}
+          {activeView === 'tools' && (
+            <div className="space-y-4">
+              <h2 className="text-xl font-bold text-center gradient-text mb-6">Growth Tools</h2>
+              <div className="grid grid-cols-2 gap-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setActiveView('mood')}
+                  className="h-20 flex-col gap-2"
+                >
+                  <Heart className="h-6 w-6" />
+                  Mood Tracker
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setActiveView('reflection')}
+                  className="h-20 flex-col gap-2"
+                >
+                  <Sparkles className="h-6 w-6" />
+                  Reflection
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setActiveView('insight')}
+                  className="h-20 flex-col gap-2"
+                >
+                  <BookOpen className="h-6 w-6" />
+                  Insights
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setActiveView('weekly')}
+                  className="h-20 flex-col gap-2"
+                >
+                  <Calendar className="h-6 w-6" />
+                  Weekly Review
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Individual Tools */}
+          {activeView === 'mood' && (
+            <MoodTracker onMoodSave={handleMoodSave} />
+          )}
           
-          {!activeTool && (
-            <CosmicCard className="p-8 text-center h-full flex flex-col items-center justify-center">
-              <Compass className="h-12 w-12 text-soul-purple/50 mb-4" />
-              <h3 className="text-lg font-medium mb-2">{t('growth.chooseYourTool')}</h3>
-              <p className="text-sm text-muted-foreground">
-                {t('growth.chooseYourToolDescription')}
-              </p>
-            </CosmicCard>
+          {activeView === 'reflection' && (
+            <ReflectionPrompts onReflectionSave={handleReflectionSave} />
+          )}
+          
+          {activeView === 'insight' && (
+            <InsightJournal onInsightSave={handleInsightSave} />
+          )}
+          
+          {activeView === 'weekly' && (
+            <WeeklyInsights />
           )}
         </div>
       </div>

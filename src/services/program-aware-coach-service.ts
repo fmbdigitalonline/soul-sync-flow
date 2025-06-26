@@ -1,4 +1,3 @@
-
 import { enhancedAICoachService } from "./enhanced-ai-coach-service";
 import { growthProgramService } from "./growth-program-service";
 import { GrowthProgram, ProgramWeek } from "@/types/growth-program";
@@ -9,7 +8,7 @@ class ProgramAwareCoachService {
   private conversationStage: 'welcome' | 'exploring' | 'deepening' | 'integrating' = 'welcome';
 
   async initializeForUser(userId: string) {
-    console.log("🎯 Program-Aware Coach: Initializing intelligent steward for user", userId);
+    console.log("🎯 Program-Aware Coach: Initializing step-by-step growth facilitator for user", userId);
     
     try {
       this.currentProgram = await growthProgramService.getCurrentProgram(userId);
@@ -18,14 +17,14 @@ class ProgramAwareCoachService {
         const weeks = await growthProgramService.generateWeeklyProgram(this.currentProgram);
         this.currentWeek = weeks.find(w => w.week_number === this.currentProgram!.current_week) || null;
         
-        console.log("✅ Program context loaded for intelligent guidance:", {
+        console.log("✅ Growth context ready for step-by-step facilitation:", {
           program: this.currentProgram.domain,
           week: this.currentWeek?.theme,
-          readyForGuidance: true
+          mode: 'focused_guidance'
         });
       }
     } catch (error) {
-      console.error("❌ Error initializing intelligent coach:", error);
+      console.error("❌ Error initializing growth facilitator:", error);
     }
   }
 
@@ -40,18 +39,18 @@ class ProgramAwareCoachService {
       await this.initializeForUser(userId);
     }
 
-    // Create intelligent, adaptive guidance message
-    const intelligentMessage = this.createIntelligentGuidance(message);
+    // Create step-by-step focused guidance message
+    const focusedMessage = this.createStepByStepGuidance(message);
     
-    console.log("🧠 Sending intelligent guidance:", {
+    console.log("🧠 Sending step-by-step growth guidance:", {
       originalLength: message.length,
-      guidedLength: intelligentMessage.length,
+      guidedLength: focusedMessage.length,
       stage: this.conversationStage,
       hasContext: !!this.currentProgram
     });
 
     return await enhancedAICoachService.sendMessage(
-      intelligentMessage,
+      focusedMessage,
       sessionId,
       usePersona,
       "guide",
@@ -59,53 +58,64 @@ class ProgramAwareCoachService {
     );
   }
 
-  private createIntelligentGuidance(userMessage: string): string {
+  private createStepByStepGuidance(userMessage: string): string {
     // Detect if this is an initial program start
     const isInitialStart = userMessage.includes("I'm starting my") || userMessage.includes("Help me understand");
     
     if (!this.currentProgram || !this.currentWeek) {
-      return this.createDomainSelectionGuidance(userMessage);
+      return this.createDomainExplorationStep(userMessage);
     }
 
     if (isInitialStart) {
-      return this.createWelcomeGuidance(userMessage);
+      return this.createWelcomeStep(userMessage);
     }
 
-    return this.createAdaptiveGuidance(userMessage);
+    return this.createFocusedGuidanceStep(userMessage);
   }
 
-  private createDomainSelectionGuidance(userMessage: string): string {
-    return `I'm here as your growth guide, ready to help you choose the perfect area to focus on.
+  private createDomainExplorationStep(userMessage: string): string {
+    return `I'm your Growth Coach, and we're going to take this step by step.
 
-Before we dive into any specific domain, I'm curious - what's calling to you right now? Is there a particular area of your life where you're feeling:
-- Excited about possibilities?
-- A bit stuck or uncertain? 
-- Ready for some positive change?
+**Step 1: Let's explore what's calling to you**
 
-There's no wrong answer here. Sometimes we know exactly what we want to work on, and sometimes we just know something needs to shift. Both are perfect starting points.
+Before we choose any specific area to work on, I want to understand what's happening in your inner world right now.
 
-What feels most alive for you when you think about growth right now?`;
+Take a moment and ask yourself: When you think about growth, what area of your life feels like it's asking for attention?
+
+Is it:
+- A feeling of being stuck somewhere?
+- An excitement about a possibility?
+- Something that keeps coming up in your thoughts?
+
+Just share what comes up for you - no need to have it all figured out. We'll explore this together, one step at a time.
+
+What feels most alive or urgent for you right now?`;
   }
 
-  private createWelcomeGuidance(userMessage: string): string {
+  private createWelcomeStep(userMessage: string): string {
     const domainName = this.currentProgram!.domain.replace('_', ' ');
     const weekTheme = this.currentWeek!.theme.replace('_', ' ');
     
-    // Gentle, question-first approach
-    return `Welcome to your ${domainName} growth journey! I'm genuinely excited to be your guide through this.
+    return `Welcome to your ${domainName} growth journey. I'm here to guide you step by step.
 
-You're in Week ${this.currentWeek!.week_number}: ${weekTheme}, and I want to start exactly where you are right now - not where you think you should be.
+**Current Step: Week ${this.currentWeek!.week_number} - ${weekTheme}**
 
-So let me ask you this: When you think about your ${domainName} area of life, what's the first feeling that comes up? 
+Let's start exactly where you are right now, not where you think you should be.
 
-Is it excitement? Uncertainty? Maybe a mix of both? 
+**Step 1: Check in with yourself**
 
-And here's the beautiful thing - whatever you're feeling is exactly right. We're going to work with that, not against it.
+Before we dive into any activities or frameworks, I want to understand your current experience.
 
-What would feel most helpful for you right now - exploring what's working well, or gently looking at what feels challenging?`;
+Close your eyes for a moment and think about your ${domainName} area of life.
+
+What's the first feeling that comes up? Don't think about it - just notice what arises.
+
+Share that with me, and then we'll take the next step together.
+
+What did you notice?`;
   }
 
-  private createAdaptiveGuidance(userMessage: string): string {
+  private createFocusedGuidanceStep(userMessage: string): string {
     const domainName = this.currentProgram!.domain.replace('_', ' ');
     
     // Detect user readiness level from their language
@@ -113,20 +123,21 @@ What would feel most helpful for you right now - exploring what's working well, 
     const isUncertain = userLanguage.includes("don't know") || userLanguage.includes("not sure") || userLanguage.includes("confused");
     const isReady = userLanguage.includes("ready") || userLanguage.includes("want to") || userLanguage.includes("excited");
     
-    const contextPrefix = `[GENTLE CONTEXT: You're guiding them through ${domainName} growth, Week ${this.currentWeek?.week_number}: ${this.currentWeek?.theme.replace('_', ' ')}. Focus on ${this.currentWeek?.focus_area}. Available tools: ${this.currentWeek?.tools_unlocked.join(', ')}]
+    const contextPrefix = `[GROWTH COACH CONTEXT: You're facilitating ${domainName} growth, Week ${this.currentWeek?.week_number}: ${this.currentWeek?.theme.replace('_', ' ')}. Focus: ${this.currentWeek?.focus_area}]
 
-IMPORTANT GUIDANCE PRINCIPLES:
-- Be warm, curious, and genuinely interested in THEIR experience
-- Ask questions first, give advice second
-- If they say "I don't know" - normalize it and offer gentle exploration
-- Only introduce frameworks/tools when they show readiness
-- Keep responses conversational length (2-3 short paragraphs max)
-- Always end with a gentle, open question
-- No information dumping or long explanations unless specifically requested
+STEP-BY-STEP GUIDANCE PRINCIPLES:
+- Give ONE clear step at a time, not multiple steps
+- Ask ONE focused question, not several options
+- Keep responses short (2-3 sentences max)
+- If they're uncertain, slow down and explore that uncertainty
+- If they're ready, give them the next concrete step
+- Always end with "What comes up for you?" or similar single question
+- No lists, no frameworks, no information dumping
+- Be a facilitator, not a teacher
 
 USER MESSAGE: ${userMessage}
 
-Respond as their intelligent growth guide who truly listens and adapts.`;
+Respond as their step-by-step Growth Coach who helps them go deeper, one focused step at a time.`;
 
     return contextPrefix;
   }
