@@ -43,6 +43,14 @@ class ProgramAwareCoachService {
       await this.initializeForUser(userId);
     }
 
+    // Handle domain selection if user mentions a specific domain
+    const detectedDomain = this.detectDomainFromMessage(message);
+    if (detectedDomain && this.conversationStage === 'domain_exploration') {
+      this.selectedDomain = detectedDomain;
+      this.conversationStage = 'belief_drilling';
+      return this.handleDomainSelection(detectedDomain, userId, sessionId);
+    }
+
     // Create step-by-step focused guidance message
     const focusedMessage = this.createStepByStepGuidance(message, userId);
     
@@ -65,22 +73,30 @@ class ProgramAwareCoachService {
   async startGuidedProgramCreation(userId: string, sessionId: string): Promise<{ response: string; conversationId: string }> {
     this.conversationStage = 'domain_exploration';
     
-    const guidedMessage = `I'm starting a guided program creation process with the user. This is Growth Mode - we go deep, step by step.
+    const guidedMessage = `I'm starting a guided program creation process with the user. This is Growth Mode - the coach leads and guides step by step.
 
-[GROWTH COACH CONTEXT: User clicked "Start Growth Program" - begin guided domain exploration]
+[GROWTH COACH CONTEXT: User clicked "Start Growth Program" - coach should lead domain exploration]
 
-STEP-BY-STEP GUIDANCE PRINCIPLES:
-- Be a warm, personal guide - not an information provider
+GROWTH COACH LEADERSHIP PRINCIPLES:
+- YOU are the guide leading this conversation
+- Present clear options and help them choose
+- Be warm, personal, and create space for reflection
 - Ask ONE focused question at a time
-- Go slow and let them reflect
-- Create space for their inner wisdom to emerge
-- Use "What comes up for you?" style questions
-- No lists, no options, no information dumping
 - Help them feel their way into their answer
+- Present the 7 life domains and guide them to choose
+
+LIFE DOMAINS TO PRESENT:
+1. Career & Purpose - work, calling, professional growth
+2. Relationships & Love - romantic, friendships, family connections  
+3. Health & Wellbeing - physical, mental, emotional health
+4. Money & Abundance - finances, wealth, prosperity mindset
+5. Creativity & Expression - artistic, innovative, creative pursuits
+6. Spirituality & Meaning - consciousness, purpose, spiritual growth
+7. Home & Family - domestic life, family relationships, living environment
 
 USER ACTION: Just clicked "Start Growth Program"
 
-Respond as their personal Growth Coach who is excited to guide them through this discovery process. Start by helping them connect with what area of their life is calling for attention right now. Be warm, personal, and create space for reflection.`;
+Respond as their Growth Coach who is excited to guide them. Welcome them warmly and present the 7 life domains, asking them which area feels most alive or challenging for them right now. Lead the conversation - don't wait for them to know what to say.`;
 
     return await enhancedAICoachService.sendMessage(
       guidedMessage,
@@ -106,11 +122,11 @@ BELIEF DRILLING PRINCIPLES (Bashar-inspired):
 - Help them connect with their authentic self
 - Ask questions that reveal unconscious beliefs
 - Create space for genuine self-reflection
-- If they struggle with reflection, guide them gently
+- If they struggle with reflection, guide them gently with more specific questions
 
 USER CONTEXT: Has chosen to focus on ${domain.replace('_', ' ')} growth
 
-Respond as their Growth Coach who wants to help them understand the deeper motivations and beliefs behind their choice. Ask a penetrating but gentle question that helps them explore why this area is calling to them right now.`;
+Respond as their Growth Coach who wants to help them understand the deeper motivations and beliefs behind their choice. Ask a penetrating but gentle question that helps them explore why this area is calling to them right now. What might be the deeper belief or pattern underneath their desire for growth here?`;
 
     return await enhancedAICoachService.sendMessage(
       beliefDrillingMessage,
@@ -148,10 +164,11 @@ STEP-BY-STEP GUIDANCE PRINCIPLES:
 - Guide them to the area that has the most energy/charge
 - Once they identify an area, acknowledge it and prepare for belief drilling
 - Stay warm, personal, and facilitate their inner knowing
+- If they seem unsure, gently guide them back to the 7 life domains
 
 USER MESSAGE: ${userMessage}
 
-Respond as their Growth Coach helping them discover which life area is truly calling for their attention. Help them connect with their inner wisdom.`;
+Respond as their Growth Coach helping them discover which life area is truly calling for their attention. Help them connect with their inner wisdom. If they haven't clearly chosen yet, guide them back to the domains with warmth.`;
   }
 
   private createBeliefDrillingGuidance(userMessage: string): string {
@@ -219,13 +236,13 @@ Respond as their Growth Coach guiding them through their active ${domainName} pr
   // Method to handle domain detection from conversation
   detectDomainFromMessage(message: string): LifeDomain | null {
     const domainKeywords = {
-      'career': ['work', 'job', 'career', 'profession', 'calling', 'purpose'],
-      'relationships': ['relationship', 'love', 'partner', 'friendship', 'connection'],
-      'wellbeing': ['health', 'wellness', 'energy', 'self-care', 'wellbeing'],
-      'finances': ['money', 'financial', 'abundance', 'wealth', 'income'],
-      'creativity': ['creative', 'art', 'expression', 'innovation', 'creation'],
-      'spirituality': ['spiritual', 'meaning', 'growth', 'consciousness', 'soul'],
-      'home_family': ['family', 'home', 'domestic', 'children', 'household']
+      'career': ['work', 'job', 'career', 'profession', 'calling', 'purpose', 'professional'],
+      'relationships': ['relationship', 'love', 'partner', 'friendship', 'connection', 'romantic'],
+      'wellbeing': ['health', 'wellness', 'energy', 'self-care', 'wellbeing', 'physical', 'mental'],
+      'finances': ['money', 'financial', 'abundance', 'wealth', 'income', 'prosperity'],
+      'creativity': ['creative', 'art', 'expression', 'innovation', 'creation', 'artistic'],
+      'spirituality': ['spiritual', 'meaning', 'growth', 'consciousness', 'soul', 'purpose'],
+      'home_family': ['family', 'home', 'domestic', 'children', 'household', 'living']
     };
 
     const lowerMessage = message.toLowerCase();

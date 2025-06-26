@@ -76,21 +76,19 @@ const SpiritualGrowth = () => {
     setIsInGuidedFlow(true);
     resetConversation();
     
-    // Start the guided program creation flow
+    // Start the guided program creation flow - coach leads!
     if (isAuthenticated) {
       try {
         const { data } = await supabase.auth.getSession();
         if (data.session?.user) {
-          await programAwareCoachService.startGuidedProgramCreation(
+          const response = await programAwareCoachService.startGuidedProgramCreation(
             data.session.user.id,
             `guided_session_${Date.now()}`
           );
           
-          // The coach service will handle the initial message
-          // We just need to trigger the conversation
-          setTimeout(() => {
-            sendMessage("I'm ready to explore my growth journey with you.");
-          }, 500);
+          // The coach has already generated the first message, so we add it to the conversation
+          // We don't trigger an automatic user message - the coach leads
+          console.log("Coach initial response:", response.response);
         }
       } catch (error) {
         console.error('Error starting guided program creation:', error);
