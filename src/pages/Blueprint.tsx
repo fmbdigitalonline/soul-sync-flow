@@ -53,9 +53,9 @@ const Blueprint = () => {
   if (authLoading) {
     return (
       <MainLayout>
-        <div className="w-full min-h-[80vh] flex flex-col items-center justify-center p-4 sm:p-6">
+        <div className="w-full min-h-[80vh] flex flex-col items-center justify-center p-3 mobile-container">
           <Loader2 className="h-8 w-8 animate-spin text-soul-purple" />
-          <p className="mt-2 text-sm sm:text-base">Loading...</p>
+          <p className="mt-2 text-sm">Loading...</p>
         </div>
       </MainLayout>
     );
@@ -65,14 +65,14 @@ const Blueprint = () => {
   if (!user) {
     return (
       <MainLayout>
-        <div className="w-full min-h-[80vh] flex items-center justify-center p-4 sm:p-6">
-          <div className="cosmic-card p-6 sm:p-8 text-center max-w-md w-full">
-            <h1 className="text-xl sm:text-2xl font-bold font-display mb-4">
+        <div className="w-full min-h-[80vh] flex items-center justify-center p-3 mobile-container">
+          <div className="cosmic-card p-4 sm:p-6 text-center w-full max-w-md">
+            <h1 className="text-lg sm:text-xl font-bold font-display mb-4 break-words">
               <span className="gradient-text">Soul Blueprint</span>
             </h1>
-            <p className="mb-6 text-sm sm:text-base">Please sign in to view your blueprint</p>
+            <p className="mb-6 text-sm break-words">Please sign in to view your blueprint</p>
             <Button 
-              className="bg-soul-purple hover:bg-soul-purple/90 w-full"
+              className="bg-soul-purple hover:bg-soul-purple/90 w-full max-w-full"
               onClick={() => navigate('/auth')}
             >
               Sign In
@@ -87,9 +87,9 @@ const Blueprint = () => {
   if (loading) {
     return (
       <MainLayout>
-        <div className="w-full min-h-[80vh] flex flex-col items-center justify-center p-4 sm:p-6">
+        <div className="w-full min-h-[80vh] flex flex-col items-center justify-center p-3 mobile-container">
           <Loader2 className="h-8 w-8 animate-spin text-soul-purple" />
-          <p className="mt-2 text-sm sm:text-base">Loading blueprint...</p>
+          <p className="mt-2 text-sm break-words">Loading blueprint...</p>
         </div>
       </MainLayout>
     );
@@ -99,18 +99,18 @@ const Blueprint = () => {
   if (error) {
     return (
       <MainLayout>
-        <div className="w-full min-h-[80vh] flex flex-col items-center justify-center p-4 sm:p-6">
-          <div className="cosmic-card p-6 sm:p-8 text-center max-w-md w-full">
-            <h2 className="text-lg font-semibold mb-4 text-red-500">Blueprint Error</h2>
-            <p className="text-red-500 mb-4">{error}</p>
+        <div className="w-full min-h-[80vh] flex flex-col items-center justify-center p-3 mobile-container">
+          <div className="cosmic-card p-4 sm:p-6 text-center w-full max-w-md">
+            <h2 className="text-base sm:text-lg font-semibold mb-4 text-red-500 break-words">Blueprint Error</h2>
+            <p className="text-red-500 mb-4 text-sm break-words">{error}</p>
             <div className="space-y-2">
-              <Button onClick={() => refetch()} className="w-full">
+              <Button onClick={() => refetch()} className="w-full max-w-full">
                 Try Again
               </Button>
               <Button 
                 variant="outline" 
                 onClick={() => navigate('/onboarding')} 
-                className="w-full"
+                className="w-full max-w-full"
               >
                 Create New Blueprint
               </Button>
@@ -264,85 +264,98 @@ const Blueprint = () => {
 
   return (
     <MainLayout>
-      <div className="w-full p-4 sm:p-6 pb-20">
-        {/* Mobile-friendly header */}
-        <div className="flex flex-col gap-4 mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold font-display">
+      <div className="w-full p-3 sm:p-4 md:p-6 pb-20 mobile-container">
+        {/* Mobile-friendly header with proper constraints */}
+        <div className="flex flex-col gap-3 sm:gap-4 mb-4 sm:mb-6 w-full max-w-full">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold font-display break-words">
             <span className="gradient-text">Soul Blueprint</span>
           </h1>
-          {/* Action buttons - Mobile Stack */}
-          <div className="flex flex-col sm:flex-row gap-2">
+          
+          {/* Action buttons - Mobile Stack with proper sizing */}
+          <div className="flex flex-col gap-2 w-full max-w-full">
             {isAdmin && (
               <Button 
                 variant="outline"
-                className="flex items-center justify-center text-sm h-9"
+                className="flex items-center justify-center text-sm h-9 w-full max-w-full"
                 onClick={handleRegenerateBlueprint}
                 disabled={isGenerating}
               >
-                <RefreshCw className="mr-2 h-4 w-4" />
-                {isGenerating ? "Generating..." : "Regenerate"}
+                <RefreshCw className="mr-2 h-4 w-4 flex-shrink-0" />
+                <span className="truncate">{isGenerating ? "Generating..." : "Regenerate"}</span>
               </Button>
             )}
             <Button 
-              className="bg-soul-purple hover:bg-soul-purple/90 flex items-center justify-center text-sm h-9"
+              className="bg-soul-purple hover:bg-soul-purple/90 flex items-center justify-center text-sm h-9 w-full max-w-full"
               onClick={() => navigate('/coach')}
             >
-              <MessageCircle className="mr-2 h-4 w-4" />
-              Chat with Coach
+              <MessageCircle className="mr-2 h-4 w-4 flex-shrink-0" />
+              <span className="truncate">Chat with Coach</span>
             </Button>
           </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
-          {/* Mobile-responsive tabs */}
-          <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full max-w-4xl mx-auto h-auto p-1">
-            <TabsTrigger value="view" className="text-xs sm:text-sm py-2">View</TabsTrigger>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8 w-full max-w-full">
+          {/* Mobile-responsive tabs with proper overflow handling */}
+          <TabsList className="w-full max-w-full h-auto p-1 grid grid-cols-2 sm:grid-cols-4">
+            <TabsTrigger value="view" className="text-xs sm:text-sm py-2 px-1 truncate">
+              View
+            </TabsTrigger>
             {isAdmin && (
-              <TabsTrigger value="edit" className="text-xs sm:text-sm py-2">Edit</TabsTrigger>
-            )}
-            {isAdmin && (
-              <TabsTrigger value="health-check" className="text-xs sm:text-sm py-2 flex items-center gap-1">
-                <Activity className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">Health Check</span>
-                <span className="sm:hidden">Health</span>
+              <TabsTrigger value="edit" className="text-xs sm:text-sm py-2 px-1 truncate">
+                Edit
               </TabsTrigger>
             )}
-            <TabsTrigger value="generating" disabled={!isGenerating} className="text-xs sm:text-sm py-2">
+            {isAdmin && (
+              <TabsTrigger value="health-check" className="text-xs sm:text-sm py-2 px-1 flex items-center gap-1 min-w-0">
+                <Activity className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                <span className="hidden sm:inline truncate">Health Check</span>
+                <span className="sm:hidden truncate">Health</span>
+              </TabsTrigger>
+            )}
+            <TabsTrigger value="generating" disabled={!isGenerating} className="text-xs sm:text-sm py-2 px-1 truncate">
               Generating
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="view" className="mt-6">
+          <TabsContent value="view" className="mt-4 sm:mt-6 w-full max-w-full">
             {blueprintData && (
-              <SimplifiedBlueprintViewer blueprint={blueprintData} />
+              <div className="w-full max-w-full overflow-hidden">
+                <SimplifiedBlueprintViewer blueprint={blueprintData} />
+              </div>
             )}
           </TabsContent>
           
           {isAdmin && (
-            <TabsContent value="edit" className="mt-6">
-              <BlueprintEditor onSave={handleSaveBlueprint} initialBlueprint={blueprintData ? convertToSaveFormat(blueprintData) : undefined} />
+            <TabsContent value="edit" className="mt-4 sm:mt-6 w-full max-w-full">
+              <div className="w-full max-w-full overflow-hidden">
+                <BlueprintEditor onSave={handleSaveBlueprint} initialBlueprint={blueprintData ? convertToSaveFormat(blueprintData) : undefined} />
+              </div>
             </TabsContent>
           )}
 
           {isAdmin && (
-            <TabsContent value="health-check" className="mt-6">
-              <BlueprintHealthCheck />
+            <TabsContent value="health-check" className="mt-4 sm:mt-6 w-full max-w-full">
+              <div className="w-full max-w-full overflow-hidden">
+                <BlueprintHealthCheck />
+              </div>
             </TabsContent>
           )}
 
-          <TabsContent value="generating" className="mt-6">
+          <TabsContent value="generating" className="mt-4 sm:mt-6 w-full max-w-full">
             {isGenerating && blueprintData && (
-              <BlueprintGenerator 
-                userProfile={{
-                  full_name: blueprintData.user_meta?.full_name || "",
-                  preferred_name: blueprintData.user_meta?.preferred_name || "",
-                  birth_date: blueprintData.user_meta?.birth_date || "",
-                  birth_time_local: blueprintData.user_meta?.birth_time_local || "",
-                  birth_location: blueprintData.user_meta?.birth_location || "",
-                  timezone: blueprintData.user_meta?.timezone || ""
-                }}
-                onComplete={handleGenerationComplete}
-              />
+              <div className="w-full max-w-full overflow-hidden">
+                <BlueprintGenerator 
+                  userProfile={{
+                    full_name: blueprintData.user_meta?.full_name || "",
+                    preferred_name: blueprintData.user_meta?.preferred_name || "",
+                    birth_date: blueprintData.user_meta?.birth_date || "",
+                    birth_time_local: blueprintData.user_meta?.birth_time_local || "",
+                    birth_location: blueprintData.user_meta?.birth_location || "",
+                    timezone: blueprintData.user_meta?.timezone || ""
+                  }}
+                  onComplete={handleGenerationComplete}
+                />
+              </div>
             )}
           </TabsContent>
         </Tabs>
