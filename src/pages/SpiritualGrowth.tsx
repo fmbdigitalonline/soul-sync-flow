@@ -3,7 +3,7 @@ import React, { useRef, useEffect, useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
-import { Heart, Sparkles, Moon, BookOpen, Calendar, MessageCircle, Compass } from "lucide-react";
+import { Heart, Sparkles, Moon, BookOpen, Calendar, MessageCircle, Compass, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useEnhancedAICoach } from "@/hooks/use-enhanced-ai-coach";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,18 +12,18 @@ import { MoodTracker } from "@/components/coach/MoodTracker";
 import { ReflectionPrompts } from "@/components/coach/ReflectionPrompts";
 import { InsightJournal } from "@/components/coach/InsightJournal";
 import { WeeklyInsights } from "@/components/coach/WeeklyInsights";
-import { LifeAreaSelector, LifeArea } from "@/components/growth/LifeAreaSelector";
-import { JourneyEngine } from "@/components/growth/JourneyEngine";
+import { GrowthProgramInterface } from "@/components/growth/GrowthProgramInterface";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
+import { ProgramWeek } from "@/types/growth-program";
 
-type ActiveTool = 'mood' | 'reflection' | 'insight' | 'weekly' | 'chat' | 'journey' | null;
+type ActiveTool = 'growth_program' | 'mood' | 'reflection' | 'insight' | 'weekly' | 'chat' | null;
 
 const SpiritualGrowth = () => {
   const { messages, isLoading, sendMessage, resetConversation } = useEnhancedAICoach("guide");
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [activeTool, setActiveTool] = useState<ActiveTool>('journey'); // Default to journey mode
-  const [selectedLifeArea, setSelectedLifeArea] = useState<LifeArea | null>(null);
+  const [activeTool, setActiveTool] = useState<ActiveTool>('growth_program'); // Default to growth program
+  const [selectedWeek, setSelectedWeek] = useState<ProgramWeek | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -77,25 +77,24 @@ const SpiritualGrowth = () => {
     addInsightEntry(insight, tags);
   };
 
+  const handleWeekSelect = (week: ProgramWeek) => {
+    setSelectedWeek(week);
+  };
+
+  const handleBackToProgram = () => {
+    setSelectedWeek(null);
+  };
+
   const toggleTool = (tool: ActiveTool) => {
     setActiveTool(activeTool === tool ? null : tool);
-    // Reset life area selection when switching tools
-    if (tool !== 'journey') {
-      setSelectedLifeArea(null);
+    // Reset week selection when switching tools
+    if (tool !== 'growth_program') {
+      setSelectedWeek(null);
     }
   };
 
-  const handleLifeAreaSelect = (area: LifeArea) => {
-    setSelectedLifeArea(area);
-    console.log('Selected life area:', area.name);
-  };
-
-  const handleBackToLifeAreas = () => {
-    setSelectedLifeArea(null);
-  };
-
   const tools = [
-    { id: 'journey' as ActiveTool, name: t('growth.tools.soulGuide'), icon: Compass },
+    { id: 'growth_program' as ActiveTool, name: 'Growth Program', icon: TrendingUp },
     { id: 'mood' as ActiveTool, name: t('growth.tools.moodTracker'), icon: Heart },
     { id: 'reflection' as ActiveTool, name: t('growth.tools.reflectionPrompts'), icon: Sparkles },
     { id: 'insight' as ActiveTool, name: t('growth.tools.insightJournal'), icon: BookOpen },
@@ -125,18 +124,76 @@ const SpiritualGrowth = () => {
     );
   }
 
+  // Handle week selection view
+  if (selectedWeek) {
+    return (
+      <MainLayout>
+        <div className="flex flex-col h-[calc(100vh-5rem)] w-full p-4">
+          <div className="mb-6">
+            <Button 
+              variant="outline" 
+              onClick={handleBackToProgram}
+              className="mb-4"
+            >
+              ← Back to Growth Program
+            </Button>
+            
+            <CosmicCard>
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 className="text-2xl font-bold capitalize">
+                      Week {selectedWeek.week_number}: {selectedWeek.theme.replace('_', ' ')}
+                    </h2>
+                    <p className="text-muted-foreground mt-2">{selectedWeek.focus_area}</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3">Key Activities This Week</h3>
+                    <div className="space-y-2">
+                      {selectedWeek.key_activities.map((activity, idx) => (
+                        <div key={idx} className="flex items-center gap-3 p-3 bg-soul-purple/5 rounded-lg">
+                          <div className="w-2 h-2 bg-soul-purple rounded-full" />
+                          <span>{activity}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3">Tools Available</h3>
+                    <div className="grid grid-cols-2 gap-3">
+                      {selectedWeek.tools_unlocked.map((tool) => (
+                        <div key={tool} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                          <Compass className="h-4 w-4 text-soul-purple" />
+                          <span className="text-sm">{tool}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CosmicCard>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
   return (
     <MainLayout>
       <div className="flex flex-col h-[calc(100vh-5rem)] w-full p-4">
-        {/* Header with NO LanguageSelector; now handled in MainLayout */}
+        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4 w-full">
           <div className="text-center sm:text-left">
             <h1 className="text-2xl font-bold font-display mb-1">
               <span className="gradient-text">{t('growth.title')}</span>
             </h1>
             <p className="text-sm text-muted-foreground">
-              {selectedLifeArea
-                ? t('growth.exploringArea', { area: selectedLifeArea.name })
+              {activeTool === 'growth_program' 
+                ? "Your personalized growth journey based on your blueprint"
                 : t('growth.headerSubtitle')
               }
             </p>
@@ -168,15 +225,8 @@ const SpiritualGrowth = () => {
 
         {/* Active Tool Content */}
         <div className="flex-1 w-full">
-          {activeTool === 'journey' && (
-            selectedLifeArea ? (
-              <JourneyEngine 
-                selectedArea={selectedLifeArea} 
-                onBack={handleBackToLifeAreas}
-              />
-            ) : (
-              <LifeAreaSelector onAreaSelect={handleLifeAreaSelect} />
-            )
+          {activeTool === 'growth_program' && (
+            <GrowthProgramInterface onWeekSelect={handleWeekSelect} />
           )}
 
           {activeTool === 'mood' && (

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -16,7 +17,6 @@ import Auth from '@/pages/Auth';
 import Dashboard from '@/pages/Dashboard';
 import Blueprint from '@/pages/Blueprint';
 import Coach from '@/pages/Coach';
-import GrowthProgram from '@/pages/GrowthProgram';
 import Profile from '@/pages/Profile';
 import Dreams from '@/pages/Dreams';
 import Tasks from '@/pages/Tasks';
@@ -58,7 +58,6 @@ function App() {
                         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                         <Route path="/blueprint" element={<ProtectedRoute><Blueprint /></ProtectedRoute>} />
                         <Route path="/coach" element={<ProtectedRoute><Coach /></ProtectedRoute>} />
-                        <Route path="/growth-program" element={<ProtectedRoute><GrowthProgram /></ProtectedRoute>} />
                         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                         <Route path="/dreams" element={<ProtectedRoute><Dreams /></ProtectedRoute>} />
                         <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
