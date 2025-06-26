@@ -238,6 +238,28 @@ Respond as their Growth Coach guiding them through their active ${domainName} pr
     
     return null;
   }
+
+  // New methods for test suite compatibility
+  getReadinessPrompts(): string[] {
+    return [
+      "What area of your life feels ready for transformation?",
+      "Where do you sense the most energy for growth right now?",
+      "What would change if you could breakthrough in one area?"
+    ];
+  }
+
+  updateConversationStage(message: string): void {
+    // Detect if user is expressing uncertainty or exploration
+    const lowerMessage = message.toLowerCase();
+    
+    if (lowerMessage.includes("don't know") || lowerMessage.includes("not sure") || lowerMessage.includes("uncertain")) {
+      this.conversationStage = 'domain_exploration';
+    } else if (this.selectedDomain && !this.currentProgram) {
+      this.conversationStage = 'belief_drilling';
+    } else if (this.currentProgram) {
+      this.conversationStage = 'active_guidance';
+    }
+  }
 }
 
 export const programAwareCoachService = new ProgramAwareCoachService();

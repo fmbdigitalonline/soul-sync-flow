@@ -470,7 +470,7 @@ class GrowthModeComprehensiveTestSuite {
       results.push({
         testName: 'Conversation Stage Management',
         category: 'coach',
-        status: context.stage === 'exploring' ? 'passed' : 'failed',
+        status: context.stage === 'domain_exploration' ? 'passed' : 'failed',
         duration: Date.now() - startTime,
         details: { stage: context.stage }
       });
