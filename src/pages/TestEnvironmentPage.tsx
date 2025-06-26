@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { AutomatedTestRunner } from '@/components/debug/AutomatedTestRunner';
-import { SystemHealthMonitor } from '@/components/debug/SystemHealthMonitor';
+import SystemHealthMonitor from '@/components/debug/SystemHealthMonitor';
 import { PerformanceMonitor } from '@/components/debug/PerformanceMonitor';
 import { GrowthProgramTestRunner } from '@/components/testing/GrowthProgramTestRunner';
 import { TestTube, Activity, Gauge, Sprout, Database, Zap } from 'lucide-react';
