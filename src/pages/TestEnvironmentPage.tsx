@@ -26,7 +26,8 @@ import {
   BarChart2,
   Users,
   Settings,
-  Gauge
+  Gauge,
+  TrendingUp
 } from 'lucide-react';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { Phase3MemoryTest } from '@/components/debug/Phase3MemoryTest';
@@ -57,9 +58,10 @@ import UXFlowTester from '@/components/debug/UXFlowTester';
 import AdvancedAnalyticsSuite from '@/components/debug/AdvancedAnalyticsSuite';
 import SystemHealthMonitor from '@/components/debug/SystemHealthMonitor';
 import ABTestingFramework from '@/components/debug/ABTestingFramework';
+import { GrowthProgramTestRunner } from '@/components/testing/GrowthProgramTestRunner';
 
 const TestEnvironmentPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('architecture');
+  const [activeTab, setActiveTab] = useState('growth-program');
 
   return (
     <AuthProvider>
@@ -72,7 +74,7 @@ const TestEnvironmentPage: React.FC = () => {
                 Complete Test Environment Dashboard
               </h1>
               <p className="text-lg text-gray-600">
-                Comprehensive testing suite: 35 test components covering 7-layer personality engine, 12 modules, 3 coach modes, error handling, performance, UX flows, and advanced analytics with real-time dynamic data
+                Comprehensive testing suite: 36 test components covering Growth Programs, 7-layer personality engine, 12 modules, 3 coach modes, error handling, performance, UX flows, and advanced analytics with real-time dynamic data
               </p>
             </div>
 
@@ -81,11 +83,32 @@ const TestEnvironmentPage: React.FC = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Activity className="h-5 w-5" />
-                  Complete Test Environment Status (35 Tests Available)
+                  Complete Test Environment Status (36 Tests Available)
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-12 gap-4">
+                  
+                  {/* Growth Program Tests */}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="text-center p-3 border rounded-lg hover:bg-gray-50 cursor-help">
+                        <div className="flex items-center justify-center mb-2">
+                          <TrendingUp className="h-6 w-6 text-green-600" />
+                        </div>
+                        <div className="text-sm font-medium mb-1">Growth Program</div>
+                        <Badge className="bg-green-100 text-green-800 text-xs">Live Data</Badge>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-sm">
+                      <div className="space-y-2">
+                        <p><strong>Growth Program End-to-End Testing</strong></p>
+                        <p>Measures: Program creation, blueprint integration, AI coach context, progress tracking</p>
+                        <p>KPIs: Program completion rate (0-100%), user engagement score, weekly progression</p>
+                        <p>Benefits: Ensures complete growth program workflow with real user data</p>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
                   
                   {/* Core Architecture Tests */}
                   <Tooltip>
@@ -321,7 +344,19 @@ const TestEnvironmentPage: React.FC = () => {
               <div className="space-y-4">
                 {/* Core Test Categories */}
                 <div className="overflow-x-auto">
-                  <TabsList className="grid w-max grid-cols-3 lg:grid-cols-9 gap-1 p-1 h-auto">
+                  <TabsList className="grid w-max grid-cols-4 lg:grid-cols-10 gap-1 p-1 h-auto">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <TabsTrigger value="growth-program" className="flex flex-col items-center gap-1 p-3 text-xs">
+                          <TrendingUp className="h-4 w-4" />
+                          Growth Program
+                        </TabsTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>End-to-end Growth Program testing with real data integration</p>
+                      </TooltipContent>
+                    </Tooltip>
+
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <TabsTrigger value="architecture" className="flex flex-col items-center gap-1 p-3 text-xs">
@@ -648,6 +683,17 @@ const TestEnvironmentPage: React.FC = () => {
               </div>
 
               {/* All Tab Contents */}
+              
+              {/* Growth Program Tests - NEW FIRST TAB */}
+              <TabsContent value="growth-program" className="space-y-6">
+                <div className="mb-4">
+                  <h2 className="text-2xl font-semibold mb-2">Growth Program End-to-End Testing</h2>
+                  <p className="text-gray-600">
+                    Comprehensive testing of growth program lifecycle: Blueprint integration → Program creation → AI coach context → Progress tracking → Cross-domain data consistency with real user data.
+                  </p>
+                </div>
+                <GrowthProgramTestRunner />
+              </TabsContent>
               
               {/* Core Architecture Tests */}
               <TabsContent value="architecture" className="space-y-6">
