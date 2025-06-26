@@ -13,6 +13,7 @@ import { ReflectionPrompts } from "@/components/coach/ReflectionPrompts";
 import { InsightJournal } from "@/components/coach/InsightJournal";
 import { WeeklyInsights } from "@/components/coach/WeeklyInsights";
 import { GrowthProgramInterface } from "@/components/growth/GrowthProgramInterface";
+import { programAwareCoachService } from "@/services/program-aware-coach-service";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 import { ProgramWeek } from "@/types/growth-program";
@@ -22,7 +23,7 @@ type ActiveTool = 'growth_program' | 'mood' | 'reflection' | 'insight' | 'weekly
 const SpiritualGrowth = () => {
   const { messages, isLoading, sendMessage, resetConversation } = useEnhancedAICoach("guide");
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [activeTool, setActiveTool] = useState<ActiveTool>('growth_program'); // Default to growth program
+  const [activeTool, setActiveTool] = useState<ActiveTool>('growth_program');
   const [selectedWeek, setSelectedWeek] = useState<ProgramWeek | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -34,13 +35,24 @@ const SpiritualGrowth = () => {
   useEffect(() => {
     const checkAuth = async () => {
       const { data } = await supabase.auth.getSession();
-      setIsAuthenticated(!!data.session);
+      const authenticated = !!data.session;
+      setIsAuthenticated(authenticated);
+      
+      // Initialize program-aware coach if authenticated
+      if (authenticated && data.session.user) {
+        await programAwareCoachService.initializeForUser(data.session.user.id);
+      }
     };
     
     checkAuth();
     
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setIsAuthenticated(!!session);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      const authenticated = !!session;
+      setIsAuthenticated(authenticated);
+      
+      if (authenticated && session?.user) {
+        await programAwareCoachService.initializeForUser(session.user.id);
+      }
     });
     
     return () => {
@@ -62,6 +74,30 @@ const SpiritualGrowth = () => {
       title: t('coach.newConversation'),
       description: t('newConversationStarted', { agent: t('coach.soulGuide') }),
     });
+  };
+
+  // Enhanced program-aware message sending
+  const handleProgramAwareMessage = async (message: string) => {
+    if (!isAuthenticated) return;
+    
+    try {
+      const { data } = await supabase.auth.getSession();
+      if (data.session?.user) {
+        // Use program-aware coach for enhanced context
+        const response = await programAwareCoachService.sendProgramAwareMessage(
+          message,
+          `session_${Date.now()}`,
+          data.session.user.id
+        );
+        
+        // The useEnhancedAICoach hook will handle the message display
+        sendMessage(message);
+      }
+    } catch (error) {
+      console.error('Error sending program-aware message:', error);
+      // Fallback to regular message sending
+      sendMessage(message);
+    }
   };
 
   // Data collection handlers with journey tracking
@@ -124,7 +160,7 @@ const SpiritualGrowth = () => {
     );
   }
 
-  // Handle week selection view
+  // Handle week selection view (now integrated into the main interface)
   if (selectedWeek) {
     return (
       <MainLayout>
@@ -250,7 +286,7 @@ const SpiritualGrowth = () => {
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-medium flex items-center">
                   <Heart className="h-4 w-4 mr-2 text-soul-purple" />
-                  {t('coach.soulGuide')}
+                  {t('coach.soulGuide')} - Program Aware
                 </h3>
                 <Button
                   variant="outline"
@@ -265,7 +301,7 @@ const SpiritualGrowth = () => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => sendMessage(t('growth.startSoulCheckIn'))}
+                onClick={() => handleProgramAwareMessage(t('growth.startSoulCheckIn'))}
                 className="w-full text-xs border-soul-purple/30 hover:bg-soul-purple/10 mb-4"
               >
                 <Moon className="h-3 w-3 mr-2" />
@@ -276,7 +312,7 @@ const SpiritualGrowth = () => {
                 <GuideInterface
                   messages={messages}
                   isLoading={isLoading}
-                  onSendMessage={sendMessage}
+                  onSendMessage={handleProgramAwareMessage}
                   messagesEndRef={messagesEndRef}
                 />
               </div>

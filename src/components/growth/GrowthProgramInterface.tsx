@@ -10,10 +10,11 @@ import { growthProgramService } from '@/services/growth-program-service';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBlueprintCache } from '@/contexts/BlueprintCacheContext';
 import { GrowthProgramStarter } from './GrowthProgramStarter';
+import { WeekDetailView } from './WeekDetailView';
 import { useToast } from '@/hooks/use-toast';
 
 interface GrowthProgramInterfaceProps {
-  onWeekSelect: (week: ProgramWeek) => void;
+  onWeekSelect?: (week: ProgramWeek) => void;
 }
 
 export const GrowthProgramInterface: React.FC<GrowthProgramInterfaceProps> = ({
@@ -21,6 +22,7 @@ export const GrowthProgramInterface: React.FC<GrowthProgramInterfaceProps> = ({
 }) => {
   const [currentProgram, setCurrentProgram] = useState<GrowthProgram | null>(null);
   const [programWeeks, setProgramWeeks] = useState<ProgramWeek[]>([]);
+  const [selectedWeek, setSelectedWeek] = useState<ProgramWeek | null>(null);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const { user } = useAuth();
@@ -96,6 +98,44 @@ export const GrowthProgramInterface: React.FC<GrowthProgramInterfaceProps> = ({
     }
   };
 
+  const handleWeekSelect = (week: ProgramWeek) => {
+    if (!week.is_unlocked) return;
+    
+    if (onWeekSelect) {
+      onWeekSelect(week);
+    } else {
+      setSelectedWeek(week);
+    }
+  };
+
+  const handleMarkWeekComplete = async (weekNumber: number) => {
+    if (!currentProgram) return;
+    
+    try {
+      // Update program progress
+      const nextWeek = Math.min(weekNumber + 1, currentProgram.total_weeks);
+      await growthProgramService.updateProgramProgress(currentProgram.id, {
+        current_week: nextWeek
+      });
+      
+      // Reload program state
+      await loadCurrentProgram();
+      setSelectedWeek(null);
+      
+      toast({
+        title: "Week Completed!",
+        description: `Great job completing Week ${weekNumber}! Week ${nextWeek} is now unlocked.`,
+      });
+    } catch (error) {
+      console.error('Error completing week:', error);
+      toast({
+        title: "Error",
+        description: "There was an issue marking the week as complete.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const getProgramTypeInfo = (programType: string) => {
     const info = {
       sprint: { label: 'Sprint Program', duration: '3 weeks', intensity: 'High' },
@@ -121,6 +161,17 @@ export const GrowthProgramInterface: React.FC<GrowthProgramInterfaceProps> = ({
 
   if (!currentProgram) {
     return <GrowthProgramStarter onDomainSelect={handleCreateProgram} loading={creating} />;
+  }
+
+  // Show detailed week view
+  if (selectedWeek) {
+    return (
+      <WeekDetailView
+        week={selectedWeek}
+        onBack={() => setSelectedWeek(null)}
+        onMarkComplete={handleMarkWeekComplete}
+      />
+    );
   }
 
   const programInfo = getProgramTypeInfo(currentProgram.program_type);
@@ -192,7 +243,7 @@ export const GrowthProgramInterface: React.FC<GrowthProgramInterfaceProps> = ({
                       ? 'bg-blue-50 border-blue-200 cursor-pointer hover:shadow-md' 
                       : 'bg-gray-50 border-gray-200 opacity-60'
                 }`}
-                onClick={() => week.is_unlocked && onWeekSelect(week)}
+                onClick={() => handleWeekSelect(week)}
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-3">
