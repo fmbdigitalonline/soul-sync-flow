@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { CheckCircle, Clock, Lock, Play, ArrowRight } from 'lucide-react';
+import { CheckCircle, Clock, Lock, Play, ArrowRight, Plus, RotateCcw } from 'lucide-react';
 import { GrowthProgram, ProgramWeek, LifeDomain } from '@/types/growth-program';
 import { growthProgramService } from '@/services/growth-program-service';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,6 +22,7 @@ export const GrowthProgramInterface: React.FC<GrowthProgramInterfaceProps> = ({
   const [currentProgram, setCurrentProgram] = useState<GrowthProgram | null>(null);
   const [programWeeks, setProgramWeeks] = useState<ProgramWeek[]>([]);
   const [selectedWeek, setSelectedWeek] = useState<ProgramWeek | null>(null);
+  const [showDomainSelector, setShowDomainSelector] = useState(false);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const { user } = useAuth();
@@ -71,6 +71,14 @@ export const GrowthProgramInterface: React.FC<GrowthProgramInterfaceProps> = ({
       setCreating(true);
       console.log('Creating growth program for domain:', domain);
       
+      // If there's an existing program, complete it first
+      if (currentProgram) {
+        await growthProgramService.updateProgramProgress(currentProgram.id, { 
+          status: 'completed',
+          actual_completion: new Date().toISOString()
+        });
+      }
+      
       const program = await growthProgramService.createProgram(user.id, domain, blueprintData);
       setCurrentProgram(program);
       
@@ -81,8 +89,11 @@ export const GrowthProgramInterface: React.FC<GrowthProgramInterfaceProps> = ({
       // Start program
       await growthProgramService.updateProgramProgress(program.id, { status: 'active' });
       
+      // Hide domain selector
+      setShowDomainSelector(false);
+      
       toast({
-        title: "Growth Program Created!",
+        title: "New Growth Program Created!",
         description: `Your personalized ${domain.replace('_', ' ')} growth program is ready to begin.`,
       });
       
@@ -96,6 +107,14 @@ export const GrowthProgramInterface: React.FC<GrowthProgramInterfaceProps> = ({
     } finally {
       setCreating(false);
     }
+  };
+
+  const handleStartNewProgram = () => {
+    setShowDomainSelector(true);
+  };
+
+  const handleCancelNewProgram = () => {
+    setShowDomainSelector(false);
   };
 
   const handleWeekSelect = (week: ProgramWeek) => {
@@ -159,8 +178,26 @@ export const GrowthProgramInterface: React.FC<GrowthProgramInterfaceProps> = ({
     );
   }
 
-  if (!currentProgram) {
-    return <GrowthProgramStarter onDomainSelect={handleCreateProgram} loading={creating} />;
+  // Show domain selector for new users OR when explicitly requested
+  if (!currentProgram || showDomainSelector) {
+    return (
+      <div className="space-y-4">
+        {currentProgram && (
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-lg font-semibold">Start New Growth Program</h3>
+              <p className="text-sm text-muted-foreground">
+                Choose a different life area to focus on
+              </p>
+            </div>
+            <Button variant="outline" onClick={handleCancelNewProgram}>
+              Cancel
+            </Button>
+          </div>
+        )}
+        <GrowthProgramStarter onDomainSelect={handleCreateProgram} loading={creating} />
+      </div>
+    );
   }
 
   // Show detailed week view
@@ -189,9 +226,20 @@ export const GrowthProgramInterface: React.FC<GrowthProgramInterfaceProps> = ({
                 {currentProgram.domain.replace('_', ' ')} • Week {currentProgram.current_week} of {currentProgram.total_weeks}
               </p>
             </div>
-            <Badge variant="outline" className="capitalize">
-              {currentProgram.status}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="capitalize">
+                {currentProgram.status}
+              </Badge>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleStartNewProgram}
+                className="text-xs"
+              >
+                <Plus className="h-3 w-3 mr-1" />
+                New Program
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
