@@ -80,52 +80,6 @@ export const GrowthBeliefDrilling: React.FC<GrowthBeliefDrillingProps> = ({
     onComplete(extractedBeliefs);
   };
 
-  return (
-    <div className="flex flex-col h-full max-h-[80vh]">
-      {/* Header */}
-      <div className="p-6 border-b bg-gradient-to-r from-soul-purple/5 to-soul-teal/5 flex-shrink-0">
-        <div className="flex items-center space-x-4">
-          <div className="text-3xl">{domainEmoji[domain]}</div>
-          <div>
-            <h2 className="text-xl font-bold">Exploring {domainTitle[domain]}</h2>
-            <p className="text-sm text-muted-foreground">
-              Let's dive deep into your motivations and beliefs in this area
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Scrollable Chat Interface */}
-      <div className="flex-1 overflow-hidden">
-        <div className="h-full p-4">
-          <GuideInterface
-            messages={messages}
-            isLoading={isLoading}
-            onSendMessage={handleSendMessage}
-            messagesEndRef={messagesEndRef}
-          />
-        </div>
-      </div>
-
-      {/* Action Bar */}
-      {messages.length >= 6 && (
-        <div className="p-4 border-t bg-gray-50 flex-shrink-0">
-          <div className="flex justify-between items-center max-w-2xl mx-auto">
-            <p className="text-sm text-muted-foreground">
-              Ready to create your personalized growth program?
-            </p>
-            <Button 
-              onClick={handleContinue}
-              className="bg-soul-purple hover:bg-soul-purple/90"
-            >
-              Generate My Program
-            </Button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-
   function extractKeyInsights(msgs: any[]) {
     return msgs
       .filter(m => m.sender === 'user')
@@ -162,4 +116,48 @@ export const GrowthBeliefDrilling: React.FC<GrowthBeliefDrillingProps> = ({
     
     return patterns.slice(0, 3);
   }
+
+  return (
+    <div className="h-full flex flex-col">
+      {/* Header */}
+      <div className="flex-shrink-0 p-6 border-b bg-gradient-to-r from-soul-purple/5 to-soul-teal/5">
+        <div className="flex items-center space-x-4">
+          <div className="text-3xl">{domainEmoji[domain]}</div>
+          <div>
+            <h2 className="text-xl font-bold">Exploring {domainTitle[domain]}</h2>
+            <p className="text-sm text-muted-foreground">
+              Let's dive deep into your motivations and beliefs in this area
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Chat Interface - Let GuideInterface handle its own layout */}
+      <div className="flex-1 min-h-0">
+        <GuideInterface
+          messages={messages}
+          isLoading={isLoading}
+          onSendMessage={handleSendMessage}
+          messagesEndRef={messagesEndRef}
+        />
+      </div>
+
+      {/* Action Bar */}
+      {messages.length >= 6 && (
+        <div className="flex-shrink-0 p-4 border-t bg-gray-50">
+          <div className="flex justify-between items-center max-w-2xl mx-auto">
+            <p className="text-sm text-muted-foreground">
+              Ready to create your personalized growth program?
+            </p>
+            <Button 
+              onClick={handleContinue}
+              className="bg-soul-purple hover:bg-soul-purple/90"
+            >
+              Generate My Program
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
