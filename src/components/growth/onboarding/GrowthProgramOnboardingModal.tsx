@@ -61,8 +61,8 @@ export const GrowthProgramOnboardingModal: React.FC<GrowthProgramOnboardingModal
 
   return (
     <Dialog open={isOpen} onOpenChange={() => {}}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0">
-        <div className="w-full h-full">
+      <DialogContent className="max-w-4xl h-[90vh] overflow-hidden p-0 flex flex-col">
+        <div className="w-full h-full flex flex-col overflow-hidden">
           {renderCurrentStage()}
         </div>
       </DialogContent>
