@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { PersonalityEngine } from "./personality-engine";
 import { soulSyncService } from "./soul-sync-service";
@@ -222,6 +223,19 @@ class EnhancedAICoachService {
     }
   }
 
+  private async getAuthenticatedHeaders(): Promise<{ [key: string]: string }> {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session?.access_token) {
+      throw new Error('No valid authentication session');
+    }
+
+    return {
+      'Authorization': `Bearer ${session.access_token}`,
+      'Content-Type': 'application/json',
+    };
+  }
+
   async sendStreamingMessage(
     message: string,
     sessionId: string,
@@ -243,13 +257,21 @@ class EnhancedAICoachService {
         const validation = UnifiedBlueprintService.validateBlueprint(blueprint);
         console.log("📊 Blueprint completeness for streaming:", validation.completionPercentage + "%");
       }
+
+      let headers: { [key: string]: string };
+      
+      try {
+        headers = await this.getAuthenticatedHeaders();
+        console.log("✅ Authentication headers prepared for streaming");
+      } catch (authError) {
+        console.error("❌ Authentication error for streaming:", authError);
+        callbacks.onError(new Error('Authentication required. Please sign in again.'));
+        return;
+      }
       
       const response = await fetch(`https://qxaajirrqrcnmvtowjbg.supabase.co/functions/v1/ai-coach-stream`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4YWFqaXJycXJjbm12dG93amJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE0NDE5NzQ1NDcsImV4cCI6MjA1OTU1MDU0N30.HZRTlihPe3PNQVWxNHCrwjoa9R6Wvo8WOKlQVGunYIw`,
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({
           message,
           sessionId,
@@ -263,12 +285,36 @@ class EnhancedAICoachService {
         }),
       });
 
+      if (response.status === 401) {
+        console.error("❌ Authentication failed for streaming - falling back to non-streaming");
+        // Fallback to non-streaming mode
+        try {
+          const fallbackResult = await this.sendMessage(message, sessionId, usePersona, agentType, language);
+          callbacks.onComplete(fallbackResult.response);
+          return;
+        } catch (fallbackError) {
+          callbacks.onError(new Error('Authentication failed. Please sign in again.'));
+          return;
+        }
+      }
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.error(`❌ HTTP error! status: ${response.status}, body: ${errorText}`);
+        
+        // Try fallback to non-streaming
+        try {
+          console.log("🔄 Attempting fallback to non-streaming mode");
+          const fallbackResult = await this.sendMessage(message, sessionId, usePersona, agentType, language);
+          callbacks.onComplete(fallbackResult.response);
+          return;
+        } catch (fallbackError) {
+          throw new Error(`Streaming failed: ${response.status}. Fallback also failed.`);
+        }
       }
 
       if (!response.body) {
-        throw new Error('No response body');
+        throw new Error('No response body from streaming endpoint');
       }
 
       const reader = response.body.getReader();
@@ -276,10 +322,15 @@ class EnhancedAICoachService {
       let fullResponse = '';
 
       try {
+        console.log("📡 Starting to read streaming response...");
+        
         while (true) {
           const { done, value } = await reader.read();
           
-          if (done) break;
+          if (done) {
+            console.log("📡 Stream reading completed");
+            break;
+          }
           
           const chunk = decoder.decode(value, { stream: true });
           const lines = chunk.split('\n');

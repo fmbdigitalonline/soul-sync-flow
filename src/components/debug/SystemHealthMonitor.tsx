@@ -22,10 +22,13 @@ import {
   TrendingDown,
   Settings,
   Bell,
-  Gauge
+  Gauge,
+  Wifi,
+  Lock
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { streamingAuthTestSuite, StreamingTestSuiteResult } from '@/services/streaming-auth-test-suite';
 
 interface SystemMetrics {
   cpuUsage: number;
@@ -102,6 +105,7 @@ const SystemHealthMonitor: React.FC = () => {
   });
 
   const [healthAlerts, setHealthAlerts] = useState<HealthAlert[]>([]);
+  const [streamingAuthStatus, setStreamingAuthStatus] = useState<StreamingTestSuiteResult | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
   // Monitor system metrics using real data
@@ -287,6 +291,27 @@ const SystemHealthMonitor: React.FC = () => {
     }
   };
 
+  // New function to monitor streaming authentication
+  const monitorStreamingAuth = async () => {
+    try {
+      console.log('🔐 Monitoring streaming authentication...');
+      const results = await streamingAuthTestSuite.runFullTestSuite();
+      setStreamingAuthStatus(results);
+      
+      // Generate alerts based on streaming auth status
+      if (results.overallAuthStatus === 'failed') {
+        generateHealthAlert('critical', 'Streaming Auth', 'Streaming authentication completely failed');
+      } else if (results.overallAuthStatus === 'degraded') {
+        generateHealthAlert('warning', 'Streaming Auth', 'Streaming authentication partially degraded');
+      }
+      
+      console.log('✅ Streaming authentication monitoring completed:', results.overallAuthStatus);
+    } catch (error) {
+      console.error('❌ Error monitoring streaming authentication:', error);
+      generateHealthAlert('critical', 'Streaming Auth Monitor', 'Failed to assess streaming authentication');
+    }
+  };
+
   // Generate health alerts
   const generateHealthAlert = (severity: 'critical' | 'warning' | 'info', service: string, message: string) => {
     const alert: HealthAlert = {
@@ -314,17 +339,18 @@ const SystemHealthMonitor: React.FC = () => {
   // Run comprehensive health check
   const runHealthCheck = async () => {
     setIsMonitoring(true);
-    console.log('🚀 Starting comprehensive health check...');
+    console.log('🚀 Starting comprehensive health check including streaming auth...');
 
     try {
       await Promise.all([
         monitorSystemMetrics(),
         monitorDatabaseHealth(),
-        monitorServiceHealth()
+        monitorServiceHealth(),
+        monitorStreamingAuth() // Add streaming auth monitoring
       ]);
       
       setLastUpdated(new Date());
-      console.log('✅ Comprehensive health check completed');
+      console.log('✅ Comprehensive health check completed with streaming auth');
     } catch (error) {
       console.error('❌ Error running health check:', error);
     } finally {
@@ -341,11 +367,13 @@ const SystemHealthMonitor: React.FC = () => {
     }
   }, [user]);
 
+  // Enhanced helper functions
   const getHealthColor = (status: string) => {
     switch (status) {
       case 'healthy': return 'text-green-600';
       case 'degraded': return 'text-yellow-600';
-      case 'down': return 'text-red-600';
+      case 'down':
+      case 'failed': return 'text-red-600';
       default: return 'text-gray-600';
     }
   };
@@ -354,7 +382,8 @@ const SystemHealthMonitor: React.FC = () => {
     switch (status) {
       case 'healthy': return 'bg-green-100';
       case 'degraded': return 'bg-yellow-100';
-      case 'down': return 'bg-red-100';
+      case 'down':
+      case 'failed': return 'bg-red-100';
       default: return 'bg-gray-100';
     }
   };
@@ -378,7 +407,7 @@ const SystemHealthMonitor: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* System Status Overview */}
+      {/* Enhanced System Status Overview */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -425,14 +454,20 @@ const SystemHealthMonitor: React.FC = () => {
               <div className="text-sm text-gray-600">Error Rate</div>
             </div>
             <div className="text-center p-3 border rounded-lg">
-              <div className="text-xl font-bold text-red-600">{unresolvedAlerts.length}</div>
-              <div className="text-sm text-gray-600">Active Alerts</div>
+              <div className={`text-xl font-bold ${
+                streamingAuthStatus?.overallAuthStatus === 'healthy' ? 'text-green-600' :
+                streamingAuthStatus?.overallAuthStatus === 'degraded' ? 'text-yellow-600' : 'text-red-600'
+              }`}>
+                {streamingAuthStatus?.overallAuthStatus === 'healthy' ? '✓' :
+                 streamingAuthStatus?.overallAuthStatus === 'degraded' ? '⚠' : '✗'}
+              </div>
+              <div className="text-sm text-gray-600">Stream Auth</div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Health Check Controls */}
+      {/* Enhanced Health Check Controls */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -441,7 +476,7 @@ const SystemHealthMonitor: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-2 mb-4">
+          <div className="flex gap-2 mb-4 flex-wrap">
             <Button 
               onClick={runHealthCheck}
               disabled={isMonitoring}
@@ -477,16 +512,26 @@ const SystemHealthMonitor: React.FC = () => {
               <Server className="h-4 w-4" />
               Check Services
             </Button>
+            <Button 
+              onClick={monitorStreamingAuth}
+              disabled={isMonitoring}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Lock className="h-4 w-4" />
+              Check Streaming Auth
+            </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Detailed Health Tabs */}
+      {/* Enhanced Detailed Health Tabs */}
       <Tabs defaultValue="services" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="services">Services</TabsTrigger>
           <TabsTrigger value="database">Database</TabsTrigger>
           <TabsTrigger value="system">System</TabsTrigger>
+          <TabsTrigger value="streaming">Streaming Auth</TabsTrigger>
           <TabsTrigger value="alerts">Alerts</TabsTrigger>
         </TabsList>
 
@@ -650,6 +695,88 @@ const SystemHealthMonitor: React.FC = () => {
           </Card>
         </TabsContent>
 
+        {/* New Streaming Authentication Tab */}
+        <TabsContent value="streaming" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Wifi className="h-5 w-5" />
+                Streaming Authentication Status
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {streamingAuthStatus ? (
+                <div className="space-y-6">
+                  {/* Overall Status */}
+                  <div className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-4 h-4 rounded-full ${
+                        streamingAuthStatus.overallAuthStatus === 'healthy' ? 'bg-green-500' : 
+                        streamingAuthStatus.overallAuthStatus === 'degraded' ? 'bg-yellow-500' : 'bg-red-500'
+                      }`} />
+                      <span className="font-medium">Overall Streaming Auth Status</span>
+                    </div>
+                    <Badge className={getHealthBackground(streamingAuthStatus.overallAuthStatus)}>
+                      <span className={getHealthColor(streamingAuthStatus.overallAuthStatus)}>
+                        {streamingAuthStatus.overallAuthStatus.toUpperCase()}
+                      </span>
+                    </Badge>
+                  </div>
+
+                  {/* Test Results Summary */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="text-center p-3 border rounded-lg">
+                      <div className="text-2xl font-bold text-green-600">{streamingAuthStatus.passed}</div>
+                      <div className="text-sm text-gray-600">Tests Passed</div>
+                    </div>
+                    <div className="text-center p-3 border rounded-lg">
+                      <div className="text-2xl font-bold text-red-600">{streamingAuthStatus.failed}</div>
+                      <div className="text-sm text-gray-600">Tests Failed</div>
+                    </div>
+                    <div className="text-center p-3 border rounded-lg">
+                      <div className="text-2xl font-bold text-blue-600">{streamingAuthStatus.duration}ms</div>
+                      <div className="text-sm text-gray-600">Test Duration</div>
+                    </div>
+                  </div>
+
+                  {/* Individual Test Results */}
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Individual Test Results</h4>
+                    {streamingAuthStatus.results.map((test, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-3 h-3 rounded-full ${
+                            test.status === 'passed' ? 'bg-green-500' : 
+                            test.status === 'failed' ? 'bg-red-500' : 'bg-gray-400'
+                          }`} />
+                          <span className="font-medium">{test.testName}</span>
+                          {test.error && (
+                            <span className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded">
+                              {test.error}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-600">{test.duration}ms</span>
+                          <Badge variant="outline" className="text-xs">
+                            {test.authenticationStatus || 'unknown'}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Wifi className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                  <p>No streaming authentication data available.</p>
+                  <p className="text-sm">Run a health check to test streaming authentication.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* Health Alerts */}
         <TabsContent value="alerts" className="space-y-4">
           <Card>
@@ -704,7 +831,7 @@ const SystemHealthMonitor: React.FC = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Health Summary */}
+      {/* Enhanced Health Summary */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -718,8 +845,10 @@ const SystemHealthMonitor: React.FC = () => {
             <p>✅ Live database health: Connection pool, query performance tracking</p>
             <p>✅ Service availability monitoring: All core services health checked</p>
             <p>✅ Performance metrics: API response time, network latency measurement</p>
+            <p>✅ Streaming authentication: Real-time auth token validation and streaming endpoint testing</p>
             <p>✅ Automated alerting: Critical, warning, and info alerts generated</p>
             <p>✅ Dynamic data validation: Real Supabase queries, no hardcoded values</p>
+            <p>✅ Fallback mechanism testing: Non-streaming fallback verification</p>
           </div>
         </CardContent>
       </Card>

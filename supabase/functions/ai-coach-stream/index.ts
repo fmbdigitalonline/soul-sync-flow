@@ -1,6 +1,7 @@
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,6 +14,36 @@ serve(async (req) => {
   }
 
   try {
+    console.log('🔐 AI Coach Stream: Validating authentication...');
+    
+    // Initialize Supabase client for auth validation
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Extract and validate auth token
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      console.error('❌ AI Coach Stream: No authorization header provided');
+      return new Response(JSON.stringify({ error: 'Authentication required' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      console.error('❌ AI Coach Stream: Authentication failed:', authError?.message);
+      return new Response(JSON.stringify({ error: 'Invalid authentication token' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    console.log('✅ AI Coach Stream: User authenticated:', user.id);
+
     const { 
       message, 
       sessionId, 
@@ -25,7 +56,7 @@ serve(async (req) => {
       temperature = 0.7
     } = await req.json();
 
-    console.log(`🚀 Starting streaming chat completion (${agentType}, Blueprint: ${includeBlueprint}, MaxTokens: ${maxTokens})`);
+    console.log(`🚀 Starting streaming chat completion (${agentType}, Blueprint: ${includeBlueprint}, MaxTokens: ${maxTokens}, User: ${user.id})`);
 
     // Build messages array
     const messages = [];
@@ -43,10 +74,20 @@ serve(async (req) => {
 
     messages.push({ role: 'user', content: message });
 
+    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+    if (!openAIApiKey) {
+      console.error('❌ AI Coach Stream: OpenAI API key not configured');
+      return new Response(JSON.stringify({ error: 'Service configuration error' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    console.log('🤖 Making OpenAI API request...');
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+        'Authorization': `Bearer ${openAIApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -59,8 +100,12 @@ serve(async (req) => {
     });
 
     if (!openAIResponse.ok) {
+      const errorText = await openAIResponse.text();
+      console.error('❌ OpenAI API error:', openAIResponse.status, errorText);
       throw new Error(`OpenAI API error: ${openAIResponse.status}`);
     }
+
+    console.log('✅ OpenAI API request successful, starting stream...');
 
     // Create a ReadableStream for the response
     const stream = new ReadableStream({
@@ -99,7 +144,6 @@ serve(async (req) => {
                   const content = parsed.choices?.[0]?.delta?.content;
                   
                   if (content) {
-                    console.log(`📡 Streaming content chunk: ${content.slice(0, 50)}...`);
                     controller.enqueue(new TextEncoder().encode(`data: ${data}\n\n`));
                   }
                 } catch (e) {
@@ -129,7 +173,10 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('❌ Error in ai-coach-stream function:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ 
+      error: error.message,
+      details: 'Authentication or service error occurred'
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
