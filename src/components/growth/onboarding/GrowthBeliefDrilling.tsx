@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -48,22 +49,18 @@ export const GrowthBeliefDrilling: React.FC<GrowthBeliefDrillingProps> = ({
       setIsInitialized(true);
       resetConversation();
       
-      // Start with a simple, conversational drilling question
+      // Send a user message that will trigger the coach to start the drilling conversation
       setTimeout(() => {
-        const startingQuestion = `What draws you to focusing on ${domainTitle[domain]} right now? What's happening in this area of your life that feels ready for exploration?`;
+        const userMessage = `I've chosen ${domainTitle[domain]} as my growth area. I'm ready to explore the deeper beliefs and motivations behind this choice. Please help me drill down to understand what's really driving this decision.`;
         
-        console.log('🚀 Starting belief drilling with question:', startingQuestion);
-        
-        // Send this as a coach message directly, not as a system prompt
-        sendMessage(startingQuestion, true); // Use assistant flag to make it appear as coach message
+        console.log('🚀 Starting belief drilling conversation with user message:', userMessage);
+        sendMessage(userMessage);
       }, 1000);
     }
   }, [domain, isInitialized, resetConversation, sendMessage, domainTitle]);
 
   const handleSendMessage = async (message: string) => {
     console.log('📤 Sending belief drilling response:', message);
-    
-    // Send user message normally
     sendMessage(message);
   };
 

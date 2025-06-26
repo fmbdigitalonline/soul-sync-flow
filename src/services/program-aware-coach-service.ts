@@ -1,3 +1,4 @@
+
 import { enhancedAICoachService } from "./enhanced-ai-coach-service";
 import { growthProgramService } from "./growth-program-service";
 import { GrowthProgram, ProgramWeek, LifeDomain } from "@/types/growth-program";
@@ -115,22 +116,29 @@ Respond immediately as the Growth Coach with the welcome message and interactive
     this.selectedDomain = domain;
     this.conversationStage = 'belief_drilling';
     
-    const beliefDrillingMessage = `The user has chosen ${domain.replace('_', ' ')} as their growth domain. Now I need to help them drill down to their core beliefs and motivations using Bashar principles.
+    // This should not be called directly anymore - the belief drilling will happen through normal conversation
+    const beliefDrillingMessage = `The user has chosen ${domain.replace('_', ' ')} as their growth domain. Now I need to help them drill down to their core beliefs and motivations using focused questioning.
 
-[GROWTH COACH CONTEXT: Domain selected - ${domain} - now drilling to core beliefs and root causes]
+[BELIEF DRILLING MODE: User selected ${domain} - I am now their belief drilling coach]
 
-BELIEF DRILLING PRINCIPLES (Bashar-inspired):
-- Help them discover the "why" behind their desire for growth
-- Look for core beliefs that might be limiting them
-- Find the root cause, not just surface symptoms  
-- Help them connect with their authentic self
-- Ask questions that reveal unconscious beliefs
-- Create space for genuine self-reflection
-- If they struggle with reflection, guide them gently with more specific questions
+BELIEF DRILLING PRINCIPLES:
+- I ask ONE specific, penetrating question at a time
+- I wait for their response before asking the next question
+- Each question goes deeper than the last
+- I explore beliefs, fears, motivations, and root causes
+- I stay conversational and warm while drilling deeper
+- NO analysis, summaries, or reports - just targeted questions
+- I build on what they share to ask the next deeper question
 
-USER CONTEXT: Has chosen to focus on ${domain.replace('_', ' ')} growth
+DRILLING APPROACH:
+- Start with why this area called to them right now
+- Explore what's happening in this area of their life
+- Look for underlying beliefs, assumptions, or patterns
+- Help them discover what's really driving their relationship with ${domain.replace('_', ' ')}
 
-Respond as their Growth Coach who wants to help them understand the deeper motivations and beliefs behind their choice. Ask a penetrating but gentle question that helps them explore why this area is calling to them right now. What might be the deeper belief or pattern underneath their desire for growth here?`;
+USER CONTEXT: Has chosen to focus on ${domain.replace('_', ' ')} growth and is ready for belief exploration.
+
+I respond as their Growth Coach with ONE targeted question that helps them explore why this area is calling to them right now. I ask about their current experience or what's drawing them to focus here.`;
 
     return await enhancedAICoachService.sendMessage(
       beliefDrillingMessage,
@@ -142,13 +150,16 @@ Respond as their Growth Coach who wants to help them understand the deeper motiv
   }
 
   private createStepByStepGuidance(userMessage: string, userId: string): string {
+    // Check if this is a belief drilling conversation
+    if (this.conversationStage === 'belief_drilling' || 
+        userMessage.toLowerCase().includes('chosen') && 
+        userMessage.toLowerCase().includes('growth area')) {
+      return this.createBeliefDrillingGuidance(userMessage);
+    }
+    
     // Detect if this is program creation flow
     if (this.conversationStage === 'domain_exploration') {
       return this.createDomainExplorationGuidance(userMessage);
-    }
-    
-    if (this.conversationStage === 'belief_drilling') {
-      return this.createBeliefDrillingGuidance(userMessage);
     }
 
     if (!this.currentProgram || !this.currentWeek) {
@@ -176,18 +187,16 @@ Respond as their Growth Coach helping them discover which life area is truly cal
   }
 
   private createBeliefDrillingGuidance(userMessage: string): string {
-    const domainName = this.selectedDomain?.replace('_', ' ') || 'their chosen area';
-    
-    return `[GROWTH COACH CONTEXT: Belief drilling session for ${domainName} - Step-by-step questioning]
+    return `[BELIEF DRILLING MODE: User is exploring their chosen growth area through deep questioning]
 
 BELIEF DRILLING PRINCIPLES:
-- I am conducting a focused belief drilling session about ${domainName}
 - I ask ONE specific question at a time and wait for the user's response
 - Each question should go deeper than the last, exploring beliefs, fears, and root causes
 - I look for patterns, limiting beliefs, and core motivations
 - I stay conversational and warm while drilling deeper
 - NO analysis, summaries, or reports - just targeted questions
 - I build on what they just shared to ask the next deeper question
+- I help them discover what's really driving their relationship with this area
 
 USER JUST SHARED: ${userMessage}
 
@@ -195,9 +204,9 @@ DRILLING APPROACH:
 - Ask about the specific experience, feeling, or belief they mentioned
 - Explore the "why" behind their response
 - Look for underlying fears, assumptions, or patterns
-- Help them discover what's really driving their relationship with ${domainName}
+- Help them discover what's really motivating their focus on this area
 
-Respond as their Growth Coach with ONE targeted follow-up question that goes deeper into what they just shared. Be warm but penetrating in your questioning.`;
+Respond as their Growth Coach with ONE targeted follow-up question that goes deeper into what they just shared. Be warm but penetrating in your questioning. Focus on helping them explore their deeper motivations and beliefs.`;
   }
 
   private createGeneralGrowthGuidance(userMessage: string): string {
