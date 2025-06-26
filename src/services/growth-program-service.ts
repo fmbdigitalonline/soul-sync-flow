@@ -103,7 +103,7 @@ class GrowthProgramService {
     // Extract personality-based parameters from blueprint
     const mbtiType = blueprint?.cognitiveTemperamental?.mbtiType || 'ENFP';
     const hdType = blueprint?.energyDecisionStrategy?.humanDesignType || 'Generator';
-    const lifePath = blueprint?.coreValuesNarrative?.lifePath || 1;
+    const lifePath = Number(blueprint?.coreValuesNarrative?.lifePath) || 1;
 
     // Determine time horizon based on personality
     const time_horizon = (mbtiType.includes('J') || hdType === 'Manifestor') ? 'short' : 'flexible';
@@ -118,7 +118,7 @@ class GrowthProgramService {
                         lifePath >= 7 ? 'deep_change' : 'habit';
     
     // Determine confidence from expression number
-    const expressionNumber = blueprint?.coreValuesNarrative?.expressionNumber || 1;
+    const expressionNumber = Number(blueprint?.coreValuesNarrative?.expressionNumber) || 1;
     const user_confidence = expressionNumber >= 8 ? 'high' :
                            expressionNumber >= 5 ? 'medium' : 'low';
 

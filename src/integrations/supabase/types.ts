@@ -405,6 +405,104 @@ export type Database = {
         }
         Relationships: []
       }
+      growth_programs: {
+        Row: {
+          actual_completion: string | null
+          blueprint_params: Json
+          created_at: string
+          current_week: number
+          domain: string
+          expected_completion: string
+          id: string
+          program_type: string
+          progress_metrics: Json
+          session_schedule: Json
+          started_at: string
+          status: string
+          total_weeks: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          actual_completion?: string | null
+          blueprint_params?: Json
+          created_at?: string
+          current_week?: number
+          domain: string
+          expected_completion: string
+          id?: string
+          program_type: string
+          progress_metrics?: Json
+          session_schedule?: Json
+          started_at?: string
+          status?: string
+          total_weeks: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          actual_completion?: string | null
+          blueprint_params?: Json
+          created_at?: string
+          current_week?: number
+          domain?: string
+          expected_completion?: string
+          id?: string
+          program_type?: string
+          progress_metrics?: Json
+          session_schedule?: Json
+          started_at?: string
+          status?: string
+          total_weeks?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      growth_sessions: {
+        Row: {
+          completed_at: string | null
+          id: string
+          outcomes: Json
+          program_id: string
+          session_data: Json
+          session_number: number
+          session_type: string
+          started_at: string
+          week_number: number
+        }
+        Insert: {
+          completed_at?: string | null
+          id?: string
+          outcomes?: Json
+          program_id: string
+          session_data?: Json
+          session_number: number
+          session_type: string
+          started_at?: string
+          week_number: number
+        }
+        Update: {
+          completed_at?: string | null
+          id?: string
+          outcomes?: Json
+          program_id?: string
+          session_data?: Json
+          session_number?: number
+          session_type?: string
+          started_at?: string
+          week_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "growth_sessions_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "growth_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       micro_action_reminders: {
         Row: {
           action_description: string | null

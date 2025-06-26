@@ -8,14 +8,14 @@ import { CheckCircle, XCircle, Clock, Play, Database, Zap } from 'lucide-react';
 import { growthProgramTestSuite } from '@/services/growth-program-test-suite';
 import { streamingAuthTestSuite } from '@/services/streaming-auth-test-suite';
 import { automatedTestSuite } from '@/services/automated-test-suite';
-import type { GrowthProgramTestSuite, GrowthProgramTestResult } from '@/services/growth-program-test-suite';
+import type { GrowthProgramTestSuiteResult, GrowthProgramTestResult } from '@/services/growth-program-test-suite';
 import type { StreamingTestSuiteResult } from '@/services/streaming-auth-test-suite';
 import type { TestSuiteResult } from '@/services/automated-test-suite';
 
 export const GrowthProgramTestRunner: React.FC = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [testResults, setTestResults] = useState<{
-    growthProgram?: GrowthProgramTestSuite;
+    growthProgram?: GrowthProgramTestSuiteResult;
     streaming?: StreamingTestSuiteResult;
     memory?: TestSuiteResult;
   }>({});

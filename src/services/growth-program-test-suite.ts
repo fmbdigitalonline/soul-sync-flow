@@ -19,7 +19,7 @@ export interface GrowthProgramTestResult {
   };
 }
 
-export interface GrowthProgramTestSuite {
+export interface GrowthProgramTestSuiteResult {
   suiteName: string;
   totalTests: number;
   passed: number;
@@ -29,12 +29,12 @@ export interface GrowthProgramTestSuite {
   integrationStatus: 'healthy' | 'degraded' | 'failed';
 }
 
-class GrowthProgramTestSuite {
+class GrowthProgramTestRunner {
   private testUserId: string | null = null;
   private testProgramId: string | null = null;
   private testSessionId: string = `test-session-${Date.now()}`;
 
-  async runFullTestSuite(): Promise<GrowthProgramTestSuite> {
+  async runFullTestSuite(): Promise<GrowthProgramTestSuiteResult> {
     const startTime = Date.now();
     console.log('🧪 Starting Growth Program End-to-End Test Suite...');
 
@@ -72,7 +72,7 @@ class GrowthProgramTestSuite {
 
       const integrationStatus = failed === 0 ? 'healthy' : failed < allResults.length / 2 ? 'degraded' : 'failed';
 
-      const result: GrowthProgramTestSuite = {
+      const result: GrowthProgramTestSuiteResult = {
         suiteName: 'Growth Program End-to-End Test Suite',
         totalTests: allResults.length,
         passed,
@@ -206,7 +206,7 @@ class GrowthProgramTestSuite {
       if (blueprint) {
         try {
           const extractStartTime = Date.now();
-          const testBlueprint = blueprint.blueprint as LayeredBlueprint;
+          const testBlueprint = blueprint.blueprint as unknown as LayeredBlueprint;
           
           // Test the actual extraction logic
           const mbtiType = testBlueprint?.cognitiveTemperamental?.mbtiType;
@@ -266,7 +266,7 @@ class GrowthProgramTestSuite {
         throw new Error('No blueprint data found for user');
       }
 
-      const blueprint = blueprintRecord.blueprint as LayeredBlueprint;
+      const blueprint = blueprintRecord.blueprint as unknown as LayeredBlueprint;
       const domain: LifeDomain = 'career';
       
       const program = await growthProgramService.createProgram(
@@ -384,16 +384,17 @@ class GrowthProgramTestSuite {
     try {
       const startTime = Date.now();
       
-      // Save a program-related memory
+      // Save a program-related memory with a valid memory type
       const memory = await memoryService.saveMemory({
         user_id: this.testUserId!,
         session_id: this.testSessionId,
-        memory_type: 'growth_program',
+        memory_type: 'interaction', // Using valid type from the schema
         memory_data: {
           program_week: 2,
           domain: 'career',
           insight: 'Discovered limiting belief about needing to be perfect at work',
-          excitement_level: 7
+          excitement_level: 7,
+          context: 'growth_program'
         },
         context_summary: 'Growth program week 2 belief exploration',
         importance_score: 8
@@ -642,4 +643,4 @@ class GrowthProgramTestSuite {
   }
 }
 
-export const growthProgramTestSuite = new GrowthProgramTestSuite();
+export const growthProgramTestSuite = new GrowthProgramTestRunner();
