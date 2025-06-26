@@ -26,8 +26,8 @@ export const GrowthCoachWelcome: React.FC<GrowthCoachWelcomeProps> = ({
       <div className="text-center space-y-3 max-w-md">
         <h1 className="text-2xl font-bold gradient-text">Welcome to Growth Mode</h1>
         <p className="text-muted-foreground">
-          I'm your Growth Coach, here to guide you through your personal development journey. 
-          Let's take this step by step, going deep to unlock your potential.
+          I'm your Growth Coach, here to guide you step by step through your personal development journey. 
+          Let's go deep together and unlock what's calling to you.
         </p>
       </div>
 
@@ -42,7 +42,7 @@ export const GrowthCoachWelcome: React.FC<GrowthCoachWelcomeProps> = ({
               <div className="flex-1">
                 <h3 className="font-semibold text-lg">Start Growth Program</h3>
                 <p className="text-sm text-muted-foreground">
-                  Begin a structured 6-week journey tailored to your blueprint
+                  Let me guide you through discovering your growth area and core motivations
                 </p>
               </div>
             </div>

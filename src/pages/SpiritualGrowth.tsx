@@ -26,6 +26,7 @@ const SpiritualGrowth = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [activeView, setActiveView] = useState<ActiveView>('welcome');
   const [selectedWeek, setSelectedWeek] = useState<ProgramWeek | null>(null);
+  const [isInGuidedFlow, setIsInGuidedFlow] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -70,12 +71,41 @@ const SpiritualGrowth = () => {
   }, [messages]);
 
   // Growth Coach Welcome handlers
-  const handleStartProgram = () => {
-    setActiveView('growth_program');
+  const handleStartProgram = async () => {
+    setActiveView('coach_chat');
+    setIsInGuidedFlow(true);
+    resetConversation();
+    
+    // Start the guided program creation flow
+    if (isAuthenticated) {
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (data.session?.user) {
+          await programAwareCoachService.startGuidedProgramCreation(
+            data.session.user.id,
+            `guided_session_${Date.now()}`
+          );
+          
+          // The coach service will handle the initial message
+          // We just need to trigger the conversation
+          setTimeout(() => {
+            sendMessage("I'm ready to explore my growth journey with you.");
+          }, 500);
+        }
+      } catch (error) {
+        console.error('Error starting guided program creation:', error);
+        toast({
+          title: "Error",
+          description: "There was an issue starting the guided flow. Please try again.",
+          variant: "destructive"
+        });
+      }
+    }
   };
 
   const handleTalkToCoach = () => {
     setActiveView('coach_chat');
+    setIsInGuidedFlow(false);
     resetConversation();
   };
 
@@ -247,13 +277,13 @@ const SpiritualGrowth = () => {
             <GrowthProgramInterface onWeekSelect={handleWeekSelect} />
           )}
 
-          {/* Coach Chat - Step by Step */}
+          {/* Coach Chat - Step by Step or Guided Flow */}
           {activeView === 'coach_chat' && (
             <CosmicCard className="p-4 h-full flex flex-col">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-medium flex items-center">
                   <Heart className="h-4 w-4 mr-2 text-soul-purple" />
-                  Growth Coach - Step by Step Guidance
+                  {isInGuidedFlow ? 'Growth Coach - Guided Program Creation' : 'Growth Coach - Step by Step Guidance'}
                 </h3>
               </div>
               
