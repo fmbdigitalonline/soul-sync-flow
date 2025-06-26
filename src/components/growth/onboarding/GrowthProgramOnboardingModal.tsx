@@ -61,10 +61,7 @@ export const GrowthProgramOnboardingModal: React.FC<GrowthProgramOnboardingModal
 
   return (
     <Dialog open={isOpen} onOpenChange={() => {}}>
-      <DialogContent 
-        className="max-w-4xl max-h-[90vh] overflow-hidden p-0"
-        hideCloseButton
-      >
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0">
         <div className="w-full h-full">
           {renderCurrentStage()}
         </div>

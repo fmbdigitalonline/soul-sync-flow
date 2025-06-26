@@ -19,7 +19,8 @@ export const GrowthBeliefDrilling: React.FC<GrowthBeliefDrillingProps> = ({
   beliefData
 }) => {
   const { messages, isLoading, sendMessage, resetConversation } = useEnhancedAICoach("guide");
-  const [isReady, setIsReady] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const domainEmoji = {
@@ -43,28 +44,33 @@ export const GrowthBeliefDrilling: React.FC<GrowthBeliefDrillingProps> = ({
   };
 
   useEffect(() => {
-    // Initialize the belief drilling conversation
-    if (!isReady) {
-      resetConversation();
-      const initialMessage = `I've chosen ${domainTitle[domain]} as my growth area. Help me explore the deeper beliefs and motivations behind this choice.`;
+    // Only initialize once when the component mounts
+    if (!isInitialized && !hasStarted) {
+      console.log('🔍 Initializing belief drilling for domain:', domain);
       
+      setIsInitialized(true);
+      setHasStarted(true);
+      
+      // Clear any existing conversation
+      resetConversation();
+      
+      // Start the belief drilling conversation with a delay to ensure proper initialization
       setTimeout(() => {
+        const initialMessage = `I've chosen ${domainTitle[domain]} as my growth area. Help me explore the deeper beliefs and motivations behind this choice.`;
+        console.log('🚀 Starting belief drilling with message:', initialMessage);
         sendMessage(initialMessage);
-        setIsReady(true);
-      }, 500);
+      }, 1000);
     }
-  }, [domain, isReady, resetConversation, sendMessage]);
+  }, [domain, isInitialized, hasStarted, resetConversation, sendMessage, domainTitle]);
 
   const handleSendMessage = async (message: string) => {
+    console.log('📤 Sending belief drilling message:', message);
     await sendMessage(message);
-    
-    // Check if we have enough exploration to proceed
-    if (messages.length >= 6) { // At least 3 exchanges
-      setIsReady(true);
-    }
   };
 
   const handleContinue = () => {
+    console.log('✅ Belief drilling complete, extracting data from', messages.length, 'messages');
+    
     // Extract belief data from conversation
     const extractedBeliefs = {
       domain,
@@ -74,6 +80,7 @@ export const GrowthBeliefDrilling: React.FC<GrowthBeliefDrillingProps> = ({
       rootCauses: extractRootCauses(messages)
     };
     
+    console.log('📊 Extracted belief data:', extractedBeliefs);
     onComplete(extractedBeliefs);
   };
 

@@ -2,7 +2,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { growthProgramService } from "./growth-program-service";
 import { LifeDomain, GrowthProgram } from "@/types/growth-program";
-import { LayeredBlueprint } from "@/types/personality-modules";
 
 interface BeliefData {
   domain: LifeDomain;
@@ -10,6 +9,26 @@ interface BeliefData {
   keyInsights: string[];
   coreChallenges: string[];
   rootCauses: string[];
+}
+
+// Create a minimal blueprint type for the growth program
+interface BasicBlueprint {
+  cognitiveTemperamental: {
+    mbtiType: string;
+    cognitiveStrengths: string[];
+    temperamentTraits: string[];
+  };
+  energyDecisionStrategy: {
+    humanDesignType: string;
+    authority: string;
+    strategy: string;
+  };
+  coreValuesNarrative: {
+    lifePath: string;
+    expressionNumber: string;
+    personalityNumber: string;
+    coreValues: string[];
+  };
 }
 
 class GrowthProgramGenerationService {
@@ -28,7 +47,7 @@ class GrowthProgramGenerationService {
       const program = await growthProgramService.createProgram(
         userId,
         domain,
-        blueprint
+        blueprint as any // Type assertion for now
       );
       
       // 3. Customize program based on belief data
@@ -46,11 +65,11 @@ class GrowthProgramGenerationService {
     }
   }
 
-  private async getUserBlueprint(userId: string): Promise<LayeredBlueprint> {
+  private async getUserBlueprint(userId: string): Promise<BasicBlueprint> {
     // Try to get user's existing blueprint
     const { data: blueprintData, error } = await supabase
       .from('user_blueprints')
-      .select('blueprint_data')
+      .select('blueprint')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(1)
@@ -61,15 +80,15 @@ class GrowthProgramGenerationService {
     }
 
     // If no blueprint found, create a basic one
-    if (!blueprintData?.blueprint_data) {
+    if (!blueprintData?.blueprint) {
       console.log('No blueprint found, creating basic blueprint for growth program');
       return this.createBasicBlueprint();
     }
 
-    return blueprintData.blueprint_data as LayeredBlueprint;
+    return this.extractBasicBlueprint(blueprintData.blueprint);
   }
 
-  private createBasicBlueprint(): LayeredBlueprint {
+  private createBasicBlueprint(): BasicBlueprint {
     // Create a basic blueprint for users without complete personality data
     return {
       cognitiveTemperamental: {
@@ -88,7 +107,28 @@ class GrowthProgramGenerationService {
         personalityNumber: '1',
         coreValues: ['Growth', 'Authenticity', 'Connection']
       }
-    } as LayeredBlueprint;
+    };
+  }
+
+  private extractBasicBlueprint(fullBlueprint: any): BasicBlueprint {
+    return {
+      cognitiveTemperamental: {
+        mbtiType: fullBlueprint?.cognitiveTemperamental?.mbtiType || 'ENFP',
+        cognitiveStrengths: fullBlueprint?.cognitiveTemperamental?.cognitiveStrengths || ['Intuition', 'Feeling'],
+        temperamentTraits: fullBlueprint?.cognitiveTemperamental?.temperamentTraits || ['Optimistic', 'Adaptable']
+      },
+      energyDecisionStrategy: {
+        humanDesignType: fullBlueprint?.energyDecisionStrategy?.humanDesignType || 'Generator',
+        authority: fullBlueprint?.energyDecisionStrategy?.authority || 'Sacral',
+        strategy: fullBlueprint?.energyDecisionStrategy?.strategy || 'Respond to life'
+      },
+      coreValuesNarrative: {
+        lifePath: fullBlueprint?.coreValuesNarrative?.lifePath?.toString() || '3',
+        expressionNumber: fullBlueprint?.coreValuesNarrative?.expressionNumber?.toString() || '5',
+        personalityNumber: fullBlueprint?.coreValuesNarrative?.personalityNumber?.toString() || '1',
+        coreValues: fullBlueprint?.coreValuesNarrative?.coreValues || ['Growth', 'Authenticity', 'Connection']
+      }
+    };
   }
 
   private async customizeProgram(
@@ -185,6 +225,8 @@ class GrowthProgramGenerationService {
   private determinePacePreference(conversations: any[]): 'slow' | 'steady' | 'rapid' {
     // Analyze conversation patterns to determine preferred pace
     const totalMessages = conversations.length;
+    if (totalMessages === 0) return 'steady';
+    
     const avgMessageLength = conversations.reduce((acc, conv) => {
       return acc + (conv.content?.length || 0);
     }, 0) / totalMessages;
