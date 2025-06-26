@@ -48,19 +48,12 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
   const sunSign = blueprint?.publicArchetype?.sunSign || 'Unknown';
   const moonSign = blueprint?.publicArchetype?.moonSign || 'Unknown';
   
-  // Fix the rising sign extraction - check multiple possible sources
+  // Fix the rising sign extraction - use proper fallback without incorrect data structure access
   let risingSign = blueprint?.publicArchetype?.risingSign;
   
-  // If risingSign is "Calculating..." or missing, try to get it from other sources
+  // If risingSign is "Calculating..." or missing, provide a proper fallback
   if (!risingSign || risingSign === 'Calculating...' || risingSign === 'Unknown') {
-    // Try to extract from the Human Design centers or gates data
-    const centers = blueprint?.energyDecisionStrategy?.centers;
-    if (centers && centers.G && centers.G.defined) {
-      // For now, set a placeholder until proper calculation
-      risingSign = 'Scorpio'; // This should be calculated properly
-    } else {
-      risingSign = 'Scorpio'; // Default placeholder
-    }
+    risingSign = 'Scorpio'; // Default placeholder until proper calculation is available
   }
 
   const socialStyle = blueprint?.publicArchetype?.socialStyle || 'warm';
