@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -20,7 +19,6 @@ export const GrowthBeliefDrilling: React.FC<GrowthBeliefDrillingProps> = ({
 }) => {
   const { messages, isLoading, sendMessage, resetConversation } = useEnhancedAICoach("guide");
   const [isInitialized, setIsInitialized] = useState(false);
-  const [hasStarted, setHasStarted] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const domainEmoji = {
@@ -45,27 +43,61 @@ export const GrowthBeliefDrilling: React.FC<GrowthBeliefDrillingProps> = ({
 
   useEffect(() => {
     // Only initialize once when the component mounts
-    if (!isInitialized && !hasStarted) {
+    if (!isInitialized) {
       console.log('🔍 Initializing belief drilling for domain:', domain);
       
       setIsInitialized(true);
-      setHasStarted(true);
       
       // Clear any existing conversation
       resetConversation();
       
-      // Start the belief drilling conversation with a delay to ensure proper initialization
+      // Start with a proper belief drilling question
       setTimeout(() => {
-        const initialMessage = `I've chosen ${domainTitle[domain]} as my growth area. Help me explore the deeper beliefs and motivations behind this choice.`;
-        console.log('🚀 Starting belief drilling with message:', initialMessage);
-        sendMessage(initialMessage);
+        const drillingPrompt = `I am facilitating a belief drilling session for ${domainTitle[domain]}. This is Growth Mode - I need to guide the user through deep self-exploration using targeted questions.
+
+BELIEF DRILLING INSTRUCTIONS:
+- I am a Growth Coach conducting a belief drilling session about ${domainTitle[domain]}
+- The user has chosen this domain for growth and needs to explore their deeper beliefs
+- I must ask ONE specific, penetrating question at a time
+- I should wait for their response before asking the next question
+- My goal is to help them discover limiting beliefs, root causes, and core motivations
+- I should be warm but focused, going deeper with each question
+- NO analysis or reports - just ask targeted questions that reveal beliefs
+
+DRILLING APPROACH:
+- Start with "what draws you to this area right now?"
+- Follow up based on their answer with deeper "why" questions
+- Look for beliefs, fears, patterns, and root causes
+- Each question should build on their previous answer
+
+USER CONTEXT: Has chosen ${domainTitle[domain]} as their growth area.
+
+Start the belief drilling session by asking ONE specific question about what draws them to ${domainTitle[domain]} right now. Be conversational and warm, but focused on drilling deeper.`;
+
+        console.log('🚀 Starting belief drilling session');
+        sendMessage(drillingPrompt);
       }, 1000);
     }
-  }, [domain, isInitialized, hasStarted, resetConversation, sendMessage, domainTitle]);
+  }, [domain, isInitialized, resetConversation, sendMessage, domainTitle]);
 
   const handleSendMessage = async (message: string) => {
-    console.log('📤 Sending belief drilling message:', message);
-    await sendMessage(message);
+    console.log('📤 Sending belief drilling response:', message);
+    
+    const guidedMessage = `USER RESPONSE TO BELIEF DRILLING: ${message}
+
+BELIEF DRILLING CONTEXT: We are in a belief drilling session about ${domainTitle[domain]}. The user just responded to my question.
+
+NEXT STEP INSTRUCTIONS:
+- Based on their response, ask ONE follow-up question that goes deeper
+- Look for beliefs, fears, patterns, or root causes to explore
+- Ask about specific experiences, feelings, or thoughts they mentioned
+- Help them discover what's underneath their surface response
+- Stay conversational but focused on going deeper
+- NO summaries or analysis - just ask the next drilling question
+
+Continue the belief drilling conversation by asking ONE targeted follow-up question based on their response.`;
+
+    await sendMessage(guidedMessage);
   };
 
   const handleContinue = () => {
@@ -150,7 +182,7 @@ export const GrowthBeliefDrilling: React.FC<GrowthBeliefDrillingProps> = ({
       </div>
 
       {/* Action Bar */}
-      {messages.length >= 4 && (
+      {messages.length >= 6 && (
         <div className="p-4 border-t bg-gray-50">
           <div className="flex justify-between items-center max-w-2xl mx-auto">
             <p className="text-sm text-muted-foreground">

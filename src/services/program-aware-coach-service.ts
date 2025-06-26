@@ -178,21 +178,26 @@ Respond as their Growth Coach helping them discover which life area is truly cal
   private createBeliefDrillingGuidance(userMessage: string): string {
     const domainName = this.selectedDomain?.replace('_', ' ') || 'their chosen area';
     
-    return `[GROWTH COACH CONTEXT: Drilling into core beliefs for ${domainName} growth - finding root causes]
+    return `[GROWTH COACH CONTEXT: Belief drilling session for ${domainName} - Step-by-step questioning]
 
-BELIEF DRILLING PRINCIPLES (Bashar-inspired):
-- Help them discover limiting beliefs in this area
-- Look for patterns and repeated stories
-- Find the core fear or resistance underneath
-- Help them see beliefs as just beliefs, not truth
-- Create space for genuine insight and reflection
-- If they can't reflect deeply, guide them with gentle questions
-- Connect them to their authentic self in this area
+BELIEF DRILLING PRINCIPLES:
+- I am conducting a focused belief drilling session about ${domainName}
+- I ask ONE specific question at a time and wait for the user's response
+- Each question should go deeper than the last, exploring beliefs, fears, and root causes
+- I look for patterns, limiting beliefs, and core motivations
+- I stay conversational and warm while drilling deeper
+- NO analysis, summaries, or reports - just targeted questions
+- I build on what they just shared to ask the next deeper question
 
-SELECTED DOMAIN: ${domainName}
-USER MESSAGE: ${userMessage}
+USER JUST SHARED: ${userMessage}
 
-Respond as their Growth Coach helping them uncover the deeper beliefs and motivations behind their desire for growth in ${domainName}. Ask penetrating but gentle questions that reveal core patterns.`;
+DRILLING APPROACH:
+- Ask about the specific experience, feeling, or belief they mentioned
+- Explore the "why" behind their response
+- Look for underlying fears, assumptions, or patterns
+- Help them discover what's really driving their relationship with ${domainName}
+
+Respond as their Growth Coach with ONE targeted follow-up question that goes deeper into what they just shared. Be warm but penetrating in your questioning.`;
   }
 
   private createGeneralGrowthGuidance(userMessage: string): string {
