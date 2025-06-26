@@ -76,7 +76,7 @@ const SpiritualGrowth = () => {
     setIsInGuidedFlow(true);
     resetConversation();
     
-    // Start the guided program creation flow - coach leads!
+    // Start the guided program creation flow - coach leads immediately
     if (isAuthenticated) {
       try {
         const { data } = await supabase.auth.getSession();
@@ -86,9 +86,12 @@ const SpiritualGrowth = () => {
             `guided_session_${Date.now()}`
           );
           
-          // The coach has already generated the first message, so we add it to the conversation
-          // We don't trigger an automatic user message - the coach leads
-          console.log("Coach initial response:", response.response);
+          // Immediately trigger the coach's welcome message with domain options
+          // This simulates the coach sending the first message
+          setTimeout(() => {
+            // The coach's response is ready, we just need to trigger it to be displayed
+            sendMessage("_COACH_INITIATED_FLOW_");
+          }, 500);
         }
       } catch (error) {
         console.error('Error starting guided program creation:', error);
@@ -123,6 +126,16 @@ const SpiritualGrowth = () => {
     try {
       const { data } = await supabase.auth.getSession();
       if (data.session?.user) {
+        // Special handling for coach-initiated flow
+        if (message === "_COACH_INITIATED_FLOW_") {
+          // Don't show this internal message, just trigger the coach response
+          const response = await programAwareCoachService.startGuidedProgramCreation(
+            data.session.user.id,
+            `guided_session_${Date.now()}`
+          );
+          return; // The coach message will be handled by the hook
+        }
+        
         // Use program-aware coach for enhanced context
         const response = await programAwareCoachService.sendProgramAwareMessage(
           message,
