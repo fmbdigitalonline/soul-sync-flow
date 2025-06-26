@@ -2,7 +2,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { LayeredBlueprint } from "@/types/personality-modules";
 import { GrowthProgram, ProgramType, BlueprintParams, SessionSchedule, ProgramWeek, LifeDomain } from "@/types/growth-program";
-import type { Json } from "@/integrations/supabase/types";
 
 class GrowthProgramService {
   async createProgram(userId: string, domain: LifeDomain, blueprint: LayeredBlueprint): Promise<GrowthProgram> {
@@ -14,16 +13,16 @@ class GrowthProgramService {
     const schedule = this.buildSchedule(programType, blueprintParams);
     const totalWeeks = this.calculateProgramLength(programType);
     
-    const program = {
+    const program: Omit<GrowthProgram, 'id' | 'created_at' | 'updated_at'> = {
       user_id: userId,
       program_type: programType,
       domain,
       current_week: 1,
       total_weeks: totalWeeks,
-      status: 'pending' as const,
+      status: 'pending',
       started_at: new Date().toISOString(),
       expected_completion: this.calculateExpectedCompletion(totalWeeks, schedule),
-      blueprint_params: blueprintParams as unknown as Json,
+      blueprint_params: blueprintParams,
       progress_metrics: {
         completed_sessions: 0,
         mood_entries: 0,
@@ -33,8 +32,8 @@ class GrowthProgramService {
         belief_shifts_tracked: 0,
         excitement_ratings: [],
         domain_progress_score: 0
-      } as Json,
-      session_schedule: schedule as unknown as Json
+      },
+      session_schedule: schedule
     };
 
     const { data, error } = await supabase
@@ -49,7 +48,7 @@ class GrowthProgramService {
     }
 
     console.log('✅ Growth Program created:', data.id);
-    return this.mapDatabaseRowToGrowthProgram(data);
+    return data;
   }
 
   async getCurrentProgram(userId: string): Promise<GrowthProgram | null> {
@@ -67,29 +66,18 @@ class GrowthProgramService {
       throw error;
     }
 
-    return data ? this.mapDatabaseRowToGrowthProgram(data) : null;
+    return data;
   }
 
   async updateProgramProgress(programId: string, updates: Partial<GrowthProgram>): Promise<void> {
     console.log('📊 Updating program progress:', programId);
     
-    // Convert typed updates to database format
-    const dbUpdates: Record<string, any> = {
-      updated_at: new Date().toISOString()
-    };
-
-    // Map typed fields to database format
-    Object.entries(updates).forEach(([key, value]) => {
-      if (key === 'blueprint_params' || key === 'progress_metrics' || key === 'session_schedule') {
-        dbUpdates[key] = value as unknown as Json;
-      } else {
-        dbUpdates[key] = value;
-      }
-    });
-
     const { error } = await supabase
       .from('growth_programs')
-      .update(dbUpdates)
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString()
+      })
       .eq('id', programId);
 
     if (error) {
@@ -109,26 +97,6 @@ class GrowthProgramService {
     }
 
     return weeks;
-  }
-
-  private mapDatabaseRowToGrowthProgram(data: any): GrowthProgram {
-    return {
-      id: data.id,
-      user_id: data.user_id,
-      program_type: data.program_type as ProgramType,
-      domain: data.domain as LifeDomain,
-      current_week: data.current_week,
-      total_weeks: data.total_weeks,
-      status: data.status,
-      started_at: data.started_at,
-      expected_completion: data.expected_completion,
-      actual_completion: data.actual_completion,
-      blueprint_params: data.blueprint_params as BlueprintParams,
-      progress_metrics: data.progress_metrics as any,
-      session_schedule: data.session_schedule as SessionSchedule,
-      created_at: data.created_at,
-      updated_at: data.updated_at
-    };
   }
 
   private extractBlueprintParams(blueprint: LayeredBlueprint): BlueprintParams {
