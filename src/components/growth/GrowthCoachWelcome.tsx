@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -42,7 +41,7 @@ export const GrowthCoachWelcome: React.FC<GrowthCoachWelcomeProps> = ({
               <div className="flex-1">
                 <h3 className="font-semibold text-lg">Start Growth Program</h3>
                 <p className="text-sm text-muted-foreground">
-                  Let me guide you through discovering your growth area and core motivations
+                  Guided onboarding to discover your growth area and create your personalized program
                 </p>
               </div>
             </div>

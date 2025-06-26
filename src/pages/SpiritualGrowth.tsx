@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
@@ -18,6 +17,7 @@ import { programAwareCoachService } from "@/services/program-aware-coach-service
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 import { ProgramWeek } from "@/types/growth-program";
+import { GrowthProgramOnboardingModal } from "@/components/growth/onboarding/GrowthProgramOnboardingModal";
 
 type ActiveView = 'welcome' | 'growth_program' | 'coach_chat' | 'tools' | 'mood' | 'reflection' | 'insight' | 'weekly' | null;
 
@@ -30,6 +30,7 @@ const SpiritualGrowth = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
+  const [showOnboardingModal, setShowOnboardingModal] = useState(false);
   
   const { growthJourney, addMoodEntry, addReflectionEntry, addInsightEntry } = useJourneyTracking();
 
@@ -72,36 +73,16 @@ const SpiritualGrowth = () => {
 
   // Growth Coach Welcome handlers
   const handleStartProgram = async () => {
-    setActiveView('coach_chat');
-    setIsInGuidedFlow(true);
-    resetConversation();
-    
-    // Start the guided program creation flow - coach leads immediately
-    if (isAuthenticated) {
-      try {
-        const { data } = await supabase.auth.getSession();
-        if (data.session?.user) {
-          const response = await programAwareCoachService.startGuidedProgramCreation(
-            data.session.user.id,
-            `guided_session_${Date.now()}`
-          );
-          
-          // Immediately trigger the coach's welcome message with domain options
-          // This simulates the coach sending the first message
-          setTimeout(() => {
-            // The coach's response is ready, we just need to trigger it to be displayed
-            sendMessage("_COACH_INITIATED_FLOW_");
-          }, 500);
-        }
-      } catch (error) {
-        console.error('Error starting guided program creation:', error);
-        toast({
-          title: "Error",
-          description: "There was an issue starting the guided flow. Please try again.",
-          variant: "destructive"
-        });
-      }
-    }
+    setShowOnboardingModal(true);
+  };
+
+  const handleOnboardingComplete = () => {
+    setShowOnboardingModal(false);
+    setActiveView('growth_program');
+  };
+
+  const handleOnboardingClose = () => {
+    setShowOnboardingModal(false);
   };
 
   const handleTalkToCoach = () => {
@@ -368,6 +349,13 @@ const SpiritualGrowth = () => {
           )}
         </div>
       </div>
+
+      {/* Growth Program Onboarding Modal */}
+      <GrowthProgramOnboardingModal
+        isOpen={showOnboardingModal}
+        onClose={handleOnboardingClose}
+        onComplete={handleOnboardingComplete}
+      />
     </MainLayout>
   );
 };
