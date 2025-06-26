@@ -23,7 +23,7 @@ class GrowthProgramService {
       status: 'pending' as const,
       started_at: new Date().toISOString(),
       expected_completion: this.calculateExpectedCompletion(totalWeeks, schedule),
-      blueprint_params: blueprintParams as Json,
+      blueprint_params: blueprintParams as unknown as Json,
       progress_metrics: {
         completed_sessions: 0,
         mood_entries: 0,
@@ -34,7 +34,7 @@ class GrowthProgramService {
         excitement_ratings: [],
         domain_progress_score: 0
       } as Json,
-      session_schedule: schedule as Json
+      session_schedule: schedule as unknown as Json
     };
 
     const { data, error } = await supabase
@@ -81,7 +81,7 @@ class GrowthProgramService {
     // Map typed fields to database format
     Object.entries(updates).forEach(([key, value]) => {
       if (key === 'blueprint_params' || key === 'progress_metrics' || key === 'session_schedule') {
-        dbUpdates[key] = value as Json;
+        dbUpdates[key] = value as unknown as Json;
       } else {
         dbUpdates[key] = value;
       }
