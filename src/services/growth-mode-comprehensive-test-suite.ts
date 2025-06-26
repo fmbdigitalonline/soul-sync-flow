@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { growthProgramService } from "./growth-program-service";
 import { programAwareCoachService } from "./program-aware-coach-service";
@@ -45,13 +44,160 @@ class GrowthModeComprehensiveTestSuite {
   private testSessionId: string = `growth-mode-test-${Date.now()}`;
   private testProgramId: string | null = null;
   private mockBlueprint: LayeredBlueprint = {
-    cognitive_style: { primary_type: 'ENFP', decision_making: 'intuitive', information_processing: 'perceiving' },
-    energy_dynamics: { human_design_type: 'Projector', authority: 'Splenic', strategy: 'wait_for_invitation' },
-    motivational_core: { life_path_number: 3, expression_number: 11, soul_urge_number: 8 },
-    values_beliefs: { core_values: ['creativity', 'authenticity', 'growth'], worldview: ['optimistic', 'spiritual'], belief_patterns: [] },
-    archetypal_patterns: { primary_archetype: 'Creator', shadow_archetype: 'Victim', integration_theme: 'creative_expression' },
-    shadow_integration: { shadow_aspects: ['perfectionism', 'self_doubt'], integration_practices: ['self_compassion', 'mindfulness'] },
-    expression_manifestation: { sun_sign: 'Aquarius', chinese_zodiac: 'Horse', element: 'Earth' }
+    cognitiveTemperamental: {
+      mbtiType: 'ENFP',
+      functions: ['Ne', 'Fi', 'Te', 'Si'],
+      dominantFunction: 'Ne',
+      auxiliaryFunction: 'Fi',
+      cognitiveStack: ['Ne', 'Fi', 'Te', 'Si'],
+      taskApproach: 'flexible',
+      communicationStyle: 'enthusiastic',
+      decisionMaking: 'value-based',
+      informationProcessing: 'perceiving',
+      coreKeywords: ['creative', 'flexible', 'enthusiastic']
+    },
+    energyDecisionStrategy: {
+      humanDesignType: 'Projector',
+      authority: 'Splenic',
+      decisionStyle: 'intuitive',
+      pacing: 'adaptive',
+      energyType: 'non-sacral',
+      strategy: 'wait_for_invitation',
+      profile: '2/4',
+      centers: ['Spleen', 'G-Center'],
+      gates: ['32', '57'],
+      channels: ['32-54']
+    },
+    motivationBeliefEngine: {
+      mindset: 'growth',
+      motivation: ['creativity', 'authenticity', 'growth'],
+      stateManagement: 'emotional_awareness',
+      coreBeliefs: ['I am creative', 'Growth is possible'],
+      drivingForces: ['self-expression', 'helping others'],
+      excitementCompass: 'creative_projects',
+      frequencyAlignment: 'high_vibration',
+      beliefInterface: ['openness', 'curiosity'],
+      resistancePatterns: ['perfectionism', 'self_doubt']
+    },
+    coreValuesNarrative: {
+      lifePath: 3,
+      lifePathKeyword: 'creative_expression',
+      expressionNumber: 11,
+      expressionKeyword: 'spiritual_insight',
+      soulUrgeNumber: 8,
+      soulUrgeKeyword: 'material_success',
+      meaningfulAreas: ['creativity', 'spirituality', 'career'],
+      anchoringVision: 'creative_fulfillment',
+      lifeThemes: ['self_expression', 'spiritual_growth'],
+      valueSystem: 'authenticity_based',
+      northStar: 'creative_contribution',
+      missionStatement: 'Express creativity authentically',
+      purposeAlignment: 'high',
+      core_values: ['creativity', 'authenticity', 'growth']
+    },
+    publicArchetype: {
+      sunSign: 'Aquarius',
+      moonSign: 'Pisces',
+      risingSign: 'Gemini',
+      socialStyle: 'innovative',
+      publicVibe: 'inspiring',
+      publicPersona: 'visionary',
+      leadershipStyle: 'collaborative',
+      socialMask: 'friendly_innovator',
+      externalExpression: 'creative_authenticity'
+    },
+    generationalCode: {
+      chineseZodiac: 'Horse',
+      element: 'Earth',
+      cohortTint: 'practical_idealism',
+      generationalThemes: ['technology', 'authenticity'],
+      collectiveInfluence: 'balanced_innovation'
+    },
+    surfaceExpression: {
+      observableStyle: 'creative_authentic',
+      realWorldImpact: 'inspiring_others',
+      behavioralSignatures: ['enthusiasm', 'creativity', 'authenticity'],
+      externalManifestations: ['creative_projects', 'helping_others']
+    },
+    marketingArchetype: {
+      messagingStyle: 'inspiring',
+      socialHooks: ['creativity', 'authenticity', 'growth'],
+      brandPersonality: 'creative_guide',
+      communicationPatterns: ['storytelling', 'inspiration'],
+      influenceStyle: 'authentic_inspiration'
+    },
+    goalPersona: {
+      currentMode: 'coach',
+      serviceRole: 'creative_guide',
+      coachingTone: 'supportive',
+      nudgeStyle: 'gentle_encouragement',
+      motivationApproach: 'intrinsic_motivation'
+    },
+    interactionPreferences: {
+      rapportStyle: 'warm_authentic',
+      storyPreference: 'metaphorical',
+      empathyLevel: 'high',
+      conflictStyle: 'collaborative',
+      collaborationStyle: 'co_creative',
+      feedbackStyle: 'constructive',
+      learningStyle: 'experiential'
+    },
+    timingOverlays: {
+      currentTransits: ['creativity_focus'],
+      seasonalInfluences: ['spring_energy'],
+      cyclicalPatterns: ['creative_cycles'],
+      optimalTimings: ['morning_creativity'],
+      energyWeather: 'high_creative_energy'
+    },
+    proactiveContext: {
+      nudgeHistory: [],
+      taskGraph: {},
+      streaks: {},
+      moodLog: [],
+      recentPatterns: [],
+      triggerEvents: []
+    },
+    user_meta: {
+      preferred_name: 'TestUser',
+      full_name: 'Test User'
+    },
+    humorProfile: {
+      primaryStyle: 'playful-storyteller',
+      intensity: 'moderate',
+      appropriatenessLevel: 'balanced',
+      contextualAdaptation: {
+        coaching: 'warm-nurturer',
+        guidance: 'philosophical-sage',
+        casual: 'spontaneous-entertainer'
+      },
+      avoidancePatterns: ['sarcasm', 'dark_humor'],
+      signatureElements: ['wordplay', 'gentle_teasing']
+    },
+    voiceTokens: {
+      pacing: {
+        sentenceLength: 'medium',
+        pauseFrequency: 'thoughtful',
+        rhythmPattern: 'varied'
+      },
+      expressiveness: {
+        emojiFrequency: 'occasional',
+        emphasisStyle: 'italic',
+        exclamationTendency: 'balanced'
+      },
+      vocabulary: {
+        formalityLevel: 'conversational',
+        metaphorUsage: 'frequent',
+        technicalDepth: 'balanced'
+      },
+      conversationStyle: {
+        questionAsking: 'exploratory',
+        responseLength: 'thorough',
+        personalSharing: 'warm'
+      },
+      signaturePhrases: ['Let\'s explore this together', 'What feels true for you?'],
+      greetingStyles: ['Warm and welcoming', 'Curious and inviting'],
+      transitionWords: ['So', 'Now', 'Let\'s see']
+    }
   };
 
   async runFullTestSuite(): Promise<GrowthModeTestSuiteResult> {
@@ -202,10 +348,14 @@ class GrowthModeComprehensiveTestSuite {
     try {
       const startTime = Date.now();
       if (this.testProgramId) {
-        const updateSuccess = await growthProgramService.updateProgramProgress(this.testProgramId, {
+        await growthProgramService.updateProgramProgress(this.testProgramId, {
           current_week: 2,
           status: 'active'
         });
+        
+        // Verify the update was successful
+        const updatedProgram = await growthProgramService.getCurrentProgram(this.testUserId!);
+        const updateSuccess = updatedProgram && updatedProgram.current_week === 2;
         
         results.push({
           testName: 'Program Progress Tracking',
@@ -451,8 +601,7 @@ class GrowthModeComprehensiveTestSuite {
         status: 'passed',
         duration: Date.now() - startTime,
         details: { 
-          relevantMemories: memoryContext.relevantMemories.length,
-          contextStrength: memoryContext.contextStrength
+          relevantMemories: memoryContext.relevantMemories.length
         }
       });
     } catch (error) {
