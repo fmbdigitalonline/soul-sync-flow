@@ -4,12 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CheckCircle, Clock, Lock, Play, ArrowRight } from 'lucide-react';
 import { GrowthProgram, ProgramWeek, LifeDomain } from '@/types/growth-program';
 import { growthProgramService } from '@/services/growth-program-service';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBlueprintCache } from '@/contexts/BlueprintCacheContext';
+import { GrowthProgramStarter } from './GrowthProgramStarter';
+import { useToast } from '@/hooks/use-toast';
 
 interface GrowthProgramInterfaceProps {
   onWeekSelect: (week: ProgramWeek) => void;
@@ -21,9 +22,10 @@ export const GrowthProgramInterface: React.FC<GrowthProgramInterfaceProps> = ({
   const [currentProgram, setCurrentProgram] = useState<GrowthProgram | null>(null);
   const [programWeeks, setProgramWeeks] = useState<ProgramWeek[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDomain, setSelectedDomain] = useState<LifeDomain | null>(null);
+  const [creating, setCreating] = useState(false);
   const { user } = useAuth();
   const { blueprintData } = useBlueprintCache();
+  const { toast } = useToast();
 
   useEffect(() => {
     loadCurrentProgram();
@@ -43,16 +45,30 @@ export const GrowthProgramInterface: React.FC<GrowthProgramInterfaceProps> = ({
       }
     } catch (error) {
       console.error('Error loading program:', error);
+      toast({
+        title: "Error Loading Program",
+        description: "There was an issue loading your growth program. Please try again.",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
   };
 
   const handleCreateProgram = async (domain: LifeDomain) => {
-    if (!user || !blueprintData) return;
+    if (!user || !blueprintData) {
+      toast({
+        title: "Blueprint Required",
+        description: "Please complete your blueprint first to create a personalized growth program.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     try {
-      setLoading(true);
+      setCreating(true);
+      console.log('Creating growth program for domain:', domain);
+      
       const program = await growthProgramService.createProgram(user.id, domain, blueprintData);
       setCurrentProgram(program);
       
@@ -62,22 +78,23 @@ export const GrowthProgramInterface: React.FC<GrowthProgramInterfaceProps> = ({
       
       // Start program
       await growthProgramService.updateProgramProgress(program.id, { status: 'active' });
+      
+      toast({
+        title: "Growth Program Created!",
+        description: `Your personalized ${domain.replace('_', ' ')} growth program is ready to begin.`,
+      });
+      
     } catch (error) {
       console.error('Error creating program:', error);
+      toast({
+        title: "Error Creating Program",
+        description: "There was an issue creating your growth program. Please try again.",
+        variant: "destructive"
+      });
     } finally {
-      setLoading(false);
+      setCreating(false);
     }
   };
-
-  const getDomainOptions = (): { value: LifeDomain; label: string; description: string }[] => [
-    { value: 'career', label: 'Career & Purpose', description: 'Work, calling, and professional growth' },
-    { value: 'relationships', label: 'Relationships', description: 'Love, friendship, and connection' },
-    { value: 'wellbeing', label: 'Wellbeing', description: 'Health, energy, and self-care' },
-    { value: 'finances', label: 'Finances', description: 'Money, abundance, and security' },
-    { value: 'creativity', label: 'Creativity', description: 'Expression, art, and innovation' },
-    { value: 'spirituality', label: 'Spirituality', description: 'Meaning, growth, and connection' },
-    { value: 'home_family', label: 'Home & Family', description: 'Domestic life and family relationships' }
-  ];
 
   const getProgramTypeInfo = (programType: string) => {
     const info = {
@@ -103,50 +120,7 @@ export const GrowthProgramInterface: React.FC<GrowthProgramInterfaceProps> = ({
   }
 
   if (!currentProgram) {
-    return (
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle className="text-xl font-bold">Start Your Growth Journey</CardTitle>
-          <p className="text-muted-foreground">
-            Choose a life area to focus on for your personalized growth program
-          </p>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {getDomainOptions().map((domain) => (
-              <Card
-                key={domain.value}
-                className={`cursor-pointer transition-all hover:shadow-md ${
-                  selectedDomain === domain.value ? 'ring-2 ring-soul-purple' : ''
-                }`}
-                onClick={() => setSelectedDomain(domain.value)}
-              >
-                <CardContent className="p-4">
-                  <h3 className="font-semibold mb-2">{domain.label}</h3>
-                  <p className="text-sm text-muted-foreground">{domain.description}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-          
-          {selectedDomain && (
-            <div className="mt-6 p-4 bg-soul-purple/5 rounded-lg">
-              <h4 className="font-semibold mb-2">Your Personalized Program</h4>
-              <p className="text-sm text-muted-foreground mb-4">
-                Based on your blueprint, we'll create a customized growth program tailored to your personality, decision-making style, and preferences.
-              </p>
-              <Button 
-                onClick={() => handleCreateProgram(selectedDomain)}
-                className="bg-soul-purple hover:bg-soul-purple/90"
-              >
-                <Play className="h-4 w-4 mr-2" />
-                Start My Growth Program
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    );
+    return <GrowthProgramStarter onDomainSelect={handleCreateProgram} loading={creating} />;
   }
 
   const programInfo = getProgramTypeInfo(currentProgram.program_type);
@@ -243,19 +217,29 @@ export const GrowthProgramInterface: React.FC<GrowthProgramInterfaceProps> = ({
                 
                 <div className="ml-8">
                   <div className="flex flex-wrap gap-2 mb-2">
-                    {week.tools_unlocked.map((tool) => (
+                    {week.tools_unlocked.slice(0, 3).map((tool) => (
                       <Badge key={tool} variant="secondary" className="text-xs">
                         {tool}
                       </Badge>
                     ))}
+                    {week.tools_unlocked.length > 3 && (
+                      <Badge variant="secondary" className="text-xs">
+                        +{week.tools_unlocked.length - 3} more
+                      </Badge>
+                    )}
                   </div>
                   
                   <div className="text-sm">
                     <p className="text-muted-foreground mb-1">Key Activities:</p>
                     <ul className="list-disc list-inside space-y-1">
-                      {week.key_activities.map((activity, idx) => (
+                      {week.key_activities.slice(0, 2).map((activity, idx) => (
                         <li key={idx} className="text-sm">{activity}</li>
                       ))}
+                      {week.key_activities.length > 2 && (
+                        <li className="text-sm text-muted-foreground">
+                          +{week.key_activities.length - 2} more activities
+                        </li>
+                      )}
                     </ul>
                   </div>
                 </div>
