@@ -7,10 +7,11 @@ import { Message } from './use-ai-coach';
 export const useProgramAwareCoach = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
   const { user } = useAuth();
 
   const sendMessage = useCallback(async (content: string) => {
-    if (!user) return;
+    if (!user || isLoading) return;
 
     const userMessage: Message = {
       id: `msg_${Date.now()}_user`,
@@ -52,10 +53,31 @@ export const useProgramAwareCoach = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user, isLoading]);
+
+  const initializeConversation = useCallback(async () => {
+    if (!user || hasInitialized) return;
+    
+    setHasInitialized(true);
+    
+    // Initialize the service but don't automatically send a message
+    await programAwareCoachService.initializeForUser(user.id);
+    
+    // Only send initial message for truly new users without programs
+    const context = programAwareCoachService.getCurrentContext();
+    
+    if (!context.hasContext) {
+      // User has no program - guide them through selection
+      setTimeout(() => {
+        sendMessage("I want to start a growth program but I'm not sure which area to focus on. Can you help me explore my options?");
+      }, 1000);
+    }
+    // For users with existing programs, let them initiate the conversation naturally
+  }, [user, hasInitialized, sendMessage]);
 
   const resetConversation = useCallback(() => {
     setMessages([]);
+    setHasInitialized(false);
   }, []);
 
   const getProgramContext = useCallback(() => {
@@ -67,6 +89,7 @@ export const useProgramAwareCoach = () => {
     isLoading,
     sendMessage,
     resetConversation,
-    getProgramContext
+    getProgramContext,
+    initializeConversation
   };
 };

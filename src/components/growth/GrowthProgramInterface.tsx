@@ -33,11 +33,18 @@ export const GrowthProgramInterface: React.FC<GrowthProgramInterfaceProps> = ({
   const { toast } = useToast();
   
   // Program-aware coach for intelligent guidance
-  const { messages, isLoading: coachLoading, sendMessage, resetConversation } = useProgramAwareCoach();
+  const { messages, isLoading: coachLoading, sendMessage, resetConversation, initializeConversation } = useProgramAwareCoach();
 
   useEffect(() => {
     loadCurrentProgram();
   }, [user]);
+
+  // Initialize conversation appropriately
+  useEffect(() => {
+    if (user && !loading) {
+      initializeConversation();
+    }
+  }, [user, loading, initializeConversation]);
 
   const loadCurrentProgram = async () => {
     if (!user) return;
@@ -50,20 +57,6 @@ export const GrowthProgramInterface: React.FC<GrowthProgramInterfaceProps> = ({
         setCurrentProgram(program);
         const weeks = await growthProgramService.generateWeeklyProgram(program);
         setProgramWeeks(weeks);
-        
-        // Send initial guidance message if no messages yet
-        if (messages.length === 0) {
-          setTimeout(() => {
-            sendMessage(`I'm starting my ${program.domain.replace('_', ' ')} growth program. I'm currently on week ${program.current_week}. Help me understand what I should focus on and guide me through this journey.`);
-          }, 1000);
-        }
-      } else {
-        // No program exists - guide them to select one
-        if (messages.length === 0) {
-          setTimeout(() => {
-            sendMessage("I want to start a growth program but I'm not sure which life area to focus on. Help me understand my options and guide me through selecting the right domain for my current needs.");
-          }, 1000);
-        }
       }
     } catch (error) {
       console.error('Error loading program:', error);
@@ -108,8 +101,8 @@ export const GrowthProgramInterface: React.FC<GrowthProgramInterfaceProps> = ({
       
       setShowDomainSelector(false);
       
-      // Send celebration message to guide
-      sendMessage(`Great! I've created my ${domain.replace('_', ' ')} growth program. Now guide me through what to expect and how to get the most out of this journey.`);
+      // Send gentle celebration message to guide
+      sendMessage(`I just created my ${domain.replace('_', ' ')} growth program. I'm feeling a mix of excitement and maybe some uncertainty. How should I approach this journey?`);
       
       toast({
         title: "New Growth Program Created!",
@@ -130,7 +123,7 @@ export const GrowthProgramInterface: React.FC<GrowthProgramInterfaceProps> = ({
 
   const handleStartNewProgram = () => {
     setShowDomainSelector(true);
-    sendMessage("I want to start a new growth program in a different life area. Help me understand my options and guide me through selecting the right domain for my next growth phase.");
+    sendMessage("I'm thinking about starting a new growth program in a different area of my life. Can you help me think through what might be calling to me right now?");
   };
 
   const handleCancelNewProgram = () => {
@@ -449,7 +442,7 @@ export const GrowthProgramInterface: React.FC<GrowthProgramInterfaceProps> = ({
                 Your Growth Guide
               </CardTitle>
               <p className="text-sm text-muted-foreground">
-                I understand your current program and can guide you through your journey
+                I'm here to listen, understand, and gently guide you through your journey
               </p>
             </CardHeader>
             <CardContent>
