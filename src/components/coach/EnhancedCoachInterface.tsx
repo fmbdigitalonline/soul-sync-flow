@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +6,8 @@ import {
   ArrowRight, 
   Loader2,
   Sparkles,
-  Target
+  Target,
+  MessageSquare
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Message } from "@/hooks/use-ai-coach";
@@ -18,6 +18,7 @@ import { CoachLoadingMessage } from "./CoachLoadingMessage";
 import { SmartQuickActions } from "../task/SmartQuickActions";
 import { StructuredMessageRenderer } from "./StructuredMessageRenderer";
 import { CoachMessageParser, ParsedSubTask } from "@/services/coach-message-parser";
+import { SessionFeedback } from "@/components/memory/SessionFeedback";
 
 interface EnhancedCoachInterfaceProps {
   messages: Message[];
@@ -26,6 +27,7 @@ interface EnhancedCoachInterfaceProps {
   messagesEndRef: React.RefObject<HTMLDivElement>;
   taskTitle: string;
   estimatedDuration: string;
+  sessionId: string;
   awaitingFirstAssistantReply?: boolean;
 }
 
@@ -36,9 +38,11 @@ export const EnhancedCoachInterface: React.FC<EnhancedCoachInterfaceProps> = ({
   messagesEndRef,
   taskTitle,
   estimatedDuration,
+  sessionId,
   awaitingFirstAssistantReply = false,
 }) => {
   const [inputValue, setInputValue] = useState("");
+  const [showFeedback, setShowFeedback] = useState(false);
   const { t } = useLanguage();
   const isMobile = useIsMobile();
   const [isFallbackTimeout, setIsFallbackTimeout] = useState(false);
@@ -78,6 +82,10 @@ export const EnhancedCoachInterface: React.FC<EnhancedCoachInterfaceProps> = ({
       e.preventDefault();
       handleSendMessage();
     }
+  };
+
+  const handleToggleFeedback = () => {
+    setShowFeedback(!showFeedback);
   };
 
   const handleSubTaskStart = (subTask: ParsedSubTask) => {
@@ -139,6 +147,9 @@ export const EnhancedCoachInterface: React.FC<EnhancedCoachInterfaceProps> = ({
       setManagedSubTasks(allSubTasks);
     }
   }, [messages, managedSubTasks.length]);
+
+  // Show feedback form when there are messages and not currently loading
+  const shouldShowFeedbackOption = messages.length > 2 && !isLoading;
 
   return (
     <div className="flex flex-col h-full w-full">
@@ -209,6 +220,18 @@ export const EnhancedCoachInterface: React.FC<EnhancedCoachInterfaceProps> = ({
             </div>
           </div>
         )}
+
+        {/* Session Feedback Section */}
+        {showFeedback && (
+          <div className="w-full mx-auto max-w-2xl md:max-w-3xl">
+            <SessionFeedback
+              sessionId={sessionId}
+              sessionSummary={`Enhanced task coaching session: ${taskTitle}`}
+              onFeedbackSubmitted={() => setShowFeedback(false)}
+            />
+          </div>
+        )}
+
         <div ref={messagesEndRef} />
       </div>
 
@@ -224,6 +247,21 @@ export const EnhancedCoachInterface: React.FC<EnhancedCoachInterfaceProps> = ({
 
       {/* Input Area */}
       <div className="sticky bottom-0 pb-4">
+        {/* Feedback Toggle Button */}
+        {shouldShowFeedbackOption && !showFeedback && (
+          <div className="flex justify-center mb-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleToggleFeedback}
+              className="text-xs"
+            >
+              <MessageSquare className="h-3 w-3 mr-1" />
+              Rate this session
+            </Button>
+          </div>
+        )}
+
         <div className="flex items-center space-x-2 p-2 border border-green-200/20 bg-white rounded-2xl shadow">
           <Input
             value={inputValue}

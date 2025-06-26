@@ -12,9 +12,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { BlendInterface } from "@/components/coach/BlendInterface";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
+import { ActiveReminders } from "@/components/reminders/ActiveReminders";
 
 const Coach = () => {
-  const { messages, isLoading, sendMessage, resetConversation, streamingContent, isStreaming } = useEnhancedAICoach("blend");
+  const { messages, isLoading, sendMessage, resetConversation, streamingContent, isStreaming, sessionId } = useEnhancedAICoach("blend");
   const { isSoulSyncReady, soulSyncError } = useSoulSync();
   const { hasBlueprint, blueprintData } = useBlueprintCache();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -48,9 +49,10 @@ const Coach = () => {
       hasBlueprint,
       isSoulSyncReady,
       soulSyncError,
-      blueprintDataExists: !!blueprintData
+      blueprintDataExists: !!blueprintData,
+      sessionId
     });
-  }, [isAuthenticated, hasBlueprint, isSoulSyncReady, soulSyncError, blueprintData]);
+  }, [isAuthenticated, hasBlueprint, isSoulSyncReady, soulSyncError, blueprintData, sessionId]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -97,74 +99,85 @@ const Coach = () => {
 
   return (
     <MainLayout>
-      <div className="flex flex-col h-[calc(100vh-5rem)] w-full">
-        {/* Enhanced Header with SoulSync Status */}
-        <div className="flex-shrink-0 px-3 py-1">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="relative">
-                <div className={`w-6 h-6 bg-gradient-to-br from-soul-purple to-soul-teal rounded-full flex items-center justify-center ${isSoulSyncReady ? 'ring-2 ring-green-400' : ''}`}>
-                  {isSoulSyncReady ? (
-                    <Zap className="h-3 w-3 text-white" />
-                  ) : (
-                    <MessageCircle className="h-3 w-3 text-white" />
+      <div className="flex h-[calc(100vh-5rem)] w-full gap-4">
+        {/* Main Chat Area */}
+        <div className="flex-1 flex flex-col">
+          {/* Enhanced Header with SoulSync Status */}
+          <div className="flex-shrink-0 px-3 py-1">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <div className={`w-6 h-6 bg-gradient-to-br from-soul-purple to-soul-teal rounded-full flex items-center justify-center ${isSoulSyncReady ? 'ring-2 ring-green-400' : ''}`}>
+                    {isSoulSyncReady ? (
+                      <Zap className="h-3 w-3 text-white" />
+                    ) : (
+                      <MessageCircle className="h-3 w-3 text-white" />
+                    )}
+                  </div>
+                  {isSoulSyncReady && (
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse" />
                   )}
                 </div>
-                {isSoulSyncReady && (
-                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse" />
-                )}
+                <div className="flex flex-col">
+                  <h1 className="text-sm font-medium gradient-text">
+                    {isSoulSyncReady ? 'SoulSync Active' : 'Soul Companion'}
+                  </h1>
+                  {isSoulSyncReady && (
+                    <span className="text-xs text-green-600">Personalized AI Ready</span>
+                  )}
+                  {soulSyncError && (
+                    <span className="text-xs text-red-500">Generic Mode</span>
+                  )}
+                </div>
               </div>
-              <div className="flex flex-col">
-                <h1 className="text-sm font-medium gradient-text">
-                  {isSoulSyncReady ? 'SoulSync Active' : 'Soul Companion'}
-                </h1>
-                {isSoulSyncReady && (
-                  <span className="text-xs text-green-600">Personalized AI Ready</span>
-                )}
-                {soulSyncError && (
-                  <span className="text-xs text-red-500">Generic Mode</span>
-                )}
-              </div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleNewConversation}
+                className="h-6 px-1"
+              >
+                <RotateCcw className="h-3 w-3" />
+              </Button>
             </div>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handleNewConversation}
-              className="h-6 px-1"
-            >
-              <RotateCcw className="h-3 w-3" />
-            </Button>
+            
+            {/* SoulSync Status Banner - Only show if no blueprint detected */}
+            {!hasBlueprint && (
+              <div className="mt-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg">
+                <div className="flex items-center gap-2 text-xs text-amber-700">
+                  <Sparkles className="h-3 w-3" />
+                  <span>Create your Blueprint to unlock personalized AI responses</span>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="ml-auto h-6 text-xs"
+                    onClick={() => window.location.href = '/blueprint'}
+                  >
+                    Create Blueprint
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
-          
-          {/* SoulSync Status Banner - Only show if no blueprint detected */}
-          {!hasBlueprint && (
-            <div className="mt-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg">
-              <div className="flex items-center gap-2 text-xs text-amber-700">
-                <Sparkles className="h-3 w-3" />
-                <span>Create your Blueprint to unlock personalized AI responses</span>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  className="ml-auto h-6 text-xs"
-                  onClick={() => window.location.href = '/blueprint'}
-                >
-                  Create Blueprint
-                </Button>
-              </div>
-            </div>
-          )}
+
+          {/* Chat Interface - Full width */}
+          <div className="flex-1 pb-3 min-h-0">
+            <BlendInterface
+              messages={messages}
+              isLoading={isLoading}
+              onSendMessage={handleSendMessage}
+              messagesEndRef={messagesEndRef}
+              streamingContent={streamingContent}
+              isStreaming={isStreaming}
+              sessionId={sessionId || 'default-session'}
+            />
+          </div>
         </div>
 
-        {/* Maximum Chat Interface - Full width */}
-        <div className="flex-1 pb-3 min-h-0">
-          <BlendInterface
-            messages={messages}
-            isLoading={isLoading}
-            onSendMessage={handleSendMessage}
-            messagesEndRef={messagesEndRef}
-            streamingContent={streamingContent}
-            isStreaming={isStreaming}
-          />
+        {/* Right Sidebar - Reminders Panel */}
+        <div className="w-80 flex-shrink-0 p-4 bg-gray-50/50 rounded-lg">
+          <div className="space-y-4">
+            <ActiveReminders />
+          </div>
         </div>
       </div>
     </MainLayout>

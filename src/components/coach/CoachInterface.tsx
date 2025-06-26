@@ -12,7 +12,8 @@ import {
   CheckCircle2, 
   Clock, 
   TrendingUp,
-  Calendar
+  Calendar,
+  MessageSquare
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Message } from "@/hooks/use-ai-coach";
@@ -23,6 +24,7 @@ import { StepChecklistProgress } from "./StepChecklistProgress";
 import { CoachStepMessage } from "./CoachStepMessage";
 import { ArrowRight } from "lucide-react";
 import { CoachLoadingMessage } from "./CoachLoadingMessage";
+import { SessionFeedback } from "@/components/memory/SessionFeedback";
 
 interface CoachInterfaceProps {
   messages: Message[];
@@ -31,6 +33,7 @@ interface CoachInterfaceProps {
   messagesEndRef: React.RefObject<HTMLDivElement>;
   taskTitle: string;
   estimatedDuration: string;
+  sessionId: string;
   /** Optional: Used by TaskCoachInterface to signal waiting for the first reply */
   awaitingFirstAssistantReply?: boolean;
 }
@@ -42,9 +45,11 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
   messagesEndRef,
   taskTitle,
   estimatedDuration,
+  sessionId,
   awaitingFirstAssistantReply = false,
 }) => {
   const [inputValue, setInputValue] = useState("");
+  const [showFeedback, setShowFeedback] = useState(false);
   const { t } = useLanguage();
   const isMobile = useIsMobile();
   const [assistantSteps, setAssistantSteps] = React.useState<string[]>([]);
@@ -137,6 +142,10 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
     }
   };
 
+  const handleToggleFeedback = () => {
+    setShowFeedback(!showFeedback);
+  };
+
   const renderEnhancedMessage = (message: any, idx: number) => {
     const isActionResponse = message.content.includes('ACTION COMPLETED') || 
                             message.content.includes('ACTION FAILED') ||
@@ -170,6 +179,9 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
       </div>
     );
   };
+
+  // Show feedback form when there are messages and not currently loading
+  const shouldShowFeedbackOption = messages.length > 2 && !isLoading;
 
   return (
     <div className="flex flex-col h-full w-full">
@@ -242,10 +254,37 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
             </div>
           </div>
         )}
+
+        {/* Session Feedback Section */}
+        {showFeedback && (
+          <div className="w-full mx-auto max-w-2xl md:max-w-3xl">
+            <SessionFeedback
+              sessionId={sessionId}
+              sessionSummary={`Task coaching session: ${taskTitle}`}
+              onFeedbackSubmitted={() => setShowFeedback(false)}
+            />
+          </div>
+        )}
+        
         <div ref={messagesEndRef} />
       </div>
 
       <div className="sticky bottom-0 pb-4">
+        {/* Feedback Toggle Button */}
+        {shouldShowFeedbackOption && !showFeedback && (
+          <div className="flex justify-center mb-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleToggleFeedback}
+              className="text-xs"
+            >
+              <MessageSquare className="h-3 w-3 mr-1" />
+              Rate this session
+            </Button>
+          </div>
+        )}
+
         <div className="flex items-center space-x-2 p-2 border border-green-200/20 bg-white rounded-2xl shadow">
           <Input
             value={inputValue}
