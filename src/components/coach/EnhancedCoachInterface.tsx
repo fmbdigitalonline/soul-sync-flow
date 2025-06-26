@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,7 +28,7 @@ interface EnhancedCoachInterfaceProps {
   messagesEndRef: React.RefObject<HTMLDivElement>;
   taskTitle: string;
   estimatedDuration: string;
-  sessionId: string;
+  sessionId?: string; // Made optional
   awaitingFirstAssistantReply?: boolean;
 }
 
@@ -38,7 +39,7 @@ export const EnhancedCoachInterface: React.FC<EnhancedCoachInterfaceProps> = ({
   messagesEndRef,
   taskTitle,
   estimatedDuration,
-  sessionId,
+  sessionId = 'default-session', // Default value
   awaitingFirstAssistantReply = false,
 }) => {
   const [inputValue, setInputValue] = useState("");

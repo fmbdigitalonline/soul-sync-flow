@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
@@ -33,7 +34,7 @@ interface CoachInterfaceProps {
   messagesEndRef: React.RefObject<HTMLDivElement>;
   taskTitle: string;
   estimatedDuration: string;
-  sessionId: string;
+  sessionId?: string; // Made optional
   /** Optional: Used by TaskCoachInterface to signal waiting for the first reply */
   awaitingFirstAssistantReply?: boolean;
 }
@@ -45,7 +46,7 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
   messagesEndRef,
   taskTitle,
   estimatedDuration,
-  sessionId,
+  sessionId = 'default-session', // Default value
   awaitingFirstAssistantReply = false,
 }) => {
   const [inputValue, setInputValue] = useState("");

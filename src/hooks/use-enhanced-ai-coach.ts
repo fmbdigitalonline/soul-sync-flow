@@ -341,6 +341,7 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
     switchAgent,
     streamingContent,
     isStreaming,
+    sessionId: currentSessionId,
     personaReady: hasBlueprint && !blueprintLoading && blueprintStatus.completionPercentage > 0,
     authInitialized,
     blueprintStatus,

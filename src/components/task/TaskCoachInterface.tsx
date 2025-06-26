@@ -495,6 +495,7 @@ Let's get started! What's the first step?`;
                 messagesEndRef={messagesEndRef}
                 taskTitle={task.title}
                 estimatedDuration={task.estimated_duration}
+                sessionId={sessionStats.sessionId}
                 awaitingFirstAssistantReply={awaitingFirstAssistantReply}
               />
             </div>
