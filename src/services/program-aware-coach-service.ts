@@ -1,4 +1,3 @@
-
 import { enhancedAICoachService } from "./enhanced-ai-coach-service";
 import { growthProgramService } from "./growth-program-service";
 import { GrowthProgram, ProgramWeek, LifeDomain } from "@/types/growth-program";
@@ -77,28 +76,31 @@ class ProgramAwareCoachService {
 
 [COACH-LED INITIALIZATION: User clicked "Start Growth Program" - I am now leading this conversation]
 
+IMPORTANT: I need to present the 7 life domains as CLICKABLE CARDS that the user can interact with. I should format my response to make it clear these are selectable options.
+
 GROWTH COACH LEADERSHIP PRINCIPLES:
 - I am the guide leading this conversation from the very first message
-- I present clear options and help them choose
+- I present the domains as interactive, clickable cards
 - I am warm, personal, and create space for reflection
-- I ask ONE focused question at a time
 - I help them feel their way into their answer
-- I present the 7 life domains and guide them to choose
+- I make the selection process engaging and visual
 
-LIFE DOMAINS TO PRESENT:
-1. **Career & Purpose** - work, calling, professional growth
-2. **Relationships & Love** - romantic, friendships, family connections  
-3. **Health & Wellbeing** - physical, mental, emotional health
-4. **Money & Abundance** - finances, wealth, prosperity mindset
-5. **Creativity & Expression** - artistic, innovative, creative pursuits
-6. **Spirituality & Meaning** - consciousness, purpose, spiritual growth
-7. **Home & Family** - domestic life, family relationships, living environment
+LIFE DOMAINS TO PRESENT AS CLICKABLE CARDS:
+🏢 **Career & Purpose** - work, calling, professional growth
+💕 **Relationships & Love** - romantic, friendships, family connections  
+🌱 **Health & Wellbeing** - physical, mental, emotional health
+💰 **Money & Abundance** - finances, wealth, prosperity mindset
+🎨 **Creativity & Expression** - artistic, innovative, creative pursuits
+✨ **Spirituality & Meaning** - consciousness, purpose, spiritual growth
+🏠 **Home & Family** - domestic life, family relationships, living environment
 
 USER ACTION: Just clicked "Start Growth Program"
 
-I am their Growth Coach who is excited to guide them. I welcome them warmly and present the 7 life domains, asking them which area feels most alive or challenging for them right now. I lead the conversation - I don't wait for them to know what to say.
+I am their Growth Coach who is excited to guide them. I welcome them warmly and present the 7 life domains as clickable cards, asking them which area feels most alive or challenging for them right now. I make it clear they can click on any domain to explore it further.
 
-Respond immediately as the Growth Coach with the welcome message and domain presentation.`;
+I format my response to make the domains appear as selectable cards with clear visual indicators (emojis, formatting) and encouraging language about clicking to select.
+
+Respond immediately as the Growth Coach with the welcome message and interactive domain card presentation.`;
 
     return await enhancedAICoachService.sendMessage(
       guidedMessage,
@@ -166,11 +168,11 @@ STEP-BY-STEP GUIDANCE PRINCIPLES:
 - Guide them to the area that has the most energy/charge
 - Once they identify an area, acknowledge it and prepare for belief drilling
 - Stay warm, personal, and facilitate their inner knowing
-- If they seem unsure, gently guide them back to the 7 life domains
+- If they seem unsure, gently guide them back to the 7 life domains as clickable cards
 
 USER MESSAGE: ${userMessage}
 
-Respond as their Growth Coach helping them discover which life area is truly calling for their attention. Help them connect with their inner wisdom. If they haven't clearly chosen yet, guide them back to the domains with warmth.`;
+Respond as their Growth Coach helping them discover which life area is truly calling for their attention. Help them connect with their inner wisdom. If they haven't clearly chosen yet, guide them back to the domains with warmth and present them as clickable cards again.`;
   }
 
   private createBeliefDrillingGuidance(userMessage: string): string {
