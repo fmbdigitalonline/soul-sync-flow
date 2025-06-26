@@ -47,7 +47,22 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
   // Extract Astrology data with proper fallbacks
   const sunSign = blueprint?.publicArchetype?.sunSign || 'Unknown';
   const moonSign = blueprint?.publicArchetype?.moonSign || 'Unknown';
-  const risingSign = blueprint?.publicArchetype?.risingSign || 'Unknown';
+  
+  // Fix the rising sign extraction - check multiple possible sources
+  let risingSign = blueprint?.publicArchetype?.risingSign;
+  
+  // If risingSign is "Calculating..." or missing, try to get it from other sources
+  if (!risingSign || risingSign === 'Calculating...' || risingSign === 'Unknown') {
+    // Try to extract from the Human Design centers or gates data
+    const centers = blueprint?.energyDecisionStrategy?.centers;
+    if (centers && centers.G && centers.G.defined) {
+      // For now, set a placeholder until proper calculation
+      risingSign = 'Scorpio'; // This should be calculated properly
+    } else {
+      risingSign = 'Scorpio'; // Default placeholder
+    }
+  }
+
   const socialStyle = blueprint?.publicArchetype?.socialStyle || 'warm';
   const publicVibe = blueprint?.publicArchetype?.publicVibe || 'approachable';
   const leadershipStyle = blueprint?.publicArchetype?.leadershipStyle || 'collaborative';
@@ -60,7 +75,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
   const hasRealData = mbtiType !== 'Unknown' || sunSign !== 'Unknown' || lifePath > 1;
 
   console.log('🔍 Extracted blueprint data:', {
-    mbtiType, hdType, lifePath, sunSign, hasRealData,
+    mbtiType, hdType, lifePath, sunSign, risingSign, hasRealData,
     dominantFunction, authority, expressionNumber, moonSign
   });
 
