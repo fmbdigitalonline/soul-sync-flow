@@ -89,20 +89,29 @@ class GrowthProgramService {
   async updateProgramProgress(programId: string, updates: Partial<GrowthProgram>): Promise<void> {
     console.log('📊 Updating program progress:', programId);
     
-    const updateData = {
-      ...updates,
+    // Create a clean update object with only the fields that should be updated
+    const updateData: any = {
       updated_at: new Date().toISOString()
     };
 
-    // Convert complex types to Json-compatible format
-    if (updateData.blueprint_params) {
-      updateData.blueprint_params = updateData.blueprint_params as unknown as any;
+    // Only include fields that are present in the updates and convert types appropriately
+    if (updates.current_week !== undefined) {
+      updateData.current_week = updates.current_week;
     }
-    if (updateData.progress_metrics) {
-      updateData.progress_metrics = updateData.progress_metrics as unknown as any;
+    if (updates.status !== undefined) {
+      updateData.status = updates.status;
     }
-    if (updateData.session_schedule) {
-      updateData.session_schedule = updateData.session_schedule as unknown as any;
+    if (updates.actual_completion !== undefined) {
+      updateData.actual_completion = updates.actual_completion;
+    }
+    if (updates.blueprint_params !== undefined) {
+      updateData.blueprint_params = updates.blueprint_params as unknown as any;
+    }
+    if (updates.progress_metrics !== undefined) {
+      updateData.progress_metrics = updates.progress_metrics as unknown as any;
+    }
+    if (updates.session_schedule !== undefined) {
+      updateData.session_schedule = updates.session_schedule as unknown as any;
     }
     
     const { error } = await supabase
