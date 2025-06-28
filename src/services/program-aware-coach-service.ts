@@ -1,4 +1,3 @@
-
 import { enhancedAICoachService } from "./enhanced-ai-coach-service";
 import { growthProgramService } from "./growth-program-service";
 import { GrowthProgram, ProgramWeek, LifeDomain } from "@/types/growth-program";
@@ -63,15 +62,14 @@ class ProgramAwareCoachService {
     this.selectedDomain = domain;
     this.conversationStage = 'belief_drilling';
     
-    const simplePrompt = `I want to understand why you chose ${domain.replace('_', ' ')} for growth. What draws you to focus on this area of your life right now?`;
+    // Return a simple greeting without calling the AI
+    const domainTitle = domain.replace('_', ' ');
+    const greetingMessage = `I want to understand why you chose ${domainTitle} for growth. What draws you to focus on this area of your life right now?`;
 
-    return await enhancedAICoachService.sendMessage(
-      simplePrompt,
-      sessionId,
-      true,
-      "guide",
-      "en"
-    );
+    return {
+      response: greetingMessage,
+      conversationId: sessionId
+    };
   }
 
   async startGuidedProgramCreation(userId: string, sessionId: string): Promise<{ response: string; conversationId: string }> {

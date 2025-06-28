@@ -57,11 +57,10 @@ export const useProgramAwareCoach = () => {
   }, [user, isLoading]);
 
   const initializeBeliefDrilling = useCallback(async (domain: LifeDomain) => {
-    if (!user || isLoading) return;
+    if (!user) return;
 
-    setIsLoading(true);
-    
     try {
+      // Get the simple greeting without making an AI call
       const response = await programAwareCoachService.initializeBeliefDrilling(
         domain,
         user.id,
@@ -75,7 +74,7 @@ export const useProgramAwareCoach = () => {
         timestamp: new Date(),
       };
 
-      setMessages(prev => [...prev, assistantMessage]);
+      setMessages([assistantMessage]); // Start fresh with just the greeting
     } catch (error) {
       console.error('Error initializing belief drilling:', error);
       
@@ -86,11 +85,9 @@ export const useProgramAwareCoach = () => {
         timestamp: new Date(),
       };
 
-      setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setIsLoading(false);
+      setMessages([errorMessage]);
     }
-  }, [user, isLoading]);
+  }, [user]);
 
   const initializeConversation = useCallback(async () => {
     if (!user || hasInitialized) return;
