@@ -11,7 +11,7 @@ class ProgramAwareCoachService {
   private beliefExplorationData: any = {};
 
   async initializeForUser(userId: string) {
-    console.log("🎯 Program-Aware Coach: Initializing step-by-step growth facilitator for user", userId);
+    console.log("🎯 Program-Aware Coach: Initializing for user", userId);
     
     try {
       this.currentProgram = await growthProgramService.getCurrentProgram(userId);
@@ -21,10 +21,9 @@ class ProgramAwareCoachService {
         this.currentWeek = weeks.find(w => w.week_number === this.currentProgram!.current_week) || null;
         this.conversationStage = 'active_guidance';
         
-        console.log("✅ Growth context ready for step-by-step facilitation:", {
+        console.log("✅ Growth context ready:", {
           program: this.currentProgram.domain,
-          week: this.currentWeek?.theme,
-          mode: 'focused_guidance'
+          week: this.currentWeek?.theme
         });
       }
     } catch (error) {
@@ -43,20 +42,10 @@ class ProgramAwareCoachService {
       await this.initializeForUser(userId);
     }
 
-    // Handle domain selection if user mentions a specific domain
-    const detectedDomain = this.detectDomainFromMessage(message);
-    if (detectedDomain && this.conversationStage === 'domain_exploration') {
-      this.selectedDomain = detectedDomain;
-      this.conversationStage = 'belief_drilling';
-      return this.handleDomainSelection(detectedDomain, userId, sessionId);
-    }
-
-    // Create step-by-step focused guidance message
-    const focusedMessage = this.createStepByStepGuidance(message, userId);
+    // Create simple, focused guidance message
+    const focusedMessage = this.createFocusedGuidance(message, userId);
     
-    console.log("🧠 Sending step-by-step growth guidance:", {
-      originalLength: message.length,
-      guidedLength: focusedMessage.length,
+    console.log("🧠 Sending focused growth guidance:", {
       stage: this.conversationStage,
       hasContext: !!this.currentProgram
     });
@@ -70,78 +59,14 @@ class ProgramAwareCoachService {
     );
   }
 
-  async startGuidedProgramCreation(userId: string, sessionId: string): Promise<{ response: string; conversationId: string }> {
-    this.conversationStage = 'domain_exploration';
-    
-    const guidedMessage = `I'm starting a guided program creation process with the user. This is Growth Mode - the coach leads and guides step by step.
-
-[COACH-LED INITIALIZATION: User clicked "Start Growth Program" - I am now leading this conversation]
-
-IMPORTANT: I need to present the 7 life domains as CLICKABLE CARDS that the user can interact with. I should format my response to make it clear these are selectable options.
-
-GROWTH COACH LEADERSHIP PRINCIPLES:
-- I am the guide leading this conversation from the very first message
-- I present the domains as interactive, clickable cards
-- I am warm, personal, and create space for reflection
-- I help them feel their way into their answer
-- I make the selection process engaging and visual
-
-LIFE DOMAINS TO PRESENT AS CLICKABLE CARDS:
-🏢 **Career & Purpose** - work, calling, professional growth
-💕 **Relationships & Love** - romantic, friendships, family connections  
-🌱 **Health & Wellbeing** - physical, mental, emotional health
-💰 **Money & Abundance** - finances, wealth, prosperity mindset
-🎨 **Creativity & Expression** - artistic, innovative, creative pursuits
-✨ **Spirituality & Meaning** - consciousness, purpose, spiritual growth
-🏠 **Home & Family** - domestic life, family relationships, living environment
-
-USER ACTION: Just clicked "Start Growth Program"
-
-I am their Growth Coach who is excited to guide them. I welcome them warmly and present the 7 life domains as clickable cards, asking them which area feels most alive or challenging for them right now. I make it clear they can click on any domain to explore it further.
-
-I format my response to make the domains appear as selectable cards with clear visual indicators (emojis, formatting) and encouraging language about clicking to select.
-
-Respond immediately as the Growth Coach with the welcome message and interactive domain card presentation.`;
-
-    return await enhancedAICoachService.sendMessage(
-      guidedMessage,
-      sessionId,
-      true,
-      "guide",
-      "en"
-    );
-  }
-
-  async handleDomainSelection(domain: LifeDomain, userId: string, sessionId: string): Promise<{ response: string; conversationId: string }> {
+  async initializeBeliefDrilling(domain: LifeDomain, userId: string, sessionId: string): Promise<{ response: string; conversationId: string }> {
     this.selectedDomain = domain;
     this.conversationStage = 'belief_drilling';
     
-    // This should not be called directly anymore - the belief drilling will happen through normal conversation
-    const beliefDrillingMessage = `The user has chosen ${domain.replace('_', ' ')} as their growth domain. Now I need to help them drill down to their core beliefs and motivations using focused questioning.
-
-[BELIEF DRILLING MODE: User selected ${domain} - I am now their belief drilling coach]
-
-BELIEF DRILLING PRINCIPLES:
-- I ask ONE specific, penetrating question at a time
-- I wait for their response before asking the next question
-- Each question goes deeper than the last
-- I explore beliefs, fears, motivations, and root causes
-- I stay conversational and warm while drilling deeper
-- NO analysis, summaries, or reports - just targeted questions
-- I build on what they share to ask the next deeper question
-
-DRILLING APPROACH:
-- Start with why this area called to them right now
-- Explore what's happening in this area of their life
-- Look for underlying beliefs, assumptions, or patterns
-- Help them discover what's really driving their relationship with ${domain.replace('_', ' ')}
-
-USER CONTEXT: Has chosen to focus on ${domain.replace('_', ' ')} growth and is ready for belief exploration.
-
-I respond as their Growth Coach with ONE targeted question that helps them explore why this area is calling to them right now. I ask about their current experience or what's drawing them to focus here.`;
+    const simplePrompt = `Start a belief drilling conversation about ${domain.replace('_', ' ')}. Ask ONE simple question about why they chose this area for growth. Be warm and conversational.`;
 
     return await enhancedAICoachService.sendMessage(
-      beliefDrillingMessage,
+      simplePrompt,
       sessionId,
       true,
       "guide",
@@ -149,96 +74,22 @@ I respond as their Growth Coach with ONE targeted question that helps them explo
     );
   }
 
-  private createStepByStepGuidance(userMessage: string, userId: string): string {
-    // Check if this is a belief drilling conversation
-    if (this.conversationStage === 'belief_drilling' || 
-        userMessage.toLowerCase().includes('chosen') && 
-        userMessage.toLowerCase().includes('growth area')) {
-      return this.createBeliefDrillingGuidance(userMessage);
+  private createFocusedGuidance(userMessage: string, userId: string): string {
+    // Simple, focused prompts based on conversation stage
+    if (this.conversationStage === 'belief_drilling') {
+      return `The user is exploring their beliefs about ${this.selectedDomain?.replace('_', ' ')}. They just said: "${userMessage}". Ask ONE follow-up question that goes deeper into their motivations or beliefs. Keep it conversational and warm.`;
     }
     
-    // Detect if this is program creation flow
     if (this.conversationStage === 'domain_exploration') {
-      return this.createDomainExplorationGuidance(userMessage);
+      return `Help the user choose a life area for growth. They said: "${userMessage}". Guide them warmly toward selecting one of the 7 life domains.`;
     }
 
-    if (!this.currentProgram || !this.currentWeek) {
-      return this.createGeneralGrowthGuidance(userMessage);
+    if (!this.currentProgram) {
+      return `The user wants growth guidance. They said: "${userMessage}". Help them explore their growth journey with ONE focused question or suggestion.`;
     }
 
-    return this.createActiveProgramGuidance(userMessage);
-  }
-
-  private createDomainExplorationGuidance(userMessage: string): string {
-    return `[GROWTH COACH CONTEXT: Guiding user through domain exploration for program creation]
-
-STEP-BY-STEP GUIDANCE PRINCIPLES:
-- Listen deeply to what they're sharing
-- Help them feel into their answer, not think it
-- If they mention multiple areas, help them sense which feels most alive
-- Guide them to the area that has the most energy/charge
-- Once they identify an area, acknowledge it and prepare for belief drilling
-- Stay warm, personal, and facilitate their inner knowing
-- If they seem unsure, gently guide them back to the 7 life domains as clickable cards
-
-USER MESSAGE: ${userMessage}
-
-Respond as their Growth Coach helping them discover which life area is truly calling for their attention. Help them connect with their inner wisdom. If they haven't clearly chosen yet, guide them back to the domains with warmth and present them as clickable cards again.`;
-  }
-
-  private createBeliefDrillingGuidance(userMessage: string): string {
-    return `[BELIEF DRILLING MODE: User is exploring their chosen growth area through deep questioning]
-
-BELIEF DRILLING PRINCIPLES:
-- I ask ONE specific question at a time and wait for the user's response
-- Each question should go deeper than the last, exploring beliefs, fears, and root causes
-- I look for patterns, limiting beliefs, and core motivations
-- I stay conversational and warm while drilling deeper
-- NO analysis, summaries, or reports - just targeted questions
-- I build on what they just shared to ask the next deeper question
-- I help them discover what's really driving their relationship with this area
-
-USER JUST SHARED: ${userMessage}
-
-DRILLING APPROACH:
-- Ask about the specific experience, feeling, or belief they mentioned
-- Explore the "why" behind their response
-- Look for underlying fears, assumptions, or patterns
-- Help them discover what's really motivating their focus on this area
-
-Respond as their Growth Coach with ONE targeted follow-up question that goes deeper into what they just shared. Be warm but penetrating in your questioning. Focus on helping them explore their deeper motivations and beliefs.`;
-  }
-
-  private createGeneralGrowthGuidance(userMessage: string): string {
-    return `[GROWTH COACH CONTEXT: General growth guidance - no active program]
-
-STEP-BY-STEP GUIDANCE PRINCIPLES:
-- Give ONE clear step at a time
-- Ask ONE focused question
-- Keep responses short and focused
-- Help them go deeper into their experience
-- Be a facilitator, not a teacher
-
-USER MESSAGE: ${userMessage}
-
-Respond as their step-by-step Growth Coach helping them explore their growth journey.`;
-  }
-
-  private createActiveProgramGuidance(userMessage: string): string {
     const domainName = this.currentProgram!.domain.replace('_', ' ');
-    
-    return `[GROWTH COACH CONTEXT: Active program guidance - ${domainName}, Week ${this.currentWeek?.week_number}]
-
-STEP-BY-STEP GUIDANCE PRINCIPLES:
-- Give ONE clear step at a time
-- Ask ONE focused question
-- Keep responses short and focused
-- Help them go deeper, not wider
-- Be their personal growth facilitator
-
-USER MESSAGE: ${userMessage}
-
-Respond as their Growth Coach guiding them through their active ${domainName} program.`;
+    return `The user is working on ${domainName} growth. They said: "${userMessage}". Give ONE helpful response or ask ONE focused question about their ${domainName} journey.`;
   }
 
   getCurrentContext() {
@@ -274,7 +125,6 @@ Respond as their Growth Coach guiding them through their active ${domainName} pr
     return null;
   }
 
-  // New methods for test suite compatibility
   getReadinessPrompts(): string[] {
     return [
       "What area of your life feels ready for transformation?",
@@ -284,7 +134,6 @@ Respond as their Growth Coach guiding them through their active ${domainName} pr
   }
 
   updateConversationStage(message: string): void {
-    // Detect if user is expressing uncertainty or exploration
     const lowerMessage = message.toLowerCase();
     
     if (lowerMessage.includes("don't know") || lowerMessage.includes("not sure") || lowerMessage.includes("uncertain")) {

@@ -18,9 +18,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Message } from "@/hooks/use-ai-coach";
-import { MoodTracker } from "./MoodTracker";
-import { ReflectionPrompts } from "./ReflectionPrompts";
-import { InsightJournal } from "./InsightJournal";
 import { TypewriterText } from "./TypewriterText";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -60,7 +57,7 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
   };
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex flex-col h-full">
       {/* Collapsible Soul Compass Dashboard */}
       <div className="flex-shrink-0">
         <CosmicCard className="p-4 mb-4">
@@ -125,8 +122,8 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
         </CosmicCard>
       </div>
 
-      {/* Chat Messages - Scrollable area */}
-      <div className="flex-1 overflow-y-auto px-4 pb-4">
+      {/* Chat Messages - Properly constrained scrollable area */}
+      <div className="flex-1 overflow-y-auto px-4 pb-4 min-h-0">
         <div className="space-y-4">
           {messages.length === 0 && (
             <div className="text-center p-6 text-muted-foreground">
@@ -230,7 +227,7 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
         </div>
       </div>
 
-      {/* Input Area - Fixed at bottom */}
+      {/* Input Area - Fixed at bottom with proper positioning */}
       <div className="flex-shrink-0 p-4 border-t bg-background">
         <CosmicCard className="flex items-center space-x-2 p-2 border border-soul-purple/20">
           <Input

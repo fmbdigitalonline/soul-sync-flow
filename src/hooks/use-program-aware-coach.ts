@@ -3,6 +3,7 @@ import { useState, useCallback } from 'react';
 import { programAwareCoachService } from '@/services/program-aware-coach-service';
 import { useAuth } from '@/contexts/AuthContext';
 import { Message } from './use-ai-coach';
+import { LifeDomain } from '@/types/growth-program';
 
 export const useProgramAwareCoach = () => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -55,25 +56,48 @@ export const useProgramAwareCoach = () => {
     }
   }, [user, isLoading]);
 
+  const initializeBeliefDrilling = useCallback(async (domain: LifeDomain) => {
+    if (!user || isLoading) return;
+
+    setIsLoading(true);
+    
+    try {
+      const response = await programAwareCoachService.initializeBeliefDrilling(
+        domain,
+        user.id,
+        `session_${user.id}_${Date.now()}`
+      );
+
+      const assistantMessage: Message = {
+        id: `msg_${Date.now()}_assistant`,
+        content: response.response,
+        sender: 'assistant',
+        timestamp: new Date(),
+      };
+
+      setMessages(prev => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error('Error initializing belief drilling:', error);
+      
+      const errorMessage: Message = {
+        id: `msg_${Date.now()}_error`,
+        content: 'I apologize, but I encountered an error starting our conversation. Please try again.',
+        sender: 'assistant',
+        timestamp: new Date(),
+      };
+
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user, isLoading]);
+
   const initializeConversation = useCallback(async () => {
     if (!user || hasInitialized) return;
     
     setHasInitialized(true);
-    
-    // Initialize the service but don't automatically send a message
     await programAwareCoachService.initializeForUser(user.id);
-    
-    // Only send initial message for truly new users without programs
-    const context = programAwareCoachService.getCurrentContext();
-    
-    if (!context.hasContext) {
-      // User has no program - guide them through selection
-      setTimeout(() => {
-        sendMessage("I want to start a growth program but I'm not sure which area to focus on. Can you help me explore my options?");
-      }, 1000);
-    }
-    // For users with existing programs, let them initiate the conversation naturally
-  }, [user, hasInitialized, sendMessage]);
+  }, [user, hasInitialized]);
 
   const resetConversation = useCallback(() => {
     setMessages([]);
@@ -90,6 +114,7 @@ export const useProgramAwareCoach = () => {
     sendMessage,
     resetConversation,
     getProgramContext,
-    initializeConversation
+    initializeConversation,
+    initializeBeliefDrilling
   };
 };

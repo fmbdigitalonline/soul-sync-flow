@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Heart, Send, ArrowLeft } from 'lucide-react';
 import { LifeDomain } from '@/types/growth-program';
 import { GuideInterface } from '@/components/coach/GuideInterface';
-import { useEnhancedAICoach } from '@/hooks/use-enhanced-ai-coach';
+import { useProgramAwareCoach } from '@/hooks/use-program-aware-coach';
 
 interface GrowthBeliefDrillingProps {
   domain: LifeDomain;
@@ -18,7 +18,7 @@ export const GrowthBeliefDrilling: React.FC<GrowthBeliefDrillingProps> = ({
   onComplete,
   beliefData
 }) => {
-  const { messages, isLoading, sendMessage, resetConversation } = useEnhancedAICoach("guide");
+  const { messages, isLoading, sendMessage, resetConversation, initializeBeliefDrilling } = useProgramAwareCoach();
   const [isInitialized, setIsInitialized] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -45,19 +45,13 @@ export const GrowthBeliefDrilling: React.FC<GrowthBeliefDrillingProps> = ({
   useEffect(() => {
     if (!isInitialized) {
       console.log('🔍 Initializing belief drilling for domain:', domain);
-      
       setIsInitialized(true);
       resetConversation();
       
-      // Send a user message that will trigger the coach to start the drilling conversation
-      setTimeout(() => {
-        const userMessage = `I've chosen ${domainTitle[domain]} as my growth area. I'm ready to explore the deeper beliefs and motivations behind this choice. Please help me drill down to understand what's really driving this decision.`;
-        
-        console.log('🚀 Starting belief drilling conversation with user message:', userMessage);
-        sendMessage(userMessage);
-      }, 1000);
+      // Initialize belief drilling mode - AI will start the conversation
+      initializeBeliefDrilling(domain);
     }
-  }, [domain, isInitialized, resetConversation, sendMessage, domainTitle]);
+  }, [domain, isInitialized, resetConversation, initializeBeliefDrilling]);
 
   const handleSendMessage = async (message: string) => {
     console.log('📤 Sending belief drilling response:', message);
@@ -118,7 +112,7 @@ export const GrowthBeliefDrilling: React.FC<GrowthBeliefDrillingProps> = ({
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex flex-col h-full">
       {/* Header */}
       <div className="flex-shrink-0 p-6 border-b bg-gradient-to-r from-soul-purple/5 to-soul-teal/5">
         <div className="flex items-center space-x-4">
@@ -132,7 +126,7 @@ export const GrowthBeliefDrilling: React.FC<GrowthBeliefDrillingProps> = ({
         </div>
       </div>
 
-      {/* Chat Interface - Let GuideInterface handle its own layout */}
+      {/* Chat Interface - Simplified container structure */}
       <div className="flex-1 min-h-0">
         <GuideInterface
           messages={messages}
