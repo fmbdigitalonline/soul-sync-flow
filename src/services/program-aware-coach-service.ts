@@ -63,7 +63,7 @@ class ProgramAwareCoachService {
     this.selectedDomain = domain;
     this.conversationStage = 'belief_drilling';
     
-    const simplePrompt = `Start a belief drilling conversation about ${domain.replace('_', ' ')}. Ask ONE simple question about why they chose this area for growth. Be warm and conversational.`;
+    const simplePrompt = `I want to understand why you chose ${domain.replace('_', ' ')} for growth. What draws you to focus on this area of your life right now?`;
 
     return await enhancedAICoachService.sendMessage(
       simplePrompt,
@@ -74,22 +74,36 @@ class ProgramAwareCoachService {
     );
   }
 
+  async startGuidedProgramCreation(userId: string, sessionId: string): Promise<{ response: string; conversationId: string }> {
+    this.conversationStage = 'program_creation';
+    
+    const welcomeMessage = `I'm here to help you create a personalized growth program. Let's start by exploring what area of your life you'd like to focus on. What's calling for your attention right now?`;
+    
+    return await enhancedAICoachService.sendMessage(
+      welcomeMessage,
+      sessionId,
+      true,
+      "guide",
+      "en"
+    );
+  }
+
   private createFocusedGuidance(userMessage: string, userId: string): string {
     // Simple, focused prompts based on conversation stage
     if (this.conversationStage === 'belief_drilling') {
-      return `The user is exploring their beliefs about ${this.selectedDomain?.replace('_', ' ')}. They just said: "${userMessage}". Ask ONE follow-up question that goes deeper into their motivations or beliefs. Keep it conversational and warm.`;
+      return `Continue exploring their beliefs about ${this.selectedDomain?.replace('_', ' ')}. They said: "${userMessage}". Ask ONE follow-up question that goes deeper. Be warm and conversational.`;
     }
     
     if (this.conversationStage === 'domain_exploration') {
-      return `Help the user choose a life area for growth. They said: "${userMessage}". Guide them warmly toward selecting one of the 7 life domains.`;
+      return `Help them choose a growth area. They said: "${userMessage}". Guide them warmly toward one of the 7 life domains: career, relationships, wellbeing, finances, creativity, spirituality, or home & family.`;
     }
 
     if (!this.currentProgram) {
-      return `The user wants growth guidance. They said: "${userMessage}". Help them explore their growth journey with ONE focused question or suggestion.`;
+      return `Help with their growth journey. They said: "${userMessage}". Give ONE helpful response or ask ONE focused question.`;
     }
 
     const domainName = this.currentProgram!.domain.replace('_', ' ');
-    return `The user is working on ${domainName} growth. They said: "${userMessage}". Give ONE helpful response or ask ONE focused question about their ${domainName} journey.`;
+    return `They're working on ${domainName} growth. They said: "${userMessage}". Give ONE helpful response about their ${domainName} journey.`;
   }
 
   getCurrentContext() {
