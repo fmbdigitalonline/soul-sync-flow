@@ -1,3 +1,4 @@
+
 import { enhancedAICoachService } from "./enhanced-ai-coach-service";
 import { growthProgramService } from "./growth-program-service";
 import { GrowthProgram, ProgramWeek, LifeDomain } from "@/types/growth-program";
@@ -18,6 +19,22 @@ const convertMessagesToJson = (messages: any[]): Json => {
     sender: msg.sender,
     timestamp: msg.timestamp instanceof Date ? msg.timestamp.toISOString() : msg.timestamp
   }));
+};
+
+// Helper function to safely extract recovery context
+const extractRecoveryContext = (recoveryContext: Json): {
+  inquiryPhase?: string;
+  discoveredInsights?: string[];
+} => {
+  if (!recoveryContext || typeof recoveryContext !== 'object' || Array.isArray(recoveryContext)) {
+    return {};
+  }
+  
+  const context = recoveryContext as Record<string, any>;
+  return {
+    inquiryPhase: typeof context.inquiryPhase === 'string' ? context.inquiryPhase : undefined,
+    discoveredInsights: Array.isArray(context.discoveredInsights) ? context.discoveredInsights : undefined
+  };
 };
 
 class ProgramAwareCoachService {
@@ -73,9 +90,10 @@ class ProgramAwareCoachService {
         }
         
         if (data.recovery_context) {
+          const context = extractRecoveryContext(data.recovery_context);
           this.beliefExplorationData = data.recovery_context;
-          this.inquiryPhase = data.recovery_context.inquiryPhase || 'discovery';
-          this.discoveredInsights = data.recovery_context.discoveredInsights || [];
+          this.inquiryPhase = (context.inquiryPhase as any) || 'discovery';
+          this.discoveredInsights = context.discoveredInsights || [];
         }
 
         const messages = convertJsonToMessages(data.messages);
