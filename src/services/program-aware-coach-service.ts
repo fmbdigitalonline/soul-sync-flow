@@ -174,10 +174,10 @@ class ProgramAwareCoachService {
     this.processMessageForInsights(message);
     this.questionCount++;
 
-    // Create phase-appropriate response
-    const response = this.createPhaseAwareResponse(message, userId);
+    // Create contextual response based on user's actual message
+    const response = this.createContextualResponse(message, userId);
     
-    console.log("🧠 Generated phase-aware response:", {
+    console.log("🧠 Generated contextual response:", {
       stage: this.conversationStage,
       phase: this.inquiryPhase,
       insights: this.discoveredInsights.length,
@@ -242,11 +242,12 @@ class ProgramAwareCoachService {
     }
   }
 
-  private createPhaseAwareResponse(userMessage: string, userId: string): string {
+  private createContextualResponse(userMessage: string, userId: string): string {
     const domainName = this.getDomainTitle(this.selectedDomain || 'career');
+    const lowerMessage = userMessage.toLowerCase();
     
     if (this.inquiryPhase === 'discovery') {
-      return this.createDiscoveryQuestion(userMessage, domainName);
+      return this.createEmpathicDiscoveryResponse(userMessage, domainName, lowerMessage);
     } else if (this.inquiryPhase === 'blueprint_analysis') {
       return this.createBlueprintAnalysisResponse(userMessage, domainName);
     } else {
@@ -254,28 +255,65 @@ class ProgramAwareCoachService {
     }
   }
 
-  private createDiscoveryQuestion(userMessage: string, domainName: string): string {
-    // Phase 1: Deep Discovery - Direct questions without assumptions
-    const discoveryQuestions = [
-      `Tell me more about that. What does a typical day or week look like for you when it comes to ${domainName.toLowerCase()}?`,
+  private createEmpathicDiscoveryResponse(userMessage: string, domainName: string, lowerMessage: string): string {
+    // Respond empathically based on the emotional content and context
+    
+    // Handle expressions of struggle, pain, or confusion
+    if (lowerMessage.includes("can't find") || lowerMessage.includes("why can't i")) {
+      if (domainName.toLowerCase().includes('relationship') || domainName.toLowerCase().includes('love')) {
+        return `I can hear the frustration and perhaps loneliness in that question. Not being able to find love is one of life's most challenging experiences. 
+
+Tell me more about what that journey has looked like for you - are you actively trying to meet people but connections aren't forming the way you hope? Or does it feel more like you're not sure where or how to start? 
+
+What does "finding love" mean to you specifically?`;
+      } else if (domainName.toLowerCase().includes('career')) {
+        return `That feeling of being stuck without a clear career path can be really overwhelming. It's like everyone else seems to have it figured out while you're still searching.
+
+Help me understand your situation better - is this more about not knowing what kind of work would fulfill you, or have you tried things that didn't work out? What does having a "career" represent to you?`;
+      }
+    }
+
+    // Handle expressions of confusion or uncertainty
+    if (lowerMessage.includes("don't know") || lowerMessage.includes("confused") || lowerMessage.includes("how do you mean")) {
+      return `Let me be more specific. When you think about ${domainName.toLowerCase()}, what comes up for you emotionally? 
+
+For example, do you feel frustrated, sad, hopeful, scared, or something else? And what specific situations or experiences in this area have left you feeling that way?`;
+    }
+
+    // Handle brief or minimal responses
+    if (userMessage.length < 20 && this.questionCount > 2) {
+      return `I sense there might be more beneath the surface here. Sometimes it's hard to put these feelings into words.
+
+What would it look like if ${domainName.toLowerCase()} was working well in your life? What would be different about your day-to-day experience?`;
+    }
+
+    // Handle expressions of fear or anxiety
+    if (lowerMessage.includes("afraid") || lowerMessage.includes("scared") || lowerMessage.includes("worry")) {
+      return `Thank you for sharing that fear with me - it takes courage to be vulnerable about what scares us.
+
+What specifically about ${domainName.toLowerCase()} feels threatening or overwhelming to you? Sometimes our fears point us toward what matters most to us.`;
+    }
+
+    // Handle expressions of past failures or attempts
+    if (lowerMessage.includes("tried") || lowerMessage.includes("failed") || lowerMessage.includes("didn't work")) {
+      return `It sounds like you've put effort into this area before and it didn't go as hoped. That can be really discouraging.
+
+What did you try, and what happened? Sometimes understanding what didn't work can be just as valuable as knowing what does work.`;
+    }
+
+    // Default empathic follow-up questions based on conversation depth
+    const followUpQuestions = [
+      `I want to understand the full picture of what's happening with your ${domainName.toLowerCase()}. What emotions come up when you think about this area of your life?`,
       
-      `Help me understand the specifics. What exactly happens (or doesn't happen) that makes this area feel challenging for you?`,
+      `Help me understand what's been most challenging about ${domainName.toLowerCase()} for you. What specific situations or experiences have shaped how you feel about it now?`,
       
-      `When did you first notice this pattern? What was different about ${domainName.toLowerCase()} before versus now?`,
+      `When you imagine ${domainName.toLowerCase()} working well in your life, what does that look like? What would need to change for you to feel satisfied in this area?`,
       
-      `What have you already tried to address this situation? What worked, what didn't, and what happened?`,
-      
-      `How does this situation with ${domainName.toLowerCase()} affect other parts of your life? What ripple effects do you notice?`,
-      
-      `If nothing changed, where do you see your ${domainName.toLowerCase()} heading in the next 6 months?`,
-      
-      `What would need to be different for you to feel genuinely satisfied with your ${domainName.toLowerCase()}?`
+      `Tell me about the story of your ${domainName.toLowerCase()} - how did you get to where you are now? What key moments or experiences stand out?`
     ];
 
-    // Cycle through different question approaches
-    const questionIndex = Math.min(this.questionCount - 1, discoveryQuestions.length - 1);
-    
-    return discoveryQuestions[questionIndex];
+    const questionIndex = Math.min(this.questionCount - 1, followUpQuestions.length - 1);
+    return followUpQuestions[questionIndex];
   }
 
   private createBlueprintAnalysisResponse(userMessage: string, domainName: string): string {
