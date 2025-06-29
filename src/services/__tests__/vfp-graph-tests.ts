@@ -29,6 +29,17 @@ jest.mock('@/integrations/supabase/client', () => ({
   }
 }));
 
+// Helper function for weight sum calculation
+const calculateWeightSum = (weights: Record<string, number[][]>): number => {
+  let sum = 0;
+  Object.values(weights).forEach(matrix => {
+    matrix.forEach(row => {
+      row.forEach(weight => sum += weight);
+    });
+  });
+  return sum;
+};
+
 describe('VFP-Graph Core Intelligence Tests', () => {
   const TEST_USER_ID = 'test-user-12345';
   const TEST_MESSAGE_ID = 'msg-67890';
@@ -117,8 +128,8 @@ describe('VFP-Graph Core Intelligence Tests', () => {
       const updatedWeights = await personalityFusionService.initializeAdaptiveWeights(TEST_USER_ID);
 
       // Calculate weight delta
-      const initialSum = this.calculateWeightSum(initialWeights.weights);
-      const updatedSum = this.calculateWeightSum(updatedWeights.weights);
+      const initialSum = calculateWeightSum(initialWeights.weights);
+      const updatedSum = calculateWeightSum(updatedWeights.weights);
       const delta = Math.abs(updatedSum - initialSum);
 
       // Delta should be non-zero but small (bounded)
@@ -129,17 +140,6 @@ describe('VFP-Graph Core Intelligence Tests', () => {
 
       console.log(`✅ Weight delta validation passed: δ = ${delta.toFixed(6)}`);
     });
-
-    // Helper method for weight sum calculation
-    private calculateWeightSum(weights: Record<string, number[][]>): number {
-      let sum = 0;
-      Object.values(weights).forEach(matrix => {
-        matrix.forEach(row => {
-          row.forEach(weight => sum += weight);
-        });
-      });
-      return sum;
-    }
   });
 
   // Test 3: Encoder Version Validation
