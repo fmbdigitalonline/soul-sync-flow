@@ -253,7 +253,7 @@ export const VFPGraphPatentTester: React.FC = () => {
                         <span className="ml-2">{(currentReport.executionSummary.memoryUsage / 1024 / 1024).toFixed(2)}MB</span>
                       </div>
                     </div>
-                  </Card>
+                  </CardContent>
                 </Card>
               </TabsContent>
               
