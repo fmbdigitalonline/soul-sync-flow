@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -21,6 +20,7 @@ import { VFPGraphTester } from '../personality/VFPGraphTester';
 import { VFPGraphPatentTester } from './VFPGraphPatentTester';
 
 export const TestingDashboard: React.FC = () => {
+  // Set VFP Patent as the default active tab
   const [activeTab, setActiveTab] = useState('vfp-patent');
 
   const testCategories = [
@@ -88,11 +88,11 @@ export const TestingDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Overview Section */}
+      {/* Overview Section - Now focused on Patent Validation */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <TestTube2 className="w-6 h-6" />
+            <Shield className="w-6 h-6 text-red-500" />
             <span>VFP-Graph Patent Validation Suite</span>
             <Badge variant="outline" className="ml-2 bg-red-50 text-red-700 border-red-200">
               Patent Testing Active
