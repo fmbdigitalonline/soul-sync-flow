@@ -19,7 +19,7 @@ import { GrowthModeTestRunner } from './GrowthModeTestRunner';
 import { GrowthProgramTestRunner } from './GrowthProgramTestRunner';
 import { VFPGraphTester } from '../personality/VFPGraphTester';
 import { VFPGraphPatentTester } from './VFPGraphPatentTester';
-import { ACSPatentTestSuite } from './ACSPatentTestSuite';
+import ACSPatentTestSuite from './ACSPatentTestSuite';
 
 export const TestingDashboard: React.FC = () => {
   // Set ACS Patent as the default active tab (highest priority)
