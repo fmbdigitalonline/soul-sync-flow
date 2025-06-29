@@ -10,7 +10,8 @@ import {
   Activity,
   Settings,
   Shield,
-  CheckCircle
+  CheckCircle,
+  MessageSquare
 } from 'lucide-react';
 
 // Import existing test components
@@ -18,12 +19,23 @@ import { GrowthModeTestRunner } from './GrowthModeTestRunner';
 import { GrowthProgramTestRunner } from './GrowthProgramTestRunner';
 import { VFPGraphTester } from '../personality/VFPGraphTester';
 import { VFPGraphPatentTester } from './VFPGraphPatentTester';
+import { ACSPatentTestSuite } from './ACSPatentTestSuite';
 
 export const TestingDashboard: React.FC = () => {
-  // Set VFP Patent as the default active tab
-  const [activeTab, setActiveTab] = useState('vfp-patent');
+  // Set ACS Patent as the default active tab (highest priority)
+  const [activeTab, setActiveTab] = useState('acs-patent');
 
   const testCategories = [
+    {
+      id: 'acs-patent',
+      title: 'ACS Patent Validation',
+      description: 'Live conversation testing for Adaptive Context Scheduler patent claims with real-time evidence',
+      icon: MessageSquare,
+      status: 'production',
+      priority: 'critical',
+      testCount: 9,
+      component: ACSPatentTestSuite
+    },
     {
       id: 'vfp-patent',
       title: 'VFP-Graph Patent Validation',
@@ -88,24 +100,24 @@ export const TestingDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Overview Section - Now focused on Patent Validation */}
+      {/* Overview Section - Now focused on ACS + Patent Validation */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <Shield className="w-6 h-6 text-red-500" />
-            <span>VFP-Graph Patent Validation Suite</span>
-            <Badge variant="outline" className="ml-2 bg-red-50 text-red-700 border-red-200">
-              Patent Testing Active
+            <MessageSquare className="w-6 h-6 text-blue-500" />
+            <span>Live Patent Validation Test Suite</span>
+            <Badge variant="outline" className="ml-2 bg-blue-50 text-blue-700 border-blue-200">
+              ACS + VFP-Graph Patent Testing Active
             </Badge>
           </CardTitle>
           <p className="text-muted-foreground">
-            <strong>Patent-ready evidence collection</strong> for VFP-Graph technology claims. 
-            Comprehensive testing validates all 6 patent claims with real-time data generation 
-            and automatic evidence package creation for US Provisional Patent Application.
+            <strong>Comprehensive patent evidence collection</strong> with live conversation testing for ACS technology claims 
+            and VFP-Graph patent validation. Real-time data generation with automatic evidence package creation 
+            for US Provisional Patent Applications.
           </p>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             {testCategories.map((category) => {
               const IconComponent = category.icon;
               return (
@@ -147,14 +159,25 @@ export const TestingDashboard: React.FC = () => {
       </Card>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <Card className="border-blue-200 bg-blue-50/30">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <MessageSquare className="w-5 h-5 text-blue-500" />
+              <div>
+                <p className="text-2xl font-bold text-blue-700">9</p>
+                <p className="text-sm text-blue-600">ACS Claims</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
         <Card className="border-red-200 bg-red-50/30">
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
               <Shield className="w-5 h-5 text-red-500" />
               <div>
                 <p className="text-2xl font-bold text-red-700">6</p>
-                <p className="text-sm text-red-600">Patent Claims</p>
+                <p className="text-sm text-red-600">VFP Claims</p>
               </div>
             </div>
           </CardContent>
@@ -184,7 +207,7 @@ export const TestingDashboard: React.FC = () => {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <CheckCircle className="w-5 h-5 text-blue-500" />
+              <CheckCircle className="w-5 h-5 text-indigo-500" />
               <div>
                 <p className="text-2xl font-bold">{totalTests}</p>
                 <p className="text-sm text-muted-foreground">Total Tests</p>
@@ -198,14 +221,14 @@ export const TestingDashboard: React.FC = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <Shield className="w-5 h-5 text-red-500" />
-            <span>Patent Validation Test Environment</span>
-            <Badge variant="secondary" className="bg-red-100 text-red-800">Real-Time Evidence Collection</Badge>
+            <MessageSquare className="w-5 h-5 text-blue-500" />
+            <span>Live Patent Test Environment</span>
+            <Badge variant="secondary" className="bg-blue-100 text-blue-800">Real-Time Evidence Collection</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               {testCategories.map((category) => (
                 <TabsTrigger 
                   key={category.id} 
