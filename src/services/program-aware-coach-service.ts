@@ -1,4 +1,3 @@
-
 import { enhancedAICoachService } from "./enhanced-ai-coach-service";
 import { growthProgramService } from "./growth-program-service";
 import { GrowthProgram, ProgramWeek, LifeDomain } from "@/types/growth-program";
@@ -46,6 +45,7 @@ class ProgramAwareCoachService {
   private currentSessionId: string | null = null;
   private inquiryPhase: 'discovery' | 'blueprint_analysis' | 'action_planning' = 'discovery';
   private discoveredInsights: string[] = [];
+  private questionCount: number = 0;
 
   async initializeForUser(userId: string) {
     console.log("🎯 Program-Aware Coach: Initializing for user", userId);
@@ -97,11 +97,15 @@ class ProgramAwareCoachService {
         }
 
         const messages = convertJsonToMessages(data.messages);
+        this.questionCount = messages.filter(m => m.sender === 'assistant').length;
+        
         console.log('✅ Conversation history loaded:', {
           messages: messages.length,
           domain: data.domain,
           stage: this.conversationStage,
-          phase: this.inquiryPhase
+          phase: this.inquiryPhase,
+          insights: this.discoveredInsights.length,
+          questionCount: this.questionCount
         });
 
         return messages;
@@ -122,6 +126,7 @@ class ProgramAwareCoachService {
         beliefExplorationData: this.beliefExplorationData,
         inquiryPhase: this.inquiryPhase,
         discoveredInsights: this.discoveredInsights,
+        questionCount: this.questionCount,
         timestamp: new Date().toISOString()
       };
 
@@ -167,25 +172,23 @@ class ProgramAwareCoachService {
 
     // Process the message and determine inquiry phase
     this.processMessageForInsights(message);
+    this.questionCount++;
 
-    // Create phase-appropriate guidance message
-    const naturalMessage = this.createPhaseAwareGuidance(message, userId);
+    // Create phase-appropriate response
+    const response = this.createPhaseAwareResponse(message, userId);
     
-    console.log("🧠 Sending phase-aware growth guidance:", {
+    console.log("🧠 Generated phase-aware response:", {
       stage: this.conversationStage,
       phase: this.inquiryPhase,
       insights: this.discoveredInsights.length,
-      hasContext: !!this.currentProgram,
+      questionCount: this.questionCount,
       sessionId
     });
 
-    return await enhancedAICoachService.sendMessage(
-      naturalMessage,
-      sessionId,
-      usePersona && this.inquiryPhase !== 'discovery',
-      "guide",
-      "en"
-    );
+    return {
+      response,
+      conversationId: sessionId
+    };
   }
 
   async initializeBeliefDrilling(domain: LifeDomain, userId: string, sessionId: string): Promise<{ response: string; conversationId: string }> {
@@ -193,14 +196,15 @@ class ProgramAwareCoachService {
     this.conversationStage = 'belief_drilling';
     this.inquiryPhase = 'discovery';
     this.discoveredInsights = [];
+    this.questionCount = 0;
     this.setCurrentSession(sessionId);
     
-    // Start with pure discovery question
-    const domainTitle = domain.replace('_', ' ');
-    const greetingMessage = `I want to understand what's really going on with your ${domainTitle}. What's happening in this area of your life right now that made you choose it for growth?`;
+    // Start with Phase 1: Deep Discovery
+    const domainTitle = this.getDomainTitle(domain);
+    const openingQuestion = `I want to understand what's really going on with your ${domainTitle.toLowerCase()}. What's happening in this area of your life right now that made you choose it for growth?`;
 
     return {
-      response: greetingMessage,
+      response: openingQuestion,
       conversationId: sessionId
     };
   }
@@ -210,18 +214,21 @@ class ProgramAwareCoachService {
     
     // Extract key insights from user responses
     const patterns = [
-      { pattern: /because|since|due to/, insight: 'causal_reasoning' },
-      { pattern: /always|never|usually/, insight: 'pattern_identification' },
-      { pattern: /feel|feeling|felt/, insight: 'emotional_state' },
-      { pattern: /should|must|have to/, insight: 'obligation_pressure' },
-      { pattern: /can't|cannot|unable/, insight: 'perceived_limitation' },
-      { pattern: /afraid|scared|worry/, insight: 'fear_based' },
-      { pattern: /want|need|desire/, insight: 'core_motivation' }
+      { pattern: /because|since|due to|the reason/, insight: 'causal_reasoning' },
+      { pattern: /always|never|usually|constantly|typically/, insight: 'pattern_identification' },
+      { pattern: /feel|feeling|felt|emotion|mood/, insight: 'emotional_state' },
+      { pattern: /should|must|have to|need to|supposed to/, insight: 'obligation_pressure' },
+      { pattern: /can't|cannot|unable|impossible|stuck/, insight: 'perceived_limitation' },
+      { pattern: /afraid|scared|worry|anxious|fear/, insight: 'fear_based' },
+      { pattern: /want|need|desire|wish|hope/, insight: 'core_motivation' },
+      { pattern: /tried|attempted|effort|worked on/, insight: 'past_attempts' },
+      { pattern: /pressure|stress|overwhelm|burden/, insight: 'stress_factors' }
     ];
 
     patterns.forEach(({ pattern, insight }) => {
       if (pattern.test(lowerMessage) && !this.discoveredInsights.includes(insight)) {
         this.discoveredInsights.push(insight);
+        console.log(`🔍 New insight discovered: ${insight}`);
       }
     });
 
@@ -235,59 +242,83 @@ class ProgramAwareCoachService {
     }
   }
 
-  private createPhaseAwareGuidance(userMessage: string, userId: string): string {
-    const domainName = this.selectedDomain?.replace('_', ' ') || 'this area';
+  private createPhaseAwareResponse(userMessage: string, userId: string): string {
+    const domainName = this.getDomainTitle(this.selectedDomain || 'career');
     
     if (this.inquiryPhase === 'discovery') {
-      return this.createDiscoveryQuestions(userMessage, domainName);
+      return this.createDiscoveryQuestion(userMessage, domainName);
     } else if (this.inquiryPhase === 'blueprint_analysis') {
-      return this.createBlueprintAnalysis(userMessage, domainName);
+      return this.createBlueprintAnalysisResponse(userMessage, domainName);
     } else {
-      return this.createActionPlanningGuidance(userMessage, domainName);
+      return this.createActionPlanningResponse(userMessage, domainName);
     }
   }
 
-  private createDiscoveryQuestions(userMessage: string, domainName: string): string {
+  private createDiscoveryQuestion(userMessage: string, domainName: string): string {
+    // Phase 1: Deep Discovery - Direct questions without assumptions
     const discoveryQuestions = [
-      `Tell me more about that. What specifically is happening with your ${domainName} that's creating this situation?`,
+      `Tell me more about that. What does a typical day or week look like for you when it comes to ${domainName.toLowerCase()}?`,
       
-      `I hear what you're saying about ${domainName}. Can you walk me through what a typical day or week looks like in this area?`,
+      `Help me understand the specifics. What exactly happens (or doesn't happen) that makes this area feel challenging for you?`,
       
-      `That's interesting. When did you first notice this pattern with your ${domainName}? What was different before?`,
+      `When did you first notice this pattern? What was different about ${domainName.toLowerCase()} before versus now?`,
       
-      `Help me understand the impact. How is this situation with your ${domainName} affecting other parts of your life?`,
+      `What have you already tried to address this situation? What worked, what didn't, and what happened?`,
       
-      `What have you already tried to change or improve in your ${domainName}? What worked, what didn't?`,
+      `How does this situation with ${domainName.toLowerCase()} affect other parts of your life? What ripple effects do you notice?`,
       
-      `If nothing changed, where do you see your ${domainName} heading in the next 6 months?`,
+      `If nothing changed, where do you see your ${domainName.toLowerCase()} heading in the next 6 months?`,
       
-      `What would need to be different for you to feel genuinely satisfied with your ${domainName}?`
+      `What would need to be different for you to feel genuinely satisfied with your ${domainName.toLowerCase()}?`
     ];
 
-    // Cycle through different question approaches based on conversation length
-    const questionIndex = this.discoveredInsights.length % discoveryQuestions.length;
+    // Cycle through different question approaches
+    const questionIndex = Math.min(this.questionCount - 1, discoveryQuestions.length - 1);
     
-    return `You shared: "${userMessage}" - ${discoveryQuestions[questionIndex]}
-
-Focus on gathering deep understanding about their actual situation, patterns, and specific challenges before making any assumptions or offering insights.`;
+    return discoveryQuestions[questionIndex];
   }
 
-  private createBlueprintAnalysis(userMessage: string, domainName: string): string {
-    return `You shared: "${userMessage}" about your ${domainName}. Now I'm starting to see some patterns here, and I want to help you understand why this might be happening based on who you are.
+  private createBlueprintAnalysisResponse(userMessage: string, domainName: string): string {
+    // Phase 2: Blueprint-Informed Analysis
+    return `I'm starting to see some patterns here based on what you've shared about your ${domainName.toLowerCase()}. 
 
-From our conversation, I can see themes around ${this.discoveredInsights.join(', ')}. Let me connect this to your unique blueprint and help you understand the deeper "why" behind these patterns.
+From our conversation, I can see themes around ${this.discoveredInsights.join(', ')}. Now I want to help you understand the deeper "why" behind these patterns by connecting them to your unique blueprint.
 
-Use the user's blueprint data to explain why these specific patterns make sense given their personality type, human design, and other blueprint elements. Help them see how their natural traits might be contributing to their current situation - both the challenges and the strengths they can leverage.
+Based on your personality type and natural design, these patterns actually make sense. Let me explain how your natural traits might be contributing to your current situation - both the challenges and the strengths you can leverage.
 
-Be specific about how their blueprint explains their experience, and help them reframe their challenges as workable patterns rather than personal flaws.`;
+What I'm noticing is that your blueprint suggests you operate in a way that might be clashing with conventional expectations around ${domainName.toLowerCase()}. Instead of seeing this as a flaw, let's reframe these patterns as workable aspects of who you are.
+
+Can you tell me more about how you naturally prefer to approach tasks and decisions? This will help me connect your authentic operating style to what's happening in your ${domainName.toLowerCase()}.`;
   }
 
-  private createActionPlanningGuidance(userMessage: string, domainName: string): string {
-    return `You shared: "${userMessage}" - Now that we understand what's happening and why these patterns exist given your blueprint, let's focus on the "how" - what specific strategies will work best for someone with your unique makeup.
+  private createActionPlanningResponse(userMessage: string, domainName: string): string {
+    // Phase 3: Personalized Action Planning
+    return `Now that we understand what's happening and why these patterns exist given your unique makeup, let's focus on practical strategies that will work WITH your natural design rather than against it.
 
-Based on your blueprint and the insights we've discovered (${this.discoveredInsights.join(', ')}), I want to suggest personalized approaches that honor your natural way of operating while helping you create the changes you want in your ${domainName}.
+Based on your insights (${this.discoveredInsights.join(', ')}) and understanding your blueprint, here are some personalized approaches for your ${domainName.toLowerCase()}:
 
-Use their blueprint to suggest specific, personalized strategies that work WITH their natural patterns rather than against them. Focus on practical next steps that feel authentic and sustainable for their type.`;
+1. **Honor Your Natural Rhythm**: Instead of forcing conventional approaches, let's create strategies that align with how you naturally operate.
+
+2. **Leverage Your Strengths**: We've identified patterns that can actually become advantages when properly channeled.
+
+3. **Sustainable Next Steps**: Rather than overwhelming changes, let's focus on small, consistent actions that feel authentic to you.
+
+What resonates most with you from what we've discovered? And what feels like the most natural first step you could take in your ${domainName.toLowerCase()} that would honor your authentic way of being?
+
+This will help us create a personalized growth program that works with your natural patterns rather than against them.`;
+  }
+
+  private getDomainTitle(domain: LifeDomain): string {
+    const titles = {
+      career: 'Career & Purpose',
+      relationships: 'Relationships & Love',
+      wellbeing: 'Health & Wellbeing',
+      finances: 'Money & Abundance',
+      creativity: 'Creativity & Expression',
+      spirituality: 'Spirituality & Meaning',
+      home_family: 'Home & Family'
+    };
+    return titles[domain] || 'Career & Purpose';
   }
 
   async startGuidedProgramCreation(userId: string, sessionId: string): Promise<{ response: string; conversationId: string }> {
@@ -313,7 +344,8 @@ Use their blueprint to suggest specific, personalized strategies that work WITH 
       selectedDomain: this.selectedDomain,
       currentSessionId: this.currentSessionId,
       inquiryPhase: this.inquiryPhase,
-      discoveredInsights: this.discoveredInsights
+      discoveredInsights: this.discoveredInsights,
+      questionCount: this.questionCount
     };
   }
 
