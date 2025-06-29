@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Json } from '@/integrations/supabase/types';
 
@@ -134,7 +133,7 @@ class PersonalityFusionService {
     mbtiVector: number[],
     hdVector: number[],
     astroVector: number[],
-    weights: number[][]
+    weights: Record<string, number[][]>
   ): number[] {
     const fusedVector = new Array(128).fill(0);
 
@@ -148,17 +147,22 @@ class PersonalityFusionService {
       
       // MBTI contribution (first 32 dims)
       if (i < 32) {
-        weightedSum += paddedMbti[i] * (weights[0]?.[i] || 1/3);
+        const mbtiWeights = weights.mbti || Array(32).fill(0).map(() => Array(128).fill(1/3));
+        weightedSum += paddedMbti[i] * (mbtiWeights[Math.min(i, mbtiWeights.length - 1)]?.[Math.min(i, 127)] || 1/3);
       }
       
       // Human Design contribution (next 64 dims)
       if (i >= 32 && i < 96) {
-        weightedSum += hdVector[i - 32] * (weights[1]?.[i] || 1/3);
+        const hdWeights = weights.humanDesign || Array(64).fill(0).map(() => Array(128).fill(1/3));
+        const hdIndex = i - 32;
+        weightedSum += hdVector[hdIndex] * (hdWeights[Math.min(hdIndex, hdWeights.length - 1)]?.[Math.min(i, 127)] || 1/3);
       }
       
       // Astrology contribution (last 32 dims)
       if (i >= 96) {
-        weightedSum += paddedAstro[i - 96] * (weights[2]?.[i] || 1/3);
+        const astroWeights = weights.astrology || Array(32).fill(0).map(() => Array(128).fill(1/3));
+        const astroIndex = i - 96;
+        weightedSum += paddedAstro[astroIndex] * (astroWeights[Math.min(astroIndex, astroWeights.length - 1)]?.[Math.min(i, 127)] || 1/3);
       }
 
       fusedVector[i] = Math.tanh(weightedSum); // Activation function
@@ -426,7 +430,7 @@ class PersonalityFusionService {
       mbtiVector, 
       hdVector, 
       astroVector, 
-      Object.values(adaptiveWeights.weights)
+      adaptiveWeights.weights
     );
 
     // Step 5: Save to database
@@ -536,4 +540,6 @@ class PersonalityFusionService {
   }
 }
 
+// Export both the class and instance
+export { PersonalityFusionService };
 export const personalityFusionService = new PersonalityFusionService();

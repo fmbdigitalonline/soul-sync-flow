@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { PersonalityFusionService } from "./personality-fusion-service";
+import { personalityFusionService } from "./personality-fusion-service";
 import { PersonalityProfile } from "@/types/personality-fusion";
 import { BlueprintHealthChecker } from "./blueprint-health-checker";
 

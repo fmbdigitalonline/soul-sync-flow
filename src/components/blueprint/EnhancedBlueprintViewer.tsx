@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -5,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { EnhancedBlueprintData, ViewDepth } from "@/types/blueprint-enhanced";
-import { PersonalityFusionService } from "@/services/personality-fusion-service";
+import { personalityFusionService } from "@/services/personality-fusion-service";
 import { PersonalityProfile } from "@/types/personality-fusion";
 
 interface EnhancedBlueprintViewerProps {
