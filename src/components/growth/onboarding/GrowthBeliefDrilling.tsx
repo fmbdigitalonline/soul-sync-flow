@@ -51,15 +51,14 @@ export const GrowthBeliefDrilling: React.FC<GrowthBeliefDrillingProps> = ({
     loadAvailableRecoveries(domain);
   }, [domain, loadAvailableRecoveries]);
 
+  // Initialize fresh conversation only if no recoveries and not initialized
   useEffect(() => {
-    if (!isInitialized && availableRecoveries.length === 0) {
-      console.log('🔍 Initializing belief drilling for domain:', domain);
+    if (!isInitialized && availableRecoveries.length === 0 && messages.length === 0) {
+      console.log('🔍 Initializing fresh belief drilling for domain:', domain);
       setIsInitialized(true);
-      
-      // Initialize belief drilling mode - AI will start the conversation
       initializeBeliefDrilling(domain);
     }
-  }, [domain, isInitialized, initializeBeliefDrilling, availableRecoveries.length]);
+  }, [domain, isInitialized, initializeBeliefDrilling, availableRecoveries.length, messages.length]);
 
   const handleSendMessage = async (message: string) => {
     console.log('📤 Sending belief drilling response:', message);
@@ -77,8 +76,8 @@ export const GrowthBeliefDrilling: React.FC<GrowthBeliefDrillingProps> = ({
     await deleteConversation(sessionId);
     setShowRecoveryBanner(false);
     
-    // Start fresh conversation
-    if (!isInitialized) {
+    // Start fresh conversation if not already initialized
+    if (!isInitialized && messages.length === 0) {
       setIsInitialized(true);
       initializeBeliefDrilling(domain);
     }
@@ -164,7 +163,7 @@ export const GrowthBeliefDrilling: React.FC<GrowthBeliefDrillingProps> = ({
         </div>
       )}
 
-      {/* Chat Interface - Preserve conversation history */}
+      {/* Chat Interface */}
       <div className="flex-1 min-h-0">
         <GuideInterface
           messages={messages}

@@ -107,8 +107,8 @@ export const useProgramAwareCoach = () => {
         timestamp: new Date(),
       };
 
-      // Only add the greeting if there are no messages, otherwise preserve conversation
-      setMessages(prev => prev.length === 0 ? [assistantMessage] : [...prev, assistantMessage]);
+      // Set fresh conversation with only the greeting
+      setMessages([assistantMessage]);
     } catch (error) {
       console.error('Error initializing belief drilling:', error);
       
@@ -119,7 +119,7 @@ export const useProgramAwareCoach = () => {
         timestamp: new Date(),
       };
 
-      setMessages(prev => prev.length === 0 ? [errorMessage] : [...prev, errorMessage]);
+      setMessages([errorMessage]);
     }
   }, [user]);
 
@@ -134,9 +134,16 @@ export const useProgramAwareCoach = () => {
       const history = await programAwareCoachService.loadConversationHistory(sessionId, user.id);
       
       if (history.length > 0) {
-        setMessages(history);
+        const formattedMessages: Message[] = history.map((msg: any) => ({
+          id: msg.id || `msg_${Date.now()}_${Math.random()}`,
+          content: msg.content || '',
+          sender: msg.sender || 'user',
+          timestamp: new Date(msg.timestamp || Date.now())
+        }));
+        
+        setMessages(formattedMessages);
         setCurrentSessionId(sessionId);
-        console.log('✅ Conversation recovered:', history.length, 'messages');
+        console.log('✅ Conversation recovered:', formattedMessages.length, 'messages');
       }
     } catch (error) {
       console.error('Error recovering conversation:', error);

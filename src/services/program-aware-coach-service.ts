@@ -1,7 +1,25 @@
+
 import { enhancedAICoachService } from "./enhanced-ai-coach-service";
 import { growthProgramService } from "./growth-program-service";
 import { GrowthProgram, ProgramWeek, LifeDomain } from "@/types/growth-program";
 import { supabase } from "@/integrations/supabase/client";
+import { Json } from "@/integrations/supabase/types";
+
+// Helper function to convert Json to Message array
+const convertJsonToMessages = (jsonData: Json): any[] => {
+  if (!jsonData || !Array.isArray(jsonData)) return [];
+  return jsonData as any[];
+};
+
+// Helper function to convert Message array to Json
+const convertMessagesToJson = (messages: any[]): Json => {
+  return messages.map(msg => ({
+    id: msg.id,
+    content: msg.content,
+    sender: msg.sender,
+    timestamp: msg.timestamp instanceof Date ? msg.timestamp.toISOString() : msg.timestamp
+  }));
+};
 
 class ProgramAwareCoachService {
   private currentProgram: GrowthProgram | null = null;
@@ -57,13 +75,14 @@ class ProgramAwareCoachService {
           this.beliefExplorationData = data.recovery_context;
         }
 
+        const messages = convertJsonToMessages(data.messages);
         console.log('✅ Conversation history loaded:', {
-          messages: data.messages?.length || 0,
+          messages: messages.length,
           domain: data.domain,
           stage: this.conversationStage
         });
 
-        return data.messages || [];
+        return messages;
       }
 
       return [];
@@ -87,7 +106,7 @@ class ProgramAwareCoachService {
         .upsert({
           user_id: userId,
           session_id: sessionId,
-          messages,
+          messages: convertMessagesToJson(messages),
           domain: this.selectedDomain,
           conversation_stage: 'active',
           recovery_context: recoveryContext,
