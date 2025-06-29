@@ -18,7 +18,7 @@ export const GrowthBeliefDrilling: React.FC<GrowthBeliefDrillingProps> = ({
   onComplete,
   beliefData
 }) => {
-  const { messages, isLoading, sendMessage, resetConversation, initializeBeliefDrilling } = useProgramAwareCoach();
+  const { messages, isLoading, sendMessage, initializeBeliefDrilling } = useProgramAwareCoach();
   const [isInitialized, setIsInitialized] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -46,12 +46,12 @@ export const GrowthBeliefDrilling: React.FC<GrowthBeliefDrillingProps> = ({
     if (!isInitialized) {
       console.log('🔍 Initializing belief drilling for domain:', domain);
       setIsInitialized(true);
-      resetConversation();
       
       // Initialize belief drilling mode - AI will start the conversation
+      // Don't reset existing conversations
       initializeBeliefDrilling(domain);
     }
-  }, [domain, isInitialized, resetConversation, initializeBeliefDrilling]);
+  }, [domain, isInitialized, initializeBeliefDrilling]);
 
   const handleSendMessage = async (message: string) => {
     console.log('📤 Sending belief drilling response:', message);
@@ -126,7 +126,7 @@ export const GrowthBeliefDrilling: React.FC<GrowthBeliefDrillingProps> = ({
         </div>
       </div>
 
-      {/* Chat Interface - Simplified container structure */}
+      {/* Chat Interface - Preserve conversation history */}
       <div className="flex-1 min-h-0">
         <GuideInterface
           messages={messages}

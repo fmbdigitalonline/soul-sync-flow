@@ -74,7 +74,8 @@ export const useProgramAwareCoach = () => {
         timestamp: new Date(),
       };
 
-      setMessages([assistantMessage]); // Start fresh with just the greeting
+      // Only add the greeting if there are no messages, otherwise preserve conversation
+      setMessages(prev => prev.length === 0 ? [assistantMessage] : [...prev, assistantMessage]);
     } catch (error) {
       console.error('Error initializing belief drilling:', error);
       
@@ -85,7 +86,7 @@ export const useProgramAwareCoach = () => {
         timestamp: new Date(),
       };
 
-      setMessages([errorMessage]);
+      setMessages(prev => prev.length === 0 ? [errorMessage] : [...prev, errorMessage]);
     }
   }, [user]);
 

@@ -1,3 +1,4 @@
+
 import { enhancedAICoachService } from "./enhanced-ai-coach-service";
 import { growthProgramService } from "./growth-program-service";
 import { GrowthProgram, ProgramWeek, LifeDomain } from "@/types/growth-program";
@@ -41,16 +42,16 @@ class ProgramAwareCoachService {
       await this.initializeForUser(userId);
     }
 
-    // Create simple, focused guidance message
-    const focusedMessage = this.createFocusedGuidance(message, userId);
+    // Create natural, intuitive guidance message
+    const naturalMessage = this.createNaturalGuidance(message, userId);
     
-    console.log("🧠 Sending focused growth guidance:", {
+    console.log("🧠 Sending natural growth guidance:", {
       stage: this.conversationStage,
       hasContext: !!this.currentProgram
     });
 
     return await enhancedAICoachService.sendMessage(
-      focusedMessage,
+      naturalMessage,
       sessionId,
       usePersona,
       "guide",
@@ -86,22 +87,42 @@ class ProgramAwareCoachService {
     );
   }
 
-  private createFocusedGuidance(userMessage: string, userId: string): string {
-    // Simple, focused prompts based on conversation stage
+  private createNaturalGuidance(userMessage: string, userId: string): string {
+    // Create natural, intuitive coaching prompts that speak as if knowing the user personally
     if (this.conversationStage === 'belief_drilling') {
-      return `Continue exploring their beliefs about ${this.selectedDomain?.replace('_', ' ')}. They said: "${userMessage}". Ask ONE follow-up question that goes deeper. Be warm and conversational.`;
+      return this.createNaturalBeliefDrillingPrompt(userMessage);
     }
     
     if (this.conversationStage === 'domain_exploration') {
-      return `Help them choose a growth area. They said: "${userMessage}". Guide them warmly toward one of the 7 life domains: career, relationships, wellbeing, finances, creativity, spirituality, or home & family.`;
+      return `You're exploring what area of your life needs attention right now. From what you've shared: "${userMessage}" - I sense there's something deeper calling you. You're someone who values growth and authentic expression. What feels most alive for you when you think about transformation?`;
     }
 
     if (!this.currentProgram) {
-      return `Help with their growth journey. They said: "${userMessage}". Give ONE helpful response or ask ONE focused question.`;
+      return `I can see you're on a journey of self-discovery. You said: "${userMessage}". You're the kind of person who doesn't settle for surface-level answers - you want to understand the deeper patterns and create real change. What would transformation look like for you?`;
     }
 
     const domainName = this.currentProgram!.domain.replace('_', ' ');
-    return `They're working on ${domainName} growth. They said: "${userMessage}". Give ONE helpful response about their ${domainName} journey.`;
+    return `You're working on your ${domainName} journey, and I can feel your commitment to growth. You shared: "${userMessage}". You're someone who seeks authentic progress, not just quick fixes. What's the next step that feels most aligned for you?`;
+  }
+
+  private createNaturalBeliefDrillingPrompt(userMessage: string): string {
+    const domainName = this.selectedDomain?.replace('_', ' ') || 'this area';
+    
+    // Create natural follow-up questions based on conversation flow
+    const naturalPrompts = [
+      `You're drawn to ${domainName} for a reason. From what you've shared: "${userMessage}" - I sense there's a deeper pattern here. You're someone who feels things deeply and wants authentic growth. What would it look like if this area of your life was exactly as you wanted it?`,
+      
+      `I hear you when you talk about ${domainName}. "${userMessage}" - This tells me you're ready for real change, not just surface adjustments. You have high standards for yourself. What's been holding you back from having what you truly want here?`,
+      
+      `Your focus on ${domainName} makes sense. "${userMessage}" - You're someone who knows there's more possible. You don't accept limitations easily. If you could go back and change one belief you had about this area, what would it be?`,
+      
+      `"${userMessage}" - I can feel the importance of ${domainName} in your life. You're not someone who does things halfway. When you imagine your ideal situation here, what does that person (the future you) believe about themselves that you might not fully believe yet?`
+    ];
+    
+    // Rotate through different natural approaches
+    const promptIndex = Math.floor(Math.random() * naturalPrompts.length);
+    return naturalPrompts[promptIndex] + 
+           `\n\nIMPORTANT: Respond as an intuitive coach who knows this person well. Use their blueprint data to inform your understanding, but speak naturally as if you've known them for years. Only mention specific blueprint elements (like "Life Path 3" or "ENFP") if they directly ask "How do you know this about me?" Otherwise, integrate the insights seamlessly into natural conversation.`;
   }
 
   getCurrentContext() {
