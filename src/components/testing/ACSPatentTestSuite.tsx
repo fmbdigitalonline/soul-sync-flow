@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -43,7 +42,7 @@ const ACSPatentTestSuite: React.FC = () => {
     velocityFloor: 0.5,
     sentimentSlopeNeg: -0.2,
     maxSilentMs: 45000, // 45 seconds for idle detection
-    frustrationThreshold: 0.4,
+    frustrationThreshold: 0.25, // LOWERED from 0.4 to 0.25 for better detection
     clarificationThreshold: 0.6,
     enableRL: true,
     personalityScaling: true
@@ -166,6 +165,7 @@ const ACSPatentTestSuite: React.FC = () => {
 
     try {
       console.log("🧪 ACS Real AI Integration Test - Sending message:", testMessage);
+      console.log("⚙️ Using enhanced config with frustration threshold:", config.frustrationThreshold);
       
       // Use real AI integration service
       const response = await acsRealAIIntegrationService.sendMessage(

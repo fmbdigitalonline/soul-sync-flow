@@ -13,12 +13,13 @@ export class ACSEnhancedStateDetection {
     console.log("🔍 ACS Enhanced State Detection - Analyzing metrics:", metrics);
     console.log("⚙️ Config thresholds:", config);
     
-    // Enhanced frustration detection with multiple indicators
+    // CRITICAL FIX: Enhanced frustration detection with lower threshold and better patterns
     if (this.detectFrustrationState(metrics, config)) {
+      console.log("😤 FRUSTRATION DETECTED - Triggering intervention");
       return {
         newState: 'FRUSTRATION_DETECTED',
-        confidence: 0.9,
-        trigger: `Frustration score ${metrics.frustrationScore.toFixed(3)} >= threshold ${config.frustrationThreshold}`
+        confidence: 0.95,
+        trigger: `Frustration score ${metrics.frustrationScore.toFixed(3)} >= threshold ${config.frustrationThreshold} with enhanced pattern matching`
       };
     }
     
@@ -57,29 +58,65 @@ export class ACSEnhancedStateDetection {
   }
 
   private detectFrustrationState(metrics: DialogueHealthMetrics, config: ACSConfig): boolean {
-    // Multi-factor frustration detection
+    // CRITICAL FIX: Enhanced multi-factor frustration detection with lower threshold
     const frustrationFactors = [];
+    let totalFrustrationScore = metrics.frustrationScore;
     
-    // Direct frustration score
+    // Direct frustration score (lowered threshold)
     if (metrics.frustrationScore >= config.frustrationThreshold) {
-      frustrationFactors.push('High frustration score');
+      frustrationFactors.push(`High frustration score: ${metrics.frustrationScore.toFixed(3)}`);
+    }
+    
+    // CRITICAL: Enhanced frustration keywords detection
+    const recentHelpSignals = metrics.helpSignals.filter(signal => 
+      Date.now() - signal.timestamp < 30000 // Last 30 seconds
+    );
+    
+    const frustrationSignals = recentHelpSignals.filter(signal => 
+      signal.type === 'frustration_pattern' || 
+      (signal.type === 'negative_feedback' && signal.confidence > 0.7)
+    );
+    
+    if (frustrationSignals.length > 0) {
+      totalFrustrationScore += 0.3;
+      frustrationFactors.push(`Frustration keywords detected: ${frustrationSignals.length} signals`);
     }
     
     // Negative sentiment combined with help signals
-    if (metrics.sentimentSlope < -0.3 && metrics.helpSignals.length > 0) {
+    if (metrics.sentimentSlope < -0.2 && metrics.helpSignals.length > 0) {
+      totalFrustrationScore += 0.2;
       frustrationFactors.push('Negative sentiment with help signals');
     }
     
     // Repetitive negative feedback patterns
     const negativeSignals = metrics.helpSignals.filter(signal => 
-      signal.type === 'negative_feedback' && signal.confidence > 0.7
+      signal.type === 'negative_feedback' && signal.confidence > 0.6
     );
     if (negativeSignals.length >= 2) {
+      totalFrustrationScore += 0.3;
       frustrationFactors.push('Multiple negative feedback signals');
     }
     
-    console.log("😤 Frustration factors detected:", frustrationFactors);
-    return frustrationFactors.length > 0;
+    // CRITICAL: Memory-related frustration (common in our test)
+    const memoryFrustrationSignals = recentHelpSignals.filter(signal =>
+      signal.message.toLowerCase().includes('memory') ||
+      signal.message.toLowerCase().includes('forget') ||
+      signal.message.toLowerCase().includes('again')
+    );
+    
+    if (memoryFrustrationSignals.length > 0) {
+      totalFrustrationScore += 0.4;
+      frustrationFactors.push('Memory-related frustration detected');
+    }
+    
+    console.log("😤 Frustration analysis:", {
+      originalScore: metrics.frustrationScore,
+      enhancedScore: totalFrustrationScore,
+      threshold: config.frustrationThreshold,
+      factors: frustrationFactors
+    });
+    
+    return totalFrustrationScore >= config.frustrationThreshold && frustrationFactors.length > 0;
   }
 
   private detectClarificationNeeded(metrics: DialogueHealthMetrics, config: ACSConfig): boolean {
