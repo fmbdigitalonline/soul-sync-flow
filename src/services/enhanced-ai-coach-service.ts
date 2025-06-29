@@ -6,6 +6,8 @@ import { UnifiedBlueprintService } from "./unified-blueprint-service";
 import { LayeredBlueprint, AgentMode } from "@/types/personality-modules";
 import { memoryInformedConversationService } from "./memory-informed-conversation-service";
 import { personalityVectorService } from "./personality-vector-service";
+import { useACSIntegration } from '@/hooks/use-acs-integration';
+import { ACSConfig, DialogueHealthMetrics, DialogueState, StateTransition, PromptStrategyConfig, ACSMetrics, HelpSignal } from '@/types/acs-types';
 
 export type AgentType = "coach" | "guide" | "blend";
 
@@ -30,13 +32,14 @@ class EnhancedAICoachService {
   private conversationCache: Map<string, ChatMessage[]> = new Map();
   private blueprintCache: LayeredBlueprint | null = null;
   private vfpGraphCache: { vector: Float32Array | null; summary: string | null } = { vector: null, summary: null };
+  private acsEnabled: boolean = true; // Feature flag for ACS
 
   constructor() {
     this.personalityEngine = new PersonalityEngine();
   }
 
   async setCurrentUser(userId: string) {
-    console.log("🔐 Enhanced AI Coach Service: Setting current user with VFP-Graph integration:", userId);
+    console.log("🔐 Enhanced AI Coach Service: Setting current user with VFP-Graph and ACS integration:", userId);
     this.currentUserId = userId;
     this.blueprintCache = null;
     this.vfpGraphCache = { vector: null, summary: null };
@@ -127,14 +130,14 @@ class EnhancedAICoachService {
     }
 
     try {
-      console.log("🧠 VFP-Graph Enhanced SoulSync: Generating comprehensive persona with vector intelligence...");
+      console.log("🧠 VFP-Graph Enhanced SoulSync: Generating comprehensive persona with vector intelligence and ACS...");
       
       const blueprint = await this.getBlueprintFromCache();
       let comprehensivePrompt = null;
 
       // VFP-Graph Enhanced System Prompt Generation
       if (this.vfpGraphCache.vector && this.vfpGraphCache.summary) {
-        console.log("🎯 Using VFP-Graph 128D vector for enhanced personalization");
+        console.log("🎯 Using VFP-Graph 128D vector for enhanced personalization with ACS");
         
         // Generate VFP-Graph powered system prompt
         const vfgSystemPrompt = this.generateVFPGraphSystemPrompt(
@@ -193,7 +196,7 @@ class EnhancedAICoachService {
         console.log("⚠️ No user message provided for memory context integration");
       }
       
-      console.log("✅ VFP-Graph Enhanced SoulSync: Comprehensive persona ready with full intelligence stack");
+      console.log("✅ VFP-Graph Enhanced SoulSync: Comprehensive persona ready with full intelligence stack and ACS");
       return comprehensivePrompt;
     } catch (error) {
       console.error("❌ VFP-Graph Enhanced SoulSync: Error in persona generation:", error);
@@ -269,12 +272,12 @@ Seamlessly blend VFP-Graph intelligence with the detailed blueprint information 
     language: string = "en"
   ): Promise<{ response: string; conversationId: string }> {
     try {
-      console.log(`📤 VFP-Graph Enhanced AI Coach: Sending message (${agentType}, VFP-Graph: ${usePersona && !!this.vfpGraphCache.vector})`);
+      console.log(`📤 VFP-Graph Enhanced AI Coach: Sending message (${agentType}, VFP-Graph: ${usePersona && !!this.vfpGraphCache.vector}, ACS: ${this.acsEnabled})`);
       
       const systemPrompt = await this.getOrCreatePersona(usePersona, agentType, message);
       
       if (systemPrompt && usePersona && this.vfpGraphCache.vector) {
-        console.log("🎯 Using VFP-Graph enhanced system prompt with 128D personality vector");
+        console.log("🎯 Using VFP-Graph enhanced system prompt with 128D personality vector and ACS");
       }
       
       const { data, error } = await supabase.functions.invoke("ai-coach", {
@@ -288,6 +291,7 @@ Seamlessly blend VFP-Graph intelligence with the detailed blueprint information 
           maxTokens: 4000,
           vfpGraphEnabled: !!(usePersona && this.vfpGraphCache.vector),
           personalitySummary: this.vfpGraphCache.summary,
+          acsEnabled: this.acsEnabled,
         },
       });
 
@@ -347,7 +351,7 @@ Seamlessly blend VFP-Graph intelligence with the detailed blueprint information 
     callbacks: StreamingResponse
   ): Promise<void> {
     try {
-      console.log(`📡 VFP-Graph Enhanced Streaming: Starting (${agentType}, VFP-Graph: ${usePersona && !!this.vfpGraphCache.vector})`);
+      console.log(`📡 VFP-Graph Enhanced Streaming: Starting (${agentType}, VFP-Graph: ${usePersona && !!this.vfpGraphCache.vector}, ACS: ${this.acsEnabled})`);
       
       const systemPrompt = await this.getOrCreatePersona(usePersona, agentType, message);
       
@@ -355,7 +359,7 @@ Seamlessly blend VFP-Graph intelligence with the detailed blueprint information 
       const blueprintFilter = blueprint ? createBlueprintFilter(blueprint) : null;
       
       if (systemPrompt && usePersona && this.vfpGraphCache.vector) {
-        console.log("🎯 Using VFP-Graph enhanced streaming with 128D personality intelligence");
+        console.log("🎯 Using VFP-Graph enhanced streaming with 128D personality intelligence and ACS");
         console.log("📊 VFP-Graph Status:", this.vfpGraphCache.summary);
       }
 
@@ -363,7 +367,7 @@ Seamlessly blend VFP-Graph intelligence with the detailed blueprint information 
       
       try {
         headers = await this.getAuthenticatedHeaders();
-        console.log("✅ Authentication headers prepared for VFP-Graph streaming");
+        console.log("✅ Authentication headers prepared for VFP-Graph streaming with ACS");
       } catch (authError) {
         console.error("❌ Authentication error for VFP-Graph streaming:", authError);
         callbacks.onError(new Error('Authentication required. Please sign in again.'));
@@ -385,7 +389,8 @@ Seamlessly blend VFP-Graph intelligence with the detailed blueprint information 
           temperature: 0.7,
           vfpGraphEnabled: !!(usePersona && this.vfpGraphCache.vector),
           personalitySummary: this.vfpGraphCache.summary,
-          vectorDimensions: this.vfpGraphCache.vector?.length || 0
+          vectorDimensions: this.vfpGraphCache.vector?.length || 0,
+          acsEnabled: this.acsEnabled,
         }),
       });
 
@@ -396,7 +401,7 @@ Seamlessly blend VFP-Graph intelligence with the detailed blueprint information 
           callbacks.onComplete(fallbackResult.response);
           return;
         } catch (fallbackError) {
-          callbacks.onError(new Error('Authentication failed. Please sign in again.'));
+          callbacks.onError(new Error('Authentication required. Please sign in again.'));
           return;
         }
       }
@@ -424,7 +429,7 @@ Seamlessly blend VFP-Graph intelligence with the detailed blueprint information 
       let fullResponse = '';
 
       try {
-        console.log("📡 Starting VFP-Graph enhanced streaming response...");
+        console.log("📡 Starting VFP-Graph enhanced streaming response with ACS...");
         
         while (true) {
           const { done, value } = await reader.read();
@@ -493,8 +498,6 @@ Seamlessly blend VFP-Graph intelligence with the detailed blueprint information 
                       message,
                       fullResponse
                     );
-                    
-                    console.log("✅ VFP-Graph memory application tracked for streaming response");
                   } catch (error) {
                     console.error("❌ Error tracking VFP-Graph memory application:", error);
                   }
@@ -523,18 +526,10 @@ Seamlessly blend VFP-Graph intelligence with the detailed blueprint information 
       }
       
       if (fullResponse) {
-        if (blueprintFilter) {
-          const filtered = blueprintFilter.filterResponse(fullResponse, message);
-          if (filtered.content !== fullResponse) {
-            callbacks.onComplete(filtered.content);
-            return;
-          }
-        }
-        console.log(`📏 Final VFP-Graph response length: ${fullResponse.length} characters`);
         callbacks.onComplete(fullResponse);
       }
     } catch (error) {
-      console.error("❌ VFP-Graph Enhanced Streaming: Error in comprehensive streaming:", error);
+      console.error("❌ VFP-Graph Enhanced streaming error:", error);
       callbacks.onError(error as Error);
     }
   }
@@ -656,7 +651,7 @@ Seamlessly blend VFP-Graph intelligence with the detailed blueprint information 
     isAvailable: boolean;
     vectorDimensions: number;
     personalitySummary: string;
-    vectorMagnitude: number;
+    vectorMagnitude?: number;
   }> {
     if (!this.currentUserId) {
       return {
@@ -705,14 +700,29 @@ Seamlessly blend VFP-Graph intelligence with the detailed blueprint information 
   }
 
   async recordVFPGraphFeedback(messageId: string, isPositive: boolean): Promise<void> {
-    if (!this.currentUserId) return;
-
     try {
-      await personalityVectorService.voteThumb(this.currentUserId, messageId, isPositive);
-      console.log(`✅ VFP-Graph feedback recorded via Enhanced AI Coach: ${isPositive ? '👍' : '👎'}`);
+      if (this.currentUserId) {
+        await personalityVectorService.voteThumb(this.currentUserId, messageId, isPositive);
+        console.log(`✅ VFP-Graph feedback recorded: ${isPositive ? '👍' : '👎'}`);
+      }
     } catch (error) {
       console.error("❌ Error recording VFP-Graph feedback:", error);
     }
+  }
+
+  // New ACS-specific methods
+  enableACS(): void {
+    this.acsEnabled = true;
+    console.log('✅ ACS enabled in Enhanced AI Coach Service');
+  }
+
+  disableACS(): void {
+    this.acsEnabled = false;
+    console.log('⚠️ ACS disabled in Enhanced AI Coach Service - using static logic');
+  }
+
+  isACSEnabled(): boolean {
+    return this.acsEnabled;
   }
 }
 
