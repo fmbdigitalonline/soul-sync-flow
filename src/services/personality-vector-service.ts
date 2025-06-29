@@ -9,6 +9,24 @@ export interface PersonalityVectorService {
   getPersonaSummary(userId: string): Promise<string>;
 }
 
+// Type for blueprint data structure
+interface BlueprintData {
+  cognitiveTemperamental?: {
+    mbtiType?: string;
+  };
+  energyDecisionStrategy?: {
+    gates?: number[];
+  };
+  publicArchetype?: {
+    sunSign?: string;
+    moonSign?: string;
+    ascendant?: string;
+  };
+  coreValuesNarrative?: {
+    lifePath?: number;
+  };
+}
+
 class VFPGraphService implements PersonalityVectorService {
   private static readonly ENCODER_VERSION = '1.0.0';
   private static readonly FEATURE_FLAG_KEY = 'useFusion';
@@ -134,14 +152,17 @@ class VFPGraphService implements PersonalityVectorService {
       return await this.getFallbackVector(userId);
     }
 
+    // Type the blueprint data properly
+    const blueprintData = blueprint.blueprint as BlueprintData;
+
     // Extract personality data
-    const mbtiType = blueprint.blueprint.cognitiveTemperamental?.mbtiType || 'ENFP';
-    const hdGates = blueprint.blueprint.energyDecisionStrategy?.gates || [1, 15, 31, 43];
+    const mbtiType = blueprintData.cognitiveTemperamental?.mbtiType || 'ENFP';
+    const hdGates = blueprintData.energyDecisionStrategy?.gates || [1, 15, 31, 43];
     const astroData = {
-      sunSign: blueprint.blueprint.publicArchetype?.sunSign === 'Cancer' ? 4 : 5,
-      moonSign: blueprint.blueprint.publicArchetype?.moonSign === 'Pisces' ? 12 : 6,
+      sunSign: blueprintData.publicArchetype?.sunSign === 'Cancer' ? 4 : 5,
+      moonSign: blueprintData.publicArchetype?.moonSign === 'Pisces' ? 12 : 6,
       ascendant: 7,
-      lifePathNumber: blueprint.blueprint.coreValuesNarrative?.lifePath || 7
+      lifePathNumber: blueprintData.coreValuesNarrative?.lifePath || 7
     };
 
     // Generate fusion vector
