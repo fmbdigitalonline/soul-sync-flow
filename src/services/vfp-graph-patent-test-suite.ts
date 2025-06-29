@@ -1,4 +1,3 @@
-
 /**
  * VFP-Graph Patent Validation Test Suite
  * 
@@ -7,6 +6,7 @@
  */
 
 import { personalityFusionService } from './personality-fusion-service';
+import { VFPGraphPatentTestClaims } from './vfp-graph-patent-test-suite-claims';
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -15,6 +15,7 @@ export interface PatentTestResult {
   claimTitle: string;
   passed: boolean;
   evidence: any;
+  error?: string;
   timestamp: string;
   executionTimeMs: number;
   testDetails: Record<string, any>;
@@ -45,6 +46,7 @@ class VFPGraphPatentTestSuite {
   private evidence: PatentValidationReport['evidence'];
   private startTime: number;
   private testUserId: string;
+  private claimsHelper: VFPGraphPatentTestClaims;
 
   constructor() {
     this.testRunId = `patent_test_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -55,26 +57,44 @@ class VFPGraphPatentTestSuite {
       conflictResolutions: []
     };
     this.startTime = 0;
-    // Use the system test user ID that we created in the database
+    // Use authenticated user if available, otherwise use test user
     this.testUserId = 'e843bd6c-68a3-405a-bcff-a9ed6fa492b6';
+    this.claimsHelper = new VFPGraphPatentTestClaims(this.testUserId, this.evidence);
   }
 
-  // Initialize authentication context for patent testing
+  // Initialize proper authentication context for patent testing
   private async initializeTestContext(): Promise<boolean> {
     try {
-      // Set session for system test user to bypass RLS
-      const { error } = await supabase.auth.setSession({
-        access_token: 'patent-test-token',
-        refresh_token: 'patent-test-refresh'
+      console.log('🔐 Initializing patent test authentication context...');
+      
+      // Get current user first
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        console.log('✅ Using authenticated user for patent testing:', user.id);
+        this.testUserId = user.id;
+        return true;
+      }
+      
+      console.log('⚠️ No authenticated user found, attempting system test context...');
+      
+      // Attempt to create test session for patent validation
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: 'patent-test@soulsync.ai',
+        password: 'system-test-password'
       });
       
       if (error) {
-        console.log('Authentication setup for testing context');
+        console.log('⚠️ System test auth failed, continuing with current context:', error.message);
+        // Continue with test - the system will use whatever auth context is available
+      } else if (data.user) {
+        console.log('✅ System test authentication successful:', data.user.id);
+        this.testUserId = data.user.id;
       }
       
       return true;
     } catch (error) {
-      console.warn('Test context initialization:', error);
+      console.warn('❌ Test context initialization error:', error);
       return true; // Continue with testing even if auth setup fails
     }
   }
@@ -99,9 +119,10 @@ class VFPGraphPatentTestSuite {
       // Real astrological data based on current date
       const astrologyData = this.generateRealtimeAstrologyData(currentTime);
 
-      console.log('Generated real-time test data:', { mbtiType, humanDesignGates, astrologyData });
+      console.log('📊 Generated real-time test data:', { mbtiType, humanDesignGates, astrologyData });
 
       // Execute the patent-claimed process with actual service
+      console.log('🔄 Executing personality fusion with real service...');
       const fusionResult = await personalityFusionService.generatePersonalityFusion(
         this.testUserId,
         mbtiType,
@@ -109,7 +130,11 @@ class VFPGraphPatentTestSuite {
         astrologyData
       );
 
-      console.log('Fusion result received:', fusionResult);
+      console.log('✅ Fusion result received:', {
+        fusionVectorId: fusionResult.fusionVector.id,
+        hasConflicts: !!fusionResult.conflicts,
+        vectorLength: fusionResult.fusionVector.fusedVector?.length
+      });
 
       // Validate each step of Claim 1 with real data
       const validations = {
@@ -125,7 +150,7 @@ class VFPGraphPatentTestSuite {
         storedUnifiedEmbedding: !!fusionResult.fusionVector.id
       };
 
-      console.log('Validation results:', validations);
+      console.log('📋 Validation results:', validations);
 
       // Record evidence with real data
       this.evidence.realTimeData.push({
@@ -136,6 +161,7 @@ class VFPGraphPatentTestSuite {
         validations,
         realTimeContextualData: {
           systemTime: currentTime.toISOString(),
+          testUserId: this.testUserId,
           testEnvironment: 'production',
           dataSource: 'real-time-generation'
         }
@@ -143,6 +169,8 @@ class VFPGraphPatentTestSuite {
 
       const passed = Object.values(validations).every(v => v === true);
       const executionTime = performance.now() - startTime;
+
+      console.log(`${passed ? '✅' : '❌'} Claim 1 result: ${passed ? 'PASSED' : 'FAILED'}`);
 
       return {
         claimNumber: 1,
@@ -174,14 +202,16 @@ class VFPGraphPatentTestSuite {
         }
       };
     } catch (error) {
-      console.error('Claim 1 test error:', error);
+      console.error('❌ Claim 1 test error:', error);
+      const executionTime = performance.now() - startTime;
       return {
         claimNumber: 1,
         claimTitle: 'Unified Digital-Persona Embedding Generation',
         passed: false,
         evidence: { error: error.message, stack: error.stack },
+        error: error.message,
         timestamp: new Date().toISOString(),
-        executionTimeMs: performance.now() - startTime,
+        executionTimeMs: executionTime,
         testDetails: { error: error.message }
       };
     }
@@ -200,7 +230,7 @@ class VFPGraphPatentTestSuite {
       const gates = [1, 15, 31, 43];
       const astroData = this.generateRealtimeAstrologyData(currentTime);
 
-      console.log('Testing reproducibility with real-time data:', { mbtiType, gates, astroData });
+      console.log('🔄 Testing reproducibility with real-time data:', { mbtiType, gates, astroData });
 
       // Generate multiple embeddings with same input using real service
       const results = await Promise.all([
@@ -209,7 +239,7 @@ class VFPGraphPatentTestSuite {
         personalityFusionService.generatePersonalityFusion(this.testUserId, mbtiType, gates, astroData)
       ]);
 
-      console.log('Generated fusion results for reproducibility test:', results.length);
+      console.log('📊 Generated fusion results for reproducibility test:', results.length);
 
       // Validate encoder determinism with real vectors
       const mbtiVectorsIdentical = results[0].fusionVector.mbtiVector && results[1].fusionVector.mbtiVector &&
@@ -236,13 +266,15 @@ class VFPGraphPatentTestSuite {
           realTimeVerification: true,
           testRunContext: {
             executionTime: new Date().toISOString(),
-            systemLoad: performance.now(),
             testUserId: this.testUserId
           }
         }
       });
 
       const passed = mbtiVectorsIdentical && hdVectorsIdentical && astroVectorsIdentical;
+      const executionTime = performance.now() - startTime;
+
+      console.log(`${passed ? '✅' : '❌'} Claim 2 result: ${passed ? 'PASSED' : 'FAILED'}`);
 
       return {
         claimNumber: 2,
@@ -262,7 +294,7 @@ class VFPGraphPatentTestSuite {
           }
         },
         timestamp: new Date().toISOString(),
-        executionTimeMs: performance.now() - startTime,
+        executionTimeMs: executionTime,
         testDetails: {
           testRuns: results.length,
           vectorComparisons: 'Deterministic encoder validation',
@@ -270,400 +302,16 @@ class VFPGraphPatentTestSuite {
         }
       };
     } catch (error) {
-      console.error('Claim 2 test error:', error);
+      console.error('❌ Claim 2 test error:', error);
+      const executionTime = performance.now() - startTime;
       return {
         claimNumber: 2,
         claimTitle: 'Deterministic Encoder Reproducibility',
         passed: false,
         evidence: { error: error.message, stack: error.stack },
+        error: error.message,
         timestamp: new Date().toISOString(),
-        executionTimeMs: performance.now() - startTime,
-        testDetails: { error: error.message }
-      };
-    }
-  }
-
-  // Patent Claim 3: L2-Norm Constraint Validation
-  async testClaim3_L2NormConstraint(): Promise<PatentTestResult> {
-    const startTime = performance.now();
-    console.log('🧪 Testing Patent Claim 3: L2-Norm Constraint ≤ 1.0');
-
-    try {
-      await this.initializeTestContext();
-      
-      // Initialize adaptive weights with real service
-      const weights = await personalityFusionService.initializeAdaptiveWeights(this.testUserId);
-      console.log('Initialized adaptive weights:', weights);
-      
-      // Simulate multiple feedback updates with real system
-      const feedbackCycles = 10;
-      const l2Norms: number[] = [];
-      
-      for (let i = 0; i < feedbackCycles; i++) {
-        const isPositive = Math.random() > 0.5;
-        const contextVector = Array(128).fill(0).map(() => Math.random() * 2 - 1);
-        
-        await personalityFusionService.updateWeightsFromFeedback(
-          this.testUserId,
-          isPositive,
-          contextVector
-        );
-        
-        // Get updated weights and calculate L2 norm
-        const updatedWeights = await personalityFusionService.initializeAdaptiveWeights(this.testUserId);
-        l2Norms.push(updatedWeights.l2Norm);
-      }
-
-      console.log('L2 norms after feedback cycles:', l2Norms);
-
-      // Validate L2 norm constraint with real calculations
-      const allNormsValid = l2Norms.every(norm => norm <= 1.0);
-      const maxNorm = Math.max(...l2Norms);
-      const avgNorm = l2Norms.reduce((sum, norm) => sum + norm, 0) / l2Norms.length;
-
-      // Record evidence with actual L2 norm calculations
-      this.evidence.userInteractions.push({
-        claim: 3,
-        timestamp: new Date().toISOString(),
-        l2NormTest: {
-          feedbackCycles,
-          l2Norms,
-          maxNorm,
-          avgNorm,
-          constraintSatisfied: allNormsValid,
-          realTimeCalculation: true,
-          testEnvironment: {
-            userId: this.testUserId,
-            executionTime: new Date().toISOString(),
-            systemIntegration: 'full-service'
-          }
-        }
-      });
-
-      return {
-        claimNumber: 3,
-        claimTitle: 'L2-Norm Constraint ≤ 1.0',
-        passed: allNormsValid,
-        evidence: {
-          l2Norms,
-          maxNorm,
-          averageNorm: avgNorm,
-          constraintViolations: l2Norms.filter(norm => norm > 1.0).length,
-          numericalStability: maxNorm <= 1.0,
-          realTimeData: {
-            feedbackCycles,
-            testUserId: this.testUserId,
-            systemIntegration: true
-          }
-        },
-        timestamp: new Date().toISOString(),
-        executionTimeMs: performance.now() - startTime,
-        testDetails: {
-          feedbackCycles,
-          testUserId: this.testUserId,
-          validation: 'L2-norm constraint enforcement',
-          realTimeExecution: true
-        }
-      };
-    } catch (error) {
-      console.error('Claim 3 test error:', error);
-      return {
-        claimNumber: 3,
-        claimTitle: 'L2-Norm Constraint ≤ 1.0',
-        passed: false,
-        evidence: { error: error.message, stack: error.stack },
-        timestamp: new Date().toISOString(),
-        executionTimeMs: performance.now() - startTime,
-        testDetails: { error: error.message }
-      };
-    }
-  }
-
-  // Patent Claim 4: User Feedback Integration
-  async testClaim4_UserFeedbackIntegration(): Promise<PatentTestResult> {
-    const startTime = performance.now();
-    console.log('🧪 Testing Patent Claim 4: User Feedback Integration');
-
-    try {
-      await this.initializeTestContext();
-      
-      const currentTime = new Date();
-      
-      // Generate initial fusion with real service
-      const fusionResult = await personalityFusionService.generatePersonalityFusion(
-        this.testUserId,
-        'ENTP',
-        [2, 14, 27, 50],
-        this.generateRealtimeAstrologyData(currentTime)
-      );
-
-      console.log('Generated fusion for feedback testing:', fusionResult.fusionVector.id);
-
-      // Simulate user feedback interactions with real system
-      const feedbackSessions = [];
-      
-      for (let i = 0; i < 15; i++) {
-        const isPositive = i % 3 !== 0; // Mix of positive/negative feedback
-        const sessionStart = Date.now();
-        
-        await personalityFusionService.updateWeightsFromFeedback(
-          this.testUserId,
-          isPositive,
-          fusionResult.fusionVector.fusedVector
-        );
-        
-        feedbackSessions.push({
-          sessionId: i + 1,
-          feedback: isPositive ? 'thumbs_up' : 'thumbs_down',
-          timestamp: new Date().toISOString(),
-          processingTime: Date.now() - sessionStart
-        });
-      }
-
-      console.log('Completed feedback sessions:', feedbackSessions.length);
-
-      // Validate feedback integration with real data
-      const weights = await personalityFusionService.initializeAdaptiveWeights(this.testUserId);
-      const feedbackIntegrated = weights.updateCount === feedbackSessions.length;
-      const positiveFeedbackTracked = weights.positiveFeedbackCount > 0;
-      const negativeFeedbackTracked = weights.negativeFeedbackCount > 0;
-
-      // Record evidence with actual feedback processing
-      this.evidence.userInteractions.push({
-        claim: 4,
-        timestamp: new Date().toISOString(),
-        feedbackIntegration: {
-          totalSessions: feedbackSessions.length,
-          positiveFeedback: weights.positiveFeedbackCount,
-          negativeFeedback: weights.negativeFeedbackCount,
-          updateCount: weights.updateCount,
-          feedbackSessions,
-          realTimeProcessing: true,
-          systemIntegration: {
-            userId: this.testUserId,
-            realDataFlow: true,
-            executionContext: 'production-testing'
-          }
-        }
-      });
-
-      const passed = feedbackIntegrated && positiveFeedbackTracked && negativeFeedbackTracked;
-
-      return {
-        claimNumber: 4,
-        claimTitle: 'User Feedback Integration (Thumbs Up/Down)',
-        passed,
-        evidence: {
-          feedbackSessions,
-          weightUpdates: weights.updateCount,
-          positiveFeedbackCount: weights.positiveFeedbackCount,
-          negativeFeedbackCount: weights.negativeFeedbackCount,
-          lastRlhfUpdate: weights.lastRlhfUpdate,
-          realTimeData: {
-            testUserId: this.testUserId,
-            systemIntegration: true,
-            executionTimestamp: new Date().toISOString()
-          }
-        },
-        timestamp: new Date().toISOString(),
-        executionTimeMs: performance.now() - startTime,
-        testDetails: {
-          testUserId: this.testUserId,
-          feedbackType: 'explicit_thumbs_rating',
-          conversationalUI: true,
-          realTimeExecution: true
-        }
-      };
-    } catch (error) {
-      console.error('Claim 4 test error:', error);
-      return {
-        claimNumber: 4,
-        claimTitle: 'User Feedback Integration (Thumbs Up/Down)',
-        passed: false,
-        evidence: { error: error.message, stack: error.stack },
-        timestamp: new Date().toISOString(),
-        executionTimeMs: performance.now() - startTime,
-        testDetails: { error: error.message }
-      };
-    }
-  }
-
-  // Patent Claim 5: Contradiction Detection via Cosine Similarity
-  async testClaim5_ContradictionDetection(): Promise<PatentTestResult> {
-    const startTime = performance.now();
-    console.log('🧪 Testing Patent Claim 5: Contradiction Detection');
-
-    try {
-      await this.initializeTestContext();
-      
-      const currentTime = new Date();
-      
-      // Create intentionally contradictory data for real testing
-      const contradictoryResult = await personalityFusionService.generatePersonalityFusion(
-        this.testUserId,
-        'INTJ', // Introverted, thinking
-        [7, 23, 44, 56], // Human Design gates
-        this.generateRealtimeAstrologyData(currentTime) // Real-time astrology
-      );
-
-      console.log('Generated contradictory data for conflict detection:', contradictoryResult.conflicts);
-
-      // Validate contradiction detection with real system
-      const conflictsDetected = !!contradictoryResult.conflicts;
-      const conflictDimensions = contradictoryResult.conflicts?.conflictingDimensions || [];
-      const conflictScores = contradictoryResult.conflicts?.conflictScores || [];
-      
-      // Validate cosine similarity computation (implicit in conflict detection)
-      const hasConflictScores = conflictScores.length > 0;
-      const negativeThresholdDetection = conflictScores.some(score => score > 0.5); // High variance indicates conflict
-
-      // Record evidence with real conflict detection results
-      this.evidence.conflictResolutions.push({
-        claim: 5,
-        timestamp: new Date().toISOString(),
-        contradictionDetection: {
-          conflictsDetected,
-          conflictingDimensions: conflictDimensions,
-          conflictScores: conflictScores,
-          frameworkConflicts: contradictoryResult.conflicts?.frameworkConflicts,
-          realTimeDetection: true,
-          systemContext: {
-            userId: this.testUserId,
-            executionTime: new Date().toISOString(),
-            algorithmicProcessing: 'cosine-similarity-based'
-          }
-        }
-      });
-
-      const passed = conflictsDetected && hasConflictScores;
-
-      return {
-        claimNumber: 5,
-        claimTitle: 'Contradiction Detection via Cosine Similarity',
-        passed,
-        evidence: {
-          conflictsDetected,
-          conflictingDimensions: conflictDimensions.length,
-          conflictScores,
-          pairwiseSimilarityComputed: hasConflictScores,
-          negativeThresholdDetection,
-          realTimeData: {
-            testUserId: this.testUserId,
-            systematicDetection: true,
-            executionTimestamp: new Date().toISOString()
-          }
-        },
-        timestamp: new Date().toISOString(),
-        executionTimeMs: performance.now() - startTime,
-        testDetails: {
-          testUserId: this.testUserId,
-          contradictoryInputs: 'INTJ + dynamic astrology',
-          similarityMetric: 'cosine_similarity',
-          realTimeExecution: true
-        }
-      };
-    } catch (error) {
-      console.error('Claim 5 test error:', error);
-      return {
-        claimNumber: 5,
-        claimTitle: 'Contradiction Detection via Cosine Similarity',
-        passed: false,
-        evidence: { error: error.message, stack: error.stack },
-        timestamp: new Date().toISOString(),
-        executionTimeMs: performance.now() - startTime,
-        testDetails: { error: error.message }
-      };
-    }
-  }
-
-  // Patent Claim 6: Clarifying Question Generation
-  async testClaim6_ClarifyingQuestions(): Promise<PatentTestResult> {
-    const startTime = performance.now();
-    console.log('🧪 Testing Patent Claim 6: Clarifying Question Generation');
-
-    try {
-      await this.initializeTestContext();
-      
-      const currentTime = new Date();
-      
-      // Generate fusion with high entropy (conflicting data) using real system
-      const conflictResult = await personalityFusionService.generatePersonalityFusion(
-        this.testUserId,
-        'ESFP', // Extroverted, sensing, feeling
-        [13, 38, 59, 61], // Specific HD gates
-        this.generateRealtimeAstrologyData(currentTime)
-      );
-
-      console.log('Generated high-entropy data for question generation:', conflictResult.conflicts?.clarifyingQuestions);
-
-      // Validate clarifying question generation with real results
-      const hasConflicts = !!conflictResult.conflicts;
-      const clarifyingQuestions = conflictResult.conflicts?.clarifyingQuestions || [];
-      const questionsGenerated = clarifyingQuestions.length > 0;
-      const questionsAimAtResolution = clarifyingQuestions.some(q => 
-        q.toLowerCase().includes('help') || 
-        q.toLowerCase().includes('understand') ||
-        q.toLowerCase().includes('prefer')
-      );
-
-      // Test entropy threshold (calculated from real system)
-      const entropyThresholdExceeded = hasConflicts; // Conflicts indicate high entropy
-      
-      // Record evidence with actual question generation
-      this.evidence.conflictResolutions.push({
-        claim: 6,
-        timestamp: new Date().toISOString(),
-        clarifyingQuestions: {
-          questionsGenerated,
-          questionCount: clarifyingQuestions.length,
-          questions: clarifyingQuestions,
-          entropyThresholdExceeded,
-          conflictResolutionAimed: questionsAimAtResolution,
-          realTimeGeneration: true,
-          systemContext: {
-            userId: this.testUserId,
-            executionTime: new Date().toISOString(),
-            algorithmicGeneration: 'entropy-threshold-based'
-          }
-        }
-      });
-
-      const passed = questionsGenerated && questionsAimAtResolution && entropyThresholdExceeded;
-
-      return {
-        claimNumber: 6,
-        claimTitle: 'Clarifying Question Generation (Entropy > 0.7)',
-        passed,
-        evidence: {
-          entropyThresholdExceeded,
-          clarifyingQuestionsGenerated: questionsGenerated,
-          questionCount: clarifyingQuestions.length,
-          questions: clarifyingQuestions,
-          conflictResolutionAimed: questionsAimAtResolution,
-          realTimeData: {
-            testUserId: this.testUserId,
-            systematicGeneration: true,
-            executionTimestamp: new Date().toISOString()
-          }
-        },
-        timestamp: new Date().toISOString(),
-        executionTimeMs: performance.now() - startTime,
-        testDetails: {
-          testUserId: this.testUserId,
-          entropyMetric: 'framework_variance',
-          thresholdValue: 0.7,
-          realTimeExecution: true
-        }
-      };
-    } catch (error) {
-      console.error('Claim 6 test error:', error);
-      return {
-        claimNumber: 6,
-        claimTitle: 'Clarifying Question Generation (Entropy > 0.7)',
-        passed: false,
-        evidence: { error: error.message, stack: error.stack },
-        timestamp: new Date().toISOString(),
-        executionTimeMs: performance.now() - startTime,
+        executionTimeMs: executionTime,
         testDetails: { error: error.message }
       };
     }
@@ -696,7 +344,7 @@ class VFPGraphPatentTestSuite {
       const weights = await personalityFusionService.initializeAdaptiveWeights(userId);
       return !!(weights && weights.weights);
     } catch (error) {
-      console.warn('Weight validation error:', error);
+      console.warn('⚠️ Weight validation error:', error);
       return false;
     }
   }
@@ -713,6 +361,9 @@ class VFPGraphPatentTestSuite {
 
     // Initialize test context
     await this.initializeTestContext();
+    
+    // Update claims helper with correct user ID
+    this.claimsHelper = new VFPGraphPatentTestClaims(this.testUserId, this.evidence);
 
     const claimResults: PatentTestResult[] = [];
 
@@ -720,10 +371,10 @@ class VFPGraphPatentTestSuite {
     const tests = [
       () => this.testClaim1_UnifiedPersonaEmbedding(),
       () => this.testClaim2_DeterministicEncoders(),
-      () => this.testClaim3_L2NormConstraint(),
-      () => this.testClaim4_UserFeedbackIntegration(),
-      () => this.testClaim5_ContradictionDetection(),
-      () => this.testClaim6_ClarifyingQuestions()
+      () => this.claimsHelper.testClaim3_L2NormConstraint(),
+      () => this.claimsHelper.testClaim4_UserFeedbackIntegration(),
+      () => this.claimsHelper.testClaim5_ContradictionDetection(),
+      () => this.claimsHelper.testClaim6_ClarifyingQuestions()
     ];
 
     for (const test of tests) {
@@ -732,10 +383,20 @@ class VFPGraphPatentTestSuite {
         claimResults.push(result);
         console.log(`${result.passed ? '✅' : '❌'} Claim ${result.claimNumber}: ${result.claimTitle}`);
         if (!result.passed) {
-          console.log(`   Error details:`, result.evidence);
+          console.log(`   Error details:`, result.error || 'No specific error details');
         }
       } catch (error) {
         console.error(`❌ Error testing claim: ${error.message}`);
+        claimResults.push({
+          claimNumber: claimResults.length + 1,
+          claimTitle: 'Failed to execute',
+          passed: false,
+          evidence: { error: error.message },
+          error: error.message,
+          timestamp: new Date().toISOString(),
+          executionTimeMs: 0,
+          testDetails: { error: error.message }
+        });
       }
     }
 
@@ -797,12 +458,12 @@ class VFPGraphPatentTestSuite {
         });
 
       if (error) {
-        console.warn('Could not store patent test results in database:', error.message);
+        console.warn('⚠️ Could not store patent test results in database:', error.message);
       } else {
         console.log('✅ Patent test results stored successfully in database');
       }
     } catch (error) {
-      console.warn('Error storing patent test results:', error.message);
+      console.warn('❌ Error storing patent test results:', error.message);
     }
   }
 }
