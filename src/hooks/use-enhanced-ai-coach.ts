@@ -30,6 +30,12 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
     completionPercentage: number;
     summary: string;
   }>({ isAvailable: false, completionPercentage: 0, summary: 'Loading...' });
+  const [vfpGraphStatus, setVFPGraphStatus] = useState<{
+    isAvailable: boolean;
+    vectorDimensions: number;
+    personalitySummary: string;
+    vectorMagnitude: number;
+  }>({ isAvailable: false, vectorDimensions: 0, personalitySummary: 'Loading...', vectorMagnitude: 0 });
   
   const { language } = useLanguage();
   const { blueprintData, hasBlueprint, loading: blueprintLoading } = useBlueprintCache();
@@ -44,16 +50,19 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
     resetStreaming,
   } = useStreamingMessage();
 
-  // Initialize authentication with enhanced integration
+  // Initialize authentication with enhanced VFP-Graph integration
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        console.log("🔐 Enhanced AI Coach Hook: Initializing authentication with integration services");
+        console.log("🔐 Enhanced AI Coach Hook: Initializing with VFP-Graph integration services");
         const { data: { user } } = await supabase.auth.getUser();
         
         if (user) {
-          console.log("👤 Enhanced AI Coach Hook: User authenticated:", user.id);
+          console.log("👤 Enhanced AI Coach Hook: User authenticated for VFP-Graph:", user.id);
           await enhancedAICoachService.setCurrentUser(user.id);
+          
+          // Load VFP-Graph status
+          await loadVFPGraphStatus();
           
           // Trigger blueprint sync
           await blueprintAIIntegrationService.performBlueprintSync();
@@ -72,7 +81,17 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
     initializeAuth();
   }, [user]);
 
-  // Enhanced blueprint status monitoring
+  const loadVFPGraphStatus = async () => {
+    try {
+      const status = await enhancedAICoachService.getVFPGraphStatus();
+      setVFPGraphStatus(status);
+      console.log("✅ VFP-Graph status loaded:", status);
+    } catch (error) {
+      console.error("❌ Error loading VFP-Graph status:", error);
+    }
+  };
+
+  // Enhanced blueprint status monitoring with VFP-Graph integration
   useEffect(() => {
     if (!authInitialized || blueprintLoading) {
       console.log("⏳ Enhanced AI Coach Hook: Waiting for auth/blueprint initialization");
@@ -81,7 +100,7 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
 
     const updateBlueprintStatus = async () => {
       if (hasBlueprint && blueprintData) {
-        console.log("🎭 Enhanced AI Coach Hook: Blueprint available, triggering enhanced integration");
+        console.log("🎭 Enhanced AI Coach Hook: Blueprint available, triggering VFP-Graph enhanced integration");
         
         try {
           // Force blueprint sync to ensure consistency
@@ -92,7 +111,7 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
           const integrationReport = await blueprintAIIntegrationService.generateIntegrationReport();
           console.log("📊 Blueprint integration report:", integrationReport);
           
-          // Update status for UI
+          // Update blueprint status
           const summary = UnifiedBlueprintService.extractBlueprintSummary(blueprintData);
           setBlueprintStatus({
             isAvailable: integrationReport.blueprintLoaded,
@@ -100,7 +119,10 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
             summary
           });
           
-          console.log("✅ Enhanced blueprint system fully initialized with", integrationReport.completionPercentage + "% complete data");
+          // Refresh VFP-Graph status
+          await loadVFPGraphStatus();
+          
+          console.log("✅ Enhanced blueprint and VFP-Graph system fully initialized");
         } catch (error) {
           console.error("❌ Enhanced blueprint integration error:", error);
           // Fallback to basic blueprint handling
@@ -170,16 +192,19 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
   const sendMessage = async (content: string, useStreaming: boolean = true, displayMessage?: string) => {
     if (!content.trim()) return;
 
-    // Enhanced blueprint integration check
+    // Enhanced blueprint and VFP-Graph integration check
     const integrationReport = await blueprintAIIntegrationService.generateIntegrationReport();
     const canUsePersona = integrationReport.blueprintLoaded && integrationReport.completionPercentage > 0;
+    const hasVFPGraph = vfpGraphStatus.isAvailable;
     
-    console.log('📤 Enhanced AI Coach Hook: Sending message with ENHANCED INTEGRATION:', {
+    console.log('📤 Enhanced AI Coach Hook: Sending message with VFP-GRAPH ENHANCED INTEGRATION:', {
       contentLength: content.length,
       useStreaming,
       currentAgent,
       integrationScore: integrationReport.integrationScore,
       canUsePersona,
+      hasVFPGraph,
+      vfpGraphDimensions: vfpGraphStatus.vectorDimensions,
       blueprintCompletionPercentage: integrationReport.completionPercentage,
       authInitialized,
       blueprintLoading
@@ -217,8 +242,9 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
       try {
         let accumulatedContent = '';
         
-        console.log('📡 Enhanced AI Coach Hook: Starting streaming with ENHANCED INTEGRATION:', {
+        console.log('📡 Enhanced AI Coach Hook: Starting VFP-GRAPH ENHANCED streaming:', {
           canUsePersona,
+          hasVFPGraph,
           integrationScore: integrationReport.integrationScore,
           currentAgent,
           blueprintAvailable: integrationReport.blueprintLoaded
@@ -244,7 +270,7 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
               );
             },
             onComplete: (fullResponse: string) => {
-              console.log('✅ Enhanced AI Coach Hook: Streaming complete, response length:', fullResponse.length);
+              console.log('✅ VFP-Graph Enhanced streaming complete, response length:', fullResponse.length);
               completeStreaming();
               setMessages(prev => 
                 prev.map(msg => 
@@ -256,7 +282,7 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
               setIsLoading(false);
             },
             onError: (error: Error) => {
-              console.error("❌ Enhanced AI Coach Hook: Streaming error:", error);
+              console.error("❌ VFP-Graph Enhanced streaming error:", error);
               completeStreaming();
               setMessages(prev => 
                 prev.map(msg => 
@@ -270,7 +296,7 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
           }
         );
       } catch (error) {
-        console.error("❌ Enhanced AI Coach Hook: Error with streaming:", error);
+        console.error("❌ VFP-Graph Enhanced streaming error:", error);
         completeStreaming();
         setMessages(prev => 
           prev.map(msg => 
@@ -283,7 +309,7 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
       }
     } else {
       try {
-        console.log('📤 Enhanced AI Coach Hook: Sending non-streaming message with enhanced integration');
+        console.log('📤 Enhanced AI Coach Hook: Sending non-streaming message with VFP-Graph enhancement');
         
         const response = await enhancedAICoachService.sendMessage(
           content,
@@ -303,7 +329,7 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
 
         setMessages(prev => [...prev, assistantMessage]);
       } catch (error) {
-        console.error("❌ Enhanced AI Coach Hook: Error in non-streaming:", error);
+        console.error("❌ VFP-Graph Enhanced non-streaming error:", error);
         const errorMessage: Message = {
           id: (Date.now() + 1).toString(),
           content: language === 'nl' ? 
@@ -322,14 +348,23 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
   };
 
   const resetConversation = () => {
-    console.log("🔄 Enhanced AI Coach Hook: Resetting conversation");
+    console.log("🔄 VFP-Graph Enhanced AI Coach Hook: Resetting conversation");
     setMessages([]);
     enhancedAICoachService.clearConversationCache();
   };
 
   const switchAgent = (newAgent: AgentType) => {
-    console.log("🔄 Enhanced AI Coach Hook: Switching agent from", currentAgent, "to", newAgent);
+    console.log("🔄 VFP-Graph Enhanced AI Coach Hook: Switching agent from", currentAgent, "to", newAgent);
     setCurrentAgent(newAgent);
+  };
+
+  const recordVFPGraphFeedback = async (messageId: string, isPositive: boolean) => {
+    try {
+      await enhancedAICoachService.recordVFPGraphFeedback(messageId, isPositive);
+      console.log(`✅ VFP-Graph feedback recorded from hook: ${isPositive ? '👍' : '👎'}`);
+    } catch (error) {
+      console.error("❌ Error recording VFP-Graph feedback from hook:", error);
+    }
   };
 
   return {
@@ -345,5 +380,7 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
     personaReady: hasBlueprint && !blueprintLoading && blueprintStatus.completionPercentage > 0,
     authInitialized,
     blueprintStatus,
+    vfpGraphStatus,
+    recordVFPGraphFeedback,
   };
 };

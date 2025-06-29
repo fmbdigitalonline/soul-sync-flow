@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +7,8 @@ import {
   Loader2,
   Sparkles,
   Target,
-  MessageSquare
+  MessageSquare,
+  Brain
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Message } from "@/hooks/use-ai-coach";
@@ -20,6 +20,7 @@ import { SmartQuickActions } from "../task/SmartQuickActions";
 import { StructuredMessageRenderer } from "./StructuredMessageRenderer";
 import { CoachMessageParser, ParsedSubTask } from "@/services/coach-message-parser";
 import { SessionFeedback } from "@/components/memory/SessionFeedback";
+import { VFPGraphFeedback } from "./VFPGraphFeedback";
 
 interface EnhancedCoachInterfaceProps {
   messages: Message[];
@@ -30,6 +31,13 @@ interface EnhancedCoachInterfaceProps {
   estimatedDuration: string;
   sessionId?: string; // Made optional
   awaitingFirstAssistantReply?: boolean;
+  vfpGraphStatus?: {
+    isAvailable: boolean;
+    vectorDimensions: number;
+    personalitySummary: string;
+    vectorMagnitude?: number;
+  };
+  onVFPGraphFeedback?: (messageId: string, isPositive: boolean) => void;
 }
 
 export const EnhancedCoachInterface: React.FC<EnhancedCoachInterfaceProps> = ({
@@ -41,6 +49,8 @@ export const EnhancedCoachInterface: React.FC<EnhancedCoachInterfaceProps> = ({
   estimatedDuration,
   sessionId = 'default-session', // Default value
   awaitingFirstAssistantReply = false,
+  vfpGraphStatus,
+  onVFPGraphFeedback,
 }) => {
   const [inputValue, setInputValue] = useState("");
   const [showFeedback, setShowFeedback] = useState(false);
@@ -65,7 +75,9 @@ export const EnhancedCoachInterface: React.FC<EnhancedCoachInterfaceProps> = ({
         message={
           isFallbackTimeout
             ? t('coach.fallbackTimeout')
-            : t('coach.preparingPlan')
+            : vfpGraphStatus?.isAvailable
+              ? 'Analyzing with VFP-Graph intelligence...'
+              : t('coach.preparingPlan')
         }
         showSpinner={!isFallbackTimeout}
       />
@@ -159,25 +171,55 @@ export const EnhancedCoachInterface: React.FC<EnhancedCoachInterfaceProps> = ({
         estimatedDuration={estimatedDuration || t('coach.defaultDuration')}
       />
 
+      {/* VFP-Graph Status Header */}
+      {vfpGraphStatus?.isAvailable && (
+        <div className="bg-gradient-to-r from-soul-purple/10 to-soul-teal/10 border-b border-soul-purple/20 px-4 py-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Brain className="h-4 w-4 text-soul-purple" />
+              <span className="text-sm font-medium text-soul-purple">VFP-Graph Enhanced</span>
+              <span className="text-xs text-muted-foreground">
+                {vfpGraphStatus.vectorDimensions}D Intelligence
+              </span>
+            </div>
+            <div className="text-xs text-muted-foreground max-w-xs truncate">
+              {vfpGraphStatus.personalitySummary}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Messages Area */}
       <div className="flex-1 overflow-y-auto px-0 pt-2 pb-4 space-y-4 min-h-0">
         {messages.length === 0 && (
           <div className="space-y-4">
             <div className="text-center p-4 text-muted-foreground">
               <div className={cn("bg-gradient-to-br from-soul-purple to-soul-teal rounded-full mx-auto mb-4 flex items-center justify-center", isMobile ? "w-12 h-12" : "w-16 h-16")}>
-                <Sparkles className={cn("text-white", isMobile ? "h-6 w-6" : "h-8 w-8")} />
+                {vfpGraphStatus?.isAvailable ? (
+                  <Brain className={cn("text-white", isMobile ? "h-6 w-6" : "h-8 w-8")} />
+                ) : (
+                  <Sparkles className={cn("text-white", isMobile ? "h-6 w-6" : "h-8 w-8")} />
+                )}
               </div>
               <h3 className={cn("font-medium mb-1", isMobile ? "text-base" : "text-lg")}>
-                AI Task Coach Ready
+                {vfpGraphStatus?.isAvailable ? 'VFP-Graph Enhanced' : 'AI'} Task Coach Ready
               </h3>
               <p className={cn("max-w-xs mx-auto", isMobile ? "text-xs" : "text-sm")}>
-                I'll help you break down tasks, track progress, and provide personalized guidance
+                {vfpGraphStatus?.isAvailable 
+                  ? `I understand your unique ${vfpGraphStatus.personalitySummary.toLowerCase()} personality and will provide highly personalized task guidance`
+                  : "I'll help you break down tasks, track progress, and provide personalized guidance"
+                }
               </p>
+              {vfpGraphStatus?.isAvailable && (
+                <div className="mt-2 px-2 py-1 bg-soul-purple/10 text-soul-purple text-xs rounded-full inline-block">
+                  Powered by 128-dimensional personality intelligence
+                </div>
+              )}
             </div>
           </div>
         )}
 
-        {/* Render Messages with Structure */}
+        {/* Render Messages with VFP-Graph Enhancement */}
         {messages.map((message, idx) => {
           if (message.sender === "user") {
             return (
@@ -193,15 +235,46 @@ export const EnhancedCoachInterface: React.FC<EnhancedCoachInterfaceProps> = ({
             );
           } else {
             const parsedMessage = CoachMessageParser.parseMessage(message.content);
+            const isVFPGraphPowered = vfpGraphStatus?.isAvailable;
             
             return (
               <div key={message.id} className="w-full mx-auto max-w-2xl md:max-w-3xl">
-                <StructuredMessageRenderer
-                  parsedMessage={parsedMessage}
-                  onSubTaskStart={handleSubTaskStart}
-                  onSubTaskComplete={handleSubTaskComplete}
-                  onStartTaskPlan={handleStartTaskPlan}
-                />
+                <div className="rounded-2xl border bg-slate-50 p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <ArrowRight className="h-4 w-4 text-green-400" />
+                    <span className="text-sm font-medium text-slate-700">
+                      {isVFPGraphPowered ? 'VFP-Graph' : 'AI'} Task Coach
+                    </span>
+                    {isVFPGraphPowered && (
+                      <Brain className="h-3 w-3 text-soul-purple" />
+                    )}
+                  </div>
+                  
+                  <StructuredMessageRenderer
+                    parsedMessage={parsedMessage}
+                    onSubTaskStart={handleSubTaskStart}
+                    onSubTaskComplete={handleSubTaskComplete}
+                    onStartTaskPlan={handleStartTaskPlan}
+                  />
+                  
+                  {/* VFP-Graph Feedback Integration */}
+                  {isVFPGraphPowered && (
+                    <VFPGraphFeedback
+                      messageId={message.id}
+                      onFeedbackGiven={(isPositive) => handleVFPGraphFeedback(message.id, isPositive)}
+                    />
+                  )}
+                  
+                  {/* Personality Insight Display */}
+                  {isVFPGraphPowered && vfpGraphStatus && (
+                    <div className="mt-2 px-2 py-1 bg-soul-purple/5 rounded text-xs text-soul-purple/70">
+                      Personalized using your {vfpGraphStatus.vectorDimensions}D personality vector
+                      {vfpGraphStatus.vectorMagnitude && (
+                        <span className="ml-1">• Intensity: {vfpGraphStatus.vectorMagnitude}</span>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             );
           }
@@ -212,11 +285,21 @@ export const EnhancedCoachInterface: React.FC<EnhancedCoachInterfaceProps> = ({
             <div className={cn("border border-green-200/20 max-w-[80%] rounded-2xl bg-slate-50 p-4", isMobile ? "p-3" : "p-4")}>
               <div className="flex items-center space-x-2">
                 <ArrowRight className="h-4 w-4 text-green-400" />
-                <p className="text-xs font-medium">Soul Coach</p>
+                <p className="text-xs font-medium">
+                  {vfpGraphStatus?.isAvailable ? 'VFP-Graph' : 'AI'} Task Coach
+                </p>
+                {vfpGraphStatus?.isAvailable && (
+                  <Brain className="h-3 w-3 text-soul-purple" />
+                )}
               </div>
               <div className="flex items-center space-x-2 mt-2">
                 <Loader2 className="h-4 w-4 animate-spin text-soul-purple" />
-                <p className="text-sm">Analyzing your task and creating a personalized plan...</p>
+                <p className="text-sm">
+                  {vfpGraphStatus?.isAvailable 
+                    ? "Analyzing with VFP-Graph personality intelligence..."
+                    : "Analyzing your task and creating a personalized plan..."
+                  }
+                </p>
               </div>
             </div>
           </div>
@@ -246,7 +329,7 @@ export const EnhancedCoachInterface: React.FC<EnhancedCoachInterfaceProps> = ({
         />
       </div>
 
-      {/* Input Area */}
+      {/* Input Area with VFP-Graph Enhancement */}
       <div className="sticky bottom-0 pb-4">
         {/* Feedback Toggle Button */}
         {shouldShowFeedbackOption && !showFeedback && (
@@ -268,7 +351,11 @@ export const EnhancedCoachInterface: React.FC<EnhancedCoachInterfaceProps> = ({
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyPress}
-            placeholder="Ask about your task, request guidance, or get help..."
+            placeholder={
+              vfpGraphStatus?.isAvailable
+                ? "Ask about your task - I understand your unique working style..."
+                : "Ask about your task, request guidance, or get help..."
+            }
             className="flex-1 border-0 focus-visible:ring-0"
             disabled={isLoading}
           />
@@ -282,7 +369,10 @@ export const EnhancedCoachInterface: React.FC<EnhancedCoachInterfaceProps> = ({
           </Button>
         </div>
         <p className="text-xs text-center text-muted-foreground mt-2">
-          Enhanced task coaching with smart breakdown and progress tracking
+          {vfpGraphStatus?.isAvailable 
+            ? `VFP-Graph enhanced task coaching • ${vfpGraphStatus.personalitySummary}`
+            : "Enhanced task coaching with smart breakdown and progress tracking"
+          }
         </p>
       </div>
     </div>

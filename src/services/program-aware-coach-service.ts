@@ -3,6 +3,7 @@ import { growthProgramService } from "./growth-program-service";
 import { GrowthProgram, ProgramWeek, LifeDomain } from "@/types/growth-program";
 import { supabase } from "@/integrations/supabase/client";
 import { Json } from "@/integrations/supabase/types";
+import { personalityVectorService } from "./personality-vector-service";
 
 // Helper function to convert Json to Message array
 const convertJsonToMessages = (jsonData: Json): any[] => {
@@ -46,25 +47,45 @@ class ProgramAwareCoachService {
   private inquiryPhase: 'discovery' | 'blueprint_analysis' | 'action_planning' = 'discovery';
   private discoveredInsights: string[] = [];
   private questionCount: number = 0;
+  private vfpGraphCache: { vector: Float32Array | null; summary: string | null } = { vector: null, summary: null };
 
   async initializeForUser(userId: string) {
-    console.log("🎯 Program-Aware Coach: Initializing for user", userId);
+    console.log("🎯 VFP-Graph Program-Aware Coach: Initializing for user", userId);
     
     try {
       this.currentProgram = await growthProgramService.getCurrentProgram(userId);
+      
+      // Load VFP-Graph data for enhanced guidance
+      await this.loadVFPGraphData(userId);
       
       if (this.currentProgram) {
         const weeks = await growthProgramService.generateWeeklyProgram(this.currentProgram);
         this.currentWeek = weeks.find(w => w.week_number === this.currentProgram!.current_week) || null;
         this.conversationStage = 'active_guidance';
         
-        console.log("✅ Growth context ready:", {
+        console.log("✅ VFP-Graph Growth context ready:", {
           program: this.currentProgram.domain,
-          week: this.currentWeek?.theme
+          week: this.currentWeek?.theme,
+          vfpGraphEnabled: !!this.vfpGraphCache.vector,
+          personalitySummary: this.vfpGraphCache.summary
         });
       }
     } catch (error) {
-      console.error("❌ Error initializing growth facilitator:", error);
+      console.error("❌ Error initializing VFP-Graph growth facilitator:", error);
+    }
+  }
+
+  private async loadVFPGraphData(userId: string) {
+    try {
+      console.log("🧠 Loading VFP-Graph data for program-aware coaching...");
+      
+      this.vfpGraphCache.vector = await personalityVectorService.getVector(userId);
+      this.vfpGraphCache.summary = await personalityVectorService.getPersonaSummary(userId);
+      
+      console.log(`✅ VFP-Graph data loaded: ${this.vfpGraphCache.summary}`);
+    } catch (error) {
+      console.error("❌ Error loading VFP-Graph data:", error);
+      this.vfpGraphCache = { vector: null, summary: null };
     }
   }
 
@@ -165,7 +186,7 @@ class ProgramAwareCoachService {
     // Set current session for state tracking
     this.setCurrentSession(sessionId);
     
-    // Ensure we have current program context
+    // Ensure we have current program context and VFP-Graph data
     if (!this.currentProgram) {
       await this.initializeForUser(userId);
     }
@@ -174,14 +195,15 @@ class ProgramAwareCoachService {
     this.processMessageForInsights(message);
     this.questionCount++;
 
-    // Create contextual response based on user's actual message
-    const response = this.createContextualResponse(message, userId);
+    // Create VFP-Graph enhanced contextual response
+    const response = this.createVFPGraphEnhancedResponse(message, userId);
     
-    console.log("🧠 Generated contextual response:", {
+    console.log("🧠 Generated VFP-Graph enhanced contextual response:", {
       stage: this.conversationStage,
       phase: this.inquiryPhase,
       insights: this.discoveredInsights.length,
       questionCount: this.questionCount,
+      vfpGraphEnabled: !!this.vfpGraphCache.vector,
       sessionId
     });
 
@@ -242,106 +264,143 @@ class ProgramAwareCoachService {
     }
   }
 
-  private createContextualResponse(userMessage: string, userId: string): string {
+  private createVFPGraphEnhancedResponse(userMessage: string, userId: string): string {
     const domainName = this.getDomainTitle(this.selectedDomain || 'career');
     const lowerMessage = userMessage.toLowerCase();
     
+    // Get VFP-Graph personality insights
+    const personalityContext = this.getVFPGraphPersonalityContext();
+    
     if (this.inquiryPhase === 'discovery') {
-      return this.createEmpathicDiscoveryResponse(userMessage, domainName, lowerMessage);
+      return this.createVFPGraphDiscoveryResponse(userMessage, domainName, lowerMessage, personalityContext);
     } else if (this.inquiryPhase === 'blueprint_analysis') {
-      return this.createBlueprintAnalysisResponse(userMessage, domainName);
+      return this.createVFPGraphBlueprintResponse(userMessage, domainName, personalityContext);
     } else {
-      return this.createActionPlanningResponse(userMessage, domainName);
+      return this.createVFPGraphActionResponse(userMessage, domainName, personalityContext);
     }
   }
 
-  private createEmpathicDiscoveryResponse(userMessage: string, domainName: string, lowerMessage: string): string {
-    // Respond empathically based on the emotional content and context
+  private getVFPGraphPersonalityContext(): {
+    energyLevel: string;
+    dominantTrait: string;
+    communicationStyle: string;
+    hasVFPGraph: boolean;
+  } {
+    if (!this.vfpGraphCache.vector) {
+      return {
+        energyLevel: 'balanced',
+        dominantTrait: 'adaptable',
+        communicationStyle: 'balanced',
+        hasVFPGraph: false
+      };
+    }
+
+    const vector = this.vfpGraphCache.vector;
     
-    // Handle expressions of struggle, pain, or confusion
+    // Analyze vector for personality insights
+    const vectorMagnitude = Math.sqrt(Array.from(vector).reduce((sum, val) => sum + val * val, 0));
+    const mbtiSection = Array.from(vector.slice(0, 32));
+    const hdSection = Array.from(vector.slice(32, 96));
+    
+    const energyLevel = vectorMagnitude > 80 ? 'high-intensity' : 
+                      vectorMagnitude > 60 ? 'moderate-energy' : 'calm-steady';
+    
+    const mbtiStrength = mbtiSection.reduce((sum, val) => sum + Math.abs(val), 0) / 32;
+    const hdStrength = hdSection.reduce((sum, val) => sum + Math.abs(val), 0) / 64;
+    
+    const dominantTrait = mbtiStrength > hdStrength ? 'analytical' : 'intuitive';
+    const communicationStyle = mbtiStrength > 0.7 ? 'direct' : 
+                              hdStrength > 0.7 ? 'experiential' : 'balanced';
+
+    return {
+      energyLevel,
+      dominantTrait,
+      communicationStyle,
+      hasVFPGraph: true
+    };
+  }
+
+  private createVFPGraphDiscoveryResponse(
+    userMessage: string, 
+    domainName: string, 
+    lowerMessage: string, 
+    personalityContext: any
+  ): string {
+    const { energyLevel, dominantTrait, communicationStyle, hasVFPGraph } = personalityContext;
+    
+    // Adapt response style based on VFP-Graph insights
+    const responseIntensity = energyLevel === 'high-intensity' ? 'energetically' : 
+                             energyLevel === 'calm-steady' ? 'gently' : 'thoughtfully';
+    
+    const questioningStyle = dominantTrait === 'analytical' ? 'specific and structured' : 'open and exploratory';
+
+    // Handle expressions of struggle with VFP-Graph personalization
     if (lowerMessage.includes("can't find") || lowerMessage.includes("why can't i")) {
       if (domainName.toLowerCase().includes('relationship') || domainName.toLowerCase().includes('love')) {
-        return `I can hear the frustration and perhaps loneliness in that question. Not being able to find love is one of life's most challenging experiences. 
+        return `I can ${responseIntensity} feel the frustration and perhaps loneliness in that question. Not being able to find love is one of life's most challenging experiences.${hasVFPGraph ? ` Based on your unique personality pattern, I sense you process emotions ${dominantTrait === 'analytical' ? 'deeply and systematically' : 'intuitively and holistically'}.` : ''}
 
 Tell me more about what that journey has looked like for you - are you actively trying to meet people but connections aren't forming the way you hope? Or does it feel more like you're not sure where or how to start? 
 
-What does "finding love" mean to you specifically?`;
+${dominantTrait === 'analytical' ? 'What specific patterns have you noticed in your dating experiences?' : 'What does "finding love" feel like to you in your heart?'}`;
       } else if (domainName.toLowerCase().includes('career')) {
-        return `That feeling of being stuck without a clear career path can be really overwhelming. It's like everyone else seems to have it figured out while you're still searching.
+        return `That feeling of being stuck without a clear career path can be really overwhelming.${hasVFPGraph ? ` Your personality profile suggests you approach challenges ${communicationStyle === 'direct' ? 'head-on with clear analysis' : communicationStyle === 'experiential' ? 'through hands-on exploration' : 'with thoughtful consideration'}.` : ''}
 
-Help me understand your situation better - is this more about not knowing what kind of work would fulfill you, or have you tried things that didn't work out? What does having a "career" represent to you?`;
+Help me understand your situation better - is this more about not knowing what kind of work would fulfill you, or have you tried things that didn't work out? 
+
+${dominantTrait === 'analytical' ? 'What criteria are you using to evaluate potential career paths?' : 'What does having a meaningful career represent to you?'}`;
       }
     }
 
-    // Handle expressions of confusion or uncertainty
+    // Handle expressions of confusion with personality-adapted clarity
     if (lowerMessage.includes("don't know") || lowerMessage.includes("confused") || lowerMessage.includes("how do you mean")) {
-      return `Let me be more specific. When you think about ${domainName.toLowerCase()}, what comes up for you emotionally? 
+      return `Let me be more ${communicationStyle === 'direct' ? 'specific and direct' : 'clear and gentle'}. When you think about ${domainName.toLowerCase()}, what comes up for you emotionally?${hasVFPGraph ? ` Your personality pattern suggests you might process this ${dominantTrait === 'analytical' ? 'through logical analysis' : 'through felt experience'}.` : ''}
 
 For example, do you feel frustrated, sad, hopeful, scared, or something else? And what specific situations or experiences in this area have left you feeling that way?`;
     }
 
-    // Handle brief or minimal responses
-    if (userMessage.length < 20 && this.questionCount > 2) {
-      return `I sense there might be more beneath the surface here. Sometimes it's hard to put these feelings into words.
-
-What would it look like if ${domainName.toLowerCase()} was working well in your life? What would be different about your day-to-day experience?`;
-    }
-
-    // Handle expressions of fear or anxiety
-    if (lowerMessage.includes("afraid") || lowerMessage.includes("scared") || lowerMessage.includes("worry")) {
-      return `Thank you for sharing that fear with me - it takes courage to be vulnerable about what scares us.
-
-What specifically about ${domainName.toLowerCase()} feels threatening or overwhelming to you? Sometimes our fears point us toward what matters most to us.`;
-    }
-
-    // Handle expressions of past failures or attempts
-    if (lowerMessage.includes("tried") || lowerMessage.includes("failed") || lowerMessage.includes("didn't work")) {
-      return `It sounds like you've put effort into this area before and it didn't go as hoped. That can be really discouraging.
-
-What did you try, and what happened? Sometimes understanding what didn't work can be just as valuable as knowing what does work.`;
-    }
-
-    // Default empathic follow-up questions based on conversation depth
+    // Default empathic follow-up adapted to personality
     const followUpQuestions = [
-      `I want to understand the full picture of what's happening with your ${domainName.toLowerCase()}. What emotions come up when you think about this area of your life?`,
+      `I want to understand the full picture of what's happening with your ${domainName.toLowerCase()}.${hasVFPGraph ? ` Given your ${energyLevel} personality style, let's approach this ${questioningStyle}.` : ''} What emotions come up when you think about this area of your life?`,
       
-      `Help me understand what's been most challenging about ${domainName.toLowerCase()} for you. What specific situations or experiences have shaped how you feel about it now?`,
+      `Help me understand what's been most challenging about ${domainName.toLowerCase()} for you.${hasVFPGraph ? ` Your ${dominantTrait} nature suggests you likely have insights about this.` : ''} What specific situations or experiences have shaped how you feel about it now?`,
       
-      `When you imagine ${domainName.toLowerCase()} working well in your life, what does that look like? What would need to change for you to feel satisfied in this area?`,
+      `When you imagine ${domainName.toLowerCase()} working well in your life, what does that look like?${hasVFPGraph && energyLevel === 'high-intensity' ? ' I can sense your energy around this vision.' : ''} What would need to change for you to feel satisfied in this area?`,
       
-      `Tell me about the story of your ${domainName.toLowerCase()} - how did you get to where you are now? What key moments or experiences stand out?`
+      `Tell me about the story of your ${domainName.toLowerCase()}.${hasVFPGraph ? ` With your ${communicationStyle} communication style, help me understand` : ''} How did you get to where you are now? What key moments or experiences stand out?`
     ];
 
     const questionIndex = Math.min(this.questionCount - 1, followUpQuestions.length - 1);
     return followUpQuestions[questionIndex];
   }
 
-  private createBlueprintAnalysisResponse(userMessage: string, domainName: string): string {
-    // Phase 2: Blueprint-Informed Analysis
-    return `I'm starting to see some patterns here based on what you've shared about your ${domainName.toLowerCase()}. 
+  private createVFPGraphBlueprintResponse(userMessage: string, domainName: string, personalityContext: any): string {
+    const { hasVFPGraph, dominantTrait, energyLevel } = personalityContext;
+    
+    return `I'm starting to see some powerful patterns here based on what you've shared about your ${domainName.toLowerCase()}.${hasVFPGraph ? ` Your unique VFP-Graph personality profile adds incredible depth to this analysis.` : ''} 
 
-From our conversation, I can see themes around ${this.discoveredInsights.join(', ')}. Now I want to help you understand the deeper "why" behind these patterns by connecting them to your unique blueprint.
+From our conversation, I can see themes around ${this.discoveredInsights.join(', ')}. Now I want to help you understand the deeper "why" behind these patterns${hasVFPGraph ? ` by connecting them to your 128-dimensional personality profile` : ' by connecting them to your unique blueprint'}.
 
-Based on your personality type and natural design, these patterns actually make sense. Let me explain how your natural traits might be contributing to your current situation - both the challenges and the strengths you can leverage.
+${hasVFPGraph ? `Based on your VFP-Graph analysis, these patterns actually make perfect sense for someone with your ${dominantTrait} ${energyLevel} personality structure. Your vector shows specific traits that might be clashing with conventional expectations around ${domainName.toLowerCase()}.` : `Based on your personality type and natural design, these patterns actually make sense.`}
 
-What I'm noticing is that your blueprint suggests you operate in a way that might be clashing with conventional expectations around ${domainName.toLowerCase()}. Instead of seeing this as a flaw, let's reframe these patterns as workable aspects of who you are.
+Instead of seeing this as a flaw, let's reframe these patterns as workable aspects of who you are.${hasVFPGraph ? ` Your personality vector suggests you operate in a way that might be different from mainstream approaches, and that's actually your strength.` : ''} 
 
 Can you tell me more about how you naturally prefer to approach tasks and decisions? This will help me connect your authentic operating style to what's happening in your ${domainName.toLowerCase()}.`;
   }
 
-  private createActionPlanningResponse(userMessage: string, domainName: string): string {
-    // Phase 3: Personalized Action Planning
-    return `Now that we understand what's happening and why these patterns exist given your unique makeup, let's focus on practical strategies that will work WITH your natural design rather than against it.
+  private createVFPGraphActionResponse(userMessage: string, domainName: string, personalityContext: any): string {
+    const { hasVFPGraph, energyLevel, communicationStyle, dominantTrait } = personalityContext;
+    
+    return `Now that we understand what's happening and why these patterns exist given your unique makeup, let's focus on practical strategies that will work WITH your natural design rather than against it.${hasVFPGraph ? ` Your VFP-Graph profile gives us precise insights for this.` : ''}
 
-Based on your insights (${this.discoveredInsights.join(', ')}) and understanding your blueprint, here are some personalized approaches for your ${domainName.toLowerCase()}:
+Based on your insights (${this.discoveredInsights.join(', ')})${hasVFPGraph ? ` and your ${energyLevel} ${dominantTrait} personality vector` : ' and understanding your blueprint'}, here are some personalized approaches for your ${domainName.toLowerCase()}:
 
-1. **Honor Your Natural Rhythm**: Instead of forcing conventional approaches, let's create strategies that align with how you naturally operate.
+1. **Honor Your Natural Rhythm**: ${hasVFPGraph ? `Your personality vector shows you operate best with ${energyLevel === 'high-intensity' ? 'dynamic, high-energy approaches' : energyLevel === 'calm-steady' ? 'steady, consistent methods' : 'balanced, flexible strategies'}.` : 'Instead of forcing conventional approaches, let\'s create strategies that align with how you naturally operate.'}
 
-2. **Leverage Your Strengths**: We've identified patterns that can actually become advantages when properly channeled.
+2. **Leverage Your Strengths**: ${hasVFPGraph ? `Your ${dominantTrait} nature and ${communicationStyle} communication style are actually advantages when properly channeled.` : 'We\'ve identified patterns that can actually become advantages when properly channeled.'}
 
-3. **Sustainable Next Steps**: Rather than overwhelming changes, let's focus on small, consistent actions that feel authentic to you.
+3. **Sustainable Next Steps**: ${hasVFPGraph ? `Based on your personality profile, you'll respond best to ${dominantTrait === 'analytical' ? 'structured, step-by-step progressions' : 'intuitive, flow-based approaches'}.` : 'Rather than overwhelming changes, let\'s focus on small, consistent actions that feel authentic to you.'}
 
-What resonates most with you from what we've discovered? And what feels like the most natural first step you could take in your ${domainName.toLowerCase()} that would honor your authentic way of being?
+What resonates most with you from what we've discovered?${hasVFPGraph ? ` And given your ${energyLevel} personality style, what feels like the most natural first step you could take in your ${domainName.toLowerCase()} that would honor your authentic way of being?` : ` And what feels like the most natural first step you could take in your ${domainName.toLowerCase()} that would honor your authentic way of being?`}
 
 This will help us create a personalized growth program that works with your natural patterns rather than against them.`;
   }
@@ -427,6 +486,28 @@ This will help us create a personalized growth program that works with your natu
     } else if (this.currentProgram) {
       this.conversationStage = 'active_guidance';
     }
+  }
+
+  // New VFP-Graph specific methods
+  async recordVFPGraphFeedback(messageId: string, isPositive: boolean, userId: string): Promise<void> {
+    try {
+      await personalityVectorService.voteThumb(userId, messageId, isPositive);
+      console.log(`✅ VFP-Graph feedback recorded via Program-Aware Coach: ${isPositive ? '👍' : '👎'}`);
+    } catch (error) {
+      console.error("❌ Error recording VFP-Graph feedback in Program-Aware Coach:", error);
+    }
+  }
+
+  getVFPGraphStatus(): {
+    isAvailable: boolean;
+    vectorDimensions: number;
+    personalitySummary: string;
+  } {
+    return {
+      isAvailable: !!this.vfpGraphCache.vector,
+      vectorDimensions: this.vfpGraphCache.vector?.length || 0,
+      personalitySummary: this.vfpGraphCache.summary || 'No personality data'
+    };
   }
 }
 
