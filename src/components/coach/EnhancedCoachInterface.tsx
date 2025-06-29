@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -258,10 +259,10 @@ export const EnhancedCoachInterface: React.FC<EnhancedCoachInterfaceProps> = ({
                   />
                   
                   {/* VFP-Graph Feedback Integration */}
-                  {isVFPGraphPowered && (
+                  {isVFPGraphPowered && onVFPGraphFeedback && (
                     <VFPGraphFeedback
                       messageId={message.id}
-                      onFeedbackGiven={(isPositive) => handleVFPGraphFeedback(message.id, isPositive)}
+                      onFeedbackGiven={(isPositive) => onVFPGraphFeedback(message.id, isPositive)}
                     />
                   )}
                   

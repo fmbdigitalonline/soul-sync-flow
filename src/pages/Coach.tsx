@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
@@ -15,7 +16,17 @@ import { ActiveReminders } from "@/components/reminders/ActiveReminders";
 import { MobileTogglePanel } from "@/components/ui/mobile-toggle-panel";
 
 const Coach = () => {
-  const { messages, isLoading, sendMessage, resetConversation, streamingContent, isStreaming, sessionId } = useEnhancedAICoach("blend");
+  const { 
+    messages, 
+    isLoading, 
+    sendMessage, 
+    resetConversation, 
+    streamingContent, 
+    isStreaming, 
+    sessionId,
+    personaReady,
+    vfpGraphStatus 
+  } = useEnhancedAICoach("blend");
   const { isSoulSyncReady, soulSyncError } = useSoulSync();
   const { hasBlueprint, blueprintData } = useBlueprintCache();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -162,10 +173,8 @@ const Coach = () => {
           messages={messages}
           isLoading={isLoading}
           onSendMessage={handleSendMessage}
-          messagesEndRef={messagesEndRef}
-          streamingContent={streamingContent}
-          isStreaming={isStreaming}
-          sessionId={sessionId || 'default-session'}
+          personaReady={personaReady}
+          vfpGraphStatus={vfpGraphStatus}
         />
       </div>
     </>
