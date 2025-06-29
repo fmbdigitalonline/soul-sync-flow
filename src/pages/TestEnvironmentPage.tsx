@@ -59,9 +59,10 @@ import AdvancedAnalyticsSuite from '@/components/debug/AdvancedAnalyticsSuite';
 import SystemHealthMonitor from '@/components/debug/SystemHealthMonitor';
 import ABTestingFramework from '@/components/debug/ABTestingFramework';
 import { GrowthProgramTestRunner } from '@/components/testing/GrowthProgramTestRunner';
+import { VFPGraphPatentTester } from '@/components/testing/VFPGraphPatentTester';
 
 const TestEnvironmentPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('growth-program');
+  const [activeTab, setActiveTab] = useState('vfp-patent');
 
   return (
     <AuthProvider>
@@ -70,24 +71,48 @@ const TestEnvironmentPage: React.FC = () => {
           <div className="container mx-auto py-8 px-4 max-w-7xl">
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <TestTube className="h-8 w-8" />
-                Complete Test Environment Dashboard
+                <Shield className="h-8 w-8 text-red-600" />
+                VFP-Graph Patent Validation Environment
               </h1>
               <p className="text-lg text-gray-600">
-                Comprehensive testing suite: 36 test components covering Growth Programs, 7-layer personality engine, 12 modules, 3 coach modes, error handling, performance, UX flows, and advanced analytics with real-time dynamic data
+                <strong>Patent-ready evidence collection</strong> for VFP-Graph technology claims + comprehensive testing suite: 36 test components covering Growth Programs, 7-layer personality engine, 12 modules, 3 coach modes, error handling, performance, UX flows, and advanced analytics with real-time dynamic data
               </p>
             </div>
 
-            {/* Enhanced Status Overview */}
-            <Card className="mb-8">
+            {/* Enhanced Status Overview - Patent Focused */}
+            <Card className="mb-8 border-red-200 bg-red-50/30">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Activity className="h-5 w-5" />
-                  Complete Test Environment Status (36 Tests Available)
+                  <Shield className="h-5 w-5 text-red-600" />
+                  Patent Validation Status + Complete Test Environment (37 Tests Available)
+                  <Badge variant="destructive" className="ml-2">
+                    US Provisional Patent
+                  </Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-12 gap-4">
+                  
+                  {/* VFP Patent Tests - FIRST AND PROMINENT */}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="text-center p-3 border-2 border-red-300 rounded-lg hover:bg-red-50 cursor-help bg-red-100">
+                        <div className="flex items-center justify-center mb-2">
+                          <Shield className="h-6 w-6 text-red-600" />
+                        </div>
+                        <div className="text-sm font-bold mb-1 text-red-800">Patent Claims</div>
+                        <Badge className="bg-red-200 text-red-800 text-xs font-bold">6 Claims</Badge>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-sm">
+                      <div className="space-y-2">
+                        <p><strong>VFP-Graph Patent Validation Suite</strong></p>
+                        <p>Measures: 6 patent claims with real-time evidence collection</p>
+                        <p>KPIs: Patent claim validation rate (0-100%), evidence quality score</p>
+                        <p>Benefits: US Provisional Patent Application ready evidence package</p>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
                   
                   {/* Growth Program Tests */}
                   <Tooltip>
@@ -342,9 +367,21 @@ const TestEnvironmentPage: React.FC = () => {
             {/* Test Tabs - Complete with all categories */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
               <div className="space-y-4">
-                {/* Core Test Categories */}
+                {/* Core Test Categories - VFP Patent First */}
                 <div className="overflow-x-auto">
-                  <TabsList className="grid w-max grid-cols-4 lg:grid-cols-10 gap-1 p-1 h-auto">
+                  <TabsList className="grid w-max grid-cols-4 lg:grid-cols-11 gap-1 p-1 h-auto">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <TabsTrigger value="vfp-patent" className="flex flex-col items-center gap-1 p-3 text-xs data-[state=active]:bg-red-100 data-[state=active]:text-red-800 border-red-200">
+                          <Shield className="h-4 w-4" />
+                          Patent Claims
+                        </TabsTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>VFP-Graph Patent Validation Suite - 6 Claims Evidence Collection</p>
+                      </TooltipContent>
+                    </Tooltip>
+
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <TabsTrigger value="growth-program" className="flex flex-col items-center gap-1 p-3 text-xs">
@@ -682,9 +719,28 @@ const TestEnvironmentPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* All Tab Contents */}
+              {/* All Tab Contents - VFP Patent First */}
               
-              {/* Growth Program Tests - NEW FIRST TAB */}
+              {/* VFP-Graph Patent Validation - NEW FIRST TAB */}
+              <TabsContent value="vfp-patent" className="space-y-6">
+                <div className="mb-4">
+                  <h2 className="text-2xl font-semibold mb-2 flex items-center gap-2">
+                    <Shield className="h-6 w-6 text-red-600" />
+                    VFP-Graph Patent Validation Suite
+                    <Badge variant="destructive" className="ml-2">
+                      US Provisional Patent
+                    </Badge>
+                  </h2>
+                  <p className="text-gray-600">
+                    <strong>Patent-ready evidence collection</strong> for VFP-Graph technology claims. 
+                    Comprehensive testing validates all 6 patent claims with real-time data generation 
+                    and automatic evidence package creation for US Provisional Patent Application.
+                  </p>
+                </div>
+                <VFPGraphPatentTester />
+              </TabsContent>
+              
+              {/* Growth Program Tests */}
               <TabsContent value="growth-program" className="space-y-6">
                 <div className="mb-4">
                   <h2 className="text-2xl font-semibold mb-2">Growth Program End-to-End Testing</h2>
