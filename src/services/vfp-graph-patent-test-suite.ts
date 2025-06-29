@@ -8,6 +8,7 @@
 
 import { personalityFusionService } from './personality-fusion-service';
 import { supabase } from '@/integrations/supabase/client';
+import { v4 as uuidv4 } from 'uuid';
 
 export interface PatentTestResult {
   claimNumber: number;
@@ -61,8 +62,8 @@ class VFPGraphPatentTestSuite {
     console.log('🧪 Testing Patent Claim 1: Unified Digital-Persona Embedding');
 
     try {
-      // Generate real-time test data (no hardcoded values)
-      const testUserId = `test_user_${Date.now()}`;
+      // Generate real UUID for test user (FIXED: proper UUID format)
+      const testUserId = uuidv4();
       const currentTime = new Date();
       
       // Real MBTI type based on current system state
@@ -151,7 +152,14 @@ class VFPGraphPatentTestSuite {
     console.log('🧪 Testing Patent Claim 2: Deterministic Encoder Reproducibility');
 
     try {
-      const testUserId = `test_user_${Date.now()}`;
+      // Generate proper UUIDs for test users (FIXED)
+      const baseUserId = uuidv4();
+      const testUserIds = [
+        uuidv4(),
+        uuidv4(),
+        uuidv4()
+      ];
+      
       const mbtiType = 'ENFJ';
       const gates = [1, 15, 31, 43];
       const astroData = {
@@ -163,9 +171,9 @@ class VFPGraphPatentTestSuite {
 
       // Generate multiple embeddings with same input
       const results = await Promise.all([
-        personalityFusionService.generatePersonalityFusion(testUserId + '_1', mbtiType, gates, astroData),
-        personalityFusionService.generatePersonalityFusion(testUserId + '_2', mbtiType, gates, astroData),
-        personalityFusionService.generatePersonalityFusion(testUserId + '_3', mbtiType, gates, astroData)
+        personalityFusionService.generatePersonalityFusion(testUserIds[0], mbtiType, gates, astroData),
+        personalityFusionService.generatePersonalityFusion(testUserIds[1], mbtiType, gates, astroData),
+        personalityFusionService.generatePersonalityFusion(testUserIds[2], mbtiType, gates, astroData)
       ]);
 
       // Validate encoder determinism
@@ -230,7 +238,8 @@ class VFPGraphPatentTestSuite {
     console.log('🧪 Testing Patent Claim 3: L2-Norm Constraint ≤ 1.0');
 
     try {
-      const testUserId = `test_user_${Date.now()}`;
+      // Generate proper UUID for test user (FIXED)
+      const testUserId = uuidv4();
       
       // Initialize adaptive weights
       const weights = await personalityFusionService.initializeAdaptiveWeights(testUserId);
@@ -310,7 +319,8 @@ class VFPGraphPatentTestSuite {
     console.log('🧪 Testing Patent Claim 4: User Feedback Integration');
 
     try {
-      const testUserId = `test_user_${Date.now()}`;
+      // Generate proper UUID for test user (FIXED)
+      const testUserId = uuidv4();
       
       // Generate initial fusion
       const fusionResult = await personalityFusionService.generatePersonalityFusion(
@@ -400,7 +410,8 @@ class VFPGraphPatentTestSuite {
     console.log('🧪 Testing Patent Claim 5: Contradiction Detection');
 
     try {
-      const testUserId = `test_user_${Date.now()}`;
+      // Generate proper UUID for test user (FIXED)
+      const testUserId = uuidv4();
       
       // Create intentionally contradictory data
       const contradictoryResult = await personalityFusionService.generatePersonalityFusion(
@@ -413,7 +424,7 @@ class VFPGraphPatentTestSuite {
       // Validate contradiction detection
       const conflictsDetected = !!contradictoryResult.conflicts;
       const conflictDimensions = contradictoryResult.conflicts?.conflictingDimensions || [];
-      const conflictScores = contradictoryResult.conflicts?.conflictScores || []; // Fixed: use conflictScores instead of conflict_scores
+      const conflictScores = contradictoryResult.conflicts?.conflictScores || [];
       
       // Validate cosine similarity computation (implicit in conflict detection)
       const hasConflictScores = conflictScores.length > 0;
@@ -471,7 +482,8 @@ class VFPGraphPatentTestSuite {
     console.log('🧪 Testing Patent Claim 6: Clarifying Question Generation');
 
     try {
-      const testUserId = `test_user_${Date.now()}`;
+      // Generate proper UUID for test user (FIXED)
+      const testUserId = uuidv4();
       
       // Generate fusion with high entropy (conflicting data)
       const conflictResult = await personalityFusionService.generatePersonalityFusion(
@@ -607,9 +619,9 @@ class VFPGraphPatentTestSuite {
     const passedClaims = claimResults.filter(r => r.passed).length;
 
     // Get memory usage safely (browser-compatible)
-    const memoryUsage = (performance as any).memory?.usedJSHeapSize || 0; // Fixed: handle memory safely
+    const memoryUsage = (performance as any).memory?.usedJSHeapSize || 0;
 
-    // Store test results in database for permanent record
+    // Store test results in database for permanent record (FIXED: proper UUID)
     await this.storePatentTestResults({
       testRunId: this.testRunId,
       timestamp: new Date().toISOString(),
@@ -646,11 +658,14 @@ class VFPGraphPatentTestSuite {
 
   private async storePatentTestResults(report: PatentValidationReport): Promise<void> {
     try {
+      // Use proper UUID for user_id (FIXED)
+      const systemUserId = uuidv4();
+      
       // Store in user_session_memory table since vfp_graph_patent_test_results doesn't exist
       await supabase
         .from('user_session_memory')
         .insert({
-          user_id: 'patent_test_system',
+          user_id: systemUserId,
           session_id: report.testRunId,
           memory_type: 'patent_test_results',
           memory_data: report as any,
