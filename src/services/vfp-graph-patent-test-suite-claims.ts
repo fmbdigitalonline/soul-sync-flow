@@ -1,4 +1,3 @@
-
 /**
  * VFP-Graph Patent Test Claims 3-6 Implementation
  * Additional claims for the patent validation suite
@@ -115,7 +114,7 @@ export class VFPGraphPatentTestClaims {
     }
   }
 
-  // Patent Claim 4: User Feedback Integration
+  // Patent Claim 4: User Feedback Integration - FIXED VERSION
   async testClaim4_UserFeedbackIntegration(): Promise<PatentTestResult> {
     const startTime = performance.now();
     console.log('🧪 Testing Patent Claim 4: User Feedback Integration');
@@ -133,12 +132,32 @@ export class VFPGraphPatentTestClaims {
 
       console.log('📊 Generated fusion for feedback testing:', fusionResult.fusionVector.id);
 
+      // Get initial weight state before feedback
+      const initialWeights = await personalityFusionService.initializeAdaptiveWeights(this.testUserId);
+      const initialPositiveFeedback = initialWeights.positiveFeedbackCount;
+      const initialNegativeFeedback = initialWeights.negativeFeedbackCount;
+      const initialUpdateCount = initialWeights.updateCount;
+
+      console.log('📊 Initial weight state:', {
+        positiveFeedback: initialPositiveFeedback,
+        negativeFeedback: initialNegativeFeedback,
+        updateCount: initialUpdateCount
+      });
+
       // Simulate user feedback interactions with real system
       const feedbackSessions = [];
+      let positiveFeedbackGiven = 0;
+      let negativeFeedbackGiven = 0;
       
       for (let i = 0; i < 15; i++) {
         const isPositive = i % 3 !== 0; // Mix of positive/negative feedback
         const sessionStart = Date.now();
+        
+        if (isPositive) {
+          positiveFeedbackGiven++;
+        } else {
+          negativeFeedbackGiven++;
+        }
         
         await personalityFusionService.updateWeightsFromFeedback(
           this.testUserId,
@@ -155,12 +174,44 @@ export class VFPGraphPatentTestClaims {
       }
 
       console.log('📊 Completed feedback sessions:', feedbackSessions.length);
+      console.log('📊 Expected feedback counts:', { positive: positiveFeedbackGiven, negative: negativeFeedbackGiven });
 
-      // Validate feedback integration with real data
-      const weights = await personalityFusionService.initializeAdaptiveWeights(this.testUserId);
-      const feedbackIntegrated = weights.updateCount === feedbackSessions.length;
-      const positiveFeedbackTracked = weights.positiveFeedbackCount > 0;
-      const negativeFeedbackTracked = weights.negativeFeedbackCount > 0;
+      // Validate feedback integration with corrected logic
+      const finalWeights = await personalityFusionService.initializeAdaptiveWeights(this.testUserId);
+      
+      console.log('📊 Final weight state:', {
+        positiveFeedback: finalWeights.positiveFeedbackCount,
+        negativeFeedback: finalWeights.negativeFeedbackCount,
+        updateCount: finalWeights.updateCount,
+        lastUpdate: finalWeights.lastRlhfUpdate
+      });
+
+      // CORRECTED VALIDATION LOGIC
+      const positiveFeedbackIncreased = finalWeights.positiveFeedbackCount > initialPositiveFeedback;
+      const negativeFeedbackIncreased = finalWeights.negativeFeedbackCount > initialNegativeFeedback;
+      const updateCountIncreased = finalWeights.updateCount > initialUpdateCount;
+      const recentUpdate = finalWeights.lastRlhfUpdate && 
+        new Date(finalWeights.lastRlhfUpdate).getTime() > (Date.now() - 60000); // Within last minute
+
+      const actualPositiveIncrease = finalWeights.positiveFeedbackCount - initialPositiveFeedback;
+      const actualNegativeIncrease = finalWeights.negativeFeedbackCount - initialNegativeFeedback;
+      
+      // Feedback should match what we actually provided
+      const positiveFeedbackMatches = actualPositiveIncrease === positiveFeedbackGiven;
+      const negativeFeedbackMatches = actualNegativeIncrease === negativeFeedbackGiven;
+
+      console.log('📊 Validation checks:', {
+        positiveFeedbackIncreased,
+        negativeFeedbackIncreased,
+        updateCountIncreased,
+        recentUpdate,
+        positiveFeedbackMatches,
+        negativeFeedbackMatches,
+        expectedPositive: positiveFeedbackGiven,
+        actualPositiveIncrease,
+        expectedNegative: negativeFeedbackGiven,
+        actualNegativeIncrease
+      });
 
       // Record evidence with actual feedback processing
       this.evidence.userInteractions.push({
@@ -168,9 +219,20 @@ export class VFPGraphPatentTestClaims {
         timestamp: new Date().toISOString(),
         feedbackIntegration: {
           totalSessions: feedbackSessions.length,
-          positiveFeedback: weights.positiveFeedbackCount,
-          negativeFeedback: weights.negativeFeedbackCount,
-          updateCount: weights.updateCount,
+          initialState: {
+            positiveFeedback: initialPositiveFeedback,
+            negativeFeedback: initialNegativeFeedback,
+            updateCount: initialUpdateCount
+          },
+          finalState: {
+            positiveFeedback: finalWeights.positiveFeedbackCount,
+            negativeFeedback: finalWeights.negativeFeedbackCount,
+            updateCount: finalWeights.updateCount
+          },
+          feedbackGiven: {
+            positive: positiveFeedbackGiven,
+            negative: negativeFeedbackGiven
+          },
           feedbackSessions,
           realTimeProcessing: true,
           systemIntegration: {
@@ -181,7 +243,13 @@ export class VFPGraphPatentTestClaims {
         }
       });
 
-      const passed = feedbackIntegrated && positiveFeedbackTracked && negativeFeedbackTracked;
+      const passed = positiveFeedbackIncreased && 
+                    negativeFeedbackIncreased && 
+                    updateCountIncreased && 
+                    recentUpdate &&
+                    positiveFeedbackMatches && 
+                    negativeFeedbackMatches;
+
       const executionTime = performance.now() - startTime;
       console.log(`${passed ? '✅' : '❌'} Claim 4 result: ${passed ? 'PASSED' : 'FAILED'}`);
 
@@ -191,10 +259,24 @@ export class VFPGraphPatentTestClaims {
         passed,
         evidence: {
           feedbackSessions,
-          weightUpdates: weights.updateCount,
-          positiveFeedbackCount: weights.positiveFeedbackCount,
-          negativeFeedbackCount: weights.negativeFeedbackCount,
-          lastRlhfUpdate: weights.lastRlhfUpdate,
+          initialWeightState: {
+            positiveFeedbackCount: initialPositiveFeedback,
+            negativeFeedbackCount: initialNegativeFeedback,
+            updateCount: initialUpdateCount
+          },
+          finalWeightState: {
+            positiveFeedbackCount: finalWeights.positiveFeedbackCount,
+            negativeFeedbackCount: finalWeights.negativeFeedbackCount,
+            updateCount: finalWeights.updateCount,
+            lastRlhfUpdate: finalWeights.lastRlhfUpdate
+          },
+          feedbackDelta: {
+            positiveIncrease: actualPositiveIncrease,
+            negativeIncrease: actualNegativeIncrease,
+            expectedPositive: positiveFeedbackGiven,
+            expectedNegative: negativeFeedbackGiven,
+            countsMatch: positiveFeedbackMatches && negativeFeedbackMatches
+          },
           realTimeData: {
             testUserId: this.testUserId,
             systemIntegration: true,
