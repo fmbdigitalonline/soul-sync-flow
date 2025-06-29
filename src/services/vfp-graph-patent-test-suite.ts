@@ -413,7 +413,7 @@ class VFPGraphPatentTestSuite {
       // Validate contradiction detection
       const conflictsDetected = !!contradictoryResult.conflicts;
       const conflictDimensions = contradictoryResult.conflicts?.conflictingDimensions || [];
-      const conflictScores = contradictoryResult.conflicts?.conflict_scores || [];
+      const conflictScores = contradictoryResult.conflicts?.conflictScores || []; // Fixed: use conflictScores instead of conflict_scores
       
       // Validate cosine similarity computation (implicit in conflict detection)
       const hasConflictScores = conflictScores.length > 0;
@@ -606,6 +606,9 @@ class VFPGraphPatentTestSuite {
     const totalTime = performance.now() - this.startTime;
     const passedClaims = claimResults.filter(r => r.passed).length;
 
+    // Get memory usage safely (browser-compatible)
+    const memoryUsage = (performance as any).memory?.usedJSHeapSize || 0; // Fixed: handle memory safely
+
     // Store test results in database for permanent record
     await this.storePatentTestResults({
       testRunId: this.testRunId,
@@ -616,7 +619,7 @@ class VFPGraphPatentTestSuite {
       executionSummary: {
         totalTimeMs: totalTime,
         averageTimePerClaim: totalTime / claimResults.length,
-        memoryUsage: performance.memory?.usedJSHeapSize || 0
+        memoryUsage
       },
       claimResults,
       evidence: this.evidence
@@ -631,7 +634,7 @@ class VFPGraphPatentTestSuite {
       executionSummary: {
         totalTimeMs: totalTime,
         averageTimePerClaim: totalTime / claimResults.length,
-        memoryUsage: (performance as any).memory?.usedJSHeapSize || 0
+        memoryUsage
       },
       claimResults,
       evidence: this.evidence
@@ -643,15 +646,16 @@ class VFPGraphPatentTestSuite {
 
   private async storePatentTestResults(report: PatentValidationReport): Promise<void> {
     try {
+      // Store in user_session_memory table since vfp_graph_patent_test_results doesn't exist
       await supabase
-        .from('vfp_graph_patent_test_results')
+        .from('user_session_memory')
         .insert({
-          test_run_id: report.testRunId,
-          test_results: report as any,
-          claims_passed: report.passedClaims,
-          total_claims: report.totalClaims,
-          overall_success: report.overallSuccess,
-          created_at: new Date().toISOString()
+          user_id: 'patent_test_system',
+          session_id: report.testRunId,
+          memory_type: 'patent_test_results',
+          memory_data: report as any,
+          importance_score: 10,
+          context_summary: `Patent test run with ${report.passedClaims}/${report.totalClaims} claims passed`
         });
     } catch (error) {
       console.warn('Could not store patent test results:', error.message);

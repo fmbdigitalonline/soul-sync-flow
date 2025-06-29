@@ -127,7 +127,7 @@ export const EnhancedBlueprintViewer: React.FC<EnhancedBlueprintViewerProps> = (
   React.useEffect(() => {
     const loadPersonalityProfile = async () => {
       if (blueprint.id) {
-        const { data } = await personalityFusionService.getPersonalityProfile(blueprint.id);
+        const { data } = await personalityFusionService.getPersonalityProfile(blueprint.id); // Fixed: this method now exists
         setPersonalityProfile(data);
       }
     };
