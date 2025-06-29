@@ -293,28 +293,40 @@ export type Database = {
       }
       conversation_memory: {
         Row: {
+          conversation_stage: string | null
           created_at: string | null
+          domain: string | null
           id: string
+          last_activity: string | null
           messages: Json
           mode: string | null
+          recovery_context: Json | null
           session_id: string
           updated_at: string | null
           user_id: string
         }
         Insert: {
+          conversation_stage?: string | null
           created_at?: string | null
+          domain?: string | null
           id?: string
+          last_activity?: string | null
           messages?: Json
           mode?: string | null
+          recovery_context?: Json | null
           session_id: string
           updated_at?: string | null
           user_id: string
         }
         Update: {
+          conversation_stage?: string | null
           created_at?: string | null
+          domain?: string | null
           id?: string
+          last_activity?: string | null
           messages?: Json
           mode?: string | null
+          recovery_context?: Json | null
           session_id?: string
           updated_at?: string | null
           user_id?: string

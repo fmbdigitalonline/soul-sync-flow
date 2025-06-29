@@ -1,0 +1,163 @@
+
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { Message } from './use-ai-coach';
+import { LifeDomain } from '@/types/growth-program';
+
+interface ConversationRecoveryData {
+  sessionId: string;
+  messages: Message[];
+  domain?: LifeDomain;
+  lastActivity: string;
+  recoveryContext: any;
+}
+
+export const useConversationRecovery = () => {
+  const [availableRecoveries, setAvailableRecoveries] = useState<ConversationRecoveryData[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const { user } = useAuth();
+
+  const loadAvailableRecoveries = useCallback(async (domain?: LifeDomain) => {
+    if (!user) return;
+
+    setIsLoading(true);
+    try {
+      let query = supabase
+        .from('conversation_memory')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('conversation_stage', 'active')
+        .order('last_activity', { ascending: false })
+        .limit(5);
+
+      if (domain) {
+        query = query.eq('domain', domain);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Error loading conversation recoveries:', error);
+        return;
+      }
+
+      const recoveries = data?.map(record => ({
+        sessionId: record.session_id,
+        messages: record.messages || [],
+        domain: record.domain as LifeDomain,
+        lastActivity: record.last_activity || record.updated_at,
+        recoveryContext: record.recovery_context || {}
+      })) || [];
+
+      setAvailableRecoveries(recoveries);
+    } catch (error) {
+      console.error('Error in loadAvailableRecoveries:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user]);
+
+  const saveConversation = useCallback(async (
+    sessionId: string,
+    messages: Message[],
+    domain?: LifeDomain,
+    recoveryContext?: any
+  ) => {
+    if (!user || messages.length === 0) return;
+
+    try {
+      const { error } = await supabase
+        .from('conversation_memory')
+        .upsert({
+          user_id: user.id,
+          session_id: sessionId,
+          messages,
+          domain,
+          conversation_stage: 'active',
+          recovery_context: recoveryContext || {},
+          mode: 'guide'
+        });
+
+      if (error) {
+        console.error('Error saving conversation:', error);
+      } else {
+        console.log('✅ Conversation saved successfully');
+      }
+    } catch (error) {
+      console.error('Error in saveConversation:', error);
+    }
+  }, [user]);
+
+  const loadConversation = useCallback(async (sessionId: string): Promise<Message[]> => {
+    if (!user) return [];
+
+    try {
+      const { data, error } = await supabase
+        .from('conversation_memory')
+        .select('messages')
+        .eq('user_id', user.id)
+        .eq('session_id', sessionId)
+        .single();
+
+      if (error) {
+        console.error('Error loading conversation:', error);
+        return [];
+      }
+
+      return data?.messages || [];
+    } catch (error) {
+      console.error('Error in loadConversation:', error);
+      return [];
+    }
+  }, [user]);
+
+  const markConversationComplete = useCallback(async (sessionId: string) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('conversation_memory')
+        .update({ conversation_stage: 'completed' })
+        .eq('user_id', user.id)
+        .eq('session_id', sessionId);
+
+      if (error) {
+        console.error('Error marking conversation complete:', error);
+      }
+    } catch (error) {
+      console.error('Error in markConversationComplete:', error);
+    }
+  }, [user]);
+
+  const deleteConversation = useCallback(async (sessionId: string) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('conversation_memory')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('session_id', sessionId);
+
+      if (error) {
+        console.error('Error deleting conversation:', error);
+      } else {
+        // Refresh available recoveries
+        await loadAvailableRecoveries();
+      }
+    } catch (error) {
+      console.error('Error in deleteConversation:', error);
+    }
+  }, [user, loadAvailableRecoveries]);
+
+  return {
+    availableRecoveries,
+    isLoading,
+    loadAvailableRecoveries,
+    saveConversation,
+    loadConversation,
+    markConversationComplete,
+    deleteConversation
+  };
+};

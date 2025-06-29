@@ -6,6 +6,8 @@ import { Heart, Send, ArrowLeft } from 'lucide-react';
 import { LifeDomain } from '@/types/growth-program';
 import { GuideInterface } from '@/components/coach/GuideInterface';
 import { useProgramAwareCoach } from '@/hooks/use-program-aware-coach';
+import { useConversationRecovery } from '@/hooks/use-conversation-recovery';
+import { ConversationRecoveryBanner } from '@/components/growth/ConversationRecoveryBanner';
 
 interface GrowthBeliefDrillingProps {
   domain: LifeDomain;
@@ -18,8 +20,10 @@ export const GrowthBeliefDrilling: React.FC<GrowthBeliefDrillingProps> = ({
   onComplete,
   beliefData
 }) => {
-  const { messages, isLoading, sendMessage, initializeBeliefDrilling } = useProgramAwareCoach();
+  const { messages, isLoading, sendMessage, initializeBeliefDrilling, recoverConversation } = useProgramAwareCoach();
+  const { availableRecoveries, loadAvailableRecoveries, deleteConversation } = useConversationRecovery();
   const [isInitialized, setIsInitialized] = useState(false);
+  const [showRecoveryBanner, setShowRecoveryBanner] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const domainEmoji = {
@@ -42,20 +46,42 @@ export const GrowthBeliefDrilling: React.FC<GrowthBeliefDrillingProps> = ({
     home_family: 'Home & Family'
   };
 
+  // Load available recoveries when component mounts
   useEffect(() => {
-    if (!isInitialized) {
+    loadAvailableRecoveries(domain);
+  }, [domain, loadAvailableRecoveries]);
+
+  useEffect(() => {
+    if (!isInitialized && availableRecoveries.length === 0) {
       console.log('🔍 Initializing belief drilling for domain:', domain);
       setIsInitialized(true);
       
       // Initialize belief drilling mode - AI will start the conversation
-      // Don't reset existing conversations
       initializeBeliefDrilling(domain);
     }
-  }, [domain, isInitialized, initializeBeliefDrilling]);
+  }, [domain, isInitialized, initializeBeliefDrilling, availableRecoveries.length]);
 
   const handleSendMessage = async (message: string) => {
     console.log('📤 Sending belief drilling response:', message);
     sendMessage(message);
+  };
+
+  const handleRecoverConversation = async (sessionId: string) => {
+    console.log('🔄 Recovering conversation:', sessionId);
+    await recoverConversation(sessionId);
+    setShowRecoveryBanner(false);
+    setIsInitialized(true);
+  };
+
+  const handleDismissRecovery = async (sessionId: string) => {
+    await deleteConversation(sessionId);
+    setShowRecoveryBanner(false);
+    
+    // Start fresh conversation
+    if (!isInitialized) {
+      setIsInitialized(true);
+      initializeBeliefDrilling(domain);
+    }
   };
 
   const handleContinue = () => {
@@ -125,6 +151,18 @@ export const GrowthBeliefDrilling: React.FC<GrowthBeliefDrillingProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Conversation Recovery Banner */}
+      {showRecoveryBanner && availableRecoveries.length > 0 && (
+        <div className="flex-shrink-0 p-4">
+          <ConversationRecoveryBanner
+            recoveries={availableRecoveries}
+            onRecover={handleRecoverConversation}
+            onDismiss={handleDismissRecovery}
+            onClose={() => setShowRecoveryBanner(false)}
+          />
+        </div>
+      )}
 
       {/* Chat Interface - Preserve conversation history */}
       <div className="flex-1 min-h-0">

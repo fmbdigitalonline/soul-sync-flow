@@ -1,7 +1,7 @@
-
 import { enhancedAICoachService } from "./enhanced-ai-coach-service";
 import { growthProgramService } from "./growth-program-service";
 import { GrowthProgram, ProgramWeek, LifeDomain } from "@/types/growth-program";
+import { supabase } from "@/integrations/supabase/client";
 
 class ProgramAwareCoachService {
   private currentProgram: GrowthProgram | null = null;
@@ -9,6 +9,7 @@ class ProgramAwareCoachService {
   private conversationStage: 'welcome' | 'domain_exploration' | 'belief_drilling' | 'program_creation' | 'active_guidance' = 'welcome';
   private selectedDomain: LifeDomain | null = null;
   private beliefExplorationData: any = {};
+  private currentSessionId: string | null = null;
 
   async initializeForUser(userId: string) {
     console.log("🎯 Program-Aware Coach: Initializing for user", userId);
@@ -31,12 +32,91 @@ class ProgramAwareCoachService {
     }
   }
 
+  async loadConversationHistory(sessionId: string, userId: string): Promise<any[]> {
+    try {
+      const { data, error } = await supabase
+        .from('conversation_memory')
+        .select('messages, domain, recovery_context')
+        .eq('user_id', userId)
+        .eq('session_id', sessionId)
+        .single();
+
+      if (error) {
+        console.error('Error loading conversation history:', error);
+        return [];
+      }
+
+      if (data) {
+        // Restore conversation context
+        if (data.domain) {
+          this.selectedDomain = data.domain as LifeDomain;
+          this.conversationStage = 'belief_drilling';
+        }
+        
+        if (data.recovery_context) {
+          this.beliefExplorationData = data.recovery_context;
+        }
+
+        console.log('✅ Conversation history loaded:', {
+          messages: data.messages?.length || 0,
+          domain: data.domain,
+          stage: this.conversationStage
+        });
+
+        return data.messages || [];
+      }
+
+      return [];
+    } catch (error) {
+      console.error('Error in loadConversationHistory:', error);
+      return [];
+    }
+  }
+
+  async saveConversationState(sessionId: string, userId: string, messages: any[]) {
+    try {
+      const recoveryContext = {
+        selectedDomain: this.selectedDomain,
+        conversationStage: this.conversationStage,
+        beliefExplorationData: this.beliefExplorationData,
+        timestamp: new Date().toISOString()
+      };
+
+      const { error } = await supabase
+        .from('conversation_memory')
+        .upsert({
+          user_id: userId,
+          session_id: sessionId,
+          messages,
+          domain: this.selectedDomain,
+          conversation_stage: 'active',
+          recovery_context: recoveryContext,
+          mode: 'guide'
+        });
+
+      if (error) {
+        console.error('Error saving conversation state:', error);
+      } else {
+        console.log('✅ Conversation state saved');
+      }
+    } catch (error) {
+      console.error('Error in saveConversationState:', error);
+    }
+  }
+
+  setCurrentSession(sessionId: string) {
+    this.currentSessionId = sessionId;
+  }
+
   async sendProgramAwareMessage(
     message: string,
     sessionId: string,
     userId: string,
     usePersona: boolean = true
   ): Promise<{ response: string; conversationId: string }> {
+    // Set current session for state tracking
+    this.setCurrentSession(sessionId);
+    
     // Ensure we have current program context
     if (!this.currentProgram) {
       await this.initializeForUser(userId);
@@ -47,7 +127,8 @@ class ProgramAwareCoachService {
     
     console.log("🧠 Sending natural growth guidance:", {
       stage: this.conversationStage,
-      hasContext: !!this.currentProgram
+      hasContext: !!this.currentProgram,
+      sessionId
     });
 
     return await enhancedAICoachService.sendMessage(
@@ -62,6 +143,7 @@ class ProgramAwareCoachService {
   async initializeBeliefDrilling(domain: LifeDomain, userId: string, sessionId: string): Promise<{ response: string; conversationId: string }> {
     this.selectedDomain = domain;
     this.conversationStage = 'belief_drilling';
+    this.setCurrentSession(sessionId);
     
     // Return a simple greeting without calling the AI
     const domainTitle = domain.replace('_', ' ');
@@ -131,7 +213,8 @@ class ProgramAwareCoachService {
       week: this.currentWeek,
       hasContext: !!(this.currentProgram && this.currentWeek),
       stage: this.conversationStage,
-      selectedDomain: this.selectedDomain
+      selectedDomain: this.selectedDomain,
+      currentSessionId: this.currentSessionId
     };
   }
 
