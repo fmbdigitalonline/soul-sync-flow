@@ -19,7 +19,7 @@ export interface DialogueHealthMetrics {
 }
 
 export interface HelpSignal {
-  type: 'repetitive_query' | 'confusion_pattern' | 'paralinguistic_cue' | 'negative_feedback';
+  type: 'repetitive_query' | 'confusion_pattern' | 'paralinguistic_cue' | 'negative_feedback' | 'frustration_pattern';
   confidence: number;
   message: string;
   timestamp: number;
