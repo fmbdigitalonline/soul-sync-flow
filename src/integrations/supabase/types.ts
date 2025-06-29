@@ -168,6 +168,45 @@ export type Database = {
         }
         Relationships: []
       }
+      adaptive_weight_matrices: {
+        Row: {
+          created_at: string
+          id: string
+          l2_norm: number
+          last_rlhf_update: string | null
+          negative_feedback_count: number
+          positive_feedback_count: number
+          update_count: number
+          updated_at: string
+          user_id: string
+          weights: Json
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          l2_norm?: number
+          last_rlhf_update?: string | null
+          negative_feedback_count?: number
+          positive_feedback_count?: number
+          update_count?: number
+          updated_at?: string
+          user_id: string
+          weights?: Json
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          l2_norm?: number
+          last_rlhf_update?: string | null
+          negative_feedback_count?: number
+          positive_feedback_count?: number
+          update_count?: number
+          updated_at?: string
+          user_id?: string
+          weights?: Json
+        }
+        Relationships: []
+      }
       admin_users: {
         Row: {
           created_at: string
@@ -291,6 +330,48 @@ export type Database = {
         }
         Relationships: []
       }
+      conflict_resolution_contexts: {
+        Row: {
+          clarifying_questions: string[]
+          conflict_scores: number[]
+          conflicting_dimensions: number[]
+          created_at: string
+          framework_conflicts: Json
+          id: string
+          resolved: boolean
+          session_id: string
+          updated_at: string
+          user_id: string
+          user_resolution: Json | null
+        }
+        Insert: {
+          clarifying_questions?: string[]
+          conflict_scores: number[]
+          conflicting_dimensions: number[]
+          created_at?: string
+          framework_conflicts?: Json
+          id?: string
+          resolved?: boolean
+          session_id: string
+          updated_at?: string
+          user_id: string
+          user_resolution?: Json | null
+        }
+        Update: {
+          clarifying_questions?: string[]
+          conflict_scores?: number[]
+          conflicting_dimensions?: number[]
+          created_at?: string
+          framework_conflicts?: Json
+          id?: string
+          resolved?: boolean
+          session_id?: string
+          updated_at?: string
+          user_id?: string
+          user_resolution?: Json | null
+        }
+        Relationships: []
+      }
       conversation_memory: {
         Row: {
           conversation_stage: string | null
@@ -369,6 +450,39 @@ export type Database = {
           timestamp?: string
           user_agent?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      encoder_versions: {
+        Row: {
+          calibration_params: Json
+          checksum: string
+          created_at: string
+          encoder_weights: Json
+          framework_name: string
+          id: string
+          is_active: boolean
+          version: string
+        }
+        Insert: {
+          calibration_params?: Json
+          checksum: string
+          created_at?: string
+          encoder_weights: Json
+          framework_name: string
+          id?: string
+          is_active?: boolean
+          version: string
+        }
+        Update: {
+          calibration_params?: Json
+          checksum?: string
+          created_at?: string
+          encoder_weights?: Json
+          framework_name?: string
+          id?: string
+          is_active?: boolean
+          version?: string
         }
         Relationships: []
       }
@@ -591,6 +705,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      personality_fusion_vectors: {
+        Row: {
+          astro_vector: number[] | null
+          calibration_params: Json
+          created_at: string
+          encoder_checksums: Json
+          fused_vector: number[] | null
+          fusion_metadata: Json
+          hd_vector: number[] | null
+          id: string
+          mbti_vector: number[] | null
+          updated_at: string
+          user_id: string
+          version: number
+        }
+        Insert: {
+          astro_vector?: number[] | null
+          calibration_params?: Json
+          created_at?: string
+          encoder_checksums?: Json
+          fused_vector?: number[] | null
+          fusion_metadata?: Json
+          hd_vector?: number[] | null
+          id?: string
+          mbti_vector?: number[] | null
+          updated_at?: string
+          user_id: string
+          version?: number
+        }
+        Update: {
+          astro_vector?: number[] | null
+          calibration_params?: Json
+          created_at?: string
+          encoder_checksums?: Json
+          fused_vector?: number[] | null
+          fusion_metadata?: Json
+          hd_vector?: number[] | null
+          id?: string
+          mbti_vector?: number[] | null
+          updated_at?: string
+          user_id?: string
+          version?: number
+        }
+        Relationships: []
       }
       personality_scores: {
         Row: {
