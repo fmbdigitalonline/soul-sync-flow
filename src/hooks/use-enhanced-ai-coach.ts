@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { enhancedAICoachService, AgentType } from "@/services/enhanced-ai-coach-service";
 import { UnifiedBlueprintService } from "@/services/unified-blueprint-service";
@@ -96,8 +97,13 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
   const loadVFPGraphStatus = async () => {
     try {
       const status = await enhancedAICoachService.getVFPGraphStatus();
-      setVFPGraphStatus(status);
-      console.log("✅ VFP-Graph status loaded:", status);
+      // Ensure vectorMagnitude is always defined
+      const statusWithMagnitude = {
+        ...status,
+        vectorMagnitude: status.vectorMagnitude ?? 0
+      };
+      setVFPGraphStatus(statusWithMagnitude);
+      console.log("✅ VFP-Graph status loaded:", statusWithMagnitude);
     } catch (error) {
       console.error("❌ Error loading VFP-Graph status:", error);
     }

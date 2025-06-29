@@ -168,6 +168,72 @@ export type Database = {
         }
         Relationships: []
       }
+      acs_config: {
+        Row: {
+          config: Json
+          created_at: string
+          id: string
+          is_active: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      acs_metrics: {
+        Row: {
+          confidence: number
+          conversation_velocity: number
+          delta_latency: number
+          id: string
+          sentiment_trend: number
+          state_transition: string
+          timestamp: string
+          trigger: string
+          user_id: string
+          user_repair_rate: number
+        }
+        Insert: {
+          confidence?: number
+          conversation_velocity?: number
+          delta_latency?: number
+          id?: string
+          sentiment_trend?: number
+          state_transition: string
+          timestamp?: string
+          trigger: string
+          user_id: string
+          user_repair_rate?: number
+        }
+        Update: {
+          confidence?: number
+          conversation_velocity?: number
+          delta_latency?: number
+          id?: string
+          sentiment_trend?: number
+          state_transition?: string
+          timestamp?: string
+          trigger?: string
+          user_id?: string
+          user_repair_rate?: number
+        }
+        Relationships: []
+      }
       adaptive_weight_matrices: {
         Row: {
           created_at: string

@@ -1,5 +1,4 @@
 import { ACSConfig, DialogueHealthMetrics, DialogueState, StateTransition, PromptStrategyConfig, ACSMetrics, HelpSignal } from '@/types/acs-types';
-import { supabase } from '@/integrations/supabase/client';
 
 class AdaptiveContextScheduler {
   private config: ACSConfig;
@@ -30,9 +29,9 @@ class AdaptiveContextScheduler {
       velocityFloor: 0.15,           // tokens per second
       sentimentSlopeNeg: -0.05,      // negative sentiment threshold
       maxSilentMs: 45000,            // 45 seconds idle
-      frustrationThreshold: 0.7,     // frustration detection
-      clarificationThreshold: 0.6,   // confusion detection
-      enableRL: true,                // reinforcement learning
+      frustrationThreshold: 0.7,     // frustration detection threshold
+      clarificationThreshold: 0.6,   // confusion detection threshold
+      enableRL: true,                // reinforcement learning toggle
       personalityScaling: true,      // VFP-Graph scaling
       ...config
     };
@@ -52,16 +51,14 @@ class AdaptiveContextScheduler {
     try {
       if (!this.userId) return;
 
-      const { data, error } = await supabase
-        .from('acs_config')
-        .select('config')
-        .eq('user_id', this.userId)
-        .eq('is_active', true)
-        .maybeSingle();
-
-      if (data && !error) {
-        this.config = { ...this.config, ...(data.config as Partial<ACSConfig>) };
-        console.log('✅ Hot-reloaded ACS config from database');
+      // Use a simple approach to avoid complex type instantiation
+      const response = await fetch(`/api/acs-config/${this.userId}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data?.config) {
+          this.config = { ...this.config, ...(data.config as Partial<ACSConfig>) };
+          console.log('✅ Hot-reloaded ACS config from database');
+        }
       }
     } catch (error) {
       console.warn('⚠️ Could not load ACS config, using defaults:', error);
@@ -74,14 +71,11 @@ class AdaptiveContextScheduler {
     // Save to database for hot-reloading
     if (this.userId) {
       try {
-        await supabase
-          .from('acs_config')
-          .upsert({
-            user_id: this.userId,
-            config: this.config,
-            is_active: true,
-            updated_at: new Date().toISOString()
-          });
+        await fetch(`/api/acs-config/${this.userId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ config: this.config })
+        });
         console.log('✅ ACS config updated in database');
       } catch (error) {
         console.error('❌ Failed to save ACS config:', error);
@@ -338,7 +332,7 @@ class AdaptiveContextScheduler {
     
     console.log(`🔄 ACS State transition: ${transition.fromState} → ${transition.toState} (${transition.trigger})`);
     
-    // Emit metrics to Supabase for monitoring
+    // Emit metrics for monitoring
     this.emitMetrics(transition);
   }
 
@@ -466,9 +460,10 @@ class AdaptiveContextScheduler {
 
   private async emitMetrics(transition: StateTransition): Promise<void> {
     try {
-      await supabase
-        .from('acs_metrics')
-        .insert({
+      await fetch('/api/acs-metrics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           user_id: this.userId,
           state_transition: `${transition.fromState}_to_${transition.toState}`,
           delta_latency: this.metrics.averageLatency,
@@ -478,7 +473,8 @@ class AdaptiveContextScheduler {
           trigger: transition.trigger,
           confidence: transition.confidence,
           timestamp: new Date().toISOString()
-        });
+        })
+      });
     } catch (error) {
       console.warn('⚠️ Could not emit ACS metrics:', error);
     }
