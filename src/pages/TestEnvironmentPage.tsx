@@ -27,7 +27,8 @@ import {
   Users,
   Settings,
   Gauge,
-  TrendingUp
+  TrendingUp,
+  MessageSquare
 } from 'lucide-react';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { Phase3MemoryTest } from '@/components/debug/Phase3MemoryTest';
@@ -60,9 +61,10 @@ import SystemHealthMonitor from '@/components/debug/SystemHealthMonitor';
 import ABTestingFramework from '@/components/debug/ABTestingFramework';
 import { GrowthProgramTestRunner } from '@/components/testing/GrowthProgramTestRunner';
 import { VFPGraphPatentTester } from '@/components/testing/VFPGraphPatentTester';
+import { ACSPatentTestSuite } from '@/components/testing/ACSPatentTestSuite';
 
 const TestEnvironmentPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('vfp-patent');
+  const [activeTab, setActiveTab] = useState('acs-patent');
 
   return (
     <AuthProvider>
@@ -72,35 +74,56 @@ const TestEnvironmentPage: React.FC = () => {
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <Shield className="h-8 w-8 text-red-600" />
-                VFP-Graph Patent Validation Environment
+                Complete Patent Validation Environment
               </h1>
               <p className="text-lg text-gray-600">
-                <strong>Patent-ready evidence collection</strong> for VFP-Graph technology claims + comprehensive testing suite: 36 test components covering Growth Programs, 7-layer personality engine, 12 modules, 3 coach modes, error handling, performance, UX flows, and advanced analytics with real-time dynamic data
+                <strong>Patent-ready evidence collection</strong> for both ACS (9 claims) and VFP-Graph (6 claims) technology + comprehensive testing suite: 37 test components covering Growth Programs, 7-layer personality engine, 12 modules, 3 coach modes, error handling, performance, UX flows, and advanced analytics with real-time dynamic data
               </p>
             </div>
 
-            {/* Enhanced Status Overview - Patent Focused */}
+            {/* Enhanced Status Overview - Both Patents */}
             <Card className="mb-8 border-red-200 bg-red-50/30">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Shield className="h-5 w-5 text-red-600" />
-                  Patent Validation Status + Complete Test Environment (37 Tests Available)
+                  Complete Patent Validation Status + Test Environment (38 Tests Available)
                   <Badge variant="destructive" className="ml-2">
-                    US Provisional Patent
+                    US Provisional Patents
                   </Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-12 gap-4">
                   
-                  {/* VFP Patent Tests - FIRST AND PROMINENT */}
+                  {/* ACS Patent Tests - FIRST AND PROMINENT */}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="text-center p-3 border-2 border-red-300 rounded-lg hover:bg-red-50 cursor-help bg-red-100">
+                        <div className="flex items-center justify-center mb-2">
+                          <MessageSquare className="h-6 w-6 text-red-600" />
+                        </div>
+                        <div className="text-sm font-bold mb-1 text-red-800">ACS Claims</div>
+                        <Badge className="bg-red-200 text-red-800 text-xs font-bold">9 Claims</Badge>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-sm">
+                      <div className="space-y-2">
+                        <p><strong>ACS Patent Validation Suite</strong></p>
+                        <p>Measures: 9 patent claims with live conversation testing and real-time evidence</p>
+                        <p>KPIs: Patent claim validation rate (0-100%), conversation metrics, state transitions</p>
+                        <p>Benefits: US Provisional Patent Application ready evidence package</p>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                  
+                  {/* VFP Patent Tests - SECOND */}
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className="text-center p-3 border-2 border-red-300 rounded-lg hover:bg-red-50 cursor-help bg-red-100">
                         <div className="flex items-center justify-center mb-2">
                           <Shield className="h-6 w-6 text-red-600" />
                         </div>
-                        <div className="text-sm font-bold mb-1 text-red-800">Patent Claims</div>
+                        <div className="text-sm font-bold mb-1 text-red-800">VFP Claims</div>
                         <Badge className="bg-red-200 text-red-800 text-xs font-bold">6 Claims</Badge>
                       </div>
                     </TooltipTrigger>
@@ -364,17 +387,29 @@ const TestEnvironmentPage: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* Test Tabs - Complete with all categories */}
+            {/* Test Tabs - Complete with all categories including ACS */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
               <div className="space-y-4">
-                {/* Core Test Categories - VFP Patent First */}
+                {/* Core Test Categories - ACS Patent First */}
                 <div className="overflow-x-auto">
-                  <TabsList className="grid w-max grid-cols-4 lg:grid-cols-11 gap-1 p-1 h-auto">
+                  <TabsList className="grid w-max grid-cols-4 lg:grid-cols-12 gap-1 p-1 h-auto">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <TabsTrigger value="acs-patent" className="flex flex-col items-center gap-1 p-3 text-xs data-[state=active]:bg-red-100 data-[state=active]:text-red-800 border-red-200">
+                          <MessageSquare className="h-4 w-4" />
+                          ACS Claims
+                        </TabsTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>ACS Patent Validation Suite - 9 Claims Live Conversation Testing</p>
+                      </TooltipContent>
+                    </Tooltip>
+
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <TabsTrigger value="vfp-patent" className="flex flex-col items-center gap-1 p-3 text-xs data-[state=active]:bg-red-100 data-[state=active]:text-red-800 border-red-200">
                           <Shield className="h-4 w-4" />
-                          Patent Claims
+                          VFP Claims
                         </TabsTrigger>
                       </TooltipTrigger>
                       <TooltipContent>
@@ -719,9 +754,28 @@ const TestEnvironmentPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* All Tab Contents - VFP Patent First */}
+              {/* All Tab Contents - ACS Patent First */}
               
-              {/* VFP-Graph Patent Validation - NEW FIRST TAB */}
+              {/* ACS Patent Validation - NEW FIRST TAB */}
+              <TabsContent value="acs-patent" className="space-y-6">
+                <div className="mb-4">
+                  <h2 className="text-2xl font-semibold mb-2 flex items-center gap-2">
+                    <MessageSquare className="h-6 w-6 text-red-600" />
+                    ACS Patent Validation Suite
+                    <Badge variant="destructive" className="ml-2">
+                      US Provisional Patent
+                    </Badge>
+                  </h2>
+                  <p className="text-gray-600">
+                    <strong>Patent-ready evidence collection</strong> for ACS technology claims. 
+                    Live conversation testing validates all 9 patent claims with real-time data generation 
+                    and automatic evidence package creation for US Provisional Patent Application.
+                  </p>
+                </div>
+                <ACSPatentTestSuite />
+              </TabsContent>
+              
+              {/* VFP-Graph Patent Validation - SECOND TAB */}
               <TabsContent value="vfp-patent" className="space-y-6">
                 <div className="mb-4">
                   <h2 className="text-2xl font-semibold mb-2 flex items-center gap-2">
@@ -977,7 +1031,7 @@ const TestEnvironmentPage: React.FC = () => {
                 <IntegrationTestPanel />
               </TabsContent>
 
-              {/* Placeholders for remaining test categories - to be implemented */}
+              {/* Remaining test categories */}
               <TabsContent value="load-testing" className="space-y-6">
                 <div className="mb-4">
                   <h2 className="text-2xl font-semibold mb-2">Response Time Under Load Testing</h2>
@@ -1018,7 +1072,7 @@ const TestEnvironmentPage: React.FC = () => {
                 <SystemHealthMonitor />
               </TabsContent>
 
-              {/* New A/B Testing Framework */}
+              {/* A/B Testing Framework */}
               <TabsContent value="ab-testing" className="space-y-6">
                 <div className="mb-4">
                   <h2 className="text-2xl font-semibold mb-2">A/B Testing Framework</h2>
