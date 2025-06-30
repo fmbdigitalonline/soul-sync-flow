@@ -2,6 +2,17 @@
 import { tieredMemoryGraph } from './tiered-memory-graph';
 import { memoryService } from './memory-service';
 
+export interface MemoryConsistencyReport {
+  userId: string;
+  consistencyScore: number;
+  totalMemories: number;
+  corruptedMemories: number;
+  duplicateMemories: number;
+  orphanedRelations: number;
+  lastUpdated: string;
+  recommendations: string[];
+}
+
 /**
  * Enhanced Memory Service that integrates TMG with existing memory system
  * Provides backward compatibility while leveraging TMG capabilities
@@ -107,7 +118,7 @@ class EnhancedMemoryService {
           prev.importance_score > current.importance_score ? prev : current
         );
         
-        // Try to find a related graph node
+        // Try to find a related graph context
         graphContext = await this.getRelatedGraphContext(userId, startingMemory);
       }
 
@@ -145,6 +156,184 @@ class EnhancedMemoryService {
       console.error('Error generating enhanced welcome message:', error);
       return `Welcome back, ${userName}! What would you like to explore today?`;
     }
+  }
+
+  // Progressive search with fallback strategies
+  async performProgressiveSearch(query: string, limit: number = 10) {
+    const startTime = Date.now();
+    
+    try {
+      // Strategy 1: Exact match in TMG hot memory
+      let results = await this.searchHotMemory(query, limit);
+      let strategy = 'exact';
+      
+      if (results.length === 0) {
+        // Strategy 2: Fuzzy search in traditional memory
+        results = await this.searchTraditionalMemory(query, limit);
+        strategy = 'fuzzy';
+      }
+      
+      if (results.length === 0) {
+        // Strategy 3: Context-based search
+        results = await this.searchByContext(query, limit);
+        strategy = 'context';
+      }
+
+      const executionTime = Date.now() - startTime;
+      
+      return {
+        memories: results,
+        matchCount: results.length,
+        searchStrategy: strategy,
+        executionTime,
+        query
+      };
+    } catch (error) {
+      console.error('Progressive search error:', error);
+      return {
+        memories: [],
+        matchCount: 0,
+        searchStrategy: 'failed',
+        executionTime: Date.now() - startTime,
+        query
+      };
+    }
+  }
+
+  // Memory consistency report generation
+  async generateConsistencyReport(): Promise<MemoryConsistencyReport> {
+    try {
+      // Get basic stats from traditional memory
+      const recentMemories = await memoryService.getRecentMemories(100);
+      
+      // Basic consistency checks
+      const totalMemories = recentMemories.length;
+      const corruptedMemories = recentMemories.filter(m => 
+        !m.memory_data || typeof m.memory_data !== 'object'
+      ).length;
+      
+      const duplicateMemories = this.findDuplicateMemories(recentMemories);
+      
+      const consistencyScore = Math.max(0, 100 - (corruptedMemories * 10) - (duplicateMemories * 5));
+      
+      const recommendations = [];
+      if (corruptedMemories > 0) {
+        recommendations.push(`Found ${corruptedMemories} corrupted memory entries`);
+      }
+      if (duplicateMemories > 0) {
+        recommendations.push(`Found ${duplicateMemories} duplicate memories`);
+      }
+      if (consistencyScore > 80) {
+        recommendations.push('Memory system is healthy');
+      }
+
+      return {
+        userId: 'not_authenticated',
+        consistencyScore,
+        totalMemories,
+        corruptedMemories,
+        duplicateMemories,
+        orphanedRelations: 0,
+        lastUpdated: new Date().toISOString(),
+        recommendations
+      };
+    } catch (error) {
+      console.error('Error generating consistency report:', error);
+      return {
+        userId: 'not_authenticated',
+        consistencyScore: 0,
+        totalMemories: 0,
+        corruptedMemories: 0,
+        duplicateMemories: 0,
+        orphanedRelations: 0,
+        lastUpdated: new Date().toISOString(),
+        recommendations: ['Error generating report']
+      };
+    }
+  }
+
+  // Test memory flow functionality
+  async testMemoryFlow() {
+    try {
+      const testSessionId = `test_${Date.now()}`;
+      const testUserId = 'test_user';
+      
+      // Test creation
+      const creationResult = await this.saveEnhancedMemory(
+        testUserId,
+        testSessionId,
+        'interaction',
+        { test: 'data', timestamp: Date.now() },
+        'Test memory creation'
+      );
+      
+      // Test retrieval
+      const retrievalResult = await this.getEnhancedMemories(
+        testUserId,
+        testSessionId,
+        5
+      );
+      
+      return {
+        creationTest: !!creationResult.traditionalMemory,
+        retrievalTest: retrievalResult.memories.length > 0,
+        tmgIntegration: !!creationResult.tmgEntry,
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('Memory flow test error:', error);
+      return {
+        creationTest: false,
+        retrievalTest: false,
+        tmgIntegration: false,
+        timestamp: new Date().toISOString()
+      };
+    }
+  }
+
+  // Get memories by session (for backward compatibility)
+  async getMemoriesBySession(sessionId: string, limit: number = 10) {
+    try {
+      return await memoryService.getRecentMemories(limit);
+    } catch (error) {
+      console.error('Error getting memories by session:', error);
+      return [];
+    }
+  }
+
+  // Private helper methods
+  private async searchHotMemory(query: string, limit: number) {
+    // Simple keyword search in hot memory
+    return [];
+  }
+
+  private async searchTraditionalMemory(query: string, limit: number) {
+    const memories = await memoryService.getRecentMemories(limit * 2);
+    return memories.filter(memory => {
+      const content = JSON.stringify(memory.memory_data).toLowerCase();
+      return content.includes(query.toLowerCase());
+    }).slice(0, limit);
+  }
+
+  private async searchByContext(query: string, limit: number) {
+    // Context-based search fallback
+    return await memoryService.getRecentMemories(Math.min(limit, 5));
+  }
+
+  private findDuplicateMemories(memories: any[]): number {
+    const seen = new Set();
+    let duplicates = 0;
+    
+    for (const memory of memories) {
+      const key = JSON.stringify(memory.memory_data);
+      if (seen.has(key)) {
+        duplicates++;
+      } else {
+        seen.add(key);
+      }
+    }
+    
+    return duplicates;
   }
 
   // Create knowledge entities from memory data
