@@ -395,6 +395,27 @@ class AdaptiveContextScheduler {
       'HIGH_ENGAGEMENT': {
         personaStyle: 'encouraging',
         temperatureAdjustment: 0.1
+      },
+
+      'ANXIOUS': {
+        systemPromptModifier: `The user seems anxious. Use a calm, reassuring tone and break down complex information into manageable steps.`,
+        temperatureAdjustment: -0.1,
+        personaStyle: 'calming',
+        maxTokens: 200
+      },
+
+      'CONFUSED': {
+        systemPromptModifier: `The user is confused. Provide clear, step-by-step explanations and ask if they need clarification.`,
+        temperatureAdjustment: -0.1,
+        personaStyle: 'clarifying',
+        maxTokens: 250
+      },
+
+      'EXCITED': {
+        systemPromptModifier: `The user is excited and engaged. Match their energy while providing helpful information.`,
+        temperatureAdjustment: 0.1,
+        personaStyle: 'encouraging',
+        maxTokens: 300
       }
     };
     
