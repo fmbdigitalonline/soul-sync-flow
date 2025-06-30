@@ -45,6 +45,13 @@ interface TaskCoachInterfaceProps {
   onTaskComplete: (taskId: string) => void;
 }
 
+interface Message {
+  id: string;
+  content: string;
+  sender: 'user' | 'assistant';
+  timestamp: Date;
+}
+
 export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
   task,
   onBack,
@@ -72,8 +79,8 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
   const [focusTime, setFocusTime] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [taskProgress, setTaskProgress] = useState(0);
-  const [awaitingFirstAssistantReply, setAwaitingFirstAssistantReply] = useState(false);
   const [taskCompleted, setTaskCompleted] = useState(false);
+  const [coachMessages, setCoachMessages] = useState<Message[]>([]);
 
   // Log component mount
   useEffect(() => {
@@ -159,13 +166,24 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
     };
   }, [onTaskComplete, focusTime, sessionStats]);
 
+  // Convert task-aware messages to coach messages format
+  useEffect(() => {
+    const convertedMessages: Message[] = messages.map(msg => ({
+      id: msg.id,
+      content: msg.content,
+      sender: msg.sender as 'user' | 'assistant',
+      timestamp: msg.timestamp
+    }));
+    setCoachMessages(convertedMessages);
+  }, [messages]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [coachMessages]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -191,7 +209,6 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
 
     setSessionStarted(true);
     setIsTimerRunning(true);
-    setAwaitingFirstAssistantReply(true);
 
     // Get current goal context
     const currentGoals = productivityJourney?.current_goals || [];
@@ -217,9 +234,7 @@ Let's get started! What's the first step?`;
       includes_task_description: !!task.description
     });
     
-    sendMessage(initialMessage).then(() => {
-      setAwaitingFirstAssistantReply(false);
-    });
+    sendMessage(initialMessage);
   }, [task, productivityJourney, sendMessage]);
 
   const handleQuickAction = useCallback(async (actionId: string, message: string) => {
@@ -272,18 +287,14 @@ Let's get started! What's the first step?`;
     await quickTaskActions.markTaskComplete();
   }, [quickTaskActions, task.id, taskProgress, focusTime]);
 
-  const handleCoachMessage = useCallback(async (message: string) => {
-    if (!isLoading && message.trim()) {
-      await dreamActivityLogger.logActivity('coach_message_typed', {
-        message_length: message.length,
-        task_id: task.id,
-        message_number: sessionStats.messageCount + 1,
-        is_loading: isLoading
-      });
-      
-      sendMessage(message);
-    }
-  }, [isLoading, sendMessage, task.id, sessionStats.messageCount]);
+  const handleNewMessage = useCallback((message: Message) => {
+    dreamActivityLogger.logActivity('coach_message_received', {
+      message_id: message.id,
+      message_sender: message.sender,
+      message_length: message.content.length,
+      task_id: task.id
+    });
+  }, [task.id]);
 
   const handleTimerToggle = useCallback(async () => {
     const newTimerState = !isTimerRunning;
@@ -489,14 +500,9 @@ Let's get started! What's the first step?`;
           ) : (
             <div className="flex-1 min-h-0">
               <EnhancedCoachInterface
-                messages={messages}
-                isLoading={isLoading}
-                onSendMessage={handleCoachMessage}
-                messagesEndRef={messagesEndRef}
-                taskTitle={task.title}
-                estimatedDuration={task.estimated_duration}
                 sessionId={sessionStats.sessionId}
-                awaitingFirstAssistantReply={awaitingFirstAssistantReply}
+                initialMessages={coachMessages}
+                onNewMessage={handleNewMessage}
               />
             </div>
           )}
