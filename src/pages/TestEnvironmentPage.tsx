@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -12,7 +11,8 @@ import {
   Settings,
   Shield,
   CheckCircle,
-  MessageSquare
+  MessageSquare,
+  Database
 } from 'lucide-react';
 
 // Import existing test components
@@ -21,12 +21,23 @@ import { GrowthProgramTestRunner } from '@/components/testing/GrowthProgramTestR
 import { VFPGraphTester } from '@/components/personality/VFPGraphTester';
 import { VFPGraphPatentTester } from '@/components/testing/VFPGraphPatentTester';
 import ACSPatentTestSuite from '@/components/testing/ACSPatentTestSuite';
+import { TMGPatentTestSuite } from '@/components/testing/TMGPatentTestSuite';
 
 const TestEnvironmentPage: React.FC = () => {
-  // Set ACS Patent as the default active tab (highest priority)
-  const [activeTab, setActiveTab] = useState('acs-patent');
+  // Set TMG Patent as the default active tab (highest priority for memory testing)
+  const [activeTab, setActiveTab] = useState('tmg-patent');
 
   const testCategories = [
+    {
+      id: 'tmg-patent',
+      title: 'TMG Patent Validation',
+      description: 'Tiered Memory Graph patent claims with real-time dynamic data (8 claims)',
+      icon: Database,
+      status: 'production',
+      priority: 'critical',
+      testCount: 8,
+      component: TMGPatentTestSuite
+    },
     {
       id: 'acs-patent',
       title: 'ACS Patent Validation',
@@ -101,31 +112,31 @@ const TestEnvironmentPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Overview Section - Now focused on ACS + Patent Validation */}
+      {/* Overview Section - Now focused on TMG + Patent Validation */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <MessageSquare className="w-6 h-6 text-blue-500" />
-            <span>Live Patent Validation Test Suite</span>
-            <Badge variant="outline" className="ml-2 bg-blue-50 text-blue-700 border-blue-200">
-              ACS + VFP-Graph Patent Testing Active
+            <Database className="w-6 h-6 text-purple-500" />
+            <span>Advanced Memory & Patent Validation Suite</span>
+            <Badge variant="outline" className="ml-2 bg-purple-50 text-purple-700 border-purple-200">
+              TMG + ACS + VFP-Graph Patent Testing Active
             </Badge>
           </CardTitle>
           <p className="text-muted-foreground">
-            <strong>Comprehensive patent evidence collection</strong> with live conversation testing for ACS technology claims 
-            and VFP-Graph patent validation. Real-time data generation with automatic evidence package creation 
+            <strong>Comprehensive patent evidence collection</strong> with live conversation testing for TMG three-tier memory management, 
+            ACS technology claims, and VFP-Graph patent validation. Real-time data generation with automatic evidence package creation 
             for US Provisional Patent Applications.
           </p>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
             {testCategories.map((category) => {
               const IconComponent = category.icon;
               return (
                 <Card 
                   key={category.id}
                   className={`cursor-pointer transition-all hover:shadow-md ${
-                    activeTab === category.id ? 'ring-2 ring-blue-500' : ''
+                    activeTab === category.id ? 'ring-2 ring-purple-500' : ''
                   } ${category.priority === 'critical' ? 'border-red-200 bg-red-50/30' : ''}`}
                   onClick={() => setActiveTab(category.id)}
                 >
@@ -160,7 +171,18 @@ const TestEnvironmentPage: React.FC = () => {
       </Card>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+        <Card className="border-purple-200 bg-purple-50/30">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <Database className="w-5 h-5 text-purple-500" />
+              <div>
+                <p className="text-2xl font-bold text-purple-700">8</p>
+                <p className="text-sm text-purple-600">TMG Claims</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
         <Card className="border-blue-200 bg-blue-50/30">
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
@@ -222,14 +244,14 @@ const TestEnvironmentPage: React.FC = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <MessageSquare className="w-5 h-5 text-blue-500" />
+            <Database className="w-5 h-5 text-purple-500" />
             <span>Live Patent Test Environment</span>
-            <Badge variant="secondary" className="bg-blue-100 text-blue-800">Real-Time Evidence Collection</Badge>
+            <Badge variant="secondary" className="bg-purple-100 text-purple-800">Real-Time Evidence Collection</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-6">
               {testCategories.map((category) => (
                 <TabsTrigger 
                   key={category.id} 
