@@ -14,7 +14,8 @@ import {
   TestTube,
   Activity,
   AlertTriangle,
-  CheckCircle
+  CheckCircle,
+  Rocket
 } from 'lucide-react';
 import { useProductionACS } from '@/hooks/use-production-acs';
 
@@ -31,7 +32,8 @@ const ACSControlPanel: React.FC<ACSControlPanelProps> = ({
     status, 
     toggleACS, 
     updateConfig, 
-    runIntegrationTests 
+    runIntegrationTests,
+    enableFullDeployment
   } = useProductionACS();
 
   const getStateColor = (state: string) => {
@@ -66,6 +68,9 @@ const ACSControlPanel: React.FC<ACSControlPanelProps> = ({
           onCheckedChange={toggleACS}
           className="scale-75"
         />
+        <Badge variant="outline" className="text-xs">
+          {status.trafficPercentage}% Traffic
+        </Badge>
         <span className="text-xs text-gray-600">
           {status.interventionsCount} adaptations
         </span>
@@ -80,8 +85,14 @@ const ACSControlPanel: React.FC<ACSControlPanelProps> = ({
           <Brain className="w-5 h-5 text-blue-600" />
           <span>Adaptive Context System</span>
           <Badge variant={status.isEnabled ? "default" : "secondary"}>
-            {status.isEnabled ? "Active" : "Disabled"}
+            {status.isEnabled ? "Production" : "Disabled"}
           </Badge>
+          {status.deploymentMode === 'full' && (
+            <Badge variant="outline" className="bg-green-50 text-green-700">
+              <Rocket className="w-3 h-3 mr-1" />
+              100% Traffic
+            </Badge>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -121,6 +132,31 @@ const ACSControlPanel: React.FC<ACSControlPanelProps> = ({
           </div>
         </div>
 
+        {/* Deployment Status */}
+        <div className="p-3 bg-blue-50 rounded-lg border">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="font-medium text-blue-800">Production Deployment</div>
+              <div className="text-sm text-blue-600">
+                {status.deploymentMode === 'full' 
+                  ? `Serving ${status.trafficPercentage}% of all users`
+                  : 'Not deployed'
+                }
+              </div>
+            </div>
+            {status.deploymentMode !== 'full' && (
+              <Button 
+                size="sm" 
+                onClick={enableFullDeployment}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                <Rocket className="w-4 h-4 mr-1" />
+                Deploy Now
+              </Button>
+            )}
+          </div>
+        </div>
+
         {/* Controls */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
@@ -156,7 +192,7 @@ const ACSControlPanel: React.FC<ACSControlPanelProps> = ({
               })}
             />
             <div className="text-xs text-gray-500">
-              Adapt responses to your personality profile
+              Adapt responses to user personality profile
             </div>
           </div>
         </div>
@@ -168,10 +204,9 @@ const ACSControlPanel: React.FC<ACSControlPanelProps> = ({
             variant="outline"
             size="sm"
             className="w-full"
-            disabled={!status.isEnabled}
           >
             <TestTube className="w-4 h-4 mr-2" />
-            Run System Tests
+            Run System Tests & Deploy
           </Button>
         </div>
 

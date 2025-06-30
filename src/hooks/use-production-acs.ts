@@ -10,6 +10,8 @@ interface ACSStatus {
   interventionsCount: number;
   fallbacksUsed: number;
   lastInterventionTime?: number;
+  deploymentMode: 'full' | 'shadow';
+  trafficPercentage: number;
 }
 
 interface UseProductionACSResult {
@@ -22,6 +24,7 @@ interface UseProductionACSResult {
   toggleACS: () => void;
   updateConfig: (config: Partial<ACSConfig>) => void;
   runIntegrationTests: () => Promise<void>;
+  enableFullDeployment: () => void;
 }
 
 export const useProductionACS = (initialConfig?: Partial<ACSConfig>): UseProductionACSResult => {
@@ -29,7 +32,9 @@ export const useProductionACS = (initialConfig?: Partial<ACSConfig>): UseProduct
     isEnabled: true,
     currentState: 'NORMAL',
     interventionsCount: 0,
-    fallbacksUsed: 0
+    fallbacksUsed: 0,
+    deploymentMode: 'full', // Default to full deployment
+    trafficPercentage: 100   // 100% traffic from start
   });
 
   const [config, setConfig] = useState<ACSConfig>({
@@ -98,6 +103,16 @@ export const useProductionACS = (initialConfig?: Partial<ACSConfig>): UseProduct
     toast.success("ACS configuration updated");
   }, []);
 
+  const enableFullDeployment = useCallback(() => {
+    setStatus(prev => ({
+      ...prev,
+      deploymentMode: 'full',
+      trafficPercentage: 100,
+      isEnabled: true
+    }));
+    toast.success("🚀 ACS enabled for 100% of traffic - Full deployment active!");
+  }, []);
+
   const runIntegrationTests = useCallback(async () => {
     toast.info("Running ACS integration tests...");
     
@@ -125,7 +140,8 @@ export const useProductionACS = (initialConfig?: Partial<ACSConfig>): UseProduct
       const allPassed = test1 && test2 && test3.passed;
       
       if (allPassed) {
-        toast.success(`✅ All integration tests passed! P95 latency: ${test3.latency.toFixed(0)}ms`);
+        toast.success(`✅ All integration tests passed! P95 latency: ${test3.latency.toFixed(0)}ms - Ready for full deployment`);
+        enableFullDeployment();
       } else {
         toast.error(`❌ Some tests failed. Check console for details.`);
       }
@@ -134,13 +150,14 @@ export const useProductionACS = (initialConfig?: Partial<ACSConfig>): UseProduct
       console.error("Integration tests failed:", error);
       toast.error("Integration tests encountered errors");
     }
-  }, []);
+  }, [enableFullDeployment]);
 
   return {
     status,
     processMessage,
     toggleACS,
     updateConfig,
-    runIntegrationTests
+    runIntegrationTests,
+    enableFullDeployment
   };
 };
