@@ -195,10 +195,24 @@ export class ACSEnhancedStateDetection {
     this.resetIdleTimer();
     this.silenceStartTime = Date.now();
     
-    console.log(`⏰ Starting idle monitoring - will trigger after ${config.maxSilentMs / 1000 / 60} minutes of inactivity`);
+    // CRITICAL: Evidence collection for Claim 5
+    console.log(`⏰ CLAIM 5: Starting idle monitoring - will trigger after ${config.maxSilentMs / 1000 / 60} minutes of inactivity`);
+    console.log(`⏰ CLAIM 5: Idle threshold set to ${config.maxSilentMs}ms (${config.maxSilentMs / 1000 / 60} minutes)`);
     
     this.idleTimer = setTimeout(() => {
-      console.log("⏰ ACS Idle State Detected - No user activity for", config.maxSilentMs / 1000 / 60, "minutes");
+      console.log("⏰ CLAIM 5: ACS Idle State Detected - No user activity for", config.maxSilentMs / 1000 / 60, "minutes");
+      
+      // CRITICAL: Evidence collection for idle state detection
+      const idleEvidence = {
+        idleDetected: true,
+        silentDurationMs: config.maxSilentMs,
+        silentDurationMinutes: config.maxSilentMs / 1000 / 60,
+        thresholdExceeded: true,
+        detectionTimestamp: Date.now(),
+        configuredThreshold: config.maxSilentMs
+      };
+      
+      console.log("⏰ CLAIM 5: Idle evidence collected:", idleEvidence);
       onIdleDetected();
     }, config.maxSilentMs);
   }
@@ -213,7 +227,14 @@ export class ACSEnhancedStateDetection {
 
   getCurrentSilentDuration(): number {
     if (!this.silenceStartTime) return 0;
-    return Date.now() - this.silenceStartTime;
+    const duration = Date.now() - this.silenceStartTime;
+    
+    // CRITICAL: Evidence collection for ongoing idle monitoring
+    if (duration > 60000) { // Log every minute after first minute
+      console.log(`⏰ CLAIM 5: Current silent duration: ${duration}ms (${(duration / 1000 / 60).toFixed(1)} minutes)`);
+    }
+    
+    return duration;
   }
 
   recordStateTransition(from: DialogueState, to: DialogueState, trigger: string, confidence: number): void {

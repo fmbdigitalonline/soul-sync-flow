@@ -88,8 +88,10 @@ class ACSRealAIIntegrationService implements ACSRealAIIntegration {
           message,
           sessionId: `acs_test_${Date.now()}`,
           systemPrompt: modifiedPrompt, // CRITICAL: Use the actually modified prompt
-          temperature: promptModifications.temperatureAdjustment || 0.7,
-          maxTokens: promptModifications.maxTokens || 150,
+          temperature: promptModifications.temperatureAdjustment !== undefined 
+            ? Math.max(0.1, Math.min(1.0, 0.7 + promptModifications.temperatureAdjustment))
+            : 0.7,  // CRITICAL: Pass dynamic temperature
+          maxTokens: promptModifications.maxTokens || 150,  // CRITICAL: Pass dynamic maxTokens
           includeBlueprint: false,
           agentType: "guide",
           language: "en"
@@ -149,8 +151,10 @@ class ACSRealAIIntegrationService implements ACSRealAIIntegration {
         promptLengthChange: modifiedPrompt.length - basePrompt.length,
         actualModificationsApplied: {
           apologyPrefixApplied: modifiedPrompt.includes("I sincerely apologize") || modifiedPrompt.includes("I apologize"),
-          temperatureActuallyReduced: (promptModifications.temperatureAdjustment || 0.7) < 0.7,
-          temperatureValue: promptModifications.temperatureAdjustment || 0.7,
+          temperatureActuallyReduced: (promptModifications.temperatureAdjustment || 0) < 0,
+          temperatureValue: promptModifications.temperatureAdjustment !== undefined 
+            ? Math.max(0.1, Math.min(1.0, 0.7 + promptModifications.temperatureAdjustment))
+            : 0.7,
           personalityScalingApplied: promptModifications.personalityScaling || false,
           emotionDetected: emotionalState.emotion,
           emotionIntensity: emotionalState.intensity
@@ -423,8 +427,8 @@ class ACSRealAIIntegrationService implements ACSRealAIIntegration {
     
     // CRITICAL FIX: Proper conversation velocity calculation
     const wordCount = message.split(/\s+/).filter(word => word.length > 0).length;
-    const timeInSeconds = timeSinceLastMessage / 1000;
-    const conversationVelocity = timeInSeconds > 0 ? wordCount / timeInSeconds : 0;
+    const timeInSeconds = Math.max(timeSinceLastMessage / 1000, 0.1); // Prevent division by zero
+    const conversationVelocity = wordCount / timeInSeconds;
     
     // Enhanced sentiment analysis
     const sentiment = this.calculateSentiment(message);
@@ -756,7 +760,7 @@ class ACSRealAIIntegrationService implements ACSRealAIIntegration {
     
     // CRITICAL: Store in Supabase for persistence (Claim 9)
     try {
-      await supabase
+      const { data, error } = await supabase
         .from('user_session_memory')
         .insert({
           user_id: 'acs_cross_session',
@@ -780,12 +784,21 @@ class ACSRealAIIntegrationService implements ACSRealAIIntegration {
           context_summary: `Cross-session learning: ${fromState} → ${toState} (${emotionalState.emotion})`
         });
       
-      console.log(`📚 CLAIM 9: Cross-session learning stored in Supabase for ${sessionKey}`);
+      if (error) {
+        console.warn('⚠️ Supabase insert error for cross-session learning:', error.message);
+      } else {
+        console.log(`📚 CLAIM 9: Cross-session learning stored in Supabase for ${sessionKey}`);
+        console.log(`📚 CLAIM 9: Database record created with ID:`, data?.id);
+      }
     } catch (error) {
       console.warn('⚠️ Could not store cross-session learning:', error.message);
     }
     
-    console.log(`📚 Cross-session learning updated for ${sessionKey}:`, existingData);
+    console.log(`📚 CLAIM 9: Cross-session learning updated for ${sessionKey}:`, {
+      count: existingData.count,
+      patterns: existingData.patterns.length,
+      emotions: Object.keys(existingData.emotions).length
+    });
   }
 
   private getCrossSessionSummary(): any {

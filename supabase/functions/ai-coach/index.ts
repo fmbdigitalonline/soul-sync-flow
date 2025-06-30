@@ -12,7 +12,17 @@ serve(async (req) => {
   }
 
   try {
-    const { message, userId, sessionId, includeBlueprint, agentType, systemPrompt, language = 'en' } = await req.json();
+    const { 
+      message, 
+      userId, 
+      sessionId, 
+      includeBlueprint, 
+      agentType, 
+      systemPrompt, 
+      language = 'en',
+      temperature,     // CRITICAL: Now dynamic from ACS
+      maxTokens       // CRITICAL: Now dynamic from ACS
+    } = await req.json();
 
     console.log('AI Coach request:', {
       agentType,
@@ -21,7 +31,9 @@ serve(async (req) => {
       sessionId,
       includeBlueprint,
       hasCustomPrompt: !!systemPrompt,
-      language
+      language,
+      acsTemperature: temperature,    // CRITICAL: Log ACS values
+      acsMaxTokens: maxTokens        // CRITICAL: Log ACS values
     });
 
     const openAIKey = Deno.env.get('OPENAI_API_KEY');
@@ -33,6 +45,7 @@ serve(async (req) => {
     // Use custom system prompt if provided, otherwise fall back to default
     const getSystemPrompt = (agentType: string, language: string) => {
       if (systemPrompt) {
+        console.log('🔧 Using ACS-modified system prompt, length:', systemPrompt.length);
         return systemPrompt;
       }
 
@@ -95,6 +108,16 @@ INTEGRATION: Help users achieve goals while staying authentic to their inner wis
       }
     };
 
+    // CRITICAL FIX: Use dynamic parameters from ACS instead of hardcoded values
+    const finalTemperature = temperature !== undefined ? temperature : 0.7;
+    const finalMaxTokens = maxTokens !== undefined ? maxTokens : 1000;
+
+    console.log('🎯 Using dynamic parameters:', {
+      temperature: finalTemperature,
+      maxTokens: finalMaxTokens,
+      isACSControlled: temperature !== undefined || maxTokens !== undefined
+    });
+
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -113,8 +136,8 @@ INTEGRATION: Help users achieve goals while staying authentic to their inner wis
             content: message
           }
         ],
-        temperature: 0.7,
-        max_tokens: 1000,
+        temperature: finalTemperature,    // CRITICAL: Now dynamic
+        max_tokens: finalMaxTokens,       // CRITICAL: Now dynamic
       }),
     });
 
@@ -133,7 +156,7 @@ INTEGRATION: Help users achieve goals while staying authentic to their inner wis
       throw new Error(errorMessage);
     }
 
-    console.log('AI Coach response generated successfully');
+    console.log('✅ AI Coach response generated successfully with ACS parameters');
 
     return new Response(
       JSON.stringify({
