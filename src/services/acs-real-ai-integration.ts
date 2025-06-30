@@ -418,6 +418,33 @@ class ACSRealAIIntegrationService implements ACSRealAIIntegration {
     return Math.abs(hash).toString(36);
   }
 
+  // NEW: Dynamic token calculation method
+  private calculateDynamicTokens(
+    modifiedPrompt: string, 
+    conversationHistory: any[], 
+    promptModifications: PromptStrategyConfig
+  ): number {
+    // Base token calculation
+    const baseTokens = 150;
+    
+    // Adjust based on prompt length
+    const promptTokens = Math.ceil(modifiedPrompt.length / 4); // Rough estimate: 4 chars per token
+    
+    // Adjust based on conversation context
+    const contextTokens = Math.min(conversationHistory.length * 20, 100);
+    
+    // Adjust based on modifications
+    let modificationTokens = 0;
+    if (promptModifications.apologyPrefix) modificationTokens += 20;
+    if (promptModifications.multiModalContext) modificationTokens += 30;
+    if (promptModifications.personalityScaling) modificationTokens += 25;
+    
+    const totalTokens = baseTokens + promptTokens + contextTokens + modificationTokens;
+    
+    // Cap at reasonable limits
+    return Math.max(50, Math.min(totalTokens, 500));
+  }
+
   generateModifiedSystemPrompt(basePrompt: string, config: PromptStrategyConfig, userMessage: string): string {
     let modifiedPrompt = basePrompt;
     const modificationsApplied = [];
