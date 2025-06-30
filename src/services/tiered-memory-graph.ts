@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export interface HotMemoryEntry {
@@ -243,7 +244,7 @@ class TieredMemoryGraphService {
   ): Promise<{ nodes: MemoryGraphNode[], edges: MemoryGraphEdge[] }> {
     try {
       // Get nodes first
-      const { data: nodes, error: nodesError } = await supabase
+      const { data: nodesData, error: nodesError } = await supabase
         .from('memory_graph_nodes')
         .select('*')
         .eq('user_id', userId)
@@ -255,7 +256,7 @@ class TieredMemoryGraphService {
       }
 
       // Get edges
-      const { data: edges, error: edgesError } = await supabase
+      const { data: edgesData, error: edgesError } = await supabase
         .from('memory_graph_edges')
         .select('*')
         .eq('user_id', userId)
@@ -263,10 +264,13 @@ class TieredMemoryGraphService {
 
       if (edgesError) {
         console.error('Error getting graph edges:', edgesError);
-        return { nodes: nodes || [], edges: [] };
+        return { nodes: nodesData ? this.castToMemoryGraphNodes(nodesData) : [], edges: [] };
       }
 
-      return { nodes: nodes || [], edges: edges || [] };
+      return { 
+        nodes: nodesData ? this.castToMemoryGraphNodes(nodesData) : [], 
+        edges: edgesData ? this.castToMemoryGraphEdges(edgesData) : [] 
+      };
     } catch (error) {
       console.error('Error traversing graph:', error);
       return { nodes: [], edges: [] };
@@ -509,6 +513,28 @@ class TieredMemoryGraphService {
     console.log('Executing writeback for item:', item);
   }
 
+  // TYPE CASTING HELPERS
+  private castToMemoryGraphNodes(data: any[]): MemoryGraphNode[] {
+    return data.map(node => ({
+      ...node,
+      node_type: node.node_type as MemoryGraphNode['node_type']
+    }));
+  }
+
+  private castToMemoryGraphEdges(data: any[]): MemoryGraphEdge[] {
+    return data.map(edge => ({
+      ...edge,
+      relationship_type: edge.relationship_type as MemoryGraphEdge['relationship_type']
+    }));
+  }
+
+  private castToMemoryDeltas(data: any[]): MemoryDelta[] {
+    return data.map(delta => ({
+      ...delta,
+      delta_type: delta.delta_type as MemoryDelta['delta_type']
+    }));
+  }
+
   // UTILITY METHODS
   private async cleanupHotMemory(userId: string, sessionId: string): Promise<void> {
     try {
@@ -566,7 +592,7 @@ class TieredMemoryGraphService {
         return [];
       }
 
-      return data;
+      return this.castToMemoryDeltas(data);
     } catch (error) {
       console.error('Error getting delta chain:', error);
       return [];
