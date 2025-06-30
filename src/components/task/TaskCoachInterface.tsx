@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { useTaskAwareCoach } from "@/hooks/use-task-aware-coach";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
-import { EnhancedCoachInterface } from "@/components/coach/EnhancedCoachInterface";
+import EnhancedCoachInterface from "@/components/coach/EnhancedCoachInterface";
 import { SessionProgress } from "./SessionProgress";
 import { SubTaskManager } from "./SubTaskManager";
 import { SmartQuickActions } from "./SmartQuickActions";
