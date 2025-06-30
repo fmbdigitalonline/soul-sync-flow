@@ -1,388 +1,364 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { memoryService, SessionMemory } from "./memory-service";
+import { tieredMemoryGraph } from './tiered-memory-graph';
+import { memoryService } from './memory-service';
 
-export interface MemorySearchResult {
-  memories: SessionMemory[];
-  searchStrategy: 'exact' | 'fuzzy' | 'context' | 'session';
-  matchCount: number;
-  executionTime: number;
-}
-
-export interface MemoryConsistencyReport {
-  userId: string;
-  totalMemories: number;
-  sessionMemories: number;
-  recentMemories: number;
-  searchCapability: boolean;
-  retrievalLatency: number;
-  lastMemoryDate: string | null;
-  consistencyScore: number;
-}
-
+/**
+ * Enhanced Memory Service that integrates TMG with existing memory system
+ * Provides backward compatibility while leveraging TMG capabilities
+ */
 class EnhancedMemoryService {
-  private async getAuthenticatedUserId(): Promise<string | null> {
+  
+  // Enhanced memory storage with TMG integration
+  async saveEnhancedMemory(
+    userId: string,
+    sessionId: string,
+    memoryType: 'interaction' | 'mood' | 'belief_shift' | 'journal_entry' | 'micro_action',
+    memoryData: any,
+    contextSummary?: string,
+    importanceScore?: number
+  ) {
     try {
-      const { data: { user }, error } = await supabase.auth.getUser();
-      
-      if (error || !user) {
-        console.error('🔐 Enhanced Memory: Authentication error:', error?.message);
-        return null;
+      // Calculate importance score using TMG if not provided
+      let finalImportanceScore = importanceScore;
+      if (!finalImportanceScore) {
+        const contentAnalysis = this.analyzeContent(memoryData, contextSummary);
+        finalImportanceScore = await tieredMemoryGraph.calculateImportanceScore(
+          userId,
+          contentAnalysis.semanticNovelty,
+          contentAnalysis.emotionIntensity,
+          contentAnalysis.userFeedback,
+          contentAnalysis.recurrenceCount
+        );
       }
-      
-      console.log('✅ Enhanced Memory: User authenticated:', user.id);
-      return user.id;
+
+      // Store in traditional memory system
+      const traditionalMemory = await memoryService.saveMemory({
+        user_id: userId,
+        session_id: sessionId,
+        memory_type: memoryType,
+        memory_data: memoryData,
+        context_summary: contextSummary,
+        importance_score: finalImportanceScore
+      });
+
+      // Store in TMG hot memory
+      const tmgEntry = await tieredMemoryGraph.storeInHotMemory(
+        userId,
+        sessionId,
+        {
+          memory_type: memoryType,
+          memory_data: memoryData,
+          context_summary: contextSummary,
+          traditional_memory_id: traditionalMemory?.id
+        },
+        finalImportanceScore
+      );
+
+      // Create knowledge entities for high-importance memories
+      if (finalImportanceScore > 7) {
+        await this.createKnowledgeEntities(userId, memoryType, memoryData, contextSummary);
+      }
+
+      return {
+        traditionalMemory,
+        tmgEntry,
+        importanceScore: finalImportanceScore
+      };
     } catch (error) {
-      console.error('🔐 Enhanced Memory: Unexpected auth error:', error);
-      return null;
+      console.error('Error saving enhanced memory:', error);
+      // Fallback to traditional memory only
+      return {
+        traditionalMemory: await memoryService.saveMemory({
+          user_id: userId,
+          session_id: sessionId,
+          memory_type: memoryType,
+          memory_data: memoryData,
+          context_summary: contextSummary,
+          importance_score: importanceScore || 5
+        }),
+        tmgEntry: null,
+        importanceScore: importanceScore || 5
+      };
     }
   }
 
-  async performProgressiveSearch(query: string, limit = 5): Promise<MemorySearchResult> {
-    const startTime = Date.now();
-    const userId = await this.getAuthenticatedUserId();
+  // Enhanced memory retrieval with TMG context
+  async getEnhancedMemories(
+    userId: string,
+    sessionId: string,
+    limit: number = 10,
+    includeGraphContext: boolean = true
+  ) {
+    try {
+      // Get from TMG hot memory first (fastest)
+      const hotMemories = await tieredMemoryGraph.getFromHotMemory(userId, sessionId, limit);
+      
+      // If we need more context, get from traditional memory
+      const traditionalMemories = await memoryService.getRecentMemories(limit);
+      
+      // Combine and deduplicate
+      const combinedMemories = this.combineMemories(hotMemories, traditionalMemories);
+      
+      // Get graph context if requested
+      let graphContext = null;
+      if (includeGraphContext && combinedMemories.length > 0) {
+        // Find the most important memory to use as starting point
+        const startingMemory = combinedMemories.reduce((prev, current) => 
+          prev.importance_score > current.importance_score ? prev : current
+        );
+        
+        // Try to find a related graph node
+        graphContext = await this.getRelatedGraphContext(userId, startingMemory);
+      }
+
+      return {
+        memories: combinedMemories,
+        graphContext,
+        source: 'enhanced_tmg'
+      };
+    } catch (error) {
+      console.error('Error getting enhanced memories:', error);
+      // Fallback to traditional memory
+      return {
+        memories: await memoryService.getRecentMemories(limit),
+        graphContext: null,
+        source: 'traditional_fallback'
+      };
+    }
+  }
+
+  // Generate contextual welcome message using TMG
+  async generateEnhancedWelcomeMessage(userId: string, userName: string): Promise<string> {
+    try {
+      // Get TMG context first
+      const sessionId = `welcome_${Date.now()}`;
+      const tmgContext = await tieredMemoryGraph.getFromHotMemory(userId, sessionId, 5);
+      
+      // If TMG has context, use it
+      if (tmgContext.length > 0) {
+        return this.generateTMGWelcomeMessage(userName, tmgContext);
+      }
+      
+      // Fallback to traditional memory service
+      return await memoryService.generateWelcomeMessage(userName);
+    } catch (error) {
+      console.error('Error generating enhanced welcome message:', error);
+      return `Welcome back, ${userName}! What would you like to explore today?`;
+    }
+  }
+
+  // Create knowledge entities from memory data
+  private async createKnowledgeEntities(
+    userId: string,
+    memoryType: string,
+    memoryData: any,
+    contextSummary?: string
+  ) {
+    try {
+      // Extract entities based on memory type
+      const entities = this.extractEntities(memoryType, memoryData, contextSummary);
+      
+      for (const entity of entities) {
+        const nodeId = await tieredMemoryGraph.createGraphNode(
+          userId,
+          entity.type,
+          entity.label,
+          entity.properties,
+          entity.importance
+        );
+
+        // Link entities if there are relationships
+        if (entity.relatedTo && nodeId) {
+          for (const relatedEntityLabel of entity.relatedTo) {
+            // Find or create related entity
+            const relatedNodeId = await this.findOrCreateEntity(
+              userId,
+              'topic',
+              relatedEntityLabel
+            );
+            
+            if (relatedNodeId) {
+              await tieredMemoryGraph.createGraphEdge(
+                userId,
+                nodeId,
+                relatedNodeId,
+                'relates_to'
+              );
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error creating knowledge entities:', error);
+    }
+  }
+
+  // Analyze content for importance scoring
+  private analyzeContent(memoryData: any, contextSummary?: string) {
+    const content = contextSummary || JSON.stringify(memoryData);
     
-    if (!userId) {
-      return {
-        memories: [],
-        searchStrategy: 'exact',
-        matchCount: 0,
-        executionTime: Date.now() - startTime
-      };
-    }
-
-    console.log('🔍 Enhanced Memory: Starting progressive search for:', query);
-
-    // Strategy 1: Exact context summary match
-    let memories = await this.searchByContextSummary(userId, query, limit);
-    if (memories.length > 0) {
-      console.log(`✅ Enhanced Memory: Found ${memories.length} memories via exact match`);
-      return {
-        memories,
-        searchStrategy: 'exact',
-        matchCount: memories.length,
-        executionTime: Date.now() - startTime
-      };
-    }
-
-    // Strategy 2: Fuzzy content search
-    memories = await this.searchByContent(userId, query, limit);
-    if (memories.length > 0) {
-      console.log(`✅ Enhanced Memory: Found ${memories.length} memories via fuzzy search`);
-      return {
-        memories,
-        searchStrategy: 'fuzzy',
-        matchCount: memories.length,
-        executionTime: Date.now() - startTime
-      };
-    }
-
-    // Strategy 3: Context-based search
-    memories = await this.searchByContext(userId, query, limit);
-    if (memories.length > 0) {
-      console.log(`✅ Enhanced Memory: Found ${memories.length} memories via context search`);
-      return {
-        memories,
-        searchStrategy: 'context',
-        matchCount: memories.length,
-        executionTime: Date.now() - startTime
-      };
-    }
-
-    console.log('⚠️ Enhanced Memory: No memories found with any strategy');
+    // Simple heuristics - in production, use ML models
+    const semanticNovelty = Math.min(content.length / 50, 5); // Length-based
+    const emotionIntensity = this.detectEmotionIntensity(content);
+    const userFeedback = memoryData.user_feedback || memoryData.rating || 1;
+    const recurrenceCount = 1; // Would track actual recurrence in production
+    
     return {
-      memories: [],
-      searchStrategy: 'context',
-      matchCount: 0,
-      executionTime: Date.now() - startTime
+      semanticNovelty,
+      emotionIntensity,
+      userFeedback,
+      recurrenceCount
     };
   }
 
-  private async searchByContextSummary(userId: string, query: string, limit: number): Promise<SessionMemory[]> {
-    try {
-      const { data, error } = await supabase
-        .from('user_session_memory')
-        .select('*')
-        .eq('user_id', userId)
-        .ilike('context_summary', `%${query}%`)
-        .order('importance_score', { ascending: false })
-        .order('last_referenced', { ascending: false })
-        .limit(limit);
-
-      if (error) throw error;
-      return data as SessionMemory[] || [];
-    } catch (error) {
-      console.error('❌ Enhanced Memory: Context summary search error:', error);
-      return [];
+  private detectEmotionIntensity(content: string): number {
+    // Simple emotion detection based on keywords
+    const highEmotionWords = ['love', 'hate', 'amazing', 'terrible', 'excited', 'frustrated'];
+    const mediumEmotionWords = ['like', 'dislike', 'good', 'bad', 'happy', 'sad'];
+    
+    const lowerContent = content.toLowerCase();
+    
+    if (highEmotionWords.some(word => lowerContent.includes(word))) {
+      return 4;
+    } else if (mediumEmotionWords.some(word => lowerContent.includes(word))) {
+      return 2;
     }
+    
+    return 1;
   }
 
-  private async searchByContent(userId: string, query: string, limit: number): Promise<SessionMemory[]> {
-    try {
-      const { data, error } = await supabase
-        .from('user_session_memory')
-        .select('*')
-        .eq('user_id', userId)
-        .or(`memory_data->>content.ilike.%${query}%,memory_data->>test_content.ilike.%${query}%`)
-        .order('importance_score', { ascending: false })
-        .order('last_referenced', { ascending: false })
-        .limit(limit);
-
-      if (error) throw error;
-      return data as SessionMemory[] || [];
-    } catch (error) {
-      console.error('❌ Enhanced Memory: Content search error:', error);
-      return [];
-    }
-  }
-
-  private async searchByContext(userId: string, query: string, limit: number): Promise<SessionMemory[]> {
-    try {
-      const { data, error } = await supabase
-        .from('user_session_memory')
-        .select('*')
-        .eq('user_id', userId)
-        .order('importance_score', { ascending: false })
-        .order('created_at', { ascending: false })
-        .limit(limit * 2);
-
-      if (error) throw error;
-      
-      // Filter by relevance to query
-      const filtered = (data as SessionMemory[] || []).filter(memory => {
-        const contextSummary = memory.context_summary?.toLowerCase() || '';
-        const memoryData = JSON.stringify(memory.memory_data).toLowerCase();
-        const queryLower = query.toLowerCase();
+  private extractEntities(memoryType: string, memoryData: any, contextSummary?: string) {
+    const entities = [];
+    
+    // Extract based on memory type
+    switch (memoryType) {
+      case 'interaction':
+        if (memoryData.topic) {
+          entities.push({
+            type: 'topic' as const,
+            label: memoryData.topic,
+            properties: { source: 'interaction', data: memoryData },
+            importance: 6,
+            relatedTo: memoryData.related_topics || []
+          });
+        }
+        break;
         
-        return contextSummary.includes(queryLower) || memoryData.includes(queryLower);
-      });
-
-      return filtered.slice(0, limit);
-    } catch (error) {
-      console.error('❌ Enhanced Memory: Context search error:', error);
-      return [];
+      case 'micro_action':
+        entities.push({
+          type: 'entity' as const,
+          label: memoryData.action_title || 'Action',
+          properties: { 
+            type: 'micro_action',
+            status: memoryData.status,
+            description: memoryData.action_description
+          },
+          importance: 7,
+          relatedTo: []
+        });
+        break;
+        
+      case 'belief_shift':
+        entities.push({
+          type: 'preference' as const,
+          label: contextSummary || 'Belief Change',
+          properties: { 
+            type: 'belief',
+            previous: memoryData.previous_belief,
+            current: memoryData.current_belief
+          },
+          importance: 8,
+          relatedTo: memoryData.related_beliefs || []
+        });
+        break;
+        
+      default:
+        if (contextSummary) {
+          entities.push({
+            type: 'summary' as const,
+            label: contextSummary,
+            properties: { memory_type: memoryType, data: memoryData },
+            importance: 5,
+            relatedTo: []
+          });
+        }
     }
+    
+    return entities;
   }
 
-  async getMemoriesBySession(sessionId: string): Promise<SessionMemory[]> {
-    const userId = await this.getAuthenticatedUserId();
-    if (!userId) return [];
-
-    try {
-      console.log(`🔍 Enhanced Memory: Fetching memories for session: ${sessionId}`);
-      
-      const { data, error } = await supabase
-        .from('user_session_memory')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('session_id', sessionId)
-        .order('created_at', { ascending: true });
-
-      if (error) throw error;
-      
-      console.log(`✅ Enhanced Memory: Found ${data?.length || 0} memories for session`);
-      return data as SessionMemory[] || [];
-    } catch (error) {
-      console.error('❌ Enhanced Memory: Session search error:', error);
-      return [];
-    }
+  private async findOrCreateEntity(
+    userId: string,
+    nodeType: 'entity' | 'topic' | 'summary' | 'conversation' | 'preference',
+    label: string
+  ): Promise<string | null> {
+    // In production, would search existing nodes first
+    // For now, just create new ones
+    return await tieredMemoryGraph.createGraphNode(
+      userId,
+      nodeType,
+      label,
+      {},
+      5
+    );
   }
 
-  async generateConsistencyReport(): Promise<MemoryConsistencyReport> {
-    const startTime = Date.now();
-    const userId = await this.getAuthenticatedUserId();
+  private combineMemories(hotMemories: any[], traditionalMemories: any[]) {
+    // Combine and deduplicate memories
+    const combined = [...hotMemories];
     
-    if (!userId) {
-      return {
-        userId: 'not_authenticated',
-        totalMemories: 0,
-        sessionMemories: 0,
-        recentMemories: 0,
-        searchCapability: false,
-        retrievalLatency: Date.now() - startTime,
-        lastMemoryDate: null,
-        consistencyScore: 0
-      };
-    }
-
-    try {
-      // Get total memories
-      const { data: totalData, error: totalError } = await supabase
-        .from('user_session_memory')
-        .select('id, created_at')
-        .eq('user_id', userId);
-
-      if (totalError) throw totalError;
-
-      const totalMemories = totalData?.length || 0;
+    for (const traditional of traditionalMemories) {
+      // Check if already included via TMG
+      const exists = hotMemories.some(hot => 
+        hot.raw_content?.traditional_memory_id === traditional.id
+      );
       
-      // Get recent memories (last 7 days)
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      
-      const { data: recentData, error: recentError } = await supabase
-        .from('user_session_memory')
-        .select('id')
-        .eq('user_id', userId)
-        .gte('created_at', sevenDaysAgo.toISOString());
-
-      if (recentError) throw recentError;
-
-      const recentMemories = recentData?.length || 0;
-
-      // Test search capability
-      const searchTest = await this.performProgressiveSearch('test', 1);
-      const searchCapability = searchTest.memories.length > 0 || totalMemories === 0;
-
-      // Get unique sessions
-      const { data: sessionData, error: sessionError } = await supabase
-        .from('user_session_memory')
-        .select('session_id')
-        .eq('user_id', userId);
-
-      if (sessionError) throw sessionError;
-
-      const uniqueSessions = new Set(sessionData?.map(s => s.session_id)).size;
-
-      // Calculate consistency score
-      const consistencyScore = this.calculateConsistencyScore({
-        totalMemories,
-        recentMemories,
-        searchCapability,
-        uniqueSessions,
-        retrievalLatency: Date.now() - startTime
-      });
-
-      const lastMemoryDate = totalData && totalData.length > 0 
-        ? totalData.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0].created_at
-        : null;
-
-      return {
-        userId: userId.substring(0, 8),
-        totalMemories,
-        sessionMemories: uniqueSessions,
-        recentMemories,
-        searchCapability,
-        retrievalLatency: Date.now() - startTime,
-        lastMemoryDate,
-        consistencyScore
-      };
-    } catch (error) {
-      console.error('❌ Enhanced Memory: Consistency report error:', error);
-      return {
-        userId: userId.substring(0, 8),
-        totalMemories: 0,
-        sessionMemories: 0,
-        recentMemories: 0,
-        searchCapability: false,
-        retrievalLatency: Date.now() - startTime,
-        lastMemoryDate: null,
-        consistencyScore: 0
-      };
-    }
-  }
-
-  private calculateConsistencyScore(metrics: {
-    totalMemories: number;
-    recentMemories: number;
-    searchCapability: boolean;
-    uniqueSessions: number;
-    retrievalLatency: number;
-  }): number {
-    let score = 0;
-    
-    // Memory volume score (0-30)
-    if (metrics.totalMemories > 10) score += 30;
-    else if (metrics.totalMemories > 5) score += 20;
-    else if (metrics.totalMemories > 0) score += 10;
-    
-    // Recent activity score (0-25)
-    if (metrics.recentMemories > 5) score += 25;
-    else if (metrics.recentMemories > 2) score += 15;
-    else if (metrics.recentMemories > 0) score += 10;
-    
-    // Search capability score (0-25)
-    if (metrics.searchCapability) score += 25;
-    
-    // Session diversity score (0-10)
-    if (metrics.uniqueSessions > 3) score += 10;
-    else if (metrics.uniqueSessions > 1) score += 5;
-    
-    // Performance score (0-10)
-    if (metrics.retrievalLatency < 500) score += 10;
-    else if (metrics.retrievalLatency < 1000) score += 5;
-    
-    return Math.min(100, score);
-  }
-
-  async testMemoryFlow(): Promise<{
-    creationTest: boolean;
-    retrievalTest: boolean;
-    searchTest: boolean;
-    sessionTest: boolean;
-    error?: string;
-  }> {
-    const testSessionId = `test-${Date.now()}`;
-    const testContent = `Memory flow test - ${new Date().toISOString()}`;
-    
-    try {
-      console.log('🧪 Enhanced Memory: Starting memory flow test');
-      
-      // Test 1: Memory creation
-      const createdMemory = await memoryService.saveMemory({
-        user_id: '', // Will be set by memoryService
-        session_id: testSessionId,
-        memory_type: 'interaction',
-        memory_data: {
-          test_type: 'memory_flow_test',
-          test_content: testContent,
-          timestamp: new Date().toISOString()
-        },
-        context_summary: 'Memory flow test',
-        importance_score: 8
-      });
-      
-      const creationTest = !!createdMemory;
-      console.log('🧪 Creation test:', creationTest ? 'PASS' : 'FAIL');
-      
-      if (!creationTest) {
-        return { creationTest: false, retrievalTest: false, searchTest: false, sessionTest: false };
+      if (!exists) {
+        // Convert traditional memory to TMG format
+        combined.push({
+          id: traditional.id,
+          importance_score: traditional.importance_score,
+          raw_content: {
+            memory_type: traditional.memory_type,
+            memory_data: traditional.memory_data,
+            context_summary: traditional.context_summary
+          },
+          created_at: traditional.created_at,
+          source: 'traditional'
+        });
       }
-      
-      // Wait for database consistency
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Test 2: Direct retrieval
-      const recentMemories = await memoryService.getRecentMemories(10);
-      const retrievalTest = recentMemories.some(m => m.session_id === testSessionId);
-      console.log('🧪 Retrieval test:', retrievalTest ? 'PASS' : 'FAIL');
-      
-      // Test 3: Search functionality
-      const searchResult = await this.performProgressiveSearch('memory_flow_test', 5);
-      const searchTest = searchResult.memories.some(m => m.session_id === testSessionId);
-      console.log('🧪 Search test:', searchTest ? 'PASS' : 'FAIL');
-      
-      // Test 4: Session-specific retrieval
-      const sessionMemories = await this.getMemoriesBySession(testSessionId);
-      const sessionTest = sessionMemories.length > 0;
-      console.log('🧪 Session test:', sessionTest ? 'PASS' : 'FAIL');
-      
-      return {
-        creationTest,
-        retrievalTest,
-        searchTest,
-        sessionTest
-      };
-    } catch (error) {
-      console.error('❌ Enhanced Memory: Memory flow test error:', error);
-      return {
-        creationTest: false,
-        retrievalTest: false,
-        searchTest: false,
-        sessionTest: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
-      };
     }
+    
+    // Sort by importance then recency
+    return combined.sort((a, b) => {
+      if (a.importance_score !== b.importance_score) {
+        return b.importance_score - a.importance_score;
+      }
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+  }
+
+  private async getRelatedGraphContext(userId: string, memory: any) {
+    // Try to find graph context related to this memory
+    // This is a simplified version - in production would use more sophisticated matching
+    return null;
+  }
+
+  private generateTMGWelcomeMessage(userName: string, tmgContext: any[]): string {
+    let message = `Welcome back, ${userName}! `;
+    
+    const recentContext = tmgContext[0];
+    if (recentContext?.raw_content?.context_summary) {
+      message += `I remember we were discussing ${recentContext.raw_content.context_summary.toLowerCase()}. `;
+    }
+    
+    if (tmgContext.length > 1) {
+      message += `I have ${tmgContext.length} recent conversation turns in context. `;
+    }
+    
+    message += `What would you like to explore today?`;
+    
+    return message;
   }
 }
 
