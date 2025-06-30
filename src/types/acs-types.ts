@@ -45,6 +45,12 @@ export interface PromptStrategyConfig {
   maxTokens?: number;
   personalityScaling?: boolean;   // personality scaling enabled flag
   personalityVector?: any;        // VFP-Graph personality vector data
+  multiModalContext?: {           // Multi-modal context integration
+    emotionalState: string;
+    intensity: number;
+    confidence: number;
+    processingType: 'analytical' | 'empathetic';
+  };
 }
 
 export interface ACSMetrics {
