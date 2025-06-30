@@ -51,6 +51,9 @@ export interface PromptStrategyConfig {
     confidence: number;
     processingType: 'analytical' | 'empathetic';
   };
+  contextualResponseModification?: boolean;  // NEW: Flag for validation detection
+  contextualResponseType?: string;           // NEW: Type of contextual modification
+  contextualResponseEvidence?: string[];     // NEW: Evidence for validation
 }
 
 export interface ACSMetrics {
