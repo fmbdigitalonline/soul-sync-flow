@@ -100,6 +100,11 @@ class ACSRealAIIntegrationService implements ACSRealAIIntegration {
 
       if (error) throw error;
 
+      // CRITICAL FIX: Add null check for data
+      if (!data || !data.response) {
+        throw new Error("No response received from AI coach service");
+      }
+
       const response = data.response;
       const responseTime = performance.now() - startTime;
       
