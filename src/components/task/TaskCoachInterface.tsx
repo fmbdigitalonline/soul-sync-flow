@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+
+import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -96,12 +97,12 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
     return () => {
       dreamActivityLogger.logActivity('task_coach_interface_unmounted', {
         task_id: task.id,
-        session_duration: sessionStats.sessionDuration,
+        session_duration: Date.now() - sessionStats.sessionDuration, // Calculate directly instead of using sessionStats.sessionDuration
         messages_sent: sessionStats.messageCount,
         actions_executed: sessionStats.actionCount
       });
     };
-  }, [task.id, task.title, task.status, task.estimated_duration, sessionStats]);
+  }, [task.id, task.title, task.status, task.estimated_duration]); // Removed sessionStats from dependencies
 
   // Timer effect with logging
   useEffect(() => {
@@ -144,7 +145,7 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
     }
   }, [currentTask, taskProgress]);
 
-  // Set up task completion callback with logging
+  // Set up task completion callback with logging - removed sessionStats from dependencies
   useEffect(() => {
     const unsubscribeComplete = enhancedTaskCoachIntegrationService.onTaskComplete((taskId) => {
       console.log('🎉 Task completed via coach integration:', taskId);
@@ -166,7 +167,7 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
     return () => {
       unsubscribeComplete();
     };
-  }, [onTaskComplete, focusTime, sessionStats]);
+  }, [onTaskComplete, focusTime]); // Removed sessionStats from dependencies
 
   // Convert task-aware messages to coach messages format
   useEffect(() => {
@@ -203,6 +204,8 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
   };
 
   const handleStartSession = useCallback(async () => {
+    console.log('🚀 Starting coaching session for task:', task.title);
+    
     await dreamActivityLogger.logActivity('session_start_clicked', {
       task_id: task.id,
       task_title: task.title,
@@ -236,6 +239,7 @@ Let's get started! What's the first step?`;
       includes_task_description: !!task.description
     });
     
+    console.log('📤 Sending initial coaching message');
     sendMessage(initialMessage);
   }, [task, productivityJourney, sendMessage]);
 
