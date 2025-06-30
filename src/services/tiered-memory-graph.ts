@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface HotMemoryEntry {
@@ -82,39 +81,24 @@ class TieredMemoryGraphService {
       const contentHash = await this.generateContentHash(contentStr);
       const cacheKey = `${sessionId}_${Date.now()}`;
 
-      // Store in user_activities table as fallback since hot_memory_cache doesn't exist in current schema
+      // Store in hot_memory_cache table
       const { data, error } = await supabase
-        .from('user_activities')
+        .from('hot_memory_cache')
         .insert({
           user_id: userId,
-          activity_type: 'hot_memory_cache',
-          activity_data: {
-            session_id: sessionId,
-            cache_key: cacheKey,
-            content_hash: contentHash,
-            raw_content: content,
-            importance_score: importanceScore,
-            expires_at: new Date(Date.now() + this.HOT_MEMORY_TTL * 1000).toISOString()
-          }
+          session_id: sessionId,
+          cache_key: cacheKey,
+          content_hash: contentHash,
+          raw_content: content,
+          importance_score: importanceScore,
+          expires_at: new Date(Date.now() + this.HOT_MEMORY_TTL * 1000).toISOString()
         })
         .select()
         .single();
 
       if (error) {
         console.error('Failed to store in hot memory:', error);
-        // Fallback: simulate successful storage
-        const fakeId = `hot_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        
-        // Record metrics
-        await this.recordMetrics({
-          user_id: userId,
-          memory_tier: 'hot',
-          access_type: 'write',
-          latency_ms: Date.now() - startTime,
-          session_id: sessionId
-        });
-
-        return fakeId;
+        return null;
       }
 
       // Record metrics
@@ -130,9 +114,9 @@ class TieredMemoryGraphService {
       await this.cleanupHotMemory(userId, sessionId);
 
       // Queue for writeback to warm memory
-      await this.queueWriteback(data?.id || `hot_${Date.now()}`, 'persist_to_warm');
+      await this.queueWriteback(data.id, 'persist_to_warm');
 
-      return data?.id || `hot_${Date.now()}`;
+      return data.id;
     } catch (error) {
       console.error('Error storing in hot memory:', error);
       return null;
@@ -147,12 +131,13 @@ class TieredMemoryGraphService {
     try {
       const startTime = Date.now();
 
-      // Get from user_activities table as fallback
+      // Get from hot_memory_cache table
       const { data, error } = await supabase
-        .from('user_activities')
+        .from('hot_memory_cache')
         .select('*')
         .eq('user_id', userId)
-        .eq('activity_type', 'hot_memory_cache')
+        .eq('session_id', sessionId)
+        .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false })
         .limit(limit);
 
@@ -176,20 +161,7 @@ class TieredMemoryGraphService {
         session_id: sessionId
       });
 
-      // Convert user_activities data to HotMemoryEntry format
-      return (data || []).map(item => ({
-        id: item.id,
-        user_id: item.user_id,
-        session_id: (item.activity_data as any)?.session_id || sessionId,
-        cache_key: (item.activity_data as any)?.cache_key || '',
-        content_hash: (item.activity_data as any)?.content_hash || '',
-        raw_content: (item.activity_data as any)?.raw_content || {},
-        importance_score: (item.activity_data as any)?.importance_score || 5,
-        access_count: 1,
-        last_accessed: item.created_at,
-        created_at: item.created_at,
-        expires_at: (item.activity_data as any)?.expires_at || item.created_at
-      }));
+      return data || [];
     } catch (error) {
       console.error('Error getting from hot memory:', error);
       return [];
@@ -205,28 +177,24 @@ class TieredMemoryGraphService {
     importanceScore: number = 5.0
   ): Promise<string | null> {
     try {
-      // Store in user_activities table as fallback since memory_graph_nodes doesn't exist
       const { data, error } = await supabase
-        .from('user_activities')
+        .from('memory_graph_nodes')
         .insert({
           user_id: userId,
-          activity_type: 'graph_node',
-          activity_data: {
-            node_type: nodeType,
-            label: label,
-            properties: properties,
-            importance_score: importanceScore
-          }
+          node_type: nodeType,
+          label: label,
+          properties: properties,
+          importance_score: importanceScore
         })
         .select()
         .single();
 
       if (error) {
         console.error('Failed to create graph node:', error);
-        return `node_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        return null;
       }
 
-      return data?.id || `node_${Date.now()}`;
+      return data?.id || null;
     } catch (error) {
       console.error('Error creating graph node:', error);
       return null;
@@ -242,29 +210,25 @@ class TieredMemoryGraphService {
     weight: number = 1.0
   ): Promise<string | null> {
     try {
-      // Store in user_activities table as fallback
       const { data, error } = await supabase
-        .from('user_activities')
+        .from('memory_graph_edges')
         .insert({
           user_id: userId,
-          activity_type: 'graph_edge',
-          activity_data: {
-            from_node_id: fromNodeId,
-            to_node_id: toNodeId,
-            relationship_type: relationshipType,
-            properties: properties,
-            weight: weight
-          }
+          from_node_id: fromNodeId,
+          to_node_id: toNodeId,
+          relationship_type: relationshipType,
+          properties: properties,
+          weight: weight
         })
         .select()
         .single();
 
       if (error) {
         console.error('Failed to create graph edge:', error);
-        return `edge_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        return null;
       }
 
-      return data?.id || `edge_${Date.now()}`;
+      return data?.id || null;
     } catch (error) {
       console.error('Error creating graph edge:', error);
       return null;
@@ -278,12 +242,31 @@ class TieredMemoryGraphService {
     maxDepth: number = 2
   ): Promise<{ nodes: MemoryGraphNode[], edges: MemoryGraphEdge[] }> {
     try {
-      // Simplified traversal - in production, use proper graph algorithms
-      const nodes: MemoryGraphNode[] = [];
-      const edges: MemoryGraphEdge[] = [];
+      // Get nodes first
+      const { data: nodes, error: nodesError } = await supabase
+        .from('memory_graph_nodes')
+        .select('*')
+        .eq('user_id', userId)
+        .limit(20);
 
-      // For now, return empty graph structure
-      return { nodes, edges };
+      if (nodesError) {
+        console.error('Error getting graph nodes:', nodesError);
+        return { nodes: [], edges: [] };
+      }
+
+      // Get edges
+      const { data: edges, error: edgesError } = await supabase
+        .from('memory_graph_edges')
+        .select('*')
+        .eq('user_id', userId)
+        .limit(50);
+
+      if (edgesError) {
+        console.error('Error getting graph edges:', edgesError);
+        return { nodes: nodes || [], edges: [] };
+      }
+
+      return { nodes: nodes || [], edges: edges || [] };
     } catch (error) {
       console.error('Error traversing graph:', error);
       return { nodes: [], edges: [] };
@@ -302,20 +285,16 @@ class TieredMemoryGraphService {
     try {
       const deltaHash = await this.generateDeltaHash(deltaData, previousHash);
 
-      // Store in user_activities table as fallback
       const { data, error } = await supabase
-        .from('user_activities')
+        .from('memory_deltas')
         .insert({
           user_id: userId,
-          activity_type: 'memory_delta',
-          activity_data: {
-            session_id: sessionId,
-            delta_hash: deltaHash,
-            previous_hash: previousHash,
-            delta_type: deltaType,
-            delta_data: deltaData,
-            importance_score: importanceScore
-          }
+          session_id: sessionId,
+          delta_hash: deltaHash,
+          previous_hash: previousHash,
+          delta_type: deltaType,
+          delta_data: deltaData,
+          importance_score: importanceScore
         })
         .select()
         .single();
@@ -364,7 +343,6 @@ class TieredMemoryGraphService {
     recurrenceCount: number
   ): Promise<number> {
     try {
-      // Implement importance scoring algorithm directly since RPC doesn't exist
       // Weighted formula: semantic novelty (30%) + emotion intensity (40%) + user feedback (20%) + recurrence (10%)
       const weights = {
         semanticNovelty: 0.3,
@@ -396,19 +374,14 @@ class TieredMemoryGraphService {
   // METRICS AND MONITORING
   async recordMetrics(metrics: MemoryMetrics): Promise<void> {
     try {
-      // Store in user_activities table as fallback
       await supabase
-        .from('user_activities')
+        .from('memory_metrics')
         .insert({
           user_id: metrics.user_id,
-          activity_type: 'memory_access',
-          activity_data: {
-            memory_tier: metrics.memory_tier,
-            access_type: metrics.access_type,
-            latency_ms: metrics.latency_ms,
-            session_id: metrics.session_id,
-            timestamp: new Date().toISOString()
-          }
+          memory_tier: metrics.memory_tier,
+          access_type: metrics.access_type,
+          latency_ms: metrics.latency_ms,
+          session_id: metrics.session_id
         });
     } catch (error) {
       console.error('Error recording metrics:', error);
@@ -428,28 +401,26 @@ class TieredMemoryGraphService {
       const since = new Date(Date.now() - timeRange).toISOString();
 
       const { data, error } = await supabase
-        .from('user_activities')
-        .select('activity_data')
+        .from('memory_metrics')
+        .select('*')
         .eq('user_id', userId)
-        .eq('activity_type', 'memory_access')
         .gte('created_at', since);
 
       if (error || !data) {
         return { hotHits: 0, warmHits: 0, coldHits: 0, avgLatency: {} };
       }
 
-      const stats = data.reduce((acc, activity) => {
-        const activityData = activity.activity_data as any;
-        const tier = activityData.memory_tier;
-        const type = activityData.access_type;
+      const stats = data.reduce((acc, metric) => {
+        const tier = metric.memory_tier;
+        const type = metric.access_type;
         
         if (type === 'hit') {
           acc[`${tier}Hits`] = (acc[`${tier}Hits`] || 0) + 1;
         }
         
-        if (activityData.latency_ms) {
+        if (metric.latency_ms) {
           acc.latencies[tier] = acc.latencies[tier] || [];
-          acc.latencies[tier].push(activityData.latency_ms);
+          acc.latencies[tier].push(metric.latency_ms);
         }
         
         return acc;
@@ -475,17 +446,11 @@ class TieredMemoryGraphService {
   // WRITEBACK PROCESSING
   private async queueWriteback(cacheId: string, operationType: string): Promise<void> {
     try {
-      // Store in user_activities table as fallback
       await supabase
-        .from('user_activities')
+        .from('memory_writeback_queue')
         .insert({
-          user_id: 'system',
-          activity_type: 'memory_writeback',
-          activity_data: {
-            cache_id: cacheId,
-            operation_type: operationType,
-            queued_at: new Date().toISOString()
-          }
+          cache_id: cacheId,
+          operation_type: operationType
         });
     } catch (error) {
       console.error('Error queueing writeback:', error);
@@ -500,23 +465,76 @@ class TieredMemoryGraphService {
 
   private async processWritebackQueue(): Promise<void> {
     try {
-      // Simplified processing - in production, would use proper queue
-      console.log('Processing writeback queue...');
+      const { data: items, error } = await supabase
+        .from('memory_writeback_queue')
+        .select('*')
+        .eq('status', 'pending')
+        .limit(10);
+
+      if (error || !items || items.length === 0) {
+        return;
+      }
+
+      for (const item of items) {
+        try {
+          await this.executeWriteback(item);
+          
+          // Mark as completed
+          await supabase
+            .from('memory_writeback_queue')
+            .update({ 
+              status: 'completed', 
+              processed_at: new Date().toISOString() 
+            })
+            .eq('id', item.id);
+        } catch (error) {
+          // Mark as failed
+          await supabase
+            .from('memory_writeback_queue')
+            .update({ 
+              status: 'failed', 
+              error_message: error.message,
+              processed_at: new Date().toISOString() 
+            })
+            .eq('id', item.id);
+        }
+      }
     } catch (error) {
       console.error('Error processing writeback queue:', error);
     }
   }
 
   private async executeWriteback(item: any): Promise<void> {
-    // Simplified writeback execution
+    // Implementation would depend on operation type
     console.log('Executing writeback for item:', item);
   }
 
   // UTILITY METHODS
   private async cleanupHotMemory(userId: string, sessionId: string): Promise<void> {
     try {
-      // Simplified cleanup - in production, would use proper cleanup
-      console.log('Cleaning up hot memory for user:', userId, 'session:', sessionId);
+      // Remove expired entries
+      await supabase
+        .from('hot_memory_cache')
+        .delete()
+        .eq('user_id', userId)
+        .lt('expires_at', new Date().toISOString());
+
+      // Keep only the most recent entries up to the limit
+      const { data: allEntries } = await supabase
+        .from('hot_memory_cache')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('session_id', sessionId)
+        .order('created_at', { ascending: false });
+
+      if (allEntries && allEntries.length > this.HOT_MEMORY_LIMIT) {
+        const idsToDelete = allEntries.slice(this.HOT_MEMORY_LIMIT).map(entry => entry.id);
+        
+        await supabase
+          .from('hot_memory_cache')
+          .delete()
+          .in('id', idsToDelete);
+      }
     } catch (error) {
       console.error('Error cleaning up hot memory:', error);
     }
@@ -536,8 +554,23 @@ class TieredMemoryGraphService {
   }
 
   private async getDeltaChain(userId: string, sessionId: string, targetHash: string): Promise<MemoryDelta[]> {
-    // Simplified delta chain retrieval
-    return [];
+    try {
+      const { data, error } = await supabase
+        .from('memory_deltas')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('session_id', sessionId)
+        .order('created_at', { ascending: true });
+
+      if (error || !data) {
+        return [];
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error getting delta chain:', error);
+      return [];
+    }
   }
 
   private applyDelta(state: any, delta: any): any {

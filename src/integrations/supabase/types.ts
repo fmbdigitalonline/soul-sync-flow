@@ -779,6 +779,234 @@ export type Database = {
           },
         ]
       }
+      hot_memory_cache: {
+        Row: {
+          access_count: number
+          cache_key: string
+          content_hash: string
+          created_at: string
+          expires_at: string
+          id: string
+          importance_score: number
+          last_accessed: string
+          raw_content: Json
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          access_count?: number
+          cache_key: string
+          content_hash: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          importance_score?: number
+          last_accessed?: string
+          raw_content?: Json
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          access_count?: number
+          cache_key?: string
+          content_hash?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          importance_score?: number
+          last_accessed?: string
+          raw_content?: Json
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      memory_deltas: {
+        Row: {
+          created_at: string
+          delta_data: Json
+          delta_hash: string
+          delta_type: string
+          id: string
+          importance_score: number
+          previous_hash: string | null
+          schema_version: number
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          delta_data?: Json
+          delta_hash: string
+          delta_type: string
+          id?: string
+          importance_score?: number
+          previous_hash?: string | null
+          schema_version?: number
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          delta_data?: Json
+          delta_hash?: string
+          delta_type?: string
+          id?: string
+          importance_score?: number
+          previous_hash?: string | null
+          schema_version?: number
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      memory_graph_edges: {
+        Row: {
+          created_at: string
+          from_node_id: string
+          id: string
+          properties: Json
+          relationship_type: string
+          schema_version: number
+          to_node_id: string
+          user_id: string
+          weight: number
+        }
+        Insert: {
+          created_at?: string
+          from_node_id: string
+          id?: string
+          properties?: Json
+          relationship_type: string
+          schema_version?: number
+          to_node_id: string
+          user_id: string
+          weight?: number
+        }
+        Update: {
+          created_at?: string
+          from_node_id?: string
+          id?: string
+          properties?: Json
+          relationship_type?: string
+          schema_version?: number
+          to_node_id?: string
+          user_id?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "memory_graph_edges_from_node_id_fkey"
+            columns: ["from_node_id"]
+            isOneToOne: false
+            referencedRelation: "memory_graph_nodes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "memory_graph_edges_to_node_id_fkey"
+            columns: ["to_node_id"]
+            isOneToOne: false
+            referencedRelation: "memory_graph_nodes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      memory_graph_nodes: {
+        Row: {
+          created_at: string
+          id: string
+          importance_score: number
+          label: string
+          node_type: string
+          properties: Json
+          schema_version: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          importance_score?: number
+          label: string
+          node_type: string
+          properties?: Json
+          schema_version?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          importance_score?: number
+          label?: string
+          node_type?: string
+          properties?: Json
+          schema_version?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      memory_metrics: {
+        Row: {
+          access_type: string
+          created_at: string
+          id: string
+          latency_ms: number | null
+          memory_tier: string
+          session_id: string | null
+          user_id: string
+        }
+        Insert: {
+          access_type: string
+          created_at?: string
+          id?: string
+          latency_ms?: number | null
+          memory_tier: string
+          session_id?: string | null
+          user_id: string
+        }
+        Update: {
+          access_type?: string
+          created_at?: string
+          id?: string
+          latency_ms?: number | null
+          memory_tier?: string
+          session_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      memory_writeback_queue: {
+        Row: {
+          cache_id: string
+          error_message: string | null
+          id: string
+          operation_type: string
+          processed_at: string | null
+          queued_at: string
+          status: string
+        }
+        Insert: {
+          cache_id: string
+          error_message?: string | null
+          id?: string
+          operation_type: string
+          processed_at?: string | null
+          queued_at?: string
+          status?: string
+        }
+        Update: {
+          cache_id?: string
+          error_message?: string | null
+          id?: string
+          operation_type?: string
+          processed_at?: string | null
+          queued_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
       micro_action_reminders: {
         Row: {
           action_description: string | null
@@ -1412,6 +1640,10 @@ export type Database = {
       check_admin_status: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      cleanup_expired_hot_memory: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       cleanup_old_memories: {
         Args: Record<PropertyKey, never>
