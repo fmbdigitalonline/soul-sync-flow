@@ -71,6 +71,13 @@ const ACSPatentTestSuite: React.FC = () => {
     ));
   };
 
+  // Helper function to safely access evidence properties
+  const getEvidenceProperty = (evidence: any, property: string, defaultValue: any = null) => {
+    if (!evidence || typeof evidence !== 'object') return defaultValue;
+    if (evidence.error) return defaultValue; // Error evidence type
+    return evidence[property] ?? defaultValue;
+  };
+
   const runQuickTest = async (claimNumber: number) => {
     const testMessage = quickTestMessages[claimNumber];
     if (!testMessage) return;
@@ -79,13 +86,15 @@ const ACSPatentTestSuite: React.FC = () => {
     const startTime = Date.now();
 
     try {
-      // Configure ACS for specific claim testing
+      // Configure ACS for specific claim testing - FIX: Add missing properties
       const acsConfig = {
         enableRL: claimNumber === 6,
         personalityScaling: claimNumber === 3,
         frustrationThreshold: 0.3,
         sentimentSlopeNeg: -0.2,
-        velocityFloor: 0.1
+        velocityFloor: 0.1,
+        maxSilentMs: 180000, // FIX: Add missing property
+        clarificationThreshold: 0.4 // FIX: Add missing property
       };
 
       // Determine initial state based on claim
@@ -101,7 +110,7 @@ const ACSPatentTestSuite: React.FC = () => {
         initialState as any
       );
 
-      // Extract claim-specific metrics
+      // Extract claim-specific metrics with safe property access
       let claimMetrics = {};
       let passed = false;
 
@@ -110,7 +119,7 @@ const ACSPatentTestSuite: React.FC = () => {
           claimMetrics = {
             metricsCollected: result.metrics ? 1.000 : 0.000,
             conversationVelocity: result.metrics?.conversationVelocity || 0,
-            responseTime: result.evidence?.responseTime || 0
+            responseTime: getEvidenceProperty(result.evidence, 'responseTime', 0)
           };
           passed = !!result.metrics && result.metrics.conversationVelocity !== undefined;
           break;
@@ -124,31 +133,34 @@ const ACSPatentTestSuite: React.FC = () => {
           break;
 
         case 3: // Personality Scaling Integration
+          const actualModificationsApplied = getEvidenceProperty(result.evidence, 'actualModificationsApplied', {});
           claimMetrics = {
-            personalityScaling: result.evidence?.actualModificationsApplied?.personalityScalingApplied ? 1.000 : 0.000,
+            personalityScaling: actualModificationsApplied.personalityScalingApplied ? 1.000 : 0.000,
             personalityVector: result.promptModifications?.personalityVector ? 1.000 : 0.000
           };
-          passed = result.evidence?.actualModificationsApplied?.personalityScalingApplied === true;
+          passed = actualModificationsApplied.personalityScalingApplied === true;
           break;
 
         case 4: // Frustration State Intervention
+          const frustrationModifications = getEvidenceProperty(result.evidence, 'actualModificationsApplied', {});
           claimMetrics = {
-            apologyInsertion: result.evidence?.actualModificationsApplied?.apologyPrefixApplied ? 1.000 : 0.000,
-            temperatureReduction: result.evidence?.actualModificationsApplied?.temperatureReduction > 0 ? 1.000 : 0.000,
+            apologyInsertion: frustrationModifications.apologyPrefixApplied ? 1.000 : 0.000,
+            temperatureReduction: frustrationModifications.temperatureReduction > 0 ? 1.000 : 0.000,
             frustrationScore: result.metrics?.frustrationScore || 0,
             interventionTriggered: (result.newState === 'FRUSTRATION_DETECTED' || result.metrics?.frustrationScore > 0.3) ? 1.000 : 0.000
           };
-          passed = result.evidence?.actualModificationsApplied?.apologyPrefixApplied && 
-                   result.evidence?.actualModificationsApplied?.temperatureReduction > 0;
+          passed = frustrationModifications.apologyPrefixApplied && 
+                   frustrationModifications.temperatureReduction > 0;
           break;
 
         case 5: // Dialogue State Management
+          const stateTransition = getEvidenceProperty(result.evidence, 'stateTransition');
           claimMetrics = {
             stateDetection: result.newState !== 'NORMAL' ? 1.000 : 0.000,
-            stateTransition: result.evidence?.stateTransition ? 1.000 : 0.000,
+            stateTransition: stateTransition ? 1.000 : 0.000,
             contextualResponse: result.promptModifications?.systemPromptModifier ? 1.000 : 0.000
           };
-          passed = result.newState !== undefined && result.evidence?.stateTransition;
+          passed = result.newState !== undefined && stateTransition;
           break;
 
         case 6: // RL Optimization with L2-Norm
@@ -163,28 +175,29 @@ const ACSPatentTestSuite: React.FC = () => {
         case 7: // Multi-Modal Input Processing
           claimMetrics = {
             inputProcessing: 1.000,
-            modalityDetection: result.evidence?.emotionalState ? 1.000 : 0.000,
+            modalityDetection: getEvidenceProperty(result.evidence, 'emotionalState') ? 1.000 : 0.000,
             contextIntegration: result.promptModifications ? 1.000 : 0.000
           };
-          passed = !!result.evidence?.emotionalState;
+          passed = !!getEvidenceProperty(result.evidence, 'emotionalState');
           break;
 
         case 8: // Context Window Management
           claimMetrics = {
-            contextWindowUsage: result.evidence?.modifiedPrompt ? 1.000 : 0.000,
-            memoryEfficiency: result.evidence?.promptLengthChange !== undefined ? 1.000 : 0.000,
+            contextWindowUsage: getEvidenceProperty(result.evidence, 'modifiedPrompt') ? 1.000 : 0.000,
+            memoryEfficiency: getEvidenceProperty(result.evidence, 'promptLengthChange') !== undefined ? 1.000 : 0.000,
             dynamicAdjustment: result.promptModifications?.maxTokens ? 1.000 : 0.000
           };
-          passed = !!result.evidence?.modifiedPrompt;
+          passed = !!getEvidenceProperty(result.evidence, 'modifiedPrompt');
           break;
 
         case 9: // Cross-Session Learning
+          const crossSessionData = getEvidenceProperty(result.evidence, 'crossSessionData');
           claimMetrics = {
-            crossSessionStorage: result.evidence?.crossSessionData ? 1.000 : 0.000,
-            patternRecognition: Object.keys(result.evidence?.crossSessionData || {}).length > 0 ? 1.000 : 0.000,
+            crossSessionStorage: crossSessionData ? 1.000 : 0.000,
+            patternRecognition: Object.keys(crossSessionData || {}).length > 0 ? 1.000 : 0.000,
             learningPersistence: 1.000 // Assume persistence works if storage works
           };
-          passed = !!result.evidence?.crossSessionData;
+          passed = !!crossSessionData;
           break;
       }
 
