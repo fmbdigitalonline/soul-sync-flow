@@ -292,15 +292,24 @@ const ACSPatentTestSuite: React.FC = () => {
     const actualMods = evidence?.actualModificationsApplied;
     const contextWindowEvidence = evidence?.contextWindowManagementEvidence;
 
-    // Primary check: Dynamic token adjustment applied
+    // Primary check: Dynamic token adjustment applied - checking CORRECT locations
     if (evidence?.dynamicTokenAdjustment === true) {
       score += 0.4;
+      console.log("✅ Found evidence.dynamicTokenAdjustment === true");
     } else if (contextWindowEvidence?.dynamicAdjustmentApplied === true) {
       score += 0.4;
+      console.log("✅ Found contextWindowEvidence.dynamicAdjustmentApplied === true");
     } else if (actualMods?.dynamicTokensUsed && actualMods.dynamicTokensUsed !== 150) {
       score += 0.4;
+      console.log(`✅ Found actualMods.dynamicTokensUsed: ${actualMods.dynamicTokensUsed} (not default 150)`);
     } else {
-      reasons.push("No dynamic token adjustment evidence found");
+      reasons.push("No dynamic token adjustment evidence found in evidence object");
+      console.log("❌ No dynamic token adjustment evidence found");
+      console.log("Evidence structure:", { 
+        dynamicTokenAdjustment: evidence?.dynamicTokenAdjustment,
+        contextWindowEvidence: contextWindowEvidence?.dynamicAdjustmentApplied,
+        dynamicTokensUsed: actualMods?.dynamicTokensUsed 
+      });
     }
 
     // Check for context window management evidence structure
@@ -326,6 +335,7 @@ const ACSPatentTestSuite: React.FC = () => {
       reasons.push("No token calculation method evidence");
     }
 
+    console.log(`🔍 Context Window Management validation - Score: ${score}, Reasons:`, reasons);
     return { passed: score >= 0.7, score, reasons };
   };
 
