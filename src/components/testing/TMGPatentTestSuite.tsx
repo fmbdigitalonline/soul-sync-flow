@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -288,7 +289,7 @@ export const TMGPatentTestSuite: React.FC = () => {
       
       // Test graph-database store with summary nodes and relationship edges
       const summaryNodeId = await createKnowledgeEntity(
-        'summary',
+        'topic',
         'Recent Conversation Summary',
         { 
           dialogue_count: recentDialogues.length,
