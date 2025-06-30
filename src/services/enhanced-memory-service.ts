@@ -1,4 +1,3 @@
-
 import { tieredMemoryGraph } from './tiered-memory-graph';
 import { memoryService } from './memory-service';
 
@@ -11,6 +10,8 @@ export interface MemoryConsistencyReport {
   orphanedRelations: number;
   lastUpdated: string;
   recommendations: string[];
+  retrievalLatency?: number;
+  lastMemoryDate?: string;
 }
 
 /**
@@ -203,6 +204,8 @@ class EnhancedMemoryService {
   // Memory consistency report generation
   async generateConsistencyReport(): Promise<MemoryConsistencyReport> {
     try {
+      const startTime = Date.now();
+      
       // Get basic stats from traditional memory
       const recentMemories = await memoryService.getRecentMemories(100);
       
@@ -227,6 +230,9 @@ class EnhancedMemoryService {
         recommendations.push('Memory system is healthy');
       }
 
+      const retrievalLatency = Date.now() - startTime;
+      const lastMemoryDate = recentMemories.length > 0 ? recentMemories[0].created_at : null;
+
       return {
         userId: 'not_authenticated',
         consistencyScore,
@@ -235,7 +241,9 @@ class EnhancedMemoryService {
         duplicateMemories,
         orphanedRelations: 0,
         lastUpdated: new Date().toISOString(),
-        recommendations
+        recommendations,
+        retrievalLatency,
+        lastMemoryDate
       };
     } catch (error) {
       console.error('Error generating consistency report:', error);
@@ -247,7 +255,9 @@ class EnhancedMemoryService {
         duplicateMemories: 0,
         orphanedRelations: 0,
         lastUpdated: new Date().toISOString(),
-        recommendations: ['Error generating report']
+        recommendations: ['Error generating report'],
+        retrievalLatency: 0,
+        lastMemoryDate: null
       };
     }
   }
@@ -273,11 +283,15 @@ class EnhancedMemoryService {
         testSessionId,
         5
       );
+
+      // Test search
+      const searchResult = await this.performProgressiveSearch('test', 5);
       
       return {
         creationTest: !!creationResult.traditionalMemory,
         retrievalTest: retrievalResult.memories.length > 0,
         tmgIntegration: !!creationResult.tmgEntry,
+        searchTest: searchResult.memories.length >= 0, // Added missing searchTest property
         timestamp: new Date().toISOString()
       };
     } catch (error) {
@@ -286,6 +300,7 @@ class EnhancedMemoryService {
         creationTest: false,
         retrievalTest: false,
         tmgIntegration: false,
+        searchTest: false,
         timestamp: new Date().toISOString()
       };
     }

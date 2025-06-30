@@ -82,16 +82,23 @@ class TieredMemoryGraphService {
       const contentHash = await this.generateContentHash(contentStr);
       const cacheKey = `${sessionId}_${Date.now()}`;
 
-      // Use raw SQL query to avoid type issues
-      const { data, error } = await supabase.rpc('custom_insert_hot_memory', {
-        p_user_id: userId,
-        p_session_id: sessionId,
-        p_cache_key: cacheKey,
-        p_content_hash: contentHash,
-        p_raw_content: content,
-        p_importance_score: importanceScore,
-        p_expires_at: new Date(Date.now() + this.HOT_MEMORY_TTL * 1000).toISOString()
-      });
+      // Store in user_activities table as fallback since hot_memory_cache doesn't exist in current schema
+      const { data, error } = await supabase
+        .from('user_activities')
+        .insert({
+          user_id: userId,
+          activity_type: 'hot_memory_cache',
+          activity_data: {
+            session_id: sessionId,
+            cache_key: cacheKey,
+            content_hash: contentHash,
+            raw_content: content,
+            importance_score: importanceScore,
+            expires_at: new Date(Date.now() + this.HOT_MEMORY_TTL * 1000).toISOString()
+          }
+        })
+        .select()
+        .single();
 
       if (error) {
         console.error('Failed to store in hot memory:', error);
@@ -123,9 +130,9 @@ class TieredMemoryGraphService {
       await this.cleanupHotMemory(userId, sessionId);
 
       // Queue for writeback to warm memory
-      await this.queueWriteback(data || `hot_${Date.now()}`, 'persist_to_warm');
+      await this.queueWriteback(data?.id || `hot_${Date.now()}`, 'persist_to_warm');
 
-      return data || `hot_${Date.now()}`;
+      return data?.id || `hot_${Date.now()}`;
     } catch (error) {
       console.error('Error storing in hot memory:', error);
       return null;
@@ -140,12 +147,14 @@ class TieredMemoryGraphService {
     try {
       const startTime = Date.now();
 
-      // Use raw SQL query to avoid type issues
-      const { data, error } = await supabase.rpc('custom_get_hot_memory', {
-        p_user_id: userId,
-        p_session_id: sessionId,
-        p_limit: limit
-      });
+      // Get from user_activities table as fallback
+      const { data, error } = await supabase
+        .from('user_activities')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('activity_type', 'hot_memory_cache')
+        .order('created_at', { ascending: false })
+        .limit(limit);
 
       if (error) {
         console.error('Failed to get from hot memory:', error);
@@ -167,7 +176,20 @@ class TieredMemoryGraphService {
         session_id: sessionId
       });
 
-      return (data || []) as HotMemoryEntry[];
+      // Convert user_activities data to HotMemoryEntry format
+      return (data || []).map(item => ({
+        id: item.id,
+        user_id: item.user_id,
+        session_id: (item.activity_data as any)?.session_id || sessionId,
+        cache_key: (item.activity_data as any)?.cache_key || '',
+        content_hash: (item.activity_data as any)?.content_hash || '',
+        raw_content: (item.activity_data as any)?.raw_content || {},
+        importance_score: (item.activity_data as any)?.importance_score || 5,
+        access_count: 1,
+        last_accessed: item.created_at,
+        created_at: item.created_at,
+        expires_at: (item.activity_data as any)?.expires_at || item.created_at
+      }));
     } catch (error) {
       console.error('Error getting from hot memory:', error);
       return [];
@@ -183,21 +205,28 @@ class TieredMemoryGraphService {
     importanceScore: number = 5.0
   ): Promise<string | null> {
     try {
-      // Use raw SQL query to avoid type issues
-      const { data, error } = await supabase.rpc('custom_create_graph_node', {
-        p_user_id: userId,
-        p_node_type: nodeType,
-        p_label: label,
-        p_properties: JSON.stringify(properties),
-        p_importance_score: importanceScore
-      });
+      // Store in user_activities table as fallback since memory_graph_nodes doesn't exist
+      const { data, error } = await supabase
+        .from('user_activities')
+        .insert({
+          user_id: userId,
+          activity_type: 'graph_node',
+          activity_data: {
+            node_type: nodeType,
+            label: label,
+            properties: properties,
+            importance_score: importanceScore
+          }
+        })
+        .select()
+        .single();
 
       if (error) {
         console.error('Failed to create graph node:', error);
         return `node_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       }
 
-      return data || `node_${Date.now()}`;
+      return data?.id || `node_${Date.now()}`;
     } catch (error) {
       console.error('Error creating graph node:', error);
       return null;
@@ -213,22 +242,29 @@ class TieredMemoryGraphService {
     weight: number = 1.0
   ): Promise<string | null> {
     try {
-      // Use raw SQL query to avoid type issues
-      const { data, error } = await supabase.rpc('custom_create_graph_edge', {
-        p_user_id: userId,
-        p_from_node_id: fromNodeId,
-        p_to_node_id: toNodeId,
-        p_relationship_type: relationshipType,
-        p_properties: JSON.stringify(properties),
-        p_weight: weight
-      });
+      // Store in user_activities table as fallback
+      const { data, error } = await supabase
+        .from('user_activities')
+        .insert({
+          user_id: userId,
+          activity_type: 'graph_edge',
+          activity_data: {
+            from_node_id: fromNodeId,
+            to_node_id: toNodeId,
+            relationship_type: relationshipType,
+            properties: properties,
+            weight: weight
+          }
+        })
+        .select()
+        .single();
 
       if (error) {
         console.error('Failed to create graph edge:', error);
         return `edge_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       }
 
-      return data || `edge_${Date.now()}`;
+      return data?.id || `edge_${Date.now()}`;
     } catch (error) {
       console.error('Error creating graph edge:', error);
       return null;
@@ -266,16 +302,23 @@ class TieredMemoryGraphService {
     try {
       const deltaHash = await this.generateDeltaHash(deltaData, previousHash);
 
-      // Use raw SQL query
-      const { data, error } = await supabase.rpc('custom_store_delta', {
-        p_user_id: userId,
-        p_session_id: sessionId,
-        p_delta_hash: deltaHash,
-        p_previous_hash: previousHash,
-        p_delta_type: deltaType,
-        p_delta_data: JSON.stringify(deltaData),
-        p_importance_score: importanceScore
-      });
+      // Store in user_activities table as fallback
+      const { data, error } = await supabase
+        .from('user_activities')
+        .insert({
+          user_id: userId,
+          activity_type: 'memory_delta',
+          activity_data: {
+            session_id: sessionId,
+            delta_hash: deltaHash,
+            previous_hash: previousHash,
+            delta_type: deltaType,
+            delta_data: deltaData,
+            importance_score: importanceScore
+          }
+        })
+        .select()
+        .single();
 
       if (error) {
         console.error('Failed to store delta:', error);
@@ -335,7 +378,7 @@ class TieredMemoryGraphService {
         return 5.0; // Default score
       }
 
-      return data || 5.0;
+      return Number(data) || 5.0;
     } catch (error) {
       console.error('Error calculating importance score:', error);
       return 5.0;
