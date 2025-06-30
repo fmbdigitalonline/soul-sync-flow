@@ -732,7 +732,7 @@ class ACSRealAIIntegrationService implements ACSRealAIIntegration {
     return rlUpdate;
   }
 
-  // CRITICAL FIX: Cross-session learning for Claim 9
+  // CRITICAL FIX: Cross-session learning for Claim 9 - FIXED NULL DATA ISSUE
   private async updateCrossSessionLearning(
     fromState: DialogueState, 
     toState: DialogueState, 
@@ -767,37 +767,46 @@ class ACSRealAIIntegrationService implements ACSRealAIIntegration {
     
     this.crossSessionMemory.set(sessionKey, existingData);
     
-    // CRITICAL: Store in Supabase for persistence (Claim 9)
+    // CRITICAL FIX: Store in Supabase for persistence with .select() to avoid null data
     try {
+      const insertData = {
+        user_id: 'acs_cross_session',
+        session_id: `cross_session_${Date.now()}`,
+        memory_type: 'cross_session_learning',
+        memory_data: {
+          sessionKey,
+          fromState,
+          toState,
+          emotionalState,
+          patterns: existingData.patterns.slice(-5), // Store recent patterns
+          summary: {
+            totalTransitions: existingData.count,
+            successRate: existingData.patterns.filter(p => p.success).length / existingData.patterns.length,
+            dominantEmotion: Object.keys(existingData.emotions).reduce((a, b) => 
+              existingData.emotions[a].count > existingData.emotions[b].count ? a : b
+            )
+          }
+        },
+        importance_score: 8,
+        context_summary: `Cross-session learning: ${fromState} → ${toState} (${emotionalState.emotion})`
+      };
+
+      // SOLUTION: Add .select() to ensure data is returned
       const { data, error } = await supabase
         .from('user_session_memory')
-        .insert({
-          user_id: 'acs_cross_session',
-          session_id: `cross_session_${Date.now()}`,
-          memory_type: 'cross_session_learning',
-          memory_data: {
-            sessionKey,
-            fromState,
-            toState,
-            emotionalState,
-            patterns: existingData.patterns.slice(-5), // Store recent patterns
-            summary: {
-              totalTransitions: existingData.count,
-              successRate: existingData.patterns.filter(p => p.success).length / existingData.patterns.length,
-              dominantEmotion: Object.keys(existingData.emotions).reduce((a, b) => 
-                existingData.emotions[a].count > existingData.emotions[b].count ? a : b
-              )
-            }
-          },
-          importance_score: 8,
-          context_summary: `Cross-session learning: ${fromState} → ${toState} (${emotionalState.emotion})`
-        });
+        .insert(insertData)
+        .select('id, created_at'); // Select specific fields we need
       
       if (error) {
         console.warn('⚠️ Supabase insert error for cross-session learning:', error.message);
-      } else {
+      } else if (data && data.length > 0) {
+        // Now data is guaranteed to exist and be an array
+        const insertedRecord = data[0];
         console.log(`📚 CLAIM 9: Cross-session learning stored in Supabase for ${sessionKey}`);
-        console.log(`📚 CLAIM 9: Database record created with ID:`, data?.[0]?.id);
+        console.log(`📚 CLAIM 9: Database record created with ID:`, insertedRecord.id);
+        console.log(`📚 CLAIM 9: Record created at:`, insertedRecord.created_at);
+      } else {
+        console.warn('⚠️ Unexpected: Insert succeeded but no data returned');
       }
     } catch (error) {
       console.warn('⚠️ Could not store cross-session learning:', error instanceof Error ? error.message : String(error));
