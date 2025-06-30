@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -357,7 +358,7 @@ const ACSPatentTestSuite: React.FC = () => {
     const startTime = Date.now();
 
     try {
-      // Use realistic ACS config - no pre-rigging
+      // Use realistic ACS config - no pre-rigging, with ALL required properties
       const acsConfig = {
         enableRL: claimNumber === 6,
         personalityScaling: claimNumber === 3,
@@ -477,7 +478,15 @@ const ACSPatentTestSuite: React.FC = () => {
     
     const result = await acsRealAIIntegrationService.sendMessage(
       negativeMessage,
-      { frustrationThreshold: 0.3, sentimentSlopeNeg: -0.2, velocityFloor: 0.1, maxSilentMs: 180000, clarificationThreshold: 0.4 },
+      { 
+        enableRL: false,
+        personalityScaling: false,
+        frustrationThreshold: 0.3, 
+        sentimentSlopeNeg: -0.2, 
+        velocityFloor: 0.1, 
+        maxSilentMs: 180000, 
+        clarificationThreshold: 0.4 
+      },
       'NORMAL' as any
     );
 

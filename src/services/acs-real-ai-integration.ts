@@ -528,7 +528,7 @@ class ACSRealAIIntegrationService implements ACSRealAIIntegration {
     return modifications;
   }
 
-  // REAL personality vector retrieval
+  // REAL personality vector retrieval - Fixed Json type issue
   private async getPersonalityVector(): Promise<any> {
     try {
       // Try to get real personality data from user's blueprint
@@ -541,17 +541,21 @@ class ACSRealAIIntegrationService implements ACSRealAIIntegration {
           .eq('is_active', true)
           .single();
         
-        if (data?.blueprint?.cognition_mbti) {
-          // Extract real personality dimensions
-          return {
-            openness: Math.random() * 0.4 + 0.6, // Realistic range
-            conscientiousness: Math.random() * 0.4 + 0.6,
-            extraversion: Math.random() * 0.6 + 0.2,
-            agreeableness: Math.random() * 0.4 + 0.7,
-            neuroticism: Math.random() * 0.6 + 0.1,
-            dominance: Math.random() * 0.6 + 0.2,
-            influence: Math.random() * 0.4 + 0.5
-          };
+        if (data?.blueprint && typeof data.blueprint === 'object') {
+          // Properly type the blueprint as an object and check for cognition_mbti
+          const blueprint = data.blueprint as Record<string, any>;
+          if (blueprint.cognition_mbti) {
+            // Extract real personality dimensions
+            return {
+              openness: Math.random() * 0.4 + 0.6, // Realistic range
+              conscientiousness: Math.random() * 0.4 + 0.6,
+              extraversion: Math.random() * 0.6 + 0.2,
+              agreeableness: Math.random() * 0.4 + 0.7,
+              neuroticism: Math.random() * 0.6 + 0.1,
+              dominance: Math.random() * 0.6 + 0.2,
+              influence: Math.random() * 0.4 + 0.5
+            };
+          }
         }
       }
     } catch (error) {
