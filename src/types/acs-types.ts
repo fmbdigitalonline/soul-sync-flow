@@ -1,4 +1,5 @@
 
+
 export interface ACSConfig {
   velocityFloor: number;          // tokens per second threshold
   sentimentSlopeNeg: number;      // negative sentiment slope threshold
@@ -16,6 +17,7 @@ export interface DialogueHealthMetrics {
   frustrationScore: number;       // accumulated frustration indicators
   helpSignals: HelpSignal[];      // detected confusion patterns
   timestamp: number;
+  l2NormConstraint?: number;      // L2-norm constraint for RL optimization
 }
 
 export interface HelpSignal {
@@ -42,6 +44,8 @@ export interface PromptStrategyConfig {
   apologyPrefix?: boolean;
   checkInEnabled?: boolean;
   maxTokens?: number;
+  personalityScaling?: boolean;   // personality scaling enabled flag
+  personalityVector?: any;        // VFP-Graph personality vector data
 }
 
 export interface ACSMetrics {
@@ -52,3 +56,4 @@ export interface ACSMetrics {
   sentimentTrend: number;
   successRate: number;
 }
+
