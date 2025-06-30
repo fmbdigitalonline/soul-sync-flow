@@ -19,7 +19,8 @@ import {
   Archive,
   Hash,
   Eye,
-  AlertCircle
+  AlertCircle,
+  Play
 } from 'lucide-react';
 import { tieredMemoryGraph } from '@/services/tiered-memory-graph';
 import { useTieredMemory } from '@/hooks/use-tiered-memory';
@@ -51,6 +52,7 @@ export const TMGPatentTestSuite: React.FC = () => {
   const [testResults, setTestResults] = useState<PatentClaimResult[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const [currentClaim, setCurrentClaim] = useState<number | null>(null);
+  const [individualTestingClaims, setIndividualTestingClaims] = useState<Set<number>>(new Set());
   const [metrics, setMetrics] = useState<TMGTestMetrics | null>(null);
   const [realTimeData, setRealTimeData] = useState<any[]>([]);
   const [testUserId, setTestUserId] = useState<string>('');
@@ -389,6 +391,59 @@ export const TMGPatentTestSuite: React.FC = () => {
     }
   }, [testUserId, testSessionId, generateRealTimeDialogue, storeConversationTurn, createKnowledgeEntity, hotMemory.length, graphContext.nodes.length]);
 
+  // NEW: Individual claim test function
+  const runIndividualClaimTest = useCallback(async (claimId: number) => {
+    if (!testUserId || !isInitialized || !tmgInitialized) {
+      console.error('❌ Cannot run individual test: System not properly initialized');
+      return;
+    }
+
+    console.log(`🔬 Starting individual test for Claim ${claimId}...`);
+    
+    // Add to individual testing set
+    setIndividualTestingClaims(prev => new Set([...prev, claimId]));
+    
+    try {
+      // Run the specific claim test
+      const result = await executeClaimTest(claimId);
+      
+      // Update test results for this specific claim
+      setTestResults(prev => {
+        const newResults = prev.filter(r => r.claimNumber !== claimId);
+        return [...newResults, result].sort((a, b) => a.claimNumber - b.claimNumber);
+      });
+      
+      console.log(`${result.status === 'passed' ? '✅' : '❌'} Individual Claim ${claimId} test completed: ${result.status}`);
+      
+    } catch (error) {
+      console.error(`❌ Individual Claim ${claimId} test error:`, error);
+      
+      // Add failed result
+      const failedResult: PatentClaimResult = {
+        claimNumber: claimId,
+        title: patentClaims.find(c => c.id === claimId)?.title || `Claim ${claimId}`,
+        status: 'failed',
+        evidence: { error: error.message },
+        timestamp: new Date().toISOString(),
+        executionTime: 0,
+        realTimeData: { error: error.message },
+        error: error.message
+      };
+      
+      setTestResults(prev => {
+        const newResults = prev.filter(r => r.claimNumber !== claimId);
+        return [...newResults, failedResult].sort((a, b) => a.claimNumber - b.claimNumber);
+      });
+    } finally {
+      // Remove from individual testing set
+      setIndividualTestingClaims(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(claimId);
+        return newSet;
+      });
+    }
+  }, [testUserId, isInitialized, tmgInitialized, executeClaimTest]);
+
   // Main test suite runner with enhanced validation
   const runPatentTestSuite = useCallback(async () => {
     if (!testUserId || !isInitialized || !tmgInitialized) {
@@ -508,7 +563,7 @@ export const TMGPatentTestSuite: React.FC = () => {
             ) : (
               <>
                 <Zap className="w-4 h-4 mr-2" />
-                Run Patent Tests
+                Run All Patent Tests
               </>
             )}
           </Button>
@@ -590,7 +645,6 @@ export const TMGPatentTestSuite: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Rest of the component remains the same */}
       <Tabs defaultValue="claims" className="space-y-4">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="claims">Patent Claims</TabsTrigger>
@@ -603,6 +657,7 @@ export const TMGPatentTestSuite: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {patentClaims.map((claim) => {
               const result = testResults.find(r => r.claimNumber === claim.id);
+              const isIndividualTesting = individualTestingClaims.has(claim.id);
               const IconComponent = claim.icon;
               
               return (
@@ -610,6 +665,7 @@ export const TMGPatentTestSuite: React.FC = () => {
                   result?.status === 'passed' ? 'border-green-200 bg-green-50/30' :
                   result?.status === 'failed' ? 'border-red-200 bg-red-50/30' :
                   currentClaim === claim.id ? 'border-blue-200 bg-blue-50/30' :
+                  isIndividualTesting ? 'border-orange-200 bg-orange-50/30' :
                   'border-gray-200'
                 }`}>
                   <CardHeader className="pb-3">
@@ -618,20 +674,62 @@ export const TMGPatentTestSuite: React.FC = () => {
                         <IconComponent className="w-5 h-5" />
                         <span>Claim {claim.id}</span>
                       </div>
-                      {result && (
-                        <Badge className={
-                          result.status === 'passed' ? 'bg-green-100 text-green-800' :
-                          result.status === 'failed' ? 'bg-red-100 text-red-800' :
-                          'bg-yellow-100 text-yellow-800'
-                        }>
-                          {result.status}
-                        </Badge>
-                      )}
+                      <div className="flex items-center space-x-2">
+                        {result && (
+                          <Badge className={
+                            result.status === 'passed' ? 'bg-green-100 text-green-800' :
+                            result.status === 'failed' ? 'bg-red-100 text-red-800' :
+                            'bg-yellow-100 text-yellow-800'
+                          }>
+                            {result.status}
+                          </Badge>
+                        )}
+                        {isIndividualTesting && (
+                          <Badge variant="outline" className="bg-orange-100 text-orange-800">
+                            Testing...
+                          </Badge>
+                        )}
+                      </div>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <h4 className="font-medium mb-2">{claim.title}</h4>
                     <p className="text-sm text-muted-foreground mb-3">{claim.description}</p>
+                    
+                    {/* NEW: Individual test button */}
+                    <div className="flex items-center justify-between mb-3">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => runIndividualClaimTest(claim.id)}
+                        disabled={isIndividualTesting || isRunning || !isSystemReady}
+                        className="bg-blue-50 hover:bg-blue-100 text-blue-700"
+                      >
+                        {isIndividualTesting ? (
+                          <>
+                            <Activity className="w-3 h-3 mr-1 animate-spin" />
+                            Testing...
+                          </>
+                        ) : (
+                          <>
+                            <Play className="w-3 h-3 mr-1" />
+                            Test This Claim
+                          </>
+                        )}
+                      </Button>
+                      
+                      {result?.status === 'failed' && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => runIndividualClaimTest(claim.id)}
+                          disabled={isIndividualTesting || isRunning || !isSystemReady}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          Re-test
+                        </Button>
+                      )}
+                    </div>
                     
                     {result && (
                       <div className="space-y-2">
