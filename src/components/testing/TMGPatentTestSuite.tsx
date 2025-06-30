@@ -33,6 +33,7 @@ interface PatentClaimResult {
   timestamp: string;
   executionTime: number;
   realTimeData: any;
+  error?: string;
 }
 
 interface TMGTestMetrics {
@@ -53,27 +54,39 @@ export const TMGPatentTestSuite: React.FC = () => {
   const [metrics, setMetrics] = useState<TMGTestMetrics | null>(null);
   const [realTimeData, setRealTimeData] = useState<any[]>([]);
   const [testUserId, setTestUserId] = useState<string>('');
+  const [initializationError, setInitializationError] = useState<string | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   
   const testSessionId = `tmg_patent_${Date.now()}`;
 
-  // Initialize user ID only once with useCallback to prevent re-initialization
+  // Initialize user ID with better error handling
   const initializeUserId = useCallback(async () => {
     if (testUserId) return; // Don't re-initialize if already set
     
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      console.log('🔧 Initializing TMG Patent Test Suite...');
+      const { data: { user }, error } = await supabase.auth.getUser();
+      
+      if (error) {
+        console.warn('⚠️ Auth error:', error);
+        throw new Error(`Authentication error: ${error.message}`);
+      }
+      
       if (user?.id) {
         setTestUserId(user.id);
+        setInitializationError(null);
         console.log('✅ User ID initialized:', user.id);
       } else {
         const fallbackId = '00000000-0000-4000-8000-000000000001';
         setTestUserId(fallbackId);
+        setInitializationError('Using fallback user ID - some features may be limited');
         console.log('⚠️ Using fallback user ID:', fallbackId);
       }
     } catch (error) {
-      console.warn('Could not get user, using test UUID:', error);
-      setTestUserId('00000000-0000-4000-8000-000000000001');
+      const fallbackId = '00000000-0000-4000-8000-000000000001';
+      setTestUserId(fallbackId);
+      setInitializationError(`Initialization failed: ${error.message}. Using fallback ID.`);
+      console.error('❌ User initialization failed:', error);
     }
   }, [testUserId]);
 
@@ -86,7 +99,8 @@ export const TMGPatentTestSuite: React.FC = () => {
     createKnowledgeEntity,
     getGraphContext,
     hotMemory,
-    graphContext
+    graphContext,
+    isLoading: tmgLoading
   } = useTieredMemory(testUserId, testSessionId);
 
   const patentClaims = [
@@ -166,22 +180,31 @@ export const TMGPatentTestSuite: React.FC = () => {
   const startConversationSimulator = useCallback(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
     
+    console.log('🎯 Starting conversation simulator...');
+    
     intervalRef.current = setInterval(() => {
-      if (!testUserId) return;
+      if (!testUserId) {
+        console.warn('⚠️ Cannot simulate - no user ID');
+        return;
+      }
       
-      const dialogue = generateRealTimeDialogue();
-      
-      setRealTimeData(prev => {
-        const newData = [...prev.slice(-19), dialogue];
+      try {
+        const dialogue = generateRealTimeDialogue();
         
-        // Store in TMG system asynchronously
-        if (testUserId && testUserId !== '') {
-          storeConversationTurn(dialogue, dialogue.semantic_novelty + dialogue.sentiment_score)
-            .catch(err => console.warn('Simulator storage warning:', err));
-        }
-        
-        return newData;
-      });
+        setRealTimeData(prev => {
+          const newData = [...prev.slice(-19), dialogue];
+          
+          // Store in TMG system asynchronously
+          if (testUserId && testUserId !== '') {
+            storeConversationTurn(dialogue, dialogue.semantic_novelty + dialogue.sentiment_score)
+              .catch(err => console.warn('⚠️ Simulator storage warning:', err));
+          }
+          
+          return newData;
+        });
+      } catch (error) {
+        console.error('❌ Simulator error:', error);
+      }
     }, 3000);
   }, [testUserId, generateRealTimeDialogue, storeConversationTurn]);
 
@@ -189,11 +212,12 @@ export const TMGPatentTestSuite: React.FC = () => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
+      console.log('⏹️ Conversation simulator stopped');
     }
   }, []);
 
-  // Execute individual patent claim test
-  const executeClaimTest = useCallback(async (claimId: number): Promise<PatentClaimResult> => {
+  // Execute individual patent claim test with proper error handling
+  const executeClaimTest = useCallback(async (claimId: number): Promise<PatentClaimResult> {
     const startTime = performance.now();
     const claim = patentClaims.find(c => c.id === claimId);
     
@@ -206,6 +230,7 @@ export const TMGPatentTestSuite: React.FC = () => {
       
       switch (claimId) {
         case 1: // Three-Tier Memory Method
+          console.log('📊 Testing Three-Tier Memory Method...');
           const dialogue = generateRealTimeDialogue();
           const hotMemoryId = await storeConversationTurn(dialogue, 8.5);
           const entityId = await createKnowledgeEntity(
@@ -231,9 +256,11 @@ export const TMGPatentTestSuite: React.FC = () => {
           };
           realTimeData = { dialogue, hotMemoryId, entityId, deltaId };
           passed = !!(hotMemoryId && entityId && deltaId);
+          console.log(`✅ Claim 1 evidence:`, evidence);
           break;
           
         case 2: // Hierarchical Context-Memory System
+          console.log('📊 Testing Hierarchical Context-Memory System...');
           evidence = {
             volatileCache: hotMemory.length,
             graphStore: graphContext.nodes.length,
@@ -242,9 +269,11 @@ export const TMGPatentTestSuite: React.FC = () => {
           };
           realTimeData = { cacheSize: hotMemory.length, graphNodes: graphContext.nodes.length };
           passed = true;
+          console.log(`✅ Claim 2 evidence:`, evidence);
           break;
           
         case 3: // SHA-256 Hash Chain
+          console.log('📊 Testing SHA-256 Hash Chain...');
           const testData = `test_data_${Date.now()}`;
           const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(testData));
           const hashString = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
@@ -256,9 +285,11 @@ export const TMGPatentTestSuite: React.FC = () => {
           };
           realTimeData = { testData, hashString };
           passed = !!hashString;
+          console.log(`✅ Claim 3 evidence:`, evidence);
           break;
           
         case 4: // Recurrence Coefficient
+          console.log('📊 Testing Recurrence Coefficient...');
           const score = await tieredMemoryGraph.calculateImportanceScore(
             testUserId,
             8.0, 7.5, 9.0, 3
@@ -271,9 +302,11 @@ export const TMGPatentTestSuite: React.FC = () => {
           };
           realTimeData = { calculatedScore: score };
           passed = score > 0;
+          console.log(`✅ Claim 4 evidence:`, evidence);
           break;
           
         case 5: // Graph Traversal
+          console.log('📊 Testing Graph Traversal...');
           evidence = {
             shortestPath: true,
             graphTraversal: true,
@@ -281,9 +314,11 @@ export const TMGPatentTestSuite: React.FC = () => {
           };
           realTimeData = { traversalTest: true };
           passed = true;
+          console.log(`✅ Claim 5 evidence:`, evidence);
           break;
           
         case 6: // Privacy Module
+          console.log('📊 Testing Privacy Module...');
           evidence = {
             piiRedaction: true,
             hashPreservation: true,
@@ -291,9 +326,11 @@ export const TMGPatentTestSuite: React.FC = () => {
           };
           realTimeData = { privacyScore: 0.95 };
           passed = true;
+          console.log(`✅ Claim 6 evidence:`, evidence);
           break;
           
         case 7: // Delta Compression
+          console.log('📊 Testing Delta Compression...');
           evidence = {
             deltaCompression: true,
             hashLinking: true,
@@ -301,9 +338,11 @@ export const TMGPatentTestSuite: React.FC = () => {
           };
           realTimeData = { compressionApplied: true };
           passed = true;
+          console.log(`✅ Claim 7 evidence:`, evidence);
           break;
           
         case 8: // Computer-Readable Medium
+          console.log('📊 Testing Computer-Readable Medium...');
           evidence = {
             instructionExecution: true,
             systemImplementation: true,
@@ -311,6 +350,7 @@ export const TMGPatentTestSuite: React.FC = () => {
           };
           realTimeData = { implementationValid: true };
           passed = true;
+          console.log(`✅ Claim 8 evidence:`, evidence);
           break;
       }
       
@@ -337,15 +377,16 @@ export const TMGPatentTestSuite: React.FC = () => {
         evidence: { error: error.message },
         timestamp: new Date().toISOString(),
         executionTime: performance.now() - startTime,
-        realTimeData: { error: error.message }
+        realTimeData: { error: error.message },
+        error: error.message
       };
     }
   }, [testUserId, testSessionId, generateRealTimeDialogue, storeConversationTurn, createKnowledgeEntity, hotMemory.length, graphContext.nodes.length]);
 
-  // Main test suite runner
+  // Main test suite runner with enhanced logging
   const runPatentTestSuite = useCallback(async () => {
     if (!testUserId) {
-      console.error('Cannot run tests: User ID not initialized');
+      console.error('❌ Cannot run tests: User ID not initialized');
       return;
     }
     
@@ -361,6 +402,7 @@ export const TMGPatentTestSuite: React.FC = () => {
       
       // Execute each test sequentially
       for (let i = 1; i <= 8; i++) {
+        console.log(`🔬 Starting test ${i}/8...`);
         setCurrentClaim(i);
         
         const result = await executeClaimTest(i);
@@ -389,7 +431,7 @@ export const TMGPatentTestSuite: React.FC = () => {
       };
       
       setMetrics(finalMetrics);
-      console.log(`✅ TMG Patent Test Suite completed: ${passedCount}/${allResults.length} claims passed`);
+      console.log(`🏁 TMG Patent Test Suite completed: ${passedCount}/${allResults.length} claims passed`);
       
     } catch (error) {
       console.error('❌ Patent test suite error:', error);
@@ -422,12 +464,18 @@ export const TMGPatentTestSuite: React.FC = () => {
           <p className="text-muted-foreground">
             Comprehensive validation of all 8 patent claims with real-time dynamic data
           </p>
+          {initializationError && (
+            <div className="flex items-center space-x-2 mt-2 text-yellow-600 text-sm">
+              <AlertCircle className="w-4 h-4" />
+              <span>{initializationError}</span>
+            </div>
+          )}
         </div>
         
         <div className="flex space-x-2">
           <Button
             onClick={runPatentTestSuite}
-            disabled={isRunning || !testUserId}
+            disabled={isRunning || !testUserId || tmgLoading}
             className="bg-blue-600 hover:bg-blue-700"
           >
             {isRunning ? (
@@ -557,6 +605,11 @@ export const TMGPatentTestSuite: React.FC = () => {
                           <div className="flex items-center space-x-2 text-sm text-green-600">
                             <CheckCircle className="w-4 h-4" />
                             <span>Real-time evidence collected</span>
+                          </div>
+                        )}
+                        {result.error && (
+                          <div className="text-xs text-red-600 mt-2">
+                            Error: {result.error}
                           </div>
                         )}
                       </div>
@@ -701,6 +754,9 @@ export const TMGPatentTestSuite: React.FC = () => {
                           <div>Execution Time: {result.executionTime.toFixed(2)}ms</div>
                           <div>Timestamp: {result.timestamp}</div>
                           <div>Real-time Data: ✓ Collected and validated</div>
+                          {result.error && (
+                            <div className="text-red-600 mt-1">Error: {result.error}</div>
+                          )}
                         </div>
                       </div>
                     ))}

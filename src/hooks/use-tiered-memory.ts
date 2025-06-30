@@ -1,7 +1,6 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { tieredMemoryGraph, HotMemoryEntry, MemoryGraphNode, MemoryGraphEdge } from '@/services/tiered-memory-graph';
-import { memoryService } from '@/services/memory-service';
 
 interface TieredMemoryState {
   hotMemory: HotMemoryEntry[];
@@ -31,7 +30,10 @@ export const useTieredMemory = (userId: string, sessionId: string) => {
     content: any,
     importanceScore?: number
   ) => {
-    if (!userId || !sessionId) return null;
+    if (!userId || !sessionId) {
+      console.warn('Cannot store conversation turn: missing userId or sessionId');
+      return null;
+    }
 
     try {
       setState(prev => ({ ...prev, isLoading: true }));
@@ -89,7 +91,10 @@ export const useTieredMemory = (userId: string, sessionId: string) => {
 
   // Load hot memory context
   const loadHotMemory = useCallback(async () => {
-    if (!userId || !sessionId) return;
+    if (!userId || !sessionId) {
+      console.warn('Cannot load hot memory: missing userId or sessionId');
+      return;
+    }
 
     try {
       setState(prev => ({ ...prev, isLoading: true }));
@@ -114,7 +119,10 @@ export const useTieredMemory = (userId: string, sessionId: string) => {
     properties: Record<string, any> = {},
     importanceScore: number = 5.0
   ) => {
-    if (!userId) return null;
+    if (!userId) {
+      console.warn('Cannot create knowledge entity: missing userId');
+      return null;
+    }
 
     try {
       const nodeId = await tieredMemoryGraph.createGraphNode(
@@ -139,7 +147,10 @@ export const useTieredMemory = (userId: string, sessionId: string) => {
     relationshipType: 'relates_to' | 'mentions' | 'likes' | 'discussed_with' | 'summary_of',
     weight: number = 1.0
   ) => {
-    if (!userId) return null;
+    if (!userId) {
+      console.warn('Cannot link entities: missing userId');
+      return null;
+    }
 
     try {
       const edgeId = await tieredMemoryGraph.createGraphEdge(
@@ -164,14 +175,17 @@ export const useTieredMemory = (userId: string, sessionId: string) => {
     relationshipTypes?: string[],
     maxDepth: number = 2
   ) => {
-    if (!userId || !startNodeId) return { nodes: [], edges: [] };
+    if (!userId) {
+      console.warn('Cannot get graph context: missing userId');
+      return { nodes: [], edges: [] };
+    }
 
     try {
       setState(prev => ({ ...prev, isLoading: true }));
 
       const context = await tieredMemoryGraph.traverseGraph(
         userId,
-        startNodeId,
+        startNodeId || 'dummy', // Provide a fallback
         relationshipTypes,
         maxDepth
       );
@@ -192,7 +206,10 @@ export const useTieredMemory = (userId: string, sessionId: string) => {
 
   // Load performance metrics
   const loadMetrics = useCallback(async () => {
-    if (!userId) return;
+    if (!userId) {
+      console.warn('Cannot load metrics: missing userId');
+      return;
+    }
 
     try {
       const metrics = await tieredMemoryGraph.getPerformanceMetrics(userId);
@@ -201,31 +218,6 @@ export const useTieredMemory = (userId: string, sessionId: string) => {
       console.error('Error loading metrics:', error);
     }
   }, [userId]);
-
-  // Integration with existing memory service
-  const integrateWithExistingMemory = useCallback(async () => {
-    if (!userId) return;
-
-    try {
-      // Get recent memories from existing system
-      const existingMemories = await memoryService.getRecentMemories(10);
-      
-      // Convert to TMG format and store
-      for (const memory of existingMemories) {
-        await storeConversationTurn({
-          type: 'migrated_memory',
-          memory_type: memory.memory_type,
-          content: memory.memory_data,
-          context_summary: memory.context_summary,
-          original_timestamp: memory.created_at
-        }, memory.importance_score);
-      }
-
-      console.log(`Integrated ${existingMemories.length} existing memories into TMG`);
-    } catch (error) {
-      console.error('Error integrating existing memory:', error);
-    }
-  }, [userId, storeConversationTurn]);
 
   // Initialize on mount
   useEffect(() => {
@@ -242,7 +234,6 @@ export const useTieredMemory = (userId: string, sessionId: string) => {
     createKnowledgeEntity,
     linkEntities,
     getGraphContext,
-    loadMetrics,
-    integrateWithExistingMemory
+    loadMetrics
   };
 };
