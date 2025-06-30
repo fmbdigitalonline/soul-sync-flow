@@ -195,6 +195,90 @@ export type Database = {
         }
         Relationships: []
       }
+      acs_error_logs: {
+        Row: {
+          acs_version: string | null
+          context_data: Json | null
+          created_at: string | null
+          error_message: string
+          error_type: string
+          fallback_used: boolean | null
+          id: string
+          session_id: string
+          stack_trace: string | null
+          user_id: string | null
+        }
+        Insert: {
+          acs_version?: string | null
+          context_data?: Json | null
+          created_at?: string | null
+          error_message: string
+          error_type: string
+          fallback_used?: boolean | null
+          id?: string
+          session_id: string
+          stack_trace?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          acs_version?: string | null
+          context_data?: Json | null
+          created_at?: string | null
+          error_message?: string
+          error_type?: string
+          fallback_used?: boolean | null
+          id?: string
+          session_id?: string
+          stack_trace?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      acs_intervention_logs: {
+        Row: {
+          created_at: string | null
+          error_details: string | null
+          from_state: string
+          id: string
+          intervention_data: Json | null
+          intervention_type: string
+          session_id: string
+          success: boolean | null
+          suppressed_until_turn: number | null
+          to_state: string
+          trigger_reason: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          error_details?: string | null
+          from_state: string
+          id?: string
+          intervention_data?: Json | null
+          intervention_type: string
+          session_id: string
+          success?: boolean | null
+          suppressed_until_turn?: number | null
+          to_state: string
+          trigger_reason: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          error_details?: string | null
+          from_state?: string
+          id?: string
+          intervention_data?: Json | null
+          intervention_type?: string
+          session_id?: string
+          success?: boolean | null
+          suppressed_until_turn?: number | null
+          to_state?: string
+          trigger_reason?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       acs_metrics: {
         Row: {
           confidence: number
@@ -1187,6 +1271,7 @@ export type Database = {
       }
       user_session_memory: {
         Row: {
+          acs_version: string | null
           context_summary: string | null
           created_at: string
           id: string
@@ -1196,8 +1281,10 @@ export type Database = {
           memory_type: string
           session_id: string
           user_id: string
+          vector_version: string | null
         }
         Insert: {
+          acs_version?: string | null
           context_summary?: string | null
           created_at?: string
           id?: string
@@ -1207,8 +1294,10 @@ export type Database = {
           memory_type: string
           session_id: string
           user_id: string
+          vector_version?: string | null
         }
         Update: {
+          acs_version?: string | null
           context_summary?: string | null
           created_at?: string
           id?: string
@@ -1218,6 +1307,7 @@ export type Database = {
           memory_type?: string
           session_id?: string
           user_id?: string
+          vector_version?: string | null
         }
         Relationships: []
       }

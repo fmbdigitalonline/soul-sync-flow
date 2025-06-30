@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,6 @@ import { useProductionACS } from '@/hooks/use-production-acs';
 import ACSControlPanel from '@/components/acs/ACSControlPanel';
 import { toast } from 'sonner';
 import { supabase } from "@/integrations/supabase/client";
-import ACSEnhancedCoachInterface from './ACSEnhancedCoachInterface';
 
 interface Message {
   id: string;
@@ -20,19 +20,27 @@ interface Message {
   fallbackUsed?: boolean;
 }
 
-interface EnhancedCoachInterfaceProps {
+interface ACSEnhancedCoachInterfaceProps {
   sessionId: string;
   initialMessages?: Message[];
   onNewMessage?: (message: Message) => void;
 }
 
-const EnhancedCoachInterface: React.FC<EnhancedCoachInterfaceProps> = (props) => {
-  // Check if ACS should be enabled (could be based on user settings, feature flags, etc.)
-  const [useACS, setUseACS] = useState(true);
-  const [messages, setMessages] = useState<Message[]>(props.initialMessages || []);
+const ACSEnhancedCoachInterface: React.FC<ACSEnhancedCoachInterfaceProps> = ({
+  sessionId,
+  initialMessages = [],
+  onNewMessage
+}) => {
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showACSPanel, setShowACSPanel] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  const { status, processMessage } = useProductionACS({
+    personalityScaling: true,
+    frustrationThreshold: 0.3
+  });
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -57,36 +65,56 @@ const EnhancedCoachInterface: React.FC<EnhancedCoachInterfaceProps> = (props) =>
     setIsLoading(true);
 
     try {
-      // Use regular AI coach without ACS
-      const { data, error } = await supabase.functions.invoke("ai-coach", {
-        body: {
-          message: inputValue.trim(),
-          sessionId: props.sessionId,
-          systemPrompt: "You are a helpful AI assistant. Respond naturally and helpfully to user questions.",
-          temperature: 0.7,
-          maxTokens: 200,
-          includeBlueprint: false,
-          agentType: "guide",
-          language: "en"
-        },
-      });
+      // Try ACS processing first
+      let response: string;
+      let interventionApplied = false;
+      let fallbackUsed = false;
 
-      if (error || !data?.response) {
-        throw new Error("AI coach service failed");
+      try {
+        const acsResult = await processMessage(inputValue.trim(), sessionId);
+        response = acsResult.response;
+        interventionApplied = acsResult.interventionApplied;
+        fallbackUsed = acsResult.fallbackUsed;
+      } catch (acsError) {
+        console.log("ACS failed, using regular AI coach:", acsError);
+        
+        // Fallback to regular AI coach
+        const { data, error } = await supabase.functions.invoke("ai-coach", {
+          body: {
+            message: inputValue.trim(),
+            sessionId,
+            systemPrompt: "You are a helpful AI assistant. Respond naturally and helpfully to user questions.",
+            temperature: 0.7,
+            maxTokens: 200,
+            includeBlueprint: false,
+            agentType: "guide",
+            language: "en"
+          },
+        });
+
+        if (error || !data?.response) {
+          throw new Error("Both ACS and fallback coach failed");
+        }
+
+        response = data.response;
+        fallbackUsed = true;
+        toast.warning("Using backup system - ACS temporarily unavailable");
       }
 
       const assistantMessage: Message = {
         id: `assistant_${Date.now()}`,
-        content: data.response,
+        content: response,
         isUser: false,
-        timestamp: new Date()
+        timestamp: new Date(),
+        interventionApplied,
+        fallbackUsed
       };
 
       setMessages(prev => [...prev, assistantMessage]);
       
-      if (props.onNewMessage) {
-        props.onNewMessage(userMessage);
-        props.onNewMessage(assistantMessage);
+      if (onNewMessage) {
+        onNewMessage(userMessage);
+        onNewMessage(assistantMessage);
       }
 
     } catch (error) {
@@ -114,29 +142,39 @@ const EnhancedCoachInterface: React.FC<EnhancedCoachInterfaceProps> = (props) =>
     }
   };
 
-  if (useACS) {
-    return <ACSEnhancedCoachInterface {...props} />;
-  }
-
-  // Original coach interface (ACS disabled)
   return (
     <div className="flex flex-col h-full max-w-4xl mx-auto space-y-4">
       
-      {/* Status Bar */}
-      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+      {/* ACS Status Bar */}
+      <div className="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border">
         <div className="flex items-center space-x-3">
-          <span className="text-sm font-medium">Standard AI Coach</span>
-          <Badge variant="secondary">ACS Disabled</Badge>
+          <Brain className="w-5 h-5 text-blue-600" />
+          <span className="text-sm font-medium">Adaptive Context System</span>
+          <Badge variant={status.isEnabled ? "default" : "secondary"}>
+            {status.isEnabled ? "Active" : "Disabled"}
+          </Badge>
+          <Badge variant="outline" className="text-xs">
+            {status.currentState.replace('_', ' ')}
+          </Badge>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setUseACS(true)}
-        >
-          <Brain className="w-4 h-4 mr-2" />
-          Enable ACS
-        </Button>
+        <div className="flex items-center space-x-2">
+          <span className="text-xs text-gray-600">
+            {status.interventionsCount} adaptations
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowACSPanel(!showACSPanel)}
+          >
+            <Settings className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
+
+      {/* ACS Control Panel */}
+      {showACSPanel && (
+        <ACSControlPanel sessionId={sessionId} />
+      )}
 
       {/* Messages */}
       <Card className="flex-1 flex flex-col">
@@ -156,8 +194,21 @@ const EnhancedCoachInterface: React.FC<EnhancedCoachInterfaceProps> = (props) =>
                 >
                   <div className="whitespace-pre-wrap">{message.content}</div>
                   
+                  {/* ACS Status Indicators */}
                   {!message.isUser && (
                     <div className="flex items-center space-x-2 mt-2">
+                      {message.interventionApplied && (
+                        <Badge variant="outline" className="text-xs bg-blue-50">
+                          <Brain className="w-3 h-3 mr-1" />
+                          Adapted
+                        </Badge>
+                      )}
+                      {message.fallbackUsed && (
+                        <Badge variant="outline" className="text-xs bg-orange-50">
+                          <Settings className="w-3 h-3 mr-1" />
+                          Backup
+                        </Badge>
+                      )}
                       <span className="text-xs text-gray-500">
                         {message.timestamp.toLocaleTimeString()}
                       </span>
@@ -186,7 +237,7 @@ const EnhancedCoachInterface: React.FC<EnhancedCoachInterfaceProps> = (props) =>
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Type your message..."
+              placeholder="Type your message... (ACS will adapt based on your needs)"
               className="flex-1 min-h-[60px]"
               disabled={isLoading}
             />
@@ -208,4 +259,4 @@ const EnhancedCoachInterface: React.FC<EnhancedCoachInterfaceProps> = (props) =>
   );
 };
 
-export default EnhancedCoachInterface;
+export default ACSEnhancedCoachInterface;
