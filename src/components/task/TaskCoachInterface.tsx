@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -45,11 +44,14 @@ interface TaskCoachInterfaceProps {
   onTaskComplete: (taskId: string) => void;
 }
 
-interface Message {
+// EnhancedCoachInterface's Message type
+interface CoachMessage {
   id: string;
   content: string;
-  sender: 'user' | 'assistant';
+  isUser: boolean;
   timestamp: Date;
+  interventionApplied?: boolean;
+  fallbackUsed?: boolean;
 }
 
 export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
@@ -80,7 +82,7 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [taskProgress, setTaskProgress] = useState(0);
   const [taskCompleted, setTaskCompleted] = useState(false);
-  const [coachMessages, setCoachMessages] = useState<Message[]>([]);
+  const [coachMessages, setCoachMessages] = useState<CoachMessage[]>([]);
 
   // Log component mount
   useEffect(() => {
@@ -168,10 +170,10 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
 
   // Convert task-aware messages to coach messages format
   useEffect(() => {
-    const convertedMessages: Message[] = messages.map(msg => ({
+    const convertedMessages: CoachMessage[] = messages.map(msg => ({
       id: msg.id,
       content: msg.content,
-      sender: msg.sender as 'user' | 'assistant',
+      isUser: msg.sender === 'user', // Convert sender to isUser boolean
       timestamp: msg.timestamp
     }));
     setCoachMessages(convertedMessages);
@@ -287,10 +289,10 @@ Let's get started! What's the first step?`;
     await quickTaskActions.markTaskComplete();
   }, [quickTaskActions, task.id, taskProgress, focusTime]);
 
-  const handleNewMessage = useCallback((message: Message) => {
+  const handleNewMessage = useCallback((message: CoachMessage) => {
     dreamActivityLogger.logActivity('coach_message_received', {
       message_id: message.id,
-      message_sender: message.sender,
+      message_sender: message.isUser ? 'user' : 'assistant',
       message_length: message.content.length,
       task_id: task.id
     });
