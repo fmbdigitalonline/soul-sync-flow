@@ -364,24 +364,32 @@ class TieredMemoryGraphService {
     recurrenceCount: number
   ): Promise<number> {
     try {
-      const { data, error } = await supabase
-        .rpc('calculate_importance_score', {
-          semantic_novelty: semanticNovelty,
-          emotion_intensity: emotionIntensity,
-          user_feedback: userFeedback,
-          recurrence_count: recurrenceCount,
-          user_id_param: userId
-        });
+      // Implement importance scoring algorithm directly since RPC doesn't exist
+      // Weighted formula: semantic novelty (30%) + emotion intensity (40%) + user feedback (20%) + recurrence (10%)
+      const weights = {
+        semanticNovelty: 0.3,
+        emotionIntensity: 0.4,
+        userFeedback: 0.2,
+        recurrenceCount: 0.1
+      };
 
-      if (error) {
-        console.error('Failed to calculate importance score:', error);
-        return 5.0; // Default score
-      }
+      // Normalize inputs to 0-10 scale
+      const normalizedSemanticNovelty = Math.max(0, Math.min(10, semanticNovelty));
+      const normalizedEmotionIntensity = Math.max(0, Math.min(10, emotionIntensity));
+      const normalizedUserFeedback = Math.max(0, Math.min(10, userFeedback));
+      const normalizedRecurrence = Math.max(0, Math.min(10, recurrenceCount));
 
-      return Number(data) || 5.0;
+      const score = 
+        (normalizedSemanticNovelty * weights.semanticNovelty) +
+        (normalizedEmotionIntensity * weights.emotionIntensity) +
+        (normalizedUserFeedback * weights.userFeedback) +
+        (normalizedRecurrence * weights.recurrenceCount);
+
+      // Return score between 1-10
+      return Math.max(1, Math.min(10, score));
     } catch (error) {
       console.error('Error calculating importance score:', error);
-      return 5.0;
+      return 5.0; // Default score
     }
   }
 
