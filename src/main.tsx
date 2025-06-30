@@ -29,24 +29,37 @@ import { BlueprintCacheProvider } from "./contexts/BlueprintCacheContext";
 import { SoulOrbProvider } from "./contexts/SoulOrbContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { ModeProvider } from "./contexts/ModeContext";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
-const queryClient = new QueryClient();
+// Create stable QueryClient instance outside of component to prevent recreation
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
-// Root layout component that includes the ModeProvider inside the router context
+// Root layout component with consistent provider nesting order
 const RootLayout = () => {
   return (
-    <AuthProvider>
-      <LanguageProvider>
-        <BlueprintCacheProvider>
-          <SoulOrbProvider>
+    <div className="min-h-screen bg-gradient-to-br from-soul-deep via-soul-purple to-soul-bright">
+      <ErrorBoundary>
+        <AuthProvider>
+          <LanguageProvider>
             <ModeProvider>
-              <Outlet />
-              <Toaster />
+              <SoulOrbProvider>
+                <BlueprintCacheProvider>
+                  <Outlet />
+                  <Toaster />
+                </BlueprintCacheProvider>
+              </SoulOrbProvider>
             </ModeProvider>
-          </SoulOrbProvider>
-        </BlueprintCacheProvider>
-      </LanguageProvider>
-    </AuthProvider>
+          </LanguageProvider>
+        </AuthProvider>
+      </ErrorBoundary>
+    </div>
   );
 };
 
