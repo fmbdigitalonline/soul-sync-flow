@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { ACSConfig, DialogueHealthMetrics, DialogueState, PromptStrategyConfig } from "@/types/acs-types";
 
@@ -220,7 +219,7 @@ class ACSRealAIIntegrationService implements ACSRealAIIntegration {
         },
         promptModifications,
         evidence: {
-          error: error.message,
+          error: error instanceof Error ? error.message : String(error),
           fallbackUsed: true,
           emotionalState,
           timestamp: new Date().toISOString()
@@ -470,7 +469,7 @@ class ACSRealAIIntegrationService implements ACSRealAIIntegration {
       helpSignals,
       timestamp: currentTime,
       l2NormConstraint: 0 // Will be calculated separately if RL enabled
-    };
+    } as DialogueHealthMetrics;
   }
 
   private calculateSentiment(message: string): number {
@@ -798,10 +797,10 @@ class ACSRealAIIntegrationService implements ACSRealAIIntegration {
         console.warn('⚠️ Supabase insert error for cross-session learning:', error.message);
       } else {
         console.log(`📚 CLAIM 9: Cross-session learning stored in Supabase for ${sessionKey}`);
-        console.log(`📚 CLAIM 9: Database record created with ID:`, data?.id);
+        console.log(`📚 CLAIM 9: Database record created with ID:`, data?.[0]?.id);
       }
     } catch (error) {
-      console.warn('⚠️ Could not store cross-session learning:', error.message);
+      console.warn('⚠️ Could not store cross-session learning:', error instanceof Error ? error.message : String(error));
     }
     
     console.log(`📚 CLAIM 9: Cross-session learning updated for ${sessionKey}:`, {
