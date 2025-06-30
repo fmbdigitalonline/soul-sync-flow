@@ -5,15 +5,51 @@ export class ACSEnhancedStateDetection {
   private idleTimer: NodeJS.Timeout | null = null;
   private silenceStartTime: number | null = null;
 
-  detectState(metrics: DialogueHealthMetrics, config: ACSConfig, currentState: DialogueState): {
+  detectState(
+    metrics: DialogueHealthMetrics, 
+    config: ACSConfig, 
+    currentState: DialogueState,
+    emotionalState?: { emotion: string; intensity: number; confidence: number }
+  ): {
     newState: DialogueState;
     confidence: number;
     trigger: string;
   } {
     console.log("🔍 ACS Enhanced State Detection - Analyzing metrics:", metrics);
+    console.log("🎭 Emotional state:", emotionalState);
     console.log("⚙️ Config thresholds:", config);
     
-    // CRITICAL FIX: Enhanced frustration detection with lower threshold and better patterns
+    // CRITICAL FIX: Enhanced emotion-based state detection
+    if (emotionalState && emotionalState.emotion !== 'neutral' && emotionalState.intensity > 0.3) {
+      switch (emotionalState.emotion) {
+        case 'frustrated':
+          return {
+            newState: 'FRUSTRATION_DETECTED',
+            confidence: 0.95,
+            trigger: `Emotion-based: ${emotionalState.emotion} detected with intensity ${emotionalState.intensity.toFixed(3)}`
+          };
+        case 'anxious':
+          return {
+            newState: 'ANXIOUS',
+            confidence: 0.9,
+            trigger: `Anxiety detected with intensity ${emotionalState.intensity.toFixed(3)}`
+          };
+        case 'confused':
+          return {
+            newState: 'CONFUSED',
+            confidence: 0.85,
+            trigger: `Confusion detected with intensity ${emotionalState.intensity.toFixed(3)}`
+          };
+        case 'excited':
+          return {
+            newState: 'EXCITED',
+            confidence: 0.8,
+            trigger: `Excitement detected with intensity ${emotionalState.intensity.toFixed(3)}`
+          };
+      }
+    }
+    
+    // Traditional frustration detection (backup)
     if (this.detectFrustrationState(metrics, config)) {
       console.log("😤 FRUSTRATION DETECTED - Triggering intervention");
       return {
@@ -32,12 +68,12 @@ export class ACSEnhancedStateDetection {
       };
     }
     
-    // Idle state detection (checked separately via timer)
+    // CRITICAL FIX: Updated idle state detection (3 minutes = 180000ms)
     if (this.detectIdleState(metrics, config)) {
       return {
         newState: 'IDLE',
         confidence: 0.95,
-        trigger: `Silent duration ${metrics.silentDuration}ms >= threshold ${config.maxSilentMs}ms`
+        trigger: `Silent duration ${metrics.silentDuration}ms >= threshold ${config.maxSilentMs}ms (3 minutes)`
       };
     }
     
@@ -146,7 +182,7 @@ export class ACSEnhancedStateDetection {
   }
 
   private detectIdleState(metrics: DialogueHealthMetrics, config: ACSConfig): boolean {
-    return metrics.silentDuration >= config.maxSilentMs;
+    return metrics.silentDuration >= config.maxSilentMs; // Now 3 minutes (180000ms)
   }
 
   private detectHighEngagement(metrics: DialogueHealthMetrics, config: ACSConfig): boolean {
@@ -154,13 +190,15 @@ export class ACSEnhancedStateDetection {
            metrics.sentimentSlope > 0.2;
   }
 
-  // Real-time idle monitoring
+  // CRITICAL FIX: Update idle monitoring to 3 minutes
   startIdleMonitoring(config: ACSConfig, onIdleDetected: () => void): void {
     this.resetIdleTimer();
     this.silenceStartTime = Date.now();
     
+    console.log(`⏰ Starting idle monitoring - will trigger after ${config.maxSilentMs / 1000 / 60} minutes of inactivity`);
+    
     this.idleTimer = setTimeout(() => {
-      console.log("⏰ ACS Idle State Detected - No user activity for", config.maxSilentMs, "ms");
+      console.log("⏰ ACS Idle State Detected - No user activity for", config.maxSilentMs / 1000 / 60, "minutes");
       onIdleDetected();
     }, config.maxSilentMs);
   }

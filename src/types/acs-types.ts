@@ -1,9 +1,8 @@
 
-
 export interface ACSConfig {
   velocityFloor: number;          // tokens per second threshold
   sentimentSlopeNeg: number;      // negative sentiment slope threshold
-  maxSilentMs: number;           // idle threshold in milliseconds
+  maxSilentMs: number;           // idle threshold in milliseconds (now 3 minutes = 180000ms)
   frustrationThreshold: number;   // accumulated frustration score
   clarificationThreshold: number; // confusion detection threshold
   enableRL: boolean;             // reinforcement learning toggle
@@ -21,13 +20,13 @@ export interface DialogueHealthMetrics {
 }
 
 export interface HelpSignal {
-  type: 'repetitive_query' | 'confusion_pattern' | 'paralinguistic_cue' | 'negative_feedback' | 'frustration_pattern';
+  type: 'repetitive_query' | 'confusion_pattern' | 'paralinguistic_cue' | 'negative_feedback' | 'frustration_pattern' | 'anxiety_pattern' | 'sadness_pattern' | 'excitement_pattern';
   confidence: number;
   message: string;
   timestamp: number;
 }
 
-export type DialogueState = 'NORMAL' | 'CLARIFICATION_NEEDED' | 'FRUSTRATION_DETECTED' | 'IDLE' | 'HIGH_ENGAGEMENT';
+export type DialogueState = 'NORMAL' | 'CLARIFICATION_NEEDED' | 'FRUSTRATION_DETECTED' | 'IDLE' | 'HIGH_ENGAGEMENT' | 'ANXIOUS' | 'CONFUSED' | 'EXCITED';
 
 export interface StateTransition {
   fromState: DialogueState;
@@ -40,7 +39,7 @@ export interface StateTransition {
 export interface PromptStrategyConfig {
   systemPromptModifier?: string;
   temperatureAdjustment?: number;
-  personaStyle?: 'empathetic' | 'direct' | 'encouraging' | 'clarifying' | 'neutral';
+  personaStyle?: 'empathetic' | 'direct' | 'encouraging' | 'clarifying' | 'neutral' | 'calming';
   apologyPrefix?: boolean;
   checkInEnabled?: boolean;
   maxTokens?: number;
@@ -57,3 +56,9 @@ export interface ACSMetrics {
   successRate: number;
 }
 
+export interface EmotionalState {
+  emotion: 'neutral' | 'frustrated' | 'anxious' | 'confused' | 'excited' | 'sad' | 'happy';
+  intensity: number; // 0-1 scale
+  confidence: number; // 0-1 scale
+  timestamp: number;
+}
