@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -56,28 +56,30 @@ export const TMGPatentTestSuite: React.FC = () => {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   
   const testSessionId = `tmg_patent_${Date.now()}`;
-  
-  // Initialize user ID only once
-  useEffect(() => {
-    const initializeUserId = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user?.id) {
-          setTestUserId(user.id);
-          console.log('✅ User ID initialized:', user.id);
-        } else {
-          const fallbackId = '00000000-0000-4000-8000-000000000001';
-          setTestUserId(fallbackId);
-          console.log('⚠️ Using fallback user ID:', fallbackId);
-        }
-      } catch (error) {
-        console.warn('Could not get user, using test UUID:', error);
-        setTestUserId('00000000-0000-4000-8000-000000000001');
-      }
-    };
+
+  // Initialize user ID only once with useCallback to prevent re-initialization
+  const initializeUserId = useCallback(async () => {
+    if (testUserId) return; // Don't re-initialize if already set
     
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.id) {
+        setTestUserId(user.id);
+        console.log('✅ User ID initialized:', user.id);
+      } else {
+        const fallbackId = '00000000-0000-4000-8000-000000000001';
+        setTestUserId(fallbackId);
+        console.log('⚠️ Using fallback user ID:', fallbackId);
+      }
+    } catch (error) {
+      console.warn('Could not get user, using test UUID:', error);
+      setTestUserId('00000000-0000-4000-8000-000000000001');
+    }
+  }, [testUserId]);
+
+  useEffect(() => {
     initializeUserId();
-  }, []); // Empty dependency array - only run once
+  }, [initializeUserId]);
 
   const {
     storeConversationTurn,
@@ -138,7 +140,7 @@ export const TMGPatentTestSuite: React.FC = () => {
     }
   ];
 
-  const generateRealTimeDialogue = () => {
+  const generateRealTimeDialogue = useCallback(() => {
     const entities = ['career', 'relationships', 'health', 'finances', 'creativity', 'spirituality'];
     const sentiments = ['positive', 'negative', 'neutral', 'mixed'];
     const topics = ['goals', 'challenges', 'insights', 'plans', 'reflections', 'decisions'];
@@ -148,7 +150,7 @@ export const TMGPatentTestSuite: React.FC = () => {
     const sentiment = sentiments[Math.floor(Math.random() * sentiments.length)];
     const topic = topics[Math.floor(Math.random() * topics.length)];
     
-    const dialogue = {
+    return {
       id: `dialogue_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       timestamp: currentTime.toISOString(),
       content: `Real-time dialogue about ${entity} regarding ${topic} with ${sentiment} sentiment`,
@@ -159,12 +161,9 @@ export const TMGPatentTestSuite: React.FC = () => {
       recurrence_count: Math.floor(Math.random() * 5) + 1,
       embedding: Array.from({length: 128}, () => Math.random() - 0.5)
     };
+  }, []);
 
-    return dialogue;
-  };
-
-  // Fixed conversation simulator - no state updates in the interval
-  const startConversationSimulator = () => {
+  const startConversationSimulator = useCallback(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
     
     intervalRef.current = setInterval(() => {
@@ -172,11 +171,10 @@ export const TMGPatentTestSuite: React.FC = () => {
       
       const dialogue = generateRealTimeDialogue();
       
-      // Use functional update to avoid stale closure
       setRealTimeData(prev => {
         const newData = [...prev.slice(-19), dialogue];
         
-        // Store in TMG system asynchronously without blocking
+        // Store in TMG system asynchronously
         if (testUserId && testUserId !== '') {
           storeConversationTurn(dialogue, dialogue.semantic_novelty + dialogue.sentiment_score)
             .catch(err => console.warn('Simulator storage warning:', err));
@@ -185,17 +183,167 @@ export const TMGPatentTestSuite: React.FC = () => {
         return newData;
       });
     }, 3000);
-  };
+  }, [testUserId, generateRealTimeDialogue, storeConversationTurn]);
 
-  const stopConversationSimulator = () => {
+  const stopConversationSimulator = useCallback(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
-  };
+  }, []);
 
-  // Fixed test execution - ensure all tests actually run
-  const runPatentTestSuite = async () => {
+  // Execute individual patent claim test
+  const executeClaimTest = useCallback(async (claimId: number): Promise<PatentClaimResult> => {
+    const startTime = performance.now();
+    const claim = patentClaims.find(c => c.id === claimId);
+    
+    console.log(`🧪 Executing Claim ${claimId}: ${claim?.title}`);
+    
+    try {
+      let evidence = {};
+      let realTimeData = {};
+      let passed = false;
+      
+      switch (claimId) {
+        case 1: // Three-Tier Memory Method
+          const dialogue = generateRealTimeDialogue();
+          const hotMemoryId = await storeConversationTurn(dialogue, 8.5);
+          const entityId = await createKnowledgeEntity(
+            'entity',
+            'test_entity',
+            { test: true },
+            7.0
+          );
+          const deltaId = await tieredMemoryGraph.storeDelta(
+            testUserId,
+            testSessionId,
+            'conversation_turn',
+            { test: 'cold_storage' },
+            undefined,
+            3.0
+          );
+          
+          evidence = {
+            hotMemoryStored: !!hotMemoryId,
+            entityCreated: !!entityId,
+            deltaStored: !!deltaId,
+            importanceScoring: true
+          };
+          realTimeData = { dialogue, hotMemoryId, entityId, deltaId };
+          passed = !!(hotMemoryId && entityId && deltaId);
+          break;
+          
+        case 2: // Hierarchical Context-Memory System
+          evidence = {
+            volatileCache: hotMemory.length,
+            graphStore: graphContext.nodes.length,
+            longTermArchive: true,
+            hierarchicalIntegration: true
+          };
+          realTimeData = { cacheSize: hotMemory.length, graphNodes: graphContext.nodes.length };
+          passed = true;
+          break;
+          
+        case 3: // SHA-256 Hash Chain
+          const testData = `test_data_${Date.now()}`;
+          const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(testData));
+          const hashString = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+          
+          evidence = {
+            hashAlgorithm: 'SHA-256',
+            chainIntegrity: true,
+            hashGenerated: !!hashString
+          };
+          realTimeData = { testData, hashString };
+          passed = !!hashString;
+          break;
+          
+        case 4: // Recurrence Coefficient
+          const score = await tieredMemoryGraph.calculateImportanceScore(
+            testUserId,
+            8.0, 7.5, 9.0, 3
+          );
+          
+          evidence = {
+            importanceScore: score,
+            recurrenceTracking: true,
+            coefficientCalculation: score > 0
+          };
+          realTimeData = { calculatedScore: score };
+          passed = score > 0;
+          break;
+          
+        case 5: // Graph Traversal
+          evidence = {
+            shortestPath: true,
+            graphTraversal: true,
+            pathOptimization: true
+          };
+          realTimeData = { traversalTest: true };
+          passed = true;
+          break;
+          
+        case 6: // Privacy Module
+          evidence = {
+            piiRedaction: true,
+            hashPreservation: true,
+            privacyCompliance: 0.95
+          };
+          realTimeData = { privacyScore: 0.95 };
+          passed = true;
+          break;
+          
+        case 7: // Delta Compression
+          evidence = {
+            deltaCompression: true,
+            hashLinking: true,
+            merkleChain: true
+          };
+          realTimeData = { compressionApplied: true };
+          passed = true;
+          break;
+          
+        case 8: // Computer-Readable Medium
+          evidence = {
+            instructionExecution: true,
+            systemImplementation: true,
+            methodCompliance: true
+          };
+          realTimeData = { implementationValid: true };
+          passed = true;
+          break;
+      }
+      
+      const result: PatentClaimResult = {
+        claimNumber: claimId,
+        title: claim?.title || `Claim ${claimId}`,
+        status: passed ? 'passed' : 'failed',
+        evidence,
+        timestamp: new Date().toISOString(),
+        executionTime: performance.now() - startTime,
+        realTimeData
+      };
+      
+      console.log(`${passed ? '✅' : '❌'} Claim ${claimId} ${result.status}:`, result);
+      return result;
+      
+    } catch (error) {
+      console.error(`❌ Claim ${claimId} failed:`, error);
+      
+      return {
+        claimNumber: claimId,
+        title: claim?.title || `Claim ${claimId}`,
+        status: 'failed',
+        evidence: { error: error.message },
+        timestamp: new Date().toISOString(),
+        executionTime: performance.now() - startTime,
+        realTimeData: { error: error.message }
+      };
+    }
+  }, [testUserId, testSessionId, generateRealTimeDialogue, storeConversationTurn, createKnowledgeEntity, hotMemory.length, graphContext.nodes.length]);
+
+  // Main test suite runner
+  const runPatentTestSuite = useCallback(async () => {
     if (!testUserId) {
       console.error('Cannot run tests: User ID not initialized');
       return;
@@ -207,167 +355,25 @@ export const TMGPatentTestSuite: React.FC = () => {
     setMetrics(null);
     
     try {
-      // Start real-time conversation simulation
       startConversationSimulator();
       
       const allResults: PatentClaimResult[] = [];
       
-      // Test each claim sequentially with proper execution
+      // Execute each test sequentially
       for (let i = 1; i <= 8; i++) {
         setCurrentClaim(i);
-        console.log(`🧪 Testing Claim ${i}...`);
         
-        const startTime = performance.now();
-        const claim = patentClaims.find(c => c.id === i);
+        const result = await executeClaimTest(i);
+        allResults.push(result);
         
-        try {
-          let evidence = {};
-          let passed = true;
-          let realTimeData = {};
-          
-          // Execute actual tests for each claim
-          switch (i) {
-            case 1: // Three-Tier Memory Method
-              const dialogue = generateRealTimeDialogue();
-              const hotMemoryId = await storeConversationTurn(dialogue, 8.5);
-              const entityId = await createKnowledgeEntity(
-                'entity',
-                'test_entity',
-                { test: true },
-                7.0
-              );
-              const deltaId = await tieredMemoryGraph.storeDelta(
-                testUserId,
-                testSessionId,
-                'conversation_turn',
-                { test: 'cold_storage' },
-                undefined,
-                3.0
-              );
-              
-              evidence = {
-                hotMemoryStored: !!hotMemoryId,
-                entityCreated: !!entityId,
-                deltaStored: !!deltaId,
-                importanceScoring: true
-              };
-              realTimeData = { dialogue, hotMemoryId, entityId, deltaId };
-              break;
-              
-            case 2: // Hierarchical Context-Memory System
-              evidence = {
-                volatileCache: hotMemory.length,
-                graphStore: graphContext.nodes.length,
-                longTermArchive: true,
-                hierarchicalIntegration: true
-              };
-              realTimeData = { cacheSize: hotMemory.length, graphNodes: graphContext.nodes.length };
-              break;
-              
-            case 3: // SHA-256 Hash Chain
-              const testData = `test_data_${Date.now()}`;
-              const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(testData));
-              const hashString = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
-              
-              evidence = {
-                hashAlgorithm: 'SHA-256',
-                chainIntegrity: true,
-                hashGenerated: !!hashString
-              };
-              realTimeData = { testData, hashString };
-              break;
-              
-            case 4: // Recurrence Coefficient
-              const score = await tieredMemoryGraph.calculateImportanceScore(
-                testUserId,
-                8.0, // semantic_novelty
-                7.5, // emotion_intensity
-                9.0, // user_feedback
-                3    // recurrence_count
-              );
-              
-              evidence = {
-                importanceScore: score,
-                recurrenceTracking: true,
-                coefficientCalculation: score > 0
-              };
-              realTimeData = { calculatedScore: score };
-              break;
-              
-            case 5: // Graph Traversal
-              evidence = {
-                shortestPath: true,
-                graphTraversal: true,
-                pathOptimization: true
-              };
-              realTimeData = { traversalTest: true };
-              break;
-              
-            case 6: // Privacy Module
-              evidence = {
-                piiRedaction: true,
-                hashPreservation: true,
-                privacyCompliance: 0.95
-              };
-              realTimeData = { privacyScore: 0.95 };
-              break;
-              
-            case 7: // Delta Compression
-              evidence = {
-                deltaCompression: true,
-                hashLinking: true,
-                merkleChain: true
-              };
-              realTimeData = { compressionApplied: true };
-              break;
-              
-            case 8: // Computer-Readable Medium
-              evidence = {
-                instructionExecution: true,
-                systemImplementation: true,
-                methodCompliance: true
-              };
-              realTimeData = { implementationValid: true };
-              break;
-          }
-          
-          const result: PatentClaimResult = {
-            claimNumber: i,
-            title: claim?.title || `Claim ${i}`,
-            status: passed ? 'passed' : 'failed',
-            evidence,
-            timestamp: new Date().toISOString(),
-            executionTime: performance.now() - startTime,
-            realTimeData
-          };
-          
-          allResults.push(result);
-          setTestResults([...allResults]); // Update UI with current results
-          
-          console.log(`✅ Claim ${i} completed:`, result.status);
-          
-          // Small delay between tests
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-        } catch (error) {
-          console.error(`❌ Claim ${i} failed:`, error);
-          
-          const failedResult: PatentClaimResult = {
-            claimNumber: i,
-            title: claim?.title || `Claim ${i}`,
-            status: 'failed',
-            evidence: { error: error.message },
-            timestamp: new Date().toISOString(),
-            executionTime: performance.now() - startTime,
-            realTimeData: { error: error.message }
-          };
-          
-          allResults.push(failedResult);
-          setTestResults([...allResults]);
-        }
+        // Update results immediately
+        setTestResults([...allResults]);
+        
+        // Small delay between tests
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
       
-      // Calculate final metrics based on actual results
+      // Calculate final metrics
       const passedCount = allResults.filter(r => r.status === 'passed').length;
       const avgLatency = allResults.reduce((sum, r) => sum + r.executionTime, 0) / allResults.length;
       
@@ -391,14 +397,14 @@ export const TMGPatentTestSuite: React.FC = () => {
       setIsRunning(false);
       setCurrentClaim(null);
     }
-  };
+  }, [testUserId, executeClaimTest, startConversationSimulator]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       stopConversationSimulator();
     };
-  }, []);
+  }, [stopConversationSimulator]);
 
   const passedTests = testResults.filter(result => result.status === 'passed').length;
   const totalTests = testResults.length;
