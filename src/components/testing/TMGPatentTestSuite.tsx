@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -217,7 +218,7 @@ export const TMGPatentTestSuite: React.FC = () => {
   }, []);
 
   // Execute individual patent claim test with proper error handling
-  const executeClaimTest = useCallback(async (claimId: number): Promise<PatentClaimResult> {
+  const executeClaimTest = useCallback(async (claimId: number): Promise<PatentClaimResult> => {
     const startTime = performance.now();
     const claim = patentClaims.find(c => c.id === claimId);
     
