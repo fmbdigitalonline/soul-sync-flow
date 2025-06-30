@@ -15,6 +15,8 @@ interface TieredMemoryState {
     avgLatency: Record<string, number>;
   };
   isLoading: boolean;
+  isInitialized: boolean;
+  error: string | null;
 }
 
 export const useTieredMemory = (userId: string, sessionId: string) => {
@@ -22,10 +24,12 @@ export const useTieredMemory = (userId: string, sessionId: string) => {
     hotMemory: [],
     graphContext: { nodes: [], edges: [] },
     metrics: { hotHits: 0, warmHits: 0, coldHits: 0, avgLatency: {} },
-    isLoading: false
+    isLoading: false,
+    isInitialized: false,
+    error: null
   });
 
-  // Store conversation turn in TMG
+  // Store conversation turn in TMG with improved error handling
   const storeConversationTurn = useCallback(async (
     content: any,
     importanceScore?: number
@@ -36,7 +40,7 @@ export const useTieredMemory = (userId: string, sessionId: string) => {
     }
 
     try {
-      setState(prev => ({ ...prev, isLoading: true }));
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
 
       // Calculate importance score if not provided
       let finalImportanceScore = importanceScore;
@@ -83,32 +87,50 @@ export const useTieredMemory = (userId: string, sessionId: string) => {
       return hotMemoryId;
     } catch (error) {
       console.error('Error storing conversation turn:', error);
+      setState(prev => ({ 
+        ...prev, 
+        error: `Failed to store conversation: ${error.message}`,
+        isLoading: false 
+      }));
       return null;
     } finally {
       setState(prev => ({ ...prev, isLoading: false }));
     }
   }, [userId, sessionId]);
 
-  // Load hot memory context
+  // Load hot memory context with enhanced error handling
   const loadHotMemory = useCallback(async () => {
     if (!userId || !sessionId) {
       console.warn('Cannot load hot memory: missing userId or sessionId');
+      setState(prev => ({ 
+        ...prev, 
+        error: 'Missing user ID or session ID',
+        isLoading: false 
+      }));
       return;
     }
 
     try {
-      setState(prev => ({ ...prev, isLoading: true }));
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
 
       const hotMemory = await tieredMemoryGraph.getFromHotMemory(userId, sessionId);
       
       setState(prev => ({
         ...prev,
         hotMemory,
-        isLoading: false
+        isLoading: false,
+        isInitialized: true,
+        error: null
       }));
     } catch (error) {
       console.error('Error loading hot memory:', error);
-      setState(prev => ({ ...prev, isLoading: false }));
+      setState(prev => ({ 
+        ...prev, 
+        isLoading: false,
+        error: `Failed to load hot memory: ${error.message}`,
+        // Still mark as initialized even if loading failed
+        isInitialized: true
+      }));
     }
   }, [userId, sessionId]);
 
@@ -121,6 +143,10 @@ export const useTieredMemory = (userId: string, sessionId: string) => {
   ) => {
     if (!userId) {
       console.warn('Cannot create knowledge entity: missing userId');
+      setState(prev => ({ 
+        ...prev, 
+        error: 'Missing user ID for entity creation' 
+      }));
       return null;
     }
 
@@ -136,6 +162,10 @@ export const useTieredMemory = (userId: string, sessionId: string) => {
       return nodeId;
     } catch (error) {
       console.error('Error creating knowledge entity:', error);
+      setState(prev => ({ 
+        ...prev, 
+        error: `Failed to create entity: ${error.message}` 
+      }));
       return null;
     }
   }, [userId]);
@@ -149,6 +179,10 @@ export const useTieredMemory = (userId: string, sessionId: string) => {
   ) => {
     if (!userId) {
       console.warn('Cannot link entities: missing userId');
+      setState(prev => ({ 
+        ...prev, 
+        error: 'Missing user ID for entity linking' 
+      }));
       return null;
     }
 
@@ -165,6 +199,10 @@ export const useTieredMemory = (userId: string, sessionId: string) => {
       return edgeId;
     } catch (error) {
       console.error('Error linking entities:', error);
+      setState(prev => ({ 
+        ...prev, 
+        error: `Failed to link entities: ${error.message}` 
+      }));
       return null;
     }
   }, [userId]);
@@ -177,11 +215,15 @@ export const useTieredMemory = (userId: string, sessionId: string) => {
   ) => {
     if (!userId) {
       console.warn('Cannot get graph context: missing userId');
+      setState(prev => ({ 
+        ...prev, 
+        error: 'Missing user ID for graph context' 
+      }));
       return { nodes: [], edges: [] };
     }
 
     try {
-      setState(prev => ({ ...prev, isLoading: true }));
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
 
       const context = await tieredMemoryGraph.traverseGraph(
         userId,
@@ -193,41 +235,62 @@ export const useTieredMemory = (userId: string, sessionId: string) => {
       setState(prev => ({
         ...prev,
         graphContext: context,
-        isLoading: false
+        isLoading: false,
+        error: null
       }));
 
       return context;
     } catch (error) {
       console.error('Error getting graph context:', error);
-      setState(prev => ({ ...prev, isLoading: false }));
+      setState(prev => ({ 
+        ...prev, 
+        isLoading: false,
+        error: `Failed to get graph context: ${error.message}` 
+      }));
       return { nodes: [], edges: [] };
     }
   }, [userId]);
 
-  // Load performance metrics
+  // Load performance metrics with error handling
   const loadMetrics = useCallback(async () => {
     if (!userId) {
       console.warn('Cannot load metrics: missing userId');
+      setState(prev => ({ 
+        ...prev, 
+        error: 'Missing user ID for metrics loading' 
+      }));
       return;
     }
 
     try {
       const metrics = await tieredMemoryGraph.getPerformanceMetrics(userId);
-      setState(prev => ({ ...prev, metrics }));
+      setState(prev => ({ 
+        ...prev, 
+        metrics,
+        error: null 
+      }));
     } catch (error) {
       console.error('Error loading metrics:', error);
+      setState(prev => ({ 
+        ...prev, 
+        error: `Failed to load metrics: ${error.message}` 
+      }));
     }
   }, [userId]);
 
-  // Integrate with existing memory - the missing function
+  // Integrate with existing memory - enhanced with error handling
   const integrateWithExistingMemory = useCallback(async () => {
     if (!userId) {
       console.warn('Cannot integrate memory: missing userId');
+      setState(prev => ({ 
+        ...prev, 
+        error: 'Missing user ID for memory integration' 
+      }));
       return;
     }
 
     try {
-      setState(prev => ({ ...prev, isLoading: true }));
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
       console.log('🔄 Integrating with existing memory systems...');
 
       // This function would integrate TMG with existing memory systems
@@ -239,20 +302,40 @@ export const useTieredMemory = (userId: string, sessionId: string) => {
       ]);
 
       console.log('✅ Memory integration completed');
+      setState(prev => ({ 
+        ...prev, 
+        isLoading: false,
+        error: null 
+      }));
     } catch (error) {
       console.error('❌ Error integrating with existing memory:', error);
-    } finally {
-      setState(prev => ({ ...prev, isLoading: false }));
+      setState(prev => ({ 
+        ...prev, 
+        isLoading: false,
+        error: `Memory integration failed: ${error.message}` 
+      }));
     }
   }, [userId, loadHotMemory, getGraphContext, loadMetrics]);
 
-  // Initialize on mount
+  // Initialize TMG system when userId and sessionId are available
   useEffect(() => {
-    if (userId && sessionId) {
+    if (userId && sessionId && !state.isInitialized) {
+      console.log('🚀 Initializing TMG system for user:', userId);
       loadHotMemory();
       loadMetrics();
     }
-  }, [userId, sessionId, loadHotMemory, loadMetrics]);
+  }, [userId, sessionId, state.isInitialized, loadHotMemory, loadMetrics]);
+
+  // Clear error after some time
+  useEffect(() => {
+    if (state.error) {
+      const timer = setTimeout(() => {
+        setState(prev => ({ ...prev, error: null }));
+      }, 10000); // Clear error after 10 seconds
+
+      return () => clearTimeout(timer);
+    }
+  }, [state.error]);
 
   return {
     ...state,

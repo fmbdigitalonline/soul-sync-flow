@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -61,9 +60,9 @@ export const TMGPatentTestSuite: React.FC = () => {
   
   const testSessionId = `tmg_patent_${Date.now()}`;
 
-  // Initialize user ID with better error handling - fix the infinite loop
+  // Initialize user ID with proper error handling and no circular dependencies
   const initializeUserId = useCallback(async () => {
-    if (testUserId || isInitialized) return; // Prevent re-initialization
+    if (isInitialized) return; // Only initialize once
     
     try {
       console.log('🔧 Initializing TMG Patent Test Suite...');
@@ -84,20 +83,20 @@ export const TMGPatentTestSuite: React.FC = () => {
         setInitializationError('Using fallback user ID - some features may be limited');
         console.log('⚠️ Using fallback user ID:', fallbackId);
       }
-      setIsInitialized(true);
     } catch (error) {
       const fallbackId = '00000000-0000-4000-8000-000000000001';
       setTestUserId(fallbackId);
       setInitializationError(`Initialization failed: ${error.message}. Using fallback ID.`);
-      setIsInitialized(true);
       console.error('❌ User initialization failed:', error);
+    } finally {
+      setIsInitialized(true);
     }
-  }, [testUserId, isInitialized]);
+  }, [isInitialized]);
 
-  // Only initialize once on mount
+  // Initialize once on mount
   useEffect(() => {
     initializeUserId();
-  }, []); // Empty dependency array to run only once
+  }, [initializeUserId]);
 
   const {
     storeConversationTurn,
@@ -105,7 +104,9 @@ export const TMGPatentTestSuite: React.FC = () => {
     getGraphContext,
     hotMemory,
     graphContext,
-    isLoading: tmgLoading
+    isLoading: tmgLoading,
+    isInitialized: tmgInitialized,
+    error: tmgError
   } = useTieredMemory(testUserId, testSessionId);
 
   const patentClaims = [
@@ -188,8 +189,8 @@ export const TMGPatentTestSuite: React.FC = () => {
     console.log('🎯 Starting conversation simulator...');
     
     intervalRef.current = setInterval(() => {
-      if (!testUserId) {
-        console.warn('⚠️ Cannot simulate - no user ID');
+      if (!testUserId || !isInitialized) {
+        console.warn('⚠️ Cannot simulate - not properly initialized');
         return;
       }
       
@@ -200,7 +201,7 @@ export const TMGPatentTestSuite: React.FC = () => {
           const newData = [...prev.slice(-19), dialogue];
           
           // Store in TMG system asynchronously
-          if (testUserId && testUserId !== '') {
+          if (testUserId && tmgInitialized) {
             storeConversationTurn(dialogue, dialogue.semantic_novelty + dialogue.sentiment_score)
               .catch(err => console.warn('⚠️ Simulator storage warning:', err));
           }
@@ -211,7 +212,7 @@ export const TMGPatentTestSuite: React.FC = () => {
         console.error('❌ Simulator error:', error);
       }
     }, 3000);
-  }, [testUserId, generateRealTimeDialogue, storeConversationTurn]);
+  }, [testUserId, isInitialized, tmgInitialized, generateRealTimeDialogue, storeConversationTurn]);
 
   const stopConversationSimulator = useCallback(() => {
     if (intervalRef.current) {
@@ -388,10 +389,11 @@ export const TMGPatentTestSuite: React.FC = () => {
     }
   }, [testUserId, testSessionId, generateRealTimeDialogue, storeConversationTurn, createKnowledgeEntity, hotMemory.length, graphContext.nodes.length]);
 
-  // Main test suite runner with enhanced logging
+  // Main test suite runner with enhanced validation
   const runPatentTestSuite = useCallback(async () => {
-    if (!testUserId || !isInitialized) {
-      console.error('❌ Cannot run tests: User ID not initialized');
+    if (!testUserId || !isInitialized || !tmgInitialized) {
+      console.error('❌ Cannot run tests: System not properly initialized');
+      console.log('State:', { testUserId: !!testUserId, isInitialized, tmgInitialized, tmgError });
       return;
     }
     
@@ -444,7 +446,7 @@ export const TMGPatentTestSuite: React.FC = () => {
       setIsRunning(false);
       setCurrentClaim(null);
     }
-  }, [testUserId, isInitialized, executeClaimTest, startConversationSimulator]);
+  }, [testUserId, isInitialized, tmgInitialized, tmgError, executeClaimTest, startConversationSimulator]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -456,6 +458,10 @@ export const TMGPatentTestSuite: React.FC = () => {
   const passedTests = testResults.filter(result => result.status === 'passed').length;
   const totalTests = testResults.length;
   const successRate = totalTests > 0 ? (passedTests / totalTests) * 100 : 0;
+
+  // Check if system is ready for testing
+  const isSystemReady = isInitialized && tmgInitialized && testUserId && !tmgLoading;
+  const systemStatus = tmgError ? 'error' : isSystemReady ? 'ready' : 'initializing';
 
   return (
     <div className="space-y-6">
@@ -475,18 +481,29 @@ export const TMGPatentTestSuite: React.FC = () => {
               <span>{initializationError}</span>
             </div>
           )}
+          {tmgError && (
+            <div className="flex items-center space-x-2 mt-2 text-red-600 text-sm">
+              <XCircle className="w-4 h-4" />
+              <span>TMG Error: {tmgError}</span>
+            </div>
+          )}
         </div>
         
         <div className="flex space-x-2">
           <Button
             onClick={runPatentTestSuite}
-            disabled={isRunning || !testUserId || !isInitialized || tmgLoading}
+            disabled={isRunning || !isSystemReady}
             className="bg-blue-600 hover:bg-blue-700"
           >
             {isRunning ? (
               <>
                 <Activity className="w-4 h-4 mr-2 animate-spin" />
                 Testing...
+              </>
+            ) : systemStatus === 'initializing' ? (
+              <>
+                <Clock className="w-4 h-4 mr-2" />
+                Initializing...
               </>
             ) : (
               <>
@@ -499,7 +516,7 @@ export const TMGPatentTestSuite: React.FC = () => {
           <Button
             variant="outline"
             onClick={intervalRef.current ? stopConversationSimulator : startConversationSimulator}
-            disabled={!testUserId || !isInitialized}
+            disabled={!isSystemReady}
           >
             {intervalRef.current ? (
               <>
@@ -515,6 +532,26 @@ export const TMGPatentTestSuite: React.FC = () => {
           </Button>
         </div>
       </div>
+
+      {/* System Status Indicator */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            {systemStatus === 'ready' && <CheckCircle className="w-5 h-5 text-green-600" />}
+            {systemStatus === 'initializing' && <Clock className="w-5 h-5 text-yellow-600" />}
+            {systemStatus === 'error' && <XCircle className="w-5 h-5 text-red-600" />}
+            <span>System Status: {systemStatus.charAt(0).toUpperCase() + systemStatus.slice(1)}</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="text-sm text-muted-foreground">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            <div>User ID: {testUserId ? '✅' : '❌'}</div>
+            <div>Initialized: {isInitialized ? '✅' : '❌'}</div>
+            <div>TMG Ready: {tmgInitialized ? '✅' : '❌'}</div>
+            <div>Loading: {tmgLoading ? '🔄' : '✅'}</div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Progress Overview */}
       <Card>
