@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -288,25 +287,43 @@ const ACSPatentTestSuite: React.FC = () => {
     const reasons: string[] = [];
     let score = 0;
 
-    // Check context window usage
-    if (result.evidence?.modifiedPrompt) {
+    // Check for dynamic token adjustment evidence in the correct locations
+    const evidence = result.evidence;
+    const actualMods = evidence?.actualModificationsApplied;
+    const contextWindowEvidence = evidence?.contextWindowManagementEvidence;
+
+    // Primary check: Dynamic token adjustment applied
+    if (evidence?.dynamicTokenAdjustment === true) {
+      score += 0.4;
+    } else if (contextWindowEvidence?.dynamicAdjustmentApplied === true) {
+      score += 0.4;
+    } else if (actualMods?.dynamicTokensUsed && actualMods.dynamicTokensUsed !== 150) {
       score += 0.4;
     } else {
-      reasons.push("No context window management evidence");
+      reasons.push("No dynamic token adjustment evidence found");
     }
 
-    // Verify memory efficiency
-    if (result.evidence?.promptLengthChange !== undefined) {
+    // Check for context window management evidence structure
+    if (contextWindowEvidence) {
       score += 0.3;
+      if (contextWindowEvidence.contextWindowManagement === true) {
+        score += 0.1;
+      }
     } else {
-      reasons.push("No memory efficiency tracking");
+      reasons.push("No context window management evidence structure");
     }
 
-    // Check dynamic adjustment
-    if (result.promptModifications?.maxTokens) {
-      score += 0.3;
+    // Check for token calculation method evidence
+    if (contextWindowEvidence?.tokenCalculationMethod === 'real-time-dynamic') {
+      score += 0.2;
+    } else if (evidence?.modifiedPrompt && evidence.basePrompt) {
+      // Fallback: check if prompt was actually modified (indicates dynamic processing)
+      const lengthChange = evidence.modifiedPrompt.length - evidence.basePrompt.length;
+      if (lengthChange > 0) {
+        score += 0.2;
+      }
     } else {
-      reasons.push("No dynamic token adjustment");
+      reasons.push("No token calculation method evidence");
     }
 
     return { passed: score >= 0.7, score, reasons };
