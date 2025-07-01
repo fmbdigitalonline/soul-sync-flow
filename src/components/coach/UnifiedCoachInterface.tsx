@@ -1,16 +1,16 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Send, Loader2, Brain, Activity, Database, Zap } from 'lucide-react';
+import { Send, Loader2, Brain, Activity, Database, Zap, Sparkles } from 'lucide-react';
 import { unifiedBrainService } from '@/services/unified-brain-service';
 import { AgentMode } from '@/types/personality-modules';
 import { DialogueState } from '@/types/acs-types';
 import { toast } from 'sonner';
 import { supabase } from "@/integrations/supabase/client";
+import { usePIEEnhancedCoach } from '@/hooks/use-pie-enhanced-coach';
 
 interface Message {
   id: string;
@@ -44,6 +44,9 @@ const UnifiedCoachInterface: React.FC<UnifiedCoachInterfaceProps> = ({
   const [brainInitialized, setBrainInitialized] = useState(false);
   const [brainHealth, setBrainHealth] = useState<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Use PIE-enhanced coach instead of regular enhanced coach
+  const pieCoach = usePIEEnhancedCoach(agentMode);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -103,37 +106,18 @@ const UnifiedCoachInterface: React.FC<UnifiedCoachInterfaceProps> = ({
     setIsLoading(true);
 
     try {
-      // Process through unified brain service
-      const brainResponse = await unifiedBrainService.processMessage(
-        inputValue.trim(),
-        sessionId,
-        agentMode,
-        currentState
-      );
-
-      // Update dialogue state if changed
-      if (brainResponse.newState !== currentState) {
-        setCurrentState(brainResponse.newState);
-      }
-
-      const assistantMessage: Message = {
-        id: `assistant_${Date.now()}`,
-        content: brainResponse.response,
-        isUser: false,
-        timestamp: new Date(),
-        agentMode,
-        brainMetrics: brainResponse.brainMetrics,
-        interventionApplied: brainResponse.interventionApplied
-      };
-
-      setMessages(prev => [...prev, assistantMessage]);
+      // Use PIE-enhanced message sending
+      await pieCoach.sendMessage(inputValue.trim(), true);
+      
+      // The PIE-enhanced coach will handle the response through its own state
+      // We need to sync with its messages
+      setMessages(prev => [...prev, ...pieCoach.messages.slice(prev.length)]);
       
       // Update brain health metrics
       setBrainHealth(unifiedBrainService.getBrainHealth());
       
       if (onNewMessage) {
         onNewMessage(userMessage);
-        onNewMessage(assistantMessage);
       }
 
     } catch (error) {
@@ -182,7 +166,7 @@ const UnifiedCoachInterface: React.FC<UnifiedCoachInterfaceProps> = ({
   return (
     <div className="flex flex-col h-full max-w-4xl mx-auto space-y-4">
       
-      {/* Unified Brain Status Bar */}
+      {/* Unified Brain Status Bar with PIE Integration */}
       <div className="flex items-center justify-between p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border">
         <div className="flex items-center space-x-3">
           <Brain className="w-5 h-5 text-purple-600" />
@@ -193,6 +177,11 @@ const UnifiedCoachInterface: React.FC<UnifiedCoachInterfaceProps> = ({
           <Badge variant={currentState === 'NORMAL' ? "outline" : "default"}>
             State: {currentState}
           </Badge>
+          {pieCoach.pieEnabled && (
+            <Badge variant="default" className="bg-gradient-to-r from-purple-500 to-pink-500">
+              PIE Enhanced
+            </Badge>
+          )}
         </div>
         
         <div className="flex items-center space-x-2">
@@ -202,6 +191,7 @@ const UnifiedCoachInterface: React.FC<UnifiedCoachInterfaceProps> = ({
               <span>Memory: {brainHealth.memorySystemActive ? '✅' : '❌'}</span>
               <span>VFP: {brainHealth.personalityEngineActive ? '✅' : '❌'}</span>
               <span>ACS: {brainHealth.acsSystemActive ? '✅' : '❌'}</span>
+              {pieCoach.pieInitialized && <span>PIE: ✅</span>}
             </div>
           )}
         </div>
@@ -223,6 +213,19 @@ const UnifiedCoachInterface: React.FC<UnifiedCoachInterfaceProps> = ({
           </Button>
         ))}
       </div>
+
+      {/* PIE Insights Display */}
+      {pieCoach.pieInsights.length > 0 && (
+        <div className="p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
+          <div className="flex items-center space-x-2 mb-2">
+            <Sparkles className="w-4 h-4 text-purple-600" />
+            <span className="text-sm font-medium text-purple-800">Active Insights</span>
+          </div>
+          <div className="text-xs text-purple-700">
+            {pieCoach.pieInsights.slice(0, 2).map(insight => insight.title).join(' • ')}
+          </div>
+        </div>
+      )}
 
       {/* Messages */}
       <Card className="flex-1 flex flex-col">
@@ -293,7 +296,7 @@ const UnifiedCoachInterface: React.FC<UnifiedCoachInterfaceProps> = ({
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder={`Message your ${agentMode}... (unified brain active)`}
+              placeholder={`Message your ${agentMode}... (unified brain + PIE active)`}
               className="flex-1 min-h-[60px]"
               disabled={isLoading || !brainInitialized}
             />
