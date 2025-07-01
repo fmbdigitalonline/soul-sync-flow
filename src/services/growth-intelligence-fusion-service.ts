@@ -2,6 +2,8 @@ import { pieService } from './pie-service';
 import { tieredMemoryGraph } from './tiered-memory-graph';
 import { adaptiveContextScheduler } from './adaptive-context-scheduler';
 import { personalityVectorService } from './personality-vector-service';
+import { enhancedCareerCoachingService } from './enhanced-career-coaching-service';
+import { eventBusService, CAREER_EVENTS } from './event-bus-service';
 import { LifeDomain } from '@/types/growth-program';
 
 export interface RootCauseCandidate {
@@ -57,20 +59,67 @@ class GrowthIntelligenceFusionService {
     
     // Initialize all intelligence systems
     await pieService.initialize(userId);
-    // Note: TMG doesn't have an initialize method, it's ready to use
-    // Note: ACS doesn't have an initialize method, it's ready to use
+    await enhancedCareerCoachingService.initialize();
+    
+    // Subscribe to career events if we're in career domain
+    if (domain === 'career') {
+      this.setupCareerEventHandlers();
+    }
     
     this.initialized = true;
-    console.log('✅ Growth Intelligence Fusion initialized');
+    console.log('✅ Growth Intelligence Fusion initialized with enhanced career coaching');
   }
 
-  // Main fusion analysis method
+  private setupCareerEventHandlers(): void {
+    eventBusService.subscribe(CAREER_EVENTS.STATUS_DETECTED, async (event) => {
+      console.log('🎯 Fusion received career status:', event.data);
+      
+      // Update PIE with career status for better insights
+      try {
+        await pieService.processUserData({
+          id: `career_status_${Date.now()}`,
+          userId: this.userId!,
+          timestamp: new Date().toISOString(),
+          dataType: 'career_status',
+          value: this.mapCareerStatusToValue(event.data.status),
+          source: 'career_detection',
+          confidence: event.data.confidence,
+          metadata: {
+            status: event.data.status,
+            needsConfirmation: event.data.needsConfirmation
+          }
+        });
+      } catch (error) {
+        console.error('Failed to update PIE with career status:', error);
+      }
+    });
+  }
+
+  private mapCareerStatusToValue(status: string): number {
+    const statusValues = {
+      'no_career': 0.1,
+      'unemployed': 0.2,
+      'job_searching': 0.4,
+      'career_transition': 0.5,
+      'employed_struggling': 0.3,
+      'employed_satisfied': 0.8,
+      'career_change': 0.6
+    };
+    return statusValues[status as keyof typeof statusValues] || 0.5;
+  }
+
+  // Enhanced conversation analysis with career awareness
   async analyzeConversationDepth(sessionId: string): Promise<DepthAnalysis> {
     if (!this.initialized || !this.userId) {
       throw new Error('Growth Intelligence Fusion not initialized');
     }
 
-    console.log('🔍 Analyzing conversation depth using multi-layer intelligence');
+    console.log('🔍 Analyzing conversation depth with career intelligence');
+
+    // Special handling for career domain
+    if (this.domain === 'career') {
+      return this.analyzeCareerConversationDepth(sessionId);
+    }
 
     // Get data from all intelligence systems
     const [acsMetrics, pieInsights, tmgMemories, personalityVector] = await Promise.all([
@@ -102,11 +151,109 @@ class GrowthIntelligenceFusionService {
     return analysis;
   }
 
-  // Identify root cause candidates using fusion intelligence
+  private async analyzeCareerConversationDepth(sessionId: string): Promise<DepthAnalysis> {
+    console.log('💼 Analyzing career-specific conversation depth');
+
+    // Get career-specific intelligence
+    const [acsMetrics, pieInsights, tmgMemories, personalityVector] = await Promise.all([
+      this.getACSMetrics(sessionId),
+      this.getPIEPatterns(),
+      this.getCareerTMGMemories(sessionId),
+      this.getPersonalityAlignment()
+    ]);
+
+    // Enhanced career-specific depth calculation
+    const careerClarityDepth = this.calculateCareerClarityDepth(tmgMemories);
+    const explorationDepth = this.calculateExplorationDepth(pieInsights);
+    const emotionalReadinessDepth = this.calculateEmotionalDepth(acsMetrics);
+    const personalityAlignment = this.calculatePersonalityAlignment(personalityVector);
+
+    const overallDepth = (careerClarityDepth + explorationDepth + emotionalReadinessDepth + personalityAlignment) / 4;
+
+    return {
+      overallDepth,
+      emotionalDepth: emotionalReadinessDepth,
+      patternDepth: explorationDepth,
+      beliefDepth: careerClarityDepth,
+      personalityAlignment,
+      readyForProgram: this.isReadyForCareerProgram(overallDepth, careerClarityDepth, explorationDepth),
+      nextRecommendedAction: this.getCareerRecommendedAction(overallDepth, careerClarityDepth, explorationDepth)
+    };
+  }
+
+  private async getCareerTMGMemories(sessionId: string) {
+    try {
+      if (!this.userId) return [];
+      const memories = await tieredMemoryGraph.getFromHotMemory(this.userId, sessionId, 20);
+      
+      // Filter for career-relevant memories
+      return memories.filter(memory => {
+        const content = memory.raw_content?.content?.toLowerCase() || '';
+        const context = memory.raw_content?.context;
+        return context === 'career_coaching' || 
+               content.includes('career') || 
+               content.includes('job') || 
+               content.includes('work');
+      });
+    } catch (error) {
+      console.warn('Could not get career TMG memories:', error);
+      return [];
+    }
+  }
+
+  private calculateCareerClarityDepth(memories: any[]): number {
+    if (memories.length === 0) return 0;
+
+    // Look for career status clarity indicators
+    const clarityKeywords = ['no career', 'unemployed', 'job search', 'career change', 'want to', 'looking for'];
+    const clarityMemories = memories.filter(memory => {
+      const content = memory.raw_content?.content?.toLowerCase() || '';
+      return clarityKeywords.some(keyword => content.includes(keyword));
+    });
+
+    const clarityRatio = clarityMemories.length / memories.length;
+    const avgImportance = clarityMemories.reduce((sum, mem) => sum + (mem.importance_score || 5), 0) / Math.max(clarityMemories.length, 1);
+    
+    return Math.min(1, clarityRatio * (avgImportance / 10));
+  }
+
+  private calculateExplorationDepth(pieInsights: any[]): number {
+    if (pieInsights.length === 0) return 0;
+
+    // Look for exploration and discovery patterns
+    const explorationInsights = pieInsights.filter(insight => 
+      insight.type === 'career_exploration' || 
+      insight.type === 'self_discovery' ||
+      insight.priority === 'high'
+    );
+
+    const avgConfidence = explorationInsights.reduce((sum, insight) => sum + insight.confidence, 0) / Math.max(explorationInsights.length, 1);
+    const explorationRatio = explorationInsights.length / pieInsights.length;
+
+    return Math.min(1, avgConfidence * explorationRatio);
+  }
+
+  private isReadyForCareerProgram(overall: number, clarity: number, exploration: number): boolean {
+    // Career programs need clarity about current status and some exploration
+    return overall >= 0.5 && clarity >= 0.4 && exploration >= 0.3;
+  }
+
+  private getCareerRecommendedAction(overall: number, clarity: number, exploration: number): string {
+    if (clarity < 0.4) return 'Continue exploring your current career situation and what you truly want';
+    if (exploration < 0.3) return 'Dive deeper into what energizes and excites you about work';
+    if (overall >= 0.5) return 'Ready to create a personalized career development plan';
+    return 'Keep building clarity about your career direction and values';
+  }
+
+  // Enhanced root cause identification with career context
   async identifyRootCauseCandidates(sessionId: string): Promise<RootCauseCandidate[]> {
     if (!this.initialized || !this.userId) return [];
 
-    console.log('🎯 Identifying root cause candidates using fusion intelligence');
+    console.log('🎯 Identifying root cause candidates with career intelligence');
+
+    if (this.domain === 'career') {
+      return this.identifyCareerRootCauses(sessionId);
+    }
 
     const [acsData, piePatterns, beliefMaps] = await Promise.all([
       this.getACSEmotionalResonance(sessionId),
@@ -146,6 +293,64 @@ class GrowthIntelligenceFusionService {
 
     console.log(`✅ Identified ${candidates.length} root cause candidates`);
     return candidates.slice(0, 3); // Return top 3 candidates
+  }
+
+  private async identifyCareerRootCauses(sessionId: string): Promise<RootCauseCandidate[]> {
+    console.log('💼 Identifying career-specific root causes');
+
+    const candidates: RootCauseCandidate[] = [];
+    const careerMemories = await this.getCareerTMGMemories(sessionId);
+    
+    // Career-specific root cause patterns
+    const careerRootCauses = [
+      {
+        pattern: /no\s+(career|job)/i,
+        description: "Lack of career direction or employment",
+        category: "career_foundation"
+      },
+      {
+        pattern: /don't\s+know\s+what\s+I\s+want/i,
+        description: "Unclear about career desires and direction",
+        category: "career_clarity"
+      },
+      {
+        pattern: /hate\s+(my\s+)?(job|work)/i,
+        description: "Deep dissatisfaction with current work situation",
+        category: "job_misalignment"
+      },
+      {
+        pattern: /afraid\s+of\s+(change|failure|success)/i,
+        description: "Fear blocking career progression",
+        category: "career_fear"
+      },
+      {
+        pattern: /not\s+good\s+enough/i,
+        description: "Self-worth issues affecting career confidence",
+        category: "career_confidence"
+      }
+    ];
+
+    for (const rootCause of careerRootCauses) {
+      const evidence = careerMemories.filter(memory => {
+        const content = memory.raw_content?.content || '';
+        return rootCause.pattern.test(content);
+      });
+
+      if (evidence.length >= 1) {
+        candidates.push({
+          id: `career_root_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          description: rootCause.description,
+          confidence: Math.min(0.9, evidence.length * 0.3 + 0.4),
+          emotionalResonance: evidence.reduce((sum, e) => sum + (e.importance_score || 5), 0) / (evidence.length * 10),
+          patternStrength: evidence.length / careerMemories.length,
+          beliefMappingScore: 0.7, // Career beliefs are typically strong
+          supportingEvidence: evidence.map(e => e.raw_content?.content || '').slice(0, 3),
+          requiredConfirmation: true
+        });
+      }
+    }
+
+    return candidates.sort((a, b) => b.confidence - a.confidence).slice(0, 3);
   }
 
   // Create belief mapping from TMG data
