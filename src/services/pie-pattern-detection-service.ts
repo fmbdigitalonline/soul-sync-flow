@@ -98,7 +98,7 @@ class PIEPatternDetectionService {
         id: `weekly_${userData[0].dataType}_${Date.now()}`,
         userId: userData[0].userId,
         patternType: 'cyclic',
-        dataType: userData[0].dataType,
+        dataType: userData[0].dataType as PIEPattern['dataType'],
         significance: 0.05, // Placeholder - would be calculated properly
         confidence: Math.min(0.9, standardDeviation * 2),
         sampleSize: userData.length,
@@ -121,9 +121,26 @@ class PIEPatternDetectionService {
 
   private async storePattern(pattern: PIEPattern): Promise<void> {
     try {
+      // Map PIEPattern to database schema
+      const dbPattern = {
+        id: pattern.id,
+        user_id: pattern.userId,
+        pattern_type: pattern.patternType,
+        data_type: pattern.dataType,
+        significance: pattern.significance,
+        confidence: pattern.confidence,
+        sample_size: pattern.sampleSize,
+        cycle_period: pattern.cyclePeriod || null,
+        event_trigger: pattern.eventTrigger || null,
+        correlation_strength: pattern.correlationStrength,
+        detected_at: pattern.detectedAt,
+        last_updated: pattern.lastUpdated,
+        valid_until: pattern.validUntil || null
+      };
+
       const { error } = await supabase
         .from('pie_patterns')
-        .insert(pattern);
+        .insert(dbPattern);
 
       if (error) {
         console.error("Failed to store pattern:", error);

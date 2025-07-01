@@ -91,18 +91,20 @@ class PIESchedulingService {
 
   private async logSuppressedEvent(rule: PIEPredictiveRule, event: AstrologicalEvent, reason: string): Promise<void> {
     try {
+      const suppressedEvent = {
+        user_id: this.userId!,
+        rule_id: rule.id,
+        event_id: event.id,
+        event_type: event.eventType,
+        suppression_reason: reason,
+        rule_confidence: rule.confidence,
+        threshold_used: PIE_CONFIDENCE_THRESHOLD,
+        suppressed_at: new Date().toISOString()
+      };
+
       const { error } = await supabase
         .from('pie_suppressed_events')
-        .insert({
-          user_id: this.userId,
-          rule_id: rule.id,
-          event_id: event.id,
-          event_type: event.eventType,
-          suppression_reason: reason,
-          rule_confidence: rule.confidence,
-          threshold_used: PIE_CONFIDENCE_THRESHOLD,
-          suppressed_at: new Date().toISOString()
-        });
+        .insert(suppressedEvent);
 
       if (error) {
         console.error("Failed to log suppressed event:", error);
@@ -124,7 +126,23 @@ class PIESchedulingService {
 
       if (error) throw error;
 
-      return data as PIEPredictiveRule[];
+      // Map database records to PIEPredictiveRule interface
+      return (data || []).map(record => ({
+        id: record.id,
+        userId: record.user_id,
+        eventType: record.event_type,
+        direction: record.direction as PIEPredictiveRule['direction'],
+        magnitude: record.magnitude,
+        confidence: record.confidence,
+        conditions: {
+          windowHours: record.window_hours,
+          minimumOccurrences: record.minimum_occurrences,
+          userDataTypes: record.user_data_types || []
+        },
+        creationDate: record.creation_date,
+        lastValidated: record.last_validated,
+        statisticalSignificance: record.statistical_significance
+      }));
     } catch (error) {
       console.error("Error getting predictive rules:", error);
       return [];
@@ -145,7 +163,17 @@ class PIESchedulingService {
 
       if (error) throw error;
 
-      return data as AstrologicalEvent[];
+      // Map database records to AstrologicalEvent interface
+      return (data || []).map(record => ({
+        id: record.id,
+        eventType: record.event_type,
+        startTime: record.start_time,
+        endTime: record.end_time || undefined,
+        intensity: record.intensity,
+        personalRelevance: record.personal_relevance,
+        description: record.description,
+        category: record.category as AstrologicalEvent['category']
+      }));
     } catch (error) {
       console.error("Error getting astrological events:", error);
       return [];
@@ -170,9 +198,31 @@ class PIESchedulingService {
 
   private async storeScheduledInsight(insight: PIEInsight): Promise<void> {
     try {
+      // Map PIEInsight to database schema
+      const dbInsight = {
+        id: insight.id,
+        user_id: insight.userId,
+        pattern_id: insight.patternId,
+        predictive_rule_id: insight.predictiveRuleId,
+        title: insight.title,
+        message: insight.message,
+        insight_type: insight.insightType,
+        priority: insight.priority,
+        trigger_event: insight.triggerEvent,
+        trigger_time: insight.triggerTime,
+        delivery_time: insight.deliveryTime,
+        expiration_time: insight.expirationTime,
+        confidence: insight.confidence,
+        delivered: insight.delivered,
+        acknowledged: insight.acknowledged,
+        user_feedback: insight.userFeedback || null,
+        communication_style: insight.communicationStyle,
+        personalized_for_blueprint: insight.personalizedForBlueprint
+      };
+
       const { error } = await supabase
         .from('pie_insights')
-        .insert(insight);
+        .insert(dbInsight);
 
       if (error) {
         console.error("Failed to store scheduled insight:", error);
@@ -201,7 +251,27 @@ class PIESchedulingService {
 
       if (error) throw error;
 
-      return data as PIEInsight[];
+      // Map database records to PIEInsight interface
+      return (data || []).map(record => ({
+        id: record.id,
+        userId: record.user_id,
+        patternId: record.pattern_id,
+        predictiveRuleId: record.predictive_rule_id,
+        title: record.title,
+        message: record.message,
+        insightType: record.insight_type as PIEInsight['insightType'],
+        priority: record.priority as PIEInsight['priority'],
+        triggerEvent: record.trigger_event,
+        triggerTime: record.trigger_time,
+        deliveryTime: record.delivery_time,
+        expirationTime: record.expiration_time,
+        confidence: record.confidence,
+        delivered: record.delivered,
+        acknowledged: record.acknowledged,
+        userFeedback: record.user_feedback as PIEInsight['userFeedback'],
+        communicationStyle: record.communication_style,
+        personalizedForBlueprint: record.personalized_for_blueprint
+      }));
     } catch (error) {
       console.error("Error checking pending insights:", error);
       return [];

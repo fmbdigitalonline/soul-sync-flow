@@ -52,7 +52,21 @@ export class PIEService {
       }
 
       if (data) {
-        this.configuration = data as PIEConfiguration;
+        // Map database record to PIEConfiguration interface
+        this.configuration = {
+          userId: data.user_id,
+          enabled: data.enabled,
+          minimumConfidence: data.minimum_confidence,
+          patternSensitivity: data.pattern_sensitivity as PIEConfiguration['patternSensitivity'],
+          deliveryMethods: data.delivery_methods || ['conversation'],
+          deliveryTiming: data.delivery_timing as PIEConfiguration['deliveryTiming'],
+          quietHours: data.quiet_hours || { start: '22:00', end: '08:00' },
+          includeAstrology: data.include_astrology,
+          includeStatistics: data.include_statistics,
+          communicationStyle: data.communication_style as PIEConfiguration['communicationStyle'],
+          dataTypes: data.data_types || ['mood', 'productivity', 'sentiment'],
+          retentionPeriod: data.retention_period
+        };
       } else {
         // Create default configuration
         this.configuration = {
@@ -81,12 +95,33 @@ export class PIEService {
   private async saveConfiguration(): Promise<void> {
     if (!this.configuration) return;
 
-    const { error } = await supabase
-      .from('pie_configurations')
-      .upsert(this.configuration);
+    try {
+      // Map PIEConfiguration to database schema
+      const dbConfig = {
+        user_id: this.configuration.userId,
+        enabled: this.configuration.enabled,
+        minimum_confidence: this.configuration.minimumConfidence,
+        pattern_sensitivity: this.configuration.patternSensitivity,
+        delivery_methods: this.configuration.deliveryMethods,
+        delivery_timing: this.configuration.deliveryTiming,
+        quiet_hours: this.configuration.quietHours,
+        include_astrology: this.configuration.includeAstrology,
+        include_statistics: this.configuration.includeStatistics,
+        communication_style: this.configuration.communicationStyle,
+        data_types: this.configuration.dataTypes,
+        retention_period: this.configuration.retentionPeriod
+      };
 
-    if (error) {
-      console.error("Failed to save PIE configuration:", error);
+      const { error } = await supabase
+        .from('pie_configurations')
+        .upsert(dbConfig);
+
+      if (error) {
+        console.error("Failed to save PIE configuration:", error);
+        throw error;
+      }
+    } catch (error) {
+      console.error("Error saving PIE configuration:", error);
       throw error;
     }
   }
@@ -149,6 +184,7 @@ export class PIEService {
     if (confidence >= PIE_CONFIDENCE_THRESHOLD) {
       const rule: PIEPredictiveRule = {
         id: `rule_${pattern.id}_${Date.now()}`,
+        userId: pattern.userId,
         eventType: pattern.eventTrigger || `${pattern.patternType}_${pattern.dataType}`,
         direction,
         magnitude,
@@ -175,9 +211,25 @@ export class PIEService {
   private async storePredictiveRules(rules: PIEPredictiveRule[]): Promise<void> {
     for (const rule of rules) {
       try {
+        // Map PIEPredictiveRule to database schema
+        const dbRule = {
+          id: rule.id,
+          user_id: rule.userId,
+          event_type: rule.eventType,
+          direction: rule.direction,
+          magnitude: rule.magnitude,
+          confidence: rule.confidence,
+          window_hours: rule.conditions.windowHours,
+          minimum_occurrences: rule.conditions.minimumOccurrences,
+          user_data_types: rule.conditions.userDataTypes,
+          creation_date: rule.creationDate,
+          last_validated: rule.lastValidated,
+          statistical_significance: rule.statisticalSignificance
+        };
+
         const { error } = await supabase
           .from('pie_predictive_rules')
-          .upsert(rule);
+          .upsert(dbRule);
 
         if (error) {
           console.error("Failed to store predictive rule:", error);
@@ -203,7 +255,27 @@ export class PIEService {
 
       if (error) throw error;
 
-      return data as PIEInsight[];
+      // Map database records to PIEInsight interface
+      return (data || []).map(record => ({
+        id: record.id,
+        userId: record.user_id,
+        patternId: record.pattern_id,
+        predictiveRuleId: record.predictive_rule_id,
+        title: record.title,
+        message: record.message,
+        insightType: record.insight_type as PIEInsight['insightType'],
+        priority: record.priority as PIEInsight['priority'],
+        triggerEvent: record.trigger_event,
+        triggerTime: record.trigger_time,
+        deliveryTime: record.delivery_time,
+        expirationTime: record.expiration_time,
+        confidence: record.confidence,
+        delivered: record.delivered,
+        acknowledged: record.acknowledged,
+        userFeedback: record.user_feedback as PIEInsight['userFeedback'],
+        communicationStyle: record.communication_style,
+        personalizedForBlueprint: record.personalized_for_blueprint
+      }));
     } catch (error) {
       console.error("Failed to get current insights:", error);
       return [];

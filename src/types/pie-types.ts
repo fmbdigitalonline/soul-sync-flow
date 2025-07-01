@@ -11,6 +11,7 @@ export const PIE_STATISTICAL_SIGNIFICANCE_THRESHOLD = 0.05; // p-value threshold
 // Patent Claim 1(d): Predictive rule object
 export interface PIEPredictiveRule {
   id: string;
+  userId: string;
   eventType: string; // e.g., "mercury_retrograde", "full_moon", "mars_opposition"
   direction: 'positive' | 'negative' | 'neutral'; // Expected impact direction
   magnitude: number; // Expected impact magnitude (0-1 scale)

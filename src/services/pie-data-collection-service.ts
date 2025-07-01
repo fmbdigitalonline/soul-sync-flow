@@ -20,9 +20,22 @@ class PIEDataCollectionService {
     if (!this.active) return;
 
     try {
+      // Map PIEDataPoint to database schema
+      const dbDataPoint = {
+        id: dataPoint.id,
+        user_id: dataPoint.userId,
+        timestamp: dataPoint.timestamp,
+        data_type: dataPoint.dataType,
+        value: dataPoint.value,
+        raw_value: dataPoint.rawValue || null,
+        source: dataPoint.source,
+        confidence: dataPoint.confidence,
+        metadata: dataPoint.metadata || {}
+      };
+
       const { error } = await supabase
         .from('pie_user_data')
-        .insert(dataPoint);
+        .insert(dbDataPoint);
 
       if (error) {
         console.error("Failed to store PIE data point:", error);
@@ -169,7 +182,18 @@ class PIEDataCollectionService {
 
       if (error) throw error;
 
-      return data as PIEDataPoint[];
+      // Map database records to PIEDataPoint interface
+      return (data || []).map(record => ({
+        id: record.id,
+        userId: record.user_id,
+        timestamp: record.timestamp,
+        dataType: record.data_type as PIEDataPoint['dataType'],
+        value: record.value,
+        rawValue: record.raw_value,
+        source: record.source as PIEDataPoint['source'],
+        confidence: record.confidence,
+        metadata: record.metadata || {}
+      }));
     } catch (error) {
       console.error("Error getting user data:", error);
       return [];

@@ -1209,6 +1209,339 @@ export type Database = {
         }
         Relationships: []
       }
+      pie_astrological_events: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          end_time: string | null
+          event_type: string
+          id: string
+          intensity: number
+          personal_relevance: number
+          start_time: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description: string
+          end_time?: string | null
+          event_type: string
+          id?: string
+          intensity: number
+          personal_relevance: number
+          start_time: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          end_time?: string | null
+          event_type?: string
+          id?: string
+          intensity?: number
+          personal_relevance?: number
+          start_time?: string
+        }
+        Relationships: []
+      }
+      pie_configurations: {
+        Row: {
+          communication_style: string
+          created_at: string
+          data_types: Json
+          delivery_methods: Json
+          delivery_timing: string
+          enabled: boolean
+          id: string
+          include_astrology: boolean
+          include_statistics: boolean
+          minimum_confidence: number
+          pattern_sensitivity: string
+          quiet_hours: Json
+          retention_period: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          communication_style?: string
+          created_at?: string
+          data_types?: Json
+          delivery_methods?: Json
+          delivery_timing?: string
+          enabled?: boolean
+          id?: string
+          include_astrology?: boolean
+          include_statistics?: boolean
+          minimum_confidence?: number
+          pattern_sensitivity?: string
+          quiet_hours?: Json
+          retention_period?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          communication_style?: string
+          created_at?: string
+          data_types?: Json
+          delivery_methods?: Json
+          delivery_timing?: string
+          enabled?: boolean
+          id?: string
+          include_astrology?: boolean
+          include_statistics?: boolean
+          minimum_confidence?: number
+          pattern_sensitivity?: string
+          quiet_hours?: Json
+          retention_period?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pie_insights: {
+        Row: {
+          acknowledged: boolean
+          communication_style: string
+          confidence: number
+          created_at: string
+          delivered: boolean
+          delivered_at: string | null
+          delivery_time: string
+          expiration_time: string
+          id: string
+          insight_type: string
+          message: string
+          pattern_id: string
+          personalized_for_blueprint: boolean
+          predictive_rule_id: string
+          priority: string
+          title: string
+          trigger_event: string
+          trigger_time: string
+          user_feedback: string | null
+          user_id: string
+        }
+        Insert: {
+          acknowledged?: boolean
+          communication_style: string
+          confidence: number
+          created_at?: string
+          delivered?: boolean
+          delivered_at?: string | null
+          delivery_time: string
+          expiration_time: string
+          id?: string
+          insight_type: string
+          message: string
+          pattern_id: string
+          personalized_for_blueprint?: boolean
+          predictive_rule_id: string
+          priority: string
+          title: string
+          trigger_event: string
+          trigger_time: string
+          user_feedback?: string | null
+          user_id: string
+        }
+        Update: {
+          acknowledged?: boolean
+          communication_style?: string
+          confidence?: number
+          created_at?: string
+          delivered?: boolean
+          delivered_at?: string | null
+          delivery_time?: string
+          expiration_time?: string
+          id?: string
+          insight_type?: string
+          message?: string
+          pattern_id?: string
+          personalized_for_blueprint?: boolean
+          predictive_rule_id?: string
+          priority?: string
+          title?: string
+          trigger_event?: string
+          trigger_time?: string
+          user_feedback?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pie_patterns: {
+        Row: {
+          confidence: number
+          correlation_strength: number
+          created_at: string
+          cycle_period: number | null
+          data_type: string
+          detected_at: string
+          event_trigger: string | null
+          id: string
+          last_updated: string
+          pattern_type: string
+          sample_size: number
+          significance: number
+          user_id: string
+          valid_until: string | null
+        }
+        Insert: {
+          confidence: number
+          correlation_strength: number
+          created_at?: string
+          cycle_period?: number | null
+          data_type: string
+          detected_at?: string
+          event_trigger?: string | null
+          id?: string
+          last_updated?: string
+          pattern_type: string
+          sample_size: number
+          significance: number
+          user_id: string
+          valid_until?: string | null
+        }
+        Update: {
+          confidence?: number
+          correlation_strength?: number
+          created_at?: string
+          cycle_period?: number | null
+          data_type?: string
+          detected_at?: string
+          event_trigger?: string | null
+          id?: string
+          last_updated?: string
+          pattern_type?: string
+          sample_size?: number
+          significance?: number
+          user_id?: string
+          valid_until?: string | null
+        }
+        Relationships: []
+      }
+      pie_predictive_rules: {
+        Row: {
+          confidence: number
+          created_at: string
+          creation_date: string
+          direction: string
+          event_type: string
+          id: string
+          last_validated: string
+          magnitude: number
+          minimum_occurrences: number
+          statistical_significance: number
+          user_data_types: Json
+          user_id: string
+          window_hours: number
+        }
+        Insert: {
+          confidence: number
+          created_at?: string
+          creation_date?: string
+          direction: string
+          event_type: string
+          id?: string
+          last_validated?: string
+          magnitude: number
+          minimum_occurrences: number
+          statistical_significance: number
+          user_data_types?: Json
+          user_id: string
+          window_hours: number
+        }
+        Update: {
+          confidence?: number
+          created_at?: string
+          creation_date?: string
+          direction?: string
+          event_type?: string
+          id?: string
+          last_validated?: string
+          magnitude?: number
+          minimum_occurrences?: number
+          statistical_significance?: number
+          user_data_types?: Json
+          user_id?: string
+          window_hours?: number
+        }
+        Relationships: []
+      }
+      pie_suppressed_events: {
+        Row: {
+          event_id: string
+          event_type: string
+          id: string
+          rule_confidence: number
+          rule_id: string
+          suppressed_at: string
+          suppression_reason: string
+          threshold_used: number
+          user_id: string
+        }
+        Insert: {
+          event_id: string
+          event_type: string
+          id?: string
+          rule_confidence: number
+          rule_id: string
+          suppressed_at?: string
+          suppression_reason: string
+          threshold_used: number
+          user_id: string
+        }
+        Update: {
+          event_id?: string
+          event_type?: string
+          id?: string
+          rule_confidence?: number
+          rule_id?: string
+          suppressed_at?: string
+          suppression_reason?: string
+          threshold_used?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pie_user_data: {
+        Row: {
+          confidence: number
+          created_at: string
+          data_type: string
+          id: string
+          metadata: Json | null
+          raw_value: Json | null
+          source: string
+          timestamp: string
+          user_id: string
+          value: number
+        }
+        Insert: {
+          confidence?: number
+          created_at?: string
+          data_type: string
+          id?: string
+          metadata?: Json | null
+          raw_value?: Json | null
+          source: string
+          timestamp: string
+          user_id: string
+          value: number
+        }
+        Update: {
+          confidence?: number
+          created_at?: string
+          data_type?: string
+          id?: string
+          metadata?: Json | null
+          raw_value?: Json | null
+          source?: string
+          timestamp?: string
+          user_id?: string
+          value?: number
+        }
+        Relationships: []
+      }
       productivity_journey: {
         Row: {
           completed_goals: Json | null
