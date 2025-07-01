@@ -1,4 +1,3 @@
-
 import { LifeDomain } from '@/types/growth-program';
 import { enhancedCareerCoachingService } from './enhanced-career-coaching-service';
 import { eventBusService, CAREER_EVENTS } from './event-bus-service';
@@ -12,6 +11,8 @@ export interface CareerDiscoveryContext {
   discoveredValues: string[];
   blockers: string[];
   strengths: string[];
+  emotionalSignals: string[];
+  userFrustrationLevel: number;
 }
 
 class CareerDiscoveryService {
@@ -26,7 +27,9 @@ class CareerDiscoveryService {
       explorationPhase: 'status_discovery',
       discoveredValues: [],
       blockers: [],
-      strengths: []
+      strengths: [],
+      emotionalSignals: [],
+      userFrustrationLevel: 0
     };
 
     this.contexts.set(sessionId, context);
@@ -48,6 +51,9 @@ class CareerDiscoveryService {
       throw new Error('Career discovery context not found');
     }
 
+    // Detect emotional signals and frustration
+    this.extractEmotionalSignals(message, context);
+
     // Use enhanced career coaching for status detection
     const careerResponse = await enhancedCareerCoachingService.processCareerMessage(
       message,
@@ -62,8 +68,8 @@ class CareerDiscoveryService {
     // Extract insights from message
     this.extractInsights(message, context);
 
-    // Determine next phase and response
-    const { response, phaseComplete, readyForProgram } = this.generatePhaseResponse(context, message);
+    // Generate contextual response based on emotional state and content
+    const { response, phaseComplete, readyForProgram } = this.generateEmotionallyAwareResponse(context, message);
 
     // Advance phase if complete
     if (phaseComplete) {
@@ -78,6 +84,28 @@ class CareerDiscoveryService {
       phaseComplete,
       readyForProgram
     };
+  }
+
+  private extractEmotionalSignals(message: string, context: CareerDiscoveryContext): void {
+    const lowerMessage = message.toLowerCase();
+    
+    // Detect frustration and emotional signals
+    const emotionalPatterns = [
+      { pattern: /stuck|trapped|can't move/, signal: 'feeling_stuck', frustration: 2 },
+      { pattern: /mad|angry|frustrated|frustrating/, signal: 'angry', frustration: 3 },
+      { pattern: /why don't you listen|not listening|ignore/, signal: 'feeling_unheard', frustration: 4 },
+      { pattern: /help|support|need/, signal: 'seeking_help', frustration: 1 },
+      { pattern: /confused|don't know|unclear/, signal: 'confusion', frustration: 1 }
+    ];
+
+    emotionalPatterns.forEach(({ pattern, signal, frustration }) => {
+      if (pattern.test(lowerMessage)) {
+        if (!context.emotionalSignals.includes(signal)) {
+          context.emotionalSignals.push(signal);
+        }
+        context.userFrustrationLevel = Math.max(context.userFrustrationLevel, frustration);
+      }
+    });
   }
 
   private extractInsights(message: string, context: CareerDiscoveryContext): void {
@@ -137,6 +165,88 @@ class CareerDiscoveryService {
         }
       }
     });
+  }
+
+  private generateEmotionallyAwareResponse(
+    context: CareerDiscoveryContext,
+    message: string
+  ): { response: string; phaseComplete: boolean; readyForProgram: boolean } {
+    // If user is showing high frustration, acknowledge it first
+    if (context.userFrustrationLevel >= 3) {
+      return this.generateFrustrationResponse(context, message);
+    }
+
+    // If user feels unheard, acknowledge that specifically
+    if (context.emotionalSignals.includes('feeling_unheard')) {
+      return this.generateListeningResponse(context, message);
+    }
+
+    // If user feels stuck, focus on that
+    if (context.emotionalSignals.includes('feeling_stuck')) {
+      return this.generateStuckResponse(context, message);
+    }
+
+    // Default to phase-based response
+    return this.generatePhaseResponse(context, message);
+  }
+
+  private generateFrustrationResponse(
+    context: CareerDiscoveryContext,
+    message: string
+  ): { response: string; phaseComplete: boolean; readyForProgram: boolean } {
+    if (message.toLowerCase().includes('mad') || message.toLowerCase().includes('frustrating')) {
+      return {
+        response: `I can hear the frustration in your words, and I want you to know that makes complete sense. Being stuck in your career can feel maddening, especially when it feels like you're not being heard or understood.
+
+Let me slow down and really listen to what you're telling me. You said you're "stuck" - that word tells me a lot. It sounds like you might feel trapped between where you are and where you want to be, but can't see a clear path forward.
+
+Can you tell me more about what "stuck" feels like for you specifically? Is it that you don't know what direction to go, or that you know what you want but can't figure out how to get there?`,
+        phaseComplete: false,
+        readyForProgram: false
+      };
+    }
+
+    return {
+      response: `I hear you're feeling really frustrated right now, and that makes total sense. Career challenges can be incredibly draining and maddening.
+
+Instead of asking you the same questions, let me acknowledge what you've already told me: you feel stuck in your career. That's real, and that's important information.
+
+What would help most right now - would you like to talk about what's making you feel most trapped, or would you prefer to explore what might help you feel less stuck?`,
+      phaseComplete: false,
+      readyForProgram: false
+    };
+  }
+
+  private generateListeningResponse(
+    context: CareerDiscoveryContext,
+    message: string
+  ): { response: string; phaseComplete: boolean; readyForProgram: boolean } {
+    return {
+      response: `You're absolutely right, and I apologize. I wasn't truly listening to what you were telling me. You said you're "stuck" in your career, and instead of hearing that and responding to it, I kept asking generic questions.
+
+Let me actually listen now: You feel stuck in your career. That's a real and difficult place to be. 
+
+When you say "stuck," I'm wondering - does that mean you feel trapped in a job that isn't working for you? Or does it mean you're not sure what direction to take your career? Or something else entirely?
+
+I want to understand YOUR specific situation, not just ask standard career questions.`,
+      phaseComplete: true,
+      readyForProgram: false
+    };
+  }
+
+  private generateStuckResponse(
+    context: CareerDiscoveryContext,
+    message: string
+  ): { response: string; phaseComplete: boolean; readyForProgram: boolean } {
+    return {
+      response: `I hear you saying you're stuck, and I want to understand what that really means for you. "Stuck" can feel different for different people.
+
+Some people feel stuck because they're in a job they don't like but don't know how to leave. Others feel stuck because they don't know what they want to do with their career at all. Some feel stuck because they know what they want but can't figure out how to get there.
+
+What does "stuck" look like in your day-to-day life? What would it feel like if you weren't stuck anymore?`,
+      phaseComplete: true,
+      readyForProgram: false
+    };
   }
 
   private generatePhaseResponse(

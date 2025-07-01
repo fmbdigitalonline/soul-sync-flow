@@ -199,13 +199,54 @@ class ProgramAwareCoachService {
 
     // DISCOVERY-FIRST APPROACH: Use career discovery service for career domain
     if (this.selectedDomain === 'career' || this.conversationStage === 'belief_drilling') {
-      const careerResponse = await this.handleCareerDiscovery(message, userId, sessionId);
-      if (careerResponse) {
-        return careerResponse;
+      try {
+        console.log("🔍 Using career discovery service for discovery-first approach");
+        
+        // Initialize career discovery context if needed
+        let context = careerDiscoveryService.getContext(sessionId);
+        if (!context) {
+          context = await careerDiscoveryService.initializeDiscovery(userId, sessionId);
+        }
+
+        // Process the discovery message
+        const discoveryResult = await careerDiscoveryService.processDiscoveryMessage(message, sessionId);
+        
+        // Update our belief exploration data with career insights
+        this.beliefExplorationData.careerStatus = discoveryResult.context.discoveredStatus;
+        this.beliefExplorationData.careerConfidence = discoveryResult.context.statusConfidence;
+        this.beliefExplorationData.explorationPhase = discoveryResult.context.explorationPhase;
+        this.beliefExplorationData.discoveredValues = discoveryResult.context.discoveredValues;
+        this.beliefExplorationData.blockers = discoveryResult.context.blockers;
+        this.beliefExplorationData.emotionalSignals = discoveryResult.context.emotionalSignals;
+        this.beliefExplorationData.userFrustrationLevel = discoveryResult.context.userFrustrationLevel;
+
+        // Update insights for progress tracking
+        this.discoveredInsights = [
+          ...discoveryResult.context.emotionalSignals,
+          ...discoveryResult.context.discoveredValues,
+          ...discoveryResult.context.blockers
+        ];
+
+        console.log("✅ Career discovery completed:", {
+          status: discoveryResult.context.discoveredStatus,
+          confidence: discoveryResult.context.statusConfidence,
+          phase: discoveryResult.context.explorationPhase,
+          emotionalSignals: discoveryResult.context.emotionalSignals,
+          frustrationLevel: discoveryResult.context.userFrustrationLevel,
+          readyForProgram: discoveryResult.readyForProgram
+        });
+
+        return {
+          response: discoveryResult.response,
+          conversationId: sessionId
+        };
+      } catch (error) {
+        console.error("❌ Error in career discovery:", error);
+        // Fallback to original logic if career discovery fails
       }
     }
 
-    // Process the message and determine inquiry phase
+    // Process the message and determine inquiry phase (fallback)
     this.processMessageForInsights(message);
     this.questionCount++;
 
