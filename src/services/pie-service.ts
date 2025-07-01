@@ -298,6 +298,80 @@ export class PIEService {
     ).slice(0, 3); // Limit to top 3 for conversation context
   }
 
+  // Record insight feedback (NEW METHOD)
+  async recordInsightFeedback(insightId: string, feedback: {
+    type: 'positive' | 'negative' | 'detailed';
+    helpful?: boolean;
+    feedback?: string;
+    timestamp: string;
+  }): Promise<void> {
+    if (!this.userId) return;
+
+    try {
+      // Update the insight with feedback
+      const { error } = await supabase
+        .from('pie_insights')
+        .update({
+          user_feedback: feedback.type === 'detailed' ? feedback.feedback : 
+                        feedback.helpful ? 'helpful' : 'not_helpful',
+          acknowledged: true
+        })
+        .eq('id', insightId)
+        .eq('user_id', this.userId);
+
+      if (error) throw error;
+
+      console.log('✅ PIE insight feedback recorded:', insightId, feedback.type);
+    } catch (error) {
+      console.error('Error recording insight feedback:', error);
+      throw error;
+    }
+  }
+
+  // Mark insight as viewed (NEW METHOD)
+  async markInsightAsViewed(insightId: string): Promise<void> {
+    if (!this.userId) return;
+
+    try {
+      const { error } = await supabase
+        .from('pie_insights')
+        .update({
+          acknowledged: true
+        })
+        .eq('id', insightId)
+        .eq('user_id', this.userId);
+
+      if (error) throw error;
+
+      console.log('✅ PIE insight marked as viewed:', insightId);
+    } catch (error) {
+      console.error('Error marking insight as viewed:', error);
+    }
+  }
+
+  // Dismiss insight (NEW METHOD)
+  async dismissInsight(insightId: string): Promise<void> {
+    if (!this.userId) return;
+
+    try {
+      // Set expiration time to now to effectively dismiss the insight
+      const { error } = await supabase
+        .from('pie_insights')
+        .update({
+          expiration_time: new Date().toISOString(),
+          acknowledged: true
+        })
+        .eq('id', insightId)
+        .eq('user_id', this.userId);
+
+      if (error) throw error;
+
+      console.log('✅ PIE insight dismissed:', insightId);
+    } catch (error) {
+      console.error('Error dismissing insight:', error);
+    }
+  }
+
   // Update configuration
   async updateConfiguration(updates: Partial<PIEConfiguration>): Promise<void> {
     if (!this.configuration) return;
