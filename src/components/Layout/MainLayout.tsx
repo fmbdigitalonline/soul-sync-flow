@@ -59,9 +59,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
     { to: "/coach", icon: MessageCircle, label: t('nav.coach') },
   ];
 
-  // Add Test Environment for admin users
+  // Add Admin Dashboard and Test Environment for admin users
   const navItems = user && isAdminUser(user) 
-    ? [...baseNavItems, { to: "/test-environment", icon: TestTube, label: "Test Environment" }]
+    ? [
+        ...baseNavItems, 
+        { to: "/admin", icon: Settings, label: "Admin Dashboard" },
+        { to: "/test-environment", icon: TestTube, label: "Test Environment" }
+      ]
     : baseNavItems;
 
   const isActive = (path: string) => {
