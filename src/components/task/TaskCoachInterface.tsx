@@ -51,6 +51,7 @@ interface CoachMessage {
   content: string;
   isUser: boolean;
   timestamp: Date;
+  agentMode: AgentMode;
   interventionApplied?: boolean;
   fallbackUsed?: boolean;
 }
@@ -175,7 +176,8 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
       id: msg.id,
       content: msg.content,
       isUser: msg.sender === 'user', // Convert sender to isUser boolean
-      timestamp: msg.timestamp
+      timestamp: msg.timestamp,
+      agentMode: 'guide' as AgentMode // Add required agentMode property
     }));
     setCoachMessages(convertedMessages);
   }, [messages]);

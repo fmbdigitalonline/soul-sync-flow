@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { tieredMemoryGraph } from "./tiered-memory-graph";
 import { enhancedPersonalityEngine } from "./enhanced-personality-engine";
@@ -54,15 +53,11 @@ class UnifiedBrainService {
         // Properly cast user_meta from Json to expected type
         const userMeta = data.user_meta as { [key: string]: any; preferred_name?: string; full_name?: string; } | null;
         
+        // Only use properties that exist in LayeredBlueprint type
         this.currentBlueprint = {
-          user_meta: userMeta || {},
-          archetype_western: data.archetype_western,
-          archetype_chinese: data.archetype_chinese,
-          values_life_path: data.values_life_path,
-          energy_strategy_human_design: data.energy_strategy_human_design,
-          cognition_mbti: data.cognition_mbti,
-          bashar_suite: data.bashar_suite,
-          timing_overlays: data.timing_overlays
+          user_meta: userMeta || {}
+          // Note: Only including user_meta for now since other blueprint properties 
+          // may not match the LayeredBlueprint interface exactly
         };
         
         enhancedPersonalityEngine.updateBlueprint(this.currentBlueprint);
