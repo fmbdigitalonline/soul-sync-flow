@@ -175,10 +175,10 @@ class GrowthIntelligenceFusionService {
   private async getACSMetrics(sessionId: string) {
     try {
       const metrics = adaptiveContextScheduler.getMetrics();
-      return metrics || { conversationVelocity: 0.5, emotionalIntensity: 0, engagementScore: 0 };
+      return metrics || { conversationVelocity: 0.5, successRate: 0, averageLatency: 0, stateTransitions: 0, userRepairRate: 0, sentimentTrend: 0 };
     } catch (error) {
       console.warn('Could not get ACS metrics:', error);
-      return { conversationVelocity: 0.5, emotionalIntensity: 0, engagementScore: 0 };
+      return { conversationVelocity: 0.5, successRate: 0, averageLatency: 0, stateTransitions: 0, userRepairRate: 0, sentimentTrend: 0 };
     }
   }
 
