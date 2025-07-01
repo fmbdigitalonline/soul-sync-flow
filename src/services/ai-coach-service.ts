@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { PersonalityEngine } from "./personality-engine";
 import { LayeredBlueprint, AgentMode } from "@/types/personality-modules";
+import { unifiedBrainService } from "./unified-brain-service";
 
 export type AgentType = "coach" | "guide" | "blend";
 
@@ -21,6 +22,7 @@ export interface StreamingResponse {
 class AICoachService {
   private sessions: Map<string, string> = new Map();
   private personalityEngine: PersonalityEngine;
+  private useUnifiedBrain: boolean = true;
 
   constructor() {
     this.personalityEngine = new PersonalityEngine();
@@ -37,6 +39,11 @@ class AICoachService {
     console.log("Updated user blueprint in AI coach service:", blueprint);
   }
 
+  enableUnifiedBrain(enabled: boolean = true) {
+    this.useUnifiedBrain = enabled;
+    console.log(`🧠 Unified brain ${enabled ? 'enabled' : 'disabled'} in AI coach service`);
+  }
+
   async sendMessage(
     message: string,
     sessionId: string,
@@ -45,15 +52,33 @@ class AICoachService {
     language: string = "en"
   ): Promise<{ response: string; conversationId: string }> {
     try {
-      // Generate personalized system prompt using the personality engine
-      // For growth mode, pass the user message for advanced prompt generation
+      // Try unified brain first if enabled
+      if (this.useUnifiedBrain) {
+        try {
+          const brainResponse = await unifiedBrainService.processMessage(
+            message,
+            sessionId,
+            agentType as AgentMode
+          );
+          
+          return {
+            response: brainResponse.response,
+            conversationId: sessionId,
+          };
+        } catch (brainError) {
+          console.warn("🧠 Unified brain failed, falling back to regular coach:", brainError);
+          // Fall through to regular processing
+        }
+      }
+
+      // Fallback to regular AI coach processing
       const systemPrompt = includeBlueprint 
         ? (agentType === "guide" 
-            ? this.personalityEngine.generateSystemPrompt("guide", message) // Pass message for growth mode
+            ? this.personalityEngine.generateSystemPrompt("guide", message)
             : this.personalityEngine.generateSystemPrompt(agentType as AgentMode))
         : null;
 
-      console.log("Generated personalized system prompt length:", systemPrompt?.length || 0);
+      console.log("Using regular AI coach service, prompt length:", systemPrompt?.length || 0);
 
       const { data, error } = await supabase.functions.invoke("ai-coach", {
         body: {
@@ -62,7 +87,7 @@ class AICoachService {
           includeBlueprint,
           agentType,
           language,
-          systemPrompt, // Pass the personalized prompt
+          systemPrompt,
         },
       });
 
@@ -89,14 +114,37 @@ class AICoachService {
     try {
       console.log('Starting streaming request...');
       
-      // For growth mode, pass the user message for advanced prompt generation
+      // Try unified brain first if enabled
+      if (this.useUnifiedBrain) {
+        try {
+          const brainResponse = await unifiedBrainService.processMessage(
+            message,
+            sessionId,
+            agentType as AgentMode
+          );
+          
+          // Simulate streaming for unified brain response
+          const words = brainResponse.response.split(' ');
+          for (const word of words) {
+            callbacks.onChunk(word + ' ');
+            await new Promise(resolve => setTimeout(resolve, 50)); // Small delay for streaming effect
+          }
+          callbacks.onComplete(brainResponse.response);
+          return;
+        } catch (brainError) {
+          console.warn("🧠 Unified brain streaming failed, falling back:", brainError);
+          // Fall through to regular streaming
+        }
+      }
+      
+      // Fallback to regular streaming
       const systemPrompt = includeBlueprint 
         ? (agentType === "guide" 
-            ? this.personalityEngine.generateSystemPrompt("guide", message) // Pass message for growth mode
+            ? this.personalityEngine.generateSystemPrompt("guide", message)
             : this.personalityEngine.generateSystemPrompt(agentType as AgentMode))
         : null;
 
-      console.log("Generated personalized system prompt for streaming, length:", systemPrompt?.length || 0);
+      console.log("Using regular streaming, prompt length:", systemPrompt?.length || 0);
       
       const response = await fetch(`https://qxaajirrqrcnmvtowjbg.supabase.co/functions/v1/ai-coach-stream`, {
         method: 'POST',
@@ -153,7 +201,6 @@ class AICoachService {
                   
                   if (content) {
                     fullResponse += content;
-                    // Pass the content chunk directly without artificial delays
                     callbacks.onChunk(content);
                   }
                 } catch (parseError) {

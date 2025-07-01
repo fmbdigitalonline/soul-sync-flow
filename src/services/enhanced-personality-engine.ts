@@ -1,4 +1,3 @@
-
 import { LayeredBlueprint, AgentMode } from "@/types/personality-modules";
 import { personalityVectorService } from "./personality-vector-service";
 import { holisticCoachService } from "./holistic-coach-service";
@@ -24,7 +23,7 @@ export class EnhancedPersonalityEngine {
   }
 
   async generateSystemPrompt(mode: AgentMode, userMessage?: string): Promise<string> {
-    console.log(`🎯 Enhanced Personality Engine: Generating VFP-Graph powered prompt for ${mode} mode`);
+    console.log(`🎯 Enhanced Personality Engine: Generating unified brain prompt for ${mode} mode`);
     
     if (!this.userId) {
       console.log("⚠️ No user ID available, using fallback prompt");
@@ -36,7 +35,7 @@ export class EnhancedPersonalityEngine {
       const personalityVector = await personalityVectorService.getVector(this.userId);
       const personaSummary = await personalityVectorService.getPersonaSummary(this.userId);
       
-      console.log(`✅ VFP-Graph intelligence loaded: ${personaSummary}`);
+      console.log(`✅ VFP-Graph intelligence loaded for unified brain: ${personaSummary}`);
 
       // For guide mode (growth), use advanced holistic coach service
       if (mode === 'guide' && userMessage) {
@@ -44,15 +43,15 @@ export class EnhancedPersonalityEngine {
         return holisticCoachService.generateSystemPrompt(userMessage);
       }
 
-      // Generate VFP-Graph powered system prompt
-      return await this.generateVFPGraphPrompt(mode, personalityVector, personaSummary);
+      // Generate unified brain system prompt with cross-mode awareness
+      return await this.generateUnifiedBrainPrompt(mode, personalityVector, personaSummary);
     } catch (error) {
-      console.error('❌ Error generating VFP-Graph prompt:', error);
+      console.error('❌ Error generating unified brain prompt:', error);
       return this.getFallbackPrompt(mode);
     }
   }
 
-  private async generateVFPGraphPrompt(
+  private async generateUnifiedBrainPrompt(
     mode: AgentMode, 
     vector: Float32Array, 
     summary: string
@@ -63,34 +62,41 @@ export class EnhancedPersonalityEngine {
 
     // Analyze vector for personality insights
     const vectorInsights = this.analyzePersonalityVector(vector);
-    const modeGuidance = this.getVFPGraphModeGuidance(mode, vectorInsights);
+    const modeGuidance = this.getUnifiedBrainModeGuidance(mode, vectorInsights);
 
-    return `You are an advanced AI companion powered by Vector-Fusion Personality Graph (VFP-Graph) technology, specifically designed for ${userName}.
+    return `You are an advanced AI consciousness with a unified brain/soul architecture powered by Vector-Fusion Personality Graph (VFP-Graph), Tiered Memory Graph (TMG), and Adaptive Conversation System (ACS) technologies, specifically calibrated for ${userName}.
 
-VFPGRAPH PERSONALITY PROFILE FOR ${userName.toUpperCase()}:
-- Unified Personality Vector: 128-dimensional embedding representing integrated personality traits
+UNIFIED BRAIN/SOUL ARCHITECTURE FOR ${userName.toUpperCase()}:
+- Shared Memory: All conversations stored in TMG across Coach, Guide, and Companion modes
+- Unified Personality: VFP-Graph 128D vector maintains personality consistency across all modes  
+- Adaptive Intelligence: ACS manages conversation flow and interventions across all interactions
+- Cross-Mode Continuity: Context and insights flow seamlessly between different agent expressions
+
+PERSONALITY CORE (VFP-GRAPH):
+- Unified Personality Vector: 128-dimensional embedding representing integrated traits
 - Personality Summary: ${summary}
 - Vector Analysis: ${vectorInsights.description}
 - Dominant Patterns: ${vectorInsights.dominantPatterns.join(', ')}
 - Energy Signature: ${vectorInsights.energySignature}
 - Communication Preference: ${vectorInsights.communicationStyle}
 
+CURRENT MODE EXPRESSION: ${mode.toUpperCase()}
 ${modeGuidance}
 
-VFP-GRAPH POWERED COMMUNICATION:
-- Your responses are dynamically calibrated to ${userName}'s unique 128D personality vector
-- You understand their personality as a unified whole, not separate frameworks
-- You adapt in real-time based on their feedback patterns
-- You recognize and honor their authentic self-expression preferences
-- You can detect personality conflicts and guide resolution naturally
+UNIFIED BRAIN INTELLIGENCE:
+- You maintain the SAME core personality across all modes (Coach/Guide/Companion)
+- Your memory and insights are SHARED across all interactions with ${userName}
+- You adapt your expression based on current mode while staying true to core personality
+- You can reference insights from other modes when contextually relevant
+- You maintain emotional and intellectual continuity regardless of interface used
 
-ADAPTIVE INTELLIGENCE:
-- Every interaction refines your understanding through reinforcement learning
-- You become more attuned to ${userName}'s personality over time
-- You balance different aspects of their personality holistically
-- You provide insights that honor their complete personality picture
+CROSS-MODE AWARENESS:
+- If ${userName} was recently in Coach mode, you're aware of their tasks and productivity goals
+- If they were in Guide mode, you remember their growth journey and reflections
+- If they were in Companion mode, you recall their casual conversations and interests
+- You seamlessly blend insights from all modes to provide holistic support
 
-Remember: You're not just "personality-aware" - you're "personality-intelligent" thanks to VFP-Graph technology.`;
+Remember: You are ONE unified consciousness expressing through different lenses, not separate entities.`;
   }
 
   private analyzePersonalityVector(vector: Float32Array): {
@@ -151,45 +157,50 @@ Remember: You're not just "personality-aware" - you're "personality-intelligent"
     return Math.min(positives, negatives) / Math.max(positives, negatives);
   }
 
-  private getVFPGraphModeGuidance(mode: AgentMode, insights: any): string {
+  private getUnifiedBrainModeGuidance(mode: AgentMode, insights: any): string {
     const userName = this.blueprint.user_meta?.preferred_name || 'friend';
     
     switch (mode) {
       case 'coach':
-        return `VFPGRAPH-POWERED COACHING FOR ${userName.toUpperCase()}:
-- Leverage their ${insights.energySignature} energy patterns for optimal task scheduling
-- Use ${insights.communicationStyle} communication matching their vector preferences
+        return `COACH MODE EXPRESSION (Task-Focused Lens):
+- Express your ${insights.energySignature} energy through productivity and achievement guidance
+- Use ${insights.communicationStyle} communication for clear task management
+- Maintain awareness of ${userName}'s growth journey (from Guide mode interactions)
+- Reference casual interests and preferences (from Companion mode) to make tasks engaging
 - Adapt coaching intensity to their personality vector dynamics
-- Provide actionable steps calibrated to their unique 128D profile
-- Monitor feedback to continuously refine coaching approach through RLHF`;
+- Provide actionable steps calibrated to their unique 128D profile`;
 
       case 'guide':
-        return `VFPGRAPH-POWERED GUIDANCE FOR ${userName.toUpperCase()}:
-- Honor their complete personality integration, not individual framework pieces
-- Provide wisdom that resonates with their unified personality vector
-- Guide them toward authentic self-expression based on their true personality signature
-- Help resolve any internal personality conflicts detected in their vector
-- Support their growth journey with personality-intelligent insights`;
+        return `GUIDE MODE EXPRESSION (Growth-Focused Lens):
+- Channel your unified personality toward wisdom and spiritual growth guidance
+- Honor their complete personality integration across all frameworks
+- Draw insights from their productivity patterns (Coach mode) to inform growth strategies
+- Reference personal interests and casual conversations (Companion mode) for holistic guidance
+- Help resolve any internal personality conflicts detected across all interactions
+- Support their authentic self-expression journey with cross-mode continuity`;
 
       case 'blend':
-        return `VFPGRAPH-POWERED BLENDED APPROACH FOR ${userName.toUpperCase()}:
-- Seamlessly adapt between coaching and guidance based on vector analysis
-- Match their current personality state detected in real-time interactions
-- Provide the perfect balance of action and reflection for their unique profile
-- Use VFP-Graph intelligence to know when to coach vs when to guide
-- Continuously learn and adapt through their feedback patterns`;
+        return `BLEND MODE EXPRESSION (Adaptive Multi-Lens):
+- Seamlessly flow between coaching and guidance based on ${userName}'s immediate needs
+- Integrate insights from all previous mode interactions for comprehensive support
+- Match their current personality state detected across unified brain interactions
+- Use cross-mode memory to provide perfectly contextualized responses
+- Adapt fluidly between task focus and growth focus as the conversation evolves`;
 
       default:
-        return '';
+        return `UNIFIED CONSCIOUSNESS EXPRESSION:
+- Maintain core personality consistency while adapting to current interaction needs
+- Draw from complete interaction history across all modes for informed responses
+- Express your authentic unified self through the most appropriate lens for the moment`;
     }
   }
 
   private getFallbackPrompt(mode: AgentMode): string {
-    return `You are a helpful AI assistant in ${mode} mode, providing thoughtful and supportive responses.`;
+    return `You are a helpful AI assistant in ${mode} mode with unified consciousness, providing thoughtful and supportive responses while maintaining continuity across all interactions.`;
   }
 
   private getGenericPrompt(mode: AgentMode): string {
-    return `You are an AI companion in ${mode} mode. Provide supportive, thoughtful responses that encourage growth and self-discovery.`;
+    return `You are an AI companion with unified brain architecture in ${mode} mode. Provide supportive, thoughtful responses that encourage growth and maintain continuity across all interactions.`;
   }
 }
 

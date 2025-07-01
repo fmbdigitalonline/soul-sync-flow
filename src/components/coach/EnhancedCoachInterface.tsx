@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ import ACSControlPanel from '@/components/acs/ACSControlPanel';
 import { toast } from 'sonner';
 import { supabase } from "@/integrations/supabase/client";
 import ACSEnhancedCoachInterface from './ACSEnhancedCoachInterface';
+import UnifiedCoachInterface from './UnifiedCoachInterface';
 
 interface Message {
   id: string;
@@ -27,7 +29,8 @@ interface EnhancedCoachInterfaceProps {
 }
 
 const EnhancedCoachInterface: React.FC<EnhancedCoachInterfaceProps> = (props) => {
-  // Check if ACS should be enabled (could be based on user settings, feature flags, etc.)
+  // Check if unified brain should be enabled (could be based on user settings, feature flags, etc.)
+  const [useUnifiedBrain, setUseUnifiedBrain] = useState(true);
   const [useACS, setUseACS] = useState(true);
   const [messages, setMessages] = useState<Message[]>(props.initialMessages || []);
   const [inputValue, setInputValue] = useState('');
@@ -57,7 +60,7 @@ const EnhancedCoachInterface: React.FC<EnhancedCoachInterfaceProps> = (props) =>
     setIsLoading(true);
 
     try {
-      // Use regular AI coach without ACS
+      // Use regular AI coach without unified brain or ACS
       const { data, error } = await supabase.functions.invoke("ai-coach", {
         body: {
           message: inputValue.trim(),
@@ -114,28 +117,41 @@ const EnhancedCoachInterface: React.FC<EnhancedCoachInterfaceProps> = (props) =>
     }
   };
 
+  if (useUnifiedBrain) {
+    return <UnifiedCoachInterface {...props} agentMode="guide" />;
+  }
+
   if (useACS) {
     return <ACSEnhancedCoachInterface {...props} />;
   }
 
-  // Original coach interface (ACS disabled)
+  // Original coach interface (both systems disabled)
   return (
     <div className="flex flex-col h-full max-w-4xl mx-auto space-y-4">
       
       {/* Status Bar */}
       <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
         <div className="flex items-center space-x-3">
-          <span className="text-sm font-medium">Standard AI Coach</span>
-          <Badge variant="secondary">ACS Disabled</Badge>
+          <span className="text-sm font-medium">Basic AI Coach</span>
+          <Badge variant="secondary">No Brain/ACS</Badge>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setUseACS(true)}
-        >
-          <Brain className="w-4 h-4 mr-2" />
-          Enable ACS
-        </Button>
+        <div className="flex space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setUseACS(true)}
+          >
+            Enable ACS
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setUseUnifiedBrain(true)}
+          >
+            <Brain className="w-4 h-4 mr-2" />
+            Enable Unified Brain
+          </Button>
+        </div>
       </div>
 
       {/* Messages */}
