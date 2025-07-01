@@ -57,8 +57,8 @@ class GrowthIntelligenceFusionService {
     
     // Initialize all intelligence systems
     await pieService.initialize(userId);
-    await tieredMemoryGraph.initialize(userId);
-    await adaptiveContextScheduler.initialize(userId);
+    // Note: TMG doesn't have an initialize method, it's ready to use
+    // Note: ACS doesn't have an initialize method, it's ready to use
     
     this.initialized = true;
     console.log('✅ Growth Intelligence Fusion initialized');
@@ -174,10 +174,11 @@ class GrowthIntelligenceFusionService {
   // Helper methods for calculation
   private async getACSMetrics(sessionId: string) {
     try {
-      return adaptiveContextScheduler.getMetrics();
+      const metrics = adaptiveContextScheduler.getMetrics();
+      return metrics || { conversationVelocity: 0.5, emotionalIntensity: 0, engagementScore: 0 };
     } catch (error) {
       console.warn('Could not get ACS metrics:', error);
-      return { conversationVelocity: 0.5, sentimentSlope: 0, frustrationScore: 0 };
+      return { conversationVelocity: 0.5, emotionalIntensity: 0, engagementScore: 0 };
     }
   }
 
@@ -212,9 +213,11 @@ class GrowthIntelligenceFusionService {
   }
 
   private calculateEmotionalDepth(acsMetrics: any): number {
-    // Higher frustration and sentiment changes indicate deeper emotional engagement
-    const emotionalIntensity = Math.abs(acsMetrics.sentimentSlope || 0) + (acsMetrics.frustrationScore || 0);
-    return Math.min(1, emotionalIntensity / 2); // Normalize to 0-1
+    // Use available ACS metrics properties
+    const emotionalIntensity = acsMetrics.emotionalIntensity || 0;
+    const engagementScore = acsMetrics.engagementScore || 0;
+    const combinedScore = (emotionalIntensity + engagementScore) / 2;
+    return Math.min(1, combinedScore);
   }
 
   private calculatePatternDepth(pieInsights: any[]): number {
@@ -334,7 +337,9 @@ class GrowthIntelligenceFusionService {
 
   private getEmotionalResonanceScore(theme: any, acsData: any): number {
     // Calculate emotional resonance based on ACS metrics when theme was discussed
-    return Math.min(1, (acsData.frustrationScore || 0) + Math.abs(acsData.sentimentSlope || 0));
+    const emotionalIntensity = acsData.emotionalIntensity || 0;
+    const engagementScore = acsData.engagementScore || 0;
+    return Math.min(1, (emotionalIntensity + engagementScore) / 2);
   }
 
   private getPatternStrengthScore(theme: any, piePatterns: any[]): number {
@@ -467,13 +472,13 @@ class GrowthIntelligenceFusionService {
     try {
       const metrics = await this.getACSMetrics(sessionId);
       return {
-        resonanceScore: Math.abs(metrics.sentimentSlope || 0) + (metrics.frustrationScore || 0),
-        sentimentTrend: metrics.sentimentSlope || 0,
-        emotionalIntensity: metrics.frustrationScore || 0
+        resonanceScore: (metrics.emotionalIntensity || 0) + (metrics.engagementScore || 0),
+        emotionalIntensity: metrics.emotionalIntensity || 0,
+        engagementLevel: metrics.engagementScore || 0
       };
     } catch (error) {
       console.warn('Could not get ACS emotional resonance:', error);
-      return { resonanceScore: 0, sentimentTrend: 0, emotionalIntensity: 0 };
+      return { resonanceScore: 0, emotionalIntensity: 0, engagementLevel: 0 };
     }
   }
 
