@@ -1,5 +1,6 @@
 import { enhancedAICoachService } from "./enhanced-ai-coach-service";
 import { growthProgramService } from "./growth-program-service";
+import { enhancedCareerCoachingService } from "./enhanced-career-coaching-service";
 import { GrowthProgram, ProgramWeek, LifeDomain } from "@/types/growth-program";
 import { supabase } from "@/integrations/supabase/client";
 import { Json } from "@/integrations/supabase/types";
@@ -48,6 +49,7 @@ class ProgramAwareCoachService {
   private discoveredInsights: string[] = [];
   private questionCount: number = 0;
   private vfpGraphCache: { vector: Float32Array | null; summary: string | null } = { vector: null, summary: null };
+  private discoveredCareerStatus: string | null = null;
 
   async initializeForUser(userId: string) {
     console.log("🎯 VFP-Graph Program-Aware Coach: Initializing for user", userId);
@@ -57,6 +59,9 @@ class ProgramAwareCoachService {
       
       // Load VFP-Graph data for enhanced guidance
       await this.loadVFPGraphData(userId);
+      
+      // Initialize enhanced career coaching
+      await enhancedCareerCoachingService.initialize();
       
       if (this.currentProgram) {
         const weeks = await growthProgramService.generateWeeklyProgram(this.currentProgram);
@@ -191,6 +196,14 @@ class ProgramAwareCoachService {
       await this.initializeForUser(userId);
     }
 
+    // DISCOVERY-FIRST APPROACH: Use enhanced career coaching for career domain
+    if (this.selectedDomain === 'career' || this.conversationStage === 'belief_drilling') {
+      const careerResponse = await this.handleCareerDiscovery(message, userId, sessionId);
+      if (careerResponse) {
+        return careerResponse;
+      }
+    }
+
     // Process the message and determine inquiry phase
     this.processMessageForInsights(message);
     this.questionCount++;
@@ -213,17 +226,77 @@ class ProgramAwareCoachService {
     };
   }
 
+  private async handleCareerDiscovery(
+    message: string,
+    userId: string,
+    sessionId: string
+  ): Promise<{ response: string; conversationId: string } | null> {
+    try {
+      console.log("🔍 Using enhanced career coaching for discovery-first approach");
+      
+      // Use enhanced career coaching service for proper discovery
+      const careerResponse = await enhancedCareerCoachingService.processCareerMessage(
+        message,
+        userId,
+        sessionId,
+        this.getConversationHistory()
+      );
+
+      // Store discovered career status
+      this.discoveredCareerStatus = careerResponse.careerContext.currentStatus.primaryStatus.status;
+      
+      // Update our belief exploration data with career insights
+      this.beliefExplorationData.careerStatus = this.discoveredCareerStatus;
+      this.beliefExplorationData.careerConfidence = careerResponse.careerContext.currentStatus.primaryStatus.confidence;
+      this.beliefExplorationData.needsConfirmation = careerResponse.needsConfirmation;
+
+      console.log("✅ Career discovery completed:", {
+        status: this.discoveredCareerStatus,
+        confidence: careerResponse.careerContext.currentStatus.primaryStatus.confidence,
+        needsConfirmation: careerResponse.needsConfirmation
+      });
+
+      return {
+        response: careerResponse.response,
+        conversationId: sessionId
+      };
+    } catch (error) {
+      console.error("❌ Error in career discovery:", error);
+      return null;
+    }
+  }
+
+  private getConversationHistory(): any[] {
+    // Convert our internal conversation tracking to the format expected by enhanced career coaching
+    return this.discoveredInsights.map((insight, index) => ({
+      message: `Insight ${index + 1}: ${insight}`,
+      response: "Acknowledged",
+      timestamp: Date.now() - (this.discoveredInsights.length - index) * 60000
+    }));
+  }
+
   async initializeBeliefDrilling(domain: LifeDomain, userId: string, sessionId: string): Promise<{ response: string; conversationId: string }> {
     this.selectedDomain = domain;
     this.conversationStage = 'belief_drilling';
     this.inquiryPhase = 'discovery';
     this.discoveredInsights = [];
     this.questionCount = 0;
+    this.discoveredCareerStatus = null;
     this.setCurrentSession(sessionId);
     
-    // Start with Phase 1: Deep Discovery
+    // For career domain, use enhanced career coaching initialization
+    if (domain === 'career') {
+      console.log("🎯 Initializing career belief drilling with enhanced discovery");
+      return await enhancedCareerCoachingService.initializeBeliefDrilling(
+        domain,
+        userId,
+        sessionId
+      );
+    }
+    
+    // For other domains, use discovery-focused approach
     const domainTitle = this.getDomainTitle(domain);
-    const openingQuestion = `I want to understand what's really going on with your ${domainTitle.toLowerCase()}. What's happening in this area of your life right now that made you choose it for growth?`;
+    const openingQuestion = `I want to understand what's really happening with your ${domainTitle.toLowerCase()}. What's going on in this area of your life right now that made you choose it for growth?`;
 
     return {
       response: openingQuestion,
@@ -271,12 +344,42 @@ class ProgramAwareCoachService {
     // Get VFP-Graph personality insights
     const personalityContext = this.getVFPGraphPersonalityContext();
     
+    // If we have discovered career status, use it to inform responses
+    if (this.discoveredCareerStatus && this.selectedDomain === 'career') {
+      return this.createCareerStatusAwareResponse(userMessage, personalityContext);
+    }
+    
     if (this.inquiryPhase === 'discovery') {
       return this.createVFPGraphDiscoveryResponse(userMessage, domainName, lowerMessage, personalityContext);
     } else if (this.inquiryPhase === 'blueprint_analysis') {
       return this.createVFPGraphBlueprintResponse(userMessage, domainName, personalityContext);
     } else {
       return this.createVFPGraphActionResponse(userMessage, domainName, personalityContext);
+    }
+  }
+
+  private createCareerStatusAwareResponse(userMessage: string, personalityContext: any): string {
+    const { hasVFPGraph, dominantTrait, energyLevel } = personalityContext;
+    
+    // Respond based on discovered career status, not assumptions
+    switch (this.discoveredCareerStatus) {
+      case 'no_career':
+        return `I understand you don't have a career right now. ${hasVFPGraph ? `Your ${dominantTrait} ${energyLevel} personality suggests you might approach this differently than conventional advice would recommend.` : ''} 
+        
+Instead of focusing on what's missing, let's explore what draws your curiosity. When you think about contributing to the world or making an impact, what comes to mind? ${dominantTrait === 'analytical' ? 'What specific problems or areas interest you intellectually?' : 'What feels meaningful or exciting to you?'}`;
+
+      case 'unemployed':
+        return `Being unemployed can bring both practical pressures and unexpected opportunities for clarity. ${hasVFPGraph ? `Given your ${energyLevel} nature, how are you processing this transition?` : 'How are you handling this transition?'} 
+        
+What's been the most challenging aspect - the practical concerns, the identity shift, or something else?`;
+
+      case 'job_searching':
+        return `Job searching is its own full-time job with unique stresses. ${hasVFPGraph ? `Your ${dominantTrait} approach likely means you're being thorough, but how is the process affecting your energy?` : 'How is the search process affecting you?'}
+        
+What type of work are you seeking, and what's been most frustrating about the search so far?`;
+
+      default:
+        return this.createVFPGraphDiscoveryResponse(userMessage, 'career & purpose', userMessage.toLowerCase(), personalityContext);
     }
   }
 
