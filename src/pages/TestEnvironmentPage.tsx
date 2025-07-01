@@ -22,12 +22,23 @@ import { VFPGraphTester } from '@/components/personality/VFPGraphTester';
 import { VFPGraphPatentTester } from '@/components/testing/VFPGraphPatentTester';
 import ACSPatentTestSuite from '@/components/testing/ACSPatentTestSuite';
 import { TMGPatentTestSuite } from '@/components/testing/TMGPatentTestSuite';
+import PIEPatentTestSuite from '@/components/testing/PIEPatentTestSuite';
 
 const TestEnvironmentPage: React.FC = () => {
-  // Set TMG Patent as the default active tab (highest priority for memory testing)
-  const [activeTab, setActiveTab] = useState('tmg-patent');
+  // Set PIE Patent as the default active tab (highest priority for PIE testing)
+  const [activeTab, setActiveTab] = useState('pie-patent');
 
   const testCategories = [
+    {
+      id: 'pie-patent',
+      title: 'PIE Patent Validation',
+      description: 'Proactive Insight Engine patent claims with real-time dynamic data (8 claims)',
+      icon: Shield,
+      status: 'production',
+      priority: 'critical',
+      testCount: 8,
+      component: PIEPatentTestSuite
+    },
     {
       id: 'tmg-patent',
       title: 'TMG Patent Validation',
@@ -112,20 +123,20 @@ const TestEnvironmentPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Overview Section - Now focused on TMG + Patent Validation */}
+      {/* Overview Section - Now focused on PIE + TMG + Patent Validation */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <Database className="w-6 h-6 text-purple-500" />
-            <span>Advanced Memory & Patent Validation Suite</span>
+            <Shield className="w-6 h-6 text-purple-500" />
+            <span>Advanced Patent Validation Suite</span>
             <Badge variant="outline" className="ml-2 bg-purple-50 text-purple-700 border-purple-200">
-              TMG + ACS + VFP-Graph Patent Testing Active
+              PIE + TMG + ACS + VFP-Graph Patent Testing Active
             </Badge>
           </CardTitle>
           <p className="text-muted-foreground">
-            <strong>Comprehensive patent evidence collection</strong> with live conversation testing for TMG three-tier memory management, 
-            ACS technology claims, and VFP-Graph patent validation. Real-time data generation with automatic evidence package creation 
-            for US Provisional Patent Applications.
+            <strong>Comprehensive patent evidence collection</strong> with live functionality testing for PIE proactive insights, 
+            TMG three-tier memory management, ACS technology claims, and VFP-Graph patent validation. Real-time data generation 
+            with automatic evidence package creation for US Provisional Patent Applications.
           </p>
         </CardHeader>
         <CardContent>
@@ -172,6 +183,17 @@ const TestEnvironmentPage: React.FC = () => {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+        <Card className="border-purple-200 bg-purple-50/30">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <Shield className="w-5 h-5 text-purple-500" />
+              <div>
+                <p className="text-2xl font-bold text-purple-700">8</p>
+                <p className="text-sm text-purple-600">PIE Claims</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
         <Card className="border-purple-200 bg-purple-50/30">
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
@@ -244,7 +266,7 @@ const TestEnvironmentPage: React.FC = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <Database className="w-5 h-5 text-purple-500" />
+            <Shield className="w-5 h-5 text-purple-500" />
             <span>Live Patent Test Environment</span>
             <Badge variant="secondary" className="bg-purple-100 text-purple-800">Real-Time Evidence Collection</Badge>
           </CardTitle>
