@@ -51,8 +51,11 @@ class UnifiedBrainService {
         .maybeSingle();
 
       if (data && !error) {
+        // Properly cast user_meta from Json to expected type
+        const userMeta = data.user_meta as { [key: string]: any; preferred_name?: string; full_name?: string; } | null;
+        
         this.currentBlueprint = {
-          user_meta: data.user_meta,
+          user_meta: userMeta || {},
           archetype_western: data.archetype_western,
           archetype_chinese: data.archetype_chinese,
           values_life_path: data.values_life_path,
@@ -152,7 +155,8 @@ class UnifiedBrainService {
         sessionContext: sessionId
       };
 
-      return await tieredMemoryGraph.storeConversationTurn(
+      // Use correct TMG method name
+      return await tieredMemoryGraph.storeInHotMemory(
         this.userId!,
         sessionId,
         conversationTurn,
@@ -169,8 +173,8 @@ class UnifiedBrainService {
       // Get hot memory (recent conversations across all modes)
       const hotMemory = await tieredMemoryGraph.getFromHotMemory(this.userId!, sessionId, 10);
       
-      // Get relevant knowledge entities from warm memory
-      const graphContext = await tieredMemoryGraph.getGraphContext(this.userId!, sessionId);
+      // Get relevant knowledge entities from warm memory - use correct method name
+      const graphContext = await tieredMemoryGraph.traverseGraph(this.userId!, sessionId);
       
       return {
         relevantMemories: hotMemory,

@@ -12,14 +12,17 @@ import { toast } from 'sonner';
 import { supabase } from "@/integrations/supabase/client";
 import ACSEnhancedCoachInterface from './ACSEnhancedCoachInterface';
 import UnifiedCoachInterface from './UnifiedCoachInterface';
+import { AgentMode } from '@/types/personality-modules';
 
 interface Message {
   id: string;
   content: string;
   isUser: boolean;
   timestamp: Date;
+  agentMode: AgentMode;
   interventionApplied?: boolean;
   fallbackUsed?: boolean;
+  brainMetrics?: any;
 }
 
 interface EnhancedCoachInterfaceProps {
@@ -52,7 +55,8 @@ const EnhancedCoachInterface: React.FC<EnhancedCoachInterfaceProps> = (props) =>
       id: `user_${Date.now()}`,
       content: inputValue.trim(),
       isUser: true,
-      timestamp: new Date()
+      timestamp: new Date(),
+      agentMode: 'guide'
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -82,7 +86,8 @@ const EnhancedCoachInterface: React.FC<EnhancedCoachInterfaceProps> = (props) =>
         id: `assistant_${Date.now()}`,
         content: data.response,
         isUser: false,
-        timestamp: new Date()
+        timestamp: new Date(),
+        agentMode: 'guide'
       };
 
       setMessages(prev => [...prev, assistantMessage]);
@@ -101,6 +106,7 @@ const EnhancedCoachInterface: React.FC<EnhancedCoachInterfaceProps> = (props) =>
         content: "I'm sorry, I'm having trouble responding right now. Please try again.",
         isUser: false,
         timestamp: new Date(),
+        agentMode: 'guide',
         fallbackUsed: true
       };
       
