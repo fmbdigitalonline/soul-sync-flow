@@ -1,4 +1,3 @@
-
 import { pieService } from './pie-service';
 import { tieredMemoryGraph } from './tiered-memory-graph';
 import { adaptiveContextScheduler } from './adaptive-context-scheduler';
@@ -112,7 +111,7 @@ class GrowthIntelligenceFusionService {
     const [acsData, piePatterns, beliefMaps] = await Promise.all([
       this.getACSEmotionalResonance(sessionId),
       this.getPIESignificantPatterns(),
-      this.getBelief Mapping(sessionId)
+      this.getBeliefMapping(sessionId)
     ]);
 
     const candidates: RootCauseCandidate[] = [];
