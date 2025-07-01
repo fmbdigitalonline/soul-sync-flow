@@ -1,3 +1,4 @@
+
 import { careerStatusClassifier, CareerClassificationResult } from './career-status-classifier';
 import { eventBusService, CAREER_EVENTS } from './event-bus-service';
 import { adaptiveContextScheduler } from './adaptive-context-scheduler';
@@ -312,15 +313,17 @@ class EnhancedCareerCoachingService {
     }
   }
 
-  // Event handlers with correct ACS method calls
+  // Event handlers using correct ACS methods
   private async handleStatusDetected(event: any): Promise<void> {
     console.log('🎯 Career status detected:', event.data);
     
-    // Update ACS with career context using correct method names
+    // Influence ACS through feedback mechanism based on career status
     if (event.data.status === 'no_career') {
-      adaptiveContextScheduler.updateContext({ phase: 'EXPLORATION', priority: 'high' });
+      // Signal positive engagement for exploration mode
+      adaptiveContextScheduler.recordUserFeedback('positive', 'Career exploration mode activated');
     } else if (event.data.status === 'employed_struggling') {
-      adaptiveContextScheduler.updateContext({ phase: 'SUPPORT', priority: 'medium' });
+      // Signal the need for supportive dialogue
+      adaptiveContextScheduler.recordUserFeedback('neutral', 'Career support mode activated');
     }
   }
 
@@ -333,15 +336,15 @@ class EnhancedCareerCoachingService {
       context.discoveryPhase = 'exploring';
     }
     
-    // Reset any stalled states using correct method
-    adaptiveContextScheduler.updateContext({ stalled: false });
+    // Signal successful confirmation to ACS
+    adaptiveContextScheduler.recordUserFeedback('positive', 'Career status confirmed');
   }
 
   private async handleCareerConfusion(event: any): Promise<void> {
     console.log('❓ Career confusion detected:', event.data);
     
-    // Flag confusion using correct method
-    adaptiveContextScheduler.updateContext({ confused: true, needsClarification: true });
+    // Signal confusion to ACS for appropriate response adjustment
+    adaptiveContextScheduler.recordUserFeedback('negative', 'Career status confusion detected');
   }
 
   // Public methods for confirmation handling
@@ -358,10 +361,10 @@ class EnhancedCareerCoachingService {
         context.userId,
         sessionId
       );
-      adaptiveContextScheduler.updateContext({ stalled: false });
+      adaptiveContextScheduler.recordUserFeedback('positive', 'Career status confirmed');
     } else {
       context.confirmationState = 'rejected';
-      adaptiveContextScheduler.updateContext({ confused: true });
+      adaptiveContextScheduler.recordUserFeedback('negative', 'Career status rejected');
       await eventBusService.publish(
         CAREER_EVENTS.CAREER_CONFUSION,
         { previousStatus: context.currentStatus.primaryStatus.status },
