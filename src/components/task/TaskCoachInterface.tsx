@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +24,7 @@ import { QuickActions } from "./QuickActions";
 import { enhancedTaskCoachIntegrationService } from "@/services/enhanced-task-coach-integration-service";
 import { dreamActivityLogger } from "@/services/dream-activity-logger";
 import { TaskContext } from "@/services/task-coach-integration-service";
+import { AgentMode } from "@/types/personality-modules";
 
 interface Task {
   id: string;
