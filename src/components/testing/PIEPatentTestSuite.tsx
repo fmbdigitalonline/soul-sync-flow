@@ -15,8 +15,7 @@ import {
   Shield,
   Brain,
   Calendar,
-  Bell,
-  Zap
+  Bell
 } from 'lucide-react';
 import { piePatentTestRunner, PIEPatentTestResult, PIEPatentValidationReport } from '@/services/pie-patent-test-runner';
 
@@ -60,9 +59,9 @@ export const PIEPatentTestSuite: React.FC = () => {
       3: Brain,
       4: Shield,
       5: Activity,
-      6: Zap,
-      7: Calendar,
-      8: Bell
+      6: Calendar,
+      7: Bell
+      // REMOVED: Claim 8 icon mapping
     };
     return iconMap[claimNumber] || CheckCircle;
   };
@@ -75,8 +74,8 @@ export const PIEPatentTestSuite: React.FC = () => {
       4: 'Hard Suppression Gate',
       5: 'Adaptive Text Styling',
       6: 'System Architecture Validation',
-      7: 'Astrology Correlation Focus',
-      8: 'Software Implementation'
+      7: 'Astrology Correlation Focus'
+      // REMOVED: Claim 8 title mapping
     };
     return titleMap[claimNumber] || `Claim ${claimNumber}`;
   };
@@ -110,11 +109,11 @@ export const PIEPatentTestSuite: React.FC = () => {
             <Shield className="h-6 w-6 text-purple-600" />
             PIE (Proactive Insight Engine) Patent Validation Suite
             <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-300">
-              8 Patent Claims
+              7 Patent Claims
             </Badge>
           </CardTitle>
           <p className="text-sm text-purple-600">
-            Comprehensive real-time validation of all PIE patent claims using dynamic functionality data
+            Comprehensive real-time validation of core PIE patent claims using dynamic functionality data
           </p>
         </CardHeader>
         <CardContent>

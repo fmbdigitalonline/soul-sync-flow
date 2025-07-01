@@ -32,11 +32,11 @@ const TestEnvironmentPage: React.FC = () => {
     {
       id: 'pie-patent',
       title: 'PIE Patent Validation',
-      description: 'Proactive Insight Engine patent claims with real-time dynamic data (8 claims)',
+      description: 'Proactive Insight Engine patent claims with real-time dynamic data (7 claims)',
       icon: Shield,
       status: 'production',
       priority: 'critical',
-      testCount: 8,
+      testCount: 7, // UPDATED: Changed from 8 to 7 claims
       component: PIEPatentTestSuite
     },
     {
@@ -188,7 +188,7 @@ const TestEnvironmentPage: React.FC = () => {
             <div className="flex items-center space-x-2">
               <Shield className="w-5 h-5 text-purple-500" />
               <div>
-                <p className="text-2xl font-bold text-purple-700">8</p>
+                <p className="text-2xl font-bold text-purple-700">7</p>
                 <p className="text-sm text-purple-600">PIE Claims</p>
               </div>
             </div>
