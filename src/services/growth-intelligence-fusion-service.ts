@@ -472,9 +472,9 @@ class GrowthIntelligenceFusionService {
     try {
       const metrics = await this.getACSMetrics(sessionId);
       return {
-        resonanceScore: (metrics.emotionalIntensity || 0) + (metrics.engagementScore || 0),
-        emotionalIntensity: metrics.emotionalIntensity || 0,
-        engagementLevel: metrics.engagementScore || 0
+        resonanceScore: (metrics.conversationVelocity || 0) + (metrics.successRate || 0),
+        emotionalIntensity: metrics.conversationVelocity || 0,
+        engagementLevel: metrics.successRate || 0
       };
     } catch (error) {
       console.warn('Could not get ACS emotional resonance:', error);
