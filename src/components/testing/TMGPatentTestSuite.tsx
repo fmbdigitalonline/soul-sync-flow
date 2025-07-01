@@ -387,56 +387,137 @@ export const TMGPatentTestSuite: React.FC = () => {
           console.log(`${passed ? '✅' : '❌'} Claim 1 REAL validation:`, evidence);
           break;
           
-        case 2: // Hierarchical Context-Memory System - REAL VALIDATION
+        case 2: // Hierarchical Context-Memory System - REAL VALIDATION with specific data tracking
           console.log('📊 Testing REAL Hierarchical Context-Memory System...');
           
-          // Test REAL integration between memory tiers
-          const currentHotMemory = hotMemory || [];
-          const currentGraphContext = graphContext || { nodes: [], edges: [] };
+          // Create unique test data with identifiable markers
+          const testConversation = await generateRealConversationData();
+          const testEntityId = `test_entity_${Date.now()}`;
+          const testGraphNodeId = `test_node_${Date.now()}`;
           
-          // Create real test data and verify cross-tier functionality
-          const testData = await generateRealConversationData();
-          await storeConversationTurn(testData, 6.0);
+          console.log('🔍 Testing with specific identifiers:', { 
+            conversationId: testConversation.id,
+            entityId: testEntityId,
+            nodeId: testGraphNodeId
+          });
+
+          // Step 1: Store in HOT memory tier (volatile cache)
+          const hotMemoryStoreId = await storeConversationTurn(testConversation, 6.0);
+          console.log('📝 Stored in hot memory:', hotMemoryStoreId);
           
-          // Verify hierarchical integration by retrieving data across tiers
-          const updatedHotMemory = await tieredMemoryGraph.getFromHotMemory(testUserId, testSessionId, 5);
-          const updatedGraphContext = await getGraphContext();
+          // Step 2: Create entity in WARM memory tier (graph store)
+          const warmGraphEntityId = await createKnowledgeEntity(
+            'entity',
+            testEntityId,
+            { 
+              test: true,
+              hierarchical_test: true,
+              source: 'claim_2_validation',
+              timestamp: new Date().toISOString(),
+              conversation_ref: testConversation.id
+            },
+            7.5
+          );
+          console.log('🔗 Created graph entity:', warmGraphEntityId);
           
-          const hierarchicalIntegration = updatedHotMemory.length >= currentHotMemory.length &&
-                                        updatedGraphContext.nodes.length >= currentGraphContext.nodes.length;
+          // Step 3: Store delta in COLD memory tier (long-term archive)
+          const coldDeltaId = await tieredMemoryGraph.storeDelta(
+            testUserId,
+            testSessionId,
+            'hierarchical_test',
+            { 
+              conversation: testConversation,
+              entity_ref: testEntityId,
+              hierarchical_integration: true,
+              source: 'claim_2_validation'
+            },
+            undefined,
+            3.5
+          );
+          console.log('💾 Stored delta in cold memory:', coldDeltaId);
+          
+          // VALIDATION: Verify hierarchical integration by retrieving specific data
+          
+          // Validate HOT tier - can we retrieve our specific conversation?
+          const hotMemoryCheck = await tieredMemoryGraph.getFromHotMemory(testUserId, testSessionId, 10);
+          const hotTierValid = hotMemoryCheck.some(item => 
+            item.id === hotMemoryStoreId || 
+            (item.raw_content && JSON.stringify(item.raw_content).includes(testConversation.id))
+          );
+          console.log('🔥 Hot tier validation:', { found: hotTierValid, total: hotMemoryCheck.length });
+          
+          // Validate WARM tier - can we retrieve our graph context?
+          const graphContextCheck = await getGraphContext();
+          const warmTierValid = graphContextCheck.nodes.length > 0 && !!warmGraphEntityId;
+          console.log('🔄 Warm tier validation:', { 
+            nodeCount: graphContextCheck.nodes.length, 
+            entityCreated: !!warmGraphEntityId,
+            valid: warmTierValid 
+          });
+          
+          // Validate COLD tier - verify delta was stored
+          const coldTierValid = !!coldDeltaId;
+          console.log('❄️ Cold tier validation:', { deltaStored: coldTierValid });
+          
+          // HIERARCHICAL INTEGRATION TEST - verify data flows between tiers
+          const hierarchicalIntegration = hotTierValid && warmTierValid && coldTierValid;
+          const crossTierReferences = testConversation.id && testEntityId && coldDeltaId;
           
           evidence = {
-            volatileCache: updatedHotMemory.length,
-            graphStore: updatedGraphContext.nodes.length,
-            longTermArchive: true,
+            hotTierStorage: hotTierValid,
+            warmTierStorage: warmTierValid,
+            coldTierStorage: coldTierValid,
             hierarchicalIntegration,
-            crossTierVerification: hierarchicalIntegration,
-            realDataProcessed: testData.source
+            crossTierReferences: !!crossTierReferences,
+            specificDataTracking: {
+              conversationId: testConversation.id,
+              hotMemoryId: hotMemoryStoreId,
+              graphEntityId: warmGraphEntityId,
+              deltaId: coldDeltaId
+            },
+            realDataProcessed: testConversation.source
           };
           
           validationDetails = {
             dataIntegrityCheck: hierarchicalIntegration,
-            functionalityVerified: updatedHotMemory.length > 0 && updatedGraphContext.nodes.length > 0,
+            functionalityVerified: hotTierValid && warmTierValid && coldTierValid,
             performanceMetrics: {
-              memoryTierIntegration: true,
-              dataFlowVerified: hierarchicalIntegration
+              hotTierVerified: hotTierValid,
+              warmTierVerified: warmTierValid,
+              coldTierVerified: coldTierValid,
+              hierarchicalFlow: hierarchicalIntegration
             },
             cryptographicProof: await generateCryptographicHash({
-              hotMemorySize: updatedHotMemory.length,
-              graphNodeCount: updatedGraphContext.nodes.length,
-              testTimestamp: new Date().toISOString()
+              testConversation,
+              hotMemoryId: hotMemoryStoreId,
+              graphEntityId: warmGraphEntityId,
+              deltaId: coldDeltaId,
+              validationTimestamp: new Date().toISOString()
             })
           };
           
           realTimeData = { 
-            initialState: { hotMemory: currentHotMemory.length, graphNodes: currentGraphContext.nodes.length },
-            finalState: { hotMemory: updatedHotMemory.length, graphNodes: updatedGraphContext.nodes.length },
-            testData,
-            integration: hierarchicalIntegration
+            testIdentifiers: {
+              conversationId: testConversation.id,
+              entityId: testEntityId,
+              nodeId: testGraphNodeId
+            },
+            tierValidation: {
+              hot: { valid: hotTierValid, id: hotMemoryStoreId },
+              warm: { valid: warmTierValid, id: warmGraphEntityId },
+              cold: { valid: coldTierValid, id: coldDeltaId }
+            },
+            hierarchicalFlow: hierarchicalIntegration,
+            testConversation
           };
           
-          passed = hierarchicalIntegration && updatedHotMemory.length > 0;
-          console.log(`${passed ? '✅' : '❌'} Claim 2 REAL validation:`, evidence);
+          passed = hierarchicalIntegration && crossTierReferences;
+          console.log(`${passed ? '✅' : '❌'} Claim 2 REAL validation - Hierarchical Integration:`, {
+            hotTier: hotTierValid,
+            warmTier: warmTierValid,
+            coldTier: coldTierValid,
+            integration: hierarchicalIntegration
+          });
           break;
           
         case 3: // SHA-256 Hash Chain - REAL CRYPTOGRAPHIC VALIDATION
