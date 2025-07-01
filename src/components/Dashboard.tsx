@@ -7,12 +7,17 @@ import { Badge } from "@/components/ui/badge";
 import { Clock, Target, Calendar, TrendingUp, Star, Play, CheckCircle, Brain } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { PIEDashboardPanel } from "@/components/pie/PIEDashboardPanel";
+import { PIEContextualInsights } from "@/components/pie/PIEContextualInsights";
+import { PIENotificationSystem } from "@/components/pie/PIENotificationSystem";
 
 const Dashboard = () => {
   const { t } = useLanguage();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 p-6">
+      {/* PIE Notification System */}
+      <PIENotificationSystem />
+      
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">
@@ -24,17 +29,22 @@ const Dashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* PIE Insights Panel - New Addition */}
+          {/* PIE Insights Panel */}
           <div className="lg:col-span-1">
             <PIEDashboardPanel />
           </div>
 
-          {/* Quick Stats */}
+          {/* Quick Stats with Contextual Insights */}
           <CosmicCard className="p-6 lg:col-span-2">
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
               <TrendingUp className="w-5 h-5" />
               {t('dashboard.quickStats')}
             </h2>
+            
+            {/* Contextual PIE Insights for Dashboard */}
+            <div className="mb-6">
+              <PIEContextualInsights context="dashboard" compact={true} maxInsights={2} />
+            </div>
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center">
@@ -116,7 +126,7 @@ const Dashboard = () => {
           </CosmicCard>
         </div>
 
-        {/* Recent Activities */}
+        {/* Recent Activities with Pattern Insights */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <CosmicCard className="p-6">
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">

@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MainLayout from "@/components/Layout/MainLayout";
@@ -10,6 +11,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useOptimizedBlueprintData } from "@/hooks/use-optimized-blueprint-data";
 import { isAdminUser } from "@/utils/isAdminUser";
 import { EnhancedProductivityDashboard } from "@/components/productivity/EnhancedProductivityDashboard";
+import { PIENotificationSystem } from "@/components/pie/PIENotificationSystem";
+import { PIEContextualInsights } from "@/components/pie/PIEContextualInsights";
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
@@ -39,6 +42,7 @@ const Dashboard = () => {
   if (authLoading) {
     return (
       <MainLayout>
+        <PIENotificationSystem />
         <div className="w-full min-h-[80vh] flex flex-col items-center justify-center p-4 sm:p-6">
           <Loader2 className="h-8 w-8 animate-spin text-soul-purple" />
           <p className="mt-2 text-sm sm:text-base">Loading...</p>
@@ -73,6 +77,7 @@ const Dashboard = () => {
   if (loading) {
     return (
       <MainLayout>
+        <PIENotificationSystem />
         <div className="w-full min-h-[80vh] flex flex-col items-center justify-center p-4 sm:p-6">
           <Loader2 className="h-8 w-8 animate-spin text-soul-purple" />
           <p className="mt-2 text-sm sm:text-base">Loading dashboard...</p>
@@ -85,6 +90,7 @@ const Dashboard = () => {
   if (error) {
     return (
       <MainLayout>
+        <PIENotificationSystem />
         <div className="w-full min-h-[80vh] flex flex-col items-center justify-center p-4 sm:p-6">
           <p className="text-red-500 mb-4">{error}</p>
           <Button onClick={() => refetch()}>Try Again</Button>
@@ -103,11 +109,18 @@ const Dashboard = () => {
 
   return (
     <MainLayout>
+      <PIENotificationSystem />
       <div className="w-full p-4 sm:p-6 pb-20">
         <div className="flex flex-col gap-4 mb-6">
           <h1 className="text-2xl sm:text-3xl font-bold font-display">
             <span className="gradient-text">Soul Dashboard</span>
           </h1>
+          
+          {/* PIE Contextual Insights for Overview */}
+          <div className="mb-4">
+            <PIEContextualInsights context="dashboard" compact={true} maxInsights={1} />
+          </div>
+          
           <div className="flex flex-col sm:flex-row gap-2">
             <Button 
               className="bg-soul-purple hover:bg-soul-purple/90 flex items-center justify-center text-sm h-9"
@@ -140,16 +153,26 @@ const Dashboard = () => {
               <div className="cosmic-card">
                 <h2 className="text-xl font-bold mb-4">Welcome to your Soul Dashboard</h2>
                 <p>This is your personalized space to track your progress, gain insights, and connect with your inner self.</p>
+                
+                {/* Contextual insights for overview */}
+                <div className="mt-4">
+                  <PIEContextualInsights context="dashboard" compact={false} maxInsights={2} />
+                </div>
               </div>
               <div className="cosmic-card">
                 <h2 className="text-xl font-bold mb-4">Quick Actions</h2>
-                <Button onClick={() => navigate('/coach')}>Chat with Coach</Button>
-                <Button onClick={() => navigate('/journey')}>View Journey</Button>
+                <div className="space-y-2">
+                  <Button onClick={() => navigate('/coach')} className="w-full">Chat with Coach</Button>
+                  <Button onClick={() => navigate('/journey')} className="w-full">View Journey</Button>
+                </div>
               </div>
             </div>
           </TabsContent>
           
           <TabsContent value="productivity" className="mt-6">
+            <div className="mb-4">
+              <PIEContextualInsights context="productivity" compact={true} maxInsights={2} />
+            </div>
             <EnhancedProductivityDashboard />
           </TabsContent>
           
@@ -157,6 +180,10 @@ const Dashboard = () => {
             <div className="cosmic-card">
               <h2 className="text-xl font-bold mb-4">Growth & Development</h2>
               <p>Explore resources and tools to support your personal and spiritual growth.</p>
+              
+              <div className="mt-4">
+                <PIEContextualInsights context="growth" compact={false} maxInsights={3} />
+              </div>
             </div>
           </TabsContent>
 

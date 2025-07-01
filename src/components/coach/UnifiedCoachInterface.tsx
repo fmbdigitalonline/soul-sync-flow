@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,6 +12,7 @@ import { DialogueState } from '@/types/acs-types';
 import { toast } from 'sonner';
 import { supabase } from "@/integrations/supabase/client";
 import { usePIEEnhancedCoach } from '@/hooks/use-pie-enhanced-coach';
+import { PIEContextualInsights } from '@/components/pie/PIEContextualInsights';
 
 interface Message {
   id: string;
@@ -238,6 +240,11 @@ const UnifiedCoachInterface: React.FC<UnifiedCoachInterfaceProps> = ({
           </div>
         </div>
       )}
+
+      {/* Contextual Coach Insights */}
+      <div className="mb-4">
+        <PIEContextualInsights context="coach" compact={true} maxInsights={2} />
+      </div>
 
       {/* Messages */}
       <Card className="flex-1 flex flex-col">
