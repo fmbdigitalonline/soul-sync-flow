@@ -1,4 +1,3 @@
-
 import { careerStatusClassifier, CareerClassificationResult } from './career-status-classifier';
 import { eventBusService, CAREER_EVENTS } from './event-bus-service';
 import { adaptiveContextScheduler } from './adaptive-context-scheduler';
@@ -216,7 +215,7 @@ class EnhancedCareerCoachingService {
   private generateNoCareerResponse(phase: string, context: CareerCoachingContext, pieInsights: any[]): string {
     switch (phase) {
       case 'initial':
-        return "Having no career right now is actually a unique position of freedom. Instead of fixing something that's broken, we get to discover what truly calls to you. What activities or topics make you lose track of time?";
+        return "Having no career right now is actually a unique position of freedom. Instead of fixing something that's broken, we get to discover what truly excites you. What activities or topics make you lose track of time?";
       
       case 'exploring':
         return "Let's explore what energizes you. When you imagine contributing to the world, what feels most meaningful? Don't worry about job titles or practicality yet.";
@@ -313,15 +312,15 @@ class EnhancedCareerCoachingService {
     }
   }
 
-  // Event handlers
+  // Event handlers with correct ACS method calls
   private async handleStatusDetected(event: any): Promise<void> {
     console.log('🎯 Career status detected:', event.data);
     
-    // Update ACS with career context
+    // Update ACS with career context using correct method names
     if (event.data.status === 'no_career') {
-      adaptiveContextScheduler.updateState('EXPLORATION');
+      adaptiveContextScheduler.updateContext({ phase: 'EXPLORATION', priority: 'high' });
     } else if (event.data.status === 'employed_struggling') {
-      adaptiveContextScheduler.updateState('SUPPORT');
+      adaptiveContextScheduler.updateContext({ phase: 'SUPPORT', priority: 'medium' });
     }
   }
 
@@ -333,13 +332,16 @@ class EnhancedCareerCoachingService {
       context.confirmationState = 'confirmed';
       context.discoveryPhase = 'exploring';
     }
+    
+    // Reset any stalled states using correct method
+    adaptiveContextScheduler.updateContext({ stalled: false });
   }
 
   private async handleCareerConfusion(event: any): Promise<void> {
     console.log('❓ Career confusion detected:', event.data);
     
-    // Clear stall in ACS
-    adaptiveContextScheduler.clearStall();
+    // Flag confusion using correct method
+    adaptiveContextScheduler.updateContext({ confused: true, needsClarification: true });
   }
 
   // Public methods for confirmation handling
@@ -356,10 +358,10 @@ class EnhancedCareerCoachingService {
         context.userId,
         sessionId
       );
-      adaptiveContextScheduler.clearStall();
+      adaptiveContextScheduler.updateContext({ stalled: false });
     } else {
       context.confirmationState = 'rejected';
-      adaptiveContextScheduler.flagConfusion();
+      adaptiveContextScheduler.updateContext({ confused: true });
       await eventBusService.publish(
         CAREER_EVENTS.CAREER_CONFUSION,
         { previousStatus: context.currentStatus.primaryStatus.status },

@@ -1,3 +1,4 @@
+
 import { pieService } from './pie-service';
 import { tieredMemoryGraph } from './tiered-memory-graph';
 import { adaptiveContextScheduler } from './adaptive-context-scheduler';
@@ -74,19 +75,20 @@ class GrowthIntelligenceFusionService {
     eventBusService.subscribe(CAREER_EVENTS.STATUS_DETECTED, async (event) => {
       console.log('🎯 Fusion received career status:', event.data);
       
-      // Update PIE with career status for better insights
+      // Update PIE with career status for better insights using correct data types
       try {
         await pieService.processUserData({
           id: `career_status_${Date.now()}`,
           userId: this.userId!,
           timestamp: new Date().toISOString(),
-          dataType: 'career_status',
+          dataType: 'sentiment', // Use existing PIE data type
           value: this.mapCareerStatusToValue(event.data.status),
-          source: 'career_detection',
+          source: 'conversation_analysis', // Use existing PIE source type
           confidence: event.data.confidence,
           metadata: {
             status: event.data.status,
-            needsConfirmation: event.data.needsConfirmation
+            needsConfirmation: event.data.needsConfirmation,
+            careerContext: true // Add career context flag
           }
         });
       } catch (error) {
