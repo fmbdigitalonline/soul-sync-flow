@@ -1,10 +1,11 @@
 
 import React from 'react';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Brain, TrendingUp, Star, Clock, ThumbsUp, ThumbsDown, X } from 'lucide-react';
+import { Brain, TrendingUp, Star, Clock, X } from 'lucide-react';
 import { PIEInsight } from '@/types/pie-types';
+import { PIEFeedbackSystem } from './PIEFeedbackSystem';
+import { Button } from '@/components/ui/button';
 
 interface PIEInsightCardProps {
   insight: PIEInsight;
@@ -61,24 +62,13 @@ export const PIEInsightCard: React.FC<PIEInsightCardProps> = ({
           <Badge variant="outline" className="text-xs">
             {Math.round(insight.confidence * 100)}% confidence
           </Badge>
-          <div className="flex space-x-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onFeedback(insight.id, true)}
-              className="h-6 w-6 p-0"
-            >
-              <ThumbsUp className="w-3 h-3" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onFeedback(insight.id, false)}
-              className="h-6 w-6 p-0"
-            >
-              <ThumbsDown className="w-3 h-3" />
-            </Button>
-          </div>
+          <PIEFeedbackSystem
+            insightId={insight.id}
+            compact={true}
+            onFeedbackSubmitted={(feedback) => {
+              onFeedback(insight.id, feedback.type === 'positive' || feedback.helpful === true);
+            }}
+          />
         </div>
       </div>
     );
@@ -117,24 +107,13 @@ export const PIEInsightCard: React.FC<PIEInsightCardProps> = ({
           </div>
         </div>
         
-        <div className="flex space-x-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onFeedback(insight.id, true)}
-            className="h-8 w-8 p-0"
-          >
-            <ThumbsUp className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onFeedback(insight.id, false)}
-            className="h-8 w-8 p-0"
-          >
-            <ThumbsDown className="w-4 h-4" />
-          </Button>
-        </div>
+        <PIEFeedbackSystem
+          insightId={insight.id}
+          compact={false}
+          onFeedbackSubmitted={(feedback) => {
+            onFeedback(insight.id, feedback.type === 'positive' || feedback.helpful === true);
+          }}
+        />
       </div>
     </Card>
   );

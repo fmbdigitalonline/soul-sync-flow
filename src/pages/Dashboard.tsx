@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MainLayout from "@/components/Layout/MainLayout";
@@ -13,6 +12,7 @@ import { isAdminUser } from "@/utils/isAdminUser";
 import { EnhancedProductivityDashboard } from "@/components/productivity/EnhancedProductivityDashboard";
 import { PIENotificationSystem } from "@/components/pie/PIENotificationSystem";
 import { PIEContextualInsights } from "@/components/pie/PIEContextualInsights";
+import { PIEUserExperienceHub } from "@/components/pie/PIEUserExperienceHub";
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
@@ -116,7 +116,7 @@ const Dashboard = () => {
             <span className="gradient-text">Soul Dashboard</span>
           </h1>
           
-          {/* PIE Contextual Insights for Overview */}
+          {/* Enhanced PIE Contextual Insights */}
           <div className="mb-4">
             <PIEContextualInsights context="dashboard" compact={true} maxInsights={1} />
           </div>
@@ -141,11 +141,12 @@ const Dashboard = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
-          <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full max-w-4xl mx-auto h-auto p-1">
+          <TabsList className="grid grid-cols-2 sm:grid-cols-5 w-full max-w-5xl mx-auto h-auto p-1">
             <TabsTrigger value="overview" className="text-xs sm:text-sm py-2">Overview</TabsTrigger>
             <TabsTrigger value="productivity" className="text-xs sm:text-sm py-2">Productivity</TabsTrigger>
             <TabsTrigger value="growth" className="text-xs sm:text-sm py-2">Growth</TabsTrigger>
             <TabsTrigger value="blueprint" className="text-xs sm:text-sm py-2">Blueprint</TabsTrigger>
+            <TabsTrigger value="pie" className="text-xs sm:text-sm py-2">PIE Hub</TabsTrigger>
           </TabsList>
           
           <TabsContent value="overview" className="mt-6">
@@ -154,7 +155,6 @@ const Dashboard = () => {
                 <h2 className="text-xl font-bold mb-4">Welcome to your Soul Dashboard</h2>
                 <p>This is your personalized space to track your progress, gain insights, and connect with your inner self.</p>
                 
-                {/* Contextual insights for overview */}
                 <div className="mt-4">
                   <PIEContextualInsights context="dashboard" compact={false} maxInsights={2} />
                 </div>
@@ -192,6 +192,10 @@ const Dashboard = () => {
               <h2 className="text-xl font-bold mb-4">Soul Blueprint</h2>
               <p>Dive deep into your unique astrological and personality insights.</p>
             </div>
+          </TabsContent>
+
+          <TabsContent value="pie" className="mt-6">
+            <PIEUserExperienceHub />
           </TabsContent>
         </Tabs>
       </div>
