@@ -52,19 +52,25 @@ export class PIEService {
       }
 
       if (data) {
-        // Map database record to PIEConfiguration interface
+        // Map database record to PIEConfiguration interface with proper type casting
         this.configuration = {
           userId: data.user_id,
           enabled: data.enabled,
           minimumConfidence: data.minimum_confidence,
           patternSensitivity: data.pattern_sensitivity as PIEConfiguration['patternSensitivity'],
-          deliveryMethods: data.delivery_methods || ['conversation'],
+          deliveryMethods: Array.isArray(data.delivery_methods) 
+            ? data.delivery_methods as PIEConfiguration['deliveryMethods']
+            : ['conversation'],
           deliveryTiming: data.delivery_timing as PIEConfiguration['deliveryTiming'],
-          quietHours: data.quiet_hours || { start: '22:00', end: '08:00' },
+          quietHours: (data.quiet_hours && typeof data.quiet_hours === 'object' && !Array.isArray(data.quiet_hours))
+            ? data.quiet_hours as { start: string; end: string }
+            : { start: '22:00', end: '08:00' },
           includeAstrology: data.include_astrology,
           includeStatistics: data.include_statistics,
           communicationStyle: data.communication_style as PIEConfiguration['communicationStyle'],
-          dataTypes: data.data_types || ['mood', 'productivity', 'sentiment'],
+          dataTypes: Array.isArray(data.data_types)
+            ? data.data_types as string[]
+            : ['mood', 'productivity', 'sentiment'],
           retentionPeriod: data.retention_period
         };
       } else {

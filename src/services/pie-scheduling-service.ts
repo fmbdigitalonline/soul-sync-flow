@@ -126,7 +126,7 @@ class PIESchedulingService {
 
       if (error) throw error;
 
-      // Map database records to PIEPredictiveRule interface
+      // Map database records to PIEPredictiveRule interface with proper type casting
       return (data || []).map(record => ({
         id: record.id,
         userId: record.user_id,
@@ -137,7 +137,9 @@ class PIESchedulingService {
         conditions: {
           windowHours: record.window_hours,
           minimumOccurrences: record.minimum_occurrences,
-          userDataTypes: record.user_data_types || []
+          userDataTypes: Array.isArray(record.user_data_types) 
+            ? record.user_data_types as string[]
+            : []
         },
         creationDate: record.creation_date,
         lastValidated: record.last_validated,

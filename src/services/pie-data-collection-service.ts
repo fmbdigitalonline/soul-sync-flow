@@ -182,7 +182,7 @@ class PIEDataCollectionService {
 
       if (error) throw error;
 
-      // Map database records to PIEDataPoint interface
+      // Map database records to PIEDataPoint interface with proper type casting
       return (data || []).map(record => ({
         id: record.id,
         userId: record.user_id,
@@ -192,7 +192,9 @@ class PIEDataCollectionService {
         rawValue: record.raw_value,
         source: record.source as PIEDataPoint['source'],
         confidence: record.confidence,
-        metadata: record.metadata || {}
+        metadata: (record.metadata && typeof record.metadata === 'object' && !Array.isArray(record.metadata)) 
+          ? record.metadata as Record<string, any>
+          : {}
       }));
     } catch (error) {
       console.error("Error getting user data:", error);
