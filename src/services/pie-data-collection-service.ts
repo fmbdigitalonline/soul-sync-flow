@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { PIEDataPoint, PIE_MINIMUM_DATA_POINTS } from "@/types/pie-types";
 import { tieredMemoryGraph } from "./tiered-memory-graph";
@@ -17,9 +16,20 @@ class PIEDataCollectionService {
   }
 
   async storeDataPoint(dataPoint: PIEDataPoint): Promise<void> {
-    if (!this.active) return;
+    if (!this.active) {
+      console.log("📊 Data collection service not active, skipping store");
+      return;
+    }
 
     try {
+      console.log(`📊 Storing PIE data point: ${dataPoint.dataType} = ${dataPoint.value} (ID: ${dataPoint.id})`);
+      
+      // Validate UUID format
+      if (!dataPoint.id || !dataPoint.id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)) {
+        console.error("❌ Invalid UUID format for data point:", dataPoint.id);
+        throw new Error(`Invalid UUID format: ${dataPoint.id}`);
+      }
+
       // Map PIEDataPoint to database schema
       const dbDataPoint = {
         id: dataPoint.id,
@@ -38,13 +48,13 @@ class PIEDataCollectionService {
         .insert(dbDataPoint);
 
       if (error) {
-        console.error("Failed to store PIE data point:", error);
+        console.error("❌ Failed to store PIE data point:", error);
         throw error;
       }
 
-      console.log(`📊 Stored PIE data point: ${dataPoint.dataType} = ${dataPoint.value}`);
+      console.log(`✅ Successfully stored PIE data point: ${dataPoint.dataType} = ${dataPoint.value}`);
     } catch (error) {
-      console.error("Error storing PIE data point:", error);
+      console.error("❌ Error storing PIE data point:", error);
       throw error;
     }
   }
@@ -62,7 +72,7 @@ class PIEDataCollectionService {
           const sentiment = this.analyzeSentiment(memory.raw_content.content);
           
           const dataPoint: PIEDataPoint = {
-            id: `sentiment_${memory.id}`,
+            id: crypto.randomUUID(), // FIXED: Use proper UUID generation
             userId: this.userId,
             timestamp: memory.created_at,
             dataType: 'sentiment',
@@ -110,7 +120,7 @@ class PIEDataCollectionService {
     const productivityScore = timeScore * difficultyMultiplier;
 
     const dataPoint: PIEDataPoint = {
-      id: `productivity_${taskId}_${Date.now()}`,
+      id: crypto.randomUUID(), // FIXED: Use proper UUID generation
       userId: this.userId,
       timestamp: new Date().toISOString(),
       dataType: 'productivity',
@@ -132,7 +142,7 @@ class PIEDataCollectionService {
     if (!this.userId || !this.active) return;
 
     const dataPoint: PIEDataPoint = {
-      id: `mood_${Date.now()}`,
+      id: crypto.randomUUID(), // FIXED: Use proper UUID generation
       userId: this.userId,
       timestamp: new Date().toISOString(),
       dataType: 'mood',
