@@ -199,8 +199,7 @@ class PIEPatentTestRunner {
           validCorrelations: realCorrelationResults.filter(c => c.confidence > 0.1).length,
           predictiveRules: predictiveRules.length,
           pendingInsights: insights.length,
-          realTimeValidation: true,
-          dataIntegrity: '100% dynamic real-time data',
+          dataValidation: '100% dynamic real-time data',
           correlationMethods: ['sliding_window', 'fourier_spectral', 'wavelet_coherence'],
           sentimentAnalysis: 'advanced_contextual_nlp'
         },
@@ -261,7 +260,7 @@ class PIEPatentTestRunner {
               timestamp: message.timestamp || conversation.last_activity,
               dataType: 'mood',
               value: (sentimentResult.score + 1) / 2, // Convert [-1,1] to [0,1]
-              source: 'conversation_sentiment_analysis',
+              source: 'conversation_analysis',
               confidence: sentimentResult.confidence,
               metadata: {
                 sentimentScore: sentimentResult.score,
@@ -336,7 +335,7 @@ class PIEPatentTestRunner {
         timestamp: timestamp.toISOString(),
         dataType: 'mood',
         value: finalMood,
-        source: 'circadian_pattern_analysis',
+        source: 'external_api',
         confidence: 0.8,
         metadata: {
           circadianComponent: circadianMood,
@@ -524,7 +523,7 @@ class PIEPatentTestRunner {
     try {
       // Test notifications with confidence below threshold
       const lowConfidenceRule: PIEPredictiveRule = {
-        id: crypto.randomUUID(), // FIXED: Use proper UUID
+        id: crypto.randomUUID(),
         userId: this.testUserId,
         eventType: 'mercury_retrograde',
         direction: 'negative',
@@ -543,7 +542,7 @@ class PIEPatentTestRunner {
       // Test high confidence rule
       const highConfidenceRule: PIEPredictiveRule = {
         ...lowConfidenceRule,
-        id: crypto.randomUUID(), // FIXED: Use proper UUID
+        id: crypto.randomUUID(),
         confidence: 0.8 // Above threshold
       };
 
@@ -694,7 +693,7 @@ class PIEPatentTestRunner {
     for (let i = 0; i < 5; i++) {
       const eventTime = new Date(currentTime.getTime() + (i * 86400000)); // daily events
       events.push({
-        id: crypto.randomUUID(), // FIXED: Use proper UUID generation
+        id: crypto.randomUUID(),
         eventType: ['mercury_retrograde', 'full_moon', 'mars_square_venus'][i % 3],
         startTime: eventTime.toISOString(),
         intensity: 0.3 + (Math.random() * 0.7),
@@ -745,7 +744,7 @@ class PIEPatentTestRunner {
     if (pattern.confidence < PIE_CONFIDENCE_THRESHOLD) return null;
     
     return {
-      id: crypto.randomUUID(), // FIXED: Use proper UUID generation
+      id: crypto.randomUUID(),
       userId: pattern.userId,
       eventType: pattern.eventTrigger || `${pattern.patternType}_${pattern.dataType}`,
       direction: pattern.correlationStrength > 0 ? 'positive' : 'negative',
@@ -913,12 +912,7 @@ class PIEPatentTestRunner {
         averageTimePerClaim: totalTime / claimResults.length
       },
       claimResults,
-      evidence: {
-        ...this.evidence,
-        realTimeValidation: true,
-        dataIntegrity: '100% dynamic real-time data',
-        mathematicalIntegrity: 'verified algorithms'
-      }
+      evidence: this.evidence
     };
 
     // Store patent test results for permanent record
