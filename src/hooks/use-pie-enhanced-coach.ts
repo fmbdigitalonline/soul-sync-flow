@@ -64,6 +64,7 @@ export const usePIEEnhancedCoach = (defaultAgent: AgentType = "guide") => {
       try {
         // Create data point from user interaction
         const dataPoint = {
+          id: `pie_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           userId: user.id,
           dataType: 'sentiment' as const,
           timestamp: new Date().toISOString(),

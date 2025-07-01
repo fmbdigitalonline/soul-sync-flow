@@ -127,7 +127,7 @@ export const PIESettingsPanel: React.FC = () => {
             <p className="text-sm text-gray-600">How sensitive pattern detection should be</p>
           </div>
           <div className="flex space-x-2">
-            {(['low', 'moderate', 'high'] as const).map((level) => (
+            {(['conservative', 'moderate', 'sensitive'] as const).map((level) => (
               <Button
                 key={level}
                 variant={config.patternSensitivity === level ? "default" : "outline"}

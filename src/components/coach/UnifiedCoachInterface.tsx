@@ -109,9 +109,21 @@ const UnifiedCoachInterface: React.FC<UnifiedCoachInterfaceProps> = ({
       // Use PIE-enhanced message sending
       await pieCoach.sendMessage(inputValue.trim(), true);
       
-      // The PIE-enhanced coach will handle the response through its own state
-      // We need to sync with its messages
-      setMessages(prev => [...prev, ...pieCoach.messages.slice(prev.length)]);
+      // Convert PIE coach messages to our local Message interface
+      const convertedMessages = pieCoach.messages.map(msg => ({
+        id: msg.id,
+        content: msg.content,
+        isUser: msg.sender === 'user',
+        timestamp: msg.timestamp,
+        agentMode: msg.agentType || agentMode
+      }));
+      
+      // Update with converted messages, avoiding duplicates
+      setMessages(prev => {
+        const existingIds = new Set(prev.map(m => m.id));
+        const newMessages = convertedMessages.filter(m => !existingIds.has(m.id));
+        return [...prev, ...newMessages];
+      });
       
       // Update brain health metrics
       setBrainHealth(unifiedBrainService.getBrainHealth());
