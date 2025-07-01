@@ -1,6 +1,7 @@
 import { enhancedAICoachService } from "./enhanced-ai-coach-service";
 import { growthProgramService } from "./growth-program-service";
 import { enhancedCareerCoachingService } from "./enhanced-career-coaching-service";
+import { careerDiscoveryService } from "./career-discovery-service";
 import { GrowthProgram, ProgramWeek, LifeDomain } from "@/types/growth-program";
 import { supabase } from "@/integrations/supabase/client";
 import { Json } from "@/integrations/supabase/types";
@@ -196,7 +197,7 @@ class ProgramAwareCoachService {
       await this.initializeForUser(userId);
     }
 
-    // DISCOVERY-FIRST APPROACH: Use enhanced career coaching for career domain
+    // DISCOVERY-FIRST APPROACH: Use career discovery service for career domain
     if (this.selectedDomain === 'career' || this.conversationStage === 'belief_drilling') {
       const careerResponse = await this.handleCareerDiscovery(message, userId, sessionId);
       if (careerResponse) {
@@ -232,32 +233,33 @@ class ProgramAwareCoachService {
     sessionId: string
   ): Promise<{ response: string; conversationId: string } | null> {
     try {
-      console.log("🔍 Using enhanced career coaching for discovery-first approach");
+      console.log("🔍 Using career discovery service for discovery-first approach");
       
-      // Use enhanced career coaching service for proper discovery
-      const careerResponse = await enhancedCareerCoachingService.processCareerMessage(
-        message,
-        userId,
-        sessionId,
-        this.getConversationHistory()
-      );
+      // Initialize career discovery context if needed
+      let context = careerDiscoveryService.getContext(sessionId);
+      if (!context) {
+        context = await careerDiscoveryService.initializeDiscovery(userId, sessionId);
+      }
 
-      // Store discovered career status
-      this.discoveredCareerStatus = careerResponse.careerContext.currentStatus.primaryStatus.status;
+      // Process the discovery message
+      const discoveryResult = await careerDiscoveryService.processDiscoveryMessage(message, sessionId);
       
       // Update our belief exploration data with career insights
-      this.beliefExplorationData.careerStatus = this.discoveredCareerStatus;
-      this.beliefExplorationData.careerConfidence = careerResponse.careerContext.currentStatus.primaryStatus.confidence;
-      this.beliefExplorationData.needsConfirmation = careerResponse.needsConfirmation;
+      this.beliefExplorationData.careerStatus = discoveryResult.context.discoveredStatus;
+      this.beliefExplorationData.careerConfidence = discoveryResult.context.statusConfidence;
+      this.beliefExplorationData.explorationPhase = discoveryResult.context.explorationPhase;
+      this.beliefExplorationData.discoveredValues = discoveryResult.context.discoveredValues;
+      this.beliefExplorationData.blockers = discoveryResult.context.blockers;
 
       console.log("✅ Career discovery completed:", {
-        status: this.discoveredCareerStatus,
-        confidence: careerResponse.careerContext.currentStatus.primaryStatus.confidence,
-        needsConfirmation: careerResponse.needsConfirmation
+        status: discoveryResult.context.discoveredStatus,
+        confidence: discoveryResult.context.statusConfidence,
+        phase: discoveryResult.context.explorationPhase,
+        readyForProgram: discoveryResult.readyForProgram
       });
 
       return {
-        response: careerResponse.response,
+        response: discoveryResult.response,
         conversationId: sessionId
       };
     } catch (error) {
@@ -284,14 +286,30 @@ class ProgramAwareCoachService {
     this.discoveredCareerStatus = null;
     this.setCurrentSession(sessionId);
     
-    // For career domain, use enhanced career coaching initialization
+    // For career domain, use career discovery service
     if (domain === 'career') {
-      console.log("🎯 Initializing career belief drilling with enhanced discovery");
-      return await enhancedCareerCoachingService.initializeBeliefDrilling(
-        domain,
-        userId,
-        sessionId
-      );
+      console.log("🎯 Initializing career belief drilling with discovery-first approach");
+      
+      try {
+        // Initialize career discovery
+        const context = await careerDiscoveryService.initializeDiscovery(userId, sessionId);
+        
+        // Generate opening question based on career discovery approach
+        const openingQuestion = `I want to understand what's really happening with your career & purpose. What's going on in this area of your life right now that made you choose it for growth?`;
+
+        return {
+          response: openingQuestion,
+          conversationId: sessionId
+        };
+      } catch (error) {
+        console.error("❌ Error initializing career discovery:", error);
+        // Fallback to generic approach
+        const openingQuestion = `I want to understand what's really happening with your career & purpose. What's going on in this area of your life right now that made you choose it for growth?`;
+        return {
+          response: openingQuestion,
+          conversationId: sessionId
+        };
+      }
     }
     
     // For other domains, use discovery-focused approach
