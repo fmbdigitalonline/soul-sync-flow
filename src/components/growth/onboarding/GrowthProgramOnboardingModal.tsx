@@ -5,6 +5,8 @@ import { GrowthDomainSelection } from './GrowthDomainSelection';
 import { GrowthBeliefDrilling } from './GrowthBeliefDrilling';
 import { GrowthProgramGeneration } from './GrowthProgramGeneration';
 import { useGrowthOnboardingLogic } from './useGrowthOnboardingLogic';
+import { Button } from '@/components/ui/button';
+import { X } from 'lucide-react';
 
 interface GrowthProgramOnboardingModalProps {
   isOpen: boolean;
@@ -25,8 +27,15 @@ export const GrowthProgramOnboardingModal: React.FC<GrowthProgramOnboardingModal
     error,
     handleDomainSelect,
     handleBeliefComplete,
-    handleGenerationComplete
+    handleGenerationComplete,
+    handleBackToDomainSelection
   } = useGrowthOnboardingLogic(onComplete);
+
+  const handleClose = () => {
+    if (!isGenerating) {
+      onClose();
+    }
+  };
 
   const renderCurrentStage = () => {
     switch (currentStage) {
@@ -42,6 +51,7 @@ export const GrowthProgramOnboardingModal: React.FC<GrowthProgramOnboardingModal
           <GrowthBeliefDrilling
             domain={selectedDomain!}
             onComplete={handleBeliefComplete}
+            onBack={handleBackToDomainSelection}
             beliefData={beliefData}
           />
         );
@@ -60,8 +70,21 @@ export const GrowthProgramOnboardingModal: React.FC<GrowthProgramOnboardingModal
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={() => {}}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-4xl h-[90vh] overflow-hidden p-0 flex flex-col">
+        {/* Close button */}
+        <div className="absolute top-4 right-4 z-50">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleClose}
+            disabled={isGenerating}
+            className="h-8 w-8 p-0"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+        
         <div className="w-full h-full flex flex-col overflow-hidden">
           {renderCurrentStage()}
         </div>

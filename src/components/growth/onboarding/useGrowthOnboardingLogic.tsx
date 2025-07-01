@@ -31,6 +31,14 @@ export const useGrowthOnboardingLogic = (onComplete: () => void) => {
     setCurrentStage('belief_drilling');
   }, []);
 
+  const handleBackToDomainSelection = useCallback(() => {
+    console.log('🔙 Going back to domain selection');
+    setCurrentStage('domain_selection');
+    setSelectedDomain(null);
+    setBeliefData(null);
+    setError(null);
+  }, []);
+
   const handleBeliefComplete = useCallback((beliefs: BeliefData) => {
     console.log('🧠 Beliefs drilling complete:', beliefs);
     setBeliefData(beliefs);
@@ -97,6 +105,7 @@ export const useGrowthOnboardingLogic = (onComplete: () => void) => {
     error,
     handleDomainSelect,
     handleBeliefComplete,
-    handleGenerationComplete
+    handleGenerationComplete,
+    handleBackToDomainSelection
   };
 };
