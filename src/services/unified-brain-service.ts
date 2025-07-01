@@ -4,6 +4,8 @@ import { enhancedPersonalityEngine } from "./enhanced-personality-engine";
 import { productionACSService } from "./production-acs-service";
 import { ACSConfig, DialogueState } from "@/types/acs-types";
 import { LayeredBlueprint, AgentMode } from "@/types/personality-modules";
+import { pieService } from "./pie-service";
+import { PIEDataPoint } from "@/types/pie-types";
 
 export interface UnifiedBrainResponse {
   response: string;
@@ -32,10 +34,13 @@ class UnifiedBrainService {
     // Initialize all brain components
     enhancedPersonalityEngine.setUserId(userId);
     
+    // Initialize PIE (Proactive Insight Engine)
+    await pieService.initialize(userId);
+    
     // Load user's blueprint for personality consistency
     await this.loadUserBlueprint();
     
-    console.log("✅ Unified Brain Service initialized");
+    console.log("✅ Unified Brain Service initialized with PIE integration");
   }
 
   private async loadUserBlueprint() {
@@ -81,6 +86,12 @@ class UnifiedBrainService {
     const startTime = performance.now();
     console.log(`🧠 Processing message through unified brain - Mode: ${agentMode}, State: ${currentState}`);
 
+    // PIE: Collect user data from conversation
+    await this.collectPIEDataFromMessage(message, agentMode);
+
+    // PIE: Get proactive insights for conversation context
+    const pieInsights = await pieService.getInsightsForConversation(agentMode);
+
     // Step 1: Store conversation turn in TMG (shared memory)
     const memoryStartTime = performance.now();
     const memoryId = await this.storeInSharedMemory(message, sessionId, agentMode);
@@ -89,7 +100,7 @@ class UnifiedBrainService {
     // Step 2: Generate personality-aware system prompt via VFP-Graph
     const systemPrompt = await enhancedPersonalityEngine.generateSystemPrompt(agentMode, message);
     
-    // Step 3: Process through ACS for adaptive conversation management
+    // Step 3: Process through ACS with PIE context
     const acsResult = await productionACSService.processMessage(
       message,
       sessionId,
@@ -97,11 +108,20 @@ class UnifiedBrainService {
       currentState
     );
 
+    // PIE: Enhance response with proactive insights if relevant
+    let finalResponse = acsResult.response;
+    if (pieInsights.length > 0 && !acsResult.fallbackUsed) {
+      finalResponse = await this.enhanceResponseWithPIEInsights(
+        acsResult.response,
+        pieInsights,
+        agentMode
+      );
+    }
+
     // Step 4: Retrieve relevant context from shared memory
     const memoryContext = await this.getSharedMemoryContext(sessionId, agentMode);
 
     // Step 5: Enhance response with memory context if ACS didn't already handle it
-    let finalResponse = acsResult.response;
     if (!acsResult.fallbackUsed && memoryContext.relevantMemories.length > 0) {
       finalResponse = await this.enhanceResponseWithMemory(
         acsResult.response,
@@ -130,6 +150,115 @@ class UnifiedBrainService {
         adaptiveResponse: acsResult.interventionApplied || !acsResult.fallbackUsed
       }
     };
+  }
+
+  // PIE: Collect user data from conversation
+  private async collectPIEDataFromMessage(message: string, agentMode: AgentMode): Promise<void> {
+    if (!this.userId) return;
+
+    try {
+      // Analyze message sentiment
+      const sentiment = this.analyzeSentiment(message);
+      
+      const sentimentData: PIEDataPoint = {
+        id: `sentiment_${Date.now()}`,
+        userId: this.userId,
+        timestamp: new Date().toISOString(),
+        dataType: 'sentiment',
+        value: sentiment,
+        source: 'conversation_analysis',
+        confidence: 0.7,
+        metadata: {
+          agentMode,
+          messageLength: message.length
+        }
+      };
+
+      await pieService.processUserData(sentimentData);
+    } catch (error) {
+      console.error("Failed to collect PIE data from message:", error);
+    }
+  }
+
+  // PIE: Simple sentiment analysis
+  private analyzeSentiment(text: string): number {
+    const positiveWords = ['good', 'great', 'excellent', 'happy', 'love', 'amazing', 'wonderful', 'fantastic', 'excited', 'motivated'];
+    const negativeWords = ['bad', 'terrible', 'hate', 'sad', 'angry', 'frustrated', 'worried', 'stressed', 'difficult', 'struggling'];
+    
+    const words = text.toLowerCase().split(/\s+/);
+    let score = 0;
+    
+    for (const word of words) {
+      if (positiveWords.includes(word)) score += 1;
+      if (negativeWords.includes(word)) score -= 1;
+    }
+    
+    return Math.max(-1, Math.min(1, score / Math.max(words.length / 10, 1)));
+  }
+
+  // PIE: Enhance response with proactive insights
+  private async enhanceResponseWithPIEInsights(
+    response: string,
+    insights: any[],
+    agentMode: AgentMode
+  ): Promise<string> {
+    if (insights.length === 0) return response;
+
+    // Find the highest priority insight
+    const topInsight = insights[0];
+    
+    // Contextually integrate the insight into the response
+    const insightIntegration = `\n\n*By the way, ${topInsight.message}*`;
+    
+    return response + insightIntegration;
+  }
+
+  // PIE: Collect mood data
+  async collectMoodData(moodValue: number): Promise<void> {
+    if (!this.userId) return;
+
+    const moodData: PIEDataPoint = {
+      id: `mood_${Date.now()}`,
+      userId: this.userId,
+      timestamp: new Date().toISOString(),
+      dataType: 'mood',
+      value: moodValue / 10, // Normalize to 0-1
+      source: 'user_input',
+      confidence: 0.9,
+      metadata: {
+        rawMoodValue: moodValue
+      }
+    };
+
+    await pieService.processUserData(moodData);
+  }
+
+  // PIE: Collect productivity data
+  async collectProductivityData(taskId: string, completionTime: number, difficulty: string): Promise<void> {
+    if (!this.userId) return;
+
+    const productivityData: PIEDataPoint = {
+      id: `productivity_${taskId}_${Date.now()}`,
+      userId: this.userId,
+      timestamp: new Date().toISOString(),
+      dataType: 'productivity',
+      value: this.calculateProductivityScore(completionTime, difficulty),
+      source: 'activity_log',
+      confidence: 0.8,
+      metadata: {
+        taskId,
+        completionTime,
+        difficulty
+      }
+    };
+
+    await pieService.processUserData(productivityData);
+  }
+
+  private calculateProductivityScore(completionTime: number, difficulty: string): number {
+    const difficultyMultiplier = difficulty === 'high' ? 1.2 : difficulty === 'medium' ? 1.0 : 0.8;
+    const timeScore = Math.max(0, 1 - (completionTime / 3600));
+    return Math.min(1, timeScore * difficultyMultiplier);
   }
 
   private async storeInSharedMemory(
@@ -282,8 +411,10 @@ class UnifiedBrainService {
       memorySystemActive: !!this.userId,
       personalityEngineActive: !!this.currentBlueprint,
       acsSystemActive: true,
+      pieSystemActive: pieService.getPIEHealth().enabled,
       unifiedBrainCoherence: this.calculatePersonalityCoherence(),
-      sessionMemorySize: this.sessionMemory.size
+      sessionMemorySize: this.sessionMemory.size,
+      pie: pieService.getPIEHealth()
     };
   }
 }
