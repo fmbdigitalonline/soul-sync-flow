@@ -12,7 +12,8 @@ import {
   Brain,
   Play,
   Pause,
-  RotateCcw
+  RotateCcw,
+  AlertCircle
 } from "lucide-react";
 import { useTaskAwareCoach } from "@/hooks/use-task-aware-coach";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
@@ -61,12 +62,17 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
   onBack,
   onTaskComplete
 }) => {
-  const taskContext: TaskContext = {
+  // Create stable task context
+  const taskContext: TaskContext = useMemo(() => ({
     ...task,
     progress: 0,
     sub_tasks: []
-  };
+  }), [task.id, task.title, task.description, task.status]);
 
+  const [initializationError, setInitializationError] = useState<string | null>(null);
+  const [isInitializing, setIsInitializing] = useState(true);
+
+  // Initialize the task-aware coach with error handling
   const { 
     messages, 
     isLoading, 
@@ -86,24 +92,35 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
   const [taskCompleted, setTaskCompleted] = useState(false);
   const [coachMessages, setCoachMessages] = useState<CoachMessage[]>([]);
 
-  // Log component mount
+  // Log component mount with error handling
   useEffect(() => {
-    dreamActivityLogger.logActivity('task_coach_interface_mounted', {
-      task_id: task.id,
-      task_title: task.title,
-      task_status: task.status,
-      estimated_duration: task.estimated_duration
-    });
+    const initializeInterface = async () => {
+      try {
+        await dreamActivityLogger.logActivity('task_coach_interface_mounted', {
+          task_id: task.id,
+          task_title: task.title,
+          task_status: task.status,
+          estimated_duration: task.estimated_duration
+        });
+        setIsInitializing(false);
+      } catch (error) {
+        console.error('Failed to initialize task coach interface:', error);
+        setInitializationError(error instanceof Error ? error.message : 'Unknown initialization error');
+        setIsInitializing(false);
+      }
+    };
+
+    initializeInterface();
 
     return () => {
       dreamActivityLogger.logActivity('task_coach_interface_unmounted', {
         task_id: task.id,
-        session_duration: Date.now() - sessionStats.sessionDuration, // Calculate directly instead of using sessionStats.sessionDuration
+        session_duration: Date.now() - sessionStats.sessionDuration,
         messages_sent: sessionStats.messageCount,
         actions_executed: sessionStats.actionCount
       });
     };
-  }, [task.id, task.title, task.status, task.estimated_duration]); // Removed sessionStats from dependencies
+  }, [task.id, task.title, task.status, task.estimated_duration, sessionStats]);
 
   // Timer effect with logging
   useEffect(() => {
@@ -131,22 +148,20 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
 
   // Sync task progress with current task state
   useEffect(() => {
-    if (currentTask) {
+    if (currentTask && currentTask.progress !== taskProgress) {
       const previousProgress = taskProgress;
       setTaskProgress(currentTask.progress);
       
-      if (previousProgress !== currentTask.progress) {
-        dreamActivityLogger.logActivity('task_progress_updated', {
-          task_id: currentTask.id,
-          previous_progress: previousProgress,
-          new_progress: currentTask.progress,
-          progress_change: currentTask.progress - previousProgress
-        });
-      }
+      dreamActivityLogger.logActivity('task_progress_updated', {
+        task_id: currentTask.id,
+        previous_progress: previousProgress,
+        new_progress: currentTask.progress,
+        progress_change: currentTask.progress - previousProgress
+      });
     }
-  }, [currentTask, taskProgress]);
+  }, [currentTask?.progress, taskProgress]);
 
-  // Set up task completion callback with logging - removed sessionStats from dependencies
+  // Set up task completion callback with logging
   useEffect(() => {
     const unsubscribeComplete = enhancedTaskCoachIntegrationService.onTaskComplete((taskId) => {
       console.log('🎉 Task completed via coach integration:', taskId);
@@ -168,16 +183,16 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
     return () => {
       unsubscribeComplete();
     };
-  }, [onTaskComplete, focusTime]); // Removed sessionStats from dependencies
+  }, [onTaskComplete, focusTime, sessionStats]);
 
   // Convert task-aware messages to coach messages format
   useEffect(() => {
     const convertedMessages: CoachMessage[] = messages.map(msg => ({
       id: msg.id,
       content: msg.content,
-      isUser: msg.sender === 'user', // Convert sender to isUser boolean
+      isUser: msg.sender === 'user',
       timestamp: msg.timestamp,
-      agentMode: 'guide' as AgentMode // Add required agentMode property
+      agentMode: 'guide' as AgentMode
     }));
     setCoachMessages(convertedMessages);
   }, [messages]);
@@ -205,6 +220,7 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
     }
   };
 
+  // Stable event handlers
   const handleStartSession = useCallback(async () => {
     console.log('🚀 Starting coaching session for task:', task.title);
     
@@ -347,6 +363,39 @@ Let's get started! What's the first step?`;
   };
 
   const totalDays = getTotalDays(task.estimated_duration);
+
+  // Show loading state during initialization
+  if (isInitializing) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center">
+          <Brain className="h-8 w-8 text-soul-purple animate-pulse mx-auto mb-4" />
+          <p className="text-muted-foreground">Initializing task coach...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if initialization failed
+  if (initializationError) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center max-w-md p-6">
+          <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold mb-2">Initialization Error</h3>
+          <p className="text-muted-foreground mb-4">{initializationError}</p>
+          <div className="space-x-2">
+            <Button variant="outline" onClick={handleBackClick}>
+              Go Back
+            </Button>
+            <Button onClick={() => window.location.reload()}>
+              Retry
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full flex flex-col animate-fade-in transition-all duration-300">

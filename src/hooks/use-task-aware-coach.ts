@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useEnhancedAICoach } from "./use-enhanced-ai-coach";
 import { enhancedTaskCoachIntegrationService } from "@/services/enhanced-task-coach-integration-service";
 import { TaskContext, TaskAction } from "@/services/task-coach-integration-service";
@@ -10,11 +10,17 @@ export const useTaskAwareCoach = (initialTask?: TaskContext) => {
   const [currentTask, setCurrentTask] = useState<TaskContext | null>(initialTask || null);
   const [messageCount, setMessageCount] = useState(0);
   const [actionCount, setActionCount] = useState(0);
-  const [sessionStartTime] = useState(Date.now());
+  
+  // Use refs for stable values that don't need to trigger re-renders
+  const sessionStartTimeRef = useRef(Date.now());
+  const initializedRef = useRef(false);
+  const sessionIdRef = useRef(dreamActivityLogger.getCurrentSessionId());
 
-  // Initialize task context with logging - removed currentAgent from dependencies
+  // Initialize task context only once
   useEffect(() => {
-    if (initialTask) {
+    if (initialTask && !initializedRef.current) {
+      console.log('🎯 Initializing task-aware coach with task:', initialTask.title);
+      
       dreamActivityLogger.logActivity('task_aware_coach_initialized', {
         task_id: initialTask.id,
         task_title: initialTask.title,
@@ -23,10 +29,11 @@ export const useTaskAwareCoach = (initialTask?: TaskContext) => {
 
       enhancedTaskCoachIntegrationService.setCurrentTask(initialTask);
       setCurrentTask(initialTask);
+      initializedRef.current = true;
 
       // Log task coach session start
       dreamActivityLogger.logTaskCoachSession({
-        session_id: dreamActivityLogger.getCurrentSessionId(),
+        session_id: sessionIdRef.current,
         task_id: initialTask.id,
         task_title: initialTask.title,
         session_start: new Date(),
@@ -34,32 +41,34 @@ export const useTaskAwareCoach = (initialTask?: TaskContext) => {
         actions_executed: 0,
         session_data: {
           initial_task: initialTask,
-          coach_agent: 'coach' // Use static value instead of currentAgent
+          coach_agent: 'coach'
         }
       });
     }
-  }, [initialTask]); // Removed currentAgent from dependencies
+  }, [initialTask?.id]); // Only depend on task ID to prevent loops
 
-  // Set up task update callbacks with logging
-  useEffect(() => {
-    const unsubscribeUpdate = enhancedTaskCoachIntegrationService.onTaskUpdate((updatedTask) => {
-      console.log('🔄 Task update received:', updatedTask);
-      
-      dreamActivityLogger.logActivity('task_state_updated', {
-        previous_progress: currentTask?.progress,
-        new_progress: updatedTask.progress,
-        task_id: updatedTask.id,
-        status_change: currentTask?.status !== updatedTask.status,
-        subtasks_change: (currentTask?.sub_tasks?.length || 0) !== (updatedTask.sub_tasks?.length || 0)
-      });
-      
-      setCurrentTask(updatedTask);
+  // Set up task update callbacks - stable callback
+  const handleTaskUpdate = useCallback((updatedTask: TaskContext) => {
+    console.log('🔄 Task update received:', updatedTask);
+    
+    dreamActivityLogger.logActivity('task_state_updated', {
+      previous_progress: currentTask?.progress,
+      new_progress: updatedTask.progress,
+      task_id: updatedTask.id,
+      status_change: currentTask?.status !== updatedTask.status,
+      subtasks_change: (currentTask?.sub_tasks?.length || 0) !== (updatedTask.sub_tasks?.length || 0)
     });
+    
+    setCurrentTask(updatedTask);
+  }, [currentTask?.progress, currentTask?.status, currentTask?.sub_tasks?.length]);
 
+  // Set up task update listener only once
+  useEffect(() => {
+    const unsubscribeUpdate = enhancedTaskCoachIntegrationService.onTaskUpdate(handleTaskUpdate);
     return () => {
       unsubscribeUpdate();
     };
-  }, [currentTask]);
+  }, []); // Empty dependency array - set up once
 
   // Enhanced send message with comprehensive logging and loop prevention
   const sendTaskAwareMessage = useCallback(async (message: string) => {
@@ -103,8 +112,7 @@ Please provide guidance while being aware of my current task state and progress.
       console.log('📤 Sending task-aware message to coach');
       
       // Send only the original user message to be displayed in chat
-      // The enhanced message goes to AI, but the UI shows the clean user message
-      await sendMessage(enhancedMessage, true, message); // Pass original message as display message
+      await sendMessage(enhancedMessage, true, message);
       
       const messageTime = Date.now() - messageStartTime;
       setMessageCount(prev => prev + 1);
@@ -131,7 +139,7 @@ Please provide guidance while being aware of my current task state and progress.
       
       throw error;
     }
-  }, [messageCount, currentTask, sendMessage]); // Stable dependencies
+  }, [messageCount, currentTask?.id, sendMessage]); // Stable dependencies only
 
   // Enhanced action checking with comprehensive logging
   const checkForCoachActionsWithLogging = useCallback(async () => {
@@ -166,7 +174,7 @@ Please provide guidance while being aware of my current task state and progress.
         messages_length: messages.length
       });
     }
-  }, [messages]); // Only depend on messages
+  }, [messages.length]); // Only depend on messages length
 
   // Enhanced action execution with comprehensive tracking
   const executeCoachActionWithLogging = useCallback(async (action: TaskAction, triggeredBy: 'user_action' | 'auto_execution' | 'coach_response' = 'user_action') => {
@@ -212,7 +220,7 @@ Please provide guidance while being aware of my current task state and progress.
         data: null
       };
     }
-  }, [sendMessage]); // Only depend on sendMessage
+  }, [sendMessage]);
 
   // Enhanced response parsing with logging
   const parseCoachResponseWithLogging = useCallback((response: string): TaskAction | null => {
@@ -272,9 +280,9 @@ Please provide guidance while being aware of my current task state and progress.
       });
       return null;
     }
-  }, []); // No dependencies needed
+  }, []);
 
-  // Quick actions with enhanced logging
+  // Quick actions with enhanced logging - memoized to prevent re-creation
   const quickTaskActions = useMemo(() => ({
     markSubTaskComplete: async (subTaskId: string) => {
       await dreamActivityLogger.logActivity('quick_action_triggered', {
@@ -322,20 +330,20 @@ Please provide guidance while being aware of my current task state and progress.
       });
       return executeCoachActionWithLogging({ type: 'get_next_task', payload: {} }, 'user_action');
     }
-  }), [currentTask, executeCoachActionWithLogging]); // Memoized with stable dependencies
+  }), [currentTask?.id, currentTask?.progress, currentTask?.sub_tasks?.length, executeCoachActionWithLogging]);
 
   // Memoized session stats to prevent re-renders
   const sessionStats = useMemo(() => ({
     messageCount,
     actionCount,
-    sessionDuration: Date.now() - sessionStartTime,
-    sessionId: dreamActivityLogger.getCurrentSessionId()
-  }), [messageCount, actionCount, sessionStartTime]);
+    sessionDuration: Date.now() - sessionStartTimeRef.current,
+    sessionId: sessionIdRef.current
+  }), [messageCount, actionCount]);
 
-  // Log session stats periodically - removed sessionStats from dependencies
+  // Log session stats periodically - stable interval
   useEffect(() => {
     const interval = setInterval(async () => {
-      const sessionDuration = Date.now() - sessionStartTime;
+      const sessionDuration = Date.now() - sessionStartTimeRef.current;
       
       await dreamActivityLogger.logActivity('session_stats_update', {
         session_duration_ms: sessionDuration,
@@ -347,7 +355,7 @@ Please provide guidance while being aware of my current task state and progress.
     }, 30000); // Every 30 seconds
 
     return () => clearInterval(interval);
-  }, [messageCount, actionCount, currentTask, sessionStartTime]); // Removed sessionStats
+  }, [messageCount, actionCount, currentTask?.id, currentTask?.progress]);
 
   return {
     messages,
