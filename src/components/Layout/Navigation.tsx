@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import { Home, MessageCircle, Heart, Target, Sparkles, Settings } from 'lucide-react';
+import { Home, MessageCircle, Heart, Target, Sparkles, Settings, TestTube } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, } from "@/components/ui/dropdown-menu"
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -16,7 +16,7 @@ const Navigation = () => {
     { name: t('nav.spiritualGrowth'), href: '/spiritual-growth', icon: Heart, current: location.pathname === '/spiritual-growth' },
     { name: 'Dreams', href: '/dreams', icon: Target, current: location.pathname === '/dreams' },
     { name: t('nav.blueprint'), href: '/blueprint', icon: Sparkles, current: location.pathname === '/blueprint' },
-    { name: 'Diagnostics', href: '/diagnostics', icon: Settings, current: location.pathname === '/diagnostics' },
+    { name: 'Diagnostics', href: '/diagnostics', icon: TestTube, current: location.pathname === '/diagnostics' },
   ];
 
   return (
