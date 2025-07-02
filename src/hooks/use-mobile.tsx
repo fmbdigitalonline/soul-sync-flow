@@ -77,5 +77,8 @@ export function useIsMobile() {
   }
 }
 
-// Legacy export for backward compatibility
-export { useIsMobile as useIsMobile }
+// Create a legacy hook that returns just the boolean for backward compatibility
+export function useIsMobileBoolean() {
+  const { isMobile } = useIsMobile()
+  return isMobile
+}
