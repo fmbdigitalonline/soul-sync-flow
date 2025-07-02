@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -5,11 +6,15 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent } from "@/components/ui/card";
 import { Send, Menu, X } from "lucide-react";
 import { useEnhancedAICoach } from "@/hooks/use-enhanced-ai-coach";
+import { useACSIntegration } from "@/hooks/use-acs-integration";
+import { useTieredMemory } from "@/hooks/use-tiered-memory";
+import { usePIEEnhancedCoach } from "@/hooks/use-pie-enhanced-coach";
 import { AgentSelector } from "./AgentSelector";
 import { CoachLoadingMessage } from "./CoachLoadingMessage";
 import { TypewriterText } from "./TypewriterText";
 import { VFPGraphFeedback } from "./VFPGraphFeedback";
 import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Message {
   id: string;
@@ -33,11 +38,22 @@ export default function EnhancedCoachInterface({
 }: EnhancedCoachInterfaceProps) {
   const { isMobile, isUltraNarrow, spacing, getTextSize, touchTargetSize } = useResponsiveLayout();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { user } = useAuth();
   
+  // Generate session ID if not provided
+  const currentSessionId = sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  
+  // Initialize all 4 brain innovations
+  const baseCoach = useEnhancedAICoach();
+  const pieCoach = usePIEEnhancedCoach(baseCoach.currentAgent);
+  const acsIntegration = useACSIntegration(user?.id || null, true);
+  const tieredMemory = useTieredMemory(user?.id || 'anonymous', currentSessionId);
+  
+  // Use PIE-enhanced coach for better conversations
   const {
     messages,
     isLoading,
-    sendMessage,
+    sendMessage: baseSendMessage,
     resetConversation,
     currentAgent,
     switchAgent,
@@ -48,7 +64,7 @@ export default function EnhancedCoachInterface({
     blueprintStatus,
     vfpGraphStatus,
     recordVFPGraphFeedback
-  } = useEnhancedAICoach();
+  } = pieCoach.pieEnabled ? pieCoach : baseCoach;
 
   const [inputMessage, setInputMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -74,6 +90,7 @@ export default function EnhancedCoachInterface({
     scrollToBottom();
   }, [allMessages, streamingContent]);
 
+  // Enhanced send message with all 4 brain innovations
   const handleSendMessage = useCallback(async () => {
     if (!inputMessage.trim() || isLoading) return;
 
@@ -92,11 +109,49 @@ export default function EnhancedCoachInterface({
     onNewMessage?.(userMessage);
     
     try {
-      await sendMessage(messageToSend, true);
+      // ACS: Process user message for adaptive context
+      if (acsIntegration.isEnabled) {
+        acsIntegration.processUserMessage(messageToSend);
+      }
+      
+      // TMG: Store conversation turn for memory
+      if (tieredMemory.isInitialized) {
+        await tieredMemory.storeConversationTurn({
+          content: messageToSend,
+          sender: 'user',
+          timestamp: new Date().toISOString(),
+          agent_mode: currentAgent
+        }, 7.0); // High importance for user messages
+      }
+      
+      // Send message with enhanced system prompt from ACS
+      let enhancedMessage = messageToSend;
+      if (acsIntegration.isEnabled) {
+        const systemPromptEnhancement = acsIntegration.getEnhancedSystemPrompt("");
+        if (systemPromptEnhancement !== "") {
+          enhancedMessage = `${messageToSend}\n\n[Context: ${systemPromptEnhancement}]`;
+        }
+      }
+      
+      await baseSendMessage(enhancedMessage, true);
+      
+      // ACS: Process assistant response
+      if (acsIntegration.isEnabled) {
+        // We'll process the assistant response when it's received
+        setTimeout(() => {
+          if (messages.length > 0) {
+            const lastMessage = messages[messages.length - 1];
+            if (lastMessage.sender === 'assistant') {
+              acsIntegration.processAssistantMessage(lastMessage.content);
+            }
+          }
+        }, 1000);
+      }
+      
     } catch (error) {
-      console.error("Error sending message:", error);
+      console.error("Error sending enhanced message:", error);
     }
-  }, [inputMessage, isLoading, sendMessage, onNewMessage, currentAgent]);
+  }, [inputMessage, isLoading, baseSendMessage, onNewMessage, currentAgent, acsIntegration, tieredMemory, messages]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -109,6 +164,16 @@ export default function EnhancedCoachInterface({
     switchAgent(newAgent);
     if (isMobile) setSidebarOpen(false); // Close sidebar on mobile after selection
   };
+
+  // Enhanced VFP feedback with ACS integration
+  const handleVFPFeedback = useCallback((messageId: string, isPositive: boolean) => {
+    recordVFPGraphFeedback(messageId, isPositive);
+    
+    // ACS: Record feedback for learning
+    if (acsIntegration.isEnabled) {
+      acsIntegration.recordFeedback(isPositive ? 'positive' : 'negative', `Message ${messageId}`);
+    }
+  }, [recordVFPGraphFeedback, acsIntegration]);
 
   // Mobile Sidebar Component
   const MobileSidebar = () => (
@@ -151,6 +216,17 @@ export default function EnhancedCoachInterface({
             />
           </div>
           
+          {/* Brain Innovation Status */}
+          <div className="space-y-2">
+            <h4 className={`font-medium ${getTextSize('text-sm')}`}>Brain Innovations</h4>
+            <div className={`text-xs p-2 rounded bg-muted space-y-1`}>
+              <div>ACS: {acsIntegration.isEnabled ? '✅ Active' : '❌ Inactive'}</div>
+              <div>VFP: {vfpGraphStatus.isAvailable ? '✅ Active' : '❌ Inactive'}</div>
+              <div>PIE: {pieCoach.pieEnabled ? '✅ Active' : '❌ Inactive'}</div>
+              <div>TMG: {tieredMemory.isInitialized ? '✅ Active' : '❌ Inactive'}</div>
+            </div>
+          </div>
+          
           {/* Blueprint Status */}
           <div className="space-y-2">
             <h4 className={`font-medium ${getTextSize('text-sm')}`}>Blueprint Status</h4>
@@ -176,7 +252,7 @@ export default function EnhancedCoachInterface({
   if (!authInitialized) {
     return (
       <div className="h-full flex items-center justify-center">
-        <CoachLoadingMessage message="Initializing coach..." />
+        <CoachLoadingMessage message="Initializing brain innovations..." />
       </div>
     );
   }
@@ -202,6 +278,7 @@ export default function EnhancedCoachInterface({
             
             <h2 className={`font-semibold ${getTextSize('text-lg')}`}>
               AI Coach - {currentAgent}
+              {pieCoach.pieEnabled && <span className="text-xs text-purple-600 ml-2">PIE Enhanced</span>}
             </h2>
           </div>
           
@@ -229,6 +306,24 @@ export default function EnhancedCoachInterface({
               onAgentChange={switchAgent}
             />
           </div>
+          
+          {/* Brain Innovation Status */}
+          <Card>
+            <CardContent className="p-4">
+              <h4 className="font-medium mb-2">Brain Innovations</h4>
+              <div className="space-y-1 text-sm text-muted-foreground">
+                <div>ACS: {acsIntegration.isEnabled ? '✅ Active' : '❌ Inactive'}</div>
+                <div>VFP: {vfpGraphStatus.isAvailable ? '✅ Active' : '❌ Inactive'}</div>
+                <div>PIE: {pieCoach.pieEnabled ? '✅ Active' : '❌ Inactive'}</div>
+                <div>TMG: {tieredMemory.isInitialized ? '✅ Active' : '❌ Inactive'}</div>
+              </div>
+              {acsIntegration.isEnabled && (
+                <div className="text-xs mt-2 text-blue-600">
+                  Context State: {acsIntegration.currentState}
+                </div>
+              )}
+            </CardContent>
+          </Card>
           
           {/* Blueprint Status */}
           <Card>
@@ -288,7 +383,7 @@ export default function EnhancedCoachInterface({
                     {!message.isUser && !message.isStreaming && (
                       <VFPGraphFeedback
                         messageId={message.id}
-                        onFeedbackGiven={(isPositive) => recordVFPGraphFeedback(message.id, isPositive)}
+                        onFeedbackGiven={handleVFPFeedback}
                       />
                     )}
                   </div>
