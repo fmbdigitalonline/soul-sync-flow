@@ -5,6 +5,7 @@ import { pieService } from "./pie-service";
 import { agentConfigurationService } from "./agent-configuration-service";
 import { adaptiveContextScheduler } from "./adaptive-context-scheduler";
 import { LayeredBlueprint } from "@/types/personality-modules";
+import { agentCommunicationService } from "./agent-communication-service";
 
 export interface GrowthBrainResponse {
   response: string;
@@ -94,7 +95,12 @@ class GrowthBrainService {
     }
 
     const startTime = performance.now();
-    console.log(`🌱 Processing spiritual growth message with specialized configuration`);
+    console.log(`🌱 Processing spiritual growth message with Phase 3 agent communication`);
+
+    // Initialize agent communication if not already done
+    if (!agentCommunicationService['userId']) {
+      await agentCommunicationService.initialize(this.userId);
+    }
 
     // Process through ACS with growth-specific parameters
     let acsState = 'NORMAL';
@@ -120,6 +126,23 @@ class GrowthBrainService {
     const spiritualInsights = this.extractSpiritualInsights(response);
     const growthPatterns = this.extractGrowthPatterns(response);
     
+    // Share insights with other agents via Phase 3 communication API
+    if (spiritualInsights.length > 0) {
+      await agentCommunicationService.shareInsightBetweenAgents(
+        'growth',
+        'soul_companion',
+        {
+          insightType: 'pattern',
+          content: `Spiritual growth insight: ${spiritualInsights[0]}`,
+          confidence: 0.8,
+          relevanceScore: 0.9
+        }
+      );
+    }
+
+    // Analyze cross-mode patterns
+    await agentCommunicationService.analyzeCrossModePatterns(message, 'growth');
+    
     // Get PIE insights for spiritual growth
     let pieInsights: string[] = [];
     try {
@@ -139,7 +162,7 @@ class GrowthBrainService {
 
     const totalLatency = performance.now() - startTime;
     
-    console.log(`✅ Growth brain processing complete in ${totalLatency.toFixed(1)}ms with specialized config`);
+    console.log(`✅ Growth brain Phase 3 processing complete in ${totalLatency.toFixed(1)}ms`);
 
     return {
       response,
@@ -306,12 +329,14 @@ Remember: This is a sacred space for ${userName}'s spiritual development. Every 
       namespace: this.NAMESPACE,
       focusAreas: this.agentConfig.behavioral.focusAreas,
       isInitialized: !!this.userId,
+      phase3Enabled: true,
       configuration: {
         emotionalSensitivity: this.agentConfig.behavioral.emotionalSensitivity,
         responseStyle: this.agentConfig.behavioral.responseStyle,
         conversationDepth: this.agentConfig.behavioral.conversationDepth,
         acsEnabled: true,
-        pieEnabled: true
+        pieEnabled: true,
+        agentCommunication: true
       }
     };
   }

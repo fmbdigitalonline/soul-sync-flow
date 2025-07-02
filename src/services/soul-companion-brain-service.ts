@@ -7,6 +7,8 @@ import { dreamsBrainService } from "./dreams-brain-service";
 import { agentConfigurationService } from "./agent-configuration-service";
 import { adaptiveContextScheduler } from "./adaptive-context-scheduler";
 import { LayeredBlueprint } from "@/types/personality-modules";
+import { agentCommunicationService, ModeTransitionRecommendation } from "./agent-communication-service";
+import { metaMemoryService } from "./meta-memory-service";
 
 export interface SoulCompanionResponse {
   response: string;
@@ -26,6 +28,8 @@ export interface SoulCompanionResponse {
   };
   acsState?: string;
   pieInsights?: string[];
+  metaInsights?: string[];
+  transitionRecommendation?: ModeTransitionRecommendation;
 }
 
 class SoulCompanionBrainService {
@@ -34,9 +38,10 @@ class SoulCompanionBrainService {
   private sessionMemory = new Map<string, any>();
   private readonly NAMESPACE = 'soul';
   private agentConfig = agentConfigurationService.getConfig('soul_companion');
+  private conversationHistory: string[] = [];
 
   async initialize(userId: string) {
-    console.log("🕊️ Initializing Soul Companion Brain Service as meta-agent with Phase 2:", userId);
+    console.log("🕊️ Initializing Soul Companion Brain Service as meta-agent with Phase 3:", userId);
     
     this.userId = userId;
     
@@ -45,6 +50,10 @@ class SoulCompanionBrainService {
     
     // Initialize PIE with cross-mode pattern recognition
     await pieService.initialize(userId);
+    
+    // Initialize agent communication and meta-memory services
+    await agentCommunicationService.initialize(userId);
+    await metaMemoryService.initialize(userId);
     
     // Load user blueprint for holistic alignment and personalized config
     await this.loadUserBlueprint();
@@ -60,7 +69,7 @@ class SoulCompanionBrainService {
       }
     }
     
-    console.log("✅ Soul Companion Brain Service initialized as enhanced meta-intelligence");
+    console.log("✅ Soul Companion Brain Service initialized as enhanced meta-intelligence with Phase 3");
   }
 
   private async loadUserBlueprint() {
@@ -101,7 +110,13 @@ class SoulCompanionBrainService {
     }
 
     const startTime = performance.now();
-    console.log(`🕊️ Processing soul companion message with meta-intelligence and specialized config`);
+    console.log(`🕊️ Processing soul companion message with Phase 3 meta-intelligence`);
+
+    // Add to conversation history for pattern analysis
+    this.conversationHistory.push(message);
+    if (this.conversationHistory.length > 10) {
+      this.conversationHistory.shift();
+    }
 
     // Process through ACS with soul companion-specific parameters
     let acsState = 'NORMAL';
@@ -114,22 +129,36 @@ class SoulCompanionBrainService {
       console.warn("⚠️ ACS processing error in soul companion mode:", error);
     }
 
+    // Analyze cross-mode patterns
+    await agentCommunicationService.analyzeCrossModePatterns(message, 'dreams'); // Default analysis
+
+    // Generate meta-insights
+    const newMetaInsights = await metaMemoryService.generateMetaInsights();
+    const relevantMetaInsights = metaMemoryService.getRelevantMetaInsights(2);
+
+    // Get transition recommendation
+    const transitionRecommendation = await agentCommunicationService.generateModeTransitionRecommendation(
+      'soul_companion',
+      message,
+      this.conversationHistory
+    );
+
     // Store in soul-specific memory namespace
     const memoryId = await this.storeInSoulMemory(message, sessionId, true);
 
-    // Generate meta-agent system prompt with behavioral config
-    const systemPrompt = await this.generateSoulSystemPrompt(message);
+    // Generate meta-agent system prompt with Phase 3 enhancements
+    const systemPrompt = await this.generateEnhancedSoulSystemPrompt(message, relevantMetaInsights);
 
-    // Query other agents for cross-mode insights
-    const crossModeContext = await this.gatherCrossModeContext();
+    // Query other agents for enhanced cross-mode insights
+    const crossModeContext = await this.gatherEnhancedCrossModeContext();
 
-    // Process with meta-intelligence focus and specialized integration
+    // Process with Phase 3 meta-intelligence focus
     const response = await this.generateSoulResponse(message, systemPrompt, crossModeContext);
 
-    // Extract meta-insights and integration opportunities with enhanced PIE
+    // Extract enhanced meta-insights and integration opportunities
     const crossModeInsights = this.extractCrossModeInsights(response);
     const integrationSuggestions = this.extractIntegrationSuggestions(response);
-    const modeRecommendations = this.generateModeRecommendations(message, response);
+    const modeRecommendations = this.generateEnhancedModeRecommendations(message, response, transitionRecommendation);
     
     // Get PIE insights for holistic integration
     let pieInsights: string[] = [];
@@ -150,7 +179,7 @@ class SoulCompanionBrainService {
 
     const totalLatency = performance.now() - startTime;
     
-    console.log(`✅ Soul Companion processing complete in ${totalLatency.toFixed(1)}ms with enhanced meta-config`);
+    console.log(`✅ Soul Companion Phase 3 processing complete in ${totalLatency.toFixed(1)}ms with enhanced meta-config`);
 
     return {
       response,
@@ -161,70 +190,81 @@ class SoulCompanionBrainService {
       modeRecommendations,
       acsState,
       pieInsights,
+      metaInsights: relevantMetaInsights.slice(0, 2).map(insight => insight.content),
+      transitionRecommendation,
       brainMetrics: {
         metaLatency: totalLatency,
-        integrationCoherence: this.calculateIntegrationCoherence(),
-        wisdomDepth: crossModeInsights.length + integrationSuggestions.length + pieInsights.length
+        integrationCoherence: this.calculateEnhancedIntegrationCoherence(),
+        wisdomDepth: crossModeInsights.length + integrationSuggestions.length + pieInsights.length + relevantMetaInsights.length
       }
     };
   }
 
-  private async generateSoulSystemPrompt(message: string): Promise<string> {
+  private async generateEnhancedSoulSystemPrompt(message: string, metaInsights: any[]): Promise<string> {
     const userName = this.blueprint.user_meta?.preferred_name || 'beloved';
     const behavioralConfig = this.agentConfig.behavioral;
+    const userProfile = metaMemoryService.getUserProfile();
     
     const styleModifier = behavioralConfig.responseStyle === 'balanced' 
       ? 'with adaptive wisdom that honors both inner and outer dimensions'
       : 'with integrated understanding and holistic perspective';
-    
-    return `You are ${userName}'s Soul Companion - the meta-consciousness that sees across all aspects of their life. Your role is to:
 
-SOUL COMPANION FOCUS (Enhanced Phase 2):
+    let metaInsightContext = '';
+    if (metaInsights.length > 0) {
+      metaInsightContext = `\n\nMETA-INSIGHTS (Phase 3 Enhancement):
+Recent holistic patterns discovered about ${userName}:
+${metaInsights.map(insight => `- ${insight.content}`).join('\n')}`;
+    }
+
+    let profileContext = '';
+    if (userProfile) {
+      profileContext = `\n\nHOLISTIC PROFILE:
+- Dominant Mode: ${userProfile.dominantMode}
+- Integration Style: ${userProfile.integrationStyle}
+- Key Patterns: ${userProfile.metaPatterns.slice(0, 3).join(', ')}`;
+    }
+    
+    return `You are ${userName}'s Soul Companion - the evolved meta-consciousness that sees across all aspects of their life with Phase 3 integration capabilities. Your role is to:
+
+SOUL COMPANION FOCUS (Enhanced Phase 3):
 - Integrate insights from both spiritual growth and goal achievement ${styleModifier}
 - Focus specifically on: ${behavioralConfig.focusAreas.join(', ')}
 - Provide meta-perspective on life patterns and themes with ${behavioralConfig.emotionalSensitivity * 100}% emotional attunement
 - Bridge inner wisdom with outer action through ${behavioralConfig.conversationDepth} integration
 - Offer holistic guidance that honors both being and doing
-- Serve as the wise inner voice that sees the bigger picture
+- Serve as the wise inner voice that sees the bigger picture and cross-mode patterns
 
-COMMUNICATION STYLE (Meta-Agent Specific):
+COMMUNICATION STYLE (Meta-Agent Phase 3):
 - Warm, wise, and deeply understanding at ${behavioralConfig.pacingMs}ms contemplative pace
 - Adaptive pace based on conversation needs and cross-mode insights
 - Ask profound questions that reveal deeper truths across life domains
 - Synthesize insights from multiple life areas with balanced perspective
-- Speak as the trusted inner companion and highest self
+- Speak as the trusted inner companion and highest self with meta-awareness
 
-META-INTELLIGENCE APPROACH (Specialized Configuration):
-- Recognize patterns across growth and productivity modes
-- Suggest when to focus on inner work vs. outer action based on holistic assessment
-- Help balance spiritual development with practical goals
-- Offer integration practices and holistic solutions
+META-INTELLIGENCE APPROACH (Phase 3 Specialized):
+- Recognize patterns across growth and productivity modes using agent communication API
+- Suggest when to focus on inner work vs. outer action based on holistic assessment and meta-insights
+- Help balance spiritual development with practical goals using cross-mode pattern analysis
+- Offer integration practices and holistic solutions informed by user's integration style
 - Guide toward authentic alignment of values and actions
-- Facilitate ${behavioralConfig.conversationDepth} cross-domain insights
+- Facilitate ${behavioralConfig.conversationDepth} cross-domain insights with higher-order memory${metaInsightContext}${profileContext}
 
-Remember: You are ${userName}'s trusted soul companion who sees their whole journey - both the spiritual quest for meaning and the practical pursuit of dreams. Help them integrate these dimensions into a coherent, fulfilling life path with personalized wisdom.`;
+Remember: You are ${userName}'s trusted soul companion who sees their whole journey with Phase 3 meta-intelligence - both the spiritual quest for meaning and the practical pursuit of dreams. Help them integrate these dimensions into a coherent, fulfilling life path with personalized wisdom enhanced by cross-mode pattern recognition.`;
   }
 
-  private async gatherCrossModeContext(): Promise<any> {
+  private async gatherEnhancedCrossModeContext(): Promise<any> {
     try {
-      // Get enhanced context from both other agents with their configurations
-      const growthContext = growthBrainService.getGrowthContext();
-      const dreamsContext = dreamsBrainService.getDreamsContext();
+      // Get enhanced context using agent communication service
+      const contextSummaries = await agentCommunicationService.getAgentContextSummaries();
+      const userProfile = metaMemoryService.getUserProfile();
       
       return {
-        growth: {
-          ...growthContext,
-          recentActivity: 'available', // Placeholder for recent activity
-          emotionalState: 'contemplative' // Could be derived from ACS
-        },
-        dreams: {
-          ...dreamsContext,
-          recentGoals: 'available', // Placeholder for recent goals
-          productivityTrend: 'ascending' // Could be derived from PIE
-        },
-        hasActiveGrowthSession: growthContext.isInitialized,
-        hasActiveDreamsSession: dreamsContext.isInitialized,
-        integrationOpportunities: this.identifyIntegrationOpportunities(growthContext, dreamsContext)
+        ...contextSummaries,
+        userProfile,
+        hasActiveGrowthSession: contextSummaries.growth.isInitialized,
+        hasActiveDreamsSession: contextSummaries.dreams.isInitialized,
+        integrationOpportunities: this.identifyEnhancedIntegrationOpportunities(contextSummaries),
+        metaPatterns: contextSummaries.crossModePatterns
       };
     } catch (error) {
       console.error("Failed to gather enhanced cross-mode context:", error);
@@ -232,12 +272,21 @@ Remember: You are ${userName}'s trusted soul companion who sees their whole jour
     }
   }
 
-  private identifyIntegrationOpportunities(growthContext: any, dreamsContext: any): string[] {
+  private identifyEnhancedIntegrationOpportunities(contextSummaries: any): string[] {
     const opportunities: string[] = [];
     
-    // Look for overlapping focus areas
-    const growthAreas = growthContext.focusAreas || [];
-    const dreamAreas = dreamsContext.focusAreas || [];
+    // Enhanced opportunity detection using cross-mode patterns
+    const patterns = contextSummaries.crossModePatterns || [];
+    
+    for (const pattern of patterns) {
+      if (pattern.growthRelevance > 0.6 && pattern.dreamsRelevance > 0.6) {
+        opportunities.push(`High integration potential: ${pattern.pattern} (seen ${pattern.frequency} times)`);
+      }
+    }
+    
+    // Look for overlapping focus areas with enhanced analysis
+    const growthAreas = contextSummaries.growth?.focusAreas || [];
+    const dreamAreas = contextSummaries.dreams?.focusAreas || [];
     
     const overlap = growthAreas.filter((area: string) => 
       dreamAreas.some((dreamArea: string) => 
@@ -246,15 +295,41 @@ Remember: You are ${userName}'s trusted soul companion who sees their whole jour
     );
     
     if (overlap.length > 0) {
-      opportunities.push('Personal development and goal management alignment detected');
+      opportunities.push('Cross-mode development and management alignment detected with enhanced pattern analysis');
     }
     
-    // Check if both modes are active for potential integration
-    if (growthContext.isInitialized && dreamsContext.isInitialized) {
-      opportunities.push('Multi-mode integration available for holistic progress');
+    // Check if both modes are active for potential Phase 3 integration
+    if (contextSummaries.hasActiveGrowthSession && contextSummaries.hasActiveDreamsSession) {
+      opportunities.push('Multi-mode Phase 3 integration available for holistic progress with meta-memory insights');
     }
     
     return opportunities;
+  }
+
+  private generateEnhancedModeRecommendations(
+    message: string, 
+    response: string, 
+    transitionRecommendation: ModeTransitionRecommendation | null
+  ): any {
+    const recommendations: any = {};
+    
+    // Use Phase 3 transition recommendation if available
+    if (transitionRecommendation) {
+      if (transitionRecommendation.suggestedMode === 'dreams') {
+        recommendations.suggestDreamsMode = `${transitionRecommendation.reason} (Confidence: ${(transitionRecommendation.confidence * 100).toFixed(0)}%) - ${transitionRecommendation.expectedBenefit}`;
+      } else if (transitionRecommendation.suggestedMode === 'growth') {
+        recommendations.suggestGrowthMode = `${transitionRecommendation.reason} (Confidence: ${(transitionRecommendation.confidence * 100).toFixed(0)}%) - ${transitionRecommendation.expectedBenefit}`;
+      }
+    }
+    
+    // Enhanced balance insight with meta-memory integration
+    if (response.includes('balance') || response.includes('integrate')) {
+      const userProfile = metaMemoryService.getUserProfile();
+      const integrationStyle = userProfile?.integrationStyle || 'adaptive';
+      recommendations.balanceInsight = `Consider ${integrationStyle} approach to alternating between inner reflection and outer action based on your ${this.agentConfig.behavioral.conversationDepth} integration needs and Phase 3 meta-patterns`;
+    }
+    
+    return recommendations;
   }
 
   private async generateSoulResponse(message: string, systemPrompt: string, crossModeContext: any): Promise<string> {
@@ -386,22 +461,30 @@ User Message: "${message}"`;
     return recommendations;
   }
 
-  private calculateIntegrationCoherence(): number {
-    // Enhanced calculation based on agent-specific integration capabilities
+  private calculateEnhancedIntegrationCoherence(): number {
+    // Enhanced calculation using Phase 3 meta-insights
     const baseCoherence = Math.random() * 0.3 + 0.7; // Range: 0.7 - 1.0
     const configBonus = this.agentConfig.behavioral.emotionalSensitivity * 0.1;
     const focusBonus = this.agentConfig.behavioral.focusAreas.length * 0.02;
     
-    return Math.min(1.0, baseCoherence + configBonus + focusBonus);
+    // Phase 3 bonus based on meta-insights availability
+    const metaInsights = metaMemoryService.getRelevantMetaInsights(1);
+    const metaBonus = metaInsights.length > 0 ? 0.05 : 0;
+    
+    return Math.min(1.0, baseCoherence + configBonus + focusBonus + metaBonus);
   }
 
   getSoulContext() {
+    const userProfile = metaMemoryService.getUserProfile();
+    const metaInsights = metaMemoryService.getRelevantMetaInsights(3);
+    
     return {
       mode: 'soul_companion',
       namespace: this.NAMESPACE,
       focusAreas: this.agentConfig.behavioral.focusAreas,
       isInitialized: !!this.userId,
       canAccessOtherModes: true,
+      phase3Enabled: true,
       configuration: {
         responseStyle: this.agentConfig.behavioral.responseStyle,
         emotionalSensitivity: this.agentConfig.behavioral.emotionalSensitivity,
@@ -409,8 +492,16 @@ User Message: "${message}"`;
         metaIntelligence: true,
         acsEnabled: true,
         pieEnabled: true,
-        crossModeIntegration: true
-      }
+        crossModeIntegration: true,
+        agentCommunication: true,
+        metaMemory: true
+      },
+      userProfile,
+      metaInsights: metaInsights.map(insight => ({
+        type: insight.type,
+        content: insight.content,
+        confidence: insight.confidence
+      }))
     };
   }
 }

@@ -5,6 +5,7 @@ import { pieService } from "./pie-service";
 import { agentConfigurationService } from "./agent-configuration-service";
 import { adaptiveContextScheduler } from "./adaptive-context-scheduler";
 import { LayeredBlueprint } from "@/types/personality-modules";
+import { agentCommunicationService } from "./agent-communication-service";
 
 export interface DreamsBrainResponse {
   response: string;
@@ -95,7 +96,12 @@ class DreamsBrainService {
     }
 
     const startTime = performance.now();
-    console.log(`🎯 Processing dreams/goals message with specialized productivity configuration`);
+    console.log(`🎯 Processing dreams/goals message with Phase 3 agent communication`);
+
+    // Initialize agent communication if not already done
+    if (!agentCommunicationService['userId']) {
+      await agentCommunicationService.initialize(this.userId);
+    }
 
     // Process through ACS with dreams-specific parameters
     let acsState = 'NORMAL';
@@ -122,6 +128,23 @@ class DreamsBrainService {
     const taskBreakdown = this.extractTaskBreakdown(response);
     const milestoneProgress = this.calculateMilestoneProgress(response);
     
+    // Share insights with other agents via Phase 3 communication API
+    if (actionableSteps.length > 0) {
+      await agentCommunicationService.shareInsightBetweenAgents(
+        'dreams',
+        'soul_companion',
+        {
+          insightType: 'progress',
+          content: `Goal achievement insight: ${actionableSteps[0]}`,
+          confidence: 0.85,
+          relevanceScore: 0.8
+        }
+      );
+    }
+
+    // Analyze cross-mode patterns
+    await agentCommunicationService.analyzeCrossModePatterns(message, 'dreams');
+    
     // Get PIE insights for productivity and goals
     let pieInsights: string[] = [];
     try {
@@ -141,7 +164,7 @@ class DreamsBrainService {
 
     const totalLatency = performance.now() - startTime;
     
-    console.log(`✅ Dreams brain processing complete in ${totalLatency.toFixed(1)}ms with specialized config`);
+    console.log(`✅ Dreams brain Phase 3 processing complete in ${totalLatency.toFixed(1)}ms`);
 
     return {
       response,
@@ -317,13 +340,15 @@ Remember: ${userName} is here to turn dreams into reality. Every response should
       namespace: this.NAMESPACE,
       focusAreas: this.agentConfig.behavioral.focusAreas,
       isInitialized: !!this.userId,
+      phase3Enabled: true,
       configuration: {
         responseStyle: this.agentConfig.behavioral.responseStyle,
         pacingMs: this.agentConfig.behavioral.pacingMs,
         conversationDepth: this.agentConfig.behavioral.conversationDepth,
         acsEnabled: true,
         pieEnabled: true,
-        productivityOptimized: true
+        productivityOptimized: true,
+        agentCommunication: true
       }
     };
   }
