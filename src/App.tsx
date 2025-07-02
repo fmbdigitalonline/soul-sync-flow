@@ -11,6 +11,7 @@ import SpiritualGrowth from './pages/SpiritualGrowth';
 import Coach from './pages/Coach';
 import Auth from './pages/Auth';
 import Blueprint from './pages/Blueprint';
+import Profile from './pages/Profile';
 import TestEnvironmentPage from './pages/TestEnvironmentPage';
 import { Toaster } from '@/components/ui/toaster';
 import { SoulOrbProvider } from './contexts/SoulOrbContext';
@@ -35,6 +36,7 @@ function App() {
                     <Route path="/spiritual-growth" element={<ProtectedRoute><MainLayout><SpiritualGrowth /></MainLayout></ProtectedRoute>} />
                     <Route path="/coach" element={<ProtectedRoute><MainLayout><Coach /></MainLayout></ProtectedRoute>} />
                     <Route path="/blueprint" element={<ProtectedRoute><MainLayout><Blueprint /></MainLayout></ProtectedRoute>} />
+                    <Route path="/profile" element={<ProtectedRoute><MainLayout><Profile /></MainLayout></ProtectedRoute>} />
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/test-environment" element={<ProtectedRoute><MainLayout><TestEnvironmentPage /></MainLayout></ProtectedRoute>} />
                     <Route 

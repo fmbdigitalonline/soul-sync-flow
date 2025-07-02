@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,8 @@ import {
   Menu, 
   X,
   Star,
-  TestTube
+  TestTube,
+  User
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -59,14 +61,19 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
     { to: "/coach", icon: MessageCircle, label: t('nav.coach') },
   ];
 
+  // Add profile to navigation items for authenticated users
+  const userNavItems = user 
+    ? [...baseNavItems, { to: "/profile", icon: User, label: "Profile" }]
+    : baseNavItems;
+
   // Add Admin Dashboard and Test Environment for admin users
   const navItems = user && isAdminUser(user) 
     ? [
-        ...baseNavItems, 
+        ...userNavItems, 
         { to: "/admin", icon: Settings, label: "Admin Dashboard" },
         { to: "/test-environment", icon: TestTube, label: "Test Environment" }
       ]
-    : baseNavItems;
+    : userNavItems;
 
   const isActive = (path: string) => {
     if (path === "/" && location.pathname === "/") return true;
@@ -74,9 +81,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
     return false;
   };
 
-  if (hideNav) {
-    return <div className="min-h-screen bg-background">{children}</div>;
-  }
+  // Show desktop navigation unless explicitly hidden
+  const showDesktopNav = !hideNav;
+  
+  // Always show mobile navigation for authenticated users, and on homepage for all users
+  const showMobileNav = user || location.pathname === "/";
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -122,7 +131,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
 
       <div className="flex flex-1 min-h-0">
         {/* Desktop Sidebar */}
-        {user && (
+        {user && showDesktopNav && (
           <div className="hidden md:flex w-64 min-h-full bg-white/80 backdrop-blur-lg border-r border-gray-100 flex-col">
             {/* Logo and Language Selector */}
             <div className="p-6 border-b border-gray-100 flex items-center justify-between">
@@ -183,8 +192,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
       </div>
 
       {/* Mobile Bottom Navigation */}
-      {/* Show for all users on home page, and for authenticated users everywhere else */}
-      {(user || location.pathname === "/") && (
+      {showMobileNav && (
         <div className="md:hidden fixed bottom-0 left-0 right-0 z-50">
           <div className="bg-white/95 backdrop-blur-lg border-t border-gray-100 px-2 py-2 shadow-lg">
             <div className="flex justify-around items-center max-w-md mx-auto">
