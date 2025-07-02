@@ -21,8 +21,9 @@ export const TasksBreakdown: React.FC<TasksBreakdownProps> = ({
   const isMobile = useIsMobile();
   const [expandedMilestone, setExpandedMilestone] = useState<string | null>(null);
   
-  // Show ALL tasks instead of limiting
-  const displayTasks = tasks || [];
+  // Ensure tasks and milestones are arrays and provide defaults
+  const displayTasks = Array.isArray(tasks) ? tasks : [];
+  const displayMilestones = Array.isArray(milestones) ? milestones : [];
   
   const handleTaskClick = (task: any) => {
     if (onTaskClick) {
@@ -60,7 +61,7 @@ export const TasksBreakdown: React.FC<TasksBreakdownProps> = ({
 
   const getMilestoneTitle = (milestoneId: string) => {
     if (milestoneId === 'unassigned') return 'General Tasks';
-    const milestone = milestones?.find(m => m.id === milestoneId);
+    const milestone = displayMilestones.find(m => m.id === milestoneId);
     return milestone?.title || `Milestone ${milestoneId.slice(-4)}`;
   };
 
@@ -93,7 +94,7 @@ export const TasksBreakdown: React.FC<TasksBreakdownProps> = ({
                   {getMilestoneTitle(milestoneId)}
                 </span>
                 <Badge variant="outline" className="text-xs">
-                  {milestoneTasks.length} tasks
+                  {Array.isArray(milestoneTasks) ? milestoneTasks.length : 0} tasks
                 </Badge>
               </div>
               {expandedMilestone === milestoneId ? (
@@ -103,7 +104,7 @@ export const TasksBreakdown: React.FC<TasksBreakdownProps> = ({
               )}
             </button>
             
-            {expandedMilestone === milestoneId && (
+            {expandedMilestone === milestoneId && Array.isArray(milestoneTasks) && (
               <div className="space-y-2 p-3 bg-white">
                 {milestoneTasks.map((task: any, index: number) => (
                   <button
