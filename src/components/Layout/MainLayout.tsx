@@ -22,6 +22,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
 import { LanguageSelector } from "@/components/ui/language-selector";
 import { isAdminUser } from "@/utils/isAdminUser";
+import MobileNavigation from "./MobileNavigation";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -83,12 +84,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
 
   // Show desktop navigation unless explicitly hidden
   const showDesktopNav = !hideNav;
-  
-  // Always show mobile navigation - either for authenticated users or on homepage for all users
-  const showMobileNav = true;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background">
       {/* Mobile Header */}
       <div className="md:hidden bg-white/80 backdrop-blur-lg border-b border-gray-100 sticky top-0 z-40 w-full">
         <div className="flex items-center justify-between p-4 w-full">
@@ -183,50 +181,16 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
           </div>
         )}
 
-        {/* Main Content - with proper mobile spacing */}
-        <div className="flex-1 flex flex-col min-h-0">
-          <div className="flex-1 overflow-auto pb-20 md:pb-0">
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col">
+          <div className="flex-1 pb-20 md:pb-0">
             {children}
           </div>
         </div>
       </div>
 
       {/* Mobile Bottom Navigation - Always show */}
-      {showMobileNav && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 z-50">
-          <div className="bg-white/95 backdrop-blur-lg border-t border-gray-100 px-2 py-2 shadow-lg">
-            <div className="flex justify-around items-center max-w-md mx-auto">
-              {baseNavItems.slice(0, 5).map((item) => {
-                const Icon = item.icon;
-                const active = isActive(item.to);
-                return (
-                  <Link
-                    key={item.to}
-                    to={item.to}
-                    className={cn(
-                      "flex flex-col items-center gap-1 p-2 rounded-2xl transition-all duration-200 min-w-[60px]",
-                      active
-                        ? "bg-gradient-to-t from-soul-purple/10 to-soul-teal/10 text-soul-purple"
-                        : "text-gray-500 hover:text-soul-purple"
-                    )}
-                  >
-                    <Icon className={cn(
-                      "h-5 w-5 transition-all duration-200",
-                      active ? "scale-110" : ""
-                    )} />
-                    <span className={cn(
-                      "text-xs font-medium transition-all duration-200",
-                      active ? "text-soul-purple" : "text-gray-400"
-                    )}>
-                      {item.label}
-                    </span>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
+      <MobileNavigation />
     </div>
   );
 };
