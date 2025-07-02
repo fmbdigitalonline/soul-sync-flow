@@ -39,27 +39,27 @@ export const DecompositionStageDisplay: React.FC<DecompositionStageDisplayProps>
   // Fallback state when currentStage is undefined
   if (!currentStage) {
     return (
-      <div className="flex justify-center mb-6">
+      <div className="flex justify-center mb-4">
         <div className="relative">
           <SoulOrb 
             speaking={false}
             stage="generating"
-            size="lg"
+            size="sm"
             pulse={true}
           />
-          <div className="absolute inset-0 rounded-full border-2 border-soul-purple/20 animate-ping" 
+          <div className="absolute inset-0 rounded-full border border-soul-purple/20 animate-ping" 
                style={{ animationDuration: '2s' }} />
         </div>
-        <div className="space-y-3 mb-8 mt-4">
+        <div className="space-y-3 mb-6 mt-3">
           <div className="flex items-center justify-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-soul-purple to-soul-teal rounded-full flex items-center justify-center text-white animate-pulse">
-              <Brain className="h-5 w-5" />
+            <div className="w-8 h-8 bg-gradient-to-br from-soul-purple to-soul-teal rounded-full flex items-center justify-center text-white animate-pulse">
+              <Brain className="h-4 w-4" />
             </div>
-            <h2 className="text-xl font-bold text-gray-800 animate-fade-in">
+            <h2 className="text-lg font-bold text-gray-800 animate-fade-in">
               Initializing...
             </h2>
           </div>
-          <p className="text-gray-600 leading-relaxed px-4 text-center animate-fade-in">
+          <p className="text-gray-600 leading-relaxed px-4 text-center animate-fade-in text-sm">
             Preparing your dream analysis...
           </p>
         </div>
@@ -69,36 +69,36 @@ export const DecompositionStageDisplay: React.FC<DecompositionStageDisplayProps>
 
   return (
     <>
-      {/* Enhanced Soul Orb with Loading State */}
-      <div className="flex justify-center mb-6">
+      {/* Reduced Soul Orb with Loading State */}
+      <div className="flex justify-center mb-4">
         <div className="relative">
           <SoulOrb 
             speaking={speaking}
             stage="generating"
-            size="lg"
+            size="sm"
             pulse={true}
           />
-          {/* Surrounding energy rings for active processing */}
-          <div className="absolute inset-0 rounded-full border-2 border-soul-purple/20 animate-ping" 
+          {/* Smaller surrounding energy rings for active processing */}
+          <div className="absolute inset-0 rounded-full border border-soul-purple/20 animate-ping" 
                style={{ animationDuration: '2s' }} />
-          <div className="absolute inset-0 rounded-full border border-soul-teal/20 animate-ping" 
+          <div className="absolute inset-0 rounded-full border border-soul-teal/15 animate-ping" 
                style={{ animationDuration: '3s', animationDelay: '1s' }} />
         </div>
       </div>
 
       {/* Current Stage Header */}
-      <div className="space-y-3 mb-8">
+      <div className="space-y-3 mb-6">
         <div className="flex items-center justify-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-soul-purple to-soul-teal rounded-full flex items-center justify-center text-white animate-pulse">
+          <div className="w-8 h-8 bg-gradient-to-br from-soul-purple to-soul-teal rounded-full flex items-center justify-center text-white animate-pulse">
             {currentStage.icon}
           </div>
-          <h2 className="text-xl font-bold text-gray-800 animate-fade-in">
+          <h2 className="text-lg font-bold text-gray-800 animate-fade-in">
             {currentStage.title}
           </h2>
         </div>
         
         {/* Stage message with typewriter effect */}
-        <p className="text-gray-600 leading-relaxed px-4 text-center animate-fade-in">
+        <p className="text-gray-600 leading-relaxed px-4 text-center animate-fade-in text-sm">
           {currentStage.message}
         </p>
       </div>
