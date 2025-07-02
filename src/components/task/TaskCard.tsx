@@ -7,6 +7,7 @@ import { useDoubleTap } from "@/hooks/use-double-tap";
 import { TaskPreview } from "./TaskPreview";
 import { ReadyToBeginModal } from "./ReadyToBeginModal";
 import { TaskStatusSelector } from "./TaskStatusSelector";
+import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 
 interface TaskCardProps {
   task: any;
@@ -28,6 +29,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   const [showModal, setShowModal] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [localStatus, setLocalStatus] = useState(task.status || 'todo');
+  const { spacing, getTextSize, touchTargetSize, isFoldDevice, isUltraNarrow } = useResponsiveLayout();
 
   const handleStartCoach = () => {
     if (!isProcessing) {
@@ -100,54 +102,56 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   return (
     <>
       <Card
-        className={`cursor-pointer transition-all duration-200 hover:shadow-md transform active:scale-[0.98] ${getStatusColor(
+        className={`cursor-pointer transition-all duration-200 hover:shadow-md transform active:scale-[0.98] w-full max-w-full overflow-hidden ${getStatusColor(
           currentStatus
         )}`}
       >
-        <CardContent className="p-4">
-          <div className="flex items-center gap-3 mb-2">
+        <CardContent className={`w-full max-w-full overflow-hidden ${spacing.card}`}>
+          <div className={`flex items-center gap-3 mb-2 w-full max-w-full overflow-hidden ${isFoldDevice ? 'gap-2' : ''}`}>
             {isCompleted ? (
-              <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
+              <CheckCircle2 className={`text-green-600 flex-shrink-0 ${isFoldDevice ? 'h-4 w-4' : 'h-5 w-5'}`} />
             ) : (
-              <Circle className="h-5 w-5 text-gray-400 flex-shrink-0" />
+              <Circle className={`text-gray-400 flex-shrink-0 ${isFoldDevice ? 'h-4 w-4' : 'h-5 w-5'}`} />
             )}
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 w-full max-w-full overflow-hidden">
               <h4
-                className={`font-bold text-base truncate ${
+                className={`font-bold truncate w-full max-w-full ${
                   isCompleted
                     ? "line-through text-gray-500"
                     : "text-gray-800"
-                }`}
+                } ${getTextSize('text-base')}`}
               >
                 {task.title}
               </h4>
               {task.short_description && (
-                <div className="text-xs text-muted-foreground truncate mt-1">
+                <div className={`text-muted-foreground truncate mt-1 w-full max-w-full ${getTextSize('text-xs')}`}>
                   {task.short_description}
                 </div>
               )}
             </div>
-            <Info className="h-4 w-4 text-gray-400 flex-shrink-0 ml-2" />
+            <Info className={`text-gray-400 flex-shrink-0 ml-2 ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
           </div>
           
-          <div className="flex flex-wrap gap-2 mb-2">
-            <Badge variant="secondary" className="text-xs bg-soul-purple/20 text-soul-purple">
-              🧩 This task is aligned to your blueprint
+          <div className={`flex flex-wrap gap-2 mb-2 w-full max-w-full overflow-hidden ${isFoldDevice ? 'gap-1' : ''}`}>
+            <Badge variant="secondary" className={`bg-soul-purple/20 text-soul-purple flex-shrink-0 ${getTextSize('text-xs')}`}>
+              🧩 {isFoldDevice ? 'Blueprint' : 'This task is aligned to your blueprint'}
             </Badge>
-            <Badge variant="outline" className={`text-xs ${getEnergyColor(task.energy_level_required)}`}>
-              <Zap className="h-3 w-3 mr-1" />
+            <Badge variant="outline" className={`${getEnergyColor(task.energy_level_required)} flex-shrink-0 ${getTextSize('text-xs')}`}>
+              <Zap className={`mr-1 ${isFoldDevice ? 'h-2 w-2' : 'h-3 w-3'}`} />
               {task.energy_level_required}
             </Badge>
-            <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700">
-              <Clock className="h-3 w-3 mr-1" />
+            <Badge variant="outline" className={`bg-purple-50 text-purple-700 flex-shrink-0 ${getTextSize('text-xs')}`}>
+              <Clock className={`mr-1 ${isFoldDevice ? 'h-2 w-2' : 'h-3 w-3'}`} />
               {task.estimated_duration}
             </Badge>
           </div>
           
-          <TaskPreview task={task} />
+          <div className="w-full max-w-full overflow-hidden mb-3">
+            <TaskPreview task={task} />
+          </div>
 
           {/* Status Selector */}
-          <div className="mb-3">
+          <div className="mb-3 w-full max-w-full">
             <TaskStatusSelector
               currentStatus={currentStatus}
               onStatusChange={handleStatusChange}
@@ -155,20 +159,33 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             />
           </div>
 
-          <div className="flex gap-2">
+          {/* Mobile-Responsive Button Layout */}
+          <div className={`w-full max-w-full ${
+            isFoldDevice || isUltraNarrow 
+              ? 'flex flex-col gap-2' 
+              : 'flex gap-2'
+          }`}>
             <button
-              className="flex-1 px-2 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`px-2 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full max-w-full overflow-hidden ${
+                isFoldDevice || isUltraNarrow ? 'flex-none' : 'flex-1'
+              } ${getTextSize('text-sm')} ${touchTargetSize}`}
               disabled={isCompleted || isProcessing}
               onClick={handleMarkDone}
             >
-              ✅ Mark as Done
+              <span className="truncate w-full">
+                ✅ {isFoldDevice ? 'Done' : 'Mark as Done'}
+              </span>
             </button>
             <button
-              className="flex-1 px-2 py-2 bg-soul-purple hover:bg-soul-purple/90 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`px-2 py-2 bg-soul-purple hover:bg-soul-purple/90 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full max-w-full overflow-hidden ${
+                isFoldDevice || isUltraNarrow ? 'flex-none' : 'flex-1'
+              } ${getTextSize('text-sm')} ${touchTargetSize}`}
               onClick={handleStartCoach}
               disabled={isCompleted || isProcessing}
             >
-              🔮 Tackle with Coach
+              <span className="truncate w-full">
+                🔮 {isFoldDevice ? 'Coach' : 'Tackle with Coach'}
+              </span>
             </button>
           </div>
         </CardContent>
