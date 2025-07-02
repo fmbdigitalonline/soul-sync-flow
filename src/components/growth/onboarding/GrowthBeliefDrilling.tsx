@@ -9,6 +9,7 @@ import { Send, Brain, Lightbulb, Target, ArrowLeft, X } from 'lucide-react';
 import { LifeDomain } from '@/types/growth-program';
 import { useProgramAwareCoach } from '@/hooks/use-program-aware-coach';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { SlowStreamingMessage } from '@/components/coach/SlowStreamingMessage';
 
 interface GrowthBeliefDrillingProps {
   domain: LifeDomain;
@@ -29,7 +30,9 @@ export const GrowthBeliefDrilling: React.FC<GrowthBeliefDrillingProps> = ({
     sendMessage, 
     initializeBeliefDrilling,
     getProgramContext,
-    currentSessionId
+    currentSessionId,
+    streamingContent,
+    isStreaming
   } = useProgramAwareCoach();
 
   const [inputValue, setInputValue] = useState('');
@@ -55,7 +58,7 @@ export const GrowthBeliefDrilling: React.FC<GrowthBeliefDrillingProps> = ({
   }, [messages, getProgramContext]);
 
   const handleSendMessage = async () => {
-    if (!inputValue.trim() || isLoading) return;
+    if (!inputValue.trim() || isLoading || isStreaming) return;
 
     await sendMessage(inputValue);
     setInputValue('');
@@ -165,28 +168,50 @@ export const GrowthBeliefDrilling: React.FC<GrowthBeliefDrillingProps> = ({
       <div className="flex-1 flex flex-col min-h-0">
         <ScrollArea className="flex-1 px-4 py-2">
           <div className="space-y-4 max-w-3xl mx-auto pb-4">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[85%] rounded-lg px-4 py-3 ${
-                    message.sender === 'user'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white border border-gray-200 text-gray-900 shadow-sm'
-                  }`}
-                >
-                  <div className="whitespace-pre-wrap break-words">{message.content}</div>
-                  {message.sender === 'assistant' && (
-                    <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
-                      <Target className="w-3 h-3" />
-                      <span>Soul Guide</span>
+            {messages.map((message, index) => (
+              <div key={message.id} className="animate-fade-in">
+                {message.sender === 'user' ? (
+                  // User Message
+                  <div className="flex justify-end">
+                    <div className="max-w-[85%] rounded-lg px-4 py-3 bg-blue-600 text-white">
+                      <div className="whitespace-pre-wrap break-words">{message.content}</div>
                     </div>
-                  )}
-                </div>
+                  </div>
+                ) : (
+                  // Assistant Message with Slow Streaming
+                  <SlowStreamingMessage
+                    content={
+                      // If this is the last message and we're streaming, show streaming content
+                      index === messages.length - 1 && isStreaming && !message.content
+                        ? streamingContent || ''
+                        : message.content
+                    }
+                    isStreaming={
+                      // Only stream if this is the last message and we're actively streaming
+                      index === messages.length - 1 && isStreaming && !message.content
+                    }
+                    speed={85} // Slow, contemplative speed for growth conversations
+                  />
+                )}
               </div>
             ))}
+            
+            {/* Loading indicator for when waiting for response */}
+            {isLoading && !isStreaming && (
+              <div className="flex items-start gap-3 mb-4">
+                <div className="flex-shrink-0 p-3 bg-soul-purple/10 rounded-lg">
+                  <Brain className="h-6 w-6 text-soul-purple" />
+                </div>
+                <div className="bg-soul-purple/5 rounded-lg p-4 border border-soul-purple/10">
+                  <div className="flex items-center gap-2 text-soul-purple">
+                    <div className="w-2 h-2 bg-soul-purple rounded-full animate-pulse"></div>
+                    <div className="w-2 h-2 bg-soul-purple rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                    <div className="w-2 h-2 bg-soul-purple rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                    <span className="text-sm ml-2">Thinking deeply...</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </ScrollArea>
 
@@ -200,12 +225,12 @@ export const GrowthBeliefDrilling: React.FC<GrowthBeliefDrillingProps> = ({
                 onKeyPress={handleKeyPress}
                 placeholder="Share what comes to mind..."
                 className="flex-1 min-h-[60px] max-h-[120px] resize-none"
-                disabled={isLoading}
+                disabled={isLoading || isStreaming}
               />
               <div className="flex flex-col gap-2">
                 <Button
                   onClick={handleSendMessage}
-                  disabled={isLoading || !inputValue.trim()}
+                  disabled={isLoading || isStreaming || !inputValue.trim()}
                   size="sm"
                 >
                   <Send className="w-4 h-4" />
