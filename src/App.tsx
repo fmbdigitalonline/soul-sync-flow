@@ -1,10 +1,11 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import Home from "./pages/Home";
+import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Blueprint from "./pages/Blueprint";
 import Coach from "./pages/Coach";
-import Productivity from "./pages/Productivity";
+import Dreams from "./pages/Dreams";
 import SpiritualGrowth from "./pages/SpiritualGrowth";
 import Diagnostics from "./pages/Diagnostics";
 
@@ -13,11 +14,11 @@ function App() {
     <Router>
       <div className="min-h-screen bg-background">
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/blueprint" element={<Blueprint />} />
           <Route path="/coach" element={<Coach />} />
-          <Route path="/productivity" element={<Productivity />} />
+          <Route path="/dreams" element={<Dreams />} />
           <Route path="/spiritual-growth" element={<SpiritualGrowth />} />
           <Route path="/diagnostics" element={<Diagnostics />} />
         </Routes>

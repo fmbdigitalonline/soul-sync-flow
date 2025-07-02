@@ -1,4 +1,3 @@
-
 import { memoryService, SessionMemory, SessionFeedback, MicroActionReminder } from '@/services/memory-service';
 import { addHours, addDays } from 'date-fns';
 
@@ -664,6 +663,11 @@ class AutomatedTestSuite {
     });
 
     return suiteResults;
+  }
+
+  // Alias for backward compatibility
+  async runFullTestSuite(): Promise<TestSuiteResult[]> {
+    return this.runCompleteTestSuite();
   }
 
   generateDiagnosticReport(suiteResults: TestSuiteResult[]): string {
