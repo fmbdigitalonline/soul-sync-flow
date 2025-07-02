@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { CosmicCard } from '@/components/ui/cosmic-card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Play, 
   CheckCircle2, 
@@ -11,19 +12,25 @@ import {
   Clock, 
   BarChart3,
   AlertTriangle,
-  Zap
+  Zap,
+  TestTube,
+  Activity
 } from 'lucide-react';
 import { automatedTestSuite, TestSuiteResult } from '@/services/automated-test-suite';
+import { streamingAuthTestSuite, StreamingTestSuiteResult } from '@/services/streaming-auth-test-suite';
 
 export const DiagnosticDashboard = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [results, setResults] = useState<TestSuiteResult[]>([]);
+  const [streamingResults, setStreamingResults] = useState<StreamingTestSuiteResult | null>(null);
   const [report, setReport] = useState<string>('');
+  const [activeTest, setActiveTest] = useState<string>('');
 
-  const runDiagnostics = async () => {
+  const runPhaseImplementationDiagnostics = async () => {
     setIsRunning(true);
     setResults([]);
     setReport('');
+    setActiveTest('Phase Implementation Diagnostics');
 
     try {
       console.log('🔍 Starting Phase 1-3 implementation diagnostics...');
@@ -38,6 +45,55 @@ export const DiagnosticDashboard = () => {
       setReport(`❌ Diagnostic test suite failed: ${error}`);
     } finally {
       setIsRunning(false);
+      setActiveTest('');
+    }
+  };
+
+  const runStreamingAuthDiagnostics = async () => {
+    setIsRunning(true);
+    setStreamingResults(null);
+    setActiveTest('Streaming Authentication Diagnostics');
+
+    try {
+      console.log('🧪 Starting streaming authentication diagnostics...');
+      const result = await streamingAuthTestSuite.runFullTestSuite();
+      setStreamingResults(result);
+      console.log('Streaming auth diagnostics completed:', result);
+    } catch (error) {
+      console.error('Streaming auth test suite failed:', error);
+    } finally {
+      setIsRunning(false);
+      setActiveTest('');
+    }
+  };
+
+  const runAllDiagnostics = async () => {
+    setIsRunning(true);
+    setResults([]);
+    setStreamingResults(null);
+    setReport('');
+    setActiveTest('All Diagnostics');
+
+    try {
+      console.log('🚀 Starting comprehensive diagnostic suite...');
+      
+      // Run phase implementation tests
+      const suiteResults = await automatedTestSuite.runCompleteTestSuite();
+      const diagnosticReport = automatedTestSuite.generateDiagnosticReport(suiteResults);
+      setResults(suiteResults);
+      setReport(diagnosticReport);
+      
+      // Run streaming auth tests
+      const streamingResult = await streamingAuthTestSuite.runFullTestSuite();
+      setStreamingResults(streamingResult);
+      
+      console.log('All diagnostics completed successfully');
+    } catch (error) {
+      console.error('Comprehensive diagnostic suite failed:', error);
+      setReport(`❌ Comprehensive diagnostic suite failed: ${error}`);
+    } finally {
+      setIsRunning(false);
+      setActiveTest('');
     }
   };
 
@@ -53,106 +109,253 @@ export const DiagnosticDashboard = () => {
     return total > 0 ? Math.round((passed / total) * 100) : 0;
   };
 
+  const getAuthStatusBadge = (status: 'healthy' | 'degraded' | 'failed') => {
+    const colors = {
+      healthy: 'bg-green-100 text-green-800',
+      degraded: 'bg-yellow-100 text-yellow-800', 
+      failed: 'bg-red-100 text-red-800'
+    };
+    return (
+      <Badge className={colors[status]}>
+        {status.toUpperCase()}
+      </Badge>
+    );
+  };
+
   return (
     <div className="space-y-6 p-6">
       <div className="text-center space-y-4">
         <h1 className="text-3xl font-bold gradient-text">
-          Phase 1-3 Implementation Diagnostics
+          SoulSync Implementation Diagnostics
         </h1>
         <p className="text-muted-foreground max-w-2xl mx-auto">
-          Comprehensive test suite to verify that all implementations use real, dynamic functionality 
-          without hardcoded or simulated data.
+          Comprehensive test suite to verify real-time functionality across all system phases
         </p>
         
-        <Button 
-          onClick={runDiagnostics} 
-          disabled={isRunning}
-          size="lg"
-          className="bg-gradient-to-r from-soul-purple to-soul-teal hover:opacity-90"
-        >
-          {isRunning ? (
-            <>
-              <div className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-              Running Diagnostics...
-            </>
-          ) : (
-            <>
-              <Play className="mr-2 h-4 w-4" />
-              Run Complete Diagnostic
-            </>
-          )}
-        </Button>
+        <div className="flex flex-wrap gap-4 justify-center">
+          <Button 
+            onClick={runPhaseImplementationDiagnostics} 
+            disabled={isRunning}
+            variant="outline"
+            className="bg-gradient-to-r from-soul-purple to-soul-teal hover:opacity-90"
+          >
+            {isRunning && activeTest === 'Phase Implementation Diagnostics' ? (
+              <>
+                <div className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                Running Phase Tests...
+              </>
+            ) : (
+              <>
+                <TestTube className="mr-2 h-4 w-4" />
+                Phase Implementation Tests
+              </>
+            )}
+          </Button>
+
+          <Button 
+            onClick={runStreamingAuthDiagnostics} 
+            disabled={isRunning}
+            variant="outline"
+          >
+            {isRunning && activeTest === 'Streaming Authentication Diagnostics' ? (
+              <>
+                <div className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                Running Auth Tests...
+              </>
+            ) : (
+              <>
+                <Activity className="mr-2 h-4 w-4" />
+                Streaming Auth Tests
+              </>
+            )}
+          </Button>
+
+          <Button 
+            onClick={runAllDiagnostics} 
+            disabled={isRunning}
+            size="lg"
+            className="bg-gradient-to-r from-soul-purple to-soul-teal hover:opacity-90"
+          >
+            {isRunning && activeTest === 'All Diagnostics' ? (
+              <>
+                <div className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                Running All Diagnostics...
+              </>
+            ) : (
+              <>
+                <Play className="mr-2 h-4 w-4" />
+                Run Complete Diagnostic Suite
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
-      {results.length > 0 && (
-        <div className="space-y-6">
-          {/* Overall Summary */}
-          <CosmicCard className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold flex items-center">
-                <BarChart3 className="mr-2 h-5 w-5" />
-                Overall Test Summary
-              </h2>
-              <Badge variant={results.every(r => r.failed === 0) ? "default" : "destructive"}>
-                {results.every(r => r.failed === 0) ? "All Passed" : "Issues Found"}
-              </Badge>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {results.map((suite, index) => {
-                const successRate = getSuccessRate(suite.passed, suite.totalTests);
-                return (
-                  <div key={index} className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">{suite.suiteName.split(':')[0]}</span>
-                      <span className="text-sm text-muted-foreground">
-                        {suite.passed}/{suite.totalTests}
-                      </span>
-                    </div>
-                    <Progress value={successRate} className="h-2" />
-                    <div className="text-xs text-muted-foreground">
-                      {successRate}% success rate
+      <Tabs defaultValue="results" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="results">Test Results</TabsTrigger>
+          <TabsTrigger value="streaming">Auth & Streaming</TabsTrigger>
+          <TabsTrigger value="report">Diagnostic Report</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="results" className="space-y-6">
+          {results.length > 0 && (
+            <>
+              {/* Overall Summary */}
+              <CosmicCard className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold flex items-center">
+                    <BarChart3 className="mr-2 h-5 w-5" />
+                    Phase Implementation Summary
+                  </h2>
+                  <Badge variant={results.every(r => r.failed === 0) ? "default" : "destructive"}>
+                    {results.every(r => r.failed === 0) ? "All Passed" : "Issues Found"}
+                  </Badge>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {results.map((suite, index) => {
+                    const successRate = getSuccessRate(suite.passed, suite.totalTests);
+                    return (
+                      <div key={index} className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">{suite.suiteName.split(':')[0]}</span>
+                          <span className="text-sm text-muted-foreground">
+                            {suite.passed}/{suite.totalTests}
+                          </span>
+                        </div>
+                        <Progress value={successRate} className="h-2" />
+                        <div className="text-xs text-muted-foreground">
+                          {successRate}% success rate
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CosmicCard>
+
+              {/* Detailed Results */}
+              {results.map((suite, suiteIndex) => (
+                <CosmicCard key={suiteIndex} className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold">{suite.suiteName}</h3>
+                    <div className="flex space-x-2">
+                      <Badge variant="outline" className="text-green-600">
+                        <CheckCircle2 className="mr-1 h-3 w-3" />
+                        {suite.passed}
+                      </Badge>
+                      {suite.failed > 0 && (
+                        <Badge variant="outline" className="text-red-600">
+                          <XCircle className="mr-1 h-3 w-3" />
+                          {suite.failed}
+                        </Badge>
+                      )}
+                      <Badge variant="outline" className="text-muted-foreground">
+                        {suite.duration}ms
+                      </Badge>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          </CosmicCard>
 
-          {/* Detailed Results */}
-          {results.map((suite, suiteIndex) => (
-            <CosmicCard key={suiteIndex} className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">{suite.suiteName}</h3>
-                <div className="flex space-x-2">
-                  <Badge variant="outline" className="text-green-600">
-                    <CheckCircle2 className="mr-1 h-3 w-3" />
-                    {suite.passed}
-                  </Badge>
-                  {suite.failed > 0 && (
-                    <Badge variant="outline" className="text-red-600">
-                      <XCircle className="mr-1 h-3 w-3" />
-                      {suite.failed}
-                    </Badge>
+                  <div className="space-y-2">
+                    {suite.results.map((test, testIndex) => (
+                      <div 
+                        key={testIndex} 
+                        className={`flex items-center justify-between p-3 rounded-lg border ${
+                          test.status === 'failed' ? 'bg-red-50 border-red-200' : 
+                          'bg-gray-50 border-gray-200'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          {getStatusIcon(test.status)}
+                          <span className="font-medium">{test.testName}</span>
+                        </div>
+                        
+                        <div className="flex items-center space-x-2">
+                          {test.details && (
+                            <Badge variant="outline" className="text-xs">
+                              {JSON.stringify(test.details)}
+                            </Badge>
+                          )}
+                          <span className="text-sm text-muted-foreground">
+                            {test.duration}ms
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Show errors for failed tests */}
+                  {suite.results.some(r => r.status === 'failed') && (
+                    <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                      <h4 className="font-medium text-red-800 mb-2 flex items-center">
+                        <AlertTriangle className="mr-2 h-4 w-4" />
+                        Failed Tests Details
+                      </h4>
+                      <div className="space-y-1">
+                        {suite.results
+                          .filter(r => r.status === 'failed')
+                          .map((test, index) => (
+                            <div key={index} className="text-sm text-red-700">
+                              <strong>{test.testName}:</strong> {test.error}
+                            </div>
+                          ))}
+                      </div>
+                    </div>
                   )}
-                  <Badge variant="outline" className="text-muted-foreground">
-                    {suite.duration}ms
-                  </Badge>
+                </CosmicCard>
+              ))}
+            </>
+          )}
+        </TabsContent>
+
+        <TabsContent value="streaming" className="space-y-6">
+          {streamingResults && (
+            <CosmicCard className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold flex items-center">
+                  <Activity className="mr-2 h-5 w-5" />
+                  Streaming Authentication Status
+                </h2>
+                {getAuthStatusBadge(streamingResults.overallAuthStatus)}
+              </div>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-600">{streamingResults.passed}</div>
+                  <div className="text-sm text-muted-foreground">Passed</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-red-600">{streamingResults.failed}</div>
+                  <div className="text-sm text-muted-foreground">Failed</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-yellow-600">{streamingResults.skipped}</div>
+                  <div className="text-sm text-muted-foreground">Skipped</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-600">{streamingResults.duration}ms</div>
+                  <div className="text-sm text-muted-foreground">Duration</div>
                 </div>
               </div>
 
               <div className="space-y-2">
-                {suite.results.map((test, testIndex) => (
+                {streamingResults.results.map((test, index) => (
                   <div 
-                    key={testIndex} 
+                    key={index} 
                     className={`flex items-center justify-between p-3 rounded-lg border ${
                       test.status === 'failed' ? 'bg-red-50 border-red-200' : 
-                      'bg-gray-50 border-gray-200'
+                      test.status === 'skipped' ? 'bg-yellow-50 border-yellow-200' :
+                      'bg-green-50 border-green-200'
                     }`}
                   >
                     <div className="flex items-center space-x-3">
                       {getStatusIcon(test.status)}
                       <span className="font-medium">{test.testName}</span>
+                      {test.authenticationStatus && (
+                        <Badge variant="outline" className="text-xs">
+                          {test.authenticationStatus}
+                        </Badge>
+                      )}
                     </div>
                     
                     <div className="flex items-center space-x-2">
@@ -165,45 +368,33 @@ export const DiagnosticDashboard = () => {
                         {test.duration}ms
                       </span>
                     </div>
+
+                    {test.error && (
+                      <div className="mt-2 text-sm text-red-600">
+                        {test.error}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
-
-              {/* Show errors for failed tests */}
-              {suite.results.some(r => r.status === 'failed') && (
-                <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                  <h4 className="font-medium text-red-800 mb-2 flex items-center">
-                    <AlertTriangle className="mr-2 h-4 w-4" />
-                    Failed Tests Details
-                  </h4>
-                  <div className="space-y-1">
-                    {suite.results
-                      .filter(r => r.status === 'failed')
-                      .map((test, index) => (
-                        <div key={index} className="text-sm text-red-700">
-                          <strong>{test.testName}:</strong> {test.error}
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              )}
             </CosmicCard>
-          ))}
+          )}
+        </TabsContent>
 
-          {/* Report Output */}
+        <TabsContent value="report">
           {report && (
             <CosmicCard className="p-6">
               <h3 className="text-lg font-semibold mb-4 flex items-center">
                 <Zap className="mr-2 h-5 w-5" />
-                Diagnostic Report
+                Comprehensive Diagnostic Report
               </h3>
               <pre className="text-sm bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto font-mono">
                 {report}
               </pre>
             </CosmicCard>
           )}
-        </div>
-      )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
