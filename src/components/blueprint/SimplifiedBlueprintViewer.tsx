@@ -73,7 +73,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
   });
 
   return (
-    <div className="space-y-4 sm:space-y-6 w-full max-w-full overflow-hidden">
+    <div className="w-full max-w-4xl mx-auto space-y-6">
       <div className="flex flex-col gap-3 sm:gap-4 mb-4 w-full max-w-full">
         <div className="w-full max-w-full">
           <h2 className="text-xl sm:text-2xl font-bold break-words">Soul Blueprint for {userName}</h2>

@@ -1,3 +1,4 @@
+
 // Modular Personality Framework Types
 export interface PersonalityModule {
   id: string;
@@ -110,6 +111,8 @@ export interface LayeredBlueprint {
     soulUrgeKeyword?: string;
     personalityNumber?: number;
     personalityKeyword?: string;
+    birthdayNumber?: number;
+    birthdayKeyword?: string;
     meaningfulAreas: string[];
     anchoringVision: string;
     lifeThemes: string[];

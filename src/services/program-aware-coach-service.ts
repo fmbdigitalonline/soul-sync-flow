@@ -1,3 +1,4 @@
+
 import { v4 as uuidv4 } from 'uuid';
 import { EnhancedAICoachService, AgentType } from "./enhanced-ai-coach-service";
 import { memoryInformedConversationService } from "./memory-informed-conversation-service";
@@ -42,6 +43,10 @@ export class ProgramAwareCoachService {
     console.log(`🌱 Program-Aware Coach Service: Initialized for user ${userId}`);
   }
 
+  async initializeForUser(userId: string): Promise<void> {
+    await this.initialize(userId);
+  }
+
   async loadProgramState(): Promise<void> {
     if (!this.userId) {
       console.warn("No user ID set, cannot load program state.");
@@ -80,6 +85,10 @@ export class ProgramAwareCoachService {
     }
   }
 
+  async saveConversationState(): Promise<void> {
+    await this.saveProgramState();
+  }
+
   async updateProgramState(userMessage: string, aiResponse: string): Promise<void> {
     // Update program state based on user message and AI response
     // For example, check if the user has completed a lesson or module
@@ -103,6 +112,34 @@ export class ProgramAwareCoachService {
 
   getProgramState(): ProgramState {
     return this.programState;
+  }
+
+  getCurrentContext(): ProgramState {
+    return this.getProgramState();
+  }
+
+  async startGuidedProgramCreation(): Promise<string> {
+    return "Starting guided program creation...";
+  }
+
+  async sendProgramAwareMessage(message: string, sessionId: string): Promise<{ response: string; conversationId: string }> {
+    return await this.sendMessage(message, sessionId, true, 'guide', 'en');
+  }
+
+  async initializeBeliefDrilling(): Promise<void> {
+    console.log("Initializing belief drilling...");
+  }
+
+  async loadConversationHistory(): Promise<any[]> {
+    return [];
+  }
+
+  async getReadinessPrompts(): Promise<string[]> {
+    return ["Are you ready to begin?", "How are you feeling today?"];
+  }
+
+  async updateConversationStage(stage: string): Promise<void> {
+    console.log(`Updating conversation stage to: ${stage}`);
   }
 
   async sendMessage(

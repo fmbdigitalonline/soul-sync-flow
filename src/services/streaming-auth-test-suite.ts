@@ -7,6 +7,7 @@ export interface StreamingTestResult {
   duration: number;
   error?: string;
   details?: any;
+  authenticationStatus?: 'authenticated' | 'unauthenticated' | 'error';
 }
 
 export interface StreamingTestSuiteResult {
@@ -16,6 +17,7 @@ export interface StreamingTestSuiteResult {
   failed: number;
   duration: number;
   results: StreamingTestResult[];
+  overallAuthStatus: 'passed' | 'failed' | 'partial';
 }
 
 class StreamingAuthTestSuite {
@@ -48,6 +50,7 @@ class StreamingAuthTestSuite {
         testName: 'Basic Authentication Test',
         status: response.response ? 'passed' : 'failed',
         duration: Date.now() - testStartTime,
+        authenticationStatus: response.response ? 'authenticated' : 'error',
         details: {
           responseLength: response.response?.length || 0,
           conversationId: sessionId
@@ -58,6 +61,7 @@ class StreamingAuthTestSuite {
         testName: 'Basic Authentication Test',
         status: 'failed',
         duration: Date.now() - startTime,
+        authenticationStatus: 'error',
         error: String(error)
       });
     }
@@ -91,6 +95,7 @@ class StreamingAuthTestSuite {
         testName: 'Streaming Authentication Test',
         status: streamedContent.length > 0 ? 'passed' : 'failed',
         duration: Date.now() - testStartTime,
+        authenticationStatus: streamedContent.length > 0 ? 'authenticated' : 'error',
         details: {
           streamedLength: streamedContent.length,
           conversationId: sessionId
@@ -101,12 +106,17 @@ class StreamingAuthTestSuite {
         testName: 'Streaming Authentication Test',
         status: 'failed',
         duration: Date.now() - startTime,
+        authenticationStatus: 'error',
         error: String(error)
       });
     }
 
     const passed = results.filter(r => r.status === 'passed').length;
     const failed = results.filter(r => r.status === 'failed').length;
+    
+    const overallAuthStatus: 'passed' | 'failed' | 'partial' = 
+      failed === 0 ? 'passed' : 
+      passed === 0 ? 'failed' : 'partial';
 
     return {
       suiteName: 'Streaming Authentication Test Suite',
@@ -114,7 +124,8 @@ class StreamingAuthTestSuite {
       passed,
       failed,
       duration: Date.now() - startTime,
-      results
+      results,
+      overallAuthStatus
     };
   }
 }
