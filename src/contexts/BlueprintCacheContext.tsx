@@ -112,22 +112,26 @@ const convertBlueprintToLayered = (data: BlueprintData): LayeredBlueprint => {
   console.log('🔧 Converting raw data to LayeredBlueprint...');
   console.log('🗂️ Raw data keys available:', Object.keys(data));
   
+  // Handle user_meta with proper type checking
+  const userMeta = data.user_meta || {};
+  const safeUserMeta = typeof userMeta === 'object' && userMeta !== null ? userMeta : {};
+  
   // Handle MBTI data - check multiple possible sources
   const mbtiData = data.cognition_mbti || data.mbti || data.personality || {};
   let mbtiType = "Unknown";
   
   // Extract MBTI type from user personality data if available
-  if (data.user_meta?.personality) {
+  if (safeUserMeta.personality) {
     // Check if personality is an object with likelyType property
-    if (typeof data.user_meta.personality === 'object' && data.user_meta.personality !== null) {
-      const personalityObj = data.user_meta.personality as any;
+    if (typeof safeUserMeta.personality === 'object' && safeUserMeta.personality !== null) {
+      const personalityObj = safeUserMeta.personality as any;
       if (personalityObj.likelyType) {
         mbtiType = personalityObj.likelyType;
         console.log('🎯 Using MBTI from user personality object:', mbtiType);
       }
-    } else if (typeof data.user_meta.personality === 'string') {
+    } else if (typeof safeUserMeta.personality === 'string') {
       // If it's a string, use it directly
-      mbtiType = data.user_meta.personality;
+      mbtiType = safeUserMeta.personality;
       console.log('🎯 Using MBTI from user personality string:', mbtiType);
     }
   } else if (mbtiData?.type) {
@@ -190,8 +194,8 @@ const convertBlueprintToLayered = (data: BlueprintData): LayeredBlueprint => {
       soulUrgeKeyword: numerologyData?.soul_urge_keyword || numerologyData?.soulUrgeKeyword,
       personalityNumber: numerologyData?.personality_number || numerologyData?.personalityNumber,
       personalityKeyword: numerologyData?.personality_keyword || numerologyData?.personalityKeyword,
-      birthdayNumber: numerologyData?.birthday_number || numerologyData?.birthdayNumber,
-      birthdayKeyword: numerologyData?.birthday_keyword || numerologyData?.birthdayKeyword,
+      birthdayNumber: numerologyData?.birthday_number || numerologyData?.birthdayNumber || 1,
+      birthdayKeyword: numerologyData?.birthday_keyword || numerologyData?.birthdayKeyword || 'Pioneer',
       meaningfulAreas: numerologyData?.meaningful_areas || ["growth"],
       anchoringVision: numerologyData?.anchoring_vision || "authentic contribution",
       lifeThemes: numerologyData?.life_themes || ["self-discovery"],
@@ -225,7 +229,7 @@ const convertBlueprintToLayered = (data: BlueprintData): LayeredBlueprint => {
       optimalTimings: data.timing_overlays?.optimal_timings || [],
       energyWeather: data.timing_overlays?.energy_weather || "stable growth",
     },
-    user_meta: data.user_meta || {},
+    user_meta: safeUserMeta,
     humorProfile: {
       primaryStyle: 'warm-nurturer' as const,
       intensity: 'moderate' as const,

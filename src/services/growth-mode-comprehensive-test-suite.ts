@@ -872,6 +872,345 @@ class GrowthModeComprehensiveTestSuite {
     
     return breakdown;
   }
+
+  private async createTestBlueprint(): Promise<LayeredBlueprint> {
+    return {
+      cognitiveTemperamental: {
+        mbtiType: 'ENFP',
+        functions: ['Ne', 'Fi', 'Te', 'Si'],
+        dominantFunction: 'Ne',
+        auxiliaryFunction: 'Fi',
+        cognitiveStack: ['Ne', 'Fi', 'Te', 'Si'],
+        taskApproach: 'flexible',
+        communicationStyle: 'enthusiastic',
+        decisionMaking: 'value-based',
+        informationProcessing: 'perceiving',
+        coreKeywords: ['creative', 'flexible', 'enthusiastic']
+      },
+      energyDecisionStrategy: {
+        humanDesignType: 'Projector',
+        authority: 'Splenic',
+        decisionStyle: 'intuitive',
+        pacing: 'adaptive',
+        energyType: 'non-sacral',
+        strategy: 'wait_for_invitation',
+        profile: '2/4',
+        centers: ['Spleen', 'G-Center'],
+        gates: ['32', '57'],
+        channels: ['32-54']
+      },
+      motivationBeliefEngine: {
+        coreBeliefs: ['growth mindset', 'self-compassion'],
+        motivationalDrivers: ['achievement', 'connection'],
+        beliefPatterns: ['positive self-talk', 'resilience'],
+        motivationTriggers: ['challenge', 'recognition'],
+        resistancePoints: ['perfectionism', 'fear of failure'],
+        empowermentSources: ['meditation', 'journaling']
+      },
+      coreValuesNarrative: {
+        lifePath: 3,
+        lifePathKeyword: 'creative_expression',
+        expressionNumber: 11,
+        expressionKeyword: 'spiritual_insight',
+        soulUrgeNumber: 8,
+        soulUrgeKeyword: 'material_success',
+        meaningfulAreas: ['creativity', 'spirituality', 'career'],
+        anchoringVision: 'creative_fulfillment',
+        lifeThemes: ['self_expression', 'spiritual_growth'],
+        valueSystem: 'authenticity_based',
+        northStar: 'creative_contribution',
+        missionStatement: 'Express creativity authentically',
+        purposeAlignment: 'high',
+        core_values: ['creativity', 'authenticity', 'growth']
+      },
+      publicArchetype: {
+        sunSign: 'Aquarius',
+        moonSign: 'Pisces',
+        risingSign: 'Gemini',
+        socialStyle: 'innovative',
+        publicVibe: 'inspiring',
+        publicPersona: 'visionary',
+        leadershipStyle: 'collaborative',
+        socialMask: 'friendly_innovator',
+        externalExpression: 'creative_authenticity'
+      },
+      generationalCode: {
+        chineseZodiac: 'Horse',
+        element: 'Earth',
+        cohortTint: 'practical_idealism',
+        generationalThemes: ['technology', 'authenticity'],
+        collectiveInfluence: 'balanced_innovation'
+      },
+      surfaceExpression: {
+        observableStyle: 'creative_authentic',
+        realWorldImpact: 'inspiring_others',
+        behavioralSignatures: ['enthusiasm', 'creativity', 'authenticity'],
+        externalManifestations: ['creative_projects', 'helping_others']
+      },
+      marketingArchetype: {
+        messagingStyle: 'inspiring',
+        socialHooks: ['creativity', 'authenticity', 'growth'],
+        brandPersonality: 'creative_guide',
+        communicationPatterns: ['storytelling', 'inspiration'],
+        influenceStyle: 'authentic_inspiration'
+      },
+      goalPersona: {
+        currentMode: 'coach',
+        serviceRole: 'creative_guide',
+        coachingTone: 'supportive',
+        nudgeStyle: 'gentle_encouragement',
+        motivationApproach: 'intrinsic_motivation'
+      },
+      interactionPreferences: {
+        rapportStyle: 'warm_authentic',
+        storyPreference: 'metaphorical',
+        empathyLevel: 'high',
+        conflictStyle: 'collaborative',
+        collaborationStyle: 'co_creative',
+        feedbackStyle: 'constructive',
+        learningStyle: 'experiential'
+      },
+      timingOverlays: {
+        currentTransits: ['creativity_focus'],
+        seasonalInfluences: ['spring_energy'],
+        cyclicalPatterns: ['creative_cycles'],
+        optimalTimings: ['morning_creativity'],
+        energyWeather: 'high_creative_energy'
+      },
+      proactiveContext: {
+        nudgeHistory: [],
+        taskGraph: {},
+        streaks: {},
+        moodLog: [],
+        recentPatterns: [],
+        triggerEvents: []
+      },
+      user_meta: {
+        preferred_name: 'TestUser',
+        full_name: 'Test User'
+      },
+      humorProfile: {
+        primaryStyle: 'playful-storyteller',
+        intensity: 'moderate',
+        appropriatenessLevel: 'balanced',
+        contextualAdaptation: {
+          coaching: 'warm-nurturer',
+          guidance: 'philosophical-sage',
+          casual: 'spontaneous-entertainer'
+        },
+        avoidancePatterns: ['sarcasm', 'dark_humor'],
+        signatureElements: ['wordplay', 'gentle_teasing']
+      },
+      voiceTokens: {
+        pacing: {
+          sentenceLength: 'medium',
+          pauseFrequency: 'thoughtful',
+          rhythmPattern: 'varied'
+        },
+        expressiveness: {
+          emojiFrequency: 'occasional',
+          emphasisStyle: 'italic',
+          exclamationTendency: 'balanced'
+        },
+        vocabulary: {
+          formalityLevel: 'conversational',
+          metaphorUsage: 'frequent',
+          technicalDepth: 'balanced'
+        },
+        conversationStyle: {
+          questionAsking: 'exploratory',
+          responseLength: 'thorough',
+          personalSharing: 'warm'
+        },
+        signaturePhrases: ['Let\'s explore this together', 'What feels true for you?'],
+        greetingStyles: ['Warm and welcoming', 'Curious and inviting'],
+        transitionWords: ['So', 'Now', 'Let\'s see']
+      }
+    };
+  }
+
+  async testProgramAwareInitialization(): Promise<{ success: boolean; details: any }> {
+    try {
+      console.log('🔄 Testing program-aware initialization...');
+      
+      const testUserId = 'test-user-id';
+      await this.programAwareCoach.initializeForUser(testUserId);
+      
+      const context = this.programAwareCoach.getCurrentContext();
+      
+      return {
+        success: context.hasContext && 
+                context.program === 'spiritual-growth' && 
+                context.week >= 1 && 
+                context.stage === 'exploration',
+        details: {
+          context,
+          hasContext: context.hasContext,
+          program: context.program,
+          week: context.week
+        }
+      };
+    } catch (error) {
+      return {
+        success: false,
+        details: { error: String(error) }
+      };
+    }
+  }
+
+  async testProgramAwareMessaging(): Promise<{ success: boolean; details: any }> {
+    try {
+      console.log('🔄 Testing program-aware messaging...');
+      
+      const response = await this.programAwareCoach.sendProgramAwareMessage(
+        'How can I improve my meditation practice?',
+        'test-session-id'
+      );
+      
+      return {
+        success: typeof response.response === 'string' && response.response.length > 0,
+        details: {
+          responseLength: response.response.length,
+          hasConversationId: !!response.conversationId
+        }
+      };
+    } catch (error) {
+      return {
+        success: false,
+        details: { error: String(error) }
+      };
+    }
+  }
+
+  async testReadinessPrompts(): Promise<{ success: boolean; details: any }> {
+    try {
+      console.log('🔄 Testing readiness prompts...');
+      
+      const prompts = await this.programAwareCoach.getReadinessPrompts();
+      
+      return {
+        success: Array.isArray(prompts) && prompts.length > 0,
+        details: {
+          promptCount: Array.isArray(prompts) ? prompts.length : 0,
+          samplePrompt: Array.isArray(prompts) && prompts.length > 0 ? prompts[0] : null
+        }
+      };
+    } catch (error) {
+      return {
+        success: false,
+        details: { error: String(error) }
+      };
+    }
+  }
+
+  async testConversationStageUpdates(): Promise<{ success: boolean; details: any }> {
+    try {
+      console.log('🔄 Testing conversation stage updates...');
+      
+      await this.programAwareCoach.updateConversationStage('deep_work');
+      const context = this.programAwareCoach.getCurrentContext();
+      
+      return {
+        success: context.stage === 'deep_work',
+        details: {
+          currentStage: context.stage,
+          expectedStage: 'deep_work'
+        }
+      };
+    } catch (error) {
+      return {
+        success: false,
+        details: { error: String(error) }
+      };
+    }
+  }
+
+  async testFullGrowthModeConversationFlow(): Promise<{ success: boolean; details: any }> {
+    try {
+      console.log('🔄 Testing full growth mode conversation flow...');
+      
+      // Initialize user
+      const testUserId = 'test-user-growth-flow';
+      await this.programAwareCoach.initializeForUser(testUserId);
+      
+      // Check initial context
+      const initialContext = this.programAwareCoach.getCurrentContext();
+      if (!initialContext.hasContext || initialContext.program !== 'spiritual-growth') {
+        throw new Error('Initial context not properly set');
+      }
+      
+      console.log('✅ Initial context validated:', {
+        program: initialContext.program,
+        week: initialContext.week,
+        hasContext: initialContext.hasContext
+      });
+      
+      // Test message exchange
+      const response = await this.programAwareCoach.sendProgramAwareMessage(
+        'I want to work on my self-awareness',
+        'test-session-growth-flow'
+      );
+      
+      if (!response.response || response.response.length === 0) {
+        throw new Error('Empty response from program-aware messaging');
+      }
+      
+      return {
+        success: true,
+        details: {
+          initialContext,
+          responseReceived: true,
+          responseLength: response.response.length
+        }
+      };
+    } catch (error) {
+      return {
+        success: false,
+        details: { error: String(error) }
+      };
+    }
+  }
+
+  async testAdvancedGrowthModeInteractions(): Promise<{ success: boolean; details: any }> {
+    try {
+      console.log('🔄 Testing advanced growth mode interactions...');
+      
+      // Test multiple message exchanges
+      const messages = [
+        'I want to understand my limiting beliefs',
+        'How can I develop better self-compassion?',
+        'What practices would help me stay consistent?'
+      ];
+      
+      const responses = [];
+      for (const message of messages) {
+        const response = await this.programAwareCoach.sendProgramAwareMessage(
+          message,
+          'test-session-advanced-growth'
+        );
+        responses.push(response);
+      }
+      
+      return {
+        success: responses.every(r => r.response && r.response.length > 0),
+        details: {
+          totalMessages: messages.length,
+          successfulResponses: responses.filter(r => r.response && r.response.length > 0).length,
+          averageResponseLength: responses.reduce((acc, r) => acc + (r.response?.length || 0), 0) / responses.length
+        }
+      };
+    } catch (error) {
+      return {
+        success: false,
+        details: { error: String(error) }
+      };
+    }
+  }
 }
 
-export const growthModeComprehensiveTestSuite = new GrowthModeComprehensiveTestSuite();
+export const growthModeComprehensiveTestSuite = new GrowthModeComprehensiveTestSuite(
+  programAwareCoachService,
+  enhancedAICoachService,
+  memoryInformedConversationService,
+  enhancedMemoryService
+);

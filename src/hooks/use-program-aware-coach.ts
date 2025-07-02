@@ -19,7 +19,7 @@ export const useProgramAwareCoach = () => {
   useEffect(() => {
     if (messages.length > 0 && currentSessionId && user) {
       const saveTimer = setTimeout(() => {
-        programAwareCoachService.saveConversationState(currentSessionId, user.id, messages);
+        programAwareCoachService.saveConversationState();
       }, 2000); // Save 2 seconds after last message
 
       return () => clearTimeout(saveTimer);
@@ -47,9 +47,7 @@ export const useProgramAwareCoach = () => {
 
       const response = await programAwareCoachService.sendProgramAwareMessage(
         content,
-        sessionId,
-        user.id,
-        true
+        sessionId
       );
 
       const assistantMessage: Message = {
@@ -94,15 +92,11 @@ export const useProgramAwareCoach = () => {
       setCurrentSessionId(sessionId);
 
       // Get the simple greeting without making an AI call
-      const response = await programAwareCoachService.initializeBeliefDrilling(
-        domain,
-        user.id,
-        sessionId
-      );
+      await programAwareCoachService.initializeBeliefDrilling();
 
       const assistantMessage: Message = {
         id: `msg_${Date.now()}_assistant`,
-        content: response.response,
+        content: "Welcome to your belief drilling session. I'm here to help you explore your beliefs and mindset around this area of your life. What would you like to focus on today?",
         sender: 'assistant',
         timestamp: new Date(),
       };
@@ -131,7 +125,7 @@ export const useProgramAwareCoach = () => {
       console.log('🔄 Recovering conversation:', sessionId);
 
       // Load conversation history
-      const history = await programAwareCoachService.loadConversationHistory(sessionId, user.id);
+      const history = await programAwareCoachService.loadConversationHistory();
       
       if (history.length > 0) {
         const formattedMessages: Message[] = history.map((msg: any) => ({
