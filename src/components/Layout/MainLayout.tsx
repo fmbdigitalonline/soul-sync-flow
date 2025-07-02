@@ -84,8 +84,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
   // Show desktop navigation unless explicitly hidden
   const showDesktopNav = !hideNav;
   
-  // Always show mobile navigation for authenticated users, and on homepage for all users
-  const showMobileNav = user || location.pathname === "/";
+  // Always show mobile navigation - either for authenticated users or on homepage for all users
+  const showMobileNav = true;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -191,12 +191,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
         </div>
       </div>
 
-      {/* Mobile Bottom Navigation */}
+      {/* Mobile Bottom Navigation - Always show */}
       {showMobileNav && (
         <div className="md:hidden fixed bottom-0 left-0 right-0 z-50">
           <div className="bg-white/95 backdrop-blur-lg border-t border-gray-100 px-2 py-2 shadow-lg">
             <div className="flex justify-around items-center max-w-md mx-auto">
-              {navItems.slice(0, 5).map((item) => {
+              {baseNavItems.slice(0, 5).map((item) => {
                 const Icon = item.icon;
                 const active = isActive(item.to);
                 return (
