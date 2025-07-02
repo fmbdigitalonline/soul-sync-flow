@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -165,7 +164,7 @@ export default function EnhancedCoachInterface({
     if (isMobile) setSidebarOpen(false); // Close sidebar on mobile after selection
   };
 
-  // Enhanced VFP feedback with ACS integration
+  // Enhanced VFP feedback with ACS integration - Fixed callback signature
   const handleVFPFeedback = useCallback((messageId: string, isPositive: boolean) => {
     recordVFPGraphFeedback(messageId, isPositive);
     
@@ -379,11 +378,11 @@ export default function EnhancedCoachInterface({
                       {message.timestamp.toLocaleTimeString()}
                     </div>
                     
-                    {/* VFP Graph Feedback for assistant messages */}
+                    {/* VFP Graph Feedback for assistant messages - Fixed callback */}
                     {!message.isUser && !message.isStreaming && (
                       <VFPGraphFeedback
                         messageId={message.id}
-                        onFeedbackGiven={handleVFPFeedback}
+                        onFeedbackGiven={(isPositive: boolean) => handleVFPFeedback(message.id, isPositive)}
                       />
                     )}
                   </div>
