@@ -195,6 +195,117 @@
   }
 }
 
+/* Ultra-narrow screens (Galaxy Z Fold 5 external screen and similar) */
+@media (max-width: 400px) {
+  #root {
+    padding: 0;
+    max-width: 100vw;
+    width: 100vw;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+  
+  body {
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    max-width: 100vw;
+  }
+  
+  html {
+    overflow-x: hidden;
+    width: 100vw;
+    max-width: 100vw;
+  }
+  
+  /* Force single-column layouts on ultra-narrow screens */
+  .grid-cols-2,
+  .grid-cols-3,
+  .grid-cols-4 {
+    @apply grid-cols-1 !important;
+  }
+  
+  /* Reduce padding and margins on ultra-narrow */
+  .cosmic-card {
+    @apply rounded-xl p-3;
+  }
+  
+  /* Ensure touch targets remain accessible */
+  button, [role="button"] {
+    @apply min-h-[40px] min-w-[40px];
+  }
+  
+  /* Optimize text sizes for readability */
+  h1 {
+    @apply text-2xl;
+  }
+  
+  h2 {
+    @apply text-xl;
+  }
+  
+  h3 {
+    @apply text-lg;
+  }
+  
+  /* Hide non-essential content on ultra-narrow */
+  .hide-on-fold {
+    @apply hidden;
+  }
+  
+  /* Compact spacing */
+  .space-y-4 > :not([hidden]) ~ :not([hidden]) {
+    --tw-space-y-reverse: 0;
+    margin-top: calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));
+    margin-bottom: calc(0.5rem * var(--tw-space-y-reverse));
+  }
+  
+  .space-x-4 > :not([hidden]) ~ :not([hidden]) {
+    --tw-space-x-reverse: 0;
+    margin-right: calc(0.5rem * var(--tw-space-x-reverse));
+    margin-left: calc(0.5rem * calc(1 - var(--tw-space-x-reverse)));
+  }
+}
+
+/* Fold device specific optimizations (Galaxy Z Fold 5: 344px) */
+@media (max-width: 350px) {
+  /* Ultra-compact mode for the narrowest screens */
+  .cosmic-card {
+    @apply rounded-lg p-2;
+  }
+  
+  /* Minimum viable text sizes */
+  .text-xs {
+    font-size: 10px;
+  }
+  
+  .text-sm {
+    font-size: 11px;
+  }
+  
+  .text-base {
+    font-size: 12px;
+  }
+  
+  /* Ultra-compact spacing */
+  .space-y-3 > :not([hidden]) ~ :not([hidden]) {
+    --tw-space-y-reverse: 0;
+    margin-top: calc(0.25rem * calc(1 - var(--tw-space-y-reverse)));
+    margin-bottom: calc(0.25rem * var(--tw-space-y-reverse));
+  }
+  
+  /* Ensure inputs remain usable */
+  input, textarea, select {
+    @apply min-h-[40px] text-sm;
+  }
+  
+  /* Optimize button sizes */
+  button {
+    @apply min-h-[40px] px-2 py-1 text-sm;
+  }
+}
+
 /* Update spacious grid system */
 .grid-8 { gap: 8px; }
 .grid-16 { gap: 16px; }
@@ -207,4 +318,31 @@
 
 .rounded-spacious {
   border-radius: 24px;
+}
+
+/* Utility classes for responsive design */
+@layer utilities {
+  .ultra-narrow-hidden {
+    @media (max-width: 400px) {
+      display: none;
+    }
+  }
+  
+  .fold-hidden {
+    @media (max-width: 350px) {
+      display: none;
+    }
+  }
+  
+  .ultra-narrow-block {
+    @media (max-width: 400px) {
+      display: block;
+    }
+  }
+  
+  .fold-compact {
+    @media (max-width: 350px) {
+      @apply text-xs p-1 gap-1;
+    }
+  }
 }

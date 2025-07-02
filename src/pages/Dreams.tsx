@@ -36,6 +36,7 @@ import { HabitTracker } from "@/components/productivity/HabitTracker";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { DreamDecompositionPage } from "@/components/dream/DreamDecompositionPage";
 import { DreamSuccessPage } from "@/components/dream/DreamSuccessPage";
+import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 
 interface Task {
   id: string;
@@ -63,7 +64,7 @@ const Dreams = () => {
   const { toast } = useToast();
   const { t } = useLanguage();
   const { blueprintData } = useBlueprintData();
-  const isMobile = useIsMobile();
+  const { spacing, layout, touchTargetSize, getTextSize, isFoldDevice, isUltraNarrow } = useResponsiveLayout();
 
   // Dream creation form state
   const [dreamForm, setDreamForm] = useState({
@@ -218,17 +219,17 @@ const Dreams = () => {
     return (
       <MainLayout>
         <ErrorBoundary>
-          <div className="min-h-screen bg-gradient-to-br from-soul-purple/10 via-white to-soul-teal/5 flex items-center justify-center p-4">
-            <div className="bg-white/80 backdrop-blur-lg rounded-3xl p-6 shadow-2xl border border-white/20 text-center w-full max-w-sm mx-auto">
-              <div className="w-12 h-12 bg-gradient-to-br from-soul-purple to-soul-teal rounded-full mx-auto mb-4 flex items-center justify-center">
-                <Heart className="h-6 w-6 text-white" />
+          <div className={`min-h-screen bg-gradient-to-br from-soul-purple/10 via-white to-soul-teal/5 flex items-center justify-center ${layout.padding}`}>
+            <div className={`bg-white/80 backdrop-blur-lg rounded-2xl ${spacing.card} shadow-2xl border border-white/20 text-center ${layout.width} ${layout.maxWidth} mx-auto`}>
+              <div className={`w-12 h-12 mx-auto bg-gradient-to-br from-soul-purple to-soul-teal rounded-full mb-4 flex items-center justify-center ${isFoldDevice ? 'w-10 h-10' : ''}`}>
+                <Heart className={`h-6 w-6 text-white ${isFoldDevice ? 'h-5 w-5' : ''}`} />
               </div>
-              <h1 className="text-xl font-bold mb-3 bg-gradient-to-r from-soul-purple to-soul-teal bg-clip-text text-transparent">
+              <h1 className={`font-bold mb-3 bg-gradient-to-r from-soul-purple to-soul-teal bg-clip-text text-transparent ${getTextSize('text-xl')}`}>
                 {t("dreams.title")}
               </h1>
-              <p className="mb-6 text-gray-600 text-sm leading-relaxed">{t("dreams.description")}</p>
+              <p className={`mb-6 text-gray-600 leading-relaxed ${getTextSize('text-sm')} ${isFoldDevice ? 'px-1' : 'px-2'}`}>{t("dreams.description")}</p>
               <Button 
-                className="w-full bg-gradient-to-r from-soul-purple to-soul-teal hover:shadow-lg transition-all duration-300 rounded-2xl h-10 text-white font-medium text-sm"
+                className={`w-full bg-gradient-to-r from-soul-purple to-soul-teal hover:shadow-lg transition-all duration-300 rounded-2xl text-white font-medium ${touchTargetSize} ${getTextSize('text-sm')}`}
                 onClick={() => window.location.href = '/auth'}
               >
                 {t("dreams.getStarted")}
@@ -259,29 +260,29 @@ const Dreams = () => {
     return (
       <MainLayout>
         <div className="min-h-screen flex flex-col bg-gradient-to-br from-soul-purple/5 to-white w-full">
-          {/* Mobile-Optimized Header */}
-          <div className="bg-white/80 backdrop-blur-lg border-b border-gray-100 p-3 sticky top-0 z-10 w-full">
-            <div className="flex items-center justify-between w-full max-w-sm mx-auto">
+          {/* Ultra-Narrow Optimized Header */}
+          <div className={`bg-white/80 backdrop-blur-lg border-b border-gray-100 sticky top-0 z-10 w-full ${spacing.container}`}>
+            <div className={`flex items-center justify-between w-full ${layout.maxWidth} mx-auto`}>
               <Button 
                 variant="ghost" 
                 size="sm" 
                 onClick={() => setCurrentView('create')}
-                className="flex items-center gap-2 text-gray-600 hover:text-soul-purple rounded-xl px-2 py-1 text-sm"
+                className={`flex items-center gap-2 text-gray-600 hover:text-soul-purple rounded-xl px-2 py-1 ${getTextSize('text-sm')} ${touchTargetSize}`}
               >
-                <ArrowLeft className="h-4 w-4" />
-                Back
+                <ArrowLeft className={`h-4 w-4 ${isFoldDevice ? 'h-3 w-3' : ''}`} />
+                {!isFoldDevice && 'Back'}
               </Button>
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 bg-gradient-to-br from-soul-purple to-soul-teal rounded-full flex items-center justify-center">
-                  <Brain className="h-3 w-3 text-white" />
+                <div className={`bg-gradient-to-br from-soul-purple to-soul-teal rounded-full flex items-center justify-center ${isFoldDevice ? 'w-5 h-5' : 'w-6 h-6'}`}>
+                  <Brain className={`text-white ${isFoldDevice ? 'h-2 w-2' : 'h-3 w-3'}`} />
                 </div>
-                <h2 className="font-semibold text-gray-800 text-sm">AI Dream Coach</h2>
+                <h2 className={`font-semibold text-gray-800 ${getTextSize('text-sm')} ${isFoldDevice ? 'hidden' : ''}`}>AI Dream Coach</h2>
               </div>
-              <div className="w-16" />
+              <div className={isFoldDevice ? 'w-8' : 'w-16'} />
             </div>
           </div>
           
-          <div className="flex-1 w-full p-3 overflow-hidden max-w-sm mx-auto">
+          <div className={`flex-1 w-full overflow-hidden ${layout.maxWidth} mx-auto ${spacing.container}`}>
             <CoachInterface
               messages={messages}
               isLoading={isLoading}
@@ -300,98 +301,134 @@ const Dreams = () => {
     return (
       <MainLayout>
         <div className="min-h-screen bg-gradient-to-br from-soul-purple/5 via-white to-soul-teal/5 w-full">
-          <div className="w-full max-w-sm mx-auto py-3 px-4">
+          <div className={`w-full ${layout.maxWidth} mx-auto py-3 ${layout.padding}`}>
             
-            {/* Header */}
-            <div className="flex items-center justify-between mb-4 w-full">
+            {/* Ultra-Narrow Optimized Header */}
+            <div className={`flex items-center justify-between mb-4 w-full ${isFoldDevice ? 'flex-col gap-2' : ''}`}>
               <Button 
                 variant="ghost" 
                 size="sm" 
                 onClick={() => setCurrentView('create')}
-                className="flex items-center gap-2 text-gray-600 hover:text-soul-purple rounded-xl px-2 py-1 text-sm"
+                className={`flex items-center gap-2 text-gray-600 hover:text-soul-purple rounded-xl px-2 py-1 ${getTextSize('text-sm')} ${touchTargetSize}`}
               >
-                <ArrowLeft className="h-4 w-4" />
-                New Dream
+                <ArrowLeft className={`h-4 w-4 ${isFoldDevice ? 'h-3 w-3' : ''}`} />
+                {isFoldDevice ? '' : 'New Dream'}
               </Button>
-              <div className="text-center flex-1">
-                <h1 className="text-base font-bold text-gray-800">{t("dreams.yourJourney")}</h1>
-                <p className="text-xs text-gray-500">{t("dreams.trackProgress")}</p>
+              <div className={`text-center ${isFoldDevice ? 'w-full' : 'flex-1'}`}>
+                <h1 className={`font-bold text-gray-800 ${getTextSize('text-base')}`}>{t("dreams.yourJourney")}</h1>
+                {!isFoldDevice && <p className={`text-gray-500 ${getTextSize('text-xs')}`}>{t("dreams.trackProgress")}</p>}
               </div>
-              <div className="w-20" />
+              <div className={isFoldDevice ? 'hidden' : 'w-20'} />
             </div>
 
-            {/* Single Card with Toggle Navigation */}
+            {/* Single Card with Ultra-Narrow Optimized Navigation */}
             <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg border border-white/20 overflow-hidden w-full">
               
-              {/* Tab Navigation - Single Row */}
-              <div className="border-b border-gray-100 p-2 bg-white/50 w-full">
-                <div className="flex gap-1 w-full">
+              {/* Ultra-Narrow Tab Navigation */}
+              <div className={`border-b border-gray-100 bg-white/50 w-full ${isFoldDevice ? 'p-1' : 'p-2'}`}>
+                <div className={`${spacing.gap} w-full ${isFoldDevice ? 'grid grid-cols-2' : 'flex'}`}>
                   <Button
                     variant={activeTab === 'journey' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setActiveTab('journey')}
-                    className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 text-xs font-medium transition-all ${
+                    className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 font-medium transition-all ${getTextSize('text-xs')} ${touchTargetSize} ${
                       activeTab === 'journey' 
                         ? 'bg-gradient-to-r from-soul-purple to-soul-teal text-white shadow-md' 
                         : 'text-gray-600 hover:text-soul-purple hover:bg-gray-50'
                     }`}
                   >
-                    <MapPin className="h-3 w-3" />
-                    Journey
+                    <MapPin className={`${isFoldDevice ? 'h-2 w-2' : 'h-3 w-3'}`} />
+                    {isFoldDevice ? 'Map' : 'Journey'}
                   </Button>
                   <Button
                     variant={activeTab === 'tasks' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setActiveTab('tasks')}
-                    className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 text-xs font-medium transition-all ${
+                    className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 font-medium transition-all ${getTextSize('text-xs')} ${touchTargetSize} ${
                       activeTab === 'tasks' 
                         ? 'bg-gradient-to-r from-soul-purple to-soul-teal text-white shadow-md' 
                         : 'text-gray-600 hover:text-soul-purple hover:bg-gray-50'
                     }`}
                   >
-                    <Target className="h-3 w-3" />
+                    <Target className={`${isFoldDevice ? 'h-2 w-2' : 'h-3 w-3'}`} />
                     Tasks
                   </Button>
-                  <Button
-                    variant={activeTab === 'focus' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setActiveTab('focus')}
-                    className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 text-xs font-medium transition-all ${
-                      activeTab === 'focus' 
-                        ? 'bg-gradient-to-r from-soul-purple to-soul-teal text-white shadow-md' 
-                        : 'text-gray-600 hover:text-soul-purple hover:bg-gray-50'
-                    }`}
-                  >
-                    <Clock className="h-3 w-3" />
-                    Focus
-                  </Button>
-                  <Button
-                    variant={activeTab === 'habits' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setActiveTab('habits')}
-                    className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 text-xs font-medium transition-all ${
-                      activeTab === 'habits' 
-                        ? 'bg-gradient-to-r from-soul-purple to-soul-teal text-white shadow-md' 
-                        : 'text-gray-600 hover:text-soul-purple hover:bg-gray-50'
-                    }`}
-                  >
-                    <CheckCircle className="h-3 w-3" />
-                    Habits
-                  </Button>
+                  {!isFoldDevice && (
+                    <>
+                      <Button
+                        variant={activeTab === 'focus' ? 'default' : 'ghost'}
+                        size="sm"
+                        onClick={() => setActiveTab('focus')}
+                        className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 font-medium transition-all ${getTextSize('text-xs')} ${touchTargetSize} ${
+                          activeTab === 'focus' 
+                            ? 'bg-gradient-to-r from-soul-purple to-soul-teal text-white shadow-md' 
+                            : 'text-gray-600 hover:text-soul-purple hover:bg-gray-50'
+                        }`}
+                      >
+                        <Clock className="h-3 w-3" />
+                        Focus
+                      </Button>
+                      <Button
+                        variant={activeTab === 'habits' ? 'default' : 'ghost'}
+                        size="sm"
+                        onClick={() => setActiveTab('habits')}
+                        className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 font-medium transition-all ${getTextSize('text-xs')} ${touchTargetSize} ${
+                          activeTab === 'habits' 
+                            ? 'bg-gradient-to-r from-soul-purple to-soul-teal text-white shadow-md' 
+                            : 'text-gray-600 hover:text-soul-purple hover:bg-gray-50'
+                        }`}
+                      >
+                        <CheckCircle className="h-3 w-3" />
+                        Habits
+                      </Button>
+                    </>
+                  )}
                 </div>
+                
+                {/* Secondary row for Fold devices */}
+                {isFoldDevice && (
+                  <div className="flex gap-1 w-full mt-1">
+                    <Button
+                      variant={activeTab === 'focus' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => setActiveTab('focus')}
+                      className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 font-medium transition-all ${getTextSize('text-xs')} ${touchTargetSize} ${
+                        activeTab === 'focus' 
+                          ? 'bg-gradient-to-r from-soul-purple to-soul-teal text-white shadow-md' 
+                          : 'text-gray-600 hover:text-soul-purple hover:bg-gray-50'
+                      }`}
+                    >
+                      <Clock className="h-2 w-2" />
+                      Focus
+                    </Button>
+                    <Button
+                      variant={activeTab === 'habits' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => setActiveTab('habits')}
+                      className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 font-medium transition-all ${getTextSize('text-xs')} ${touchTargetSize} ${
+                        activeTab === 'habits' 
+                          ? 'bg-gradient-to-r from-soul-purple to-soul-teal text-white shadow-md' 
+                          : 'text-gray-600 hover:text-soul-purple hover:bg-gray-50'
+                      }`}
+                    >
+                      <CheckCircle className="h-2 w-2" />
+                      Habits
+                    </Button>
+                  </div>
+                )}
               </div>
 
-              {/* Single Content Area - Only One Visible */}
-              <div className="p-4 w-full">
+              {/* Content Area - Optimized for Ultra-Narrow */}
+              <div className={`w-full ${spacing.card}`}>
                 {activeTab === 'journey' && (
                   <div className="w-full">
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="w-6 h-6 bg-gradient-to-br from-soul-purple to-soul-teal rounded-xl flex items-center justify-center">
-                        <MapPin className="h-3 w-3 text-white" />
+                    <div className={`flex items-center gap-2 mb-3 ${isFoldDevice ? 'flex-col items-start gap-1' : ''}`}>
+                      <div className={`bg-gradient-to-br from-soul-purple to-soul-teal rounded-xl flex items-center justify-center ${isFoldDevice ? 'w-5 h-5' : 'w-6 h-6'}`}>
+                        <MapPin className={`text-white ${isFoldDevice ? 'h-2 w-2' : 'h-3 w-3'}`} />
                       </div>
                       <div className="flex-1">
-                        <h2 className="text-sm font-semibold text-gray-800">Journey Map</h2>
-                        <p className="text-xs text-gray-500">{getBlueprintInsight()}</p>
+                        <h2 className={`font-semibold text-gray-800 ${getTextSize('text-sm')}`}>Journey Map</h2>
+                        {!isFoldDevice && <p className={`text-gray-500 ${getTextSize('text-xs')}`}>{getBlueprintInsight()}</p>}
                       </div>
                     </div>
                     
@@ -406,9 +443,9 @@ const Dreams = () => {
 
                 {activeTab === 'tasks' && (
                   <div className="w-full">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="font-semibold flex items-center gap-2 text-gray-800 text-sm">
-                        <Target className="h-4 w-4 text-soul-purple" />
+                    <div className={`flex items-center justify-between mb-3 ${isFoldDevice ? 'flex-col items-start gap-1' : ''}`}>
+                      <h3 className={`font-semibold flex items-center gap-2 text-gray-800 ${getTextSize('text-sm')}`}>
+                        <Target className={`text-soul-purple ${isFoldDevice ? 'h-4 w-4' : 'h-5 w-5'}`} />
                         Your Tasks
                       </h3>
                     </div>
@@ -425,8 +462,8 @@ const Dreams = () => {
                 {activeTab === 'focus' && (
                   <div className="w-full">
                     <div className="flex items-center gap-2 mb-3">
-                      <Clock className="h-4 w-4 text-soul-purple" />
-                      <h3 className="font-semibold text-gray-800 text-sm">Focus Session</h3>
+                      <Clock className={`text-soul-purple ${isFoldDevice ? 'h-4 w-4' : 'h-5 w-5'}`} />
+                      <h3 className={`font-semibold text-gray-800 ${getTextSize('text-sm')}`}>Focus Session</h3>
                     </div>
                     <div className="w-full">
                       <PomodoroTimer />
@@ -437,8 +474,8 @@ const Dreams = () => {
                 {activeTab === 'habits' && (
                   <div className="w-full">
                     <div className="flex items-center gap-2 mb-3">
-                      <CheckCircle className="h-4 w-4 text-soul-purple" />
-                      <h3 className="font-semibold text-gray-800 text-sm">Habits</h3>
+                      <CheckCircle className={`text-soul-purple ${isFoldDevice ? 'h-4 w-4' : 'h-5 w-5'}`} />
+                      <h3 className={`font-semibold text-gray-800 ${getTextSize('text-sm')}`}>Habits</h3>
                     </div>
                     <div className="w-full">
                       <HabitTracker />
@@ -485,106 +522,107 @@ const Dreams = () => {
     <MainLayout>
       <ErrorBoundary>
         <div className="min-h-screen bg-gradient-to-br from-soul-purple/10 via-white to-soul-teal/5 w-full">
-          <div className="w-full max-w-sm mx-auto py-4 pb-20 px-4">
+          <div className={`w-full ${layout.maxWidth} mx-auto py-4 pb-20 ${layout.padding}`}>
             
-            {/* Hero Section */}
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 mx-auto bg-gradient-to-br from-soul-purple via-soul-purple to-soul-teal rounded-full flex items-center justify-center mb-4 shadow-xl">
-                <Sparkles className="h-8 w-8 text-white" />
+            {/* Ultra-Narrow Optimized Hero Section */}
+            <div className={`text-center mb-6 ${spacing.container}`}>
+              <div className={`mx-auto bg-gradient-to-br from-soul-purple via-soul-purple to-soul-teal rounded-full flex items-center justify-center mb-4 shadow-xl ${isFoldDevice ? 'w-12 h-12' : 'w-16 h-16'}`}>
+                <Sparkles className={`text-white ${isFoldDevice ? 'h-6 w-6' : 'h-8 w-8'}`} />
               </div>
-              <h1 className="text-xl font-bold mb-3 bg-gradient-to-r from-soul-purple to-soul-teal bg-clip-text text-transparent">
+              <h1 className={`font-bold mb-3 bg-gradient-to-r from-soul-purple to-soul-teal bg-clip-text text-transparent ${getTextSize('text-xl')}`}>
                 {t("dreams.whatsYourDream")}
               </h1>
-              <p className="text-gray-600 text-sm leading-relaxed mb-4 px-2">
+              <p className={`text-gray-600 leading-relaxed mb-4 ${getTextSize('text-sm')} ${isFoldDevice ? 'px-1' : 'px-2'}`}>
                 {t("dreams.heroDescription")}
               </p>
-              <div className="inline-flex items-center gap-2 bg-soul-purple/10 px-3 py-1 rounded-full">
+              <div className={`inline-flex items-center gap-2 bg-soul-purple/10 px-3 py-1 rounded-full ${isFoldDevice ? 'text-center' : ''}`}>
                 <div className="w-2 h-2 bg-soul-purple rounded-full animate-pulse"></div>
-                <p className="text-xs text-soul-purple font-medium">{getBlueprintInsight()}</p>
+                <p className={`text-soul-purple font-medium ${getTextSize('text-xs')} ${isFoldDevice ? 'text-center leading-tight' : ''}`}>{getBlueprintInsight()}</p>
               </div>
             </div>
 
-            {/* Dream Creation Form - Single Column */}
-            <div className="bg-white/80 backdrop-blur-lg rounded-2xl p-4 mb-4 shadow-lg border border-white/20 w-full">
-              <div className="space-y-4">
+            {/* Ultra-Narrow Optimized Dream Creation Form */}
+            <div className={`bg-white/80 backdrop-blur-lg rounded-2xl mb-4 shadow-lg border border-white/20 w-full ${spacing.card}`}>
+              <div className={`space-y-4 ${spacing.gap}`}>
                 {/* Dream Input */}
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-gray-700 block">{t("dreams.whatsYourDream")}</label>
+                  <label className={`font-semibold text-gray-700 block ${getTextSize('text-sm')}`}>{t("dreams.whatsYourDream")}</label>
                   <Input
                     placeholder={t("dreams.placeholderDream")}
                     value={dreamForm.title}
                     onChange={(e) => setDreamForm(prev => ({ ...prev, title: e.target.value }))}
-                    className="text-sm border-gray-200 rounded-xl h-10 focus:border-soul-purple focus:ring-soul-purple/20 w-full"
+                    className={`border-gray-200 rounded-xl focus:border-soul-purple focus:ring-soul-purple/20 w-full ${getTextSize('text-sm')} ${touchTargetSize}`}
                   />
                 </div>
 
                 {/* Why Input */}
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-gray-700 block">{t("dreams.whyImportant")}</label>
+                  <label className={`font-semibold text-gray-700 block ${getTextSize('text-sm')}`}>{t("dreams.whyImportant")}</label>
                   <Textarea
                     placeholder={t("dreams.placeholderWhy")}
                     value={dreamForm.description}
                     onChange={(e) => setDreamForm(prev => ({ ...prev, description: e.target.value }))}
-                    className="text-sm border-gray-200 rounded-xl min-h-[70px] focus:border-soul-purple focus:ring-soul-purple/20 resize-none w-full"
+                    className={`border-gray-200 rounded-xl focus:border-soul-purple focus:ring-soul-purple/20 resize-none w-full ${getTextSize('text-sm')} ${isFoldDevice ? 'min-h-[60px]' : 'min-h-[70px]'}`}
                   />
                 </div>
 
-                {/* Category - Full Width */}
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-gray-700 block">{t("dreams.category")}</label>
-                  <Select 
-                    value={dreamForm.category} 
-                    onValueChange={(value) => setDreamForm(prev => ({ ...prev, category: value }))}
-                  >
-                    <SelectTrigger className="border-gray-200 rounded-xl h-10 focus:border-soul-purple w-full text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-xl border-gray-200">
-                      <SelectItem value="personal_growth" className="rounded-lg text-sm">{t("goals.categoryPersonal")}</SelectItem>
-                      <SelectItem value="career" className="rounded-lg text-sm">{t("goals.categoryCareer")}</SelectItem>
-                      <SelectItem value="health" className="rounded-lg text-sm">{t("goals.categoryHealth")}</SelectItem>
-                      <SelectItem value="relationships" className="rounded-lg text-sm">{t("goals.categoryRelationships")}</SelectItem>
-                      <SelectItem value="creativity" className="rounded-lg text-sm">{t("goals.categoryCreative")}</SelectItem>
-                      <SelectItem value="financial" className="rounded-lg text-sm">{t("goals.categoryFinancial")}</SelectItem>
-                      <SelectItem value="spiritual" className="rounded-lg text-sm">{t("goals.categorySpiritual")}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                {/* Category & Timeline - Stack on ultra-narrow */}
+                <div className={`space-y-4 ${isFoldDevice ? '' : 'grid grid-cols-2 gap-4 space-y-0'}`}>
+                  <div className="space-y-2">
+                    <label className={`font-semibold text-gray-700 block ${getTextSize('text-sm')}`}>{t("dreams.category")}</label>
+                    <Select 
+                      value={dreamForm.category} 
+                      onValueChange={(value) => setDreamForm(prev => ({ ...prev, category: value }))}
+                    >
+                      <SelectTrigger className={`border-gray-200 rounded-xl focus:border-soul-purple w-full ${getTextSize('text-sm')} ${touchTargetSize}`}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl border-gray-200">
+                        <SelectItem value="personal_growth" className={`rounded-lg ${getTextSize('text-sm')}`}>{t("goals.categoryPersonal")}</SelectItem>
+                        <SelectItem value="career" className={`rounded-lg ${getTextSize('text-sm')}`}>{t("goals.categoryCareer")}</SelectItem>
+                        <SelectItem value="health" className={`rounded-lg ${getTextSize('text-sm')}`}>{t("goals.categoryHealth")}</SelectItem>
+                        <SelectItem value="relationships" className={`rounded-lg ${getTextSize('text-sm')}`}>{t("goals.categoryRelationships")}</SelectItem>
+                        <SelectItem value="creativity" className={`rounded-lg ${getTextSize('text-sm')}`}>{t("goals.categoryCreative")}</SelectItem>
+                        <SelectItem value="financial" className={`rounded-lg ${getTextSize('text-sm')}`}>{t("goals.categoryFinancial")}</SelectItem>
+                        <SelectItem value="spiritual" className={`rounded-lg ${getTextSize('text-sm')}`}>{t("goals.categorySpiritual")}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                {/* Timeline - Full Width */}
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-gray-700 block">{t("dreams.timeline")}</label>
-                  <Select 
-                    value={dreamForm.timeframe} 
-                    onValueChange={(value) => setDreamForm(prev => ({ ...prev, timeframe: value }))}
-                  >
-                    <SelectTrigger className="border-gray-200 rounded-xl h-10 focus:border-soul-purple w-full text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-xl border-gray-200">
-                      <SelectItem value="1 month" className="rounded-lg text-sm">{t("goals.targetDate") + " - 1 Month"}</SelectItem>
-                      <SelectItem value="3 months" className="rounded-lg text-sm">{t("goals.targetDate") + " - 3 Months"}</SelectItem>
-                      <SelectItem value="6 months" className="rounded-lg text-sm">{t("goals.targetDate") + " - 6 Months"}</SelectItem>
-                      <SelectItem value="1 year" className="rounded-lg text-sm">{t("goals.targetDate") + " - 1 Year"}</SelectItem>
-                      <SelectItem value="2 years" className="rounded-lg text-sm">{t("goals.targetDate") + " - 2+ Years"}</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="space-y-2">
+                    <label className={`font-semibold text-gray-700 block ${getTextSize('text-sm')}`}>{t("dreams.timeline")}</label>
+                    <Select 
+                      value={dreamForm.timeframe} 
+                      onValueChange={(value) => setDreamForm(prev => ({ ...prev, timeframe: value }))}
+                    >
+                      <SelectTrigger className={`border-gray-200 rounded-xl focus:border-soul-purple w-full ${getTextSize('text-sm')} ${touchTargetSize}`}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl border-gray-200">
+                        <SelectItem value="1 month" className={`rounded-lg ${getTextSize('text-sm')}`}>{t("goals.targetDate") + " - 1 Month"}</SelectItem>
+                        <SelectItem value="3 months" className={`rounded-lg ${getTextSize('text-sm')}`}>{t("goals.targetDate") + " - 3 Months"}</SelectItem>
+                        <SelectItem value="6 months" className={`rounded-lg ${getTextSize('text-sm')}`}>{t("goals.targetDate") + " - 6 Months"}</SelectItem>
+                        <SelectItem value="1 year" className={`rounded-lg ${getTextSize('text-sm')}`}>{t("goals.targetDate") + " - 1 Year"}</SelectItem>
+                        <SelectItem value="2 years" className={`rounded-lg ${getTextSize('text-sm')}`}>{t("goals.targetDate") + " - 2+ Years"}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 {/* Create Button */}
                 <Button 
                   onClick={handleCreateDream}
                   disabled={isCreatingDream || !dreamForm.title.trim()}
-                  className="w-full bg-gradient-to-r from-soul-purple to-soul-teal hover:shadow-lg text-white text-sm py-4 rounded-xl font-semibold transition-all duration-300 disabled:opacity-50"
+                  className={`w-full bg-gradient-to-r from-soul-purple to-soul-teal hover:shadow-lg text-white py-4 rounded-xl font-semibold transition-all duration-300 disabled:opacity-50 ${getTextSize('text-sm')} ${touchTargetSize}`}
                 >
                   {isCreatingDream ? (
                     <>
-                      <Brain className="h-4 w-4 mr-2 animate-pulse" />
+                      <Brain className={`mr-2 animate-pulse ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
                       {t("dreams.creatingJourney")}
                     </>
                   ) : (
                     <>
-                      <Sparkles className="h-4 w-4 mr-2" />
+                      <Sparkles className={`mr-2 ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
                       {t("dreams.createJourney")}
                     </>
                   )}
@@ -592,25 +630,25 @@ const Dreams = () => {
               </div>
             </div>
 
-            {/* Alternative Options - Single Column Stack */}
+            {/* Ultra-Narrow Optimized Alternative Options */}
             <div className="space-y-3 w-full">
               <div className="text-center">
-                <p className="text-xs text-gray-500 mb-3">{t("dreams.aiInsighLabel")}</p>
+                <p className={`text-gray-500 mb-3 ${getTextSize('text-xs')}`}>{t("dreams.aiInsighLabel")}</p>
               </div>
               
               <div className="space-y-3 w-full">
                 <Button
                   variant="outline"
                   onClick={handleStartAIGuidance}
-                  className="w-full justify-start text-left p-3 h-auto border-gray-200 hover:border-soul-purple/50 hover:bg-soul-purple/5 rounded-xl transition-all duration-300"
+                  className={`w-full justify-start text-left h-auto border-gray-200 hover:border-soul-purple/50 hover:bg-soul-purple/5 rounded-xl transition-all duration-300 ${spacing.card}`}
                 >
                   <div className="flex items-center w-full">
-                    <div className="w-10 h-10 bg-gradient-to-br from-soul-teal/20 to-soul-teal/10 rounded-xl flex items-center justify-center mr-3 flex-shrink-0">
-                      <Zap className="h-4 w-4 text-soul-teal" />
+                    <div className={`bg-gradient-to-br from-soul-teal/20 to-soul-teal/10 rounded-xl flex items-center justify-center mr-3 flex-shrink-0 ${isFoldDevice ? 'w-8 h-8' : 'w-10 h-10'}`}>
+                      <Zap className={`text-soul-teal ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-gray-800 text-sm">{t("dreams.aiButtonTitle")}</div>
-                      <div className="text-xs text-gray-500">{t("dreams.aiButtonDesc")}</div>
+                      <div className={`font-semibold text-gray-800 ${getTextSize('text-sm')}`}>{t("dreams.aiButtonTitle")}</div>
+                      {!isFoldDevice && <div className={`text-gray-500 ${getTextSize('text-xs')}`}>{t("dreams.aiButtonDesc")}</div>}
                     </div>
                   </div>
                 </Button>
@@ -618,15 +656,15 @@ const Dreams = () => {
                 <Button
                   variant="outline"
                   onClick={() => setCurrentView('journey')}
-                  className="w-full justify-start text-left p-3 h-auto border-gray-200 hover:border-soul-purple/50 hover:bg-soul-purple/5 rounded-xl transition-all duration-300"
+                  className={`w-full justify-start text-left h-auto border-gray-200 hover:border-soul-purple/50 hover:bg-soul-purple/5 rounded-xl transition-all duration-300 ${spacing.card}`}
                 >
                   <div className="flex items-center w-full">
-                    <div className="w-10 h-10 bg-gradient-to-br from-soul-purple/20 to-soul-purple/10 rounded-xl flex items-center justify-center mr-3 flex-shrink-0">
-                      <MapPin className="h-4 w-4 text-soul-purple" />
+                    <div className={`bg-gradient-to-br from-soul-purple/20 to-soul-purple/10 rounded-xl flex items-center justify-center mr-3 flex-shrink-0 ${isFoldDevice ? 'w-8 h-8' : 'w-10 h-10'}`}>
+                      <MapPin className={`text-soul-purple ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-gray-800 text-sm">{t("dreams.journeyButtonTitle")}</div>
-                      <div className="text-xs text-gray-500">{t("dreams.journeyButtonDesc")}</div>
+                      <div className={`font-semibold text-gray-800 ${getTextSize('text-sm')}`}>{t("dreams.journeyButtonTitle")}</div>
+                      {!isFoldDevice && <div className={`text-gray-500 ${getTextSize('text-xs')}`}>{t("dreams.journeyButtonDesc")}</div>}
                     </div>
                   </div>
                 </Button>

@@ -1,48 +1,81 @@
 
 import * as React from "react"
 
+// Breakpoints for different mobile experiences
+const ULTRA_NARROW_BREAKPOINT = 400
 const MOBILE_BREAKPOINT = 768
+const FOLD_5_WIDTH = 344
 
 export function useIsMobile() {
   const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)
+  const [isUltraNarrow, setIsUltraNarrow] = React.useState<boolean | undefined>(undefined)
+  const [isFoldDevice, setIsFoldDevice] = React.useState<boolean | undefined>(undefined)
 
   React.useEffect(() => {
-    const updateIsMobile = () => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
+    const updateBreakpoints = () => {
+      const width = window.innerWidth
+      setIsMobile(width < MOBILE_BREAKPOINT)
+      setIsUltraNarrow(width < ULTRA_NARROW_BREAKPOINT)
+      setIsFoldDevice(width <= FOLD_5_WIDTH + 50) // Some tolerance for fold devices
     }
 
     // Initial check
-    updateIsMobile()
+    updateBreakpoints()
 
-    // Create media query listener for more accurate detection
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
+    // Create media query listeners for more accurate detection
+    const mobileQuery = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
+    const ultraNarrowQuery = window.matchMedia(`(max-width: ${ULTRA_NARROW_BREAKPOINT - 1}px)`)
+    const foldQuery = window.matchMedia(`(max-width: ${FOLD_5_WIDTH + 50}px)`)
     
     // Modern event listener
-    const handleChange = (e: MediaQueryListEvent) => {
+    const handleMobileChange = (e: MediaQueryListEvent) => {
       setIsMobile(e.matches)
     }
+    
+    const handleUltraNarrowChange = (e: MediaQueryListEvent) => {
+      setIsUltraNarrow(e.matches)
+    }
+    
+    const handleFoldChange = (e: MediaQueryListEvent) => {
+      setIsFoldDevice(e.matches)
+    }
 
-    // Add listener
-    if (mql.addEventListener) {
-      mql.addEventListener('change', handleChange)
+    // Add listeners
+    if (mobileQuery.addEventListener) {
+      mobileQuery.addEventListener('change', handleMobileChange)
+      ultraNarrowQuery.addEventListener('change', handleUltraNarrowChange)
+      foldQuery.addEventListener('change', handleFoldChange)
     } else {
       // Fallback for older browsers
-      mql.addListener(handleChange)
+      mobileQuery.addListener(handleMobileChange)
+      ultraNarrowQuery.addListener(handleUltraNarrowChange)
+      foldQuery.addListener(handleFoldChange)
     }
 
     // Also listen to resize events as backup
-    window.addEventListener('resize', updateIsMobile)
+    window.addEventListener('resize', updateBreakpoints)
     
     return () => {
-      if (mql.removeEventListener) {
-        mql.removeEventListener('change', handleChange)
+      if (mobileQuery.removeEventListener) {
+        mobileQuery.removeEventListener('change', handleMobileChange)
+        ultraNarrowQuery.removeEventListener('change', handleUltraNarrowChange)
+        foldQuery.removeEventListener('change', handleFoldChange)
       } else {
         // Fallback for older browsers
-        mql.removeListener(handleChange)
+        mobileQuery.removeListener(handleMobileChange)
+        ultraNarrowQuery.removeListener(handleUltraNarrowChange)
+        foldQuery.removeListener(handleFoldChange)
       }
-      window.removeEventListener('resize', updateIsMobile)
+      window.removeEventListener('resize', updateBreakpoints)
     }
   }, [])
 
-  return !!isMobile
+  return {
+    isMobile: !!isMobile,
+    isUltraNarrow: !!isUltraNarrow,
+    isFoldDevice: !!isFoldDevice
+  }
 }
+
+// Legacy export for backward compatibility
+export { useIsMobile as useIsMobile }
