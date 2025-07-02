@@ -1,26 +1,28 @@
+
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { ModeProvider } from './contexts/ModeContext';
 import MainLayout from './components/Layout/MainLayout';
-import HomePage from './pages/HomePage';
-import DreamsPage from './pages/DreamsPage';
-import SpiritualGrowthPage from './pages/SpiritualGrowthPage';
-import CoachPage from './pages/CoachPage';
-import LoginPage from './pages/LoginPage';
-import SignupPage from './pages/SignupPage';
-import BlueprintPage from './pages/BlueprintPage';
-import TestEnvironment from './pages/TestEnvironment';
+import Index from './pages/Index';
+import Dreams from './pages/Dreams';
+import SpiritualGrowth from './pages/SpiritualGrowth';
+import Coach from './pages/Coach';
+import Auth from './pages/Auth';
+import Blueprint from './pages/Blueprint';
+import TestEnvironmentPage from './pages/TestEnvironmentPage';
 import { Toaster } from '@/components/ui/toaster';
 import { SoulOrbProvider } from './contexts/SoulOrbContext';
-import { QueryClient } from 'react-query';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BlueprintCacheProvider } from './contexts/BlueprintCacheContext';
 import AdminDashboard from "@/pages/AdminDashboard";
 
+const queryClient = new QueryClient();
+
 function App() {
   return (
-    <QueryClient>
+    <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
           <LanguageProvider>
@@ -28,14 +30,13 @@ function App() {
               <SoulOrbProvider>
                 <BlueprintCacheProvider>
                   <Routes>
-                    <Route path="/" element={<MainLayout><HomePage /></MainLayout>} />
-                    <Route path="/dreams" element={<ProtectedRoute><MainLayout><DreamsPage /></MainLayout></ProtectedRoute>} />
-                    <Route path="/spiritual-growth" element={<ProtectedRoute><MainLayout><SpiritualGrowthPage /></MainLayout></ProtectedRoute>} />
-                    <Route path="/coach" element={<ProtectedRoute><MainLayout><CoachPage /></MainLayout></ProtectedRoute>} />
-                    <Route path="/blueprint" element={<ProtectedRoute><MainLayout><BlueprintPage /></MainLayout></ProtectedRoute>} />
-                    <Route path="/login" element={<LoginPage />} />
-                    <Route path="/signup" element={<SignupPage />} />
-                    <Route path="/test-environment" element={<ProtectedRoute><MainLayout><TestEnvironment /></MainLayout></ProtectedRoute>} />
+                    <Route path="/" element={<MainLayout><Index /></MainLayout>} />
+                    <Route path="/dreams" element={<ProtectedRoute><MainLayout><Dreams /></MainLayout></ProtectedRoute>} />
+                    <Route path="/spiritual-growth" element={<ProtectedRoute><MainLayout><SpiritualGrowth /></MainLayout></ProtectedRoute>} />
+                    <Route path="/coach" element={<ProtectedRoute><MainLayout><Coach /></MainLayout></ProtectedRoute>} />
+                    <Route path="/blueprint" element={<ProtectedRoute><MainLayout><Blueprint /></MainLayout></ProtectedRoute>} />
+                    <Route path="/auth" element={<Auth />} />
+                    <Route path="/test-environment" element={<ProtectedRoute><MainLayout><TestEnvironmentPage /></MainLayout></ProtectedRoute>} />
                     <Route 
                       path="/admin" 
                       element={
@@ -54,14 +55,14 @@ function App() {
           </LanguageProvider>
         </AuthProvider>
       </BrowserRouter>
-    </QueryClient>
+    </QueryClientProvider>
   );
 }
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
   if (!user) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/auth" />;
   }
   return children;
 };
