@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,8 +54,17 @@ export default function EnhancedCoachInterface({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Combine initial messages with current messages
-  const allMessages = [...initialMessages, ...messages];
+  // Convert hook messages to component Message format and combine with initial messages
+  const convertedMessages: Message[] = messages.map(msg => ({
+    id: msg.id,
+    content: msg.content,
+    isUser: msg.sender === 'user',
+    timestamp: msg.timestamp,
+    agentMode: currentAgent,
+    isStreaming: false
+  }));
+
+  const allMessages = [...initialMessages, ...convertedMessages];
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
