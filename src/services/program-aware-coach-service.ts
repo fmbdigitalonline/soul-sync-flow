@@ -51,9 +51,9 @@ class ProgramAwareCoachService {
     try {
       // Use career discovery service for initial context if available
       let careerContext = {};
-      if (careerDiscoveryService && typeof careerDiscoveryService.analyzeCareerStatus === 'function') {
-        const analysisResult = await careerDiscoveryService.analyzeCareerStatus("Starting growth program");
-        careerContext = analysisResult || {};
+      if (careerDiscoveryService && typeof careerDiscoveryService.initializeDiscovery === 'function') {
+        const discoveryContext = await careerDiscoveryService.initializeDiscovery(userId, sessionId);
+        careerContext = discoveryContext || {};
       }
       console.log("✅ Career discovery completed:", careerContext);
 
@@ -154,9 +154,14 @@ class ProgramAwareCoachService {
         
         // Update career discovery context with new message if service is available
         let updatedCareerContext = careerContext || {};
-        if (careerDiscoveryService && typeof careerDiscoveryService.analyzeCareerStatus === 'function') {
-          const analysisResult = await careerDiscoveryService.analyzeCareerStatus(message);
-          updatedCareerContext = analysisResult || {};
+        if (careerDiscoveryService && typeof careerDiscoveryService.processDiscoveryMessage === 'function') {
+          try {
+            const discoveryResult = await careerDiscoveryService.processDiscoveryMessage(message, sessionId);
+            updatedCareerContext = discoveryResult.context || {};
+          } catch (error) {
+            console.log("Career discovery not available, using existing context");
+            updatedCareerContext = careerContext || {};
+          }
         }
         
         // Create context-rich prompt for enhanced AI coach
