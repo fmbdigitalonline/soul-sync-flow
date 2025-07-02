@@ -8,6 +8,8 @@ import { memoryInformedConversationService } from "./memory-informed-conversatio
 import { personalityVectorService } from "./personality-vector-service";
 import { useACSIntegration } from '@/hooks/use-acs-integration';
 import { ACSConfig, DialogueHealthMetrics, DialogueState, StateTransition, PromptStrategyConfig, ACSMetrics, HelpSignal } from '@/types/acs-types';
+import { modelRouterService } from "./model-router-service";
+import { costMonitoringService } from "./cost-monitoring-service";
 
 export type AgentType = "coach" | "guide" | "blend";
 
@@ -23,6 +25,26 @@ export interface StreamingResponse {
   onChunk: (chunk: string) => void;
   onComplete: (fullResponse: string) => void;
   onError: (error: Error) => void;
+}
+
+interface ConversationContext {
+  agentType: 'coach' | 'guide' | 'blend';
+  turnNumber: number;
+  emotionalThemes: boolean;
+  blueprintHeavy: boolean;
+  userMood: 'positive' | 'neutral' | 'negative';
+  complexity: 'low' | 'medium' | 'high';
+  importance: number;
+  sessionType: 'onboarding' | 'routine' | 'crisis' | 'exploration';
+}
+
+interface ModelSelection {
+  model: string;
+  maxTokens: number;
+  temperature: number;
+  reasoning: string;
+  layer: 'core_brain' | 'tmg' | 'pie' | 'acs' | 'exploration_coach';
+  costTier: 'premium' | 'standard' | 'economy';
 }
 
 class EnhancedAICoachService {
@@ -264,21 +286,25 @@ INTEGRATION APPROACH:
 Seamlessly blend VFP-Graph intelligence with the detailed blueprint information above. The VFP-Graph provides the foundational personality understanding, while the blueprint adds specific contextual details. Use both to create the most personalized and effective coaching experience possible.`;
   }
 
-  async sendMessage(
+  private async sendMessageWithLayeredModel(
     message: string,
     sessionId: string,
     usePersona: boolean = false,
     agentType: AgentType = "guide",
     language: string = "en"
-  ): Promise<{ response: string; conversationId: string }> {
+  ): Promise<{ response: string; conversationId: string; modelUsed: string }> {
     try {
-      console.log(`📤 VFP-Graph Enhanced AI Coach: Sending message (${agentType}, VFP-Graph: ${usePersona && !!this.vfpGraphCache.vector}, ACS: ${this.acsEnabled})`);
+      console.log(`📤 Layered AI Coach: Sending message (${agentType}, Persona: ${usePersona})`);
       
+      // Analyze conversation context for model selection
+      const conversationContext = await this.analyzeConversationContext(message, sessionId, agentType, usePersona);
+      
+      // Select optimal model using router
+      const modelSelection = this.selectOptimalModel(conversationContext);
+      
+      console.log(`🎯 Model Selection: ${modelSelection.model} (${modelSelection.layer}) - ${modelSelection.reasoning}`);
+
       const systemPrompt = await this.getOrCreatePersona(usePersona, agentType, message);
-      
-      if (systemPrompt && usePersona && this.vfpGraphCache.vector) {
-        console.log("🎯 Using VFP-Graph enhanced system prompt with 128D personality vector and ACS");
-      }
       
       const { data, error } = await supabase.functions.invoke("ai-coach", {
         body: {
@@ -288,45 +314,218 @@ Seamlessly blend VFP-Graph intelligence with the detailed blueprint information 
           agentType,
           language,
           systemPrompt,
-          maxTokens: 4000,
-          vfpGraphEnabled: !!(usePersona && this.vfpGraphCache.vector),
-          personalitySummary: this.vfpGraphCache.summary,
-          acsEnabled: this.acsEnabled,
+          maxTokens: modelSelection.maxTokens,
+          temperature: modelSelection.temperature,
+          contextDepth: this.getContextDepth(conversationContext),
+          modelOverride: modelSelection.model, // Pass selected model to edge function
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        // Try escalation if primary model fails
+        console.log('⚠️ Primary model failed, attempting escalation...');
+        const escalatedSelection = this.escalateOnFailure(modelSelection, error);
+        
+        const { data: escalatedData, error: escalatedError } = await supabase.functions.invoke("ai-coach", {
+          body: {
+            message,
+            sessionId,
+            includeBlueprint: usePersona,
+            agentType,
+            language,
+            systemPrompt,
+            maxTokens: escalatedSelection.maxTokens,
+            temperature: escalatedSelection.temperature,
+            contextDepth: 'deep',
+            modelOverride: escalatedSelection.model,
+          },
+        });
 
-      // Track VFP-Graph enhanced memory application
-      if (usePersona && this.currentUserId && this.vfpGraphCache.vector) {
-        try {
-          const memoryContext = await memoryInformedConversationService.buildMemoryContext(
-            message,
-            sessionId,
-            this.currentUserId
-          );
-          
-          await memoryInformedConversationService.trackMemoryApplication(
-            sessionId,
-            memoryContext,
-            message,
-            data.response
-          );
-          
-          console.log("✅ VFP-Graph enhanced memory application tracked");
-        } catch (error) {
-          console.error("❌ Error tracking VFP-Graph memory application:", error);
-        }
+        if (escalatedError) throw escalatedError;
+        
+        return {
+          response: escalatedData.response,
+          conversationId: escalatedData.conversationId || sessionId,
+          modelUsed: escalatedSelection.model + ' (escalated)'
+        };
       }
+
+      // Track model performance for optimization
+      await this.trackModelPerformance(modelSelection.model, data.response, message);
 
       return {
         response: data.response,
         conversationId: data.conversationId || sessionId,
+        modelUsed: modelSelection.model
       };
     } catch (error) {
-      console.error("❌ VFP-Graph Enhanced AI Coach: Error in sendMessage:", error);
+      console.error("❌ Layered AI Coach: Error in sendMessage:", error);
       throw error;
     }
+  }
+
+  private async analyzeConversationContext(
+    message: string, 
+    sessionId: string, 
+    agentType: AgentType, 
+    usePersona: boolean
+  ): Promise<ConversationContext> {
+    // Get conversation history to determine turn number
+    const turnNumber = await this.getConversationTurnNumber(sessionId);
+    
+    // Analyze message for emotional themes
+    const emotionalThemes = this.detectEmotionalThemes(message);
+    
+    // Check if blueprint-heavy conversation
+    const blueprintHeavy = usePersona && (
+      message.toLowerCase().includes('personality') ||
+      message.toLowerCase().includes('blueprint') ||
+      message.toLowerCase().includes('astrology') ||
+      message.toLowerCase().includes('mbti')
+    );
+
+    // Analyze complexity
+    const complexity = this.analyzeComplexity(message, emotionalThemes);
+    
+    // Determine importance
+    const importance = this.calculateImportance(message, emotionalThemes, blueprintHeavy);
+
+    // Determine session type
+    const sessionType = this.determineSessionType(turnNumber, emotionalThemes, message);
+
+    return {
+      agentType,
+      turnNumber,
+      emotionalThemes,
+      blueprintHeavy,
+      userMood: this.analyzeMood(message),
+      complexity,
+      importance,
+      sessionType
+    };
+  }
+
+  private selectOptimalModel(context: ConversationContext): ModelSelection {
+    return modelRouterService.selectModel(context);
+  }
+
+  private escalateOnFailure(originalSelection: ModelSelection, error: any): ModelSelection {
+    const reason = error.message?.includes('timeout') ? 'timeout' : 'low_quality';
+    return modelRouterService.escalateModel(originalSelection.model, reason);
+  }
+
+  private getContextDepth(context: ConversationContext): string {
+    if (context.emotionalThemes || context.complexity === 'high' || context.blueprintHeavy) {
+      return 'deep';
+    }
+    if (context.complexity === 'medium' || context.importance > 6) {
+      return 'normal';
+    }
+    return 'shallow';
+  }
+
+  private detectEmotionalThemes(message: string): boolean {
+    const emotionalKeywords = [
+      'feel', 'feeling', 'emotion', 'sad', 'happy', 'angry', 'frustrated', 
+      'excited', 'worried', 'anxious', 'stressed', 'overwhelmed', 'grateful',
+      'hurt', 'disappointed', 'proud', 'ashamed', 'confident', 'insecure'
+    ];
+    
+    const lowerMessage = message.toLowerCase();
+    return emotionalKeywords.some(keyword => lowerMessage.includes(keyword));
+  }
+
+  private analyzeComplexity(message: string, hasEmotionalThemes: boolean): 'low' | 'medium' | 'high' {
+    let score = 0;
+    
+    // Length factor
+    if (message.length > 500) score += 2;
+    else if (message.length > 200) score += 1;
+    
+    // Question complexity
+    const questionMarks = (message.match(/\?/g) || []).length;
+    if (questionMarks > 2) score += 2;
+    else if (questionMarks > 0) score += 1;
+    
+    // Emotional themes add complexity
+    if (hasEmotionalThemes) score += 1;
+    
+    // Abstract concepts
+    const abstractTerms = ['meaning', 'purpose', 'identity', 'values', 'beliefs', 'spirituality'];
+    if (abstractTerms.some(term => message.toLowerCase().includes(term))) {
+      score += 2;
+    }
+
+    if (score >= 4) return 'high';
+    if (score >= 2) return 'medium';
+    return 'low';
+  }
+
+  private calculateImportance(message: string, emotional: boolean, blueprintHeavy: boolean): number {
+    let importance = 5; // Base importance
+    
+    if (emotional) importance += 2;
+    if (blueprintHeavy) importance += 2;
+    if (message.toLowerCase().includes('help')) importance += 1;
+    if (message.toLowerCase().includes('stuck')) importance += 2;
+    if (message.toLowerCase().includes('crisis') || message.toLowerCase().includes('emergency')) importance += 3;
+    
+    return Math.min(importance, 10);
+  }
+
+  private analyzeMood(message: string): 'positive' | 'neutral' | 'negative' {
+    const positiveWords = ['good', 'great', 'excellent', 'happy', 'excited', 'grateful', 'wonderful'];
+    const negativeWords = ['bad', 'terrible', 'sad', 'angry', 'frustrated', 'worried', 'stressed'];
+    
+    const lowerMessage = message.toLowerCase();
+    const positiveCount = positiveWords.filter(word => lowerMessage.includes(word)).length;
+    const negativeCount = negativeWords.filter(word => lowerMessage.includes(word)).length;
+    
+    if (positiveCount > negativeCount + 1) return 'positive';
+    if (negativeCount > positiveCount + 1) return 'negative';
+    return 'neutral';
+  }
+
+  private determineSessionType(turnNumber: number, emotional: boolean, message: string): 'onboarding' | 'routine' | 'crisis' | 'exploration' {
+    if (turnNumber <= 3) return 'onboarding';
+    if (message.toLowerCase().includes('crisis') || message.toLowerCase().includes('emergency')) return 'crisis';
+    if (emotional || message.toLowerCase().includes('explore') || message.toLowerCase().includes('understand')) return 'exploration';
+    return 'routine';
+  }
+
+  private async getConversationTurnNumber(sessionId: string): Promise<number> {
+    // Simple implementation - in real app, query conversation history
+    return this.conversationCache.get(sessionId)?.length || 1;
+  }
+
+  private async trackModelPerformance(model: string, response: string, originalMessage: string): Promise<void> {
+    // Track metrics for optimization
+    const metrics = {
+      model,
+      responseLength: response.length,
+      messageLength: originalMessage.length,
+      timestamp: Date.now(),
+      quality: response.length > 50 ? 'good' : 'poor' // Simple quality heuristic
+    };
+    
+    console.log('📊 Model Performance:', metrics);
+    // In production, store these metrics for analysis
+  }
+
+  // Update existing sendMessage to use new layered approach
+  async sendMessage(
+    message: string,
+    sessionId: string,
+    usePersona: boolean = false,
+    agentType: AgentType = "guide",
+    language: string = "en"
+  ): Promise<{ response: string; conversationId: string }> {
+    const result = await this.sendMessageWithLayeredModel(message, sessionId, usePersona, agentType, language);
+    
+    return {
+      response: result.response,
+      conversationId: result.conversationId
+    };
   }
 
   private async getAuthenticatedHeaders(): Promise<{ [key: string]: string }> {

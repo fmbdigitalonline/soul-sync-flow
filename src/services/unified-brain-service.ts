@@ -6,6 +6,7 @@ import { ACSConfig, DialogueState } from "@/types/acs-types";
 import { LayeredBlueprint, AgentMode } from "@/types/personality-modules";
 import { pieService } from "./pie-service";
 import { PIEDataPoint } from "@/types/pie-types";
+import { costMonitoringService } from "./cost-monitoring-service";
 
 export interface UnifiedBrainResponse {
   response: string;
@@ -84,7 +85,7 @@ class UnifiedBrainService {
     }
 
     const startTime = performance.now();
-    console.log(`🧠 Processing message through unified brain - Mode: ${agentMode}, State: ${currentState}`);
+    console.log(`🧠 Processing message through unified brain with layered models - Mode: ${agentMode}, State: ${currentState}`);
 
     // PIE: Collect user data from conversation
     await this.collectPIEDataFromMessage(message, agentMode);
@@ -92,62 +93,68 @@ class UnifiedBrainService {
     // PIE: Get proactive insights for conversation context
     const pieInsights = await pieService.getInsightsForConversation(agentMode);
 
-    // Step 1: Store conversation turn in TMG (shared memory)
+    // Step 1: Store conversation turn in TMG (using TMG layer model)
     const memoryStartTime = performance.now();
     const memoryId = await this.storeInSharedMemory(message, sessionId, agentMode);
     const memoryLatency = performance.now() - memoryStartTime;
 
-    // Step 2: Generate personality-aware system prompt via VFP-Graph
+    // Record TMG layer usage
+    costMonitoringService.recordUsage('gpt-4o-mini', 200, 'tmg', !!memoryId, 0);
+
+    // Step 2: Generate personality-aware system prompt via VFP-Graph (Core Brain layer)
     const systemPrompt = await enhancedPersonalityEngine.generateSystemPrompt(agentMode, message);
     
-    // Step 3: Process through ACS with PIE context
-    const acsResult = await productionACSService.processMessage(
+    // Step 3: Process through Enhanced AI Coach with layered model selection
+    const coachStartTime = performance.now();
+    const acsResult = await enhancedAICoachService.sendMessage(
       message,
       sessionId,
-      this.getACSConfig(agentMode),
-      currentState
+      true, // Use persona for better personalization
+      agentMode as AgentType,
+      'en'
     );
+    const coachLatency = performance.now() - coachStartTime;
 
     // PIE: Enhance response with proactive insights if relevant
     let finalResponse = acsResult.response;
-    if (pieInsights.length > 0 && !acsResult.fallbackUsed) {
+    if (pieInsights.length > 0) {
       finalResponse = await this.enhanceResponseWithPIEInsights(
         acsResult.response,
         pieInsights,
         agentMode
       );
+      
+      // Record PIE layer usage
+      costMonitoringService.recordUsage('gpt-4o', 300, 'pie', true, finalResponse.length);
     }
 
     // Step 4: Retrieve relevant context from shared memory
     const memoryContext = await this.getSharedMemoryContext(sessionId, agentMode);
 
-    // Step 5: Enhance response with memory context if ACS didn't already handle it
-    if (!acsResult.fallbackUsed && memoryContext.relevantMemories.length > 0) {
-      finalResponse = await this.enhanceResponseWithMemory(
-        acsResult.response,
-        memoryContext,
-        agentMode
-      );
-    }
-
-    // Step 6: Store the AI response back to shared memory
+    // Step 5: Store the AI response back to shared memory (TMG layer)
     await this.storeInSharedMemory(finalResponse, sessionId, agentMode, false);
 
     const totalLatency = performance.now() - startTime;
     
-    console.log(`✅ Unified brain processing complete in ${totalLatency.toFixed(1)}ms`);
+    // Check for cost alerts
+    const costAlert = costMonitoringService.checkCostAlerts();
+    if (costAlert.alert) {
+      console.warn(`💸 ${costAlert.message}`);
+    }
+    
+    console.log(`✅ Unified brain processing complete in ${totalLatency.toFixed(1)}ms (Coach: ${coachLatency.toFixed(1)}ms, Memory: ${memoryLatency.toFixed(1)}ms)`);
 
     return {
       response: finalResponse,
-      newState: acsResult.newState,
+      newState: currentState, // Simplified for now
       memoryStored: !!memoryId,
       personalityApplied: !!systemPrompt,
-      interventionApplied: acsResult.interventionApplied,
+      interventionApplied: false, // Simplified for now
       continuityMaintained: memoryContext.relevantMemories.length > 0,
       brainMetrics: {
         memoryLatency,
         personalityCoherence: this.calculatePersonalityCoherence(),
-        adaptiveResponse: acsResult.interventionApplied || !acsResult.fallbackUsed
+        adaptiveResponse: pieInsights.length > 0
       }
     };
   }
@@ -405,8 +412,10 @@ class UnifiedBrainService {
     console.log("✅ Agent mode switched with continuity maintained");
   }
 
-  // Get brain health metrics
+  // Enhanced brain health metrics with cost awareness
   getBrainHealth(): any {
+    const costMetrics = costMonitoringService.getCostMetrics(1); // Last hour
+    
     return {
       memorySystemActive: !!this.userId,
       personalityEngineActive: !!this.currentBlueprint,
@@ -414,7 +423,13 @@ class UnifiedBrainService {
       pieSystemActive: pieService.getPIEHealth().enabled,
       unifiedBrainCoherence: this.calculatePersonalityCoherence(),
       sessionMemorySize: this.sessionMemory.size,
-      pie: pieService.getPIEHealth()
+      pie: pieService.getPIEHealth(),
+      costMetrics: {
+        hourlySpend: costMetrics.totalCost,
+        efficiency: costMetrics.efficiency,
+        recommendations: costMetrics.recommendations.slice(0, 3), // Top 3 recommendations
+        alerts: costMonitoringService.checkCostAlerts()
+      }
     };
   }
 }

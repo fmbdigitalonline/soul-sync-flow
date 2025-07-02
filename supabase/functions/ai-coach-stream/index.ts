@@ -52,11 +52,33 @@ serve(async (req) => {
       language = "en",
       systemPrompt,
       enableBlueprintFiltering = false,
-      maxTokens = 4000,
-      temperature = 0.7
+      maxTokens = 1000,
+      temperature = 0.7,
+      contextDepth = 'normal' // New parameter for layered model selection
     } = await req.json();
 
-    console.log(`🚀 Starting streaming chat completion (${agentType}, Blueprint: ${includeBlueprint}, MaxTokens: ${maxTokens}, User: ${user.id})`);
+    console.log(`🚀 Starting streaming chat completion (${agentType}, Blueprint: ${includeBlueprint}, Context: ${contextDepth}, User: ${user.id})`);
+
+    // Layered model selection for streaming
+    const selectStreamingModel = (agentType: string, contextDepth: string, includeBlueprint: boolean) => {
+      // Core Brain Layer - deep personality integration
+      if (includeBlueprint && (contextDepth === 'deep' || agentType === 'guide')) {
+        console.log('🧠 Streaming with Core Brain Layer: gpt-4o');
+        return 'gpt-4o';
+      }
+      
+      // Exploration Coach Layer - emotional themes
+      if (agentType === 'coach' && contextDepth === 'emotional') {
+        console.log('🧭 Streaming with Exploration Coach Layer: gpt-4o');
+        return 'gpt-4o';
+      }
+      
+      // ACS Layer - fast state switching and routine interactions
+      console.log('⚡ Streaming with ACS Layer: gpt-4o-mini');
+      return 'gpt-4o-mini';
+    };
+
+    const selectedModel = selectStreamingModel(agentType, contextDepth, includeBlueprint);
 
     // Build messages array
     const messages = [];
@@ -65,11 +87,11 @@ serve(async (req) => {
       console.log(`📝 Using custom system prompt (length: ${systemPrompt.length})`);
       messages.push({ role: 'system', content: systemPrompt });
     } else {
-      // Fallback system prompt
-      messages.push({ 
-        role: 'system', 
-        content: `You are a helpful AI assistant focused on ${agentType === 'coach' ? 'productivity and goal achievement' : 'personal growth and guidance'}. Provide thoughtful, complete responses.` 
-      });
+      // Fallback system prompt based on agent type
+      const fallbackPrompt = agentType === 'coach' 
+        ? `You are a helpful AI coach focused on productivity and goal achievement. Provide thoughtful, actionable responses.`
+        : `You are a helpful AI guide focused on personal growth and guidance. Provide thoughtful, complete responses.`;
+      messages.push({ role: 'system', content: fallbackPrompt });
     }
 
     messages.push({ role: 'user', content: message });
@@ -83,7 +105,17 @@ serve(async (req) => {
       });
     }
 
-    console.log('🤖 Making OpenAI API request...');
+    // Dynamic parameters based on selected model
+    const finalTemperature = selectedModel === 'gpt-4o' ? temperature : Math.min(temperature, 0.5);
+    const finalMaxTokens = selectedModel === 'gpt-4o' ? maxTokens : Math.min(maxTokens, 1000);
+
+    console.log('🎯 Streaming with layered model:', {
+      model: selectedModel,
+      temperature: finalTemperature,
+      maxTokens: finalMaxTokens
+    });
+
+    console.log('🤖 Making OpenAI streaming API request...');
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -91,10 +123,10 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: selectedModel,
         messages: messages,
-        temperature: temperature,
-        max_tokens: maxTokens,
+        temperature: finalTemperature,
+        max_tokens: finalMaxTokens,
         stream: true,
       }),
     });

@@ -20,8 +20,9 @@ serve(async (req) => {
       agentType, 
       systemPrompt, 
       language = 'en',
-      temperature,     // CRITICAL: Now dynamic from ACS
-      maxTokens       // CRITICAL: Now dynamic from ACS
+      temperature,
+      maxTokens,
+      contextDepth = 'normal' // New parameter for model selection
     } = await req.json();
 
     console.log('AI Coach request:', {
@@ -32,8 +33,9 @@ serve(async (req) => {
       includeBlueprint,
       hasCustomPrompt: !!systemPrompt,
       language,
-      acsTemperature: temperature,    // CRITICAL: Log ACS values
-      acsMaxTokens: maxTokens        // CRITICAL: Log ACS values
+      contextDepth,
+      acsTemperature: temperature,
+      acsMaxTokens: maxTokens
     });
 
     const openAIKey = Deno.env.get('OPENAI_API_KEY');
@@ -41,6 +43,27 @@ serve(async (req) => {
       const errorMessage = language === 'nl' ? 'OpenAI API sleutel niet geconfigureerd' : 'OpenAI API key not configured';
       throw new Error(errorMessage);
     }
+
+    // Layered model selection based on context
+    const selectModel = (agentType: string, contextDepth: string, includeBlueprint: boolean) => {
+      // Core Brain Layer - deep personality integration
+      if (includeBlueprint && (contextDepth === 'deep' || agentType === 'guide')) {
+        console.log('🧠 Using Core Brain Layer: gpt-4o for personality integration');
+        return 'gpt-4o';
+      }
+      
+      // Exploration Coach Layer - emotional themes and onboarding
+      if (agentType === 'coach' && contextDepth === 'emotional') {
+        console.log('🧭 Using Exploration Coach Layer: gpt-4o for emotional themes');
+        return 'gpt-4o';
+      }
+      
+      // Default to cost-effective model for routine interactions
+      console.log('⚡ Using optimized model: gpt-4o-mini for routine interactions');
+      return 'gpt-4o-mini';
+    };
+
+    const selectedModel = selectModel(agentType, contextDepth, includeBlueprint);
 
     // Use custom system prompt if provided, otherwise fall back to default
     const getSystemPrompt = (agentType: string, language: string) => {
@@ -108,14 +131,15 @@ INTEGRATION: Help users achieve goals while staying authentic to their inner wis
       }
     };
 
-    // CRITICAL FIX: Use dynamic parameters from ACS instead of hardcoded values
-    const finalTemperature = temperature !== undefined ? temperature : 0.7;
-    const finalMaxTokens = maxTokens !== undefined ? maxTokens : 1000;
+    // Dynamic parameter selection based on model
+    const finalTemperature = temperature !== undefined ? temperature : (selectedModel === 'gpt-4o' ? 0.7 : 0.5);
+    const finalMaxTokens = maxTokens !== undefined ? maxTokens : (selectedModel === 'gpt-4o' ? 1500 : 1000);
 
-    console.log('🎯 Using dynamic parameters:', {
+    console.log('🎯 Using layered model strategy:', {
+      model: selectedModel,
       temperature: finalTemperature,
       maxTokens: finalMaxTokens,
-      isACSControlled: temperature !== undefined || maxTokens !== undefined
+      reasoning: `${agentType} + ${contextDepth} + blueprint:${includeBlueprint}`
     });
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -125,7 +149,7 @@ INTEGRATION: Help users achieve goals while staying authentic to their inner wis
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4-1106-preview',
+        model: selectedModel,
         messages: [
           {
             role: 'system',
@@ -136,8 +160,8 @@ INTEGRATION: Help users achieve goals while staying authentic to their inner wis
             content: message
           }
         ],
-        temperature: finalTemperature,    // CRITICAL: Now dynamic
-        max_tokens: finalMaxTokens,       // CRITICAL: Now dynamic
+        temperature: finalTemperature,
+        max_tokens: finalMaxTokens,
       }),
     });
 
@@ -156,12 +180,14 @@ INTEGRATION: Help users achieve goals while staying authentic to their inner wis
       throw new Error(errorMessage);
     }
 
-    console.log('✅ AI Coach response generated successfully with ACS parameters');
+    console.log('✅ AI Coach response generated successfully with layered model strategy');
 
     return new Response(
       JSON.stringify({
         response: aiResponse,
         conversationId: sessionId,
+        modelUsed: selectedModel,
+        tokensUsed: finalMaxTokens
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

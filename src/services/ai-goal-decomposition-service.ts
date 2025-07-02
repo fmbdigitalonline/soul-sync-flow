@@ -1,4 +1,3 @@
-
 import { enhancedAICoachService } from './enhanced-ai-coach-service';
 import { BlueprintData } from './blueprint-service';
 import { v4 as uuidv4 } from 'uuid';
@@ -51,15 +50,15 @@ class AIGoalDecompositionService {
     blueprintData: BlueprintData
   ): Promise<AIGeneratedGoal> {
     const startTime = Date.now();
-    console.log('🤖 Starting AI-powered goal decomposition for:', {
+    console.log('🤖 Starting AI-powered goal decomposition with layered model strategy:', {
       goalTitle,
       category,
       timeframe,
       timestamp: startTime
     });
     
-    // Create comprehensive prompt for AI goal decomposition
-    const decompositionPrompt = this.createDecompositionPrompt(
+    // Create optimized prompt for AI goal decomposition
+    const decompositionPrompt = this.createOptimizedDecompositionPrompt(
       goalTitle,
       goalDescription,
       timeframe,
@@ -68,15 +67,16 @@ class AIGoalDecompositionService {
     );
 
     try {
-      // Use the enhanced AI coach service with coach mode for goal breakdown
+      // Use cost-effective model for goal decomposition
       const sessionId = enhancedAICoachService.createNewSession('coach');
       
-      console.log('📤 Sending request to AI coach service...', {
+      console.log('📤 Sending request to AI coach service with optimized model...', {
         sessionId,
         promptLength: decompositionPrompt.length,
         timestamp: Date.now()
       });
       
+      // Use layered model selection for goal decomposition
       const response = await enhancedAICoachService.sendMessage(
         decompositionPrompt,
         sessionId,
@@ -102,7 +102,7 @@ class AIGoalDecompositionService {
       );
 
       const endTime = Date.now();
-      console.log('✅ Goal decomposition completed successfully', {
+      console.log('✅ Goal decomposition completed successfully with layered models', {
         totalTime: endTime - startTime,
         goalId: parsedGoal.id,
         milestonesCount: parsedGoal.milestones.length,
@@ -119,81 +119,57 @@ class AIGoalDecompositionService {
         timestamp: errorTime
       });
       
-      // Check if it's a timeout or network error
-      if (error instanceof Error) {
-        if (error.message.includes('timeout') || error.message.includes('network')) {
-          console.log('🔄 Network/timeout error detected, creating enhanced fallback...');
-          return this.createEnhancedFallbackGoal(goalTitle, goalDescription, timeframe, category, blueprintData);
-        }
-      }
-      
-      // For other errors, still provide a fallback but log it as unexpected
-      console.log('🔄 Unexpected error, creating basic fallback...');
-      return this.createFallbackGoal(goalTitle, goalDescription, timeframe, category);
+      // Enhanced fallback with blueprint awareness
+      console.log('🔄 Creating enhanced blueprint-aware fallback...');
+      return this.createEnhancedFallbackGoal(goalTitle, goalDescription, timeframe, category, blueprintData);
     }
   }
 
-  private createDecompositionPrompt(
+  private createOptimizedDecompositionPrompt(
     goalTitle: string,
     goalDescription: string,
     timeframe: string,
     category: string,
     blueprintData: BlueprintData
   ): string {
-    return `I need you to create a personalized goal decomposition for my dream/goal. Please analyze my blueprint and create a strategic breakdown that honors my unique design.
+    // Compress blueprint context to reduce tokens (< 500 tokens)
+    const compressedBlueprint = this.compressBlueprintContext(blueprintData);
+    
+    return `Create a personalized goal breakdown for: "${goalTitle}"
 
-MY GOAL:
-Title: "${goalTitle}"
-Description: "${goalDescription}"
-Category: ${category}
-Timeframe: ${timeframe}
+GOAL DETAILS:
+- Description: ${goalDescription}
+- Category: ${category}
+- Timeframe: ${timeframe}
 
-BLUEPRINT CONTEXT:
-${this.formatBlueprintContext(blueprintData)}
+PERSONALITY (compressed): ${compressedBlueprint}
 
-Please create a personalized goal breakdown with:
+REQUIRED OUTPUT:
+1. 3-4 MILESTONES with dates and completion criteria
+2. 2-3 TASKS per milestone optimized for your personality
+3. KEY INSIGHTS about alignment with your natural patterns
 
-1. 3-5 MILESTONES that match my cognitive style and energy design
-   - Each milestone should have a title, description, target date, and completion criteria
-   - Explain how each milestone aligns with my blueprint (MBTI functions, Human Design strategy, etc.)
-
-2. 3-4 TASKS per milestone that honor my:
-   - Cognitive functions (${blueprintData?.cognition_mbti?.dominant_function} dominant, ${blueprintData?.cognition_mbti?.auxiliary_function} auxiliary)
-   - Energy strategy (${blueprintData?.energy_strategy_human_design?.strategy})
-   - Decision-making authority (${blueprintData?.energy_strategy_human_design?.authority})
-   - Life path themes (${blueprintData?.values_life_path?.life_themes?.join(', ')})
-
-3. PERSONALIZATION INSIGHTS:
-   - How this goal connects to my life path ${blueprintData?.values_life_path?.lifePathNumber} themes
-   - Potential resistance patterns to watch for
-   - Optimal timing and energy management strategies
-   - Ways to stay motivated using my excitement compass
-
-Please format your response as a detailed breakdown I can follow, making it specific to my blueprint design rather than generic advice. Focus on actionable steps that work WITH my natural patterns, not against them.`;
+Be specific, actionable, and honor the personality design. Focus on what matters most.`;
   }
 
-  private formatBlueprintContext(blueprintData: BlueprintData): string {
-    if (!blueprintData) return "Blueprint data not available";
+  private compressBlueprintContext(blueprintData: BlueprintData): string {
+    if (!blueprintData) return "Standard approach";
 
-    const context = [];
+    const compressed = [];
     
     if (blueprintData.cognition_mbti?.type) {
-      context.push(`MBTI: ${blueprintData.cognition_mbti.type} (${blueprintData.cognition_mbti.dominant_function} dominant)`);
+      compressed.push(`${blueprintData.cognition_mbti.type}`);
     }
     
-    if (blueprintData.energy_strategy_human_design?.type) {
-      context.push(`Human Design: ${blueprintData.energy_strategy_human_design.type} (${blueprintData.energy_strategy_human_design.strategy} strategy)`);
+    if (blueprintData.energy_strategy_human_design?.type && blueprintData.energy_strategy_human_design?.strategy) {
+      compressed.push(`${blueprintData.energy_strategy_human_design.type}-${blueprintData.energy_strategy_human_design.strategy}`);
     }
     
     if (blueprintData.values_life_path?.lifePathNumber) {
-      context.push(`Life Path: ${blueprintData.values_life_path.lifePathNumber} (${blueprintData.values_life_path.life_themes?.join(', ')})`);
-    }
-    
-    if (blueprintData.bashar_suite?.excitement_compass) {
-      context.push(`Excitement Compass: ${blueprintData.bashar_suite.excitement_compass}`);
+      compressed.push(`LP${blueprintData.values_life_path.lifePathNumber}`);
     }
 
-    return context.join('\n');
+    return compressed.length > 0 ? compressed.join(', ') : "Personalized approach";
   }
 
   private async parseAIResponse(
