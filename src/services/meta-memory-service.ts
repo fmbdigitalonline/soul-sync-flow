@@ -157,10 +157,11 @@ class MetaMemoryService {
     toMode: 'growth' | 'dreams'
   ): string[] {
     // Extract common triggers for mode transitions
-    const relevantPatterns = patterns.filter(p => 
-      p[`${fromMode}Relevance` as keyof CrossModePattern] > 0.5 &&
-      p[`${toMode}Relevance` as keyof CrossModePattern] > 0.5
-    );
+    const relevantPatterns = patterns.filter(p => {
+      const fromRelevance = fromMode === 'growth' ? p.growthRelevance : p.dreamsRelevance;
+      const toRelevance = toMode === 'growth' ? p.growthRelevance : p.dreamsRelevance;
+      return fromRelevance > 0.5 && toRelevance > 0.5;
+    });
 
     return relevantPatterns
       .slice(0, 3)
