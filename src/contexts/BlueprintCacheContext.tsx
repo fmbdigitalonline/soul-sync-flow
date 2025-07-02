@@ -35,7 +35,7 @@ export function BlueprintCacheProvider({ children }: { children: React.ReactNode
         console.log('🔬 RAW BLUEPRINT DATA STRUCTURE:', JSON.stringify(result.data, null, 2));
         
         // Convert raw blueprint to LayeredBlueprint format
-        const layeredBlueprint = convertToLayeredBlueprint(result.data);
+        const layeredBlueprint = convertBlueprintToLayered(result.data);
         console.log('🎯 Blueprint Cache: Converted to LayeredBlueprint');
         console.log('📊 CONVERTED BLUEPRINT SAMPLE:', {
           hasUserMeta: !!layeredBlueprint.user_meta,
@@ -108,26 +108,26 @@ export function useBlueprintCache() {
 }
 
 // Helper function to convert raw blueprint to LayeredBlueprint format
-function convertToLayeredBlueprint(rawData: BlueprintData): LayeredBlueprint {
+const convertBlueprintToLayered = (data: BlueprintData): LayeredBlueprint => {
   console.log('🔧 Converting raw data to LayeredBlueprint...');
-  console.log('🗂️ Raw data keys available:', Object.keys(rawData));
+  console.log('🗂️ Raw data keys available:', Object.keys(data));
   
   // Handle MBTI data - check multiple possible sources
-  const mbtiData = rawData.cognition_mbti || rawData.mbti || rawData.personality || {};
+  const mbtiData = data.cognition_mbti || data.mbti || data.personality || {};
   let mbtiType = "Unknown";
   
   // Extract MBTI type from user personality data if available
-  if (rawData.user_meta?.personality) {
+  if (data.user_meta?.personality) {
     // Check if personality is an object with likelyType property
-    if (typeof rawData.user_meta.personality === 'object' && rawData.user_meta.personality !== null) {
-      const personalityObj = rawData.user_meta.personality as any;
+    if (typeof data.user_meta.personality === 'object' && data.user_meta.personality !== null) {
+      const personalityObj = data.user_meta.personality as any;
       if (personalityObj.likelyType) {
         mbtiType = personalityObj.likelyType;
         console.log('🎯 Using MBTI from user personality object:', mbtiType);
       }
-    } else if (typeof rawData.user_meta.personality === 'string') {
+    } else if (typeof data.user_meta.personality === 'string') {
       // If it's a string, use it directly
-      mbtiType = rawData.user_meta.personality;
+      mbtiType = data.user_meta.personality;
       console.log('🎯 Using MBTI from user personality string:', mbtiType);
     }
   } else if (mbtiData?.type) {
@@ -136,16 +136,16 @@ function convertToLayeredBlueprint(rawData: BlueprintData): LayeredBlueprint {
   }
   
   // Extract other data sections
-  const hdData = rawData.energy_strategy_human_design || rawData.human_design || {};
-  const numerologyData = rawData.values_life_path || rawData.numerology || {};
-  const westernAstroData = rawData.archetype_western || rawData.astrology || {};
-  const chineseAstroData = rawData.archetype_chinese || {};
+  const hdData = data.energy_strategy_human_design || data.human_design || {};
+  const numerologyData = data.values_life_path || data.numerology || {};
+  const westernAstroData = data.archetype_western || data.astrology || {};
+  const chineseAstroData = data.archetype_chinese || {};
   
   console.log('🔍 Data extraction results:', {
     mbtiType,
-    hdType: hdData?.type || "Unknown",
-    lifePath: numerologyData?.life_path_number || numerologyData?.lifePathNumber || 1,
-    sunSign: westernAstroData?.sun_sign || westernAstroData?.sunSign || "Unknown",
+    hdType: hdData?.type || hdData?.design_type || hdData?.humanDesignType || "Generator",
+    lifePath: numerologyData?.life_path_number || numerologyData?.lifePathNumber || numerologyData?.lifePath || 1,
+    sunSign: westernAstroData?.sun_sign || westernAstroData?.sunSign || westernAstroData?.sun || "Unknown",
     chineseAnimal: chineseAstroData?.animal || "Unknown"
   });
 
@@ -174,15 +174,12 @@ function convertToLayeredBlueprint(rawData: BlueprintData): LayeredBlueprint {
       channels: hdData?.channels || [],
     },
     motivationBeliefEngine: {
-      mindset: rawData.bashar_suite?.mindset || "growth",
-      motivation: rawData.bashar_suite?.motivation || ["growth", "authenticity"],
-      stateManagement: rawData.bashar_suite?.state_management || "awareness",
-      coreBeliefs: rawData.bashar_suite?.core_beliefs || ["potential"],
-      drivingForces: rawData.bashar_suite?.driving_forces || ["purpose"],
-      excitementCompass: rawData.bashar_suite?.excitement_compass || "follow joy",
-      frequencyAlignment: rawData.bashar_suite?.frequency_alignment || "authentic self",
-      beliefInterface: rawData.bashar_suite?.belief_interface || [],
-      resistancePatterns: rawData.bashar_suite?.resistance_patterns || [],
+      coreBeliefs: data.bashar_suite?.mindset || [],
+      motivationalDrivers: data.bashar_suite?.motivation || [],
+      beliefPatterns: data.bashar_suite?.stateManagement || [],
+      motivationTriggers: data.bashar_suite?.drivingForces || [],
+      resistancePoints: data.bashar_suite?.resistancePatterns || [],
+      empowermentSources: data.bashar_suite?.excitementCompass || []
     },
     coreValuesNarrative: {
       lifePath: numerologyData?.life_path_number || numerologyData?.lifePathNumber || numerologyData?.lifePath || 1,
@@ -222,17 +219,13 @@ function convertToLayeredBlueprint(rawData: BlueprintData): LayeredBlueprint {
       collectiveInfluence: chineseAstroData?.collective_influence || chineseAstroData?.collectiveInfluence || "moderate",
     },
     timingOverlays: {
-      currentTransits: rawData.timing_overlays?.current_transits || [],
-      seasonalInfluences: rawData.timing_overlays?.seasonal_influences || [],
-      cyclicalPatterns: rawData.timing_overlays?.cyclical_patterns || [],
-      optimalTimings: rawData.timing_overlays?.optimal_timings || [],
-      energyWeather: rawData.timing_overlays?.energy_weather || "stable growth",
+      currentTransits: data.timing_overlays?.current_transits || [],
+      seasonalInfluences: data.timing_overlays?.seasonal_influences || [],
+      cyclicalPatterns: data.timing_overlays?.cyclical_patterns || [],
+      optimalTimings: data.timing_overlays?.optimal_timings || [],
+      energyWeather: data.timing_overlays?.energy_weather || "stable growth",
     },
-    user_meta: {
-      preferred_name: rawData.user_meta?.preferred_name,
-      full_name: rawData.user_meta?.full_name,
-      ...rawData.user_meta
-    },
+    user_meta: data.user_meta || {},
     humorProfile: {
       primaryStyle: 'warm-nurturer' as const,
       intensity: 'moderate' as const,

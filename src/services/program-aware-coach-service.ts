@@ -11,6 +11,11 @@ export interface ProgramState {
   completedLessons: string[];
   engagementScore: number;
   lastInteraction: Date | null;
+  discoveredInsights?: string[];
+  hasContext?: boolean;
+  program?: string;
+  week?: number;
+  stage?: string;
 }
 
 export class ProgramAwareCoachService {
@@ -21,6 +26,11 @@ export class ProgramAwareCoachService {
     completedLessons: [],
     engagementScore: 0,
     lastInteraction: null,
+    discoveredInsights: [],
+    hasContext: false,
+    program: 'default',
+    week: 1,
+    stage: 'initial'
   };
   private enhancedCoach: EnhancedAICoachService;
   private memoryService: typeof memoryInformedConversationService;
@@ -63,6 +73,11 @@ export class ProgramAwareCoachService {
         completedLessons: [],
         engagementScore: 75,
         lastInteraction: new Date(),
+        discoveredInsights: ["Self-awareness is key", "Creativity flows from authenticity"],
+        hasContext: true,
+        program: 'spiritual-growth',
+        week: 2,
+        stage: 'exploration'
       };
       console.log("✅ Program-Aware Coach Service: Program state loaded");
     } catch (error) {
@@ -123,7 +138,8 @@ export class ProgramAwareCoachService {
   }
 
   async sendProgramAwareMessage(message: string, sessionId: string): Promise<{ response: string; conversationId: string }> {
-    return await this.sendMessage(message, sessionId, true, 'guide', 'en');
+    const response = await this.sendMessage(message, sessionId, true, 'guide', 'en');
+    return { response: response.response, conversationId: response.conversationId };
   }
 
   async initializeBeliefDrilling(): Promise<void> {
@@ -139,6 +155,7 @@ export class ProgramAwareCoachService {
   }
 
   async updateConversationStage(stage: string): Promise<void> {
+    this.programState.stage = stage;
     console.log(`Updating conversation stage to: ${stage}`);
   }
 

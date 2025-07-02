@@ -1,3 +1,4 @@
+
 import { LayeredBlueprint } from "@/types/personality-modules";
 import { enhancedAICoachService } from "./enhanced-ai-coach-service";
 import { blueprintService } from "./blueprint-service";
@@ -36,12 +37,63 @@ class BlueprintAIIntegrationService {
     }
   }
 
-  async forceBlueprintSync(): Promise<{ success: boolean; timestamp: Date }> {
-    await this.performBlueprintSync();
-    return {
-      success: this.lastSyncTime !== null,
-      timestamp: this.lastSyncTime || new Date()
-    };
+  async forceBlueprintSync(): Promise<{ success: boolean; timestamp: Date; error?: string }> {
+    try {
+      await this.performBlueprintSync();
+      return {
+        success: this.lastSyncTime !== null,
+        timestamp: this.lastSyncTime || new Date()
+      };
+    } catch (error) {
+      return {
+        success: false,
+        timestamp: new Date(),
+        error: String(error)
+      };
+    }
+  }
+
+  async testBlueprintIntegration(): Promise<{ [key: string]: boolean }> {
+    try {
+      const testResults = {
+        blueprintLoadTest: false,
+        aiSyncTest: false,
+        personalityVectorTest: false
+      };
+
+      // Test blueprint loading
+      try {
+        const blueprintResult = await blueprintService.getActiveBlueprintData();
+        testResults.blueprintLoadTest = !!blueprintResult.data;
+      } catch (error) {
+        console.error('Blueprint load test failed:', error);
+      }
+
+      // Test AI sync
+      try {
+        await this.performBlueprintSync();
+        testResults.aiSyncTest = this.lastSyncTime !== null;
+      } catch (error) {
+        console.error('AI sync test failed:', error);
+      }
+
+      // Test personality vector generation
+      try {
+        const report = await this.generateIntegrationReport();
+        testResults.personalityVectorTest = report.personalityVectorStatus.isGenerated;
+      } catch (error) {
+        console.error('Personality vector test failed:', error);
+      }
+
+      return testResults;
+    } catch (error) {
+      console.error('Blueprint integration test failed:', error);
+      return {
+        blueprintLoadTest: false,
+        aiSyncTest: false,
+        personalityVectorTest: false
+      };
+    }
   }
 
   async generateIntegrationReport(): Promise<BlueprintIntegrationReport> {
