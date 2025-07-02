@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Send, Loader2, Brain, Activity, Database, Zap, Sparkles } from 'lucide-react';
 import { unifiedBrainService } from '@/services/unified-brain-service';
 import { AgentMode } from '@/types/personality-modules';
+import { AgentType } from '@/services/enhanced-ai-coach-service';
 import { DialogueState } from '@/types/acs-types';
 import { toast } from 'sonner';
 import { supabase } from "@/integrations/supabase/client";
@@ -48,7 +49,7 @@ const UnifiedCoachInterface: React.FC<UnifiedCoachInterfaceProps> = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Use PIE-enhanced coach instead of regular enhanced coach
-  const pieCoach = usePIEEnhancedCoach(agentMode);
+  const pieCoach = usePIEEnhancedCoach(agentMode as AgentType);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -83,7 +84,7 @@ const UnifiedCoachInterface: React.FC<UnifiedCoachInterfaceProps> = ({
     if (!brainInitialized || newMode === agentMode) return;
 
     try {
-      await unifiedBrainService.switchAgentMode(agentMode, newMode, sessionId);
+      await unifiedBrainService.switchAgentMode(agentMode as AgentType, newMode as AgentType, sessionId);
       onModeChange?.(newMode);
       toast.success(`Switched to ${newMode} mode with continuity maintained`);
     } catch (error) {
@@ -117,7 +118,7 @@ const UnifiedCoachInterface: React.FC<UnifiedCoachInterfaceProps> = ({
         content: msg.content,
         isUser: msg.sender === 'user',
         timestamp: msg.timestamp,
-        agentMode: msg.agentType || agentMode
+        agentMode: (msg.agentType as AgentMode) || agentMode
       }));
       
       // Update with converted messages, avoiding duplicates

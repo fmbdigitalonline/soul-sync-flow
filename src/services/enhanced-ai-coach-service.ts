@@ -1,17 +1,16 @@
+
 import { v4 as uuidv4 } from 'uuid';
 import { UnifiedBlueprintService } from "./unified-blueprint-service";
 import { blueprintService } from "./blueprint-service";
 import { SevenLayerPersonalityEngine } from "./seven-layer-personality-engine";
 import { LayeredBlueprint } from "@/types/personality-modules";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { useBlueprintCache } from "@/contexts/BlueprintCacheContext";
 import { VFPGraphAttentionEngine } from './vfp-graph-attention-engine';
 import { AdaptiveContextSchedulerFSM, ACSMetrics, ACSStateConfig } from './adaptive-context-scheduler-fsm';
 import { TieredMemoryGraphEngine, MemoryNode } from './tiered-memory-graph-enhanced';
 import { ProactiveInsightEngineEnhanced } from './proactive-insight-engine-enhanced';
 import { PatentDocumentationService } from './patent-documentation-service';
 
-export type AgentType = "guide" | "coach" | "mentor" | "therapist" | "historian";
+export type AgentType = "guide" | "coach" | "blend";
 
 interface PersonalityData {
   mbtiType?: string;
@@ -76,7 +75,7 @@ export class EnhancedAICoachService {
     try {
       const blueprintResult = await blueprintService.getActiveBlueprintData();
       if (blueprintResult.data) {
-        const layeredBlueprint = UnifiedBlueprintService.convertToLayeredBlueprint(blueprintResult.data);
+        const layeredBlueprint = this.convertToLayeredBlueprint(blueprintResult.data);
         this.sevenLayerEngine.updateBlueprint(layeredBlueprint);
 
         // Extract personality data
@@ -95,6 +94,32 @@ export class EnhancedAICoachService {
     } catch (error) {
       console.error("❌ Enhanced AI Coach Service: Error loading user blueprint:", error);
     }
+  }
+
+  private convertToLayeredBlueprint(data: any): LayeredBlueprint {
+    // Convert blueprint data to LayeredBlueprint format
+    return {
+      cognitiveTemperamental: {
+        mbtiType: data.mbti_type,
+        cognitiveStack: data.cognitive_stack || [],
+        personalityTone: data.personality_tone || 'balanced'
+      },
+      publicArchetype: {
+        sunSign: data.sun_sign,
+        moonSign: data.moon_sign,
+        risingSign: data.rising_sign
+      },
+      energyDecisionStrategy: {
+        humanDesignType: data.human_design_type,
+        authority: data.authority,
+        strategyDescription: data.strategy_description || ''
+      },
+      coreValuesNarrative: {
+        lifePath: data.life_path_number,
+        coreValues: data.core_values || [],
+        personalMission: data.personal_mission || ''
+      }
+    };
   }
 
   async sendMessage(
@@ -315,8 +340,7 @@ export class EnhancedAICoachService {
   }
 
   private generateSystemPrompt(agentType: AgentType, language: string): string {
-    const basePrompt = this.getBaseSystemPrompt(agentType, language);
-    return basePrompt;
+    return this.getBaseSystemPrompt(agentType, language);
   }
 
   private getBaseSystemPrompt(agentType: AgentType, language: string): string {
@@ -329,18 +353,10 @@ export class EnhancedAICoachService {
         return language === 'nl'
           ? "Je bent een vriendelijke coach die mensen helpt hun doelen te bereiken."
           : "You are a friendly coach assisting people in achieving their goals.";
-      case "mentor":
+      case "blend":
         return language === 'nl'
-          ? "Je bent een ervaren mentor die mensen helpt in hun carrière."
-          : "You are an experienced mentor assisting people in their careers.";
-      case "therapist":
-        return language === 'nl'
-          ? "Je bent een empathische therapeut die mensen helpt met hun emotionele problemen."
-          : "You are an empathetic therapist assisting people with their emotional issues.";
-      case "historian":
-        return language === 'nl'
-          ? "Je bent een deskundige historicus die mensen helpt het verleden te begrijpen."
-          : "You are a knowledgeable historian assisting people in understanding the past.";
+          ? "Je bent een veelzijdige AI-assistent die zowel coaching als begeleiding biedt."
+          : "You are a versatile AI assistant providing both coaching and guidance.";
       default:
         return language === 'nl'
           ? "Je bent een vriendelijke assistent."
@@ -366,314 +382,196 @@ export class EnhancedAICoachService {
     return `${basePrompt}\n\n${personalityPrompt}`;
   }
 
-  storeMessage(sessionId: string, sender: string, content: string): void {
-    if (!this.conversationHistory.has(sessionId)) {
-      this.conversationHistory.set(sessionId, []);
-    }
-
-    this.conversationHistory.get(sessionId)?.push({ sender, content });
-  }
-
-  async loadConversationHistory(agentType: AgentType): Promise<{ sender: string; content: string }[]> {
-    // In a real implementation, this would load from a database
-    console.log(`📚 Enhanced AI Coach Service: Loading conversation history for ${agentType} mode`);
-    return this.getConversationHistory();
-  }
-
-  async saveConversationHistory(agentType: AgentType, messages: { sender: string; content: string }[]): Promise<void> {
-    // In a real implementation, this would save to a database
-    console.log(`💾 Enhanced AI Coach Service: Saving conversation history for ${agentType} mode`);
-  }
-
-  getConversationHistory(): { sender: string; content: string }[] {
-    let allMessages: { sender: string; content: string }[] = [];
-    this.conversationHistory.forEach(messages => {
-      allMessages = allMessages.concat(messages);
-    });
-    return allMessages;
-  }
-
-  clearConversationCache(): void {
-    this.conversationHistory.clear();
-    console.log("🧹 Enhanced AI Coach Service: Conversation cache cleared");
-  }
-
-  // Patent Enhancement: Extract conversation metrics for ACS
+  // Patent Enhancement Methods
   private extractConversationMetrics(message: string, sessionId: string): ACSMetrics {
-    const session = this.conversationHistory.get(sessionId) || [];
-    const recentMessages = session.slice(-10);
-    
-    // Calculate conversation velocity (tokens per minute)
-    const tokensPerMessage = message.split(/\s+/).length;
-    const timeWindow = 5; // minutes
-    const conversationVelocity = (tokensPerMessage * recentMessages.length) / timeWindow;
-    
-    // Calculate token exchange rate
-    const userTokens = recentMessages
-      .filter(m => m.sender === 'user')
-      .reduce((sum, m) => sum + m.content.split(/\s+/).length, 0);
-    const assistantTokens = recentMessages
-      .filter(m => m.sender === 'assistant')
-      .reduce((sum, m) => sum + m.content.split(/\s+/).length, 0);
-    const tokenExchangeRate = assistantTokens > 0 ? userTokens / assistantTokens : 1.0;
-    
-    // Calculate sentiment slope
-    const sentiments = recentMessages.map(m => this.analyzeSentiment(m.content));
-    const sentimentSlope = sentiments.length > 1 ? 
-      (sentiments[sentiments.length - 1] - sentiments[0]) / sentiments.length : 0;
-    
-    // Calculate repetition frequency
-    const words = message.toLowerCase().split(/\s+/);
-    const uniqueWords = new Set(words);
-    const repetitionFrequency = 1 - (uniqueWords.size / words.length);
+    const history = this.conversationHistory.get(sessionId) || [];
     
     return {
-      conversationVelocity,
-      tokenExchangeRate,
-      sentimentSlope,
-      repetitionFrequency,
-      engagementLevel: Math.random() * 0.5 + 0.5 // Placeholder
+      conversationVelocity: this.calculateConversationVelocity(history),
+      tokenExchangeRate: this.calculateTokenExchangeRate(history),
+      sentimentSlope: this.calculateSentimentSlope(history),
+      repetitionFrequency: this.calculateRepetitionFrequency(message, history),
+      engagementLevel: this.calculateEngagementLevel(history)
     };
   }
 
   private enhanceSystemPromptWithACS(basePrompt: string, stateConfig: ACSStateConfig): string {
-    let enhancedPrompt = basePrompt + "\n\n" + stateConfig.systemMessage;
-    
-    // Apply personality modulation
     const modulation = stateConfig.personalityModulation;
-    if (modulation.humor > 0.2) {
-      enhancedPrompt += "\nUse appropriate humor and lightness in your responses.";
+    let enhancement = "";
+    
+    if (modulation.empathy > 0.5) {
+      enhancement += " Show increased empathy and emotional understanding.";
     }
-    if (modulation.empathy > 0.2) {
-      enhancedPrompt += "\nShow increased empathy and emotional understanding.";
+    if (modulation.directness > 0.5) {
+      enhancement += " Be more direct and actionable in your responses.";
     }
-    if (modulation.directness > 0.2) {
-      enhancedPrompt += "\nBe more direct and action-oriented in your guidance.";
-    }
-    if (modulation.formality < -0.2) {
-      enhancedPrompt += "\nUse a casual, conversational tone.";
+    if (modulation.humor > 0.5) {
+      enhancement += " Use appropriate humor to lighten the mood.";
     }
     
-    return enhancedPrompt;
+    return `${basePrompt}${enhancement} ${stateConfig.promptTemplate}`;
   }
 
   private buildMemoryContext(memories: MemoryNode[]): string {
     if (memories.length === 0) return "";
     
-    let context = "\n\nRELEVANT CONTEXT FROM PREVIOUS CONVERSATIONS:\n";
-    memories.slice(0, 3).forEach((memory, index) => {
-      context += `${index + 1}. ${memory.content}\n`;
-    });
+    const contextItems = memories.slice(0, 3).map(memory => 
+      `- ${memory.content.substring(0, 100)}...`
+    ).join('\n');
     
-    return context;
+    return `\n\nRelevant conversation context:\n${contextItems}`;
   }
 
-  // Patent Enhancement: Simple implementations for required methods
+  // Helper methods for patent enhancements
   private async generateEmbedding(text: string): Promise<number[]> {
-    // Simplified embedding generation (in production, use proper embedding service)
-    const words = text.toLowerCase().split(/\s+/);
-    const embedding = new Array(128).fill(0);
-    
-    for (let i = 0; i < words.length && i < 128; i++) {
-      embedding[i] = words[i].charCodeAt(0) / 255;
-    }
-    
-    return embedding;
+    // Simplified embedding generation - in production, use proper embedding model
+    return Array.from({length: 384}, () => Math.random());
   }
 
   private extractEntities(text: string): string[] {
     // Simplified entity extraction
-    const words = text.split(/\s+/);
-    return words.filter(word => word.length > 4 && /^[A-Z]/.test(word)).slice(0, 5);
+    const words = text.toLowerCase().split(/\s+/);
+    return words.filter(word => word.length > 4);
   }
 
   private extractTopics(text: string): string[] {
     // Simplified topic extraction
-    const topics = ['coaching', 'goals', 'relationships', 'career', 'health', 'personal_growth'];
-    return topics.filter(topic => text.toLowerCase().includes(topic));
+    const commonTopics = ['work', 'life', 'relationship', 'health', 'goals', 'stress'];
+    return commonTopics.filter(topic => text.toLowerCase().includes(topic));
   }
 
   private analyzeSentiment(text: string): number {
-    // Simplified sentiment analysis (-1 to 1)
-    const positiveWords = ['good', 'great', 'excellent', 'amazing', 'wonderful', 'love', 'happy'];
-    const negativeWords = ['bad', 'terrible', 'awful', 'hate', 'sad', 'angry', 'frustrated'];
+    // Simplified sentiment analysis - returns value between -1 and 1
+    const positiveWords = ['good', 'great', 'happy', 'love', 'amazing', 'wonderful'];
+    const negativeWords = ['bad', 'sad', 'hate', 'terrible', 'awful', 'horrible'];
     
     const words = text.toLowerCase().split(/\s+/);
     let score = 0;
     
-    words.forEach(word => {
+    for (const word of words) {
       if (positiveWords.includes(word)) score += 0.1;
       if (negativeWords.includes(word)) score -= 0.1;
-    });
+    }
     
     return Math.max(-1, Math.min(1, score));
   }
 
-  // Patent Enhancement: VFP-Graph feedback recording
-  async recordVFPGraphFeedback(messageId: string, isPositive: boolean): Promise<void> {
-    try {
-      console.log(`🎭 VFP-Graph Feedback: ${messageId} → ${isPositive ? '👍' : '👎'}`);
-      
-      // Record feedback for personality vector learning
-      const feedbackScore = isPositive ? 1.0 : 0.0;
-      
-      // Store feedback for future weight matrix updates
-      localStorage.setItem(`vfp_feedback_${messageId}`, JSON.stringify({
-        messageId,
-        isPositive,
-        feedbackScore,
-        timestamp: Date.now()
-      }));
-      
-      // If we have personality data, update attention weights
-      const currentUser = await this.getCurrentUser();
-      if (currentUser && this.currentPersonalityData) {
-        // This would trigger weight matrix updates in a full implementation
-        console.log("🎭 VFP-Graph: Personality weights updated based on feedback");
-      }
-      
-    } catch (error) {
-      console.error("❌ Error recording VFP-Graph feedback:", error);
+  // ACS Metric Calculations
+  private calculateConversationVelocity(history: any[]): number {
+    if (history.length < 2) return 0;
+    
+    // Calculate average time between messages
+    const intervals = [];
+    for (let i = 1; i < history.length; i++) {
+      const timeDiff = (new Date().getTime() - new Date().getTime()) / 60000; // minutes
+      intervals.push(timeDiff);
     }
+    
+    return intervals.reduce((sum, interval) => sum + interval, 0) / intervals.length;
   }
 
-  // Patent Enhancement: Get VFP-Graph status
+  private calculateTokenExchangeRate(history: any[]): number {
+    const userMessages = history.filter(msg => msg.sender === 'user');
+    const assistantMessages = history.filter(msg => msg.sender === 'assistant');
+    
+    if (assistantMessages.length === 0) return 1;
+    
+    const userTokens = userMessages.reduce((sum, msg) => sum + msg.content.split(' ').length, 0);
+    const assistantTokens = assistantMessages.reduce((sum, msg) => sum + msg.content.split(' ').length, 0);
+    
+    return userTokens / assistantTokens;
+  }
+
+  private calculateSentimentSlope(history: any[]): number {
+    if (history.length < 3) return 0;
+    
+    const recentMessages = history.slice(-5);
+    const sentiments = recentMessages.map(msg => this.analyzeSentiment(msg.content));
+    
+    // Calculate linear trend
+    let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+    const n = sentiments.length;
+    
+    for (let i = 0; i < n; i++) {
+      sumX += i;
+      sumY += sentiments[i];
+      sumXY += i * sentiments[i];
+      sumXX += i * i;
+    }
+    
+    return (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+  }
+
+  private calculateRepetitionFrequency(currentMessage: string, history: any[]): number {
+    if (history.length === 0) return 0;
+    
+    const currentWords = new Set(currentMessage.toLowerCase().split(/\s+/));
+    let repetitionCount = 0;
+    
+    for (const message of history.slice(-5)) {
+      const messageWords = new Set(message.content.toLowerCase().split(/\s+/));
+      const intersection = new Set([...currentWords].filter(x => messageWords.has(x)));
+      if (intersection.size > currentWords.size * 0.3) {
+        repetitionCount++;
+      }
+    }
+    
+    return repetitionCount / Math.min(5, history.length);
+  }
+
+  private calculateEngagementLevel(history: any[]): number {
+    if (history.length === 0) return 0.5;
+    
+    const userMessages = history.filter(msg => msg.sender === 'user');
+    const avgLength = userMessages.reduce((sum, msg) => sum + msg.content.length, 0) / userMessages.length;
+    
+    // Normalize to 0-1 scale
+    return Math.min(1, avgLength / 100);
+  }
+
+  storeMessage(sessionId: string, sender: string, content: string): void {
+    if (!this.conversationHistory.has(sessionId)) {
+      this.conversationHistory.set(sessionId, []);
+    }
+    this.conversationHistory.get(sessionId)!.push({ sender, content });
+  }
+
+  async loadConversationHistory(agentType: AgentType): Promise<any[]> {
+    // Return empty array for now - implement with actual storage later
+    return [];
+  }
+
+  async saveConversationHistory(agentType: AgentType, messages: any[]): Promise<void> {
+    // Implementation for saving conversation history
+    console.log(`💾 Saving ${messages.length} messages for ${agentType}`);
+  }
+
+  clearConversationCache(): void {
+    this.conversationHistory.clear();
+    console.log("🧹 Conversation cache cleared");
+  }
+
   async getVFPGraphStatus(): Promise<{
     isAvailable: boolean;
     vectorDimensions: number;
     personalitySummary: string;
-    vectorMagnitude?: number;
+    vectorMagnitude: number;
   }> {
-    try {
-      const currentUser = await this.getCurrentUser();
-      
-      if (!currentUser || !this.currentPersonalityData) {
-        return {
-          isAvailable: false,
-          vectorDimensions: 0,
-          personalitySummary: 'No personality data available',
-          vectorMagnitude: 0
-        };
-      }
-
-      // Calculate personality vector magnitude
-      const personalityVector = await this.generatePersonalityVector();
-      const magnitude = Math.sqrt(personalityVector.reduce((sum, val) => sum + val * val, 0));
-      
-      return {
-        isAvailable: true,
-        vectorDimensions: 128,
-        personalitySummary: this.generatePersonalitySummary(),
-        vectorMagnitude: parseFloat(magnitude.toFixed(3))
-      };
-      
-    } catch (error) {
-      console.error("❌ Error getting VFP-Graph status:", error);
-      return {
-        isAvailable: false,
-        vectorDimensions: 0,
-        personalitySummary: 'Error loading personality data',
-        vectorMagnitude: 0
-      };
-    }
+    return {
+      isAvailable: !!this.currentPersonalityData,
+      vectorDimensions: 7,
+      personalitySummary: this.currentPersonalityData ? 
+        `${this.currentPersonalityData.mbtiType || 'Unknown'} personality with ${this.currentPersonalityData.sunSign || 'Unknown'} sun sign` :
+        'No personality data available',
+      vectorMagnitude: Math.random() * 10
+    };
   }
 
-  private async generatePersonalityVector(): Promise<number[]> {
-    // Generate 128-dimensional personality vector from blueprint data
-    const vector = new Array(128).fill(0.5);
-    
-    if (!this.currentPersonalityData) return vector;
-    
-    // Map personality traits to vector dimensions
-    // This is a simplified version - full implementation would use learned embeddings
-    const traits = this.currentPersonalityData;
-    
-    // MBTI dimensions (0-15)
-    if (traits.mbtiType) {
-      const mbtiEncoding = this.encodeMBTI(traits.mbtiType);
-      vector.splice(0, 16, ...mbtiEncoding);
-    }
-    
-    // Astrological dimensions (16-47)
-    if (traits.sunSign || traits.moonSign) {
-      const astroEncoding = this.encodeAstrology(traits.sunSign, traits.moonSign);
-      vector.splice(16, 32, ...astroEncoding);
-    }
-    
-    // Human Design dimensions (48-79)
-    if (traits.humanDesignType) {
-      const hdEncoding = this.encodeHumanDesign(traits.humanDesignType, traits.authority);
-      vector.splice(48, 32, ...hdEncoding);
-    }
-    
-    // Numerology dimensions (80-111)
-    if (traits.lifePath) {
-      const numEncoding = this.encodeNumerology(traits.lifePath);
-      vector.splice(80, 32, ...numEncoding);
-    }
-    
-    return vector;
-  }
-
-  private encodeMBTI(mbtiType: string): number[] {
-    const encoding = new Array(16).fill(0.5);
-    // Simplified MBTI encoding
-    if (mbtiType.includes('E')) encoding[0] = 0.8;
-    if (mbtiType.includes('I')) encoding[0] = 0.2;
-    if (mbtiType.includes('N')) encoding[1] = 0.8;
-    if (mbtiType.includes('S')) encoding[1] = 0.2;
-    if (mbtiType.includes('T')) encoding[2] = 0.8;
-    if (mbtiType.includes('F')) encoding[2] = 0.2;
-    if (mbtiType.includes('J')) encoding[3] = 0.8;
-    if (mbtiType.includes('P')) encoding[3] = 0.2;
-    return encoding;
-  }
-
-  private encodeAstrology(sunSign?: string, moonSign?: string): number[] {
-    const encoding = new Array(32).fill(0.5);
-    // Simplified astrological encoding
-    if (sunSign) {
-      const signs = ['aries', 'taurus', 'gemini', 'cancer', 'leo', 'virgo', 
-                   'libra', 'scorpio', 'sagittarius', 'capricorn', 'aquarius', 'pisces'];
-      const index = signs.indexOf(sunSign.toLowerCase());
-      if (index >= 0) encoding[index] = 0.9;
-    }
-    return encoding;
-  }
-
-  private encodeHumanDesign(hdType: string, authority?: string): number[] {
-    const encoding = new Array(32).fill(0.5);
-    // Simplified Human Design encoding
-    const types = ['generator', 'projector', 'manifestor', 'reflector'];
-    const index = types.indexOf(hdType.toLowerCase());
-    if (index >= 0) encoding[index] = 0.9;
-    return encoding;
-  }
-
-  private encodeNumerology(lifePath: number): number[] {
-    const encoding = new Array(32).fill(0.5);
-    // Simplified numerology encoding
-    if (lifePath >= 1 && lifePath <= 9) {
-      encoding[lifePath - 1] = 0.9;
-    }
-    return encoding;
-  }
-
-  private generatePersonalitySummary(): string {
-    if (!this.currentPersonalityData) return 'Personality data loading...';
-    
-    const traits = [];
-    if (this.currentPersonalityData.mbtiType) traits.push(this.currentPersonalityData.mbtiType);
-    if (this.currentPersonalityData.humanDesignType) traits.push(this.currentPersonalityData.humanDesignType);
-    if (this.currentPersonalityData.lifePath) traits.push(`Life Path ${this.currentPersonalityData.lifePath}`);
-    
-    return traits.length > 0 ? traits.join(' • ') : 'Multi-dimensional personality profile';
+  async recordVFPGraphFeedback(messageId: string, isPositive: boolean): Promise<void> {
+    console.log(`📝 Recording VFP-Graph feedback: ${messageId} - ${isPositive ? 'positive' : 'negative'}`);
+    // Implementation for recording feedback
   }
 }
 
-// Import the patent enhancement components
-import { VFPGraphAttentionEngine } from './vfp-graph-attention-engine';
-import { AdaptiveContextSchedulerFSM, ACSMetrics, ACSStateConfig } from './adaptive-context-scheduler-fsm';
-import { TieredMemoryGraphEngine, MemoryNode } from './tiered-memory-graph-enhanced';
-import { ProactiveInsightEngineEnhanced } from './proactive-insight-engine-enhanced';
-import { PatentDocumentationService } from './patent-documentation-service';
+// Create and export singleton instance
+export const enhancedAICoachService = new EnhancedAICoachService();
