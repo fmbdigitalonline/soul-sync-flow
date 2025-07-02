@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { LifeDomain } from '@/types/growth-program';
 import { enhancedAICoachService } from './enhanced-ai-coach-service';
@@ -52,8 +51,9 @@ class ProgramAwareCoachService {
     try {
       // Use career discovery service for initial context if available
       let careerContext = {};
-      if (careerDiscoveryService && typeof careerDiscoveryService.getCareerContext === 'function') {
-        careerContext = await careerDiscoveryService.getCareerContext("");
+      if (careerDiscoveryService && typeof careerDiscoveryService.analyzeCareerStatus === 'function') {
+        const analysisResult = await careerDiscoveryService.analyzeCareerStatus("Starting growth program");
+        careerContext = analysisResult || {};
       }
       console.log("✅ Career discovery completed:", careerContext);
 
@@ -154,8 +154,9 @@ class ProgramAwareCoachService {
         
         // Update career discovery context with new message if service is available
         let updatedCareerContext = careerContext || {};
-        if (careerDiscoveryService && typeof careerDiscoveryService.getCareerContext === 'function') {
-          updatedCareerContext = await careerDiscoveryService.getCareerContext(message);
+        if (careerDiscoveryService && typeof careerDiscoveryService.analyzeCareerStatus === 'function') {
+          const analysisResult = await careerDiscoveryService.analyzeCareerStatus(message);
+          updatedCareerContext = analysisResult || {};
         }
         
         // Create context-rich prompt for enhanced AI coach
@@ -416,8 +417,8 @@ Be conversational, empathetic, and avoid generic responses. Draw from their pers
       // Add missing properties that are expected by components
       discoveredInsights: this.getAllDiscoveredInsights(),
       hasContext: this.conversationCache.size > 0,
-      program: null,
-      week: null,
+      program: this.getCurrentProgram(),
+      week: this.getCurrentWeek(),
       stage: this.getCurrentStage()
     };
   }
@@ -430,6 +431,20 @@ Be conversational, empathetic, and avoid generic responses. Draw from their pers
       }
     }
     return allInsights;
+  }
+
+  private getCurrentProgram(): any {
+    if (this.conversationCache.size === 0) return null;
+    const contexts = Array.from(this.conversationCache.values());
+    const latestContext = contexts[contexts.length - 1];
+    return latestContext?.program || null;
+  }
+
+  private getCurrentWeek(): any {
+    if (this.conversationCache.size === 0) return null;
+    const contexts = Array.from(this.conversationCache.values());
+    const latestContext = contexts[contexts.length - 1];
+    return latestContext?.week || null;
   }
 
   private getCurrentStage(): string {
