@@ -219,15 +219,15 @@ const Dreams = () => {
     return (
       <MainLayout>
         <ErrorBoundary>
-          <div className={`min-h-screen bg-gradient-to-br from-soul-purple/10 via-white to-soul-teal/5 flex items-center justify-center ${layout.padding} ${isMobile ? 'pb-20' : ''}`}>
-            <div className={`bg-white/80 backdrop-blur-lg rounded-2xl ${spacing.card} shadow-2xl border border-white/20 text-center ${layout.width} ${layout.maxWidth} mx-auto`}>
-              <div className={`w-12 h-12 mx-auto bg-gradient-to-br from-soul-purple to-soul-teal rounded-full mb-4 flex items-center justify-center ${isFoldDevice ? 'w-10 h-10' : ''}`}>
-                <Heart className={`h-6 w-6 text-white ${isFoldDevice ? 'h-5 w-5' : ''}`} />
+          <div className={`min-h-screen bg-gradient-to-br from-soul-purple/10 via-white to-soul-teal/5 flex items-center justify-center p-3 ${isMobile ? 'pb-20' : ''}`}>
+            <div className={`bg-white/80 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 text-center w-full max-w-sm mx-auto ${spacing.card}`}>
+              <div className={`w-10 h-10 mx-auto bg-gradient-to-br from-soul-purple to-soul-teal rounded-full mb-4 flex items-center justify-center ${isFoldDevice ? 'w-8 h-8' : ''}`}>
+                <Heart className={`h-5 w-5 text-white ${isFoldDevice ? 'h-4 w-4' : ''}`} />
               </div>
-              <h1 className={`font-bold mb-3 bg-gradient-to-r from-soul-purple to-soul-teal bg-clip-text text-transparent ${getTextSize('text-xl')}`}>
+              <h1 className={`font-bold mb-3 bg-gradient-to-r from-soul-purple to-soul-teal bg-clip-text text-transparent ${getTextSize('text-lg')}`}>
                 {t("dreams.title")}
               </h1>
-              <p className={`mb-6 text-gray-600 leading-relaxed ${getTextSize('text-sm')} ${isFoldDevice ? 'px-1' : 'px-2'}`}>{t("dreams.description")}</p>
+              <p className={`mb-6 text-gray-600 leading-relaxed px-2 ${getTextSize('text-sm')}`}>{t("dreams.description")}</p>
               <Button 
                 className={`w-full bg-gradient-to-r from-soul-purple to-soul-teal hover:shadow-lg transition-all duration-300 rounded-2xl text-white font-medium ${touchTargetSize} ${getTextSize('text-sm')}`}
                 onClick={() => window.location.href = '/auth'}
@@ -260,14 +260,14 @@ const Dreams = () => {
     return (
       <MainLayout>
         <div className={`min-h-screen flex flex-col bg-gradient-to-br from-soul-purple/5 to-white w-full ${isMobile ? 'pb-20' : ''}`}>
-          {/* Ultra-Narrow Optimized Header */}
-          <div className={`bg-white/80 backdrop-blur-lg border-b border-gray-100 sticky top-0 z-10 w-full ${spacing.container}`}>
-            <div className={`flex items-center justify-between w-full ${layout.maxWidth} mx-auto`}>
+          {/* Mobile Optimized Header */}
+          <div className={`bg-white/80 backdrop-blur-lg border-b border-gray-100 sticky top-0 z-10 w-full ${isMobile ? 'px-3 py-2' : 'px-4 py-3'}`}>
+            <div className={`flex items-center justify-between w-full max-w-4xl mx-auto`}>
               <Button 
                 variant="ghost" 
                 size="sm" 
                 onClick={() => setCurrentView('create')}
-                className={`flex items-center gap-2 text-gray-600 hover:text-soul-purple rounded-xl px-2 py-1 ${getTextSize('text-sm')} ${touchTargetSize}`}
+                className={`flex items-center gap-2 text-gray-600 hover:text-soul-purple rounded-xl ${isFoldDevice ? 'px-1 py-1' : 'px-2 py-1'} ${getTextSize('text-sm')} ${touchTargetSize}`}
               >
                 <ArrowLeft className={`h-4 w-4 ${isFoldDevice ? 'h-3 w-3' : ''}`} />
                 {!isFoldDevice && 'Back'}
@@ -278,11 +278,11 @@ const Dreams = () => {
                 </div>
                 <h2 className={`font-semibold text-gray-800 ${getTextSize('text-sm')} ${isFoldDevice ? 'hidden' : ''}`}>AI Dream Coach</h2>
               </div>
-              <div className={isFoldDevice ? 'w-8' : 'w-16'} />
+              <div className={isFoldDevice ? 'w-6' : 'w-16'} />
             </div>
           </div>
           
-          <div className={`flex-1 w-full overflow-hidden ${layout.maxWidth} mx-auto ${spacing.container}`}>
+          <div className={`flex-1 w-full overflow-hidden max-w-4xl mx-auto ${isMobile ? 'px-3' : 'px-4'}`}>
             <CoachInterface
               messages={messages}
               isLoading={isLoading}
@@ -301,15 +301,15 @@ const Dreams = () => {
     return (
       <MainLayout>
         <div className={`min-h-screen bg-gradient-to-br from-soul-purple/5 via-white to-soul-teal/5 w-full ${isMobile ? 'pb-20' : ''}`}>
-          <div className={`w-full ${layout.maxWidth} mx-auto py-3 ${layout.padding}`}>
+          <div className={`w-full max-w-4xl mx-auto py-3 ${isMobile ? 'px-3 pb-24' : 'px-6 pb-20'}`}>
             
-            {/* Ultra-Narrow Optimized Header */}
+            {/* Mobile Optimized Header */}
             <div className={`flex items-center justify-between mb-4 w-full ${isFoldDevice ? 'flex-col gap-2' : ''}`}>
               <Button 
                 variant="ghost" 
                 size="sm" 
                 onClick={() => setCurrentView('create')}
-                className={`flex items-center gap-2 text-gray-600 hover:text-soul-purple rounded-xl px-2 py-1 ${getTextSize('text-sm')} ${touchTargetSize}`}
+                className={`flex items-center gap-2 text-gray-600 hover:text-soul-purple rounded-xl ${isFoldDevice ? 'px-1 py-1' : 'px-2 py-1'} ${getTextSize('text-sm')} ${touchTargetSize}`}
               >
                 <ArrowLeft className={`h-4 w-4 ${isFoldDevice ? 'h-3 w-3' : ''}`} />
                 {isFoldDevice ? '' : 'New Dream'}
@@ -321,12 +321,12 @@ const Dreams = () => {
               <div className={isFoldDevice ? 'hidden' : 'w-20'} />
             </div>
 
-            {/* Single Card with Ultra-Narrow Optimized Navigation */}
+            {/* Mobile Responsive Single Card */}
             <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg border border-white/20 overflow-hidden w-full">
               
-              {/* Ultra-Narrow Tab Navigation */}
+              {/* Mobile Optimized Tab Navigation */}
               <div className={`border-b border-gray-100 bg-white/50 w-full ${isFoldDevice ? 'p-1' : 'p-2'}`}>
-                <div className={`${spacing.gap} w-full ${isFoldDevice ? 'grid grid-cols-2' : 'flex'}`}>
+                <div className={`w-full ${isFoldDevice ? 'grid grid-cols-2 gap-1' : 'flex gap-2'}`}>
                   <Button
                     variant={activeTab === 'journey' ? 'default' : 'ghost'}
                     size="sm"
@@ -418,7 +418,7 @@ const Dreams = () => {
                 )}
               </div>
 
-              {/* Content Area - Optimized for Ultra-Narrow */}
+              {/* Content Area - Mobile Optimized */}
               <div className={`w-full ${spacing.card}`}>
                 {activeTab === 'journey' && (
                   <div className="w-full">
@@ -490,7 +490,7 @@ const Dreams = () => {
     );
   }
 
-  // Create Dream View (default) - Mobile First
+  // Create Dream View (default) - Mobile Responsive
   if (currentView === 'decomposing') {
     return (
       <MainLayout>
@@ -522,28 +522,28 @@ const Dreams = () => {
     <MainLayout>
       <ErrorBoundary>
         <div className={`min-h-screen bg-gradient-to-br from-soul-purple/10 via-white to-soul-teal/5 w-full ${isMobile ? 'pb-20' : ''}`}>
-          <div className={`w-full ${layout.maxWidth} mx-auto py-4 ${isMobile ? 'pb-24' : 'pb-20'} ${layout.padding}`}>
+          <div className={`w-full max-w-lg mx-auto py-4 px-3 ${isMobile ? 'pb-24' : 'pb-20'}`}>
             
-            {/* Ultra-Narrow Optimized Hero Section */}
-            <div className={`text-center mb-6 ${spacing.container}`}>
+            {/* Mobile Optimized Hero Section */}
+            <div className={`text-center mb-6 px-2`}>
               <div className={`mx-auto bg-gradient-to-br from-soul-purple via-soul-purple to-soul-teal rounded-full flex items-center justify-center mb-4 shadow-xl ${isFoldDevice ? 'w-12 h-12' : 'w-16 h-16'}`}>
                 <Sparkles className={`text-white ${isFoldDevice ? 'h-6 w-6' : 'h-8 w-8'}`} />
               </div>
               <h1 className={`font-bold mb-3 bg-gradient-to-r from-soul-purple to-soul-teal bg-clip-text text-transparent ${getTextSize('text-xl')}`}>
                 {t("dreams.whatsYourDream")}
               </h1>
-              <p className={`text-gray-600 leading-relaxed mb-4 ${getTextSize('text-sm')} ${isFoldDevice ? 'px-1' : 'px-2'}`}>
+              <p className={`text-gray-600 leading-relaxed mb-4 ${getTextSize('text-sm')}`}>
                 {t("dreams.heroDescription")}
               </p>
-              <div className={`inline-flex items-center gap-2 bg-soul-purple/10 px-3 py-1 rounded-full ${isFoldDevice ? 'text-center' : ''}`}>
+              <div className={`inline-flex items-center gap-2 bg-soul-purple/10 px-3 py-1 rounded-full`}>
                 <div className="w-2 h-2 bg-soul-purple rounded-full animate-pulse"></div>
-                <p className={`text-soul-purple font-medium ${getTextSize('text-xs')} ${isFoldDevice ? 'text-center leading-tight' : ''}`}>{getBlueprintInsight()}</p>
+                <p className={`text-soul-purple font-medium ${getTextSize('text-xs')} text-center leading-tight`}>{getBlueprintInsight()}</p>
               </div>
             </div>
 
-            {/* Ultra-Narrow Optimized Dream Creation Form */}
-            <div className={`bg-white/80 backdrop-blur-lg rounded-2xl mb-4 shadow-lg border border-white/20 w-full ${spacing.card}`}>
-              <div className={`space-y-4 ${spacing.gap}`}>
+            {/* Mobile Optimized Dream Creation Form */}
+            <div className={`bg-white/80 backdrop-blur-lg rounded-2xl mb-4 shadow-lg border border-white/20 w-full p-4`}>
+              <div className={`space-y-4`}>
                 {/* Dream Input */}
                 <div className="space-y-2">
                   <label className={`font-semibold text-gray-700 block ${getTextSize('text-sm')}`}>{t("dreams.whatsYourDream")}</label>
@@ -566,8 +566,8 @@ const Dreams = () => {
                   />
                 </div>
 
-                {/* Category & Timeline - Stack on ultra-narrow */}
-                <div className={`space-y-4 ${isFoldDevice ? '' : 'grid grid-cols-2 gap-4 space-y-0'}`}>
+                {/* Category & Timeline - Stack on mobile */}
+                <div className={`space-y-4`}>
                   <div className="space-y-2">
                     <label className={`font-semibold text-gray-700 block ${getTextSize('text-sm')}`}>{t("dreams.category")}</label>
                     <Select 
@@ -630,7 +630,7 @@ const Dreams = () => {
               </div>
             </div>
 
-            {/* Ultra-Narrow Optimized Alternative Options */}
+            {/* Mobile Optimized Alternative Options */}
             <div className="space-y-3 w-full">
               <div className="text-center">
                 <p className={`text-gray-500 mb-3 ${getTextSize('text-xs')}`}>{t("dreams.aiInsighLabel")}</p>
@@ -640,7 +640,7 @@ const Dreams = () => {
                 <Button
                   variant="outline"
                   onClick={handleStartAIGuidance}
-                  className={`w-full justify-start text-left h-auto border-gray-200 hover:border-soul-purple/50 hover:bg-soul-purple/5 rounded-xl transition-all duration-300 ${spacing.card}`}
+                  className={`w-full justify-start text-left h-auto border-gray-200 hover:border-soul-purple/50 hover:bg-soul-purple/5 rounded-xl transition-all duration-300 p-4`}
                 >
                   <div className="flex items-center w-full">
                     <div className={`bg-gradient-to-br from-soul-teal/20 to-soul-teal/10 rounded-xl flex items-center justify-center mr-3 flex-shrink-0 ${isFoldDevice ? 'w-8 h-8' : 'w-10 h-10'}`}>
@@ -656,7 +656,7 @@ const Dreams = () => {
                 <Button
                   variant="outline"
                   onClick={() => setCurrentView('journey')}
-                  className={`w-full justify-start text-left h-auto border-gray-200 hover:border-soul-purple/50 hover:bg-soul-purple/5 rounded-xl transition-all duration-300 ${spacing.card}`}
+                  className={`w-full justify-start text-left h-auto border-gray-200 hover:border-soul-purple/50 hover:bg-soul-purple/5 rounded-xl transition-all duration-300 p-4`}
                 >
                   <div className="flex items-center w-full">
                     <div className={`bg-gradient-to-br from-soul-purple/20 to-soul-purple/10 rounded-xl flex items-center justify-center mr-3 flex-shrink-0 ${isFoldDevice ? 'w-8 h-8' : 'w-10 h-10'}`}>
