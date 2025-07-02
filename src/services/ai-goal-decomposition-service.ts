@@ -1,3 +1,4 @@
+
 import { enhancedAICoachService } from './enhanced-ai-coach-service';
 import { BlueprintData } from './blueprint-service';
 import { v4 as uuidv4 } from 'uuid';
@@ -240,7 +241,9 @@ Please format your response as a detailed breakdown I can follow, making it spec
     const matches = response.match(milestonePattern) || [];
     
     matches.forEach((match, index) => {
-      const title = match.replace(/(?:MILESTONE|Milestone)\s*\d*[:\-]?\s*/i, '').trim();
+      // Ensure we have a string before calling replace
+      const matchStr = String(match);
+      const title = matchStr.replace(/(?:MILESTONE|Milestone)\s*\d*[:\-]?\s*/i, '').trim();
       if (title) {
         milestones.push({
           id: uuidv4(),
