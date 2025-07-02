@@ -22,8 +22,10 @@ import PersonaTest from "./pages/PersonaTest";
 import SevenLayerTest from "./pages/SevenLayerTest";
 import Phase3MemoryTestPage from "./pages/Phase3MemoryTest";
 import TestEnvironmentPage from "./pages/TestEnvironmentPage";
+import AdminDashboard from "@/pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
+import MainLayout from "./components/Layout/MainLayout";
 import { AuthProvider } from "./contexts/AuthContext";
 import { BlueprintCacheProvider } from "./contexts/BlueprintCacheContext";
 import { SoulOrbProvider } from "./contexts/SoulOrbContext";
@@ -31,12 +33,16 @@ import { LanguageProvider } from "./contexts/LanguageContext";
 import { ModeProvider } from "./contexts/ModeContext";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 
-// Create stable QueryClient instance outside of component to prevent recreation
+// Create stable QueryClient instance with optimized settings
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
       refetchOnWindowFocus: false,
+      refetchOnMount: true,
+      retry: 2,
+      retryDelay: 1000,
     },
   },
 });
@@ -63,28 +69,84 @@ const RootLayout = () => {
   );
 };
 
+// Unified router configuration with all routes
 const router = createBrowserRouter([
   {
     path: "/",
     element: <RootLayout />,
     children: [
-      { index: true, element: <Index /> },
-      { path: "auth", element: <Auth /> },
-      { path: "onboarding", element: <ProtectedRoute><Onboarding /></ProtectedRoute> },
-      { path: "dashboard", element: <ProtectedRoute><Dashboard /></ProtectedRoute> },
-      { path: "blueprint", element: <ProtectedRoute><Blueprint /></ProtectedRoute> },
-      { path: "coach", element: <ProtectedRoute><Coach /></ProtectedRoute> },
-      { path: "tasks", element: <ProtectedRoute><Tasks /></ProtectedRoute> },
-      { path: "dreams", element: <ProtectedRoute><Dreams /></ProtectedRoute> },
-      { path: "spiritual-growth", element: <ProtectedRoute><SpiritualGrowth /></ProtectedRoute> },
-      { path: "profile", element: <ProtectedRoute><Profile /></ProtectedRoute> },
-      { path: "test-ephemeris", element: <TestEphemeris /> },
-      { path: "human-design-debug", element: <HumanDesignDebug /> },
-      { path: "persona-test", element: <PersonaTest /> },
-      { path: "seven-layer-test", element: <ProtectedRoute><SevenLayerTest /></ProtectedRoute> },
-      { path: "phase3-memory-test", element: <ProtectedRoute><Phase3MemoryTestPage /></ProtectedRoute> },
-      { path: "test-environment", element: <ProtectedRoute><TestEnvironmentPage /></ProtectedRoute> },
-      { path: "*", element: <NotFound /> }
+      { 
+        index: true, 
+        element: <MainLayout><Index /></MainLayout> 
+      },
+      { 
+        path: "auth", 
+        element: <Auth /> 
+      },
+      { 
+        path: "onboarding", 
+        element: <ProtectedRoute><MainLayout><Onboarding /></MainLayout></ProtectedRoute> 
+      },
+      { 
+        path: "dashboard", 
+        element: <ProtectedRoute><MainLayout><Dashboard /></MainLayout></ProtectedRoute> 
+      },
+      { 
+        path: "blueprint", 
+        element: <ProtectedRoute><MainLayout><Blueprint /></MainLayout></ProtectedRoute> 
+      },
+      { 
+        path: "coach", 
+        element: <ProtectedRoute><MainLayout><Coach /></MainLayout></ProtectedRoute> 
+      },
+      { 
+        path: "tasks", 
+        element: <ProtectedRoute><MainLayout><Tasks /></MainLayout></ProtectedRoute> 
+      },
+      { 
+        path: "dreams", 
+        element: <ProtectedRoute><MainLayout><Dreams /></MainLayout></ProtectedRoute> 
+      },
+      { 
+        path: "spiritual-growth", 
+        element: <ProtectedRoute><MainLayout><SpiritualGrowth /></MainLayout></ProtectedRoute> 
+      },
+      { 
+        path: "profile", 
+        element: <ProtectedRoute><MainLayout><Profile /></MainLayout></ProtectedRoute> 
+      },
+      { 
+        path: "admin", 
+        element: <ProtectedRoute><MainLayout><AdminDashboard /></MainLayout></ProtectedRoute> 
+      },
+      { 
+        path: "test-ephemeris", 
+        element: <TestEphemeris /> 
+      },
+      { 
+        path: "human-design-debug", 
+        element: <HumanDesignDebug /> 
+      },
+      { 
+        path: "persona-test", 
+        element: <PersonaTest /> 
+      },
+      { 
+        path: "seven-layer-test", 
+        element: <ProtectedRoute><MainLayout><SevenLayerTest /></MainLayout></ProtectedRoute> 
+      },
+      { 
+        path: "phase3-memory-test", 
+        element: <ProtectedRoute><MainLayout><Phase3MemoryTestPage /></MainLayout></ProtectedRoute> 
+      },
+      { 
+        path: "test-environment", 
+        element: <ProtectedRoute><MainLayout><TestEnvironmentPage /></MainLayout></ProtectedRoute> 
+      },
+      { 
+        path: "*", 
+        element: <NotFound /> 
+      }
     ]
   }
 ]);

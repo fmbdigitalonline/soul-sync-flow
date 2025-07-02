@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { blueprintService, BlueprintData } from '@/services/blueprint-service';
 import { useAuth } from '@/contexts/AuthContext';
@@ -18,13 +18,16 @@ const BlueprintCacheContext = createContext<BlueprintCacheContextType | undefine
 export function BlueprintCacheProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   
+  // Memoize query key to prevent unnecessary re-renders
+  const queryKey = useMemo(() => ['blueprint-cache', user?.id], [user?.id]);
+  
   const {
     data: blueprintResult,
     isLoading,
     error,
     refetch: queryRefetch
   } = useQuery({
-    queryKey: ['blueprint-cache', user?.id],
+    queryKey,
     queryFn: async () => {
       if (!user) return { data: null, error: 'No user' };
       
@@ -71,13 +74,14 @@ export function BlueprintCacheProvider({ children }: { children: React.ReactNode
     await queryRefetch();
   };
 
-  const value: BlueprintCacheContextType = {
+  // Memoize the context value to prevent unnecessary re-renders
+  const value: BlueprintCacheContextType = useMemo(() => ({
     blueprintData: blueprintResult?.data || null,
     loading: isLoading,
     error: blueprintResult?.error || (error as Error)?.message || null,
     refetch,
     hasBlueprint: !!blueprintResult?.data && !blueprintResult?.error
-  };
+  }), [blueprintResult, isLoading, error, refetch]);
 
   // Log state changes for debugging
   useEffect(() => {
@@ -231,7 +235,7 @@ const convertBlueprintToLayered = (data: BlueprintData): LayeredBlueprint => {
       energyWeather: data.timing_overlays?.energy_weather || "stable growth",
     },
     user_meta: {
-      preferred_name: safeUserMeta.preferred_name,
+      preferred_name: safeUserMeta.preferred_name as any,
       full_name: safeUserMeta.full_name,
       ...safeUserMeta
     },
@@ -324,4 +328,4 @@ const convertBlueprintToLayered = (data: BlueprintData): LayeredBlueprint => {
   });
 
   return converted;
-}
+};
