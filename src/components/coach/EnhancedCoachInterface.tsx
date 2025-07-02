@@ -140,7 +140,6 @@ export default function EnhancedCoachInterface({
             <AgentSelector
               currentAgent={currentAgent}
               onAgentChange={handleAgentSwitch}
-              personaReady={personaReady}
             />
           </div>
           
@@ -220,7 +219,6 @@ export default function EnhancedCoachInterface({
             <AgentSelector
               currentAgent={currentAgent}
               onAgentChange={switchAgent}
-              personaReady={personaReady}
             />
           </div>
           
@@ -269,7 +267,7 @@ export default function EnhancedCoachInterface({
                   >
                     <div className={`${getTextSize('text-sm')} break-words`}>
                       {message.isStreaming ? (
-                        <TypewriterText text={message.content} />
+                        <TypewriterText text={message.content} isStreaming={true} />
                       ) : (
                         message.content
                       )}
@@ -282,7 +280,7 @@ export default function EnhancedCoachInterface({
                     {!message.isUser && !message.isStreaming && (
                       <VFPGraphFeedback
                         messageId={message.id}
-                        onFeedback={(isPositive) => recordVFPGraphFeedback(message.id, isPositive)}
+                        onFeedbackGiven={(isPositive) => recordVFPGraphFeedback(message.id, isPositive)}
                       />
                     )}
                   </div>
@@ -294,7 +292,7 @@ export default function EnhancedCoachInterface({
                 <div className="flex justify-start">
                   <div className="max-w-[85%] sm:max-w-[80%] md:max-w-[70%] rounded-lg px-3 md:px-4 py-2 md:py-3 bg-muted">
                     <div className={`${getTextSize('text-sm')} break-words`}>
-                      <TypewriterText text={streamingContent} />
+                      <TypewriterText text={streamingContent} isStreaming={true} />
                     </div>
                   </div>
                 </div>
