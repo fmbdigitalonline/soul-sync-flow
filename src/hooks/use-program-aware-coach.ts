@@ -1,9 +1,9 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { programAwareCoachService, Message } from '@/services/program-aware-coach-service';
 import { useAuth } from '@/contexts/AuthContext';
 import { LifeDomain } from '@/types/growth-program';
 import { useConversationRecovery } from './use-conversation-recovery';
+import { useStreamingMessage } from './use-streaming-message';
 
 export const useProgramAwareCoach = () => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -14,6 +14,7 @@ export const useProgramAwareCoach = () => {
   const { user } = useAuth();
   
   const { saveConversation, loadConversation } = useConversationRecovery();
+  const { streamingContent, isStreaming, streamText, resetStreaming } = useStreamingMessage();
 
   // Auto-save conversations with error handling
   useEffect(() => {
@@ -44,6 +45,7 @@ export const useProgramAwareCoach = () => {
 
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
+    resetStreaming();
 
     try {
       const sessionId = currentSessionId || `session_${user.id}_${Date.now()}`;
@@ -59,28 +61,42 @@ export const useProgramAwareCoach = () => {
         true // Use enhanced brain
       );
 
+      // Create assistant message with streaming
       const assistantMessage: Message = {
         id: `msg_${Date.now()}_assistant`,
-        content: response.response,
+        content: '', // Start empty for streaming
         sender: 'assistant',
         timestamp: new Date(),
       };
 
-      setMessages(prev => {
-        const updatedMessages = [...prev, assistantMessage];
-        
-        // Save conversation state with recovery context
-        if (sessionId) {
-          saveConversation(sessionId, updatedMessages, undefined, {
-            stage: 'belief_drilling',
-            lastUserMessage: content,
-            progressPercentage: response.progressPercentage,
-            keyInsights: response.keyInsights,
-            coreChallenges: response.coreChallenges
-          });
-        }
-        return updatedMessages;
-      });
+      setMessages(prev => [...prev, assistantMessage]);
+
+      // Start slow typewriter streaming of the response
+      setTimeout(() => {
+        streamText(response.response, 75); // Slow, contemplative speed
+      }, 300);
+
+      // Update the message content after streaming completes
+      setTimeout(() => {
+        setMessages(prev => 
+          prev.map(msg => 
+            msg.id === assistantMessage.id 
+              ? { ...msg, content: response.response }
+              : msg
+          )
+        );
+      }, response.response.length * 75 + 1000);
+
+      // Save conversation state with recovery context
+      if (sessionId) {
+        saveConversation(sessionId, [...messages, userMessage, { ...assistantMessage, content: response.response }], undefined, {
+          stage: 'belief_drilling',
+          lastUserMessage: content,
+          progressPercentage: response.progressPercentage,
+          keyInsights: response.keyInsights,
+          coreChallenges: response.coreChallenges
+        });
+      }
 
       // Reset error count on successful message
       setErrorCount(0);
@@ -89,19 +105,56 @@ export const useProgramAwareCoach = () => {
       console.error('Error sending program-aware message:', error);
       setErrorCount(prev => prev + 1);
       
-      // Provide error recovery response
+      // Provide error recovery response with slow streaming
       const errorMessage: Message = {
         id: `msg_${Date.now()}_error`,
-        content: 'I apologize, but I encountered an issue. Let me try to help you differently. Could you rephrase what you were trying to share?',
+        content: '',
         sender: 'assistant',
         timestamp: new Date(),
       };
 
       setMessages(prev => [...prev, errorMessage]);
+      
+      const errorText = 'I apologize, but I encountered an issue. Let me try to help you differently. Could you rephrase what you were trying to share?';
+      setTimeout(() => {
+        streamText(errorText, 80);
+      }, 300);
+
     } finally {
       setIsLoading(false);
     }
-  }, [user, isLoading, currentSessionId, saveConversation, errorCount]);
+  }, [user, isLoading, currentSessionId, saveConversation, errorCount, streamText, resetStreaming]);
+
+  const resetConversation = useCallback(() => {
+    setMessages([]);
+    setHasInitialized(false);
+    setErrorCount(0);
+    resetStreaming();
+    
+    // Clear session data
+    if (currentSessionId) {
+      programAwareCoachService.clearSession(currentSessionId);
+    }
+    setCurrentSessionId('');
+  }, [currentSessionId, resetStreaming]);
+
+  const getProgramContext = useCallback(() => {
+    return programAwareCoachService.getCurrentContext();
+  }, []);
+
+  const initializeConversation = useCallback(async () => {
+    if (!user || hasInitialized) return;
+    
+    setHasInitialized(true);
+    
+    try {
+      await programAwareCoachService.initializeForUser(user.id);
+      console.log("✅ Program-aware coach initialized with enhanced brain");
+    } catch (error) {
+      console.error("Error initializing program-aware coach:", error);
+      setErrorCount(prev => prev + 1);
+    }
+  }, [user, hasInitialized]);
 
   const initializeBeliefDrilling = useCallback(async (domain: LifeDomain) => {
     if (!user) return;
@@ -122,29 +175,44 @@ export const useProgramAwareCoach = () => {
 
       const assistantMessage: Message = {
         id: `msg_${Date.now()}_assistant`,
-        content: response.response,
+        content: '',
         sender: 'assistant',
         timestamp: new Date(),
       };
 
-      // Set fresh conversation with enhanced greeting
+      // Set fresh conversation with slow streaming greeting
       setMessages([assistantMessage]);
+      
+      // Start slow typewriter streaming
+      setTimeout(() => {
+        streamText(response.response, 80);
+      }, 500);
 
-      console.log("✅ Belief drilling initialized with enhanced brain integration");
+      // Update message after streaming
+      setTimeout(() => {
+        setMessages([{ ...assistantMessage, content: response.response }]);
+      }, response.response.length * 80 + 1000);
+
+      console.log("✅ Belief drilling initialized with slow streaming");
 
     } catch (error) {
       console.error('Error initializing belief drilling:', error);
       
       const errorMessage: Message = {
         id: `msg_${Date.now()}_error`,
-        content: 'Welcome to your growth journey. I apologize for the technical issue, but I\'m here to help you explore and grow. What would you like to focus on?',
+        content: '',
         sender: 'assistant',
         timestamp: new Date(),
       };
 
       setMessages([errorMessage]);
+      
+      const fallbackText = 'Welcome to your growth journey. I apologize for the technical issue, but I\'m here to help you explore and grow. What would you like to focus on?';
+      setTimeout(() => {
+        streamText(fallbackText, 80);
+      }, 300);
     }
-  }, [user]);
+  }, [user, streamText]);
 
   const recoverConversation = useCallback(async (sessionId: string) => {
     if (!user) return;
@@ -163,11 +231,11 @@ export const useProgramAwareCoach = () => {
           sender: msg.sender || 'user',
           timestamp: new Date(msg.timestamp || Date.now())
         }));
-        
+          
         setMessages(formattedMessages);
         setCurrentSessionId(sessionId);
         setErrorCount(0); // Reset error count on successful recovery
-        
+          
         console.log('✅ Enhanced conversation recovered:', formattedMessages.length, 'messages');
       }
     } catch (error) {
@@ -177,36 +245,6 @@ export const useProgramAwareCoach = () => {
       setIsLoading(false);
     }
   }, [user]);
-
-  const initializeConversation = useCallback(async () => {
-    if (!user || hasInitialized) return;
-    
-    setHasInitialized(true);
-    
-    try {
-      await programAwareCoachService.initializeForUser(user.id);
-      console.log("✅ Program-aware coach initialized with enhanced brain");
-    } catch (error) {
-      console.error("Error initializing program-aware coach:", error);
-      setErrorCount(prev => prev + 1);
-    }
-  }, [user, hasInitialized]);
-
-  const resetConversation = useCallback(() => {
-    setMessages([]);
-    setHasInitialized(false);
-    setErrorCount(0);
-    
-    // Clear session data
-    if (currentSessionId) {
-      programAwareCoachService.clearSession(currentSessionId);
-    }
-    setCurrentSessionId('');
-  }, [currentSessionId]);
-
-  const getProgramContext = useCallback(() => {
-    return programAwareCoachService.getCurrentContext();
-  }, []);
 
   return {
     messages,
@@ -219,6 +257,8 @@ export const useProgramAwareCoach = () => {
     recoverConversation,
     currentSessionId,
     hasError: errorCount >= 3, // Expose error state for UI feedback
-    errorCount
+    errorCount,
+    streamingContent,
+    isStreaming
   };
 };

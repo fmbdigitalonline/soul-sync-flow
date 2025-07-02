@@ -5,24 +5,28 @@ interface TypewriterTextProps {
   text: string;
   isStreaming: boolean;
   speed?: number;
+  onComplete?: () => void;
 }
 
 export const TypewriterText: React.FC<TypewriterTextProps> = ({ 
   text, 
   isStreaming, 
-  speed = 50 // Slower default speed (50ms per character)
+  speed = 75, // Slower default for more feeling
+  onComplete
 }) => {
   const [displayText, setDisplayText] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const targetTextRef = useRef(text);
+  const completedRef = useRef(false);
 
   // Update target text when prop changes
   useEffect(() => {
     targetTextRef.current = text;
+    completedRef.current = false;
   }, [text]);
 
-  // Typewriter animation effect
+  // Slow, rhythmic typewriter animation with natural pauses
   useEffect(() => {
     const targetText = targetTextRef.current;
     
@@ -33,10 +37,30 @@ export const TypewriterText: React.FC<TypewriterTextProps> = ({
 
     // If we need to add more characters
     if (currentIndex < targetText.length) {
+      const char = targetText[currentIndex];
+      
+      // Calculate delay based on character for natural rhythm
+      let delay = speed;
+      if (char === '.' || char === '!' || char === '?') {
+        delay = speed * 4; // Long pause after sentences - creates anticipation
+      } else if (char === ',' || char === ';' || char === ':') {
+        delay = speed * 2.5; // Medium pause after clauses
+      } else if (char === ' ') {
+        delay = speed * 0.7; // Slightly faster for spaces
+      } else if (char === '\n') {
+        delay = speed * 3; // Pause for line breaks
+      }
+      
       timeoutRef.current = setTimeout(() => {
         setDisplayText(targetText.slice(0, currentIndex + 1));
         setCurrentIndex(prev => prev + 1);
-      }, speed);
+      }, delay);
+    } else if (!completedRef.current && !isStreaming) {
+      // Animation complete
+      completedRef.current = true;
+      if (onComplete) {
+        setTimeout(onComplete, 300); // Small delay before calling complete
+      }
     }
 
     // Cleanup timeout on unmount
@@ -45,16 +69,17 @@ export const TypewriterText: React.FC<TypewriterTextProps> = ({
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [currentIndex, speed]);
+  }, [currentIndex, speed, isStreaming, onComplete]);
 
   // Reset animation when text changes significantly (new message)
   useEffect(() => {
     const targetText = targetTextRef.current;
     
     // If text is completely different (new message), restart animation
-    if (!displayText || !targetText.startsWith(displayText.slice(0, displayText.length - 10))) {
+    if (!displayText || !targetText.startsWith(displayText.slice(0, Math.min(displayText.length, 20)))) {
       setDisplayText('');
       setCurrentIndex(0);
+      completedRef.current = false;
     }
     // If text just got longer (streaming), continue from current position
     else if (targetText.length > displayText.length) {
@@ -62,34 +87,11 @@ export const TypewriterText: React.FC<TypewriterTextProps> = ({
     }
   }, [text]);
 
-  // Speed up completion when streaming stops
-  useEffect(() => {
-    if (!isStreaming && currentIndex < targetTextRef.current.length) {
-      // Faster completion when streaming stops
-      const remainingText = targetTextRef.current;
-      const fastSpeed = Math.min(speed / 3, 20); // Much faster completion
-      
-      const completeAnimation = () => {
-        if (currentIndex < remainingText.length) {
-          setDisplayText(remainingText.slice(0, currentIndex + 1));
-          setCurrentIndex(prev => prev + 1);
-          
-          timeoutRef.current = setTimeout(completeAnimation, fastSpeed);
-        }
-      };
-      
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-      timeoutRef.current = setTimeout(completeAnimation, fastSpeed);
-    }
-  }, [isStreaming, currentIndex, speed]);
-
   return (
     <div className="text-sm leading-relaxed whitespace-pre-wrap text-left">
       {displayText}
-      {isStreaming && (
-        <span className="inline-block w-1 h-4 bg-soul-purple/60 ml-1 animate-pulse" />
+      {(isStreaming || currentIndex < targetTextRef.current.length) && (
+        <span className="inline-block w-1 h-4 bg-soul-purple/70 ml-1 animate-pulse" />
       )}
     </div>
   );

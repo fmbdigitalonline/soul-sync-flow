@@ -1,31 +1,19 @@
 
-import React, { useState } from "react";
-import { CosmicCard } from "@/components/ui/cosmic-card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { 
-  Heart, 
-  SendHorizontal, 
-  User, 
-  Loader2, 
-  Sparkles,
-  Moon,
-  Star,
-  Compass,
-  ChevronDown,
-  ChevronUp
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Message } from "@/hooks/use-ai-coach";
-import { TypewriterText } from "./TypewriterText";
-import { useLanguage } from "@/contexts/LanguageContext";
+import React, { useState, useRef, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Send, Sparkles, User } from 'lucide-react';
+import { SlowStreamingMessage } from './SlowStreamingMessage';
+import { Message } from '@/services/program-aware-coach-service';
 
 interface GuideInterfaceProps {
   messages: Message[];
   isLoading: boolean;
   onSendMessage: (message: string) => void;
   messagesEndRef: React.RefObject<HTMLDivElement>;
+  streamingContent?: string;
+  isStreaming?: boolean;
 }
 
 export const GuideInterface: React.FC<GuideInterfaceProps> = ({
@@ -33,223 +21,112 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
   isLoading,
   onSendMessage,
   messagesEndRef,
+  streamingContent,
+  isStreaming = false
 }) => {
-  const [inputValue, setInputValue] = useState("");
-  const [showTools, setShowTools] = useState(false);
-  const { t } = useLanguage();
+  const [input, setInput] = useState('');
+  const [lastStreamingMessageId, setLastStreamingMessageId] = useState<string | null>(null);
 
-  const handleSendMessage = () => {
-    if (inputValue.trim() === "") return;
-    onSendMessage(inputValue);
-    setInputValue("");
-    setShowTools(false);
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      handleSendMessage();
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (input.trim() && !isLoading) {
+      onSendMessage(input.trim());
+      setInput('');
     }
   };
 
-  const handleToolAction = (message: string) => {
-    onSendMessage(message);
-    setShowTools(false);
-  };
+  // Scroll to bottom when messages change or streaming updates
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, streamingContent, messagesEndRef]);
+
+  // Track which message is currently streaming
+  useEffect(() => {
+    if (messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.sender === 'assistant' && !lastMessage.content && isStreaming) {
+        setLastStreamingMessageId(lastMessage.id);
+      }
+    }
+  }, [messages, isStreaming]);
 
   return (
     <div className="flex flex-col h-full">
-      {/* Collapsible Soul Compass Dashboard */}
-      <div className="flex-shrink-0">
-        <CosmicCard className="p-4 mb-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <Heart className="h-4 w-4 mr-2 text-soul-purple" />
-              <h3 className="text-sm font-medium">{t('guide.innerCompass')}</h3>
-            </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-xs">
-                <Moon className="h-3 w-3 mr-1" />
-                {t('guide.reflectionMode')}
-              </Badge>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowTools(!showTools)}
-                className="h-6 w-6 p-0"
-              >
-                {showTools ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-              </Button>
+      {/* Messages Area */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {messages.map((message, index) => (
+          <div key={message.id} className="animate-fade-in">
+            {message.sender === 'user' ? (
+              // User Message
+              <div className="flex items-start gap-3 mb-4 justify-end">
+                <div className="bg-soul-purple text-white rounded-lg p-3 max-w-[80%]">
+                  <p className="text-sm leading-relaxed">{message.content}</p>
+                </div>
+                <Avatar className="h-8 w-8">
+                  <AvatarFallback className="bg-soul-purple/10">
+                    <User className="h-4 w-4" />
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+            ) : (
+              // Assistant Message with Slow Streaming
+              message.id === lastStreamingMessageId && isStreaming ? (
+                <SlowStreamingMessage
+                  content={streamingContent || ''}
+                  isStreaming={isStreaming}
+                  speed={75}
+                />
+              ) : (
+                <SlowStreamingMessage
+                  content={message.content}
+                  isStreaming={false}
+                  speed={75}
+                />
+              )
+            )}
+          </div>
+        ))}
+        
+        {/* Loading indicator for when waiting for response */}
+        {isLoading && !isStreaming && (
+          <div className="flex items-start gap-3 mb-4">
+            <Avatar className="h-8 w-8 border border-soul-purple/20">
+              <AvatarFallback className="bg-soul-purple/10 text-soul-purple">
+                <Sparkles className="h-4 w-4" />
+              </AvatarFallback>
+            </Avatar>
+            <div className="bg-soul-purple/5 rounded-lg p-4 border border-soul-purple/10">
+              <div className="flex items-center gap-2 text-soul-purple">
+                <div className="w-2 h-2 bg-soul-purple rounded-full animate-pulse"></div>
+                <div className="w-2 h-2 bg-soul-purple rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                <div className="w-2 h-2 bg-soul-purple rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                <span className="text-sm ml-2">Thinking deeply...</span>
+              </div>
             </div>
           </div>
-          
-          {showTools && (
-            <div className="mt-3 space-y-3">
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleToolAction("I want to check in with my current mood and energy. Help me understand what I'm feeling right now.")}
-                  className="text-xs h-7 border-soul-purple/30"
-                >
-                  <Heart className="h-3 w-3 mr-1" />
-                  {t('guide.checkIn')}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleToolAction("I want to explore some deep reflection questions about my life and growth. What should I be asking myself?")}
-                  className="text-xs h-7 border-soul-purple/30"
-                >
-                  <Sparkles className="h-3 w-3 mr-1" />
-                  {t('guide.reflect')}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleToolAction("I have some insights I'd like to explore deeper. Help me understand what I'm learning about myself.")}
-                  className="text-xs h-7 border-soul-purple/30"
-                >
-                  <Star className="h-3 w-3 mr-1" />
-                  {t('guide.journal')}
-                </Button>
-              </div>
-              
-              <div className="text-xs text-muted-foreground">
-                {t('guide.description')}
-              </div>
-            </div>
-          )}
-        </CosmicCard>
+        )}
+        
+        <div ref={messagesEndRef} />
       </div>
 
-      {/* Chat Messages - Properly constrained scrollable area */}
-      <div className="flex-1 overflow-y-auto px-4 pb-4 min-h-0">
-        <div className="space-y-4">
-          {messages.length === 0 && (
-            <div className="text-center p-6 text-muted-foreground">
-              <Heart className="h-12 w-12 text-soul-purple mx-auto mb-4" />
-              <h3 className="text-lg font-medium mb-1">{t('guide.awaits')}</h3>
-              <p className="text-sm max-w-xs mx-auto">
-                {t('guide.awaitsDescription')}
-              </p>
-            </div>
-          )}
-          
-          {messages.map((message, index) => (
-            <div
-              key={message.id}
-              className={cn(
-                "flex",
-                message.sender === "user" ? "justify-end" : "justify-start"
-              )}
-            >
-              <div
-                className={cn(
-                  "max-w-[85%] rounded-2xl p-4",
-                  message.sender === "user"
-                    ? "bg-soul-purple text-white"
-                    : "cosmic-card border border-soul-purple/20"
-                )}
-              >
-                <div className="flex items-center space-x-2 mb-2">
-                  {message.sender === "assistant" ? (
-                    <Heart className="h-4 w-4 text-soul-purple" />
-                  ) : (
-                    <User className="h-4 w-4" />
-                  )}
-                  <p className="text-xs font-medium">
-                    {message.sender === "assistant" ? t('coach.soulGuide') : t('you')}
-                  </p>
-                  {message.sender === "assistant" && (
-                    <Badge variant="outline" className="text-xs border-soul-purple/30">
-                      <Star className="h-3 w-3 mr-1" />
-                      {message.isStreaming ? t('streaming') : t('insight')}
-                    </Badge>
-                  )}
-                </div>
-                
-                {message.sender === "assistant" ? (
-                  <TypewriterText 
-                    text={message.content} 
-                    isStreaming={message.isStreaming || false} 
-                  />
-                ) : (
-                  <div className="text-sm leading-relaxed whitespace-pre-wrap">
-                    {message.content}
-                  </div>
-                )}
-                
-                {/* Reflection buttons for latest AI message only */}
-                {message.sender === "assistant" && 
-                 !message.isStreaming && 
-                 index === messages.length - 1 && 
-                 messages.length > 1 && (
-                  <div className="flex space-x-2 mt-3">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-xs h-7 border-soul-purple/30"
-                      onClick={() => onSendMessage(t('guide.tellMore'))}
-                    >
-                      <Compass className="h-3 w-3 mr-1" />
-                      {t('guide.exploreDeeper')}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-xs h-7 border-soul-purple/30"
-                      onClick={() => onSendMessage(t('guide.howConnect'))}
-                    >
-                      <Sparkles className="h-3 w-3 mr-1" />
-                      {t('guide.blueprintLink')}
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-          
-          {isLoading && (
-            <div className="flex justify-start">
-              <div className="cosmic-card border border-soul-purple/20 max-w-[85%] rounded-2xl p-4">
-                <div className="flex items-center space-x-2 mb-2">
-                  <Heart className="h-4 w-4 text-soul-purple" />
-                  <p className="text-xs font-medium">{t('coach.soulGuide')}</p>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <p className="text-sm">{t('guide.reflecting')}</p>
-                </div>
-              </div>
-            </div>
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-      </div>
-
-      {/* Input Area - Fixed at bottom with proper positioning */}
-      <div className="flex-shrink-0 p-4 border-t bg-background">
-        <CosmicCard className="flex items-center space-x-2 p-2 border border-soul-purple/20">
+      {/* Input Area */}
+      <div className="border-t p-4 bg-background">
+        <form onSubmit={handleSubmit} className="flex gap-2">
           <Input
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyPress}
-            placeholder={t('guide.inputPlaceholder')}
-            className="flex-1"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Share what's on your heart..."
             disabled={isLoading}
+            className="flex-1"
           />
-          <Button
-            size="icon"
-            onClick={handleSendMessage}
-            disabled={inputValue.trim() === "" || isLoading}
+          <Button 
+            type="submit" 
+            disabled={!input.trim() || isLoading}
             className="bg-soul-purple hover:bg-soul-purple/90"
           >
-            <SendHorizontal className="h-4 w-4" />
+            <Send className="h-4 w-4" />
           </Button>
-        </CosmicCard>
-        <p className="text-xs text-center text-muted-foreground mt-2">
-          {t('guide.poweredBy')}
-        </p>
+        </form>
       </div>
     </div>
   );
