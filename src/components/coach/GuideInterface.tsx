@@ -25,11 +25,10 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
   isStreaming = false
 }) => {
   const [input, setInput] = useState('');
-  const [lastStreamingMessageId, setLastStreamingMessageId] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (input.trim() && !isLoading) {
+    if (input.trim() && !isLoading && !isStreaming) {
       onSendMessage(input.trim());
       setInput('');
     }
@@ -38,17 +37,7 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
   // Scroll to bottom when messages change or streaming updates
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, streamingContent, messagesEndRef]);
-
-  // Track which message is currently streaming
-  useEffect(() => {
-    if (messages.length > 0) {
-      const lastMessage = messages[messages.length - 1];
-      if (lastMessage.sender === 'assistant' && !lastMessage.content && isStreaming) {
-        setLastStreamingMessageId(lastMessage.id);
-      }
-    }
-  }, [messages, isStreaming]);
+  }, [messages, streamingContent, isStreaming, messagesEndRef]);
 
   return (
     <div className="flex flex-col h-full">
@@ -70,19 +59,19 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
               </div>
             ) : (
               // Assistant Message with Slow Streaming
-              message.id === lastStreamingMessageId && isStreaming ? (
-                <SlowStreamingMessage
-                  content={streamingContent || ''}
-                  isStreaming={isStreaming}
-                  speed={75}
-                />
-              ) : (
-                <SlowStreamingMessage
-                  content={message.content}
-                  isStreaming={false}
-                  speed={75}
-                />
-              )
+              <SlowStreamingMessage
+                content={
+                  // If this is the last message and we're streaming, show streaming content
+                  index === messages.length - 1 && isStreaming && !message.content
+                    ? streamingContent || ''
+                    : message.content
+                }
+                isStreaming={
+                  // Only stream if this is the last message and we're actively streaming
+                  index === messages.length - 1 && isStreaming && !message.content
+                }
+                speed={85} // Slow, contemplative speed for growth conversations
+              />
             )}
           </div>
         ))}
@@ -116,12 +105,12 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Share what's on your heart..."
-            disabled={isLoading}
+            disabled={isLoading || isStreaming}
             className="flex-1"
           />
           <Button 
             type="submit" 
-            disabled={!input.trim() || isLoading}
+            disabled={!input.trim() || isLoading || isStreaming}
             className="bg-soul-purple hover:bg-soul-purple/90"
           >
             <Send className="h-4 w-4" />

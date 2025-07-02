@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { programAwareCoachService, Message } from '@/services/program-aware-coach-service';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,7 +15,14 @@ export const useProgramAwareCoach = () => {
   const { user } = useAuth();
   
   const { saveConversation, loadConversation } = useConversationRecovery();
-  const { streamingContent, isStreaming, streamText, resetStreaming } = useStreamingMessage();
+  const { 
+    streamingContent, 
+    isStreaming, 
+    streamText, 
+    resetStreaming,
+    startStreaming,
+    completeStreaming 
+  } = useStreamingMessage();
 
   // Auto-save conversations with error handling
   useEffect(() => {
@@ -45,6 +53,8 @@ export const useProgramAwareCoach = () => {
 
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
+    
+    // Reset streaming before starting new response
     resetStreaming();
 
     try {
@@ -53,15 +63,7 @@ export const useProgramAwareCoach = () => {
         setCurrentSessionId(sessionId);
       }
 
-      // Use enhanced program-aware coach with brain innovations
-      const response = await programAwareCoachService.sendProgramAwareMessage(
-        content,
-        sessionId,
-        user.id,
-        true // Use enhanced brain
-      );
-
-      // Create assistant message with streaming
+      // Create placeholder assistant message for streaming
       const assistantMessage: Message = {
         id: `msg_${Date.now()}_assistant`,
         content: '', // Start empty for streaming
@@ -71,12 +73,23 @@ export const useProgramAwareCoach = () => {
 
       setMessages(prev => [...prev, assistantMessage]);
 
-      // Start slow typewriter streaming of the response
-      setTimeout(() => {
-        streamText(response.response, 75); // Slow, contemplative speed
-      }, 300);
+      // Start streaming state
+      startStreaming();
 
-      // Update the message content after streaming completes
+      // Get response from program-aware coach
+      const response = await programAwareCoachService.sendProgramAwareMessage(
+        content,
+        sessionId,
+        user.id,
+        true // Use enhanced brain
+      );
+
+      console.log("🎯 Starting slow typewriter streaming for response:", response.response.substring(0, 50) + "...");
+
+      // Start slow typewriter streaming with natural pacing
+      streamText(response.response, 85); // Slow, contemplative speed for growth conversations
+
+      // Update the actual message content after a delay to ensure streaming completes
       setTimeout(() => {
         setMessages(prev => 
           prev.map(msg => 
@@ -85,7 +98,8 @@ export const useProgramAwareCoach = () => {
               : msg
           )
         );
-      }, response.response.length * 75 + 1000);
+        completeStreaming();
+      }, response.response.length * 90 + 2000); // Give extra time for natural pauses
 
       // Save conversation state with recovery context
       if (sessionId) {
@@ -116,14 +130,25 @@ export const useProgramAwareCoach = () => {
       setMessages(prev => [...prev, errorMessage]);
       
       const errorText = 'I apologize, but I encountered an issue. Let me try to help you differently. Could you rephrase what you were trying to share?';
+      
+      startStreaming();
+      streamText(errorText, 80);
+      
       setTimeout(() => {
-        streamText(errorText, 80);
-      }, 300);
+        setMessages(prev => 
+          prev.map(msg => 
+            msg.id === errorMessage.id 
+              ? { ...msg, content: errorText }
+              : msg
+          )
+        );
+        completeStreaming();
+      }, errorText.length * 85 + 1000);
 
     } finally {
       setIsLoading(false);
     }
-  }, [user, isLoading, currentSessionId, saveConversation, errorCount, streamText, resetStreaming]);
+  }, [user, isLoading, currentSessionId, saveConversation, errorCount, streamText, resetStreaming, startStreaming, completeStreaming]);
 
   const resetConversation = useCallback(() => {
     setMessages([]);
@@ -166,13 +191,7 @@ export const useProgramAwareCoach = () => {
       // Initialize program-aware coach
       await programAwareCoachService.initializeForUser(user.id);
 
-      // Get personalized greeting with enhanced brain
-      const response = await programAwareCoachService.initializeBeliefDrilling(
-        domain,
-        user.id,
-        sessionId
-      );
-
+      // Create initial assistant message for streaming
       const assistantMessage: Message = {
         id: `msg_${Date.now()}_assistant`,
         content: '',
@@ -180,18 +199,28 @@ export const useProgramAwareCoach = () => {
         timestamp: new Date(),
       };
 
-      // Set fresh conversation with slow streaming greeting
       setMessages([assistantMessage]);
-      
-      // Start slow typewriter streaming
-      setTimeout(() => {
-        streamText(response.response, 80);
-      }, 500);
+
+      // Start streaming state
+      startStreaming();
+
+      // Get personalized greeting with enhanced brain
+      const response = await programAwareCoachService.initializeBeliefDrilling(
+        domain,
+        user.id,
+        sessionId
+      );
+
+      console.log("🎯 Starting belief drilling with slow typewriter streaming");
+
+      // Start slow typewriter streaming with contemplative pacing
+      streamText(response.response, 90); // Even slower for initial greeting
 
       // Update message after streaming
       setTimeout(() => {
         setMessages([{ ...assistantMessage, content: response.response }]);
-      }, response.response.length * 80 + 1000);
+        completeStreaming();
+      }, response.response.length * 95 + 2000);
 
       console.log("✅ Belief drilling initialized with slow streaming");
 
@@ -208,11 +237,16 @@ export const useProgramAwareCoach = () => {
       setMessages([errorMessage]);
       
       const fallbackText = 'Welcome to your growth journey. I apologize for the technical issue, but I\'m here to help you explore and grow. What would you like to focus on?';
+      
+      startStreaming();
+      streamText(fallbackText, 80);
+      
       setTimeout(() => {
-        streamText(fallbackText, 80);
-      }, 300);
+        setMessages([{ ...errorMessage, content: fallbackText }]);
+        completeStreaming();
+      }, fallbackText.length * 85 + 1000);
     }
-  }, [user, streamText]);
+  }, [user, streamText, startStreaming, completeStreaming]);
 
   const recoverConversation = useCallback(async (sessionId: string) => {
     if (!user) return;
