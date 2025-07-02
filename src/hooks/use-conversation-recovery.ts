@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -90,22 +89,52 @@ export const useConversationRecovery = () => {
     if (!user || messages.length === 0) return;
 
     try {
-      const { error } = await supabase
+      // First check if record exists
+      const { data: existing } = await supabase
         .from('conversation_memory')
-        .upsert({
-          user_id: user.id,
-          session_id: sessionId,
-          messages: convertMessagesToJson(messages),
-          domain,
-          conversation_stage: 'active',
-          recovery_context: recoveryContext || {},
-          mode: 'guide'
-        });
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('session_id', sessionId)
+        .single();
 
-      if (error) {
-        console.error('Error saving conversation:', error);
+      if (existing) {
+        // Update existing record
+        const { error } = await supabase
+          .from('conversation_memory')
+          .update({
+            messages: convertMessagesToJson(messages),
+            domain,
+            recovery_context: recoveryContext || {},
+            updated_at: new Date().toISOString(),
+            last_activity: new Date().toISOString()
+          })
+          .eq('user_id', user.id)
+          .eq('session_id', sessionId);
+
+        if (error) {
+          console.error('Error updating conversation:', error);
+        } else {
+          console.log('✅ Conversation updated successfully');
+        }
       } else {
-        console.log('✅ Conversation saved successfully');
+        // Insert new record
+        const { error } = await supabase
+          .from('conversation_memory')
+          .insert({
+            user_id: user.id,
+            session_id: sessionId,
+            messages: convertMessagesToJson(messages),
+            domain,
+            conversation_stage: 'active',
+            recovery_context: recoveryContext || {},
+            mode: 'guide'
+          });
+
+        if (error) {
+          console.error('Error saving conversation:', error);
+        } else {
+          console.log('✅ Conversation saved successfully');
+        }
       }
     } catch (error) {
       console.error('Error in saveConversation:', error);
