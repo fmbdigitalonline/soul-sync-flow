@@ -9,9 +9,7 @@ import { ActionButtons } from './ActionButtons';
 import { MilestoneDetailView } from '@/components/journey/MilestoneDetailView';
 import { TimelineDetailView } from '@/components/journey/TimelineDetailView';
 import { TaskViews } from '@/components/journey/TaskViews';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Target, CheckCircle, Sparkles } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { MobileTabs } from './MobileTabs';
 import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
 
 interface DreamSuccessPageProps {
@@ -26,7 +24,7 @@ export const DreamSuccessPage: React.FC<DreamSuccessPageProps> = ({
   onViewJourney
 }) => {
   const { speak, speaking } = useSoulOrb();
-  const { isFoldDevice, spacing, getTextSize } = useResponsiveLayout();
+  const { isMobile } = useResponsiveLayout();
   const [tourStep, setTourStep] = useState(0);
   const [showTour, setShowTour] = useState(true);
   const [celebrationComplete, setCelebrationComplete] = useState(false);
@@ -154,7 +152,7 @@ export const DreamSuccessPage: React.FC<DreamSuccessPageProps> = ({
     );
   }
 
-  // Default overview view with tabbed interface
+  // Default overview view with mobile-optimized interface
   return (
     <div className="min-h-screen bg-gradient-to-br from-soul-purple/5 via-white to-soul-teal/5 w-full max-w-full overflow-x-hidden">
       <div className="w-full max-w-full mx-auto p-3 sm:p-4 space-y-4 sm:space-y-6 overflow-x-hidden">
@@ -176,37 +174,17 @@ export const DreamSuccessPage: React.FC<DreamSuccessPageProps> = ({
           />
         </div>
 
-        {/* Tabbed Content Interface */}
+        {/* Use Mobile-Optimized Tabs */}
         <div className="w-full max-w-full overflow-x-hidden">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full max-w-full">
-            <TabsList className={`grid w-full max-w-full grid-cols-3 bg-white/50 backdrop-blur-sm rounded-xl overflow-hidden ${isFoldDevice ? 'h-12' : ''}`}>
-              <TabsTrigger 
-                value="overview" 
-                className={`flex items-center gap-2 data-[state=active]:bg-soul-purple/10 data-[state=active]:text-soul-purple min-w-0 ${isFoldDevice ? 'px-2' : ''}`}
-              >
-                <Sparkles className={`flex-shrink-0 ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
-                <span className={`truncate ${isFoldDevice ? getTextSize('text-xs') : 'hidden sm:inline'}`}>Overview</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="roadmap" 
-                className={`flex items-center gap-2 data-[state=active]:bg-soul-purple/10 data-[state=active]:text-soul-purple min-w-0 ${isFoldDevice ? 'px-2' : ''}`}
-              >
-                <Target className={`flex-shrink-0 ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
-                <span className={`truncate ${isFoldDevice ? getTextSize('text-xs') : 'hidden sm:inline'}`}>Roadmap</span>
-                <Badge variant="secondary" className={`text-xs ml-1 flex-shrink-0 ${isFoldDevice ? 'hidden' : 'hidden sm:inline-flex'}`}>
-                  {goal.milestones?.length || 0}
-                </Badge>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="nexttask" 
-                className={`flex items-center gap-2 data-[state=active]:bg-soul-purple/10 data-[state=active]:text-soul-purple min-w-0 ${isFoldDevice ? 'px-2' : ''}`}
-              >
-                <CheckCircle className={`flex-shrink-0 ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
-                <span className={`truncate ${isFoldDevice ? getTextSize('text-xs') : 'hidden sm:inline'}`}>Next Task</span>
-              </TabsTrigger>
-            </TabsList>
+          <MobileTabs
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            milestonesCount={goal.milestones?.length || 0}
+          />
 
-            <TabsContent value="overview" className="mt-6 w-full max-w-full overflow-x-hidden">
+          {/* Tab Content */}
+          <div className="w-full max-w-full overflow-x-hidden">
+            {activeTab === 'overview' && (
               <InteractiveJourneyOverview
                 milestonesCount={goal.milestones?.length || 0}
                 tasksCount={goal.tasks?.length || 0}
@@ -214,23 +192,23 @@ export const DreamSuccessPage: React.FC<DreamSuccessPageProps> = ({
                 isHighlighted={currentStep?.highlight === 'overview'}
                 onNavigateToSection={handleNavigateToSection}
               />
-            </TabsContent>
+            )}
 
-            <TabsContent value="roadmap" className="mt-6 w-full max-w-full overflow-x-hidden">
+            {activeTab === 'roadmap' && (
               <MilestonesRoadmap
                 milestones={goal.milestones || []}
                 isHighlighted={currentStep?.highlight === 'milestones'}
               />
-            </TabsContent>
+            )}
 
-            <TabsContent value="nexttask" className="mt-6 w-full max-w-full overflow-x-hidden">
+            {activeTab === 'nexttask' && (
               <RecommendedTask
                 task={getRecommendedTask()}
                 isHighlighted={currentStep?.highlight === 'next-action'}
                 onStartTask={onStartTask}
               />
-            </TabsContent>
-          </Tabs>
+            )}
+          </div>
         </div>
 
         <div className="w-full max-w-full overflow-x-hidden">
