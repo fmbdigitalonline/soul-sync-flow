@@ -1,4 +1,3 @@
-
 import { v4 as uuidv4 } from 'uuid';
 import { UnifiedBlueprintService } from "./unified-blueprint-service";
 import { blueprintService } from "./blueprint-service";
@@ -85,7 +84,9 @@ export class EnhancedAICoachService {
           moonSign: layeredBlueprint.publicArchetype?.moonSign,
           humanDesignType: layeredBlueprint.energyDecisionStrategy?.humanDesignType,
           authority: layeredBlueprint.energyDecisionStrategy?.authority,
-          lifePath: layeredBlueprint.coreValuesNarrative?.lifePath
+          lifePath: typeof layeredBlueprint.coreValuesNarrative?.lifePath === 'string' ? 
+            parseInt(layeredBlueprint.coreValuesNarrative.lifePath) : 
+            layeredBlueprint.coreValuesNarrative?.lifePath
         };
         console.log("✅ Enhanced AI Coach Service: User blueprint loaded and 7-layer engine updated");
       } else {
@@ -100,24 +101,139 @@ export class EnhancedAICoachService {
     // Convert blueprint data to LayeredBlueprint format
     return {
       cognitiveTemperamental: {
-        mbtiType: data.mbti_type,
+        mbtiType: data.mbti_type || '',
+        functions: data.cognitive_functions || [],
+        dominantFunction: data.dominant_function || '',
+        auxiliaryFunction: data.auxiliary_function || '',
         cognitiveStack: data.cognitive_stack || [],
-        personalityTone: data.personality_tone || 'balanced'
+        taskApproach: data.task_approach || '',
+        communicationStyle: data.communication_style || '',
+        decisionMaking: data.decision_making || '',
+        informationProcessing: data.information_processing || ''
       },
       publicArchetype: {
-        sunSign: data.sun_sign,
+        sunSign: data.sun_sign || '',
         moonSign: data.moon_sign,
-        risingSign: data.rising_sign
+        risingSign: data.rising_sign,
+        socialStyle: data.social_style || '',
+        publicVibe: data.public_vibe || '',
+        publicPersona: data.public_persona || '',
+        leadershipStyle: data.leadership_style || '',
+        socialMask: data.social_mask || '',
+        externalExpression: data.external_expression || ''
       },
       energyDecisionStrategy: {
-        humanDesignType: data.human_design_type,
-        authority: data.authority,
-        strategyDescription: data.strategy_description || ''
+        humanDesignType: data.human_design_type || '',
+        authority: data.authority || '',
+        decisionStyle: data.decision_style || '',
+        pacing: data.pacing || '',
+        energyType: data.energy_type || '',
+        strategy: data.strategy || '',
+        profile: data.profile || '',
+        centers: data.centers || [],
+        gates: data.gates || [],
+        channels: data.channels || []
       },
       coreValuesNarrative: {
-        lifePath: data.life_path_number,
-        coreValues: data.core_values || [],
-        personalMission: data.personal_mission || ''
+        lifePath: data.life_path_number || 1,
+        lifePathKeyword: data.life_path_keyword,
+        meaningfulAreas: data.meaningful_areas || [],
+        anchoringVision: data.anchoring_vision || '',
+        lifeThemes: data.life_themes || [],
+        valueSystem: data.value_system || '',
+        northStar: data.north_star || '',
+        missionStatement: data.mission_statement || '',
+        purposeAlignment: data.purpose_alignment || '',
+        core_values: data.core_values || []
+      },
+      generationalCode: {
+        chineseZodiac: data.chinese_zodiac || '',
+        element: data.element || '',
+        cohortTint: data.cohort_tint || '',
+        generationalThemes: data.generational_themes || [],
+        collectiveInfluence: data.collective_influence || ''
+      },
+      surfaceExpression: {
+        observableStyle: data.observable_style || '',
+        realWorldImpact: data.real_world_impact || '',
+        behavioralSignatures: data.behavioral_signatures || [],
+        externalManifestations: data.external_manifestations || []
+      },
+      marketingArchetype: {
+        messagingStyle: data.messaging_style || '',
+        socialHooks: data.social_hooks || [],
+        brandPersonality: data.brand_personality || '',
+        communicationPatterns: data.communication_patterns || [],
+        influenceStyle: data.influence_style || ''
+      },
+      goalPersona: {
+        currentMode: 'guide',
+        serviceRole: data.service_role || '',
+        coachingTone: data.coaching_tone || '',
+        nudgeStyle: data.nudge_style || '',
+        motivationApproach: data.motivation_approach || ''
+      },
+      interactionPreferences: {
+        rapportStyle: data.rapport_style || '',
+        storyPreference: data.story_preference || '',
+        empathyLevel: data.empathy_level || '',
+        conflictStyle: data.conflict_style || '',
+        collaborationStyle: data.collaboration_style || '',
+        feedbackStyle: data.feedback_style || '',
+        learningStyle: data.learning_style || ''
+      },
+      timingOverlays: {
+        currentTransits: data.current_transits || [],
+        seasonalInfluences: data.seasonal_influences || [],
+        cyclicalPatterns: data.cyclical_patterns || [],
+        optimalTimings: data.optimal_timings || [],
+        energyWeather: data.energy_weather || ''
+      },
+      proactiveContext: {
+        nudgeHistory: data.nudge_history || [],
+        taskGraph: data.task_graph || {},
+        streaks: data.streaks || {},
+        moodLog: data.mood_log || [],
+        recentPatterns: data.recent_patterns || [],
+        triggerEvents: data.trigger_events || []
+      },
+      user_meta: data.user_meta || {},
+      humorProfile: data.humor_profile || {
+        primaryStyle: 'witty-inventor',
+        intensity: 'moderate',
+        appropriatenessLevel: 'balanced',
+        contextualAdaptation: {
+          coaching: 'witty-inventor',
+          guidance: 'witty-inventor',
+          casual: 'witty-inventor'
+        },
+        avoidancePatterns: [],
+        signatureElements: []
+      },
+      voiceTokens: data.voice_tokens || {
+        pacing: {
+          sentenceLength: 'medium',
+          pauseFrequency: 'thoughtful',
+          rhythmPattern: 'steady'
+        },
+        expressiveness: {
+          emojiFrequency: 'rare',
+          emphasisStyle: 'subtle',
+          exclamationTendency: 'balanced'
+        },
+        vocabulary: {
+          formalityLevel: 'conversational',
+          metaphorUsage: 'occasional',
+          technicalDepth: 'balanced'
+        },
+        conversationStyle: {
+          questionAsking: 'exploratory',
+          responseLength: 'thorough',
+          personalSharing: 'relevant'
+        },
+        signaturePhrases: [],
+        greetingStyles: [],
+        transitionWords: []
       }
     };
   }
@@ -128,7 +244,7 @@ export class EnhancedAICoachService {
     usePersona: boolean,
     agentType: AgentType,
     language: string = 'en'
-  ): Promise<{ response: string }> {
+  ): Promise<{ response: string; conversationId: string }> {
     try {
       console.log("📤 Enhanced AI Coach Service: Sending message with persona:", {
         messageLength: message.length,
@@ -179,7 +295,7 @@ export class EnhancedAICoachService {
       this.storeMessage(sessionId, 'user', message);
       this.storeMessage(sessionId, 'assistant', aiResponse);
 
-      return { response: aiResponse };
+      return { response: aiResponse, conversationId: sessionId };
     } catch (error) {
       console.error("❌ Enhanced AI Coach Service error:", error);
       throw error;

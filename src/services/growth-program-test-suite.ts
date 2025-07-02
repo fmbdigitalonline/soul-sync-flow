@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { growthProgramService } from "./growth-program-service";
 import { enhancedAICoachService } from "./enhanced-ai-coach-service";
@@ -349,13 +348,20 @@ class GrowthProgramTestRunner {
     try {
       const startTime = Date.now();
       
+      const testMessage = `I'm starting week 2 of my growth program focused on career. Can you help me explore my beliefs about success?`;
+      const sessionId = this.testSessionId;
+      
       const response = await enhancedAICoachService.sendMessage(
-        `I'm starting week 2 of my growth program focused on career. Can you help me explore my beliefs about success?`,
-        this.testSessionId,
-        true, // Use blueprint personalization
+        testMessage,
+        sessionId,
+        true,
         'guide',
         'en'
       );
+      
+      expect(response.response).toBeDefined();
+      expect(response.conversationId).toBe(sessionId);
+      expect(response.response.length).toBeGreaterThan(10);
 
       results.push({
         testName: 'AI Coach Integration with Growth Program Context',
