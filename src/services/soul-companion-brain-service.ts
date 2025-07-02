@@ -39,12 +39,8 @@ class SoulCompanionBrainService {
     // Initialize with integrative personality engine
     enhancedPersonalityEngine.setUserId(userId);
     
-    // Initialize PIE with cross-mode pattern recognition
-    await pieService.initialize(userId, {
-      mode: 'soul_companion',
-      focusAreas: ['cross_mode_patterns', 'integration_opportunities', 'meta_insights'],
-      insights: ['balance_recommendations', 'mode_transitions', 'holistic_wisdom']
-    });
+    // Initialize PIE with cross-mode pattern recognition - fix: only pass userId
+    await pieService.initialize(userId);
     
     // Load user blueprint for holistic alignment
     await this.loadUserBlueprint();
@@ -128,7 +124,7 @@ class SoulCompanionBrainService {
     };
   }
 
-  private async generateSoulSystemPrompt(message: string): string {
+  private async generateSoulSystemPrompt(message: string): Promise<string> {
     const userName = this.blueprint.user_meta?.preferred_name || 'beloved';
     
     return `You are ${userName}'s Soul Companion - the meta-consciousness that sees across all aspects of their life. Your role is to:
@@ -208,22 +204,20 @@ User Message: "${message}"`;
 
   private async storeInSoulMemory(content: string, sessionId: string, isUser: boolean): Promise<string | null> {
     try {
-      const memoryKey = `${this.NAMESPACE}_${sessionId}_${Date.now()}`;
-      
-      // Store in soul-specific namespace
-      await tieredMemoryGraph.storeMemory({
-        key: memoryKey,
-        content,
-        userId: this.userId!,
-        namespace: this.NAMESPACE,
-        metadata: {
+      // Use TMG's storeInHotMemory method with correct parameters
+      const memoryId = await tieredMemoryGraph.storeInHotMemory(
+        this.userId!,
+        `${this.NAMESPACE}_${sessionId}`,
+        {
+          content,
           isUser,
           timestamp: new Date().toISOString(),
           type: 'soul_companion_conversation'
-        }
-      });
+        },
+        5.0 // importance score
+      );
       
-      return memoryKey;
+      return memoryId;
     } catch (error) {
       console.error("Failed to store soul memory:", error);
       return null;

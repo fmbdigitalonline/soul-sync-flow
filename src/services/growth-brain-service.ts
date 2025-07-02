@@ -32,12 +32,8 @@ class GrowthBrainService {
     // Initialize with growth-focused personality engine
     enhancedPersonalityEngine.setUserId(userId);
     
-    // Initialize PIE with growth-specific rules
-    await pieService.initialize(userId, {
-      mode: 'growth',
-      focusAreas: ['emotional_patterns', 'spiritual_growth', 'self_reflection'],
-      insights: ['growth_opportunities', 'reflection_triggers', 'wisdom_moments']
-    });
+    // Initialize PIE with growth-specific rules - fix: only pass userId
+    await pieService.initialize(userId);
     
     // Load user blueprint for spiritual alignment
     await this.loadUserBlueprint();
@@ -116,7 +112,7 @@ class GrowthBrainService {
     };
   }
 
-  private async generateGrowthSystemPrompt(message: string): string {
+  private async generateGrowthSystemPrompt(message: string): Promise<string> {
     const userName = this.blueprint.user_meta?.preferred_name || 'dear friend';
     
     return `You are a wise spiritual guide and growth companion for ${userName}. Your role is to:
@@ -168,22 +164,20 @@ Remember: This is a sacred space for ${userName}'s spiritual development. Every 
 
   private async storeInGrowthMemory(content: string, sessionId: string, isUser: boolean): Promise<string | null> {
     try {
-      const memoryKey = `${this.NAMESPACE}_${sessionId}_${Date.now()}`;
-      
-      // Store in growth-specific namespace
-      await tieredMemoryGraph.storeMemory({
-        key: memoryKey,
-        content,
-        userId: this.userId!,
-        namespace: this.NAMESPACE,
-        metadata: {
+      // Use TMG's storeInHotMemory method with correct parameters
+      const memoryId = await tieredMemoryGraph.storeInHotMemory(
+        this.userId!,
+        `${this.NAMESPACE}_${sessionId}`,
+        {
+          content,
           isUser,
           timestamp: new Date().toISOString(),
           type: 'spiritual_growth_conversation'
-        }
-      });
+        },
+        5.0 // importance score
+      );
       
-      return memoryKey;
+      return memoryId;
     } catch (error) {
       console.error("Failed to store growth memory:", error);
       return null;

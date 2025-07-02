@@ -33,12 +33,8 @@ class DreamsBrainService {
     // Initialize with productivity-focused personality engine
     enhancedPersonalityEngine.setUserId(userId);
     
-    // Initialize PIE with dreams/productivity-specific rules
-    await pieService.initialize(userId, {
-      mode: 'dreams',
-      focusAreas: ['productivity_cycles', 'goal_tracking', 'task_optimization'],
-      insights: ['milestone_opportunities', 'efficiency_patterns', 'achievement_triggers']
-    });
+    // Initialize PIE with dreams/productivity-specific rules - fix: only pass userId
+    await pieService.initialize(userId);
     
     // Load user blueprint for goal alignment
     await this.loadUserBlueprint();
@@ -119,7 +115,7 @@ class DreamsBrainService {
     };
   }
 
-  private async generateDreamsSystemPrompt(message: string): string {
+  private async generateDreamsSystemPrompt(message: string): Promise<string> {
     const userName = this.blueprint.user_meta?.preferred_name || 'achiever';
     
     return `You are ${userName}'s strategic goal coach and productivity partner. Your role is to:
@@ -171,22 +167,20 @@ Remember: ${userName} is here to turn dreams into reality. Every response should
 
   private async storeInDreamsMemory(content: string, sessionId: string, isUser: boolean): Promise<string | null> {
     try {
-      const memoryKey = `${this.NAMESPACE}_${sessionId}_${Date.now()}`;
-      
-      // Store in dreams-specific namespace
-      await tieredMemoryGraph.storeMemory({
-        key: memoryKey,
-        content,
-        userId: this.userId!,
-        namespace: this.NAMESPACE,
-        metadata: {
+      // Use TMG's storeInHotMemory method with correct parameters
+      const memoryId = await tieredMemoryGraph.storeInHotMemory(
+        this.userId!,
+        `${this.NAMESPACE}_${sessionId}`,
+        {
+          content,
           isUser,
           timestamp: new Date().toISOString(),
           type: 'dreams_goals_conversation'
-        }
-      });
+        },
+        5.0 // importance score
+      );
       
-      return memoryKey;
+      return memoryId;
     } catch (error) {
       console.error("Failed to store dreams memory:", error);
       return null;
