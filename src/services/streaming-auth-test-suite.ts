@@ -1,58 +1,122 @@
-import { enhancedAICoachService } from '../enhanced-ai-coach-service';
 
-describe('Streaming Authentication Test Suite', () => {
-  it('should successfully authenticate and stream a response', async () => {
-    const sessionId = `streaming_auth_test_${Date.now()}`;
+import { EnhancedAICoachService } from './enhanced-ai-coach-service';
 
-    // Mock the authentication process
-    const mockAuth = {
-      isAuthenticated: true,
-      userId: 'test_user_id',
+export interface StreamingTestResult {
+  testName: string;
+  status: 'passed' | 'failed' | 'skipped';
+  duration: number;
+  error?: string;
+  details?: any;
+}
+
+export interface StreamingTestSuiteResult {
+  suiteName: string;
+  totalTests: number;
+  passed: number;
+  failed: number;
+  duration: number;
+  results: StreamingTestResult[];
+}
+
+class StreamingAuthTestSuite {
+  private enhancedAICoach: EnhancedAICoachService;
+
+  constructor() {
+    this.enhancedAICoach = new EnhancedAICoachService();
+  }
+
+  async runFullTestSuite(): Promise<StreamingTestSuiteResult> {
+    const startTime = Date.now();
+    console.log('🧪 Starting Streaming Authentication Test Suite...');
+
+    const results: StreamingTestResult[] = [];
+
+    // Test 1: Basic Authentication
+    try {
+      const testStartTime = Date.now();
+      const sessionId = `streaming_auth_test_${Date.now()}`;
+      
+      const response = await this.enhancedAICoach.sendMessage(
+        'Test message for streaming auth',
+        sessionId,
+        true,
+        'guide',
+        'en'
+      );
+      
+      results.push({
+        testName: 'Basic Authentication Test',
+        status: response.response ? 'passed' : 'failed',
+        duration: Date.now() - testStartTime,
+        details: {
+          responseLength: response.response?.length || 0,
+          conversationId: sessionId
+        }
+      });
+    } catch (error) {
+      results.push({
+        testName: 'Basic Authentication Test',
+        status: 'failed',
+        duration: Date.now() - startTime,
+        error: String(error)
+      });
+    }
+
+    // Test 2: Streaming Authentication
+    try {
+      const testStartTime = Date.now();
+      const sessionId = `streaming_test_${Date.now()}`;
+      let streamedContent = '';
+      
+      await this.enhancedAICoach.sendStreamingMessage(
+        'Test streaming message',
+        sessionId,
+        true,
+        'guide',
+        'en',
+        {
+          onChunk: (chunk: string) => {
+            streamedContent += chunk;
+          },
+          onComplete: (fullResponse: string) => {
+            console.log('Streaming complete:', fullResponse.length);
+          },
+          onError: (error: Error) => {
+            console.error('Streaming error:', error);
+          }
+        }
+      );
+      
+      results.push({
+        testName: 'Streaming Authentication Test',
+        status: streamedContent.length > 0 ? 'passed' : 'failed',
+        duration: Date.now() - testStartTime,
+        details: {
+          streamedLength: streamedContent.length,
+          conversationId: sessionId
+        }
+      });
+    } catch (error) {
+      results.push({
+        testName: 'Streaming Authentication Test',
+        status: 'failed',
+        duration: Date.now() - startTime,
+        error: String(error)
+      });
+    }
+
+    const passed = results.filter(r => r.status === 'passed').length;
+    const failed = results.filter(r => r.status === 'failed').length;
+
+    return {
+      suiteName: 'Streaming Authentication Test Suite',
+      totalTests: results.length,
+      passed,
+      failed,
+      duration: Date.now() - startTime,
+      results
     };
+  }
+}
 
-    // Mock the streaming service
-    const mockStreamingService = {
-      startStreaming: jest.fn(),
-      addChunk: jest.fn(),
-      completeStreaming: jest.fn(),
-      onError: jest.fn(),
-    };
-
-    // Mock the enhanced AI coach service
-    jest.spyOn(enhancedAICoachService, 'sendMessage').mockImplementation(
-      async (
-        message: string,
-        sessionId: string,
-        usePersona: boolean,
-        agentType: string,
-        language: string
-      ): Promise<{ response: string; conversationId: string }> => {
-        // Simulate a streaming response
-        const responseText = 'This is a test streaming response.';
-        return new Promise((resolve) => {
-          setTimeout(() => {
-            resolve({ response: responseText, conversationId: sessionId });
-          }, 500);
-        });
-      }
-    );
-
-    // Call the enhanced AI coach service
-    const response = await enhancedAICoachService.sendMessage(
-      'Test message for streaming auth',
-      sessionId,
-      true,
-      'guide',
-      'en'
-    );
-    
-    expect(response.response).toBeDefined();
-    expect(response.conversationId).toBe(sessionId);
-
-    // Verify that the streaming service methods were called
-    // expect(mockStreamingService.startStreaming).toHaveBeenCalled();
-    // expect(mockStreamingService.addChunk).toHaveBeenCalled();
-    // expect(mockStreamingService.completeStreaming).toHaveBeenCalled();
-    // expect(mockStreamingService.onError).not.toHaveBeenCalled();
-  });
-});
+export const streamingAuthTestSuite = new StreamingAuthTestSuite();

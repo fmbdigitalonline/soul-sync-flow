@@ -135,7 +135,7 @@ export class EnhancedAICoachService {
         channels: data.channels || []
       },
       coreValuesNarrative: {
-        lifePath: data.life_path_number || 1,
+        lifePath: typeof data.life_path_number === 'string' ? parseInt(data.life_path_number) : (data.life_path_number || 1),
         lifePathKeyword: data.life_path_keyword,
         meaningfulAreas: data.meaningful_areas || [],
         anchoringVision: data.anchoring_vision || '',
@@ -234,6 +234,14 @@ export class EnhancedAICoachService {
         signaturePhrases: [],
         greetingStyles: [],
         transitionWords: []
+      },
+      motivationBeliefEngine: {
+        coreBeliefs: data.core_beliefs || [],
+        motivationalDrivers: data.motivational_drivers || [],
+        beliefPatterns: data.belief_patterns || [],
+        motivationTriggers: data.motivation_triggers || [],
+        resistancePoints: data.resistance_points || [],
+        empowermentSources: data.empowerment_sources || []
       }
     };
   }
@@ -689,5 +697,5 @@ export class EnhancedAICoachService {
   }
 }
 
-// Create and export singleton instance
+// Export an instance for convenience
 export const enhancedAICoachService = new EnhancedAICoachService();

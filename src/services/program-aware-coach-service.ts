@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { EnhancedAICoachService, AgentType } from "./enhanced-ai-coach-service";
-import { MemoryInformedConversationService } from "./memory-informed-conversation-service";
+import { memoryInformedConversationService } from "./memory-informed-conversation-service";
 import { UnifiedBlueprintService } from "./unified-blueprint-service";
 
 export interface ProgramState {
@@ -22,13 +22,13 @@ export class ProgramAwareCoachService {
     lastInteraction: null,
   };
   private enhancedCoach: EnhancedAICoachService;
-  private memoryService: MemoryInformedConversationService;
+  private memoryService: typeof memoryInformedConversationService;
   private blueprintService: UnifiedBlueprintService;
   private userId: string | null = null;
 
   constructor(
     enhancedCoach: EnhancedAICoachService,
-    memoryService: MemoryInformedConversationService,
+    memoryService: typeof memoryInformedConversationService,
     blueprintService: UnifiedBlueprintService
   ) {
     this.enhancedCoach = enhancedCoach;
@@ -132,3 +132,10 @@ export class ProgramAwareCoachService {
     return { response: response.response, conversationId: response.conversationId };
   }
 }
+
+// Export an instance
+export const programAwareCoachService = new ProgramAwareCoachService(
+  new EnhancedAICoachService(),
+  memoryInformedConversationService,
+  new UnifiedBlueprintService()
+);

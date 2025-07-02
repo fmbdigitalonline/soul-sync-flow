@@ -78,6 +78,17 @@ export interface LayeredBlueprint {
     informationProcessing: string;
     coreKeywords?: string[];
   };
+  publicArchetype: {
+    sunSign: string;
+    moonSign?: string;
+    risingSign?: string;
+    socialStyle: string;
+    publicVibe: string;
+    publicPersona: string;
+    leadershipStyle: string;
+    socialMask: string;
+    externalExpression: string;
+  };
   energyDecisionStrategy: {
     humanDesignType: string;
     authority: string;
@@ -90,19 +101,8 @@ export interface LayeredBlueprint {
     gates: string[];
     channels: string[];
   };
-  motivationBeliefEngine: {
-    mindset: string;
-    motivation: string[];
-    stateManagement: string;
-    coreBeliefs: string[];
-    drivingForces: string[];
-    excitementCompass: string;
-    frequencyAlignment: string;
-    beliefInterface: string[];
-    resistancePatterns: string[];
-  };
   coreValuesNarrative: {
-    lifePath: number | string;
+    lifePath: string | number;
     lifePathKeyword?: string;
     expressionNumber?: number;
     expressionKeyword?: string;
@@ -110,8 +110,6 @@ export interface LayeredBlueprint {
     soulUrgeKeyword?: string;
     personalityNumber?: number;
     personalityKeyword?: string;
-    birthdayNumber?: number;
-    birthdayKeyword?: string;
     meaningfulAreas: string[];
     anchoringVision: string;
     lifeThemes: string[];
@@ -120,17 +118,6 @@ export interface LayeredBlueprint {
     missionStatement: string;
     purposeAlignment: string;
     core_values?: string[];
-  };
-  publicArchetype: {
-    sunSign: string;
-    moonSign?: string; // Made optional to fix existing usage
-    risingSign?: string;
-    socialStyle: string;
-    publicVibe: string;
-    publicPersona: string;
-    leadershipStyle: string;
-    socialMask: string;
-    externalExpression: string;
   };
   generationalCode: {
     chineseZodiac: string;
@@ -153,7 +140,7 @@ export interface LayeredBlueprint {
     influenceStyle: string;
   };
   goalPersona: {
-    currentMode: 'coach' | 'guide' | 'blend';
+    currentMode: AgentMode;
     serviceRole: string;
     coachingTone: string;
     nudgeStyle: string;
@@ -177,21 +164,58 @@ export interface LayeredBlueprint {
   };
   proactiveContext: {
     nudgeHistory: string[];
-    taskGraph: any;
-    streaks: any;
-    moodLog: string[];
+    taskGraph: Record<string, any>;
+    streaks: Record<string, number>;
+    moodLog: Array<{ mood: string; timestamp: string }>;
     recentPatterns: string[];
     triggerEvents: string[];
   };
-  // NEW: User meta information including name
-  user_meta?: {
-    preferred_name?: string;
-    full_name?: string;
-    [key: string]: any;
+  user_meta: Record<string, any>;
+  humorProfile: {
+    primaryStyle: string;
+    intensity: string;
+    appropriatenessLevel: string;
+    contextualAdaptation: {
+      coaching: string;
+      guidance: string;
+      casual: string;
+    };
+    avoidancePatterns: string[];
+    signatureElements: string[];
   };
-  // NEW: Auto-Generated Personality Components
-  humorProfile: HumorProfile;
-  voiceTokens: VoiceTokens;
+  voiceTokens: {
+    pacing: {
+      sentenceLength: string;
+      pauseFrequency: string;
+      rhythmPattern: string;
+    };
+    expressiveness: {
+      emojiFrequency: string;
+      emphasisStyle: string;
+      exclamationTendency: string;
+    };
+    vocabulary: {
+      formalityLevel: string;
+      metaphorUsage: string;
+      technicalDepth: string;
+    };
+    conversationStyle: {
+      questionAsking: string;
+      responseLength: string;
+      personalSharing: string;
+    };
+    signaturePhrases: string[];
+    greetingStyles: string[];
+    transitionWords: string[];
+  };
+  motivationBeliefEngine: {
+    coreBeliefs: string[];
+    motivationalDrivers: string[];
+    beliefPatterns: string[];
+    motivationTriggers: string[];
+    resistancePoints: string[];
+    empowermentSources: string[];
+  };
 }
 
 export type AgentMode = "guide" | "coach" | "blend";
