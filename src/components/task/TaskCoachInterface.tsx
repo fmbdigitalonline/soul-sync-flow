@@ -96,15 +96,19 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
   useEffect(() => {
     const initializeInterface = async () => {
       try {
+        console.log('🎯 TaskCoachInterface: Initializing with task:', task.title);
+        
         await dreamActivityLogger.logActivity('task_coach_interface_mounted', {
           task_id: task.id,
           task_title: task.title,
           task_status: task.status,
           estimated_duration: task.estimated_duration
         });
+        
         setIsInitializing(false);
+        console.log('✅ TaskCoachInterface: Initialization complete');
       } catch (error) {
-        console.error('Failed to initialize task coach interface:', error);
+        console.error('❌ TaskCoachInterface: Failed to initialize:', error);
         setInitializationError(error instanceof Error ? error.message : 'Unknown initialization error');
         setIsInitializing(false);
       }
