@@ -31,13 +31,14 @@ const MobileNavigation: React.FC = () => {
 
   return (
     <div 
-      className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-gray-100 px-2 py-2 shadow-lg"
+      className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-gray-100 px-2 py-2 shadow-lg safe-area-inset-bottom"
       style={{ 
         zIndex: 9999,
         position: 'fixed',
         bottom: 0,
         left: 0,
-        right: 0
+        right: 0,
+        paddingBottom: 'max(8px, env(safe-area-inset-bottom))'
       }}
     >
       <div className="flex justify-around items-center max-w-md mx-auto">
@@ -49,7 +50,7 @@ const MobileNavigation: React.FC = () => {
               key={item.to}
               to={item.to}
               className={cn(
-                "flex flex-col items-center gap-1 p-2 rounded-2xl transition-all duration-200 min-w-[60px]",
+                "flex flex-col items-center gap-1 p-2 rounded-2xl transition-all duration-200 min-w-[60px] min-h-[56px]",
                 active
                   ? "bg-gradient-to-t from-soul-purple/10 to-soul-teal/10 text-soul-purple"
                   : "text-gray-500 hover:text-soul-purple"

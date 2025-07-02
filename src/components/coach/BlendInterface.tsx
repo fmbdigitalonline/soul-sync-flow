@@ -31,7 +31,7 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
 }) => {
   const [inputValue, setInputValue] = useState("");
   const { t } = useLanguage();
-  const isMobile = useIsMobile();
+  const { isMobile, isFoldDevice, isUltraNarrow } = useIsMobile();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -60,7 +60,7 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full max-w-4xl mx-auto">
+    <div className={`flex flex-col h-full max-w-4xl mx-auto ${isMobile ? 'pb-20' : ''}`}>
       {/* VFP-Graph Status Header */}
       {vfpGraphStatus?.isAvailable && (
         <div className="bg-gradient-to-r from-soul-purple/10 to-soul-teal/10 border border-soul-purple/20 rounded-lg p-3 mb-4">
@@ -74,8 +74,8 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
         </div>
       )}
 
-      {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto space-y-4 pb-4">
+      {/* Messages Area - Add extra padding bottom for mobile */}
+      <div className={`flex-1 overflow-y-auto space-y-4 ${isMobile ? 'pb-24' : 'pb-4'}`}>
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center p-8">
             <div className={cn("bg-gradient-to-br from-soul-purple to-soul-teal rounded-full mx-auto mb-4 flex items-center justify-center", isMobile ? "w-12 h-12" : "w-16 h-16")}>
@@ -182,9 +182,15 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Area */}
-      <div className={cn("border-t bg-white", isMobile ? "p-3" : "p-4")}>
-        <div className="flex items-center space-x-2">
+      {/* Input Area - Fixed positioning for mobile with safe area */}
+      <div className={cn(
+        "border-t bg-white/95 backdrop-blur-lg",
+        isMobile 
+          ? "fixed bottom-16 left-0 right-0 z-50 border-t border-gray-200 shadow-lg" 
+          : "p-4",
+        isMobile ? "p-3" : ""
+      )}>
+        <div className={cn("flex items-center space-x-2", isMobile ? "max-w-md mx-auto" : "")}>
           <Input
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
@@ -194,14 +200,14 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
                 ? "Ask me anything - I understand your unique personality..."
                 : "Ask me anything - I'll blend coaching questions with direct guidance..."
             }
-            className="flex-1"
+            className={cn("flex-1", isFoldDevice ? "text-sm" : "")}
             disabled={isLoading}
           />
           <Button
             size="icon"
             onClick={handleSendMessage}
             disabled={inputValue.trim() === "" || isLoading}
-            className="bg-green-600 hover:bg-green-700"
+            className="bg-green-600 hover:bg-green-700 flex-shrink-0"
           >
             <SendHorizontal className="h-4 w-4" />
           </Button>

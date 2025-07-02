@@ -64,7 +64,7 @@ const Dreams = () => {
   const { toast } = useToast();
   const { t } = useLanguage();
   const { blueprintData } = useBlueprintData();
-  const { spacing, layout, touchTargetSize, getTextSize, isFoldDevice, isUltraNarrow } = useResponsiveLayout();
+  const { spacing, layout, touchTargetSize, getTextSize, isFoldDevice, isUltraNarrow, isMobile } = useResponsiveLayout();
 
   // Dream creation form state
   const [dreamForm, setDreamForm] = useState({
@@ -219,7 +219,7 @@ const Dreams = () => {
     return (
       <MainLayout>
         <ErrorBoundary>
-          <div className={`min-h-screen bg-gradient-to-br from-soul-purple/10 via-white to-soul-teal/5 flex items-center justify-center ${layout.padding}`}>
+          <div className={`min-h-screen bg-gradient-to-br from-soul-purple/10 via-white to-soul-teal/5 flex items-center justify-center ${layout.padding} ${isMobile ? 'pb-20' : ''}`}>
             <div className={`bg-white/80 backdrop-blur-lg rounded-2xl ${spacing.card} shadow-2xl border border-white/20 text-center ${layout.width} ${layout.maxWidth} mx-auto`}>
               <div className={`w-12 h-12 mx-auto bg-gradient-to-br from-soul-purple to-soul-teal rounded-full mb-4 flex items-center justify-center ${isFoldDevice ? 'w-10 h-10' : ''}`}>
                 <Heart className={`h-6 w-6 text-white ${isFoldDevice ? 'h-5 w-5' : ''}`} />
@@ -245,7 +245,7 @@ const Dreams = () => {
   if (currentView === 'task-coach' && selectedTask) {
     return (
       <MainLayout>
-        <div className="min-h-screen bg-gradient-to-br from-soul-purple/5 to-soul-teal/5 w-full">
+        <div className={`min-h-screen bg-gradient-to-br from-soul-purple/5 to-soul-teal/5 w-full ${isMobile ? 'pb-20' : ''}`}>
           <TaskCoachInterface
             task={selectedTask}
             onBack={handleBackFromTaskCoach}
@@ -259,7 +259,7 @@ const Dreams = () => {
   if (currentView === 'chat') {
     return (
       <MainLayout>
-        <div className="min-h-screen flex flex-col bg-gradient-to-br from-soul-purple/5 to-white w-full">
+        <div className={`min-h-screen flex flex-col bg-gradient-to-br from-soul-purple/5 to-white w-full ${isMobile ? 'pb-20' : ''}`}>
           {/* Ultra-Narrow Optimized Header */}
           <div className={`bg-white/80 backdrop-blur-lg border-b border-gray-100 sticky top-0 z-10 w-full ${spacing.container}`}>
             <div className={`flex items-center justify-between w-full ${layout.maxWidth} mx-auto`}>
@@ -300,7 +300,7 @@ const Dreams = () => {
   if (currentView === 'journey') {
     return (
       <MainLayout>
-        <div className="min-h-screen bg-gradient-to-br from-soul-purple/5 via-white to-soul-teal/5 w-full">
+        <div className={`min-h-screen bg-gradient-to-br from-soul-purple/5 via-white to-soul-teal/5 w-full ${isMobile ? 'pb-20' : ''}`}>
           <div className={`w-full ${layout.maxWidth} mx-auto py-3 ${layout.padding}`}>
             
             {/* Ultra-Narrow Optimized Header */}
@@ -521,8 +521,8 @@ const Dreams = () => {
   return (
     <MainLayout>
       <ErrorBoundary>
-        <div className="min-h-screen bg-gradient-to-br from-soul-purple/10 via-white to-soul-teal/5 w-full">
-          <div className={`w-full ${layout.maxWidth} mx-auto py-4 pb-20 ${layout.padding}`}>
+        <div className={`min-h-screen bg-gradient-to-br from-soul-purple/10 via-white to-soul-teal/5 w-full ${isMobile ? 'pb-20' : ''}`}>
+          <div className={`w-full ${layout.maxWidth} mx-auto py-4 ${isMobile ? 'pb-24' : 'pb-20'} ${layout.padding}`}>
             
             {/* Ultra-Narrow Optimized Hero Section */}
             <div className={`text-center mb-6 ${spacing.container}`}>
