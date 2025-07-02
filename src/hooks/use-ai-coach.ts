@@ -62,12 +62,15 @@ export const useAICoach = () => {
           channels: blueprintData.energy_strategy_human_design?.channels || [],
         },
         motivationBeliefEngine: {
-          coreBeliefs: [],
-          motivationalDrivers: [],
-          beliefPatterns: [],
-          motivationTriggers: [],
-          resistancePoints: [],
-          empowermentSources: []
+          mindset: blueprintData.bashar_suite?.mindset || "growth",
+          motivation: blueprintData.bashar_suite?.motivation || ["growth", "authenticity"],
+          stateManagement: blueprintData.bashar_suite?.state_management || "awareness",
+          coreBeliefs: blueprintData.bashar_suite?.core_beliefs || ["potential"],
+          drivingForces: blueprintData.bashar_suite?.driving_forces || ["purpose"],
+          excitementCompass: blueprintData.bashar_suite?.excitement_compass || "follow joy",
+          frequencyAlignment: blueprintData.bashar_suite?.frequency_alignment || "authentic self",
+          beliefInterface: blueprintData.bashar_suite?.belief_interface || [],
+          resistancePatterns: blueprintData.bashar_suite?.resistance_patterns || [],
         },
         coreValuesNarrative: {
           lifePath: blueprintData.values_life_path?.lifePathNumber || 1,

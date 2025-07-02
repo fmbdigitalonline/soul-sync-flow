@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -227,7 +228,7 @@ export const EndToEndFlowTester: React.FC = () => {
     );
     updateStepStatus('complete-journey', 'ai-response', 'success', { 
       responseLength: response.response.length,
-      conversationId: sessionId
+      conversationId: response.conversationId
     });
 
     // Step 5: Store Memory

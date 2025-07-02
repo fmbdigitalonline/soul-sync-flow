@@ -1,3 +1,4 @@
+
 import { LayeredBlueprint } from '@/types/personality-modules';
 
 export interface CommunicationStyle {
@@ -296,12 +297,11 @@ export class CommunicationStyleAdapter {
     }
 
     // Core Motivations Analysis
-    const layeredBlueprint = blueprint as LayeredBlueprint;
-    const motivation = layeredBlueprint.motivationBeliefEngine.motivationalDrivers || [];
-    if (motivation && Array.isArray(motivation)) {
+    const motivations = blueprint.motivationBeliefEngine?.motivation;
+    if (motivations && Array.isArray(motivations)) {
       totalFactors++;
       
-      motivation.forEach(motivation => {
+      motivations.forEach(motivation => {
         if (typeof motivation === 'string') {
           if (motivation.toLowerCase().includes('growth')) {
             scores.growthFocused += 2;

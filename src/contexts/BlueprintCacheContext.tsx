@@ -1,5 +1,4 @@
-
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { blueprintService, BlueprintData } from '@/services/blueprint-service';
 import { useAuth } from '@/contexts/AuthContext';
@@ -18,16 +17,13 @@ const BlueprintCacheContext = createContext<BlueprintCacheContextType | undefine
 export function BlueprintCacheProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   
-  // Memoize query key to prevent unnecessary re-renders
-  const queryKey = useMemo(() => ['blueprint-cache', user?.id], [user?.id]);
-  
   const {
     data: blueprintResult,
     isLoading,
     error,
     refetch: queryRefetch
   } = useQuery({
-    queryKey,
+    queryKey: ['blueprint-cache', user?.id],
     queryFn: async () => {
       if (!user) return { data: null, error: 'No user' };
       
@@ -39,7 +35,7 @@ export function BlueprintCacheProvider({ children }: { children: React.ReactNode
         console.log('🔬 RAW BLUEPRINT DATA STRUCTURE:', JSON.stringify(result.data, null, 2));
         
         // Convert raw blueprint to LayeredBlueprint format
-        const layeredBlueprint = convertBlueprintToLayered(result.data);
+        const layeredBlueprint = convertToLayeredBlueprint(result.data);
         console.log('🎯 Blueprint Cache: Converted to LayeredBlueprint');
         console.log('📊 CONVERTED BLUEPRINT SAMPLE:', {
           hasUserMeta: !!layeredBlueprint.user_meta,
@@ -74,14 +70,13 @@ export function BlueprintCacheProvider({ children }: { children: React.ReactNode
     await queryRefetch();
   };
 
-  // Memoize the context value to prevent unnecessary re-renders
-  const value: BlueprintCacheContextType = useMemo(() => ({
+  const value: BlueprintCacheContextType = {
     blueprintData: blueprintResult?.data || null,
     loading: isLoading,
     error: blueprintResult?.error || (error as Error)?.message || null,
     refetch,
     hasBlueprint: !!blueprintResult?.data && !blueprintResult?.error
-  }), [blueprintResult, isLoading, error, refetch]);
+  };
 
   // Log state changes for debugging
   useEffect(() => {
@@ -113,30 +108,26 @@ export function useBlueprintCache() {
 }
 
 // Helper function to convert raw blueprint to LayeredBlueprint format
-const convertBlueprintToLayered = (data: BlueprintData): LayeredBlueprint => {
+function convertToLayeredBlueprint(rawData: BlueprintData): LayeredBlueprint {
   console.log('🔧 Converting raw data to LayeredBlueprint...');
-  console.log('🗂️ Raw data keys available:', Object.keys(data));
-  
-  // Handle user_meta with proper type checking and type assertion
-  const userMeta = data.user_meta || {};
-  const safeUserMeta = typeof userMeta === 'object' && userMeta !== null ? userMeta as any : {};
+  console.log('🗂️ Raw data keys available:', Object.keys(rawData));
   
   // Handle MBTI data - check multiple possible sources
-  const mbtiData = data.cognition_mbti || data.mbti || data.personality || {};
+  const mbtiData = rawData.cognition_mbti || rawData.mbti || rawData.personality || {};
   let mbtiType = "Unknown";
   
   // Extract MBTI type from user personality data if available
-  if (safeUserMeta.personality) {
+  if (rawData.user_meta?.personality) {
     // Check if personality is an object with likelyType property
-    if (typeof safeUserMeta.personality === 'object' && safeUserMeta.personality !== null) {
-      const personalityObj = safeUserMeta.personality as any;
+    if (typeof rawData.user_meta.personality === 'object' && rawData.user_meta.personality !== null) {
+      const personalityObj = rawData.user_meta.personality as any;
       if (personalityObj.likelyType) {
         mbtiType = personalityObj.likelyType;
         console.log('🎯 Using MBTI from user personality object:', mbtiType);
       }
-    } else if (typeof safeUserMeta.personality === 'string') {
+    } else if (typeof rawData.user_meta.personality === 'string') {
       // If it's a string, use it directly
-      mbtiType = safeUserMeta.personality;
+      mbtiType = rawData.user_meta.personality;
       console.log('🎯 Using MBTI from user personality string:', mbtiType);
     }
   } else if (mbtiData?.type) {
@@ -145,16 +136,16 @@ const convertBlueprintToLayered = (data: BlueprintData): LayeredBlueprint => {
   }
   
   // Extract other data sections
-  const hdData = data.energy_strategy_human_design || data.human_design || {};
-  const numerologyData = data.values_life_path || data.numerology || {};
-  const westernAstroData = data.archetype_western || data.astrology || {};
-  const chineseAstroData = data.archetype_chinese || {};
+  const hdData = rawData.energy_strategy_human_design || rawData.human_design || {};
+  const numerologyData = rawData.values_life_path || rawData.numerology || {};
+  const westernAstroData = rawData.archetype_western || rawData.astrology || {};
+  const chineseAstroData = rawData.archetype_chinese || {};
   
   console.log('🔍 Data extraction results:', {
     mbtiType,
-    hdType: hdData?.type || hdData?.design_type || hdData?.humanDesignType || "Generator",
-    lifePath: numerologyData?.life_path_number || numerologyData?.lifePathNumber || numerologyData?.lifePath || 1,
-    sunSign: westernAstroData?.sun_sign || westernAstroData?.sunSign || westernAstroData?.sun || "Unknown",
+    hdType: hdData?.type || "Unknown",
+    lifePath: numerologyData?.life_path_number || numerologyData?.lifePathNumber || 1,
+    sunSign: westernAstroData?.sun_sign || westernAstroData?.sunSign || "Unknown",
     chineseAnimal: chineseAstroData?.animal || "Unknown"
   });
 
@@ -183,12 +174,15 @@ const convertBlueprintToLayered = (data: BlueprintData): LayeredBlueprint => {
       channels: hdData?.channels || [],
     },
     motivationBeliefEngine: {
-      coreBeliefs: data.bashar_suite?.mindset || [],
-      motivationalDrivers: data.bashar_suite?.motivation || [],
-      beliefPatterns: data.bashar_suite?.stateManagement || [],
-      motivationTriggers: data.bashar_suite?.drivingForces || [],
-      resistancePoints: data.bashar_suite?.resistancePatterns || [],
-      empowermentSources: data.bashar_suite?.excitementCompass || []
+      mindset: rawData.bashar_suite?.mindset || "growth",
+      motivation: rawData.bashar_suite?.motivation || ["growth", "authenticity"],
+      stateManagement: rawData.bashar_suite?.state_management || "awareness",
+      coreBeliefs: rawData.bashar_suite?.core_beliefs || ["potential"],
+      drivingForces: rawData.bashar_suite?.driving_forces || ["purpose"],
+      excitementCompass: rawData.bashar_suite?.excitement_compass || "follow joy",
+      frequencyAlignment: rawData.bashar_suite?.frequency_alignment || "authentic self",
+      beliefInterface: rawData.bashar_suite?.belief_interface || [],
+      resistancePatterns: rawData.bashar_suite?.resistance_patterns || [],
     },
     coreValuesNarrative: {
       lifePath: numerologyData?.life_path_number || numerologyData?.lifePathNumber || numerologyData?.lifePath || 1,
@@ -199,8 +193,8 @@ const convertBlueprintToLayered = (data: BlueprintData): LayeredBlueprint => {
       soulUrgeKeyword: numerologyData?.soul_urge_keyword || numerologyData?.soulUrgeKeyword,
       personalityNumber: numerologyData?.personality_number || numerologyData?.personalityNumber,
       personalityKeyword: numerologyData?.personality_keyword || numerologyData?.personalityKeyword,
-      birthdayNumber: numerologyData?.birthday_number || numerologyData?.birthdayNumber || 1,
-      birthdayKeyword: numerologyData?.birthday_keyword || numerologyData?.birthdayKeyword || 'Pioneer',
+      birthdayNumber: numerologyData?.birthday_number || numerologyData?.birthdayNumber,
+      birthdayKeyword: numerologyData?.birthday_keyword || numerologyData?.birthdayKeyword,
       meaningfulAreas: numerologyData?.meaningful_areas || ["growth"],
       anchoringVision: numerologyData?.anchoring_vision || "authentic contribution",
       lifeThemes: numerologyData?.life_themes || ["self-discovery"],
@@ -228,16 +222,16 @@ const convertBlueprintToLayered = (data: BlueprintData): LayeredBlueprint => {
       collectiveInfluence: chineseAstroData?.collective_influence || chineseAstroData?.collectiveInfluence || "moderate",
     },
     timingOverlays: {
-      currentTransits: data.timing_overlays?.current_transits || [],
-      seasonalInfluences: data.timing_overlays?.seasonal_influences || [],
-      cyclicalPatterns: data.timing_overlays?.cyclical_patterns || [],
-      optimalTimings: data.timing_overlays?.optimal_timings || [],
-      energyWeather: data.timing_overlays?.energy_weather || "stable growth",
+      currentTransits: rawData.timing_overlays?.current_transits || [],
+      seasonalInfluences: rawData.timing_overlays?.seasonal_influences || [],
+      cyclicalPatterns: rawData.timing_overlays?.cyclical_patterns || [],
+      optimalTimings: rawData.timing_overlays?.optimal_timings || [],
+      energyWeather: rawData.timing_overlays?.energy_weather || "stable growth",
     },
     user_meta: {
-      preferred_name: safeUserMeta.preferred_name as any,
-      full_name: safeUserMeta.full_name,
-      ...safeUserMeta
+      preferred_name: rawData.user_meta?.preferred_name,
+      full_name: rawData.user_meta?.full_name,
+      ...rawData.user_meta
     },
     humorProfile: {
       primaryStyle: 'warm-nurturer' as const,
@@ -328,4 +322,4 @@ const convertBlueprintToLayered = (data: BlueprintData): LayeredBlueprint => {
   });
 
   return converted;
-};
+}
