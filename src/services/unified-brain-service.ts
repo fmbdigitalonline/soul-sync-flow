@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { tieredMemoryGraph } from "./tiered-memory-graph";
 import { enhancedPersonalityEngine } from "./enhanced-personality-engine";
 import { productionACSService } from "./production-acs-service";
+import { enhancedAICoachService, AgentType } from "./enhanced-ai-coach-service";
 import { ACSConfig, DialogueState } from "@/types/acs-types";
 import { LayeredBlueprint, AgentMode } from "@/types/personality-modules";
 import { pieService } from "./pie-service";
