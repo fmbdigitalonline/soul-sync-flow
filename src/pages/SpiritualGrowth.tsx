@@ -110,7 +110,8 @@ const SpiritualGrowth = () => {
         // Special handling for coach-initiated flow
         if (message === "_COACH_INITIATED_FLOW_") {
           // Don't show this internal message, just trigger the coach response
-          const response = await programAwareCoachService.startGuidedProgramCreation(
+          const response = await programAwareCoachService.initializeBeliefDrilling(
+            'relationships',
             data.session.user.id,
             `guided_session_${Date.now()}`
           );

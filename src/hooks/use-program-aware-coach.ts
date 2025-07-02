@@ -1,8 +1,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
-import { programAwareCoachService } from '@/services/program-aware-coach-service';
+import { programAwareCoachService, Message } from '@/services/program-aware-coach-service';
 import { useAuth } from '@/contexts/AuthContext';
-import { Message } from './use-ai-coach';
 import { LifeDomain } from '@/types/growth-program';
 import { useConversationRecovery } from './use-conversation-recovery';
 

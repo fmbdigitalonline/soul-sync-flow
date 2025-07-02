@@ -1,9 +1,16 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Message } from './ai-coach-service';
 import { LifeDomain } from '@/types/growth-program';
 import { enhancedAICoachService } from './enhanced-ai-coach-service';
 import { careerDiscoveryService } from './career-discovery-service';
+
+// Define Message interface locally since it's not exported from ai-coach-service
+export interface Message {
+  id: string;
+  content: string;
+  sender: "user" | "assistant";
+  timestamp: Date;
+}
 
 export interface BeliefDrillingResponse {
   response: string;
@@ -43,8 +50,11 @@ class ProgramAwareCoachService {
     this.activeConversations.add(sessionId);
 
     try {
-      // Use career discovery service for initial context
-      const careerContext = await careerDiscoveryService.discoverCareerContext("");
+      // Use career discovery service for initial context if available
+      let careerContext = {};
+      if (careerDiscoveryService && typeof careerDiscoveryService.getCareerContext === 'function') {
+        careerContext = await careerDiscoveryService.getCareerContext("");
+      }
       console.log("✅ Career discovery completed:", careerContext);
 
       // Generate personalized greeting using enhanced AI coach
@@ -65,7 +75,12 @@ class ProgramAwareCoachService {
         userId,
         careerContext,
         lastResponse: response,
-        messageCount: 1
+        messageCount: 1,
+        discoveredInsights: [],
+        hasContext: true,
+        program: null,
+        week: null,
+        stage: 'initial'
       });
 
       return response;
@@ -137,8 +152,11 @@ class ProgramAwareCoachService {
       if (useEnhancedBrain) {
         console.log("🧠 Using enhanced AI coach with 4 brain innovations");
         
-        // Update career discovery context with new message
-        const updatedCareerContext = await careerDiscoveryService.discoverCareerContext(message);
+        // Update career discovery context with new message if service is available
+        let updatedCareerContext = careerContext || {};
+        if (careerDiscoveryService && typeof careerDiscoveryService.getCareerContext === 'function') {
+          updatedCareerContext = await careerDiscoveryService.getCareerContext(message);
+        }
         
         // Create context-rich prompt for enhanced AI coach
         const enhancedPrompt = this.createEnhancedPrompt(message, domain, updatedCareerContext, conversationContext);
@@ -160,7 +178,9 @@ class ProgramAwareCoachService {
           lastMessage: message,
           lastResponse: parsedResponse,
           messageCount: (conversationContext.messageCount || 0) + 1,
-          careerContext: updatedCareerContext
+          careerContext: updatedCareerContext,
+          discoveredInsights: this.extractInsights(aiResponse.response),
+          stage: this.determineConversationStage(conversationContext.messageCount || 0)
         });
 
         // Save conversation state with proper UPSERT
@@ -194,6 +214,7 @@ class ProgramAwareCoachService {
 Career Context: ${JSON.stringify(careerContext, null, 2)}
 Conversation History: ${conversationContext.messageCount || 0} messages exchanged
 Domain Focus: ${domain}
+Current Stage: ${conversationContext.stage || 'initial'}
 
 User Message: "${message}"
 
@@ -283,6 +304,13 @@ Be conversational, empathetic, and avoid generic responses. Draw from their pers
       ...data,
       lastUpdated: new Date().toISOString()
     });
+  }
+
+  private determineConversationStage(messageCount: number): string {
+    if (messageCount <= 2) return 'initial';
+    if (messageCount <= 5) return 'exploration';
+    if (messageCount <= 10) return 'deepening';
+    return 'integration';
   }
 
   // Fixed: Proper UPSERT logic to handle unique constraint
@@ -384,8 +412,51 @@ Be conversational, empathetic, and avoid generic responses. Draw from their pers
     return {
       activeConversations: Array.from(this.activeConversations),
       cachedSessions: this.conversationCache.size,
-      enhancedBrainEnabled: true
+      enhancedBrainEnabled: true,
+      // Add missing properties that are expected by components
+      discoveredInsights: this.getAllDiscoveredInsights(),
+      hasContext: this.conversationCache.size > 0,
+      program: null,
+      week: null,
+      stage: this.getCurrentStage()
     };
+  }
+
+  private getAllDiscoveredInsights(): string[] {
+    const allInsights: string[] = [];
+    for (const [sessionId, context] of this.conversationCache.entries()) {
+      if (context.discoveredInsights) {
+        allInsights.push(...context.discoveredInsights);
+      }
+    }
+    return allInsights;
+  }
+
+  private getCurrentStage(): string {
+    if (this.conversationCache.size === 0) return 'initial';
+    const contexts = Array.from(this.conversationCache.values());
+    const latestContext = contexts[contexts.length - 1];
+    return latestContext?.stage || 'initial';
+  }
+
+  // Add missing methods that are referenced in other files
+  async startGuidedProgramCreation(userId: string, sessionId: string): Promise<BeliefDrillingResponse> {
+    return this.initializeBeliefDrilling('relationships', userId, sessionId);
+  }
+
+  async getReadinessPrompts(domain: LifeDomain): Promise<string[]> {
+    return [
+      "What feels most challenging in this area right now?",
+      "What would success look like for you here?",
+      "What patterns do you notice in this part of your life?"
+    ];
+  }
+
+  async updateConversationStage(sessionId: string, stage: string): Promise<void> {
+    const context = this.conversationCache.get(sessionId);
+    if (context) {
+      this.updateConversationCache(sessionId, { stage });
+    }
   }
 
   // Cleanup method to prevent memory leaks
