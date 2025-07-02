@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
@@ -78,7 +79,10 @@ export default function SpiritualGrowth() {
     if (!user) return;
     
     try {
-      const response = await programAwareCoachService.sendProgramAwareMessage(message, sessionId || '');
+      const response = await programAwareCoachService.sendProgramAwareMessage(
+        message, 
+        sessionId || ''
+      );
       // Handle the response as needed
       console.log('Response received:', response);
     } catch (error) {
@@ -113,7 +117,8 @@ export default function SpiritualGrowth() {
             placeholder="Type your message..."
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
-                handleSendMessage(e.target.value);
+                const target = e.target as HTMLInputElement;
+                handleSendMessage(target.value);
               }
             }}
           />

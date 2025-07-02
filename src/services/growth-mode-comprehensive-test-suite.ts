@@ -43,6 +43,8 @@ class GrowthModeComprehensiveTestSuite {
   private testUserId: string | null = null;
   private testSessionId: string = `growth-mode-test-${Date.now()}`;
   private testProgramId: string | null = null;
+  private programAwareCoach = programAwareCoachService;
+
   private mockBlueprint: LayeredBlueprint = {
     cognitiveTemperamental: {
       mbtiType: 'ENFP',
@@ -69,15 +71,12 @@ class GrowthModeComprehensiveTestSuite {
       channels: ['32-54']
     },
     motivationBeliefEngine: {
-      mindset: 'growth',
-      motivation: ['creativity', 'authenticity', 'growth'],
-      stateManagement: 'emotional_awareness',
       coreBeliefs: ['I am creative', 'Growth is possible'],
-      drivingForces: ['self-expression', 'helping others'],
-      excitementCompass: 'creative_projects',
-      frequencyAlignment: 'high_vibration',
-      beliefInterface: ['openness', 'curiosity'],
-      resistancePatterns: ['perfectionism', 'self_doubt']
+      motivationalDrivers: ['creativity', 'authenticity', 'growth'],
+      beliefPatterns: ['emotional_awareness'],
+      motivationTriggers: ['self-expression', 'helping others'],
+      resistancePoints: ['perfectionism', 'self_doubt'],
+      empowermentSources: ['creative_projects']
     },
     coreValuesNarrative: {
       lifePath: 3,
@@ -408,8 +407,7 @@ class GrowthModeComprehensiveTestSuite {
       const startTime = Date.now();
       const response = await programAwareCoachService.sendProgramAwareMessage(
         "I'm feeling uncertain about starting this program",
-        this.testSessionId,
-        this.testUserId!
+        this.testSessionId
       );
       
       // Check if response is adaptive (not information dumping)
@@ -439,10 +437,10 @@ class GrowthModeComprehensiveTestSuite {
       });
     }
 
-    // Test 3: Readiness Detection
+    // Test 3: Readiness Detection - Fix Promise handling
     try {
       const startTime = Date.now();
-      const prompts = programAwareCoachService.getReadinessPrompts();
+      const prompts = await programAwareCoachService.getReadinessPrompts();
       
       results.push({
         testName: 'Readiness Detection',
@@ -689,8 +687,7 @@ class GrowthModeComprehensiveTestSuite {
       const userMessage = "I need guidance on my career week 2";
       const response = await programAwareCoachService.sendProgramAwareMessage(
         userMessage,
-        this.testSessionId,
-        this.testUserId!
+        this.testSessionId
       );
       
       // Check if response is contextual
@@ -758,8 +755,7 @@ class GrowthModeComprehensiveTestSuite {
       // Test coach response time for UI
       const quickResponse = await programAwareCoachService.sendProgramAwareMessage(
         "Quick test",
-        this.testSessionId,
-        this.testUserId!
+        this.testSessionId
       );
       
       const isResponsive = (Date.now() - startTime) < 3000; // Under 3 seconds
@@ -792,7 +788,7 @@ class GrowthModeComprehensiveTestSuite {
       const startTime = Date.now();
       
       const promises = [
-        programAwareCoachService.sendProgramAwareMessage("Test 1", this.testSessionId, this.testUserId!),
+        programAwareCoachService.sendProgramAwareMessage("Test 1", this.testSessionId),
         memoryService.getRecentMemories(5),
         growthProgramService.getCurrentProgram(this.testUserId!)
       ];
@@ -900,12 +896,12 @@ class GrowthModeComprehensiveTestSuite {
         channels: ['32-54']
       },
       motivationBeliefEngine: {
-        coreBeliefs: ['growth mindset', 'self-compassion'],
-        motivationalDrivers: ['achievement', 'connection'],
-        beliefPatterns: ['positive self-talk', 'resilience'],
-        motivationTriggers: ['challenge', 'recognition'],
-        resistancePoints: ['perfectionism', 'fear of failure'],
-        empowermentSources: ['meditation', 'journaling']
+        coreBeliefs: ['I am creative', 'Growth is possible'],
+        motivationalDrivers: ['creativity', 'authenticity', 'growth'],
+        beliefPatterns: ['emotional_awareness'],
+        motivationTriggers: ['self-expression', 'helping others'],
+        resistancePoints: ['perfectionism', 'self_doubt'],
+        empowermentSources: ['creative_projects']
       },
       coreValuesNarrative: {
         lifePath: 3,
@@ -1208,9 +1204,4 @@ class GrowthModeComprehensiveTestSuite {
   }
 }
 
-export const growthModeComprehensiveTestSuite = new GrowthModeComprehensiveTestSuite(
-  programAwareCoachService,
-  enhancedAICoachService,
-  memoryInformedConversationService,
-  enhancedMemoryService
-);
+export const growthModeComprehensiveTestSuite = new GrowthModeComprehensiveTestSuite();

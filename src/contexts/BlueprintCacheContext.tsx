@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { blueprintService, BlueprintData } from '@/services/blueprint-service';
@@ -112,9 +113,9 @@ const convertBlueprintToLayered = (data: BlueprintData): LayeredBlueprint => {
   console.log('🔧 Converting raw data to LayeredBlueprint...');
   console.log('🗂️ Raw data keys available:', Object.keys(data));
   
-  // Handle user_meta with proper type checking
+  // Handle user_meta with proper type checking and type assertion
   const userMeta = data.user_meta || {};
-  const safeUserMeta = typeof userMeta === 'object' && userMeta !== null ? userMeta : {};
+  const safeUserMeta = typeof userMeta === 'object' && userMeta !== null ? userMeta as any : {};
   
   // Handle MBTI data - check multiple possible sources
   const mbtiData = data.cognition_mbti || data.mbti || data.personality || {};
@@ -229,7 +230,11 @@ const convertBlueprintToLayered = (data: BlueprintData): LayeredBlueprint => {
       optimalTimings: data.timing_overlays?.optimal_timings || [],
       energyWeather: data.timing_overlays?.energy_weather || "stable growth",
     },
-    user_meta: safeUserMeta,
+    user_meta: {
+      preferred_name: safeUserMeta.preferred_name,
+      full_name: safeUserMeta.full_name,
+      ...safeUserMeta
+    },
     humorProfile: {
       primaryStyle: 'warm-nurturer' as const,
       intensity: 'moderate' as const,
