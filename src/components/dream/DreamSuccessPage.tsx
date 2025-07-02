@@ -10,6 +10,7 @@ import { ActionButtons } from './success/ActionButtons';
 import { MilestoneDetailView } from '@/components/journey/MilestoneDetailView';
 import { TimelineDetailView } from '@/components/journey/TimelineDetailView';
 import { TaskViews } from '@/components/journey/TaskViews';
+import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
 
 interface DreamSuccessPageProps {
   goal: any;
@@ -27,6 +28,7 @@ export const DreamSuccessPage: React.FC<DreamSuccessPageProps> = ({
   const [showTour, setShowTour] = useState(true);
   const [celebrationComplete, setCelebrationComplete] = useState(false);
   const [currentView, setCurrentView] = useState<'overview' | 'milestones' | 'tasks' | 'timeline'>('overview');
+  const { spacing, layout, touchTargetSize, getTextSize, isFoldDevice, isUltraNarrow, isMobile } = useResponsiveLayout();
 
   const tourSteps = [
     {
@@ -114,7 +116,7 @@ export const DreamSuccessPage: React.FC<DreamSuccessPageProps> = ({
   // Render different views based on currentView
   if (currentView === 'milestones') {
     return (
-      <div className="min-h-screen">
+      <div className={`min-h-screen w-full ${isMobile ? 'pb-20' : ''}`}>
         <MilestoneDetailView
           milestones={goal.milestones || []}
           onBack={handleBackToOverview}
@@ -126,8 +128,8 @@ export const DreamSuccessPage: React.FC<DreamSuccessPageProps> = ({
 
   if (currentView === 'tasks') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-soul-purple/5 via-white to-soul-teal/5">
-        <div className="max-w-4xl mx-auto p-4">
+      <div className={`min-h-screen bg-gradient-to-br from-soul-purple/5 via-white to-soul-teal/5 w-full ${isMobile ? 'pb-20' : ''}`}>
+        <div className={`w-full max-w-4xl mx-auto ${spacing.container}`}>
           <TaskViews
             focusedMilestone={null}
             onBackToJourney={handleBackToOverview}
@@ -140,7 +142,7 @@ export const DreamSuccessPage: React.FC<DreamSuccessPageProps> = ({
 
   if (currentView === 'timeline') {
     return (
-      <div className="min-h-screen">
+      <div className={`min-h-screen w-full ${isMobile ? 'pb-20' : ''}`}>
         <TimelineDetailView
           goal={goal}
           milestones={goal.milestones || []}
@@ -150,10 +152,10 @@ export const DreamSuccessPage: React.FC<DreamSuccessPageProps> = ({
     );
   }
 
-  // Default overview view
+  // Default overview view - Mobile responsive
   return (
-    <div className="min-h-screen bg-gradient-to-br from-soul-purple/5 via-white to-soul-teal/5 p-4">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className={`min-h-screen bg-gradient-to-br from-soul-purple/5 via-white to-soul-teal/5 w-full ${isMobile ? 'pb-20' : ''}`}>
+      <div className={`w-full max-w-4xl mx-auto ${spacing.container} ${spacing.gap}`}>
         
         <CelebrationHeader
           speaking={speaking}
