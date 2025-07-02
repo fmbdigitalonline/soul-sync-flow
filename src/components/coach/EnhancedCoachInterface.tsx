@@ -1,44 +1,62 @@
 
-import React, { useState, useRef, useEffect } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
-import { Send, Loader2, Brain, Settings } from 'lucide-react';
-import { useProductionACS } from '@/hooks/use-production-acs';
-import ACSControlPanel from '@/components/acs/ACSControlPanel';
-import { toast } from 'sonner';
-import { supabase } from "@/integrations/supabase/client";
-import ACSEnhancedCoachInterface from './ACSEnhancedCoachInterface';
-import UnifiedCoachInterface from './UnifiedCoachInterface';
-import { AgentMode } from '@/types/personality-modules';
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card, CardContent } from "@/components/ui/card";
+import { Send, Menu, X } from "lucide-react";
+import { useEnhancedAICoach } from "@/hooks/use-enhanced-ai-coach";
+import { AgentSelector } from "./AgentSelector";
+import { CoachLoadingMessage } from "./CoachLoadingMessage";
+import { TypewriterText } from "./TypewriterText";
+import { VFPGraphFeedback } from "./VFPGraphFeedback";
+import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 
 interface Message {
   id: string;
   content: string;
   isUser: boolean;
   timestamp: Date;
-  agentMode: AgentMode;
-  interventionApplied?: boolean;
-  fallbackUsed?: boolean;
-  brainMetrics?: any;
+  agentMode?: string;
+  isStreaming?: boolean;
 }
 
 interface EnhancedCoachInterfaceProps {
-  sessionId: string;
+  sessionId?: string;
   initialMessages?: Message[];
   onNewMessage?: (message: Message) => void;
 }
 
-const EnhancedCoachInterface: React.FC<EnhancedCoachInterfaceProps> = (props) => {
-  // Check if unified brain should be enabled (could be based on user settings, feature flags, etc.)
-  const [useUnifiedBrain, setUseUnifiedBrain] = useState(true);
-  const [useACS, setUseACS] = useState(true);
-  const [messages, setMessages] = useState<Message[]>(props.initialMessages || []);
-  const [inputValue, setInputValue] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+export default function EnhancedCoachInterface({
+  sessionId,
+  initialMessages = [],
+  onNewMessage
+}: EnhancedCoachInterfaceProps) {
+  const { isMobile, isUltraNarrow, spacing, getTextSize, touchTargetSize } = useResponsiveLayout();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  
+  const {
+    messages,
+    isLoading,
+    sendMessage,
+    resetConversation,
+    currentAgent,
+    switchAgent,
+    streamingContent,
+    isStreaming,
+    personaReady,
+    authInitialized,
+    blueprintStatus,
+    vfpGraphStatus,
+    recordVFPGraphFeedback
+  } = useEnhancedAICoach();
+
+  const [inputMessage, setInputMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Combine initial messages with current messages
+  const allMessages = [...initialMessages, ...messages];
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -46,188 +64,276 @@ const EnhancedCoachInterface: React.FC<EnhancedCoachInterfaceProps> = (props) =>
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [allMessages, streamingContent]);
 
-  const handleSendMessage = async () => {
-    if (!inputValue.trim() || isLoading) return;
+  const handleSendMessage = useCallback(async () => {
+    if (!inputMessage.trim() || isLoading) return;
 
+    const messageToSend = inputMessage;
+    setInputMessage("");
+    
+    // Notify parent of new user message
     const userMessage: Message = {
-      id: `user_${Date.now()}`,
-      content: inputValue.trim(),
+      id: Date.now().toString(),
+      content: messageToSend,
       isUser: true,
       timestamp: new Date(),
-      agentMode: 'guide'
+      agentMode: currentAgent
     };
-
-    setMessages(prev => [...prev, userMessage]);
-    setInputValue('');
-    setIsLoading(true);
-
+    
+    onNewMessage?.(userMessage);
+    
     try {
-      // Use regular AI coach without unified brain or ACS
-      const { data, error } = await supabase.functions.invoke("ai-coach", {
-        body: {
-          message: inputValue.trim(),
-          sessionId: props.sessionId,
-          systemPrompt: "You are a helpful AI assistant. Respond naturally and helpfully to user questions.",
-          temperature: 0.7,
-          maxTokens: 200,
-          includeBlueprint: false,
-          agentType: "guide",
-          language: "en"
-        },
-      });
-
-      if (error || !data?.response) {
-        throw new Error("AI coach service failed");
-      }
-
-      const assistantMessage: Message = {
-        id: `assistant_${Date.now()}`,
-        content: data.response,
-        isUser: false,
-        timestamp: new Date(),
-        agentMode: 'guide'
-      };
-
-      setMessages(prev => [...prev, assistantMessage]);
-      
-      if (props.onNewMessage) {
-        props.onNewMessage(userMessage);
-        props.onNewMessage(assistantMessage);
-      }
-
+      await sendMessage(messageToSend, true);
     } catch (error) {
-      console.error('Failed to send message:', error);
-      toast.error('Failed to send message. Please try again.');
-      
-      const errorMessage: Message = {
-        id: `error_${Date.now()}`,
-        content: "I'm sorry, I'm having trouble responding right now. Please try again.",
-        isUser: false,
-        timestamp: new Date(),
-        agentMode: 'guide',
-        fallbackUsed: true
-      };
-      
-      setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setIsLoading(false);
+      console.error("Error sending message:", error);
     }
-  };
+  }, [inputMessage, isLoading, sendMessage, onNewMessage, currentAgent]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
     }
   };
 
-  if (useUnifiedBrain) {
-    return <UnifiedCoachInterface {...props} agentMode="guide" />;
-  }
+  const handleAgentSwitch = (newAgent: any) => {
+    switchAgent(newAgent);
+    if (isMobile) setSidebarOpen(false); // Close sidebar on mobile after selection
+  };
 
-  if (useACS) {
-    return <ACSEnhancedCoachInterface {...props} />;
-  }
-
-  // Original coach interface (both systems disabled)
-  return (
-    <div className="flex flex-col h-full max-w-4xl mx-auto space-y-4">
+  // Mobile Sidebar Component
+  const MobileSidebar = () => (
+    <div className={`
+      fixed inset-0 z-50 md:hidden
+      ${sidebarOpen ? 'visible' : 'invisible'}
+    `}>
+      {/* Backdrop */}
+      <div 
+        className={`absolute inset-0 bg-black/50 transition-opacity duration-300 ${
+          sidebarOpen ? 'opacity-100' : 'opacity-0'
+        }`}
+        onClick={() => setSidebarOpen(false)}
+      />
       
-      {/* Status Bar */}
-      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
-        <div className="flex items-center space-x-3">
-          <span className="text-sm font-medium">Basic AI Coach</span>
-          <Badge variant="secondary">No Brain/ACS</Badge>
+      {/* Sidebar */}
+      <div className={`
+        absolute left-0 top-0 h-full w-80 max-w-[85vw] bg-background border-r
+        transform transition-transform duration-300 ease-in-out
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        overflow-y-auto
+      `}>
+        <div className="p-4 border-b flex items-center justify-between">
+          <h3 className="font-semibold">Coach Settings</h3>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
         </div>
-        <div className="flex space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setUseACS(true)}
-          >
-            Enable ACS
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setUseUnifiedBrain(true)}
-          >
-            <Brain className="w-4 h-4 mr-2" />
-            Enable Unified Brain
-          </Button>
+        
+        <div className="p-4 space-y-4">
+          <div>
+            <h4 className={`font-medium mb-3 ${getTextSize('text-sm')}`}>Select Coach Mode</h4>
+            <AgentSelector
+              currentAgent={currentAgent}
+              onAgentChange={handleAgentSwitch}
+              personaReady={personaReady}
+            />
+          </div>
+          
+          {/* Blueprint Status */}
+          <div className="space-y-2">
+            <h4 className={`font-medium ${getTextSize('text-sm')}`}>Blueprint Status</h4>
+            <div className={`text-xs p-2 rounded bg-muted`}>
+              <div>Available: {blueprintStatus.isAvailable ? '✓' : '✗'}</div>
+              <div>Completion: {blueprintStatus.completionPercentage}%</div>
+            </div>
+          </div>
+          
+          {/* VFP Graph Status */}
+          <div className="space-y-2">
+            <h4 className={`font-medium ${getTextSize('text-sm')}`}>VFP Graph Status</h4>
+            <div className={`text-xs p-2 rounded bg-muted`}>
+              <div>Available: {vfpGraphStatus.isAvailable ? '✓' : '✗'}</div>
+              <div>Dimensions: {vfpGraphStatus.vectorDimensions}</div>
+            </div>
+          </div>
         </div>
       </div>
+    </div>
+  );
 
-      {/* Messages */}
-      <Card className="flex-1 flex flex-col">
-        <ScrollArea className="flex-1 p-4">
-          <div className="space-y-4">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[70%] rounded-lg px-4 py-2 ${
-                    message.isUser
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-900'
-                  }`}
-                >
-                  <div className="whitespace-pre-wrap">{message.content}</div>
-                  
-                  {!message.isUser && (
-                    <div className="flex items-center space-x-2 mt-2">
-                      <span className="text-xs text-gray-500">
-                        {message.timestamp.toLocaleTimeString()}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-            
-            {isLoading && (
-              <div className="flex justify-start">
-                <div className="bg-gray-100 rounded-lg px-4 py-2">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                </div>
-              </div>
-            )}
-            
-            <div ref={messagesEndRef} />
-          </div>
-        </ScrollArea>
+  if (!authInitialized) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <CoachLoadingMessage message="Initializing coach..." />
+      </div>
+    );
+  }
 
-        {/* Input */}
-        <div className="p-4 border-t">
-          <div className="flex space-x-2">
-            <Textarea
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Type your message..."
-              className="flex-1 min-h-[60px]"
-              disabled={isLoading}
-            />
+  return (
+    <div className="h-full flex flex-col">
+      {/* Mobile Sidebar */}
+      <MobileSidebar />
+      
+      {/* Header - Mobile Responsive */}
+      <div className="border-b bg-background p-3 md:p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {/* Mobile sidebar toggle */}
             <Button
-              onClick={handleSendMessage}
-              disabled={isLoading || !inputValue.trim()}
-              className="self-end"
+              variant="outline"
+              size="sm"
+              onClick={() => setSidebarOpen(true)}
+              className="md:hidden"
             >
-              {isLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Send className="w-4 h-4" />
-              )}
+              <Menu className="h-4 w-4" />
+            </Button>
+            
+            <h2 className={`font-semibold ${getTextSize('text-lg')}`}>
+              AI Coach - {currentAgent}
+            </h2>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={resetConversation}
+              className="hidden sm:block"
+            >
+              Reset
             </Button>
           </div>
         </div>
-      </Card>
+      </div>
+
+      {/* Main Content - Mobile Responsive Layout */}
+      <div className="flex-1 flex flex-col md:flex-row min-h-0">
+        {/* Desktop Sidebar - Hidden on Mobile */}
+        <div className="hidden md:block w-80 border-r bg-muted/50 p-4 space-y-4 overflow-y-auto">
+          <div>
+            <h4 className="font-medium mb-3">Select Coach Mode</h4>
+            <AgentSelector
+              currentAgent={currentAgent}
+              onAgentChange={switchAgent}
+              personaReady={personaReady}
+            />
+          </div>
+          
+          {/* Blueprint Status */}
+          <Card>
+            <CardContent className="p-4">
+              <h4 className="font-medium mb-2">Blueprint Status</h4>
+              <div className="space-y-1 text-sm text-muted-foreground">
+                <div>Available: {blueprintStatus.isAvailable ? '✓' : '✗'}</div>
+                <div>Completion: {blueprintStatus.completionPercentage}%</div>
+                <div className="text-xs mt-2">{blueprintStatus.summary}</div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          {/* VFP Graph Status */}
+          <Card>
+            <CardContent className="p-4">
+              <h4 className="font-medium mb-2">VFP Graph Status</h4>
+              <div className="space-y-1 text-sm text-muted-foreground">
+                <div>Available: {vfpGraphStatus.isAvailable ? '✓' : '✗'}</div>
+                <div>Dimensions: {vfpGraphStatus.vectorDimensions}</div>
+                <div>Magnitude: {vfpGraphStatus.vectorMagnitude?.toFixed(2) || 'N/A'}</div>
+                <div className="text-xs mt-2">{vfpGraphStatus.personalitySummary}</div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Chat Interface - Full Width on Mobile */}
+        <div className="flex-1 flex flex-col min-h-0">
+          {/* Messages Area */}
+          <ScrollArea className="flex-1 p-3 md:p-4">
+            <div className="space-y-4 max-w-4xl mx-auto">
+              {allMessages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex ${message.isUser ? "justify-end" : "justify-start"}`}
+                >
+                  <div
+                    className={`max-w-[85%] sm:max-w-[80%] md:max-w-[70%] rounded-lg px-3 md:px-4 py-2 md:py-3 ${
+                      message.isUser
+                        ? "bg-soul-purple text-white"
+                        : "bg-muted"
+                    }`}
+                  >
+                    <div className={`${getTextSize('text-sm')} break-words`}>
+                      {message.isStreaming ? (
+                        <TypewriterText text={message.content} />
+                      ) : (
+                        message.content
+                      )}
+                    </div>
+                    <div className={`${getTextSize('text-xs')} mt-1 opacity-70`}>
+                      {message.timestamp.toLocaleTimeString()}
+                    </div>
+                    
+                    {/* VFP Graph Feedback for assistant messages */}
+                    {!message.isUser && !message.isStreaming && (
+                      <VFPGraphFeedback
+                        messageId={message.id}
+                        onFeedback={(isPositive) => recordVFPGraphFeedback(message.id, isPositive)}
+                      />
+                    )}
+                  </div>
+                </div>
+              ))}
+              
+              {/* Streaming message */}
+              {isStreaming && streamingContent && (
+                <div className="flex justify-start">
+                  <div className="max-w-[85%] sm:max-w-[80%] md:max-w-[70%] rounded-lg px-3 md:px-4 py-2 md:py-3 bg-muted">
+                    <div className={`${getTextSize('text-sm')} break-words`}>
+                      <TypewriterText text={streamingContent} />
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Loading indicator */}
+              {isLoading && !isStreaming && (
+                <div className="flex justify-start">
+                  <CoachLoadingMessage />
+                </div>
+              )}
+              
+              <div ref={messagesEndRef} />
+            </div>
+          </ScrollArea>
+
+          {/* Input Area - Mobile Responsive */}
+          <div className="border-t bg-background p-3 md:p-4">
+            <div className="flex gap-2 max-w-4xl mx-auto">
+              <Input
+                ref={inputRef}
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Type your message..."
+                disabled={isLoading}
+                className={`flex-1 ${getTextSize('text-sm')}`}
+              />
+              <Button
+                onClick={handleSendMessage}
+                disabled={isLoading || !inputMessage.trim()}
+                className={`${touchTargetSize} px-3`}
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
-};
-
-export default EnhancedCoachInterface;
+}
