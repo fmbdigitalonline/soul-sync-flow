@@ -13,7 +13,9 @@ import {
   Play,
   Pause,
   RotateCcw,
-  AlertCircle
+  AlertCircle,
+  Menu,
+  X
 } from "lucide-react";
 import { useTaskAwareCoach } from "@/hooks/use-task-aware-coach";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
@@ -26,6 +28,7 @@ import { enhancedTaskCoachIntegrationService } from "@/services/enhanced-task-co
 import { dreamActivityLogger } from "@/services/dream-activity-logger";
 import { TaskContext } from "@/services/task-coach-integration-service";
 import { AgentMode } from "@/types/personality-modules";
+import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 
 interface Task {
   id: string;
@@ -62,6 +65,8 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
   onBack,
   onTaskComplete
 }) => {
+  const { isMobile, isUltraNarrow, spacing, getTextSize, touchTargetSize } = useResponsiveLayout();
+  
   // Create stable task context
   const taskContext: TaskContext = useMemo(() => ({
     ...task,
@@ -71,6 +76,7 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
 
   const [initializationError, setInitializationError] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Initialize the task-aware coach with error handling
   const { 
@@ -236,6 +242,7 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
 
     setSessionStarted(true);
     setIsTimerRunning(true);
+    setSidebarOpen(false); // Close sidebar on mobile when starting session
 
     // Get current goal context
     const currentGoals = productivityJourney?.current_goals || [];
@@ -275,8 +282,9 @@ Let's get started! What's the first step?`;
       });
       
       sendMessage(message);
+      if (isMobile) setSidebarOpen(false); // Close sidebar after action on mobile
     }
-  }, [isLoading, sendMessage, task.id]);
+  }, [isLoading, sendMessage, task.id, isMobile]);
 
   const handleSubTaskComplete = useCallback(async (subTaskId: string) => {
     console.log('🎯 Sub-task completed, notifying coach:', subTaskId);
@@ -401,20 +409,105 @@ Let's get started! What's the first step?`;
     );
   }
 
+  // Mobile Sidebar Component
+  const MobileSidebar = () => (
+    <div className={`
+      fixed inset-0 z-50 md:hidden
+      ${sidebarOpen ? 'visible' : 'invisible'}
+    `}>
+      {/* Backdrop */}
+      <div 
+        className={`absolute inset-0 bg-black/50 transition-opacity duration-300 ${
+          sidebarOpen ? 'opacity-100' : 'opacity-0'
+        }`}
+        onClick={() => setSidebarOpen(false)}
+      />
+      
+      {/* Sidebar */}
+      <div className={`
+        absolute left-0 top-0 h-full w-80 max-w-[85vw] bg-background border-r
+        transform transition-transform duration-300 ease-in-out
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        overflow-y-auto
+      `}>
+        <div className="p-4 border-b flex items-center justify-between">
+          <h3 className="font-semibold">Task Tools</h3>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+        
+        <div className="p-4 space-y-4">
+          <SessionProgress 
+            focusTime={focusTime}
+            estimatedDuration={task.estimated_duration}
+            energyLevel={task.energy_level_required}
+            taskProgress={taskProgress}
+            totalDays={totalDays}
+          />
+          
+          <SubTaskManager
+            taskTitle={task.title}
+            onSubTaskComplete={handleSubTaskComplete}
+            onAllComplete={handleAllSubTasksComplete}
+          />
+          
+          {sessionStarted && (
+            <>
+              <SmartQuickActions
+                onAction={handleQuickAction}
+                isLoading={isLoading}
+                currentProgress={taskProgress}
+                hasSubTasks={!!(currentTask?.sub_tasks && currentTask.sub_tasks.length > 0)}
+              />
+              
+              <QuickActions
+                onAction={handleQuickAction}
+                isLoading={isLoading}
+              />
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="h-full flex flex-col animate-fade-in transition-all duration-300">
-      {/* Task Header - More compact */}
-      <div className="border-b bg-background p-3">
+      {/* Mobile Sidebar */}
+      <MobileSidebar />
+      
+      {/* Task Header - Mobile Responsive */}
+      <div className="border-b bg-background p-3 md:p-4">
         <div className="flex items-center justify-between mb-3">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={handleBackClick}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Journey
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleBackClick}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span className="hidden sm:inline">Back to Journey</span>
+              <span className="sm:hidden">Back</span>
+            </Button>
+            
+            {/* Mobile sidebar toggle */}
+            {sessionStarted && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSidebarOpen(true)}
+                className="md:hidden"
+              >
+                <Menu className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
           
           <div className="flex items-center gap-2">
             <Button
@@ -425,7 +518,7 @@ Let's get started! What's the first step?`;
               className="flex items-center gap-2"
             >
               {isTimerRunning ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
-              {formatTime(focusTime)}
+              <span className={getTextSize('text-xs')}>{formatTime(focusTime)}</span>
             </Button>
             
             <Button
@@ -433,25 +526,26 @@ Let's get started! What's the first step?`;
               size="sm"
               onClick={handleTimerReset}
               disabled={!sessionStarted}
+              className="hidden sm:flex"
             >
               <RotateCcw className="h-3 w-3" />
             </Button>
           </div>
         </div>
         
-        {/* Compact task info */}
+        {/* Compact task info - Mobile Responsive */}
         <div className="space-y-2">
-          <div className="flex items-start justify-between">
-            <h2 className="text-lg font-semibold flex items-center gap-2">
-              <Target className="h-5 w-5 text-soul-purple" />
-              {task.title}
+          <div className="flex items-start justify-between flex-col sm:flex-row gap-2">
+            <h2 className={`font-semibold flex items-center gap-2 ${getTextSize('text-lg')}`}>
+              <Target className="h-5 w-5 text-soul-purple flex-shrink-0" />
+              <span className="break-words">{task.title}</span>
             </h2>
             
             {!taskCompleted && task.status !== 'completed' && (
               <Button
                 onClick={handleCompleteTask}
                 disabled={!sessionStarted}
-                className="bg-emerald-600 hover:bg-emerald-700"
+                className="bg-emerald-600 hover:bg-emerald-700 w-full sm:w-auto"
                 size="sm"
               >
                 <CheckCircle2 className="h-4 w-4 mr-1" />
@@ -461,7 +555,9 @@ Let's get started! What's the first step?`;
           </div>
           
           {task.description && (
-            <p className="text-sm text-muted-foreground">{task.description}</p>
+            <p className={`text-muted-foreground break-words ${getTextSize('text-sm')}`}>
+              {task.description}
+            </p>
           )}
 
           <div className="flex gap-2 flex-wrap">
@@ -501,10 +597,10 @@ Let's get started! What's the first step?`;
         )}
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex gap-4 p-4 min-h-0">
-        {/* Left Sidebar - Task Management */}
-        <div className="w-80 space-y-4 overflow-y-auto">
+      {/* Main Content - Mobile Responsive Layout */}
+      <div className="flex-1 flex flex-col md:flex-row gap-4 p-4 min-h-0">
+        {/* Desktop Sidebar - Hidden on Mobile */}
+        <div className="hidden md:block w-80 space-y-4 overflow-y-auto">
           <SessionProgress 
             focusTime={focusTime}
             estimatedDuration={task.estimated_duration}
@@ -536,22 +632,22 @@ Let's get started! What's the first step?`;
           )}
         </div>
 
-        {/* Right Side - Coach Interface */}
+        {/* Main Coach Interface - Full Width on Mobile */}
         <div className="flex-1 flex flex-col min-h-0">
           {!sessionStarted ? (
-            <div className="flex-1 flex items-center justify-center p-8">
-              <div className="text-center max-w-md">
+            <div className="flex-1 flex items-center justify-center p-4 md:p-8">
+              <div className="text-center max-w-md w-full">
                 <div className="w-16 h-16 bg-soul-purple/10 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Brain className="h-8 w-8 text-soul-purple" />
                 </div>
-                <h3 className="text-xl font-semibold mb-2">Ready to Focus?</h3>
-                <p className="text-muted-foreground mb-6">
+                <h3 className={`font-semibold mb-2 ${getTextSize('text-xl')}`}>Ready to Focus?</h3>
+                <p className={`text-muted-foreground mb-6 ${getTextSize('text-sm')}`}>
                   Start a personalized coaching session with integrated task management for "{task.title}".
                 </p>
                 <Button 
                   onClick={handleStartSession}
-                  className="bg-soul-purple hover:bg-soul-purple/90"
-                  size="lg"
+                  className="bg-soul-purple hover:bg-soul-purple/90 w-full sm:w-auto"
+                  size={isMobile ? "default" : "lg"}
                 >
                   <MessageCircle className="h-4 w-4 mr-2" />
                   Start Coaching Session
