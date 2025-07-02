@@ -127,7 +127,7 @@ export const DreamSuccessPage: React.FC<DreamSuccessPageProps> = ({
   if (currentView === 'tasks') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-soul-purple/5 via-white to-soul-teal/5">
-        <div className="max-w-4xl mx-auto p-4">
+        <div className="w-full max-w-full mx-auto p-3 sm:p-4 overflow-x-hidden">
           <TaskViews
             focusedMilestone={null}
             onBackToJourney={handleBackToOverview}
@@ -150,10 +150,10 @@ export const DreamSuccessPage: React.FC<DreamSuccessPageProps> = ({
     );
   }
 
-  // Default overview view
+  // Default overview view - Fixed container width and overflow
   return (
-    <div className="min-h-screen bg-gradient-to-br from-soul-purple/5 via-white to-soul-teal/5 p-4">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-soul-purple/5 via-white to-soul-teal/5 w-full overflow-x-hidden">
+      <div className="w-full max-w-full mx-auto p-3 sm:p-4 space-y-4 sm:space-y-6">
         
         <CelebrationHeader
           speaking={speaking}
@@ -161,39 +161,49 @@ export const DreamSuccessPage: React.FC<DreamSuccessPageProps> = ({
           goalTitle={goal.title}
         />
 
-        <GuidedTourPanel
-          showTour={showTour}
-          currentStep={currentStep}
-          tourStep={tourStep}
-          totalSteps={tourSteps.length}
-          onNextStep={handleNextTourStep}
-          onSkipTour={handleSkipTour}
-        />
+        <div className="w-full max-w-full">
+          <GuidedTourPanel
+            showTour={showTour}
+            currentStep={currentStep}
+            tourStep={tourStep}
+            totalSteps={tourSteps.length}
+            onNextStep={handleNextTourStep}
+            onSkipTour={handleSkipTour}
+          />
+        </div>
 
-        <InteractiveJourneyOverview
-          milestonesCount={goal.milestones?.length || 0}
-          tasksCount={goal.tasks?.length || 0}
-          timeframe={goal.timeframe}
-          isHighlighted={currentStep?.highlight === 'overview'}
-          onNavigateToSection={handleNavigateToSection}
-        />
+        <div className="w-full max-w-full">
+          <InteractiveJourneyOverview
+            milestonesCount={goal.milestones?.length || 0}
+            tasksCount={goal.tasks?.length || 0}
+            timeframe={goal.timeframe}
+            isHighlighted={currentStep?.highlight === 'overview'}
+            onNavigateToSection={handleNavigateToSection}
+          />
+        </div>
 
-        <MilestonesRoadmap
-          milestones={goal.milestones || []}
-          isHighlighted={currentStep?.highlight === 'milestones'}
-        />
+        <div className="w-full max-w-full">
+          <MilestonesRoadmap
+            milestones={goal.milestones || []}
+            isHighlighted={currentStep?.highlight === 'milestones'}
+          />
+        </div>
 
-        <RecommendedTask
-          task={getRecommendedTask()}
-          isHighlighted={currentStep?.highlight === 'next-action'}
-          onStartTask={onStartTask}
-        />
+        <div className="w-full max-w-full">
+          <RecommendedTask
+            task={getRecommendedTask()}
+            isHighlighted={currentStep?.highlight === 'next-action'}
+            onStartTask={onStartTask}
+          />
+        </div>
 
-        <ActionButtons
-          showTour={showTour}
-          onViewJourney={onViewJourney}
-          onRestartTour={handleRestartTour}
-        />
+        <div className="w-full max-w-full">
+          <ActionButtons
+            showTour={showTour}
+            onViewJourney={onViewJourney}
+            onRestartTour={handleRestartTour}
+          />
+        </div>
       </div>
     </div>
   );
