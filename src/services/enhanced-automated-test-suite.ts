@@ -459,24 +459,52 @@ class EnhancedAutomatedTestSuite {
         }
       });
 
-      // Enhanced personalized configuration test
+      // Enhanced personalized configuration test with detailed logging
       const mockBlueprint = {
         cognition_mbti: { type: 'INTJ' },
         energy_strategy_human_design: { type: 'Generator' },
         user_meta: { preferred_name: 'EnhancedTestUser' }
       };
 
+      const originalGrowthConfig = agentConfigurationService.getConfig('growth');
       const personalizedConfig = agentConfigurationService.getPersonalizedConfig('growth', mockBlueprint);
       
-      // More thorough personalization check - compare key behavioral properties
-      const personalizedDifferences = [
-        personalizedConfig.behavioral?.responseStyle !== growthConfig.behavioral?.responseStyle,
-        personalizedConfig.behavioral?.emotionalSensitivity !== growthConfig.behavioral?.emotionalSensitivity,
-        JSON.stringify(personalizedConfig.behavioral?.focusAreas) !== JSON.stringify(growthConfig.behavioral?.focusAreas),
-        personalizedConfig.behavioral?.conversationDepth !== growthConfig.behavioral?.conversationDepth
-      ].filter(Boolean).length;
+      // Detailed comparison of configurations
+      const detailedComparisons = {
+        acsMaxSilentMs: {
+          original: originalGrowthConfig.acs.maxSilentMs,
+          personalized: personalizedConfig.acs.maxSilentMs,
+          changed: originalGrowthConfig.acs.maxSilentMs !== personalizedConfig.acs.maxSilentMs
+        },
+        behavioralPacingMs: {
+          original: originalGrowthConfig.behavioral.pacingMs,
+          personalized: personalizedConfig.behavioral.pacingMs,
+          changed: originalGrowthConfig.behavioral.pacingMs !== personalizedConfig.behavioral.pacingMs
+        },
+        acsFrustrationThreshold: {
+          original: originalGrowthConfig.acs.frustrationThreshold,
+          personalized: personalizedConfig.acs.frustrationThreshold,
+          changed: originalGrowthConfig.acs.frustrationThreshold !== personalizedConfig.acs.frustrationThreshold
+        },
+        behavioralEmotionalSensitivity: {
+          original: originalGrowthConfig.behavioral.emotionalSensitivity,
+          personalized: personalizedConfig.behavioral.emotionalSensitivity,
+          changed: originalGrowthConfig.behavioral.emotionalSensitivity !== personalizedConfig.behavioral.emotionalSensitivity
+        },
+        acsClarificationThreshold: {
+          original: originalGrowthConfig.acs.clarificationThreshold,
+          personalized: personalizedConfig.acs.clarificationThreshold,
+          changed: originalGrowthConfig.acs.clarificationThreshold !== personalizedConfig.acs.clarificationThreshold
+        },
+        piePatternSensitivity: {
+          original: originalGrowthConfig.pie.patternSensitivity,
+          personalized: personalizedConfig.pie.patternSensitivity,
+          changed: originalGrowthConfig.pie.patternSensitivity !== personalizedConfig.pie.patternSensitivity
+        }
+      };
 
-      const isPersonalized = personalizedDifferences > 0;
+      const changedProperties = Object.values(detailedComparisons).filter(comp => comp.changed).length;
+      const isPersonalized = changedProperties > 0;
 
       results.push({
         testName: 'Personalized Configuration (Enhanced)',
@@ -485,8 +513,9 @@ class EnhancedAutomatedTestSuite {
         error: isPersonalized ? undefined : 'Personalized config shows no meaningful differences from default',
         details: { 
           personalizedConfigExists: isPersonalized,
-          differencesFound: personalizedDifferences,
-          blueprintType: mockBlueprint.cognition_mbti.type
+          changedProperties,
+          blueprintType: mockBlueprint.cognition_mbti.type,
+          detailedComparisons
         }
       });
 

@@ -123,6 +123,11 @@ class AgentConfigurationService {
     return this.getConfig(agentType).behavioral;
   }
 
+  // Helper method to create a deep copy of configuration
+  private static deepCopy<T>(obj: T): T {
+    return JSON.parse(JSON.stringify(obj));
+  }
+
   // Method to get personalized config based on user's blueprint
   static getPersonalizedConfig(
     agentType: 'growth' | 'dreams' | 'soul_companion',
@@ -134,39 +139,61 @@ class AgentConfigurationService {
       return baseConfig;
     }
 
+    // Create a deep copy to avoid mutating the original configuration
+    const personalizedConfig = this.deepCopy(baseConfig);
+
+    // Track changes made for debugging
+    const changes: string[] = [];
+
     // Adjust based on MBTI preferences
     const mbtiType = userBlueprint.cognition_mbti?.type;
     if (mbtiType) {
       // Introverts get longer silence tolerance
       if (mbtiType.includes('I')) {
-        baseConfig.acs.maxSilentMs *= 1.5;
-        baseConfig.behavioral.pacingMs += 10;
+        const originalMaxSilent = personalizedConfig.acs.maxSilentMs;
+        personalizedConfig.acs.maxSilentMs *= 1.5;
+        personalizedConfig.behavioral.pacingMs += 10;
+        changes.push(`MBTI-I: maxSilentMs ${originalMaxSilent} -> ${personalizedConfig.acs.maxSilentMs}, pacingMs +10`);
       }
       
       // Feeling types get higher emotional sensitivity
       if (mbtiType.includes('F')) {
-        baseConfig.acs.frustrationThreshold *= 0.8;
-        baseConfig.behavioral.emotionalSensitivity = Math.min(1.0, baseConfig.behavioral.emotionalSensitivity + 0.1);
+        const originalFrustration = personalizedConfig.acs.frustrationThreshold;
+        const originalEmotional = personalizedConfig.behavioral.emotionalSensitivity;
+        personalizedConfig.acs.frustrationThreshold *= 0.8;
+        personalizedConfig.behavioral.emotionalSensitivity = Math.min(1.0, personalizedConfig.behavioral.emotionalSensitivity + 0.1);
+        changes.push(`MBTI-F: frustrationThreshold ${originalFrustration} -> ${personalizedConfig.acs.frustrationThreshold}, emotionalSensitivity ${originalEmotional} -> ${personalizedConfig.behavioral.emotionalSensitivity}`);
       }
       
       // Perceiving types get more flexible thresholds
       if (mbtiType.includes('P')) {
-        baseConfig.acs.clarificationThreshold += 0.1;
-        baseConfig.pie.patternSensitivity = 'sensitive';
+        const originalClarification = personalizedConfig.acs.clarificationThreshold;
+        personalizedConfig.acs.clarificationThreshold += 0.1;
+        personalizedConfig.pie.patternSensitivity = 'sensitive';
+        changes.push(`MBTI-P: clarificationThreshold ${originalClarification} -> ${personalizedConfig.acs.clarificationThreshold}, patternSensitivity -> sensitive`);
       }
     }
 
     // Adjust based on Human Design type
     const hdType = userBlueprint.energy_strategy_human_design?.type;
     if (hdType === 'Reflector') {
-      baseConfig.acs.maxSilentMs *= 2; // Reflectors need more processing time
-      baseConfig.behavioral.conversationDepth = 'deep';
+      const originalMaxSilent = personalizedConfig.acs.maxSilentMs;
+      personalizedConfig.acs.maxSilentMs *= 2; // Reflectors need more processing time
+      personalizedConfig.behavioral.conversationDepth = 'deep';
+      changes.push(`HD-Reflector: maxSilentMs ${originalMaxSilent} -> ${personalizedConfig.acs.maxSilentMs}, conversationDepth -> deep`);
     } else if (hdType === 'Manifestor') {
-      baseConfig.behavioral.responseStyle = 'direct';
-      baseConfig.acs.velocityFloor += 0.05; // Manifestors prefer faster pace
+      const originalVelocity = personalizedConfig.acs.velocityFloor;
+      personalizedConfig.behavioral.responseStyle = 'direct';
+      personalizedConfig.acs.velocityFloor += 0.05; // Manifestors prefer faster pace
+      changes.push(`HD-Manifestor: responseStyle -> direct, velocityFloor ${originalVelocity} -> ${personalizedConfig.acs.velocityFloor}`);
     }
 
-    return baseConfig;
+    // Log changes for debugging
+    if (changes.length > 0) {
+      console.log(`Personalization changes for ${agentType}:`, changes);
+    }
+
+    return personalizedConfig;
   }
 }
 
