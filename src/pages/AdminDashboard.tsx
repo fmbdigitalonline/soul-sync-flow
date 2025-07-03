@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -29,6 +28,7 @@ import { AdminACSMonitoring } from '@/components/admin/AdminACSMonitoring';
 import { AdminUserAnalytics } from '@/components/admin/AdminUserAnalytics';
 import { AdminSystemHealth } from '@/components/admin/AdminSystemHealth';
 import { AdminConfigurationHub } from '@/components/admin/AdminConfigurationHub';
+import { AdminSystemDiagnostics } from '@/components/admin/AdminSystemDiagnostics';
 
 const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -108,7 +108,7 @@ const AdminDashboard: React.FC = () => {
 
         {/* Main Content */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-8">
+          <TabsList className="grid w-full grid-cols-9">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
               Overview
@@ -136,6 +136,10 @@ const AdminDashboard: React.FC = () => {
             <TabsTrigger value="health" className="flex items-center gap-2">
               <Activity className="w-4 h-4" />
               Health
+            </TabsTrigger>
+            <TabsTrigger value="diagnostics" className="flex items-center gap-2">
+              <Settings className="w-4 h-4" />
+              Diagnostics
             </TabsTrigger>
             <TabsTrigger value="config" className="flex items-center gap-2">
               <Settings className="w-4 h-4" />
@@ -169,6 +173,10 @@ const AdminDashboard: React.FC = () => {
 
           <TabsContent value="health">
             <AdminSystemHealth />
+          </TabsContent>
+
+          <TabsContent value="diagnostics">
+            <AdminSystemDiagnostics />
           </TabsContent>
 
           <TabsContent value="config">
