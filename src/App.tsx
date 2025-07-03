@@ -7,7 +7,6 @@ import Blueprint from "./pages/Blueprint";
 import Coach from "./pages/Coach";
 import Dreams from "./pages/Dreams";
 import SpiritualGrowth from "./pages/SpiritualGrowth";
-import Diagnostics from "./pages/Diagnostics";
 
 function App() {
   return (
@@ -20,7 +19,6 @@ function App() {
           <Route path="/coach" element={<Coach />} />
           <Route path="/dreams" element={<Dreams />} />
           <Route path="/spiritual-growth" element={<SpiritualGrowth />} />
-          <Route path="/diagnostics" element={<Diagnostics />} />
         </Routes>
       </div>
     </Router>
