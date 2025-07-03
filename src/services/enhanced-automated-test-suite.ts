@@ -308,7 +308,7 @@ class EnhancedAutomatedTestSuite {
         // Initialize with real admin user context
         await agentCommunicationService.initialize(this.adminUserId);
         
-        // Test real-time insight sharing - using valid insight type
+        // Test real-time insight sharing - using valid insight type with only allowed properties
         await agentCommunicationService.shareInsightBetweenAgents(
           'growth',
           'soul_companion',
@@ -316,9 +316,7 @@ class EnhancedAutomatedTestSuite {
             insightType: 'pattern', // Fixed: using valid insight type
             content: 'Enhanced test insight sharing with real-time validation',
             confidence: 0.85,
-            relevanceScore: 0.92,
-            timestamp: new Date().toISOString(),
-            sessionId: this.sessionId
+            relevanceScore: 0.92
           }
         );
 
