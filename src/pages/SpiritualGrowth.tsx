@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
@@ -7,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useEnhancedAICoach } from "@/hooks/use-enhanced-ai-coach";
 import { supabase } from "@/integrations/supabase/client";
 import { GuideInterface } from "@/components/coach/GuideInterface";
+import { OptimizedSpiritualInterface } from "@/components/coach/OptimizedSpiritualInterface";
 import { MoodTracker } from "@/components/coach/MoodTracker";
 import { ReflectionPrompts } from "@/components/coach/ReflectionPrompts";
 import { InsightJournal } from "@/components/coach/InsightJournal";
@@ -28,6 +30,7 @@ const SpiritualGrowth = () => {
   const [activeView, setActiveView] = useState<ActiveView>('welcome');
   const [selectedWeek, setSelectedWeek] = useState<ProgramWeek | null>(null);
   const [isInGuidedFlow, setIsInGuidedFlow] = useState(false);
+  const [useOptimizedMode, setUseOptimizedMode] = useState(true); // Enable optimized mode by default
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -101,37 +104,29 @@ const SpiritualGrowth = () => {
     setSelectedWeek(null);
   };
 
-  // Enhanced program-aware message sending with performance optimization
+  // Enhanced program-aware message sending with performance optimization toggle
   const handleProgramAwareMessage = async (message: string) => {
     if (!isAuthenticated) return;
     
     try {
       const { data } = await supabase.auth.getSession();
       if (data.session?.user) {
-        // Special handling for coach-initiated flow
-        if (message === "_COACH_INITIATED_FLOW_") {
-          // Don't show this internal message, just trigger the coach response
-          const response = await programAwareCoachService.initializeBeliefDrilling(
-            'relationships',
-            data.session.user.id,
-            `guided_session_${Date.now()}`
+        if (useOptimizedMode) {
+          // Use optimized mode - this is handled by OptimizedSpiritualInterface
+          console.log("🚀 Using optimized conversation mode");
+          return;
+        } else {
+          // Use original mode for comparison
+          const response = await programAwareCoachService.sendProgramAwareMessage(
+            message,
+            `session_${Date.now()}`,
+            data.session.user.id
           );
-          return; // The coach message will be handled by the hook
+          sendMessage(message);
         }
-        
-        // Use program-aware coach for enhanced context
-        const response = await programAwareCoachService.sendProgramAwareMessage(
-          message,
-          `session_${Date.now()}`,
-          data.session.user.id
-        );
-        
-        // The useEnhancedAICoach hook will handle the message display
-        sendMessage(message);
       }
     } catch (error) {
       console.error('Error sending program-aware message:', error);
-      // Fallback to regular message sending
       sendMessage(message);
     }
   };
@@ -248,9 +243,9 @@ const SpiritualGrowth = () => {
           messageCount={messages.length}
         />
 
-        {/* Header with Back Button */}
+        {/* Header with Back Button and Optimization Toggle */}
         {activeView !== 'welcome' && (
-          <div className="mb-4">
+          <div className="mb-4 flex items-center justify-between">
             <Button 
               variant="outline" 
               onClick={handleBackToWelcome}
@@ -259,6 +254,19 @@ const SpiritualGrowth = () => {
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Growth Coach
             </Button>
+            
+            {activeView === 'coach_chat' && (
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium">Optimized Mode:</label>
+                <Button
+                  variant={useOptimizedMode ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setUseOptimizedMode(!useOptimizedMode)}
+                >
+                  {useOptimizedMode ? "ON" : "OFF"}
+                </Button>
+              </div>
+            )}
           </div>
         )}
 
@@ -278,27 +286,33 @@ const SpiritualGrowth = () => {
             <GrowthProgramInterface onWeekSelect={handleWeekSelect} />
           )}
 
-          {/* Coach Chat - Step by Step or Guided Flow */}
+          {/* Coach Chat - Optimized or Original */}
           {activeView === 'coach_chat' && (
-            <CosmicCard className="p-4 h-full flex flex-col">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-medium flex items-center">
-                  <Heart className="h-4 w-4 mr-2 text-soul-purple" />
-                  {isInGuidedFlow ? 'Growth Coach - Guided Program Creation' : 'Growth Coach - Step by Step Guidance'}
-                </h3>
-              </div>
-              
-              <div className="flex-1">
-                <GuideInterface
-                  messages={messages}
-                  isLoading={isLoading}
-                  onSendMessage={handleProgramAwareMessage}
-                  messagesEndRef={messagesEndRef}
-                  streamingContent={streamingContent}
-                  isStreaming={isStreaming}
-                />
-              </div>
-            </CosmicCard>
+            <>
+              {useOptimizedMode ? (
+                <OptimizedSpiritualInterface />
+              ) : (
+                <CosmicCard className="p-4 h-full flex flex-col">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-medium flex items-center">
+                      <Heart className="h-4 w-4 mr-2 text-soul-purple" />
+                      {isInGuidedFlow ? 'Growth Coach - Guided Program Creation' : 'Growth Coach - Step by Step Guidance'}
+                    </h3>
+                  </div>
+                  
+                  <div className="flex-1">
+                    <GuideInterface
+                      messages={messages}
+                      isLoading={isLoading}
+                      onSendMessage={handleProgramAwareMessage}
+                      messagesEndRef={messagesEndRef}
+                      streamingContent={streamingContent}
+                      isStreaming={isStreaming}
+                    />
+                  </div>
+                </CosmicCard>
+              )}
+            </>
           )}
 
           {/* Growth Tools Menu */}
