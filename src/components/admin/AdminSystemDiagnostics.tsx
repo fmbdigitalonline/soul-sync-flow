@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -38,6 +37,14 @@ interface DiagnosticTest {
   runner: () => Promise<any>;
 }
 
+interface AggregatedTestResults {
+  total: number;
+  passed: number;
+  failed: number;
+  duration: number;
+  suiteCount?: number;
+}
+
 export const AdminSystemDiagnostics: React.FC = () => {
   const [runningTests, setRunningTests] = useState<Set<string>>(new Set());
   const [testResults, setTestResults] = useState<Record<string, any>>({});
@@ -46,7 +53,15 @@ export const AdminSystemDiagnostics: React.FC = () => {
   const [enhancedPhaseResults, setEnhancedPhaseResults] = useState<EnhancedTestSuiteResult[]>([]);
   const [phaseReport, setPhaseReport] = useState<string>('');
   const [enhancedPhaseReport, setEnhancedPhaseReport] = useState<string>('');
+  const [executionLogs, setExecutionLogs] = useState<Record<string, string[]>>({});
   const { toast } = useToast();
+
+  const addExecutionLog = (testId: string, message: string) => {
+    setExecutionLogs(prev => ({
+      ...prev,
+      [testId]: [...(prev[testId] || []), `${new Date().toLocaleTimeString()}: ${message}`]
+    }));
+  };
 
   const diagnosticTests: DiagnosticTest[] = [
     {
@@ -93,31 +108,42 @@ export const AdminSystemDiagnostics: React.FC = () => {
 
   const runSingleTest = async (test: DiagnosticTest) => {
     console.log(`🧪 Starting diagnostic test: ${test.name}`);
+    addExecutionLog(test.id, `Starting ${test.name}`);
     
     setRunningTests(prev => new Set([...prev, test.id]));
     
     try {
+      addExecutionLog(test.id, 'Executing test runner...');
       const result = await test.runner();
       
-      // Handle different result formats
+      addExecutionLog(test.id, `Test completed. Processing results...`);
+      
+      // Handle different result formats with proper aggregation
       if (test.category === 'phase-implementation') {
         if (test.id === 'phase-implementation-legacy') {
-          setPhaseResults(Array.isArray(result) ? result : [result]);
-          setPhaseReport(automatedTestSuite.generateDiagnosticReport(Array.isArray(result) ? result : [result]));
+          const suiteResults = Array.isArray(result) ? result : [result];
+          setPhaseResults(suiteResults);
+          setPhaseReport(automatedTestSuite.generateDiagnosticReport(suiteResults));
+          addExecutionLog(test.id, `Legacy results: ${suiteResults.length} test suites processed`);
         } else if (test.id === 'phase-implementation-enhanced') {
-          setEnhancedPhaseResults(Array.isArray(result) ? result : [result]);
-          setEnhancedPhaseReport(enhancedAutomatedTestSuite.generateDiagnosticReport(Array.isArray(result) ? result : [result]));
+          const suiteResults = Array.isArray(result) ? result : [result];
+          setEnhancedPhaseResults(suiteResults);
+          setEnhancedPhaseReport(enhancedAutomatedTestSuite.generateDiagnosticReport(suiteResults));
+          addExecutionLog(test.id, `Enhanced results: ${suiteResults.length} test suites processed`);
         }
       }
       
       setTestResults(prev => ({
         ...prev,
         [test.id]: {
-          ...result,
+          rawResult: result,
           status: 'completed',
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          aggregated: test.category === 'phase-implementation' ? aggregatePhaseResults(result) : result
         }
       }));
+
+      addExecutionLog(test.id, 'Results processed and stored successfully');
 
       toast({
         title: "Test Completed",
@@ -127,6 +153,7 @@ export const AdminSystemDiagnostics: React.FC = () => {
       console.log(`✅ Test completed: ${test.name}`, result);
     } catch (error) {
       console.error(`❌ Test failed: ${test.name}`, error);
+      addExecutionLog(test.id, `Error: ${error.message}`);
       
       setTestResults(prev => ({
         ...prev,
@@ -149,6 +176,46 @@ export const AdminSystemDiagnostics: React.FC = () => {
         return newSet;
       });
     }
+  };
+
+  const aggregatePhaseResults = (result: any): AggregatedTestResults => {
+    if (!result) {
+      return { total: 0, passed: 0, failed: 0, duration: 0 };
+    }
+
+    // Handle array of TestSuiteResult
+    if (Array.isArray(result)) {
+      const totals = result.reduce((acc, suite) => ({
+        total: acc.total + (suite.totalTests || 0),
+        passed: acc.passed + (suite.passed || 0),
+        failed: acc.failed + (suite.failed || 0),
+        duration: acc.duration + (suite.duration || 0)
+      }), { total: 0, passed: 0, failed: 0, duration: 0 });
+
+      return {
+        ...totals,
+        suiteCount: result.length
+      };
+    }
+
+    // Handle single TestSuiteResult
+    if (result.totalTests !== undefined) {
+      return {
+        total: result.totalTests || 0,
+        passed: result.passed || 0,
+        failed: result.failed || 0,
+        duration: result.duration || 0,
+        suiteCount: 1
+      };
+    }
+
+    // Fallback for other formats
+    return {
+      total: result.length || 0,
+      passed: result.filter?.((r: any) => r.status === 'passed')?.length || 0,
+      failed: result.filter?.((r: any) => r.status === 'failed')?.length || 0,
+      duration: result.duration || 0
+    };
   };
 
   const runAllTests = async () => {
@@ -190,6 +257,14 @@ export const AdminSystemDiagnostics: React.FC = () => {
       return <XCircle className="w-4 h-4 text-red-600" />;
     }
     
+    // Check aggregated results for phase implementation tests
+    if (result.aggregated) {
+      const aggregated = result.aggregated;
+      return aggregated.failed === 0 && aggregated.total > 0 ? 
+        <CheckCircle className="w-4 h-4 text-green-600" /> : 
+        <XCircle className="w-4 h-4 text-red-600" />;
+    }
+    
     if (result.overallSuccess !== undefined) {
       return result.overallSuccess ? 
         <CheckCircle className="w-4 h-4 text-green-600" /> : 
@@ -213,6 +288,14 @@ export const AdminSystemDiagnostics: React.FC = () => {
       return <Badge variant="destructive">Failed</Badge>;
     }
     
+    // Check aggregated results for phase implementation tests
+    if (result.aggregated) {
+      const aggregated = result.aggregated;
+      return aggregated.failed === 0 && aggregated.total > 0 ? 
+        <Badge variant="default" className="bg-green-600">Passed</Badge> : 
+        <Badge variant="destructive">Failed</Badge>;
+    }
+    
     if (result.overallSuccess !== undefined) {
       return result.overallSuccess ? 
         <Badge variant="default" className="bg-green-600">Passed</Badge> : 
@@ -222,7 +305,7 @@ export const AdminSystemDiagnostics: React.FC = () => {
     return <Badge variant="default" className="bg-green-600">Passed</Badge>;
   };
 
-  const getTestResults = (testId: string) => {
+  const getTestResults = (testId: string): AggregatedTestResults | null => {
     const result = testResults[testId];
     if (!result || runningTests.has(testId)) return null;
 
@@ -235,6 +318,12 @@ export const AdminSystemDiagnostics: React.FC = () => {
       };
     }
 
+    // Use aggregated results for phase implementation tests
+    if (result.aggregated) {
+      return result.aggregated;
+    }
+
+    // Handle other result formats
     return {
       total: result.totalTests || result.totalClaims || result.length || 0,
       passed: result.passed || result.passedClaims || 0,
@@ -249,10 +338,11 @@ export const AdminSystemDiagnostics: React.FC = () => {
     setEnhancedPhaseResults([]);
     setPhaseReport('');
     setEnhancedPhaseReport('');
+    setExecutionLogs({});
     setOverallStatus('idle');
     toast({
       title: "Results Cleared",
-      description: "All test results have been cleared",
+      description: "All test results and logs have been cleared",
     });
   };
 
@@ -308,13 +398,14 @@ export const AdminSystemDiagnostics: React.FC = () => {
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="authentication">Auth & Streaming</TabsTrigger>
           <TabsTrigger value="innovations">Innovations</TabsTrigger>
           <TabsTrigger value="phase-tests">Phase Tests</TabsTrigger>
           <TabsTrigger value="reports">Reports</TabsTrigger>
           <TabsTrigger value="results">Detailed Results</TabsTrigger>
+          <TabsTrigger value="logs">Execution Logs</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -355,7 +446,10 @@ export const AdminSystemDiagnostics: React.FC = () => {
               <CardContent>
                 <div className="text-2xl font-bold text-blue-600">
                   {Object.keys(testResults).length > 0 ? 
-                    Math.round((Object.values(testResults).filter((r: any) => r.overallSuccess !== false).length / Object.keys(testResults).length) * 100) : 0}%
+                    Math.round((Object.values(testResults).filter((r: any) => {
+                      if (r.aggregated) return r.aggregated.failed === 0 && r.aggregated.total > 0;
+                      return r.overallSuccess !== false && r.status !== 'failed';
+                    }).length / Object.keys(testResults).length) * 100) : 0}%
                 </div>
               </CardContent>
             </Card>
@@ -601,7 +695,7 @@ export const AdminSystemDiagnostics: React.FC = () => {
                     
                     {results && (
                       <CardContent>
-                        <div className="grid grid-cols-4 gap-4 mb-4">
+                        <div className="grid grid-cols-5 gap-4 mb-4">
                           <div className="text-center">
                             <div className="text-2xl font-bold">{results.total}</div>
                             <div className="text-sm text-gray-600">Total</div>
@@ -618,6 +712,12 @@ export const AdminSystemDiagnostics: React.FC = () => {
                             <div className="text-2xl font-bold">{Math.round(results.duration)}ms</div>
                             <div className="text-sm text-gray-600">Duration</div>
                           </div>
+                          {results.suiteCount && (
+                            <div className="text-center">
+                              <div className="text-2xl font-bold text-blue-600">{results.suiteCount}</div>
+                              <div className="text-sm text-gray-600">Suites</div>
+                            </div>
+                          )}
                         </div>
                         
                         {results.total > 0 && (
@@ -764,6 +864,7 @@ export const AdminSystemDiagnostics: React.FC = () => {
                             {results && (
                               <span className="text-sm">
                                 {results.passed}/{results.total} passed
+                                {results.suiteCount && ` (${results.suiteCount} suites)`}
                               </span>
                             )}
                           </TableCell>
@@ -776,6 +877,37 @@ export const AdminSystemDiagnostics: React.FC = () => {
                     })}
                   </TableBody>
                 </Table>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="logs" className="space-y-6">
+          {Object.keys(executionLogs).length > 0 ? (
+            Object.entries(executionLogs).map(([testId, logs]) => {
+              const test = diagnosticTests.find(t => t.id === testId);
+              return (
+                <Card key={testId}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Activity className="w-5 h-5" />
+                      {test?.name || testId} - Execution Log
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm space-y-1 max-h-96 overflow-y-auto">
+                      {logs.map((log, index) => (
+                        <div key={index}>{log}</div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })
+          ) : (
+            <Card>
+              <CardContent className="text-center py-8 text-gray-500">
+                No execution logs available. Run some tests to see detailed execution information.
               </CardContent>
             </Card>
           )}
