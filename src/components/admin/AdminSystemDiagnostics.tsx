@@ -231,7 +231,7 @@ const AdminSystemDiagnostics: React.FC = () => {
     try {
       switch (testId) {
         case 'vfp-patent':
-          const vfpResult = await vfpGraphPatentTestSuite.runCompleteTestSuite();
+          const vfpResult = await vfpGraphPatentTestSuite.runFullTestSuite();
           (window as any).lastVFPGraphResult = vfpResult;
           break;
           
@@ -241,7 +241,7 @@ const AdminSystemDiagnostics: React.FC = () => {
           break;
           
         case 'growth-program':
-          const growthResult = await growthProgramTestSuite.runCompleteTestSuite();
+          const growthResult = await growthProgramTestSuite.runFullTestSuite();
           (window as any).lastGrowthProgramResult = growthResult;
           break;
           
@@ -272,9 +272,9 @@ const AdminSystemDiagnostics: React.FC = () => {
     try {
       // Run all test suites in parallel for better performance
       const [vfpResult, streamingResult, growthResult, legacyResult, enhancedResult] = await Promise.allSettled([
-        vfpGraphPatentTestSuite.runCompleteTestSuite(),
+        vfpGraphPatentTestSuite.runFullTestSuite(),
         streamingAuthTestSuite.runFullTestSuite(),
-        growthProgramTestSuite.runCompleteTestSuite(),
+        growthProgramTestSuite.runFullTestSuite(),
         automatedTestSuite.runCompleteTestSuite(),
         enhancedAutomatedTestSuite.runCompleteTestSuite()
       ]);

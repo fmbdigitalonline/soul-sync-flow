@@ -28,7 +28,7 @@ import { AdminACSMonitoring } from '@/components/admin/AdminACSMonitoring';
 import { AdminUserAnalytics } from '@/components/admin/AdminUserAnalytics';
 import { AdminSystemHealth } from '@/components/admin/AdminSystemHealth';
 import { AdminConfigurationHub } from '@/components/admin/AdminConfigurationHub';
-import { AdminSystemDiagnostics } from '@/components/admin/AdminSystemDiagnostics';
+import AdminSystemDiagnostics from '@/components/admin/AdminSystemDiagnostics';
 
 const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
