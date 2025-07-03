@@ -1,918 +1,477 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  PlayCircle, 
+  Play, 
   RefreshCw, 
   CheckCircle, 
   XCircle, 
-  AlertTriangle,
   Clock,
-  Zap,
+  AlertTriangle,
   Database,
-  Settings,
-  Activity,
-  Shield,
-  ShieldCheck,
-  TestTube,
-  BarChart3
+  Brain,
+  Zap,
+  TrendingUp
 } from 'lucide-react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { streamingAuthTestSuite, StreamingTestSuiteResult } from '@/services/streaming-auth-test-suite';
-import { vfpGraphPatentTestSuite, PatentValidationReport } from '@/services/vfp-graph-patent-test-suite';
-import { growthProgramTestSuite, GrowthProgramTestSuiteResult } from '@/services/growth-program-test-suite';
-import { automatedTestSuite, TestSuiteResult } from '@/services/automated-test-suite';
-import { enhancedAutomatedTestSuite, TestSuiteResult as EnhancedTestSuiteResult, EnhancedTestResult } from '@/services/enhanced-automated-test-suite';
-import { useToast } from '@/hooks/use-toast';
+import { automatedTestSuite } from '@/services/automated-test-suite';
+import { enhancedAutomatedTestSuite } from '@/services/enhanced-automated-test-suite';
+import { vfpGraphPatentTestSuite } from '@/services/vfp-graph-patent-test-suite';
+import { streamingAuthTestSuite } from '@/services/streaming-auth-test-suite';
+import { growthProgramTestSuite } from '@/services/growth-program-test-suite';
 
-interface DiagnosticTest {
+interface TestResult {
   id: string;
   name: string;
-  description: string;
-  category: 'authentication' | 'vfp' | 'growth' | 'system' | 'phase-implementation';
-  icon: React.ComponentType<any>;
-  runner: () => Promise<any>;
-}
-
-interface AggregatedTestResults {
-  total: number;
-  passed: number;
-  failed: number;
+  category: string;
+  status: 'passed' | 'failed' | 'running' | 'pending';
+  results: string;
   duration: number;
-  suiteCount?: number;
+  timestamp: string;
+  rawResult?: any;
 }
 
-export const AdminSystemDiagnostics: React.FC = () => {
-  const [runningTests, setRunningTests] = useState<Set<string>>(new Set());
-  const [testResults, setTestResults] = useState<Record<string, any>>({});
-  const [overallStatus, setOverallStatus] = useState<'idle' | 'running' | 'completed'>('idle');
-  const [phaseResults, setPhaseResults] = useState<TestSuiteResult[]>([]);
-  const [enhancedPhaseResults, setEnhancedPhaseResults] = useState<EnhancedTestSuiteResult[]>([]);
-  const [phaseReport, setPhaseReport] = useState<string>('');
-  const [enhancedPhaseReport, setEnhancedPhaseReport] = useState<string>('');
-  const [executionLogs, setExecutionLogs] = useState<Record<string, string[]>>({});
-  const { toast } = useToast();
+const AdminSystemDiagnostics: React.FC = () => {
+  const [testResults, setTestResults] = useState<TestResult[]>([]);
+  const [isRunning, setIsRunning] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('all');
 
-  const addExecutionLog = (testId: string, message: string) => {
-    setExecutionLogs(prev => ({
-      ...prev,
-      [testId]: [...(prev[testId] || []), `${new Date().toLocaleTimeString()}: ${message}`]
-    }));
+  const getTestResults = (): TestResult[] => {
+    const results: TestResult[] = [];
+    const now = new Date().toLocaleString();
+
+    // Helper function to safely extract test counts and duration
+    const extractTestMetrics = (result: any) => {
+      let total = 0;
+      let passed = 0;
+      let duration = 0;
+
+      try {
+        // Handle different result formats
+        if (result && typeof result === 'object') {
+          // Check for nested rawResult first
+          const dataSource = result.rawResult || result;
+          
+          // Extract total count - try multiple field names
+          total = dataSource.totalClaims || 
+                  dataSource.totalTests || 
+                  dataSource.total || 
+                  (Array.isArray(dataSource.results) ? dataSource.results.length : 0) ||
+                  (Array.isArray(dataSource) ? dataSource.length : 0);
+
+          // Extract passed count - try multiple field names
+          passed = dataSource.passedClaims || 
+                   dataSource.passed || 
+                   (Array.isArray(dataSource.results) ? 
+                     dataSource.results.filter((r: any) => r.status === 'passed').length : 0) ||
+                   (Array.isArray(dataSource) ? 
+                     dataSource.filter((r: any) => r.status === 'passed').length : 0);
+
+          // Extract duration - try multiple sources
+          duration = dataSource.duration || 
+                     dataSource.executionSummary?.totalTimeMs || 
+                     dataSource.totalDuration || 
+                     0;
+        }
+
+        // Ensure we have valid numbers
+        total = isNaN(total) ? 0 : Math.max(0, total);
+        passed = isNaN(passed) ? 0 : Math.max(0, Math.min(passed, total));
+        duration = isNaN(duration) ? 0 : Math.max(0, duration);
+
+      } catch (error) {
+        console.error('Error extracting test metrics:', error);
+        // Return safe defaults
+        total = 0;
+        passed = 0;
+        duration = 0;
+      }
+
+      return { total, passed, duration };
+    };
+
+    // VFP-Graph Patent Test Suite
+    try {
+      const vfpResult = (window as any).lastVFPGraphResult;
+      const { total, passed, duration } = extractTestMetrics(vfpResult);
+      
+      results.push({
+        id: 'vfp-patent',
+        name: 'VFP-Graph Patent Validation',
+        category: 'vfp',
+        status: vfpResult ? (passed === total && total > 0 ? 'passed' : 'failed') : 'pending',
+        results: total > 0 ? `${passed}/${total} passed` : 'No results',
+        duration,
+        timestamp: now,
+        rawResult: vfpResult
+      });
+    } catch (error) {
+      console.error('Error processing VFP-Graph results:', error);
+      results.push({
+        id: 'vfp-patent',
+        name: 'VFP-Graph Patent Validation',
+        category: 'vfp',
+        status: 'failed',
+        results: 'Error processing results',
+        duration: 0,
+        timestamp: now
+      });
+    }
+
+    // Streaming Authentication Test Suite
+    try {
+      const streamingResult = (window as any).lastStreamingAuthResult;
+      const { total, passed, duration } = extractTestMetrics(streamingResult);
+      
+      results.push({
+        id: 'streaming-auth',
+        name: 'Streaming Authentication Suite',
+        category: 'authentication',
+        status: streamingResult ? (passed === total && total > 0 ? 'passed' : 'failed') : 'pending',
+        results: total > 0 ? `${passed}/${total} passed` : 'No results',
+        duration,
+        timestamp: now,
+        rawResult: streamingResult
+      });
+    } catch (error) {
+      console.error('Error processing Streaming Auth results:', error);
+      results.push({
+        id: 'streaming-auth',
+        name: 'Streaming Authentication Suite',
+        category: 'authentication',
+        status: 'failed',
+        results: 'Error processing results',
+        duration: 0,
+        timestamp: now
+      });
+    }
+
+    // Growth Program Test Suite
+    try {
+      const growthResult = (window as any).lastGrowthProgramResult;
+      const { total, passed, duration } = extractTestMetrics(growthResult);
+      
+      results.push({
+        id: 'growth-program',
+        name: 'Growth Program Integration',
+        category: 'growth',
+        status: growthResult ? (passed === total && total > 0 ? 'passed' : 'failed') : 'pending',
+        results: total > 0 ? `${passed}/${total} passed` : 'No results',
+        duration,
+        timestamp: now,
+        rawResult: growthResult
+      });
+    } catch (error) {
+      console.error('Error processing Growth Program results:', error);
+      results.push({
+        id: 'growth-program',
+        name: 'Growth Program Integration',
+        category: 'growth',
+        status: 'failed',
+        results: 'Error processing results',
+        duration: 0,
+        timestamp: now
+      });
+    }
+
+    // Phase Implementation Tests (Legacy)
+    try {
+      const legacyResult = (window as any).lastLegacyPhaseResult;
+      if (legacyResult && Array.isArray(legacyResult)) {
+        const totalTests = legacyResult.reduce((sum: number, suite: any) => sum + (suite.totalTests || 0), 0);
+        const passedTests = legacyResult.reduce((sum: number, suite: any) => sum + (suite.passed || 0), 0);
+        const totalDuration = legacyResult.reduce((sum: number, suite: any) => sum + (suite.duration || 0), 0);
+        
+        results.push({
+          id: 'legacy-phase',
+          name: 'Phase Implementation (Legacy)',
+          category: 'phase-implementation',
+          status: passedTests === totalTests && totalTests > 0 ? 'passed' : 'failed',
+          results: `${passedTests}/${totalTests} passed (${legacyResult.length} suites)`,
+          duration: totalDuration,
+          timestamp: now,
+          rawResult: legacyResult
+        });
+      }
+    } catch (error) {
+      console.error('Error processing Legacy Phase results:', error);
+    }
+
+    // Phase Implementation Tests (Enhanced)
+    try {
+      const enhancedResult = (window as any).lastEnhancedPhaseResult;
+      if (enhancedResult && Array.isArray(enhancedResult)) {
+        const totalTests = enhancedResult.reduce((sum: number, suite: any) => sum + (suite.totalTests || 0), 0);
+        const passedTests = enhancedResult.reduce((sum: number, suite: any) => sum + (suite.passed || 0), 0);
+        const totalDuration = enhancedResult.reduce((sum: number, suite: any) => sum + (suite.duration || 0), 0);
+        
+        results.push({
+          id: 'enhanced-phase',
+          name: 'Phase Implementation (Enhanced)',
+          category: 'phase-implementation',
+          status: passedTests === totalTests && totalTests > 0 ? 'passed' : 'failed',
+          results: `${passedTests}/${totalTests} passed (${enhancedResult.length} suites)`,
+          duration: totalDuration,
+          timestamp: now,
+          rawResult: enhancedResult
+        });
+      }
+    } catch (error) {
+      console.error('Error processing Enhanced Phase results:', error);
+    }
+
+    return results;
   };
 
-  const diagnosticTests: DiagnosticTest[] = [
-    {
-      id: 'streaming-auth',
-      name: 'Streaming Authentication Suite',
-      description: 'Tests streaming endpoints, auth flow, and real-time functionality',
-      category: 'authentication',
-      icon: Activity,
-      runner: async () => await streamingAuthTestSuite.runFullTestSuite()
-    },
-    {
-      id: 'vfp-patent',
-      name: 'VFP-Graph Patent Validation',
-      description: 'Validates all patent claims with real-time data and system integration',
-      category: 'vfp',
-      icon: Zap,
-      runner: async () => await vfpGraphPatentTestSuite.runPatentValidationSuite()
-    },
-    {
-      id: 'growth-program',
-      name: 'Growth Program Integration',
-      description: 'End-to-end testing of growth program functionality and data flow',
-      category: 'growth',
-      icon: Database,
-      runner: async () => await growthProgramTestSuite.runFullTestSuite()
-    },
-    {
-      id: 'phase-implementation-legacy',
-      name: 'Phase Implementation (Legacy)',
-      description: 'Original phase 1-3 implementation diagnostics',
-      category: 'phase-implementation',
-      icon: TestTube,
-      runner: async () => await automatedTestSuite.runCompleteTestSuite()
-    },
-    {
-      id: 'phase-implementation-enhanced',
-      name: 'Phase Implementation (Enhanced)',
-      description: 'Enhanced phase 1-3 diagnostics with authentication awareness',
-      category: 'phase-implementation',
-      icon: ShieldCheck,
-      runner: async () => await enhancedAutomatedTestSuite.runCompleteTestSuite()
-    }
-  ];
-
-  const runSingleTest = async (test: DiagnosticTest) => {
-    console.log(`🧪 Starting diagnostic test: ${test.name}`);
-    addExecutionLog(test.id, `Starting ${test.name}`);
-    
-    setRunningTests(prev => new Set([...prev, test.id]));
+  const runTestSuite = async (testId: string) => {
+    setIsRunning(true);
     
     try {
-      addExecutionLog(test.id, 'Executing test runner...');
-      const result = await test.runner();
-      
-      addExecutionLog(test.id, `Test completed. Processing results...`);
-      
-      // Handle different result formats with proper aggregation
-      if (test.category === 'phase-implementation') {
-        if (test.id === 'phase-implementation-legacy') {
-          const suiteResults = Array.isArray(result) ? result : [result];
-          setPhaseResults(suiteResults);
-          setPhaseReport(automatedTestSuite.generateDiagnosticReport(suiteResults));
-          addExecutionLog(test.id, `Legacy results: ${suiteResults.length} test suites processed`);
-        } else if (test.id === 'phase-implementation-enhanced') {
-          const suiteResults = Array.isArray(result) ? result : [result];
-          setEnhancedPhaseResults(suiteResults);
-          setEnhancedPhaseReport(enhancedAutomatedTestSuite.generateDiagnosticReport(suiteResults));
-          addExecutionLog(test.id, `Enhanced results: ${suiteResults.length} test suites processed`);
-        }
+      switch (testId) {
+        case 'vfp-patent':
+          const vfpResult = await vfpGraphPatentTestSuite.runCompleteTestSuite();
+          (window as any).lastVFPGraphResult = vfpResult;
+          break;
+          
+        case 'streaming-auth':
+          const streamingResult = await streamingAuthTestSuite.runFullTestSuite();
+          (window as any).lastStreamingAuthResult = streamingResult;
+          break;
+          
+        case 'growth-program':
+          const growthResult = await growthProgramTestSuite.runCompleteTestSuite();
+          (window as any).lastGrowthProgramResult = growthResult;
+          break;
+          
+        case 'legacy-phase':
+          const legacyResult = await automatedTestSuite.runCompleteTestSuite();
+          (window as any).lastLegacyPhaseResult = legacyResult;
+          break;
+          
+        case 'enhanced-phase':
+          const enhancedResult = await enhancedAutomatedTestSuite.runCompleteTestSuite();
+          (window as any).lastEnhancedPhaseResult = enhancedResult;
+          break;
       }
       
-      setTestResults(prev => ({
-        ...prev,
-        [test.id]: {
-          rawResult: result,
-          status: 'completed',
-          timestamp: new Date().toISOString(),
-          aggregated: test.category === 'phase-implementation' ? aggregatePhaseResults(result) : result
-        }
-      }));
-
-      addExecutionLog(test.id, 'Results processed and stored successfully');
-
-      toast({
-        title: "Test Completed",
-        description: `${test.name} finished successfully`,
-      });
-
-      console.log(`✅ Test completed: ${test.name}`, result);
-    } catch (error) {
-      console.error(`❌ Test failed: ${test.name}`, error);
-      addExecutionLog(test.id, `Error: ${error.message}`);
+      // Update results after test completion
+      setTestResults(getTestResults());
       
-      setTestResults(prev => ({
-        ...prev,
-        [test.id]: {
-          status: 'failed',
-          error: error.message,
-          timestamp: new Date().toISOString()
-        }
-      }));
-
-      toast({
-        title: "Test Failed",
-        description: `${test.name} encountered an error: ${error.message}`,
-        variant: "destructive"
-      });
+    } catch (error) {
+      console.error(`Error running ${testId} test suite:`, error);
     } finally {
-      setRunningTests(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(test.id);
-        return newSet;
-      });
+      setIsRunning(false);
     }
-  };
-
-  const aggregatePhaseResults = (result: any): AggregatedTestResults => {
-    if (!result) {
-      return { total: 0, passed: 0, failed: 0, duration: 0 };
-    }
-
-    // Handle array of TestSuiteResult
-    if (Array.isArray(result)) {
-      const totals = result.reduce((acc, suite) => ({
-        total: acc.total + (suite.totalTests || 0),
-        passed: acc.passed + (suite.passed || 0),
-        failed: acc.failed + (suite.failed || 0),
-        duration: acc.duration + (suite.duration || 0)
-      }), { total: 0, passed: 0, failed: 0, duration: 0 });
-
-      return {
-        ...totals,
-        suiteCount: result.length
-      };
-    }
-
-    // Handle single TestSuiteResult
-    if (result.totalTests !== undefined) {
-      return {
-        total: result.totalTests || 0,
-        passed: result.passed || 0,
-        failed: result.failed || 0,
-        duration: result.duration || 0,
-        suiteCount: 1
-      };
-    }
-
-    // Fallback for other formats
-    return {
-      total: result.length || 0,
-      passed: result.filter?.((r: any) => r.status === 'passed')?.length || 0,
-      failed: result.filter?.((r: any) => r.status === 'failed')?.length || 0,
-      duration: result.duration || 0
-    };
   };
 
   const runAllTests = async () => {
-    console.log('🚀 Starting comprehensive diagnostic test suite...');
-    setOverallStatus('running');
+    setIsRunning(true);
     
-    for (const test of diagnosticTests) {
-      await runSingleTest(test);
+    try {
+      // Run all test suites in parallel for better performance
+      const [vfpResult, streamingResult, growthResult, legacyResult, enhancedResult] = await Promise.allSettled([
+        vfpGraphPatentTestSuite.runCompleteTestSuite(),
+        streamingAuthTestSuite.runFullTestSuite(),
+        growthProgramTestSuite.runCompleteTestSuite(),
+        automatedTestSuite.runCompleteTestSuite(),
+        enhancedAutomatedTestSuite.runCompleteTestSuite()
+      ]);
+
+      // Store results
+      if (vfpResult.status === 'fulfilled') (window as any).lastVFPGraphResult = vfpResult.value;
+      if (streamingResult.status === 'fulfilled') (window as any).lastStreamingAuthResult = streamingResult.value;
+      if (growthResult.status === 'fulfilled') (window as any).lastGrowthProgramResult = growthResult.value;
+      if (legacyResult.status === 'fulfilled') (window as any).lastLegacyPhaseResult = legacyResult.value;
+      if (enhancedResult.status === 'fulfilled') (window as any).lastEnhancedPhaseResult = enhancedResult.value;
+
+      // Update results
+      setTestResults(getTestResults());
+      
+    } catch (error) {
+      console.error('Error running all test suites:', error);
+    } finally {
+      setIsRunning(false);
     }
-    
-    setOverallStatus('completed');
-    console.log('🏁 All diagnostic tests completed');
   };
 
-  const runCategoryTests = async (category: string) => {
-    console.log(`🚀 Starting ${category} diagnostic tests...`);
-    setOverallStatus('running');
-    
-    const categoryTests = diagnosticTests.filter(test => test.category === category);
-    for (const test of categoryTests) {
-      await runSingleTest(test);
-    }
-    
-    setOverallStatus('completed');
-    console.log(`🏁 ${category} diagnostic tests completed`);
-  };
+  useEffect(() => {
+    // Load initial results from any stored data
+    setTestResults(getTestResults());
+  }, []);
 
-  const getTestStatusIcon = (testId: string) => {
-    if (runningTests.has(testId)) {
-      return <Clock className="w-4 h-4 text-yellow-600 animate-pulse" />;
-    }
-    
-    const result = testResults[testId];
-    if (!result) {
-      return <AlertTriangle className="w-4 h-4 text-gray-400" />;
-    }
-    
-    if (result.status === 'failed') {
-      return <XCircle className="w-4 h-4 text-red-600" />;
-    }
-    
-    // Check aggregated results for phase implementation tests
-    if (result.aggregated) {
-      const aggregated = result.aggregated;
-      return aggregated.failed === 0 && aggregated.total > 0 ? 
-        <CheckCircle className="w-4 h-4 text-green-600" /> : 
-        <XCircle className="w-4 h-4 text-red-600" />;
-    }
-    
-    if (result.overallSuccess !== undefined) {
-      return result.overallSuccess ? 
-        <CheckCircle className="w-4 h-4 text-green-600" /> : 
-        <XCircle className="w-4 h-4 text-red-600" />;
-    }
-    
-    return <CheckCircle className="w-4 h-4 text-green-600" />;
-  };
-
-  const getTestStatusBadge = (testId: string) => {
-    if (runningTests.has(testId)) {
-      return <Badge variant="secondary">Running...</Badge>;
-    }
-    
-    const result = testResults[testId];
-    if (!result) {
-      return <Badge variant="outline">Not Run</Badge>;
-    }
-    
-    if (result.status === 'failed') {
-      return <Badge variant="destructive">Failed</Badge>;
-    }
-    
-    // Check aggregated results for phase implementation tests
-    if (result.aggregated) {
-      const aggregated = result.aggregated;
-      return aggregated.failed === 0 && aggregated.total > 0 ? 
-        <Badge variant="default" className="bg-green-600">Passed</Badge> : 
-        <Badge variant="destructive">Failed</Badge>;
-    }
-    
-    if (result.overallSuccess !== undefined) {
-      return result.overallSuccess ? 
-        <Badge variant="default" className="bg-green-600">Passed</Badge> : 
-        <Badge variant="destructive">Failed</Badge>;
-    }
-    
-    return <Badge variant="default" className="bg-green-600">Passed</Badge>;
-  };
-
-  const getTestResults = (testId: string): AggregatedTestResults | null => {
-    const result = testResults[testId];
-    if (!result || runningTests.has(testId)) return null;
-
-    if (result.status === 'failed') {
-      return {
-        total: 0,
-        passed: 0,
-        failed: 1,
-        duration: 0
-      };
-    }
-
-    // Use aggregated results for phase implementation tests
-    if (result.aggregated) {
-      return result.aggregated;
-    }
-
-    // Handle other result formats
-    return {
-      total: result.totalTests || result.totalClaims || result.length || 0,
-      passed: result.passed || result.passedClaims || 0,
-      failed: result.failed || (result.totalClaims - result.passedClaims) || 0,
-      duration: result.duration || result.executionSummary?.totalTimeMs || 0
-    };
-  };
-
-  const clearResults = () => {
-    setTestResults({});
-    setPhaseResults([]);
-    setEnhancedPhaseResults([]);
-    setPhaseReport('');
-    setEnhancedPhaseReport('');
-    setExecutionLogs({});
-    setOverallStatus('idle');
-    toast({
-      title: "Results Cleared",
-      description: "All test results and logs have been cleared",
-    });
-  };
-
-  const getSuccessRate = (passed: number, total: number) => {
-    return total > 0 ? Math.round((passed / total) * 100) : 0;
-  };
-
-  const getStatusColor = (status: 'passed' | 'failed' | 'skipped') => {
+  const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'passed': return 'text-green-600';
-      case 'failed': return 'text-red-600';
-      case 'skipped': return 'text-yellow-600';
-      default: return 'text-gray-600';
+      case 'passed': return <CheckCircle className="w-4 h-4 text-green-600" />;
+      case 'failed': return <XCircle className="w-4 h-4 text-red-600" />;
+      case 'running': return <RefreshCw className="w-4 h-4 text-blue-600 animate-spin" />;
+      default: return <Clock className="w-4 h-4 text-gray-600" />;
     }
   };
 
-  const getStatusIcon = (status: 'passed' | 'failed' | 'skipped') => {
+  const getStatusColor = (status: string) => {
     switch (status) {
-      case 'passed': return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'failed': return <XCircle className="h-4 w-4 text-red-500" />;
-      case 'skipped': return <Clock className="h-4 w-4 text-yellow-500" />;
+      case 'passed': return 'bg-green-100 text-green-800';
+      case 'failed': return 'bg-red-100 text-red-800';
+      case 'running': return 'bg-blue-100 text-blue-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
+
+  const filteredResults = selectedCategory === 'all' 
+    ? testResults 
+    : testResults.filter(result => result.category === selectedCategory);
+
+  const categories = ['all', ...Array.from(new Set(testResults.map(r => r.category)))];
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold flex items-center gap-2">
-            <Settings className="w-6 h-6 text-blue-600" />
-            Comprehensive System Diagnostics
-          </h2>
-          <p className="text-gray-600 mt-1">Unified testing suite for all Soul Guide innovations and system phases</p>
+          <h2 className="text-2xl font-bold text-gray-900">System Diagnostics</h2>
+          <p className="text-gray-600">Run comprehensive system tests and validate implementations</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex gap-2">
           <Button 
             onClick={runAllTests} 
-            disabled={overallStatus === 'running'}
+            disabled={isRunning}
             className="flex items-center gap-2"
           >
-            {overallStatus === 'running' ? (
-              <RefreshCw className="w-4 h-4 animate-spin" />
-            ) : (
-              <PlayCircle className="w-4 h-4" />
-            )}
+            {isRunning ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
             Run All Tests
-          </Button>
-          <Button onClick={clearResults} variant="outline">
-            Clear Results
           </Button>
         </div>
       </div>
 
-      <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-7">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="authentication">Auth & Streaming</TabsTrigger>
-          <TabsTrigger value="innovations">Innovations</TabsTrigger>
-          <TabsTrigger value="phase-tests">Phase Tests</TabsTrigger>
-          <TabsTrigger value="reports">Reports</TabsTrigger>
-          <TabsTrigger value="results">Detailed Results</TabsTrigger>
-          <TabsTrigger value="logs">Execution Logs</TabsTrigger>
+      <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
+        <TabsList className="grid w-full grid-cols-6">
+          {categories.map(category => (
+            <TabsTrigger key={category} value={category} className="capitalize">
+              {category === 'all' ? 'All Tests' : category.replace('-', ' ')}
+            </TabsTrigger>
+          ))}
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-6">
-          {/* Test Status Overview */}
-          <div className="grid grid-cols-4 gap-4">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm">Total Tests</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{diagnosticTests.length}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm">Completed</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-600">
-                  {Object.keys(testResults).filter(id => !runningTests.has(id)).length}
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm">Running</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-yellow-600">
-                  {runningTests.size}
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm">Success Rate</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-blue-600">
-                  {Object.keys(testResults).length > 0 ? 
-                    Math.round((Object.values(testResults).filter((r: any) => {
-                      if (r.aggregated) return r.aggregated.failed === 0 && r.aggregated.total > 0;
-                      return r.overallSuccess !== false && r.status !== 'failed';
-                    }).length / Object.keys(testResults).length) * 100) : 0}%
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Category Quick Actions */}
-          <div className="grid grid-cols-2 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="w-5 h-5" />
-                  Authentication & Streaming
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Button 
-                  onClick={() => runCategoryTests('authentication')} 
-                  disabled={overallStatus === 'running'}
-                  className="w-full"
-                >
-                  Test Auth & Streaming
-                </Button>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Zap className="w-5 h-5" />
-                  Innovation Patents
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Button 
-                  onClick={() => runCategoryTests('vfp')} 
-                  disabled={overallStatus === 'running'}
-                  className="w-full"
-                  variant="outline"
-                >
-                  Test VFP & Growth
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="authentication" className="space-y-6">
-          {diagnosticTests
-            .filter(test => test.category === 'authentication')
-            .map((test) => {
-              const TestIcon = test.icon;
-              const results = getTestResults(test.id);
-              
-              return (
-                <Card key={test.id}>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <TestIcon className="w-5 h-5 text-gray-600" />
-                        <div>
-                          <CardTitle className="text-lg">{test.name}</CardTitle>
-                          <p className="text-sm text-gray-600">{test.description}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        {getTestStatusIcon(test.id)}
-                        {getTestStatusBadge(test.id)}
-                        <Button
-                          onClick={() => runSingleTest(test)}
-                          disabled={runningTests.has(test.id)}
-                          size="sm"
-                          variant="outline"
-                        >
-                          {runningTests.has(test.id) ? (
-                            <RefreshCw className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <PlayCircle className="w-4 h-4" />
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  
-                  {results && (
-                    <CardContent>
-                      <div className="grid grid-cols-4 gap-4 mb-4">
-                        <div className="text-center">
-                          <div className="text-2xl font-bold">{results.total}</div>
-                          <div className="text-sm text-gray-600">Total</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-green-600">{results.passed}</div>
-                          <div className="text-sm text-gray-600">Passed</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-red-600">{results.failed}</div>
-                          <div className="text-sm text-gray-600">Failed</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-2xl font-bold">{Math.round(results.duration)}ms</div>
-                          <div className="text-sm text-gray-600">Duration</div>
-                        </div>
-                      </div>
-                      
-                      {results.total > 0 && (
-                        <div className="space-y-2">
-                          <div className="flex justify-between text-sm">
-                            <span>Success Rate</span>
-                            <span>{Math.round((results.passed / results.total) * 100)}%</span>
-                          </div>
-                          <Progress value={(results.passed / results.total) * 100} className="h-2" />
-                        </div>
-                      )}
-                    </CardContent>
-                  )}
-                </Card>
-              );
-            })}
-        </TabsContent>
-
-        <TabsContent value="innovations" className="space-y-6">
-          {diagnosticTests
-            .filter(test => ['vfp', 'growth'].includes(test.category))
-            .map((test) => {
-              const TestIcon = test.icon;
-              const results = getTestResults(test.id);
-              
-              return (
-                <Card key={test.id}>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <TestIcon className="w-5 h-5 text-gray-600" />
-                        <div>
-                          <CardTitle className="text-lg">{test.name}</CardTitle>
-                          <p className="text-sm text-gray-600">{test.description}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        {getTestStatusIcon(test.id)}
-                        {getTestStatusBadge(test.id)}
-                        <Button
-                          onClick={() => runSingleTest(test)}
-                          disabled={runningTests.has(test.id)}
-                          size="sm"
-                          variant="outline"
-                        >
-                          {runningTests.has(test.id) ? (
-                            <RefreshCw className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <PlayCircle className="w-4 h-4" />
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  
-                  {results && (
-                    <CardContent>
-                      <div className="grid grid-cols-4 gap-4 mb-4">
-                        <div className="text-center">
-                          <div className="text-2xl font-bold">{results.total}</div>
-                          <div className="text-sm text-gray-600">Total</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-green-600">{results.passed}</div>
-                          <div className="text-sm text-gray-600">Passed</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-red-600">{results.failed}</div>
-                          <div className="text-sm text-gray-600">Failed</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-2xl font-bold">{Math.round(results.duration)}ms</div>
-                          <div className="text-sm text-gray-600">Duration</div>
-                        </div>
-                      </div>
-                      
-                      {results.total > 0 && (
-                        <div className="space-y-2">
-                          <div className="flex justify-between text-sm">
-                            <span>Success Rate</span>
-                            <span>{Math.round((results.passed / results.total) * 100)}%</span>
-                          </div>
-                          <Progress value={(results.passed / results.total) * 100} className="h-2" />
-                        </div>
-                      )}
-                    </CardContent>
-                  )}
-                </Card>
-              );
-            })}
-        </TabsContent>
-
-        <TabsContent value="phase-tests" className="space-y-6">
-          {/* Phase Implementation Tests */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Phase Implementation Tests</h3>
-              <Button 
-                onClick={() => runCategoryTests('phase-implementation')} 
-                disabled={overallStatus === 'running'}
-                variant="outline"
-              >
-                Run Phase Tests
-              </Button>
-            </div>
-
-            {diagnosticTests
-              .filter(test => test.category === 'phase-implementation')
-              .map((test) => {
-                const TestIcon = test.icon;
-                const results = getTestResults(test.id);
-                
-                return (
-                  <Card key={test.id}>
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <TestIcon className="w-5 h-5 text-gray-600" />
-                          <div>
-                            <CardTitle className="text-lg">{test.name}</CardTitle>
-                            <p className="text-sm text-gray-600">{test.description}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          {getTestStatusIcon(test.id)}
-                          {getTestStatusBadge(test.id)}
+        <TabsContent value={selectedCategory} className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Database className="w-5 h-5" />
+                Detailed Test Results
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left p-3 font-semibold">Test Name</th>
+                      <th className="text-left p-3 font-semibold">Category</th>
+                      <th className="text-left p-3 font-semibold">Status</th>
+                      <th className="text-left p-3 font-semibold">Results</th>
+                      <th className="text-left p-3 font-semibold">Duration</th>
+                      <th className="text-left p-3 font-semibold">Timestamp</th>
+                      <th className="text-left p-3 font-semibold">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredResults.map((result) => (
+                      <tr key={result.id} className="border-b hover:bg-gray-50">
+                        <td className="p-3 font-medium">{result.name}</td>
+                        <td className="p-3">
+                          <Badge variant="outline" className="capitalize">
+                            {result.category.replace('-', ' ')}
+                          </Badge>
+                        </td>
+                        <td className="p-3">
+                          <Badge className={getStatusColor(result.status)}>
+                            <div className="flex items-center gap-1">
+                              {getStatusIcon(result.status)}
+                              <span className="capitalize">{result.status}</span>
+                            </div>
+                          </Badge>
+                        </td>
+                        <td className="p-3 font-mono text-sm">{result.results}</td>
+                        <td className="p-3 font-mono text-sm">{result.duration}ms</td>
+                        <td className="p-3 text-sm text-gray-600">{result.timestamp}</td>
+                        <td className="p-3">
                           <Button
-                            onClick={() => runSingleTest(test)}
-                            disabled={runningTests.has(test.id)}
                             size="sm"
                             variant="outline"
+                            onClick={() => runTestSuite(result.id)}
+                            disabled={isRunning}
+                            className="flex items-center gap-1"
                           >
-                            {runningTests.has(test.id) ? (
-                              <RefreshCw className="w-4 h-4 animate-spin" />
+                            {isRunning ? (
+                              <RefreshCw className="w-3 h-3 animate-spin" />
                             ) : (
-                              <PlayCircle className="w-4 h-4" />
+                              <Play className="w-3 h-3" />
                             )}
+                            Run
                           </Button>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    
-                    {results && (
-                      <CardContent>
-                        <div className="grid grid-cols-5 gap-4 mb-4">
-                          <div className="text-center">
-                            <div className="text-2xl font-bold">{results.total}</div>
-                            <div className="text-sm text-gray-600">Total</div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-2xl font-bold text-green-600">{results.passed}</div>
-                            <div className="text-sm text-gray-600">Passed</div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-2xl font-bold text-red-600">{results.failed}</div>
-                            <div className="text-sm text-gray-600">Failed</div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-2xl font-bold">{Math.round(results.duration)}ms</div>
-                            <div className="text-sm text-gray-600">Duration</div>
-                          </div>
-                          {results.suiteCount && (
-                            <div className="text-center">
-                              <div className="text-2xl font-bold text-blue-600">{results.suiteCount}</div>
-                              <div className="text-sm text-gray-600">Suites</div>
-                            </div>
-                          )}
-                        </div>
-                        
-                        {results.total > 0 && (
-                          <div className="space-y-2">
-                            <div className="flex justify-between text-sm">
-                              <span>Success Rate</span>
-                              <span>{Math.round((results.passed / results.total) * 100)}%</span>
-                            </div>
-                            <Progress value={(results.passed / results.total) * 100} className="h-2" />
-                          </div>
-                        )}
-                      </CardContent>
-                    )}
-                  </Card>
-                );
-              })}
-          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
-          {/* Phase Results Summary */}
-          {(phaseResults.length > 0 || enhancedPhaseResults.length > 0) && (
+              {filteredResults.length === 0 && (
+                <div className="text-center py-8">
+                  <AlertTriangle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-600">No test results available. Run tests to see results.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Test Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card>
-              <CardHeader>
-                <CardTitle>Phase Implementation Summary</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {enhancedPhaseResults.length > 0 && (
-                    <div>
-                      <h4 className="font-medium mb-2">Enhanced Phase Tests</h4>
-                      <div className="grid grid-cols-3 gap-4">
-                        {enhancedPhaseResults.map((suite, index) => {
-                          const successRate = getSuccessRate(suite.passed, suite.totalTests);
-                          return (
-                            <div key={index} className="space-y-2">
-                              <div className="flex justify-between items-center">
-                                <span className="text-sm font-medium">{suite.suiteName.split(':')[0]}</span>
-                                <span className="text-sm text-muted-foreground">
-                                  {suite.passed}/{suite.totalTests}
-                                </span>
-                              </div>
-                              <Progress value={successRate} className="h-2" />
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {phaseResults.length > 0 && (
-                    <div>
-                      <h4 className="font-medium mb-2">Legacy Phase Tests</h4>
-                      <div className="grid grid-cols-3 gap-4">
-                        {phaseResults.map((suite, index) => {
-                          const successRate = getSuccessRate(suite.passed, suite.totalTests);
-                          return (
-                            <div key={index} className="space-y-2">
-                              <div className="flex justify-between items-center">
-                                <span className="text-sm font-medium">{suite.suiteName.split(':')[0]}</span>
-                                <span className="text-sm text-muted-foreground">
-                                  {suite.passed}/{suite.totalTests}
-                                </span>
-                              </div>
-                              <Progress value={successRate} className="h-2" />
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Total Tests</p>
+                    <p className="text-2xl font-bold">{filteredResults.length}</p>
+                  </div>
+                  <Database className="w-8 h-8 text-blue-600" />
                 </div>
               </CardContent>
             </Card>
-          )}
-        </TabsContent>
 
-        <TabsContent value="reports" className="space-y-6">
-          {enhancedPhaseReport && (
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <ShieldCheck className="w-5 h-5 text-emerald-600" />
-                  Enhanced Phase Implementation Report
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <pre className="text-sm bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto font-mono">
-                  {enhancedPhaseReport}
-                </pre>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Passed</p>
+                    <p className="text-2xl font-bold text-green-600">
+                      {filteredResults.filter(r => r.status === 'passed').length}
+                    </p>
+                  </div>
+                  <CheckCircle className="w-8 h-8 text-green-600" />
+                </div>
               </CardContent>
             </Card>
-          )}
-          
-          {phaseReport && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TestTube className="w-5 h-5" />
-                  Legacy Phase Implementation Report
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <pre className="text-sm bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto font-mono">
-                  {phaseReport}
-                </pre>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
 
-        <TabsContent value="results" className="space-y-6">
-          {/* Detailed Results Table */}
-          {Object.keys(testResults).length > 0 && (
             <Card>
-              <CardHeader>
-                <CardTitle>Detailed Test Results</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Test Name</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Results</TableHead>
-                      <TableHead>Duration</TableHead>
-                      <TableHead>Timestamp</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {diagnosticTests.map((test) => {
-                      const result = testResults[test.id];
-                      if (!result) return null;
-                      
-                      const results = getTestResults(test.id);
-                      
-                      return (
-                        <TableRow key={test.id}>
-                          <TableCell className="font-medium">{test.name}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline">{test.category}</Badge>
-                          </TableCell>
-                          <TableCell>{getTestStatusBadge(test.id)}</TableCell>
-                          <TableCell>
-                            {results && (
-                              <span className="text-sm">
-                                {results.passed}/{results.total} passed
-                                {results.suiteCount && ` (${results.suiteCount} suites)`}
-                              </span>
-                            )}
-                          </TableCell>
-                          <TableCell>{results ? `${Math.round(results.duration)}ms` : 'N/A'}</TableCell>
-                          <TableCell className="text-gray-500">
-                            {result.timestamp ? new Date(result.timestamp).toLocaleString() : 'N/A'}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Failed</p>
+                    <p className="text-2xl font-bold text-red-600">
+                      {filteredResults.filter(r => r.status === 'failed').length}
+                    </p>
+                  </div>
+                  <XCircle className="w-8 h-8 text-red-600" />
+                </div>
               </CardContent>
             </Card>
-          )}
-        </TabsContent>
-
-        <TabsContent value="logs" className="space-y-6">
-          {Object.keys(executionLogs).length > 0 ? (
-            Object.entries(executionLogs).map(([testId, logs]) => {
-              const test = diagnosticTests.find(t => t.id === testId);
-              return (
-                <Card key={testId}>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Activity className="w-5 h-5" />
-                      {test?.name || testId} - Execution Log
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm space-y-1 max-h-96 overflow-y-auto">
-                      {logs.map((log, index) => (
-                        <div key={index}>{log}</div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })
-          ) : (
-            <Card>
-              <CardContent className="text-center py-8 text-gray-500">
-                No execution logs available. Run some tests to see detailed execution information.
-              </CardContent>
-            </Card>
-          )}
+          </div>
         </TabsContent>
       </Tabs>
     </div>
   );
 };
+
+export default AdminSystemDiagnostics;
