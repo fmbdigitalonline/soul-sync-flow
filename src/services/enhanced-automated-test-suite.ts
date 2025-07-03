@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { memoryService, SessionMemory, SessionFeedback, MicroActionReminder } from '@/services/memory-service';
 import { addHours, addDays } from 'date-fns';
@@ -26,6 +25,7 @@ export interface TestSuiteResult {
     hasUser: boolean;
     userId?: string;
     isAdmin?: boolean;
+    error?: string;
   };
 }
 
@@ -80,11 +80,11 @@ class EnhancedAutomatedTestSuite {
           authenticationRequired: true
         });
       } else {
-        // Test with real user context
+        // Test with real user context - using valid memory type
         const testMemory = await memoryService.saveMemory({
           user_id: this.adminUserId,
           session_id: this.sessionId,
-          memory_type: 'enhanced_interaction',
+          memory_type: 'interaction', // Fixed: using valid memory type
           memory_data: {
             test_content: 'Enhanced automated test memory with real-time validation',
             test_timestamp: new Date().toISOString(),
@@ -224,8 +224,8 @@ class EnhancedAutomatedTestSuite {
         growthConfig.behavioral.responseStyle !== dreamsConfig.behavioral.responseStyle &&
         growthConfig.behavioral.emotionalSensitivity !== dreamsConfig.behavioral.emotionalSensitivity &&
         JSON.stringify(growthConfig.behavioral.focusAreas) !== JSON.stringify(dreamsConfig.behavioral.focusAreas) &&
-        growthConfig.persona.primaryTraits.length > 0 &&
-        dreamsConfig.persona.primaryTraits.length > 0
+        growthConfig.behavioral.focusAreas.length > 0 && // Fixed: using behavioral.focusAreas instead of persona.primaryTraits
+        dreamsConfig.behavioral.focusAreas.length > 0
       );
 
       results.push({
@@ -308,12 +308,12 @@ class EnhancedAutomatedTestSuite {
         // Initialize with real admin user context
         await agentCommunicationService.initialize(this.adminUserId);
         
-        // Test real-time insight sharing
+        // Test real-time insight sharing - using valid insight type
         await agentCommunicationService.shareInsightBetweenAgents(
           'growth',
           'soul_companion',
           {
-            insightType: 'enhanced_pattern',
+            insightType: 'pattern', // Fixed: using valid insight type
             content: 'Enhanced test insight sharing with real-time validation',
             confidence: 0.85,
             relevanceScore: 0.92,
@@ -500,7 +500,7 @@ class EnhancedAutomatedTestSuite {
       report += `Authenticated User: ${authCtx.hasUser ? '✅ Yes' : '❌ No'}\n`;
       if (authCtx.userId) report += `User ID: ${authCtx.userId}\n`;
       report += `Admin Context: ${authCtx.isAdmin ? '✅ Yes' : '❌ No'}\n`;
-      if (authCtx.error) report += `Auth Error: ${authCtx.error}\n`;
+      if (authCtx.error) report += `Auth Error: ${authCtx.error}\n`; // Fixed: now error property exists
       report += '\n';
     }
 
