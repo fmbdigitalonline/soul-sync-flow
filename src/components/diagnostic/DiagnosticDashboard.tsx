@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { CosmicCard } from '@/components/ui/cosmic-card';
@@ -14,16 +13,22 @@ import {
   AlertTriangle,
   Zap,
   TestTube,
-  Activity
+  Activity,
+  Shield,
+  ShieldCheck,
+  ShieldAlert
 } from 'lucide-react';
 import { automatedTestSuite, TestSuiteResult } from '@/services/automated-test-suite';
+import { enhancedAutomatedTestSuite } from '@/services/enhanced-automated-test-suite';
 import { streamingAuthTestSuite, StreamingTestSuiteResult } from '@/services/streaming-auth-test-suite';
 
 export const DiagnosticDashboard = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [results, setResults] = useState<TestSuiteResult[]>([]);
+  const [enhancedResults, setEnhancedResults] = useState<TestSuiteResult[]>([]);
   const [streamingResults, setStreamingResults] = useState<StreamingTestSuiteResult | null>(null);
   const [report, setReport] = useState<string>('');
+  const [enhancedReport, setEnhancedReport] = useState<string>('');
   const [activeTest, setActiveTest] = useState<string>('');
 
   const runPhaseImplementationDiagnostics = async () => {
@@ -43,6 +48,29 @@ export const DiagnosticDashboard = () => {
     } catch (error) {
       console.error('Diagnostic test suite failed:', error);
       setReport(`❌ Diagnostic test suite failed: ${error}`);
+    } finally {
+      setIsRunning(false);
+      setActiveTest('');
+    }
+  };
+
+  const runEnhancedDiagnostics = async () => {
+    setIsRunning(true);
+    setEnhancedResults([]);
+    setEnhancedReport('');
+    setActiveTest('Enhanced Authentication-Aware Diagnostics');
+
+    try {
+      console.log('🔍 Starting Enhanced Phase 1-3 diagnostics with authentication...');
+      const suiteResults = await enhancedAutomatedTestSuite.runCompleteTestSuite();
+      const diagnosticReport = enhancedAutomatedTestSuite.generateDiagnosticReport(suiteResults);
+      
+      setEnhancedResults(suiteResults);
+      setEnhancedReport(diagnosticReport);
+      console.log(diagnosticReport);
+    } catch (error) {
+      console.error('Enhanced diagnostic test suite failed:', error);
+      setEnhancedReport(`❌ Enhanced diagnostic test suite failed: ${error}`);
     } finally {
       setIsRunning(false);
       setActiveTest('');
@@ -70,14 +98,22 @@ export const DiagnosticDashboard = () => {
   const runAllDiagnostics = async () => {
     setIsRunning(true);
     setResults([]);
+    setEnhancedResults([]);
     setStreamingResults(null);
     setReport('');
+    setEnhancedReport('');
     setActiveTest('All Diagnostics');
 
     try {
       console.log('🚀 Starting comprehensive diagnostic suite...');
       
-      // Run phase implementation tests
+      // Run enhanced tests first
+      const enhancedSuiteResults = await enhancedAutomatedTestSuite.runCompleteTestSuite();
+      const enhancedDiagnosticReport = enhancedAutomatedTestSuite.generateDiagnosticReport(enhancedSuiteResults);
+      setEnhancedResults(enhancedSuiteResults);
+      setEnhancedReport(enhancedDiagnosticReport);
+      
+      // Run original tests for comparison
       const suiteResults = await automatedTestSuite.runCompleteTestSuite();
       const diagnosticReport = automatedTestSuite.generateDiagnosticReport(suiteResults);
       setResults(suiteResults);
@@ -90,7 +126,7 @@ export const DiagnosticDashboard = () => {
       console.log('All diagnostics completed successfully');
     } catch (error) {
       console.error('Comprehensive diagnostic suite failed:', error);
-      setReport(`❌ Comprehensive diagnostic suite failed: ${error}`);
+      setEnhancedReport(`❌ Comprehensive diagnostic suite failed: ${error}`);
     } finally {
       setIsRunning(false);
       setActiveTest('');
@@ -129,10 +165,29 @@ export const DiagnosticDashboard = () => {
           SoulSync Implementation Diagnostics
         </h1>
         <p className="text-muted-foreground max-w-2xl mx-auto">
-          Comprehensive test suite to verify real-time functionality across all system phases
+          Comprehensive test suite to verify real-time functionality across all system phases with enhanced authentication support
         </p>
         
         <div className="flex flex-wrap gap-4 justify-center">
+          <Button 
+            onClick={runEnhancedDiagnostics} 
+            disabled={isRunning}
+            size="lg"
+            className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:opacity-90"
+          >
+            {isRunning && activeTest === 'Enhanced Authentication-Aware Diagnostics' ? (
+              <>
+                <div className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                Running Enhanced Tests...
+              </>
+            ) : (
+              <>
+                <ShieldCheck className="mr-2 h-4 w-4" />
+                Enhanced Diagnostics (Recommended)
+              </>
+            )}
+          </Button>
+
           <Button 
             onClick={runPhaseImplementationDiagnostics} 
             disabled={isRunning}
@@ -142,12 +197,12 @@ export const DiagnosticDashboard = () => {
             {isRunning && activeTest === 'Phase Implementation Diagnostics' ? (
               <>
                 <div className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-                Running Phase Tests...
+                Running Legacy Tests...
               </>
             ) : (
               <>
                 <TestTube className="mr-2 h-4 w-4" />
-                Phase Implementation Tests
+                Legacy Phase Tests
               </>
             )}
           </Button>
@@ -184,19 +239,134 @@ export const DiagnosticDashboard = () => {
             ) : (
               <>
                 <Play className="mr-2 h-4 w-4" />
-                Run Complete Diagnostic Suite
+                Run Complete Suite
               </>
             )}
           </Button>
         </div>
       </div>
 
-      <Tabs defaultValue="results" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="results">Test Results</TabsTrigger>
+      <Tabs defaultValue="enhanced" className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="enhanced">Enhanced Results</TabsTrigger>
+          <TabsTrigger value="results">Legacy Results</TabsTrigger>
           <TabsTrigger value="streaming">Auth & Streaming</TabsTrigger>
-          <TabsTrigger value="report">Diagnostic Report</TabsTrigger>
+          <TabsTrigger value="report">Diagnostic Reports</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="enhanced" className="space-y-6">
+          {enhancedResults.length > 0 && (
+            <>
+              {/* Enhanced Overall Summary */}
+              <CosmicCard className="p-6 border-2 border-emerald-200">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold flex items-center">
+                    <ShieldCheck className="mr-2 h-5 w-5 text-emerald-600" />
+                    Enhanced Phase Implementation Summary
+                  </h2>
+                  <Badge variant={enhancedResults.every(r => r.failed === 0 && r.skipped < r.totalTests/2) ? "default" : "destructive"}>
+                    {enhancedResults.every(r => r.failed === 0 && r.skipped < r.totalTests/2) ? "Enhanced Success" : "Issues Detected"}
+                  </Badge>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {enhancedResults.map((suite, index) => {
+                    const successRate = getSuccessRate(suite.passed, suite.totalTests);
+                    const isAuthenticated = suite.suiteName.includes('authenticated');
+                    return (
+                      <div key={index} className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium flex items-center">
+                            {isAuthenticated ? <Shield className="mr-1 h-3 w-3 text-emerald-500" /> : null}
+                            {suite.suiteName.split(':')[0]}
+                          </span>
+                          <span className="text-sm text-muted-foreground">
+                            {suite.passed}/{suite.totalTests}
+                            {suite.skipped > 0 && <span className="text-yellow-600"> ({suite.skipped} skipped)</span>}
+                          </span>
+                        </div>
+                        <Progress value={successRate} className="h-2" />
+                        <div className="text-xs text-muted-foreground">
+                          {successRate}% success rate
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CosmicCard>
+
+              {/* Enhanced Detailed Results */}
+              {enhancedResults.map((suite, suiteIndex) => (
+                <CosmicCard key={suiteIndex} className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold">{suite.suiteName}</h3>
+                    <div className="flex space-x-2">
+                      <Badge variant="outline" className="text-green-600">
+                        <CheckCircle2 className="mr-1 h-3 w-3" />
+                        {suite.passed}
+                      </Badge>
+                      {suite.failed > 0 && (
+                        <Badge variant="outline" className="text-red-600">
+                          <XCircle className="mr-1 h-3 w-3" />
+                          {suite.failed}
+                        </Badge>
+                      )}
+                      {suite.skipped > 0 && (
+                        <Badge variant="outline" className="text-yellow-600">
+                          <Clock className="mr-1 h-3 w-3" />
+                          {suite.skipped}
+                        </Badge>
+                      )}
+                      <Badge variant="outline" className="text-muted-foreground">
+                        {suite.duration}ms
+                      </Badge>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    {suite.results.map((test, testIndex) => (
+                      <div 
+                        key={testIndex} 
+                        className={`flex items-center justify-between p-3 rounded-lg border ${
+                          test.status === 'failed' ? 'bg-red-50 border-red-200' : 
+                          test.status === 'skipped' ? 'bg-yellow-50 border-yellow-200' :
+                          'bg-green-50 border-green-200'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          {getStatusIcon(test.status)}
+                          <span className="font-medium">{test.testName}</span>
+                          {test.authenticationStatus && (
+                            <Badge variant="outline" className="text-xs">
+                              {test.authenticationStatus}
+                            </Badge>
+                          )}
+                        </div>
+                        
+                        <div className="flex items-center space-x-2">
+                          {test.details && (
+                            <Badge variant="outline" className="text-xs">
+                              {JSON.stringify(test.details)}
+                            </Badge>
+                          )}
+                          <span className="text-sm text-muted-foreground">
+                            {test.duration}ms
+                          </span>
+                        </div>
+
+                        {test.error && (
+                          <div className="mt-2 text-sm text-red-600">
+                            {test.error}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </CosmicCard>
+              ))}
+            </>
+          )}
+        </TabsContent>
 
         <TabsContent value="results" className="space-y-6">
           {results.length > 0 && (
@@ -206,7 +376,7 @@ export const DiagnosticDashboard = () => {
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-semibold flex items-center">
                     <BarChart3 className="mr-2 h-5 w-5" />
-                    Phase Implementation Summary
+                    Legacy Phase Implementation Summary
                   </h2>
                   <Badge variant={results.every(r => r.failed === 0) ? "default" : "destructive"}>
                     {results.every(r => r.failed === 0) ? "All Passed" : "Issues Found"}
@@ -382,17 +552,31 @@ export const DiagnosticDashboard = () => {
         </TabsContent>
 
         <TabsContent value="report">
-          {report && (
-            <CosmicCard className="p-6">
-              <h3 className="text-lg font-semibold mb-4 flex items-center">
-                <Zap className="mr-2 h-5 w-5" />
-                Comprehensive Diagnostic Report
-              </h3>
-              <pre className="text-sm bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto font-mono">
-                {report}
-              </pre>
-            </CosmicCard>
-          )}
+          <div className="space-y-6">
+            {enhancedReport && (
+              <CosmicCard className="p-6">
+                <h3 className="text-lg font-semibold mb-4 flex items-center">
+                  <ShieldCheck className="mr-2 h-5 w-5 text-emerald-600" />
+                  Enhanced Comprehensive Diagnostic Report
+                </h3>
+                <pre className="text-sm bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto font-mono">
+                  {enhancedReport}
+                </pre>
+              </CosmicCard>
+            )}
+            
+            {report && (
+              <CosmicCard className="p-6">
+                <h3 className="text-lg font-semibold mb-4 flex items-center">
+                  <Zap className="mr-2 h-5 w-5" />
+                  Legacy Diagnostic Report
+                </h3>
+                <pre className="text-sm bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto font-mono">
+                  {report}
+                </pre>
+              </CosmicCard>
+            )}
+          </div>
         </TabsContent>
       </Tabs>
     </div>
