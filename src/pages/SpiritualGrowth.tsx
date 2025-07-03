@@ -13,6 +13,7 @@ import { InsightJournal } from "@/components/coach/InsightJournal";
 import { WeeklyInsights } from "@/components/coach/WeeklyInsights";
 import { GrowthProgramInterface } from "@/components/growth/GrowthProgramInterface";
 import { GrowthCoachWelcome } from "@/components/growth/GrowthCoachWelcome";
+import { PerformanceMonitor } from "@/components/coach/PerformanceMonitor";
 import { programAwareCoachService } from "@/services/program-aware-coach-service";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
@@ -22,7 +23,7 @@ import { GrowthProgramOnboardingModal } from "@/components/growth/onboarding/Gro
 type ActiveView = 'welcome' | 'growth_program' | 'coach_chat' | 'tools' | 'mood' | 'reflection' | 'insight' | 'weekly' | null;
 
 const SpiritualGrowth = () => {
-  const { messages, isLoading, sendMessage, resetConversation } = useEnhancedAICoach("guide");
+  const { messages, isLoading, sendMessage, resetConversation, streamingContent, isStreaming } = useEnhancedAICoach("guide");
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [activeView, setActiveView] = useState<ActiveView>('welcome');
   const [selectedWeek, setSelectedWeek] = useState<ProgramWeek | null>(null);
@@ -100,7 +101,7 @@ const SpiritualGrowth = () => {
     setSelectedWeek(null);
   };
 
-  // Enhanced program-aware message sending
+  // Enhanced program-aware message sending with performance optimization
   const handleProgramAwareMessage = async (message: string) => {
     if (!isAuthenticated) return;
     
@@ -240,6 +241,13 @@ const SpiritualGrowth = () => {
   return (
     <MainLayout>
       <div className="flex flex-col h-[calc(100vh-5rem)] w-full p-4">
+        {/* Performance Monitor */}
+        <PerformanceMonitor 
+          isLoading={isLoading}
+          isStreaming={isStreaming}
+          messageCount={messages.length}
+        />
+
         {/* Header with Back Button */}
         {activeView !== 'welcome' && (
           <div className="mb-4">
@@ -286,6 +294,8 @@ const SpiritualGrowth = () => {
                   isLoading={isLoading}
                   onSendMessage={handleProgramAwareMessage}
                   messagesEndRef={messagesEndRef}
+                  streamingContent={streamingContent}
+                  isStreaming={isStreaming}
                 />
               </div>
             </CosmicCard>

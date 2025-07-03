@@ -34,10 +34,14 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
     }
   };
 
-  // Scroll to bottom when messages change or streaming updates
+  // Optimized scroll to bottom with reduced frequency
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, streamingContent, isStreaming, messagesEndRef]);
+    const timeoutId = setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100); // Small delay to batch scroll updates
+    
+    return () => clearTimeout(timeoutId);
+  }, [messages.length, streamingContent, isStreaming, messagesEndRef]); // Only on message count change
 
   return (
     <div className="flex flex-col h-full">
@@ -58,7 +62,7 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
                 </Avatar>
               </div>
             ) : (
-              // Assistant Message with Slow Streaming
+              // Assistant Message with Optimized Streaming
               <SlowStreamingMessage
                 content={
                   // If this is the last message and we're streaming, show streaming content
@@ -70,13 +74,13 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
                   // Only stream if this is the last message and we're actively streaming
                   index === messages.length - 1 && isStreaming && !message.content
                 }
-                speed={85} // Slow, contemplative speed for growth conversations
+                speed={35} // Much faster - was 85
               />
             )}
           </div>
         ))}
         
-        {/* Loading indicator for when waiting for response */}
+        {/* Simplified loading indicator */}
         {isLoading && !isStreaming && (
           <div className="flex items-start gap-3 mb-4">
             <Avatar className="h-8 w-8 border border-soul-purple/20">
@@ -89,7 +93,7 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
                 <div className="w-2 h-2 bg-soul-purple rounded-full animate-pulse"></div>
                 <div className="w-2 h-2 bg-soul-purple rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
                 <div className="w-2 h-2 bg-soul-purple rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
-                <span className="text-sm ml-2">Thinking deeply...</span>
+                <span className="text-sm ml-2">Thinking...</span>
               </div>
             </div>
           </div>

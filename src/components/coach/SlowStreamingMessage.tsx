@@ -15,19 +15,19 @@ export const SlowStreamingMessage: React.FC<SlowStreamingMessageProps> = ({
   content,
   isStreaming,
   onComplete,
-  speed = 80 // Slow, contemplative speed for growth conversations
+  speed = 30 // Much faster - was 80
 }) => {
   const [showAvatar, setShowAvatar] = useState(false);
 
-  // Show avatar with slight delay for natural feel
+  // Show avatar with minimal delay
   useEffect(() => {
-    const timer = setTimeout(() => setShowAvatar(true), 200);
+    const timer = setTimeout(() => setShowAvatar(true), 50); // Reduced from 200ms to 50ms
     return () => clearTimeout(timer);
   }, []);
 
   return (
     <div className="flex items-start gap-3 mb-6 animate-fade-in">
-      <div className={`transition-opacity duration-500 ${showAvatar ? 'opacity-100' : 'opacity-0'}`}>
+      <div className={`transition-opacity duration-300 ${showAvatar ? 'opacity-100' : 'opacity-0'}`}>
         <Avatar className="h-8 w-8 border border-soul-purple/20">
           <AvatarFallback className="bg-soul-purple/10 text-soul-purple">
             <Sparkles className="h-4 w-4" />
