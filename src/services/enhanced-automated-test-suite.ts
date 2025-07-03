@@ -3,7 +3,7 @@ import { memoryService, SessionMemory, SessionFeedback, MicroActionReminder } fr
 import { TestAuthenticationService } from './test-authentication-service';
 import { addHours, addDays } from 'date-fns';
 
-export interface TestResult {
+export interface EnhancedTestResult {
   testName: string;
   status: 'passed' | 'failed' | 'skipped';
   duration: number;
@@ -19,7 +19,7 @@ export interface TestSuiteResult {
   failed: number;
   skipped: number;
   duration: number;
-  results: TestResult[];
+  results: EnhancedTestResult[];
 }
 
 class EnhancedAutomatedTestSuite {
@@ -42,8 +42,8 @@ class EnhancedAutomatedTestSuite {
     }
   }
 
-  async runMemoryPersistenceTests(): Promise<TestResult[]> {
-    const results: TestResult[] = [];
+  async runMemoryPersistenceTests(): Promise<EnhancedTestResult[]> {
+    const results: EnhancedTestResult[] = [];
 
     // Test 1: Basic memory save with proper authentication
     try {
@@ -159,8 +159,8 @@ class EnhancedAutomatedTestSuite {
     return results;
   }
 
-  async runFeedbackTests(): Promise<TestResult[]> {
-    const results: TestResult[] = [];
+  async runFeedbackTests(): Promise<EnhancedTestResult[]> {
+    const results: EnhancedTestResult[] = [];
 
     // Test 1: Feedback save with proper user context
     try {
@@ -239,8 +239,8 @@ class EnhancedAutomatedTestSuite {
     return results;
   }
 
-  async runReminderTests(): Promise<TestResult[]> {
-    const results: TestResult[] = [];
+  async runReminderTests(): Promise<EnhancedTestResult[]> {
+    const results: EnhancedTestResult[] = [];
 
     // Test 1: Reminder creation with valid UUID
     try {
@@ -320,8 +320,8 @@ class EnhancedAutomatedTestSuite {
     return results;
   }
 
-  async runLifeContextTests(): Promise<TestResult[]> {
-    const results: TestResult[] = [];
+  async runLifeContextTests(): Promise<EnhancedTestResult[]> {
+    const results: EnhancedTestResult[] = [];
 
     // Test 1: Life context update with proper authentication
     try {
@@ -423,8 +423,8 @@ class EnhancedAutomatedTestSuite {
     return results;
   }
 
-  async runPhase2AgentConfigTests(): Promise<TestResult[]> {
-    const results: TestResult[] = [];
+  async runPhase2AgentConfigTests(): Promise<EnhancedTestResult[]> {
+    const results: EnhancedTestResult[] = [];
 
     try {
       const startTime = Date.now();
@@ -469,12 +469,13 @@ class EnhancedAutomatedTestSuite {
 
       const personalizedConfig = agentConfigurationService.getPersonalizedConfig('growth', mockBlueprint);
       
-      // More thorough personalization check
+      // More thorough personalization check - compare key behavioral properties
       const personalizedDifferences = [
         personalizedConfig.behavioral?.responseStyle !== growthConfig.behavioral?.responseStyle,
         personalizedConfig.behavioral?.emotionalSensitivity !== growthConfig.behavioral?.emotionalSensitivity,
         JSON.stringify(personalizedConfig.behavioral?.focusAreas) !== JSON.stringify(growthConfig.behavioral?.focusAreas),
-        personalizedConfig.communication?.tone !== growthConfig.communication?.tone
+        // Remove the communication property check since it doesn't exist
+        personalizedConfig.behavioral?.adaptationStyle !== growthConfig.behavioral?.adaptationStyle
       ].filter(Boolean).length;
 
       const isPersonalized = personalizedDifferences > 0;
@@ -503,8 +504,8 @@ class EnhancedAutomatedTestSuite {
     return results;
   }
 
-  async runPhase3MetaAgentTests(): Promise<TestResult[]> {
-    const results: TestResult[] = [];
+  async runPhase3MetaAgentTests(): Promise<EnhancedTestResult[]> {
+    const results: EnhancedTestResult[] = [];
 
     try {
       const startTime = Date.now();

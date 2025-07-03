@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { CosmicCard } from '@/components/ui/cosmic-card';
@@ -19,13 +20,13 @@ import {
   ShieldAlert
 } from 'lucide-react';
 import { automatedTestSuite, TestSuiteResult } from '@/services/automated-test-suite';
-import { enhancedAutomatedTestSuite } from '@/services/enhanced-automated-test-suite';
+import { enhancedAutomatedTestSuite, TestSuiteResult as EnhancedTestSuiteResult, EnhancedTestResult } from '@/services/enhanced-automated-test-suite';
 import { streamingAuthTestSuite, StreamingTestSuiteResult } from '@/services/streaming-auth-test-suite';
 
 export const DiagnosticDashboard = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [results, setResults] = useState<TestSuiteResult[]>([]);
-  const [enhancedResults, setEnhancedResults] = useState<TestSuiteResult[]>([]);
+  const [enhancedResults, setEnhancedResults] = useState<EnhancedTestSuiteResult[]>([]);
   const [streamingResults, setStreamingResults] = useState<StreamingTestSuiteResult | null>(null);
   const [report, setReport] = useState<string>('');
   const [enhancedReport, setEnhancedReport] = useState<string>('');
@@ -324,7 +325,7 @@ export const DiagnosticDashboard = () => {
                   </div>
 
                   <div className="space-y-2">
-                    {suite.results.map((test, testIndex) => (
+                    {suite.results.map((test: EnhancedTestResult, testIndex) => (
                       <div 
                         key={testIndex} 
                         className={`flex items-center justify-between p-3 rounded-lg border ${
