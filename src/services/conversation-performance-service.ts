@@ -113,7 +113,7 @@ class ConversationPerformanceService {
         .maybeSingle();
 
       const blueprint = data ? {
-        name: data.user_meta?.preferred_name || 'friend',
+        name: this.extractPreferredName(data.user_meta) || 'friend',
         summary: this.createBlueprintSummary(data),
         fullData: data
       } : { name: 'friend', summary: 'No blueprint available', fullData: null };
@@ -132,6 +132,14 @@ class ConversationPerformanceService {
     }
   }
 
+  private extractPreferredName(userMeta: any): string | null {
+    if (!userMeta || typeof userMeta !== 'object') return null;
+    
+    // Handle both direct object and JSON string cases
+    const meta = typeof userMeta === 'string' ? JSON.parse(userMeta) : userMeta;
+    return meta?.preferred_name || null;
+  }
+
   private async detectCareerStatusCached(userId: string): Promise<any> {
     const cacheKey = `career_${userId}`;
     const cached = this.contextCache.get(cacheKey);
@@ -143,7 +151,15 @@ class ConversationPerformanceService {
     }
 
     try {
-      const careerStatus = await careerDiscoveryService.detectCareerStatus(userId);
+      // Initialize career discovery and get context instead of calling detectCareerStatus
+      const sessionId = `career_${Date.now()}`;
+      const context = await careerDiscoveryService.initializeDiscovery(userId, sessionId);
+      
+      const careerStatus = {
+        status: context.discoveredStatus || 'unknown',
+        confidence: context.statusConfidence || 0,
+        phase: context.explorationPhase || 'status_discovery'
+      };
       
       this.contextCache.set(cacheKey, {
         data: { careerStatus },
@@ -155,7 +171,7 @@ class ConversationPerformanceService {
       return careerStatus;
     } catch (error) {
       console.warn("⚠️ Career detection failed:", error);
-      return null;
+      return { status: 'unknown', confidence: 0, phase: 'status_discovery' };
     }
   }
 
