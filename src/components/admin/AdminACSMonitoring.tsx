@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,9 @@ import {
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { adminAnalyticsService, ACSMetrics } from '@/services/admin-analytics-service';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const mockACSData = [
   { date: '2025-06-25', interventions: 23, success: 87, states: 156 },
@@ -34,27 +37,65 @@ const stateDistribution = [
   { state: 'CLARIFICATION', count: 9, percentage: 4 }
 ];
 
-export const AdminACSMonitoring: React.FC = () => {
-  const [acsMetrics, setAcsMetrics] = useState({
-    totalInterventions: 2847,
-    activeUsers: 51,
-    successRate: 89.3,
-    avgResponseTime: 1.2, // seconds
-    dailyInterventions: 45,
-    stateTransitions: 245,
-    systemAccuracy: 95.7,
-    userSatisfaction: 4.6
-  });
+interface RecentIntervention {
+  id: number;
+  user: string;
+  from: string;
+  to: string;
+  reason: string;
+  success: boolean;
+  time: string;
+}
 
-  const [recentInterventions, setRecentInterventions] = useState([
-    { id: 1, user: 'User #1247', from: 'NORMAL', to: 'CLARIFICATION', reason: 'Unclear query', success: true, time: '3 min ago' },
-    { id: 2, user: 'User #1089', from: 'FRUSTRATED', to: 'NORMAL', reason: 'Adaptive response', success: true, time: '7 min ago' },
-    { id: 3, user: 'User #1356', from: 'CONFUSED', to: 'CLARIFICATION', reason: 'Context missing', success: false, time: '12 min ago' },
-    { id: 4, user: 'User #1124', from: 'NORMAL', to: 'FRUSTRATED', reason: 'Task complexity', success: true, time: '18 min ago' }
-  ]);
+export const AdminACSMonitoring: React.FC = () => {
+  const [acsMetrics, setAcsMetrics] = useState<ACSMetrics | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [recentInterventions, setRecentInterventions] = useState<RecentIntervention[]>([]);
+  const { toast } = useToast();
+
+  const fetchACSData = async () => {
+    try {
+      setLoading(true);
+      const metrics = await adminAnalyticsService.getACSMetrics();
+      setAcsMetrics(metrics);
+
+      // Fetch recent interventions
+      const { data: interventions } = await supabase
+        .from('acs_intervention_logs')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(4);
+
+      if (interventions) {
+        const formattedInterventions: RecentIntervention[] = interventions.map((intervention, index) => ({
+          id: index + 1,
+          user: `User #${intervention.user_id.slice(-4)}`,
+          from: intervention.from_state,
+          to: intervention.to_state,
+          reason: intervention.trigger_reason,
+          success: intervention.success || false,
+          time: new Date(intervention.created_at).toLocaleString()
+        }));
+        setRecentInterventions(formattedInterventions);
+      }
+    } catch (error) {
+      console.error('Failed to fetch ACS data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load ACS metrics",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchACSData();
+  }, []);
 
   const handleRefreshMetrics = () => {
-    console.log('Refreshing ACS metrics...');
+    fetchACSData();
   };
 
   const getStateColor = (state: string) => {
@@ -72,6 +113,30 @@ export const AdminACSMonitoring: React.FC = () => {
       <CheckCircle className="w-4 h-4 text-green-600" /> : 
       <AlertTriangle className="w-4 h-4 text-red-600" />;
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <RefreshCw className="w-8 h-8 animate-spin" />
+        <span className="ml-2">Loading ACS metrics...</span>
+      </div>
+    );
+  }
+
+  if (!acsMetrics) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <p className="text-lg font-medium">Failed to load ACS metrics</p>
+          <Button onClick={fetchACSData} className="mt-4">
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -220,16 +285,33 @@ export const AdminACSMonitoring: React.FC = () => {
       <div className="grid grid-cols-3 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Detection Accuracy</CardTitle>
+            <CardTitle>Intervention Performance</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-sm">System Accuracy</span>
+              <span className="text-sm">Daily Rate</span>
+              <span className="font-bold">{acsMetrics.dailyInterventions}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm">State Transitions</span>
+              <span className="font-bold">{acsMetrics.stateTransitions}</span>
+            </div>
+            <Progress value={acsMetrics.successRate} className="h-2" />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>System Accuracy</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="text-sm">Overall Accuracy</span>
               <span className="font-bold">{acsMetrics.systemAccuracy}%</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm">False Positives</span>
-              <span className="font-bold">2.1%</span>
+              <span className="text-sm">Response Time</span>
+              <span className="font-bold">{acsMetrics.avgResponseTime}s</span>
             </div>
             <Progress value={acsMetrics.systemAccuracy} className="h-2" />
           </CardContent>
@@ -237,38 +319,18 @@ export const AdminACSMonitoring: React.FC = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>User Experience</CardTitle>
+            <CardTitle>User Satisfaction</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-sm">User Satisfaction</span>
+              <span className="text-sm">Satisfaction Score</span>
               <span className="font-bold">{acsMetrics.userSatisfaction}/5</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm">Seamless Transitions</span>
-              <span className="font-bold">94.8%</span>
+              <span className="text-sm">Positive Feedback</span>
+              <span className="font-bold">92.1%</span>
             </div>
-            <Progress value={94.8} className="h-2" />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>System Health</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-sm">State Detection: Active</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-sm">Context Analysis: Active</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-sm">Intervention Engine: Active</span>
-            </div>
+            <Progress value={92.1} className="h-2" />
           </CardContent>
         </Card>
       </div>
@@ -276,7 +338,7 @@ export const AdminACSMonitoring: React.FC = () => {
       {/* Recent Interventions */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent ACS Interventions</CardTitle>
+          <CardTitle>Recent Interventions</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
@@ -284,34 +346,44 @@ export const AdminACSMonitoring: React.FC = () => {
               <TableRow>
                 <TableHead>User</TableHead>
                 <TableHead>State Transition</TableHead>
-                <TableHead>Trigger Reason</TableHead>
+                <TableHead>Reason</TableHead>
                 <TableHead>Success</TableHead>
                 <TableHead>Time</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {recentInterventions.map((intervention) => (
-                <TableRow key={intervention.id}>
-                  <TableCell className="font-medium">{intervention.user}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Badge className={getStateColor(intervention.from)} variant="outline">
-                        {intervention.from}
-                      </Badge>
-                      <span>→</span>
-                      <Badge className={getStateColor(intervention.to)}>
-                        {intervention.to}
-                      </Badge>
-                    </div>
+              {recentInterventions.length > 0 ? (
+                recentInterventions.map((intervention) => (
+                  <TableRow key={intervention.id}>
+                    <TableCell className="font-medium">{intervention.user}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Badge className={getStateColor(intervention.from)} variant="outline">
+                          {intervention.from}
+                        </Badge>
+                        <span>→</span>
+                        <Badge className={getStateColor(intervention.to)} variant="outline">
+                          {intervention.to}
+                        </Badge>
+                      </div>
+                    </TableCell>
+                    <TableCell>{intervention.reason}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {getSuccessIcon(intervention.success)}
+                        <span>{intervention.success ? 'Success' : 'Failed'}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-gray-500">{intervention.time}</TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-4 text-gray-500">
+                    No recent interventions found
                   </TableCell>
-                  <TableCell>{intervention.reason}</TableCell>
-                  <TableCell className="flex items-center gap-2">
-                    {getSuccessIcon(intervention.success)}
-                    {intervention.success ? 'Success' : 'Failed'}
-                  </TableCell>
-                  <TableCell className="text-gray-500">{intervention.time}</TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </CardContent>

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -11,10 +11,14 @@ import {
   Activity, 
   Search,
   RefreshCw,
-  Network
+  Network,
+  AlertTriangle
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { adminAnalyticsService, TMGMetrics } from '@/services/admin-analytics-service';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const mockTMGData = [
   { date: '2025-06-25', memories: 289, retrievals: 156, latency: 95 },
@@ -32,27 +36,63 @@ const memoryDistribution = [
   { tier: 'Cold (Archive)', count: 3567, percentage: 43, avgLatency: 340 }
 ];
 
-export const AdminTMGMonitoring: React.FC = () => {
-  const [tmgMetrics, setTmgMetrics] = useState({
-    totalMemories: 8235,
-    activeUsers: 58,
-    retrievalRate: 98.2,
-    avgLatency: 89, // milliseconds
-    dailyStorage: 378,
-    graphTraversals: 1456,
-    memoryUtilization: 76.8,
-    compressionRatio: 4.2
-  });
+interface RecentActivity {
+  id: number;
+  user: string;
+  action: string;
+  type: string;
+  importance: number;
+  time: string;
+}
 
-  const [recentActivity, setRecentActivity] = useState([
-    { id: 1, user: 'User #1247', action: 'Memory Stored', type: 'conversation', importance: 8.5, time: '2 min ago' },
-    { id: 2, user: 'User #1089', action: 'Memory Retrieved', type: 'knowledge', importance: 7.2, time: '4 min ago' },
-    { id: 3, user: 'User #1356', action: 'Graph Traversal', type: 'pattern', importance: 9.1, time: '6 min ago' },
-    { id: 4, user: 'User #1124', action: 'Memory Indexed', type: 'insight', importance: 6.8, time: '9 min ago' }
-  ]);
+export const AdminTMGMonitoring: React.FC = () => {
+  const [tmgMetrics, setTmgMetrics] = useState<TMGMetrics | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
+  const { toast } = useToast();
+
+  const fetchTMGData = async () => {
+    try {
+      setLoading(true);
+      const metrics = await adminAnalyticsService.getTMGMetrics();
+      setTmgMetrics(metrics);
+
+      // Fetch recent memory activity
+      const { data: memories } = await supabase
+        .from('user_session_memory')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(4);
+
+      if (memories) {
+        const formattedActivity: RecentActivity[] = memories.map((memory, index) => ({
+          id: index + 1,
+          user: `User #${memory.user_id.slice(-4)}`,
+          action: 'Memory Stored',
+          type: memory.memory_type || 'session',
+          importance: memory.importance_score || 5,
+          time: new Date(memory.created_at).toLocaleString()
+        }));
+        setRecentActivity(formattedActivity);
+      }
+    } catch (error) {
+      console.error('Failed to fetch TMG data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load TMG metrics",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTMGData();
+  }, []);
 
   const handleRefreshMetrics = () => {
-    console.log('Refreshing TMG metrics...');
+    fetchTMGData();
   };
 
   const getImportanceColor = (importance: number) => {
@@ -70,6 +110,30 @@ export const AdminTMGMonitoring: React.FC = () => {
     };
     return colors[action as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <RefreshCw className="w-8 h-8 animate-spin" />
+        <span className="ml-2">Loading TMG metrics...</span>
+      </div>
+    );
+  }
+
+  if (!tmgMetrics) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <p className="text-lg font-medium">Failed to load TMG metrics</p>
+          <Button onClick={fetchTMGData} className="mt-4">
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -293,23 +357,31 @@ export const AdminTMGMonitoring: React.FC = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {recentActivity.map((activity) => (
-                <TableRow key={activity.id}>
-                  <TableCell className="font-medium">{activity.user}</TableCell>
-                  <TableCell>
-                    <Badge className={getActionColor(activity.action)}>
-                      {activity.action}
-                    </Badge>
+              {recentActivity.length > 0 ? (
+                recentActivity.map((activity) => (
+                  <TableRow key={activity.id}>
+                    <TableCell className="font-medium">{activity.user}</TableCell>
+                    <TableCell>
+                      <Badge className={getActionColor(activity.action)}>
+                        {activity.action}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{activity.type}</TableCell>
+                    <TableCell>
+                      <span className={getImportanceColor(activity.importance)}>
+                        {activity.importance}/10
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-gray-500">{activity.time}</TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-4 text-gray-500">
+                    No recent activity found
                   </TableCell>
-                  <TableCell>{activity.type}</TableCell>
-                  <TableCell>
-                    <span className={getImportanceColor(activity.importance)}>
-                      {activity.importance}/10
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-gray-500">{activity.time}</TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </CardContent>
