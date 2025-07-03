@@ -1,4 +1,3 @@
-
 import { memoryService, SessionMemory, SessionFeedback, MicroActionReminder } from '@/services/memory-service';
 import { TestAuthenticationService } from './test-authentication-service';
 import { addHours, addDays } from 'date-fns';
@@ -474,8 +473,7 @@ class EnhancedAutomatedTestSuite {
         personalizedConfig.behavioral?.responseStyle !== growthConfig.behavioral?.responseStyle,
         personalizedConfig.behavioral?.emotionalSensitivity !== growthConfig.behavioral?.emotionalSensitivity,
         JSON.stringify(personalizedConfig.behavioral?.focusAreas) !== JSON.stringify(growthConfig.behavioral?.focusAreas),
-        // Remove the communication property check since it doesn't exist
-        personalizedConfig.behavioral?.adaptationStyle !== growthConfig.behavioral?.adaptationStyle
+        personalizedConfig.behavioral?.conversationDepth !== growthConfig.behavioral?.conversationDepth
       ].filter(Boolean).length;
 
       const isPersonalized = personalizedDifferences > 0;
