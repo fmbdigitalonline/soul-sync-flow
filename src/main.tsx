@@ -16,6 +16,7 @@ import Dreams from "./pages/Dreams";
 import SpiritualGrowth from "./pages/SpiritualGrowth";
 import Profile from "./pages/Profile";
 import Onboarding from "./pages/Onboarding";
+import AdminDashboard from "./pages/AdminDashboard";
 import HumanDesignDebug from "./pages/HumanDesignDebug";
 import TestEphemeris from "./pages/TestEphemeris";
 import PersonaTest from "./pages/PersonaTest";
@@ -79,6 +80,7 @@ const router = createBrowserRouter([
       { path: "dreams", element: <ProtectedRoute><Dreams /></ProtectedRoute> },
       { path: "spiritual-growth", element: <ProtectedRoute><SpiritualGrowth /></ProtectedRoute> },
       { path: "profile", element: <ProtectedRoute><Profile /></ProtectedRoute> },
+      { path: "admin", element: <ProtectedRoute><AdminDashboard /></ProtectedRoute> },
       { path: "diagnostics", element: <Diagnostics /> },
       { path: "test-ephemeris", element: <TestEphemeris /> },
       { path: "human-design-debug", element: <HumanDesignDebug /> },
