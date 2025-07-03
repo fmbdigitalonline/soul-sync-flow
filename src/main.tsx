@@ -22,6 +22,7 @@ import PersonaTest from "./pages/PersonaTest";
 import SevenLayerTest from "./pages/SevenLayerTest";
 import Phase3MemoryTestPage from "./pages/Phase3MemoryTest";
 import TestEnvironmentPage from "./pages/TestEnvironmentPage";
+import Diagnostics from "./pages/Diagnostics";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -78,6 +79,7 @@ const router = createBrowserRouter([
       { path: "dreams", element: <ProtectedRoute><Dreams /></ProtectedRoute> },
       { path: "spiritual-growth", element: <ProtectedRoute><SpiritualGrowth /></ProtectedRoute> },
       { path: "profile", element: <ProtectedRoute><Profile /></ProtectedRoute> },
+      { path: "diagnostics", element: <Diagnostics /> },
       { path: "test-ephemeris", element: <TestEphemeris /> },
       { path: "human-design-debug", element: <HumanDesignDebug /> },
       { path: "persona-test", element: <PersonaTest /> },
