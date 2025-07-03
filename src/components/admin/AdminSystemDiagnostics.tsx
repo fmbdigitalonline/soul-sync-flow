@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -42,48 +41,79 @@ const AdminSystemDiagnostics: React.FC = () => {
     const results: TestResult[] = [];
     const now = new Date().toLocaleString();
 
-    // Helper function to safely extract test counts and duration
-    const extractTestMetrics = (result: any) => {
+    // Enhanced helper function to safely extract test metrics from various result formats
+    const extractTestMetrics = (result: any, testType: string) => {
       let total = 0;
       let passed = 0;
       let duration = 0;
 
       try {
-        // Handle different result formats
-        if (result && typeof result === 'object') {
-          // Check for nested rawResult first
-          const dataSource = result.rawResult || result;
-          
-          // Extract total count - try multiple field names
-          total = dataSource.totalClaims || 
-                  dataSource.totalTests || 
+        if (!result || typeof result !== 'object') {
+          console.warn(`No valid result data for ${testType}`);
+          return { total: 0, passed: 0, duration: 0 };
+        }
+
+        // Handle different result structures based on test type
+        let dataSource = result;
+        
+        // Check for nested rawResult first
+        if (result.rawResult && typeof result.rawResult === 'object') {
+          dataSource = result.rawResult;
+        }
+
+        // VFP-Graph Patent Test Suite format
+        if (testType === 'vfp-patent') {
+          total = dataSource.totalClaims || 0;
+          passed = dataSource.passedClaims || 0;
+          duration = dataSource.executionSummary?.totalTimeMs || dataSource.duration || 0;
+        }
+        // Streaming Authentication Test Suite format
+        else if (testType === 'streaming-auth') {
+          total = dataSource.totalTests || dataSource.total || 0;
+          passed = dataSource.passed || dataSource.passedTests || 0;
+          duration = dataSource.duration || dataSource.executionTime || 0;
+        }
+        // Growth Program Test Suite format
+        else if (testType === 'growth-program') {
+          total = dataSource.totalTests || dataSource.total || 0;
+          passed = dataSource.passed || dataSource.passedTests || 0;
+          duration = dataSource.duration || dataSource.executionTime || 0;
+        }
+        // Legacy/Enhanced phase implementations (array format)
+        else if (Array.isArray(dataSource)) {
+          total = dataSource.reduce((sum: number, suite: any) => sum + (suite.totalTests || 0), 0);
+          passed = dataSource.reduce((sum: number, suite: any) => sum + (suite.passed || 0), 0);
+          duration = dataSource.reduce((sum: number, suite: any) => sum + (suite.duration || 0), 0);
+        }
+        // General fallback for other formats
+        else {
+          total = dataSource.totalTests || 
+                  dataSource.totalClaims || 
                   dataSource.total || 
-                  (Array.isArray(dataSource.results) ? dataSource.results.length : 0) ||
-                  (Array.isArray(dataSource) ? dataSource.length : 0);
+                  (Array.isArray(dataSource.results) ? dataSource.results.length : 0) || 0;
 
-          // Extract passed count - try multiple field names
-          passed = dataSource.passedClaims || 
-                   dataSource.passed || 
+          passed = dataSource.passed || 
+                   dataSource.passedClaims || 
+                   dataSource.passedTests ||
                    (Array.isArray(dataSource.results) ? 
-                     dataSource.results.filter((r: any) => r.status === 'passed').length : 0) ||
-                   (Array.isArray(dataSource) ? 
-                     dataSource.filter((r: any) => r.status === 'passed').length : 0);
+                     dataSource.results.filter((r: any) => r.status === 'passed' || r.passed).length : 0) || 0;
 
-          // Extract duration - try multiple sources
           duration = dataSource.duration || 
                      dataSource.executionSummary?.totalTimeMs || 
                      dataSource.totalDuration || 
-                     0;
+                     dataSource.executionTime || 0;
         }
 
-        // Ensure we have valid numbers
-        total = isNaN(total) ? 0 : Math.max(0, total);
-        passed = isNaN(passed) ? 0 : Math.max(0, Math.min(passed, total));
-        duration = isNaN(duration) ? 0 : Math.max(0, duration);
+        // Ensure we have valid numbers and handle edge cases
+        total = Math.max(0, isNaN(total) ? 0 : Math.floor(total));
+        passed = Math.max(0, isNaN(passed) ? 0 : Math.floor(Math.min(passed, total)));
+        duration = Math.max(0, isNaN(duration) ? 0 : Math.floor(duration));
+
+        console.log(`${testType} metrics:`, { total, passed, duration, dataSource });
 
       } catch (error) {
-        console.error('Error extracting test metrics:', error);
-        // Return safe defaults
+        console.error(`Error extracting metrics for ${testType}:`, error);
+        // Return safe defaults on error
         total = 0;
         passed = 0;
         duration = 0;
@@ -95,7 +125,7 @@ const AdminSystemDiagnostics: React.FC = () => {
     // VFP-Graph Patent Test Suite
     try {
       const vfpResult = (window as any).lastVFPGraphResult;
-      const { total, passed, duration } = extractTestMetrics(vfpResult);
+      const { total, passed, duration } = extractTestMetrics(vfpResult, 'vfp-patent');
       
       results.push({
         id: 'vfp-patent',
@@ -123,7 +153,7 @@ const AdminSystemDiagnostics: React.FC = () => {
     // Streaming Authentication Test Suite
     try {
       const streamingResult = (window as any).lastStreamingAuthResult;
-      const { total, passed, duration } = extractTestMetrics(streamingResult);
+      const { total, passed, duration } = extractTestMetrics(streamingResult, 'streaming-auth');
       
       results.push({
         id: 'streaming-auth',
@@ -151,7 +181,7 @@ const AdminSystemDiagnostics: React.FC = () => {
     // Growth Program Test Suite
     try {
       const growthResult = (window as any).lastGrowthProgramResult;
-      const { total, passed, duration } = extractTestMetrics(growthResult);
+      const { total, passed, duration } = extractTestMetrics(growthResult, 'growth-program');
       
       results.push({
         id: 'growth-program',
@@ -180,17 +210,15 @@ const AdminSystemDiagnostics: React.FC = () => {
     try {
       const legacyResult = (window as any).lastLegacyPhaseResult;
       if (legacyResult && Array.isArray(legacyResult)) {
-        const totalTests = legacyResult.reduce((sum: number, suite: any) => sum + (suite.totalTests || 0), 0);
-        const passedTests = legacyResult.reduce((sum: number, suite: any) => sum + (suite.passed || 0), 0);
-        const totalDuration = legacyResult.reduce((sum: number, suite: any) => sum + (suite.duration || 0), 0);
+        const { total, passed, duration } = extractTestMetrics(legacyResult, 'legacy-phase');
         
         results.push({
           id: 'legacy-phase',
           name: 'Phase Implementation (Legacy)',
           category: 'phase-implementation',
-          status: passedTests === totalTests && totalTests > 0 ? 'passed' : 'failed',
-          results: `${passedTests}/${totalTests} passed (${legacyResult.length} suites)`,
-          duration: totalDuration,
+          status: passed === total && total > 0 ? 'passed' : 'failed',
+          results: `${passed}/${total} passed (${legacyResult.length} suites)`,
+          duration,
           timestamp: now,
           rawResult: legacyResult
         });
@@ -203,17 +231,15 @@ const AdminSystemDiagnostics: React.FC = () => {
     try {
       const enhancedResult = (window as any).lastEnhancedPhaseResult;
       if (enhancedResult && Array.isArray(enhancedResult)) {
-        const totalTests = enhancedResult.reduce((sum: number, suite: any) => sum + (suite.totalTests || 0), 0);
-        const passedTests = enhancedResult.reduce((sum: number, suite: any) => sum + (suite.passed || 0), 0);
-        const totalDuration = enhancedResult.reduce((sum: number, suite: any) => sum + (suite.duration || 0), 0);
+        const { total, passed, duration } = extractTestMetrics(enhancedResult, 'enhanced-phase');
         
         results.push({
           id: 'enhanced-phase',
           name: 'Phase Implementation (Enhanced)',
           category: 'phase-implementation',
-          status: passedTests === totalTests && totalTests > 0 ? 'passed' : 'failed',
-          results: `${passedTests}/${totalTests} passed (${enhancedResult.length} suites)`,
-          duration: totalDuration,
+          status: passed === total && total > 0 ? 'passed' : 'failed',
+          results: `${passed}/${total} passed (${enhancedResult.length} suites)`,
+          duration,
           timestamp: now,
           rawResult: enhancedResult
         });
@@ -231,7 +257,7 @@ const AdminSystemDiagnostics: React.FC = () => {
     try {
       switch (testId) {
         case 'vfp-patent':
-          const vfpResult = await vfpGraphPatentTestSuite.runFullTestSuite();
+          const vfpResult = await vfpGraphPatentTestSuite.runPatentValidationSuite();
           (window as any).lastVFPGraphResult = vfpResult;
           break;
           
@@ -272,7 +298,7 @@ const AdminSystemDiagnostics: React.FC = () => {
     try {
       // Run all test suites in parallel for better performance
       const [vfpResult, streamingResult, growthResult, legacyResult, enhancedResult] = await Promise.allSettled([
-        vfpGraphPatentTestSuite.runFullTestSuite(),
+        vfpGraphPatentTestSuite.runPatentValidationSuite(),
         streamingAuthTestSuite.runFullTestSuite(),
         growthProgramTestSuite.runFullTestSuite(),
         automatedTestSuite.runCompleteTestSuite(),
