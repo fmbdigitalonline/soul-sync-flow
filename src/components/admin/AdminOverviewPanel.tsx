@@ -13,9 +13,13 @@ import {
   Settings,
   AlertCircle,
   CheckCircle,
-  Clock
+  Clock,
+  RefreshCw
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { adminAnalyticsService, SystemMetrics } from '@/services/admin-analytics-service';
+import { useToast } from '@/hooks/use-toast';
 
 const mockDailyData = [
   { date: '2025-06-25', users: 45, pie: 89, vfp: 92, tmg: 88, acs: 95 },
@@ -28,24 +32,36 @@ const mockDailyData = [
 ];
 
 export const AdminOverviewPanel: React.FC = () => {
-  const [metrics, setMetrics] = useState({
-    totalUsers: 1247,
-    activeUsers: 68,
-    dailyGrowth: 12.5,
-    systemUptime: 99.8,
-    innovations: {
-      pie: { active: 45, satisfaction: 4.2, insights: 234 },
-      vfp: { active: 62, accuracy: 94.5, vectors: 1186 },
-      tmg: { active: 58, memories: 3421, retrieval: 98.2 },
-      acs: { active: 51, interventions: 156, success: 89.3 }
-    }
-  });
+  const [metrics, setMetrics] = useState<SystemMetrics | null>(null);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   const [alerts, setAlerts] = useState([
     { id: 1, type: 'warning', message: 'PIE insight generation rate below target', timestamp: '10 minutes ago' },
     { id: 2, type: 'info', message: 'TMG memory optimization completed', timestamp: '2 hours ago' },
     { id: 3, type: 'success', message: 'ACS intervention success rate improved', timestamp: '4 hours ago' }
   ]);
+
+  const fetchMetrics = async () => {
+    try {
+      setLoading(true);
+      const data = await adminAnalyticsService.getSystemMetrics();
+      setMetrics(data);
+    } catch (error) {
+      console.error('Failed to fetch metrics:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load system metrics",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMetrics();
+  }, []);
 
   const getAlertIcon = (type: string) => {
     switch (type) {
@@ -55,8 +71,41 @@ export const AdminOverviewPanel: React.FC = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <RefreshCw className="w-8 h-8 animate-spin" />
+        <span className="ml-2">Loading system metrics...</span>
+      </div>
+    );
+  }
+
+  if (!metrics) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <p className="text-lg font-medium">Failed to load metrics</p>
+          <Button onClick={fetchMetrics} className="mt-4">
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
+      {/* Header with Refresh Button */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">System Overview</h2>
+        <Button onClick={fetchMetrics} variant="outline" size="sm">
+          <RefreshCw className="w-4 h-4 mr-2" />
+          Refresh Data
+        </Button>
+      </div>
+
       {/* Key Metrics */}
       <div className="grid grid-cols-4 gap-6">
         <Card>
