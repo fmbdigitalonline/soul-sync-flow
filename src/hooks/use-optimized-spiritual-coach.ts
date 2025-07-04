@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useRef } from 'react';
 import { conversationPerformanceService } from '@/services/conversation-performance-service';
 import { useStreamingMessage } from './use-streaming-message';
@@ -24,7 +23,6 @@ export const useOptimizedSpiritualCoach = () => {
     streamingContent,
     isStreaming,
     streamText,
-    completeStreaming,
     resetStreaming,
   } = useStreamingMessage();
 
@@ -46,7 +44,6 @@ export const useOptimizedSpiritualCoach = () => {
       console.log("🚀 Starting optimized spiritual coaching conversation");
       const startTime = performance.now();
 
-      // Get stream-first response
       const { quickResponse, contextPromise } = await conversationPerformanceService.handleUserInputOptimized(
         content,
         user.id,
@@ -56,7 +53,6 @@ export const useOptimizedSpiritualCoach = () => {
       const quickResponseTime = performance.now() - startTime;
       console.log(`⚡ Quick response ready in ${quickResponseTime.toFixed(1)}ms`);
 
-      // Create assistant message for quick response
       const quickAssistantMessage: OptimizedMessage = {
         id: `assistant_quick_${Date.now()}`,
         content: '',
@@ -66,30 +62,23 @@ export const useOptimizedSpiritualCoach = () => {
       };
 
       setMessages(prev => [...prev, quickAssistantMessage]);
-      setIsLoading(false);
+      setIsLoading(false); // Unblock input immediately
 
-      // Stream the quick response immediately
-      streamText(quickResponse, 25); // Fast streaming for quick response
+      // Stream with faster speed
+      streamText(quickResponse, 15); // Faster streaming
 
-      // Wait for streaming to complete
-      await new Promise(resolve => {
-        const checkComplete = () => {
-          if (!isStreaming) {
-            resolve(void 0);
-          } else {
-            setTimeout(checkComplete, 100);
-          }
-        };
-        checkComplete();
-      });
-
-      // Update message content after streaming
-      setMessages(prev => prev.map(msg => {
-        if (msg.id === quickAssistantMessage.id) {
-          return { ...msg, content: quickResponse };
+      // Wait for streaming completion with timeout
+      const streamingTimeout = setTimeout(() => {
+        if (isStreaming) {
+          console.log("⚠️ Streaming timeout, forcing completion");
+          setMessages(prev => prev.map(msg => {
+            if (msg.id === quickAssistantMessage.id) {
+              return { ...msg, content: quickResponse };
+            }
+            return msg;
+          }));
         }
-        return msg;
-      }));
+      }, quickResponse.length * 15 + 2000);
 
       // Continue with enhanced response in background
       if (!enhancementInProgress.current) {
@@ -100,7 +89,6 @@ export const useOptimizedSpiritualCoach = () => {
           const contextReadyTime = performance.now() - startTime;
           console.log(`🎯 Full context ready in ${contextReadyTime.toFixed(1)}ms`);
 
-          // Generate enhanced response
           const enhancedResponse = await conversationPerformanceService.generateEnhancedResponse(
             content,
             fullContext,
@@ -110,7 +98,6 @@ export const useOptimizedSpiritualCoach = () => {
           const totalTime = performance.now() - startTime;
           console.log(`✅ Enhanced response generated in ${totalTime.toFixed(1)}ms total`);
 
-          // Create enhanced message
           const enhancedMessage: OptimizedMessage = {
             id: `assistant_enhanced_${Date.now()}`,
             content: '',
@@ -121,11 +108,9 @@ export const useOptimizedSpiritualCoach = () => {
 
           setMessages(prev => [...prev, enhancedMessage]);
 
-          // Stream enhanced response
           resetStreaming();
-          streamText(enhancedResponse, 30);
+          streamText(enhancedResponse, 20); // Slightly faster for enhanced
 
-          // Update enhanced message after streaming
           setTimeout(() => {
             setMessages(prev => prev.map(msg => {
               if (msg.id === enhancedMessage.id) {
@@ -133,12 +118,13 @@ export const useOptimizedSpiritualCoach = () => {
               }
               return msg;
             }));
-          }, enhancedResponse.length * 30 + 500);
+          }, enhancedResponse.length * 20 + 500);
 
         } catch (error) {
           console.error("❌ Enhanced response failed:", error);
         } finally {
           enhancementInProgress.current = false;
+          clearTimeout(streamingTimeout);
         }
       }
 
@@ -146,10 +132,9 @@ export const useOptimizedSpiritualCoach = () => {
       console.error("❌ Optimized conversation failed:", error);
       setIsLoading(false);
       
-      // Fallback error message
       const errorMessage: OptimizedMessage = {
         id: `assistant_error_${Date.now()}`,
-        content: "I'm experiencing some technical difficulties. Let me take a moment to reconnect with your spiritual journey...",
+        content: "I'm here to support your spiritual journey. Let me reconnect with your essence...",
         sender: 'assistant',
         timestamp: new Date()
       };

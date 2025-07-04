@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
@@ -9,6 +8,7 @@ import { useEnhancedAICoach } from "@/hooks/use-enhanced-ai-coach";
 import { supabase } from "@/integrations/supabase/client";
 import { GuideInterface } from "@/components/coach/GuideInterface";
 import { OptimizedSpiritualInterface } from "@/components/coach/OptimizedSpiritualInterface";
+import { UltraOptimizedSpiritualInterface } from "@/components/coach/UltraOptimizedSpiritualInterface";
 import { MoodTracker } from "@/components/coach/MoodTracker";
 import { ReflectionPrompts } from "@/components/coach/ReflectionPrompts";
 import { InsightJournal } from "@/components/coach/InsightJournal";
@@ -30,7 +30,7 @@ const SpiritualGrowth = () => {
   const [activeView, setActiveView] = useState<ActiveView>('welcome');
   const [selectedWeek, setSelectedWeek] = useState<ProgramWeek | null>(null);
   const [isInGuidedFlow, setIsInGuidedFlow] = useState(false);
-  const [useOptimizedMode, setUseOptimizedMode] = useState(true); // Enable optimized mode by default
+  const [optimizationMode, setOptimizationMode] = useState<'ultra' | 'standard' | 'original'>('ultra'); // Default to ultra
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -38,14 +38,12 @@ const SpiritualGrowth = () => {
   
   const { growthJourney, addMoodEntry, addReflectionEntry, addInsightEntry } = useJourneyTracking();
 
-  // Check authentication status
   useEffect(() => {
     const checkAuth = async () => {
       const { data } = await supabase.auth.getSession();
       const authenticated = !!data.session;
       setIsAuthenticated(authenticated);
       
-      // Initialize program-aware coach if authenticated
       if (authenticated && data.session.user) {
         await programAwareCoachService.initializeForUser(data.session.user.id);
       }
@@ -75,7 +73,6 @@ const SpiritualGrowth = () => {
     scrollToBottom();
   }, [messages]);
 
-  // Growth Coach Welcome handlers
   const handleStartProgram = async () => {
     setShowOnboardingModal(true);
   };
@@ -104,19 +101,16 @@ const SpiritualGrowth = () => {
     setSelectedWeek(null);
   };
 
-  // Enhanced program-aware message sending with performance optimization toggle
   const handleProgramAwareMessage = async (message: string) => {
     if (!isAuthenticated) return;
     
     try {
       const { data } = await supabase.auth.getSession();
       if (data.session?.user) {
-        if (useOptimizedMode) {
-          // Use optimized mode - this is handled by OptimizedSpiritualInterface
-          console.log("🚀 Using optimized conversation mode");
+        if (optimizationMode === 'ultra') {
+          // Ultra-optimized mode handles this internally
           return;
         } else {
-          // Use original mode for comparison
           const response = await programAwareCoachService.sendProgramAwareMessage(
             message,
             `session_${Date.now()}`,
@@ -131,7 +125,6 @@ const SpiritualGrowth = () => {
     }
   };
 
-  // Data collection handlers with journey tracking
   const handleMoodSave = (mood: string, energy: string) => {
     addMoodEntry(mood, energy);
   };
@@ -174,7 +167,6 @@ const SpiritualGrowth = () => {
     );
   }
 
-  // Handle week selection view
   if (selectedWeek) {
     return (
       <MainLayout>
@@ -243,7 +235,7 @@ const SpiritualGrowth = () => {
           messageCount={messages.length}
         />
 
-        {/* Header with Back Button and Optimization Toggle */}
+        {/* Header with Back Button and Optimization Mode Toggle */}
         {activeView !== 'welcome' && (
           <div className="mb-4 flex items-center justify-between">
             <Button 
@@ -257,14 +249,30 @@ const SpiritualGrowth = () => {
             
             {activeView === 'coach_chat' && (
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">Optimized Mode:</label>
-                <Button
-                  variant={useOptimizedMode ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setUseOptimizedMode(!useOptimizedMode)}
-                >
-                  {useOptimizedMode ? "ON" : "OFF"}
-                </Button>
+                <label className="text-sm font-medium">Performance Mode:</label>
+                <div className="flex gap-1">
+                  <Button
+                    variant={optimizationMode === 'ultra' ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setOptimizationMode('ultra')}
+                  >
+                    Ultra
+                  </Button>
+                  <Button
+                    variant={optimizationMode === 'standard' ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setOptimizationMode('standard')}
+                  >
+                    Standard
+                  </Button>
+                  <Button
+                    variant={optimizationMode === 'original' ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setOptimizationMode('original')}
+                  >
+                    Original
+                  </Button>
+                </div>
               </div>
             )}
           </div>
@@ -286,10 +294,12 @@ const SpiritualGrowth = () => {
             <GrowthProgramInterface onWeekSelect={handleWeekSelect} />
           )}
 
-          {/* Coach Chat - Optimized or Original */}
+          {/* Coach Chat - Ultra-Optimized, Standard, or Original */}
           {activeView === 'coach_chat' && (
             <>
-              {useOptimizedMode ? (
+              {optimizationMode === 'ultra' ? (
+                <UltraOptimizedSpiritualInterface />
+              ) : optimizationMode === 'standard' ? (
                 <OptimizedSpiritualInterface />
               ) : (
                 <CosmicCard className="p-4 h-full flex flex-col">
