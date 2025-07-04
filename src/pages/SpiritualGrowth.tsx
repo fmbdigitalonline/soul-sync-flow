@@ -82,24 +82,26 @@ const SpiritualGrowth = () => {
     cleanupBrowserStorage();
   }, []);
 
-  // Conditional hook initialization - ONLY initialize the selected mode's hook
+  // FIX: Always call all hooks unconditionally to follow Rules of Hooks
+  const ultraHook = useUltraOptimizedSpiritualCoach();
+  const standardHook = useOptimizedSpiritualCoach();
+  const originalHook = useEnhancedAICoach("guide");
+  
+  // Select the active hook data based on optimization mode
   const currentHookData = useMemo(() => {
-    console.log(`🎯 Initializing ${optimizationMode} mode ONLY`);
+    console.log(`🎯 Using ${optimizationMode} mode data`);
     
     if (optimizationMode === 'ultra') {
       console.log("⚡ Ultra mode: Fastest response target <500ms");
-      // eslint-disable-next-line react-hooks/rules-of-hooks
-      return { hook: useUltraOptimizedSpiritualCoach(), type: 'ultra' };
+      return { hook: ultraHook, type: 'ultra' };
     } else if (optimizationMode === 'standard') {
       console.log("🚀 Standard mode: Balanced performance target ~2s");
-      // eslint-disable-next-line react-hooks/rules-of-hooks
-      return { hook: useOptimizedSpiritualCoach(), type: 'standard' };
+      return { hook: standardHook, type: 'standard' };
     } else {
       console.log("🧠 Original mode: Full feature set with heavy services");
-      // eslint-disable-next-line react-hooks/rules-of-hooks
-      return { hook: useEnhancedAICoach("guide"), type: 'original' };
+      return { hook: originalHook, type: 'original' };
     }
-  }, [optimizationMode]);
+  }, [optimizationMode, ultraHook, standardHook, originalHook]);
   
   const { messages, isLoading, sendMessage, streamingContent, isStreaming } = currentHookData.hook;
   
