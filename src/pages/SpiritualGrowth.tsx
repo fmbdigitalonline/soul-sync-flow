@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Heart, Sparkles, Moon, BookOpen, Calendar, MessageCircle, Compass, TrendingUp, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useEnhancedAICoach } from "@/hooks/use-enhanced-ai-coach";
+import { useOptimizedSpiritualCoach } from "@/hooks/use-optimized-spiritual-coach";
+import { useUltraOptimizedSpiritualCoach } from "@/hooks/use-ultra-optimized-spiritual-coach";
 import { supabase } from "@/integrations/supabase/client";
 import { GuideInterface } from "@/components/coach/GuideInterface";
 import { OptimizedSpiritualInterface } from "@/components/coach/OptimizedSpiritualInterface";
@@ -25,26 +27,39 @@ import { GrowthProgramOnboardingModal } from "@/components/growth/onboarding/Gro
 type ActiveView = 'welcome' | 'growth_program' | 'coach_chat' | 'tools' | 'mood' | 'reflection' | 'insight' | 'weekly' | null;
 
 const SpiritualGrowth = () => {
-  const { messages, isLoading, sendMessage, resetConversation, streamingContent, isStreaming } = useEnhancedAICoach("guide");
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [activeView, setActiveView] = useState<ActiveView>('welcome');
   const [selectedWeek, setSelectedWeek] = useState<ProgramWeek | null>(null);
   const [isInGuidedFlow, setIsInGuidedFlow] = useState(false);
-  const [optimizationMode, setOptimizationMode] = useState<'ultra' | 'standard' | 'original'>('ultra'); // Default to ultra
+  const [optimizationMode, setOptimizationMode] = useState<'ultra' | 'standard' | 'original'>('ultra');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
   const [showOnboardingModal, setShowOnboardingModal] = useState(false);
   
+  // Conditional hook usage based on optimization mode
+  const ultraHook = useUltraOptimizedSpiritualCoach();
+  const standardHook = useOptimizedSpiritualCoach();
+  const originalHook = useEnhancedAICoach("guide");
+  
+  // Select the appropriate hook based on mode
+  const currentHook = optimizationMode === 'ultra' ? ultraHook : 
+                     optimizationMode === 'standard' ? standardHook : 
+                     originalHook;
+  
+  const { messages, isLoading, sendMessage, resetConversation, streamingContent, isStreaming } = currentHook;
+  
   const { growthJourney, addMoodEntry, addReflectionEntry, addInsightEntry } = useJourneyTracking();
 
+  // Lightweight auth initialization - no heavy services
   useEffect(() => {
     const checkAuth = async () => {
       const { data } = await supabase.auth.getSession();
       const authenticated = !!data.session;
       setIsAuthenticated(authenticated);
       
-      if (authenticated && data.session.user) {
+      // Only initialize heavy services for original mode
+      if (authenticated && data.session.user && optimizationMode === 'original') {
         await programAwareCoachService.initializeForUser(data.session.user.id);
       }
     };
@@ -55,7 +70,8 @@ const SpiritualGrowth = () => {
       const authenticated = !!session;
       setIsAuthenticated(authenticated);
       
-      if (authenticated && session?.user) {
+      // Only initialize heavy services for original mode
+      if (authenticated && session?.user && optimizationMode === 'original') {
         await programAwareCoachService.initializeForUser(session.user.id);
       }
     });
@@ -63,7 +79,7 @@ const SpiritualGrowth = () => {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [optimizationMode]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -89,7 +105,9 @@ const SpiritualGrowth = () => {
   const handleTalkToCoach = () => {
     setActiveView('coach_chat');
     setIsInGuidedFlow(false);
-    resetConversation();
+    if (typeof resetConversation === 'function') {
+      resetConversation();
+    }
   };
 
   const handleGoToTools = () => {
@@ -101,16 +119,15 @@ const SpiritualGrowth = () => {
     setSelectedWeek(null);
   };
 
+  // Simplified message handler - let each hook handle its own logic
   const handleProgramAwareMessage = async (message: string) => {
     if (!isAuthenticated) return;
     
-    try {
-      const { data } = await supabase.auth.getSession();
-      if (data.session?.user) {
-        if (optimizationMode === 'ultra') {
-          // Ultra-optimized mode handles this internally
-          return;
-        } else {
+    // For original mode, use program-aware logic
+    if (optimizationMode === 'original') {
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (data.session?.user) {
           const response = await programAwareCoachService.sendProgramAwareMessage(
             message,
             `session_${Date.now()}`,
@@ -118,9 +135,12 @@ const SpiritualGrowth = () => {
           );
           sendMessage(message);
         }
+      } catch (error) {
+        console.error('Error sending program-aware message:', error);
+        sendMessage(message);
       }
-    } catch (error) {
-      console.error('Error sending program-aware message:', error);
+    } else {
+      // For ultra and standard modes, use direct hook logic
       sendMessage(message);
     }
   };
@@ -228,12 +248,14 @@ const SpiritualGrowth = () => {
   return (
     <MainLayout>
       <div className="flex flex-col h-[calc(100vh-5rem)] w-full p-4">
-        {/* Performance Monitor */}
-        <PerformanceMonitor 
-          isLoading={isLoading}
-          isStreaming={isStreaming}
-          messageCount={messages.length}
-        />
+        {/* Performance Monitor - only show for ultra and standard modes */}
+        {optimizationMode !== 'original' && (
+          <PerformanceMonitor 
+            isLoading={isLoading}
+            isStreaming={isStreaming}
+            messageCount={messages.length}
+          />
+        )}
 
         {/* Header with Back Button and Optimization Mode Toggle */}
         {activeView !== 'welcome' && (
