@@ -47,11 +47,16 @@ const SpiritualGrowth = () => {
                      optimizationMode === 'standard' ? standardHook : 
                      originalHook;
   
-  const { messages, isLoading, sendMessage, resetConversation, streamingContent, isStreaming } = currentHook;
+  const { messages, isLoading, sendMessage, streamingContent, isStreaming } = currentHook;
+  
+  // Get the correct reset/clear function based on the hook
+  const resetConversation = optimizationMode === 'original' 
+    ? (originalHook as any).resetConversation 
+    : (currentHook as any).clearConversation;
   
   const { growthJourney, addMoodEntry, addReflectionEntry, addInsightEntry } = useJourneyTracking();
 
-  // Lightweight auth initialization - no heavy services
+  // Lightweight auth initialization - no heavy services unless original mode
   useEffect(() => {
     const checkAuth = async () => {
       const { data } = await supabase.auth.getSession();
