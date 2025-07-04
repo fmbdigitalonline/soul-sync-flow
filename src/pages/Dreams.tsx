@@ -52,7 +52,7 @@ interface Task {
 }
 
 const Dreams = () => {
-  const { messages, isLoading, sendMessage, resetConversation, currentAgent, switchAgent } = useEnhancedAICoach("coach");
+  const { messages, isLoading, sendMessage, resetConversation, currentAgent, switchAgent } = useEnhancedAICoach("coach", "dreams");
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [currentView, setCurrentView] = useState<'create' | 'chat' | 'journey' | 'task-coach' | 'decomposing' | 'success'>('create');
   const [activeTab, setActiveTab] = useState<'journey' | 'tasks' | 'focus' | 'habits'>('journey');

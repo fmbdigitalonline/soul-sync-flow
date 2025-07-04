@@ -23,7 +23,8 @@ class MemoryInformedConversationService {
   async buildMemoryContext(
     userMessage: string,
     sessionId: string,
-    userId: string
+    userId: string,
+    pageContext?: string
   ): Promise<MemoryContext> {
     console.log('🧠 Building memory context for conversation:', { userMessage: userMessage.substring(0, 50), sessionId, userId });
 
@@ -48,8 +49,8 @@ class MemoryInformedConversationService {
       const sessionMemories = await enhancedMemoryService.getMemoriesBySession(sessionId);
       console.log('📝 Session memories found:', sessionMemories.length);
 
-      // Step 4: Get cross-session context for continuity
-      const crossSessionMemories = await this.getCrossSessionContext(userId, sessionId, 3);
+      // Step 2: Memory Context Filtering - Get cross-session context with page filter
+      const crossSessionMemories = await this.getCrossSessionContext(userId, sessionId, 3, pageContext);
       console.log('🔄 Cross-session memories found:', crossSessionMemories.length);
 
       // Step 5: Combine and prioritize memories
@@ -303,16 +304,24 @@ User Message: ${content}${topics}`;
     }
   }
 
-  async getCrossSessionContext(userId: string, currentSessionId: string, limit: number = 5): Promise<SessionMemory[]> {
-    console.log('🔄 Getting cross-session context for user');
+  async getCrossSessionContext(userId: string, currentSessionId: string, limit: number = 5, pageContext?: string): Promise<SessionMemory[]> {
+    console.log('🔄 Getting cross-session context for user with page filter:', pageContext);
     
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('user_session_memory')
         .select('*')
         .eq('user_id', userId)
         .neq('session_id', currentSessionId)
-        .gte('importance_score', 6)
+        .gte('importance_score', 6);
+
+      // Step 2: Memory Context Filtering - Filter by page context if provided
+      if (pageContext) {
+        // Filter sessions that belong to the same page context
+        query = query.like('session_id', `${pageContext}_%`);
+      }
+
+      const { data, error } = await query
         .order('last_referenced', { ascending: false })
         .order('importance_score', { ascending: false })
         .limit(limit);

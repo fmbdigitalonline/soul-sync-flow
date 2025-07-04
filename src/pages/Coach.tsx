@@ -26,7 +26,7 @@ const Coach = () => {
     sessionId,
     personaReady,
     vfpGraphStatus 
-  } = useEnhancedAICoach("blend");
+  } = useEnhancedAICoach("blend", "coach");
   const { isSoulSyncReady, soulSyncError } = useSoulSync();
   const { hasBlueprint, blueprintData } = useBlueprintCache();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -83,7 +83,7 @@ const Coach = () => {
 
   const handleSendMessage = async (message: string) => {
     // Use SoulSync if available, otherwise fall back to regular mode
-    await sendMessage(message, isSoulSyncReady);
+    await sendMessage(message, isSoulSyncReady, undefined, "coach");
   };
 
   if (!isAuthenticated) {

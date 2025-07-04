@@ -20,11 +20,11 @@ export interface Message {
   isStreaming?: boolean;
 }
 
-export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
+export const useEnhancedAICoach = (defaultAgent: AgentType = "guide", pageContext: string = 'coach') => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [currentAgent, setCurrentAgent] = useState<AgentType>(defaultAgent);
-  const [currentSessionId] = useState(() => enhancedAICoachService.createNewSession(defaultAgent));
+  const [currentSessionId] = useState(() => `${pageContext}_${enhancedAICoachService.createNewSession(defaultAgent)}`);
   const [authInitialized, setAuthInitialized] = useState(false);
   const [blueprintStatus, setBlueprintStatus] = useState<{
     isAvailable: boolean;
@@ -207,7 +207,7 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide") => {
     return () => clearTimeout(timeoutId);
   }, [messages, currentAgent, authInitialized]);
 
-  const sendMessage = async (content: string, useStreaming: boolean = true, displayMessage?: string) => {
+  const sendMessage = async (content: string, useStreaming: boolean = true, displayMessage?: string, pageContext: string = 'coach') => {
     if (!content.trim()) return;
 
     // Enhanced blueprint and VFP-Graph integration check

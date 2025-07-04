@@ -21,32 +21,46 @@ export interface BeliefDrillingResponse {
 }
 
 class ProgramAwareCoachService {
+  // Step 3: Service Instance Isolation - Separate caches by context
   private conversationCache = new Map<string, any>();
   private activeConversations = new Set<string>();
+  private contextIsolatedCaches = new Map<string, Map<string, any>>();
+  private contextIsolatedActiveSessions = new Map<string, Set<string>>();
 
-  async initializeForUser(userId: string) {
-    console.log("🎯 VFP-Graph Program-Aware Coach: Initializing for user", userId);
+  async initializeForUser(userId: string, pageContext: string = 'spiritual-growth') {
+    console.log("🎯 VFP-Graph Program-Aware Coach: Initializing for user", userId, "with context:", pageContext);
+    
+    // Step 3: Service Instance Isolation - Initialize context-specific caches
+    if (!this.contextIsolatedCaches.has(pageContext)) {
+      this.contextIsolatedCaches.set(pageContext, new Map());
+      this.contextIsolatedActiveSessions.set(pageContext, new Set());
+    }
     
     // Set the enhanced AI coach service to use the current user
     await enhancedAICoachService.setCurrentUser(userId);
     
-    console.log("✅ Program-aware coach initialized with enhanced AI integration");
+    console.log("✅ Program-aware coach initialized with enhanced AI integration for context:", pageContext);
   }
 
   async initializeBeliefDrilling(
     domain: LifeDomain,
     userId: string,
-    sessionId: string
+    sessionId: string,
+    pageContext: string = 'spiritual-growth'
   ): Promise<BeliefDrillingResponse> {
-    console.log("🎯 Initializing belief drilling with discovery-first approach for:", domain);
+    console.log("🎯 Initializing belief drilling with discovery-first approach for:", domain, "in context:", pageContext);
 
+    // Step 3: Service Instance Isolation - Use context-specific active sessions
+    const contextSessions = this.contextIsolatedActiveSessions.get(pageContext) || new Set();
+    
     // Prevent duplicate initialization
-    if (this.activeConversations.has(sessionId)) {
+    if (contextSessions.has(sessionId)) {
       console.log("⚠️ Session already active, returning cached response");
-      return this.getCachedResponse(sessionId);
+      return this.getCachedResponse(sessionId, pageContext);
     }
 
-    this.activeConversations.add(sessionId);
+    contextSessions.add(sessionId);
+    this.contextIsolatedActiveSessions.set(pageContext, contextSessions);
 
     try {
       // Use career discovery service for initial context if available
@@ -69,10 +83,12 @@ class ProgramAwareCoachService {
         sessionComplete: false
       };
 
-      // Cache the response
-      this.conversationCache.set(sessionId, {
+      // Step 3: Service Instance Isolation - Cache response in context-specific cache
+      const contextCache = this.contextIsolatedCaches.get(pageContext) || new Map();
+      contextCache.set(sessionId, {
         domain,
         userId,
+        pageContext,
         careerContext,
         lastResponse: response,
         messageCount: 1,
@@ -82,11 +98,14 @@ class ProgramAwareCoachService {
         week: null,
         stage: 'initial'
       });
+      this.contextIsolatedCaches.set(pageContext, contextCache);
 
       return response;
     } catch (error) {
       console.error("❌ Error initializing belief drilling:", error);
-      this.activeConversations.delete(sessionId);
+      const contextSessions = this.contextIsolatedActiveSessions.get(pageContext) || new Set();
+      contextSessions.delete(sessionId);
+      this.contextIsolatedActiveSessions.set(pageContext, contextSessions);
       
       // Fallback response
       return {
@@ -119,8 +138,10 @@ class ProgramAwareCoachService {
     }
   }
 
-  private getCachedResponse(sessionId: string): BeliefDrillingResponse {
-    const cached = this.conversationCache.get(sessionId);
+  private getCachedResponse(sessionId: string, pageContext: string = 'spiritual-growth'): BeliefDrillingResponse {
+    // Step 3: Service Instance Isolation - Get cached response from context-specific cache
+    const contextCache = this.contextIsolatedCaches.get(pageContext) || new Map();
+    const cached = contextCache.get(sessionId);
     if (cached?.lastResponse) {
       return cached.lastResponse;
     }
@@ -139,13 +160,15 @@ class ProgramAwareCoachService {
     message: string,
     sessionId: string,  
     userId: string,
-    useEnhancedBrain: boolean = true
+    useEnhancedBrain: boolean = true,
+    pageContext: string = 'spiritual-growth'
   ): Promise<BeliefDrillingResponse> {
     console.log("🎯 VFP-Graph Program-Aware Coach: Processing message with enhanced brain integration");
 
     try {
-      // Get cached conversation context
-      const conversationContext = this.conversationCache.get(sessionId) || {};
+      // Step 3: Service Instance Isolation - Get cached conversation context from context-specific cache
+      const contextCache = this.contextIsolatedCaches.get(pageContext) || new Map();
+      const conversationContext = contextCache.get(sessionId) || {};
       const { domain, careerContext } = conversationContext;
 
       // Use enhanced AI coach service with full brain innovations (ACS, VFP, PIE, TMG)
@@ -178,7 +201,7 @@ class ProgramAwareCoachService {
         // Parse response and extract insights
         const parsedResponse = this.parseCoachResponse(aiResponse.response);
         
-        // Update conversation cache
+        // Step 3: Service Instance Isolation - Update context-specific conversation cache
         this.updateConversationCache(sessionId, {
           ...conversationContext,
           lastMessage: message,
@@ -186,11 +209,12 @@ class ProgramAwareCoachService {
           messageCount: (conversationContext.messageCount || 0) + 1,
           careerContext: updatedCareerContext,
           discoveredInsights: this.extractInsights(aiResponse.response),
-          stage: this.determineConversationStage(conversationContext.messageCount || 0)
-        });
+          stage: this.determineConversationStage(conversationContext.messageCount || 0),
+          pageContext
+        }, pageContext);
 
-        // Save conversation state with proper UPSERT
-        await this.saveConversationStateWithRetry(sessionId, userId, message, parsedResponse.response);
+        // Step 4: Domain-Specific Conversation Storage - Save with dynamic domain
+        await this.saveConversationStateWithRetry(sessionId, userId, message, parsedResponse.response, pageContext);
 
         return parsedResponse;
       }
@@ -203,12 +227,14 @@ class ProgramAwareCoachService {
       console.error("❌ Error in program-aware message processing:", error);
       
       // Error recovery - provide meaningful response
+      const contextCache = this.contextIsolatedCaches.get(pageContext) || new Map();
+      
       return {
         response: "I understand you're exploring this area. Could you tell me more about what's specifically on your mind right now?",
         keyInsights: [],
         coreChallenges: [],
         nextQuestions: ["What aspect would you like to explore first?"],
-        progressPercentage: (this.conversationCache.get(sessionId)?.messageCount || 0) * 10,
+        progressPercentage: (contextCache.get(sessionId)?.messageCount || 0) * 10,
         sessionComplete: false
       };
     }
@@ -304,12 +330,15 @@ Be conversational, empathetic, and avoid generic responses. Draw from their pers
     };
   }
 
-  private updateConversationCache(sessionId: string, data: any) {
-    this.conversationCache.set(sessionId, {
-      ...this.conversationCache.get(sessionId),
+  private updateConversationCache(sessionId: string, data: any, pageContext: string = 'spiritual-growth') {
+    // Step 3: Service Instance Isolation - Update context-specific cache
+    const contextCache = this.contextIsolatedCaches.get(pageContext) || new Map();
+    contextCache.set(sessionId, {
+      ...contextCache.get(sessionId),
       ...data,
       lastUpdated: new Date().toISOString()
     });
+    this.contextIsolatedCaches.set(pageContext, contextCache);
   }
 
   private determineConversationStage(messageCount: number): string {
@@ -319,16 +348,27 @@ Be conversational, empathetic, and avoid generic responses. Draw from their pers
     return 'integration';
   }
 
-  // Fixed: Proper UPSERT logic to handle unique constraint
+  // Step 4: Domain-Specific Conversation Storage - Fixed UPSERT with dynamic domain
   private async saveConversationStateWithRetry(
     sessionId: string,
     userId: string,
     userMessage: string,
     aiResponse: string,
+    pageContext: string = 'spiritual-growth',
     maxRetries: number = 3
   ): Promise<void> {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
+        // Step 4: Domain-Specific Conversation Storage - Dynamic domain based on page context
+        const domainMapping = {
+          'spiritual-growth': 'personal_growth',
+          'dreams': 'dream_coaching', 
+          'coach': 'general_coaching',
+          'relationships': 'relationships'
+        };
+        
+        const dynamicDomain = domainMapping[pageContext as keyof typeof domainMapping] || 'general_coaching';
+        
         // Use upsert to handle the unique constraint properly
         const { error } = await supabase
           .from('conversation_memory')
@@ -340,7 +380,7 @@ Be conversational, empathetic, and avoid generic responses. Draw from their pers
               { content: aiResponse, sender: 'assistant', timestamp: new Date().toISOString() }
             ],
             mode: 'guide',
-            domain: 'relationships', // This should be dynamic based on the actual domain
+            domain: dynamicDomain, // Now dynamic based on page context
             conversation_stage: 'active',
             last_activity: new Date().toISOString(),
             updated_at: new Date().toISOString()
@@ -371,7 +411,10 @@ Be conversational, empathetic, and avoid generic responses. Draw from their pers
     }
   }
 
-  async saveConversationState(sessionId: string, userId: string, messages: Message[]): Promise<void> {
+  async saveConversationState(sessionId: string, userId: string, messages: Message[], pageContext?: string): Promise<void> {
+    // Extract page context from session ID if not provided
+    const extractedContext = pageContext || this.extractPageContextFromSessionId(sessionId);
+    
     // Delegate to the retry method
     if (messages.length >= 2) {
       const userMessage = messages[messages.length - 2];
@@ -381,9 +424,17 @@ Be conversational, empathetic, and avoid generic responses. Draw from their pers
         sessionId,
         userId,
         userMessage?.content || "",
-        aiMessage?.content || ""
+        aiMessage?.content || "",
+        extractedContext
       );
     }
+  }
+
+  private extractPageContextFromSessionId(sessionId: string): string {
+    // Extract page context from session ID format: "pageContext_..."
+    const parts = sessionId.split('_');
+    const knownContexts = ['spiritual-growth', 'dreams', 'coach', 'relationships'];
+    return knownContexts.includes(parts[0]) ? parts[0] : 'spiritual-growth';
   }
 
   async loadConversationHistory(sessionId: string, userId: string): Promise<Message[]> {
@@ -414,23 +465,29 @@ Be conversational, empathetic, and avoid generic responses. Draw from their pers
     }
   }
 
-  getCurrentContext() {
+  getCurrentContext(pageContext: string = 'spiritual-growth') {
+    // Step 3: Service Instance Isolation - Get context for specific page
+    const contextSessions = this.contextIsolatedActiveSessions.get(pageContext) || new Set();
+    const contextCache = this.contextIsolatedCaches.get(pageContext) || new Map();
+    
     return {
-      activeConversations: Array.from(this.activeConversations),
-      cachedSessions: this.conversationCache.size,
+      activeConversations: Array.from(contextSessions),
+      cachedSessions: contextCache.size,
       enhancedBrainEnabled: true,
+      pageContext,
       // Add missing properties that are expected by components
-      discoveredInsights: this.getAllDiscoveredInsights(),
-      hasContext: this.conversationCache.size > 0,
-      program: this.getCurrentProgram(),
-      week: this.getCurrentWeek(),
-      stage: this.getCurrentStage()
+      discoveredInsights: this.getAllDiscoveredInsights(pageContext),
+      hasContext: contextCache.size > 0,
+      program: this.getCurrentProgram(pageContext),
+      week: this.getCurrentWeek(pageContext),
+      stage: this.getCurrentStage(pageContext)
     };
   }
 
-  private getAllDiscoveredInsights(): string[] {
+  private getAllDiscoveredInsights(pageContext: string = 'spiritual-growth'): string[] {
     const allInsights: string[] = [];
-    for (const [sessionId, context] of this.conversationCache.entries()) {
+    const contextCache = this.contextIsolatedCaches.get(pageContext) || new Map();
+    for (const [sessionId, context] of contextCache.entries()) {
       if (context.discoveredInsights) {
         allInsights.push(...context.discoveredInsights);
       }
@@ -438,23 +495,26 @@ Be conversational, empathetic, and avoid generic responses. Draw from their pers
     return allInsights;
   }
 
-  private getCurrentProgram(): any {
-    if (this.conversationCache.size === 0) return null;
-    const contexts = Array.from(this.conversationCache.values());
+  private getCurrentProgram(pageContext: string = 'spiritual-growth'): any {
+    const contextCache = this.contextIsolatedCaches.get(pageContext) || new Map();
+    if (contextCache.size === 0) return null;
+    const contexts = Array.from(contextCache.values());
     const latestContext = contexts[contexts.length - 1];
     return latestContext?.program || null;
   }
 
-  private getCurrentWeek(): any {
-    if (this.conversationCache.size === 0) return null;
-    const contexts = Array.from(this.conversationCache.values());
+  private getCurrentWeek(pageContext: string = 'spiritual-growth'): any {
+    const contextCache = this.contextIsolatedCaches.get(pageContext) || new Map();
+    if (contextCache.size === 0) return null;
+    const contexts = Array.from(contextCache.values());
     const latestContext = contexts[contexts.length - 1];
     return latestContext?.week || null;
   }
 
-  private getCurrentStage(): string {
-    if (this.conversationCache.size === 0) return 'initial';
-    const contexts = Array.from(this.conversationCache.values());
+  private getCurrentStage(pageContext: string = 'spiritual-growth'): string {
+    const contextCache = this.contextIsolatedCaches.get(pageContext) || new Map();
+    if (contextCache.size === 0) return 'initial';
+    const contexts = Array.from(contextCache.values());
     const latestContext = contexts[contexts.length - 1];
     return latestContext?.stage || 'initial';
   }
@@ -479,10 +539,30 @@ Be conversational, empathetic, and avoid generic responses. Draw from their pers
     }
   }
 
-  // Cleanup method to prevent memory leaks
-  clearSession(sessionId: string) {
+  // Step 3: Service Instance Isolation - Enhanced cleanup method
+  clearSession(sessionId: string, pageContext?: string) {
+    if (pageContext) {
+      // Clear from specific context
+      const contextSessions = this.contextIsolatedActiveSessions.get(pageContext) || new Set();
+      const contextCache = this.contextIsolatedCaches.get(pageContext) || new Map();
+      contextSessions.delete(sessionId);
+      contextCache.delete(sessionId);
+    } else {
+      // Clear from all contexts (extract context from session ID)
+      const extractedContext = this.extractPageContextFromSessionId(sessionId);
+      this.clearSession(sessionId, extractedContext);
+    }
+    
+    // Also clear from global caches (legacy support)
     this.activeConversations.delete(sessionId);
     this.conversationCache.delete(sessionId);
+  }
+
+  // Step 3: Service Instance Isolation - Clear all sessions for a specific context
+  clearContextSessions(pageContext: string) {
+    this.contextIsolatedActiveSessions.set(pageContext, new Set());
+    this.contextIsolatedCaches.set(pageContext, new Map());
+    console.log(`🧹 Cleared all sessions for context: ${pageContext}`);
   }
 }
 

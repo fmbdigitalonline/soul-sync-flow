@@ -6,7 +6,7 @@ import { LifeDomain } from '@/types/growth-program';
 import { useConversationRecovery } from './use-conversation-recovery';
 import { useStreamingMessage } from './use-streaming-message';
 
-export const useProgramAwareCoach = () => {
+export const useProgramAwareCoach = (pageContext: string = 'spiritual-growth') => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
@@ -41,7 +41,7 @@ export const useProgramAwareCoach = () => {
     }
   }, [messages, currentSessionId, user, errorCount]);
 
-  const sendMessage = useCallback(async (content: string) => {
+  const sendMessage = useCallback(async (content: string, pageContext: string = 'spiritual-growth') => {
     if (!user || isLoading) return;
 
     const userMessage: Message = {
@@ -58,7 +58,8 @@ export const useProgramAwareCoach = () => {
     resetStreaming();
 
     try {
-      const sessionId = currentSessionId || `session_${user.id}_${Date.now()}`;
+      // Step 1: Session Context Isolation - Include page context in session ID
+      const sessionId = currentSessionId || `${pageContext}_${user.id}_${Date.now()}`;
       if (!currentSessionId) {
         setCurrentSessionId(sessionId);
       }
@@ -81,7 +82,8 @@ export const useProgramAwareCoach = () => {
         content,
         sessionId,
         user.id,
-        true // Use enhanced brain
+        true, // Use enhanced brain
+        pageContext
       );
 
       console.log("🎯 Starting slow typewriter streaming for response:", response.response.substring(0, 50) + "...");
@@ -101,14 +103,19 @@ export const useProgramAwareCoach = () => {
         completeStreaming();
       }, response.response.length * 90 + 2000); // Give extra time for natural pauses
 
-      // Save conversation state with recovery context
+      // Save conversation state with recovery context and page-specific domain
       if (sessionId) {
-        saveConversation(sessionId, [...messages, userMessage, { ...assistantMessage, content: response.response }], undefined, {
+        const domainFromContext = pageContext === 'spiritual-growth' ? 'personal_growth' : 
+                                 pageContext === 'dreams' ? 'dream_coaching' :
+                                 pageContext === 'coach' ? 'general_coaching' : 'relationships';
+        
+        saveConversation(sessionId, [...messages, userMessage, { ...assistantMessage, content: response.response }], domainFromContext as any, {
           stage: 'belief_drilling',
           lastUserMessage: content,
           progressPercentage: response.progressPercentage,
           keyInsights: response.keyInsights,
-          coreChallenges: response.coreChallenges
+          coreChallenges: response.coreChallenges,
+          pageContext // Track the page context
         });
       }
 
@@ -156,16 +163,16 @@ export const useProgramAwareCoach = () => {
     setErrorCount(0);
     resetStreaming();
     
-    // Clear session data
+    // Clear session data with context isolation
     if (currentSessionId) {
-      programAwareCoachService.clearSession(currentSessionId);
+      programAwareCoachService.clearSession(currentSessionId, pageContext);
     }
     setCurrentSessionId('');
-  }, [currentSessionId, resetStreaming]);
+  }, [currentSessionId, resetStreaming, pageContext]);
 
   const getProgramContext = useCallback(() => {
-    return programAwareCoachService.getCurrentContext();
-  }, []);
+    return programAwareCoachService.getCurrentContext(pageContext);
+  }, [pageContext]);
 
   const initializeConversation = useCallback(async () => {
     if (!user || hasInitialized) return;
@@ -173,23 +180,24 @@ export const useProgramAwareCoach = () => {
     setHasInitialized(true);
     
     try {
-      await programAwareCoachService.initializeForUser(user.id);
+      await programAwareCoachService.initializeForUser(user.id, pageContext);
       console.log("✅ Program-aware coach initialized with enhanced brain");
     } catch (error) {
       console.error("Error initializing program-aware coach:", error);
       setErrorCount(prev => prev + 1);
     }
-  }, [user, hasInitialized]);
+  }, [user, hasInitialized, pageContext]);
 
-  const initializeBeliefDrilling = useCallback(async (domain: LifeDomain) => {
+  const initializeBeliefDrilling = useCallback(async (domain: LifeDomain, pageContext: string = 'spiritual-growth') => {
     if (!user) return;
 
     try {
-      const sessionId = `belief_drilling_${user.id}_${domain}_${Date.now()}`;
+      // Step 1: Session Context Isolation - Include page context in session ID
+      const sessionId = `${pageContext}_belief_drilling_${user.id}_${domain}_${Date.now()}`;
       setCurrentSessionId(sessionId);
 
-      // Initialize program-aware coach
-      await programAwareCoachService.initializeForUser(user.id);
+      // Initialize program-aware coach with context
+      await programAwareCoachService.initializeForUser(user.id, pageContext);
 
       // Create initial assistant message for streaming
       const assistantMessage: Message = {
@@ -204,11 +212,12 @@ export const useProgramAwareCoach = () => {
       // Start streaming state
       startStreaming();
 
-      // Get personalized greeting with enhanced brain
+      // Get personalized greeting with enhanced brain and context
       const response = await programAwareCoachService.initializeBeliefDrilling(
         domain,
         user.id,
-        sessionId
+        sessionId,
+        pageContext
       );
 
       console.log("🎯 Starting belief drilling with slow typewriter streaming");
@@ -246,7 +255,7 @@ export const useProgramAwareCoach = () => {
         completeStreaming();
       }, fallbackText.length * 85 + 1000);
     }
-  }, [user, streamText, startStreaming, completeStreaming]);
+  }, [user, streamText, startStreaming, completeStreaming, pageContext]);
 
   const recoverConversation = useCallback(async (sessionId: string) => {
     if (!user) return;
