@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useMemo } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
@@ -37,35 +37,93 @@ const SpiritualGrowth = () => {
   const { t } = useLanguage();
   const [showOnboardingModal, setShowOnboardingModal] = useState(false);
   
-  // Conditional hook usage based on optimization mode
-  const ultraHook = useUltraOptimizedSpiritualCoach();
-  const standardHook = useOptimizedSpiritualCoach();
-  const originalHook = useEnhancedAICoach("guide");
+  // Storage cleanup on mount
+  useEffect(() => {
+    const cleanupBrowserStorage = async () => {
+      try {
+        console.log("🧹 Emergency storage cleanup initiated");
+        
+        // Clear localStorage items that might be causing quota issues
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && (
+            key.startsWith('conversation_') || 
+            key.startsWith('memory_') || 
+            key.startsWith('cache_') ||
+            key.startsWith('coach_') ||
+            key.startsWith('vfp_')
+          )) {
+            keysToRemove.push(key);
+          }
+        }
+        
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+        console.log(`🧹 Cleared ${keysToRemove.length} storage items`);
+        
+        // Clear IndexedDB if possible
+        if ('indexedDB' in window) {
+          try {
+            const databases = await indexedDB.databases();
+            for (const db of databases) {
+              if (db.name && db.name.includes('coach')) {
+                indexedDB.deleteDatabase(db.name);
+              }
+            }
+          } catch (error) {
+            console.warn("IndexedDB cleanup failed:", error);
+          }
+        }
+      } catch (error) {
+        console.error("Storage cleanup failed:", error);
+      }
+    };
+    
+    cleanupBrowserStorage();
+  }, []);
+
+  // Conditional hook initialization - ONLY initialize the selected mode's hook
+  const currentHookData = useMemo(() => {
+    console.log(`🎯 Initializing ${optimizationMode} mode ONLY`);
+    
+    if (optimizationMode === 'ultra') {
+      console.log("⚡ Ultra mode: Fastest response target <500ms");
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      return { hook: useUltraOptimizedSpiritualCoach(), type: 'ultra' };
+    } else if (optimizationMode === 'standard') {
+      console.log("🚀 Standard mode: Balanced performance target ~2s");
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      return { hook: useOptimizedSpiritualCoach(), type: 'standard' };
+    } else {
+      console.log("🧠 Original mode: Full feature set with heavy services");
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      return { hook: useEnhancedAICoach("guide"), type: 'original' };
+    }
+  }, [optimizationMode]);
   
-  // Select the appropriate hook based on mode
-  const currentHook = optimizationMode === 'ultra' ? ultraHook : 
-                     optimizationMode === 'standard' ? standardHook : 
-                     originalHook;
+  const { messages, isLoading, sendMessage, streamingContent, isStreaming } = currentHookData.hook;
   
-  const { messages, isLoading, sendMessage, streamingContent, isStreaming } = currentHook;
-  
-  // Get the correct reset/clear function based on the hook
-  const resetConversation = optimizationMode === 'original' 
-    ? (originalHook as any).resetConversation 
-    : (currentHook as any).clearConversation;
+  // Get the correct reset/clear function based on the hook type
+  const resetConversation = currentHookData.type === 'original' 
+    ? (currentHookData.hook as any).resetConversation 
+    : (currentHookData.hook as any).clearConversation;
   
   const { growthJourney, addMoodEntry, addReflectionEntry, addInsightEntry } = useJourneyTracking();
 
-  // Lightweight auth initialization - no heavy services unless original mode
+  // Conditional auth initialization - heavy services ONLY for original mode
   useEffect(() => {
     const checkAuth = async () => {
+      console.log(`🔐 Auth check for ${optimizationMode} mode`);
       const { data } = await supabase.auth.getSession();
       const authenticated = !!data.session;
       setIsAuthenticated(authenticated);
       
-      // Only initialize heavy services for original mode
+      // CRITICAL: Only initialize heavy services for original mode
       if (authenticated && data.session.user && optimizationMode === 'original') {
+        console.log("🧠 Initializing heavy services for original mode");
         await programAwareCoachService.initializeForUser(data.session.user.id);
+      } else {
+        console.log(`⚡ Skipping heavy services for ${optimizationMode} mode`);
       }
     };
     
@@ -75,9 +133,12 @@ const SpiritualGrowth = () => {
       const authenticated = !!session;
       setIsAuthenticated(authenticated);
       
-      // Only initialize heavy services for original mode
+      // CRITICAL: Only initialize heavy services for original mode
       if (authenticated && session?.user && optimizationMode === 'original') {
+        console.log("🧠 Initializing heavy services for original mode (auth change)");
         await programAwareCoachService.initializeForUser(session.user.id);
+      } else {
+        console.log(`⚡ Skipping heavy services for ${optimizationMode} mode (auth change)`);
       }
     });
     
@@ -124,9 +185,11 @@ const SpiritualGrowth = () => {
     setSelectedWeek(null);
   };
 
-  // Simplified message handler - let each hook handle its own logic
+  // Simplified message handler - mode-specific logic
   const handleProgramAwareMessage = async (message: string) => {
     if (!isAuthenticated) return;
+    
+    console.log(`📤 Sending message in ${optimizationMode} mode`);
     
     // For original mode, use program-aware logic
     if (optimizationMode === 'original') {
@@ -145,7 +208,8 @@ const SpiritualGrowth = () => {
         sendMessage(message);
       }
     } else {
-      // For ultra and standard modes, use direct hook logic
+      // For ultra and standard modes, use direct hook logic (no heavy services)
+      console.log(`⚡ Direct message handling for ${optimizationMode} mode`);
       sendMessage(message);
     }
   };
@@ -321,7 +385,7 @@ const SpiritualGrowth = () => {
             <GrowthProgramInterface onWeekSelect={handleWeekSelect} />
           )}
 
-          {/* Coach Chat - Ultra-Optimized, Standard, or Original */}
+          {/* Coach Chat - Mode-specific interfaces */}
           {activeView === 'coach_chat' && (
             <>
               {optimizationMode === 'ultra' ? (
