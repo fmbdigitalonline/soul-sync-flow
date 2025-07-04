@@ -15,9 +15,6 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { adminAnalyticsService, PIEMetrics } from '@/services/admin-analytics-service';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 
 const mockPIEData = [
   { date: '2025-06-25', insights: 23, accuracy: 87, user_satisfaction: 4.1 },
@@ -36,63 +33,28 @@ const insightTypes = [
   { name: 'Predictive', value: 15, color: '#ff7300' }
 ];
 
-interface RecentInsight {
-  id: number;
-  user: string;
-  type: string;
-  insight: string;
-  confidence: number;
-  delivered: boolean;
-}
-
 export const AdminPIEMonitoring: React.FC = () => {
-  const [pieMetrics, setPieMetrics] = useState<PIEMetrics | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [recentInsights, setRecentInsights] = useState<RecentInsight[]>([]);
-  const { toast } = useToast();
+  const [pieMetrics, setPieMetrics] = useState({
+    totalInsights: 2847,
+    activeUsers: 45,
+    avgAccuracy: 94.2,
+    userSatisfaction: 4.4,
+    insightGeneration: 87, // insights per day
+    dataPoints: 15634,
+    patternDetection: 92.1,
+    deliveryRate: 89.3
+  });
 
-  const fetchPIEData = async () => {
-    try {
-      setLoading(true);
-      const metrics = await adminAnalyticsService.getPIEMetrics();
-      setPieMetrics(metrics);
-
-      // Fetch recent insights
-      const { data: insights } = await supabase
-        .from('pie_insights')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(4);
-
-      if (insights) {
-        const formattedInsights: RecentInsight[] = insights.map((insight, index) => ({
-          id: index + 1,
-          user: `User #${insight.user_id.slice(-4)}`,
-          type: insight.insight_type || 'general',
-          insight: insight.message,
-          confidence: Math.round(insight.confidence * 100),
-          delivered: insight.delivered
-        }));
-        setRecentInsights(formattedInsights);
-      }
-    } catch (error) {
-      console.error('Failed to fetch PIE data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load PIE metrics",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchPIEData();
-  }, []);
+  const [recentInsights, setRecentInsights] = useState([
+    { id: 1, user: 'User #1247', type: 'mood', insight: 'Productivity peaks detected during morning hours', confidence: 94, delivered: true },
+    { id: 2, user: 'User #1089', type: 'behavioral', insight: 'Stress patterns correlate with workload spikes', confidence: 87, delivered: true },
+    { id: 3, user: 'User #1356', type: 'predictive', insight: 'Optimal rest period recommended for next week', confidence: 91, delivered: false },
+    { id: 4, user: 'User #1124', type: 'productivity', insight: 'Focus session timing could be optimized', confidence: 88, delivered: true }
+  ]);
 
   const handleRefreshMetrics = () => {
-    fetchPIEData();
+    // Simulate data refresh
+    console.log('Refreshing PIE metrics...');
   };
 
   const getInsightTypeColor = (type: string) => {
@@ -100,35 +62,10 @@ export const AdminPIEMonitoring: React.FC = () => {
       mood: 'bg-blue-100 text-blue-800',
       behavioral: 'bg-green-100 text-green-800',
       predictive: 'bg-purple-100 text-purple-800',
-      productivity: 'bg-yellow-100 text-yellow-800',
-      general: 'bg-gray-100 text-gray-800'
+      productivity: 'bg-yellow-100 text-yellow-800'
     };
     return colors[type as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <RefreshCw className="w-8 h-8 animate-spin" />
-        <span className="ml-2">Loading PIE metrics...</span>
-      </div>
-    );
-  }
-
-  if (!pieMetrics) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-center">
-          <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <p className="text-lg font-medium">Failed to load PIE metrics</p>
-          <Button onClick={fetchPIEData} className="mt-4">
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Retry
-          </Button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -318,33 +255,29 @@ export const AdminPIEMonitoring: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {recentInsights.length > 0 ? (
-              recentInsights.map((insight) => (
-                <div key={insight.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge className={getInsightTypeColor(insight.type)}>
-                        {insight.type}
-                      </Badge>
-                      <span className="text-sm text-gray-600">{insight.user}</span>
-                      <Badge variant="outline" className="text-xs">
-                        {insight.confidence}% confidence
-                      </Badge>
-                    </div>
-                    <p className="text-sm">{insight.insight}</p>
+            {recentInsights.map((insight) => (
+              <div key={insight.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Badge className={getInsightTypeColor(insight.type)}>
+                      {insight.type}
+                    </Badge>
+                    <span className="text-sm text-gray-600">{insight.user}</span>
+                    <Badge variant="outline" className="text-xs">
+                      {insight.confidence}% confidence
+                    </Badge>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {insight.delivered ? (
-                      <Badge variant="outline" className="text-green-600">Delivered</Badge>
-                    ) : (
-                      <Badge variant="outline" className="text-yellow-600">Pending</Badge>
-                    )}
-                  </div>
+                  <p className="text-sm">{insight.insight}</p>
                 </div>
-              ))
-            ) : (
-              <p className="text-center text-gray-500 py-4">No recent insights found</p>
-            )}
+                <div className="flex items-center gap-2">
+                  {insight.delivered ? (
+                    <Badge variant="outline" className="text-green-600">Delivered</Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-yellow-600">Pending</Badge>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>

@@ -11,7 +11,7 @@ interface TypewriterTextProps {
 export const TypewriterText: React.FC<TypewriterTextProps> = ({ 
   text, 
   isStreaming, 
-  speed = 25, // Much faster default - was 75
+  speed = 75, // Slower default for more feeling
   onComplete
 }) => {
   const [displayText, setDisplayText] = useState('');
@@ -26,7 +26,7 @@ export const TypewriterText: React.FC<TypewriterTextProps> = ({
     completedRef.current = false;
   }, [text]);
 
-  // Fast typewriter animation with minimal pauses
+  // Slow, rhythmic typewriter animation with natural pauses
   useEffect(() => {
     const targetText = targetTextRef.current;
     
@@ -39,16 +39,16 @@ export const TypewriterText: React.FC<TypewriterTextProps> = ({
     if (currentIndex < targetText.length) {
       const char = targetText[currentIndex];
       
-      // Calculate delay - much faster with minimal punctuation delays
+      // Calculate delay based on character for natural rhythm
       let delay = speed;
       if (char === '.' || char === '!' || char === '?') {
-        delay = speed * 1.5; // Reduced from 4x to 1.5x
+        delay = speed * 4; // Long pause after sentences - creates anticipation
       } else if (char === ',' || char === ';' || char === ':') {
-        delay = speed * 1.2; // Reduced from 2.5x to 1.2x
+        delay = speed * 2.5; // Medium pause after clauses
       } else if (char === ' ') {
-        delay = speed * 0.8; // Keep space speed
+        delay = speed * 0.7; // Slightly faster for spaces
       } else if (char === '\n') {
-        delay = speed * 1.3; // Reduced from 3x to 1.3x
+        delay = speed * 3; // Pause for line breaks
       }
       
       timeoutRef.current = setTimeout(() => {
@@ -56,10 +56,10 @@ export const TypewriterText: React.FC<TypewriterTextProps> = ({
         setCurrentIndex(prev => prev + 1);
       }, delay);
     } else if (!completedRef.current && !isStreaming) {
-      // Animation complete - immediate callback
+      // Animation complete
       completedRef.current = true;
       if (onComplete) {
-        setTimeout(onComplete, 100); // Reduced from 300ms to 100ms
+        setTimeout(onComplete, 300); // Small delay before calling complete
       }
     }
 

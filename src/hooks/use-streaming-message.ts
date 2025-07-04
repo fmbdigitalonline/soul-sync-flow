@@ -13,8 +13,8 @@ export function useStreamingMessage() {
     contentRef.current = '';
   }, []);
 
-  // Optimized streaming with faster character-by-character display
-  const streamText = useCallback((fullText: string, speed: number = 35) => { // Reduced from 75 to 35
+  // Enhanced streaming with slow, rhythmic character-by-character display
+  const streamText = useCallback((fullText: string, speed: number = 75) => {
     setIsStreaming(true);
     contentRef.current = '';
     setStreamingContent('');
@@ -28,14 +28,14 @@ export function useStreamingMessage() {
         setStreamingContent(contentRef.current);
         currentIndex++;
         
-        // Minimal variable speed for natural rhythm
+        // Variable speed based on punctuation for natural rhythm
         let delay = speed;
         if (char === '.' || char === '!' || char === '?') {
-          delay = speed * 1.5; // Reduced from 3x to 1.5x
+          delay = speed * 3; // Longer pause after sentences
         } else if (char === ',' || char === ';') {
-          delay = speed * 1.2; // Reduced from 2x to 1.2x
+          delay = speed * 2; // Medium pause after clauses
         } else if (char === ' ') {
-          delay = speed * 0.9; // Slightly faster for spaces
+          delay = speed * 0.8; // Slightly faster for spaces
         }
         
         intervalRef.current = setTimeout(typeNextCharacter, delay);
@@ -51,9 +51,9 @@ export function useStreamingMessage() {
   }, []);
 
   const addStreamingChunk = useCallback((chunk: string) => {
-    // Convert chunk-based streaming to character-by-character with faster speed
+    // Convert chunk-based streaming to character-by-character
     const newContent = contentRef.current + chunk;
-    streamText(newContent, 25); // Much faster speed - was 60
+    streamText(newContent, 60); // Slower speed for growth conversations
   }, [streamText]);
 
   const completeStreaming = useCallback(() => {
@@ -79,6 +79,6 @@ export function useStreamingMessage() {
     startStreaming,
     completeStreaming,
     resetStreaming,
-    streamText,
+    streamText, // New method for direct text streaming
   };
 }

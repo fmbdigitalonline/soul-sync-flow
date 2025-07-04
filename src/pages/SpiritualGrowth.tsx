@@ -1,23 +1,18 @@
-import React, { useRef, useEffect, useState, useMemo } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
 import { Heart, Sparkles, Moon, BookOpen, Calendar, MessageCircle, Compass, TrendingUp, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useEnhancedAICoach } from "@/hooks/use-enhanced-ai-coach";
-import { useOptimizedSpiritualCoach } from "@/hooks/use-optimized-spiritual-coach";
-import { useUltraOptimizedSpiritualCoach } from "@/hooks/use-ultra-optimized-spiritual-coach";
 import { supabase } from "@/integrations/supabase/client";
 import { GuideInterface } from "@/components/coach/GuideInterface";
-import { OptimizedSpiritualInterface } from "@/components/coach/OptimizedSpiritualInterface";
-import { UltraOptimizedSpiritualInterface } from "@/components/coach/UltraOptimizedSpiritualInterface";
 import { MoodTracker } from "@/components/coach/MoodTracker";
 import { ReflectionPrompts } from "@/components/coach/ReflectionPrompts";
 import { InsightJournal } from "@/components/coach/InsightJournal";
 import { WeeklyInsights } from "@/components/coach/WeeklyInsights";
 import { GrowthProgramInterface } from "@/components/growth/GrowthProgramInterface";
 import { GrowthCoachWelcome } from "@/components/growth/GrowthCoachWelcome";
-import { PerformanceMonitor } from "@/components/coach/PerformanceMonitor";
 import { programAwareCoachService } from "@/services/program-aware-coach-service";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
@@ -27,105 +22,28 @@ import { GrowthProgramOnboardingModal } from "@/components/growth/onboarding/Gro
 type ActiveView = 'welcome' | 'growth_program' | 'coach_chat' | 'tools' | 'mood' | 'reflection' | 'insight' | 'weekly' | null;
 
 const SpiritualGrowth = () => {
+  const { messages, isLoading, sendMessage, resetConversation } = useEnhancedAICoach("guide");
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [activeView, setActiveView] = useState<ActiveView>('welcome');
   const [selectedWeek, setSelectedWeek] = useState<ProgramWeek | null>(null);
   const [isInGuidedFlow, setIsInGuidedFlow] = useState(false);
-  const [optimizationMode, setOptimizationMode] = useState<'ultra' | 'standard' | 'original'>('ultra');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
   const [showOnboardingModal, setShowOnboardingModal] = useState(false);
   
-  // Storage cleanup on mount
-  useEffect(() => {
-    const cleanupBrowserStorage = async () => {
-      try {
-        console.log("🧹 Emergency storage cleanup initiated");
-        
-        // Clear localStorage items that might be causing quota issues
-        const keysToRemove = [];
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key && (
-            key.startsWith('conversation_') || 
-            key.startsWith('memory_') || 
-            key.startsWith('cache_') ||
-            key.startsWith('coach_') ||
-            key.startsWith('vfp_')
-          )) {
-            keysToRemove.push(key);
-          }
-        }
-        
-        keysToRemove.forEach(key => localStorage.removeItem(key));
-        console.log(`🧹 Cleared ${keysToRemove.length} storage items`);
-        
-        // Clear IndexedDB if possible
-        if ('indexedDB' in window) {
-          try {
-            const databases = await indexedDB.databases();
-            for (const db of databases) {
-              if (db.name && db.name.includes('coach')) {
-                indexedDB.deleteDatabase(db.name);
-              }
-            }
-          } catch (error) {
-            console.warn("IndexedDB cleanup failed:", error);
-          }
-        }
-      } catch (error) {
-        console.error("Storage cleanup failed:", error);
-      }
-    };
-    
-    cleanupBrowserStorage();
-  }, []);
-
-  // FIX: Always call all hooks unconditionally to follow Rules of Hooks
-  const ultraHook = useUltraOptimizedSpiritualCoach();
-  const standardHook = useOptimizedSpiritualCoach();
-  const originalHook = useEnhancedAICoach("guide");
-  
-  // Select the active hook data based on optimization mode
-  const currentHookData = useMemo(() => {
-    console.log(`🎯 Using ${optimizationMode} mode data`);
-    
-    if (optimizationMode === 'ultra') {
-      console.log("⚡ Ultra mode: Fastest response target <500ms");
-      return { hook: ultraHook, type: 'ultra' };
-    } else if (optimizationMode === 'standard') {
-      console.log("🚀 Standard mode: Balanced performance target ~2s");
-      return { hook: standardHook, type: 'standard' };
-    } else {
-      console.log("🧠 Original mode: Full feature set with heavy services");
-      return { hook: originalHook, type: 'original' };
-    }
-  }, [optimizationMode, ultraHook, standardHook, originalHook]);
-  
-  const { messages, isLoading, sendMessage, streamingContent, isStreaming } = currentHookData.hook;
-  
-  // Get the correct reset/clear function based on the hook type
-  const resetConversation = currentHookData.type === 'original' 
-    ? (currentHookData.hook as any).resetConversation 
-    : (currentHookData.hook as any).clearConversation;
-  
   const { growthJourney, addMoodEntry, addReflectionEntry, addInsightEntry } = useJourneyTracking();
 
-  // Conditional auth initialization - heavy services ONLY for original mode
+  // Check authentication status
   useEffect(() => {
     const checkAuth = async () => {
-      console.log(`🔐 Auth check for ${optimizationMode} mode`);
       const { data } = await supabase.auth.getSession();
       const authenticated = !!data.session;
       setIsAuthenticated(authenticated);
       
-      // CRITICAL: Only initialize heavy services for original mode
-      if (authenticated && data.session.user && optimizationMode === 'original') {
-        console.log("🧠 Initializing heavy services for original mode");
+      // Initialize program-aware coach if authenticated
+      if (authenticated && data.session.user) {
         await programAwareCoachService.initializeForUser(data.session.user.id);
-      } else {
-        console.log(`⚡ Skipping heavy services for ${optimizationMode} mode`);
       }
     };
     
@@ -135,19 +53,15 @@ const SpiritualGrowth = () => {
       const authenticated = !!session;
       setIsAuthenticated(authenticated);
       
-      // CRITICAL: Only initialize heavy services for original mode
-      if (authenticated && session?.user && optimizationMode === 'original') {
-        console.log("🧠 Initializing heavy services for original mode (auth change)");
+      if (authenticated && session?.user) {
         await programAwareCoachService.initializeForUser(session.user.id);
-      } else {
-        console.log(`⚡ Skipping heavy services for ${optimizationMode} mode (auth change)`);
       }
     });
     
     return () => {
       subscription.unsubscribe();
     };
-  }, [optimizationMode]);
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -157,6 +71,7 @@ const SpiritualGrowth = () => {
     scrollToBottom();
   }, [messages]);
 
+  // Growth Coach Welcome handlers
   const handleStartProgram = async () => {
     setShowOnboardingModal(true);
   };
@@ -173,9 +88,7 @@ const SpiritualGrowth = () => {
   const handleTalkToCoach = () => {
     setActiveView('coach_chat');
     setIsInGuidedFlow(false);
-    if (typeof resetConversation === 'function') {
-      resetConversation();
-    }
+    resetConversation();
   };
 
   const handleGoToTools = () => {
@@ -187,35 +100,42 @@ const SpiritualGrowth = () => {
     setSelectedWeek(null);
   };
 
-  // Simplified message handler - mode-specific logic
+  // Enhanced program-aware message sending
   const handleProgramAwareMessage = async (message: string) => {
     if (!isAuthenticated) return;
     
-    console.log(`📤 Sending message in ${optimizationMode} mode`);
-    
-    // For original mode, use program-aware logic
-    if (optimizationMode === 'original') {
-      try {
-        const { data } = await supabase.auth.getSession();
-        if (data.session?.user) {
-          const response = await programAwareCoachService.sendProgramAwareMessage(
-            message,
-            `session_${Date.now()}`,
-            data.session.user.id
+    try {
+      const { data } = await supabase.auth.getSession();
+      if (data.session?.user) {
+        // Special handling for coach-initiated flow
+        if (message === "_COACH_INITIATED_FLOW_") {
+          // Don't show this internal message, just trigger the coach response
+          const response = await programAwareCoachService.initializeBeliefDrilling(
+            'relationships',
+            data.session.user.id,
+            `guided_session_${Date.now()}`
           );
-          sendMessage(message);
+          return; // The coach message will be handled by the hook
         }
-      } catch (error) {
-        console.error('Error sending program-aware message:', error);
+        
+        // Use program-aware coach for enhanced context
+        const response = await programAwareCoachService.sendProgramAwareMessage(
+          message,
+          `session_${Date.now()}`,
+          data.session.user.id
+        );
+        
+        // The useEnhancedAICoach hook will handle the message display
         sendMessage(message);
       }
-    } else {
-      // For ultra and standard modes, use direct hook logic (no heavy services)
-      console.log(`⚡ Direct message handling for ${optimizationMode} mode`);
+    } catch (error) {
+      console.error('Error sending program-aware message:', error);
+      // Fallback to regular message sending
       sendMessage(message);
     }
   };
 
+  // Data collection handlers with journey tracking
   const handleMoodSave = (mood: string, energy: string) => {
     addMoodEntry(mood, energy);
   };
@@ -258,6 +178,7 @@ const SpiritualGrowth = () => {
     );
   }
 
+  // Handle week selection view
   if (selectedWeek) {
     return (
       <MainLayout>
@@ -319,18 +240,9 @@ const SpiritualGrowth = () => {
   return (
     <MainLayout>
       <div className="flex flex-col h-[calc(100vh-5rem)] w-full p-4">
-        {/* Performance Monitor - only show for ultra and standard modes */}
-        {optimizationMode !== 'original' && (
-          <PerformanceMonitor 
-            isLoading={isLoading}
-            isStreaming={isStreaming}
-            messageCount={messages.length}
-          />
-        )}
-
-        {/* Header with Back Button and Optimization Mode Toggle */}
+        {/* Header with Back Button */}
         {activeView !== 'welcome' && (
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-4">
             <Button 
               variant="outline" 
               onClick={handleBackToWelcome}
@@ -339,35 +251,6 @@ const SpiritualGrowth = () => {
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Growth Coach
             </Button>
-            
-            {activeView === 'coach_chat' && (
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">Performance Mode:</label>
-                <div className="flex gap-1">
-                  <Button
-                    variant={optimizationMode === 'ultra' ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setOptimizationMode('ultra')}
-                  >
-                    Ultra
-                  </Button>
-                  <Button
-                    variant={optimizationMode === 'standard' ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setOptimizationMode('standard')}
-                  >
-                    Standard
-                  </Button>
-                  <Button
-                    variant={optimizationMode === 'original' ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setOptimizationMode('original')}
-                  >
-                    Original
-                  </Button>
-                </div>
-              </div>
-            )}
           </div>
         )}
 
@@ -387,35 +270,25 @@ const SpiritualGrowth = () => {
             <GrowthProgramInterface onWeekSelect={handleWeekSelect} />
           )}
 
-          {/* Coach Chat - Mode-specific interfaces */}
+          {/* Coach Chat - Step by Step or Guided Flow */}
           {activeView === 'coach_chat' && (
-            <>
-              {optimizationMode === 'ultra' ? (
-                <UltraOptimizedSpiritualInterface />
-              ) : optimizationMode === 'standard' ? (
-                <OptimizedSpiritualInterface />
-              ) : (
-                <CosmicCard className="p-4 h-full flex flex-col">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-sm font-medium flex items-center">
-                      <Heart className="h-4 w-4 mr-2 text-soul-purple" />
-                      {isInGuidedFlow ? 'Growth Coach - Guided Program Creation' : 'Growth Coach - Step by Step Guidance'}
-                    </h3>
-                  </div>
-                  
-                  <div className="flex-1">
-                    <GuideInterface
-                      messages={messages}
-                      isLoading={isLoading}
-                      onSendMessage={handleProgramAwareMessage}
-                      messagesEndRef={messagesEndRef}
-                      streamingContent={streamingContent}
-                      isStreaming={isStreaming}
-                    />
-                  </div>
-                </CosmicCard>
-              )}
-            </>
+            <CosmicCard className="p-4 h-full flex flex-col">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-medium flex items-center">
+                  <Heart className="h-4 w-4 mr-2 text-soul-purple" />
+                  {isInGuidedFlow ? 'Growth Coach - Guided Program Creation' : 'Growth Coach - Step by Step Guidance'}
+                </h3>
+              </div>
+              
+              <div className="flex-1">
+                <GuideInterface
+                  messages={messages}
+                  isLoading={isLoading}
+                  onSendMessage={handleProgramAwareMessage}
+                  messagesEndRef={messagesEndRef}
+                />
+              </div>
+            </CosmicCard>
           )}
 
           {/* Growth Tools Menu */}

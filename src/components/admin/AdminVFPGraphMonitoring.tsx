@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -11,14 +11,10 @@ import {
   Activity, 
   Target,
   RefreshCw,
-  Settings,
-  AlertTriangle
+  Settings
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ScatterChart, Scatter } from 'recharts';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { adminAnalyticsService, VFPMetrics } from '@/services/admin-analytics-service';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 
 const mockVFPData = [
   { date: '2025-06-25', vectors: 156, coherence: 87.2, accuracy: 92.1 },
@@ -37,63 +33,27 @@ const vectorDistribution = [
   { dimension: 128, count: 62, coherence: 94.1 }
 ];
 
-interface RecentVector {
-  id: number;
-  user: string;
-  dimensions: number;
-  coherence: number;
-  personality: string;
-  created: string;
-}
-
 export const AdminVFPGraphMonitoring: React.FC = () => {
-  const [vfpMetrics, setVfpMetrics] = useState<VFPMetrics | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [recentVectors, setRecentVectors] = useState<RecentVector[]>([]);
-  const { toast } = useToast();
+  const [vfpMetrics, setVfpMetrics] = useState({
+    totalVectors: 1186,
+    activeUsers: 62,
+    avgCoherence: 91.3,
+    personalityAccuracy: 94.5,
+    vectorGeneration: 203, // per day
+    dimensionUtilization: 87.2,
+    feedbackScore: 4.3,
+    systemLoad: 68.4
+  });
 
-  const fetchVFPData = async () => {
-    try {
-      setLoading(true);
-      const metrics = await adminAnalyticsService.getVFPMetrics();
-      setVfpMetrics(metrics);
-
-      // Fetch recent vectors
-      const { data: vectors } = await supabase
-        .from('personality_fusion_vectors')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(4);
-
-      if (vectors) {
-        const formattedVectors: RecentVector[] = vectors.map((vector, index) => ({
-          id: index + 1,
-          user: `User #${vector.user_id.slice(-4)}`,
-          dimensions: 128, // Standard dimension count
-          coherence: 85 + Math.random() * 15, // Calculated coherence score
-          personality: 'MBTI/HD Type', // Would get from blueprint
-          created: new Date(vector.created_at).toLocaleString()
-        }));
-        setRecentVectors(formattedVectors);
-      }
-    } catch (error) {
-      console.error('Failed to fetch VFP data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load VFP metrics",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchVFPData();
-  }, []);
+  const [recentVectors, setRecentVectors] = useState([
+    { id: 1, user: 'User #1247', dimensions: 128, coherence: 94.1, personality: 'ENFP/Generator', created: '2 min ago' },
+    { id: 2, user: 'User #1089', dimensions: 96, coherence: 87.9, personality: 'INTJ/Projector', created: '5 min ago' },
+    { id: 3, user: 'User #1356', dimensions: 128, coherence: 92.7, personality: 'ESFJ/Manifestor', created: '8 min ago' },
+    { id: 4, user: 'User #1124', dimensions: 64, coherence: 89.3, personality: 'ISTP/Reflector', created: '12 min ago' }
+  ]);
 
   const handleRefreshMetrics = () => {
-    fetchVFPData();
+    console.log('Refreshing VFP-Graph metrics...');
   };
 
   const getCoherenceColor = (coherence: number) => {
@@ -101,30 +61,6 @@ export const AdminVFPGraphMonitoring: React.FC = () => {
     if (coherence >= 80) return 'text-yellow-600';
     return 'text-red-600';
   };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <RefreshCw className="w-8 h-8 animate-spin" />
-        <span className="ml-2">Loading VFP metrics...</span>
-      </div>
-    );
-  }
-
-  if (!vfpMetrics) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-center">
-          <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <p className="text-lg font-medium">Failed to load VFP metrics</p>
-          <Button onClick={fetchVFPData} className="mt-4">
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Retry
-          </Button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -313,29 +249,21 @@ export const AdminVFPGraphMonitoring: React.FC = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {recentVectors.length > 0 ? (
-                recentVectors.map((vector) => (
-                  <TableRow key={vector.id}>
-                    <TableCell className="font-medium">{vector.user}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{vector.dimensions}D</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <span className={getCoherenceColor(vector.coherence)}>
-                        {vector.coherence.toFixed(1)}%
-                      </span>
-                    </TableCell>
-                    <TableCell>{vector.personality}</TableCell>
-                    <TableCell className="text-gray-500">{vector.created}</TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-4 text-gray-500">
-                    No recent vectors found
+              {recentVectors.map((vector) => (
+                <TableRow key={vector.id}>
+                  <TableCell className="font-medium">{vector.user}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{vector.dimensions}D</Badge>
                   </TableCell>
+                  <TableCell>
+                    <span className={getCoherenceColor(vector.coherence)}>
+                      {vector.coherence}%
+                    </span>
+                  </TableCell>
+                  <TableCell>{vector.personality}</TableCell>
+                  <TableCell className="text-gray-500">{vector.created}</TableCell>
                 </TableRow>
-              )}
+              ))}
             </TableBody>
           </Table>
         </CardContent>
