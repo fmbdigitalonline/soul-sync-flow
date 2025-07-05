@@ -13,6 +13,7 @@ import { pieDataCollectionService } from "./pie-data-collection-service";
 import { piePatternDetectionService } from "./pie-pattern-detection-service";
 import { pieInsightGenerationService } from "./pie-insight-generation-service";
 import { pieSchedulingService } from "./pie-scheduling-service";
+import { pieAPIService } from "./pie-api-service";
 
 export class PIEService {
   private userId: string | null = null;
@@ -139,32 +140,15 @@ export class PIEService {
     console.log("🔮 Processing user data point for PIE analysis:", dataPoint.dataType);
 
     try {
-      // 1. Store the data point
-      await pieDataCollectionService.storeDataPoint(dataPoint);
+      // 1. Store the data point via API
+      await pieAPIService.storeDataPoint(dataPoint);
 
-      // 2. Check if we have enough data for pattern detection
-      const canDetectPatterns = await pieDataCollectionService.hasMinimumDataForAnalysis(
-        dataPoint.userId,
-        dataPoint.dataType
-      );
+      // 2. Trigger pattern detection via API
+      const patterns = await pieAPIService.detectPatterns(dataPoint.dataType);
 
-      if (canDetectPatterns) {
-        // 3. Trigger pattern detection
-        const patterns = await piePatternDetectionService.detectPatterns(
-          dataPoint.userId,
-          dataPoint.dataType
-        );
-
-        // 4. Generate predictive rules from new patterns
-        for (const pattern of patterns) {
-          if (pattern.significance <= PIE_STATISTICAL_SIGNIFICANCE_THRESHOLD) {
-            const rules = await this.generatePredictiveRules(pattern);
-            await this.storePredictiveRules(rules);
-          }
-        }
-
-        // 5. Schedule proactive insights
-        await pieSchedulingService.scheduleInsights();
+      // 3. Generate insights if patterns detected
+      if (patterns.length > 0) {
+        await pieAPIService.generateInsights();
       }
 
     } catch (error) {
@@ -251,37 +235,7 @@ export class PIEService {
     if (!this.userId) return [];
 
     try {
-      const { data, error } = await supabase
-        .from('pie_insights')
-        .select('*')
-        .eq('user_id', this.userId)
-        .eq('delivered', true)
-        .gte('expiration_time', new Date().toISOString())
-        .order('priority', { ascending: false });
-
-      if (error) throw error;
-
-      // Map database records to PIEInsight interface
-      return (data || []).map(record => ({
-        id: record.id,
-        userId: record.user_id,
-        patternId: record.pattern_id,
-        predictiveRuleId: record.predictive_rule_id,
-        title: record.title,
-        message: record.message,
-        insightType: record.insight_type as PIEInsight['insightType'],
-        priority: record.priority as PIEInsight['priority'],
-        triggerEvent: record.trigger_event,
-        triggerTime: record.trigger_time,
-        deliveryTime: record.delivery_time,
-        expirationTime: record.expiration_time,
-        confidence: record.confidence,
-        delivered: record.delivered,
-        acknowledged: record.acknowledged,
-        userFeedback: record.user_feedback as PIEInsight['userFeedback'],
-        communicationStyle: record.communication_style,
-        personalizedForBlueprint: record.personalized_for_blueprint
-      }));
+      return await pieAPIService.getCurrentInsights();
     } catch (error) {
       console.error("Failed to get current insights:", error);
       return [];
