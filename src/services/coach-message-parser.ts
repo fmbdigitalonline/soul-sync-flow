@@ -124,10 +124,11 @@ export class CoachMessageParser {
       let match;
       while ((match = pattern.exec(content)) !== null) {
         const stepNumber = match[1] || String(subTasks.length + 1);
-        const title = match[2].trim();
+        const title = match[2]?.trim();
         const details = match[3]?.trim();
         
-        if (title && title.length > 5) { // Filter out very short titles
+        // Only process if we have a valid title
+        if (title && title.length > 5) {
           subTasks.push({
             id: `subtask-${Date.now()}-${stepNumber}`,
             title: title,
@@ -181,6 +182,7 @@ export class CoachMessageParser {
   }
   
   private static extractDescription(text: string): string | undefined {
+    if (!text) return undefined;
     const lines = text.split('\n').filter(line => line.trim());
     if (lines.length > 1) {
       return lines[1].trim();
@@ -189,6 +191,8 @@ export class CoachMessageParser {
   }
   
   private static extractTime(text: string): string | undefined {
+    if (!text) return undefined;
+    
     const timePatterns = [
       /(\d+)\s*(min|minute)s?/i,
       /(\d+)\s*(hr|hour)s?/i,
@@ -209,6 +213,8 @@ export class CoachMessageParser {
   }
   
   private static extractEnergyLevel(text: string): 'low' | 'medium' | 'high' | undefined {
+    if (!text) return undefined;
+    
     const lowerText = text.toLowerCase();
     if (lowerText.includes('low energy') || lowerText.includes('easy') || lowerText.includes('simple')) return 'low';
     if (lowerText.includes('high energy') || lowerText.includes('demanding') || lowerText.includes('complex')) return 'high';
@@ -237,7 +243,7 @@ export class CoachMessageParser {
     recPatterns.forEach(pattern => {
       let match;
       while ((match = pattern.exec(content)) !== null) {
-        const item = match[1].trim();
+        const item = match[1]?.trim();
         if (item && item.length > 10) actionItems.push(item);
       }
     });
