@@ -13,8 +13,8 @@ export function useStreamingMessage() {
     contentRef.current = '';
   }, []);
 
-  // Enhanced streaming with slow, rhythmic character-by-character display
-  const streamText = useCallback((fullText: string, speed: number = 75) => {
+  // Enhanced streaming with faster, more responsive character-by-character display
+  const streamText = useCallback((fullText: string, speed: number = 25) => {
     setIsStreaming(true);
     contentRef.current = '';
     setStreamingContent('');
@@ -31,11 +31,11 @@ export function useStreamingMessage() {
         // Variable speed based on punctuation for natural rhythm
         let delay = speed;
         if (char === '.' || char === '!' || char === '?') {
-          delay = speed * 3; // Longer pause after sentences
+          delay = speed * 1.5; // Shorter pause after sentences
         } else if (char === ',' || char === ';') {
-          delay = speed * 2; // Medium pause after clauses
+          delay = speed * 1.2; // Shorter pause after clauses
         } else if (char === ' ') {
-          delay = speed * 0.8; // Slightly faster for spaces
+          delay = speed * 0.5; // Faster for spaces
         }
         
         intervalRef.current = setTimeout(typeNextCharacter, delay);
@@ -53,7 +53,7 @@ export function useStreamingMessage() {
   const addStreamingChunk = useCallback((chunk: string) => {
     // Convert chunk-based streaming to character-by-character
     const newContent = contentRef.current + chunk;
-    streamText(newContent, 60); // Slower speed for growth conversations
+    streamText(newContent, 20); // Faster speed for better responsiveness
   }, [streamText]);
 
   const completeStreaming = useCallback(() => {

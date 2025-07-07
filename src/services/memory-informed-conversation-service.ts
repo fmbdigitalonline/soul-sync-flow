@@ -276,10 +276,17 @@ User Message: ${content}${topics}`;
     aiResponse: string
   ): Promise<void> {
     try {
+      // Get authenticated user ID first
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.id) {
+        console.warn('⚠️ No authenticated user for memory tracking');
+        return;
+      }
+
       const { error } = await supabase
         .from('user_session_memory')
         .insert({
-          user_id: '', // Will be set by RLS
+          user_id: user.id, // Use actual authenticated user ID
           session_id: sessionId,
           memory_type: 'interaction',
           memory_data: {

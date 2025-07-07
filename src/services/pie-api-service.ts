@@ -12,11 +12,16 @@ class PIEAPIService {
   private async getAuthHeaders() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
-      throw new Error('User not authenticated');
+      console.warn('⚠️ PIE API: No session found, attempting to get user');
+      // Try to get user directly as fallback
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
     }
 
     return {
-      'Authorization': `Bearer ${session.access_token}`,
+      'Authorization': `Bearer ${session?.access_token}`,
       'Content-Type': 'application/json',
       'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4YWFqaXJycXJjbm12dG93amJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM5NzQ1NDcsImV4cCI6MjA1OTU1MDU0N30.HZRTlihPe3PNQVWxNHCrwjoa9R6Wvo8WOKlQVGunYIw'
     };
