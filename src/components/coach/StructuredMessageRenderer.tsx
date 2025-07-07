@@ -9,7 +9,10 @@ import {
   TrendingUp, 
   MessageSquare,
   CheckCircle2,
-  Target
+  Target,
+  Play,
+  Clock,
+  Zap
 } from 'lucide-react';
 import { ParsedCoachMessage, ParsedSubTask } from '@/services/coach-message-parser';
 import { TaskBreakdownDisplay } from './TaskBreakdownDisplay';
@@ -27,7 +30,7 @@ export const StructuredMessageRenderer: React.FC<StructuredMessageRendererProps>
   onSubTaskComplete,
   onStartTaskPlan
 }) => {
-  // Render task breakdown with interactive cards
+  // Render task breakdown with enhanced interactive cards
   if (parsedMessage.type === 'breakdown' && parsedMessage.subTasks && parsedMessage.subTasks.length > 0) {
     return (
       <div className="space-y-4">
@@ -35,25 +38,28 @@ export const StructuredMessageRenderer: React.FC<StructuredMessageRendererProps>
         <Card className="p-4 bg-slate-50 border-green-200/40">
           <div className="flex items-center gap-2 mb-2">
             <ArrowRight className="h-4 w-4 text-green-400" />
-            <span className="text-xs font-medium text-gray-700">Soul Coach</span>
+            <span className="text-xs font-medium text-gray-700">Task Coach</span>
           </div>
           <div className="text-sm leading-relaxed text-gray-800">
-            {parsedMessage.originalText.split(/\d+\.|Step \d+:/)[0].trim()}
+            {/* Extract the introduction text before the task breakdown */}
+            {parsedMessage.originalText.split(/(?:step\s*\d+|^\d+\.)/i)[0].trim() || 
+             "Here's your task breakdown with clickable micro-tasks:"}
           </div>
         </Card>
         
-        {/* Interactive task breakdown */}
+        {/* Enhanced interactive task breakdown */}
         <TaskBreakdownDisplay
           subTasks={parsedMessage.subTasks}
           onSubTaskStart={onSubTaskStart}
           onSubTaskComplete={onSubTaskComplete}
           onStartAll={onStartTaskPlan}
+          taskTitle="Task Breakdown"
         />
       </div>
     );
   }
 
-  // Render progress update
+  // Render progress update with enhanced feedback
   if (parsedMessage.type === 'progress' && parsedMessage.progressUpdate) {
     return (
       <Card className="p-4 bg-emerald-50 border-emerald-200">
@@ -79,7 +85,7 @@ export const StructuredMessageRenderer: React.FC<StructuredMessageRendererProps>
     );
   }
 
-  // Render guidance with action items
+  // Render guidance with enhanced action items
   if (parsedMessage.type === 'guidance' && parsedMessage.actionItems && parsedMessage.actionItems.length > 0) {
     return (
       <Card className="p-4 bg-blue-50 border-blue-200">
@@ -94,9 +100,9 @@ export const StructuredMessageRenderer: React.FC<StructuredMessageRendererProps>
         
         <div className="space-y-2">
           {parsedMessage.actionItems.map((item, index) => (
-            <div key={index} className="flex items-center gap-2 p-2 bg-white rounded-lg border border-blue-100">
-              <Target className="h-3 w-3 text-blue-500 flex-shrink-0" />
-              <span className="text-xs text-gray-700">{item}</span>
+            <div key={index} className="flex items-start gap-3 p-3 bg-white rounded-lg border border-blue-100 hover:border-blue-200 transition-colors">
+              <Target className="h-4 w-4 text-blue-500 flex-shrink-0 mt-0.5" />
+              <span className="text-sm text-gray-700 leading-relaxed">{item}</span>
             </div>
           ))}
         </div>
@@ -104,12 +110,12 @@ export const StructuredMessageRenderer: React.FC<StructuredMessageRendererProps>
     );
   }
 
-  // Default rendering for general messages
+  // Enhanced default rendering for general messages
   return (
     <Card className="p-4 bg-slate-50 border-green-200/40">
       <div className="flex items-center gap-2 mb-2">
         <ArrowRight className="h-4 w-4 text-green-400" />
-        <span className="text-xs font-medium text-gray-700">Soul Coach</span>
+        <span className="text-xs font-medium text-gray-700">Task Coach</span>
       </div>
       <div className="text-sm leading-relaxed text-gray-800 whitespace-pre-line">
         {parsedMessage.originalText}

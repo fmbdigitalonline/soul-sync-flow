@@ -19,11 +19,12 @@ import {
 } from "lucide-react";
 import { useTaskAwareCoach } from "@/hooks/use-task-aware-coach";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
-import EnhancedCoachInterface from "@/components/coach/EnhancedCoachInterface";
 import { SessionProgress } from "./SessionProgress";
 import { SubTaskManager } from "./SubTaskManager";
 import { SmartQuickActions } from "./SmartQuickActions";
 import { QuickActions } from "./QuickActions";
+import { TaskCoachMessageRenderer } from "./TaskCoachMessageRenderer";
+import { ParsedSubTask } from "@/services/coach-message-parser";
 import { enhancedTaskCoachIntegrationService } from "@/services/enhanced-task-coach-integration-service";
 import { dreamActivityLogger } from "@/services/dream-activity-logger";
 import { TaskContext } from "@/services/task-coach-integration-service";
@@ -77,6 +78,7 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
   const [initializationError, setInitializationError] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [inputValue, setInputValue] = useState("");
 
   // Initialize the task-aware coach with error handling
   const { 
@@ -230,7 +232,7 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
     }
   };
 
-  // Stable event handlers
+  // Enhanced session starter with structured task breakdown prompting
   const handleStartSession = useCallback(async () => {
     console.log('🚀 Starting coaching session for task:', task.title);
     
@@ -242,139 +244,99 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
 
     setSessionStarted(true);
     setIsTimerRunning(true);
-    setSidebarOpen(false); // Close sidebar on mobile when starting session
+    setSidebarOpen(false);
 
     // Get current goal context
     const currentGoals = productivityJourney?.current_goals || [];
     const currentGoal = currentGoals.find(goal => goal.id === task.goal_id);
     const goalContext = currentGoal ? `\n\nThis task is part of your goal: "${currentGoal.title}" - ${currentGoal.description}` : '';
 
+    // Enhanced initial message with structured breakdown instructions
     const initialMessage = `I'm ready to start working on "${task.title}". This is a ${task.energy_level_required} energy task that should take ${task.estimated_duration}.
 
 ${task.description ? `Task Description: ${task.description}` : ''}${goalContext}
 
-As my productivity coach with task management capabilities, please help me by:
-1. Breaking this into 3-5 actionable sub-tasks 
-2. Creating a step-by-step plan
-3. Using your task management functions to track progress
-4. Providing personalized guidance based on my blueprint
+As my productivity coach with task management capabilities, please help me by creating a comprehensive task breakdown. 
 
-Let's get started! What's the first step?`;
+I need you to:
+1. Break this task into 3-7 specific, actionable sub-tasks
+2. Format your response using numbered steps (Step 1:, Step 2:, etc.)
+3. For each sub-task, include:
+   - Clear action description
+   - Estimated time (e.g., "15 min", "30 min")
+   - Energy level required (low, medium, high)
+4. Use your task management functions to track progress as I complete each sub-task
+
+Please structure your response so I can see clickable micro-task cards for each step. Start with the task breakdown now!`;
     
-    await dreamActivityLogger.logActivity('initial_coaching_message_sent', {
+    await dreamActivityLogger.logActivity('enhanced_coaching_message_sent', {
       task_id: task.id,
       message_length: initialMessage.length,
       includes_goal_context: !!goalContext,
-      includes_task_description: !!task.description
+      includes_breakdown_instructions: true,
+      structured_prompting: true
     });
     
-    console.log('📤 Sending initial coaching message');
+    console.log('📤 Sending enhanced coaching message with breakdown instructions');
     sendMessage(initialMessage);
   }, [task, productivityJourney, sendMessage]);
 
-  const handleQuickAction = useCallback(async (actionId: string, message: string) => {
-    if (!isLoading) {
-      await dreamActivityLogger.logActivity('quick_action_clicked', {
-        action_id: actionId,
-        message_preview: message.substring(0, 100),
-        task_id: task.id,
-        is_loading: isLoading
-      });
-      
-      sendMessage(message);
-      if (isMobile) setSidebarOpen(false); // Close sidebar after action on mobile
-    }
-  }, [isLoading, sendMessage, task.id, isMobile]);
-
-  const handleSubTaskComplete = useCallback(async (subTaskId: string) => {
-    console.log('🎯 Sub-task completed, notifying coach:', subTaskId);
+  // Sub-task interaction handlers
+  const handleSubTaskStart = useCallback(async (subTask: ParsedSubTask) => {
+    console.log('🎯 Starting sub-task:', subTask.title);
     
-    await dreamActivityLogger.logActivity('subtask_completion_clicked', {
-      subtask_id: subTaskId,
+    await dreamActivityLogger.logActivity('subtask_started_from_card', {
+      subtask_id: subTask.id,
+      subtask_title: subTask.title,
       task_id: task.id,
-      current_progress: taskProgress
+      interaction_type: 'clickable_card'
     });
     
-    quickTaskActions.markSubTaskComplete(subTaskId);
-  }, [quickTaskActions, task.id, taskProgress]);
+    const message = `I'm starting sub-task: "${subTask.title}". Can you provide detailed work instructions for this specific step?`;
+    sendMessage(message);
+  }, [sendMessage, task.id]);
 
-  const handleAllSubTasksComplete = useCallback(async () => {
-    console.log('🏁 All sub-tasks completed, checking with coach');
+  const handleSubTaskComplete = useCallback(async (subTask: ParsedSubTask) => {
+    console.log('✅ Completing sub-task via card:', subTask.title);
     
-    await dreamActivityLogger.logActivity('all_subtasks_completed', {
+    await dreamActivityLogger.logActivity('subtask_completed_from_card', {
+      subtask_id: subTask.id,
+      subtask_title: subTask.title,
       task_id: task.id,
-      completion_check_requested: true,
-      current_progress: taskProgress
+      interaction_type: 'clickable_card'
     });
     
-    sendMessage("I've completed all the sub-tasks! Can you verify if the main task is fully complete and mark it as done?");
-  }, [sendMessage, task.id, taskProgress]);
-
-  const handleCompleteTask = useCallback(async () => {
-    console.log('✅ Manually completing task via coach');
+    // Mark sub-task as complete and notify coach
+    quickTaskActions.markSubTaskComplete(subTask.id);
     
-    await dreamActivityLogger.logActivity('manual_task_completion_clicked', {
+    const message = `I've completed the sub-task: "${subTask.title}". Please update my progress and let me know what's next.`;
+    sendMessage(message);
+  }, [quickTaskActions, sendMessage, task.id]);
+
+  const handleStartTaskPlan = useCallback(async () => {
+    console.log('🚀 Starting complete task plan');
+    
+    await dreamActivityLogger.logActivity('task_plan_started', {
       task_id: task.id,
-      completion_method: 'manual_button_click',
-      current_progress: taskProgress,
-      focus_time_seconds: focusTime
+      interaction_type: 'start_all_button'
     });
     
-    await quickTaskActions.markTaskComplete();
-  }, [quickTaskActions, task.id, taskProgress, focusTime]);
+    const message = `I'm ready to start working through the complete task plan. Guide me through each step systematically.`;
+    sendMessage(message);
+  }, [sendMessage, task.id]);
 
-  const handleNewMessage = useCallback((message: CoachMessage) => {
-    dreamActivityLogger.logActivity('coach_message_received', {
-      message_id: message.id,
-      message_sender: message.isUser ? 'user' : 'assistant',
-      message_length: message.content.length,
-      task_id: task.id
-    });
-  }, [task.id]);
-
-  const handleTimerToggle = useCallback(async () => {
-    const newTimerState = !isTimerRunning;
-    setIsTimerRunning(newTimerState);
-    
-    await dreamActivityLogger.logActivity('timer_toggled', {
-      task_id: task.id,
-      timer_action: newTimerState ? 'started' : 'paused',
-      current_focus_time: focusTime,
-      session_started: sessionStarted
-    });
-  }, [isTimerRunning, task.id, focusTime, sessionStarted]);
-
-  const handleTimerReset = useCallback(async () => {
-    const previousFocusTime = focusTime;
-    setFocusTime(0);
-    setIsTimerRunning(false);
-    
-    await dreamActivityLogger.logActivity('timer_reset', {
-      task_id: task.id,
-      previous_focus_time: previousFocusTime,
-      session_started: sessionStarted
-    });
-  }, [focusTime, task.id, sessionStarted]);
-
-  const handleBackClick = useCallback(async () => {
-    await dreamActivityLogger.logActivity('back_button_clicked', {
-      task_id: task.id,
-      session_duration: sessionStats.sessionDuration,
-      focus_time_seconds: focusTime,
-      messages_sent: sessionStats.messageCount,
-      actions_executed: sessionStats.actionCount,
-      task_completed: taskCompleted
-    });
-    
-    onBack();
-  }, [onBack, task.id, sessionStats, focusTime, taskCompleted]);
-
-  const getTotalDays = (duration: string): number => {
-    const dayMatch = duration.match(/(\d+)\s*days?/i);
-    return dayMatch ? parseInt(dayMatch[1]) : 1;
+  const handleSendMessage = () => {
+    if (inputValue.trim() === "" || isLoading) return;
+    sendMessage(inputValue);
+    setInputValue("");
   };
 
-  const totalDays = getTotalDays(task.estimated_duration);
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
 
   // Show loading state during initialization
   if (isInitializing) {
@@ -397,7 +359,7 @@ Let's get started! What's the first step?`;
           <h3 className="text-lg font-semibold mb-2">Initialization Error</h3>
           <p className="text-muted-foreground mb-4">{initializationError}</p>
           <div className="space-x-2">
-            <Button variant="outline" onClick={handleBackClick}>
+            <Button variant="outline" onClick={onBack}>
               Go Back
             </Button>
             <Button onClick={() => window.location.reload()}>
@@ -488,7 +450,7 @@ Let's get started! What's the first step?`;
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={handleBackClick}
+              onClick={onBack}
               className="flex items-center gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -655,13 +617,61 @@ Let's get started! What's the first step?`;
               </div>
             </div>
           ) : (
-            <div className="flex-1 min-h-0">
-              <EnhancedCoachInterface
-                sessionId={sessionStats.sessionId}
-                initialMessages={coachMessages}
-                onNewMessage={handleNewMessage}
-              />
-            </div>
+            <>
+              <div className="flex-1 overflow-y-auto px-4 pt-4 pb-4 space-y-4 min-h-0">
+                {coachMessages.map((message, idx) => (
+                  <TaskCoachMessageRenderer
+                    key={message.id}
+                    content={message.content}
+                    isUser={message.isUser}
+                    onSubTaskStart={handleSubTaskStart}
+                    onSubTaskComplete={handleSubTaskComplete}
+                    onStartTaskPlan={handleStartTaskPlan}
+                  />
+                ))}
+                
+                {isLoading && (
+                  <div className="flex justify-start">
+                    <div className="bg-slate-50 border border-green-200/20 max-w-[80%] rounded-2xl p-4">
+                      <div className="flex items-center space-x-2">
+                        <ArrowRight className="h-4 w-4 text-green-400" />
+                        <p className="text-xs font-medium">Task Coach</p>
+                      </div>
+                      <div className="flex items-center space-x-2 mt-2">
+                        <ArrowRight className="h-4 w-4 animate-spin" />
+                        <p className="text-sm">Creating your task breakdown...</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* Input Section */}
+              <div className="sticky bottom-0 p-4 bg-white border-t">
+                <div className="flex items-center space-x-2">
+                  <input
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyDown={handleKeyPress}
+                    placeholder="Ask about your task, request actions, or get guidance..."
+                    className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    disabled={isLoading}
+                  />
+                  <Button
+                    onClick={handleSendMessage}
+                    disabled={inputValue.trim() === "" || isLoading}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-xs text-center text-gray-500 mt-2">
+                  Task-aware coaching with interactive micro-task breakdown
+                </p>
+              </div>
+            </>
           )}
         </div>
       </div>
