@@ -15,7 +15,7 @@ export const SlowStreamingMessage: React.FC<SlowStreamingMessageProps> = ({
   content,
   isStreaming,
   onComplete,
-  speed = 30 // Faster, more responsive speed
+  speed = 80 // Slow, contemplative speed for growth conversations
 }) => {
   const [showAvatar, setShowAvatar] = useState(false);
 

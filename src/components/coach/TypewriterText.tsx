@@ -11,7 +11,7 @@ interface TypewriterTextProps {
 export const TypewriterText: React.FC<TypewriterTextProps> = ({ 
   text, 
   isStreaming, 
-  speed = 25, // Much faster for better responsiveness
+  speed = 75, // Slower default for more feeling
   onComplete
 }) => {
   const [displayText, setDisplayText] = useState('');
@@ -42,13 +42,13 @@ export const TypewriterText: React.FC<TypewriterTextProps> = ({
       // Calculate delay based on character for natural rhythm
       let delay = speed;
       if (char === '.' || char === '!' || char === '?') {
-        delay = speed * 2; // Shorter pause after sentences
+        delay = speed * 4; // Long pause after sentences - creates anticipation
       } else if (char === ',' || char === ';' || char === ':') {
-        delay = speed * 1.5; // Shorter pause after clauses
+        delay = speed * 2.5; // Medium pause after clauses
       } else if (char === ' ') {
-        delay = speed * 0.5; // Faster for spaces
+        delay = speed * 0.7; // Slightly faster for spaces
       } else if (char === '\n') {
-        delay = speed * 1.5; // Shorter pause for line breaks
+        delay = speed * 3; // Pause for line breaks
       }
       
       timeoutRef.current = setTimeout(() => {

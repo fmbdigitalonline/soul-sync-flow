@@ -23,23 +23,12 @@ import { VFPGraphPatentTester } from '@/components/testing/VFPGraphPatentTester'
 import ACSPatentTestSuite from '@/components/testing/ACSPatentTestSuite';
 import { TMGPatentTestSuite } from '@/components/testing/TMGPatentTestSuite';
 import PIEPatentTestSuite from '@/components/testing/PIEPatentTestSuite';
-import { Phase1ValidationTestRunner } from '@/components/testing/Phase1ValidationTestRunner';
 
 const TestEnvironmentPage: React.FC = () => {
-  // Set Phase 1 Validation as the default active tab (new implementation testing)
-  const [activeTab, setActiveTab] = useState('phase1-validation');
+  // Set PIE Patent as the default active tab (highest priority for PIE testing)
+  const [activeTab, setActiveTab] = useState('pie-patent');
 
   const testCategories = [
-    {
-      id: 'phase1-validation',
-      title: 'Phase 1 Implementation Validator',
-      description: 'Real-time validation of PIE Backend, Growth Programs API, and Context Isolation (12 tests)',
-      icon: TestTube2,
-      status: 'testing',
-      priority: 'critical',
-      testCount: 12,
-      component: Phase1ValidationTestRunner
-    },
     {
       id: 'pie-patent',
       title: 'PIE Patent Validation',
@@ -47,7 +36,7 @@ const TestEnvironmentPage: React.FC = () => {
       icon: Shield,
       status: 'production',
       priority: 'critical',
-      testCount: 7,
+      testCount: 7, // UPDATED: Changed from 8 to 7 claims
       component: PIEPatentTestSuite
     },
     {
@@ -114,7 +103,6 @@ const TestEnvironmentPage: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'testing': return 'bg-purple-100 text-purple-800 border-purple-200';
       case 'production': return 'bg-green-100 text-green-800 border-green-200';
       case 'stable': return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'beta': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
@@ -135,34 +123,32 @@ const TestEnvironmentPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Overview Section - Updated for Phase 1 focus */}
+      {/* Overview Section - Now focused on PIE + TMG + Patent Validation */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <TestTube2 className="w-6 h-6 text-purple-500" />
-            <span>Advanced Implementation & Patent Validation Suite</span>
+            <Shield className="w-6 h-6 text-purple-500" />
+            <span>Advanced Patent Validation Suite</span>
             <Badge variant="outline" className="ml-2 bg-purple-50 text-purple-700 border-purple-200">
-              Phase 1 Implementation Testing + Patent Validation Active
+              PIE + TMG + ACS + VFP-Graph Patent Testing Active
             </Badge>
           </CardTitle>
           <p className="text-muted-foreground">
-            <strong>Phase 1 real-time implementation validation</strong> plus patent evidence collection with live functionality testing for PIE proactive insights, 
+            <strong>Comprehensive patent evidence collection</strong> with live functionality testing for PIE proactive insights, 
             TMG three-tier memory management, ACS technology claims, and VFP-Graph patent validation. Real-time data generation 
             with automatic evidence package creation for US Provisional Patent Applications.
           </p>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {testCategories.slice(0, 8).map((category) => {
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+            {testCategories.map((category) => {
               const IconComponent = category.icon;
               return (
                 <Card 
                   key={category.id}
                   className={`cursor-pointer transition-all hover:shadow-md ${
                     activeTab === category.id ? 'ring-2 ring-purple-500' : ''
-                  } ${category.priority === 'critical' ? 'border-red-200 bg-red-50/30' : ''} ${
-                    category.id === 'phase1-validation' ? 'border-purple-300 bg-purple-50' : ''
-                  }`}
+                  } ${category.priority === 'critical' ? 'border-red-200 bg-red-50/30' : ''}`}
                   onClick={() => setActiveTab(category.id)}
                 >
                   <CardContent className="p-4">
@@ -171,9 +157,6 @@ const TestEnvironmentPage: React.FC = () => {
                         <IconComponent className="w-5 h-5" />
                         {category.priority === 'critical' && (
                           <Shield className="w-4 h-4 text-red-500" />
-                        )}
-                        {category.id === 'phase1-validation' && (
-                          <TestTube2 className="w-4 h-4 text-purple-500" />
                         )}
                       </div>
                       <Badge className={getStatusColor(category.status)} variant="outline">
@@ -198,19 +181,8 @@ const TestEnvironmentPage: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Quick Stats - Updated with Phase 1 */}
+      {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-        <Card className="border-purple-200 bg-purple-50/30">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <TestTube2 className="w-5 h-5 text-purple-500" />
-              <div>
-                <p className="text-2xl font-bold text-purple-700">12</p>
-                <p className="text-sm text-purple-600">Phase 1 Tests</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
         <Card className="border-purple-200 bg-purple-50/30">
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
@@ -258,6 +230,28 @@ const TestEnvironmentPage: React.FC = () => {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
+              <Brain className="w-5 h-5 text-purple-500" />
+              <div>
+                <p className="text-2xl font-bold">12</p>
+                <p className="text-sm text-muted-foreground">Vector Tests</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <Activity className="w-5 h-5 text-green-500" />
+              <div>
+                <p className="text-2xl font-bold">15</p>
+                <p className="text-sm text-muted-foreground">Growth Tests</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
               <CheckCircle className="w-5 h-5 text-indigo-500" />
               <div>
                 <p className="text-2xl font-bold">{totalTests}</p>
@@ -272,29 +266,24 @@ const TestEnvironmentPage: React.FC = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <TestTube2 className="w-5 h-5 text-purple-500" />
-            <span>Live Implementation & Patent Test Environment</span>
+            <Shield className="w-5 h-5 text-purple-500" />
+            <span>Live Patent Test Environment</span>
             <Badge variant="secondary" className="bg-purple-100 text-purple-800">Real-Time Evidence Collection</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
+            <TabsList className="grid w-full grid-cols-6">
               {testCategories.map((category) => (
                 <TabsTrigger 
                   key={category.id} 
                   value={category.id} 
-                  className={`text-xs ${category.priority === 'critical' ? 'data-[state=active]:bg-red-100 data-[state=active]:text-red-800' : ''} ${
-                    category.id === 'phase1-validation' ? 'data-[state=active]:bg-purple-100 data-[state=active]:text-purple-800' : ''
-                  }`}
+                  className={`text-xs ${category.priority === 'critical' ? 'data-[state=active]:bg-red-100 data-[state=active]:text-red-800' : ''}`}
                 >
                   <div className="flex items-center space-x-1">
                     <span>{category.title.split(' ')[0]}</span>
                     {category.priority === 'critical' && (
                       <Shield className="w-3 h-3" />
-                    )}
-                    {category.id === 'phase1-validation' && (
-                      <TestTube2 className="w-3 h-3" />
                     )}
                   </div>
                 </TabsTrigger>
@@ -312,9 +301,6 @@ const TestEnvironmentPage: React.FC = () => {
                           <span>{category.title}</span>
                           {category.priority === 'critical' && (
                             <Shield className="w-5 h-5 text-red-500" />
-                          )}
-                          {category.id === 'phase1-validation' && (
-                            <TestTube2 className="w-5 h-5 text-purple-500" />
                           )}
                         </h2>
                         <p className="text-muted-foreground text-sm">{category.description}</p>
