@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +16,8 @@ import {
   RotateCcw,
   AlertCircle,
   Menu,
-  X
+  X,
+  ArrowRight
 } from "lucide-react";
 import { useTaskAwareCoach } from "@/hooks/use-task-aware-coach";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
@@ -99,6 +101,25 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
   const [taskProgress, setTaskProgress] = useState(0);
   const [taskCompleted, setTaskCompleted] = useState(false);
   const [coachMessages, setCoachMessages] = useState<CoachMessage[]>([]);
+
+  // Calculate total days for progress tracking
+  const totalDays = useMemo(() => {
+    if (!task.estimated_duration) return 1;
+    
+    // Parse duration string to estimate days
+    const duration = task.estimated_duration.toLowerCase();
+    if (duration.includes('day')) {
+      const match = duration.match(/(\d+)\s*day/);
+      return match ? parseInt(match[1]) : 1;
+    } else if (duration.includes('week')) {
+      const match = duration.match(/(\d+)\s*week/);
+      return match ? parseInt(match[1]) * 7 : 7;
+    } else if (duration.includes('hour')) {
+      const match = duration.match(/(\d+)\s*hour/);
+      return match ? Math.ceil(parseInt(match[1]) / 8) : 1; // 8 hours per day
+    }
+    return 1;
+  }, [task.estimated_duration]);
 
   // Log component mount with error handling
   useEffect(() => {
@@ -231,6 +252,67 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
       default: return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
+
+  // Timer control handlers
+  const handleTimerToggle = useCallback(() => {
+    setIsTimerRunning(prev => !prev);
+    dreamActivityLogger.logActivity('timer_toggled', {
+      task_id: task.id,
+      new_state: !isTimerRunning ? 'running' : 'paused',
+      current_time: focusTime
+    });
+  }, [isTimerRunning, focusTime, task.id]);
+
+  const handleTimerReset = useCallback(() => {
+    setFocusTime(0);
+    setIsTimerRunning(false);
+    dreamActivityLogger.logActivity('timer_reset', {
+      task_id: task.id,
+      previous_time: focusTime
+    });
+  }, [focusTime, task.id]);
+
+  // Task completion handler
+  const handleCompleteTask = useCallback(async () => {
+    await dreamActivityLogger.logActivity('manual_task_completion', {
+      task_id: task.id,
+      focus_time_seconds: focusTime,
+      progress_at_completion: taskProgress
+    });
+    
+    quickTaskActions.markTaskComplete();
+  }, [task.id, focusTime, taskProgress, quickTaskActions]);
+
+  // Quick action handler
+  const handleQuickAction = useCallback(async (actionId: string, message: string) => {
+    await dreamActivityLogger.logActivity('quick_action_used', {
+      task_id: task.id,
+      action_id: actionId,
+      action_message: message.substring(0, 100)
+    });
+    
+    sendMessage(message);
+  }, [task.id, sendMessage]);
+
+  // Sub-task management handlers
+  const handleSubTaskCompleteById = useCallback(async (subTaskId: string) => {
+    await dreamActivityLogger.logActivity('subtask_completed_by_id', {
+      task_id: task.id,
+      subtask_id: subTaskId
+    });
+    
+    quickTaskActions.markSubTaskComplete(subTaskId);
+  }, [task.id, quickTaskActions]);
+
+  const handleAllSubTasksComplete = useCallback(async () => {
+    await dreamActivityLogger.logActivity('all_subtasks_completed', {
+      task_id: task.id,
+      total_subtasks: currentTask?.sub_tasks?.length || 0
+    });
+    
+    const message = "I've completed all the sub-tasks! Please review my work and mark the main task as complete.";
+    sendMessage(message);
+  }, [task.id, currentTask?.sub_tasks?.length, sendMessage]);
 
   // Enhanced session starter with structured task breakdown prompting
   const handleStartSession = useCallback(async () => {
@@ -414,7 +496,7 @@ Please structure your response so I can see clickable micro-task cards for each 
           
           <SubTaskManager
             taskTitle={task.title}
-            onSubTaskComplete={handleSubTaskComplete}
+            onSubTaskComplete={handleSubTaskCompleteById}
             onAllComplete={handleAllSubTasksComplete}
           />
           
@@ -573,7 +655,7 @@ Please structure your response so I can see clickable micro-task cards for each 
           
           <SubTaskManager
             taskTitle={task.title}
-            onSubTaskComplete={handleSubTaskComplete}
+            onSubTaskComplete={handleSubTaskCompleteById}
             onAllComplete={handleAllSubTasksComplete}
           />
           
