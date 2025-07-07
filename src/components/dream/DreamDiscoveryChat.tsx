@@ -61,7 +61,7 @@ export const DreamDiscoveryChat: React.FC<DreamDiscoveryChatProps> = ({
 
   // Show decomposition button when ready
   const showDecompositionButton = conversationPhase === 'ready_for_decomposition' && 
-    intakeData?.title && intakeData?.description;
+    Boolean(intakeData?.title) && Boolean(intakeData?.description);
 
   return (
     <div className="flex flex-col h-full bg-gradient-to-br from-soul-purple/5 via-white to-soul-teal/5">
