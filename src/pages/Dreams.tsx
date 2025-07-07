@@ -22,7 +22,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Heart, Target, MapPin, Calendar, Zap, Brain, Clock, CheckCircle } from "lucide-react";
-import { useDreamDiscoveryCoach } from "@/hooks/use-dream-discovery-coach";
+import { useBlueprintAwareDreamDiscoveryCoach } from "@/hooks/use-blueprint-aware-dream-discovery-coach";
+import { DreamSuggestionCard } from "@/components/dream/DreamSuggestionCard";
 import { supabase } from "@/integrations/supabase/client";
 import { CoachInterface } from "@/components/coach/CoachInterface";
 import { useBlueprintData } from "@/hooks/use-blueprint-data";
@@ -59,10 +60,12 @@ const Dreams = () => {
     sendMessage: sendDreamMessage, 
     resetConversation: resetDreamConversation,
     conversationPhase,
+    dreamSuggestions,
+    selectedSuggestion,
+    selectDreamSuggestion,
     intakeData,
-    discoveryContext,
     isReadyForDecomposition
-  } = useDreamDiscoveryCoach();
+  } = useBlueprintAwareDreamDiscoveryCoach();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [currentView, setCurrentView] = useState<'create' | 'chat' | 'journey' | 'task-coach' | 'decomposing' | 'success'>('create');
   const [activeTab, setActiveTab] = useState<'journey' | 'tasks' | 'focus' | 'habits'>('journey');
@@ -135,7 +138,7 @@ const Dreams = () => {
       // Set the form data from the discovery conversation
       setDreamForm({
         title: intakeData.title,
-        description: intakeData.description || discoveryContext.substring(0, 500) + '...',
+        description: intakeData.description || '',
         category: intakeData.category,
         timeframe: intakeData.timeframe
       });
@@ -144,7 +147,7 @@ const Dreams = () => {
       setCurrentView('decomposing');
       setIsCreatingDream(true);
     }
-  }, [isReadyForDecomposition, intakeData, discoveryContext]);
+  }, [isReadyForDecomposition, intakeData]);
 
   const getBlueprintInsight = useCallback(() => {
     if (!blueprintData) return "Your journey will be personalized once your blueprint is complete";
@@ -277,7 +280,7 @@ const Dreams = () => {
     );
   }
 
-  // Dream Discovery Chat View - enhanced with new flow
+  // Dream Discovery Chat View - enhanced with blueprint suggestions
   if (currentView === 'chat') {
     return (
       <MainLayout>
@@ -305,6 +308,35 @@ const Dreams = () => {
           </div>
           
           <div className={`flex-1 w-full overflow-hidden max-w-4xl mx-auto ${isMobile ? 'px-0' : 'px-4'}`}>
+            {/* Show suggestions if in suggestion phase */}
+            {conversationPhase === 'suggestion_presentation' && dreamSuggestions.length > 0 && (
+              <div className={`bg-white/90 backdrop-blur-lg border-b border-gray-100 ${spacing.container} py-4`}>
+                <div className="max-w-2xl mx-auto">
+                  <div className="text-center mb-4">
+                    <h3 className={`font-semibold text-gray-800 mb-2 ${getTextSize('text-sm')}`}>
+                      Dreams Aligned with Your Blueprint
+                    </h3>
+                    <p className={`text-gray-600 ${getTextSize('text-xs')}`}>
+                      Based on your personality, here are some dreams that might resonate with you:
+                    </p>
+                  </div>
+                  <div className="space-y-3">
+                    {dreamSuggestions.map((suggestion) => (
+                      <DreamSuggestionCard
+                        key={suggestion.id}
+                        suggestion={suggestion}
+                        onSelect={(selected) => {
+                          selectDreamSuggestion(selected);
+                          sendDreamMessage(`I'm interested in exploring "${selected.title}". This really resonates with me because ${selected.blueprintReason.toLowerCase()}.`);
+                        }}
+                        isSelected={selectedSuggestion?.id === suggestion.id}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+            
             <DreamDiscoveryChat
               messages={dreamMessages}
               isLoading={dreamLoading}
