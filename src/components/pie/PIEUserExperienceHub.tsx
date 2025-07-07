@@ -10,7 +10,7 @@ import { PIEInsight } from '@/types/pie-types';
 import { PIEInsightPreview } from './PIEInsightPreview';
 import { PIEPreferencesPanel } from './PIEPreferencesPanel';
 import { PIEFeedbackSystem } from './PIEFeedbackSystem';
-import { pieService } from '@/services/pie-service';
+import { pieAPIService } from '@/services/pie-api-service';
 import { useAuth } from '@/contexts/AuthContext';
 
 export const PIEUserExperienceHub: React.FC = () => {
@@ -28,8 +28,7 @@ export const PIEUserExperienceHub: React.FC = () => {
     if (!user?.id) return;
 
     try {
-      await pieService.initialize(user.id);
-      const currentInsights = await pieService.getCurrentInsights();
+      const currentInsights = await pieAPIService.getCurrentInsights();
       setInsights(currentInsights);
     } catch (error) {
       console.error('Error loading PIE insights:', error);
@@ -41,12 +40,12 @@ export const PIEUserExperienceHub: React.FC = () => {
   const handleViewInsight = (insightId: string) => {
     console.log('📖 Viewing insight:', insightId);
     // Mark insight as viewed
-    pieService.markInsightAsViewed(insightId);
+    pieAPIService.markInsightAsViewed(insightId);
   };
 
   const handleDismissInsight = (insightId: string) => {
     setInsights(prev => prev.filter(insight => insight.id !== insightId));
-    pieService.dismissInsight(insightId);
+    pieAPIService.dismissInsight(insightId);
   };
 
   const toggleInsightExpanded = (insightId: string) => {

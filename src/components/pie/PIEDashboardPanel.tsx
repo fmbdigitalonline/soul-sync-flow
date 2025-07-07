@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Brain, TrendingUp, Star, Settings, ThumbsUp, ThumbsDown, Sparkles } from 'lucide-react';
-import { pieService } from '@/services/pie-service';
+import { pieAPIService } from '@/services/pie-api-service';
 import { PIEInsight } from '@/types/pie-types';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -25,13 +25,12 @@ export const PIEDashboardPanel: React.FC = () => {
 
     try {
       console.log('🔮 Initializing PIE for dashboard');
-      await pieService.initialize(user.id);
       
-      const currentInsights = await pieService.getCurrentInsights();
-      const healthStatus = pieService.getPIEHealth();
+      const currentInsights = await pieAPIService.getCurrentInsights();
+      const dashboardData = await pieAPIService.getDashboardData();
       
       setInsights(currentInsights);
-      setPieHealth(healthStatus);
+      setPieHealth(dashboardData.systemHealth);
       
       console.log(`✅ PIE Dashboard: ${currentInsights.length} insights loaded`);
     } catch (error) {
