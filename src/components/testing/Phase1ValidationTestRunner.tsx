@@ -258,17 +258,33 @@ export const Phase1ValidationTestRunner: React.FC = () => {
 
         const programData = {
           user_id: userId,
-          title: `Phase 1 Test Program ${Date.now()}`,
-          description: 'Real-time generated program for validation',
-          program_type: 'spiritual_growth',
-          duration_weeks: 4,
-          difficulty_level: 'beginner',
-          program_data: {
+          domain: 'spirituality',
+          program_type: 'standard',
+          current_week: 1,
+          total_weeks: 4,
+          status: 'active',
+          started_at: new Date().toISOString(),
+          expected_completion: new Date(Date.now() + 4 * 7 * 24 * 60 * 60 * 1000).toISOString(),
+          blueprint_params: {
             blueprint_based: !!blueprint,
             generated_at: new Date().toISOString(),
             test_validation: true
           },
-          status: 'active'
+          progress_metrics: {
+            completed_sessions: 0,
+            mood_entries: 0,
+            reflection_entries: 0,
+            insight_entries: 0,
+            micro_actions_completed: 0,
+            belief_shifts_tracked: 0,
+            excitement_ratings: [],
+            domain_progress_score: 0
+          },
+          session_schedule: {
+            sessions_per_week: 3,
+            session_duration_minutes: 25,
+            reminder_frequency: 'weekly'
+          }
         };
 
         const { data, error } = await supabase
@@ -352,10 +368,10 @@ export const Phase1ValidationTestRunner: React.FC = () => {
         if (!programs?.length) throw new Error('No active programs for progress update');
 
         const updateData = {
-          progress_percentage: Math.floor(Math.random() * 100),
-          last_activity: new Date().toISOString(),
-          program_data: {
-            ...programs[0].program_data,
+          current_week: Math.max(1, Math.floor(Math.random() * 4) + 1),
+          progress_metrics: {
+            ...programs[0].progress_metrics,
+            completed_sessions: (programs[0].progress_metrics as any)?.completed_sessions + 1 || 1,
             real_time_progress: true,
             updated_at: new Date().toISOString()
           }
@@ -375,7 +391,7 @@ export const Phase1ValidationTestRunner: React.FC = () => {
           dataSource: 'Dynamic user activity',
           recordCount: 1,
           apiCallsSuccess: 2,
-          updatedProgress: data.progress_percentage
+          updatedProgress: data.current_week
         };
       }
     });
@@ -401,7 +417,7 @@ export const Phase1ValidationTestRunner: React.FC = () => {
           totalPrograms: programs?.length || 0,
           activeSessions: programs?.reduce((sum, p) => sum + (p.growth_sessions?.length || 0), 0) || 0,
           recentActivities: activities?.length || 0,
-          avgProgress: programs?.reduce((sum, p) => sum + (p.progress_percentage || 0), 0) / (programs?.length || 1)
+          avgWeekProgress: programs?.reduce((sum, p) => sum + (p.current_week || 0), 0) / (programs?.length || 1)
         };
 
         return {
