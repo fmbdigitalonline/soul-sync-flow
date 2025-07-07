@@ -102,21 +102,23 @@ export class CoachMessageParser {
   
   private static isValidTaskBreakdown(content: string): boolean {
     // Must have multiple numbered steps or clear step indicators
-    const numberedSteps = content.match(/^(\d+\.|Step\s*\d+:)/gm);
+    const numberedSteps = content.match(/^(\d+\.|Step\s*\d+:|###\s*Step\s*\d+:)/gm);
     if (!numberedSteps || numberedSteps.length < 2) {
       return false;
     }
     
-    // Must have meaningful task-related content AND conversational tone
+    // Must have meaningful task-related content OR step format
     const taskKeywords = [
       /break.*down.*task/i,
       /action.*plan/i,
       /steps.*complete/i,
       /(first|next|final).*step/i,
-      /micro.*task/i
+      /micro.*task/i,
+      /sub.*task/i,
+      /manageable.*steps/i
     ];
     
-    // Must sound conversational (not formal instructions)
+    // Check for conversational tone OR structured step format
     const conversationalIndicators = [
       /let's/i,
       /here's/i,
@@ -128,6 +130,7 @@ export class CoachMessageParser {
     
     const hasTaskKeywords = taskKeywords.some(pattern => pattern.test(content));
     const hasConversationalTone = conversationalIndicators.some(pattern => pattern.test(content));
+    const hasStepFormat = /###\s*Step\s*\d+:/i.test(content);
     
     // Must not be a system prompt
     const isNotSystemPrompt = !this.isSystemPrompt(content);
@@ -135,7 +138,7 @@ export class CoachMessageParser {
     // Content should be substantial (not just bullet points)
     const hasSubstantialContent = content.length > 100;
     
-    return hasTaskKeywords && hasConversationalTone && isNotSystemPrompt && hasSubstantialContent && numberedSteps.length >= 2;
+    return (hasTaskKeywords || hasStepFormat) && (hasConversationalTone || hasStepFormat) && isNotSystemPrompt && hasSubstantialContent && numberedSteps.length >= 2;
   }
   
   private static isProgressUpdate(content: string): boolean {
@@ -171,6 +174,8 @@ export class CoachMessageParser {
     
     // More restrictive patterns for genuine task steps
     const patterns = [
+      // ### Step 1:, ### Step 2:, etc. - capture full step content blocks
+      /###\s*Step\s*(\d+)\s*:\s*([^\n]+)(?:\n((?:(?!###\s*Step\s*\d+)[\s\S])*?))?(?=###\s*Step\s*\d+|$)/gi,
       // Step 1:, Step 2:, etc. - must have substantial content after
       /Step\s*(\d+)\s*:\s*([^\n.]{10,}?)(?:\n([^\n]{10,}?))?(?=\n|$)/gi,
       // 1., 2., 3., etc. - must have substantial content after
@@ -181,8 +186,25 @@ export class CoachMessageParser {
       let match;
       while ((match = pattern.exec(content)) !== null && subTasks.length < 8) {
         const stepNumber = match[1] || String(subTasks.length + 1);
-        const title = match[2]?.trim();
-        const details = match[3]?.trim();
+        let title = match[2]?.trim();
+        let details = match[3]?.trim();
+        
+        // Special handling for ### Step format with Sub-task bullets
+        if (pattern.toString().includes('###')) {
+          // Look for Sub-task bullet point in the full step content
+          const fullStepContent = match[0];
+          const subTaskMatch = fullStepContent.match(/[•\-\*]\s*\*\*Sub-task\*\*:\s*([^\n.]+)/i);
+          if (subTaskMatch) {
+            title = subTaskMatch[1].trim();
+            // Extract the remaining content as description
+            const contentAfterSubTask = fullStepContent.substring(fullStepContent.indexOf('**Sub-task**:') + subTaskMatch[0].length);
+            details = contentAfterSubTask.replace(/^\s*[•\-\*]\s*/, '').trim();
+          } else {
+            // Use the step title if no sub-task is found
+            title = match[2]?.trim();
+            details = match[3]?.trim();
+          }
+        }
         
         // Validate the title thoroughly
         if (this.isValidTaskTitle(title) && !seenTitles.has(title.toLowerCase())) {
@@ -312,5 +334,10 @@ export class CoachMessageParser {
   // Clear cache when needed
   static clearCache(): void {
     this.parsedCache.clear();
+  }
+  
+  // Force refresh parsing by clearing cache
+  static refreshParsing(): void {
+    this.clearCache();
   }
 }
