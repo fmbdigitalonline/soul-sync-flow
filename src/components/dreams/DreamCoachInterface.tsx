@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { UnifiedCoachInterface } from '@/components/coach/UnifiedCoachInterface';
+import UnifiedCoachInterface from '@/components/coach/UnifiedCoachInterface';
 import { useAuth } from '@/contexts/AuthContext';
 
 export const DreamCoachInterface = () => {
@@ -30,9 +30,9 @@ export const DreamCoachInterface = () => {
       </CardHeader>
       <CardContent>
         <UnifiedCoachInterface 
-          mode="guide"
-          pageContext="dreams"
-          showModeSelector={false}
+          sessionId={`dreams_${user.id}_${Date.now()}`}
+          agentMode="guide"
+          initialMessages={[]}
         />
       </CardContent>
     </Card>
