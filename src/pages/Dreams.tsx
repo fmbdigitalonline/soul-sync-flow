@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MainLayout from "@/components/Layout/MainLayout";
@@ -22,7 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Heart, Target, MapPin, Calendar, Zap, Brain, Clock, CheckCircle } from "lucide-react";
-import { useEnhancedAICoach } from "@/hooks/use-enhanced-ai-coach";
+import { useDreamDiscoveryCoach } from "@/hooks/use-dream-discovery-coach";
 import { supabase } from "@/integrations/supabase/client";
 import { CoachInterface } from "@/components/coach/CoachInterface";
 import { useBlueprintData } from "@/hooks/use-blueprint-data";
@@ -52,7 +53,7 @@ interface Task {
 }
 
 const Dreams = () => {
-  const { messages, isLoading, sendMessage, resetConversation, currentAgent, switchAgent } = useEnhancedAICoach("coach", "dreams");
+  const { messages: dreamMessages, isLoading: dreamLoading, sendMessage: sendDreamMessage, resetConversation: resetDreamConversation } = useDreamDiscoveryCoach();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [currentView, setCurrentView] = useState<'create' | 'chat' | 'journey' | 'task-coach' | 'decomposing' | 'success'>('create');
   const [activeTab, setActiveTab] = useState<'journey' | 'tasks' | 'focus' | 'habits'>('journey');
@@ -104,9 +105,11 @@ const Dreams = () => {
   }, []);
 
   const handleStartAIGuidance = useCallback(() => {
-    sendMessage("I want to start my dream journey. Help me define my biggest goal and create a personalized action plan based on my soul blueprint.");
+    // Reset dream discovery conversation to ensure clean context
+    resetDreamConversation();
+    sendDreamMessage("I want to start my dream journey. Help me define my biggest goal and create a personalized action plan based on my soul blueprint.");
     setCurrentView('chat');
-  }, [sendMessage]);
+  }, [sendDreamMessage, resetDreamConversation]);
 
   // Add the missing success page handlers
   const handleSuccessTaskStart = useCallback((task: any) => {
@@ -171,20 +174,13 @@ const Dreams = () => {
     };
   }, []);
 
-  // Set agent to coach for this page
-  useEffect(() => {
-    if (currentAgent !== "coach") {
-      switchAgent("coach");
-    }
-  }, [currentAgent, switchAgent]);
-
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, scrollToBottom]);
+  }, [dreamMessages, scrollToBottom]);
 
   const handleTaskSelect = (task: Task) => {
     setSelectedTask(task);
@@ -241,7 +237,7 @@ const Dreams = () => {
     );
   }
 
-  // Task Coach View
+  // Task Coach View - uses task-specific hook
   if (currentView === 'task-coach' && selectedTask) {
     return (
       <MainLayout>
@@ -256,6 +252,7 @@ const Dreams = () => {
     );
   }
 
+  // Dream Discovery Chat View - uses dream-specific hook
   if (currentView === 'chat') {
     return (
       <MainLayout>
@@ -274,9 +271,9 @@ const Dreams = () => {
               </Button>
               <div className="flex items-center gap-2">
                 <div className={`bg-gradient-to-br from-soul-purple to-soul-teal rounded-full flex items-center justify-center ${isFoldDevice ? 'w-5 h-5' : 'w-6 h-6'}`}>
-                  <Brain className={`text-white ${isFoldDevice ? 'h-2 w-2' : 'h-3 w-3'}`} />
+                  <Sparkles className={`text-white ${isFoldDevice ? 'h-2 w-2' : 'h-3 w-3'}`} />
                 </div>
-                <h2 className={`font-semibold text-gray-800 ${getTextSize('text-sm')} ${isFoldDevice ? 'hidden' : ''}`}>AI Dream Coach</h2>
+                <h2 className={`font-semibold text-gray-800 ${getTextSize('text-sm')} ${isFoldDevice ? 'hidden' : ''}`}>Dream Discovery Guide</h2>
               </div>
               <div className={isFoldDevice ? 'w-6' : 'w-16'} />
             </div>
@@ -284,11 +281,11 @@ const Dreams = () => {
           
           <div className={`flex-1 w-full overflow-hidden max-w-4xl mx-auto ${isMobile ? 'px-3' : 'px-4'}`}>
             <CoachInterface
-              messages={messages}
-              isLoading={isLoading}
-              onSendMessage={sendMessage}
+              messages={dreamMessages}
+              isLoading={dreamLoading}
+              onSendMessage={sendDreamMessage}
               messagesEndRef={messagesEndRef}
-              taskTitle="Dream Coaching"
+              taskTitle="Dream Discovery"
               estimatedDuration="~30 min"
             />
           </div>
@@ -633,42 +630,28 @@ const Dreams = () => {
             {/* Mobile Optimized Alternative Options */}
             <div className="space-y-3 w-full">
               <div className="text-center">
-                <p className={`text-gray-500 mb-3 ${getTextSize('text-xs')}`}>{t("dreams.aiInsighLabel")}</p>
+                <p className={`text-gray-500 mb-3 ${getTextSize('text-xs')}`}>
+                  Or get personalized guidance
+                </p>
               </div>
               
-              <div className="space-y-3 w-full">
-                <Button
-                  variant="outline"
-                  onClick={handleStartAIGuidance}
-                  className={`w-full justify-start text-left h-auto border-gray-200 hover:border-soul-purple/50 hover:bg-soul-purple/5 rounded-xl transition-all duration-300 p-4`}
-                >
-                  <div className="flex items-center w-full">
-                    <div className={`bg-gradient-to-br from-soul-teal/20 to-soul-teal/10 rounded-xl flex items-center justify-center mr-3 flex-shrink-0 ${isFoldDevice ? 'w-8 h-8' : 'w-10 h-10'}`}>
-                      <Zap className={`text-soul-teal ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className={`font-semibold text-gray-800 ${getTextSize('text-sm')}`}>{t("dreams.aiButtonTitle")}</div>
-                      {!isFoldDevice && <div className={`text-gray-500 ${getTextSize('text-xs')}`}>{t("dreams.aiButtonDesc")}</div>}
-                    </div>
-                  </div>
-                </Button>
-
-                <Button
-                  variant="outline"
-                  onClick={() => setCurrentView('journey')}
-                  className={`w-full justify-start text-left h-auto border-gray-200 hover:border-soul-purple/50 hover:bg-soul-purple/5 rounded-xl transition-all duration-300 p-4`}
-                >
-                  <div className="flex items-center w-full">
-                    <div className={`bg-gradient-to-br from-soul-purple/20 to-soul-purple/10 rounded-xl flex items-center justify-center mr-3 flex-shrink-0 ${isFoldDevice ? 'w-8 h-8' : 'w-10 h-10'}`}>
-                      <MapPin className={`text-soul-purple ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className={`font-semibold text-gray-800 ${getTextSize('text-sm')}`}>{t("dreams.journeyButtonTitle")}</div>
-                      {!isFoldDevice && <div className={`text-gray-500 ${getTextSize('text-xs')}`}>{t("dreams.journeyButtonDesc")}</div>}
-                    </div>
-                  </div>
-                </Button>
-              </div>
+              <Button 
+                onClick={handleStartAIGuidance}
+                variant="outline"
+                className={`w-full border-2 border-soul-purple/20 bg-soul-purple/5 hover:bg-soul-purple/10 text-soul-purple py-4 rounded-xl font-medium transition-all duration-300 ${getTextSize('text-sm')} ${touchTargetSize}`}
+              >
+                <MessageCircle className={`mr-2 ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
+                {t("dreams.startAIGuidance")}
+              </Button>
+              
+              <Button 
+                onClick={() => setCurrentView('journey')}
+                variant="outline"
+                className={`w-full border-2 border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700 py-4 rounded-xl font-medium transition-all duration-300 ${getTextSize('text-sm')} ${touchTargetSize}`}
+              >
+                <MapPin className={`mr-2 ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
+                {t("dreams.viewJourney")}
+              </Button>
             </div>
           </div>
         </div>
