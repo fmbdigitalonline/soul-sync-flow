@@ -1,4 +1,3 @@
-
 export interface ParsedSubTask {
   id: string;
   title: string;
@@ -52,8 +51,9 @@ export class CoachMessageParser {
     const lowerContent = content.toLowerCase();
     let result: ParsedCoachMessage;
     
-    // Detect working instructions first (detailed step-by-step instructions)
+    // PHASE 1 & 2: Enhanced working instructions detection with higher priority
     if (this.isWorkingInstructions(content)) {
+      console.log('🔍 Detected working instructions format');
       result = {
         type: 'working_instructions',
         originalText: content,
@@ -96,31 +96,78 @@ export class CoachMessageParser {
     return result;
   }
   
+  // PHASE 1: Fixed and enhanced working instructions detection
   private static isWorkingInstructions(content: string): boolean {
-    // Look for detailed working instructions patterns
-    const instructionIndicators = [
-      /step-by-step instructions/i,
-      /detailed work instructions/i,
-      /structured approach/i,
-      /here's how to/i,
-      /follow these steps/i,
-      /working instructions/i
+    console.log('🔍 Checking for working instructions in content:', content.substring(0, 200));
+    
+    // PHASE 3: Context-aware detection - check if this is a response to instruction request
+    const instructionRequestKeywords = [
+      'detailed work instructions',
+      'step-by-step instructions',
+      'provide detailed',
+      'guide you through',
+      'structured approach',
+      'here\'s how to'
     ];
     
-    // Must have numbered steps (at least 3 for working instructions)
-    const numberedSteps = content.match(/^\d+\.\s*\*\*[^*]+\*\*:/gm);
-    const hasDetailedSteps = numberedSteps && numberedSteps.length >= 3;
+    const hasInstructionContext = instructionRequestKeywords.some(keyword => 
+      content.toLowerCase().includes(keyword)
+    );
     
-    // Must contain instruction-related keywords
-    const hasInstructionKeywords = instructionIndicators.some(pattern => pattern.test(content));
+    // PHASE 1: Enhanced pattern matching for various instruction formats
+    const instructionPatterns = [
+      // Format: "1. **Title:**" or "1. **Title**:"
+      /^\d+\.\s*\*\*[^*]+\*\*\s*:/gm,
+      // Format: "### Step 1:" or "## Step 1:"
+      /^#{2,3}\s*Step\s*\d+\s*:/gim,
+      // Format: numbered lists with bold titles
+      /^\d+\.\s*\*\*[^*]+\*\*/gm,
+      // Format: "Step 1:" or "1:"
+      /^(Step\s*\d+|1\.|2\.|3\.|4\.|5\.)[\s:]/gm
+    ];
     
-    // Should be substantial content
-    const hasSubstantialContent = content.length > 200;
+    // Check for instruction patterns
+    const hasInstructionPatterns = instructionPatterns.some(pattern => {
+      const matches = content.match(pattern);
+      console.log('🔍 Pattern check:', pattern.toString(), 'matches:', matches?.length || 0);
+      return matches && matches.length >= 2; // At least 2 steps for instructions
+    });
+    
+    // PHASE 3: Enhanced format recognition
+    const instructionIndicators = [
+      /step-by-step instructions/i,
+      /structured approach/i,
+      /here's how to/i,
+      /guide you through/i,
+      /follow these steps/i,
+      /working instructions/i,
+      /execution:/i,
+      /tips for execution/i
+    ];
+    
+    const hasInstructionIndicators = instructionIndicators.some(pattern => pattern.test(content));
+    
+    // Must have substantial content
+    const hasSubstantialContent = content.length > 300;
     
     // Should not be a system prompt
     const isNotSystemPrompt = !this.isSystemPrompt(content);
     
-    return hasDetailedSteps && (hasInstructionKeywords || content.length > 500) && hasSubstantialContent && isNotSystemPrompt;
+    const isWorkingInstructions = (hasInstructionPatterns || hasInstructionContext) && 
+                                  (hasInstructionIndicators || content.length > 800) && 
+                                  hasSubstantialContent && 
+                                  isNotSystemPrompt;
+    
+    console.log('🔍 Working instructions detection:', {
+      hasInstructionPatterns,
+      hasInstructionContext,
+      hasInstructionIndicators,
+      hasSubstantialContent,
+      isNotSystemPrompt,
+      result: isWorkingInstructions
+    });
+    
+    return isWorkingInstructions;
   }
   
   private static isSystemPrompt(content: string): boolean {
@@ -183,7 +230,11 @@ export class CoachMessageParser {
     // Content should be substantial (not just bullet points)
     const hasSubstantialContent = content.length > 100;
     
-    return (hasTaskKeywords || hasStepFormat) && (hasConversationalTone || hasStepFormat) && isNotSystemPrompt && hasSubstantialContent && numberedSteps.length >= 2;
+    // Don't classify as task breakdown if it's clearly working instructions
+    const isNotWorkingInstructions = !this.isWorkingInstructions(content);
+    
+    return (hasTaskKeywords || hasStepFormat) && (hasConversationalTone || hasStepFormat) && 
+           isNotSystemPrompt && hasSubstantialContent && numberedSteps.length >= 2 && isNotWorkingInstructions;
   }
   
   private static isProgressUpdate(content: string): boolean {
@@ -381,38 +432,95 @@ export class CoachMessageParser {
     this.parsedCache.clear();
   }
   
+  // PHASE 1: Enhanced working instructions extraction with better pattern matching
   private static extractWorkingInstructions(content: string): WorkingInstruction[] {
     const instructions: WorkingInstruction[] = [];
     const seenTitles = new Set<string>();
     
-    // Pattern to match numbered steps with bold titles: 1. **Title**:
-    const stepPattern = /^\d+\.\s*\*\*([^*]+)\*\*:\s*([\s\S]*?)(?=^\d+\.\s*\*\*|$)/gm;
+    console.log('🔍 Extracting working instructions from content length:', content.length);
     
-    let match;
-    while ((match = stepPattern.exec(content)) !== null && instructions.length < 15) {
-      const title = match[1]?.trim();
-      const description = match[2]?.trim();
+    // PHASE 1: Enhanced patterns to match various instruction formats
+    const instructionPatterns = [
+      // Format: "1. **Title:**" or "1. **Title**:"
+      /^\d+\.\s*\*\*([^*]+)\*\*\s*:?\s*([\s\S]*?)(?=^\d+\.\s*\*\*|$)/gm,
+      // Format: "### Step 1:" or "## Step 1:"
+      /^#{2,3}\s*Step\s*\d+\s*:\s*([^\n]+)\n([\s\S]*?)(?=^#{2,3}\s*Step\s*\d+|$)/gm,
+      // Format: numbered steps with descriptions
+      /^(\d+)\.\s*([^:\n]{8,}?):\s*\n?([\s\S]*?)(?=^\d+\.\s*[^:\n]{8,}:|$)/gm
+    ];
+    
+    let foundInstructions = false;
+    
+    instructionPatterns.forEach((pattern, patternIndex) => {
+      console.log('🔍 Trying pattern', patternIndex + 1);
+      let match;
+      const regex = new RegExp(pattern.source, pattern.flags);
       
-      if (title && description && !seenTitles.has(title.toLowerCase())) {
-        seenTitles.add(title.toLowerCase());
+      while ((match = regex.exec(content)) !== null && instructions.length < 15) {
+        let title, description;
         
-        // Extract time estimate from description
-        const timeEstimate = this.extractTimeFromDescription(description);
+        if (patternIndex === 0) {
+          // Pattern 1: 1. **Title**: description
+          title = match[1]?.trim();
+          description = match[2]?.trim();
+        } else if (patternIndex === 1) {
+          // Pattern 2: ### Step 1: title\ndescription
+          title = match[1]?.trim();
+          description = match[2]?.trim();
+        } else {
+          // Pattern 3: 1. title: description
+          title = match[2]?.trim();
+          description = match[3]?.trim();
+        }
         
-        // Extract tools from description
-        const toolsNeeded = this.extractToolsFromDescription(description);
+        console.log('🔍 Found potential instruction:', { title, description: description?.substring(0, 50) });
         
-        instructions.push({
-          id: `instruction-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          title: title,
-          description: this.cleanDescription(description),
-          timeEstimate,
-          toolsNeeded,
-          completed: false
-        });
+        if (title && description && title.length > 3 && description.length > 10 && !seenTitles.has(title.toLowerCase())) {
+          seenTitles.add(title.toLowerCase());
+          foundInstructions = true;
+          
+          // Extract time estimate from description
+          const timeEstimate = this.extractTimeFromDescription(description);
+          
+          // Extract tools from description
+          const toolsNeeded = this.extractToolsFromDescription(description);
+          
+          instructions.push({
+            id: `instruction-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            title: title,
+            description: this.cleanDescription(description),
+            timeEstimate,
+            toolsNeeded,
+            completed: false
+          });
+        }
+      }
+    });
+    
+    // PHASE 3: Fallback for simple numbered lists if no formal patterns found
+    if (!foundInstructions && instructions.length === 0) {
+      console.log('🔍 Trying fallback pattern for simple numbered lists');
+      const fallbackPattern = /^(\d+)\.\s*([^\n]{10,})/gm;
+      let match;
+      
+      while ((match = fallbackPattern.exec(content)) !== null && instructions.length < 10) {
+        const title = match[2]?.trim();
+        if (title && !seenTitles.has(title.toLowerCase())) {
+          seenTitles.add(title.toLowerCase());
+          
+          instructions.push({
+            id: `instruction-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            title: title,
+            description: title, // Use title as description for simple format
+            timeEstimate: undefined,
+            toolsNeeded: undefined,
+            completed: false
+          });
+        }
       }
     }
     
+    console.log('🔍 Extracted', instructions.length, 'working instructions');
     return instructions;
   }
   

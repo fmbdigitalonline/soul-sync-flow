@@ -41,11 +41,26 @@ export const TaskCoachMessageRenderer: React.FC<TaskCoachMessageRendererProps> =
 
   // Memoize parsing to prevent re-computation
   const parsedMessage: ParsedCoachMessage = useMemo(() => {
-    return CoachMessageParser.parseMessage(content);
+    console.log('🔍 TaskCoachMessageRenderer: Parsing message content:', content.substring(0, 100));
+    const result = CoachMessageParser.parseMessage(content);
+    console.log('🔍 TaskCoachMessageRenderer: Parsed message type:', result.type);
+    
+    // PHASE 4: Debug logging
+    if (result.type === 'working_instructions') {
+      console.log('✅ TaskCoachMessageRenderer: Working instructions detected!', {
+        instructionCount: result.workingInstructions?.length || 0,
+        instructions: result.workingInstructions?.map(i => i.title) || []
+      });
+    } else {
+      console.log('❌ TaskCoachMessageRenderer: Not working instructions, type:', result.type);
+    }
+    
+    return result;
   }, [content]);
   
   // Check if this is a structured message that should use the enhanced renderer
   if (parsedMessage.type === 'working_instructions' && parsedMessage.workingInstructions && parsedMessage.workingInstructions.length > 0) {
+    console.log('🎯 TaskCoachMessageRenderer: Rendering working instructions panel');
     return (
       <div className="w-full mx-auto max-w-2xl md:max-w-3xl my-2">
         <StructuredMessageRenderer
@@ -91,6 +106,7 @@ export const TaskCoachMessageRenderer: React.FC<TaskCoachMessageRendererProps> =
   }
 
   // Default rendering for regular coach messages
+  console.log('🔍 TaskCoachMessageRenderer: Using default rendering for message type:', parsedMessage.type);
   return (
     <div className="w-full mx-auto max-w-2xl md:max-w-3xl rounded-2xl border bg-slate-50 border-green-200/40 text-gray-900 px-5 py-4 my-2">
       <div className="flex items-center gap-2 mb-1">
