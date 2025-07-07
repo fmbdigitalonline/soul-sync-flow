@@ -8,11 +8,21 @@ export interface ParsedSubTask {
   completed: boolean;
 }
 
+export interface WorkingInstruction {
+  id: string;
+  title: string;
+  description: string;
+  timeEstimate?: string;
+  toolsNeeded?: string[];
+  completed: boolean;
+}
+
 export interface ParsedCoachMessage {
-  type: 'breakdown' | 'guidance' | 'progress' | 'general';
+  type: 'breakdown' | 'guidance' | 'progress' | 'working_instructions' | 'general';
   originalText: string;
   subTasks?: ParsedSubTask[];
   actionItems?: string[];
+  workingInstructions?: WorkingInstruction[];
   progressUpdate?: {
     percentage?: number;
     status?: string;
@@ -42,8 +52,16 @@ export class CoachMessageParser {
     const lowerContent = content.toLowerCase();
     let result: ParsedCoachMessage;
     
+    // Detect working instructions first (detailed step-by-step instructions)
+    if (this.isWorkingInstructions(content)) {
+      result = {
+        type: 'working_instructions',
+        originalText: content,
+        workingInstructions: this.extractWorkingInstructions(content)
+      };
+    }
     // Enhanced detection for task breakdown with stricter validation
-    if (this.isValidTaskBreakdown(content)) {
+    else if (this.isValidTaskBreakdown(content)) {
       result = {
         type: 'breakdown',
         originalText: content,
@@ -76,6 +94,33 @@ export class CoachMessageParser {
     // Cache the result
     this.parsedCache.set(cacheKey, result);
     return result;
+  }
+  
+  private static isWorkingInstructions(content: string): boolean {
+    // Look for detailed working instructions patterns
+    const instructionIndicators = [
+      /step-by-step instructions/i,
+      /detailed work instructions/i,
+      /structured approach/i,
+      /here's how to/i,
+      /follow these steps/i,
+      /working instructions/i
+    ];
+    
+    // Must have numbered steps (at least 3 for working instructions)
+    const numberedSteps = content.match(/^\d+\.\s*\*\*[^*]+\*\*:/gm);
+    const hasDetailedSteps = numberedSteps && numberedSteps.length >= 3;
+    
+    // Must contain instruction-related keywords
+    const hasInstructionKeywords = instructionIndicators.some(pattern => pattern.test(content));
+    
+    // Should be substantial content
+    const hasSubstantialContent = content.length > 200;
+    
+    // Should not be a system prompt
+    const isNotSystemPrompt = !this.isSystemPrompt(content);
+    
+    return hasDetailedSteps && (hasInstructionKeywords || content.length > 500) && hasSubstantialContent && isNotSystemPrompt;
   }
   
   private static isSystemPrompt(content: string): boolean {
@@ -336,6 +381,85 @@ export class CoachMessageParser {
     this.parsedCache.clear();
   }
   
+  private static extractWorkingInstructions(content: string): WorkingInstruction[] {
+    const instructions: WorkingInstruction[] = [];
+    const seenTitles = new Set<string>();
+    
+    // Pattern to match numbered steps with bold titles: 1. **Title**:
+    const stepPattern = /^\d+\.\s*\*\*([^*]+)\*\*:\s*([\s\S]*?)(?=^\d+\.\s*\*\*|$)/gm;
+    
+    let match;
+    while ((match = stepPattern.exec(content)) !== null && instructions.length < 15) {
+      const title = match[1]?.trim();
+      const description = match[2]?.trim();
+      
+      if (title && description && !seenTitles.has(title.toLowerCase())) {
+        seenTitles.add(title.toLowerCase());
+        
+        // Extract time estimate from description
+        const timeEstimate = this.extractTimeFromDescription(description);
+        
+        // Extract tools from description
+        const toolsNeeded = this.extractToolsFromDescription(description);
+        
+        instructions.push({
+          id: `instruction-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          title: title,
+          description: this.cleanDescription(description),
+          timeEstimate,
+          toolsNeeded,
+          completed: false
+        });
+      }
+    }
+    
+    return instructions;
+  }
+  
+  private static extractTimeFromDescription(description: string): string | undefined {
+    const timePatterns = [
+      /(\d+(?:-\d+)?)\s*(min|minute|hour|hr)s?/i,
+      /spend\s+(\d+(?:-\d+)?)\s*(min|minute|hour|hr)s?/i,
+      /take\s+(\d+(?:-\d+)?)\s*(min|minute|hour|hr)s?/i
+    ];
+    
+    for (const pattern of timePatterns) {
+      const match = description.match(pattern);
+      if (match) {
+        return `${match[1]} ${match[2]}`;
+      }
+    }
+    return undefined;
+  }
+  
+  private static extractToolsFromDescription(description: string): string[] | undefined {
+    const tools: string[] = [];
+    const toolPatterns = [
+      /notebook|document|paper/i,
+      /pen|pencil|keyboard/i,
+      /timer|clock/i,
+      /computer|laptop|phone/i,
+      /app|software|tool/i
+    ];
+    
+    toolPatterns.forEach(pattern => {
+      const matches = description.match(pattern);
+      if (matches) {
+        tools.push(matches[0].toLowerCase());
+      }
+    });
+    
+    return tools.length > 0 ? [...new Set(tools)] : undefined;
+  }
+  
+  private static cleanDescription(description: string): string {
+    // Remove bullet points and extra whitespace, keep important formatting
+    return description
+      .replace(/^[\s-•*]+/gm, '')
+      .replace(/\n\s*\n/g, '\n')
+      .trim();
+  }
+
   // Force refresh parsing by clearing cache
   static refreshParsing(): void {
     this.clearCache();

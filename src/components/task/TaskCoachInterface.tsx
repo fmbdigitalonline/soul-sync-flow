@@ -392,6 +392,32 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
     sendMessage(message);
   }, [sendMessage, task.id]);
 
+  // Working instructions handlers
+  const handleInstructionComplete = useCallback(async (instructionId: string) => {
+    console.log('✅ Instruction completed:', instructionId);
+    
+    await dreamActivityLogger.logActivity('working_instruction_completed', {
+      task_id: task.id,
+      instruction_id: instructionId,
+      completion_method: 'interactive_checkbox'
+    });
+  }, [task.id]);
+
+  const handleAllInstructionsComplete = useCallback(async () => {
+    console.log('🎉 All working instructions completed');
+    
+    await dreamActivityLogger.logActivity('all_working_instructions_completed', {
+      task_id: task.id,
+      completion_method: 'interactive_panel'
+    });
+    
+    // Update task progress and potentially complete the task
+    await quickTaskActions.updateProgress(100);
+    
+    const message = "I've completed all the working instructions! Please review my work and help me finalize this task.";
+    sendMessage(message);
+  }, [task.id, quickTaskActions, sendMessage]);
+
   const handleSendMessage = () => {
     if (inputValue.trim() === "" || isLoading) return;
     sendMessage(inputValue);
@@ -694,6 +720,8 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
                     onSubTaskStart={handleSubTaskStart}
                     onSubTaskComplete={handleSubTaskComplete}
                     onStartTaskPlan={handleStartTaskPlan}
+                    onInstructionComplete={handleInstructionComplete}
+                    onAllInstructionsComplete={handleAllInstructionsComplete}
                   />
                 ))}
                 

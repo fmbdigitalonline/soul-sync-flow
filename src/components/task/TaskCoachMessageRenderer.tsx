@@ -11,6 +11,8 @@ interface TaskCoachMessageRendererProps {
   onSubTaskStart: (subTask: ParsedSubTask) => void;
   onSubTaskComplete: (subTask: ParsedSubTask) => void;
   onStartTaskPlan: () => void;
+  onInstructionComplete?: (instructionId: string) => void;
+  onAllInstructionsComplete?: () => void;
 }
 
 export const TaskCoachMessageRenderer: React.FC<TaskCoachMessageRendererProps> = ({
@@ -18,7 +20,9 @@ export const TaskCoachMessageRenderer: React.FC<TaskCoachMessageRendererProps> =
   isUser,
   onSubTaskStart,
   onSubTaskComplete,
-  onStartTaskPlan
+  onStartTaskPlan,
+  onInstructionComplete,
+  onAllInstructionsComplete
 }) => {
   // User messages - render as simple cards
   if (isUser) {
@@ -41,6 +45,21 @@ export const TaskCoachMessageRenderer: React.FC<TaskCoachMessageRendererProps> =
   }, [content]);
   
   // Check if this is a structured message that should use the enhanced renderer
+  if (parsedMessage.type === 'working_instructions' && parsedMessage.workingInstructions && parsedMessage.workingInstructions.length > 0) {
+    return (
+      <div className="w-full mx-auto max-w-2xl md:max-w-3xl my-2">
+        <StructuredMessageRenderer
+          parsedMessage={parsedMessage}
+          onSubTaskStart={onSubTaskStart}
+          onSubTaskComplete={onSubTaskComplete}
+          onStartTaskPlan={onStartTaskPlan}
+          onInstructionComplete={onInstructionComplete}
+          onAllInstructionsComplete={onAllInstructionsComplete}
+        />
+      </div>
+    );
+  }
+
   if (parsedMessage.type === 'breakdown' && parsedMessage.subTasks && parsedMessage.subTasks.length > 0) {
     return (
       <div className="w-full mx-auto max-w-2xl md:max-w-3xl my-2">
@@ -49,6 +68,8 @@ export const TaskCoachMessageRenderer: React.FC<TaskCoachMessageRendererProps> =
           onSubTaskStart={onSubTaskStart}
           onSubTaskComplete={onSubTaskComplete}
           onStartTaskPlan={onStartTaskPlan}
+          onInstructionComplete={onInstructionComplete}
+          onAllInstructionsComplete={onAllInstructionsComplete}
         />
       </div>
     );
@@ -62,6 +83,8 @@ export const TaskCoachMessageRenderer: React.FC<TaskCoachMessageRendererProps> =
           onSubTaskStart={onSubTaskStart}
           onSubTaskComplete={onSubTaskComplete}
           onStartTaskPlan={onStartTaskPlan}
+          onInstructionComplete={onInstructionComplete}
+          onAllInstructionsComplete={onAllInstructionsComplete}
         />
       </div>
     );

@@ -16,20 +16,37 @@ import {
 } from 'lucide-react';
 import { ParsedCoachMessage, ParsedSubTask } from '@/services/coach-message-parser';
 import { TaskBreakdownDisplay } from './TaskBreakdownDisplay';
+import { WorkingInstructionsPanel } from './WorkingInstructionsPanel';
 
 interface StructuredMessageRendererProps {
   parsedMessage: ParsedCoachMessage;
   onSubTaskStart: (subTask: ParsedSubTask) => void;
   onSubTaskComplete: (subTask: ParsedSubTask) => void;
   onStartTaskPlan: () => void;
+  onInstructionComplete?: (instructionId: string) => void;
+  onAllInstructionsComplete?: () => void;
 }
 
 export const StructuredMessageRenderer: React.FC<StructuredMessageRendererProps> = ({
   parsedMessage,
   onSubTaskStart,
   onSubTaskComplete,
-  onStartTaskPlan
+  onStartTaskPlan,
+  onInstructionComplete,
+  onAllInstructionsComplete
 }) => {
+  // Render working instructions with interactive checkable cards
+  if (parsedMessage.type === 'working_instructions' && parsedMessage.workingInstructions && parsedMessage.workingInstructions.length > 0) {
+    return (
+      <WorkingInstructionsPanel
+        instructions={parsedMessage.workingInstructions}
+        onInstructionComplete={onInstructionComplete || (() => {})}
+        onAllInstructionsComplete={onAllInstructionsComplete || (() => {})}
+        originalText={parsedMessage.originalText}
+      />
+    );
+  }
+
   // Render task breakdown with enhanced interactive cards
   if (parsedMessage.type === 'breakdown' && parsedMessage.subTasks && parsedMessage.subTasks.length > 0) {
     return (
