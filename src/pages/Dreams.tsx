@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MainLayout from "@/components/Layout/MainLayout";
@@ -38,6 +37,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { DreamDecompositionPage } from "@/components/dream/DreamDecompositionPage";
 import { DreamSuccessPage } from "@/components/dream/DreamSuccessPage";
 import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
+import { DreamDiscoveryChat } from "@/components/dream/DreamDiscoveryChat";
 
 interface Task {
   id: string;
@@ -107,7 +107,7 @@ const Dreams = () => {
   const handleStartAIGuidance = useCallback(() => {
     // Reset dream discovery conversation to ensure clean context
     resetDreamConversation();
-    sendDreamMessage("I want to start my dream journey. Help me define my biggest goal and create a personalized action plan based on my soul blueprint.");
+    sendDreamMessage("I'm ready to explore my dreams with you. Help me discover what truly lights up my soul and what I'm meant to create in this world.");
     setCurrentView('chat');
   }, [sendDreamMessage, resetDreamConversation]);
 
@@ -252,7 +252,7 @@ const Dreams = () => {
     );
   }
 
-  // Dream Discovery Chat View - uses dream-specific hook
+  // Dream Discovery Chat View - uses dream-specific hook with empathetic interface
   if (currentView === 'chat') {
     return (
       <MainLayout>
@@ -271,22 +271,20 @@ const Dreams = () => {
               </Button>
               <div className="flex items-center gap-2">
                 <div className={`bg-gradient-to-br from-soul-purple to-soul-teal rounded-full flex items-center justify-center ${isFoldDevice ? 'w-5 h-5' : 'w-6 h-6'}`}>
-                  <Sparkles className={`text-white ${isFoldDevice ? 'h-2 w-2' : 'h-3 w-3'}`} />
+                  <Heart className={`text-white ${isFoldDevice ? 'h-2 w-2' : 'h-3 w-3'}`} />
                 </div>
-                <h2 className={`font-semibold text-gray-800 ${getTextSize('text-sm')} ${isFoldDevice ? 'hidden' : ''}`}>Dream Discovery Guide</h2>
+                <h2 className={`font-semibold text-gray-800 ${getTextSize('text-sm')} ${isFoldDevice ? 'hidden' : ''}`}>Dream Discovery</h2>
               </div>
               <div className={isFoldDevice ? 'w-6' : 'w-16'} />
             </div>
           </div>
           
-          <div className={`flex-1 w-full overflow-hidden max-w-4xl mx-auto ${isMobile ? 'px-3' : 'px-4'}`}>
-            <CoachInterface
+          <div className={`flex-1 w-full overflow-hidden max-w-4xl mx-auto ${isMobile ? 'px-0' : 'px-4'}`}>
+            <DreamDiscoveryChat
               messages={dreamMessages}
               isLoading={dreamLoading}
               onSendMessage={sendDreamMessage}
               messagesEndRef={messagesEndRef}
-              taskTitle="Dream Discovery"
-              estimatedDuration="~30 min"
             />
           </div>
         </div>
@@ -524,13 +522,13 @@ const Dreams = () => {
             {/* Mobile Optimized Hero Section */}
             <div className={`text-center mb-6 px-2`}>
               <div className={`mx-auto bg-gradient-to-br from-soul-purple via-soul-purple to-soul-teal rounded-full flex items-center justify-center mb-4 shadow-xl ${isFoldDevice ? 'w-12 h-12' : 'w-16 h-16'}`}>
-                <Sparkles className={`text-white ${isFoldDevice ? 'h-6 w-6' : 'h-8 w-8'}`} />
+                <Heart className={`text-white ${isFoldDevice ? 'h-6 w-6' : 'h-8 w-8'}`} />
               </div>
               <h1 className={`font-bold mb-3 bg-gradient-to-r from-soul-purple to-soul-teal bg-clip-text text-transparent ${getTextSize('text-xl')}`}>
                 {t("dreams.whatsYourDream")}
               </h1>
               <p className={`text-gray-600 leading-relaxed mb-4 ${getTextSize('text-sm')}`}>
-                {t("dreams.heroDescription")}
+                Share your deepest aspirations and let's discover what truly lights up your soul
               </p>
               <div className={`inline-flex items-center gap-2 bg-soul-purple/10 px-3 py-1 rounded-full`}>
                 <div className="w-2 h-2 bg-soul-purple rounded-full animate-pulse"></div>
@@ -631,7 +629,7 @@ const Dreams = () => {
             <div className="space-y-3 w-full">
               <div className="text-center">
                 <p className={`text-gray-500 mb-3 ${getTextSize('text-xs')}`}>
-                  Or get personalized guidance
+                  Or explore with your dream guide
                 </p>
               </div>
               
@@ -640,8 +638,8 @@ const Dreams = () => {
                 variant="outline"
                 className={`w-full border-2 border-soul-purple/20 bg-soul-purple/5 hover:bg-soul-purple/10 text-soul-purple py-4 rounded-xl font-medium transition-all duration-300 ${getTextSize('text-sm')} ${touchTargetSize}`}
               >
-                <MessageCircle className={`mr-2 ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
-                {t("dreams.startAIGuidance")}
+                <Heart className={`mr-2 ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
+                Start Heart-Centered Discovery
               </Button>
               
               <Button 

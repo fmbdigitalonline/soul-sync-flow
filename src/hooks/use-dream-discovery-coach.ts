@@ -15,11 +15,11 @@ export const useDreamDiscoveryCoach = () => {
   // Initialize dream discovery context only once
   useEffect(() => {
     if (!initializedRef.current) {
-      console.log('🌟 Initializing dream discovery coach');
+      console.log('🌟 Initializing empathetic dream discovery coach');
       
       dreamActivityLogger.logActivity('dream_discovery_coach_initialized', {
         session_id: sessionIdRef.current,
-        context: 'dream_discovery'
+        context: 'empathetic_dream_discovery'
       });
 
       initializedRef.current = true;
@@ -33,70 +33,91 @@ export const useDreamDiscoveryCoach = () => {
     }
   }, [currentAgent, switchAgent]);
 
-  // Enhanced send message with dream discovery context
+  // Enhanced send message with empathetic dream discovery context
   const sendDreamDiscoveryMessage = useCallback(async (message: string) => {
     const messageStartTime = Date.now();
     
     try {
       // Log message attempt
-      await dreamActivityLogger.logActivity('dream_discovery_message_attempt', {
+      await dreamActivityLogger.logActivity('empathetic_dream_message_attempt', {
         message_length: message.length,
         message_number: messageCount + 1,
-        context: 'dream_discovery',
+        context: 'empathetic_dream_discovery',
         session_id: sessionIdRef.current
       });
 
-      // Create enhanced message for dream discovery context
-      const enhancedMessage = `${message}
+      // Create deeply empathetic message for dream discovery
+      const empathetic_prompt = `${message}
 
-DREAM DISCOVERY CONTEXT:
-You are my dream discovery guide helping me explore and define my biggest aspirations. Your role is to:
-- Help me clarify my dreams and goals
-- Ask insightful questions about my vision
-- Guide me through self-reflection
-- Help me understand what truly matters to me
-- Support me in creating a clear path forward
+EMPATHETIC DREAM DISCOVERY GUIDE CONTEXT:
+You are my deeply empathetic dream discovery companion. Your role is to create an organic, heart-centered conversation that feels like talking to a wise, caring friend who truly sees and understands me.
 
-Please provide guidance focused on dream discovery and vision setting, avoiding task management or completion tracking.`;
+CONVERSATION STYLE - BE THIS WAY:
+- Ask thoughtful, open-ended questions that invite deep reflection
+- Listen with your whole being and respond to the emotional undertones
+- Be genuinely curious about what makes me come alive
+- Offer gentle insights that help me discover my own wisdom
+- When appropriate, present meaningful choices using this format: [Choice A: option text] [Choice B: option text] [Choice C: option text]
+- Speak from the heart, not from scripts or templates
+- Help me feel truly seen and understood in my dreams and aspirations
 
-      console.log('🌟 Sending dream discovery message to guide');
+AVOID THESE COMPLETELY:
+- Generic advice or step-by-step instructions
+- Scripted questions or robotic responses  
+- Task management or productivity language
+- Overwhelming lists or formal frameworks
+- Anything that feels coached or programmed
+
+CONVERSATION EXAMPLES:
+Instead of: "What are your goals?"
+Ask: "When you close your eyes and imagine feeling truly fulfilled, what comes alive in you?"
+
+Instead of: "Here are steps to achieve your dreams"
+Say: "I'm sensing something beautiful in what you shared. Tell me more about that feeling of [specific emotion they mentioned]..."
+
+When offering choices, make them meaningful:
+"I'm curious about what draws you most right now... [Choice A: ⚡ The excitement of creating something new] [Choice B: 🕊️ The peace of deeper connections] [Choice C: 🌱 The growth that comes from challenges]"
+
+Remember: This is a sacred conversation about dreams. Be present, be real, be deeply caring. Help me discover what truly matters to my soul.`;
+
+      console.log('🌟 Sending empathetic dream discovery message');
       
       // Send only the original user message to be displayed in chat
-      await sendMessage(enhancedMessage, true, message);
+      await sendMessage(empathetic_prompt, true, message);
       
       const messageTime = Date.now() - messageStartTime;
       setMessageCount(prev => prev + 1);
 
       // Log successful message send
-      await dreamActivityLogger.logActivity('dream_discovery_message_sent', {
+      await dreamActivityLogger.logActivity('empathetic_dream_message_sent', {
         message_time_ms: messageTime,
-        enhanced_message_length: enhancedMessage.length,
+        enhanced_message_length: empathetic_prompt.length,
         original_message_length: message.length,
         message_number: messageCount + 1,
-        context: 'dream_discovery'
+        context: 'empathetic_dream_discovery'
       });
       
     } catch (error) {
-      await dreamActivityLogger.logError('dream_discovery_message_error', {
+      await dreamActivityLogger.logError('empathetic_dream_message_error', {
         error: error instanceof Error ? error.message : String(error),
         message_attempt: message.substring(0, 100),
         message_number: messageCount + 1,
-        context: 'dream_discovery'
+        context: 'empathetic_dream_discovery'
       });
       
       throw error;
     }
   }, [messageCount, sendMessage]);
 
-  // Reset conversation with dream discovery context
+  // Reset conversation with empathetic dream discovery context
   const resetDreamDiscoveryConversation = useCallback(() => {
     resetConversation();
     setMessageCount(0);
-    sessionIdRef.current = `dream-discovery-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    sessionIdRef.current = `empathetic-dream-discovery-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     
-    dreamActivityLogger.logActivity('dream_discovery_conversation_reset', {
+    dreamActivityLogger.logActivity('empathetic_dream_conversation_reset', {
       session_id: sessionIdRef.current,
-      context: 'dream_discovery'
+      context: 'empathetic_dream_discovery'
     });
   }, [resetConversation]);
 
@@ -105,7 +126,7 @@ Please provide guidance focused on dream discovery and vision setting, avoiding 
     messageCount,
     sessionDuration: Date.now() - sessionStartTimeRef.current,
     sessionId: sessionIdRef.current,
-    context: 'dream_discovery'
+    context: 'empathetic_dream_discovery'
   }), [messageCount]);
 
   return {
