@@ -125,10 +125,8 @@ Please provide guidance while being aware of my current task state and progress.
         message_number: messageCount + 1
       });
       
-      // After sending, check the latest assistant message for actions with delay
-      setTimeout(() => {
-        checkForCoachActionsWithLogging();
-      }, 1000);
+      // Disable auto-action detection to prevent loops
+      // Actions should only be triggered by explicit user interaction
       
     } catch (error) {
       await dreamActivityLogger.logError('coach_message_error', {
@@ -185,21 +183,14 @@ Please provide guidance while being aware of my current task state and progress.
       
       setActionCount(prev => prev + 1);
 
+      // Handle action results silently in UI only - don't send back to AI
       if (result.success) {
-        // Send confirmation message to coach
-        const confirmationMessage = `ACTION COMPLETED: ${result.message}${result.data ? ` Data: ${JSON.stringify(result.data)}` : ''}`;
-        await sendMessage(confirmationMessage);
-        
-        await dreamActivityLogger.logActivity('action_confirmation_sent', {
+        await dreamActivityLogger.logActivity('action_completed_silently', {
           action_type: action.type,
-          confirmation_message_length: confirmationMessage.length
+          result_message: result.message
         });
       } else {
-        // Send error message to coach
-        const errorMessage = `ACTION FAILED: ${result.message}`;
-        await sendMessage(errorMessage);
-        
-        await dreamActivityLogger.logActivity('action_failure_reported', {
+        await dreamActivityLogger.logActivity('action_failed_silently', {
           action_type: action.type,
           error_message: result.message
         });

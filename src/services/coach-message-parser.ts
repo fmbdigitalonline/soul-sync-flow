@@ -82,12 +82,19 @@ export class CoachMessageParser {
     const systemIndicators = [
       /CURRENT TASK CONTEXT:/i,
       /As my productivity coach with access to/i,
+      /As my productivity coach with task management capabilities/i,
       /ACTION: (complete_subtask|complete_task|update_progress)/i,
+      /ACTION COMPLETED:/i,
+      /ACTION FAILED:/i,
+      /I need you to:/i,
+      /Please structure your response so I can see clickable/i,
       /cognitive strengths and current energy conditions/i,
       /Starting your dream journey is an exciting endeavor/i,
       /core motivations of growth and authenticity/i,
       /### Smart Task Breakdown/i,
-      /AI-generated action plan/i
+      /AI-generated action plan/i,
+      /Format your response using numbered steps/i,
+      /Use your task management functions/i
     ];
     
     return systemIndicators.some(pattern => pattern.test(content));
@@ -100,7 +107,7 @@ export class CoachMessageParser {
       return false;
     }
     
-    // Must have meaningful task-related content
+    // Must have meaningful task-related content AND conversational tone
     const taskKeywords = [
       /break.*down.*task/i,
       /action.*plan/i,
@@ -109,7 +116,18 @@ export class CoachMessageParser {
       /micro.*task/i
     ];
     
+    // Must sound conversational (not formal instructions)
+    const conversationalIndicators = [
+      /let's/i,
+      /here's/i,
+      /i'll help/i,
+      /great!/i,
+      /sure/i,
+      /of course/i
+    ];
+    
     const hasTaskKeywords = taskKeywords.some(pattern => pattern.test(content));
+    const hasConversationalTone = conversationalIndicators.some(pattern => pattern.test(content));
     
     // Must not be a system prompt
     const isNotSystemPrompt = !this.isSystemPrompt(content);
@@ -117,7 +135,7 @@ export class CoachMessageParser {
     // Content should be substantial (not just bullet points)
     const hasSubstantialContent = content.length > 100;
     
-    return hasTaskKeywords && isNotSystemPrompt && hasSubstantialContent && numberedSteps.length >= 2;
+    return hasTaskKeywords && hasConversationalTone && isNotSystemPrompt && hasSubstantialContent && numberedSteps.length >= 2;
   }
   
   private static isProgressUpdate(content: string): boolean {

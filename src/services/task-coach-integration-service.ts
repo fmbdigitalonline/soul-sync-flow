@@ -147,9 +147,9 @@ class TaskCoachIntegrationService {
       subTask.id === subTaskId ? { ...subTask, completed: true } : subTask
     );
 
-    // Calculate new progress
+    // Calculate new progress with safe division
     const completedCount = updatedSubTasks.filter(st => st.completed).length;
-    const newProgress = Math.round((completedCount / updatedSubTasks.length) * 100);
+    const newProgress = updatedSubTasks.length > 0 ? Math.round((completedCount / updatedSubTasks.length) * 100) : 0;
 
     // Update current task
     this.currentTask = {
@@ -205,9 +205,12 @@ class TaskCoachIntegrationService {
       return { success: false, message: 'No active task' };
     }
 
+    // Safe progress calculation with validation
+    const safeProgress = Math.min(100, Math.max(0, progress || 0));
+    
     this.currentTask = {
       ...this.currentTask,
-      progress: Math.min(100, Math.max(0, progress))
+      progress: safeProgress
     };
 
     // Update in database

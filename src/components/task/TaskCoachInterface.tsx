@@ -333,23 +333,8 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
     const currentGoal = currentGoals.find(goal => goal.id === task.goal_id);
     const goalContext = currentGoal ? `\n\nThis task is part of your goal: "${currentGoal.title}" - ${currentGoal.description}` : '';
 
-    // Enhanced initial message with structured breakdown instructions
-    const initialMessage = `I'm ready to start working on "${task.title}". This is a ${task.energy_level_required} energy task that should take ${task.estimated_duration}.
-
-${task.description ? `Task Description: ${task.description}` : ''}${goalContext}
-
-As my productivity coach with task management capabilities, please help me by creating a comprehensive task breakdown. 
-
-I need you to:
-1. Break this task into 3-7 specific, actionable sub-tasks
-2. Format your response using numbered steps (Step 1:, Step 2:, etc.)
-3. For each sub-task, include:
-   - Clear action description
-   - Estimated time (e.g., "15 min", "30 min")
-   - Energy level required (low, medium, high)
-4. Use your task management functions to track progress as I complete each sub-task
-
-Please structure your response so I can see clickable micro-task cards for each step. Start with the task breakdown now!`;
+    // Simple conversational message to prevent formal AI responses
+    const initialMessage = `Hi! I'm ready to work on "${task.title}". ${task.description ? `It's about: ${task.description}` : ''} Can you help me break this down into manageable steps so I can get started?${goalContext}`;
     
     await dreamActivityLogger.logActivity('enhanced_coaching_message_sent', {
       task_id: task.id,
