@@ -26,14 +26,14 @@ class MemoryInformedConversationService {
     userId: string,
     pageContext?: string
   ): Promise<MemoryContext> {
-    console.log('🧠 Building memory context for conversation:', { userMessage: userMessage.substring(0, 50), sessionId, userId });
+    console.log('🧠 Building memory context for conversation:', { userMessage: userMessage.substring(0, 50), sessionId, userId, pageContext });
 
     // Step 1: Extract keywords from user message for memory search
     const searchKeywords = this.extractKeywords(userMessage);
     console.log('🔍 Extracted keywords:', searchKeywords);
 
     try {
-      // Step 2: Progressive memory search with real data
+      // Step 2: Memory Context Filtering - Progressive memory search with page context filter
       const memorySearchResults = await enhancedMemoryService.performProgressiveSearch(
         searchKeywords.join(' '),
         8 // Get up to 8 relevant memories
@@ -45,31 +45,33 @@ class MemoryInformedConversationService {
         executionTime: memorySearchResults.executionTime
       });
 
-      // Step 3: Get session-specific memories
+      // Step 3: Get session-specific memories with page context filtering
       const sessionMemories = await enhancedMemoryService.getMemoriesBySession(sessionId);
       console.log('📝 Session memories found:', sessionMemories.length);
 
-      // Step 2: Memory Context Filtering - Get cross-session context with page filter
+      // Step 4: Memory Context Filtering - Get cross-session context with page filter
       const crossSessionMemories = await this.getCrossSessionContext(userId, sessionId, 3, pageContext);
       console.log('🔄 Cross-session memories found:', crossSessionMemories.length);
 
-      // Step 5: Combine and prioritize memories
-      const allRelevantMemories = this.prioritizeMemories([
-        ...memorySearchResults.memories,
-        ...sessionMemories,
-        ...crossSessionMemories
-      ]);
+      // Step 5: Filter memories by page context to prevent bleeding
+      const contextFilteredMemories = this.filterMemoriesByPageContext(
+        [...memorySearchResults.memories, ...sessionMemories, ...crossSessionMemories],
+        pageContext
+      );
 
-      console.log('🎯 Total prioritized memories:', allRelevantMemories.length);
+      // Step 6: Combine and prioritize memories
+      const allRelevantMemories = this.prioritizeMemories(contextFilteredMemories);
 
-      // Step 6: Create context summary
+      console.log('🎯 Total prioritized memories after context filtering:', allRelevantMemories.length);
+
+      // Step 7: Create context summary
       const contextSummary = this.createContextSummary(allRelevantMemories, userMessage);
 
-      // Step 7: Update memory state
+      // Step 8: Update memory state
       await this.updateMemoryState(sessionId, allRelevantMemories);
 
-      // Step 8: Save current interaction as memory for future reference
-      await this.saveCurrentInteraction(userId, sessionId, userMessage);
+      // Step 9: Save current interaction as memory for future reference with page context
+      await this.saveCurrentInteraction(userId, sessionId, userMessage, pageContext);
 
       const memoryContext: MemoryContext = {
         relevantMemories: allRelevantMemories,
@@ -80,7 +82,7 @@ class MemoryInformedConversationService {
 
       // Cache for performance
       this.memoryContextCache.set(`${sessionId}_${Date.now()}`, memoryContext);
-      console.log('✅ Memory context built successfully with', allRelevantMemories.length, 'memories');
+      console.log('✅ Memory context built successfully with', allRelevantMemories.length, 'memories for page:', pageContext);
 
       return memoryContext;
     } catch (error) {
@@ -95,7 +97,46 @@ class MemoryInformedConversationService {
     }
   }
 
-  private async saveCurrentInteraction(userId: string, sessionId: string, userMessage: string): Promise<void> {
+  // Step 2: Memory Context Filtering - Filter memories by page context
+  private filterMemoriesByPageContext(memories: SessionMemory[], pageContext?: string): SessionMemory[] {
+    if (!pageContext) return memories;
+
+    console.log('🔍 Filtering memories by page context:', pageContext);
+
+    return memories.filter(memory => {
+      // Check if memory session_id contains the page context
+      const memoryPageContext = this.extractPageContextFromSessionId(memory.session_id);
+      const isContextMatch = memoryPageContext === pageContext;
+      
+      // Also filter out test/debug memories that might contaminate real sessions
+      const isTestMemory = memory.context_summary?.includes('Patent test') || 
+                          memory.context_summary?.includes('PIE Patent') ||
+                          memory.context_summary?.includes('real-time validation') ||
+                          memory.session_id.includes('test') ||
+                          memory.session_id.includes('debug');
+
+      const shouldInclude = isContextMatch && !isTestMemory;
+      
+      if (!shouldInclude) {
+        console.log('🚫 Filtered out memory:', {
+          sessionId: memory.session_id,
+          context: memory.context_summary?.substring(0, 50),
+          reason: !isContextMatch ? 'context_mismatch' : 'test_memory'
+        });
+      }
+
+      return shouldInclude;
+    });
+  }
+
+  private extractPageContextFromSessionId(sessionId: string): string {
+    // Extract page context from session ID format: "pageContext_..."
+    const parts = sessionId.split('_');
+    const knownContexts = ['spiritual-growth', 'dreams', 'coach', 'relationships'];
+    return knownContexts.includes(parts[0]) ? parts[0] : 'unknown';
+  }
+
+  private async saveCurrentInteraction(userId: string, sessionId: string, userMessage: string, pageContext?: string): Promise<void> {
     try {
       // Extract key topics from the message for better memory retrieval
       const topics = this.extractKeywords(userMessage);
@@ -110,7 +151,8 @@ class MemoryInformedConversationService {
             user_message: userMessage,
             topics: topics,
             interaction_timestamp: new Date().toISOString(),
-            message_intent: this.analyzeMessageIntent(userMessage)
+            message_intent: this.analyzeMessageIntent(userMessage),
+            page_context: pageContext // Step 2: Memory Context Filtering - Store page context
           },
           context_summary: `User interaction: ${userMessage.substring(0, 100)}${userMessage.length > 100 ? '...' : ''}`,
           importance_score: this.calculateImportanceScore(userMessage)
@@ -119,7 +161,7 @@ class MemoryInformedConversationService {
       if (error) {
         console.error('❌ Error saving current interaction:', error);
       } else {
-        console.log('✅ Current interaction saved as memory');
+        console.log('✅ Current interaction saved as memory with page context:', pageContext);
       }
     } catch (error) {
       console.error('❌ Unexpected error saving interaction:', error);

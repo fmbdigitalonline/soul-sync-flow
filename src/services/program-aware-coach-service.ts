@@ -163,7 +163,7 @@ class ProgramAwareCoachService {
     useEnhancedBrain: boolean = true,
     pageContext: string = 'spiritual-growth'
   ): Promise<BeliefDrillingResponse> {
-    console.log("🎯 VFP-Graph Program-Aware Coach: Processing message with enhanced brain integration");
+    console.log("🎯 VFP-Graph Program-Aware Coach: Processing message with enhanced brain integration for context:", pageContext);
 
     try {
       // Step 3: Service Instance Isolation - Get cached conversation context from context-specific cache
@@ -173,7 +173,7 @@ class ProgramAwareCoachService {
 
       // Use enhanced AI coach service with full brain innovations (ACS, VFP, PIE, TMG)
       if (useEnhancedBrain) {
-        console.log("🧠 Using enhanced AI coach with 4 brain innovations");
+        console.log("🧠 Using enhanced AI coach with 4 brain innovations for context:", pageContext);
         
         // Update career discovery context with new message if service is available
         let updatedCareerContext = careerContext || {};
@@ -188,7 +188,7 @@ class ProgramAwareCoachService {
         }
         
         // Create context-rich prompt for enhanced AI coach
-        const enhancedPrompt = this.createEnhancedPrompt(message, domain, updatedCareerContext, conversationContext);
+        const enhancedPrompt = this.createEnhancedPrompt(message, domain, updatedCareerContext, conversationContext, pageContext);
         
         const aiResponse = await enhancedAICoachService.sendMessage(
           enhancedPrompt,
@@ -220,11 +220,11 @@ class ProgramAwareCoachService {
       }
 
       // Fallback to basic response if enhanced brain fails
-      console.log("⚠️ Falling back to basic response generation");
+      console.log("⚠️ Falling back to basic response generation for context:", pageContext);
       return this.generateBasicResponse(message, conversationContext);
 
     } catch (error) {
-      console.error("❌ Error in program-aware message processing:", error);
+      console.error("❌ Error in program-aware message processing for context:", pageContext, error);
       
       // Error recovery - provide meaningful response
       const contextCache = this.contextIsolatedCaches.get(pageContext) || new Map();
@@ -240,9 +240,10 @@ class ProgramAwareCoachService {
     }
   }
 
-  private createEnhancedPrompt(message: string, domain: LifeDomain, careerContext: any, conversationContext: any): string {
+  private createEnhancedPrompt(message: string, domain: LifeDomain, careerContext: any, conversationContext: any, pageContext: string): string {
     return `You are an expert ${domain} coach with access to the user's personality blueprint and career context. 
 
+Page Context: ${pageContext}
 Career Context: ${JSON.stringify(careerContext, null, 2)}
 Conversation History: ${conversationContext.messageCount || 0} messages exchanged
 Domain Focus: ${domain}
@@ -251,12 +252,12 @@ Current Stage: ${conversationContext.stage || 'initial'}
 User Message: "${message}"
 
 Provide a personalized, insightful response that:
-1. Acknowledges their specific situation
-2. Offers deep, actionable guidance
+1. Acknowledges their specific situation within the ${pageContext} context
+2. Offers deep, actionable guidance relevant to ${domain}
 3. Asks thoughtful follow-up questions
 4. Shows you're truly listening and understanding their unique context
 
-Be conversational, empathetic, and avoid generic responses. Draw from their personality traits and career situation to make this highly relevant to them.`;
+Be conversational, empathetic, and avoid generic responses. Draw from their personality traits and career situation to make this highly relevant to them in the ${pageContext} context.`;
   }
 
   private parseCoachResponse(response: string): BeliefDrillingResponse {
@@ -393,11 +394,11 @@ Be conversational, empathetic, and avoid generic responses. Draw from their pers
           throw error;
         }
 
-        console.log("✅ Conversation state saved successfully");
+        console.log("✅ Conversation state saved successfully for context:", pageContext, "domain:", dynamicDomain);
         return;
 
       } catch (error: any) {
-        console.error(`❌ Attempt ${attempt} failed:`, error);
+        console.error(`❌ Attempt ${attempt} failed for context ${pageContext}:`, error);
         
         if (attempt === maxRetries) {
           console.error("❌ All retry attempts failed, conversation state not saved");
@@ -547,6 +548,7 @@ Be conversational, empathetic, and avoid generic responses. Draw from their pers
       const contextCache = this.contextIsolatedCaches.get(pageContext) || new Map();
       contextSessions.delete(sessionId);
       contextCache.delete(sessionId);
+      console.log(`🧹 Cleared session ${sessionId} from context: ${pageContext}`);
     } else {
       // Clear from all contexts (extract context from session ID)
       const extractedContext = this.extractPageContextFromSessionId(sessionId);
