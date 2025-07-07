@@ -20,117 +20,158 @@ export interface ParsedCoachMessage {
 }
 
 export class CoachMessageParser {
+  private static parsedCache = new Map<string, ParsedCoachMessage>();
+  
   static parseMessage(content: string): ParsedCoachMessage {
-    const lowerContent = content.toLowerCase();
-    
-    // Enhanced detection for task breakdown
-    if (this.isTaskBreakdown(content)) {
-      return {
-        type: 'breakdown',
-        originalText: content,
-        subTasks: this.extractSubTasks(content)
+    // Check cache first to prevent re-parsing
+    const cacheKey = content.substring(0, 100);
+    if (this.parsedCache.has(cacheKey)) {
+      return this.parsedCache.get(cacheKey)!;
+    }
+
+    // Filter out system prompts and internal messages
+    if (this.isSystemPrompt(content)) {
+      const result = {
+        type: 'general' as const,
+        originalText: content
       };
+      this.parsedCache.set(cacheKey, result);
+      return result;
     }
     
+    const lowerContent = content.toLowerCase();
+    let result: ParsedCoachMessage;
+    
+    // Enhanced detection for task breakdown with stricter validation
+    if (this.isValidTaskBreakdown(content)) {
+      result = {
+        type: 'breakdown',
+        originalText: content,
+        subTasks: this.extractValidSubTasks(content)
+      };
+    } 
     // Detect progress update
-    if (this.isProgressUpdate(content)) {
-      return {
+    else if (this.isProgressUpdate(content)) {
+      result = {
         type: 'progress',
         originalText: content,
         progressUpdate: this.extractProgressInfo(content)
       };
     }
-    
     // Detect guidance with action items
-    if (this.hasActionItems(content)) {
-      return {
+    else if (this.hasActionItems(content)) {
+      result = {
         type: 'guidance',
         originalText: content,
         actionItems: this.extractActionItems(content)
       };
     }
+    else {
+      result = {
+        type: 'general',
+        originalText: content
+      };
+    }
     
-    return {
-      type: 'general',
-      originalText: content
-    };
+    // Cache the result
+    this.parsedCache.set(cacheKey, result);
+    return result;
   }
   
-  private static isTaskBreakdown(content: string): boolean {
-    const breakdownPatterns = [
-      /step\s*\d+/i,
-      /sub[\s-]*task/i,
-      /break.*down/i,
-      /\d+\.\s/g,
-      /first.*step/i,
-      /next.*step/i,
-      /micro[\s-]*task/i,
-      /action.*step/i,
-      /(here's|here are).*steps/i,
-      /to.*complete.*this.*task/i
+  private static isSystemPrompt(content: string): boolean {
+    const systemIndicators = [
+      /CURRENT TASK CONTEXT:/i,
+      /As my productivity coach with access to/i,
+      /ACTION: (complete_subtask|complete_task|update_progress)/i,
+      /cognitive strengths and current energy conditions/i,
+      /Starting your dream journey is an exciting endeavor/i,
+      /core motivations of growth and authenticity/i,
+      /### Smart Task Breakdown/i,
+      /AI-generated action plan/i
     ];
     
-    // Check if multiple patterns match (stronger indication)
-    const matchCount = breakdownPatterns.filter(pattern => pattern.test(content)).length;
+    return systemIndicators.some(pattern => pattern.test(content));
+  }
+  
+  private static isValidTaskBreakdown(content: string): boolean {
+    // Must have multiple numbered steps or clear step indicators
+    const numberedSteps = content.match(/^(\d+\.|Step\s*\d+:)/gm);
+    if (!numberedSteps || numberedSteps.length < 2) {
+      return false;
+    }
     
-    // Also check for multiple numbered items
-    const numberedItems = content.match(/\d+\.\s/g);
-    const hasMultipleSteps = numberedItems && numberedItems.length >= 2;
+    // Must have meaningful task-related content
+    const taskKeywords = [
+      /break.*down.*task/i,
+      /action.*plan/i,
+      /steps.*complete/i,
+      /(first|next|final).*step/i,
+      /micro.*task/i
+    ];
     
-    return matchCount >= 2 || hasMultipleSteps;
+    const hasTaskKeywords = taskKeywords.some(pattern => pattern.test(content));
+    
+    // Must not be a system prompt
+    const isNotSystemPrompt = !this.isSystemPrompt(content);
+    
+    // Content should be substantial (not just bullet points)
+    const hasSubstantialContent = content.length > 100;
+    
+    return hasTaskKeywords && isNotSystemPrompt && hasSubstantialContent && numberedSteps.length >= 2;
   }
   
   private static isProgressUpdate(content: string): boolean {
     const progressPatterns = [
-      /progress/i,
-      /completed?/i,
-      /\d+%/,
-      /finished/i,
-      /done/i,
-      /update.*status/i
+      /progress.*update/i,
+      /completed.*task/i,
+      /\d+%.*complete/i,
+      /finished.*step/i,
+      /status.*update/i
     ];
     
-    return progressPatterns.some(pattern => pattern.test(content));
+    return progressPatterns.some(pattern => pattern.test(content)) && 
+           !this.isSystemPrompt(content);
   }
   
   private static hasActionItems(content: string): boolean {
     const actionPatterns = [
-      /should.*do/i,
-      /recommend/i,
-      /suggest/i,
-      /try.*this/i,
-      /next.*action/i,
-      /consider/i,
-      /focus.*on/i
+      /recommend.*you/i,
+      /suggest.*that/i,
+      /consider.*doing/i,
+      /try.*to/i,
+      /focus.*on/i,
+      /next.*action/i
     ];
     
-    return actionPatterns.some(pattern => pattern.test(content));
+    return actionPatterns.some(pattern => pattern.test(content)) && 
+           !this.isSystemPrompt(content);
   }
   
-  private static extractSubTasks(content: string): ParsedSubTask[] {
+  private static extractValidSubTasks(content: string): ParsedSubTask[] {
     const subTasks: ParsedSubTask[] = [];
+    const seenTitles = new Set<string>();
     
-    // Enhanced extraction for numbered lists and steps
+    // More restrictive patterns for genuine task steps
     const patterns = [
-      // Step 1:, Step 2:, etc.
-      /step\s*(\d+)\s*:\s*([^\n.]+)(?:[.\n]([^\n]*(?:time|duration|energy|min|hour)[^\n.]*))?/gi,
-      // 1., 2., 3., etc.
-      /(\d+)\.\s*([^\n.]+)(?:[.\n]([^\n]*(?:time|duration|energy|min|hour)[^\n.]*))?/gi,
-      // - Bullet points
-      /[-•*]\s*([^\n]+)(?:\n([^\n]*(?:time|duration|energy|min|hour)[^\n]*))?/gi
+      // Step 1:, Step 2:, etc. - must have substantial content after
+      /Step\s*(\d+)\s*:\s*([^\n.]{10,}?)(?:\n([^\n]{10,}?))?(?=\n|$)/gi,
+      // 1., 2., 3., etc. - must have substantial content after
+      /^(\d+)\.\s*([^\n.]{10,}?)(?:\n([^\n]{10,}?))?(?=\n|$)/gm
     ];
 
     patterns.forEach(pattern => {
       let match;
-      while ((match = pattern.exec(content)) !== null) {
+      while ((match = pattern.exec(content)) !== null && subTasks.length < 8) {
         const stepNumber = match[1] || String(subTasks.length + 1);
         const title = match[2]?.trim();
         const details = match[3]?.trim();
         
-        // Only process if we have a valid title
-        if (title && title.length > 5) {
+        // Validate the title thoroughly
+        if (this.isValidTaskTitle(title) && !seenTitles.has(title.toLowerCase())) {
+          seenTitles.add(title.toLowerCase());
+          
           subTasks.push({
-            id: `subtask-${Date.now()}-${stepNumber}`,
+            id: `subtask-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             title: title,
             description: details || this.extractDescription(match[0]),
             estimatedTime: this.extractTime(match[0]),
@@ -141,49 +182,30 @@ export class CoachMessageParser {
       }
     });
     
-    // Deduplicate based on similar titles
-    const uniqueSubTasks = subTasks.filter((task, index, arr) => 
-      arr.findIndex(t => this.similarTitles(t.title, task.title)) === index
-    );
-    
-    return uniqueSubTasks.slice(0, 10); // Limit to reasonable number
+    return subTasks;
   }
   
-  private static similarTitles(title1: string, title2: string): boolean {
-    const normalize = (str: string) => str.toLowerCase().replace(/[^\w\s]/g, '').trim();
-    const norm1 = normalize(title1);
-    const norm2 = normalize(title2);
+  private static isValidTaskTitle(title: string | undefined): boolean {
+    if (!title || title.length < 8) return false;
     
-    // Check if one is a substring of the other or if they're very similar
-    return norm1 === norm2 || 
-           norm1.includes(norm2) || 
-           norm2.includes(norm1) ||
-           this.levenshteinDistance(norm1, norm2) < 3;
-  }
-  
-  private static levenshteinDistance(str1: string, str2: string): number {
-    const matrix = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null));
+    // Filter out common non-task patterns
+    const invalidPatterns = [
+      /^(What|Why|How|Where|When)\s/i, // Questions
+      /\*\*(.*?)\*\*/g, // Markdown bold
+      /cognitive strengths/i,
+      /energy conditions/i,
+      /dream journey/i,
+      /core motivations/i,
+      /feelings or values/i,
+      /specific area of your life/i
+    ];
     
-    for (let i = 0; i <= str1.length; i++) matrix[0][i] = i;
-    for (let j = 0; j <= str2.length; j++) matrix[j][0] = j;
-    
-    for (let j = 1; j <= str2.length; j++) {
-      for (let i = 1; i <= str1.length; i++) {
-        const substitutionCost = str1[i - 1] === str2[j - 1] ? 0 : 1;
-        matrix[j][i] = Math.min(
-          matrix[j][i - 1] + 1,
-          matrix[j - 1][i] + 1,
-          matrix[j - 1][i - 1] + substitutionCost
-        );
-      }
-    }
-    
-    return matrix[str2.length][str1.length];
+    return !invalidPatterns.some(pattern => pattern.test(title));
   }
   
   private static extractDescription(text: string): string | undefined {
     if (!text) return undefined;
-    const lines = text.split('\n').filter(line => line.trim());
+    const lines = text.split('\n').filter(line => line.trim() && line.length > 5);
     if (lines.length > 1) {
       return lines[1].trim();
     }
@@ -226,25 +248,29 @@ export class CoachMessageParser {
     const actionItems: string[] = [];
     
     // Look for bullet points or action phrases
-    const bulletMatches = content.match(/[-•*]\s*([^\n]+)/g);
+    const bulletMatches = content.match(/[-•*]\s*([^\n]{15,})/g);
     if (bulletMatches) {
       bulletMatches.forEach(match => {
         const item = match.replace(/^[-•*]\s*/, '').trim();
-        if (item && item.length > 10) actionItems.push(item);
+        if (item && item.length > 15 && !this.isSystemPrompt(item)) {
+          actionItems.push(item);
+        }
       });
     }
     
     // Look for recommendation patterns
     const recPatterns = [
-      /(?:i recommend|suggest|advise|consider)[\s:]([^.!?]+)/gi,
-      /(?:you should|try to|focus on)[\s:]([^.!?]+)/gi
+      /(?:i recommend|suggest|advise|consider)[\s:]([^.!?]{15,})/gi,
+      /(?:you should|try to|focus on)[\s:]([^.!?]{15,})/gi
     ];
     
     recPatterns.forEach(pattern => {
       let match;
       while ((match = pattern.exec(content)) !== null) {
         const item = match[1]?.trim();
-        if (item && item.length > 10) actionItems.push(item);
+        if (item && item.length > 15 && !this.isSystemPrompt(item)) {
+          actionItems.push(item);
+        }
       }
     });
     
@@ -263,5 +289,10 @@ export class CoachMessageParser {
     }
     
     return { percentage, status };
+  }
+  
+  // Clear cache when needed
+  static clearCache(): void {
+    this.parsedCache.clear();
   }
 }

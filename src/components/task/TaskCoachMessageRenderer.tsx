@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { CoachMessageParser, ParsedCoachMessage, ParsedSubTask } from '@/services/coach-message-parser';
 import { StructuredMessageRenderer } from '@/components/coach/StructuredMessageRenderer';
 import { Card } from '@/components/ui/card';
@@ -35,11 +35,26 @@ export const TaskCoachMessageRenderer: React.FC<TaskCoachMessageRendererProps> =
     );
   }
 
-  // Parse assistant messages for structure
-  const parsedMessage: ParsedCoachMessage = CoachMessageParser.parseMessage(content);
+  // Memoize parsing to prevent re-computation
+  const parsedMessage: ParsedCoachMessage = useMemo(() => {
+    return CoachMessageParser.parseMessage(content);
+  }, [content]);
   
   // Check if this is a structured message that should use the enhanced renderer
-  if (parsedMessage.type === 'breakdown' || parsedMessage.type === 'guidance' || parsedMessage.type === 'progress') {
+  if (parsedMessage.type === 'breakdown' && parsedMessage.subTasks && parsedMessage.subTasks.length > 0) {
+    return (
+      <div className="w-full mx-auto max-w-2xl md:max-w-3xl my-2">
+        <StructuredMessageRenderer
+          parsedMessage={parsedMessage}
+          onSubTaskStart={onSubTaskStart}
+          onSubTaskComplete={onSubTaskComplete}
+          onStartTaskPlan={onStartTaskPlan}
+        />
+      </div>
+    );
+  }
+
+  if (parsedMessage.type === 'guidance' || parsedMessage.type === 'progress') {
     return (
       <div className="w-full mx-auto max-w-2xl md:max-w-3xl my-2">
         <StructuredMessageRenderer
