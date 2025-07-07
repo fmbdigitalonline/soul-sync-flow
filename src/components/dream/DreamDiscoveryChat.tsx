@@ -193,13 +193,13 @@ export const DreamDiscoveryChat: React.FC<DreamDiscoveryChatProps> = ({
 interface DreamMessageRendererProps {
   message: Message;
   onChoiceSelect: (choice: DreamChoice) => void;
-  conversationPhase?: 'discovery' | 'intake' | 'ready_for_decomposition';
+  conversationPhase?: 'blueprint_analysis' | 'suggestion_presentation' | 'exploration' | 'refinement' | 'ready_for_decomposition';
 }
 
 const DreamMessageRenderer: React.FC<DreamMessageRendererProps> = ({
   message,
   onChoiceSelect,
-  conversationPhase = 'discovery'
+  conversationPhase = 'blueprint_analysis'
 }) => {
   const { getTextSize, touchTargetSize, isFoldDevice } = useResponsiveLayout();
   const parsedMessage: ParsedDreamMessage = DreamMessageParser.parseMessage(message.content);
@@ -230,8 +230,14 @@ const DreamMessageRenderer: React.FC<DreamMessageRendererProps> = ({
             </div>
             <span className={`font-medium text-gray-800 ${getTextSize('text-xs')}`}>
               Dream Guide
-              {conversationPhase === 'intake' && (
-                <span className="ml-2 text-soul-purple text-xs">• Gathering Details</span>
+              {conversationPhase === 'suggestion_presentation' && (
+                <span className="ml-2 text-soul-purple text-xs">• Presenting Suggestions</span>
+              )}
+              {conversationPhase === 'exploration' && (
+                <span className="ml-2 text-soul-purple text-xs">• Exploring Dreams</span>
+              )}
+              {conversationPhase === 'refinement' && (
+                <span className="ml-2 text-soul-purple text-xs">• Refining Vision</span>
               )}
             </span>
           </div>
