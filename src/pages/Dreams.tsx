@@ -53,7 +53,16 @@ interface Task {
 }
 
 const Dreams = () => {
-  const { messages: dreamMessages, isLoading: dreamLoading, sendMessage: sendDreamMessage, resetConversation: resetDreamConversation } = useDreamDiscoveryCoach();
+  const { 
+    messages: dreamMessages, 
+    isLoading: dreamLoading, 
+    sendMessage: sendDreamMessage, 
+    resetConversation: resetDreamConversation,
+    conversationPhase,
+    intakeData,
+    discoveryContext,
+    isReadyForDecomposition
+  } = useDreamDiscoveryCoach();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [currentView, setCurrentView] = useState<'create' | 'chat' | 'journey' | 'task-coach' | 'decomposing' | 'success'>('create');
   const [activeTab, setActiveTab] = useState<'journey' | 'tasks' | 'focus' | 'habits'>('journey');
@@ -120,6 +129,22 @@ const Dreams = () => {
   const handleSuccessViewJourney = useCallback(() => {
     setCurrentView('journey');
   }, []);
+
+  const handleDiscoveryComplete = useCallback(() => {
+    if (isReadyForDecomposition && intakeData) {
+      // Set the form data from the discovery conversation
+      setDreamForm({
+        title: intakeData.title,
+        description: intakeData.description || discoveryContext.substring(0, 500) + '...',
+        category: intakeData.category,
+        timeframe: intakeData.timeframe
+      });
+      
+      // Trigger decomposition
+      setCurrentView('decomposing');
+      setIsCreatingDream(true);
+    }
+  }, [isReadyForDecomposition, intakeData, discoveryContext]);
 
   const getBlueprintInsight = useCallback(() => {
     if (!blueprintData) return "Your journey will be personalized once your blueprint is complete";
@@ -252,7 +277,7 @@ const Dreams = () => {
     );
   }
 
-  // Dream Discovery Chat View - uses dream-specific hook with empathetic interface
+  // Dream Discovery Chat View - enhanced with new flow
   if (currentView === 'chat') {
     return (
       <MainLayout>
@@ -285,6 +310,9 @@ const Dreams = () => {
               isLoading={dreamLoading}
               onSendMessage={sendDreamMessage}
               messagesEndRef={messagesEndRef}
+              conversationPhase={conversationPhase}
+              intakeData={intakeData}
+              onReadyForDecomposition={handleDiscoveryComplete}
             />
           </div>
         </div>

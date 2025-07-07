@@ -3,7 +3,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Send, Heart, Sparkles } from 'lucide-react';
+import { Send, Heart, Sparkles, ArrowRight, CheckCircle } from 'lucide-react';
 import { DreamMessageParser, ParsedDreamMessage, DreamChoice } from '@/services/dream-message-parser';
 import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
 
@@ -19,13 +19,24 @@ interface DreamDiscoveryChatProps {
   isLoading: boolean;
   onSendMessage: (message: string) => void;
   messagesEndRef: React.RefObject<HTMLDivElement>;
+  conversationPhase?: 'discovery' | 'intake' | 'ready_for_decomposition';
+  intakeData?: {
+    title: string;
+    description: string;
+    category: string;
+    timeframe: string;
+  };
+  onReadyForDecomposition?: () => void;
 }
 
 export const DreamDiscoveryChat: React.FC<DreamDiscoveryChatProps> = ({
   messages,
   isLoading,
   onSendMessage,
-  messagesEndRef
+  messagesEndRef,
+  conversationPhase = 'discovery',
+  intakeData,
+  onReadyForDecomposition
 }) => {
   const [inputValue, setInputValue] = useState('');
   const { spacing, getTextSize, touchTargetSize, isFoldDevice } = useResponsiveLayout();
@@ -48,8 +59,38 @@ export const DreamDiscoveryChat: React.FC<DreamDiscoveryChatProps> = ({
     }
   };
 
+  // Show decomposition button when ready
+  const showDecompositionButton = conversationPhase === 'ready_for_decomposition' && 
+    intakeData?.title && intakeData?.description;
+
   return (
     <div className="flex flex-col h-full bg-gradient-to-br from-soul-purple/5 via-white to-soul-teal/5">
+      {/* Progress Indicator */}
+      {conversationPhase !== 'discovery' && (
+        <div className={`bg-white/80 backdrop-blur-lg border-b border-gray-100 ${spacing.container} py-2`}>
+          <div className="max-w-2xl mx-auto">
+            <div className="flex items-center gap-2">
+              <div className={`flex items-center gap-1 text-xs ${getTextSize('text-xs')}`}>
+                <CheckCircle className={`h-3 w-3 text-green-500`} />
+                <span className="text-green-600">Discovery Complete</span>
+              </div>
+              {conversationPhase === 'intake' && (
+                <div className={`flex items-center gap-1 text-xs ${getTextSize('text-xs')}`}>
+                  <ArrowRight className="h-3 w-3 text-soul-purple" />
+                  <span className="text-soul-purple">Gathering Details</span>
+                </div>
+              )}
+              {conversationPhase === 'ready_for_decomposition' && (
+                <div className={`flex items-center gap-1 text-xs ${getTextSize('text-xs')}`}>
+                  <ArrowRight className="h-3 w-3 text-green-500" />
+                  <span className="text-green-600">Ready to Create Journey</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Messages Container */}
       <div className={`flex-1 overflow-y-auto ${spacing.container} pb-4`}>
         <div className="max-w-2xl mx-auto space-y-4">
@@ -58,6 +99,7 @@ export const DreamDiscoveryChat: React.FC<DreamDiscoveryChatProps> = ({
               key={message.id}
               message={message}
               onChoiceSelect={handleChoiceSelect}
+              conversationPhase={conversationPhase}
             />
           ))}
           
@@ -67,10 +109,25 @@ export const DreamDiscoveryChat: React.FC<DreamDiscoveryChatProps> = ({
                 <div className="flex items-center gap-3">
                   <Sparkles className="h-5 w-5 text-soul-purple animate-pulse" />
                   <span className={`text-gray-600 ${getTextSize('text-sm')}`}>
-                    Reflecting deeply on your dreams...
+                    {conversationPhase === 'discovery' ? 'Reflecting deeply on your dreams...' : 
+                     conversationPhase === 'intake' ? 'Preparing to bring your dream to life...' :
+                     'Creating your personalized journey...'}
                   </span>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Ready for Decomposition Button */}
+          {showDecompositionButton && !isLoading && (
+            <div className="flex justify-center py-6">
+              <Button
+                onClick={onReadyForDecomposition}
+                className={`bg-gradient-to-r from-soul-purple to-soul-teal hover:shadow-lg text-white font-semibold rounded-2xl px-8 py-4 transition-all duration-300 ${getTextSize('text-sm')} ${touchTargetSize}`}
+              >
+                <Sparkles className={`mr-2 ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
+                Create My Dream Journey
+              </Button>
             </div>
           )}
           
@@ -87,14 +144,18 @@ export const DreamDiscoveryChat: React.FC<DreamDiscoveryChatProps> = ({
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Share what's in your heart..."
+                placeholder={
+                  conversationPhase === 'discovery' ? "Share what's in your heart..." :
+                  conversationPhase === 'intake' ? "Tell me more..." :
+                  "Any final thoughts?"
+                }
                 className={`border-soul-purple/20 focus:border-soul-purple focus:ring-soul-purple/20 rounded-2xl ${getTextSize('text-sm')} ${touchTargetSize}`}
-                disabled={isLoading}
+                disabled={isLoading || showDecompositionButton}
               />
             </div>
             <Button
               onClick={handleSendMessage}
-              disabled={!inputValue.trim() || isLoading}
+              disabled={!inputValue.trim() || isLoading || showDecompositionButton}
               className={`bg-gradient-to-r from-soul-purple to-soul-teal hover:shadow-lg transition-all duration-300 rounded-2xl ${touchTargetSize}`}
             >
               <Send className={`${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
@@ -109,11 +170,13 @@ export const DreamDiscoveryChat: React.FC<DreamDiscoveryChatProps> = ({
 interface DreamMessageRendererProps {
   message: Message;
   onChoiceSelect: (choice: DreamChoice) => void;
+  conversationPhase?: 'discovery' | 'intake' | 'ready_for_decomposition';
 }
 
 const DreamMessageRenderer: React.FC<DreamMessageRendererProps> = ({
   message,
-  onChoiceSelect
+  onChoiceSelect,
+  conversationPhase = 'discovery'
 }) => {
   const { getTextSize, touchTargetSize, isFoldDevice } = useResponsiveLayout();
   const parsedMessage: ParsedDreamMessage = DreamMessageParser.parseMessage(message.content);
@@ -144,6 +207,9 @@ const DreamMessageRenderer: React.FC<DreamMessageRendererProps> = ({
             </div>
             <span className={`font-medium text-gray-800 ${getTextSize('text-xs')}`}>
               Dream Guide
+              {conversationPhase === 'intake' && (
+                <span className="ml-2 text-soul-purple text-xs">• Gathering Details</span>
+              )}
             </span>
           </div>
           
