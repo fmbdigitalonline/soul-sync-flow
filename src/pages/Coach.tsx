@@ -37,7 +37,6 @@ const Coach = () => {
   const { t } = useLanguage();
   const { hasBlueprint } = useBlueprintCache();
   const { productivityJourney, growthJourney } = useJourneyTracking();
-  const [isPanelOpen, setIsPanelOpen] = useState(false);
 
   // Check authentication status
   useEffect(() => {
@@ -91,6 +90,65 @@ const Coach = () => {
     );
   }
 
+  const chatContent = (
+    <CosmicCard className="h-full">
+      <BlendInterface
+        messages={messages}
+        isLoading={isLoading}
+        onSendMessage={handleSendMessage}
+        personaReady={personaReady}
+        vfpGraphStatus={vfpGraphStatus}
+        onFeedback={recordVFPGraphFeedback}
+      />
+    </CosmicCard>
+  );
+
+  const remindersContent = (
+    <div className="space-y-4 h-full">
+      <ActiveReminders />
+      
+      <CosmicCard className="p-4">
+        <h3 className="font-semibold mb-3 flex items-center">
+          <RotateCcw className="h-4 w-4 mr-2" />
+          Reset Chat
+        </h3>
+        <Button
+          onClick={handleReset}
+          variant="outline"
+          size="sm"
+          className="w-full"
+        >
+          Clear Conversation
+        </Button>
+      </CosmicCard>
+
+      <CosmicCard className="p-4">
+        <h3 className="font-semibold mb-3 flex items-center">
+          <Sparkles className="h-4 w-4 mr-2" />
+          System Status
+        </h3>
+        <div className="space-y-2 text-sm">
+          <div className="flex justify-between">
+            <span>Blueprint:</span>
+            <span className={hasBlueprint ? "text-green-600" : "text-amber-600"}>
+              {hasBlueprint ? "Ready" : "Partial"}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span>Mode:</span>
+            <span className="text-purple-600">Companion</span>
+          </div>
+          {acsEnabled && (
+            <div className="flex justify-between">
+              <span>ACS:</span>
+              <span className="text-blue-600">Active</span>
+            </div>
+          )}
+        </div>
+      </CosmicCard>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
       <div className="container mx-auto py-6 px-4 max-w-6xl">
@@ -107,90 +165,21 @@ const Coach = () => {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-200px)]">
           
           <div className="hidden lg:block lg:col-span-1">
-            <div className="space-y-4 h-full">
-              
-              <ActiveReminders />
-              
-              <CosmicCard className="p-4">
-                <h3 className="font-semibold mb-3 flex items-center">
-                  <RotateCcw className="h-4 w-4 mr-2" />
-                  Reset Chat
-                </h3>
-                <Button
-                  onClick={handleReset}
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                >
-                  Clear Conversation
-                </Button>
-              </CosmicCard>
-
-              <CosmicCard className="p-4">
-                <h3 className="font-semibold mb-3 flex items-center">
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  System Status
-                </h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>Blueprint:</span>
-                    <span className={hasBlueprint ? "text-green-600" : "text-amber-600"}>
-                      {hasBlueprint ? "Ready" : "Partial"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Mode:</span>
-                    <span className="text-purple-600">Companion</span>
-                  </div>
-                  {acsEnabled && (
-                    <div className="flex justify-between">
-                      <span>ACS:</span>
-                      <span className="text-blue-600">Active</span>
-                    </div>
-                  )}
-                </div>
-              </CosmicCard>
-            </div>
+            {remindersContent}
           </div>
 
           <div className="lg:col-span-3">
-            <CosmicCard className="h-full">
-              <BlendInterface
-                messages={messages}
-                isLoading={isLoading}
-                onSendMessage={handleSendMessage}
-                personaReady={personaReady}
-                vfpGraphStatus={vfpGraphStatus}
-                onFeedback={recordVFPGraphFeedback}
-              />
-            </CosmicCard>
+            {chatContent}
           </div>
         </div>
 
-        <MobileTogglePanel 
-          isOpen={isPanelOpen}
-          onToggle={() => setIsPanelOpen(!isPanelOpen)}
-          title="Companion Tools"
-        >
-          <div className="space-y-4">
-            <ActiveReminders />
-            
-            <div className="p-4 bg-white rounded-lg">
-              <h3 className="font-semibold mb-3 flex items-center">
-                <RotateCcw className="h-4 w-4 mr-2" />
-                Reset Chat
-              </h3>
-              <Button
-                onClick={handleReset}
-                variant="outline"
-                size="sm"
-                className="w-full"
-              >
-                Clear Conversation
-              </Button>
-            </div>
-          </div>
-        </MobileTogglePanel>
+        <div className="lg:hidden">
+          <MobileTogglePanel
+            chatContent={chatContent}
+            remindersContent={remindersContent}
+            activeRemindersCount={0}
+          />
+        </div>
       </div>
     </div>
   );
