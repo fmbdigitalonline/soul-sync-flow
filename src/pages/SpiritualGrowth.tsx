@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
@@ -7,25 +6,21 @@ import { Heart, Sparkles, Moon, BookOpen, Calendar, MessageCircle, Compass, Tren
 import { useToast } from "@/hooks/use-toast";
 import { useEnhancedAICoach } from "@/hooks/use-enhanced-ai-coach";
 import { supabase } from "@/integrations/supabase/client";
-import { GuideInterface } from "@/components/coach/GuideInterface";
+import { SpiritualGuideInterface } from "@/components/growth/SpiritualGuideInterface";
 import { MoodTracker } from "@/components/coach/MoodTracker";
 import { ReflectionPrompts } from "@/components/coach/ReflectionPrompts";
 import { InsightJournal } from "@/components/coach/InsightJournal";
 import { WeeklyInsights } from "@/components/coach/WeeklyInsights";
-import { GrowthProgramInterface } from "@/components/growth/GrowthProgramInterface";
-import { ImmediateGrowthInterface } from "@/components/growth/ImmediateGrowthInterface";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
-import { ProgramWeek } from "@/types/growth-program";
 import { useBlueprintData } from "@/hooks/use-blueprint-data";
 
-type ActiveView = 'welcome' | 'immediate_chat' | 'growth_program' | 'coach_chat' | 'tools' | 'mood' | 'reflection' | 'insight' | 'weekly' | null;
+type ActiveView = 'welcome' | 'immediate_chat' | 'growth_program' | 'tools' | 'mood' | 'reflection' | 'insight' | 'weekly' | null;
 
 const SpiritualGrowth = () => {
-  const { messages, isLoading, sendMessage, resetConversation } = useEnhancedAICoach("guide");
+  const { messages, isLoading, sendMessage, resetConversation } = useEnhancedAICoach("guide", "spiritual-growth");
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [activeView, setActiveView] = useState<ActiveView>('welcome');
-  const [selectedWeek, setSelectedWeek] = useState<ProgramWeek | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -126,7 +121,7 @@ const SpiritualGrowth = () => {
     );
   }
 
-  // Show immediate chat interface
+  // Show immediate chat interface with unified component
   if (activeView === 'immediate_chat') {
     return (
       <MainLayout>
@@ -151,25 +146,15 @@ const SpiritualGrowth = () => {
               <div className="w-20" />
             </div>
 
-            {/* Chat Interface Container */}
-            <CosmicCard className="w-full">
-              {messages.length === 0 ? (
-                <ImmediateGrowthInterface
-                  onSendMessage={sendMessage}
-                  messages={messages}
-                  isLoading={isLoading}
-                  domain="spiritual-growth"
-                  userDisplayName={getUserDisplayName()}
-                  coreTraits={getCoreTraits()}
-                />
-              ) : (
-                <GuideInterface
-                  messages={messages}
-                  isLoading={isLoading}
-                  onSendMessage={sendMessage}
-                  messagesEndRef={messagesEndRef}
-                />
-              )}
+            {/* Unified Chat Interface Container */}
+            <CosmicCard className="w-full h-[calc(100vh-200px)]">
+              <SpiritualGuideInterface
+                messages={messages}
+                isLoading={isLoading}
+                onSendMessage={sendMessage}
+                userDisplayName={getUserDisplayName()}
+                coreTraits={getCoreTraits()}
+              />
             </CosmicCard>
           </div>
         </div>
@@ -177,12 +162,12 @@ const SpiritualGrowth = () => {
     );
   }
 
-  // Show full Growth Program Interface
+  // Show Coming Soon for Growth Program
   if (activeView === 'growth_program') {
     return (
       <MainLayout>
         <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
-          <div className="container mx-auto py-6 px-4 max-w-7xl">
+          <div className="container mx-auto py-6 px-4 max-w-4xl">
             <div className="mb-6">
               <Button 
                 variant="outline" 
@@ -194,45 +179,21 @@ const SpiritualGrowth = () => {
               </Button>
             </div>
             
-            <GrowthProgramInterface onWeekSelect={setSelectedWeek} />
+            <CosmicCard className="text-center p-12">
+              <div className="w-16 h-16 mx-auto bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mb-6">
+                <TrendingUp className="h-8 w-8 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Structured Program</h2>
+              <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                We're redesigning this experience to make it even more powerful and intuitive. 
+                In the meantime, enjoy the Heart-Centered Guidance and Spiritual Tools!
+              </p>
+              <div className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 px-4 py-2 rounded-full">
+                <Sparkles className="h-4 w-4" />
+                <span className="font-medium">Coming Soon</span>
+              </div>
+            </CosmicCard>
           </div>
-        </div>
-      </MainLayout>
-    );
-  }
-
-  if (activeView === 'coach_chat') {
-    return (
-      <MainLayout>
-        <div className="flex flex-col h-[calc(100vh-5rem)] w-full p-4">
-          <div className="mb-4">
-            <Button 
-              variant="outline" 
-              onClick={() => setActiveView('welcome')}
-              className="mb-2"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Growth Coach
-            </Button>
-          </div>
-
-          <CosmicCard className="p-4 h-full flex flex-col">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium flex items-center">
-                <Heart className="h-4 w-4 mr-2 text-soul-purple" />
-                Growth Coach - Step by Step Guidance
-              </h3>
-            </div>
-            
-            <div className="flex-1">
-              <GuideInterface
-                messages={messages}
-                isLoading={isLoading}
-                onSendMessage={sendMessage}
-                messagesEndRef={messagesEndRef}
-              />
-            </div>
-          </CosmicCard>
         </div>
       </MainLayout>
     );
@@ -408,7 +369,7 @@ const SpiritualGrowth = () => {
               </div>
             </CosmicCard>
 
-            {/* Growth Program Option */}
+            {/* Growth Program Option - Coming Soon */}
             <CosmicCard className="group hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1" onClick={() => setActiveView('growth_program')}>
               <div className="flex flex-col items-center text-center space-y-4">
                 <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -419,6 +380,9 @@ const SpiritualGrowth = () => {
                   <p className="text-gray-600 text-sm leading-relaxed">
                     Follow a comprehensive 12-week journey designed for deep spiritual transformation and growth.
                   </p>
+                </div>
+                <div className="text-xs text-indigo-600 font-medium bg-indigo-50 px-3 py-1 rounded-full">
+                  🔄 Coming Soon
                 </div>
               </div>
             </CosmicCard>
