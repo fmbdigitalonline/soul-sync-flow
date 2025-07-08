@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Heart, Brain, Sparkles, Settings } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProgramAwareCoach } from '@/hooks/use-program-aware-coach';
-import { useBlueprint } from '@/hooks/use-blueprint';
+import { useBlueprintData } from '@/hooks/use-blueprint-data';
 import { SpiritualGuideInterface } from '@/components/growth/SpiritualGuideInterface';
 import { ImmediateGrowthInterface } from '@/components/growth/ImmediateGrowthInterface';
 import { HACSLiveDemonstration } from '@/components/growth/HACSLiveDemonstration';
@@ -15,7 +15,7 @@ import { HACSLiveDemonstration } from '@/components/growth/HACSLiveDemonstration
 const SpiritualGrowth: React.FC = () => {
   const [activeTab, setActiveTab] = useState('guide');
   const { user } = useAuth();
-  const { blueprint } = useBlueprint();
+  const { blueprint } = useBlueprintData();
   
   const {
     messages,
@@ -52,7 +52,7 @@ const SpiritualGrowth: React.FC = () => {
 
   useEffect(() => {
     if (user && messages.length === 0 && activeTab === 'guide') {
-      initializeBeliefDrilling('spiritual_growth', 'spiritual-growth');
+      initializeBeliefDrilling('personal_growth', 'spiritual-growth');
     }
   }, [user, messages.length, activeTab, initializeBeliefDrilling]);
 
