@@ -12,13 +12,11 @@ import { ReflectionPrompts } from "@/components/coach/ReflectionPrompts";
 import { InsightJournal } from "@/components/coach/InsightJournal";
 import { WeeklyInsights } from "@/components/coach/WeeklyInsights";
 import { GrowthProgramInterface } from "@/components/growth/GrowthProgramInterface";
-import { GrowthCoachWelcome } from "@/components/growth/GrowthCoachWelcome";
 import { ImmediateGrowthInterface } from "@/components/growth/ImmediateGrowthInterface";
 import { growthProgramOrchestrator, OrchestrationResult } from "@/services/growth-program-orchestrator";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 import { ProgramWeek } from "@/types/growth-program";
-import { GrowthProgramOnboardingModal } from "@/components/growth/onboarding/GrowthProgramOnboardingModal";
 import { useBlueprintData } from "@/hooks/use-blueprint-data";
 
 type ActiveView = 'welcome' | 'immediate_chat' | 'growth_program' | 'coach_chat' | 'tools' | 'mood' | 'reflection' | 'insight' | 'weekly' | null;
@@ -34,7 +32,6 @@ const SpiritualGrowth = () => {
   const { toast } = useToast();
   const { t } = useLanguage();
   const { blueprintData } = useBlueprintData();
-  const [showOnboardingModal, setShowOnboardingModal] = useState(false);
   
   const { growthJourney, addMoodEntry, addReflectionEntry, addInsightEntry } = useJourneyTracking();
 
@@ -166,52 +163,24 @@ const SpiritualGrowth = () => {
     );
   }
 
+  // Show full Growth Program Interface
   if (activeView === 'growth_program') {
     return (
       <MainLayout>
-        <div className="flex flex-col h-[calc(100vh-5rem)] w-full p-4">
-          <div className="mb-6">
-            <Button 
-              variant="outline" 
-              onClick={() => setActiveView('welcome')}
-              className="mb-4"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Growth Coach
-            </Button>
+        <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
+          <div className="container mx-auto py-6 px-4 max-w-7xl">
+            <div className="mb-6">
+              <Button 
+                variant="outline" 
+                onClick={() => setActiveView('welcome')}
+                className="mb-4"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Growth Coach
+              </Button>
+            </div>
             
-            <CosmicCard>
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h2 className="text-2xl font-bold capitalize">
-                      Growth Program
-                    </h2>
-                    <p className="text-muted-foreground mt-2">Follow a structured path for spiritual growth</p>
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-lg font-semibold mb-3">Key Activities This Week</h3>
-                    <div className="space-y-2">
-                      <div>
-                        <span>Activity 1</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-lg font-semibold mb-3">Tools Available</h3>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <span>Tool 1</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CosmicCard>
+            <GrowthProgramInterface onWeekSelect={setSelectedWeek} />
           </div>
         </div>
       </MainLayout>
