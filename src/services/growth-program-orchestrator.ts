@@ -79,7 +79,7 @@ class GrowthProgramOrchestrator {
 
   private async loadEnhancedContext(
     basicContext: BasicContext,
-    blueprintData?: BlueprintData,
+    blueprintData: BlueprintData | undefined,
     domain: string = 'spiritual-growth'
   ): Promise<EnhancedContext> {
     const userId = basicContext.userId;
