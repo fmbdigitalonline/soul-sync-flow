@@ -440,6 +440,7 @@ Make every interaction feel personally crafted and meaningful.`,
   private async callOpenAI(params: any): Promise<any> {
     try {
       console.log('🤖 Calling OpenAI via Edge Function...');
+      console.log('📤 Request params:', JSON.stringify(params, null, 2));
       
       const { data, error } = await supabase.functions.invoke('openai-agent', {
         body: {
@@ -450,13 +451,27 @@ Make every interaction feel personally crafted and meaningful.`,
         }
       });
 
+      console.log('📥 Edge Function response - data:', JSON.stringify(data, null, 2));
+      console.log('📥 Edge Function response - error:', error);
+
       if (error) {
         console.error('❌ Edge Function error:', error);
         throw new Error(`Agent API error: ${error.message}`);
       }
 
-      if (!data?.content) {
+      if (!data) {
+        console.error('❌ No data returned from Edge Function');
+        throw new Error('No data returned from Edge Function');
+      }
+
+      if (!data.content) {
+        console.error('❌ No content in response data:', data);
         throw new Error('No content returned from agent');
+      }
+
+      if (typeof data.content !== 'string' || data.content.trim() === '') {
+        console.error('❌ Invalid content format:', typeof data.content, 'length:', data.content?.length);
+        throw new Error('Invalid or empty content returned from agent');
       }
 
       // Format response to match expected structure
@@ -508,6 +523,35 @@ Make every interaction feel personally crafted and meaningful.`,
       timeline: 'weekly',
       personalization_level: 'high'
     };
+  }
+
+  // Test method for immediate debugging
+  async testSimpleCall(): Promise<string> {
+    try {
+      console.log('🧪 Testing simple OpenAI call...');
+      
+      const result = await this.callOpenAI({
+        model: 'gpt-4o',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a helpful assistant. Respond with exactly one short sentence.'
+          },
+          {
+            role: 'user',
+            content: 'Say hello and confirm you are working.'
+          }
+        ],
+        temperature: 0.3
+      });
+
+      console.log('🧪 Test call result:', result);
+      return result.choices[0].message.content || 'No content';
+
+    } catch (error) {
+      console.error('🧪 Test call failed:', error);
+      throw error;
+    }
   }
 }
 
