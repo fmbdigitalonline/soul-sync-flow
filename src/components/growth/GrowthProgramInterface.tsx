@@ -13,6 +13,7 @@ import { WeekDetailView } from './WeekDetailView';
 import { useToast } from '@/hooks/use-toast';
 import { useProgramAwareCoach } from '@/hooks/use-program-aware-coach';
 import { GuideInterface } from '@/components/coach/GuideInterface';
+import { supabase } from '@/integrations/supabase/client';
 
 interface GrowthProgramInterfaceProps {
   onWeekSelect?: (week: ProgramWeek) => void;
@@ -28,12 +29,38 @@ export const GrowthProgramInterface: React.FC<GrowthProgramInterfaceProps> = ({
   const [showGuide, setShowGuide] = useState(true); // Start with guide visible
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [apiStatus, setApiStatus] = useState<'checking' | 'ready' | 'error'>('checking');
   const { user } = useAuth();
   const { blueprintData } = useBlueprintCache();
   const { toast } = useToast();
   
   // Program-aware coach for intelligent guidance
   const { messages, isLoading: coachLoading, sendMessage, resetConversation, initializeConversation } = useProgramAwareCoach();
+
+  // Check OpenAI API status on mount
+  useEffect(() => {
+    const checkAPIStatus = async () => {
+      try {
+        console.log('🔍 Checking OpenAI API status...');
+        const { data, error } = await supabase.functions.invoke('openai-embeddings', {
+          body: { query: 'test connection' }
+        });
+        
+        if (error) {
+          console.error('❌ API Status Check Failed:', error);
+          setApiStatus('error');
+        } else {
+          console.log('✅ OpenAI API is working correctly');
+          setApiStatus('ready');
+        }
+      } catch (error) {
+        console.error('❌ API Status Check Error:', error);
+        setApiStatus('error');
+      }
+    };
+
+    checkAPIStatus();
+  }, []);
 
   useEffect(() => {
     loadCurrentProgram();

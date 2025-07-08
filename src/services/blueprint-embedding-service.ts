@@ -158,28 +158,25 @@ export class BlueprintEmbeddingService {
 
     for (const chunk of chunks) {
       try {
-        const response = await fetch(`${this.baseURL}/embeddings`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            model: 'text-embedding-3-small',
-            input: chunk.content,
-            encoding_format: 'float'
-          })
+        console.log('🔧 Generating embedding for chunk:', chunk.type);
+        
+        const { data, error } = await supabase.functions.invoke('openai-embeddings', {
+          body: { query: chunk.content }
         });
 
-        if (!response.ok) {
-          throw new Error(`Embedding API error: ${response.statusText}`);
+        if (error) {
+          console.error(`❌ Edge Function error for chunk ${chunk.type}:`, error);
+          continue; // Skip this chunk but continue with others
         }
 
-        const data = await response.json();
+        if (!data?.embedding) {
+          console.error(`❌ No embedding returned for chunk: ${chunk.type}`);
+          continue;
+        }
         
         embeddedChunks.push({
           text: chunk.content,
-          embedding: data.data[0].embedding,
+          embedding: data.embedding,
           metadata: {
             ...chunk.metadata,
             type: chunk.type,
@@ -187,12 +184,15 @@ export class BlueprintEmbeddingService {
           }
         });
 
+        console.log('✅ Successfully embedded chunk:', chunk.type);
+
       } catch (error) {
         console.error(`❌ Failed to embed chunk: ${chunk.type}`, error);
         // Continue with other chunks even if one fails
       }
     }
 
+    console.log(`✅ Generated embeddings for ${embeddedChunks.length}/${chunks.length} chunks`);
     return embeddedChunks;
   }
 
@@ -288,25 +288,28 @@ export class BlueprintEmbeddingService {
 
   // Utility Functions
   private async generateQueryEmbedding(query: string): Promise<number[]> {
-    const response = await fetch(`${this.baseURL}/embeddings`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'text-embedding-3-small',
-        input: query,
-        encoding_format: 'float'
-      })
-    });
+    try {
+      console.log('🔧 Generating query embedding via Edge Function...');
+      
+      const { data, error } = await supabase.functions.invoke('openai-embeddings', {
+        body: { query }
+      });
 
-    if (!response.ok) {
-      throw new Error(`Query embedding failed: ${response.statusText}`);
+      if (error) {
+        console.error('❌ Edge Function error:', error);
+        throw new Error(`Embedding generation failed: ${error.message}`);
+      }
+
+      if (!data?.embedding) {
+        throw new Error('No embedding returned from Edge Function');
+      }
+
+      console.log('✅ Query embedding generated successfully, length:', data.embedding.length);
+      return data.embedding;
+    } catch (error) {
+      console.error('❌ Query embedding failed:', error);
+      throw new Error(`Query embedding failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-
-    const data = await response.json();
-    return data.data[0].embedding;
   }
 
   private cosineSimilarity(a: number[], b: number[]): number {

@@ -5,6 +5,7 @@
 
 import { LayeredBlueprint } from '@/types/personality-modules';
 import { LifeDomain } from '@/types/growth-program';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AgentRole {
   name: string;
@@ -435,25 +436,43 @@ Make every interaction feel personally crafted and meaningful.`,
     ]);
   }
 
-  // OpenAI API Integration
+  // OpenAI API Integration via Edge Function
   private async callOpenAI(params: any): Promise<any> {
-    const response = await fetch(`${this.baseURL}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        ...params,
-        max_tokens: 4000
-      })
-    });
+    try {
+      console.log('🤖 Calling OpenAI via Edge Function...');
+      
+      const { data, error } = await supabase.functions.invoke('openai-agent', {
+        body: {
+          messages: params.messages,
+          model: params.model || 'gpt-4o',
+          temperature: params.temperature || 0.7,
+          tools: params.tools
+        }
+      });
 
-    if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.statusText}`);
+      if (error) {
+        console.error('❌ Edge Function error:', error);
+        throw new Error(`Agent API error: ${error.message}`);
+      }
+
+      if (!data?.content) {
+        throw new Error('No content returned from agent');
+      }
+
+      // Format response to match expected structure
+      return {
+        choices: [{
+          message: {
+            content: data.content
+          }
+        }],
+        usage: data.usage,
+        model: data.model
+      };
+    } catch (error) {
+      console.error('❌ OpenAI Agent call failed:', error);
+      throw error;
     }
-
-    return response.json();
   }
 
   // Parsing Utilities
