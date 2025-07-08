@@ -8,6 +8,9 @@ import { LayeredBlueprint, AgentMode } from "@/types/personality-modules";
 import { pieService } from "./pie-service";
 import { PIEDataPoint } from "@/types/pie-types";
 import { costMonitoringService } from "./cost-monitoring-service";
+import { neuroIntentKernel } from "./hermetic-core/neuro-intent-kernel";
+import { hacsMonitorService } from "./hacs-monitor-service";
+import { hacsFallbackService } from "./hacs-fallback-service";
 
 export interface UnifiedBrainResponse {
   response: string;
@@ -33,6 +36,9 @@ class UnifiedBrainService {
     
     this.userId = userId;
     
+    // Initialize HACS monitoring first
+    hacsMonitorService.initialize();
+    
     // Initialize all brain components
     enhancedPersonalityEngine.setUserId(userId);
     
@@ -42,7 +48,7 @@ class UnifiedBrainService {
     // Load user's blueprint for personality consistency
     await this.loadUserBlueprint();
     
-    console.log("✅ Unified Brain Service initialized with PIE integration");
+    console.log("✅ Unified Brain Service initialized with PIE integration and HACS monitoring");
   }
 
   private async loadUserBlueprint() {
@@ -87,6 +93,15 @@ class UnifiedBrainService {
 
     const startTime = performance.now();
     console.log(`🧠 Processing message through unified brain with layered models - Mode: ${agentMode}, State: ${currentState}`);
+
+    // Check if HACS should be used or fallback to legacy pipeline
+    if (hacsMonitorService.shouldUseFallback()) {
+      console.log('🛡️ HACS fallback triggered - using legacy pipeline');
+      return this.processMessageWithFallback(message, sessionId, agentMode, currentState);
+    }
+
+    // HACS Step 0: NIK - Intent Analysis and Persistence
+    await this.processIntentWithNIK(message, sessionId, agentMode);
 
     // PIE: Collect user data from conversation
     await this.collectPIEDataFromMessage(message, agentMode);
@@ -356,6 +371,141 @@ class UnifiedBrainService {
     if (content.includes('help') || content.includes('stuck')) baseScore += 1.5;
     
     return Math.min(baseScore, 10.0);
+  }
+
+  // HACS NIK Integration - Process intent with Neuro-Intent Kernel
+  private async processIntentWithNIK(message: string, sessionId: string, agentMode: AgentMode): Promise<void> {
+    try {
+      console.log('🧠 NIK: Processing intent for message');
+      
+      // Analyze message for intent
+      const detectedIntent = this.analyzeMessageIntent(message, agentMode);
+      
+      if (detectedIntent) {
+        // Set intent in NIK with context
+        const context = {
+          sessionId,
+          agentMode,
+          timestamp: Date.now(),
+          messageLength: message.length,
+          userId: this.userId
+        };
+        
+        neuroIntentKernel.setIntent(detectedIntent, context, sessionId, agentMode);
+        console.log(`🧠 NIK: Intent set - "${detectedIntent}" for ${agentMode} mode`);
+      } else {
+        // Check if there's an existing intent to maintain
+        const currentIntent = neuroIntentKernel.getCurrentIntent();
+        if (currentIntent && currentIntent.sessionId === sessionId) {
+          console.log(`🧠 NIK: Maintaining existing intent - "${currentIntent.primary}"`);
+        }
+      }
+    } catch (error) {
+      console.error('🧠 NIK: Error processing intent:', error);
+      // NIK failure should not break the flow - continue without intent tracking
+    }
+  }
+
+  // Analyze message to detect user intent
+  private analyzeMessageIntent(message: string, agentMode: AgentMode): string | null {
+    const lowerMessage = message.toLowerCase();
+    
+    // Goal-oriented intents
+    if (lowerMessage.includes('goal') || lowerMessage.includes('achieve') || lowerMessage.includes('want to')) {
+      return 'goal_setting';
+    }
+    
+    // Problem-solving intents  
+    if (lowerMessage.includes('problem') || lowerMessage.includes('issue') || lowerMessage.includes('stuck')) {
+      return 'problem_solving';
+    }
+    
+    // Learning intents
+    if (lowerMessage.includes('learn') || lowerMessage.includes('understand') || lowerMessage.includes('explain')) {
+      return 'learning';
+    }
+    
+    // Planning intents
+    if (lowerMessage.includes('plan') || lowerMessage.includes('strategy') || lowerMessage.includes('next steps')) {
+      return 'planning';
+    }
+    
+    // Reflection intents
+    if (lowerMessage.includes('feel') || lowerMessage.includes('think') || lowerMessage.includes('reflection')) {
+      return 'reflection';
+    }
+    
+    // Support intents
+    if (lowerMessage.includes('help') || lowerMessage.includes('support') || lowerMessage.includes('guidance')) {
+      return 'support_seeking';
+    }
+    
+    // Mode-specific intents
+    if (agentMode === 'coach') {
+      if (lowerMessage.includes('task') || lowerMessage.includes('work') || lowerMessage.includes('project')) {
+        return 'task_management';
+      }
+    }
+    
+    if (agentMode === 'guide') {
+      if (lowerMessage.includes('growth') || lowerMessage.includes('improve') || lowerMessage.includes('better')) {
+        return 'personal_growth';
+      }
+    }
+    
+    // Return null if no clear intent detected
+    return null;
+  }
+
+  // HACS Fallback - Process message using fallback mechanisms
+  private async processMessageWithFallback(
+    message: string,
+    sessionId: string,
+    agentMode: AgentMode,
+    currentState: DialogueState
+  ): Promise<UnifiedBrainResponse> {
+    try {
+      const fallbackContext = {
+        message,
+        sessionId,
+        userId: this.userId!,
+        agentMode,
+        retryCount: 0
+      };
+      
+      const fallbackResult = await hacsFallbackService.executeFallback(fallbackContext);
+      
+      return {
+        response: fallbackResult.response,
+        newState: currentState,
+        memoryStored: false,
+        personalityApplied: false,
+        interventionApplied: false,
+        continuityMaintained: false,
+        brainMetrics: {
+          memoryLatency: 0,
+          personalityCoherence: 0,
+          adaptiveResponse: fallbackResult.usedFallback
+        }
+      };
+    } catch (error) {
+      console.error('🛡️ Fallback processing failed:', error);
+      
+      // Ultimate fallback
+      return {
+        response: "I'm experiencing some technical difficulties. Please try again in a moment.",
+        newState: currentState,
+        memoryStored: false,
+        personalityApplied: false,
+        interventionApplied: false,
+        continuityMaintained: false,
+        brainMetrics: {
+          memoryLatency: 0,
+          personalityCoherence: 0,
+          adaptiveResponse: false
+        }
+      };
+    }
   }
 
   private calculatePersonalityCoherence(): number {
