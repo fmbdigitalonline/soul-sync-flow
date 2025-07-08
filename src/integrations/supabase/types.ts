@@ -689,6 +689,7 @@ export type Database = {
       growth_programs: {
         Row: {
           actual_completion: string | null
+          adaptation_history: Json
           blueprint_params: Json
           created_at: string
           current_week: number
@@ -706,6 +707,7 @@ export type Database = {
         }
         Insert: {
           actual_completion?: string | null
+          adaptation_history?: Json
           blueprint_params?: Json
           created_at?: string
           current_week?: number
@@ -723,6 +725,7 @@ export type Database = {
         }
         Update: {
           actual_completion?: string | null
+          adaptation_history?: Json
           blueprint_params?: Json
           created_at?: string
           current_week?: number
