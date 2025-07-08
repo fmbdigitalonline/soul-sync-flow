@@ -54,7 +54,8 @@ class GrowthProgramService {
       status: data.status as any,
       blueprint_params: data.blueprint_params as unknown as BlueprintParams,
       progress_metrics: data.progress_metrics as unknown as any,
-      session_schedule: data.session_schedule as unknown as SessionSchedule
+      session_schedule: data.session_schedule as unknown as SessionSchedule,
+      adaptation_history: data.adaptation_history as unknown as any[]
     } as GrowthProgram;
   }
 
@@ -82,7 +83,8 @@ class GrowthProgramService {
       status: data.status as any,
       blueprint_params: data.blueprint_params as unknown as BlueprintParams,
       progress_metrics: data.progress_metrics as unknown as any,
-      session_schedule: data.session_schedule as unknown as SessionSchedule
+      session_schedule: data.session_schedule as unknown as SessionSchedule,
+      adaptation_history: data.adaptation_history as unknown as any[]
     } as GrowthProgram;
   }
 

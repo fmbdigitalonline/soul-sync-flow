@@ -400,13 +400,44 @@ export class AdaptiveGrowthService {
 
   // Storage and Retrieval
   private async storeAdaptiveProgram(program: AdaptiveGrowthProgram): Promise<void> {
+    // Extract base GrowthProgram properties and handle extended properties
+    const {
+      feedback_signals,
+      blueprint_alignment_score,
+      evolution_trajectory,
+      ...baseProgram
+    } = program;
+
+    // Embed extended properties in appropriate JSON fields
+    const enhancedProgressMetrics = {
+      ...program.progress_metrics,
+      blueprint_alignment_score
+    };
+
+    const enhancedAdaptationHistory = [
+      ...program.adaptation_history,
+      ...(feedback_signals.length > 0 ? [{
+        timestamp: new Date().toISOString(),
+        adaptation_type: 'feedback_signals',
+        changes_made: { feedback_signals },
+        agent_reasoning: 'Stored feedback signals'
+      }] : []),
+      ...(evolution_trajectory && Object.keys(evolution_trajectory).length > 0 ? [{
+        timestamp: new Date().toISOString(),
+        adaptation_type: 'evolution_trajectory',
+        changes_made: { evolution_trajectory },
+        agent_reasoning: 'Stored evolution trajectory'
+      }] : [])
+    ];
+
     const { error } = await supabase
       .from('growth_programs')
       .insert({
-        ...program,
-        blueprint_params: program.blueprint_params as any,
-        progress_metrics: program.progress_metrics as any,
-        session_schedule: program.session_schedule as any
+        ...baseProgram,
+        blueprint_params: baseProgram.blueprint_params as any,
+        progress_metrics: enhancedProgressMetrics as any,
+        session_schedule: baseProgram.session_schedule as any,
+        adaptation_history: enhancedAdaptationHistory as any
       });
 
     if (error) throw error;
@@ -422,6 +453,23 @@ export class AdaptiveGrowthService {
     if (error) throw error;
     if (!data) return null;
     
+    // Reconstruct extended properties from JSON fields
+    const progressMetrics = data.progress_metrics as unknown as ProgressMetrics & { blueprint_alignment_score?: number };
+    const adaptationHistory = data.adaptation_history as any[] || [];
+    
+    // Extract feedback signals and evolution trajectory from adaptation history
+    const feedbackSignalsEntry = adaptationHistory.find(entry => entry.adaptation_type === 'feedback_signals');
+    const evolutionTrajectoryEntry = adaptationHistory.find(entry => entry.adaptation_type === 'evolution_trajectory');
+    
+    const feedback_signals = feedbackSignalsEntry?.changes_made?.feedback_signals || [];
+    const evolution_trajectory = evolutionTrajectoryEntry?.changes_made?.evolution_trajectory || {};
+    const blueprint_alignment_score = progressMetrics.blueprint_alignment_score || 0.8;
+    
+    // Filter out stored extended properties from adaptation history
+    const cleanedAdaptationHistory = adaptationHistory.filter(entry => 
+      !['feedback_signals', 'evolution_trajectory'].includes(entry.adaptation_type)
+    );
+    
     // Transform database record to adaptive program
     return {
       ...data,
@@ -431,10 +479,10 @@ export class AdaptiveGrowthService {
       blueprint_params: data.blueprint_params as unknown as BlueprintParams,
       progress_metrics: data.progress_metrics as unknown as ProgressMetrics,
       session_schedule: data.session_schedule as unknown as SessionSchedule,
-      adaptation_history: [],
-      feedback_signals: [],
-      blueprint_alignment_score: 0.8,
-      evolution_trajectory: {}
+      adaptation_history: cleanedAdaptationHistory,
+      feedback_signals,
+      blueprint_alignment_score,
+      evolution_trajectory
     };
   }
 
