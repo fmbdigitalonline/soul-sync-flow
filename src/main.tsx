@@ -1,7 +1,7 @@
 
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { createBrowserRouter, RouterProvider, Outlet } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Outlet, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "./index.css";
 
@@ -27,7 +27,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./contexts/AuthContext";
 import { BlueprintCacheProvider } from "./contexts/BlueprintCacheContext";
 import { SoulOrbProvider } from "./contexts/SoulOrbContext";
-import { LanguageProvider } from "./contexts/LanguageContext";
+import { LanguageProvider } from "./contexts/LanguageProvider";
 import { ModeProvider } from "./contexts/ModeContext";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 
@@ -73,7 +73,8 @@ const router = createBrowserRouter([
       { path: "onboarding", element: <ProtectedRoute><Onboarding /></ProtectedRoute> },
       { path: "dashboard", element: <ProtectedRoute><Dashboard /></ProtectedRoute> },
       { path: "blueprint", element: <ProtectedRoute><Blueprint /></ProtectedRoute> },
-      { path: "coach", element: <ProtectedRoute><Coach /></ProtectedRoute> },
+      { path: "companion", element: <ProtectedRoute><Coach /></ProtectedRoute> },
+      { path: "coach", element: <Navigate to="/companion" replace /> },
       { path: "tasks", element: <ProtectedRoute><Tasks /></ProtectedRoute> },
       { path: "dreams", element: <ProtectedRoute><Dreams /></ProtectedRoute> },
       { path: "spiritual-growth", element: <ProtectedRoute><SpiritualGrowth /></ProtectedRoute> },
