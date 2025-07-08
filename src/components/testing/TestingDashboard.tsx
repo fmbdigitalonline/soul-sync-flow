@@ -21,11 +21,26 @@ import { VFPGraphTester } from '../personality/VFPGraphTester';
 import { VFPGraphPatentTester } from './VFPGraphPatentTester';
 import ACSPatentTestSuite from './ACSPatentTestSuite';
 
+// Import new ACS integration components
+import { ACSIntegrationTestSuite } from './ACSIntegrationTestSuite';
+import { ACSPerformanceOptimizer } from './ACSPerformanceOptimizer';
+import { ACSDocumentationHub } from './ACSDocumentationHub';
+
 export const TestingDashboard: React.FC = () => {
-  // Set ACS Patent as the default active tab (highest priority)
-  const [activeTab, setActiveTab] = useState('acs-patent');
+  // Set ACS Integration as the default active tab (highest priority)
+  const [activeTab, setActiveTab] = useState('acs-integration');
 
   const testCategories = [
+    {
+      id: 'acs-integration',
+      title: 'ACS Integration Suite',
+      description: 'Comprehensive ACS integration testing, performance optimization, and documentation',
+      icon: Activity,
+      status: 'production',
+      priority: 'critical',
+      testCount: 18,
+      component: ACSIntegrationTestSuite
+    },
     {
       id: 'acs-patent',
       title: 'ACS Patent Validation',
@@ -75,6 +90,26 @@ export const TestingDashboard: React.FC = () => {
       priority: 'medium',
       testCount: 8,
       component: GrowthProgramTestRunner
+    },
+    {
+      id: 'acs-performance',
+      title: 'ACS Performance',
+      description: 'Performance optimization and latency tuning for ACS components',
+      icon: Settings,
+      status: 'production',
+      priority: 'high',
+      testCount: 12,
+      component: ACSPerformanceOptimizer
+    },
+    {
+      id: 'acs-documentation',
+      title: 'ACS Documentation',
+      description: 'Complete documentation hub for ACS architecture and deployment',
+      icon: FileText,
+      status: 'production',
+      priority: 'high',
+      testCount: 8,
+      component: ACSDocumentationHub
     }
   ];
 
@@ -159,14 +194,14 @@ export const TestingDashboard: React.FC = () => {
       </Card>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
         <Card className="border-blue-200 bg-blue-50/30">
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <MessageSquare className="w-5 h-5 text-blue-500" />
+              <Activity className="w-5 h-5 text-blue-500" />
               <div>
-                <p className="text-2xl font-bold text-blue-700">9</p>
-                <p className="text-sm text-blue-600">ACS Claims</p>
+                <p className="text-2xl font-bold text-blue-700">18</p>
+                <p className="text-sm text-blue-600">ACS Integration</p>
               </div>
             </div>
           </CardContent>
@@ -228,7 +263,7 @@ export const TestingDashboard: React.FC = () => {
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-7">
               {testCategories.map((category) => (
                 <TabsTrigger 
                   key={category.id} 
