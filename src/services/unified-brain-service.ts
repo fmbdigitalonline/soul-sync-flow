@@ -13,6 +13,10 @@ import { crossPlaneStateReflector } from "./hermetic-core/cross-plane-state-refl
 import { temporalWaveSynchronizer } from "./hermetic-core/temporal-wave-synchronizer";
 import { hacsMonitorService } from "./hacs-monitor-service";
 import { hacsFallbackService } from "./hacs-fallback-service";
+import { harmonicFrequencyModulationEngine } from "./hermetic-core/harmonic-frequency-modulation-engine";
+import { dualPoleEquilibratorModule } from "./hermetic-core/dual-pole-equilibrator-module";
+import { causalNexusRouter } from "./hermetic-core/causal-nexus-router";
+import { biPrincipleSynthesisCore } from "./hermetic-core/bi-principle-synthesis-core";
 
 export interface UnifiedBrainResponse {
   response: string;
@@ -43,6 +47,9 @@ class UnifiedBrainService {
     
     // Initialize HACS TWS (Temporal Wave Synchronizer)
     this.initializeTWS();
+    
+    // Initialize Phase 3: Flow Orchestration modules
+    this.initializePhase3FlowOrchestration();
     
     // Initialize all brain components
     enhancedPersonalityEngine.setUserId(userId);
@@ -111,6 +118,12 @@ class UnifiedBrainService {
     // HACS Step 1: CPSR - State Synchronization and Reflection
     await this.processCPSRStateSync(message, sessionId, agentMode, currentState);
 
+    // Phase 3 Step 1: HFME - Update processing metrics
+    await this.updateHFMEMetrics(sessionId, agentMode);
+
+    // Phase 3 Step 2: DPEM - Monitor polarity balance
+    await this.monitorDualPoleBalance(message, agentMode);
+
     // PIE: Collect user data from conversation
     await this.collectPIEDataFromMessage(message, agentMode);
 
@@ -128,6 +141,9 @@ class UnifiedBrainService {
     // Step 2: Generate personality-aware system prompt via VFP-Graph (Core Brain layer)
     const systemPrompt = await enhancedPersonalityEngine.generateSystemPrompt(agentMode, message);
     
+    // Phase 3 Step 3: CNR - Route decision through causal logic
+    const causalRoute = await this.routeWithCausalNexus(message, agentMode, sessionId);
+    
     // Step 3: Process through Enhanced AI Coach with layered model selection
     const coachStartTime = performance.now();
     const acsResult = await enhancedAICoachService.sendMessage(
@@ -139,11 +155,26 @@ class UnifiedBrainService {
     );
     const coachLatency = performance.now() - coachStartTime;
 
+    // Phase 3 Step 4: BPSC - Synthesize rational + intuitive outputs
+    let synthesizedResponse = acsResult.response;
+    const synthesisResult = await this.performBiPrincipleSynthesis(
+      acsResult.response,
+      systemPrompt,
+      sessionId,
+      agentMode,
+      message
+    );
+    
+    if (synthesisResult) {
+      synthesizedResponse = synthesisResult.synthesizedOutput;
+      console.log(`🔄 BPSC: Synthesized response using ${synthesisResult.synthesis_method}`);
+    }
+
     // PIE: Enhance response with proactive insights if relevant
-    let finalResponse = acsResult.response;
+    let finalResponse = synthesizedResponse; // Use synthesized response from BPSC
     if (pieInsights.length > 0) {
       finalResponse = await this.enhanceResponseWithPIEInsights(
-        acsResult.response,
+        synthesizedResponse,
         pieInsights,
         agentMode
       );
@@ -687,6 +718,38 @@ class UnifiedBrainService {
     }
   }
 
+  // HACS Phase 3: Flow Orchestration - Initialize all Phase 3 modules
+  private initializePhase3FlowOrchestration(): void {
+    try {
+      console.log('🔄 Phase 3: Initializing Flow Orchestration modules');
+      
+      // Step 3.1: HFME (Harmonic Frequency Modulation Engine)
+      harmonicFrequencyModulationEngine.start();
+      harmonicFrequencyModulationEngine.registerModule('unified_brain', {
+        frequency: 2.0,
+        amplitude: 0.7,
+        phase: 0,
+        load: 0.2,
+        latency: 100,
+        throughput: 1.5
+      });
+      
+      // Step 3.2: DPEM (Dual-Pole Equilibrator Module)
+      dualPoleEquilibratorModule.start();
+      
+      // Step 3.3: CNR (Causal Nexus Router)
+      // CNR is stateless and ready to use
+      
+      // Step 3.4: BPSC (Bi-Principle Synthesis Core)
+      biPrincipleSynthesisCore.start();
+      
+      console.log('✅ Phase 3: Flow Orchestration modules initialized');
+    } catch (error) {
+      console.error('❌ Phase 3: Error initializing Flow Orchestration:', error);
+      // Non-critical error - continue without Phase 3 optimization
+    }
+  }
+
   private calculatePersonalityCoherence(): number {
     // Simple coherence calculation based on blueprint availability
     const blueprintFields = Object.keys(this.currentBlueprint).length;
@@ -742,7 +805,255 @@ class UnifiedBrainService {
     console.log("✅ Agent mode switched with continuity maintained");
   }
 
-  // Enhanced brain health metrics with cost awareness
+  // Phase 3 Step 1: HFME - Update processing metrics
+  private async updateHFMEMetrics(sessionId: string, agentMode: AgentMode): Promise<void> {
+    try {
+      const startTime = performance.now();
+      
+      // Update unified brain module metrics
+      harmonicFrequencyModulationEngine.updateMetrics('unified_brain', {
+        frequency: agentMode === 'coach' ? 2.5 : 2.0, // Higher frequency for task mode
+        amplitude: 0.8,
+        load: 0.3,
+        latency: performance.now() - startTime,
+        throughput: 1.2
+      });
+
+      // Register session-specific module if needed
+      if (!harmonicFrequencyModulationEngine['processMetrics']?.has(sessionId)) {
+        harmonicFrequencyModulationEngine.registerModule(sessionId, {
+          frequency: 1.5,
+          amplitude: 0.6,
+          phase: Math.PI / 4,
+          load: 0.2,
+          latency: 80,
+          throughput: 1.0
+        });
+      }
+
+      console.log(`🎵 HFME: Updated metrics for ${agentMode} session ${sessionId}`);
+    } catch (error) {
+      console.error('🎵 HFME: Error updating metrics:', error);
+    }
+  }
+
+  // Phase 3 Step 2: DPEM - Monitor polarity balance
+  private async monitorDualPoleBalance(message: string, agentMode: AgentMode): Promise<void> {
+    try {
+      // Analyze message for polarity indicators
+      const polarityContext = {
+        mode: agentMode,
+        domain: this.inferMessageDomain(message),
+        urgency: this.calculateMessageUrgency(message),
+        userPreference: this.inferUserPreference(message)
+      };
+
+      // Monitor key dimensions based on message content
+      if (message.toLowerCase().includes('risk') || message.toLowerCase().includes('safe')) {
+        const riskValue = message.toLowerCase().includes('safe') ? -0.5 : 0.5;
+        dualPoleEquilibratorModule.monitorDimension('risk_assessment', riskValue, polarityContext);
+      }
+
+      if (message.toLowerCase().includes('logic') || message.toLowerCase().includes('feel')) {
+        const reasoningValue = message.toLowerCase().includes('logic') ? -0.6 : 0.6;
+        dualPoleEquilibratorModule.monitorDimension('reasoning_style', reasoningValue, polarityContext);
+      }
+
+      // Adjust communication tone based on message formality
+      const formalityScore = this.assessMessageFormality(message);
+      dualPoleEquilibratorModule.monitorDimension('communication_tone', formalityScore, polarityContext);
+
+      console.log(`⚖️ DPEM: Monitored polarity balance for ${agentMode} message`);
+    } catch (error) {
+      console.error('⚖️ DPEM: Error monitoring polarity balance:', error);
+    }
+  }
+
+  // Helper methods for DPEM
+  private inferMessageDomain(message: string): string {
+    const lowerMessage = message.toLowerCase();
+    if (lowerMessage.includes('task') || lowerMessage.includes('work')) return 'productivity';
+    if (lowerMessage.includes('feel') || lowerMessage.includes('emotion')) return 'emotional';
+    if (lowerMessage.includes('plan') || lowerMessage.includes('goal')) return 'planning';
+    return 'general';
+  }
+
+  private calculateMessageUrgency(message: string): number {
+    const urgentWords = ['urgent', 'asap', 'immediate', 'emergency', 'quickly', 'now'];
+    const lowerMessage = message.toLowerCase();
+    const urgentCount = urgentWords.filter(word => lowerMessage.includes(word)).length;
+    return Math.min(urgentCount * 0.3, 1.0);
+  }
+
+  private inferUserPreference(message: string): number {
+    // Simple preference detection - return null if unclear
+    const lowerMessage = message.toLowerCase();
+    if (lowerMessage.includes('prefer') || lowerMessage.includes('like')) {
+      return lowerMessage.includes('formal') ? -0.5 : 0.5;
+    }
+    return 0;
+  }
+
+  private assessMessageFormality(message: string): number {
+    const formalIndicators = ['please', 'would you', 'could you', 'thank you'];
+    const informalIndicators = ['hey', 'yeah', 'cool', 'awesome', 'ok'];
+    
+    const lowerMessage = message.toLowerCase();
+    const formalCount = formalIndicators.filter(word => lowerMessage.includes(word)).length;
+    const informalCount = informalIndicators.filter(word => lowerMessage.includes(word)).length;
+    
+    return (informalCount - formalCount) * 0.3; // Positive = more casual, Negative = more formal
+  }
+
+  // Phase 3 Step 3: CNR - Route decision through causal logic
+  private async routeWithCausalNexus(
+    message: string,
+    agentMode: AgentMode,
+    sessionId: string
+  ): Promise<any> {
+    try {
+      // Analyze message to determine desired outcome
+      const desiredOutcome = this.extractDesiredOutcome(message, agentMode);
+      
+      if (desiredOutcome) {
+        const currentState = {
+          sessionId,
+          agentMode,
+          userId: this.userId,
+          timestamp: Date.now()
+        };
+        
+        const context = [agentMode, 'conversational_mode', 'interactive_mode'];
+        
+        const route = causalNexusRouter.routeDecision(currentState, desiredOutcome, context);
+        
+        if (route) {
+          console.log(`🔗 CNR: Routed decision to ${route.action} for outcome: ${desiredOutcome}`);
+          return route;
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('🔗 CNR: Error routing with causal nexus:', error);
+      return null;
+    }
+  }
+
+  // Helper method to extract desired outcome from message
+  private extractDesiredOutcome(message: string, agentMode: AgentMode): string | null {
+    const lowerMessage = message.toLowerCase();
+    
+    // Goal-oriented outcomes
+    if (lowerMessage.includes('help') || lowerMessage.includes('assist')) {
+      return 'provide_assistance';
+    }
+    if (lowerMessage.includes('explain') || lowerMessage.includes('understand')) {
+      return 'provide_explanation';
+    }
+    if (lowerMessage.includes('plan') || lowerMessage.includes('strategy')) {
+      return 'create_plan';
+    }
+    if (lowerMessage.includes('solve') || lowerMessage.includes('fix')) {
+      return 'solve_problem';
+    }
+    
+    // Mode-specific outcomes
+    if (agentMode === 'coach') {
+      if (lowerMessage.includes('task') || lowerMessage.includes('work')) {
+        return 'manage_task';
+      }
+      if (lowerMessage.includes('focus') || lowerMessage.includes('productivity')) {
+        return 'improve_focus';
+      }
+    }
+    
+    if (agentMode === 'guide') {
+      if (lowerMessage.includes('growth') || lowerMessage.includes('improve')) {
+        return 'facilitate_growth';
+      }
+      if (lowerMessage.includes('insight') || lowerMessage.includes('reflection')) {
+        return 'provide_insight';
+      }
+    }
+    
+    return 'provide_assistance'; // Default outcome
+  }
+
+  // Phase 3 Step 4: BPSC - Synthesize rational + intuitive outputs
+  private async performBiPrincipleSynthesis(
+    rationalOutput: string,
+    intuitivePrompt: string,
+    sessionId: string,
+    agentMode: AgentMode,
+    originalMessage: string
+  ): Promise<any> {
+    try {
+      // Submit rational input (AI response)
+      biPrincipleSynthesisCore.submitRationalInput(
+        sessionId,
+        rationalOutput,
+        0.8, // High confidence in AI response
+        'enhanced_ai_coach',
+        { sessionId, agentMode, messageLength: rationalOutput.length }
+      );
+
+      // Submit intuitive input (personality-enhanced prompt/insight)
+      biPrincipleSynthesisCore.submitIntuitiveInput(
+        sessionId,
+        {
+          personalityPrompt: intuitivePrompt,
+          userMessage: originalMessage,
+          contextualHints: this.generateContextualHints(originalMessage, agentMode)
+        },
+        0.7, // Good confidence in personality insights
+        'enhanced_personality_engine',
+        { sessionId, agentMode, promptLength: intuitivePrompt.length }
+      );
+
+      // Wait for synthesis (with timeout)
+      const synthesisResult = await biPrincipleSynthesisCore.getSynthesis(sessionId, 3000);
+      
+      if (synthesisResult) {
+        console.log(`🔄 BPSC: Synthesis completed with ${synthesisResult.confidence.toFixed(2)} confidence`);
+        return synthesisResult;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('🔄 BPSC: Error performing bi-principle synthesis:', error);
+      return null;
+    }
+  }
+
+  // Generate contextual hints for intuitive processing
+  private generateContextualHints(message: string, agentMode: AgentMode): string[] {
+    const hints: string[] = [];
+    const lowerMessage = message.toLowerCase();
+    
+    // Emotional context hints
+    if (lowerMessage.includes('stressed') || lowerMessage.includes('overwhelmed')) {
+      hints.push('user_experiencing_stress');
+    }
+    if (lowerMessage.includes('excited') || lowerMessage.includes('motivated')) {
+      hints.push('user_feeling_positive');
+    }
+    
+    // Task context hints
+    if (lowerMessage.includes('deadline') || lowerMessage.includes('urgent')) {
+      hints.push('time_pressure');
+    }
+    if (lowerMessage.includes('confused') || lowerMessage.includes('stuck')) {
+      hints.push('clarity_needed');
+    }
+    
+    // Mode-specific hints
+    hints.push(`${agentMode}_mode_active`);
+    
+    return hints;
+  }
+
+  // Enhanced brain health metrics with cost awareness and Phase 3 status
   getBrainHealth(): any {
     const costMetrics = costMonitoringService.getCostMetrics(1); // Last hour
     
@@ -754,6 +1065,13 @@ class UnifiedBrainService {
       unifiedBrainCoherence: this.calculatePersonalityCoherence(),
       sessionMemorySize: this.sessionMemory.size,
       pie: pieService.getPIEHealth(),
+      // Phase 3 Flow Orchestration Status
+      phase3Status: {
+        hfme: harmonicFrequencyModulationEngine.getHarmonyStatus(),
+        dpem: dualPoleEquilibratorModule.getStatus(),
+        cnr: causalNexusRouter.getRoutingStats(),
+        bpsc: biPrincipleSynthesisCore.getSynthesisStats()
+      },
       costMetrics: {
         hourlySpend: costMetrics.totalCost,
         efficiency: costMetrics.efficiency,
