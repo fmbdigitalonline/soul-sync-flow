@@ -1,4 +1,3 @@
-
 import { BlueprintData } from '@/services/blueprint-service';
 import { programAwareCoachService } from '@/services/program-aware-coach-service';
 import { dreamActivityLogger } from '@/services/dream-activity-logger';
@@ -234,8 +233,12 @@ class GrowthProgramOrchestrator {
   }
 
   private getDisplayName(blueprintData?: BlueprintData): string {
-    return blueprintData?.user_meta?.preferred_name || 
-           blueprintData?.user_meta?.display_name || 
+    if (!blueprintData?.user_meta) {
+      return 'Friend';
+    }
+    
+    return blueprintData.user_meta.preferred_name || 
+           blueprintData.user_meta.full_name?.split(' ')[0] || 
            'Friend';
   }
 
