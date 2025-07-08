@@ -27,7 +27,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./contexts/AuthContext";
 import { BlueprintCacheProvider } from "./contexts/BlueprintCacheContext";
 import { SoulOrbProvider } from "./contexts/SoulOrbContext";
-import { LanguageProvider } from "./contexts/LanguageProvider";
+import { LanguageProvider } from "./contexts/LanguageContext";
 import { ModeProvider } from "./contexts/ModeContext";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 
