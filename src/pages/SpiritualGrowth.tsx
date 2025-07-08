@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
@@ -13,7 +14,6 @@ import { InsightJournal } from "@/components/coach/InsightJournal";
 import { WeeklyInsights } from "@/components/coach/WeeklyInsights";
 import { GrowthProgramInterface } from "@/components/growth/GrowthProgramInterface";
 import { ImmediateGrowthInterface } from "@/components/growth/ImmediateGrowthInterface";
-import { growthProgramOrchestrator, OrchestrationResult } from "@/services/growth-program-orchestrator";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 import { ProgramWeek } from "@/types/growth-program";
@@ -26,8 +26,6 @@ const SpiritualGrowth = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [activeView, setActiveView] = useState<ActiveView>('welcome');
   const [selectedWeek, setSelectedWeek] = useState<ProgramWeek | null>(null);
-  const [isInGuidedFlow, setIsInGuidedFlow] = useState(false);
-  const [orchestrationResult, setOrchestrationResult] = useState<OrchestrationResult | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -53,27 +51,18 @@ const SpiritualGrowth = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Initialize orchestration when user clicks spiritual growth
+  // Initialize for immediate spiritual growth chat
   const handleStartSpiritualGrowth = async () => {
     if (!isAuthenticated) return;
     
     try {
-      const { data } = await supabase.auth.getSession();
-      if (!data.session?.user) return;
-
-      console.log('🚀 Starting immediate spiritual growth interface...');
-      
-      // Get orchestration result immediately
-      const result = await growthProgramOrchestrator.initializeForDomain(
-        data.session.user.id,
-        'spiritual-growth',
-        blueprintData || undefined
-      );
-      
-      setOrchestrationResult(result);
+      console.log('🚀 Starting Heart-Centered Guidance...');
       setActiveView('immediate_chat');
       
-      console.log('✨ Ready for immediate chat with basic context');
+      // Reset conversation to ensure clean start
+      resetConversation();
+      
+      console.log('✨ Ready for Heart-Centered Guidance chat');
       
     } catch (error) {
       console.error('Error initializing spiritual growth:', error);
@@ -85,9 +74,32 @@ const SpiritualGrowth = () => {
     }
   };
 
-  const handleImmediateChatMessage = (message: string) => {
-    // Send message through existing coach system
-    sendMessage(message);
+  // Extract user info for personalization
+  const getUserDisplayName = () => {
+    if (!blueprintData?.user_meta) return 'Friend';
+    return blueprintData.user_meta.preferred_name || 
+           blueprintData.user_meta.full_name?.split(' ')[0] || 
+           'Friend';
+  };
+
+  const getCoreTraits = () => {
+    if (!blueprintData) return ['Seeker', 'Growth-Oriented'];
+    
+    const traits: string[] = [];
+    
+    if (blueprintData.cognition_mbti?.type && blueprintData.cognition_mbti.type !== 'Unknown') {
+      traits.push(blueprintData.cognition_mbti.type);
+    }
+    
+    if (blueprintData.energy_strategy_human_design?.type && blueprintData.energy_strategy_human_design.type !== 'Unknown') {
+      traits.push(blueprintData.energy_strategy_human_design.type);
+    }
+    
+    if (blueprintData.archetype_western?.sun_sign && blueprintData.archetype_western.sun_sign !== 'Unknown') {
+      traits.push(blueprintData.archetype_western.sun_sign);
+    }
+    
+    return traits.length > 0 ? traits : ['Unique Soul', 'Growth-Focused'];
   };
 
   if (!isAuthenticated) {
@@ -115,7 +127,7 @@ const SpiritualGrowth = () => {
   }
 
   // Show immediate chat interface
-  if (activeView === 'immediate_chat' && orchestrationResult) {
+  if (activeView === 'immediate_chat') {
     return (
       <MainLayout>
         <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
@@ -133,7 +145,7 @@ const SpiritualGrowth = () => {
                 Back to Options
               </Button>
               <div className="text-center">
-                <h1 className="text-xl font-bold text-gray-800">Spiritual Growth</h1>
+                <h1 className="text-xl font-bold text-gray-800">Heart-Centered Guidance</h1>
                 <p className="text-sm text-gray-500">Connected & Ready</p>
               </div>
               <div className="w-20" />
@@ -143,10 +155,12 @@ const SpiritualGrowth = () => {
             <CosmicCard className="w-full">
               {messages.length === 0 ? (
                 <ImmediateGrowthInterface
-                  basicContext={orchestrationResult.basicContext}
-                  enhancedContextPromise={orchestrationResult.enhancedContextPromise}
-                  onSendMessage={handleImmediateChatMessage}
+                  onSendMessage={sendMessage}
+                  messages={messages}
+                  isLoading={isLoading}
                   domain="spiritual-growth"
+                  userDisplayName={getUserDisplayName()}
+                  coreTraits={getCoreTraits()}
                 />
               ) : (
                 <GuideInterface
@@ -376,7 +390,7 @@ const SpiritualGrowth = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             
-            {/* Immediate Chat Option */}
+            {/* Heart-Centered Guidance Option */}
             <CosmicCard className="group hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1" onClick={handleStartSpiritualGrowth}>
               <div className="flex flex-col items-center text-center space-y-4">
                 <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -385,7 +399,7 @@ const SpiritualGrowth = () => {
                 <div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">Heart-Centered Guidance</h3>
                   <p className="text-gray-600 text-sm leading-relaxed">
-                    Start an immediate conversation with your personalized spiritual guide. Ready in seconds, enhanced as we connect.
+                    Start an immediate conversation with your personalized spiritual guide. Ready instantly with your unique personality blueprint.
                   </p>
                 </div>
                 <div className="text-xs text-purple-600 font-medium bg-purple-50 px-3 py-1 rounded-full">
