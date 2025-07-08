@@ -9,6 +9,7 @@ import { pieService } from "./pie-service";
 import { PIEDataPoint } from "@/types/pie-types";
 import { costMonitoringService } from "./cost-monitoring-service";
 import { neuroIntentKernel } from "./hermetic-core/neuro-intent-kernel";
+import { crossPlaneStateReflector } from "./hermetic-core/cross-plane-state-reflector";
 import { hacsMonitorService } from "./hacs-monitor-service";
 import { hacsFallbackService } from "./hacs-fallback-service";
 
@@ -102,6 +103,9 @@ class UnifiedBrainService {
 
     // HACS Step 0: NIK - Intent Analysis and Persistence
     await this.processIntentWithNIK(message, sessionId, agentMode);
+
+    // HACS Step 1: CPSR - State Synchronization and Reflection
+    await this.processCPSRStateSync(message, sessionId, agentMode, currentState);
 
     // PIE: Collect user data from conversation
     await this.collectPIEDataFromMessage(message, agentMode);
@@ -505,6 +509,72 @@ class UnifiedBrainService {
           adaptiveResponse: false
         }
       };
+    }
+  }
+
+  // HACS CPSR Integration - Process state synchronization with Cross-Plane State Reflector
+  private async processCPSRStateSync(
+    message: string, 
+    sessionId: string, 
+    agentMode: AgentMode, 
+    currentState: DialogueState
+  ): Promise<void> {
+    try {
+      console.log('🔄 CPSR: Processing cross-plane state synchronization');
+      
+      // External State Updates (from user input and environment)
+      crossPlaneStateReflector.updateExternalState('user_input', message, 'unified_brain');
+      crossPlaneStateReflector.updateExternalState('session_id', sessionId, 'unified_brain');
+      crossPlaneStateReflector.updateExternalState('domain_context', agentMode, 'unified_brain');
+      crossPlaneStateReflector.updateExternalState('system_mode', currentState, 'unified_brain');
+      crossPlaneStateReflector.updateExternalState('timestamp', Date.now(), 'unified_brain');
+      
+      // Internal State Updates (from cognitive processing)
+      const currentIntent = neuroIntentKernel.getCurrentIntent();
+      if (currentIntent) {
+        crossPlaneStateReflector.updateInternalState('current_intent', currentIntent.primary, 'nik');
+        crossPlaneStateReflector.updateInternalState('intent_priority', currentIntent.priority, 'nik');
+      }
+      
+      crossPlaneStateReflector.updateInternalState('active_domain', agentMode, 'personality_engine');
+      crossPlaneStateReflector.updateInternalState('processing_mode', currentState, 'unified_brain');
+      crossPlaneStateReflector.updateInternalState('user_id', this.userId, 'unified_brain');
+      
+      // Meta State Updates (system performance and health)
+      crossPlaneStateReflector.updateMetaState('message_length', message.length, 'metrics');
+      crossPlaneStateReflector.updateMetaState('session_active', true, 'session_manager');
+      crossPlaneStateReflector.updateMetaState('last_interaction', Date.now(), 'activity_tracker');
+      
+      // Get reflection state for context awareness
+      const unifiedState = crossPlaneStateReflector.getUnifiedState();
+      console.log(`🔄 CPSR: State synchronized across planes - External: ${Object.keys(unifiedState.external).length} keys, Internal: ${Object.keys(unifiedState.internal).length} keys, Meta: ${Object.keys(unifiedState.meta).length} keys`);
+      
+      // Store state snapshot in session memory for continuity
+      this.sessionMemory.set(`cpsr_state_${sessionId}`, {
+        timestamp: Date.now(),
+        unifiedState,
+        agentMode,
+        sessionId
+      });
+      
+    } catch (error) {
+      console.error('🔄 CPSR: Error in state synchronization:', error);
+      // CPSR failure should not break the flow - continue without state sync
+    }
+  }
+
+  // Get current CPSR state for debugging/monitoring
+  getCPSRState() {
+    try {
+      return {
+        unifiedState: crossPlaneStateReflector.getUnifiedState(),
+        sessionStates: Array.from(this.sessionMemory.entries())
+          .filter(([key]) => key.startsWith('cpsr_state_'))
+          .map(([key, value]) => ({ key, value }))
+      };
+    } catch (error) {
+      console.error('🔄 CPSR: Error getting state:', error);
+      return { unifiedState: null, sessionStates: [] };
     }
   }
 
