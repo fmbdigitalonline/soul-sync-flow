@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { CheckCircle, Clock, Lock, Play, ArrowRight, Plus, RotateCcw, MessageSquare, Sparkles } from 'lucide-react';
 import { GrowthProgram, ProgramWeek, LifeDomain } from '@/types/growth-program';
-import { growthProgramService } from '@/services/growth-program-service';
+import { agentGrowthIntegration } from '@/services/agent-growth-integration';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBlueprintCache } from '@/contexts/BlueprintCacheContext';
 import { GrowthProgramStarter } from './GrowthProgramStarter';
@@ -51,11 +51,11 @@ export const GrowthProgramInterface: React.FC<GrowthProgramInterfaceProps> = ({
     
     try {
       setLoading(true);
-      const program = await growthProgramService.getCurrentProgram(user.id);
+      const program = await agentGrowthIntegration.getCurrentProgram(user.id);
       
       if (program) {
         setCurrentProgram(program);
-        const weeks = await growthProgramService.generateWeeklyProgram(program);
+        const weeks = await agentGrowthIntegration.generateWeeklyProgram(program);
         setProgramWeeks(weeks);
       }
     } catch (error) {
@@ -85,19 +85,19 @@ export const GrowthProgramInterface: React.FC<GrowthProgramInterfaceProps> = ({
       console.log('Creating growth program for domain:', domain);
       
       if (currentProgram) {
-        await growthProgramService.updateProgramProgress(currentProgram.id, { 
+        await agentGrowthIntegration.updateProgramProgress(currentProgram.id, {
           status: 'completed',
           actual_completion: new Date().toISOString()
         });
       }
       
-      const program = await growthProgramService.createProgram(user.id, domain, blueprintData);
+      const program = await agentGrowthIntegration.createProgram(user.id, domain, blueprintData);
       setCurrentProgram(program);
       
-      const weeks = await growthProgramService.generateWeeklyProgram(program);
+      const weeks = await agentGrowthIntegration.generateWeeklyProgram(program);
       setProgramWeeks(weeks);
       
-      await growthProgramService.updateProgramProgress(program.id, { status: 'active' });
+      await agentGrowthIntegration.updateProgramProgress(program.id, { status: 'active' });
       
       setShowDomainSelector(false);
       
@@ -148,7 +148,7 @@ export const GrowthProgramInterface: React.FC<GrowthProgramInterfaceProps> = ({
     
     try {
       const nextWeek = Math.min(weekNumber + 1, currentProgram.total_weeks);
-      await growthProgramService.updateProgramProgress(currentProgram.id, {
+      await agentGrowthIntegration.updateProgramProgress(currentProgram.id, {
         current_week: nextWeek
       });
       
