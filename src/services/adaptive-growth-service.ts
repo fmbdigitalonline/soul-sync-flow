@@ -7,7 +7,7 @@ import { openAIAgentOrchestrator } from './openai-agent-orchestrator';
 import { blueprintEmbeddingService } from './blueprint-embedding-service';
 import { supabase } from '@/integrations/supabase/client';
 import { LayeredBlueprint } from '@/types/personality-modules';
-import { LifeDomain, GrowthProgram } from '@/types/growth-program';
+import { LifeDomain, GrowthProgram, ProgramType, ProgramStatus, BlueprintParams, ProgressMetrics, SessionSchedule } from '@/types/growth-program';
 
 interface FeedbackSignal {
   type: 'explicit' | 'behavioral' | 'temporal';
@@ -51,11 +51,11 @@ export class AdaptiveGrowthService {
         planningContext.pastFeedback
       );
 
-      // 4. Create adaptive program structure
-      const adaptiveProgram: AdaptiveGrowthProgram = {
-        id: `adaptive_${Date.now()}`,
-        user_id: userId,
-        program_type: this.determineAdaptiveProgramType(agentResult.plan),
+  // 4. Create adaptive program structure
+    const adaptiveProgram: AdaptiveGrowthProgram = {
+      id: `adaptive_${Date.now()}`,
+      user_id: userId,
+      program_type: this.determineAdaptiveProgramType(agentResult.plan) as ProgramType,
         domain,
         current_week: 1,
         total_weeks: this.extractProgramDuration(agentResult.plan),
@@ -420,7 +420,22 @@ export class AdaptiveGrowthService {
       .maybeSingle();
 
     if (error) throw error;
-    return data as AdaptiveGrowthProgram;
+    if (!data) return null;
+    
+    // Transform database record to adaptive program
+    return {
+      ...data,
+      program_type: data.program_type as ProgramType,
+      domain: data.domain as LifeDomain,
+      status: data.status as ProgramStatus,
+      blueprint_params: data.blueprint_params as unknown as BlueprintParams,
+      progress_metrics: data.progress_metrics as unknown as ProgressMetrics,
+      session_schedule: data.session_schedule as unknown as SessionSchedule,
+      adaptation_history: [],
+      feedback_signals: [],
+      blueprint_alignment_score: 0.8,
+      evolution_trajectory: {}
+    };
   }
 
   private async getUserBlueprint(userId: string): Promise<LayeredBlueprint> {
@@ -434,12 +449,179 @@ export class AdaptiveGrowthService {
       .maybeSingle();
 
     if (error) throw error;
-    return data as LayeredBlueprint;
+    if (!data) throw new Error('No active blueprint found');
+    
+    // Transform database blueprint to LayeredBlueprint
+    const cognitiveData = data.cognition_mbti as any;
+    const energyData = data.energy_strategy_human_design as any;
+    const basharData = data.bashar_suite as any;
+    const valuesData = data.values_life_path as any;
+    const westernData = data.archetype_western as any;
+    const chineseData = data.archetype_chinese as any;
+    const timingData = data.timing_overlays as any;
+    
+    return {
+      cognitiveTemperamental: {
+        mbtiType: cognitiveData?.type || 'Unknown',
+        functions: cognitiveData?.functions || [],
+        dominantFunction: cognitiveData?.dominantFunction || '',
+        auxiliaryFunction: cognitiveData?.auxiliaryFunction || '',
+        cognitiveStack: cognitiveData?.cognitiveStack || [],
+        taskApproach: cognitiveData?.taskApproach || '',
+        communicationStyle: cognitiveData?.communicationStyle || '',
+        decisionMaking: cognitiveData?.decisionMaking || '',
+        informationProcessing: cognitiveData?.informationProcessing || '',
+        coreKeywords: cognitiveData?.coreKeywords || []
+      },
+      energyDecisionStrategy: {
+        humanDesignType: energyData?.type || 'Unknown',
+        authority: energyData?.authority || 'Unknown',
+        decisionStyle: energyData?.decisionStyle || '',
+        pacing: energyData?.pacing || '',
+        energyType: energyData?.energyType || '',
+        strategy: energyData?.strategy || '',
+        profile: energyData?.profile || '',
+        centers: energyData?.centers || [],
+        gates: energyData?.gates || [],
+        channels: energyData?.channels || []
+      },
+      motivationBeliefEngine: {
+        mindset: basharData?.mindset || '',
+        motivation: basharData?.motivation || [],
+        stateManagement: basharData?.stateManagement || '',
+        coreBeliefs: basharData?.coreBeliefs || [],
+        drivingForces: basharData?.drivingForces || [],
+        excitementCompass: basharData?.excitementCompass || '',
+        frequencyAlignment: basharData?.frequencyAlignment || '',
+        beliefInterface: basharData?.beliefInterface || [],
+        resistancePatterns: basharData?.resistancePatterns || []
+      },
+      coreValuesNarrative: {
+        lifePath: valuesData?.lifePath || 'Unknown',
+        lifePathKeyword: valuesData?.lifePathKeyword,
+        expressionNumber: valuesData?.expressionNumber,
+        expressionKeyword: valuesData?.expressionKeyword,
+        soulUrgeNumber: valuesData?.soulUrgeNumber,
+        soulUrgeKeyword: valuesData?.soulUrgeKeyword,
+        personalityNumber: valuesData?.personalityNumber,
+        personalityKeyword: valuesData?.personalityKeyword,
+        birthdayNumber: valuesData?.birthdayNumber,
+        birthdayKeyword: valuesData?.birthdayKeyword,
+        meaningfulAreas: valuesData?.meaningfulAreas || [],
+        anchoringVision: valuesData?.anchoringVision || '',
+        lifeThemes: valuesData?.lifeThemes || [],
+        valueSystem: valuesData?.valueSystem || '',
+        northStar: valuesData?.northStar || '',
+        missionStatement: valuesData?.missionStatement || '',
+        purposeAlignment: valuesData?.purposeAlignment || '',
+        core_values: valuesData?.core_values || []
+      },
+      publicArchetype: {
+        sunSign: westernData?.sunSign || 'Unknown',
+        moonSign: westernData?.moonSign,
+        risingSign: westernData?.risingSign,
+        socialStyle: westernData?.socialStyle || '',
+        publicVibe: westernData?.publicVibe || '',
+        publicPersona: westernData?.publicPersona || '',
+        leadershipStyle: westernData?.leadershipStyle || '',
+        socialMask: westernData?.socialMask || '',
+        externalExpression: westernData?.externalExpression || ''
+      },
+      generationalCode: {
+        chineseZodiac: chineseData?.chineseZodiac || 'Unknown',
+        element: chineseData?.element || '',
+        cohortTint: chineseData?.cohortTint || '',
+        generationalThemes: chineseData?.generationalThemes || [],
+        collectiveInfluence: chineseData?.collectiveInfluence || ''
+      },
+      surfaceExpression: {
+        observableStyle: '',
+        realWorldImpact: '',
+        behavioralSignatures: [],
+        externalManifestations: []
+      },
+      marketingArchetype: {
+        messagingStyle: '',
+        socialHooks: [],
+        brandPersonality: '',
+        communicationPatterns: [],
+        influenceStyle: ''
+      },
+      goalPersona: {
+        currentMode: 'coach',
+        serviceRole: '',
+        coachingTone: '',
+        nudgeStyle: '',
+        motivationApproach: ''
+      },
+      interactionPreferences: {
+        rapportStyle: '',
+        storyPreference: '',
+        empathyLevel: '',
+        conflictStyle: '',
+        collaborationStyle: '',
+        feedbackStyle: '',
+        learningStyle: ''
+      },
+      timingOverlays: {
+        currentTransits: timingData?.currentTransits || [],
+        seasonalInfluences: timingData?.seasonalInfluences || [],
+        cyclicalPatterns: timingData?.cyclicalPatterns || [],
+        optimalTimings: timingData?.optimalTimings || [],
+        energyWeather: timingData?.energyWeather || ''
+      },
+      proactiveContext: {
+        nudgeHistory: [],
+        taskGraph: data.task_graph || {},
+        streaks: {},
+        moodLog: [],
+        recentPatterns: [],
+        triggerEvents: []
+      },
+      user_meta: data.user_meta as any,
+      humorProfile: {
+        primaryStyle: 'warm-nurturer',
+        intensity: 'moderate',
+        appropriatenessLevel: 'balanced',
+        contextualAdaptation: {
+          coaching: 'warm-nurturer',
+          guidance: 'gentle-empath',
+          casual: 'playful-storyteller'
+        },
+        avoidancePatterns: [],
+        signatureElements: []
+      },
+      voiceTokens: {
+        pacing: {
+          sentenceLength: 'medium',
+          pauseFrequency: 'thoughtful',
+          rhythmPattern: 'varied'
+        },
+        expressiveness: {
+          emojiFrequency: 'occasional',
+          emphasisStyle: 'subtle',
+          exclamationTendency: 'balanced'
+        },
+        vocabulary: {
+          formalityLevel: 'conversational',
+          metaphorUsage: 'occasional',
+          technicalDepth: 'balanced'
+        },
+        conversationStyle: {
+          questionAsking: 'supportive',
+          responseLength: 'thorough',
+          personalSharing: 'warm'
+        },
+        signaturePhrases: [],
+        greetingStyles: [],
+        transitionWords: []
+      }
+    };
   }
 
   // Utility Functions
-  private determineAdaptiveProgramType(plan: any): string {
-    return 'adaptive_standard';
+  private determineAdaptiveProgramType(plan: any): ProgramType {
+    return 'standard';
   }
 
   private extractProgramDuration(plan: any): number {
@@ -452,24 +634,35 @@ export class AdaptiveGrowthService {
     return now.toISOString();
   }
 
-  private extractBlueprintParams(plan: any): any {
-    return { adaptive: true, ai_generated: true };
-  }
-
-  private initializeProgressMetrics(): any {
+  private extractBlueprintParams(plan: any): BlueprintParams {
     return {
-      adaptation_count: 0,
-      feedback_signals_processed: 0,
-      blueprint_alignment_trend: [],
-      ai_confidence_scores: []
+      time_horizon: 'flexible',
+      support_style: 4,
+      primary_goal: 'deep_change',
+      user_confidence: 'medium',
+      goal_depth: 'moderate',
+      preferred_pace: 'weekly'
     };
   }
 
-  private extractSessionSchedule(plan: any): any {
+  private initializeProgressMetrics(): ProgressMetrics {
+    return {
+      completed_sessions: 0,
+      mood_entries: 0,
+      reflection_entries: 0,
+      insight_entries: 0,
+      micro_actions_completed: 0,
+      belief_shifts_tracked: 0,
+      excitement_ratings: [],
+      domain_progress_score: 0
+    };
+  }
+
+  private extractSessionSchedule(plan: any): SessionSchedule {
     return {
       sessions_per_week: 3,
       session_duration_minutes: 25,
-      reminder_frequency: 'daily'
+      reminder_frequency: 'weekly'
     };
   }
 

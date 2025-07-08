@@ -41,7 +41,8 @@ export class OpenAIAgentOrchestrator {
   private baseURL = 'https://api.openai.com/v1';
 
   constructor() {
-    this.apiKey = process.env.OPENAI_API_KEY || '';
+    // In browser environment, we'll need to use edge functions for API calls  
+    this.apiKey = '';
   }
 
   // Agent Role Definitions aligned with HACS modules

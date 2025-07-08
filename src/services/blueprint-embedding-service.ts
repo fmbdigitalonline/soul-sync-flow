@@ -24,7 +24,8 @@ export class BlueprintEmbeddingService {
   private baseURL = 'https://api.openai.com/v1';
 
   constructor() {
-    this.apiKey = process.env.OPENAI_API_KEY || '';
+    // In browser environment, we'll need to use edge functions for API calls
+    this.apiKey = '';
   }
 
   // Main Blueprint Processing
@@ -71,7 +72,7 @@ export class BlueprintEmbeddingService {
         mbti_type: blueprint.cognitiveTemperamental?.mbtiType || 'Unknown',
         hd_type: blueprint.energyDecisionStrategy?.humanDesignType || 'Unknown',
         hd_authority: blueprint.energyDecisionStrategy?.authority || 'Unknown',
-        sun_sign: blueprint.archetypeWestern?.sunSign || 'Unknown',
+        sun_sign: blueprint.publicArchetype?.sunSign || 'Unknown',
         life_path: blueprint.coreValuesNarrative?.lifePath || 'Unknown'
       },
 
@@ -95,7 +96,7 @@ export class BlueprintEmbeddingService {
       core_values: {
         life_path_energy: blueprint.coreValuesNarrative?.lifePath,
         expression_number: blueprint.coreValuesNarrative?.expressionNumber,
-        soul_urge: blueprint.coreValuesNarrative?.soulUrge,
+        soul_urge: blueprint.coreValuesNarrative?.soulUrgeNumber,
         primary_motivations: this.extractPrimaryMotivations(blueprint)
       },
 
@@ -240,17 +241,23 @@ export class BlueprintEmbeddingService {
     }
   }
 
-  // Storage Functions
+  // Storage Functions - Use existing user_session_memory table for now
   private async storeBlueprintMemory(userId: string, memory: BlueprintMemory): Promise<void> {
-    // Store in Supabase - we'd need to create a table for this
+    // Store in existing user_session_memory table with a special type
     const { error } = await supabase
-      .from('blueprint_memory') // This table would need to be created
+      .from('user_session_memory')
       .upsert({
         user_id: userId,
-        structured_data: memory.structured,
-        vector_chunks: memory.vector_chunks,
-        last_updated: memory.last_updated,
-        version: memory.version
+        session_id: `blueprint_memory_${userId}`,
+        memory_type: 'blueprint_embedding',
+        memory_data: {
+          structured: memory.structured,
+          vector_chunks: memory.vector_chunks as any,
+          last_updated: memory.last_updated,
+          version: memory.version
+        } as any,
+        importance_score: 10, // High importance for blueprint data
+        context_summary: 'User blueprint in dual storage format for AI agents'
       });
 
     if (error) throw error;
@@ -258,10 +265,11 @@ export class BlueprintEmbeddingService {
 
   private async getBlueprintMemory(userId: string): Promise<BlueprintMemory | null> {
     const { data, error } = await supabase
-      .from('blueprint_memory')
+      .from('user_session_memory')
       .select('*')
       .eq('user_id', userId)
-      .order('last_updated', { ascending: false })
+      .eq('memory_type', 'blueprint_embedding')
+      .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
 
@@ -269,11 +277,12 @@ export class BlueprintEmbeddingService {
     
     if (!data) return null;
 
+    const memoryData = data.memory_data as any;
     return {
-      structured: data.structured_data,
-      vector_chunks: data.vector_chunks,
-      last_updated: data.last_updated,
-      version: data.version
+      structured: memoryData.structured,
+      vector_chunks: memoryData.vector_chunks,
+      last_updated: memoryData.last_updated,
+      version: memoryData.version
     };
   }
 
