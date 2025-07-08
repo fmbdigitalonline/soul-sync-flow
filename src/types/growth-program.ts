@@ -13,6 +13,7 @@ export interface GrowthProgram {
   blueprint_params: BlueprintParams;
   progress_metrics: ProgressMetrics;
   session_schedule: SessionSchedule;
+  adaptation_history: AdaptationRecord[];
   created_at: string;
   updated_at: string;
 }
@@ -80,4 +81,13 @@ export interface SessionOutcome {
   type: 'mood_entry' | 'belief_shift' | 'insight' | 'micro_action' | 'excitement_rating';
   data: any;
   timestamp: string;
+}
+
+export interface AdaptationRecord {
+  timestamp: string;
+  adaptation_type: 'schedule_change' | 'pace_adjustment' | 'focus_shift' | 'blueprint_update';
+  reason: string;
+  changes_made: any;
+  user_feedback?: string;
+  agent_reasoning?: string;
 }

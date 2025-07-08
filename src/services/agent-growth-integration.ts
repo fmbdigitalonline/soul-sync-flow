@@ -192,6 +192,7 @@ export class AgentGrowthIntegration {
       blueprint_params: adaptiveProgram.blueprint_params,
       progress_metrics: adaptiveProgram.progress_metrics,
       session_schedule: adaptiveProgram.session_schedule,
+      adaptation_history: adaptiveProgram.adaptation_history || [],
       created_at: adaptiveProgram.created_at,
       updated_at: adaptiveProgram.updated_at
     };
