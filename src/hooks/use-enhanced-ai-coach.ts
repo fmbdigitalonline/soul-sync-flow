@@ -20,11 +20,31 @@ export interface Message {
   isStreaming?: boolean;
 }
 
+// Domain to agent type mapping for consistency
+const DOMAIN_AGENT_MAPPING = {
+  'companion': 'blend' as AgentType,
+  'dreams': 'guide' as AgentType,
+  'spiritual-growth': 'coach' as AgentType,
+  'productivity': 'guide' as AgentType,
+  'coach': 'blend' as AgentType, // Legacy support
+} as const;
+
+type DomainType = keyof typeof DOMAIN_AGENT_MAPPING;
+
 export const useEnhancedAICoach = (defaultAgent: AgentType = "guide", pageContext: string = 'coach') => {
+  // Ensure correct agent type based on domain
+  const mappedAgent = DOMAIN_AGENT_MAPPING[pageContext as DomainType] || defaultAgent;
+  
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [currentAgent, setCurrentAgent] = useState<AgentType>(defaultAgent);
-  const [currentSessionId] = useState(() => `${pageContext}_${enhancedAICoachService.createNewSession(defaultAgent)}`);
+  const [currentAgent, setCurrentAgent] = useState<AgentType>(mappedAgent);
+  
+  // Create domain-isolated session ID
+  const [currentSessionId] = useState(() => {
+    const timestamp = Date.now();
+    return `${pageContext}_${mappedAgent}_${timestamp}`;
+  });
+  
   const [authInitialized, setAuthInitialized] = useState(false);
   const [blueprintStatus, setBlueprintStatus] = useState<{
     isAvailable: boolean;
@@ -61,17 +81,17 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide", pageContex
     getEnhancedSystemPrompt: acsGetEnhancedSystemPrompt,
     getGenerationParams: acsGetGenerationParams,
     isEnabled: acsEnabled
-  } = useACSIntegration(user?.id || null, true); // Enable ACS by default
+  } = useACSIntegration(user?.id || null, true);
 
   // Initialize authentication with enhanced VFP-Graph integration
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        console.log("🔐 Enhanced AI Coach Hook: Initializing with VFP-Graph integration services");
+        console.log(`🔐 Enhanced AI Coach Hook: Initializing ${pageContext} domain with ${mappedAgent} agent`);
         const { data: { user } } = await supabase.auth.getUser();
         
         if (user) {
-          console.log("👤 Enhanced AI Coach Hook: User authenticated for VFP-Graph:", user.id);
+          console.log(`👤 Enhanced AI Coach Hook: User authenticated for ${pageContext}:`, user.id);
           await enhancedAICoachService.setCurrentUser(user.id);
           
           // Load VFP-Graph status
@@ -82,54 +102,50 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide", pageContex
           
           setAuthInitialized(true);
         } else {
-          console.log("👤 Enhanced AI Coach Hook: No authenticated user");
+          console.log(`👤 Enhanced AI Coach Hook: No authenticated user for ${pageContext}`);
           setAuthInitialized(true);
         }
       } catch (error) {
-        console.error("❌ Enhanced AI Coach Hook: Auth initialization error:", error);
+        console.error(`❌ Enhanced AI Coach Hook: Auth initialization error for ${pageContext}:`, error);
         setAuthInitialized(true);
       }
     };
 
     initializeAuth();
-  }, [user]);
+  }, [user, pageContext, mappedAgent]);
 
   const loadVFPGraphStatus = async () => {
     try {
       const status = await enhancedAICoachService.getVFPGraphStatus();
-      // Ensure vectorMagnitude is always defined
       const statusWithMagnitude = {
         ...status,
         vectorMagnitude: status.vectorMagnitude ?? 0
       };
       setVFPGraphStatus(statusWithMagnitude);
-      console.log("✅ VFP-Graph status loaded:", statusWithMagnitude);
+      console.log(`✅ VFP-Graph status loaded for ${pageContext}:`, statusWithMagnitude);
     } catch (error) {
-      console.error("❌ Error loading VFP-Graph status:", error);
+      console.error(`❌ Error loading VFP-Graph status for ${pageContext}:`, error);
     }
   };
 
   // Enhanced blueprint status monitoring with VFP-Graph integration
   useEffect(() => {
     if (!authInitialized || blueprintLoading) {
-      console.log("⏳ Enhanced AI Coach Hook: Waiting for auth/blueprint initialization");
+      console.log(`⏳ Enhanced AI Coach Hook: Waiting for auth/blueprint initialization for ${pageContext}`);
       return;
     }
 
     const updateBlueprintStatus = async () => {
       if (hasBlueprint && blueprintData) {
-        console.log("🎭 Enhanced AI Coach Hook: Blueprint available, triggering VFP-Graph enhanced integration");
+        console.log(`🎭 Enhanced AI Coach Hook: Blueprint available for ${pageContext}, triggering VFP-Graph enhanced integration`);
         
         try {
-          // Force blueprint sync to ensure consistency
           const syncResult = await blueprintAIIntegrationService.forceBlueprintSync();
-          console.log("🔄 Blueprint sync result:", syncResult);
+          console.log(`🔄 Blueprint sync result for ${pageContext}:`, syncResult);
           
-          // Generate integration report
           const integrationReport = await blueprintAIIntegrationService.generateIntegrationReport();
-          console.log("📊 Blueprint integration report:", integrationReport);
+          console.log(`📊 Blueprint integration report for ${pageContext}:`, integrationReport);
           
-          // Update blueprint status
           const summary = UnifiedBlueprintService.extractBlueprintSummary(blueprintData);
           setBlueprintStatus({
             isAvailable: integrationReport.blueprintLoaded,
@@ -137,13 +153,11 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide", pageContex
             summary
           });
           
-          // Refresh VFP-Graph status
           await loadVFPGraphStatus();
           
-          console.log("✅ Enhanced blueprint and VFP-Graph system fully initialized");
+          console.log(`✅ Enhanced blueprint and VFP-Graph system fully initialized for ${pageContext}`);
         } catch (error) {
-          console.error("❌ Enhanced blueprint integration error:", error);
-          // Fallback to basic blueprint handling
+          console.error(`❌ Enhanced blueprint integration error for ${pageContext}:`, error);
           const validation = UnifiedBlueprintService.validateBlueprint(blueprintData);
           const summary = UnifiedBlueprintService.extractBlueprintSummary(blueprintData);
           setBlueprintStatus({
@@ -153,7 +167,7 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide", pageContex
           });
         }
       } else {
-        console.log("⚠️ Enhanced AI Coach Hook: No blueprint data available");
+        console.log(`⚠️ Enhanced AI Coach Hook: No blueprint data available for ${pageContext}`);
         setBlueprintStatus({
           isAvailable: false,
           completionPercentage: 0,
@@ -163,62 +177,65 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide", pageContex
     };
 
     updateBlueprintStatus();
-  }, [authInitialized, hasBlueprint, blueprintData, blueprintLoading]);
+  }, [authInitialized, hasBlueprint, blueprintData, blueprintLoading, pageContext]);
 
-  // Enhanced conversation history loading with memory integration and ACS
+  // Enhanced conversation history loading with memory integration and ACS - DOMAIN ISOLATED
   useEffect(() => {
     if (!authInitialized) return;
     
     const loadHistory = async () => {
       try {
-        console.log("📚 Enhanced AI Coach Hook: Loading conversation history with memory integration and ACS");
-        const history = await enhancedAICoachService.loadConversationHistory(currentAgent);
+        console.log(`📚 Enhanced AI Coach Hook: Loading domain-isolated conversation history for ${pageContext} with ${currentAgent}`);
         
-        // Also load relevant memories for context
+        // Load conversation history with domain isolation
+        const history = await enhancedAICoachService.loadConversationHistoryWithDomain(currentAgent, pageContext);
+        
         if (user) {
           const memoryReport = await enhancedMemoryService.generateConsistencyReport();
-          console.log("🧠 Memory integration status:", memoryReport.consistencyScore + "% consistency");
+          console.log(`🧠 Memory integration status for ${pageContext}:`, memoryReport.consistencyScore + "% consistency");
         }
         
         setMessages(history);
-        console.log(`✅ Enhanced AI Coach Hook: Loaded ${history.length} messages for ${currentAgent} mode with ACS: ${acsEnabled}`);
+        console.log(`✅ Enhanced AI Coach Hook: Loaded ${history.length} domain-isolated messages for ${pageContext}/${currentAgent} with ACS: ${acsEnabled}`);
       } catch (error) {
-        console.error("❌ Enhanced AI Coach Hook: Error loading conversation history:", error);
+        console.error(`❌ Enhanced AI Coach Hook: Error loading conversation history for ${pageContext}:`, error);
       }
     };
 
     loadHistory();
-  }, [currentAgent, authInitialized, user, acsEnabled]);
+  }, [currentAgent, authInitialized, user, acsEnabled, pageContext]);
 
-  // Enhanced conversation history saving
+  // Enhanced conversation history saving - DOMAIN ISOLATED
   useEffect(() => {
     if (!authInitialized || messages.length === 0) return;
     
     const saveHistory = async () => {
       try {
-        await enhancedAICoachService.saveConversationHistory(currentAgent, messages);
-        console.log(`💾 Enhanced AI Coach Hook: Saved ${messages.length} messages for ${currentAgent} mode`);
+        await enhancedAICoachService.saveConversationHistoryWithDomain(currentAgent, pageContext, messages);
+        console.log(`💾 Enhanced AI Coach Hook: Saved ${messages.length} domain-isolated messages for ${pageContext}/${currentAgent}`);
       } catch (error) {
-        console.error("❌ Enhanced AI Coach Hook: Error saving conversation history:", error);
+        console.error(`❌ Enhanced AI Coach Hook: Error saving conversation history for ${pageContext}:`, error);
       }
     };
 
     const timeoutId = setTimeout(saveHistory, 1000);
     return () => clearTimeout(timeoutId);
-  }, [messages, currentAgent, authInitialized]);
+  }, [messages, currentAgent, authInitialized, pageContext]);
 
-  const sendMessage = async (content: string, useStreaming: boolean = true, displayMessage?: string, pageContext: string = 'coach') => {
+  const sendMessage = async (content: string, useStreaming: boolean = true, displayMessage?: string, contextOverride?: string) => {
     if (!content.trim()) return;
 
-    // Enhanced blueprint and VFP-Graph integration check
+    const effectiveContext = contextOverride || pageContext;
+    const effectiveAgent = DOMAIN_AGENT_MAPPING[effectiveContext as DomainType] || currentAgent;
+
     const integrationReport = await blueprintAIIntegrationService.generateIntegrationReport();
     const canUsePersona = integrationReport.blueprintLoaded && integrationReport.completionPercentage > 0;
     const hasVFPGraph = vfpGraphStatus.isAvailable;
     
-    console.log('📤 Enhanced AI Coach Hook: Sending message with VFP-GRAPH and ACS ENHANCED INTEGRATION:', {
+    console.log(`📤 Enhanced AI Coach Hook: Sending message for ${effectiveContext} with ${effectiveAgent} agent:`, {
       contentLength: content.length,
       useStreaming,
-      currentAgent,
+      currentAgent: effectiveAgent,
       integrationScore: integrationReport.integrationScore,
       canUsePersona,
       hasVFPGraph,
@@ -230,12 +247,10 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide", pageContex
       acsState
     });
 
-    // Process user message through ACS
     if (acsEnabled && acsInitialized) {
       acsProcessUserMessage(content);
     }
 
-    // Use displayMessage if provided (for clean UI display), otherwise use the full content
     const messageToDisplay = displayMessage || content;
 
     const userMessage: Message = {
@@ -243,7 +258,7 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide", pageContex
       content: messageToDisplay,
       sender: "user",
       timestamp: new Date(),
-      agentType: currentAgent,
+      agentType: effectiveAgent,
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -257,7 +272,7 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide", pageContex
         content: "",
         sender: "assistant",
         timestamp: new Date(),
-        agentType: currentAgent,
+        agentType: effectiveAgent,
         isStreaming: true,
       };
 
@@ -267,22 +282,23 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide", pageContex
       try {
         let accumulatedContent = '';
         
-        console.log('📡 Enhanced AI Coach Hook: Starting VFP-GRAPH and ACS ENHANCED streaming:', {
+        console.log(`📡 Enhanced AI Coach Hook: Starting domain-isolated streaming for ${effectiveContext}:`, {
           canUsePersona,
           hasVFPGraph,
           integrationScore: integrationReport.integrationScore,
-          currentAgent,
+          currentAgent: effectiveAgent,
           blueprintAvailable: integrationReport.blueprintLoaded,
           acsEnabled,
           acsState
         });
         
-        await enhancedAICoachService.sendStreamingMessage(
+        await enhancedAICoachService.sendStreamingMessageWithDomain(
           content,
           currentSessionId,
           canUsePersona,
-          currentAgent,
+          effectiveAgent,
           language,
+          effectiveContext,
           {
             onChunk: (chunk: string) => {
               accumulatedContent += chunk;
@@ -297,9 +313,8 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide", pageContex
               );
             },
             onComplete: (fullResponse: string) => {
-              console.log('✅ VFP-Graph and ACS Enhanced streaming complete, response length:', fullResponse.length);
+              console.log(`✅ Domain-isolated streaming complete for ${effectiveContext}, response length:`, fullResponse.length);
               
-              // Process assistant message through ACS
               if (acsEnabled && acsInitialized) {
                 acsProcessAssistantMessage(fullResponse);
               }
@@ -315,7 +330,7 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide", pageContex
               setIsLoading(false);
             },
             onError: (error: Error) => {
-              console.error("❌ VFP-Graph and ACS Enhanced streaming error:", error);
+              console.error(`❌ Domain-isolated streaming error for ${effectiveContext}:`, error);
               completeStreaming();
               setMessages(prev => 
                 prev.map(msg => 
@@ -329,7 +344,7 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide", pageContex
           }
         );
       } catch (error) {
-        console.error("❌ VFP-Graph and ACS Enhanced streaming error:", error);
+        console.error(`❌ Domain-isolated streaming error for ${effectiveContext}:`, error);
         completeStreaming();
         setMessages(prev => 
           prev.map(msg => 
@@ -386,13 +401,13 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide", pageContex
   };
 
   const resetConversation = () => {
-    console.log("🔄 VFP-Graph and ACS Enhanced AI Coach Hook: Resetting conversation");
+    console.log(`🔄 Enhanced AI Coach Hook: Resetting domain-isolated conversation for ${pageContext}`);
     setMessages([]);
-    enhancedAICoachService.clearConversationCache();
+    enhancedAICoachService.clearConversationCacheForDomain(pageContext);
   };
 
   const switchAgent = (newAgent: AgentType) => {
-    console.log("🔄 VFP-Graph and ACS Enhanced AI Coach Hook: Switching agent from", currentAgent, "to", newAgent);
+    console.log(`🔄 Enhanced AI Coach Hook: Switching agent from ${currentAgent} to ${newAgent} for ${pageContext}`);
     setCurrentAgent(newAgent);
   };
 
@@ -400,14 +415,13 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide", pageContex
     try {
       await enhancedAICoachService.recordVFPGraphFeedback(messageId, isPositive);
       
-      // Also record ACS feedback for learning
       if (acsEnabled && acsInitialized) {
-        acsRecordFeedback(isPositive ? 'positive' : 'negative', `VFP-Graph feedback: ${isPositive ? 'thumbs up' : 'thumbs down'}`);
+        acsRecordFeedback(isPositive ? 'positive' : 'negative', `VFP-Graph feedback from ${pageContext}: ${isPositive ? 'thumbs up' : 'thumbs down'}`);
       }
       
-      console.log(`✅ VFP-Graph and ACS feedback recorded from hook: ${isPositive ? '👍' : '👎'}`);
+      console.log(`✅ VFP-Graph and ACS feedback recorded from ${pageContext}: ${isPositive ? '👍' : '👎'}`);
     } catch (error) {
-      console.error("❌ Error recording VFP-Graph and ACS feedback from hook:", error);
+      console.error(`❌ Error recording VFP-Graph and ACS feedback from ${pageContext}:`, error);
     }
   };
 

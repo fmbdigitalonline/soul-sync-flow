@@ -20,12 +20,14 @@ const MobileNavigation: React.FC = () => {
     { to: "/blueprint", icon: Star, label: "Blueprint" },
     { to: "/dreams", icon: Heart, label: "Dreams" },
     { to: "/spiritual-growth", icon: Sparkles, label: t('nav.growth') },
-    { to: "/coach", icon: MessageCircle, label: t('nav.coach') },
+    { to: "/companion", icon: MessageCircle, label: "Companion" }, // Changed from "Coach" to "Companion"
   ];
 
   const isActive = (path: string) => {
     if (path === "/" && location.pathname === "/") return true;
     if (path !== "/" && location.pathname.startsWith(path)) return true;
+    // Handle legacy /coach route redirect to /companion
+    if (path === "/companion" && location.pathname.startsWith("/coach")) return true;
     return false;
   };
 

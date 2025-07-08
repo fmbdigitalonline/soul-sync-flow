@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
@@ -21,49 +20,42 @@ const Coach = () => {
     isLoading, 
     sendMessage, 
     resetConversation, 
-    streamingContent, 
-    isStreaming, 
-    sessionId,
+    currentAgent, 
+    switchAgent,
     personaReady,
-    vfpGraphStatus 
-  } = useEnhancedAICoach("blend", "coach");
-  const { isSoulSyncReady, soulSyncError } = useSoulSync();
-  const { hasBlueprint, blueprintData } = useBlueprintCache();
+    authInitialized,
+    blueprintStatus,
+    vfpGraphStatus,
+    recordVFPGraphFeedback,
+    acsEnabled,
+    acsState
+  } = useEnhancedAICoach("blend", "companion");
+
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
+  const { hasBlueprint } = useBlueprintCache();
   const { productivityJourney, growthJourney } = useJourneyTracking();
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
 
   // Check authentication status
   useEffect(() => {
     const checkAuth = async () => {
       const { data } = await supabase.auth.getSession();
-      setIsAuthenticated(!!data.session);
+      const authenticated = !!data.session;
+      setIsAuthenticated(authenticated);
     };
     
     checkAuth();
     
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setIsAuthenticated(!!session);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      const authenticated = !!session;
+      setIsAuthenticated(authenticated);
     });
     
-    return () => {
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
-
-  // Debug logging
-  useEffect(() => {
-    console.log('🎯 Coach Component State:', {
-      isAuthenticated,
-      hasBlueprint,
-      isSoulSyncReady,
-      soulSyncError,
-      blueprintDataExists: !!blueprintData,
-      sessionId
-    });
-  }, [isAuthenticated, hasBlueprint, isSoulSyncReady, soulSyncError, blueprintData, sessionId]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -73,127 +65,141 @@ const Coach = () => {
     scrollToBottom();
   }, [messages]);
 
-  const handleNewConversation = () => {
-    resetConversation();
-    toast({
-      title: "New Conversation",
-      description: "Started a new conversation with your Soul Companion",
-    });
+  const handleSendMessage = async (message: string) => {
+    await sendMessage(message, true, undefined, 'companion');
   };
 
-  const handleSendMessage = async (message: string) => {
-    // Use SoulSync if available, otherwise fall back to regular mode
-    await sendMessage(message, isSoulSyncReady, undefined, "coach");
+  const handleReset = () => {
+    resetConversation();
+    toast({
+      title: "Conversation Reset",
+      description: "Your companion conversation has been cleared.",
+    });
   };
 
   if (!isAuthenticated) {
     return (
-      <MainLayout>
-        <div className="flex flex-col h-[calc(100vh-5rem)] max-w-md mx-auto p-4 items-center justify-center">
-          <CosmicCard className="p-6 text-center">
-            <Sparkles className="h-8 w-8 text-soul-purple mx-auto mb-4" />
-            <h1 className="text-2xl font-bold font-display mb-2">
-              <span className="gradient-text">Soul Companion</span>
-            </h1>
-            <p className="mb-6">Please sign in to access your AI coach</p>
-            <Button 
-              className="bg-soul-purple hover:bg-soul-purple/90"
-              onClick={() => window.location.href = '/auth'}
-            >
-              Sign In
-            </Button>
-          </CosmicCard>
-        </div>
-      </MainLayout>
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <CosmicCard className="w-full max-w-md text-center space-y-6">
+          <div className="w-16 h-16 mx-auto bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center">
+            <MessageCircle className="h-8 w-8 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">AI Companion</h1>
+            <p className="text-gray-600">Your personal AI companion for integrated support and guidance.</p>
+          </div>
+          <Button 
+            className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+            onClick={() => window.location.href = '/auth'}
+          >
+            Get Started
+          </Button>
+        </CosmicCard>
+      </div>
     );
   }
 
-  const chatContent = (
-    <>
-      {/* Enhanced Header with SoulSync Status */}
-      <div className="flex-shrink-0 px-3 py-1">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <div className={`w-6 h-6 bg-gradient-to-br from-soul-purple to-soul-teal rounded-full flex items-center justify-center ${isSoulSyncReady ? 'ring-2 ring-green-400' : ''}`}>
-                {isSoulSyncReady ? (
-                  <Zap className="h-3 w-3 text-white" />
-                ) : (
-                  <MessageCircle className="h-3 w-3 text-white" />
-                )}
-              </div>
-              {isSoulSyncReady && (
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse" />
-              )}
-            </div>
-            <div className="flex flex-col">
-              <h1 className="text-sm font-medium gradient-text">
-                {isSoulSyncReady ? 'SoulSync Active' : 'Soul Companion'}
-              </h1>
-              {isSoulSyncReady && (
-                <span className="text-xs text-green-600">Personalized AI Ready</span>
-              )}
-              {soulSyncError && (
-                <span className="text-xs text-red-500">Generic Mode</span>
-              )}
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
+      <div className="container mx-auto py-6 px-4 max-w-6xl">
+        
+        <div className="text-center mb-6">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mb-2">
+            AI Companion
+          </h1>
+          <p className="text-gray-600">
+            Your integrated AI companion combining coaching and guidance
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-200px)]">
+          
+          <div className="hidden lg:block lg:col-span-1">
+            <div className="space-y-4 h-full">
+              
+              <ActiveReminders />
+              
+              <CosmicCard className="p-4">
+                <h3 className="font-semibold mb-3 flex items-center">
+                  <RotateCcw className="h-4 w-4 mr-2" />
+                  Reset Chat
+                </h3>
+                <Button
+                  onClick={handleReset}
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                >
+                  Clear Conversation
+                </Button>
+              </CosmicCard>
+
+              <CosmicCard className="p-4">
+                <h3 className="font-semibold mb-3 flex items-center">
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  System Status
+                </h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>Blueprint:</span>
+                    <span className={hasBlueprint ? "text-green-600" : "text-amber-600"}>
+                      {hasBlueprint ? "Ready" : "Partial"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Mode:</span>
+                    <span className="text-purple-600">Companion</span>
+                  </div>
+                  {acsEnabled && (
+                    <div className="flex justify-between">
+                      <span>ACS:</span>
+                      <span className="text-blue-600">Active</span>
+                    </div>
+                  )}
+                </div>
+              </CosmicCard>
             </div>
           </div>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={handleNewConversation}
-            className="h-6 px-1"
-          >
-            <RotateCcw className="h-3 w-3" />
-          </Button>
+
+          <div className="lg:col-span-3">
+            <CosmicCard className="h-full">
+              <BlendInterface
+                messages={messages}
+                isLoading={isLoading}
+                onSendMessage={handleSendMessage}
+                messagesEndRef={messagesEndRef}
+                onFeedback={recordVFPGraphFeedback}
+              />
+            </CosmicCard>
+          </div>
         </div>
-        
-        {/* SoulSync Status Banner - Only show if no blueprint detected */}
-        {!hasBlueprint && (
-          <div className="mt-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg">
-            <div className="flex items-center gap-2 text-xs text-amber-700">
-              <Sparkles className="h-3 w-3" />
-              <span>Create your Blueprint to unlock personalized AI responses</span>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                className="ml-auto h-6 text-xs"
-                onClick={() => window.location.href = '/blueprint'}
+
+        <MobileTogglePanel 
+          isOpen={isPanelOpen}
+          onToggle={() => setIsPanelOpen(!isPanelOpen)}
+          title="Companion Tools"
+        >
+          <div className="space-y-4">
+            <ActiveReminders />
+            
+            <div className="p-4 bg-white rounded-lg">
+              <h3 className="font-semibold mb-3 flex items-center">
+                <RotateCcw className="h-4 w-4 mr-2" />
+                Reset Chat
+              </h3>
+              <Button
+                onClick={handleReset}
+                variant="outline"
+                size="sm"
+                className="w-full"
               >
-                Create Blueprint
+                Clear Conversation
               </Button>
             </div>
           </div>
-        )}
+        </MobileTogglePanel>
       </div>
-
-      {/* Chat Interface - Full width */}
-      <div className="flex-1 pb-3 min-h-0">
-        <BlendInterface
-          messages={messages}
-          isLoading={isLoading}
-          onSendMessage={handleSendMessage}
-          personaReady={personaReady}
-          vfpGraphStatus={vfpGraphStatus}
-        />
-      </div>
-    </>
-  );
-
-  const remindersContent = (
-    <div className="space-y-4">
-      <ActiveReminders />
     </div>
-  );
-
-  return (
-    <MainLayout>
-      <MobileTogglePanel
-        chatContent={chatContent}
-        remindersContent={remindersContent}
-        activeRemindersCount={0} // This could be calculated from ActiveReminders data
-      />
-    </MainLayout>
   );
 };
 

@@ -18,7 +18,7 @@ import { useBlueprintData } from "@/hooks/use-blueprint-data";
 type ActiveView = 'welcome' | 'immediate_chat' | 'growth_program' | 'tools' | 'mood' | 'reflection' | 'insight' | 'weekly' | null;
 
 const SpiritualGrowth = () => {
-  const { messages, isLoading, sendMessage, resetConversation } = useEnhancedAICoach("guide", "spiritual-growth");
+  const { messages, isLoading, sendMessage, resetConversation } = useEnhancedAICoach("coach", "spiritual-growth");
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [activeView, setActiveView] = useState<ActiveView>('welcome');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -51,13 +51,13 @@ const SpiritualGrowth = () => {
     if (!isAuthenticated) return;
     
     try {
-      console.log('🚀 Starting Heart-Centered Guidance...');
+      console.log('🚀 Starting Heart-Centered Coaching...');
       setActiveView('immediate_chat');
       
       // Reset conversation to ensure clean start
       resetConversation();
       
-      console.log('✨ Ready for Heart-Centered Guidance chat');
+      console.log('✨ Ready for Heart-Centered Coaching chat');
       
     } catch (error) {
       console.error('Error initializing spiritual growth:', error);
@@ -140,7 +140,7 @@ const SpiritualGrowth = () => {
                 Back to Options
               </Button>
               <div className="text-center">
-                <h1 className="text-xl font-bold text-gray-800">Heart-Centered Guidance</h1>
+                <h1 className="text-xl font-bold text-gray-800">Heart-Centered Coach</h1>
                 <p className="text-sm text-gray-500">Connected & Ready</p>
               </div>
               <div className="w-20" />
@@ -351,16 +351,16 @@ const SpiritualGrowth = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             
-            {/* Heart-Centered Guidance Option */}
+            {/* Heart-Centered Coaching Option */}
             <CosmicCard className="group hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1" onClick={handleStartSpiritualGrowth}>
               <div className="flex flex-col items-center text-center space-y-4">
                 <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
                   <Heart className="h-8 w-8 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Heart-Centered Guidance</h3>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Heart-Centered Coach</h3>
                   <p className="text-gray-600 text-sm leading-relaxed">
-                    Start an immediate conversation with your personalized spiritual guide. Ready instantly with your unique personality blueprint.
+                    Start an immediate conversation with your personalized spiritual coach. Ready instantly with your unique personality blueprint.
                   </p>
                 </div>
                 <div className="text-xs text-purple-600 font-medium bg-purple-50 px-3 py-1 rounded-full">

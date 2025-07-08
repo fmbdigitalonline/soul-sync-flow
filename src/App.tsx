@@ -34,7 +34,9 @@ function App() {
                     <Route path="/" element={<MainLayout><Index /></MainLayout>} />
                     <Route path="/dreams" element={<ProtectedRoute><MainLayout><Dreams /></MainLayout></ProtectedRoute>} />
                     <Route path="/spiritual-growth" element={<ProtectedRoute><MainLayout><SpiritualGrowth /></MainLayout></ProtectedRoute>} />
-                    <Route path="/coach" element={<ProtectedRoute><MainLayout><Coach /></MainLayout></ProtectedRoute>} />
+                    <Route path="/companion" element={<ProtectedRoute><MainLayout><Coach /></MainLayout></ProtectedRoute>} />
+                    {/* Legacy redirect from /coach to /companion */}
+                    <Route path="/coach" element={<Navigate to="/companion" replace />} />
                     <Route path="/blueprint" element={<ProtectedRoute><MainLayout><Blueprint /></MainLayout></ProtectedRoute>} />
                     <Route path="/profile" element={<ProtectedRoute><MainLayout><Profile /></MainLayout></ProtectedRoute>} />
                     <Route path="/auth" element={<Auth />} />
