@@ -109,7 +109,7 @@ class GrowthProgramOrchestrator {
 
   private async performEnhancedLoading(
     basicContext: BasicContext,
-    blueprintData?: BlueprintData,
+    blueprintData: BlueprintData | undefined,
     domain: string
   ): Promise<EnhancedContext> {
     const startTime = Date.now();
