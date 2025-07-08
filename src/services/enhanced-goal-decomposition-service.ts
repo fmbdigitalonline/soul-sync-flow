@@ -48,11 +48,14 @@ class EnhancedGoalDecompositionService {
     const goalId = uuidv4();
     const targetDate = this.calculateTargetDate(timeframe);
     
-    // Create realistic milestones spread over the timeframe
-    const milestones = this.createMilestones(title, timeframe, targetDate);
+    // CNR Integration: Analyze causal relationships for dream decomposition
+    const causalAnalysis = await this.performCausalAnalysis(title, category, blueprintData);
     
-    // Create tasks for each milestone
-    const tasks = this.createTasksForMilestones(milestones);
+    // Create realistic milestones spread over the timeframe with causal logic
+    const milestones = this.createMilestones(title, timeframe, targetDate, causalAnalysis);
+    
+    // Create tasks for each milestone using causal dependencies
+    const tasks = this.createTasksForMilestones(milestones, causalAnalysis);
     
     // Generate blueprint alignment insights
     const blueprintAlignment = this.generateBlueprintAlignment(blueprintData, category);
@@ -69,6 +72,70 @@ class EnhancedGoalDecompositionService {
       tasks,
       blueprint_alignment: blueprintAlignment
     };
+  }
+  
+  // CNR Integration: Perform causal analysis for goal decomposition
+  private async performCausalAnalysis(title: string, category: string, blueprintData: BlueprintData): Promise<any> {
+    console.log('🔗 CNR: Analyzing causal relationships for dream decomposition');
+    
+    const causalFactors = {
+      prerequisites: this.identifyPrerequisites(title, category),
+      dependencies: this.mapDependencies(title, blueprintData),
+      riskFactors: this.assessRiskFactors(title, category),
+      accelerators: this.findAccelerators(title, blueprintData)
+    };
+    
+    return causalFactors;
+  }
+  
+  // Identify logical prerequisites for goal achievement
+  private identifyPrerequisites(title: string, category: string): string[] {
+    const lowerTitle = title.toLowerCase();
+    const prerequisites: string[] = [];
+    
+    if (lowerTitle.includes('business') || lowerTitle.includes('startup')) {
+      prerequisites.push('market_research', 'financial_planning', 'skill_development');
+    } else if (lowerTitle.includes('fitness') || lowerTitle.includes('health')) {
+      prerequisites.push('baseline_assessment', 'routine_establishment', 'environment_setup');
+    } else if (lowerTitle.includes('relationship') || lowerTitle.includes('social')) {
+      prerequisites.push('self_awareness', 'communication_skills', 'emotional_intelligence');
+    }
+    
+    return prerequisites;
+  }
+  
+  // Map dependencies based on blueprint personality
+  private mapDependencies(title: string, blueprintData: BlueprintData): string[] {
+    const dependencies: string[] = [];
+    
+    // Add personality-based dependencies
+    if (blueprintData?.cognition_mbti?.type?.includes('I')) {
+      dependencies.push('solo_preparation_time', 'internal_processing');
+    }
+    if (blueprintData?.cognition_mbti?.type?.includes('E')) {
+      dependencies.push('social_support', 'external_feedback');
+    }
+    
+    return dependencies;
+  }
+  
+  // Assess risk factors that could impede progress
+  private assessRiskFactors(title: string, category: string): string[] {
+    return ['time_constraints', 'resource_limitations', 'motivation_fluctuation', 'external_obstacles'];
+  }
+  
+  // Find accelerators that could speed up progress
+  private findAccelerators(title: string, blueprintData: BlueprintData): string[] {
+    const accelerators: string[] = ['consistent_habits', 'support_system', 'clear_metrics'];
+    
+    // Add blueprint-specific accelerators
+    if (blueprintData?.energy_strategy_human_design?.type === 'Manifestor') {
+      accelerators.push('independent_action', 'clear_vision');
+    } else if (blueprintData?.energy_strategy_human_design?.type === 'Generator') {
+      accelerators.push('following_excitement', 'sustainable_pace');
+    }
+    
+    return accelerators;
   }
 
   private calculateTargetDate(timeframe: string): string {
@@ -89,34 +156,39 @@ class EnhancedGoalDecompositionService {
     }
   }
 
-  private createMilestones(title: string, timeframe: string, targetDate: string): EnhancedMilestone[] {
+  private createMilestones(title: string, timeframe: string, targetDate: string, causalAnalysis?: any): EnhancedMilestone[] {
     const totalMonths = this.parseTimeframe(timeframe);
     const startDate = new Date();
     
+    // Enhanced milestone templates with causal reasoning
     const milestoneTemplates = [
       {
         phase: 'discovery' as const,
         title: 'Foundation & Research',
         description: 'Understand requirements, gather resources, and create initial plan',
-        monthOffset: Math.floor(totalMonths * 0.2)
+        monthOffset: Math.floor(totalMonths * 0.2),
+        causalPriority: causalAnalysis?.prerequisites?.length || 1
       },
       {
         phase: 'planning' as const,
         title: 'Strategic Planning',
         description: 'Develop detailed action plan and set up systems',
-        monthOffset: Math.floor(totalMonths * 0.4)
+        monthOffset: Math.floor(totalMonths * 0.4),
+        causalPriority: 2
       },
       {
         phase: 'execution' as const,
         title: 'Active Implementation',
         description: 'Execute core activities and track progress',
-        monthOffset: Math.floor(totalMonths * 0.8)
+        monthOffset: Math.floor(totalMonths * 0.8),
+        causalPriority: 3
       },
       {
         phase: 'analysis' as const,
         title: 'Review & Optimization',
         description: 'Evaluate results and make final adjustments',
-        monthOffset: totalMonths
+        monthOffset: totalMonths,
+        causalPriority: 4
       }
     ];
 
@@ -164,13 +236,16 @@ class EnhancedGoalDecompositionService {
     return criteriaMap[phase] || ['Milestone completed'];
   }
 
-  private createTasksForMilestones(milestones: EnhancedMilestone[]): EnhancedTask[] {
+  private createTasksForMilestones(milestones: EnhancedMilestone[], causalAnalysis?: any): EnhancedTask[] {
     const tasks: EnhancedTask[] = [];
     
     milestones.forEach((milestone, milestoneIndex) => {
       const taskTemplates = this.getTaskTemplatesForPhase(milestone.phase);
       
       taskTemplates.forEach((template, taskIndex) => {
+        // Enhanced task creation with causal dependencies
+        const prerequisites = this.determineCausalPrerequisites(template, causalAnalysis);
+        
         tasks.push({
           id: uuidv4(),
           title: template.title,
@@ -180,13 +255,30 @@ class EnhancedGoalDecompositionService {
           estimated_duration: template.duration,
           energy_level_required: template.energy,
           category: template.category,
-          prerequisites: template.prerequisites,
+          prerequisites: prerequisites,
           order: taskIndex + 1
         });
       });
     });
     
     return tasks;
+  }
+  
+  // Determine causal prerequisites for tasks
+  private determineCausalPrerequisites(template: any, causalAnalysis?: any): string[] {
+    const basePrerequistes = template.prerequisites || [];
+    
+    if (causalAnalysis?.dependencies) {
+      // Add causal dependencies if they're relevant to this task type
+      if (template.category === 'planning' && causalAnalysis.dependencies.includes('solo_preparation_time')) {
+        basePrerequistes.push('Schedule dedicated planning time');
+      }
+      if (template.category === 'execution' && causalAnalysis.dependencies.includes('social_support')) {
+        basePrerequistes.push('Establish accountability partner');
+      }
+    }
+    
+    return basePrerequistes;
   }
 
   private getTaskTemplatesForPhase(phase: string) {

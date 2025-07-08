@@ -185,14 +185,48 @@ class GrowthProgramService {
   }
 
   private buildSchedule(programType: ProgramType, params: BlueprintParams): SessionSchedule {
-    const scheduleMap = {
-      sprint: { sessions_per_week: 5, session_duration_minutes: 15, reminder_frequency: 'daily' as const },
-      standard: { sessions_per_week: 3, session_duration_minutes: 25, reminder_frequency: 'weekly' as const },
-      deep_dive: { sessions_per_week: 2, session_duration_minutes: 45, reminder_frequency: 'weekly' as const },
-      light_touch: { sessions_per_week: 1, session_duration_minutes: 20, reminder_frequency: 'weekly' as const }
+    // TWS Integration: Adaptive timing based on user rhythms
+    const baseSchedule = {
+      sprint: { sessions_per_week: 5, session_duration_minutes: 15, reminder_frequency: 'daily' as 'daily' },
+      standard: { sessions_per_week: 3, session_duration_minutes: 25, reminder_frequency: 'weekly' as 'weekly' },
+      deep_dive: { sessions_per_week: 2, session_duration_minutes: 45, reminder_frequency: 'weekly' as 'weekly' },
+      light_touch: { sessions_per_week: 1, session_duration_minutes: 20, reminder_frequency: 'weekly' as 'weekly' }
     };
-
-    return scheduleMap[programType];
+    
+    const schedule = baseSchedule[programType];
+    
+    // TWS Adaptive Pacing: Adjust based on user energy patterns
+    const adaptedSchedule = this.adaptScheduleToUserRhythms(schedule, params);
+    
+    console.log(`⏰ TWS: Adaptive scheduling applied - ${adaptedSchedule.sessions_per_week} sessions/week, ${adaptedSchedule.session_duration_minutes}min each`);
+    
+    return adaptedSchedule;
+  }
+  
+  // TWS Integration: Adapt schedule to user's natural rhythms
+  private adaptScheduleToUserRhythms(baseSchedule: any, params: BlueprintParams): SessionSchedule {
+    let adaptedSchedule = { ...baseSchedule } as SessionSchedule;
+    
+    // Adjust frequency based on confidence level
+    if (params.user_confidence === 'low') {
+      adaptedSchedule.sessions_per_week = Math.max(1, Math.floor(adaptedSchedule.sessions_per_week * 0.7));
+      adaptedSchedule.session_duration_minutes = Math.floor(adaptedSchedule.session_duration_minutes * 0.8);
+    } else if (params.user_confidence === 'high') {
+      adaptedSchedule.sessions_per_week = Math.min(7, Math.floor(adaptedSchedule.sessions_per_week * 1.2));
+    }
+    
+    // Adjust duration based on preferred pace
+    if (params.preferred_pace === 'daily') {
+      adaptedSchedule.reminder_frequency = 'daily';
+      adaptedSchedule.session_duration_minutes = Math.floor(adaptedSchedule.session_duration_minutes * 0.7);
+    }
+    
+    // Support style affects session structure
+    if (params.support_style >= 4) {
+      adaptedSchedule.sessions_per_week = Math.min(5, adaptedSchedule.sessions_per_week + 1);
+    }
+    
+    return adaptedSchedule;
   }
 
   private calculateProgramLength(programType: ProgramType): number {
