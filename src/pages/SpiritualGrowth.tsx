@@ -7,6 +7,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useEnhancedAICoach } from "@/hooks/use-enhanced-ai-coach";
 import { supabase } from "@/integrations/supabase/client";
 import { SpiritualGuideInterface } from "@/components/growth/SpiritualGuideInterface";
+import { GrowthProgramInterface } from "@/components/growth/GrowthProgramInterface";
+import { TelemetryTracker } from "@/components/growth/TelemetryTracker";
 import { MoodTracker } from "@/components/coach/MoodTracker";
 import { ReflectionPrompts } from "@/components/coach/ReflectionPrompts";
 import { InsightJournal } from "@/components/coach/InsightJournal";
@@ -162,40 +164,30 @@ const SpiritualGrowth = () => {
     );
   }
 
-  // Show Coming Soon for Growth Program
+  // Show Growth Program Interface with Agent-Driven System
   if (activeView === 'growth_program') {
     return (
-      <MainLayout>
-        <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
-          <div className="container mx-auto py-6 px-4 max-w-4xl">
-            <div className="mb-6">
-              <Button 
-                variant="outline" 
-                onClick={() => setActiveView('welcome')}
-                className="mb-4"
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Growth Coach
-              </Button>
+      <TelemetryTracker>
+        <MainLayout>
+          <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
+            <div className="container mx-auto py-6 px-4 max-w-6xl">
+              <div className="mb-6">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setActiveView('welcome')}
+                  className="mb-4"
+                  data-track="navigation-back-to-welcome"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back to Growth Coach
+                </Button>
+              </div>
+              
+              <GrowthProgramInterface />
             </div>
-            
-            <CosmicCard className="text-center p-12">
-              <div className="w-16 h-16 mx-auto bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mb-6">
-                <TrendingUp className="h-8 w-8 text-white" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Structured Program</h2>
-              <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                We're redesigning this experience to make it even more powerful and intuitive. 
-                In the meantime, enjoy the Heart-Centered Guidance and Spiritual Tools!
-              </p>
-              <div className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 px-4 py-2 rounded-full">
-                <Sparkles className="h-4 w-4" />
-                <span className="font-medium">Coming Soon</span>
-              </div>
-            </CosmicCard>
           </div>
-        </div>
-      </MainLayout>
+        </MainLayout>
+      </TelemetryTracker>
     );
   }
 
@@ -382,7 +374,7 @@ const SpiritualGrowth = () => {
                   </p>
                 </div>
                 <div className="text-xs text-indigo-600 font-medium bg-indigo-50 px-3 py-1 rounded-full">
-                  🔄 Coming Soon
+                  🤖 AI-Powered
                 </div>
               </div>
             </CosmicCard>
