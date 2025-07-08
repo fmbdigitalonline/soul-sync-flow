@@ -264,6 +264,34 @@ class DualPoleEquilibratorModule {
     return { score: balanceScore, imbalances };
   }
 
+  // Apply active equilibration for emotional/analytical extremes
+  applyActiveEquilibration(emotionalState: number, analyticalState: number, context?: any): void {
+    // Map emotional/analytical states to relevant polarity dimensions
+    const emotionalAnalyticalBalance = (emotionalState - analyticalState) / 2;
+    
+    // Update reasoning style dimension
+    this.monitorDimension('reasoning_style', emotionalAnalyticalBalance, {
+      mode: context?.mode || 'general',
+      domain: context?.domain || 'general',
+      urgency: context?.urgency || 0.5
+    });
+    
+    // Apply counterbalancing to prevent extremes
+    if (Math.abs(emotionalAnalyticalBalance) > 0.7) {
+      const counterbalance = -emotionalAnalyticalBalance * 0.3;
+      
+      // Update communication tone to balance extreme states
+      this.monitorDimension('communication_tone', counterbalance, {
+        mode: context?.mode || 'general',
+        domain: context?.domain || 'general',
+        urgency: context?.urgency || 0.5,
+        situationalBias: counterbalance
+      });
+      
+      console.log(`⚖️ DPEM: Applied counterbalancing for extreme ${emotionalState > analyticalState ? 'emotional' : 'analytical'} state`);
+    }
+  }
+
   // Auto-correct extreme imbalances
   autoCorrectImbalances(): void {
     const { imbalances } = this.checkSystemBalance();
@@ -325,6 +353,7 @@ class DualPoleEquilibratorModule {
       if (index > -1) this.balanceListeners.splice(index, 1);
     };
   }
+
 
   // Get current status
   getStatus() {

@@ -141,8 +141,11 @@ class UnifiedBrainService {
     // Phase 3 Step 1: HFME - Update processing metrics
     await this.updateHFMEMetrics(sessionId, agentMode);
 
-    // Phase 3 Step 2: DPEM - Monitor polarity balance
+    // Phase 3 Step 2: DPEM - Monitor polarity balance with active equilibration
     await this.monitorDualPoleBalance(message, agentMode);
+    
+    // Cross-Mode Intent Sharing: Share intentions between modes for continuity
+    await this.shareCrossModeIntent(sessionId, agentMode);
 
     // PIE: Collect user data from conversation
     await this.collectPIEDataFromMessage(message, agentMode);
@@ -1200,6 +1203,74 @@ class UnifiedBrainService {
       registeredModules: ['acs', 'cnr', 'pie', 'tmg'],
       tmgIntegration: !!neuroIntentKernel['tmgReference']
     };
+  }
+
+  // Share intent across modes for continuity
+  private async shareCrossModeIntent(sessionId: string, currentMode: AgentMode): Promise<void> {
+    try {
+      const currentIntent = neuroIntentKernel.getCurrentIntent();
+      if (!currentIntent || currentIntent.sessionId !== sessionId) return;
+      
+      // Determine which modes should receive the intent
+      const targetModes = this.getRelevantModesForIntent(currentIntent.primary, currentMode);
+      
+      if (targetModes.length > 0) {
+        neuroIntentKernel.shareIntentAcrossModes(targetModes);
+        console.log(`🧠 Cross-Mode Intent: Shared "${currentIntent.primary}" from ${currentMode} to ${targetModes.join(', ')}`);
+      }
+    } catch (error) {
+      console.error('🧠 Cross-Mode Intent: Error sharing intent:', error);
+    }
+  }
+  
+  // Determine relevant modes for intent sharing
+  private getRelevantModesForIntent(intentPrimary: string, currentMode: AgentMode): string[] {
+    const lowerIntent = intentPrimary.toLowerCase();
+    const targetModes: string[] = [];
+    
+    // Goal-related intents should be shared with coach mode
+    if ((lowerIntent.includes('goal') || lowerIntent.includes('achieve')) && currentMode !== 'coach') {
+      targetModes.push('coach');
+    }
+    
+    // Growth/learning intents should be shared with guide mode
+    if ((lowerIntent.includes('learn') || lowerIntent.includes('grow') || lowerIntent.includes('develop')) && currentMode !== 'guide') {
+      targetModes.push('guide');
+    }
+    
+    // Dream/vision intents should be shared with blend mode for creative processing
+    if ((lowerIntent.includes('dream') || lowerIntent.includes('vision') || lowerIntent.includes('imagine')) && currentMode !== 'blend') {
+      targetModes.push('blend');
+    }
+    
+    return targetModes;
+  }
+  
+  // Calculate message urgency from content
+  private calculateUrgencyFromMessage(message: string): number {
+    const urgentWords = ['urgent', 'emergency', 'asap', 'immediately', 'quickly', 'deadline', 'critical'];
+    const lowerMessage = message.toLowerCase();
+    const urgentCount = urgentWords.filter(word => lowerMessage.includes(word)).length;
+    return Math.min(urgentCount * 0.25, 1.0);
+  }
+  
+  // Get optimal frequency for each mode to prevent interference
+  private getOptimalFrequencyForMode(agentMode: AgentMode): number {
+    const modeFrequencies: Record<AgentMode, number> = {
+      'coach': 8.0,     // Task-focused, medium-high frequency
+      'guide': 4.0,     // Reflective, lower frequency
+      'blend': 6.0      // Conversational, balanced frequency
+    };
+    
+    return modeFrequencies[agentMode] || 5.0;
+  }
+  
+  // Calculate current processing load
+  private calculateCurrentLoad(): number {
+    // Simple load calculation based on session memory size and processing state
+    const memoryLoad = Math.min(this.sessionMemory.size / 50, 0.8); // Max 80% from memory
+    const baseLoad = 0.2; // Base system load
+    return Math.min(memoryLoad + baseLoad, 1.0);
   }
 
   // Enhanced brain health metrics with cost awareness and Phase 3 status

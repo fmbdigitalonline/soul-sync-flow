@@ -120,7 +120,11 @@ class HarmonicFrequencyModulationEngine {
   // Apply harmonic adjustments to improve system harmony
   private applyHarmonicAdjustments(): void {
     const harmonyScore = this.analyzeHarmony();
-    if (harmonyScore >= this.harmonyTarget) return;
+    
+    // Check for cognitive interference first
+    const interferenceDetected = this.preventCognitiveInterference();
+    
+    if (harmonyScore >= this.harmonyTarget && !interferenceDetected) return;
 
     const modules = Array.from(this.processMetrics.values());
     const adjustments: HarmonicAdjustment[] = [];
@@ -246,6 +250,55 @@ class HarmonicFrequencyModulationEngine {
     }
 
     return conflicts;
+  }
+
+  // Prevent cognitive interference between modes
+  preventCognitiveInterference(): boolean {
+    const modules = Array.from(this.processMetrics.values());
+    let interferenceDetected = false;
+    
+    // Define frequency isolation channels for different modes
+    const modeFrequencies: Record<string, number> = {
+      'dream': 3.0,     // 2-4Hz range
+      'companion': 6.0, // 5-7Hz range
+      'growth': 10.0,   // 8-12Hz range
+      'coach': 8.0,     // 7-9Hz range
+      'guide': 4.0      // 3-5Hz range
+    };
+    
+    modules.forEach(module => {
+      const modeType = this.extractModeFromModuleId(module.moduleId);
+      const targetFreq = modeFrequencies[modeType];
+      
+      if (targetFreq && Math.abs(module.frequency - targetFreq) > 1.5) {
+        // Apply frequency separation
+        this.updateMetrics(module.moduleId, {
+          frequency: this.smoothTransition(module.frequency, targetFreq, 0.4),
+          phase: this.calculateOptimalPhase(targetFreq)
+        });
+        
+        interferenceDetected = true;
+        console.log(`🎵 HFME: Separated ${module.moduleId} to ${targetFreq}Hz`);
+      }
+    });
+    
+    return interferenceDetected;
+  }
+  
+  // Extract mode type from module ID
+  private extractModeFromModuleId(moduleId: string): string {
+    if (moduleId.includes('dream')) return 'dream';
+    if (moduleId.includes('companion')) return 'companion';
+    if (moduleId.includes('growth')) return 'growth';
+    if (moduleId.includes('coach')) return 'coach';
+    if (moduleId.includes('guide')) return 'guide';
+    return 'general';
+  }
+  
+  // Calculate optimal phase for frequency
+  private calculateOptimalPhase(frequency: number): number {
+    // Phase offset based on frequency to prevent destructive interference
+    return (frequency * Math.PI / 12) % (2 * Math.PI);
   }
 
   // Force harmonic convergence (emergency tuning)

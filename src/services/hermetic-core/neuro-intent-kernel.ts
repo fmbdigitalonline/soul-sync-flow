@@ -313,6 +313,48 @@ class NeuroIntentKernel {
     return null;
   }
 
+  // Share intent across modes for continuity
+  shareIntentAcrossModes(targetModes: string[]): void {
+    if (!this.currentIntent) return;
+    
+    targetModes.forEach(mode => {
+      const crossModeIntent = {
+        ...this.currentIntent,
+        id: `${this.currentIntent.id}_${mode}`,
+        domain: mode,
+        context: {
+          ...this.currentIntent.context,
+          originalMode: this.currentIntent.domain,
+          sharedAt: Date.now()
+        }
+      };
+      
+      // Broadcast to mode-specific listeners
+      this.moduleListeners.forEach((listener, moduleId) => {
+        if (moduleId.includes(mode)) {
+          const broadcast: IntentBroadcast = {
+            intent: crossModeIntent,
+            moduleId,
+            action: 'prioritize',
+            metadata: {
+              shared: true,
+              originalDomain: this.currentIntent.domain,
+              timestamp: Date.now()
+            }
+          };
+          
+          try {
+            listener(broadcast);
+          } catch (error) {
+            console.error(`🧠 NIK: Failed to share intent to ${moduleId}:`, error);
+          }
+        }
+      });
+    });
+    
+    console.log(`🧠 NIK: Shared intent "${this.currentIntent.primary}" across ${targetModes.length} modes`);
+  }
+
   // Broadcast intent to registered modules
   private broadcastToModules(): void {
     if (!this.currentIntent) return;
