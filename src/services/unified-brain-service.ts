@@ -10,6 +10,7 @@ import { PIEDataPoint } from "@/types/pie-types";
 import { costMonitoringService } from "./cost-monitoring-service";
 import { neuroIntentKernel } from "./hermetic-core/neuro-intent-kernel";
 import { crossPlaneStateReflector } from "./hermetic-core/cross-plane-state-reflector";
+import { temporalWaveSynchronizer } from "./hermetic-core/temporal-wave-synchronizer";
 import { hacsMonitorService } from "./hacs-monitor-service";
 import { hacsFallbackService } from "./hacs-fallback-service";
 
@@ -40,6 +41,9 @@ class UnifiedBrainService {
     // Initialize HACS monitoring first
     hacsMonitorService.initialize();
     
+    // Initialize HACS TWS (Temporal Wave Synchronizer)
+    this.initializeTWS();
+    
     // Initialize all brain components
     enhancedPersonalityEngine.setUserId(userId);
     
@@ -49,7 +53,7 @@ class UnifiedBrainService {
     // Load user's blueprint for personality consistency
     await this.loadUserBlueprint();
     
-    console.log("✅ Unified Brain Service initialized with PIE integration and HACS monitoring");
+    console.log("✅ Unified Brain Service initialized with PIE integration, HACS monitoring, and TWS cognitive rhythm");
   }
 
   private async loadUserBlueprint() {
@@ -575,6 +579,111 @@ class UnifiedBrainService {
     } catch (error) {
       console.error('🔄 CPSR: Error getting state:', error);
       return { unifiedState: null, sessionStates: [] };
+    }
+  }
+
+  // HACS TWS Integration - Initialize Temporal Wave Synchronizer
+  private initializeTWS(): void {
+    try {
+      console.log('⏰ TWS: Initializing cognitive rhythm cycles');
+      
+      // Start the temporal wave synchronizer with optimized timing for conversation processing
+      temporalWaveSynchronizer.start();
+      
+      // Register UnifiedBrainService for periodic cognitive sync
+      temporalWaveSynchronizer.registerModule('unified_brain', 0.5, () => {
+        this.performCognitiveSync();
+      });
+      
+      // Register memory cleanup on reflection phase
+      temporalWaveSynchronizer.onEvent('phase_start', (event) => {
+        if (event.phase?.name === 'reflection') {
+          this.performMemoryReflection();
+        }
+      });
+      
+      // Sync timing with CPSR on cycle completion
+      temporalWaveSynchronizer.onEvent('cycle_complete', () => {
+        crossPlaneStateReflector.updateMetaState('cognitive_cycle_count', 
+          temporalWaveSynchronizer.getCycleInfo().cycleCount, 'tws');
+      });
+      
+      console.log('⏰ TWS: Cognitive rhythm cycles initialized successfully');
+    } catch (error) {
+      console.error('⏰ TWS: Error initializing temporal synchronizer:', error);
+      // TWS failure should not break initialization - continue without timing optimization
+    }
+  }
+
+  // Periodic cognitive synchronization triggered by TWS
+  private performCognitiveSync(): void {
+    try {
+      // Sync session memory states
+      const activeSessionCount = Array.from(this.sessionMemory.keys())
+        .filter(key => key.startsWith('cpsr_state_')).length;
+      
+      crossPlaneStateReflector.updateMetaState('active_sessions', activeSessionCount, 'tws_sync');
+      
+      // Optimize timing based on current cognitive phase
+      const currentPhase = temporalWaveSynchronizer.getCurrentPhase();
+      if (currentPhase.name === 'analysis' && this.sessionMemory.size > 10) {
+        // Extend analysis phase if processing many sessions
+        temporalWaveSynchronizer.adjustPhaseTiming('analysis', currentPhase.duration * 1.2);
+      }
+      
+      // Update TWS health in meta state
+      const cycleInfo = temporalWaveSynchronizer.getCycleInfo();
+      crossPlaneStateReflector.updateMetaState('tws_health', {
+        isRunning: cycleInfo.isRunning,
+        currentPhase: cycleInfo.currentPhase.name,
+        uptime: cycleInfo.uptime
+      }, 'tws_monitor');
+      
+    } catch (error) {
+      console.error('⏰ TWS: Error in cognitive sync:', error);
+    }
+  }
+
+  // Memory reflection triggered during TWS reflection phase
+  private performMemoryReflection(): void {
+    try {
+      // Clean up old session memory entries (older than 1 hour)
+      const oneHourAgo = Date.now() - (60 * 60 * 1000);
+      const cleanupCount = Array.from(this.sessionMemory.entries())
+        .filter(([key, value]) => {
+          return key.startsWith('cpsr_state_') && value.timestamp < oneHourAgo;
+        }).length;
+      
+      // Remove old entries
+      for (const [key, value] of this.sessionMemory.entries()) {
+        if (key.startsWith('cpsr_state_') && value.timestamp < oneHourAgo) {
+          this.sessionMemory.delete(key);
+        }
+      }
+      
+      if (cleanupCount > 0) {
+        console.log(`⏰ TWS: Cleaned up ${cleanupCount} old session memory entries`);
+      }
+      
+      // Update reflection metrics
+      crossPlaneStateReflector.updateMetaState('memory_cleanup_count', cleanupCount, 'tws_reflection');
+      crossPlaneStateReflector.updateMetaState('memory_size', this.sessionMemory.size, 'tws_reflection');
+      
+    } catch (error) {
+      console.error('⏰ TWS: Error in memory reflection:', error);
+    }
+  }
+
+  // Get TWS timing information for debugging/monitoring
+  getTWSInfo() {
+    try {
+      return {
+        cycleInfo: temporalWaveSynchronizer.getCycleInfo(),
+        isActive: temporalWaveSynchronizer.getCycleInfo().isRunning
+      };
+    } catch (error) {
+      console.error('⏰ TWS: Error getting timing info:', error);
+      return { cycleInfo: null, isActive: false };
     }
   }
 
