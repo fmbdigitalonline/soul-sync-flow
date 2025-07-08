@@ -35,6 +35,13 @@ export class AdaptiveGrowthService {
   ): Promise<AdaptiveGrowthProgram> {
     console.log('🌱 Generating adaptive growth program with AI agents');
 
+    // Check for existing active program to prevent duplicates
+    const existingProgram = await this.getCurrentPrograms(userId);
+    if (existingProgram.length > 0 && existingProgram.some(p => p.status === 'active' && p.domain === domain)) {
+      console.log('⚠️ Active program already exists for this domain, returning existing');
+      return this.getAdaptiveProgram(existingProgram[0].id) as Promise<AdaptiveGrowthProgram>;
+    }
+
     try {
       // 1. Process blueprint into dual memory format
       await blueprintEmbeddingService.processAndStoreBlueprintMemory(userId, blueprint);
@@ -53,7 +60,7 @@ export class AdaptiveGrowthService {
 
   // 4. Create adaptive program structure
     const adaptiveProgram: AdaptiveGrowthProgram = {
-      id: `adaptive_${Date.now()}`,
+      id: crypto.randomUUID(),
       user_id: userId,
       program_type: this.determineAdaptiveProgramType(agentResult.plan) as ProgramType,
         domain,
