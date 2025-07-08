@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,7 +14,7 @@ import { HACSLiveDemonstration } from '@/components/growth/HACSLiveDemonstration
 const SpiritualGrowth: React.FC = () => {
   const [activeTab, setActiveTab] = useState('guide');
   const { user } = useAuth();
-  const { blueprint } = useBlueprintData();
+  const { blueprintData } = useBlueprintData();
   
   const {
     messages,
@@ -26,33 +25,33 @@ const SpiritualGrowth: React.FC = () => {
     isStreaming
   } = useProgramAwareCoach('spiritual-growth');
 
-  const displayName = blueprint?.user_meta?.preferred_name || 
-                     blueprint?.user_meta?.full_name?.split(' ')[0] || 
+  const displayName = blueprintData?.user_meta?.preferred_name || 
+                     blueprintData?.user_meta?.full_name?.split(' ')[0] || 
                      'friend';
 
   const coreTraits = React.useMemo(() => {
-    if (!blueprint) return ['Seeker', 'Growth-Oriented'];
+    if (!blueprintData) return ['Seeker', 'Growth-Oriented'];
     
     const traits = [];
     
-    if (blueprint.cognition_mbti?.type && blueprint.cognition_mbti.type !== 'Unknown') {
-      traits.push(blueprint.cognition_mbti.type);
+    if (blueprintData.cognition_mbti?.type && blueprintData.cognition_mbti.type !== 'Unknown') {
+      traits.push(blueprintData.cognition_mbti.type);
     }
     
-    if (blueprint.energy_strategy_human_design?.type && blueprint.energy_strategy_human_design.type !== 'Unknown') {
-      traits.push(blueprint.energy_strategy_human_design.type);
+    if (blueprintData.energy_strategy_human_design?.type && blueprintData.energy_strategy_human_design.type !== 'Unknown') {
+      traits.push(blueprintData.energy_strategy_human_design.type);
     }
     
-    if (blueprint.archetype_western?.sun_sign && blueprint.archetype_western.sun_sign !== 'Unknown') {
-      traits.push(blueprint.archetype_western.sun_sign);
+    if (blueprintData.archetype_western?.sun_sign && blueprintData.archetype_western.sun_sign !== 'Unknown') {
+      traits.push(blueprintData.archetype_western.sun_sign);
     }
     
     return traits.length > 0 ? traits : ['Unique Soul', 'Growth-Focused'];
-  }, [blueprint]);
+  }, [blueprintData]);
 
   useEffect(() => {
     if (user && messages.length === 0 && activeTab === 'guide') {
-      initializeBeliefDrilling('personal_growth', 'spiritual-growth');
+      initializeBeliefDrilling('relationships', 'spiritual-growth');
     }
   }, [user, messages.length, activeTab, initializeBeliefDrilling]);
 
@@ -80,7 +79,7 @@ const SpiritualGrowth: React.FC = () => {
               <Badge variant="outline" className="bg-soul-purple/10 text-soul-purple border-soul-purple/20">
                 Welcome {displayName}
               </Badge>
-              {blueprint && (
+              {blueprintData && (
                 <Badge variant="outline" className="bg-soul-teal/10 text-soul-teal border-soul-teal/20">
                   Blueprint Active
                 </Badge>
