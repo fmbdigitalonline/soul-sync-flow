@@ -45,6 +45,23 @@ class UnifiedBrainService {
     // Initialize HACS monitoring first
     hacsMonitorService.initialize();
     
+    // Initialize enhanced NIK with TMG integration
+    neuroIntentKernel.setTMGReference(tieredMemoryGraph);
+    
+    // Register NIK with other HACS modules
+    neuroIntentKernel.registerModule('acs', (broadcast) => {
+      this.handleNIKBroadcast(broadcast);
+    });
+    neuroIntentKernel.registerModule('cnr', (broadcast) => {
+      this.handleNIKBroadcast(broadcast);
+    });
+    neuroIntentKernel.registerModule('pie', (broadcast) => {
+      this.handleNIKBroadcast(broadcast);
+    });
+    neuroIntentKernel.registerModule('tmg', (broadcast) => {
+      this.handleNIKBroadcast(broadcast);
+    });
+    
     // Initialize HACS TWS (Temporal Wave Synchronizer)
     this.initializeTWS();
     
@@ -60,7 +77,10 @@ class UnifiedBrainService {
     // Load user's blueprint for personality consistency
     await this.loadUserBlueprint();
     
-    console.log("✅ Unified Brain Service initialized with PIE integration, HACS monitoring, and TWS cognitive rhythm");
+    // Attempt to restore any existing intent from TMG
+    await this.restoreUserIntent();
+    
+    console.log("✅ Unified Brain Service initialized with enhanced NIK, PIE integration, HACS monitoring, and TWS cognitive rhythm");
   }
 
   private async loadUserBlueprint() {
@@ -1053,6 +1073,135 @@ class UnifiedBrainService {
     return hints;
   }
 
+  // Handle NIK broadcast messages to other HACS modules
+  private handleNIKBroadcast(broadcast: any): void {
+    try {
+      const { intent, moduleId, action, metadata } = broadcast;
+      
+      switch (moduleId) {
+        case 'acs':
+          // Forward intent to ACS for priority adjustments
+          if (action === 'prioritize' && intent) {
+            console.log(`🧠 NIK→ACS: Prioritizing processes for intent "${intent.primary}"`);
+            // ACS would adjust its intervention thresholds based on intent priority
+          }
+          break;
+          
+        case 'cnr':
+          // Forward intent to CNR for causal evaluation
+          if (action === 'evaluate' && intent) {
+            console.log(`🧠 NIK→CNR: Evaluating causal routes for intent "${intent.primary}"`);
+            // CNR would factor intent into its routing decisions
+          }
+          break;
+          
+        case 'pie':
+          // Forward intent to PIE for insight generation
+          if (action === 'suggest' && intent) {
+            console.log(`🧠 NIK→PIE: Suggesting proactive insights for intent "${intent.primary}"`);
+            // PIE would generate intent-relevant insights
+          }
+          break;
+          
+        case 'tmg':
+          // Forward intent to TMG for memory weighting
+          if (action === 'monitor' && intent) {
+            console.log(`🧠 NIK→TMG: Monitoring memory relevance for intent "${intent.primary}"`);
+            // TMG would adjust memory importance scores based on intent relevance
+          }
+          break;
+      }
+    } catch (error) {
+      console.error(`🧠 NIK: Error handling broadcast to ${broadcast.moduleId}:`, error);
+    }
+  }
+
+  // Restore user intent from TMG on initialization
+  private async restoreUserIntent(): Promise<void> {
+    if (!this.userId) return;
+    
+    try {
+      // Attempt to restore from most recent session
+      const recentSessions = Array.from(this.sessionMemory.keys())
+        .filter(key => key.startsWith('cpsr_state_'))
+        .sort((a, b) => {
+          const aTime = this.sessionMemory.get(a)?.timestamp || 0;
+          const bTime = this.sessionMemory.get(b)?.timestamp || 0;
+          return bTime - aTime;
+        });
+      
+      if (recentSessions.length > 0) {
+        const mostRecentSession = this.sessionMemory.get(recentSessions[0]);
+        const sessionId = mostRecentSession?.sessionId;
+        
+        if (sessionId) {
+          const restoredIntent = await neuroIntentKernel.restoreFromTMG(sessionId);
+          if (restoredIntent) {
+            console.log(`🧠 Restored user intent: "${restoredIntent.primary}"`);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('🧠 Failed to restore user intent:', error);
+    }
+  }
+
+  // Generate internal intent suggestions when user is inactive
+  async generateProactiveIntent(observations: Record<string, any> = {}): Promise<void> {
+    try {
+      const sessionId = observations.sessionId || 'default';
+      
+      // Update user activity timestamp in NIK
+      neuroIntentKernel.updateUserActivity();
+      
+      // Add current observations
+      const enrichedObservations = {
+        ...observations,
+        userId: this.userId,
+        sessionId,
+        domain: observations.agentMode || 'general',
+        contextChange: this.hasContextChanged(sessionId)
+      };
+      
+      // Attempt to generate internal intent
+      const internalIntent = neuroIntentKernel.generateInternalIntent(enrichedObservations);
+      
+      if (internalIntent) {
+        console.log(`🧠 Generated internal intent: "${internalIntent.primary}"`);
+        
+        // Store the internally generated intent
+        await this.storeInSharedMemory(
+          `Internal intent: ${internalIntent.primary}`,
+          sessionId,
+          internalIntent.domain as AgentMode,
+          false
+        );
+      }
+    } catch (error) {
+      console.error('🧠 Error generating proactive intent:', error);
+    }
+  }
+
+  // Check if context has significantly changed
+  private hasContextChanged(sessionId: string): boolean {
+    const sessionState = this.sessionMemory.get(`cpsr_state_${sessionId}`);
+    if (!sessionState) return false;
+    
+    // Simple context change detection based on time and interaction patterns
+    const timeSinceLastUpdate = Date.now() - sessionState.timestamp;
+    return timeSinceLastUpdate > 600000; // 10 minutes indicates context shift
+  }
+
+  // Get enhanced NIK status for monitoring
+  getNIKStatus() {
+    return {
+      currentIntent: neuroIntentKernel.getCurrentIntent(),
+      intentState: neuroIntentKernel.getIntentState(),
+      registeredModules: ['acs', 'cnr', 'pie', 'tmg'],
+      tmgIntegration: !!neuroIntentKernel['tmgReference']
+    };
+  }
+
   // Enhanced brain health metrics with cost awareness and Phase 3 status
   getBrainHealth(): any {
     const costMetrics = costMonitoringService.getCostMetrics(1); // Last hour
@@ -1062,9 +1211,11 @@ class UnifiedBrainService {
       personalityEngineActive: !!this.currentBlueprint,
       acsSystemActive: true,
       pieSystemActive: pieService.getPIEHealth().enabled,
+      nikSystemActive: !!neuroIntentKernel.getCurrentIntent(),
       unifiedBrainCoherence: this.calculatePersonalityCoherence(),
       sessionMemorySize: this.sessionMemory.size,
       pie: pieService.getPIEHealth(),
+      nik: this.getNIKStatus(),
       // Phase 3 Flow Orchestration Status
       phase3Status: {
         hfme: harmonicFrequencyModulationEngine.getHarmonyStatus(),

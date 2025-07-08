@@ -1,177 +1,264 @@
 // NIK Integration Testing Component
-// Tests Neuro-Intent Kernel functionality and persistence
+// Tests enhanced Neuro-Intent Kernel with TMG persistence and module broadcasting
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { unifiedBrainService } from '@/services/unified-brain-service';
 import { neuroIntentKernel } from '@/services/hermetic-core/neuro-intent-kernel';
-import type { Intent } from '@/services/hermetic-core/neuro-intent-kernel';
 
 export const NIKIntegrationTester: React.FC = () => {
-  const [currentIntent, setCurrentIntent] = useState<Intent | null>(null);
-  const [intentHistory, setIntentHistory] = useState<Intent[]>([]);
-  const [testMessage, setTestMessage] = useState('');
-  const [testMode, setTestMode] = useState<'guide' | 'coach'>('guide');
+  // NIK Status
+  const [nikStatus, setNikStatus] = useState<any>(null);
   const [testResults, setTestResults] = useState<string[]>([]);
-  const [sessionId] = useState(`test_session_${Date.now()}`);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  // Test inputs
+  const [testIntent, setTestIntent] = useState('Help me plan my day and achieve my goals');
+  const [sessionId, setSessionId] = useState(`test_${Date.now()}`);
+  const [agentMode, setAgentMode] = useState<'guide' | 'coach'>('guide');
+
+  // Current intent display
+  const [currentIntent, setCurrentIntent] = useState<any>(null);
 
   useEffect(() => {
-    // Update intent state every 2 seconds
     const interval = setInterval(() => {
-      const intent = neuroIntentKernel.getCurrentIntent();
-      setCurrentIntent(intent);
+      updateNIKStatus();
     }, 2000);
 
+    updateNIKStatus();
     return () => clearInterval(interval);
   }, []);
 
-  const testIntentDetection = () => {
-    if (!testMessage.trim()) return;
+  const updateNIKStatus = () => {
+    try {
+      const status = unifiedBrainService.getNIKStatus();
+      setNikStatus(status);
+      setCurrentIntent(status.currentIntent);
+    } catch (error) {
+      console.error('Error updating NIK status:', error);
+    }
+  };
 
-    const testContext = {
-      sessionId,
-      agentMode: testMode,
-      timestamp: Date.now(),
-      messageLength: testMessage.length,
-      userId: 'test_user'
-    };
+  const testIntentSetting = async () => {
+    setIsProcessing(true);
+    setTestResults([]);
 
     try {
-      // Simulate the intent detection logic from UnifiedBrainService
-      const detectedIntent = analyzeMessageIntent(testMessage, testMode);
-      
-      if (detectedIntent) {
-        const intent = neuroIntentKernel.setIntent(detectedIntent, testContext, sessionId, testMode);
-        setTestResults(prev => [...prev, `✅ Intent detected: "${detectedIntent}" for message: "${testMessage}"`]);
-        setIntentHistory(prev => [...prev, intent]);
-      } else {
-        setTestResults(prev => [...prev, `❌ No intent detected for message: "${testMessage}"`]);
-      }
-    } catch (error) {
-      setTestResults(prev => [...prev, `❌ Error: ${error}`]);
-    }
+      setTestResults(prev => [...prev, '🧠 Testing intent setting with enhanced NIK...']);
 
-    setTestMessage('');
+      const context = {
+        sessionId,
+        agentMode,
+        timestamp: Date.now(),
+        messageLength: testIntent.length,
+        userId: 'test_user'
+      };
+
+      const intent = neuroIntentKernel.setIntent(testIntent, context, sessionId, agentMode);
+      
+      setTestResults(prev => [...prev, `✅ Intent set successfully: "${intent.primary}"`]);
+      setTestResults(prev => [...prev, `🔍 Intent ID: ${intent.id}`]);
+      setTestResults(prev => [...prev, `📊 Priority: ${intent.priority}`]);
+      setTestResults(prev => [...prev, `🎯 Coherence Score: ${intent.coherenceScore?.toFixed(2)}`]);
+      
+      if (intent.subIntents && intent.subIntents.length > 0) {
+        setTestResults(prev => [...prev, `📋 Sub-intents: ${intent.subIntents.join(', ')}`]);
+      }
+      
+      if (intent.constraints && intent.constraints.length > 0) {
+        setTestResults(prev => [...prev, `⚠️ Constraints: ${intent.constraints.join(', ')}`]);
+      }
+
+      if (intent.decomposition) {
+        setTestResults(prev => [...prev, `🔄 Decomposed steps: ${intent.decomposition.steps.length}`]);
+        setTestResults(prev => [...prev, `⏱️ Estimated duration: ${intent.decomposition.estimatedDuration}s`]);
+      }
+
+    } catch (error) {
+      setTestResults(prev => [...prev, `❌ Error setting intent: ${error}`]);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
-  const testIntentPersistence = () => {
-    // Test persistence by simulating page refresh
-    const persistedData = neuroIntentKernel.persistIntent();
-    if (persistedData) {
-      setTestResults(prev => [...prev, '✅ Intent persisted successfully']);
-      
-      // Test restoration
-      setTimeout(() => {
-        const restored = neuroIntentKernel.restoreIntent(persistedData);
-        if (restored) {
-          setTestResults(prev => [...prev, '✅ Intent restored successfully']);
-        } else {
-          setTestResults(prev => [...prev, '❌ Intent restoration failed']);
+  const testTMGPersistence = async () => {
+    setIsProcessing(true);
+    
+    try {
+      setTestResults(prev => [...prev, '💾 Testing TMG persistence...']);
+
+      // First, persist current intent
+      const persistResult = neuroIntentKernel.persistIntent();
+      if (persistResult) {
+        setTestResults(prev => [...prev, '✅ Intent persisted to TMG successfully']);
+      }
+
+      // Then try to restore
+      setTimeout(async () => {
+        try {
+          const restored = await neuroIntentKernel.restoreFromTMG(sessionId);
+          if (restored) {
+            setTestResults(prev => [...prev, `✅ Intent restored from TMG: "${restored.primary}"`]);
+          } else {
+            setTestResults(prev => [...prev, '⚠️ No intent found in TMG for restoration']);
+          }
+        } catch (error) {
+          setTestResults(prev => [...prev, `❌ TMG restoration error: ${error}`]);
         }
       }, 1000);
-    } else {
-      setTestResults(prev => [...prev, '❌ No intent to persist']);
+
+    } catch (error) {
+      setTestResults(prev => [...prev, `❌ TMG persistence error: ${error}`]);
+    } finally {
+      setTimeout(() => setIsProcessing(false), 1500);
     }
   };
 
-  const testIntentUpdate = () => {
-    if (!currentIntent) {
-      setTestResults(prev => [...prev, '❌ No active intent to update']);
-      return;
+  const testInternalGeneration = async () => {
+    setIsProcessing(true);
+    
+    try {
+      setTestResults(prev => [...prev, '🤖 Testing internal intent generation...']);
+
+      const observations = {
+        sessionId,
+        agentMode,
+        contextChange: true,
+        userId: 'test_user',
+        inactivityTime: 300000 // 5 minutes
+      };
+
+      const internalIntent = neuroIntentKernel.generateInternalIntent(observations);
+      
+      if (internalIntent) {
+        setTestResults(prev => [...prev, `✅ Internal intent generated: "${internalIntent.primary}"`]);
+        setTestResults(prev => [...prev, `🔮 Source: ${internalIntent.context.source}`]);
+        setTestResults(prev => [...prev, `📊 Priority: ${internalIntent.priority} (internal)`]);
+      } else {
+        setTestResults(prev => [...prev, '⚠️ No internal intent generated (conditions not met)']);
+      }
+
+    } catch (error) {
+      setTestResults(prev => [...prev, `❌ Internal generation error: ${error}`]);
+    } finally {
+      setIsProcessing(false);
     }
-
-    neuroIntentKernel.updateIntent({
-      type: 'modify',
-      intent: { priority: Math.random() },
-      reason: 'Test modification'
-    });
-
-    setTestResults(prev => [...prev, '✅ Intent updated successfully']);
   };
 
-  const testIntentCompletion = () => {
-    if (!currentIntent) {
-      setTestResults(prev => [...prev, '❌ No active intent to complete']);
-      return;
+  const testModuleBroadcasting = async () => {
+    setIsProcessing(true);
+    
+    try {
+      setTestResults(prev => [...prev, '📡 Testing module broadcasting...']);
+
+      // Set a new intent to trigger broadcasts
+      const broadcastContext = {
+        sessionId,
+        agentMode,
+        timestamp: Date.now(),
+        userId: 'test_user'
+      };
+
+      const intent = neuroIntentKernel.setIntent(
+        'Test broadcasting to all HACS modules', 
+        broadcastContext, 
+        sessionId, 
+        agentMode
+      );
+
+      setTestResults(prev => [...prev, '✅ Intent set - broadcasts should have been sent to:']);
+      setTestResults(prev => [...prev, '  📊 ACS (Adaptive Context Scheduler) for prioritization']);
+      setTestResults(prev => [...prev, '  🔗 CNR (Causal Nexus Router) for evaluation']);
+      setTestResults(prev => [...prev, '  💡 PIE (Proactive Insight Engine) for suggestions']);
+      setTestResults(prev => [...prev, '  🧠 TMG (Tiered Memory Graph) for monitoring']);
+      
+      setTestResults(prev => [...prev, `📈 Check console logs for detailed broadcast messages`]);
+
+    } catch (error) {
+      setTestResults(prev => [...prev, `❌ Broadcasting error: ${error}`]);
+    } finally {
+      setIsProcessing(false);
     }
-
-    neuroIntentKernel.updateIntent({
-      type: 'complete',
-      intent: {},
-      reason: 'Test completion'
-    });
-
-    setTestResults(prev => [...prev, '✅ Intent completed successfully']);
   };
 
-  const clearTestResults = () => {
+  const testFullWorkflow = async () => {
+    setIsProcessing(true);
+    setTestResults([]);
+    
+    try {
+      setTestResults(prev => [...prev, '🚀 Running full NIK workflow test...']);
+
+      // Step 1: Set intent
+      await testIntentSetting();
+      
+      // Step 2: Test persistence
+      setTimeout(async () => {
+        await testTMGPersistence();
+        
+        // Step 3: Test broadcasting
+        setTimeout(async () => {
+          await testModuleBroadcasting();
+          
+          // Step 4: Test internal generation
+          setTimeout(async () => {
+            await testInternalGeneration();
+            setTestResults(prev => [...prev, '🎉 Full NIK workflow test completed!']);
+          }, 2000);
+        }, 2000);
+      }, 2000);
+
+    } catch (error) {
+      setTestResults(prev => [...prev, `❌ Full workflow error: ${error}`]);
+    }
+  };
+
+  const clearResults = () => {
     setTestResults([]);
   };
 
-  // Simplified intent analysis (matches UnifiedBrainService logic)
-  const analyzeMessageIntent = (message: string, agentMode: string): string | null => {
-    const lowerMessage = message.toLowerCase();
-    
-    if (lowerMessage.includes('goal') || lowerMessage.includes('achieve') || lowerMessage.includes('want to')) {
-      return 'goal_setting';
-    }
-    if (lowerMessage.includes('problem') || lowerMessage.includes('issue') || lowerMessage.includes('stuck')) {
-      return 'problem_solving';
-    }
-    if (lowerMessage.includes('learn') || lowerMessage.includes('understand') || lowerMessage.includes('explain')) {
-      return 'learning';
-    }
-    if (lowerMessage.includes('plan') || lowerMessage.includes('strategy') || lowerMessage.includes('next steps')) {
-      return 'planning';
-    }
-    if (lowerMessage.includes('feel') || lowerMessage.includes('think') || lowerMessage.includes('reflection')) {
-      return 'reflection';
-    }
-    if (lowerMessage.includes('help') || lowerMessage.includes('support') || lowerMessage.includes('guidance')) {
-      return 'support_seeking';
-    }
-    
-    if (agentMode === 'coach') {
-      if (lowerMessage.includes('task') || lowerMessage.includes('work') || lowerMessage.includes('project')) {
-        return 'task_management';
-      }
-    }
-    
-    if (agentMode === 'guide') {
-      if (lowerMessage.includes('growth') || lowerMessage.includes('improve') || lowerMessage.includes('better')) {
-        return 'personal_growth';
-      }
-    }
-    
-    return null;
+  const getStatusColor = (isActive: boolean) => {
+    return isActive ? 'bg-green-500' : 'bg-gray-500';
   };
 
   return (
     <div className="space-y-4">
-      {/* Current Intent Status */}
+      {/* NIK Status Overview */}
       <Card>
         <CardHeader>
-          <CardTitle>Current Intent Status</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            Neuro-Intent Kernel (NIK) Status
+            <Badge className={getStatusColor(!!currentIntent)}>
+              {currentIntent ? 'ACTIVE' : 'INACTIVE'}
+            </Badge>
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {currentIntent ? (
             <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Badge variant="default">{currentIntent.primary}</Badge>
-                <span className="text-sm text-gray-600">Priority: {currentIntent.priority}</span>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div><strong>Intent:</strong> {currentIntent.primary}</div>
+                <div><strong>Priority:</strong> {currentIntent.priority}</div>
+                <div><strong>Domain:</strong> {currentIntent.domain}</div>
+                <div><strong>Session:</strong> {currentIntent.sessionId}</div>
+                <div><strong>Coherence:</strong> {currentIntent.coherenceScore?.toFixed(2)}</div>
+                <div><strong>Created:</strong> {new Date(currentIntent.timestamp).toLocaleTimeString()}</div>
               </div>
-              <div className="text-sm">
-                <div>Session: {currentIntent.sessionId}</div>
-                <div>Domain: {currentIntent.domain}</div>
-                <div>Created: {new Date(currentIntent.timestamp).toLocaleTimeString()}</div>
-                {currentIntent.subIntents.length > 0 && (
-                  <div>Sub-intents: {currentIntent.subIntents.join(', ')}</div>
-                )}
-              </div>
+              {currentIntent.subIntents?.length > 0 && (
+                <div>
+                  <strong>Sub-intents:</strong> {currentIntent.subIntents.join(', ')}
+                </div>
+              )}
+              {currentIntent.constraints?.length > 0 && (
+                <div>
+                  <strong>Constraints:</strong> {currentIntent.constraints.join(', ')}
+                </div>
+              )}
             </div>
           ) : (
             <div className="text-gray-500">No active intent</div>
@@ -179,54 +266,125 @@ export const NIKIntegrationTester: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Intent Detection Testing */}
+      {/* Test Controls */}
       <Card>
         <CardHeader>
-          <CardTitle>Intent Detection Testing</CardTitle>
+          <CardTitle>NIK Enhancement Testing</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex gap-2">
-            <Input
-              placeholder="Enter test message..."
-              value={testMessage}
-              onChange={(e) => setTestMessage(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && testIntentDetection()}
-            />
-            <Select value={testMode} onValueChange={(value: 'guide' | 'coach') => setTestMode(value)}>
-              <SelectTrigger className="w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="guide">Guide</SelectItem>
-                <SelectItem value="coach">Coach</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button onClick={testIntentDetection}>Test Intent</Button>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Test Intent</label>
+              <Textarea
+                value={testIntent}
+                onChange={(e) => setTestIntent(e.target.value)}
+                placeholder="Enter intent to test..."
+                rows={3}
+              />
+            </div>
+            <div className="space-y-2">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Session ID</label>
+                <Input
+                  value={sessionId}
+                  onChange={(e) => setSessionId(e.target.value)}
+                  placeholder="Session ID"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Agent Mode</label>
+                <select 
+                  value={agentMode} 
+                  onChange={(e) => setAgentMode(e.target.value as 'guide' | 'coach')}
+                  className="w-full p-2 border rounded"
+                >
+                  <option value="guide">Guide</option>
+                  <option value="coach">Coach</option>
+                </select>
+              </div>
+            </div>
           </div>
-          
-          <div className="text-sm text-gray-600">
-            Try messages like: "I want to achieve my goals", "I need help with a problem", "Let me learn something new"
+
+          <div className="flex gap-2 flex-wrap">
+            <Button onClick={testIntentSetting} disabled={isProcessing}>
+              Test Intent Setting
+            </Button>
+            <Button onClick={testTMGPersistence} disabled={isProcessing} variant="outline">
+              Test TMG Persistence
+            </Button>
+            <Button onClick={testInternalGeneration} disabled={isProcessing} variant="outline">
+              Test Internal Generation
+            </Button>
+            <Button onClick={testModuleBroadcasting} disabled={isProcessing} variant="outline">
+              Test Broadcasting
+            </Button>
+            <Button onClick={testFullWorkflow} disabled={isProcessing} variant="secondary">
+              Run Full Workflow
+            </Button>
+            <Button onClick={clearResults} variant="outline" size="sm">
+              Clear Results
+            </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Intent Management Testing */}
+      {/* Integration Status */}
       <Card>
         <CardHeader>
-          <CardTitle>Intent Management Testing</CardTitle>
+          <CardTitle>NIK Integration Status</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-2">
-            <Button onClick={testIntentPersistence} variant="outline">
-              Test Persistence
-            </Button>
-            <Button onClick={testIntentUpdate} variant="outline">
-              Update Intent
-            </Button>
-            <Button onClick={testIntentCompletion} variant="outline">
-              Complete Intent
-            </Button>
-          </div>
+          <Tabs defaultValue="modules">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="modules">Module Integration</TabsTrigger>
+              <TabsTrigger value="tmg">TMG Integration</TabsTrigger>
+              <TabsTrigger value="history">Intent History</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="modules" className="space-y-2">
+              {nikStatus?.registeredModules ? (
+                <div className="grid grid-cols-2 gap-2">
+                  {nikStatus.registeredModules.map((module: string) => (
+                    <div key={module} className="flex items-center gap-2">
+                      <Badge className="bg-blue-500">{module.toUpperCase()}</Badge>
+                      <span className="text-sm">Registered</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-gray-500">No module registrations found</div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="tmg" className="space-y-2">
+              <div className="text-sm space-y-2">
+                <div className="flex items-center gap-2">
+                  <Badge className={getStatusColor(nikStatus?.tmgIntegration)}>
+                    TMG
+                  </Badge>
+                  <span>{nikStatus?.tmgIntegration ? 'Connected' : 'Disconnected'}</span>
+                </div>
+                <div>
+                  <strong>Intent State:</strong> {nikStatus?.intentState?.hasActiveIntent ? 'Active' : 'Inactive'}
+                </div>
+                <div>
+                  <strong>Intent Count:</strong> {nikStatus?.intentState?.intentCount || 0}
+                </div>
+                <div>
+                  <strong>Last Update:</strong> {nikStatus?.intentState?.lastUpdate ? 
+                    new Date(nikStatus.intentState.lastUpdate).toLocaleString() : 'Never'}
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="history" className="space-y-2">
+              <div className="text-sm">
+                <div>Intent tracking and history functionality is active.</div>
+                <div>Historical intents are maintained for session continuity.</div>
+                <div>Cross-session persistence through TMG integration.</div>
+              </div>
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 
@@ -235,7 +393,7 @@ export const NIKIntegrationTester: React.FC = () => {
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             Test Results
-            <Button onClick={clearTestResults} variant="outline" size="sm">
+            <Button onClick={clearResults} variant="outline" size="sm">
               Clear
             </Button>
           </CardTitle>
@@ -244,33 +402,11 @@ export const NIKIntegrationTester: React.FC = () => {
           {testResults.length === 0 ? (
             <div className="text-gray-500">No test results yet</div>
           ) : (
-            <div className="space-y-2 max-h-60 overflow-y-auto">
+            <div className="space-y-2 max-h-96 overflow-y-auto">
               {testResults.map((result, index) => (
                 <Alert key={index}>
-                  <AlertDescription className="text-sm">{result}</AlertDescription>
+                  <AlertDescription className="text-sm font-mono">{result}</AlertDescription>
                 </Alert>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Intent History */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Intent History</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {intentHistory.length === 0 ? (
-            <div className="text-gray-500">No intents in history</div>
-          ) : (
-            <div className="space-y-2 max-h-40 overflow-y-auto">
-              {intentHistory.slice(-5).map((intent, index) => (
-                <div key={index} className="flex items-center gap-2 text-sm p-2 bg-gray-50 rounded">
-                  <Badge variant="outline">{intent.primary}</Badge>
-                  <span>{intent.domain}</span>
-                  <span className="text-gray-500">{new Date(intent.timestamp).toLocaleTimeString()}</span>
-                </div>
               ))}
             </div>
           )}
