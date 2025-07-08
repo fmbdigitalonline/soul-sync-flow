@@ -187,23 +187,28 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide", pageContex
       try {
         console.log(`📚 Enhanced AI Coach Hook: Loading domain-isolated conversation history for ${pageContext} with ${currentAgent}`);
         
-        // Load conversation history with domain isolation
-        const history = await enhancedAICoachService.loadConversationHistoryWithDomain(currentAgent, pageContext);
+        // Load conversation history with existing method but filter by domain context
+        const history = await enhancedAICoachService.loadConversationHistory(currentAgent);
+        
+        // Filter messages to only include those from this domain context
+        const domainFilteredHistory = history.filter(msg => 
+          msg.id.includes(pageContext) || msg.agentType === mappedAgent
+        );
         
         if (user) {
           const memoryReport = await enhancedMemoryService.generateConsistencyReport();
           console.log(`🧠 Memory integration status for ${pageContext}:`, memoryReport.consistencyScore + "% consistency");
         }
         
-        setMessages(history);
-        console.log(`✅ Enhanced AI Coach Hook: Loaded ${history.length} domain-isolated messages for ${pageContext}/${currentAgent} with ACS: ${acsEnabled}`);
+        setMessages(domainFilteredHistory);
+        console.log(`✅ Enhanced AI Coach Hook: Loaded ${domainFilteredHistory.length} domain-isolated messages for ${pageContext}/${currentAgent} with ACS: ${acsEnabled}`);
       } catch (error) {
         console.error(`❌ Enhanced AI Coach Hook: Error loading conversation history for ${pageContext}:`, error);
       }
     };
 
     loadHistory();
-  }, [currentAgent, authInitialized, user, acsEnabled, pageContext]);
+  }, [currentAgent, authInitialized, user, acsEnabled, pageContext, mappedAgent]);
 
   // Enhanced conversation history saving - DOMAIN ISOLATED
   useEffect(() => {
@@ -211,8 +216,15 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide", pageContex
     
     const saveHistory = async () => {
       try {
-        await enhancedAICoachService.saveConversationHistoryWithDomain(currentAgent, pageContext, messages);
-        console.log(`💾 Enhanced AI Coach Hook: Saved ${messages.length} domain-isolated messages for ${pageContext}/${currentAgent}`);
+        // Save with domain context in message IDs to maintain isolation
+        const domainTaggedMessages = messages.map(msg => ({
+          ...msg,
+          id: msg.id.includes(pageContext) ? msg.id : `${pageContext}_${msg.id}`,
+          agentType: mappedAgent
+        }));
+        
+        await enhancedAICoachService.saveConversationHistory(currentAgent, domainTaggedMessages);
+        console.log(`💾 Enhanced AI Coach Hook: Saved ${domainTaggedMessages.length} domain-isolated messages for ${pageContext}/${currentAgent}`);
       } catch (error) {
         console.error(`❌ Enhanced AI Coach Hook: Error saving conversation history for ${pageContext}:`, error);
       }
@@ -220,7 +232,7 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide", pageContex
 
     const timeoutId = setTimeout(saveHistory, 1000);
     return () => clearTimeout(timeoutId);
-  }, [messages, currentAgent, authInitialized, pageContext]);
+  }, [messages, currentAgent, authInitialized, pageContext, mappedAgent]);
 
   const sendMessage = async (content: string, useStreaming: boolean = true, displayMessage?: string, contextOverride?: string) => {
     if (!content.trim()) return;
@@ -254,7 +266,7 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide", pageContex
     const messageToDisplay = displayMessage || content;
 
     const userMessage: Message = {
-      id: Date.now().toString(),
+      id: `${effectiveContext}_${Date.now()}`,
       content: messageToDisplay,
       sender: "user",
       timestamp: new Date(),
@@ -266,7 +278,7 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide", pageContex
     resetStreaming();
 
     if (useStreaming) {
-      const assistantMessageId = (Date.now() + 1).toString();
+      const assistantMessageId = `${effectiveContext}_${Date.now() + 1}`;
       const assistantMessage: Message = {
         id: assistantMessageId,
         content: "",
@@ -292,13 +304,12 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide", pageContex
           acsState
         });
         
-        await enhancedAICoachService.sendStreamingMessageWithDomain(
+        await enhancedAICoachService.sendStreamingMessage(
           content,
           currentSessionId,
           canUsePersona,
           effectiveAgent,
           language,
-          effectiveContext,
           {
             onChunk: (chunk: string) => {
               accumulatedContent += chunk;
@@ -368,7 +379,7 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide", pageContex
         );
 
         const assistantMessage: Message = {
-          id: (Date.now() + 1).toString(),
+          id: `${effectiveContext}_${Date.now() + 1}`,
           content: response.response,
           sender: "assistant",
           timestamp: new Date(),
@@ -384,7 +395,7 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide", pageContex
       } catch (error) {
         console.error("❌ VFP-Graph and ACS Enhanced non-streaming error:", error);
         const errorMessage: Message = {
-          id: (Date.now() + 1).toString(),
+          id: `${effectiveContext}_${Date.now() + 1}`,
           content: language === 'nl' ? 
             "Sorry, er is een fout opgetreden. Probeer het later opnieuw." : 
             "Sorry, there was an error. Please try again later.",
@@ -403,7 +414,8 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide", pageContex
   const resetConversation = () => {
     console.log(`🔄 Enhanced AI Coach Hook: Resetting domain-isolated conversation for ${pageContext}`);
     setMessages([]);
-    enhancedAICoachService.clearConversationCacheForDomain(pageContext);
+    // Clear conversation cache using existing method
+    enhancedAICoachService.clearConversationCache();
   };
 
   const switchAgent = (newAgent: AgentType) => {

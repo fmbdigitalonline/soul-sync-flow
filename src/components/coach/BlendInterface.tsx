@@ -13,21 +13,23 @@ interface BlendInterfaceProps {
   messages: Message[];
   isLoading: boolean;
   onSendMessage: (message: string) => void;
-  personaReady: boolean;
+  personaReady?: boolean;
   vfpGraphStatus?: {
     isAvailable: boolean;
     vectorDimensions: number;
     personalitySummary: string;
     vectorMagnitude?: number;
   };
+  onFeedback?: (messageId: string, isPositive: boolean) => void;
 }
 
 export const BlendInterface: React.FC<BlendInterfaceProps> = ({
   messages,
   isLoading,
   onSendMessage,
-  personaReady,
-  vfpGraphStatus
+  personaReady = false,
+  vfpGraphStatus,
+  onFeedback
 }) => {
   const [inputValue, setInputValue] = useState("");
   const { t } = useLanguage();
@@ -57,6 +59,7 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
 
   const handleVFPGraphFeedback = (messageId: string, isPositive: boolean) => {
     console.log(`VFP-Graph feedback from BlendInterface: ${messageId} - ${isPositive ? '👍' : '👎'}`);
+    onFeedback?.(messageId, isPositive);
   };
 
   return (
@@ -82,7 +85,7 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
               <Sparkles className={cn("text-white", isMobile ? "h-6 w-6" : "h-8 w-8")} />
             </div>
             <h3 className={cn("font-semibold mb-2", isMobile ? "text-lg" : "text-xl")}>
-              {vfpGraphStatus?.isAvailable ? 'VFP-Graph Enhanced' : 'AI'} Blend Coach
+              {vfpGraphStatus?.isAvailable ? 'VFP-Graph Enhanced' : 'AI'} Companion
             </h3>
             <p className={cn("text-muted-foreground max-w-md", isMobile ? "text-sm" : "text-base")}>
               {personaReady || vfpGraphStatus?.isAvailable
@@ -121,7 +124,7 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
                   <div className="flex items-center gap-2 mb-2">
                     <ArrowRight className={cn("text-green-400", isMobile ? "h-3 w-3" : "h-4 w-4")} />
                     <span className={cn("font-medium text-slate-700", isMobile ? "text-xs" : "text-sm")}>
-                      {isVFPGraphPowered ? 'VFP-Graph' : 'AI'} Blend Coach
+                      {isVFPGraphPowered ? 'VFP-Graph' : 'AI'} Companion
                     </span>
                     {isVFPGraphPowered && (
                       <Sparkles className="h-3 w-3 text-soul-purple" />
@@ -160,7 +163,7 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
               <div className="flex items-center space-x-2">
                 <ArrowRight className="h-4 w-4 text-green-400" />
                 <p className={cn("font-medium", isMobile ? "text-xs" : "text-sm")}>
-                  {vfpGraphStatus?.isAvailable ? 'VFP-Graph' : 'AI'} Blend Coach
+                  {vfpGraphStatus?.isAvailable ? 'VFP-Graph' : 'AI'} Companion
                 </p>
                 {vfpGraphStatus?.isAvailable && (
                   <Sparkles className="h-3 w-3 text-soul-purple" />
@@ -214,8 +217,8 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
         </div>
         <p className={cn("text-center text-muted-foreground mt-2", isMobile ? "text-xs" : "text-sm")}>
           {vfpGraphStatus?.isAvailable 
-            ? `VFP-Graph powered blend coaching • ${vfpGraphStatus.personalitySummary}`
-            : "Balanced coaching that combines questions with guidance"
+            ? `VFP-Graph powered companion guidance • ${vfpGraphStatus.personalitySummary}`
+            : "Balanced guidance that combines questions with direct advice"
           }
         </p>
       </div>

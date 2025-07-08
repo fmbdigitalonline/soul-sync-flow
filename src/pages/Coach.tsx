@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
@@ -32,7 +33,6 @@ const Coach = () => {
   } = useEnhancedAICoach("blend", "companion");
 
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
   const { hasBlueprint } = useBlueprintCache();
@@ -56,14 +56,6 @@ const Coach = () => {
     
     return () => subscription.unsubscribe();
   }, []);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
 
   const handleSendMessage = async (message: string) => {
     await sendMessage(message, true, undefined, 'companion');
@@ -167,7 +159,8 @@ const Coach = () => {
                 messages={messages}
                 isLoading={isLoading}
                 onSendMessage={handleSendMessage}
-                messagesEndRef={messagesEndRef}
+                personaReady={personaReady}
+                vfpGraphStatus={vfpGraphStatus}
                 onFeedback={recordVFPGraphFeedback}
               />
             </CosmicCard>
