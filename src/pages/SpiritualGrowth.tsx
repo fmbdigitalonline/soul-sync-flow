@@ -16,6 +16,8 @@ import { WeeklyInsights } from "@/components/coach/WeeklyInsights";
 import { LifeOperatingSystemDashboard } from "@/components/dashboard/LifeOperatingSystemDashboard";
 import { LifeOperatingSystemChoices } from "@/components/dashboard/LifeOperatingSystemChoices";
 import { LifeOperatingSystemDomainFocus } from "@/components/dashboard/LifeOperatingSystemDomainFocus";
+import { ConversationalAssessment } from "@/components/dashboard/ConversationalAssessment";
+import { ProgressiveJourneyAssessment } from "@/components/dashboard/ProgressiveJourneyAssessment";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 import { useBlueprintData } from "@/hooks/use-blueprint-data";
@@ -415,38 +417,44 @@ const SpiritualGrowth = () => {
     );
   }
 
-  // Guided Discovery (Placeholder for now)
+  // Guided Discovery - Conversational Assessment
   if (activeView === 'life_os_guided') {
+    const handleGuidedComplete = (assessmentData: any[]) => {
+      console.log('🎯 Guided discovery assessment completed:', assessmentData);
+      toast({
+        title: "Guided Assessment Complete! 💬",
+        description: "Your conversational assessment has been processed.",
+      });
+      setActiveView('life_os_full'); // Show dashboard with results
+    };
+
     return (
       <MainLayout>
-        <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 flex items-center justify-center">
-          <div className="text-center space-y-4">
-            <h2 className="text-2xl font-bold">Guided Discovery</h2>
-            <p className="text-muted-foreground">Coming soon - conversational assessment with AI coach</p>
-            <Button onClick={() => setActiveView('life_os_choices')}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Options
-            </Button>
-          </div>
-        </div>
+        <ConversationalAssessment
+          onComplete={handleGuidedComplete}
+          onBack={() => setActiveView('life_os_choices')}
+        />
       </MainLayout>
     );
   }
 
-  // Progressive Journey (Placeholder for now)
+  // Progressive Journey - Smart Domain Expansion
   if (activeView === 'life_os_progressive') {
+    const handleProgressiveComplete = (assessmentData: any[]) => {
+      console.log('🛤️ Progressive journey assessment completed:', assessmentData);
+      toast({
+        title: "Progressive Journey Complete! 🛤️",
+        description: "Your step-by-step assessment has been processed.",
+      });
+      setActiveView('life_os_full'); // Show dashboard with results
+    };
+
     return (
       <MainLayout>
-        <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 flex items-center justify-center">
-          <div className="text-center space-y-4">
-            <h2 className="text-2xl font-bold">Progressive Journey</h2>
-            <p className="text-muted-foreground">Coming soon - step-by-step domain expansion</p>
-            <Button onClick={() => setActiveView('life_os_choices')}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Options
-            </Button>
-          </div>
-        </div>
+        <ProgressiveJourneyAssessment
+          onComplete={handleProgressiveComplete}
+          onBack={() => setActiveView('life_os_choices')}
+        />
       </MainLayout>
     );
   }
