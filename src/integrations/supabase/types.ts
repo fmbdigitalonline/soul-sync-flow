@@ -569,6 +569,33 @@ export type Database = {
         }
         Relationships: []
       }
+      domain_interdependencies: {
+        Row: {
+          created_at: string
+          from_domain: string
+          id: string
+          relationship_type: string
+          strength: number
+          to_domain: string
+        }
+        Insert: {
+          created_at?: string
+          from_domain: string
+          id?: string
+          relationship_type: string
+          strength?: number
+          to_domain: string
+        }
+        Update: {
+          created_at?: string
+          from_domain?: string
+          id?: string
+          relationship_type?: string
+          strength?: number
+          to_domain?: string
+        }
+        Relationships: []
+      }
       dream_activity_logs: {
         Row: {
           activity_data: Json
@@ -825,6 +852,48 @@ export type Database = {
           last_accessed?: string
           raw_content?: Json
           session_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      life_wheel_assessments: {
+        Row: {
+          assessment_version: number
+          created_at: string
+          current_score: number
+          desired_score: number
+          domain: string
+          gap_size: number | null
+          id: string
+          importance_rating: number
+          notes: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assessment_version?: number
+          created_at?: string
+          current_score: number
+          desired_score: number
+          domain: string
+          gap_size?: number | null
+          id?: string
+          importance_rating?: number
+          notes?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assessment_version?: number
+          created_at?: string
+          current_score?: number
+          desired_score?: number
+          domain?: string
+          gap_size?: number | null
+          id?: string
+          importance_rating?: number
+          notes?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
