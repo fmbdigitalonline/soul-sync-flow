@@ -21,7 +21,6 @@ import { ProgressiveJourneyAssessment } from "@/components/dashboard/Progressive
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 import { useBlueprintData } from "@/hooks/use-blueprint-data";
-import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 import { LifeDomain } from "@/types/growth-program";
 
 type ActiveView = 'welcome' | 'immediate_chat' | 'growth_program' | 'tools' | 'mood' | 'reflection' | 'insight' | 'weekly' | 'life_os_choices' | 'life_os_quick_focus' | 'life_os_full' | 'life_os_guided' | 'life_os_progressive' | null;
@@ -34,7 +33,6 @@ const SpiritualGrowth = () => {
   const { toast } = useToast();
   const { t } = useLanguage();
   const { blueprintData } = useBlueprintData();
-  const { spacing, layout, touchTargetSize, getTextSize } = useResponsiveLayout();
   
   const { growthJourney, addMoodEntry, addReflectionEntry, addInsightEntry } = useJourneyTracking();
 
@@ -97,7 +95,7 @@ const SpiritualGrowth = () => {
     }
     
     if (blueprintData.energy_strategy_human_design?.type && blueprintData.energy_strategy_human_design.type !== 'Unknown') {
-      traits.push(blueprintData.cognition_mbti.type);
+      traits.push(blueprintData.energy_strategy_human_design.type);
     }
     
     if (blueprintData.archetype_western?.sun_sign && blueprintData.archetype_western.sun_sign !== 'Unknown') {
@@ -110,17 +108,17 @@ const SpiritualGrowth = () => {
   if (!isAuthenticated) {
     return (
       <MainLayout>
-        <div className={`min-h-screen bg-background flex items-center justify-center ${spacing.container}`}>
-          <CosmicCard className={`${layout.width} ${layout.maxWidth} text-center ${spacing.gap}`}>
-            <div className={`w-16 h-16 mx-auto bg-primary rounded-full flex items-center justify-center ${touchTargetSize}`}>
+        <div className="min-h-screen bg-background flex items-center justify-center p-4">
+          <CosmicCard className="w-full max-w-md text-center space-y-6">
+            <div className="w-16 h-16 mx-auto bg-primary rounded-full flex items-center justify-center">
               <Heart className="h-8 w-8 text-primary-foreground" />
             </div>
             <div>
-              <h1 className={`${getTextSize('text-2xl')} font-heading font-bold text-foreground mb-2`}>{t("spiritualGrowth.title")}</h1>
-              <p className={`text-muted-foreground ${getTextSize('text-base')}`}>{t("spiritualGrowth.description")}</p>
+              <h1 className="text-2xl font-heading font-bold text-foreground mb-2">{t("spiritualGrowth.title")}</h1>
+              <p className="text-muted-foreground">{t("spiritualGrowth.description")}</p>
             </div>
             <Button 
-              className={`${layout.width} ${touchTargetSize}`}
+              className="w-full"
               onClick={() => window.location.href = '/auth'}
             >
               {t("spiritualGrowth.getStarted")}
@@ -131,30 +129,33 @@ const SpiritualGrowth = () => {
     );
   }
 
+  // Show immediate chat interface with unified component
   if (activeView === 'immediate_chat') {
     return (
       <MainLayout>
         <div className="min-h-screen bg-background">
-          <div className={`container mx-auto ${spacing.container} ${layout.maxWidth}`}>
+          <div className="container mx-auto py-6 px-4 max-w-4xl">
             
-            <div className={`flex items-center justify-between ${spacing.gap}`}>
+            {/* Header with back button */}
+            <div className="flex items-center justify-between mb-6">
               <Button 
                 variant="ghost" 
                 size="sm" 
                 onClick={() => setActiveView('welcome')}
-                className={`flex items-center ${spacing.gap} text-muted-foreground hover:text-primary ${touchTargetSize}`}
+                className="flex items-center gap-2 text-muted-foreground hover:text-primary"
               >
                 <ArrowLeft className="h-4 w-4" />
                 Back to Options
               </Button>
               <div className="text-center">
-                <h1 className={`${getTextSize('text-xl')} font-heading font-bold text-foreground`}>Heart-Centered Coach</h1>
-                <p className={`${getTextSize('text-sm')} text-muted-foreground`}>Connected & Ready</p>
+                <h1 className="text-xl font-heading font-bold text-foreground">Heart-Centered Coach</h1>
+                <p className="text-sm text-muted-foreground">Connected & Ready</p>
               </div>
               <div className="w-20" />
             </div>
 
-            <CosmicCard className={`${layout.width} h-[calc(100vh-200px)]`}>
+            {/* Unified Chat Interface Container */}
+            <CosmicCard className="w-full h-[calc(100vh-200px)]">
               <SpiritualGuideInterface
                 messages={messages}
                 isLoading={isLoading}
@@ -169,17 +170,18 @@ const SpiritualGrowth = () => {
     );
   }
 
+  // Show Growth Program Interface with Agent-Driven System
   if (activeView === 'growth_program') {
     return (
       <TelemetryTracker>
         <MainLayout>
           <div className="min-h-screen bg-background">
-            <div className={`container mx-auto ${spacing.container} ${layout.maxWidth}`}>
-              <div className={spacing.gap}>
+            <div className="container mx-auto py-6 px-4 max-w-6xl">
+              <div className="mb-6">
                 <Button 
                   variant="outline" 
                   onClick={() => setActiveView('welcome')}
-                  className={`${touchTargetSize} mb-4`}
+                  className="mb-4"
                   data-track="navigation-back-to-welcome"
                 >
                   <ArrowLeft className="h-4 w-4 mr-2" />
@@ -198,25 +200,25 @@ const SpiritualGrowth = () => {
   if (activeView === 'tools') {
     return (
       <MainLayout>
-        <div className={`flex flex-col h-[calc(100vh-5rem)] w-full ${spacing.container}`}>
-          <div className={spacing.gap}>
+        <div className="flex flex-col h-[calc(100vh-5rem)] w-full p-4">
+          <div className="mb-4">
             <Button 
               variant="outline" 
               onClick={() => setActiveView('welcome')}
-              className={`${touchTargetSize} mb-2`}
+              className="mb-2"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Growth Coach
             </Button>
           </div>
 
-          <div className={spacing.gap}>
-            <h2 className={`${getTextSize('text-xl')} font-bold text-center gradient-text ${spacing.gap}`}>Growth Tools</h2>
-            <div className={`${layout.columns} ${spacing.gap}`}>
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold text-center gradient-text mb-6">Growth Tools</h2>
+            <div className="grid grid-cols-2 gap-4">
               <Button
                 variant="outline"
                 onClick={() => setActiveView('mood')}
-                className={`h-20 flex-col ${spacing.gap} ${touchTargetSize}`}
+                className="h-20 flex-col gap-2"
               >
                 <Heart className="h-6 w-6" />
                 Mood Tracker
@@ -224,7 +226,7 @@ const SpiritualGrowth = () => {
               <Button
                 variant="outline"
                 onClick={() => setActiveView('reflection')}
-                className={`h-20 flex-col ${spacing.gap} ${touchTargetSize}`}
+                className="h-20 flex-col gap-2"
               >
                 <Sparkles className="h-6 w-6" />
                 Reflection
@@ -232,7 +234,7 @@ const SpiritualGrowth = () => {
               <Button
                 variant="outline"
                 onClick={() => setActiveView('insight')}
-                className={`h-20 flex-col ${spacing.gap} ${touchTargetSize}`}
+                className="h-20 flex-col gap-2"
               >
                 <BookOpen className="h-6 w-6" />
                 Insights
@@ -240,7 +242,7 @@ const SpiritualGrowth = () => {
               <Button
                 variant="outline"
                 onClick={() => setActiveView('weekly')}
-                className={`h-20 flex-col ${spacing.gap} ${touchTargetSize}`}
+                className="h-20 flex-col gap-2"
               >
                 <Calendar className="h-6 w-6" />
                 Weekly Review
@@ -255,12 +257,12 @@ const SpiritualGrowth = () => {
   if (activeView === 'mood') {
     return (
       <MainLayout>
-        <div className={`flex flex-col h-[calc(100vh-5rem)] w-full ${spacing.container}`}>
-          <div className={spacing.gap}>
+        <div className="flex flex-col h-[calc(100vh-5rem)] w-full p-4">
+          <div className="mb-4">
             <Button 
               variant="outline" 
               onClick={() => setActiveView('tools')}
-              className={`${touchTargetSize} mb-2`}
+              className="mb-2"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Tools
@@ -275,12 +277,12 @@ const SpiritualGrowth = () => {
   if (activeView === 'reflection') {
     return (
       <MainLayout>
-        <div className={`flex flex-col h-[calc(100vh-5rem)] w-full ${spacing.container}`}>
-          <div className={spacing.gap}>
+        <div className="flex flex-col h-[calc(100vh-5rem)] w-full p-4">
+          <div className="mb-4">
             <Button 
               variant="outline" 
               onClick={() => setActiveView('tools')}
-              className={`${touchTargetSize} mb-2`}
+              className="mb-2"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Tools
@@ -295,12 +297,12 @@ const SpiritualGrowth = () => {
   if (activeView === 'insight') {
     return (
       <MainLayout>
-        <div className={`flex flex-col h-[calc(100vh-5rem)] w-full ${spacing.container}`}>
-          <div className={spacing.gap}>
+        <div className="flex flex-col h-[calc(100vh-5rem)] w-full p-4">
+          <div className="mb-4">
             <Button 
               variant="outline" 
               onClick={() => setActiveView('tools')}
-              className={`${touchTargetSize} mb-2`}
+              className="mb-2"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Tools
@@ -315,12 +317,12 @@ const SpiritualGrowth = () => {
   if (activeView === 'weekly') {
     return (
       <MainLayout>
-        <div className={`flex flex-col h-[calc(100vh-5rem)] w-full ${spacing.container}`}>
-          <div className={spacing.gap}>
+        <div className="flex flex-col h-[calc(100vh-5rem)] w-full p-4">
+          <div className="mb-4">
             <Button 
               variant="outline" 
               onClick={() => setActiveView('tools')}
-              className={`${touchTargetSize} mb-2`}
+              className="mb-2"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Tools
@@ -332,6 +334,7 @@ const SpiritualGrowth = () => {
     );
   }
 
+  // Life Operating System Choice Interface
   if (activeView === 'life_os_choices') {
     const handleChoiceSelect = (choice: 'quick_focus' | 'full_assessment' | 'guided_discovery' | 'progressive_journey') => {
       switch (choice) {
@@ -360,6 +363,7 @@ const SpiritualGrowth = () => {
     );
   }
 
+  // Quick Focus Assessment
   if (activeView === 'life_os_quick_focus') {
     const handleAssessmentComplete = (assessmentData: any[]) => {
       console.log('🎯 Quick focus assessment completed:', assessmentData);
@@ -367,7 +371,7 @@ const SpiritualGrowth = () => {
         title: "Assessment Complete! 🎯",
         description: "Your focused assessment has been processed.",
       });
-      setActiveView('life_os_full');
+      setActiveView('life_os_full'); // Show dashboard with results
     };
 
     return (
@@ -380,6 +384,7 @@ const SpiritualGrowth = () => {
     );
   }
 
+  // Full Assessment Dashboard
   if (activeView === 'life_os_full') {
     const handleCreateProgram = (primaryDomain: LifeDomain, supportingDomains: LifeDomain[]) => {
       console.log('🚀 Creating program with Life OS integration:', { primaryDomain, supportingDomains });
@@ -393,12 +398,12 @@ const SpiritualGrowth = () => {
     return (
         <MainLayout>
           <div className="min-h-screen bg-background">
-            <div className={`container mx-auto ${spacing.container} ${layout.maxWidth}`}>
-            <div className={spacing.gap}>
+            <div className="container mx-auto py-6 px-4 max-w-7xl">
+            <div className="mb-6">
               <Button 
                 variant="outline" 
                 onClick={() => setActiveView('life_os_choices')}
-                className={`${touchTargetSize} mb-4`}
+                className="mb-4"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Assessment Options
@@ -412,6 +417,7 @@ const SpiritualGrowth = () => {
     );
   }
 
+  // Guided Discovery - Conversational Assessment
   if (activeView === 'life_os_guided') {
     const handleGuidedComplete = (assessmentData: any[]) => {
       console.log('🎯 Guided discovery assessment completed:', assessmentData);
@@ -419,7 +425,7 @@ const SpiritualGrowth = () => {
         title: "Guided Assessment Complete! 💬",
         description: "Your conversational assessment has been processed.",
       });
-      setActiveView('life_os_full');
+      setActiveView('life_os_full'); // Show dashboard with results
     };
 
     return (
@@ -432,6 +438,7 @@ const SpiritualGrowth = () => {
     );
   }
 
+  // Progressive Journey - Smart Domain Expansion
   if (activeView === 'life_os_progressive') {
     const handleProgressiveComplete = (assessmentData: any[]) => {
       console.log('🛤️ Progressive journey assessment completed:', assessmentData);
@@ -439,7 +446,7 @@ const SpiritualGrowth = () => {
         title: "Progressive Journey Complete! 🛤️",
         description: "Your step-by-step assessment has been processed.",
       });
-      setActiveView('life_os_full');
+      setActiveView('life_os_full'); // Show dashboard with results
     };
 
     return (
@@ -452,85 +459,89 @@ const SpiritualGrowth = () => {
     );
   }
 
-  // Welcome view with responsive design
+  // Welcome view with all growth options including Life Operating System
   return (
     <MainLayout>
       <div className="min-h-screen bg-background">
-        <div className={`container mx-auto ${spacing.container} ${layout.maxWidth}`}>
-          <div className={`text-center ${spacing.gap}`}>
-            <h1 className={`${getTextSize('text-3xl')} font-heading font-bold text-foreground mb-2`}>
+        <div className="container mx-auto py-8 px-4 max-w-6xl">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-heading font-bold text-foreground mb-2">
               {t("spiritualGrowth.title")}
             </h1>
-            <p className={`text-muted-foreground ${getTextSize('text-lg')}`}>
+            <p className="text-muted-foreground text-lg">
               {t("spiritualGrowth.subtitle")}
             </p>
           </div>
 
-          <div className={`${layout.columns} ${spacing.gap}`}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             
-            <CosmicCard className={`group hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1 ${touchTargetSize}`} onClick={handleStartSpiritualGrowth}>
-              <div className={`flex flex-col items-center text-center ${spacing.gap}`}>
+            {/* Heart-Centered Coaching Option */}
+            <CosmicCard className="group hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1" onClick={handleStartSpiritualGrowth}>
+              <div className="flex flex-col items-center text-center space-y-4">
                 <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
                   <Heart className="h-8 w-8 text-primary-foreground" />
                 </div>
                 <div>
-                  <h3 className={`${getTextSize('text-xl')} font-semibold text-foreground mb-2`}>Heart-Centered Coach</h3>
-                  <p className={`text-muted-foreground ${getTextSize('text-sm')} leading-relaxed`}>
+                  <h3 className="text-xl font-semibold text-foreground mb-2">Heart-Centered Coach</h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
                     Start an immediate conversation with your personalized spiritual coach.
                   </p>
                 </div>
-                <div className={`${getTextSize('text-xs')} text-primary font-medium bg-primary/10 px-3 py-1 rounded-full`}>
+                <div className="text-xs text-primary font-medium bg-primary/10 px-3 py-1 rounded-full">
                   ✨ Instant Connection
                 </div>
               </div>
             </CosmicCard>
 
-            <CosmicCard className={`group hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1 ${touchTargetSize}`} onClick={() => setActiveView('life_os_choices')}>
-              <div className={`flex flex-col items-center text-center ${spacing.gap}`}>
+            {/* Life Operating System - NEW */}
+            <CosmicCard className="group hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1" onClick={() => setActiveView('life_os_choices')}>
+              <div className="flex flex-col items-center text-center space-y-4">
                 <div className="w-16 h-16 bg-gradient-to-br from-secondary to-primary rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
                   <Target className="h-8 w-8 text-secondary-foreground" />
                 </div>
                 <div>
-                  <h3 className={`${getTextSize('text-xl')} font-semibold text-foreground mb-2`}>Life Operating System</h3>
-                  <p className={`text-muted-foreground ${getTextSize('text-sm')} leading-relaxed`}>
+                  <h3 className="text-xl font-semibold text-foreground mb-2">Life Operating System</h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
                     Holistic life wheel assessment and multi-domain growth coordination.
                   </p>
                 </div>
-                <div className={`${getTextSize('text-xs')} text-secondary font-medium bg-secondary/10 px-3 py-1 rounded-full`}>
+                <div className="text-xs text-secondary font-medium bg-secondary/10 px-3 py-1 rounded-full">
                   🎯 Multi-Domain
                 </div>
               </div>
             </CosmicCard>
 
-            <CosmicCard className={`group hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1 ${touchTargetSize}`} onClick={() => setActiveView('growth_program')}>
-              <div className={`flex flex-col items-center text-center ${spacing.gap}`}>
+            {/* Growth Program Option */}
+            <CosmicCard className="group hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1" onClick={() => setActiveView('growth_program')}>
+              <div className="flex flex-col items-center text-center space-y-4">
                 <div className="w-16 h-16 bg-gradient-to-br from-accent to-primary rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
                   <TrendingUp className="h-8 w-8 text-accent-foreground" />
                 </div>
                 <div>
-                  <h3 className={`${getTextSize('text-xl')} font-semibold text-foreground mb-2`}>Structured Program</h3>
-                  <p className={`text-muted-foreground ${getTextSize('text-sm')} leading-relaxed`}>
+                  <h3 className="text-xl font-semibold text-foreground mb-2">Structured Program</h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
                     Comprehensive 12-week journey for deep spiritual transformation.
                   </p>
                 </div>
-                <div className={`${getTextSize('text-xs')} text-accent font-medium bg-accent/10 px-3 py-1 rounded-full`}>
+                <div className="text-xs text-accent font-medium bg-accent/10 px-3 py-1 rounded-full">
                   🤖 AI-Powered
                 </div>
               </div>
             </CosmicCard>
 
-            <CosmicCard className={`group hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1 ${touchTargetSize}`} onClick={() => setActiveView('tools')}>
-              <div className={`flex flex-col items-center text-center ${spacing.gap}`}>
+            {/* Tools & Practices */}
+            <CosmicCard className="group hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1" onClick={() => setActiveView('tools')}>
+              <div className="flex flex-col items-center text-center space-y-4">
                 <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
                   <Compass className="h-8 w-8 text-primary-foreground" />
                 </div>
                 <div>
-                  <h3 className={`${getTextSize('text-xl')} font-semibold text-foreground mb-2`}>Spiritual Tools</h3>
-                  <p className={`text-muted-foreground ${getTextSize('text-sm')} leading-relaxed`}>
+                  <h3 className="text-xl font-semibold text-foreground mb-2">Spiritual Tools</h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
                     Mood tracking, reflection prompts, and insight journaling tools.
                   </p>
                 </div>
-                <div className={`${getTextSize('text-xs')} text-primary font-medium bg-primary/10 px-3 py-1 rounded-full`}>
+                <div className="text-xs text-primary font-medium bg-primary/10 px-3 py-1 rounded-full">
                   🧘 Daily Practice
                 </div>
               </div>

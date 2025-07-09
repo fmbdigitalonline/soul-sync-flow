@@ -7,7 +7,6 @@ import { GrowthProgramGeneration } from './GrowthProgramGeneration';
 import { useGrowthOnboardingLogic } from './useGrowthOnboardingLogic';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
-import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
 
 interface GrowthProgramOnboardingModalProps {
   isOpen: boolean;
@@ -20,7 +19,6 @@ export const GrowthProgramOnboardingModal: React.FC<GrowthProgramOnboardingModal
   onClose,
   onComplete
 }) => {
-  const { spacing, layout, touchTargetSize, isMobile, isFoldDevice } = useResponsiveLayout();
   const {
     currentStage,
     selectedDomain,
@@ -71,20 +69,9 @@ export const GrowthProgramOnboardingModal: React.FC<GrowthProgramOnboardingModal
     }
   };
 
-  // Responsive modal sizing
-  const getModalSize = () => {
-    if (isFoldDevice) {
-      return "w-full max-w-[calc(100vw-16px)] h-[calc(100vh-32px)]";
-    }
-    if (isMobile) {
-      return "w-full max-w-[calc(100vw-32px)] h-[calc(100vh-64px)]";
-    }
-    return "max-w-4xl h-[90vh]";
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className={`${getModalSize()} overflow-hidden p-0 flex flex-col`}>
+      <DialogContent className="max-w-4xl h-[90vh] overflow-hidden p-0 flex flex-col">
         {/* Close button */}
         <div className="absolute top-4 right-4 z-50">
           <Button
@@ -92,13 +79,13 @@ export const GrowthProgramOnboardingModal: React.FC<GrowthProgramOnboardingModal
             size="sm"
             onClick={handleClose}
             disabled={isGenerating}
-            className={`h-8 w-8 p-0 ${touchTargetSize}`}
+            className="h-8 w-8 p-0"
           >
             <X className="h-4 w-4" />
           </Button>
         </div>
         
-        <div className={`w-full h-full flex flex-col overflow-hidden ${spacing.container}`}>
+        <div className="w-full h-full flex flex-col overflow-hidden">
           {renderCurrentStage()}
         </div>
       </DialogContent>

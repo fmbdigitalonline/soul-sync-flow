@@ -3,7 +3,6 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Heart, TrendingUp, DollarSign, Palette, Sparkles, Home, Users } from 'lucide-react';
 import { LifeDomain } from '@/types/growth-program';
-import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
 
 interface DomainCard {
   domain: LifeDomain;
@@ -74,35 +73,26 @@ export const GrowthDomainSelection: React.FC<GrowthDomainSelectionProps> = ({
   onDomainSelect,
   selectedDomain
 }) => {
-  const { spacing, layout, touchTargetSize, getTextSize, isMobile, isFoldDevice } = useResponsiveLayout();
-
-  // Responsive grid columns
-  const getGridColumns = () => {
-    if (isFoldDevice) return 'grid-cols-1';
-    if (isMobile) return 'grid-cols-1';
-    return 'grid-cols-2 lg:grid-cols-3';
-  };
-
   return (
-    <div className={`${spacing.container} ${spacing.gap}`}>
+    <div className="p-8 space-y-6">
       {/* Header */}
-      <div className={`text-center ${spacing.gap}`}>
+      <div className="text-center space-y-4">
         <div className="w-16 h-16 bg-gradient-to-br from-soul-purple to-soul-teal rounded-full flex items-center justify-center mx-auto">
           <Heart className="h-8 w-8 text-white" />
         </div>
         
         <div>
-          <h1 className={`${getTextSize('text-2xl')} font-bold gradient-text mb-2`}>
+          <h1 className="text-2xl font-bold gradient-text mb-2">
             Welcome to Your Growth Journey
           </h1>
-          <p className={`text-muted-foreground ${getTextSize('text-base')} ${layout.maxWidth} mx-auto`}>
+          <p className="text-muted-foreground max-w-md mx-auto">
             I'm your Growth Coach, here to guide you step by step. Which area of your life feels most alive or challenging for you right now?
           </p>
         </div>
       </div>
 
       {/* Domain Cards */}
-      <div className={`grid ${getGridColumns()} ${spacing.gap} ${layout.maxWidth} mx-auto`}>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
         {domainCards.map((card) => {
           const IconComponent = card.icon;
           const isSelected = selectedDomain === card.domain;
@@ -110,26 +100,26 @@ export const GrowthDomainSelection: React.FC<GrowthDomainSelectionProps> = ({
           return (
             <Card
               key={card.domain}
-              className={`cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] ${touchTargetSize} ${
+              className={`cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] ${
                 isSelected ? 'ring-2 ring-soul-purple bg-soul-purple/5' : ''
               }`}
               onClick={() => onDomainSelect(card.domain)}
             >
-              <CardContent className={spacing.card}>
-                <div className={spacing.gap}>
-                  <div className={`flex items-center ${spacing.gap}`}>
-                    <div className={getTextSize('text-2xl')}>{card.emoji}</div>
+              <CardContent className="p-6">
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-3">
+                    <div className="text-2xl">{card.emoji}</div>
                     <IconComponent className="h-5 w-5 text-soul-purple" />
                   </div>
                   
                   <div>
-                    <h3 className={`font-semibold ${getTextSize('text-lg')}`}>{card.title}</h3>
-                    <p className={`${getTextSize('text-sm')} text-muted-foreground mt-1`}>
+                    <h3 className="font-semibold text-lg">{card.title}</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
                       {card.description}
                     </p>
                   </div>
                   
-                  <div className={`${getTextSize('text-xs')} text-soul-purple font-medium`}>
+                  <div className="text-xs text-soul-purple font-medium">
                     Click to explore →
                   </div>
                 </div>
@@ -140,7 +130,7 @@ export const GrowthDomainSelection: React.FC<GrowthDomainSelectionProps> = ({
       </div>
 
       <div className="text-center">
-        <p className={`${getTextSize('text-xs')} text-muted-foreground`}>
+        <p className="text-xs text-muted-foreground">
           Choose the area where you sense the most energy for growth right now
         </p>
       </div>
