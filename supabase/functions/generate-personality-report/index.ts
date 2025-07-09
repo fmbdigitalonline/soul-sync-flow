@@ -43,57 +43,116 @@ serve(async (req) => {
       hasBasharSuite: !!blueprint.bashar_suite
     });
 
-    // Extract key blueprint data for the AI prompt with robust fallbacks
+    // Extract comprehensive blueprint data for detailed analysis
+    const userMeta = blueprint.user_meta || {};
+    const personality = userMeta.personality || {};
+    const bigFive = personality.bigFive || {};
+    const confidence = personality.confidence || {};
+    const mbtiProbs = personality.mbtiProbabilities || {};
+    
     const mbti = blueprint.cognition_mbti || blueprint.mbti || {};
     const humanDesign = blueprint.energy_strategy_human_design || blueprint.human_design || {};
     const astrology = blueprint.archetype_western || blueprint.astrology || {};
     const numerology = blueprint.values_life_path || blueprint.numerology || {};
+    const chineseAstrology = blueprint.archetype_chinese || {};
     const bashar = blueprint.bashar_suite || {};
-    const userMeta = blueprint.user_meta || {};
+    const goalStack = blueprint.goal_stack || {};
 
-    console.log('🔍 Extracted data:', {
-      mbtiType: mbti.type || 'Unknown',
-      humanDesignType: humanDesign.type || 'Unknown',
-      sunSign: astrology.sun_sign || 'Unknown',
-      lifePathNumber: numerology.lifePathNumber || numerology.life_path_number || 'Unknown',
+    console.log('🔍 Comprehensive data extraction:', {
       userName: userMeta.preferred_name || userMeta.full_name || 'User',
+      bigFiveOpenness: bigFive.openness,
+      likelyMBTI: personality.likelyType,
+      humanDesignType: humanDesign.type,
+      lifePathNumber: numerology.life_path_number,
+      chineseSign: chineseAstrology.animal,
+      sunSign: astrology.sun_sign,
       blueprintId: blueprint.id
     });
 
-    const systemPrompt = `You are an expert personality analyst who creates comprehensive, personalized readings by synthesizing multiple psychological and spiritual systems. Create a detailed personality report AND 10 personalized quotes that resonate with their unique blueprint.
+    const systemPrompt = `You are a master personality analyst who creates deeply personalized, comprehensive readings by synthesizing multiple psychological and spiritual systems. You have access to extraordinarily detailed blueprint data. Create a rich, insightful personality report that demonstrates deep understanding of this person's unique psychological makeup.
 
 USER PROFILE:
 Name: ${userMeta.preferred_name || userMeta.full_name || 'User'}
 Birth Date: ${userMeta.birth_date || 'Unknown'}
+Birth Location: ${userMeta.birth_location || 'Unknown'}
 
-BLUEPRINT DATA:
-- MBTI: ${mbti.type || 'Unknown'} (${mbti.dominant_function || ''} → ${mbti.auxiliary_function || ''})
-- Human Design: ${humanDesign.type || 'Unknown'} ${humanDesign.profile || ''}, Authority: ${humanDesign.authority || 'Unknown'}
-- Astrology: Sun ${astrology.sun_sign || 'Unknown'}, Moon ${astrology.moon_sign || 'Unknown'}, Rising ${astrology.rising_sign || 'Unknown'}
-- Life Path: ${numerology.lifePathNumber || numerology.life_path_number || 'Unknown'} (${numerology.lifePathKeyword || ''})
-- Bashar Excitement: ${bashar.excitement_compass?.principle || 'Follow your highest excitement'}
+COMPREHENSIVE PERSONALITY DATA:
+Big Five Scores (0-1 scale):
+- Openness: ${bigFive.openness || 'N/A'} (Confidence: ${confidence.openness || 'N/A'})
+- Extraversion: ${bigFive.extraversion || 'N/A'} (Confidence: ${confidence.extraversion || 'N/A'})
+- Agreeableness: ${bigFive.agreeableness || 'N/A'} (Confidence: ${confidence.agreeableness || 'N/A'})
+- Conscientiousness: ${bigFive.conscientiousness || 'N/A'} (Confidence: ${confidence.conscientiousness || 'N/A'})
+- Neuroticism: ${bigFive.neuroticism || 'N/A'} (Confidence: ${confidence.neuroticism || 'N/A'})
 
-Create 5 detailed sections (each 200-300 words) plus a shorter integrated summary:
-1. Core Personality Pattern - How all these systems paint a picture of who they are
-2. Decision Making Style - How they process information and make choices
-3. Relationship Style - How they connect with others
-4. Life Path & Purpose - Their spiritual direction and calling
-5. Current Energy & Timing - Present moment guidance
-6. Integrated Summary - A cohesive overview (100-150 words)
+MBTI Analysis:
+- Most Likely Type: ${personality.likelyType || 'Unknown'} 
+- User Confidence: ${personality.userConfidence || 'N/A'}
+- Top Probabilities: ${Object.entries(mbtiProbs).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([type, prob]) => `${type} (${(prob * 100).toFixed(1)}%)`).join(', ') || 'N/A'}
 
-THEN create 10 personalized inspirational quotes that specifically resonate with their personality blueprint. Each quote should:
-- Be 1-2 sentences long
-- Connect to their specific MBTI, Human Design, or astrological characteristics
-- Include a brief explanation of why it resonates with their personality
-- Be categorized (Motivation, Self-Discovery, Relationships, Life Purpose, Energy)
+HUMAN DESIGN DETAILS:
+- Type: ${humanDesign.type || 'Unknown'}
+- Profile: ${humanDesign.profile || 'Unknown'}
+- Strategy: ${humanDesign.strategy || 'Unknown'}
+- Authority: ${humanDesign.authority || 'Unknown'}
+- Definition: ${humanDesign.definition || 'Unknown'}
+- Not-Self Theme: ${humanDesign.not_self_theme || 'Unknown'}
+- Defined Centers: ${Object.entries(humanDesign.centers || {}).filter(([_, data]) => data.defined).map(([name]) => name).join(', ') || 'None identified'}
 
-Format the quotes section as:
+ASTROLOGY PROFILE:
+- Sun Sign: ${astrology.sun_sign || 'Unknown'} (${astrology.sun_keyword || ''})
+- Moon Sign: ${astrology.moon_sign || 'Unknown'} (${astrology.moon_keyword || ''})
+- Rising Sign: ${astrology.rising_sign || 'Calculating...'}
+
+NUMEROLOGY INSIGHTS:
+- Life Path: ${numerology.life_path_number || 'Unknown'} (${numerology.life_path_keyword || ''})
+- Soul Urge: ${numerology.soul_urge_number || 'Unknown'} (${numerology.soul_urge_keyword || ''})
+- Expression: ${numerology.expression_number || 'Unknown'} (${numerology.expression_keyword || ''})
+- Personality Number: ${numerology.personality_number || 'Unknown'} (${numerology.personality_keyword || ''})
+
+CHINESE ASTROLOGY:
+- Animal: ${chineseAstrology.animal || 'Unknown'}
+- Element: ${chineseAstrology.element || 'Unknown'}
+- Yin/Yang: ${chineseAstrology.yin_yang || 'Unknown'}
+- Keyword: ${chineseAstrology.keyword || 'Unknown'}
+
+GOAL ORIENTATION:
+- Primary Goal: ${goalStack.primary_goal || 'Unknown'}
+- Time Horizon: ${goalStack.time_horizon || 'Unknown'}
+- Support Style: ${goalStack.support_style || 'Unknown'}
+
+CONSCIOUSNESS PRINCIPLES:
+- Excitement Compass: ${bashar.excitement_compass?.principle || 'Follow your highest excitement'}
+- Belief Interface: ${bashar.belief_interface?.principle || 'Beliefs create reality'}
+- Frequency Alignment: ${bashar.frequency_alignment?.quick_ritual || 'Take 3 deep breaths and feel gratitude'}
+
+Create a comprehensive 6-section personality report (minimum 1,500 words total):
+
+1. CORE PERSONALITY ARCHITECTURE (300+ words)
+Synthesize their Big Five scores, MBTI probabilities, and core traits into a detailed personality profile. Reference specific scores and explain how they interact.
+
+2. DECISION-MAKING & COGNITIVE STYLE (250+ words)
+Analyze how their Human Design authority, MBTI cognitive functions, and personality scores influence their decision-making process.
+
+3. RELATIONSHIP & SOCIAL DYNAMICS (250+ words)
+Explore how their extraversion levels, agreeableness, Human Design type, and astrological influences shape their relationships.
+
+4. LIFE PURPOSE & SPIRITUAL PATH (300+ words)
+Connect their Life Path number, Soul Urge, Expression number, Chinese astrology, and Human Design strategy into a cohesive purpose narrative.
+
+5. ENERGY PATTERNS & TIMING (200+ words)
+Discuss their Human Design centers, Chinese astrology elements, and current astrological influences for optimal energy management.
+
+6. INTEGRATED BLUEPRINT SYNTHESIS (200+ words)
+Weave all systems together showing how they create a unique, coherent personality profile.
+
+THEN create 10 deeply personalized quotes that reflect their specific numerical scores, astrological placements, and personality metrics:
+
 PERSONALIZED QUOTES:
-1. "[Quote text]" - Category: [category] - Why it resonates: [brief explanation]
-2. "[Quote text]" - Category: [category] - Why it resonates: [brief explanation]
-...and so on for all 10 quotes.
+1. "[Quote text]" - Category: [category] - Why it resonates: [specific connection to their data]
+2. "[Quote text]" - Category: [category] - Why it resonates: [specific connection to their data]
+...continue for all 10 quotes
 
-Write in second person ("You are..."), be specific about how the systems interact, and make it feel like a personalized reading from an expert who deeply understands them.`;
+Write in second person, reference specific scores and placements, and demonstrate deep knowledge of how these systems interconnect for this unique individual.`;
 
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -111,7 +170,7 @@ Write in second person ("You are..."), be specific about how the systems interac
           }
         ],
         temperature: 0.7,
-        max_tokens: 3500,
+        max_tokens: 4000,
       }),
     });
 
