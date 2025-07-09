@@ -67,6 +67,12 @@ const translations = {
     'index.dreamsDesc': 'Transform dreams into reality',
     'index.growth': 'Spiritual Growth',
     'index.growthDesc': 'Inner wisdom & reflection',
+    
+    // Spiritual Growth
+    'spiritualGrowth.title': 'Spiritual Growth',
+    'spiritualGrowth.subtitle': 'Explore deep transformation through heart-centered guidance and wisdom',
+    'spiritualGrowth.description': 'Begin your journey of spiritual discovery and inner growth',
+    'spiritualGrowth.getStarted': 'Get Started',
     'index.companion': 'AI Companion',
     'index.companionDesc': 'Personalized guidance & chat',
     'index.demo': 'View Personality Demo',
