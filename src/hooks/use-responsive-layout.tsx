@@ -25,7 +25,7 @@ export const useResponsiveLayout = () => {
         container: 'px-2 py-2',
         card: 'p-3',
         button: 'px-3 py-2',
-        text: 'text-xs',
+        text: 'text-sm', // Increased from text-xs
         gap: 'gap-2'
       };
     }
@@ -96,17 +96,17 @@ export const useResponsiveLayout = () => {
   };
 
   const getTouchTargetSize = () => {
-    return isFoldDevice ? 'min-h-[40px] min-w-[40px]' : 'min-h-[44px] min-w-[44px]';
+    return isFoldDevice ? 'min-h-[44px] min-w-[44px]' : 'min-h-[44px] min-w-[44px]'; // Increased from 40px to 44px for fold
   };
 
   const getTextSize = (base: string) => {
     const sizeMap: Record<string, string> = {
-      'text-xs': isFoldDevice ? 'text-[10px]' : 'text-xs',
-      'text-sm': isFoldDevice ? 'text-xs' : 'text-sm',
-      'text-base': isFoldDevice ? 'text-sm' : isUltraNarrow ? 'text-sm' : 'text-base',
-      'text-lg': isFoldDevice ? 'text-base' : isUltraNarrow ? 'text-base' : 'text-lg',
-      'text-xl': isFoldDevice ? 'text-lg' : isUltraNarrow ? 'text-lg' : 'text-xl',
-      'text-2xl': isFoldDevice ? 'text-xl' : isUltraNarrow ? 'text-xl' : 'text-2xl'
+      'text-xs': isFoldDevice ? 'text-sm' : 'text-xs', // Increased from text-[10px] to text-sm
+      'text-sm': isFoldDevice ? 'text-sm' : 'text-sm', // Kept as text-sm instead of text-xs
+      'text-base': isFoldDevice ? 'text-base' : isUltraNarrow ? 'text-sm' : 'text-base', // Increased from text-sm to text-base
+      'text-lg': isFoldDevice ? 'text-lg' : isUltraNarrow ? 'text-base' : 'text-lg', // Increased from text-base to text-lg
+      'text-xl': isFoldDevice ? 'text-xl' : isUltraNarrow ? 'text-lg' : 'text-xl', // Increased from text-lg to text-xl
+      'text-2xl': isFoldDevice ? 'text-xl' : isUltraNarrow ? 'text-xl' : 'text-2xl' // Only this one stays smaller for fold
     };
     
     return sizeMap[base] || base;

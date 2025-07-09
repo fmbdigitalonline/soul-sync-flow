@@ -265,7 +265,7 @@
   
   /* Ensure touch targets remain accessible */
   button, [role="button"] {
-    @apply min-h-[40px] min-w-[40px];
+    @apply min-h-[44px] min-w-[44px]; /* Increased from min-h-[40px] min-w-[40px] */
   }
   
   /* Optimize text sizes for readability */
@@ -313,17 +313,17 @@
     @apply rounded-lg p-2;
   }
   
-  /* Minimum viable text sizes */
+  /* Improved minimum viable text sizes - larger and more readable */
   .text-xs {
-    font-size: 10px;
+    font-size: 12px; /* Increased from 10px */
   }
   
   .text-sm {
-    font-size: 11px;
+    font-size: 14px; /* Increased from 11px */
   }
   
   .text-base {
-    font-size: 12px;
+    font-size: 16px; /* Increased from 12px */
   }
   
   /* Ultra-compact spacing */
@@ -335,12 +335,12 @@
   
   /* Ensure inputs remain usable */
   input, textarea, select {
-    @apply min-h-[40px] text-sm;
+    @apply min-h-[44px] text-sm; /* Increased from min-h-[40px] */
   }
   
   /* Optimize button sizes */
   button {
-    @apply min-h-[40px] px-2 py-1 text-sm;
+    @apply min-h-[44px] px-2 py-1 text-sm; /* Increased from min-h-[40px] */
   }
 
   /* Fold device mobile input positioning */
@@ -386,7 +386,7 @@
   
   .fold-compact {
     @media (max-width: 350px) {
-      @apply text-xs p-1 gap-1;
+      @apply text-sm p-1 gap-1; /* Changed from text-xs to text-sm */
     }
   }
 
