@@ -185,17 +185,49 @@ Write in second person, reference specific scores and placements, and demonstrat
     // Split content into report sections and quotes
     const [reportPart, quotesPart] = generatedContent.split('PERSONALIZED QUOTES:');
     
-    // Parse the report sections
-    const sections = reportPart.split(/\d+\.\s*/).slice(1);
+    console.log('🔍 Raw report part length:', reportPart.length);
+    console.log('🔍 Raw report part preview:', reportPart.substring(0, 500));
+    
+    // Parse the report sections - improved logic
+    const sectionPattern = /(\d+)\.\s*([A-Z\s&]+)[\s\S]*?(?=\d+\.\s*[A-Z\s&]+|$)/gi;
+    const sectionMatches = [...reportPart.matchAll(sectionPattern)];
+    
+    console.log('🔍 Found section matches:', sectionMatches.length);
+    sectionMatches.forEach((match, index) => {
+      console.log(`🔍 Section ${index + 1}:`, match[2]?.trim(), 'Content length:', match[0]?.length);
+    });
+    
+    // Extract content for each section with better parsing
+    const extractSectionContent = (sectionNumber: number): string => {
+      const match = sectionMatches.find(m => parseInt(m[1]) === sectionNumber);
+      if (!match) {
+        console.log(`⚠️ No match found for section ${sectionNumber}`);
+        return 'Content unavailable';
+      }
+      
+      // Remove the section number and title from the beginning
+      const content = match[0].replace(/^\d+\.\s*[A-Z\s&]+\s*/, '').trim();
+      console.log(`✅ Extracted section ${sectionNumber} content length:`, content.length);
+      return content || 'Content unavailable';
+    };
     
     const reportContent = {
-      core_personality_pattern: sections[0]?.replace(/^[^:]*:?\s*/, '').trim() || 'Content unavailable',
-      decision_making_style: sections[1]?.replace(/^[^:]*:?\s*/, '').trim() || 'Content unavailable',
-      relationship_style: sections[2]?.replace(/^[^:]*:?\s*/, '').trim() || 'Content unavailable',
-      life_path_purpose: sections[3]?.replace(/^[^:]*:?\s*/, '').trim() || 'Content unavailable',
-      current_energy_timing: sections[4]?.replace(/^[^:]*:?\s*/, '').trim() || 'Content unavailable',
-      integrated_summary: sections[5]?.replace(/^[^:]*:?\s*/, '').trim() || reportPart.slice(-500)
+      core_personality_pattern: extractSectionContent(1),
+      decision_making_style: extractSectionContent(2),
+      relationship_style: extractSectionContent(3),
+      life_path_purpose: extractSectionContent(4),
+      current_energy_timing: extractSectionContent(5),
+      integrated_summary: extractSectionContent(6)
     };
+    
+    console.log('📊 Final report content summary:', {
+      core_personality_pattern: reportContent.core_personality_pattern.length,
+      decision_making_style: reportContent.decision_making_style.length,
+      relationship_style: reportContent.relationship_style.length,
+      life_path_purpose: reportContent.life_path_purpose.length,
+      current_energy_timing: reportContent.current_energy_timing.length,
+      integrated_summary: reportContent.integrated_summary.length
+    });
 
     // Parse quotes
     const quotes = [];
