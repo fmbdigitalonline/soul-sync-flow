@@ -116,24 +116,24 @@ function convertToLayeredBlueprint(rawData: BlueprintData): LayeredBlueprint {
   const mbtiData = rawData.cognition_mbti || rawData.mbti || rawData.personality || {};
   let mbtiType = "Unknown";
   
-  // Extract MBTI type from user personality data if available
-  if (rawData.user_meta?.personality) {
-    // Check if personality is an object with likelyType property
-    if (typeof rawData.user_meta.personality === 'object' && rawData.user_meta.personality !== null) {
-      const personalityObj = rawData.user_meta.personality as any;
-      if (personalityObj.likelyType) {
-        mbtiType = personalityObj.likelyType;
-        console.log('🎯 Using MBTI from user personality object:', mbtiType);
-      }
-    } else if (typeof rawData.user_meta.personality === 'string') {
-      // If it's a string, use it directly
-      mbtiType = rawData.user_meta.personality;
-      console.log('🎯 Using MBTI from user personality string:', mbtiType);
-    }
-  } else if (mbtiData?.type) {
-    mbtiType = mbtiData.type;
-    console.log('🎯 Using MBTI from cognition_mbti:', mbtiType);
-  }
+        // Extract MBTI type from user personality data if available
+        if (rawData.user_meta?.personality) {
+          // Check if personality is an object with likelyType property
+          if (typeof rawData.user_meta.personality === 'object' && rawData.user_meta.personality !== null) {
+            const personalityObj = rawData.user_meta.personality as any;
+            if (personalityObj.likelyType) {
+              mbtiType = personalityObj.likelyType;
+              console.log('🎯 Using MBTI from user personality object:', mbtiType);
+            }
+          } else if (typeof rawData.user_meta.personality === 'string') {
+            // If it's a string, use it directly
+            mbtiType = rawData.user_meta.personality;
+            console.log('🎯 Using MBTI from user personality string:', mbtiType);
+          }
+        } else if (mbtiData?.type && mbtiData.type !== "Unknown") {
+          mbtiType = mbtiData.type;
+          console.log('🎯 Using MBTI from cognition_mbti:', mbtiType);
+        }
   
   // Extract other data sections
   const hdData = rawData.energy_strategy_human_design || rawData.human_design || {};

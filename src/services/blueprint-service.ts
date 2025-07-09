@@ -122,15 +122,31 @@ class BlueprintService {
     // First, ensure single active blueprint
     await this.ensureSingleActiveBlueprint(userId);
 
-    // Fetch the active blueprint
-    const { data, error } = await supabase
-      .from('user_blueprints')
+    // First try the new blueprints table
+    let { data, error } = await supabase
+      .from('blueprints')
       .select('*')
       .eq('user_id', userId)
       .eq('is_active', true)
       .order('updated_at', { ascending: false })
       .limit(1)
       .maybeSingle();
+
+    // Fallback to user_blueprints table if nothing found
+    if (!data && !error) {
+      console.log('🔄 BLUEPRINT SERVICE: No data in blueprints table, checking user_blueprints');
+      const fallbackResult = await supabase
+        .from('user_blueprints')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      data = fallbackResult.data as any;
+      error = fallbackResult.error;
+    }
 
     if (error) {
       console.error("❌ BLUEPRINT SERVICE: Database error:", error);
@@ -142,15 +158,24 @@ class BlueprintService {
       return { data: null, error: "No active blueprint found." };
     }
 
+    // Determine which table format we're dealing with
+    const dataAsAny = data as any;
+    const hasNestedBlueprint = 'blueprint' in dataAsAny && dataAsAny.blueprint;
+    const tableType = hasNestedBlueprint ? 'user_blueprints' : 'blueprints';
+    
     console.log("✅ BLUEPRINT SERVICE: Raw blueprint data found:", {
       id: data.id,
-      hasBlueprint: !!data.blueprint,
-      blueprintKeys: data.blueprint ? Object.keys(data.blueprint) : [],
-      isActive: data.is_active
+      tableType,
+      hasNestedBlueprint,
+      blueprintKeys: hasNestedBlueprint ? Object.keys(dataAsAny.blueprint) : Object.keys(data),
+      isActive: data.is_active,
+      dataStructure: hasNestedBlueprint ? dataAsAny.blueprint : data // Show the actual structure
     });
 
     // Convert and validate the blueprint data
-    const blueprintData = this.convertDatabaseBlueprintToFormat(data.blueprint as any);
+    // Handle both table formats - blueprints table stores data directly, user_blueprints stores it in a blueprint column
+    const rawBlueprintData = hasNestedBlueprint ? dataAsAny.blueprint : data;
+    const blueprintData = this.convertDatabaseBlueprintToFormat(rawBlueprintData as any);
     
     console.log("🔄 BLUEPRINT SERVICE: Converted blueprint data:", {
       hasUserMeta: !!blueprintData.user_meta,
