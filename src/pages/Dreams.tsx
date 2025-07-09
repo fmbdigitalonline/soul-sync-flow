@@ -243,17 +243,17 @@ const Dreams = () => {
     return (
       <MainLayout>
         <ErrorBoundary>
-          <div className={`min-h-screen bg-gradient-to-br from-soul-purple/10 via-white to-soul-teal/5 flex items-center justify-center p-3 ${isMobile ? 'pb-20' : ''}`}>
-            <div className={`bg-white/80 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 text-center w-full max-w-sm mx-auto ${spacing.card}`}>
-              <div className={`w-10 h-10 mx-auto bg-gradient-to-br from-soul-purple to-soul-teal rounded-full mb-4 flex items-center justify-center ${isFoldDevice ? 'w-8 h-8' : ''}`}>
-                <Heart className={`h-5 w-5 text-white ${isFoldDevice ? 'h-4 w-4' : ''}`} />
+          <div className={`min-h-screen bg-background flex items-center justify-center p-3 ${isMobile ? 'pb-20' : ''}`}>
+            <div className={`bg-card backdrop-blur-lg rounded-2xl shadow-lg border border-border text-center w-full max-w-sm mx-auto ${spacing.card}`}>
+              <div className={`w-10 h-10 mx-auto bg-primary rounded-full mb-4 flex items-center justify-center ${isFoldDevice ? 'w-8 h-8' : ''}`}>
+                <Heart className={`h-5 w-5 text-primary-foreground ${isFoldDevice ? 'h-4 w-4' : ''}`} />
               </div>
-              <h1 className={`font-bold mb-3 bg-gradient-to-r from-soul-purple to-soul-teal bg-clip-text text-transparent ${getTextSize('text-lg')}`}>
+              <h1 className={`font-heading font-bold mb-3 text-foreground ${getTextSize('text-lg')}`}>
                 {t("dreams.title")}
               </h1>
-              <p className={`mb-6 text-gray-600 leading-relaxed px-2 ${getTextSize('text-sm')}`}>{t("dreams.description")}</p>
+              <p className={`mb-6 text-muted-foreground leading-relaxed px-2 ${getTextSize('text-sm')}`}>{t("dreams.description")}</p>
               <Button 
-                className={`w-full bg-gradient-to-r from-soul-purple to-soul-teal hover:shadow-lg transition-all duration-300 rounded-2xl text-white font-medium ${touchTargetSize} ${getTextSize('text-sm')}`}
+                className={`w-full hover:shadow-lg transition-all duration-300 rounded-2xl font-medium ${touchTargetSize} ${getTextSize('text-sm')}`}
                 onClick={() => window.location.href = '/auth'}
               >
                 {t("dreams.getStarted")}
@@ -269,7 +269,7 @@ const Dreams = () => {
   if (currentView === 'task-coach' && selectedTask) {
     return (
       <MainLayout>
-        <div className={`min-h-screen bg-gradient-to-br from-soul-purple/5 to-soul-teal/5 w-full ${isMobile ? 'pb-20' : ''}`}>
+        <div className={`min-h-screen bg-background w-full ${isMobile ? 'pb-20' : ''}`}>
           <TaskCoachInterface
             task={selectedTask}
             onBack={handleBackFromTaskCoach}
@@ -284,24 +284,24 @@ const Dreams = () => {
   if (currentView === 'chat') {
     return (
       <MainLayout>
-        <div className={`min-h-screen flex flex-col bg-gradient-to-br from-soul-purple/5 to-white w-full ${isMobile ? 'pb-20' : ''}`}>
+        <div className={`min-h-screen flex flex-col bg-background w-full ${isMobile ? 'pb-20' : ''}`}>
           {/* Mobile Optimized Header */}
-          <div className={`bg-white/80 backdrop-blur-lg border-b border-gray-100 sticky top-0 z-10 w-full ${isMobile ? 'px-3 py-2' : 'px-4 py-3'}`}>
+          <div className={`bg-card/80 backdrop-blur-lg border-b border-border sticky top-0 z-10 w-full ${isMobile ? 'px-3 py-2' : 'px-4 py-3'}`}>
             <div className={`flex items-center justify-between w-full max-w-4xl mx-auto`}>
               <Button 
                 variant="ghost" 
                 size="sm" 
                 onClick={() => setCurrentView('create')}
-                className={`flex items-center gap-2 text-gray-600 hover:text-soul-purple rounded-xl ${isFoldDevice ? 'px-1 py-1' : 'px-2 py-1'} ${getTextSize('text-sm')} ${touchTargetSize}`}
+                className={`flex items-center gap-2 text-muted-foreground hover:text-primary rounded-xl ${isFoldDevice ? 'px-1 py-1' : 'px-2 py-1'} ${getTextSize('text-sm')} ${touchTargetSize}`}
               >
                 <ArrowLeft className={`h-4 w-4 ${isFoldDevice ? 'h-3 w-3' : ''}`} />
                 {!isFoldDevice && 'Back'}
               </Button>
               <div className="flex items-center gap-2">
-                <div className={`bg-gradient-to-br from-soul-purple to-soul-teal rounded-full flex items-center justify-center ${isFoldDevice ? 'w-5 h-5' : 'w-6 h-6'}`}>
-                  <Heart className={`text-white ${isFoldDevice ? 'h-2 w-2' : 'h-3 w-3'}`} />
+                <div className={`bg-primary rounded-full flex items-center justify-center ${isFoldDevice ? 'w-5 h-5' : 'w-6 h-6'}`}>
+                  <Heart className={`text-primary-foreground ${isFoldDevice ? 'h-2 w-2' : 'h-3 w-3'}`} />
                 </div>
-                <h2 className={`font-semibold text-gray-800 ${getTextSize('text-sm')} ${isFoldDevice ? 'hidden' : ''}`}>Dream Discovery</h2>
+                <h2 className={`font-heading font-semibold text-foreground ${getTextSize('text-sm')} ${isFoldDevice ? 'hidden' : ''}`}>Dream Discovery</h2>
               </div>
               <div className={isFoldDevice ? 'w-6' : 'w-16'} />
             </div>
@@ -310,13 +310,13 @@ const Dreams = () => {
           <div className={`flex-1 w-full overflow-hidden max-w-4xl mx-auto ${isMobile ? 'px-0' : 'px-4'}`}>
             {/* Show suggestions if in suggestion phase */}
             {conversationPhase === 'suggestion_presentation' && dreamSuggestions.length > 0 && (
-              <div className={`bg-white/90 backdrop-blur-lg border-b border-gray-100 ${spacing.container} py-4`}>
+              <div className={`bg-card/90 backdrop-blur-lg border-b border-border ${spacing.container} py-4`}>
                 <div className="max-w-2xl mx-auto">
                   <div className="text-center mb-4">
-                    <h3 className={`font-semibold text-gray-800 mb-2 ${getTextSize('text-sm')}`}>
+                    <h3 className={`font-heading font-semibold text-foreground mb-2 ${getTextSize('text-sm')}`}>
                       Dreams Aligned with Your Blueprint
                     </h3>
-                    <p className={`text-gray-600 ${getTextSize('text-xs')}`}>
+                    <p className={`text-muted-foreground ${getTextSize('text-xs')}`}>
                       Based on your personality, here are some dreams that might resonate with you:
                     </p>
                   </div>
@@ -355,7 +355,7 @@ const Dreams = () => {
   if (currentView === 'journey') {
     return (
       <MainLayout>
-        <div className={`min-h-screen bg-gradient-to-br from-soul-purple/5 via-white to-soul-teal/5 w-full ${isMobile ? 'pb-20' : ''}`}>
+        <div className={`min-h-screen bg-background w-full ${isMobile ? 'pb-20' : ''}`}>
           <div className={`w-full max-w-4xl mx-auto py-3 ${isMobile ? 'px-3 pb-24' : 'px-6 pb-20'}`}>
             
             {/* Mobile Optimized Header */}
@@ -364,33 +364,29 @@ const Dreams = () => {
                 variant="ghost" 
                 size="sm" 
                 onClick={() => setCurrentView('create')}
-                className={`flex items-center gap-2 text-gray-600 hover:text-soul-purple rounded-xl ${isFoldDevice ? 'px-1 py-1' : 'px-2 py-1'} ${getTextSize('text-sm')} ${touchTargetSize}`}
+                className={`flex items-center gap-2 text-muted-foreground hover:text-primary rounded-xl ${isFoldDevice ? 'px-1 py-1' : 'px-2 py-1'} ${getTextSize('text-sm')} ${touchTargetSize}`}
               >
                 <ArrowLeft className={`h-4 w-4 ${isFoldDevice ? 'h-3 w-3' : ''}`} />
                 {isFoldDevice ? '' : 'New Dream'}
               </Button>
               <div className={`text-center ${isFoldDevice ? 'w-full' : 'flex-1'}`}>
-                <h1 className={`font-bold text-gray-800 ${getTextSize('text-base')}`}>{t("dreams.yourJourney")}</h1>
-                {!isFoldDevice && <p className={`text-gray-500 ${getTextSize('text-xs')}`}>{t("dreams.trackProgress")}</p>}
+                <h1 className={`font-heading font-bold text-foreground ${getTextSize('text-base')}`}>{t("dreams.yourJourney")}</h1>
+                {!isFoldDevice && <p className={`text-muted-foreground ${getTextSize('text-xs')}`}>{t("dreams.trackProgress")}</p>}
               </div>
               <div className={isFoldDevice ? 'hidden' : 'w-20'} />
             </div>
 
             {/* Mobile Responsive Single Card */}
-            <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg border border-white/20 overflow-hidden w-full">
+            <div className="bg-card backdrop-blur-lg rounded-2xl shadow-lg border border-border overflow-hidden w-full">
               
               {/* Mobile Optimized Tab Navigation */}
-              <div className={`border-b border-gray-100 bg-white/50 w-full ${isFoldDevice ? 'p-1' : 'p-2'}`}>
+              <div className={`border-b border-border bg-card/50 w-full ${isFoldDevice ? 'p-1' : 'p-2'}`}>
                 <div className={`w-full ${isFoldDevice ? 'grid grid-cols-2 gap-1' : 'flex gap-2'}`}>
                   <Button
                     variant={activeTab === 'journey' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setActiveTab('journey')}
-                    className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 font-medium transition-all ${getTextSize('text-xs')} ${touchTargetSize} ${
-                      activeTab === 'journey' 
-                        ? 'bg-gradient-to-r from-soul-purple to-soul-teal text-white shadow-md' 
-                        : 'text-gray-600 hover:text-soul-purple hover:bg-gray-50'
-                    }`}
+                    className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 font-medium transition-all ${getTextSize('text-xs')} ${touchTargetSize}`}
                   >
                     <MapPin className={`${isFoldDevice ? 'h-2 w-2' : 'h-3 w-3'}`} />
                     {isFoldDevice ? 'Map' : 'Journey'}

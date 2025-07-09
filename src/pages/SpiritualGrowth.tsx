@@ -108,17 +108,17 @@ const SpiritualGrowth = () => {
   if (!isAuthenticated) {
     return (
       <MainLayout>
-        <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-background flex items-center justify-center p-4">
           <CosmicCard className="w-full max-w-md text-center space-y-6">
-            <div className="w-16 h-16 mx-auto bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center">
-              <Heart className="h-8 w-8 text-white" />
+            <div className="w-16 h-16 mx-auto bg-primary rounded-full flex items-center justify-center">
+              <Heart className="h-8 w-8 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">{t("spiritualGrowth.title")}</h1>
-              <p className="text-gray-600">{t("spiritualGrowth.description")}</p>
+              <h1 className="text-2xl font-heading font-bold text-foreground mb-2">{t("spiritualGrowth.title")}</h1>
+              <p className="text-muted-foreground">{t("spiritualGrowth.description")}</p>
             </div>
             <Button 
-              className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+              className="w-full"
               onClick={() => window.location.href = '/auth'}
             >
               {t("spiritualGrowth.getStarted")}
@@ -133,7 +133,7 @@ const SpiritualGrowth = () => {
   if (activeView === 'immediate_chat') {
     return (
       <MainLayout>
-        <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
+        <div className="min-h-screen bg-background">
           <div className="container mx-auto py-6 px-4 max-w-4xl">
             
             {/* Header with back button */}
@@ -142,14 +142,14 @@ const SpiritualGrowth = () => {
                 variant="ghost" 
                 size="sm" 
                 onClick={() => setActiveView('welcome')}
-                className="flex items-center gap-2 text-gray-600 hover:text-purple-600"
+                className="flex items-center gap-2 text-muted-foreground hover:text-primary"
               >
                 <ArrowLeft className="h-4 w-4" />
                 Back to Options
               </Button>
               <div className="text-center">
-                <h1 className="text-xl font-bold text-gray-800">Heart-Centered Coach</h1>
-                <p className="text-sm text-gray-500">Connected & Ready</p>
+                <h1 className="text-xl font-heading font-bold text-foreground">Heart-Centered Coach</h1>
+                <p className="text-sm text-muted-foreground">Connected & Ready</p>
               </div>
               <div className="w-20" />
             </div>
@@ -175,7 +175,7 @@ const SpiritualGrowth = () => {
     return (
       <TelemetryTracker>
         <MainLayout>
-          <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
+          <div className="min-h-screen bg-background">
             <div className="container mx-auto py-6 px-4 max-w-6xl">
               <div className="mb-6">
                 <Button 
@@ -396,9 +396,9 @@ const SpiritualGrowth = () => {
     };
 
     return (
-      <MainLayout>
-        <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
-          <div className="container mx-auto py-6 px-4 max-w-7xl">
+        <MainLayout>
+          <div className="min-h-screen bg-background">
+            <div className="container mx-auto py-6 px-4 max-w-7xl">
             <div className="mb-6">
               <Button 
                 variant="outline" 
@@ -462,13 +462,13 @@ const SpiritualGrowth = () => {
   // Welcome view with all growth options including Life Operating System
   return (
     <MainLayout>
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
+      <div className="min-h-screen bg-background">
         <div className="container mx-auto py-8 px-4 max-w-6xl">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mb-2">
+            <h1 className="text-3xl font-heading font-bold text-foreground mb-2">
               {t("spiritualGrowth.title")}
             </h1>
-            <p className="text-gray-600 text-lg">
+            <p className="text-muted-foreground text-lg">
               {t("spiritualGrowth.subtitle")}
             </p>
           </div>
@@ -478,7 +478,7 @@ const SpiritualGrowth = () => {
             {/* Heart-Centered Coaching Option */}
             <CosmicCard className="group hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1" onClick={handleStartSpiritualGrowth}>
               <div className="flex flex-col items-center text-center space-y-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
                   <Heart className="h-8 w-8 text-white" />
                 </div>
                 <div>
