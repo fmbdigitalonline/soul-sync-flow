@@ -297,7 +297,7 @@ export const MemoryConsistencyMonitor: React.FC = () => {
         
         <div className="flex gap-2">
           <Button
-            variant={autoRefresh ? "filled" : "outline"}
+            variant={autoRefresh ? "default" : "outline"}
             size="sm"
             onClick={() => setAutoRefresh(!autoRefresh)}
           >

@@ -702,7 +702,7 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
                 <Button 
                   onClick={handleStartSession}
                   className="bg-soul-purple hover:bg-soul-purple/90 w-full sm:w-auto"
-                  size={isMobile ? "md" : "lg"}
+                  size={isMobile ? "default" : "lg"}
                 >
                   <MessageCircle className="h-4 w-4 mr-2" />
                   Start Coaching Session

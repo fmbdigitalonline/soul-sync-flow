@@ -67,7 +67,7 @@ export function AgentSelector({ currentAgent, onAgentChange, className }: AgentS
               return (
                 <Button
                   key={agent.type}
-                  variant={isActive ? "filled" : "ghost"}
+                  variant={isActive ? "default" : "ghost"}
                   size="sm"
                   onClick={() => onAgentChange(agent.type)}
                   className={`flex flex-col items-center gap-1 h-auto py-3 px-2 ${
@@ -106,7 +106,7 @@ export function AgentSelector({ currentAgent, onAgentChange, className }: AgentS
             return (
               <Button
                 key={agent.type}
-                variant={isActive ? "filled" : "ghost"}
+                variant={isActive ? "default" : "ghost"}
                 size="sm"
                 onClick={() => onAgentChange(agent.type)}
                 className={`w-full flex flex-col items-center gap-1 h-auto py-3 px-2 ${

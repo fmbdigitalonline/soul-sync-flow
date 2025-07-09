@@ -6,9 +6,7 @@ import { ArrowRight, LogIn, Heart, Sparkles, Brain, BookOpen } from "lucide-reac
 import { Link } from "react-router-dom";
 import { useSoulOrb } from "@/contexts/SoulOrbContext";
 import { useNavigate } from "react-router-dom";
-import { UnifiedCard } from "@/components/ui/unified-card";
-import { useTextSize } from "@/hooks/use-text-size";
-import { useUnifiedSpacing } from "@/components/ui/unified-spacing";
+import { CosmicCard } from "@/components/ui/cosmic-card";
 import PersonalityDemo from "@/components/personality/PersonalityDemo";
 import { useOptimizedBlueprintData } from "@/hooks/use-optimized-blueprint-data";
 import { isAdminUser } from "@/utils/isAdminUser";
@@ -33,8 +31,6 @@ const Index = () => {
   } = useOptimizedBlueprintData();
   const isAdmin = isAdminUser(user);
   const { t, language } = useLanguage();
-  const { getStandardTextSize } = useTextSize();
-  const { getContainer, getPadding, getSpacing } = useUnifiedSpacing();
 
   // Memoize the welcome message logic to prevent re-renders
   const welcomeMessage = useMemo(() => {
@@ -112,7 +108,7 @@ const Index = () => {
           </div>
           
           <h1 
-            className={`font-heading font-bold ${getStandardTextSize('h1')} mb-4 sm:mb-6 px-4`}
+            className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 px-4"
             dangerouslySetInnerHTML={{ __html: t('index.welcome') }}
           />
           
@@ -125,34 +121,34 @@ const Index = () => {
           ) : (
             <RotatingText 
               texts={subtitleMessages}
-              className={`${getStandardTextSize('body')} mb-6 sm:mb-8 px-4 text-muted-foreground min-h-[3.5rem] flex items-center justify-center`}
+              className="text-lg sm:text-xl mb-6 sm:mb-8 px-4 text-muted-foreground min-h-[3.5rem] flex items-center justify-center"
               interval={4000}
             />
           )}
 
-          {user && <div className={`grid grid-cols-1 sm:grid-cols-3 ${getSpacing('md')} mb-6 sm:mb-8 max-w-2xl mx-auto px-4`}>
+          {user && <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
                 <Link to="/dreams" className="block">
-                  <UnifiedCard variant="shadowed" className={`${getPadding('md')} hover:scale-105 transition-transform cursor-pointer h-full`}>
-                    <Heart className="h-6 w-6 text-primary mx-auto mb-2" />
-                    <h3 className={`font-heading font-semibold mb-1 ${getStandardTextSize('h4')}`}>{t("index.dreams")}</h3>
-                    <p className={`${getStandardTextSize('small')} text-muted-foreground`}>{t("index.dreamsDesc")}</p>
-                  </UnifiedCard>
+                  <CosmicCard className="p-3 sm:p-4 hover:scale-105 transition-transform cursor-pointer h-full">
+                    <Heart className="h-6 w-6 sm:h-8 sm:w-8 text-soul-purple mx-auto mb-2" />
+                    <h3 className="font-semibold mb-1 text-sm sm:text-base">{t("index.dreams")}</h3>
+                    <p className="text-xs text-muted-foreground">{t("index.dreamsDesc")}</p>
+                  </CosmicCard>
                 </Link>
                 
                 <Link to="/spiritual-growth" className="block">
-                  <UnifiedCard variant="shadowed" className={`${getPadding('md')} hover:scale-105 transition-transform cursor-pointer h-full`}>
-                    <Sparkles className="h-6 w-6 text-primary mx-auto mb-2" />
-                    <h3 className={`font-heading font-semibold mb-1 ${getStandardTextSize('h4')}`}>{t("index.growth")}</h3>
-                    <p className={`${getStandardTextSize('small')} text-muted-foreground`}>{t("index.growthDesc")}</p>
-                  </UnifiedCard>
+                  <CosmicCard className="p-3 sm:p-4 hover:scale-105 transition-transform cursor-pointer h-full">
+                    <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-blue-400 mx-auto mb-2" />
+                    <h3 className="font-semibold mb-1 text-sm sm:text-base">{t("index.growth")}</h3>
+                    <p className="text-xs text-muted-foreground">{t("index.growthDesc")}</p>
+                  </CosmicCard>
                 </Link>
                 
                 <Link to="/coach" className="block">
-                  <UnifiedCard variant="shadowed" className={`${getPadding('md')} hover:scale-105 transition-transform cursor-pointer h-full`}>
-                    <Brain className="h-6 w-6 text-primary mx-auto mb-2" />
-                    <h3 className={`font-heading font-semibold mb-1 ${getStandardTextSize('h4')}`}>{t("index.companion")}</h3>
-                    <p className={`${getStandardTextSize('small')} text-muted-foreground`}>{t("index.companionDesc")}</p>
-                  </UnifiedCard>
+                  <CosmicCard className="p-3 sm:p-4 hover:scale-105 transition-transform cursor-pointer h-full">
+                    <Brain className="h-6 w-6 sm:h-8 sm:w-8 text-green-400 mx-auto mb-2" />
+                    <h3 className="font-semibold mb-1 text-sm sm:text-base">{t("index.companion")}</h3>
+                    <p className="text-xs text-muted-foreground">{t("index.companionDesc")}</p>
+                  </CosmicCard>
                 </Link>
               </div>}
 
@@ -171,35 +167,35 @@ const Index = () => {
           
           <div className="flex flex-col gap-3 sm:gap-4 px-4 max-w-md mx-auto">
             {user ? <>
-              <Button variant="filled" size="lg" className="w-full" onClick={handleGetStarted}>
+              <Button size="lg" className="bg-soul-purple hover:bg-soul-purple/90 w-full h-12 text-base" onClick={handleGetStarted}>
                 {hasBlueprint ? (
                   <>
-                    <BookOpen />
+                    <BookOpen className="mr-2 h-4 w-4" />
                     {t("index.takeTour")}
                   </>
                 ) : (
                   <>
                     {t("index.startJourney")}
-                    <ArrowRight />
+                    <ArrowRight className="ml-2 h-4 w-4" />
                   </>
                 )}
               </Button>
               
               <Link to="/coach" className="block">
-                <Button variant="outline" size="lg" className="w-full">
+                <Button size="lg" variant="outline" className="w-full h-12 text-base">
                   {t("index.chatWithCompanion")}
                 </Button>
               </Link>
             </> : <>
-              <Button variant="filled" size="lg" className="w-full" onClick={handleGetStarted}>
+              <Button size="lg" className="bg-soul-purple hover:bg-soul-purple/90 w-full h-12 text-base" onClick={handleGetStarted}>
                 {t("index.getStarted")}
-                <ArrowRight />
+                <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
               
               <Link to="/auth" className="block">
-                <Button variant="outline" size="lg" className="w-full">
+                <Button size="lg" variant="outline" className="w-full h-12 text-base">
                   {t("index.signIn")}
-                  <LogIn />
+                  <LogIn className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
             </>}

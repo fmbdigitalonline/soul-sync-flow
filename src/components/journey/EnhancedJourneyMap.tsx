@@ -221,7 +221,7 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({ onTaskCl
         
         <div className="flex gap-2">
           <Button
-            variant={selectedView === 'overview' ? 'filled' : 'outline'}
+            variant={selectedView === 'overview' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setSelectedView('overview')}
             className="flex items-center gap-1 text-xs h-8 px-3"
@@ -230,7 +230,7 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({ onTaskCl
             Timeline
           </Button>
           <Button
-            variant={selectedView === 'detailed' ? 'filled' : 'outline'}
+            variant={selectedView === 'detailed' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setSelectedView('detailed')}
             className="flex items-center gap-1 text-xs h-8 px-3"

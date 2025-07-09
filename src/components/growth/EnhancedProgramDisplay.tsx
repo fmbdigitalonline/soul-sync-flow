@@ -141,7 +141,7 @@ export function EnhancedProgramDisplay({ program, planBranches, onSelectBranch }
 
               <Button 
                 className="w-full mt-4" 
-                variant={selectedBranch === branch ? "filled" : "outline"}
+                variant={selectedBranch === branch ? "default" : "outline"}
                 size="sm"
               >
                 {selectedBranch === branch ? 'Selected' : 'Choose This Path'}

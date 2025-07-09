@@ -383,7 +383,7 @@ const Dreams = () => {
               <div className={`border-b border-border bg-card/50 w-full ${isFoldDevice ? 'p-1' : 'p-2'}`}>
                 <div className={`w-full ${isFoldDevice ? 'grid grid-cols-2 gap-1' : 'flex gap-2'}`}>
                   <Button
-                    variant={activeTab === 'journey' ? 'filled' : 'ghost'}
+                    variant={activeTab === 'journey' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setActiveTab('journey')}
                     className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 font-medium transition-all ${getTextSize('text-xs')} ${touchTargetSize}`}
@@ -392,7 +392,7 @@ const Dreams = () => {
                     {isFoldDevice ? 'Map' : 'Journey'}
                   </Button>
                   <Button
-                    variant={activeTab === 'tasks' ? 'filled' : 'ghost'}
+                    variant={activeTab === 'tasks' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setActiveTab('tasks')}
                     className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 font-medium transition-all ${getTextSize('text-xs')} ${touchTargetSize} ${
@@ -407,7 +407,7 @@ const Dreams = () => {
                   {!isFoldDevice && (
                     <>
                       <Button
-                        variant={activeTab === 'focus' ? 'filled' : 'ghost'}
+                        variant={activeTab === 'focus' ? 'default' : 'ghost'}
                         size="sm"
                         onClick={() => setActiveTab('focus')}
                         className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 font-medium transition-all ${getTextSize('text-xs')} ${touchTargetSize} ${
@@ -420,7 +420,7 @@ const Dreams = () => {
                         Focus
                       </Button>
                       <Button
-                        variant={activeTab === 'habits' ? 'filled' : 'ghost'}
+                        variant={activeTab === 'habits' ? 'default' : 'ghost'}
                         size="sm"
                         onClick={() => setActiveTab('habits')}
                         className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 font-medium transition-all ${getTextSize('text-xs')} ${touchTargetSize} ${
@@ -440,7 +440,7 @@ const Dreams = () => {
                 {isFoldDevice && (
                   <div className="flex gap-1 w-full mt-1">
                     <Button
-                      variant={activeTab === 'focus' ? 'filled' : 'ghost'}
+                      variant={activeTab === 'focus' ? 'default' : 'ghost'}
                       size="sm"
                       onClick={() => setActiveTab('focus')}
                       className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 font-medium transition-all ${getTextSize('text-xs')} ${touchTargetSize} ${
@@ -453,7 +453,7 @@ const Dreams = () => {
                       Focus
                     </Button>
                     <Button
-                      variant={activeTab === 'habits' ? 'filled' : 'ghost'}
+                      variant={activeTab === 'habits' ? 'default' : 'ghost'}
                       size="sm"
                       onClick={() => setActiveTab('habits')}
                       className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 font-medium transition-all ${getTextSize('text-xs')} ${touchTargetSize} ${

@@ -189,7 +189,7 @@ export const EnhancedBlueprintViewer: React.FC<EnhancedBlueprintViewerProps> = (
           {(['novice', 'amateur', 'pro'] as ViewDepth[]).map((level) => (
             <Button
               key={level}
-              variant={depth === level ? "filled" : "ghost"}
+              variant={depth === level ? "default" : "ghost"}
               size="sm"
               onClick={() => setDepth(level)}
               className={`${depth === level ? "bg-soul-purple text-white" : ""} text-xs sm:text-sm px-2 sm:px-3 h-8`}

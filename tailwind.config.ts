@@ -136,9 +136,11 @@ export default {
 				'200': '200%'
 			},
 			fontFamily: {
-				// Unified Font System - Two fonts only
-				body: ['Nunito Sans', 'sans-serif'], // Primary body text and UI
+				// Soul Font Hierarchy
+				body: ['Nunito Sans', 'sans-serif'], // Primary body text
+				ui: ['IBM Plex Sans', 'sans-serif'], // UI elements, buttons, forms
 				heading: ['Satoshi', 'sans-serif'], // Headlines, titles
+				focus: ['Lexend', 'sans-serif'], // Reading mode, focused content
 				sans: ['Nunito Sans', 'sans-serif'] // Default fallback
 			},
 			spacing: {
@@ -154,12 +156,12 @@ export default {
 				'normal': '1.5',
 			},
 			fontSize: {
-				'base': '16px', // Standardized base
-				'sm': '14px',
-				'xs': '12px',
-				'lg': '20px', // H2 size
-				'xl': '24px', // H1 size  
-				'2xl': '28px', // Large H1
+				'base': '16px',
+				'lg': '20px',
+				'xl': '24px',
+				'2xl': '24px',
+				'3xl': '32px',
+				'4xl': '32px',
 			},
 		}
 	},

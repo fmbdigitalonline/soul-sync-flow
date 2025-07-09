@@ -216,7 +216,7 @@ const UnifiedCoachInterface: React.FC<UnifiedCoachInterfaceProps> = ({
         {(['coach', 'guide', 'blend'] as AgentMode[]).map((mode) => (
           <Button
             key={mode}
-            variant={agentMode === mode ? "filled" : "outline"}
+            variant={agentMode === mode ? "default" : "outline"}
             size="sm"
             onClick={() => handleModeSwitch(mode)}
             disabled={!brainInitialized}

@@ -40,7 +40,7 @@ export const MobileTogglePanel: React.FC<MobileTogglePanelProps> = ({
       <div className="flex-shrink-0 p-3 border-b bg-background">
         <div className="flex gap-1 bg-gray-100 rounded-lg p-1 max-w-full">
           <Button
-            variant={activePanel === 'chat' ? 'filled' : 'ghost'}
+            variant={activePanel === 'chat' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => setActivePanel('chat')}
             className="flex-1 h-8 min-w-0"
@@ -49,7 +49,7 @@ export const MobileTogglePanel: React.FC<MobileTogglePanelProps> = ({
             <span className="truncate">Companion</span>
           </Button>
           <Button
-            variant={activePanel === 'reminders' ? 'filled' : 'ghost'}
+            variant={activePanel === 'reminders' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => setActivePanel('reminders')}
             className="flex-1 h-8 relative min-w-0"

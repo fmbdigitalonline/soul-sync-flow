@@ -140,7 +140,7 @@ const Tasks = () => {
             <div className="border-b border-gray-100 p-3 bg-white/50">
               <div className="flex gap-1 overflow-x-auto scrollbar-hide">
                 <Button
-                  variant={activeTab === 'achievement' ? 'filled' : 'ghost'}
+                  variant={activeTab === 'achievement' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setActiveTab('achievement')}
                   className={`flex items-center gap-2 rounded-xl whitespace-nowrap min-w-fit px-3 py-2 text-xs font-medium transition-all ${
@@ -153,7 +153,7 @@ const Tasks = () => {
                   AI Goals
                 </Button>
                 <Button
-                  variant={activeTab === 'planning' ? 'filled' : 'ghost'}
+                  variant={activeTab === 'planning' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setActiveTab('planning')}
                   className={`flex items-center gap-2 rounded-xl whitespace-nowrap min-w-fit px-3 py-2 text-xs font-medium transition-all ${
@@ -166,7 +166,7 @@ const Tasks = () => {
                   Planning
                 </Button>
                 <Button
-                  variant={activeTab === 'timer' ? 'filled' : 'ghost'}
+                  variant={activeTab === 'timer' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setActiveTab('timer')}
                   className={`flex items-center gap-2 rounded-xl whitespace-nowrap min-w-fit px-3 py-2 text-xs font-medium transition-all ${
@@ -179,7 +179,7 @@ const Tasks = () => {
                   Focus
                 </Button>
                 <Button
-                  variant={activeTab === 'habits' ? 'filled' : 'ghost'}
+                  variant={activeTab === 'habits' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setActiveTab('habits')}
                   className={`flex items-center gap-2 rounded-xl whitespace-nowrap min-w-fit px-3 py-2 text-xs font-medium transition-all ${
@@ -192,7 +192,7 @@ const Tasks = () => {
                   Habits
                 </Button>
                 <Button
-                  variant={activeTab === 'goals' ? 'filled' : 'ghost'}
+                  variant={activeTab === 'goals' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setActiveTab('goals')}
                   className={`flex items-center gap-2 rounded-xl whitespace-nowrap min-w-fit px-3 py-2 text-xs font-medium transition-all ${
@@ -205,7 +205,7 @@ const Tasks = () => {
                   Goals
                 </Button>
                 <Button
-                  variant={activeTab === 'chat' ? 'filled' : 'ghost'}
+                  variant={activeTab === 'chat' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setActiveTab('chat')}
                   className={`flex items-center gap-2 rounded-xl whitespace-nowrap min-w-fit px-3 py-2 text-xs font-medium transition-all ${

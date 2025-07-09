@@ -112,7 +112,7 @@ export const ProgressiveDisclosure: React.FC<ProgressiveDisclosureProps> = ({
             <Button
               key={level.level}
               onClick={() => handleLevelChange(level.level)}
-              variant={isActive ? "filled" : "outline"}
+              variant={isActive ? "default" : "outline"}
               size="sm"
               className={`text-xs px-3 py-1 ${isActive ? config.color : ''}`}
             >

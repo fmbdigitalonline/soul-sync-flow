@@ -130,7 +130,7 @@ export const PIESettingsPanel: React.FC = () => {
             {(['conservative', 'moderate', 'sensitive'] as const).map((level) => (
               <Button
                 key={level}
-                variant={config.patternSensitivity === level ? "filled" : "outline"}
+                variant={config.patternSensitivity === level ? "default" : "outline"}
                 size="sm"
                 onClick={() => updateConfiguration({ patternSensitivity: level })}
                 className="capitalize"
