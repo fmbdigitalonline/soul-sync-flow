@@ -5,6 +5,7 @@ import MainLayout from "@/components/Layout/MainLayout";
 import SimplifiedBlueprintViewer from "@/components/blueprint/SimplifiedBlueprintViewer";
 import BlueprintEditor from "@/components/blueprint/BlueprintEditor";
 import { BlueprintHealthCheck } from "@/components/blueprint/BlueprintHealthCheck";
+import PersonalityReportViewer from "@/components/blueprint/PersonalityReportViewer";
 import { Button } from "@/components/ui/button";
 import { Loader2, MessageCircle, RefreshCw, Activity } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -295,10 +296,13 @@ const Blueprint = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8 w-full max-w-full">
-          {/* Mobile-responsive tabs with proper overflow handling */}
-          <TabsList className="w-full max-w-full h-auto p-1 grid grid-cols-2 sm:grid-cols-4">
+          {/* Mobile-responsive tabs with personality report tab */}
+          <TabsList className="w-full max-w-full h-auto p-1 grid grid-cols-2 sm:grid-cols-5">
             <TabsTrigger value="view" className="text-xs sm:text-sm py-2 px-1 truncate">
-              View
+              Blueprint
+            </TabsTrigger>
+            <TabsTrigger value="report" className="text-xs sm:text-sm py-2 px-1 truncate">
+              Report
             </TabsTrigger>
             {isAdmin && (
               <TabsTrigger value="edit" className="text-xs sm:text-sm py-2 px-1 truncate">
@@ -323,6 +327,12 @@ const Blueprint = () => {
                 <SimplifiedBlueprintViewer blueprint={blueprintData} />
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="report" className="mt-4 sm:mt-6 w-full max-w-full">
+            <div className="w-full max-w-full overflow-hidden">
+              <PersonalityReportViewer />
+            </div>
           </TabsContent>
           
           {isAdmin && (
