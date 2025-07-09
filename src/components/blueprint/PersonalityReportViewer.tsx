@@ -10,6 +10,7 @@ import { aiPersonalityReportService, PersonalityReport } from '@/services/ai-per
 import { blueprintService } from '@/services/blueprint-service';
 import { useToast } from '@/hooks/use-toast';
 import { CosmicCard } from '@/components/ui/cosmic-card';
+import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
 
 interface PersonalityReportViewerProps {
   className?: string;
@@ -18,6 +19,7 @@ interface PersonalityReportViewerProps {
 export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = ({ className }) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { spacing, getTextSize, isMobile, isUltraNarrow, isFoldDevice } = useResponsiveLayout();
   const [report, setReport] = useState<PersonalityReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
@@ -124,10 +126,10 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
 
   if (loading) {
     return (
-      <div className={`flex items-center justify-center p-8 ${className}`}>
+      <div className={`flex items-center justify-center ${spacing.container} ${className}`}>
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin text-soul-purple mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">Loading your personality report...</p>
+          <p className={`text-muted-foreground ${getTextSize('text-sm')}`}>Loading your personality report...</p>
         </div>
       </div>
     );
@@ -135,21 +137,22 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
 
   if (error || !report) {
     return (
-      <div className={`p-4 ${className}`}>
+      <div className={`${spacing.container} ${className}`}>
         <Card>
-          <CardContent className="p-6 text-center">
+          <CardContent className={`${spacing.card} text-center`}>
             <div className="mb-4">
               <Sparkles className="h-12 w-12 text-soul-purple mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Personality Report</h3>
-              <p className="text-muted-foreground mb-4">
+              <h3 className={`font-semibold mb-2 ${getTextSize('text-lg')}`}>Personality Report</h3>
+              <p className={`text-muted-foreground mb-4 ${getTextSize('text-sm')} break-words`}>
                 {error || 'No personality report available'}
               </p>
             </div>
-            <div className="flex gap-2 justify-center">
+            <div className="flex flex-col sm:flex-row gap-2 justify-center w-full">
               <Button 
                 onClick={() => generateReport(false)} 
                 disabled={generating}
-                className="bg-soul-purple hover:bg-soul-purple/90"
+                className="bg-soul-purple hover:bg-soul-purple/90 w-full sm:w-auto"
+                size={isMobile ? "default" : "default"}
               >
                 {generating ? (
                   <>
@@ -163,7 +166,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                   </>
                 )}
               </Button>
-              <Button onClick={handleRefresh} variant="outline">
+              <Button onClick={handleRefresh} variant="outline" className="w-full sm:w-auto">
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
               </Button>
@@ -203,40 +206,43 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
   ];
 
   return (
-    <div className={className}>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h3 className="text-xl font-bold font-display">Your Personality Report</h3>
-          <p className="text-sm text-muted-foreground">
+    <div className={`${className} w-full max-w-full overflow-hidden`}>
+      <div className={`flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 ${spacing.gap} w-full`}>
+        <div className="min-w-0 flex-1">
+          <h3 className={`font-bold font-display break-words ${getTextSize('text-xl')}`}>Your Personality Report</h3>
+          <p className={`text-muted-foreground break-words ${getTextSize('text-sm')}`}>
             Generated on {new Date(report.generated_at).toLocaleDateString()}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="bg-soul-purple/10 text-soul-purple border-soul-purple/20">
-            <Sparkles className="h-3 w-3 mr-1" />
-            AI Generated
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto mt-3 sm:mt-0">
+          <Badge variant="outline" className="bg-soul-purple/10 text-soul-purple border-soul-purple/20 justify-center sm:justify-start">
+            <Sparkles className="h-3 w-3 mr-1 flex-shrink-0" />
+            <span className="truncate">AI Generated</span>
           </Badge>
-          <Button 
-            onClick={handleRegenerate} 
-            variant="outline" 
-            size="sm"
-            disabled={generating}
-          >
-            {generating ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Trash2 className="h-4 w-4" />
-            )}
-            {generating ? 'Regenerating...' : 'Regenerate'}
-          </Button>
-          <Button onClick={handleRefresh} variant="ghost" size="sm">
-            <RefreshCw className="h-4 w-4" />
-          </Button>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Button 
+              onClick={handleRegenerate} 
+              variant="outline" 
+              size="sm"
+              disabled={generating}
+              className="flex-1 sm:flex-none"
+            >
+              {generating ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+              <span className="ml-1 sm:ml-2">{generating ? 'Regenerating...' : 'Regenerate'}</span>
+            </Button>
+            <Button onClick={handleRefresh} variant="ghost" size="sm" className="flex-shrink-0">
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
 
       <ScrollArea className="h-[600px] w-full">
-        <div className="space-y-6 pr-4">
+        <div className={`space-y-4 sm:space-y-6 pr-2 sm:pr-4 w-full max-w-full`}>
           {(() => {
             // Sort sections according to the preferred order
             const sortedEntries = Object.entries(report.report_content).sort(([keyA], [keyB]) => {
@@ -262,18 +268,20 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
               
               if (!content || content === 'Content unavailable') {
                 return (
-                  <CosmicCard key={key} className="border-orange-200 bg-orange-50">
+                  <CosmicCard key={key} className="border-orange-200 bg-orange-50 w-full max-w-full">
                     <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center gap-2 text-lg text-orange-800">
-                        {IconComponent && <IconComponent className="h-5 w-5" />}
-                        {title}
-                        <Badge variant="outline" className="bg-orange-100 text-orange-700 border-orange-300">
+                      <CardTitle className={`flex flex-col sm:flex-row sm:items-center gap-2 text-orange-800 ${getTextSize('text-lg')} break-words`}>
+                        <div className="flex items-center gap-2 min-w-0">
+                          {IconComponent && <IconComponent className="h-5 w-5 flex-shrink-0" />}
+                          <span className="break-words">{title}</span>
+                        </div>
+                        <Badge variant="outline" className="bg-orange-100 text-orange-700 border-orange-300 w-fit">
                           Missing Content
                         </Badge>
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-orange-600 text-sm">
+                      <p className={`text-orange-600 ${getTextSize('text-sm')} break-words`}>
                         This section content is unavailable. Try regenerating the report.
                       </p>
                     </CardContent>
@@ -282,19 +290,21 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
               }
               
               return (
-                <CosmicCard key={key}>
+                <CosmicCard key={key} className="w-full max-w-full">
                   <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                      {IconComponent && <IconComponent className="h-5 w-5 text-soul-purple" />}
-                      {title}
-                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                    <CardTitle className={`flex flex-col sm:flex-row sm:items-center gap-2 ${getTextSize('text-lg')} break-words`}>
+                      <div className="flex items-center gap-2 min-w-0">
+                        {IconComponent && <IconComponent className="h-5 w-5 text-soul-purple flex-shrink-0" />}
+                        <span className="break-words">{title}</span>
+                      </div>
+                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 w-fit">
                         {content.length} chars
                       </Badge>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="prose prose-sm max-w-none">
-                      <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                    <div className="prose prose-sm max-w-none w-full">
+                      <p className={`text-gray-700 leading-relaxed whitespace-pre-wrap break-words w-full ${getTextSize('text-sm')}`}>
                         {content}
                       </p>
                     </div>
