@@ -192,6 +192,16 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
     integrated_summary: 'Integrated Summary'
   };
 
+  // Define the preferred order for sections
+  const sectionOrder = [
+    'integrated_summary',
+    'core_personality_pattern',
+    'decision_making_style',
+    'relationship_style',
+    'life_path_purpose',
+    'current_energy_timing'
+  ];
+
   return (
     <div className={className}>
       <div className="flex items-center justify-between mb-6">
@@ -227,52 +237,72 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
 
       <ScrollArea className="h-[600px] w-full">
         <div className="space-y-6 pr-4">
-          {Object.entries(report.report_content).map(([key, content]) => {
-            const IconComponent = sectionIcons[key as keyof typeof sectionIcons];
-            const title = sectionTitles[key as keyof typeof sectionTitles];
+          {(() => {
+            // Sort sections according to the preferred order
+            const sortedEntries = Object.entries(report.report_content).sort(([keyA], [keyB]) => {
+              const indexA = sectionOrder.indexOf(keyA);
+              const indexB = sectionOrder.indexOf(keyB);
+              
+              // If both keys are in the order array, sort by their position
+              if (indexA !== -1 && indexB !== -1) {
+                return indexA - indexB;
+              }
+              
+              // If only one key is in the order array, prioritize it
+              if (indexA !== -1) return -1;
+              if (indexB !== -1) return 1;
+              
+              // If neither key is in the order array, maintain original order
+              return 0;
+            });
             
-            if (!content || content === 'Content unavailable') {
+            return sortedEntries.map(([key, content]) => {
+              const IconComponent = sectionIcons[key as keyof typeof sectionIcons];
+              const title = sectionTitles[key as keyof typeof sectionTitles];
+              
+              if (!content || content === 'Content unavailable') {
+                return (
+                  <CosmicCard key={key} className="border-orange-200 bg-orange-50">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-lg text-orange-800">
+                        {IconComponent && <IconComponent className="h-5 w-5" />}
+                        {title}
+                        <Badge variant="outline" className="bg-orange-100 text-orange-700 border-orange-300">
+                          Missing Content
+                        </Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-orange-600 text-sm">
+                        This section content is unavailable. Try regenerating the report.
+                      </p>
+                    </CardContent>
+                  </CosmicCard>
+                );
+              }
+              
               return (
-                <CosmicCard key={key} className="border-orange-200 bg-orange-50">
+                <CosmicCard key={key}>
                   <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-lg text-orange-800">
-                      {IconComponent && <IconComponent className="h-5 w-5" />}
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      {IconComponent && <IconComponent className="h-5 w-5 text-soul-purple" />}
                       {title}
-                      <Badge variant="outline" className="bg-orange-100 text-orange-700 border-orange-300">
-                        Missing Content
+                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                        {content.length} chars
                       </Badge>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-orange-600 text-sm">
-                      This section content is unavailable. Try regenerating the report.
-                    </p>
+                    <div className="prose prose-sm max-w-none">
+                      <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                        {content}
+                      </p>
+                    </div>
                   </CardContent>
                 </CosmicCard>
               );
-            }
-            
-            return (
-              <CosmicCard key={key}>
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    {IconComponent && <IconComponent className="h-5 w-5 text-soul-purple" />}
-                    {title}
-                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                      {content.length} chars
-                    </Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="prose prose-sm max-w-none">
-                    <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                      {content}
-                    </p>
-                  </div>
-                </CardContent>
-              </CosmicCard>
-            );
-          })}
+            });
+          })()}
         </div>
       </ScrollArea>
     </div>
