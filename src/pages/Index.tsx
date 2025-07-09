@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -74,11 +73,9 @@ const Index = () => {
   const handleGetStarted = () => {
     if (user) {
       if (hasBlueprint) {
-        // User has blueprint - start tutorial mode
+        // User has blueprint - navigate to blueprint page
         speak(t("index.startingTutorial"));
-        // For now, navigate to coach with tutorial mode
-        // TODO: Implement proper tutorial mode
-        navigate("/coach?tutorial=true");
+        navigate("/blueprint");
       } else {
         navigate("/onboarding");
       }
