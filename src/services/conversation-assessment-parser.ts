@@ -1,5 +1,13 @@
 import { LifeDomain, LifeWheelAssessment } from '@/types/growth-program';
 
+interface AssessmentInput {
+  domain: LifeDomain;
+  current_score: number;
+  desired_score: number;
+  importance_rating: number;
+  notes?: string;
+}
+
 interface ConversationAnalysis {
   domains: {
     [key in LifeDomain]?: {
@@ -23,7 +31,12 @@ export class ConversationAssessmentParser {
     relationships: ['relationship', 'family', 'friends', 'love', 'connection', 'partnership', 'marriage', 'dating', 'social'],
     finances: ['money', 'financial', 'income', 'wealth', 'debt', 'savings', 'budget', 'economic', 'afford', 'expenses'],
     health: ['health', 'fitness', 'exercise', 'diet', 'nutrition', 'physical', 'body', 'medical', 'doctor', 'illness'],
-    personal_growth: ['growth', 'development', 'learning', 'skills', 'improvement', 'goals', 'self-development', 'progress']
+    personal_growth: ['growth', 'development', 'learning', 'skills', 'improvement', 'goals', 'self-development', 'progress'],
+    creativity: ['creativity', 'creative', 'art', 'artistic', 'imagination', 'innovation', 'design', 'expression', 'inspiration'],
+    spirituality: ['spirituality', 'spiritual', 'meditation', 'faith', 'beliefs', 'meaning', 'soul', 'consciousness', 'mindfulness'],
+    home_family: ['home', 'family', 'house', 'household', 'domestic', 'children', 'parenting', 'spouse', 'living situation'],
+    productivity: ['productivity', 'efficient', 'organized', 'time management', 'focus', 'discipline', 'habits', 'routine'],
+    stress: ['stress', 'anxiety', 'pressure', 'overwhelm', 'tension', 'worry', 'burden', 'strain', 'overwhelmed']
   };
 
   private static SATISFACTION_INDICATORS = {
@@ -38,9 +51,9 @@ export class ConversationAssessmentParser {
     low: ['minor', 'secondary', 'later', 'eventually', 'someday']
   };
 
-  static parseConversationToAssessment(conversationText: string): LifeWheelAssessment[] {
+  static parseConversationToAssessment(conversationText: string): AssessmentInput[] {
     const analysis = this.analyzeConversation(conversationText);
-    const assessments: LifeWheelAssessment[] = [];
+    const assessments: AssessmentInput[] = [];
 
     // Create assessments for domains that were discussed
     Object.entries(analysis.domains).forEach(([domain, data]) => {
@@ -137,10 +150,13 @@ export class ConversationAssessmentParser {
     const desiredScore = Math.max(currentScore + 2, 8); // Always want improvement
     const importance = this.calculateImportance(text, keywords);
 
+    const sentiment: 'positive' | 'neutral' | 'negative' = 
+      positiveContext > negativeContext ? 'positive' : 
+      negativeContext > positiveContext ? 'negative' : 'neutral';
+
     return {
       mentions,
-      sentiment: positiveContext > negativeContext ? 'positive' : 
-                negativeContext > positiveContext ? 'negative' : 'neutral' as const,
+      sentiment,
       currentScore,
       desiredScore,
       importance,
