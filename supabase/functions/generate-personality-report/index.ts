@@ -76,10 +76,9 @@ serve(async (req) => {
 
     const systemPrompt = `You are a master Human Design and personality analyst creating a comprehensive personality report. You MUST follow the EXACT format specified below.
 
-CRITICAL FORMAT REQUIREMENT: You must create exactly 6 detailed sections followed by 10 quotes. Each section must be substantial analysis (300-400 words), NOT inspirational quotes.
+CRITICAL FORMAT REQUIREMENT: You must create exactly 6 detailed sections followed by 10 quotes. Each section must be substantial analysis (300-400 words), NOT inspirational quotes. Always address the person as "you" throughout the report.
 
 USER PROFILE:
-Name: ${userMeta.preferred_name || userMeta.full_name || 'User'}
 Birth Date: ${userMeta.birth_date || 'Unknown'}
 Birth Location: ${userMeta.birth_location || 'Unknown'}
 
@@ -144,10 +143,10 @@ CRITICAL: Each numbered section (1-6) MUST contain detailed analysis, not quotes
         model: 'gpt-4o',
         messages: [
           { role: 'system', content: systemPrompt },
-          { 
-            role: 'user', 
-            content: `Generate a comprehensive personality reading for ${userMeta.preferred_name || 'this person'} that integrates ALL their blueprint data: Big Five scores, MBTI probabilities, Chinese astrology (${chineseAstrology.animal} ${chineseAstrology.element}), Human Design gates, and numerology. Include 10 warm, inspiring quotes that reflect their unique personality blend.` 
-          }
+           { 
+             role: 'user', 
+             content: `Generate a comprehensive personality reading that integrates ALL the blueprint data: Big Five scores, MBTI probabilities, Chinese astrology (${chineseAstrology.animal} ${chineseAstrology.element}), Human Design gates, and numerology. Address the person as "you" throughout. Include 10 warm, inspiring quotes that reflect the unique personality blend.` 
+           }
         ],
         temperature: 0.7,
         max_tokens: 4000,
