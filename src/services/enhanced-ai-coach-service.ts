@@ -171,7 +171,7 @@ class EnhancedAICoachService {
         
         // Combine with existing blueprint if available
         if (blueprint) {
-          const blueprintPrompt = UnifiedBlueprintService.formatBlueprintForAI(blueprint, agentType);
+          const blueprintPrompt = UnifiedBlueprintService.formatBlueprintForAI(blueprint);
           comprehensivePrompt = this.mergeSystemPrompts(vfgSystemPrompt, blueprintPrompt);
         } else {
           comprehensivePrompt = vfgSystemPrompt;
@@ -180,7 +180,7 @@ class EnhancedAICoachService {
         console.log("⚠️ VFP-Graph data not available, using blueprint only");
         const validation = UnifiedBlueprintService.validateBlueprint(blueprint);
         console.log("📊 Blueprint validation for persona generation:", validation);
-        comprehensivePrompt = UnifiedBlueprintService.formatBlueprintForAI(blueprint, agentType);
+        comprehensivePrompt = UnifiedBlueprintService.formatBlueprintForAI(blueprint);
       } else {
         console.log("⚠️ No personality data available, using basic personality engine");
         return this.personalityEngine.generateSystemPrompt(agentType as AgentMode);

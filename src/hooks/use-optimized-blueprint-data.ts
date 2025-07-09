@@ -25,8 +25,8 @@ export const useOptimizedBlueprintData = () => {
       return null;
     }
 
-    // Convert the raw blueprint data to LayeredBlueprint format
-    const converted = UnifiedBlueprintService.convertBlueprintDataToLayered(rawBlueprintData);
+    // The raw blueprint data is already in LayeredBlueprint format
+    const converted = rawBlueprintData;
     
     console.log('✅ OPTIMIZED HOOK: Conversion complete', {
       sunSign: converted.publicArchetype?.sunSign,
