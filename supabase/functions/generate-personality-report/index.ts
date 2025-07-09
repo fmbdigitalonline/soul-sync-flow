@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
@@ -26,11 +27,14 @@ serve(async (req) => {
     const { blueprint, userId } = await req.json();
     
     if (!blueprint || !userId) {
+      console.error('❌ Missing required parameters:', { hasBlueprint: !!blueprint, hasUserId: !!userId });
       throw new Error('Blueprint and userId are required');
     }
 
     console.log('🎭 Generating comprehensive personality report and quotes for user:', userId);
     console.log('📋 Received blueprint structure:', {
+      hasId: !!blueprint.id,
+      blueprintId: blueprint.id,
       hasUserMeta: !!blueprint.user_meta,
       hasCognitionMbti: !!blueprint.cognition_mbti,
       hasEnergyStrategy: !!blueprint.energy_strategy_human_design,
@@ -52,7 +56,8 @@ serve(async (req) => {
       humanDesignType: humanDesign.type || 'Unknown',
       sunSign: astrology.sun_sign || 'Unknown',
       lifePathNumber: numerology.lifePathNumber || numerology.life_path_number || 'Unknown',
-      userName: userMeta.preferred_name || userMeta.full_name || 'User'
+      userName: userMeta.preferred_name || userMeta.full_name || 'User',
+      blueprintId: blueprint.id
     });
 
     const systemPrompt = `You are an expert personality analyst who creates comprehensive, personalized readings by synthesizing multiple psychological and spiritual systems. Create a detailed personality report AND 10 personalized quotes that resonate with their unique blueprint.
@@ -65,7 +70,7 @@ BLUEPRINT DATA:
 - MBTI: ${mbti.type || 'Unknown'} (${mbti.dominant_function || ''} → ${mbti.auxiliary_function || ''})
 - Human Design: ${humanDesign.type || 'Unknown'} ${humanDesign.profile || ''}, Authority: ${humanDesign.authority || 'Unknown'}
 - Astrology: Sun ${astrology.sun_sign || 'Unknown'}, Moon ${astrology.moon_sign || 'Unknown'}, Rising ${astrology.rising_sign || 'Unknown'}
-- Life Path: ${numerology.lifePathNumber || 'Unknown'} (${numerology.lifePathKeyword || ''})
+- Life Path: ${numerology.lifePathNumber || numerology.life_path_number || 'Unknown'} (${numerology.lifePathKeyword || ''})
 - Bashar Excitement: ${bashar.excitement_compass?.principle || 'Follow your highest excitement'}
 
 Create 5 detailed sections (each 200-300 words) plus a shorter integrated summary:
@@ -111,6 +116,7 @@ Write in second person ("You are..."), be specific about how the systems interac
     });
 
     if (!openAIResponse.ok) {
+      console.error('❌ OpenAI API error:', openAIResponse.status, openAIResponse.statusText);
       throw new Error(`OpenAI API error: ${openAIResponse.status}`);
     }
 
@@ -153,12 +159,17 @@ Write in second person ("You are..."), be specific about how the systems interac
       }
     }
 
+    // Generate a valid UUID for blueprint_id if missing
+    const blueprintId = blueprint.id || crypto.randomUUID();
+    
+    console.log('💾 Storing report with blueprint_id:', blueprintId);
+
     // Store the report in the database
     const { data: reportData, error: insertError } = await supabaseClient
       .from('personality_reports')
       .insert({
         user_id: userId,
-        blueprint_id: blueprint.id || 'unknown',
+        blueprint_id: blueprintId,
         report_content: reportContent,
         blueprint_version: '1.0'
       })
@@ -166,8 +177,11 @@ Write in second person ("You are..."), be specific about how the systems interac
       .single();
 
     if (insertError) {
+      console.error('❌ Database error inserting report:', insertError);
       throw new Error(`Database error: ${insertError.message}`);
     }
+
+    console.log('✅ Report stored successfully:', reportData.id);
 
     // Store the quotes in the database
     const quotesToInsert = quotes.map(quote => ({
@@ -184,7 +198,7 @@ Write in second person ("You are..."), be specific about how the systems interac
         .insert(quotesToInsert);
 
       if (quotesError) {
-        console.error('Error storing quotes:', quotesError);
+        console.error('❌ Error storing quotes:', quotesError);
         // Don't fail the whole operation if quotes fail
       } else {
         console.log(`✅ ${quotesToInsert.length} personalized quotes stored successfully`);
@@ -202,7 +216,7 @@ Write in second person ("You are..."), be specific about how the systems interac
     });
 
   } catch (error) {
-    console.error('Error generating personality report:', error);
+    console.error('💥 Error generating personality report:', error);
     return new Response(JSON.stringify({ 
       success: false, 
       error: error.message 

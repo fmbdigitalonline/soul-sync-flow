@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { BlueprintData } from "./blueprint-service";
 
@@ -32,6 +31,7 @@ class AIPersonalityReportService {
     try {
       console.log('🎭 Generating comprehensive personality report with personalized quotes...');
       console.log('📋 Blueprint data structure:', {
+        blueprintId: blueprint.id,
         hasUserMeta: !!blueprint.user_meta,
         hasArchetypeWestern: !!blueprint.archetype_western,
         hasValuesLifePath: !!blueprint.values_life_path,
@@ -44,6 +44,7 @@ class AIPersonalityReportService {
       const transformedBlueprint = this.transformBlueprintForEdgeFunction(blueprint);
       
       console.log('🔄 Transformed blueprint for edge function:', {
+        id: transformedBlueprint.id,
         hasUserMeta: !!transformedBlueprint.user_meta,
         hasCognitionMbti: !!transformedBlueprint.cognition_mbti,
         hasEnergyStrategy: !!transformedBlueprint.energy_strategy_human_design,
