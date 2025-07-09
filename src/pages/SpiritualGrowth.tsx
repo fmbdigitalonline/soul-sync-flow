@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
-import { Heart, Sparkles, Moon, BookOpen, Calendar, MessageCircle, Compass, TrendingUp, ArrowLeft } from "lucide-react";
+import { Heart, Sparkles, Moon, BookOpen, Calendar, MessageCircle, Compass, TrendingUp, ArrowLeft, Target } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useEnhancedAICoach } from "@/hooks/use-enhanced-ai-coach";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,11 +13,13 @@ import { MoodTracker } from "@/components/coach/MoodTracker";
 import { ReflectionPrompts } from "@/components/coach/ReflectionPrompts";
 import { InsightJournal } from "@/components/coach/InsightJournal";
 import { WeeklyInsights } from "@/components/coach/WeeklyInsights";
+import { LifeOperatingSystemDashboard } from "@/components/dashboard/LifeOperatingSystemDashboard";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 import { useBlueprintData } from "@/hooks/use-blueprint-data";
+import { LifeDomain } from "@/types/growth-program";
 
-type ActiveView = 'welcome' | 'immediate_chat' | 'growth_program' | 'tools' | 'mood' | 'reflection' | 'insight' | 'weekly' | null;
+type ActiveView = 'welcome' | 'immediate_chat' | 'growth_program' | 'tools' | 'mood' | 'reflection' | 'insight' | 'weekly' | 'life_os' | null;
 
 const SpiritualGrowth = () => {
   const { messages, isLoading, sendMessage, resetConversation } = useEnhancedAICoach("coach", "spiritual-growth");
@@ -328,6 +330,41 @@ const SpiritualGrowth = () => {
     );
   }
 
+  // Life Operating System Dashboard
+  if (activeView === 'life_os') {
+    const handleCreateProgram = (primaryDomain: LifeDomain, supportingDomains: LifeDomain[]) => {
+      console.log('🚀 Creating program with Life OS integration:', { primaryDomain, supportingDomains });
+      toast({
+        title: "Program Created! 🎯",
+        description: `Multi-domain growth plan created with ${primaryDomain} as primary focus.`,
+      });
+      // Could navigate to program view or show program interface
+      setActiveView('growth_program');
+    };
+
+    return (
+      <MainLayout>
+        <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
+          <div className="container mx-auto py-6 px-4 max-w-7xl">
+            <div className="mb-6">
+              <Button 
+                variant="outline" 
+                onClick={() => setActiveView('welcome')}
+                className="mb-4"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Growth Options
+              </Button>
+            </div>
+            
+            <LifeOperatingSystemDashboard onCreateProgram={handleCreateProgram} />
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  // Welcome view with all growth options including Life Operating System
   return (
     <MainLayout>
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
@@ -341,7 +378,7 @@ const SpiritualGrowth = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             
             {/* Heart-Centered Coaching Option */}
             <CosmicCard className="group hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1" onClick={handleStartSpiritualGrowth}>
@@ -352,7 +389,7 @@ const SpiritualGrowth = () => {
                 <div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">Heart-Centered Coach</h3>
                   <p className="text-gray-600 text-sm leading-relaxed">
-                    Start an immediate conversation with your personalized spiritual coach. Ready instantly with your unique personality blueprint.
+                    Start an immediate conversation with your personalized spiritual coach.
                   </p>
                 </div>
                 <div className="text-xs text-purple-600 font-medium bg-purple-50 px-3 py-1 rounded-full">
@@ -361,7 +398,25 @@ const SpiritualGrowth = () => {
               </div>
             </CosmicCard>
 
-            {/* Growth Program Option - Coming Soon */}
+            {/* Life Operating System - NEW */}
+            <CosmicCard className="group hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1" onClick={() => setActiveView('life_os')}>
+              <div className="flex flex-col items-center text-center space-y-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Target className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Life Operating System</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed">
+                    Holistic life wheel assessment and multi-domain growth coordination.
+                  </p>
+                </div>
+                <div className="text-xs text-blue-600 font-medium bg-blue-50 px-3 py-1 rounded-full">
+                  🎯 Multi-Domain
+                </div>
+              </div>
+            </CosmicCard>
+
+            {/* Growth Program Option */}
             <CosmicCard className="group hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1" onClick={() => setActiveView('growth_program')}>
               <div className="flex flex-col items-center text-center space-y-4">
                 <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -370,7 +425,7 @@ const SpiritualGrowth = () => {
                 <div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">Structured Program</h3>
                   <p className="text-gray-600 text-sm leading-relaxed">
-                    Follow a comprehensive 12-week journey designed for deep spiritual transformation and growth.
+                    Comprehensive 12-week journey for deep spiritual transformation.
                   </p>
                 </div>
                 <div className="text-xs text-indigo-600 font-medium bg-indigo-50 px-3 py-1 rounded-full">
@@ -388,8 +443,11 @@ const SpiritualGrowth = () => {
                 <div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">Spiritual Tools</h3>
                   <p className="text-gray-600 text-sm leading-relaxed">
-                    Access mood tracking, reflection prompts, and insight journaling for daily spiritual practice.
+                    Mood tracking, reflection prompts, and insight journaling tools.
                   </p>
+                </div>
+                <div className="text-xs text-purple-600 font-medium bg-purple-50 px-3 py-1 rounded-full">
+                  🧘 Daily Practice
                 </div>
               </div>
             </CosmicCard>
