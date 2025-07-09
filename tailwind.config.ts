@@ -63,17 +63,18 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
+				// Soul palette - now properly mapped to semantic tokens
 				soul: {
-					// Updated nature-inspired palette
-					ivory: '#FCF8F6',
-					teal: '#00BBD1',
-					pewter: '#96A1A8',
-					purple: '#9b87f5',
-					indigo: '#6366f1',
-					blue: '#4f74e3',
-					lavender: '#d6bcfa',
-					gold: '#fad161',
-					black: '#1A1F2C'
+					// Legacy soul colors mapped to design system
+					ivory: 'hsl(var(--background))', // #FCF8F6
+					teal: '180 100% 41%', // #00BBD1 - kept for specific gradients
+					pewter: 'hsl(var(--muted))', // #96A1A8
+					purple: 'hsl(var(--primary))', // #9b87f5
+					indigo: '234 89% 74%', // #6366f1
+					blue: '232 65% 61%', // #4f74e3
+					lavender: 'hsl(var(--accent))', // #d6bcfa
+					gold: '51 95% 65%', // #fad161
+					black: 'hsl(var(--foreground))' // #1A1F2C
 				}
 			},
 			borderRadius: {
@@ -125,18 +126,22 @@ export default {
 				'micro-bounce': 'micro-bounce 0.2s ease-in-out'
 			},
 			backgroundImage: {
-				'cosmic-gradient': 'linear-gradient(to right, #00BBD1, #d6bcfa)',
-				'cosmic-radial': 'radial-gradient(circle, rgba(155, 135, 245, 0.15) 0%, rgba(214, 188, 250, 0.05) 70%, rgba(255, 255, 255, 0) 100%)'
+				// Soul-based gradients using semantic tokens
+				'cosmic-gradient': 'linear-gradient(to right, hsl(var(--primary)), hsl(var(--accent)))',
+				'cosmic-radial': 'radial-gradient(circle, hsl(var(--primary) / 0.15) 0%, hsl(var(--accent) / 0.05) 70%, hsl(var(--background)) 100%)',
+				'soul-gradient': 'linear-gradient(to right, hsl(var(--primary)), hsl(var(--accent)))',
+				'soul-radial': 'radial-gradient(circle, hsl(var(--primary) / 0.2) 0%, hsl(var(--accent) / 0.1) 50%, hsl(var(--background)) 100%)'
 			},
 			backgroundSize: {
 				'200': '200%'
 			},
 			fontFamily: {
-				body: ['Nunito Sans', 'sans-serif'],
-				ui: ['IBM Plex Sans', 'sans-serif'],
-				heading: ['Satoshi', 'sans-serif'],
-				focus: ['Lexend', 'sans-serif'],
-				sans: ['Nunito Sans', 'sans-serif'] // Keeping 'sans' for compatibility with existing code
+				// Soul Font Hierarchy
+				body: ['Nunito Sans', 'sans-serif'], // Primary body text
+				ui: ['IBM Plex Sans', 'sans-serif'], // UI elements, buttons, forms
+				heading: ['Satoshi', 'sans-serif'], // Headlines, titles
+				focus: ['Lexend', 'sans-serif'], // Reading mode, focused content
+				sans: ['Nunito Sans', 'sans-serif'] // Default fallback
 			},
 			spacing: {
 				'grid-8': '8px',
@@ -144,7 +149,8 @@ export default {
 				'grid-24': '24px',
 			},
 			boxShadow: {
-				'soft-ui': '4px 4px 10px rgba(0, 0, 0, 0.1)'
+				'soft-ui': '4px 4px 10px rgba(155, 135, 245, 0.1)', // soul-purple based
+				'soul-glow': '0 0 20px hsl(var(--primary) / 0.3)'
 			},
 			lineHeight: {
 				'normal': '1.5',

@@ -9,9 +9,9 @@ const gradientButtonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-cosmic-gradient text-white shadow hover:opacity-90",
-        outline: "border border-soul-purple bg-transparent text-soul-purple hover:bg-soul-purple/10",
-        ghost: "bg-transparent text-soul-purple hover:bg-soul-purple/10",
+        default: "bg-primary text-primary-foreground shadow hover:bg-primary/90",
+        outline: "border border-primary bg-transparent text-primary hover:bg-primary/10",
+        ghost: "bg-transparent text-primary hover:bg-primary/10",
       },
       size: {
         default: "h-11 px-4 py-2",

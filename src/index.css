@@ -8,83 +8,86 @@
 
 @layer base {
   :root {
-    --background: 30 30% 98%;
-    --foreground: 260 10% 10%;
+    /* Soul Color Palette - Light Mode */
+    --background: 32 28% 98%; /* soul-ivory #FCF8F6 */
+    --foreground: 219 24% 15%; /* soul-black #1A1F2C */
 
-    --card: 0 0% 100%;
-    --card-foreground: 260 10% 10%;
+    --card: 0 0% 100%; /* White with soul accents */
+    --card-foreground: 219 24% 15%; /* soul-black */
 
     --popover: 0 0% 100%;
-    --popover-foreground: 260 10% 10%;
+    --popover-foreground: 219 24% 15%;
 
-    --primary: 186 100% 41%;
+    --primary: 258 90% 76%; /* soul-purple #9b87f5 */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 200 10% 95%;
-    --secondary-foreground: 260 30% 30%;
+    --secondary: 200 10% 92%; /* lighter soul-pewter */
+    --secondary-foreground: 219 24% 15%;
 
-    --muted: 196 15% 90%;
-    --muted-foreground: 260 10% 50%;
+    --muted: 203 9% 64%; /* soul-pewter #96A1A8 */
+    --muted-foreground: 219 24% 30%;
 
-    --accent: 196 15% 92%;
-    --accent-foreground: 260 30% 30%;
+    --accent: 272 77% 86%; /* soul-lavender #d6bcfa */
+    --accent-foreground: 219 24% 15%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 196 15% 90%;
-    --input: 196 15% 90%;
-    --ring: 186 100% 41%;
+    --border: 203 15% 85%; /* lighter soul-pewter */
+    --input: 203 15% 85%;
+    --ring: 258 90% 76%; /* soul-purple */
 
     --radius: 0.75rem;
 
-    --sidebar-background: 30 30% 98%;
-    --sidebar-foreground: 260 10% 30%;
-    --sidebar-primary: 186 100% 41%;
+    /* Sidebar colors using soul palette */
+    --sidebar-background: 32 28% 98%;
+    --sidebar-foreground: 219 24% 30%;
+    --sidebar-primary: 258 90% 76%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 200 10% 95%;
-    --sidebar-accent-foreground: 260 30% 30%;
-    --sidebar-border: 196 15% 90%;
-    --sidebar-ring: 186 100% 41%;
+    --sidebar-accent: 272 77% 90%;
+    --sidebar-accent-foreground: 219 24% 15%;
+    --sidebar-border: 203 15% 85%;
+    --sidebar-ring: 258 90% 76%;
   }
 
   .dark {
-    --background: 260 25% 10%;
-    --foreground: 260 10% 98%;
+    /* Soul Color Palette - Dark Mode */
+    --background: 219 30% 8%; /* darker soul-black */
+    --foreground: 32 28% 95%; /* near soul-ivory */
 
-    --card: 260 25% 12%;
-    --card-foreground: 260 10% 98%;
+    --card: 219 25% 12%;
+    --card-foreground: 32 28% 95%;
 
-    --popover: 260 25% 12%;
-    --popover-foreground: 260 10% 98%;
+    --popover: 219 25% 12%;
+    --popover-foreground: 32 28% 95%;
 
-    --primary: 186 90% 40%;
-    --primary-foreground: 260 10% 10%;
+    --primary: 258 80% 70%; /* slightly darker soul-purple */
+    --primary-foreground: 219 24% 15%;
 
-    --secondary: 260 30% 20%;
-    --secondary-foreground: 260 10% 90%;
+    --secondary: 219 30% 18%;
+    --secondary-foreground: 32 28% 85%;
 
-    --muted: 260 25% 20%;
-    --muted-foreground: 260 10% 70%;
+    --muted: 219 25% 20%;
+    --muted-foreground: 203 9% 70%;
 
-    --accent: 260 30% 25%;
-    --accent-foreground: 260 10% 90%;
+    --accent: 258 50% 25%;
+    --accent-foreground: 272 77% 86%;
 
-    --destructive: 0 62.8% 40.6%;
-    --destructive-foreground: 260 10% 98%;
+    --destructive: 0 65% 45%;
+    --destructive-foreground: 32 28% 95%;
 
-    --border: 260 25% 25%;
-    --input: 260 25% 25%;
-    --ring: 186 90% 40%;
+    --border: 219 25% 20%;
+    --input: 219 25% 20%;
+    --ring: 258 80% 70%;
 
-    --sidebar-background: 260 25% 12%;
-    --sidebar-foreground: 260 10% 90%;
-    --sidebar-primary: 186 90% 40%;
-    --sidebar-primary-foreground: 260 10% 10%;
-    --sidebar-accent: 260 30% 20%;
-    --sidebar-accent-foreground: 260 10% 90%;
-    --sidebar-border: 260 25% 20%;
-    --sidebar-ring: 186 90% 40%;
+    --sidebar-background: 219 25% 12%;
+    --sidebar-foreground: 32 28% 85%;
+    --sidebar-primary: 258 80% 70%;
+    --sidebar-primary-foreground: 219 24% 15%;
+    --sidebar-accent: 219 30% 18%;
+    --sidebar-accent-foreground: 32 28% 85%;
+    --sidebar-border: 219 25% 18%;
+    --sidebar-ring: 258 80% 70%;
   }
 }
 
@@ -99,7 +102,7 @@
     -moz-osx-font-smoothing: grayscale;
   }
   
-  /* Enhanced Typography for App-like feel */
+  /* Soul Typography Hierarchy */
   h1 {
     @apply text-4xl font-heading font-semibold leading-tight;
   }
@@ -117,37 +120,41 @@
   }
   
   p, li, input, textarea {
-    @apply text-base leading-relaxed;
+    @apply text-base leading-relaxed font-body;
   }
   
   small {
-    @apply text-sm;
+    @apply text-sm font-body;
   }
 }
 
 @layer components {
   .cosmic-card {
-    @apply bg-white/80 backdrop-blur-lg border border-white/20 shadow-lg rounded-3xl;
+    @apply bg-card/80 backdrop-blur-lg border border-border shadow-lg rounded-3xl;
   }
   
   .cosmic-bg {
-    @apply bg-cosmic-radial bg-fixed;
+    @apply bg-gradient-to-br from-primary/10 via-background to-accent/10 bg-fixed;
   }
   
   .gradient-text {
-    @apply bg-cosmic-gradient bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient-shift;
+    @apply bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient-shift;
+  }
+  
+  .soul-gradient {
+    @apply bg-gradient-to-r from-primary to-accent;
   }
   
   .focus-mode {
     @apply font-focus;
   }
   
-  /* Interactive elements with app-like feel */
+  /* Interactive elements with soul styling */
   .interactive-element {
     @apply min-h-[48px] min-w-[48px] cursor-pointer transition-all duration-300;
   }
   
-  /* App-like button hover effects */
+  /* Soul button hover effects */
   .app-button {
     @apply transform transition-all duration-300 hover:scale-105 active:scale-95;
   }
@@ -159,15 +166,15 @@
   }
 }
 
-/* Enhanced animations for app-like interactions */
+/* Enhanced animations for soul palette */
 @keyframes gentle-bounce {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-4px); }
 }
 
-@keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(155, 135, 245, 0.4); }
-  50% { box-shadow: 0 0 0 10px rgba(155, 135, 245, 0); }
+@keyframes soul-pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0.4); }
+  50% { box-shadow: 0 0 0 10px hsl(var(--primary) / 0); }
 }
 
 /* Accessibility: support prefers-reduced-motion */
