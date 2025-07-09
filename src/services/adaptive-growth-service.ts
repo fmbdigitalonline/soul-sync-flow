@@ -88,8 +88,8 @@ export class AdaptiveGrowthService {
         evolution_trajectory: agentResult.plan
       };
 
-      // 5. Store the program
-      await this.storeAdaptiveProgram(adaptiveProgram);
+      // 5. Store the program (this is a new program, so force INSERT)
+      await this.insertAdaptiveProgram(adaptiveProgram);
 
       console.log('✅ Adaptive growth program generated successfully');
       return adaptiveProgram;
@@ -263,7 +263,7 @@ export class AdaptiveGrowthService {
         }
       ]);
 
-      // 5. Update program with evolution
+      // 5. Update program with evolution (this will use UPDATE since program exists)
       await this.updateProgramEvolution(program, {
         week_plan: formattedPlan,
         evolution_reason: progressAnalysis.summary,
@@ -405,8 +405,34 @@ export class AdaptiveGrowthService {
     ]);
   }
 
-  // Storage and Retrieval
+  // Storage and Retrieval - Fixed to handle INSERT vs UPDATE correctly
   private async storeAdaptiveProgram(program: AdaptiveGrowthProgram): Promise<void> {
+    console.log('💾 Smart storing adaptive program with existence check');
+    
+    // Check if program already exists in database
+    const { data: existingProgram, error: checkError } = await supabase
+      .from('growth_programs')
+      .select('id')
+      .eq('id', program.id)
+      .maybeSingle();
+
+    if (checkError) {
+      console.error('❌ Error checking program existence:', checkError);
+      throw checkError;
+    }
+
+    if (existingProgram) {
+      console.log('🔄 Program exists, performing UPDATE operation');
+      await this.updateAdaptiveProgram(program);
+    } else {
+      console.log('✨ New program, performing INSERT operation');
+      await this.insertAdaptiveProgram(program);
+    }
+  }
+
+  private async insertAdaptiveProgram(program: AdaptiveGrowthProgram): Promise<void> {
+    console.log('➕ Inserting new adaptive program');
+    
     // Extract base GrowthProgram properties and handle extended properties
     const {
       feedback_signals,
@@ -447,7 +473,66 @@ export class AdaptiveGrowthService {
         adaptation_history: enhancedAdaptationHistory as any
       });
 
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Insert operation failed:', error);
+      throw error;
+    }
+    
+    console.log('✅ Program inserted successfully');
+  }
+
+  private async updateAdaptiveProgram(program: AdaptiveGrowthProgram): Promise<void> {
+    console.log('🔄 Updating existing adaptive program');
+    
+    // Extract base GrowthProgram properties and handle extended properties
+    const {
+      feedback_signals,
+      blueprint_alignment_score,
+      evolution_trajectory,
+      id,
+      ...baseProgram
+    } = program;
+
+    // Embed extended properties in appropriate JSON fields
+    const enhancedProgressMetrics = {
+      ...program.progress_metrics,
+      blueprint_alignment_score
+    };
+
+    const enhancedAdaptationHistory = [
+      ...program.adaptation_history,
+      ...(feedback_signals.length > 0 ? [{
+        timestamp: new Date().toISOString(),
+        adaptation_type: 'feedback_signals',
+        changes_made: { feedback_signals },
+        agent_reasoning: 'Updated feedback signals'
+      }] : []),
+      ...(evolution_trajectory && Object.keys(evolution_trajectory).length > 0 ? [{
+        timestamp: new Date().toISOString(),
+        adaptation_type: 'evolution_trajectory',
+        changes_made: { evolution_trajectory },
+        agent_reasoning: 'Updated evolution trajectory'
+      }] : [])
+    ];
+
+    const { error } = await supabase
+      .from('growth_programs')
+      .update({
+        ...baseProgram,
+        blueprint_params: baseProgram.blueprint_params as any,
+        progress_metrics: enhancedProgressMetrics as any,
+        session_schedule: baseProgram.session_schedule as any,
+        adaptation_history: enhancedAdaptationHistory as any,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id);
+
+    if (error) {
+      console.error('❌ Update operation failed:', error);
+      throw error;
+    }
+    
+    console.log('✅ Program updated successfully');
   }
 
   private async getAdaptiveProgram(programId: string): Promise<AdaptiveGrowthProgram | null> {
