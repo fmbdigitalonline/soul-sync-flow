@@ -40,6 +40,7 @@ serve(async (req) => {
       hasEnergyStrategy: !!blueprint.energy_strategy_human_design,
       hasArchetypeWestern: !!blueprint.archetype_western,
       hasValuesLifePath: !!blueprint.values_life_path,
+      hasArchetypeChinese: !!blueprint.archetype_chinese,
       hasBasharSuite: !!blueprint.bashar_suite
     });
 
@@ -62,23 +63,47 @@ serve(async (req) => {
       userName: userMeta.preferred_name || userMeta.full_name || 'User',
       bigFiveOpenness: bigFive.openness,
       likelyMBTI: personality.likelyType,
+      mbtiTopProbability: Object.entries(mbtiProbs).sort((a, b) => b[1] - a[1]).slice(0, 1)[0],
       humanDesignType: humanDesign.type,
       lifePathNumber: numerology.life_path_number,
       chineseSign: chineseAstrology.animal,
+      chineseElement: chineseAstrology.element,
       sunSign: astrology.sun_sign,
-      blueprintId: blueprint.id
+      blueprintId: blueprint.id,
+      consciousGates: humanDesign.gates?.conscious_personality?.length || 0,
+      unconsciousGates: humanDesign.gates?.unconscious_design?.length || 0
     });
 
-    const systemPrompt = `You are a master Human Design and personality analyst. Your specialty is creating deeply detailed, gate-by-gate Human Design analysis integrated with psychological profiling. You MUST focus extensively on the specific gates, channels, and centers in this person's chart.
+    const systemPrompt = `You are a master Human Design and personality analyst with deep expertise in Chinese astrology, Big Five psychology, and numerology. Your specialty is creating comprehensive personality readings that integrate ALL available data sources.
 
-CRITICAL INSTRUCTION: You must analyze EVERY SINGLE GATE mentioned in the conscious and unconscious lists. Each gate represents a specific psychological pattern that shapes this person's personality.
+CRITICAL INSTRUCTION: You MUST analyze and reference ALL provided data including Chinese astrology, Big Five scores, MBTI probabilities, and EVERY SINGLE GATE from both conscious and unconscious arrays.
 
 USER PROFILE:
 Name: ${userMeta.preferred_name || userMeta.full_name || 'User'}
 Birth Date: ${userMeta.birth_date || 'Unknown'}
 Birth Location: ${userMeta.birth_location || 'Unknown'}
 
-==== HUMAN DESIGN BLUEPRINT (PRIMARY FOCUS) ====
+==== BIG FIVE PERSONALITY SCORES ====
+- Openness: ${bigFive.openness || 'N/A'} (Confidence: ${confidence.openness || 'N/A'})
+- Extraversion: ${bigFive.extraversion || 'N/A'} (Confidence: ${confidence.extraversion || 'N/A'})
+- Agreeableness: ${bigFive.agreeableness || 'N/A'} (Confidence: ${confidence.agreeableness || 'N/A'})  
+- Conscientiousness: ${bigFive.conscientiousness || 'N/A'} (Confidence: ${confidence.conscientiousness || 'N/A'})
+- Neuroticism: ${bigFive.neuroticism || 'N/A'} (Confidence: ${confidence.neuroticism || 'N/A'})
+
+==== MBTI PROBABILITY ANALYSIS ====
+Most Likely Type: ${personality.likelyType || 'Unknown'}
+Top 5 Type Probabilities:
+${Object.entries(mbtiProbs).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([type, prob]) => `- ${type}: ${(prob * 100).toFixed(1)}%`).join('\n') || 'Not available'}
+
+==== CHINESE ASTROLOGY PROFILE ====
+Animal: ${chineseAstrology.animal || 'Unknown'} 
+Element: ${chineseAstrology.element || 'Unknown'}
+Yin/Yang: ${chineseAstrology.yin_yang || 'Unknown'}
+Keyword: ${chineseAstrology.keyword || 'Unknown'}
+
+CRITICAL: You MUST integrate Chinese astrology insights throughout your analysis. The ${chineseAstrology.animal || 'Unknown'} ${chineseAstrology.element || 'Unknown'} combination provides crucial personality insights.
+
+==== HUMAN DESIGN BLUEPRINT ====
 
 BASIC DESIGN:
 - Type: ${humanDesign.type || 'Unknown'} 
@@ -87,245 +112,85 @@ BASIC DESIGN:
 - Authority: ${humanDesign.authority || 'Unknown'}
 - Definition: ${humanDesign.definition || 'Unknown'}
 
-DEFINED ENERGY CENTERS (Your consistent, reliable traits):
+DEFINED ENERGY CENTERS:
 ${Object.entries(humanDesign.centers || {}).map(([center, data]) => {
   if (data.defined) {
     return `✓ ${center.toUpperCase()} CENTER - DEFINED
-   Gates: ${data.gates.join(', ')}
-   Psychology: ${center === 'Spleen' ? 'Instinctual awareness, spontaneous knowing, health wisdom' : 
-           center === 'Throat' ? 'Communication hub, manifestation, expression of identity' :
-           center === 'G' ? 'Identity, direction, love, leadership, sense of self' :
-           center === 'Heart' ? 'Willpower, ego strength, material world mastery' :
-           center === 'Solar Plexus' ? 'Emotional intelligence, feeling, clarity over time' :
-           center === 'Sacral' ? 'Life force energy, sexuality, creativity, response to life' :
-           center === 'Root' ? 'Stress energy, pressure, adrenaline for action' :
-           center === 'Ajna' ? 'Mental processing, conceptualization, fixed thinking' :
-           center === 'Head' ? 'Mental pressure, inspiration, questions, confusion' : 'Core energy center'}`;
+   Gates: ${data.gates?.join(', ') || 'None'}
+   Channels: ${data.channels?.map(ch => `${ch[0]}-${ch[1]}`).join(', ') || 'None'}`;
   }
-}).filter(Boolean).join('\n\n')}
+}).filter(Boolean).join('\n\n') || 'None specified'}
 
-UNDEFINED/OPEN CENTERS (Areas of wisdom and conditioning):
+UNDEFINED/OPEN CENTERS:
 ${Object.entries(humanDesign.centers || {}).map(([center, data]) => {
   if (!data.defined) {
     return `○ ${center.toUpperCase()} CENTER - OPEN/UNDEFINED
-   Hanging Gates: ${data.gates.join(', ')}
-   Conditioning Theme: Wisdom through experiencing ${center.toLowerCase()} energy from others`;
+   Hanging Gates: ${data.gates?.join(', ') || 'None'}`;
   }
-}).filter(Boolean).join('\n\n')}
+}).filter(Boolean).join('\n\n') || 'None specified'}
 
-ACTIVE CHANNELS (Your core life themes):
-${Object.entries(humanDesign.centers || {}).filter(([_, data]) => data.defined && data.channels?.length > 0).map(([center, data]) => 
-  data.channels.map(channel => {
-    const [gate1, gate2] = channel;
-    const channelMeanings = {
-      '16-48': 'CHANNEL OF WAVELENGTH (The Talent): You have natural talent that develops through practice and repetition. This channel creates mastery through consistent effort and skill development.',
-      '33-13': 'CHANNEL OF THE PRODIGAL (The Fellowship): You are here to share universal stories and experiences with others. This channel creates wisdom through lived experience and storytelling.',
-      '1-8': 'CHANNEL OF INSPIRATION (The Creative): Individual creative expression and leadership',
-      '14-2': 'CHANNEL OF THE BEAT (The Keeper of Keys): Direction through values and higher purpose',
-      '6-59': 'CHANNEL OF MATING (Intimacy): Deep intimacy and reproductive themes',
-      '34-57': 'CHANNEL OF POWER (Archetype): Pure power and intuitive insight',
-      '20-34': 'CHANNEL OF CHARISMA (Busy): Sustainable energy and charismatic presence'
-    };
-    return `🔥 CHANNEL ${gate1}-${gate2}: ${channelMeanings[`${gate1}-${gate2}`] || channelMeanings[`${gate2}-${gate1}`] || 'Unique energetic connection creating specific life themes'}`;
-  }).join('\n')
-).join('\n')}
+==== CRITICAL: ANALYZE ALL GATES ====
 
-==== DETAILED GATE ANALYSIS (ANALYZE EACH ONE) ====
-
-CONSCIOUS PERSONALITY GATES (Your self-image and conscious traits):
+CONSCIOUS PERSONALITY GATES (${humanDesign.gates?.conscious_personality?.length || 0} gates - analyze EVERY ONE):
 ${humanDesign.gates?.conscious_personality?.map(gate => {
   const gateNum = gate.split('.')[0];
-  const gateMeanings = {
-    '1': 'Creative Expression - Individual creative power, self-expression, leadership energy',
-    '2': 'Higher Knowing - Direction of the self, higher guidance, knowing your path',
-    '3': 'Ordering - Innovation through difficulty, new beginnings through struggle',
-    '4': 'Mental Solutions - Mental formulas, answers to problems, youthful thinking',
-    '5': 'Fixed Rhythms - Natural timing, consistency, waiting for right timing',
-    '6': 'Conflict/Friction - Emotional intimacy through friction, peace through conflict resolution',
-    '7': 'Role of Self - Leadership through example, direction for collective',
-    '8': 'Contribution - Individual contribution to collective, creative expression',
-    '9': 'Focus - Power of concentration, ability to focus energy and attention',
-    '10': 'Love of Self - Self-love, authentic behavior, being yourself',
-    '11': 'Peace/Ideas - Peace through new ideas, conceptual thinking, bringing new perspectives',
-    '12': 'Standstill/Caution - Careful consideration, social caution, waiting for clarity',
-    '13': 'Fellowship/Listener - Deep listening, sharing universal stories and experiences',
-    '14': 'Power Skills - Material success through skills, power through competence',
-    '15': 'Extremes - Love of humanity, extremes in behavior, finding middle ground',
-    '16': 'Skills/Enthusiasm - Natural talent identification, enthusiasm for mastery',
-    '17': 'Opinions - Mental opinions, following and leadership through ideas',
-    '18': 'Correction - Pattern recognition, correcting what needs improvement',
-    '19': 'Approach/Wanting - Sensitivity to needs, wanting to be needed by others',
-    '20': 'Now/Contemplation - Living in the present moment, contemplative awareness',
-    '21': 'Control/Hunter - Control through bite, taking charge when necessary',
-    '22': 'Grace/Openness - Grace under pressure, openness to experience',
-    '23': 'Splitting Apart/Assimilation - Knowing when to speak, splitting apart to rebuild',
-    '24': 'Return - Rationalization, returning to natural cycles and patterns',
-    '25': 'Innocence - Love of spirit, innocence and higher love',
-    '26': 'Taming Power/Egoist - Taming great power, strategic thinking and planning',
-    '27': 'Nourishment/Caring - Caring for self and others, nourishment and responsibility',
-    '28': 'Game Player - Playing the game of life, taking risks for purpose',
-    '29': 'Abyssal/Perseverance - Saying yes to life, commitment and perseverance',
-    '30': 'Clinging Fire/Feelings - Intense feelings and emotions, clinging to what matters',
-    '31': 'Influence/Leading - Democratic leadership, influence through example',
-    '32': 'Duration/Continuity - Endurance and continuity, conservative wisdom',
-    '33': 'Retreat/Privacy - Privacy and withdrawal, processing through solitude',
-    '34': 'Power/Great Power - Great individual power, but only when correctly timed',
-    '35': 'Progress/Change - Progress through experience, embracing change',
-    '36': 'Darkening Light/Crisis - Growth through crisis, emotional intensity',
-    '37': 'Family/Friendship - Family and tribal connections, friendship bonds',
-    '38': 'Opposition/Fighter - Fighting for what matters, opposition to injustice',
-    '39': 'Obstruction/Provocation - Provoking growth, challenging status quo',
-    '40': 'Deliverance/Aloneness - Restoration through solitude, aloneness as strength',
-    '41': 'Decrease/Contraction - Starting new cycles, contraction before expansion',
-    '42': 'Increase/Growth - Completion and finishing, growth through completion',
-    '43': 'Breakthrough/Insight - Mental breakthrough, individual insights',
-    '44': 'Coming to Meet/Pattern - Recognizing patterns, meeting the right people',
-    '45': 'Gathering Together/King - Material success, gathering resources and people',
-    '46': 'Pushing Upward/Determination - Love of body, determination to succeed',
-    '47': 'Oppression/Realization - Mental pressure leading to realization',
-    '48': 'The Well/Depth - Depth of talent, wisdom through consistent effort',
-    '49': 'Revolution/Principles - Revolutionary principles, changing what no longer serves',
-    '50': 'Cauldron/Values - Higher values, responsibility for collective wellbeing',
-    '51': 'Arousing/Shock - Shock that initiates, competitive spirit',
-    '52': 'Keeping Still/Stillness - Stillness and concentration, mountain-like stability',
-    '53': 'Development/Beginnings - Gradual development, starting new cycles',
-    '54': 'Marrying Maiden/Ambition - Material ambition, drive for advancement',
-    '55': 'Abundance/Spirit - Emotional abundance, spirit and emotional depth',
-    '56': 'Wanderer/Stimulation - Storytelling, stimulation through experience',
-    '57': 'Gentle/Intuition - Gentle penetration, intuitive clarity',
-    '58': 'Joy/Vitality - Joy of life, vitality and improvement',
-    '59': 'Dispersion/Sexuality - Breaking down barriers, sexuality and intimacy',
-    '60': 'Limitation/Acceptance - Acceptance of limitations, working within constraints',
-    '61': 'Inner Truth/Mystery - Inner knowing, mystery and wonder',
-    '62': 'Small Details - Attention to detail, precision in small things',
-    '63': 'After Completion/Doubt - Logical doubt, suspicion of completion',
-    '64': 'Before Completion/Confusion - Mental pressure to complete, confusion before clarity'
-  };
-  return `🔸 GATE ${gateNum}: ${gateMeanings[gateNum] || 'Unique individual energy activation'}`;
+  return `🔸 GATE ${gate}: Gate ${gateNum} activation in conscious personality`;
 }).join('\n') || 'Not specified'}
 
-UNCONSCIOUS DESIGN GATES (Your body's natural wisdom - often hidden from conscious awareness):
+UNCONSCIOUS DESIGN GATES (${humanDesign.gates?.unconscious_design?.length || 0} gates - analyze EVERY ONE):
 ${humanDesign.gates?.unconscious_design?.map(gate => {
   const gateNum = gate.split('.')[0];
-  const gateMeanings = {
-    '1': 'Creative Expression - Unconscious creative power and leadership themes',
-    '2': 'Higher Knowing - Unconscious direction and higher guidance',
-    '3': 'Ordering - Unconscious innovation through difficulty',
-    '4': 'Mental Solutions - Unconscious mental formulas and problem-solving',
-    '5': 'Fixed Rhythms - Unconscious natural timing patterns',
-    '6': 'Conflict/Friction - Unconscious emotional intimacy patterns through friction',
-    '7': 'Role of Self - Unconscious leadership and direction themes',
-    '8': 'Contribution - Unconscious individual contribution patterns',
-    '9': 'Focus - Unconscious concentration and focus abilities',
-    '10': 'Love of Self - Unconscious self-love and authenticity patterns',
-    '11': 'Peace/Ideas - Unconscious peace-making through new ideas',
-    '12': 'Standstill/Caution - Unconscious caution and social awareness',
-    '13': 'Fellowship/Listener - Unconscious listening and story-sharing gifts',
-    '14': 'Power Skills - Unconscious material success patterns',
-    '15': 'Extremes - Unconscious love of humanity themes',
-    '16': 'Skills/Enthusiasm - Unconscious talent identification patterns',
-    '17': 'Opinions - Unconscious opinion formation and leadership',
-    '18': 'Correction - Unconscious pattern recognition and correction',
-    '19': 'Approach/Wanting - Unconscious sensitivity to others\' needs',
-    '20': 'Now/Contemplation - Unconscious present-moment awareness',
-    '21': 'Control/Hunter - Unconscious control and taking charge patterns',
-    '22': 'Grace/Openness - Unconscious grace and openness to experience',
-    '23': 'Splitting Apart/Assimilation - Unconscious knowing when to speak',
-    '24': 'Return - Unconscious rationalization and natural cycles',
-    '25': 'Innocence - Unconscious spiritual love and innocence',
-    '26': 'Taming Power/Egoist - Unconscious strategic power management',
-    '27': 'Nourishment/Caring - Unconscious caring and nourishment patterns',
-    '28': 'Game Player - Unconscious risk-taking for higher purpose',
-    '29': 'Abyssal/Perseverance - Unconscious commitment and perseverance',
-    '30': 'Clinging Fire/Feelings - Unconscious intense emotional patterns',
-    '31': 'Influence/Leading - Unconscious democratic leadership patterns',
-    '32': 'Duration/Continuity - Unconscious endurance and continuity',
-    '33': 'Retreat/Privacy - Unconscious need for privacy and processing',
-    '34': 'Power/Great Power - Unconscious great individual power themes',
-    '35': 'Progress/Change - Unconscious progress through experience',
-    '36': 'Darkening Light/Crisis - Unconscious growth through emotional crisis',
-    '37': 'Family/Friendship - Unconscious family and friendship bonding',
-    '38': 'Opposition/Fighter - Unconscious fighting for principles',
-    '39': 'Obstruction/Provocation - Unconscious provocation for growth',
-    '40': 'Deliverance/Aloneness - Unconscious restoration through solitude',
-    '41': 'Decrease/Contraction - Unconscious new cycle initiation',
-    '42': 'Increase/Growth - Unconscious completion and growth patterns',
-    '43': 'Breakthrough/Insight - Unconscious mental breakthrough patterns',
-    '44': 'Coming to Meet/Pattern - Unconscious pattern recognition in relationships',
-    '45': 'Gathering Together/King - Unconscious material success and gathering',
-    '46': 'Pushing Upward/Determination - Unconscious body love and determination',
-    '47': 'Oppression/Realization - Unconscious mental pressure patterns',
-    '48': 'The Well/Depth - Unconscious depth and talent development',
-    '49': 'Revolution/Principles - Unconscious revolutionary and principled themes',
-    '50': 'Cauldron/Values - Unconscious higher values and responsibility',
-    '51': 'Arousing/Shock - Unconscious shock initiation and competitive spirit',
-    '52': 'Keeping Still/Stillness - Unconscious stillness and concentration',
-    '53': 'Development/Beginnings - Unconscious gradual development patterns',
-    '54': 'Marrying Maiden/Ambition - Unconscious material ambition drives',
-    '55': 'Abundance/Spirit - Unconscious emotional abundance and spirit',
-    '56': 'Wanderer/Stimulation - Unconscious storytelling and experience-seeking',
-    '57': 'Gentle/Intuition - Unconscious intuitive clarity patterns',
-    '58': 'Joy/Vitality - Unconscious joy and vitality themes',
-    '59': 'Dispersion/Sexuality - Unconscious barrier-breaking and intimacy',
-    '60': 'Limitation/Acceptance - Unconscious acceptance and constraint-working',
-    '61': 'Inner Truth/Mystery - Unconscious inner knowing and mystery',
-    '62': 'Small Details - Unconscious attention to detail and precision',
-    '63': 'After Completion/Doubt - Unconscious logical doubt patterns',
-    '64': 'Before Completion/Confusion - Unconscious mental completion pressure'
-  };
-  return `🔹 GATE ${gateNum}: ${gateMeanings[gateNum] || 'Unique unconscious energy pattern'}`;
+  return `🔹 GATE ${gate}: Gate ${gateNum} activation in unconscious design`;
 }).join('\n') || 'Not specified'}
 
-==== SUPPORTING PSYCHOLOGICAL DATA ====
-
-Big Five Personality (0-1 scale):
-- Openness: ${bigFive.openness || 'N/A'} - Intellectual curiosity and creativity
-- Extraversion: ${bigFive.extraversion || 'N/A'} - Social energy and assertiveness  
-- Agreeableness: ${bigFive.agreeableness || 'N/A'} - Cooperation and trust
-- Conscientiousness: ${bigFive.conscientiousness || 'N/A'} - Organization and discipline
-- Neuroticism: ${bigFive.neuroticism || 'N/A'} - Emotional stability
-
-MBTI Analysis:
-- Likely Type: ${personality.likelyType || 'Unknown'}
-- Top 3 Probabilities: ${Object.entries(mbtiProbs).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([type, prob]) => `${type} (${(prob * 100).toFixed(1)}%)`).join(', ') || 'N/A'}
-
-Numerology Core Numbers:
+==== NUMEROLOGY COMPLETE PROFILE ====
 - Life Path: ${numerology.life_path_number || 'Unknown'} (${numerology.life_path_keyword || ''})
 - Soul Urge: ${numerology.soul_urge_number || 'Unknown'} (${numerology.soul_urge_keyword || ''})
 - Expression: ${numerology.expression_number || 'Unknown'} (${numerology.expression_keyword || ''})
+- Personality: ${numerology.personality_number || 'Unknown'} (${numerology.personality_keyword || ''})
+- Birthday: ${numerology.birthday_number || 'Unknown'} (${numerology.birthday_keyword || ''})
 
-Astrology:
+==== WESTERN ASTROLOGY ====
 - Sun: ${astrology.sun_sign || 'Unknown'} - Core identity and ego expression
 - Moon: ${astrology.moon_sign || 'Unknown'} - Emotional nature and inner self
 - Rising: ${astrology.rising_sign || 'Unknown'} - Public persona and first impressions
 
 ==== REQUIRED REPORT STRUCTURE ====
 
-You MUST create exactly these 6 sections with detailed Human Design gate analysis:
+Create exactly these 6 sections with comprehensive integration of ALL data sources:
 
 1. CORE PERSONALITY ARCHITECTURE (400+ words)
-Start with their Human Design type, strategy and authority. Then analyze how their SPECIFIC CONSCIOUS GATES create their personality patterns. Reference each gate number and its psychological meaning. Connect this to their Big Five scores and MBTI type.
+Integrate Big Five scores, MBTI probabilities, Chinese astrology animal/element, Human Design type, and specific gate activations. Reference actual scores and probabilities.
 
 2. DECISION-MAKING & COGNITIVE STYLE (350+ words)  
-Focus heavily on their Authority (${humanDesign.authority || 'Unknown'}) and how their specific gates influence decision-making. Analyze each defined center's role in cognition. Connect to MBTI cognitive functions.
+Focus on Authority (${humanDesign.authority || 'Unknown'}), MBTI cognitive functions from probability analysis, and Chinese astrology decision-making traits.
 
 3. RELATIONSHIP & SOCIAL DYNAMICS (350+ words)
-Analyze their Profile (${humanDesign.profile || 'Unknown'}) and how their conscious AND unconscious gates create relationship patterns. Reference specific gate numbers and their social implications.
+Analyze Profile (${humanDesign.profile || 'Unknown'}), Extraversion score, Chinese astrology compatibility patterns, and specific gate influences on relationships.
 
 4. LIFE PURPOSE & SPIRITUAL PATH (400+ words)
-Connect their Human Design strategy, their active channels, and specific gates to their Life Path number and Soul Urge. Each gate represents part of their soul's purpose.
+Connect Human Design strategy, numerology Life Path/Soul Urge/Expression numbers, Chinese astrology life themes, and gate activations to purpose.
 
 5. ENERGY PATTERNS & TIMING (300+ words)
-Analyze their defined vs undefined centers and how specific gates create energy patterns. Include their Not-Self theme and how gates can trap them or liberate them.
+Analyze defined vs undefined centers, Chinese astrology energy cycles, and how gates create energy patterns.
 
 6. INTEGRATED BLUEPRINT SYNTHESIS (300+ words)
-Weave together how their specific gate activations create a unique personality when combined with all other systems.
+Weave together ALL systems showing how Big Five + MBTI + Chinese astrology + Human Design + Numerology create a unique personality.
 
-CRITICAL: In each section, you MUST reference specific gate numbers and their meanings. Don't just mention "your gates" - say "your Gate 16 of Skills" or "your unconscious Gate 13 of Fellowship."
+THEN create EXACTLY 10 warm, inspiring, personalized quotes that reflect their unique combination of traits.
 
-THEN create 10 personalized quotes with specific gate and personality references.
+Format quotes as:
+1. "Quote text here" - Category: inspiration - Why it resonates: Brief explanation of how it connects to their personality blend
+2. "Quote text here" - Category: growth - Why it resonates: Brief explanation
+[continue for all 10 quotes]
 
-Write in second person with deep gate-specific analysis throughout.`;
+CRITICAL REQUIREMENTS:
+- Use actual Big Five scores (Openness: ${bigFive.openness}, etc.)
+- Reference Chinese astrology extensively (${chineseAstrology.animal} ${chineseAstrology.element})
+- Include MBTI probability insights, not just "Unknown"
+- Analyze gates from both conscious and unconscious arrays
+- Generate EXACTLY 10 quotes
+- Write in second person with specific data integration throughout`;
 
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -339,7 +204,7 @@ Write in second person with deep gate-specific analysis throughout.`;
           { role: 'system', content: systemPrompt },
           { 
             role: 'user', 
-            content: `Generate a comprehensive personality reading AND 10 personalized quotes for ${userMeta.preferred_name || 'this person'} based on their complete blueprint data. Make it feel personal and insightful.` 
+            content: `Generate a comprehensive personality reading for ${userMeta.preferred_name || 'this person'} that integrates ALL their blueprint data: Big Five scores, MBTI probabilities, Chinese astrology (${chineseAstrology.animal} ${chineseAstrology.element}), Human Design gates, and numerology. Include 10 warm, inspiring quotes that reflect their unique personality blend.` 
           }
         ],
         temperature: 0.7,
@@ -355,11 +220,14 @@ Write in second person with deep gate-specific analysis throughout.`;
     const openAIData = await openAIResponse.json();
     const generatedContent = openAIData.choices[0].message.content;
 
+    console.log('🔍 Generated content length:', generatedContent.length);
+    console.log('🔍 Content preview:', generatedContent.substring(0, 300));
+
     // Split content into report sections and quotes
     const [reportPart, quotesPart] = generatedContent.split('PERSONALIZED QUOTES:');
     
-    console.log('🔍 Raw report part length:', reportPart.length);
-    console.log('🔍 Raw report part preview:', reportPart.substring(0, 500));
+    console.log('🔍 Report part length:', reportPart?.length || 0);
+    console.log('🔍 Quotes part length:', quotesPart?.length || 0);
     
     // Parse the report sections - improved logic
     const sectionPattern = /(\d+)\.\s*([A-Z\s&]+)[\s\S]*?(?=\d+\.\s*[A-Z\s&]+|$)/gi;
@@ -402,26 +270,64 @@ Write in second person with deep gate-specific analysis throughout.`;
       integrated_summary: reportContent.integrated_summary.length
     });
 
-    // Parse quotes
+    // Parse quotes with improved pattern matching
     const quotes = [];
     if (quotesPart) {
-      const quoteLines = quotesPart.split(/\d+\.\s*/).slice(1);
-      for (const line of quoteLines) {
-        const quoteMatch = line.match(/"([^"]+)"\s*-\s*Category:\s*([^-]+)\s*-\s*Why it resonates:\s*(.+)/);
-        if (quoteMatch) {
-          quotes.push({
-            quote_text: quoteMatch[1].trim(),
-            category: quoteMatch[2].trim().toLowerCase(),
-            personality_alignment: {
-              explanation: quoteMatch[3].trim(),
-              mbti_connection: mbti.type || null,
-              hd_connection: humanDesign.type || null,
-              astro_connection: astrology.sun_sign || null
-            }
-          });
+      console.log('🔍 Processing quotes part...');
+      
+      // Try multiple quote parsing patterns
+      const quotePatterns = [
+        /"([^"]+)"\s*-\s*Category:\s*([^-]+)\s*-\s*Why it resonates:\s*(.+?)(?=\d+\.|$)/g,
+        /\d+\.\s*"([^"]+)"\s*-\s*Category:\s*([^-]+)\s*-\s*Why it resonates:\s*(.+?)(?=\d+\.|$)/g,
+        /"([^"]+)"\s*-\s*Category:\s*([^-]+)\s*-\s*(.+?)(?=\d+\.|$)/g
+      ];
+      
+      for (const pattern of quotePatterns) {
+        const matches = [...quotesPart.matchAll(pattern)];
+        if (matches.length > 0) {
+          console.log(`✅ Found ${matches.length} quotes with pattern`);
+          for (const match of matches) {
+            quotes.push({
+              quote_text: match[1].trim(),
+              category: (match[2] || 'inspiration').trim().toLowerCase(),
+              personality_alignment: {
+                explanation: (match[3] || match[2] || 'Resonates with your unique personality blend').trim(),
+                mbti_connection: personality.likelyType || null,
+                hd_connection: humanDesign.type || null,
+                astro_connection: `${chineseAstrology.animal} ${chineseAstrology.element}` || astrology.sun_sign || null
+              }
+            });
+          }
+          break; // Use the first pattern that works
+        }
+      }
+      
+      // If no quotes found with patterns, try simple line-by-line parsing
+      if (quotes.length === 0) {
+        console.log('⚠️ Pattern matching failed, trying line-by-line parsing');
+        const lines = quotesPart.split('\n').filter(line => line.trim().includes('"'));
+        for (const line of lines.slice(0, 10)) { // Limit to 10 quotes
+          const quoteMatch = line.match(/"([^"]+)"/);
+          if (quoteMatch) {
+            quotes.push({
+              quote_text: quoteMatch[1].trim(),
+              category: 'inspiration',
+              personality_alignment: {
+                explanation: 'Personalized for your unique blueprint combination',
+                mbti_connection: personality.likelyType || null,
+                hd_connection: humanDesign.type || null,
+                astro_connection: `${chineseAstrology.animal} ${chineseAstrology.element}` || astrology.sun_sign || null
+              }
+            });
+          }
         }
       }
     }
+
+    console.log(`📝 Parsed ${quotes.length} quotes`);
+    quotes.forEach((quote, index) => {
+      console.log(`Quote ${index + 1}:`, quote.quote_text.substring(0, 50) + '...');
+    });
 
     // Generate a valid UUID for blueprint_id if missing
     const blueprintId = blueprint.id || crypto.randomUUID();
