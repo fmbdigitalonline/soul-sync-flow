@@ -14,12 +14,14 @@ import { ReflectionPrompts } from "@/components/coach/ReflectionPrompts";
 import { InsightJournal } from "@/components/coach/InsightJournal";
 import { WeeklyInsights } from "@/components/coach/WeeklyInsights";
 import { LifeOperatingSystemDashboard } from "@/components/dashboard/LifeOperatingSystemDashboard";
+import { LifeOperatingSystemChoices } from "@/components/dashboard/LifeOperatingSystemChoices";
+import { LifeOperatingSystemDomainFocus } from "@/components/dashboard/LifeOperatingSystemDomainFocus";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 import { useBlueprintData } from "@/hooks/use-blueprint-data";
 import { LifeDomain } from "@/types/growth-program";
 
-type ActiveView = 'welcome' | 'immediate_chat' | 'growth_program' | 'tools' | 'mood' | 'reflection' | 'insight' | 'weekly' | 'life_os' | null;
+type ActiveView = 'welcome' | 'immediate_chat' | 'growth_program' | 'tools' | 'mood' | 'reflection' | 'insight' | 'weekly' | 'life_os_choices' | 'life_os_quick_focus' | 'life_os_full' | 'life_os_guided' | 'life_os_progressive' | null;
 
 const SpiritualGrowth = () => {
   const { messages, isLoading, sendMessage, resetConversation } = useEnhancedAICoach("coach", "spiritual-growth");
@@ -330,15 +332,64 @@ const SpiritualGrowth = () => {
     );
   }
 
-  // Life Operating System Dashboard
-  if (activeView === 'life_os') {
+  // Life Operating System Choice Interface
+  if (activeView === 'life_os_choices') {
+    const handleChoiceSelect = (choice: 'quick_focus' | 'full_assessment' | 'guided_discovery' | 'progressive_journey') => {
+      switch (choice) {
+        case 'quick_focus':
+          setActiveView('life_os_quick_focus');
+          break;
+        case 'full_assessment':
+          setActiveView('life_os_full');
+          break;
+        case 'guided_discovery':
+          setActiveView('life_os_guided');
+          break;
+        case 'progressive_journey':
+          setActiveView('life_os_progressive');
+          break;
+      }
+    };
+
+    return (
+      <MainLayout>
+        <LifeOperatingSystemChoices
+          onChoiceSelect={handleChoiceSelect}
+          onBack={() => setActiveView('welcome')}
+        />
+      </MainLayout>
+    );
+  }
+
+  // Quick Focus Assessment
+  if (activeView === 'life_os_quick_focus') {
+    const handleAssessmentComplete = (assessmentData: any[]) => {
+      console.log('🎯 Quick focus assessment completed:', assessmentData);
+      toast({
+        title: "Assessment Complete! 🎯",
+        description: "Your focused assessment has been processed.",
+      });
+      setActiveView('life_os_full'); // Show dashboard with results
+    };
+
+    return (
+      <MainLayout>
+        <LifeOperatingSystemDomainFocus
+          onBack={() => setActiveView('life_os_choices')}
+          onComplete={handleAssessmentComplete}
+        />
+      </MainLayout>
+    );
+  }
+
+  // Full Assessment Dashboard
+  if (activeView === 'life_os_full') {
     const handleCreateProgram = (primaryDomain: LifeDomain, supportingDomains: LifeDomain[]) => {
       console.log('🚀 Creating program with Life OS integration:', { primaryDomain, supportingDomains });
       toast({
         title: "Program Created! 🎯",
         description: `Multi-domain growth plan created with ${primaryDomain} as primary focus.`,
       });
-      // Could navigate to program view or show program interface
       setActiveView('growth_program');
     };
 
@@ -349,15 +400,51 @@ const SpiritualGrowth = () => {
             <div className="mb-6">
               <Button 
                 variant="outline" 
-                onClick={() => setActiveView('welcome')}
+                onClick={() => setActiveView('life_os_choices')}
                 className="mb-4"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Growth Options
+                Back to Assessment Options
               </Button>
             </div>
             
             <LifeOperatingSystemDashboard onCreateProgram={handleCreateProgram} />
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  // Guided Discovery (Placeholder for now)
+  if (activeView === 'life_os_guided') {
+    return (
+      <MainLayout>
+        <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+          <div className="text-center space-y-4">
+            <h2 className="text-2xl font-bold">Guided Discovery</h2>
+            <p className="text-muted-foreground">Coming soon - conversational assessment with AI coach</p>
+            <Button onClick={() => setActiveView('life_os_choices')}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Options
+            </Button>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  // Progressive Journey (Placeholder for now)
+  if (activeView === 'life_os_progressive') {
+    return (
+      <MainLayout>
+        <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+          <div className="text-center space-y-4">
+            <h2 className="text-2xl font-bold">Progressive Journey</h2>
+            <p className="text-muted-foreground">Coming soon - step-by-step domain expansion</p>
+            <Button onClick={() => setActiveView('life_os_choices')}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Options
+            </Button>
           </div>
         </div>
       </MainLayout>
@@ -399,7 +486,7 @@ const SpiritualGrowth = () => {
             </CosmicCard>
 
             {/* Life Operating System - NEW */}
-            <CosmicCard className="group hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1" onClick={() => setActiveView('life_os')}>
+            <CosmicCard className="group hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1" onClick={() => setActiveView('life_os_choices')}>
               <div className="flex flex-col items-center text-center space-y-4">
                 <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
                   <Target className="h-8 w-8 text-white" />
