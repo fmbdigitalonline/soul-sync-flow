@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { personalityFusionService } from "./personality-fusion-service";
 import { PersonalityProfile } from "@/types/personality-fusion";
@@ -64,24 +63,29 @@ class BlueprintService {
 
   async getActiveBlueprintData(): Promise<BlueprintDataResult> {
     try {
+      console.log('🔍 BLUEPRINT SERVICE: Starting getActiveBlueprintData');
+      
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       
       if (userError || !user) {
+        console.log('❌ BLUEPRINT SERVICE: User not authenticated', userError);
         return { data: null, error: "User not authenticated" };
       }
+
+      console.log('✅ BLUEPRINT SERVICE: User authenticated:', user.id);
 
       const cacheKey = this.getCacheKey(user.id);
       
       // Check cache first
       const cached = this.cache.get(cacheKey);
       if (cached && this.isValidCache(cached)) {
-        console.log('Blueprint cache hit');
+        console.log('📋 BLUEPRINT SERVICE: Cache hit, returning cached data');
         return { data: cached.data, error: null };
       }
 
       // Check for pending request to avoid duplicates
       if (this.pendingRequests.has(cacheKey)) {
-        console.log('Blueprint request deduplication');
+        console.log('⏳ BLUEPRINT SERVICE: Request deduplication, waiting for existing request');
         const result = await this.pendingRequests.get(cacheKey)!;
         return result;
       }
@@ -95,6 +99,7 @@ class BlueprintService {
         
         // Cache successful results
         if (result.data) {
+          console.log('💾 BLUEPRINT SERVICE: Caching successful result');
           this.cache.set(cacheKey, {
             data: result.data,
             timestamp: Date.now()
@@ -106,12 +111,14 @@ class BlueprintService {
         this.pendingRequests.delete(cacheKey);
       }
     } catch (error) {
-      console.error("Unexpected error fetching active blueprint:", error);
+      console.error("💥 BLUEPRINT SERVICE: Unexpected error in getActiveBlueprintData:", error);
       return { data: null, error: "Unexpected error occurred." };
     }
   }
 
   private async fetchBlueprintFromDatabase(userId: string): Promise<BlueprintDataResult> {
+    console.log('🗄️ BLUEPRINT SERVICE: Fetching from database for user:', userId);
+
     // First, ensure single active blueprint
     await this.ensureSingleActiveBlueprint(userId);
 
@@ -126,17 +133,93 @@ class BlueprintService {
       .maybeSingle();
 
     if (error) {
-      console.error("Error fetching active blueprint:", error);
+      console.error("❌ BLUEPRINT SERVICE: Database error:", error);
       return { data: null, error: error.message };
     }
 
     if (!data) {
-      console.log("No active blueprint found for user.");
+      console.log("📝 BLUEPRINT SERVICE: No active blueprint found in database");
       return { data: null, error: "No active blueprint found." };
     }
 
-    console.log("Fresh blueprint data fetched");
-    return { data: data.blueprint as unknown as BlueprintData, error: null };
+    console.log("✅ BLUEPRINT SERVICE: Raw blueprint data found:", {
+      id: data.id,
+      hasBlueprint: !!data.blueprint,
+      blueprintKeys: data.blueprint ? Object.keys(data.blueprint) : [],
+      isActive: data.is_active
+    });
+
+    // Convert and validate the blueprint data
+    const blueprintData = this.convertDatabaseBlueprintToFormat(data.blueprint as any);
+    
+    console.log("🔄 BLUEPRINT SERVICE: Converted blueprint data:", {
+      hasUserMeta: !!blueprintData.user_meta,
+      hasAstrology: !!blueprintData.archetype_western,
+      hasNumerology: !!blueprintData.values_life_path,
+      hasHumanDesign: !!blueprintData.energy_strategy_human_design,
+      hasMBTI: !!blueprintData.cognition_mbti
+    });
+
+    return { data: blueprintData, error: null };
+  }
+
+  private convertDatabaseBlueprintToFormat(rawBlueprint: any): BlueprintData {
+    console.log('🔄 BLUEPRINT SERVICE: Converting database format to BlueprintData');
+    
+    if (!rawBlueprint) {
+      console.warn('⚠️ BLUEPRINT SERVICE: No raw blueprint data provided');
+      return this.createEmptyBlueprint();
+    }
+
+    // Handle both old and new format
+    const converted: BlueprintData = {
+      user_meta: rawBlueprint.user_meta || {},
+      metadata: rawBlueprint.metadata || {},
+      
+      // Map new format to legacy format for compatibility
+      astrology: rawBlueprint.archetype_western || rawBlueprint.astrology || {},
+      human_design: rawBlueprint.energy_strategy_human_design || rawBlueprint.human_design || {},
+      numerology: rawBlueprint.values_life_path || rawBlueprint.numerology || {},
+      mbti: rawBlueprint.cognition_mbti || rawBlueprint.mbti || {},
+      goal_stack: rawBlueprint.goal_stack || {},
+      
+      // Keep legacy properties
+      archetype_western: rawBlueprint.archetype_western || rawBlueprint.astrology || {},
+      archetype_chinese: rawBlueprint.archetype_chinese || {},
+      values_life_path: rawBlueprint.values_life_path || rawBlueprint.numerology || {},
+      energy_strategy_human_design: rawBlueprint.energy_strategy_human_design || rawBlueprint.human_design || {},
+      cognition_mbti: rawBlueprint.cognition_mbti || rawBlueprint.mbti || {},
+      bashar_suite: rawBlueprint.bashar_suite || {},
+      timing_overlays: rawBlueprint.timing_overlays || {}
+    };
+
+    console.log('✅ BLUEPRINT SERVICE: Conversion complete:', {
+      hasUserMeta: !!converted.user_meta && Object.keys(converted.user_meta).length > 0,
+      hasAstrology: !!converted.archetype_western && Object.keys(converted.archetype_western).length > 0,
+      hasNumerology: !!converted.values_life_path && Object.keys(converted.values_life_path).length > 0,
+      hasHumanDesign: !!converted.energy_strategy_human_design && Object.keys(converted.energy_strategy_human_design).length > 0
+    });
+
+    return converted;
+  }
+
+  private createEmptyBlueprint(): BlueprintData {
+    return {
+      user_meta: {},
+      astrology: {},
+      human_design: {},
+      numerology: {},
+      mbti: {},
+      goal_stack: {},
+      metadata: {},
+      archetype_western: {},
+      archetype_chinese: {},
+      values_life_path: {},
+      energy_strategy_human_design: {},
+      cognition_mbti: {},
+      bashar_suite: {},
+      timing_overlays: {}
+    };
   }
 
   private async ensureSingleActiveBlueprint(userId: string): Promise<void> {

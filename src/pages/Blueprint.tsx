@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MainLayout from "@/components/Layout/MainLayout";
@@ -7,7 +6,7 @@ import BlueprintEditor from "@/components/blueprint/BlueprintEditor";
 import { BlueprintHealthCheck } from "@/components/blueprint/BlueprintHealthCheck";
 import PersonalityReportViewer from "@/components/blueprint/PersonalityReportViewer";
 import { Button } from "@/components/ui/button";
-import { Loader2, MessageCircle, RefreshCw, Activity } from "lucide-react";
+import { Loader2, MessageCircle, RefreshCw, Activity, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { BlueprintData, blueprintService } from "@/services/blueprint-service";
 import { useNavigate } from "react-router-dom";
@@ -32,16 +31,20 @@ const Blueprint = () => {
     loading, 
     error, 
     hasBlueprint, 
-    refetch 
+    refetch,
+    getBlueprintCompletionPercentage,
+    blueprintValidation
   } = useOptimizedBlueprintData();
 
-  console.log("Blueprint Page Debug:", {
+  console.log("🎯 BLUEPRINT PAGE: Current state", {
     user: !!user,
     authLoading,
     loading,
     hasBlueprint,
     blueprintData: !!blueprintData,
     error,
+    completionPercentage: getBlueprintCompletionPercentage,
+    validationResult: blueprintValidation,
     blueprintPreview: blueprintData ? {
       userName: blueprintData.user_meta?.preferred_name,
       mbtiType: blueprintData.cognitiveTemperamental?.mbtiType,
@@ -96,16 +99,56 @@ const Blueprint = () => {
     );
   }
 
-  // Show error if there's an error
+  // Enhanced error handling - distinguish between different types of errors
   if (error) {
+    const isNoBlueprint = error.includes("No active blueprint found");
+    
+    if (isNoBlueprint) {
+      console.log("📝 BLUEPRINT PAGE: No blueprint found, should redirect to onboarding");
+      return (
+        <MainLayout>
+          <div className="w-full min-h-[80vh] flex flex-col items-center justify-center p-3 mobile-container">
+            <div className="cosmic-card p-4 sm:p-6 text-center w-full max-w-md">
+              <AlertCircle className="h-12 w-12 text-soul-purple mx-auto mb-4" />
+              <h2 className="text-base sm:text-lg font-semibold mb-4 break-words">
+                <span className="gradient-text">Create Your Blueprint</span>
+              </h2>
+              <p className="text-sm mb-6 break-words text-muted-foreground">
+                You haven't created your soul blueprint yet. Let's get started!
+              </p>
+              <div className="space-y-2">
+                <Button 
+                  className="bg-soul-purple hover:bg-soul-purple/90 w-full max-w-full"
+                  onClick={() => navigate('/onboarding')}
+                >
+                  Create Blueprint
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => refetch()} 
+                  className="w-full max-w-full"
+                >
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Check Again
+                </Button>
+              </div>
+            </div>
+          </div>
+        </MainLayout>
+      );
+    }
+    
+    // Other errors (loading/database issues)
     return (
       <MainLayout>
         <div className="w-full min-h-[80vh] flex flex-col items-center justify-center p-3 mobile-container">
           <div className="cosmic-card p-4 sm:p-6 text-center w-full max-w-md">
+            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
             <h2 className="text-base sm:text-lg font-semibold mb-4 text-red-500 break-words">Blueprint Error</h2>
             <p className="text-red-500 mb-4 text-sm break-words">{error}</p>
             <div className="space-y-2">
               <Button onClick={() => refetch()} className="w-full max-w-full">
+                <RefreshCw className="mr-2 h-4 w-4" />
                 Try Again
               </Button>
               <Button 
@@ -122,11 +165,56 @@ const Blueprint = () => {
     );
   }
 
-  // If no blueprint exists, redirect to onboarding
+  // Check if we have sufficient blueprint data to display
   if (!hasBlueprint || !blueprintData) {
-    console.log("No blueprint found, redirecting to onboarding");
-    navigate('/onboarding');
-    return null;
+    console.log("📝 BLUEPRINT PAGE: Insufficient blueprint data, redirecting to onboarding");
+    return (
+      <MainLayout>
+        <div className="w-full min-h-[80vh] flex flex-col items-center justify-center p-3 mobile-container">
+          <div className="cosmic-card p-4 sm:p-6 text-center w-full max-w-md">
+            <AlertCircle className="h-12 w-12 text-soul-purple mx-auto mb-4" />
+            <h2 className="text-base sm:text-lg font-semibold mb-4 break-words">
+              <span className="gradient-text">Complete Your Blueprint</span>
+            </h2>
+            <p className="text-sm mb-4 break-words text-muted-foreground">
+              Your blueprint needs more information to be complete. 
+              {blueprintValidation.missingFields.length > 0 && (
+                <span className="block mt-2 text-xs">
+                  Missing: {blueprintValidation.missingFields.join(', ')}
+                </span>
+              )}
+            </p>
+            <div className="mb-4">
+              <div className="text-xs text-muted-foreground mb-1">
+                Completion: {getBlueprintCompletionPercentage}%
+              </div>
+              <div className="w-full bg-muted rounded-full h-2">
+                <div 
+                  className="bg-soul-purple h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${getBlueprintCompletionPercentage}%` }}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Button 
+                className="bg-soul-purple hover:bg-soul-purple/90 w-full max-w-full"
+                onClick={() => navigate('/onboarding')}
+              >
+                Complete Blueprint
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => refetch()} 
+                className="w-full max-w-full"
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Refresh
+              </Button>
+            </div>
+          </div>
+        </div>
+      </MainLayout>
+    );
   }
 
   const isAdmin = isAdminUser(user);
@@ -268,9 +356,16 @@ const Blueprint = () => {
       <div className="w-full p-3 sm:p-4 md:p-6 pb-20 mobile-container">
         {/* Mobile-friendly header with proper constraints */}
         <div className="flex flex-col gap-3 sm:gap-4 mb-4 sm:mb-6 w-full max-w-full">
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold font-display break-words">
-            <span className="gradient-text">Soul Blueprint</span>
-          </h1>
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold font-display break-words">
+              <span className="gradient-text">Soul Blueprint</span>
+            </h1>
+            {getBlueprintCompletionPercentage < 100 && (
+              <div className="text-xs text-muted-foreground">
+                {getBlueprintCompletionPercentage}% Complete
+              </div>
+            )}
+          </div>
           
           {/* Action buttons - Mobile Stack with proper sizing */}
           <div className="flex flex-col gap-2 w-full max-w-full">

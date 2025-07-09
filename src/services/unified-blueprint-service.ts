@@ -1,265 +1,229 @@
-import { LayeredBlueprint } from '@/types/personality-modules';
 
-export interface BlueprintValidationResult {
-  isComplete: boolean;
-  completionPercentage: number;
-  missingFields: string[];
-  availableData: {
-    hasPersonalInfo: boolean;
-    hasCognitive: boolean;
-    hasEnergy: boolean;
-    hasValues: boolean;
-    hasArchetype: boolean;
-    hasGenerational: boolean;
+import { BlueprintData } from './blueprint-service';
+
+// Define the LayeredBlueprint interface based on the actual structure
+export interface LayeredBlueprint {
+  user_meta?: {
+    full_name?: string;
+    preferred_name?: string;
+    birth_date?: string;
+    birth_time_local?: string;
+    birth_location?: string;
+    timezone?: string;
+    user_id?: string;
   };
+  publicArchetype?: {
+    sunSign?: string;
+    moonSign?: string;
+    risingSign?: string;
+    chineseZodiac?: string;
+    element?: string;
+  };
+  cognitiveTemperamental?: {
+    mbtiType?: string;
+    dominantFunction?: string;
+    auxiliaryFunction?: string;
+    coreKeywords?: string[];
+  };
+  energyDecisionStrategy?: {
+    humanDesignType?: string;
+    authority?: string;
+    profile?: string;
+    centers?: any;
+  };
+  coreValuesNarrative?: {
+    lifePath?: number;
+    expressionNumber?: number;
+    soulUrge?: number;
+  };
+  generationalCode?: {
+    chineseZodiac?: string;
+    element?: string;
+    westernGeneration?: string;
+  };
+  goal_stack?: any;
+  metadata?: any;
 }
 
 export class UnifiedBlueprintService {
-  static validateBlueprint(blueprint: LayeredBlueprint | null): BlueprintValidationResult {
+  static convertBlueprintDataToLayered(blueprintData: BlueprintData): LayeredBlueprint {
+    console.log('🔄 UNIFIED SERVICE: Converting BlueprintData to LayeredBlueprint');
+    console.log('📊 INPUT DATA:', {
+      hasUserMeta: !!blueprintData.user_meta,
+      hasArchetypeWestern: !!blueprintData.archetype_western,
+      hasValuesLifePath: !!blueprintData.values_life_path,
+      hasEnergyStrategy: !!blueprintData.energy_strategy_human_design,
+      hasCognitionMbti: !!blueprintData.cognition_mbti
+    });
+
+    const layered: LayeredBlueprint = {
+      user_meta: blueprintData.user_meta || {},
+      
+      publicArchetype: {
+        sunSign: blueprintData.archetype_western?.sun_sign || 
+                blueprintData.astrology?.sun_sign || 'Unknown',
+        moonSign: blueprintData.archetype_western?.moon_sign || 
+                 blueprintData.astrology?.moon_sign || 'Unknown',
+        risingSign: blueprintData.archetype_western?.rising_sign || 
+                   blueprintData.astrology?.rising_sign || 'Unknown',
+        chineseZodiac: blueprintData.archetype_chinese?.animal || 'Unknown',
+        element: blueprintData.archetype_chinese?.element || 'Unknown'
+      },
+      
+      cognitiveTemperamental: {
+        mbtiType: blueprintData.cognition_mbti?.type || 
+                 blueprintData.mbti?.type || 'Unknown',
+        dominantFunction: blueprintData.cognition_mbti?.dominant_function || 'Unknown',
+        auxiliaryFunction: blueprintData.cognition_mbti?.auxiliary_function || 'Unknown',
+        coreKeywords: blueprintData.cognition_mbti?.core_keywords || []
+      },
+      
+      energyDecisionStrategy: {
+        humanDesignType: blueprintData.energy_strategy_human_design?.type || 
+                        blueprintData.human_design?.type || 'Unknown',
+        authority: blueprintData.energy_strategy_human_design?.authority || 
+                  blueprintData.human_design?.authority || 'Unknown',
+        profile: blueprintData.energy_strategy_human_design?.profile || 
+                blueprintData.human_design?.profile || 'Unknown',
+        centers: blueprintData.energy_strategy_human_design?.centers || 
+                blueprintData.human_design?.centers || {}
+      },
+      
+      coreValuesNarrative: {
+        lifePath: blueprintData.values_life_path?.lifePathNumber || 
+                 blueprintData.values_life_path?.life_path_number ||
+                 blueprintData.numerology?.lifePathNumber ||
+                 blueprintData.numerology?.life_path_number || 1,
+        expressionNumber: blueprintData.values_life_path?.expressionNumber || 
+                         blueprintData.numerology?.expressionNumber || 1,
+        soulUrge: blueprintData.values_life_path?.soulUrge || 
+                 blueprintData.numerology?.soulUrge || 1
+      },
+      
+      generationalCode: {
+        chineseZodiac: blueprintData.archetype_chinese?.animal || 'Unknown',
+        element: blueprintData.archetype_chinese?.element || 'Unknown',
+        westernGeneration: 'Unknown' // This would need additional calculation
+      },
+      
+      goal_stack: blueprintData.goal_stack || {},
+      metadata: blueprintData.metadata || {}
+    };
+
+    console.log('✅ UNIFIED SERVICE: Conversion complete:', {
+      sunSign: layered.publicArchetype?.sunSign,
+      mbtiType: layered.cognitiveTemperamental?.mbtiType,
+      hdType: layered.energyDecisionStrategy?.humanDesignType,
+      lifePath: layered.coreValuesNarrative?.lifePath
+    });
+
+    return layered;
+  }
+
+  static validateBlueprint(blueprint: LayeredBlueprint | null): {
+    isValid: boolean;
+    completionPercentage: number;
+    missingFields: string[];
+    hasEssentialData: boolean;
+  } {
     if (!blueprint) {
       return {
-        isComplete: false,
+        isValid: false,
         completionPercentage: 0,
-        missingFields: ['entire_blueprint'],
-        availableData: {
-          hasPersonalInfo: false,
-          hasCognitive: false,
-          hasEnergy: false,
-          hasValues: false,
-          hasArchetype: false,
-          hasGenerational: false,
-        }
+        missingFields: ['entire blueprint'],
+        hasEssentialData: false
       };
     }
 
-    console.log('🔍 Blueprint Validation: Analyzing blueprint completeness');
-    console.log('📊 Raw blueprint data for validation:', {
-      userMeta: blueprint.user_meta,
-      cognitiveTemperamental: blueprint.cognitiveTemperamental,
-      energyDecisionStrategy: blueprint.energyDecisionStrategy,
-      coreValuesNarrative: blueprint.coreValuesNarrative,
-      publicArchetype: blueprint.publicArchetype,
-      generationalCode: blueprint.generationalCode
-    });
-    
-    const lifePath = blueprint.coreValuesNarrative?.lifePath;
-    let hasValidLifePath = false;
-    
-    if (lifePath !== undefined && lifePath !== null) {
-      if (typeof lifePath === 'number') {
-        hasValidLifePath = lifePath > 0;
-      } else if (typeof lifePath === 'string') {
-        hasValidLifePath = lifePath !== 'Unknown' && lifePath.trim() !== '';
-      }
+    const missingFields: string[] = [];
+    let completedFields = 0;
+    const totalFields = 7;
+
+    // Check essential fields
+    if (!blueprint.publicArchetype?.sunSign || blueprint.publicArchetype.sunSign === 'Unknown') {
+      missingFields.push('Sun Sign');
+    } else {
+      completedFields++;
     }
 
-    const checks = {
-      hasPersonalInfo: !!(blueprint.user_meta?.preferred_name || blueprint.user_meta?.full_name),
-      hasCognitive: !!(blueprint.cognitiveTemperamental?.mbtiType && blueprint.cognitiveTemperamental.mbtiType !== 'Unknown'),
-      hasEnergy: !!(blueprint.energyDecisionStrategy?.humanDesignType && blueprint.energyDecisionStrategy.humanDesignType !== 'Unknown'),
-      hasValues: hasValidLifePath,
-      hasArchetype: !!(blueprint.publicArchetype?.sunSign && blueprint.publicArchetype.sunSign !== 'Unknown'),
-      hasGenerational: !!(blueprint.generationalCode?.chineseZodiac && blueprint.generationalCode.chineseZodiac !== 'Unknown'),
-    };
+    if (!blueprint.cognitiveTemperamental?.mbtiType || blueprint.cognitiveTemperamental.mbtiType === 'Unknown') {
+      missingFields.push('MBTI Type');
+    } else {
+      completedFields++;
+    }
 
-    console.log('🔍 Individual field validation results:', {
-      personalInfo: {
-        hasInfo: checks.hasPersonalInfo,
-        preferredName: blueprint.user_meta?.preferred_name,
-        fullName: blueprint.user_meta?.full_name
-      },
-      cognitive: {
-        hasCognitive: checks.hasCognitive,
-        mbtiType: blueprint.cognitiveTemperamental?.mbtiType
-      },
-      energy: {
-        hasEnergy: checks.hasEnergy,
-        hdType: blueprint.energyDecisionStrategy?.humanDesignType
-      },
-      values: {
-        hasValues: checks.hasValues,
-        lifePath: lifePath,
-        lifePathType: typeof lifePath,
-        hasValidLifePath
-      },
-      archetype: {
-        hasArchetype: checks.hasArchetype,
-        sunSign: blueprint.publicArchetype?.sunSign
-      },
-      generational: {
-        hasGenerational: checks.hasGenerational,
-        chineseZodiac: blueprint.generationalCode?.chineseZodiac
-      }
-    });
+    if (!blueprint.energyDecisionStrategy?.humanDesignType || blueprint.energyDecisionStrategy.humanDesignType === 'Unknown') {
+      missingFields.push('Human Design Type');
+    } else {
+      completedFields++;
+    }
 
-    const completedCount = Object.values(checks).filter(Boolean).length;
-    const totalCount = Object.keys(checks).length;
-    const completionPercentage = Math.round((completedCount / totalCount) * 100);
+    if (!blueprint.coreValuesNarrative?.lifePath || blueprint.coreValuesNarrative.lifePath <= 0) {
+      missingFields.push('Life Path Number');
+    } else {
+      completedFields++;
+    }
 
-    const missingFields = Object.entries(checks)
-      .filter(([_, isPresent]) => !isPresent)
-      .map(([field]) => field);
+    if (!blueprint.publicArchetype?.chineseZodiac || blueprint.publicArchetype.chineseZodiac === 'Unknown') {
+      missingFields.push('Chinese Zodiac');
+    } else {
+      completedFields++;
+    }
 
-    const isComplete = completionPercentage >= 80; // At least 80% complete
+    if (!blueprint.user_meta?.full_name) {
+      missingFields.push('Full Name');
+    } else {
+      completedFields++;
+    }
 
-    console.log('✅ Blueprint Validation Complete:', {
+    if (!blueprint.user_meta?.birth_date) {
+      missingFields.push('Birth Date');
+    } else {
+      completedFields++;
+    }
+
+    const completionPercentage = Math.round((completedFields / totalFields) * 100);
+    const hasEssentialData = completedFields >= 4; // At least half the essential fields
+    const isValid = completedFields >= 6; // Most fields present
+
+    console.log('🔍 BLUEPRINT VALIDATION:', {
+      completedFields,
+      totalFields,
       completionPercentage,
-      isComplete,
-      missingFields,
-      availableData: checks
+      hasEssentialData,
+      isValid,
+      missingFields
     });
 
     return {
-      isComplete,
+      isValid,
       completionPercentage,
       missingFields,
-      availableData: checks
+      hasEssentialData
     };
   }
 
   static extractBlueprintSummary(blueprint: LayeredBlueprint): string {
-    const validation = this.validateBlueprint(blueprint);
-    
-    if (!validation.isComplete) {
-      return `Blueprint ${validation.completionPercentage}% complete. Missing: ${validation.missingFields.join(', ')}`;
-    }
+    if (!blueprint) return 'No blueprint data available';
 
-    const parts = [];
+    const traits = [];
     
-    if (validation.availableData.hasPersonalInfo) {
-      parts.push(`Name: ${blueprint.user_meta?.preferred_name || blueprint.user_meta?.full_name}`);
+    if (blueprint.cognitiveTemperamental?.mbtiType && blueprint.cognitiveTemperamental.mbtiType !== 'Unknown') {
+      traits.push(blueprint.cognitiveTemperamental.mbtiType);
     }
     
-    if (validation.availableData.hasCognitive) {
-      parts.push(`MBTI: ${blueprint.cognitiveTemperamental?.mbtiType}`);
+    if (blueprint.publicArchetype?.sunSign && blueprint.publicArchetype.sunSign !== 'Unknown') {
+      traits.push(`${blueprint.publicArchetype.sunSign} Sun`);
     }
     
-    if (validation.availableData.hasEnergy) {
-      parts.push(`Human Design: ${blueprint.energyDecisionStrategy?.humanDesignType}`);
-      if (blueprint.energyDecisionStrategy?.authority) {
-        parts.push(`Authority: ${blueprint.energyDecisionStrategy.authority}`);
-      }
+    if (blueprint.energyDecisionStrategy?.humanDesignType && blueprint.energyDecisionStrategy.humanDesignType !== 'Unknown') {
+      traits.push(blueprint.energyDecisionStrategy.humanDesignType);
     }
     
-    if (validation.availableData.hasValues) {
-      parts.push(`Life Path: ${blueprint.coreValuesNarrative?.lifePath}`);
-      if (blueprint.coreValuesNarrative?.expressionNumber) {
-        parts.push(`Expression: ${blueprint.coreValuesNarrative.expressionNumber}`);
-      }
-    }
-    
-    if (validation.availableData.hasArchetype) {
-      parts.push(`Sun: ${blueprint.publicArchetype?.sunSign}`);
-      if (blueprint.publicArchetype?.moonSign && blueprint.publicArchetype.moonSign !== 'Unknown') {
-        parts.push(`Moon: ${blueprint.publicArchetype.moonSign}`);
-      }
-      if (blueprint.publicArchetype?.risingSign && blueprint.publicArchetype.risingSign !== 'Unknown') {
-        parts.push(`Rising: ${blueprint.publicArchetype.risingSign}`);
-      }
-    }
-    
-    if (validation.availableData.hasGenerational) {
-      parts.push(`Chinese: ${blueprint.generationalCode?.chineseZodiac} ${blueprint.generationalCode?.element}`);
+    if (blueprint.coreValuesNarrative?.lifePath) {
+      traits.push(`Life Path ${blueprint.coreValuesNarrative.lifePath}`);
     }
 
-    return parts.join(' | ');
-  }
-
-  static formatBlueprintForAI(blueprint: LayeredBlueprint, agentType: 'coach' | 'guide' | 'blend' = 'guide'): string {
-    const validation = this.validateBlueprint(blueprint);
-    
-    if (!validation.isComplete) {
-      console.log('⚠️ Blueprint incomplete for AI formatting:', validation.missingFields);
-    }
-
-    let prompt = `USER BLUEPRINT CONTEXT:\n`;
-    
-    // Personal Information
-    if (validation.availableData.hasPersonalInfo) {
-      prompt += `Name: ${blueprint.user_meta?.preferred_name || blueprint.user_meta?.full_name}\n`;
-    }
-
-    // Cognitive Profile
-    if (validation.availableData.hasCognitive) {
-      prompt += `\nCOGNITIVE PROFILE:\n`;
-      prompt += `- MBTI Type: ${blueprint.cognitiveTemperamental?.mbtiType}\n`;
-      if (blueprint.cognitiveTemperamental?.dominantFunction) {
-        prompt += `- Dominant Function: ${blueprint.cognitiveTemperamental.dominantFunction}\n`;
-      }
-      if (blueprint.cognitiveTemperamental?.auxiliaryFunction) {
-        prompt += `- Auxiliary Function: ${blueprint.cognitiveTemperamental.auxiliaryFunction}\n`;
-      }
-    }
-
-    // Energy & Decision Strategy
-    if (validation.availableData.hasEnergy) {
-      prompt += `\nENERGY & DECISION STRATEGY:\n`;
-      prompt += `- Human Design Type: ${blueprint.energyDecisionStrategy?.humanDesignType}\n`;
-      if (blueprint.energyDecisionStrategy?.authority) {
-        prompt += `- Authority: ${blueprint.energyDecisionStrategy.authority}\n`;
-      }
-      if (blueprint.energyDecisionStrategy?.strategy) {
-        prompt += `- Strategy: ${blueprint.energyDecisionStrategy.strategy}\n`;
-      }
-    }
-
-    // Core Values & Life Path
-    if (validation.availableData.hasValues) {
-      prompt += `\nCORE VALUES & LIFE PATH:\n`;
-      prompt += `- Life Path Number: ${blueprint.coreValuesNarrative?.lifePath}\n`;
-      if (blueprint.coreValuesNarrative?.lifePathKeyword) {
-        prompt += `- Life Path Theme: ${blueprint.coreValuesNarrative.lifePathKeyword}\n`;
-      }
-      if (blueprint.coreValuesNarrative?.expressionNumber) {
-        prompt += `- Expression Number: ${blueprint.coreValuesNarrative.expressionNumber}\n`;
-      }
-      if (blueprint.coreValuesNarrative?.soulUrgeNumber) {
-        prompt += `- Soul Urge Number: ${blueprint.coreValuesNarrative.soulUrgeNumber}\n`;
-      }
-    }
-
-    // Public Archetype
-    if (validation.availableData.hasArchetype) {
-      prompt += `\nASTROLOGICAL PROFILE:\n`;
-      prompt += `- Sun Sign: ${blueprint.publicArchetype?.sunSign}\n`;
-      if (blueprint.publicArchetype?.moonSign && blueprint.publicArchetype.moonSign !== 'Unknown') {
-        prompt += `- Moon Sign: ${blueprint.publicArchetype.moonSign}\n`;
-      }
-      if (blueprint.publicArchetype?.risingSign && blueprint.publicArchetype.risingSign !== 'Unknown') {
-        prompt += `- Rising Sign: ${blueprint.publicArchetype.risingSign}\n`;
-      }
-    }
-
-    // Generational Code
-    if (validation.availableData.hasGenerational) {
-      prompt += `\nGENERATIONAL INFLUENCES:\n`;
-      prompt += `- Chinese Zodiac: ${blueprint.generationalCode?.chineseZodiac} ${blueprint.generationalCode?.element}\n`;
-    }
-
-    // Agent-specific instructions
-    prompt += `\nAGENT BEHAVIOR INSTRUCTIONS:\n`;
-    switch (agentType) {
-      case 'coach':
-        prompt += `- You are their personal coach. Be direct, motivating, and action-oriented.\n`;
-        prompt += `- Use their blueprint to understand their natural strengths and working style.\n`;
-        prompt += `- Provide concrete, personalized advice based on their specific personality profile.\n`;
-        break;
-      case 'guide':
-        prompt += `- You are their spiritual guide. Be wise, intuitive, and supportive.\n`;
-        prompt += `- Use their blueprint to understand their spiritual path and growth areas.\n`;
-        prompt += `- Offer insights that align with their authentic self and purpose.\n`;
-        break;
-      case 'blend':
-        prompt += `- You are their companion. Adapt your style to what they need in the moment.\n`;
-        prompt += `- Use their blueprint to understand their communication preferences and needs.\n`;
-        prompt += `- Be authentic and personalized in your responses.\n`;
-        break;
-    }
-
-    prompt += `\nIMPORTANT: Always reference specific aspects of their blueprint when relevant. They want to understand themselves better through this lens.\n`;
-
-    console.log(`🎭 Generated ${agentType} prompt with ${validation.completionPercentage}% complete blueprint`);
-    
-    return prompt;
+    return traits.length > 0 ? traits.join(' • ') : 'Unique individual with developing blueprint';
   }
 }
