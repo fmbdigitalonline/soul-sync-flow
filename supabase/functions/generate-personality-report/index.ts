@@ -89,14 +89,95 @@ MBTI Analysis:
 - User Confidence: ${personality.userConfidence || 'N/A'}
 - Top Probabilities: ${Object.entries(mbtiProbs).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([type, prob]) => `${type} (${(prob * 100).toFixed(1)}%)`).join(', ') || 'N/A'}
 
-HUMAN DESIGN DETAILS:
+DETAILED HUMAN DESIGN ANALYSIS:
 - Type: ${humanDesign.type || 'Unknown'}
 - Profile: ${humanDesign.profile || 'Unknown'}
 - Strategy: ${humanDesign.strategy || 'Unknown'}
 - Authority: ${humanDesign.authority || 'Unknown'}
 - Definition: ${humanDesign.definition || 'Unknown'}
 - Not-Self Theme: ${humanDesign.not_self_theme || 'Unknown'}
-- Defined Centers: ${Object.entries(humanDesign.centers || {}).filter(([_, data]) => data.defined).map(([name]) => name).join(', ') || 'None identified'}
+
+DEFINED CENTERS & THEIR PSYCHOLOGICAL IMPACT:
+${Object.entries(humanDesign.centers || {}).map(([center, data]) => {
+  if (data.defined) {
+    return `- ${center} Center: DEFINED (Gates: ${data.gates.join(', ')}) - ${center === 'Spleen' ? 'Instinctual awareness, health consciousness, survival wisdom' : 
+           center === 'Throat' ? 'Communication, manifestation, expression of ideas' :
+           center === 'G' ? 'Identity, direction, love, leadership' :
+           center === 'Heart' ? 'Willpower, ego, material world, promises' :
+           center === 'Solar Plexus' ? 'Emotions, emotional intelligence, clarity over time' :
+           center === 'Sacral' ? 'Life force energy, creativity, sexuality, response' :
+           center === 'Root' ? 'Pressure, adrenaline, stress energy for action' :
+           center === 'Ajna' ? 'Mental processing, conceptualization, opinions' :
+           center === 'Head' ? 'Mental pressure, inspiration, confusion, questions' : 'Energy center'}`;
+  } else {
+    return `- ${center} Center: UNDEFINED (Gates: ${data.gates.join(', ')}) - Open to conditioning, wisdom through others`;
+  }
+}).join('\n')}
+
+ACTIVE CHANNELS & THEIR MEANINGS:
+${Object.entries(humanDesign.centers || {}).filter(([_, data]) => data.defined && data.channels?.length > 0).map(([center, data]) => 
+  data.channels.map(channel => {
+    const [gate1, gate2] = channel;
+    const channelMeanings = {
+      '16-48': 'Channel of Wavelength - The Talent: Natural talent and skills, mastery through repetition',
+      '33-13': 'Channel of the Prodigal - The Fellowship: Sharing universal truths and experiences with others'
+    };
+    return `- Channel ${gate1}-${gate2}: ${channelMeanings[`${gate1}-${gate2}`] || channelMeanings[`${gate2}-${gate1}`] || 'Unique energy connection'}`;
+  }).join('\n')
+).join('\n')}
+
+CONSCIOUS PERSONALITY GATES (How you see yourself):
+${humanDesign.gates?.conscious_personality?.map(gate => {
+  const gateNum = gate.split('.')[0];
+  const gateMeanings = {
+    '11': 'Peace - Ideas and concepts, bringing new perspectives',
+    '12': 'Standstill - Caution, careful consideration before action', 
+    '55': 'Abundance - Emotional abundance, spirit, emotional depth',
+    '34': 'Power - Great power and strength, but only when correctly timed',
+    '58': 'Joy - Vitality, joy of life, improvement and correction',
+    '16': 'Skills - Enthusiasm, natural talent, identification of talent',
+    '27': 'Nourishment - Caring, responsibility, nourishment of self and others',
+    '64': 'Before Completion - Mental pressure to complete, confusion before clarity',
+    '48': 'The Well - Depth, wisdom, talent expressed through consistent effort',
+    '29': 'The Abysmal - Saying yes, commitment, perseverance through challenges',
+    '33': 'Retreat - Privacy, withdrawal to process and reflect',
+    '19': 'Approach - Wanting to be needed, sensitivity to others needs'
+  };
+  return `- Gate ${gateNum}: ${gateMeanings[gateNum] || 'Unique energy activation'}`;
+}).join('\n') || 'Not specified'}
+
+UNCONSCIOUS DESIGN GATES (Your body's wisdom):
+${humanDesign.gates?.unconscious_design?.map(gate => {
+  const gateNum = gate.split('.')[0];
+  const gateMeanings = {
+    '6': 'Conflict - Friction leading to intimacy, emotional connections',
+    '36': 'Darkening of Light - Crisis and emotional intensity for growth',
+    '34': 'Power - Great power and strength, but only when correctly timed',
+    '7': 'Role of Self - Leadership through example, direction for others',
+    '42': 'Increase - Completion, finishing what is started',
+    '45': 'Gathering Together - Material success, bringing people together',
+    '40': 'Deliverance - Aloneness, rest, restoration of energy',
+    '48': 'The Well - Depth, wisdom, talent expressed through consistent effort',
+    '29': 'The Abysmal - Saying yes, commitment, perseverance',
+    '13': 'Fellowship - Listening, sharing stories and experiences'
+  };
+  return `- Gate ${gateNum}: ${gateMeanings[gateNum] || 'Unique unconscious energy'}`;
+}).join('\n') || 'Not specified'}
+
+PROFILE ANALYSIS (${humanDesign.profile || 'Unknown'}):
+${humanDesign.profile?.includes('4/4') ? `4/4 OPPORTUNIST/OPPORTUNIST PROFILE:
+- Line 4 Personality: Networking, friendship-based connections, influencing through relationships
+- Line 4 Design: External opportunities come through your network and social connections  
+- You are here to influence others through your network and personal connections
+- Success comes through building genuine friendships and being invited to share your gifts
+- You have natural networking abilities and people are drawn to your authentic friendships
+- Your authority and wisdom are recognized through your social connections and community` : 
+humanDesign.profile?.includes('3/5') ? '3/5 MARTYR/HERETIC PROFILE: Trial and error learning, practical wisdom, universalizing experiences' :
+humanDesign.profile?.includes('1/3') ? '1/3 INVESTIGATOR/MARTYR PROFILE: Research and experimentation, building solid foundations through trial and error' :
+humanDesign.profile?.includes('2/4') ? '2/4 HERMIT/OPPORTUNIST PROFILE: Natural talent activated through relationships and networking' :
+humanDesign.profile?.includes('5/1') ? '5/1 HERETIC/INVESTIGATOR PROFILE: Practical solutions and deep research, teaching and leading others' :
+humanDesign.profile?.includes('6/2') ? '6/2 ROLE MODEL/HERMIT PROFILE: Natural talent that becomes an example for others' :
+'Unique profile combination with specific life themes and social dynamics'}
 
 ASTROLOGY PROFILE:
 - Sun Sign: ${astrology.sun_sign || 'Unknown'} (${astrology.sun_keyword || ''})
