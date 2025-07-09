@@ -31,7 +31,7 @@ function App() {
               <SoulOrbProvider>
                 <BlueprintCacheProvider>
                   <Routes>
-                    <Route path="/" element={<MainLayout><Index /></MainLayout>} />
+                    <Route path="/" element={<Index />} />
                     <Route path="/dreams" element={<ProtectedRoute><MainLayout><Dreams /></MainLayout></ProtectedRoute>} />
                     <Route path="/spiritual-growth" element={<ProtectedRoute><MainLayout><SpiritualGrowth /></MainLayout></ProtectedRoute>} />
                     <Route path="/companion" element={<ProtectedRoute><MainLayout><Coach /></MainLayout></ProtectedRoute>} />
