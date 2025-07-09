@@ -39,10 +39,26 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide", pageContex
   const [isLoading, setIsLoading] = useState(false);
   const [currentAgent, setCurrentAgent] = useState<AgentType>(mappedAgent);
   
-  // Create domain-isolated session ID
+  // Create domain-isolated session ID with forced context isolation
   const [currentSessionId] = useState(() => {
     const timestamp = Date.now();
-    return `${pageContext}_${mappedAgent}_${timestamp}`;
+    const sessionId = `${pageContext}_${mappedAgent}_${timestamp}`;
+    
+    // Clear any cross-contamination from localStorage
+    try {
+      const contaminated_keys = Object.keys(localStorage).filter(key => 
+        key.includes('coach_history') && !key.includes(pageContext)
+      );
+      contaminated_keys.forEach(key => {
+        console.log(`🧹 Clearing contaminated session data: ${key}`);
+        localStorage.removeItem(key);
+      });
+    } catch (error) {
+      console.warn('Error clearing contaminated session data:', error);
+    }
+    
+    console.log(`🔐 Created domain-isolated session ID: ${sessionId}`);
+    return sessionId;
   });
   
   const [authInitialized, setAuthInitialized] = useState(false);
@@ -179,21 +195,43 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide", pageContex
     updateBlueprintStatus();
   }, [authInitialized, hasBlueprint, blueprintData, blueprintLoading, pageContext]);
 
-  // Enhanced conversation history loading with memory integration and ACS - DOMAIN ISOLATED
+  // Enhanced conversation history loading with STRICT DOMAIN ISOLATION
   useEffect(() => {
     if (!authInitialized) return;
     
     const loadHistory = async () => {
       try {
-        console.log(`📚 Enhanced AI Coach Hook: Loading domain-isolated conversation history for ${pageContext} with ${currentAgent}`);
+        console.log(`📚 Enhanced AI Coach Hook: Loading STRICTLY domain-isolated conversation history for ${pageContext} with ${currentAgent}`);
         
-        // Load conversation history with existing method but filter by domain context
+        // STRICT ISOLATION: Only load messages that explicitly match this domain
+        let domainFilteredHistory: Message[] = [];
+        
+        // Special handling for assessment modes to ensure complete isolation
+        if (pageContext === 'life-assessment') {
+          console.log(`🔒 Assessment mode detected: starting with empty conversation for ${pageContext}`);
+          setMessages([]);
+          return;
+        }
+        
+        // Load conversation history with existing method
         const history = await enhancedAICoachService.loadConversationHistory(currentAgent);
         
-        // Filter messages to only include those from this domain context
-        const domainFilteredHistory = history.filter(msg => 
-          msg.id.includes(pageContext) || msg.agentType === mappedAgent
-        );
+        // ENHANCED FILTERING: Multiple criteria for strict isolation
+        domainFilteredHistory = history.filter(msg => {
+          // Primary filter: message ID must contain the exact page context
+          const hasCorrectContext = msg.id.includes(pageContext);
+          
+          // Secondary filter: agent type must match mapped agent for this domain
+          const hasCorrectAgent = msg.agentType === mappedAgent;
+          
+          // Tertiary filter: exclude any messages that contain other domain contexts
+          const otherDomains = ['dreams', 'spiritual-growth', 'life-assessment', 'productivity', 'companion'];
+          const hasContamination = otherDomains
+            .filter(domain => domain !== pageContext)
+            .some(domain => msg.id.includes(domain));
+          
+          return hasCorrectContext && hasCorrectAgent && !hasContamination;
+        });
         
         if (user) {
           const memoryReport = await enhancedMemoryService.generateConsistencyReport();
@@ -201,30 +239,39 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide", pageContex
         }
         
         setMessages(domainFilteredHistory);
-        console.log(`✅ Enhanced AI Coach Hook: Loaded ${domainFilteredHistory.length} domain-isolated messages for ${pageContext}/${currentAgent} with ACS: ${acsEnabled}`);
+        console.log(`✅ Enhanced AI Coach Hook: Loaded ${domainFilteredHistory.length} STRICTLY domain-isolated messages for ${pageContext}/${currentAgent} with ACS: ${acsEnabled}`);
       } catch (error) {
         console.error(`❌ Enhanced AI Coach Hook: Error loading conversation history for ${pageContext}:`, error);
+        // On error, ensure empty state for assessment modes
+        if (pageContext === 'life-assessment') {
+          setMessages([]);
+        }
       }
     };
 
     loadHistory();
   }, [currentAgent, authInitialized, user, acsEnabled, pageContext, mappedAgent]);
 
-  // Enhanced conversation history saving - DOMAIN ISOLATED
+  // Enhanced conversation history saving - STRICT DOMAIN ISOLATION
   useEffect(() => {
     if (!authInitialized || messages.length === 0) return;
     
     const saveHistory = async () => {
       try {
-        // Save with domain context in message IDs to maintain isolation
+        // STRICT TAGGING: Ensure all messages are properly domain-tagged
         const domainTaggedMessages = messages.map(msg => ({
           ...msg,
           id: msg.id.includes(pageContext) ? msg.id : `${pageContext}_${msg.id}`,
           agentType: mappedAgent
         }));
         
-        await enhancedAICoachService.saveConversationHistory(currentAgent, domainTaggedMessages);
-        console.log(`💾 Enhanced AI Coach Hook: Saved ${domainTaggedMessages.length} domain-isolated messages for ${pageContext}/${currentAgent}`);
+        // Additional validation: remove any messages that don't belong to this domain
+        const validatedMessages = domainTaggedMessages.filter(msg => 
+          msg.id.includes(pageContext) && msg.agentType === mappedAgent
+        );
+        
+        await enhancedAICoachService.saveConversationHistory(currentAgent, validatedMessages);
+        console.log(`💾 Enhanced AI Coach Hook: Saved ${validatedMessages.length} STRICTLY domain-isolated messages for ${pageContext}/${currentAgent}`);
       } catch (error) {
         console.error(`❌ Enhanced AI Coach Hook: Error saving conversation history for ${pageContext}:`, error);
       }
@@ -412,10 +459,24 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide", pageContex
   };
 
   const resetConversation = () => {
-    console.log(`🔄 Enhanced AI Coach Hook: Resetting domain-isolated conversation for ${pageContext}`);
+    console.log(`🔄 Enhanced AI Coach Hook: Resetting STRICTLY domain-isolated conversation for ${pageContext}`);
     setMessages([]);
+    
     // Clear conversation cache using existing method
     enhancedAICoachService.clearConversationCache();
+    
+    // Additional cleanup: remove any domain-specific data from localStorage
+    try {
+      const keysToRemove = Object.keys(localStorage).filter(key => 
+        key.includes('coach_history') && key.includes(pageContext)
+      );
+      keysToRemove.forEach(key => {
+        localStorage.removeItem(key);
+        console.log(`🧹 Removed domain-specific cache: ${key}`);
+      });
+    } catch (error) {
+      console.warn('Error during conversation reset cleanup:', error);
+    }
   };
 
   const switchAgent = (newAgent: AgentType) => {

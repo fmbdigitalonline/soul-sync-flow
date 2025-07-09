@@ -54,18 +54,34 @@ export function ConversationalAssessment({ onComplete, onBack }: ConversationalA
   const { messages, isLoading, sendMessage, resetConversation } = useEnhancedAICoach("guide", "life-assessment");
   const { blueprintData } = useBlueprintData();
 
-  // Initialize conversation with first stage
+  // Initialize conversation with STRICT isolation - reset and start fresh
   useEffect(() => {
-    if (currentStage === 0 && messages.length === 0) {
-      const welcomeMessage = `Welcome to your personalized Life Operating System assessment! 
+    // Always reset conversation when entering assessment mode to ensure clean slate
+    resetConversation();
+    
+    // Initialize with welcome message after a brief delay to ensure reset is complete
+    const initializeAssessment = () => {
+      const welcomeMessage = `Hello! Welcome to your personalized Life Operating System assessment.
 
-I'm here to guide you through a conversational journey to understand where you are and where you want to go across all areas of your life.
+I'm your assessment guide, and I'll help you explore different areas of your life to understand where you are and where you want to go.
 
 ${ASSESSMENT_STAGES[0].prompt}`;
       
       sendMessage(welcomeMessage, true, "", "life-assessment");
+    };
+    
+    // Delay to ensure conversation reset is complete
+    const timeoutId = setTimeout(initializeAssessment, 500);
+    return () => clearTimeout(timeoutId);
+  }, []); // Only run once when component mounts
+
+  // Handle stage progression
+  useEffect(() => {
+    if (currentStage > 0 && messages.length >= 2) {
+      // Stage has already been handled in handleNextStage
+      return;
     }
-  }, [currentStage, messages.length, sendMessage]);
+  }, [currentStage, messages.length]);
 
   const getUserDisplayName = () => {
     if (!blueprintData?.user_meta) return 'Friend';

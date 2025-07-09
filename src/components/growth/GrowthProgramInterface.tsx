@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useBlueprintCache } from '@/contexts/BlueprintCacheContext';
 import { GrowthProgramStarter } from './GrowthProgramStarter';
 import { WeekDetailView } from './WeekDetailView';
+import { EnhancedProgramDisplay } from './EnhancedProgramDisplay';
 import { useToast } from '@/hooks/use-toast';
 import { useProgramAwareCoach } from '@/hooks/use-program-aware-coach';
 import { GuideInterface } from '@/components/coach/GuideInterface';
@@ -30,6 +31,8 @@ export const GrowthProgramInterface: React.FC<GrowthProgramInterfaceProps> = ({
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [apiStatus, setApiStatus] = useState<'checking' | 'ready' | 'error'>('checking');
+  const [aiGeneratedContent, setAiGeneratedContent] = useState<any>(null);
+  const [showEnhancedView, setShowEnhancedView] = useState(false);
   const { user } = useAuth();
   const { blueprintData } = useBlueprintCache();
   const { toast } = useToast();
@@ -84,6 +87,9 @@ export const GrowthProgramInterface: React.FC<GrowthProgramInterfaceProps> = ({
         setCurrentProgram(program);
         const weeks = await agentGrowthIntegration.generateWeeklyProgram(program);
         setProgramWeeks(weeks);
+        
+        // Extract AI-generated content for enhanced display
+        await loadAIGeneratedContent(program);
       }
     } catch (error) {
       console.error('Error loading program:', error);
@@ -123,6 +129,9 @@ export const GrowthProgramInterface: React.FC<GrowthProgramInterfaceProps> = ({
       
       const weeks = await agentGrowthIntegration.generateWeeklyProgram(program);
       setProgramWeeks(weeks);
+      
+      // Load AI-generated content for the new program
+      await loadAIGeneratedContent(program);
       
       await agentGrowthIntegration.updateProgramProgress(program.id, { status: 'active' });
       
@@ -207,6 +216,150 @@ export const GrowthProgramInterface: React.FC<GrowthProgramInterfaceProps> = ({
       light_touch: { label: 'Light Touch Program', duration: '4 weeks', intensity: 'Light' }
     };
     return info[programType] || info.standard;
+  };
+
+  const loadAIGeneratedContent = async (program: GrowthProgram) => {
+    try {
+      console.log('📊 Loading AI-generated content for program:', program.id);
+      
+      // Use adaptation_history from the existing growth_programs table
+      const { data, error } = await supabase
+        .from('growth_programs')
+        .select('adaptation_history')
+        .eq('id', program.id)
+        .maybeSingle();
+      
+      if (error) {
+        console.error('❌ Error loading AI-generated content:', error);
+        return;
+      }
+      
+      if (data && data.adaptation_history && Array.isArray(data.adaptation_history)) {
+        // Find evolution trajectory in adaptation history
+        const evolutionRecord = data.adaptation_history.find((record: any) => {
+          if (typeof record === 'object' && record !== null) {
+            const changes = record.changes_made;
+            return changes && (changes.evolution_trajectory || changes.week_plan);
+          }
+          return false;
+        });
+        
+        if (evolutionRecord && typeof evolutionRecord === 'object' && !Array.isArray(evolutionRecord)) {
+          console.log('✅ Found AI-generated content in adaptation history');
+          const recordObj = evolutionRecord as { changes_made?: any };
+          setAiGeneratedContent(recordObj.changes_made || evolutionRecord);
+          setShowEnhancedView(true);
+        } else {
+          setShowEnhancedView(false);
+        }
+      } else {
+        console.log('⚠️ No AI-generated content found, using standard view');
+        setShowEnhancedView(false);
+      }
+    } catch (error) {
+      console.error('❌ Error loading AI-generated content:', error);
+      setShowEnhancedView(false);
+    }
+  };
+
+  const parsePlanBranches = (content: any) => {
+    if (!content || typeof content !== 'object') return [];
+    
+    const branches = [];
+    const weekPlan = content.week_plan || '';
+    
+    // Extract Plan Branches from the AI content
+    const branchPatterns = [
+      /Plan Branch 1[:\s]*([^*\n]+)[\s\S]*?Strategy[:\s]*([^*\n]+)[\s\S]*?Action Steps[:\s]*([\s\S]*?)(?=\*\*Advantages|Advantages|Plan Branch 2|$)/gi,
+      /Plan Branch 2[:\s]*([^*\n]+)[\s\S]*?Strategy[:\s]*([^*\n]+)[\s\S]*?Action Steps[:\s]*([\s\S]*?)(?=\*\*Advantages|Advantages|Plan Branch 3|$)/gi,
+      /Plan Branch 3[:\s]*([^*\n]+)[\s\S]*?Strategy[:\s]*([^*\n]+)[\s\S]*?Action Steps[:\s]*([\s\S]*?)(?=\*\*Advantages|Advantages|$)/gi
+    ];
+    
+    branchPatterns.forEach((pattern, index) => {
+      const match = pattern.exec(weekPlan);
+      if (match) {
+        const [, title, strategy, actionStepsText] = match;
+        
+        // Extract action steps
+        const actionSteps = extractListItems(actionStepsText);
+        
+        branches.push({
+          title: title?.trim() || `Growth Plan Branch ${index + 1}`,
+          strategy: strategy?.trim() || 'Strategic approach to growth',
+          objectives: [`Build on recent progress`, `Honor natural rhythms`],
+          actionSteps: actionSteps.length > 0 ? actionSteps : ['Engage in growth activities'],
+          advantages: ['Personalized approach', 'Blueprint-aligned', 'Sustainable pace'],
+          challenges: ['Requires commitment', 'Needs consistent effort'],
+          isRecommended: index === 2 // Plan Branch 3 is usually recommended
+        });
+      }
+    });
+    
+    // Fallback: create generic branches if none found
+    if (branches.length === 0) {
+      branches.push(
+        {
+          title: 'Gradual Personal Growth Development',
+          strategy: 'Emphasize a slow and steady approach to personal growth',
+          objectives: ['Continue building on methods that show positive results', 'Reflect and internalize experiences'],
+          actionSteps: ['Daily journaling and reflection', 'Select manageable reinforcing tasks'],
+          advantages: ['Sustainable pace', 'Lower resistance to change', 'Easier adaptation'],
+          challenges: ['Progress may feel slow', 'Requires patience and consistency'],
+          isRecommended: false
+        },
+        {
+          title: 'Intensive Personal Growth Transformation',
+          strategy: 'Adopt an accelerated approach for immediate results',
+          objectives: ['Identify key areas for focused attention', 'Commit to rigorous schedule'],
+          actionSteps: ['Workshop enrollment or course signup', 'Daily challenging goals'],
+          advantages: ['Potential for rapid results', 'High momentum', 'Clear commitment'],
+          challenges: ['Higher risk of stress and burnout', 'Requires energy monitoring'],
+          isRecommended: false
+        },
+        {
+          title: 'Balanced Personal Growth Integration',
+          strategy: 'Integrate activities with natural energy rhythms',
+          objectives: ['Align activities with peak energy periods', 'Balance growth with self-care'],
+          actionSteps: ['Schedule alignment with energy patterns', 'Incorporate holistic practices'],
+          advantages: ['Honors natural rhythms', 'Sustainable growth', 'Deeper self-awareness'],
+          challenges: ['Requires careful planning', 'Needs strong self-awareness'],
+          isRecommended: true
+        }
+      );
+    }
+    
+    return branches;
+  };
+
+  const extractListItems = (text: string): string[] => {
+    const items: string[] = [];
+    
+    // Try bullet points first
+    const bulletMatches = text.match(/[-*]\s*\*\*([^*]+)\*\*[:\s]*([^*\n]+)/g);
+    if (bulletMatches) {
+      bulletMatches.forEach(match => {
+        const cleaned = match.replace(/[-*]\s*\*\*([^*]+)\*\*[:\s]*/, '').trim();
+        if (cleaned) items.push(cleaned);
+      });
+    }
+    
+    // Try numbered lists
+    if (items.length === 0) {
+      const numberedMatches = text.match(/\d+\.\s*([^\n]+)/g);
+      if (numberedMatches) {
+        numberedMatches.forEach(match => {
+          const cleaned = match.replace(/\d+\.\s*/, '').trim();
+          if (cleaned) items.push(cleaned);
+        });
+      }
+    }
+    
+    return items.filter(item => item.length > 5).slice(0, 4);
+  };
+
+  const handleSelectPlanBranch = (branch: any) => {
+    console.log('🎯 User selected plan branch:', branch.title);
+    sendMessage(`I've chosen the "${branch.title}" approach. This feels right for me because of its ${branch.strategy.toLowerCase()}. How should I get started with this plan?`);
   };
 
   if (loading) {
@@ -385,79 +538,87 @@ export const GrowthProgramInterface: React.FC<GrowthProgramInterfaceProps> = ({
             </CardContent>
           </Card>
 
-          {/* Weekly Journey */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Your Weekly Journey</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {programWeeks.map((week) => (
-                  <div
-                    key={week.week_number}
-                    className={`p-4 rounded-lg border transition-all ${
-                      week.is_completed 
-                        ? 'bg-green-50 border-green-200' 
-                        : week.is_unlocked 
-                          ? 'bg-blue-50 border-blue-200 cursor-pointer hover:shadow-md' 
-                          : 'bg-gray-50 border-gray-200 opacity-60'
-                    }`}
-                    onClick={() => handleWeekSelect(week)}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-3">
-                        {week.is_completed ? (
-                          <CheckCircle className="h-5 w-5 text-green-600" />
-                        ) : week.is_unlocked ? (
-                          <Play className="h-5 w-5 text-blue-600" />
-                        ) : (
-                          <Lock className="h-5 w-5 text-gray-400" />
-                        )}
-                        <div>
-                          <h3 className="font-semibold capitalize">
-                            Week {week.week_number}: {week.theme.replace('_', ' ')}
-                          </h3>
-                          <p className="text-sm text-muted-foreground">{week.focus_area}</p>
+          {/* Enhanced Program Content or Weekly Journey */}
+          {showEnhancedView && aiGeneratedContent ? (
+            <EnhancedProgramDisplay
+              program={currentProgram}
+              planBranches={parsePlanBranches(aiGeneratedContent)}
+              onSelectBranch={handleSelectPlanBranch}
+            />
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle>Your Weekly Journey</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {programWeeks.map((week) => (
+                    <div
+                      key={week.week_number}
+                      className={`p-4 rounded-lg border transition-all ${
+                        week.is_completed 
+                          ? 'bg-green-50 border-green-200' 
+                          : week.is_unlocked 
+                            ? 'bg-blue-50 border-blue-200 cursor-pointer hover:shadow-md' 
+                            : 'bg-gray-50 border-gray-200 opacity-60'
+                      }`}
+                      onClick={() => handleWeekSelect(week)}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-3">
+                          {week.is_completed ? (
+                            <CheckCircle className="h-5 w-5 text-green-600" />
+                          ) : week.is_unlocked ? (
+                            <Play className="h-5 w-5 text-blue-600" />
+                          ) : (
+                            <Lock className="h-5 w-5 text-gray-400" />
+                          )}
+                          <div>
+                            <h3 className="font-semibold capitalize">
+                              Week {week.week_number}: {week.theme.replace('_', ' ')}
+                            </h3>
+                            <p className="text-sm text-muted-foreground">{week.focus_area}</p>
+                          </div>
                         </div>
-                      </div>
-                      {week.is_unlocked && !week.is_completed && (
-                        <ArrowRight className="h-4 w-4 text-blue-600" />
-                      )}
-                    </div>
-                    
-                    <div className="ml-8">
-                      <div className="flex flex-wrap gap-2 mb-2">
-                        {week.tools_unlocked.slice(0, 3).map((tool) => (
-                          <Badge key={tool} variant="secondary" className="text-xs">
-                            {tool}
-                          </Badge>
-                        ))}
-                        {week.tools_unlocked.length > 3 && (
-                          <Badge variant="secondary" className="text-xs">
-                            +{week.tools_unlocked.length - 3} more
-                          </Badge>
+                        {week.is_unlocked && !week.is_completed && (
+                          <ArrowRight className="h-4 w-4 text-blue-600" />
                         )}
                       </div>
                       
-                      <div className="text-sm">
-                        <p className="text-muted-foreground mb-1">Key Activities:</p>
-                        <ul className="list-disc list-inside space-y-1">
-                          {week.key_activities.slice(0, 2).map((activity, idx) => (
-                            <li key={idx} className="text-sm">{activity}</li>
+                      <div className="ml-8">
+                        <div className="flex flex-wrap gap-2 mb-2">
+                          {week.tools_unlocked.slice(0, 3).map((tool) => (
+                            <Badge key={tool} variant="secondary" className="text-xs">
+                              {tool}
+                            </Badge>
                           ))}
-                          {week.key_activities.length > 2 && (
-                            <li className="text-sm text-muted-foreground">
-                              +{week.key_activities.length - 2} more activities
-                            </li>
+                          {week.tools_unlocked.length > 3 && (
+                            <Badge variant="secondary" className="text-xs">
+                              +{week.tools_unlocked.length - 3} more
+                            </Badge>
                           )}
-                        </ul>
+                        </div>
+                        
+                        <div className="text-sm">
+                          <p className="text-muted-foreground mb-1">Key Activities:</p>
+                          <ul className="list-disc list-inside space-y-1">
+                            {week.key_activities.slice(0, 2).map((activity, idx) => (
+                              <li key={idx} className="text-sm">{activity}</li>
+                            ))}
+                            {week.key_activities.length > 2 && (
+                              <li className="text-sm text-muted-foreground">
+                                +{week.key_activities.length - 2} more activities
+                              </li>
+                            )}
+                          </ul>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Intelligent Growth Guide */}
