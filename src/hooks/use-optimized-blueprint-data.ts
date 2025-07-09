@@ -1,6 +1,7 @@
 
 import { useBlueprintCache } from '@/contexts/BlueprintCacheContext';
-import { UnifiedBlueprintService, LayeredBlueprint } from '@/services/unified-blueprint-service';
+import { UnifiedBlueprintService } from '@/services/unified-blueprint-service';
+import { LayeredBlueprint } from '@/types/personality-modules';
 import { useMemo } from 'react';
 
 export const useOptimizedBlueprintData = () => {

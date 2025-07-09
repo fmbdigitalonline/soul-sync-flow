@@ -29,7 +29,11 @@ export function useSoulSync() {
         
         // Validate blueprint completeness
         const validation = UnifiedBlueprintService.validateBlueprint(blueprintData);
-        setBlueprintValidation(validation);
+        setBlueprintValidation({
+          isComplete: validation.isComplete,
+          completionPercentage: validation.completionPercentage,
+          missingFields: validation.missingFields
+        });
         
         console.log("📊 SoulSync: Blueprint validation result:", validation);
         

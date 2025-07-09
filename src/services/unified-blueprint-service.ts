@@ -1,49 +1,6 @@
 
 import { BlueprintData } from './blueprint-service';
-
-// Define the LayeredBlueprint interface based on the actual structure
-export interface LayeredBlueprint {
-  user_meta?: {
-    full_name?: string;
-    preferred_name?: string;
-    birth_date?: string;
-    birth_time_local?: string;
-    birth_location?: string;
-    timezone?: string;
-    user_id?: string;
-  };
-  publicArchetype?: {
-    sunSign?: string;
-    moonSign?: string;
-    risingSign?: string;
-    chineseZodiac?: string;
-    element?: string;
-  };
-  cognitiveTemperamental?: {
-    mbtiType?: string;
-    dominantFunction?: string;
-    auxiliaryFunction?: string;
-    coreKeywords?: string[];
-  };
-  energyDecisionStrategy?: {
-    humanDesignType?: string;
-    authority?: string;
-    profile?: string;
-    centers?: any;
-  };
-  coreValuesNarrative?: {
-    lifePath?: number;
-    expressionNumber?: number;
-    soulUrge?: number;
-  };
-  generationalCode?: {
-    chineseZodiac?: string;
-    element?: string;
-    westernGeneration?: string;
-  };
-  goal_stack?: any;
-  metadata?: any;
-}
+import { LayeredBlueprint } from '@/types/personality-modules';
 
 export class UnifiedBlueprintService {
   static convertBlueprintDataToLayered(blueprintData: BlueprintData): LayeredBlueprint {
@@ -67,14 +24,26 @@ export class UnifiedBlueprintService {
         risingSign: blueprintData.archetype_western?.rising_sign || 
                    blueprintData.astrology?.rising_sign || 'Unknown',
         chineseZodiac: blueprintData.archetype_chinese?.animal || 'Unknown',
-        element: blueprintData.archetype_chinese?.element || 'Unknown'
+        element: blueprintData.archetype_chinese?.element || 'Unknown',
+        socialStyle: 'Unknown',
+        publicVibe: 'Unknown',
+        publicPersona: 'Unknown',
+        leadershipStyle: 'Unknown',
+        socialMask: 'Unknown',
+        externalExpression: 'Unknown'
       },
       
       cognitiveTemperamental: {
         mbtiType: blueprintData.cognition_mbti?.type || 
                  blueprintData.mbti?.type || 'Unknown',
+        functions: [],
         dominantFunction: blueprintData.cognition_mbti?.dominant_function || 'Unknown',
         auxiliaryFunction: blueprintData.cognition_mbti?.auxiliary_function || 'Unknown',
+        cognitiveStack: [],
+        taskApproach: 'Unknown',
+        communicationStyle: 'Unknown',
+        decisionMaking: 'Unknown',
+        informationProcessing: 'Unknown',
         coreKeywords: blueprintData.cognition_mbti?.core_keywords || []
       },
       
@@ -83,10 +52,27 @@ export class UnifiedBlueprintService {
                         blueprintData.human_design?.type || 'Unknown',
         authority: blueprintData.energy_strategy_human_design?.authority || 
                   blueprintData.human_design?.authority || 'Unknown',
+        decisionStyle: 'Unknown',
+        pacing: 'Unknown',
+        energyType: 'Unknown',
+        strategy: 'Unknown',
         profile: blueprintData.energy_strategy_human_design?.profile || 
                 blueprintData.human_design?.profile || 'Unknown',
-        centers: blueprintData.energy_strategy_human_design?.centers || 
-                blueprintData.human_design?.centers || {}
+        centers: [],
+        gates: [],
+        channels: []
+      },
+
+      motivationBeliefEngine: {
+        mindset: 'Unknown',
+        motivation: [],
+        stateManagement: 'Unknown',
+        coreBeliefs: [],
+        drivingForces: [],
+        excitementCompass: 'Unknown',
+        frequencyAlignment: 'Unknown',
+        beliefInterface: [],
+        resistancePatterns: []
       },
       
       coreValuesNarrative: {
@@ -94,20 +80,116 @@ export class UnifiedBlueprintService {
                  blueprintData.values_life_path?.life_path_number ||
                  blueprintData.numerology?.lifePathNumber ||
                  blueprintData.numerology?.life_path_number || 1,
+        lifePathKeyword: 'Unknown',
         expressionNumber: blueprintData.values_life_path?.expressionNumber || 
                          blueprintData.numerology?.expressionNumber || 1,
-        soulUrge: blueprintData.values_life_path?.soulUrge || 
-                 blueprintData.numerology?.soulUrge || 1
+        soulUrgeNumber: blueprintData.values_life_path?.soulUrge || 
+                       blueprintData.numerology?.soulUrge || 1,
+        meaningfulAreas: [],
+        anchoringVision: 'Unknown',
+        lifeThemes: [],
+        valueSystem: 'Unknown',
+        northStar: 'Unknown',
+        missionStatement: 'Unknown',
+        purposeAlignment: 'Unknown'
       },
       
       generationalCode: {
         chineseZodiac: blueprintData.archetype_chinese?.animal || 'Unknown',
         element: blueprintData.archetype_chinese?.element || 'Unknown',
-        westernGeneration: 'Unknown' // This would need additional calculation
+        cohortTint: 'Unknown',
+        generationalThemes: [],
+        collectiveInfluence: 'Unknown'
       },
-      
-      goal_stack: blueprintData.goal_stack || {},
-      metadata: blueprintData.metadata || {}
+
+      surfaceExpression: {
+        observableStyle: 'Unknown',
+        realWorldImpact: 'Unknown',
+        behavioralSignatures: [],
+        externalManifestations: []
+      },
+
+      marketingArchetype: {
+        messagingStyle: 'Unknown',
+        socialHooks: [],
+        brandPersonality: 'Unknown',
+        communicationPatterns: [],
+        influenceStyle: 'Unknown'
+      },
+
+      goalPersona: {
+        currentMode: 'blend',
+        serviceRole: 'Unknown',
+        coachingTone: 'Unknown',
+        nudgeStyle: 'Unknown',
+        motivationApproach: 'Unknown'
+      },
+
+      interactionPreferences: {
+        rapportStyle: 'Unknown',
+        storyPreference: 'Unknown',
+        empathyLevel: 'Unknown',
+        conflictStyle: 'Unknown',
+        collaborationStyle: 'Unknown',
+        feedbackStyle: 'Unknown',
+        learningStyle: 'Unknown'
+      },
+
+      timingOverlays: {
+        currentTransits: [],
+        seasonalInfluences: [],
+        cyclicalPatterns: [],
+        optimalTimings: [],
+        energyWeather: 'Unknown'
+      },
+
+      proactiveContext: {
+        nudgeHistory: [],
+        taskGraph: {},
+        streaks: {},
+        moodLog: [],
+        recentPatterns: [],
+        triggerEvents: []
+      },
+
+      humorProfile: {
+        primaryStyle: 'gentle-empath',
+        intensity: 'moderate',
+        appropriatenessLevel: 'balanced',
+        contextualAdaptation: {
+          coaching: 'gentle-empath',
+          guidance: 'gentle-empath',
+          casual: 'gentle-empath'
+        },
+        avoidancePatterns: [],
+        signatureElements: []
+      },
+
+      voiceTokens: {
+        pacing: {
+          sentenceLength: 'medium',
+          pauseFrequency: 'thoughtful',
+          rhythmPattern: 'steady'
+        },
+        expressiveness: {
+          emojiFrequency: 'occasional',
+          emphasisStyle: 'subtle',
+          exclamationTendency: 'balanced'
+        },
+        vocabulary: {
+          formalityLevel: 'conversational',
+          metaphorUsage: 'occasional',
+          technicalDepth: 'balanced'
+        },
+        conversationStyle: {
+          questionAsking: 'exploratory',
+          responseLength: 'thorough',
+          personalSharing: 'relevant'
+        },
+        signaturePhrases: [],
+        greetingStyles: [],
+        transitionWords: []
+      }
     };
 
     console.log('✅ UNIFIED SERVICE: Conversion complete:', {
@@ -122,16 +204,34 @@ export class UnifiedBlueprintService {
 
   static validateBlueprint(blueprint: LayeredBlueprint | null): {
     isValid: boolean;
+    isComplete: boolean;
     completionPercentage: number;
     missingFields: string[];
     hasEssentialData: boolean;
+    availableData: {
+      hasPersonalInfo: boolean;
+      hasCognitive: boolean;
+      hasEnergy: boolean;
+      hasValues: boolean;
+      hasArchetype: boolean;
+      hasGenerational: boolean;
+    };
   } {
     if (!blueprint) {
       return {
         isValid: false,
+        isComplete: false,
         completionPercentage: 0,
         missingFields: ['entire blueprint'],
-        hasEssentialData: false
+        hasEssentialData: false,
+        availableData: {
+          hasPersonalInfo: false,
+          hasCognitive: false,
+          hasEnergy: false,
+          hasValues: false,
+          hasArchetype: false,
+          hasGenerational: false
+        }
       };
     }
 
@@ -139,38 +239,45 @@ export class UnifiedBlueprintService {
     let completedFields = 0;
     const totalFields = 7;
 
-    // Check essential fields
-    if (!blueprint.publicArchetype?.sunSign || blueprint.publicArchetype.sunSign === 'Unknown') {
+    // Check essential fields and build availableData
+    const hasPersonalInfo = !!(blueprint.user_meta?.full_name);
+    const hasCognitive = !!(blueprint.cognitiveTemperamental?.mbtiType && blueprint.cognitiveTemperamental.mbtiType !== 'Unknown');
+    const hasEnergy = !!(blueprint.energyDecisionStrategy?.humanDesignType && blueprint.energyDecisionStrategy.humanDesignType !== 'Unknown');
+    const hasValues = !!(blueprint.coreValuesNarrative?.lifePath && blueprint.coreValuesNarrative.lifePath > 0);
+    const hasArchetype = !!(blueprint.publicArchetype?.sunSign && blueprint.publicArchetype.sunSign !== 'Unknown');
+    const hasGenerational = !!(blueprint.generationalCode?.chineseZodiac && blueprint.generationalCode.chineseZodiac !== 'Unknown');
+
+    if (!hasArchetype) {
       missingFields.push('Sun Sign');
     } else {
       completedFields++;
     }
 
-    if (!blueprint.cognitiveTemperamental?.mbtiType || blueprint.cognitiveTemperamental.mbtiType === 'Unknown') {
+    if (!hasCognitive) {
       missingFields.push('MBTI Type');
     } else {
       completedFields++;
     }
 
-    if (!blueprint.energyDecisionStrategy?.humanDesignType || blueprint.energyDecisionStrategy.humanDesignType === 'Unknown') {
+    if (!hasEnergy) {
       missingFields.push('Human Design Type');
     } else {
       completedFields++;
     }
 
-    if (!blueprint.coreValuesNarrative?.lifePath || blueprint.coreValuesNarrative.lifePath <= 0) {
+    if (!hasValues) {
       missingFields.push('Life Path Number');
     } else {
       completedFields++;
     }
 
-    if (!blueprint.publicArchetype?.chineseZodiac || blueprint.publicArchetype.chineseZodiac === 'Unknown') {
+    if (!hasGenerational) {
       missingFields.push('Chinese Zodiac');
     } else {
       completedFields++;
     }
 
-    if (!blueprint.user_meta?.full_name) {
+    if (!hasPersonalInfo) {
       missingFields.push('Full Name');
     } else {
       completedFields++;
@@ -183,8 +290,9 @@ export class UnifiedBlueprintService {
     }
 
     const completionPercentage = Math.round((completedFields / totalFields) * 100);
-    const hasEssentialData = completedFields >= 4; // At least half the essential fields
-    const isValid = completedFields >= 6; // Most fields present
+    const hasEssentialData = completedFields >= 4;
+    const isValid = completedFields >= 6;
+    const isComplete = completedFields === totalFields;
 
     console.log('🔍 BLUEPRINT VALIDATION:', {
       completedFields,
@@ -192,14 +300,24 @@ export class UnifiedBlueprintService {
       completionPercentage,
       hasEssentialData,
       isValid,
+      isComplete,
       missingFields
     });
 
     return {
       isValid,
+      isComplete,
       completionPercentage,
       missingFields,
-      hasEssentialData
+      hasEssentialData,
+      availableData: {
+        hasPersonalInfo,
+        hasCognitive,
+        hasEnergy,
+        hasValues,
+        hasArchetype,
+        hasGenerational
+      }
     };
   }
 
