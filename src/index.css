@@ -146,7 +146,7 @@
   }
   
   .focus-mode {
-    @apply font-focus;
+    @apply font-heading;
   }
   
   /* Interactive elements with soul styling */
