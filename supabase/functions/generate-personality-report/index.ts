@@ -30,14 +30,30 @@ serve(async (req) => {
     }
 
     console.log('🎭 Generating comprehensive personality report and quotes for user:', userId);
+    console.log('📋 Received blueprint structure:', {
+      hasUserMeta: !!blueprint.user_meta,
+      hasCognitionMbti: !!blueprint.cognition_mbti,
+      hasEnergyStrategy: !!blueprint.energy_strategy_human_design,
+      hasArchetypeWestern: !!blueprint.archetype_western,
+      hasValuesLifePath: !!blueprint.values_life_path,
+      hasBasharSuite: !!blueprint.bashar_suite
+    });
 
-    // Extract key blueprint data for the AI prompt
-    const mbti = blueprint.cognition_mbti || {};
-    const humanDesign = blueprint.energy_strategy_human_design || {};
-    const astrology = blueprint.archetype_western || {};
-    const numerology = blueprint.values_life_path || {};
+    // Extract key blueprint data for the AI prompt with robust fallbacks
+    const mbti = blueprint.cognition_mbti || blueprint.mbti || {};
+    const humanDesign = blueprint.energy_strategy_human_design || blueprint.human_design || {};
+    const astrology = blueprint.archetype_western || blueprint.astrology || {};
+    const numerology = blueprint.values_life_path || blueprint.numerology || {};
     const bashar = blueprint.bashar_suite || {};
     const userMeta = blueprint.user_meta || {};
+
+    console.log('🔍 Extracted data:', {
+      mbtiType: mbti.type || 'Unknown',
+      humanDesignType: humanDesign.type || 'Unknown',
+      sunSign: astrology.sun_sign || 'Unknown',
+      lifePathNumber: numerology.lifePathNumber || numerology.life_path_number || 'Unknown',
+      userName: userMeta.preferred_name || userMeta.full_name || 'User'
+    });
 
     const systemPrompt = `You are an expert personality analyst who creates comprehensive, personalized readings by synthesizing multiple psychological and spiritual systems. Create a detailed personality report AND 10 personalized quotes that resonate with their unique blueprint.
 

@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BlueprintData, blueprintService } from "@/services/blueprint-service"; 
+import { aiPersonalityReportService } from "@/services/ai-personality-report-service";
 import { useToast } from "@/hooks/use-toast";
 import { useOnboarding3D } from "@/hooks/use-onboarding-3d";
 import { useSoulOrb } from "@/contexts/SoulOrbContext";
@@ -176,6 +177,38 @@ export default function Onboarding() {
     }, 1500);
   };
 
+  // Generate personality report in background
+  const generatePersonalityReportInBackground = async () => {
+    try {
+      console.log('🎭 Starting background personality report generation...');
+      
+      // Get the latest blueprint data
+      const { data: latestBlueprint, error } = await blueprintService.getActiveBlueprintData();
+      
+      if (error || !latestBlueprint) {
+        console.error('❌ Could not fetch blueprint for report generation:', error);
+        return;
+      }
+      
+      console.log('📋 Generating personality report with blueprint data');
+      const result = await aiPersonalityReportService.generatePersonalityReport(latestBlueprint);
+      
+      if (result.success) {
+        console.log('✅ Personality report generated successfully in background');
+        toast({
+          title: "Personality Report Ready!",
+          description: "Your personalized insights are now available on your home page.",
+        });
+      } else {
+        console.error('❌ Failed to generate personality report:', result.error);
+        // Don't show error toast since this is background generation
+      }
+    } catch (error) {
+      console.error('💥 Error during background report generation:', error);
+      // Don't show error toast since this is background generation
+    }
+  };
+
   // Handle goal selection completion with back navigation support
   const handleGoalSelectionComplete = async (preferences: { 
     primary_goal: string; 
@@ -202,6 +235,12 @@ export default function Onboarding() {
       
       if (success) {
         console.log("Blueprint updated with coaching preferences successfully");
+        
+        // Start personality report generation in background
+        setTimeout(async () => {
+          await generatePersonalityReportInBackground();
+        }, 1000);
+        
         toast({
           title: t('goals.welcomeComplete'),
           description: t('goals.welcomeCompleteDesc'),

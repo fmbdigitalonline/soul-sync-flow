@@ -31,12 +31,31 @@ class AIPersonalityReportService {
   async generatePersonalityReport(blueprint: BlueprintData): Promise<{ success: boolean; report?: PersonalityReport; quotes?: any[]; error?: string }> {
     try {
       console.log('🎭 Generating comprehensive personality report with personalized quotes...');
-      console.log('📋 Blueprint data:', JSON.stringify(blueprint, null, 2));
+      console.log('📋 Blueprint data structure:', {
+        hasUserMeta: !!blueprint.user_meta,
+        hasArchetypeWestern: !!blueprint.archetype_western,
+        hasValuesLifePath: !!blueprint.values_life_path,
+        hasEnergyStrategy: !!blueprint.energy_strategy_human_design,
+        hasCognitionMbti: !!blueprint.cognition_mbti,
+        hasGoalStack: !!blueprint.goal_stack
+      });
+      
+      // Transform blueprint to ensure it has the expected structure for the edge function
+      const transformedBlueprint = this.transformBlueprintForEdgeFunction(blueprint);
+      
+      console.log('🔄 Transformed blueprint for edge function:', {
+        hasUserMeta: !!transformedBlueprint.user_meta,
+        hasCognitionMbti: !!transformedBlueprint.cognition_mbti,
+        hasEnergyStrategy: !!transformedBlueprint.energy_strategy_human_design,
+        hasArchetypeWestern: !!transformedBlueprint.archetype_western,
+        hasValuesLifePath: !!transformedBlueprint.values_life_path,
+        hasBasharSuite: !!transformedBlueprint.bashar_suite
+      });
       
       const { data, error } = await supabase.functions.invoke("generate-personality-report", {
         body: {
-          blueprint,
-          userId: blueprint.user_meta?.user_id,
+          blueprint: transformedBlueprint,
+          userId: transformedBlueprint.user_meta?.user_id || transformedBlueprint.user_meta?.id,
         },
       });
 
@@ -55,6 +74,56 @@ class AIPersonalityReportService {
       console.error('💥 Service error generating personality report:', error);
       return { success: false, error: String(error) };
     }
+  }
+
+  private transformBlueprintForEdgeFunction(blueprint: BlueprintData): any {
+    console.log('🔄 Transforming blueprint data for edge function compatibility');
+    
+    // Ensure the blueprint has the expected structure for the edge function
+    return {
+      id: blueprint.id,
+      user_meta: {
+        ...blueprint.user_meta,
+        user_id: blueprint.user_meta?.user_id || blueprint.user_id,
+        preferred_name: blueprint.user_meta?.preferred_name || blueprint.user_meta?.full_name?.split(' ')[0],
+        full_name: blueprint.user_meta?.full_name || 'User'
+      },
+      // Map to expected property names for edge function
+      cognition_mbti: blueprint.cognition_mbti || blueprint.mbti || {
+        type: 'Unknown',
+        dominant_function: 'Unknown',
+        auxiliary_function: 'Unknown',
+        core_keywords: []
+      },
+      energy_strategy_human_design: blueprint.energy_strategy_human_design || blueprint.human_design || {
+        type: 'Unknown',
+        authority: 'Unknown',
+        profile: 'Unknown'
+      },
+      archetype_western: blueprint.archetype_western || blueprint.astrology || {
+        sun_sign: 'Unknown',
+        moon_sign: 'Unknown',
+        rising_sign: 'Unknown'
+      },
+      values_life_path: blueprint.values_life_path || blueprint.numerology || {
+        lifePathNumber: 'Unknown',
+        lifePathKeyword: 'Unknown'
+      },
+      bashar_suite: blueprint.bashar_suite || {
+        excitement_compass: { 
+          principle: 'Follow your highest excitement' 
+        },
+        belief_interface: { 
+          principle: 'Beliefs create reality', 
+          reframe_prompt: 'What would I rather believe?' 
+        },
+        frequency_alignment: { 
+          quick_ritual: 'Take 3 deep breaths and feel gratitude' 
+        }
+      },
+      goal_stack: blueprint.goal_stack || {},
+      metadata: blueprint.metadata || {}
+    };
   }
 
   async getStoredReport(userId: string): Promise<{ success: boolean; report?: PersonalityReport; error?: string }> {
