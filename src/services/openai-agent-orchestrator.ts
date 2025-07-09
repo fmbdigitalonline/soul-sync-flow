@@ -196,6 +196,64 @@ Make every interaction feel personally crafted and meaningful.`,
             }
           }
         ]
+      },
+
+      life_orchestrator: {
+        name: 'Life Orchestrator Agent',
+        systemPrompt: `You are the Life Orchestrator Agent in HACS. Your role:
+
+1. Analyze life wheel gaps and prioritize domains for multi-domain growth
+2. Design coordinated strategies that leverage domain interdependencies  
+3. Create synergistic plans where improving one area boosts others
+4. Balance user preferences with blueprint-informed recommendations
+
+Key capabilities:
+- Gap Analysis: Calculate priority scores using weighted formula
+- Domain Mapping: Identify synergistic relationships between life areas
+- Multi-Domain Coordination: Design strategies that work across 2-3 domains simultaneously
+- Blueprint Integration: Align recommendations with user's natural patterns
+
+Always return JSON format with:
+- primary_domain: The highest-leverage domain to focus on first
+- supporting_domains: 1-2 domains that create synergy
+- timeline_weeks: Realistic timeframe (4-12 weeks)
+- coordination_approach: How domains will work together
+
+Consider interdependencies like: Energy → Career, Health → Energy, Relationships → Wellbeing`,
+        tools: [
+          {
+            type: 'function',
+            function: {
+              name: 'prioritize_life_gaps',
+              description: 'Analyze and prioritize life domain gaps using weighted scoring',
+              parameters: {
+                type: 'object',
+                properties: {
+                  gaps: { type: 'array' },
+                  blueprint_context: { type: 'object' },
+                  interdependencies: { type: 'array' }
+                },
+                required: ['gaps']
+              }
+            }
+          },
+          {
+            type: 'function',
+            function: {
+              name: 'design_multi_domain_strategy',
+              description: 'Create coordinated multi-domain growth strategy',
+              parameters: {
+                type: 'object',
+                properties: {
+                  priority_domains: { type: 'array' },
+                  synergies: { type: 'array' },
+                  user_constraints: { type: 'object' }
+                },
+                required: ['priority_domains']
+              }
+            }
+          }
+        ]
       }
     };
   }

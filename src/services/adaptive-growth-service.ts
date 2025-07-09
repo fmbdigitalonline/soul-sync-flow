@@ -35,6 +35,19 @@ export class AdaptiveGrowthService {
   ): Promise<AdaptiveGrowthProgram> {
     console.log('🌱 Generating adaptive growth program with AI agents');
 
+    // Check for Life Wheel Assessment first
+    const { lifeOrchestratorService } = await import('./life-orchestrator-service');
+    const needsAssessment = await lifeOrchestratorService.needsLifeWheelAssessment(userId);
+    
+    if (needsAssessment) {
+      console.log('⚠️ User needs life wheel assessment first');
+      throw new Error('NEEDS_LIFE_WHEEL_ASSESSMENT');
+    }
+
+    // Get Life Orchestrator plan for multi-domain coordination
+    const orchestratorPlan = await lifeOrchestratorService.generateLifeOrchestratorPlan(userId, 3);
+    console.log('🎯 Life Orchestrator Plan:', orchestratorPlan);
+
     // Check for existing active program to prevent duplicates
     const existingProgram = await this.getCurrentPrograms(userId);
     if (existingProgram.length > 0 && existingProgram.some(p => p.status === 'active' && p.domain === domain)) {
