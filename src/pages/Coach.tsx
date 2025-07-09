@@ -70,23 +70,25 @@ const Coach = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <CosmicCard className="w-full max-w-md text-center space-y-6">
-          <div className="w-16 h-16 mx-auto bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center">
-            <MessageCircle className="h-8 w-8 text-white" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">AI Companion</h1>
-            <p className="text-gray-600">Your personal AI companion for integrated support and guidance.</p>
-          </div>
-          <Button 
-            className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
-            onClick={() => window.location.href = '/auth'}
-          >
-            Get Started
-          </Button>
-        </CosmicCard>
-      </div>
+      <MainLayout>
+        <div className="min-h-screen bg-background flex items-center justify-center p-4">
+          <CosmicCard className="w-full max-w-md text-center space-y-6">
+            <div className="w-16 h-16 mx-auto bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center">
+              <MessageCircle className="h-8 w-8 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground mb-2">AI Companion</h1>
+              <p className="text-muted-foreground">Your personal AI companion for integrated support and guidance.</p>
+            </div>
+            <Button 
+              className="w-full"
+              onClick={() => window.location.href = '/auth'}
+            >
+              Get Started
+            </Button>
+          </CosmicCard>
+        </div>
+      </MainLayout>
     );
   }
 
@@ -136,7 +138,7 @@ const Coach = () => {
           </div>
           <div className="flex justify-between">
             <span>Mode:</span>
-            <span className="text-purple-600">Companion</span>
+            <span className="text-primary">Companion</span>
           </div>
           {acsEnabled && (
             <div className="flex justify-between">
@@ -150,38 +152,40 @@ const Coach = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
-      <div className="container mx-auto py-6 px-4 max-w-6xl">
-        
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mb-2">
-            AI Companion
-          </h1>
-          <p className="text-gray-600">
-            Your integrated AI companion combining coaching and guidance
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-200px)]">
+    <MainLayout>
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto py-6 px-4 max-w-6xl">
           
-          <div className="hidden lg:block lg:col-span-1">
-            {remindersContent}
+          <div className="text-center mb-6">
+            <h1 className="text-3xl font-bold gradient-text mb-2">
+              AI Companion
+            </h1>
+            <p className="text-muted-foreground">
+              Your integrated AI companion combining coaching and guidance
+            </p>
           </div>
 
-          <div className="lg:col-span-3">
-            {chatContent}
-          </div>
-        </div>
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-200px)]">
+            
+            <div className="hidden lg:block lg:col-span-1">
+              {remindersContent}
+            </div>
 
-        <div className="lg:hidden">
-          <MobileTogglePanel
-            chatContent={chatContent}
-            remindersContent={remindersContent}
-            activeRemindersCount={0}
-          />
+            <div className="lg:col-span-3">
+              {chatContent}
+            </div>
+          </div>
+
+          <div className="lg:hidden">
+            <MobileTogglePanel
+              chatContent={chatContent}
+              remindersContent={remindersContent}
+              activeRemindersCount={0}
+            />
+          </div>
         </div>
       </div>
-    </div>
+    </MainLayout>
   );
 };
 
