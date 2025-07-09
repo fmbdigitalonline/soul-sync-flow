@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { Loader2, RefreshCw, Sparkles, User, Heart, Brain, Compass, Zap, Plus } from 'lucide-react';
+import { Loader2, RefreshCw, Sparkles, User, Heart, Brain, Compass, Zap, Plus, Trash2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { aiPersonalityReportService, PersonalityReport } from '@/services/ai-personality-report-service';
 import { blueprintService } from '@/services/blueprint-service';
@@ -42,6 +42,12 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
       if (result.success && result.report) {
         setReport(result.report);
         console.log('✅ Report loaded successfully');
+        console.log('📋 Report content sections:', Object.keys(result.report.report_content));
+        console.log('📊 Section lengths:', 
+          Object.entries(result.report.report_content).map(([key, content]) => 
+            `${key}: ${typeof content === 'string' ? content.length : 0} chars`
+          )
+        );
       } else if (result.error) {
         setError(result.error);
         console.log('❌ Error loading report:', result.error);
@@ -58,14 +64,14 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
     }
   };
 
-  const generateReport = async () => {
+  const generateReport = async (forceRegenerate = false) => {
     if (!user) return;
     
     setGenerating(true);
     setError(null);
     
     try {
-      console.log('🎭 Starting personality report generation...');
+      console.log('🎭 Starting personality report generation...', { forceRegenerate });
       
       // First, get the user's blueprint
       const blueprintResult = await blueprintService.getActiveBlueprintData();
@@ -86,6 +92,11 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
           description: "Your personality report has been created successfully!",
         });
         console.log('✅ Report generated successfully');
+        console.log('📊 New report section lengths:', 
+          Object.entries(result.report.report_content).map(([key, content]) => 
+            `${key}: ${typeof content === 'string' ? content.length : 0} chars`
+          )
+        );
       } else {
         throw new Error(result.error || 'Failed to generate personality report');
       }
@@ -105,6 +116,10 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
 
   const handleRefresh = () => {
     loadReport();
+  };
+
+  const handleRegenerate = () => {
+    generateReport(true);
   };
 
   if (loading) {
@@ -132,7 +147,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
             </div>
             <div className="flex gap-2 justify-center">
               <Button 
-                onClick={generateReport} 
+                onClick={() => generateReport(false)} 
                 disabled={generating}
                 className="bg-soul-purple hover:bg-soul-purple/90"
               >
@@ -191,6 +206,19 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
             <Sparkles className="h-3 w-3 mr-1" />
             AI Generated
           </Badge>
+          <Button 
+            onClick={handleRegenerate} 
+            variant="outline" 
+            size="sm"
+            disabled={generating}
+          >
+            {generating ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Trash2 className="h-4 w-4" />
+            )}
+            {generating ? 'Regenerating...' : 'Regenerate'}
+          </Button>
           <Button onClick={handleRefresh} variant="ghost" size="sm">
             <RefreshCw className="h-4 w-4" />
           </Button>
@@ -203,7 +231,26 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
             const IconComponent = sectionIcons[key as keyof typeof sectionIcons];
             const title = sectionTitles[key as keyof typeof sectionTitles];
             
-            if (!content || content === 'Content unavailable') return null;
+            if (!content || content === 'Content unavailable') {
+              return (
+                <CosmicCard key={key} className="border-orange-200 bg-orange-50">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-lg text-orange-800">
+                      {IconComponent && <IconComponent className="h-5 w-5" />}
+                      {title}
+                      <Badge variant="outline" className="bg-orange-100 text-orange-700 border-orange-300">
+                        Missing Content
+                      </Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-orange-600 text-sm">
+                      This section content is unavailable. Try regenerating the report.
+                    </p>
+                  </CardContent>
+                </CosmicCard>
+              );
+            }
             
             return (
               <CosmicCard key={key}>
@@ -211,6 +258,9 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                   <CardTitle className="flex items-center gap-2 text-lg">
                     {IconComponent && <IconComponent className="h-5 w-5 text-soul-purple" />}
                     {title}
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                      {content.length} chars
+                    </Badge>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
