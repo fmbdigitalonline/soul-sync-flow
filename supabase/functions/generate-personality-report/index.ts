@@ -74,123 +74,65 @@ serve(async (req) => {
       unconsciousGates: humanDesign.gates?.unconscious_design?.length || 0
     });
 
-    const systemPrompt = `You are a master Human Design and personality analyst with deep expertise in Chinese astrology, Big Five psychology, and numerology. Your specialty is creating comprehensive personality readings that integrate ALL available data sources.
+    const systemPrompt = `You are a master Human Design and personality analyst creating a comprehensive personality report. You MUST follow the EXACT format specified below.
 
-CRITICAL INSTRUCTION: You MUST analyze and reference ALL provided data including Chinese astrology, Big Five scores, MBTI probabilities, and EVERY SINGLE GATE from both conscious and unconscious arrays.
+CRITICAL FORMAT REQUIREMENT: You must create exactly 6 detailed sections followed by 10 quotes. Each section must be substantial analysis (300-400 words), NOT inspirational quotes.
 
 USER PROFILE:
 Name: ${userMeta.preferred_name || userMeta.full_name || 'User'}
 Birth Date: ${userMeta.birth_date || 'Unknown'}
 Birth Location: ${userMeta.birth_location || 'Unknown'}
 
-==== BIG FIVE PERSONALITY SCORES ====
+BIG FIVE SCORES:
 - Openness: ${bigFive.openness || 'N/A'} (Confidence: ${confidence.openness || 'N/A'})
 - Extraversion: ${bigFive.extraversion || 'N/A'} (Confidence: ${confidence.extraversion || 'N/A'})
 - Agreeableness: ${bigFive.agreeableness || 'N/A'} (Confidence: ${confidence.agreeableness || 'N/A'})  
 - Conscientiousness: ${bigFive.conscientiousness || 'N/A'} (Confidence: ${confidence.conscientiousness || 'N/A'})
 - Neuroticism: ${bigFive.neuroticism || 'N/A'} (Confidence: ${confidence.neuroticism || 'N/A'})
 
-==== MBTI PROBABILITY ANALYSIS ====
+MBTI ANALYSIS:
 Most Likely Type: ${personality.likelyType || 'Unknown'}
-Top 5 Type Probabilities:
-${Object.entries(mbtiProbs).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([type, prob]) => `- ${type}: ${(prob * 100).toFixed(1)}%`).join('\n') || 'Not available'}
+Top Probabilities: ${Object.entries(mbtiProbs).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([type, prob]) => `${type}: ${(prob * 100).toFixed(1)}%`).join(', ') || 'Not available'}
 
-==== CHINESE ASTROLOGY PROFILE ====
-Animal: ${chineseAstrology.animal || 'Unknown'} 
-Element: ${chineseAstrology.element || 'Unknown'}
-Yin/Yang: ${chineseAstrology.yin_yang || 'Unknown'}
-Keyword: ${chineseAstrology.keyword || 'Unknown'}
+CHINESE ASTROLOGY: ${chineseAstrology.animal || 'Unknown'} ${chineseAstrology.element || 'Unknown'} (${chineseAstrology.yin_yang || 'Unknown'})
 
-CRITICAL: You MUST integrate Chinese astrology insights throughout your analysis. The ${chineseAstrology.animal || 'Unknown'} ${chineseAstrology.element || 'Unknown'} combination provides crucial personality insights.
+HUMAN DESIGN:
+- Type: ${humanDesign.type || 'Unknown'}, Profile: ${humanDesign.profile || 'Unknown'}
+- Strategy: ${humanDesign.strategy || 'Unknown'}, Authority: ${humanDesign.authority || 'Unknown'}
+- Conscious Gates: ${humanDesign.gates?.conscious_personality?.join(', ') || 'None'}
+- Unconscious Gates: ${humanDesign.gates?.unconscious_design?.join(', ') || 'None'}
 
-==== HUMAN DESIGN BLUEPRINT ====
+NUMEROLOGY:
+- Life Path: ${numerology.life_path_number || 'Unknown'}, Soul Urge: ${numerology.soul_urge_number || 'Unknown'}
+- Expression: ${numerology.expression_number || 'Unknown'}
 
-BASIC DESIGN:
-- Type: ${humanDesign.type || 'Unknown'} 
-- Profile: ${humanDesign.profile || 'Unknown'}
-- Strategy: ${humanDesign.strategy || 'Unknown'}
-- Authority: ${humanDesign.authority || 'Unknown'}
-- Definition: ${humanDesign.definition || 'Unknown'}
+EXACT OUTPUT FORMAT REQUIRED:
 
-DEFINED ENERGY CENTERS:
-${Object.entries(humanDesign.centers || {}).map(([center, data]) => {
-  if (data.defined) {
-    return `✓ ${center.toUpperCase()} CENTER - DEFINED
-   Gates: ${data.gates?.join(', ') || 'None'}
-   Channels: ${data.channels?.map(ch => `${ch[0]}-${ch[1]}`).join(', ') || 'None'}`;
-  }
-}).filter(Boolean).join('\n\n') || 'None specified'}
+1. CORE PERSONALITY ARCHITECTURE
+[Write 300-400 words of detailed personality analysis integrating Big Five scores, MBTI probabilities, and Chinese astrology traits. Analyze how these systems create your core personality structure.]
 
-UNDEFINED/OPEN CENTERS:
-${Object.entries(humanDesign.centers || {}).map(([center, data]) => {
-  if (!data.defined) {
-    return `○ ${center.toUpperCase()} CENTER - OPEN/UNDEFINED
-   Hanging Gates: ${data.gates?.join(', ') || 'None'}`;
-  }
-}).filter(Boolean).join('\n\n') || 'None specified'}
+2. DECISION-MAKING & COGNITIVE STYLE  
+[Write 300-400 words analyzing your decision-making process using Human Design Authority, MBTI cognitive functions, and Chinese astrology decision patterns.]
 
-==== CRITICAL: ANALYZE ALL GATES ====
+3. RELATIONSHIP & SOCIAL DYNAMICS
+[Write 300-400 words on relationship patterns using Human Design Profile, Big Five Extraversion/Agreeableness scores, and Chinese astrology compatibility.]
 
-CONSCIOUS PERSONALITY GATES (${humanDesign.gates?.conscious_personality?.length || 0} gates - analyze EVERY ONE):
-${humanDesign.gates?.conscious_personality?.map(gate => {
-  const gateNum = gate.split('.')[0];
-  return `🔸 GATE ${gate}: Gate ${gateNum} activation in conscious personality`;
-}).join('\n') || 'Not specified'}
+4. LIFE PURPOSE & SPIRITUAL PATH
+[Write 300-400 words connecting Human Design Strategy, numerology Life Path/Expression numbers, and Chinese astrology life themes to your purpose.]
 
-UNCONSCIOUS DESIGN GATES (${humanDesign.gates?.unconscious_design?.length || 0} gates - analyze EVERY ONE):
-${humanDesign.gates?.unconscious_design?.map(gate => {
-  const gateNum = gate.split('.')[0];
-  return `🔹 GATE ${gate}: Gate ${gateNum} activation in unconscious design`;
-}).join('\n') || 'Not specified'}
+5. ENERGY PATTERNS & TIMING
+[Write 300-400 words on energy management using Human Design centers, Chinese astrology cycles, and gate activations.]
 
-==== NUMEROLOGY COMPLETE PROFILE ====
-- Life Path: ${numerology.life_path_number || 'Unknown'} (${numerology.life_path_keyword || ''})
-- Soul Urge: ${numerology.soul_urge_number || 'Unknown'} (${numerology.soul_urge_keyword || ''})
-- Expression: ${numerology.expression_number || 'Unknown'} (${numerology.expression_keyword || ''})
-- Personality: ${numerology.personality_number || 'Unknown'} (${numerology.personality_keyword || ''})
-- Birthday: ${numerology.birthday_number || 'Unknown'} (${numerology.birthday_keyword || ''})
+6. INTEGRATED BLUEPRINT SYNTHESIS
+[Write 300-400 words synthesizing all systems to show your unique personality blueprint.]
 
-==== WESTERN ASTROLOGY ====
-- Sun: ${astrology.sun_sign || 'Unknown'} - Core identity and ego expression
-- Moon: ${astrology.moon_sign || 'Unknown'} - Emotional nature and inner self
-- Rising: ${astrology.rising_sign || 'Unknown'} - Public persona and first impressions
+PERSONALIZED QUOTES:
 
-==== REQUIRED REPORT STRUCTURE ====
+1. "Quote text" - Category: inspiration - Why it resonates: Brief explanation
+2. "Quote text" - Category: growth - Why it resonates: Brief explanation
+[Continue for exactly 10 quotes]
 
-Create exactly these 6 sections with comprehensive integration of ALL data sources:
-
-1. CORE PERSONALITY ARCHITECTURE (400+ words)
-Integrate Big Five scores, MBTI probabilities, Chinese astrology animal/element, Human Design type, and specific gate activations. Reference actual scores and probabilities.
-
-2. DECISION-MAKING & COGNITIVE STYLE (350+ words)  
-Focus on Authority (${humanDesign.authority || 'Unknown'}), MBTI cognitive functions from probability analysis, and Chinese astrology decision-making traits.
-
-3. RELATIONSHIP & SOCIAL DYNAMICS (350+ words)
-Analyze Profile (${humanDesign.profile || 'Unknown'}), Extraversion score, Chinese astrology compatibility patterns, and specific gate influences on relationships.
-
-4. LIFE PURPOSE & SPIRITUAL PATH (400+ words)
-Connect Human Design strategy, numerology Life Path/Soul Urge/Expression numbers, Chinese astrology life themes, and gate activations to purpose.
-
-5. ENERGY PATTERNS & TIMING (300+ words)
-Analyze defined vs undefined centers, Chinese astrology energy cycles, and how gates create energy patterns.
-
-6. INTEGRATED BLUEPRINT SYNTHESIS (300+ words)
-Weave together ALL systems showing how Big Five + MBTI + Chinese astrology + Human Design + Numerology create a unique personality.
-
-THEN create EXACTLY 10 warm, inspiring, personalized quotes that reflect their unique combination of traits.
-
-Format quotes as:
-1. "Quote text here" - Category: inspiration - Why it resonates: Brief explanation of how it connects to their personality blend
-2. "Quote text here" - Category: growth - Why it resonates: Brief explanation
-[continue for all 10 quotes]
-
-CRITICAL REQUIREMENTS:
-- Use actual Big Five scores (Openness: ${bigFive.openness}, etc.)
-- Reference Chinese astrology extensively (${chineseAstrology.animal} ${chineseAstrology.element})
-- Include MBTI probability insights, not just "Unknown"
-- Analyze gates from both conscious and unconscious arrays
-- Generate EXACTLY 10 quotes
-- Write in second person with specific data integration throughout`;
+CRITICAL: Each numbered section (1-6) MUST contain detailed analysis, not quotes. Quotes come only at the end after "PERSONALIZED QUOTES:".`;
 
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -223,33 +165,52 @@ CRITICAL REQUIREMENTS:
     console.log('🔍 Generated content length:', generatedContent.length);
     console.log('🔍 Content preview:', generatedContent.substring(0, 300));
 
-    // Split content into report sections and quotes
+    // Enhanced content parsing with validation
     const [reportPart, quotesPart] = generatedContent.split('PERSONALIZED QUOTES:');
     
+    console.log('🔍 Report part exists:', !!reportPart);
+    console.log('🔍 Quotes part exists:', !!quotesPart);
     console.log('🔍 Report part length:', reportPart?.length || 0);
     console.log('🔍 Quotes part length:', quotesPart?.length || 0);
     
-    // Parse the report sections - improved logic
-    const sectionPattern = /(\d+)\.\s*([A-Z\s&]+)[\s\S]*?(?=\d+\.\s*[A-Z\s&]+|$)/gi;
-    const sectionMatches = [...reportPart.matchAll(sectionPattern)];
+    // Improved section parsing with multiple patterns
+    const sectionPatterns = [
+      /(\d+)\.\s*([A-Z][A-Z\s&]+)\n([\s\S]*?)(?=\d+\.\s*[A-Z][A-Z\s&]+|$)/gi,
+      /(\d+)\.\s*([A-Z][A-Z\s&]+)\s*\n*([\s\S]*?)(?=\d+\.\s*[A-Z][A-Z\s&]+|$)/gi,
+      /(\d+)\.\s*([A-Z][A-Z\s&]+)[\s\S]*?(?=\d+\.\s*[A-Z][A-Z\s&]+|$)/gi
+    ];
+    
+    let sectionMatches = [];
+    for (const pattern of sectionPatterns) {
+      sectionMatches = [...(reportPart || '').matchAll(pattern)];
+      if (sectionMatches.length >= 6) break;
+    }
     
     console.log('🔍 Found section matches:', sectionMatches.length);
     sectionMatches.forEach((match, index) => {
-      console.log(`🔍 Section ${index + 1}:`, match[2]?.trim(), 'Content length:', match[0]?.length);
+      console.log(`🔍 Section ${index + 1}: "${match[2]?.trim()}" - Content length: ${match[3]?.length || match[0]?.length || 0}`);
     });
     
-    // Extract content for each section with better parsing
+    // Extract content for each section with validation
     const extractSectionContent = (sectionNumber: number): string => {
       const match = sectionMatches.find(m => parseInt(m[1]) === sectionNumber);
       if (!match) {
         console.log(`⚠️ No match found for section ${sectionNumber}`);
-        return 'Content unavailable';
+        return `Section ${sectionNumber} content was not properly generated. Please regenerate the report.`;
       }
       
-      // Remove the section number and title from the beginning
-      const content = match[0].replace(/^\d+\.\s*[A-Z\s&]+\s*/, '').trim();
+      // Use captured content group if available, otherwise clean the full match
+      let content = match[3] || match[0].replace(/^\d+\.\s*[A-Z\s&]+\s*/, '');
+      content = content.trim();
+      
+      // Validate content is analysis, not quotes
+      if (content.includes('"') && content.includes('Category:') && content.length < 200) {
+        console.log(`⚠️ Section ${sectionNumber} appears to be quotes instead of analysis`);
+        return `Section ${sectionNumber} requires detailed personality analysis (300+ words), not inspirational quotes. Please regenerate.`;
+      }
+      
       console.log(`✅ Extracted section ${sectionNumber} content length:`, content.length);
-      return content || 'Content unavailable';
+      return content || `Section ${sectionNumber} content unavailable`;
     };
     
     const reportContent = {
@@ -261,14 +222,17 @@ CRITICAL REQUIREMENTS:
       integrated_summary: extractSectionContent(6)
     };
     
-    console.log('📊 Final report content summary:', {
-      core_personality_pattern: reportContent.core_personality_pattern.length,
-      decision_making_style: reportContent.decision_making_style.length,
-      relationship_style: reportContent.relationship_style.length,
-      life_path_purpose: reportContent.life_path_purpose.length,
-      current_energy_timing: reportContent.current_energy_timing.length,
-      integrated_summary: reportContent.integrated_summary.length
-    });
+    // Validate all sections have substantial content
+    const validationResults = Object.entries(reportContent).map(([key, content]) => ({
+      section: key,
+      length: content.length,
+      valid: content.length > 100 && !content.includes('unavailable') && !content.includes('Please regenerate')
+    }));
+    
+    console.log('📊 Content validation results:', validationResults);
+    
+    const allValid = validationResults.every(r => r.valid);
+    console.log('✅ All sections valid:', allValid);
 
     // Parse quotes with improved pattern matching
     const quotes = [];
