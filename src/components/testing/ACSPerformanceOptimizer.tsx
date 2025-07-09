@@ -565,7 +565,7 @@ export const ACSPerformanceOptimizer: React.FC = () => {
               <div className="flex items-center justify-between">
                 <label className="text-sm font-medium">Enable Reinforcement Learning</label>
                 <Button
-                  variant={config.enableRL ? "default" : "outline"}
+                  variant={config.enableRL ? "filled" : "outline"}
                   size="sm"
                   onClick={() => setConfig(prev => ({ ...prev, enableRL: !prev.enableRL }))}
                 >
@@ -576,7 +576,7 @@ export const ACSPerformanceOptimizer: React.FC = () => {
               <div className="flex items-center justify-between">
                 <label className="text-sm font-medium">Personality Scaling</label>
                 <Button
-                  variant={config.personalityScaling ? "default" : "outline"}
+                  variant={config.personalityScaling ? "filled" : "outline"}
                   size="sm"
                   onClick={() => setConfig(prev => ({ ...prev, personalityScaling: !prev.personalityScaling }))}
                 >
@@ -589,7 +589,7 @@ export const ACSPerformanceOptimizer: React.FC = () => {
           <div className="mt-4 flex gap-2">
             <Button 
               onClick={() => adaptiveContextScheduler.updateConfig(config)}
-              variant="default"
+              variant="filled"
             >
               Apply Configuration
             </Button>

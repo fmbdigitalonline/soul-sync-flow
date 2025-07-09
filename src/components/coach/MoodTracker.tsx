@@ -66,7 +66,7 @@ export const MoodTracker: React.FC<MoodTrackerProps> = ({ onMoodSave }) => {
               return (
                 <Button
                   key={mood.name}
-                  variant={selectedMood === mood.name ? "default" : "outline"}
+                  variant={selectedMood === mood.name ? "filled" : "outline"}
                   size="sm"
                   onClick={() => setSelectedMood(mood.name)}
                   className="text-xs h-8"
@@ -88,7 +88,7 @@ export const MoodTracker: React.FC<MoodTrackerProps> = ({ onMoodSave }) => {
               return (
                 <Button
                   key={energy.name}
-                  variant={selectedEnergy === energy.name ? "default" : "outline"}
+                  variant={selectedEnergy === energy.name ? "filled" : "outline"}
                   size="sm"
                   onClick={() => setSelectedEnergy(energy.name)}
                   className="text-xs h-8"

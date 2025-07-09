@@ -108,7 +108,7 @@ export const OpenAIKeyConfiguration: React.FC = () => {
         <Button 
           onClick={testConnection} 
           disabled={testingConnection}
-          variant={keyConfigured ? "outline" : "default"}
+          variant={keyConfigured ? "outline" : "filled"}
         >
           {testingConnection ? "Testing..." : "Test Connection"}
         </Button>

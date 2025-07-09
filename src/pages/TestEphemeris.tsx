@@ -83,7 +83,7 @@ const TestEphemeris = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               Test Results
-              <Badge variant={testResult.success ? "default" : "destructive"}>
+              <Badge variant={testResult.success ? "secondary" : "destructive"}>
                 {testResult.success ? "PASS" : "FAIL"}
               </Badge>
             </CardTitle>

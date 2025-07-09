@@ -8,27 +8,27 @@
 
 @layer base {
   :root {
-    /* Soul Color Palette - Light Mode */
+    /* Unified Color Palette - Light Mode */
     --background: 32 28% 98%; /* soul-ivory #FCF8F6 */
-    --foreground: 219 24% 15%; /* soul-black #1A1F2C */
+    --foreground: 31 25% 15%; /* #1F2937 standardized dark gray */
 
     --card: 0 0% 100%; /* White with soul accents */
-    --card-foreground: 219 24% 15%; /* soul-black */
+    --card-foreground: 31 25% 15%; /* #1F2937 standardized */
 
     --popover: 0 0% 100%;
-    --popover-foreground: 219 24% 15%;
+    --popover-foreground: 31 25% 15%;
 
-    --primary: 258 90% 76%; /* soul-purple #9b87f5 */
+    --primary: 258 80% 70%; /* #A78BFA Lavender - standardized */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 200 10% 92%; /* lighter soul-pewter */
-    --secondary-foreground: 219 24% 15%;
+    --secondary: 258 33% 94%; /* #EDE9FE - standardized secondary */
+    --secondary-foreground: 31 25% 15%;
 
-    --muted: 203 9% 64%; /* soul-pewter #96A1A8 */
-    --muted-foreground: 219 24% 30%;
+    --muted: 220 9% 42%; /* #6B7280 standardized muted gray */
+    --muted-foreground: 31 25% 15%;
 
-    --accent: 272 77% 86%; /* soul-lavender #d6bcfa */
-    --accent-foreground: 219 24% 15%;
+    --accent: 258 33% 94%; /* #EDE9FE - matches secondary */
+    --accent-foreground: 31 25% 15%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
@@ -51,7 +51,7 @@
   }
 
   .dark {
-    /* Soul Color Palette - Dark Mode */
+    /* Unified Color Palette - Dark Mode */
     --background: 219 30% 8%; /* darker soul-black */
     --foreground: 32 28% 95%; /* near soul-ivory */
 
@@ -61,17 +61,17 @@
     --popover: 219 25% 12%;
     --popover-foreground: 32 28% 95%;
 
-    --primary: 258 80% 70%; /* slightly darker soul-purple */
+    --primary: 258 80% 70%; /* #A78BFA - consistent with light mode */
     --primary-foreground: 219 24% 15%;
 
-    --secondary: 219 30% 18%;
+    --secondary: 258 33% 25%; /* darker version of #EDE9FE */
     --secondary-foreground: 32 28% 85%;
 
-    --muted: 219 25% 20%;
-    --muted-foreground: 203 9% 70%;
+    --muted: 220 9% 42%; /* #6B7280 - consistent muted gray */
+    --muted-foreground: 32 28% 85%;
 
-    --accent: 258 50% 25%;
-    --accent-foreground: 272 77% 86%;
+    --accent: 258 33% 25%; /* matches secondary */
+    --accent-foreground: 32 28% 85%;
 
     --destructive: 0 65% 45%;
     --destructive-foreground: 32 28% 95%;
@@ -102,25 +102,25 @@
     -moz-osx-font-smoothing: grayscale;
   }
   
-  /* Soul Typography Hierarchy */
+  /* Unified Typography Hierarchy */
   h1 {
-    @apply text-4xl font-heading font-semibold leading-tight;
+    @apply text-2xl font-heading font-semibold leading-tight; /* 24-28px standardized */
   }
   
   h2 {
-    @apply text-3xl font-heading font-medium leading-tight;
+    @apply text-xl font-heading font-medium leading-tight; /* 20-22px standardized */
   }
   
   h3 {
-    @apply text-2xl font-heading font-medium leading-tight;
+    @apply text-lg font-heading font-medium leading-tight;
   }
   
   h4 {
-    @apply text-xl font-heading font-medium leading-tight;
+    @apply text-base font-heading font-medium leading-tight;
   }
   
   p, li, input, textarea {
-    @apply text-base leading-relaxed font-body;
+    @apply text-base leading-relaxed font-body; /* 16px base standardized */
   }
   
   small {

@@ -152,7 +152,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                 onClick={() => generateReport(false)} 
                 disabled={generating}
                 className="bg-soul-purple hover:bg-soul-purple/90 w-full sm:w-auto"
-                size={isMobile ? "default" : "default"}
+                size={isMobile ? "md" : "md"}
               >
                 {generating ? (
                   <>
