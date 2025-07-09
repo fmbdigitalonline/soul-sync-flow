@@ -23,8 +23,6 @@ export class UnifiedBlueprintService {
                  blueprintData.astrology?.moon_sign || 'Unknown',
         risingSign: blueprintData.archetype_western?.rising_sign || 
                    blueprintData.astrology?.rising_sign || 'Unknown',
-        chineseZodiac: blueprintData.archetype_chinese?.animal || 'Unknown',
-        element: blueprintData.archetype_chinese?.element || 'Unknown',
         socialStyle: 'Unknown',
         publicVibe: 'Unknown',
         publicPersona: 'Unknown',
@@ -243,7 +241,7 @@ export class UnifiedBlueprintService {
     const hasPersonalInfo = !!(blueprint.user_meta?.full_name);
     const hasCognitive = !!(blueprint.cognitiveTemperamental?.mbtiType && blueprint.cognitiveTemperamental.mbtiType !== 'Unknown');
     const hasEnergy = !!(blueprint.energyDecisionStrategy?.humanDesignType && blueprint.energyDecisionStrategy.humanDesignType !== 'Unknown');
-    const hasValues = !!(blueprint.coreValuesNarrative?.lifePath && blueprint.coreValuesNarrative.lifePath > 0);
+    const hasValues = !!(blueprint.coreValuesNarrative?.lifePath && Number(blueprint.coreValuesNarrative.lifePath) > 0);
     const hasArchetype = !!(blueprint.publicArchetype?.sunSign && blueprint.publicArchetype.sunSign !== 'Unknown');
     const hasGenerational = !!(blueprint.generationalCode?.chineseZodiac && blueprint.generationalCode.chineseZodiac !== 'Unknown');
 
@@ -343,5 +341,33 @@ export class UnifiedBlueprintService {
     }
 
     return traits.length > 0 ? traits.join(' • ') : 'Unique individual with developing blueprint';
+  }
+
+  static formatBlueprintForAI(blueprint: LayeredBlueprint): string {
+    if (!blueprint) return 'No blueprint data available';
+
+    const sections = [];
+
+    // Cognitive Section
+    if (blueprint.cognitiveTemperamental?.mbtiType && blueprint.cognitiveTemperamental.mbtiType !== 'Unknown') {
+      sections.push(`MBTI Type: ${blueprint.cognitiveTemperamental.mbtiType}`);
+    }
+
+    // Energy Section
+    if (blueprint.energyDecisionStrategy?.humanDesignType && blueprint.energyDecisionStrategy.humanDesignType !== 'Unknown') {
+      sections.push(`Human Design: ${blueprint.energyDecisionStrategy.humanDesignType}`);
+    }
+
+    // Archetype Section
+    if (blueprint.publicArchetype?.sunSign && blueprint.publicArchetype.sunSign !== 'Unknown') {
+      sections.push(`Sun Sign: ${blueprint.publicArchetype.sunSign}`);
+    }
+
+    // Values Section
+    if (blueprint.coreValuesNarrative?.lifePath) {
+      sections.push(`Life Path: ${blueprint.coreValuesNarrative.lifePath}`);
+    }
+
+    return sections.length > 0 ? sections.join(' | ') : 'Developing personality profile';
   }
 }

@@ -173,7 +173,13 @@ class BlueprintService {
 
     // Handle both old and new format
     const converted: BlueprintData = {
-      user_meta: rawBlueprint.user_meta || {},
+      user_meta: rawBlueprint.user_meta || {
+        full_name: '',
+        birth_date: '',
+        birth_time_local: '',
+        birth_location: '',
+        timezone: ''
+      },
       metadata: rawBlueprint.metadata || {},
       
       // Map new format to legacy format for compatibility
@@ -205,7 +211,13 @@ class BlueprintService {
 
   private createEmptyBlueprint(): BlueprintData {
     return {
-      user_meta: {},
+      user_meta: {
+        full_name: '',
+        birth_date: '',
+        birth_time_local: '',
+        birth_location: '',
+        timezone: ''
+      },
       astrology: {},
       human_design: {},
       numerology: {},
@@ -222,6 +234,7 @@ class BlueprintService {
     };
   }
 
+  
   private async ensureSingleActiveBlueprint(userId: string): Promise<void> {
     try {
       const { data: activeBlueprints, error } = await supabase
@@ -257,6 +270,7 @@ class BlueprintService {
   }
 
   async generateBlueprintFromBirthData(userProfile: UserProfile): Promise<BlueprintDataResult> {
+    
     try {
       console.log("🎯 BLUEPRINT ENGINE: Starting calculation with NO FALLBACKS");
       
@@ -363,6 +377,7 @@ class BlueprintService {
   }
 
   private async callBlueprintCalculator(userProfile: UserProfile): Promise<{ success: boolean; data?: any; error?: string }> {
+    
     try {
       console.log("📡 Calling blueprint-calculator edge function...");
       
@@ -394,6 +409,7 @@ class BlueprintService {
   }
 
   private validateCalculationResults(data: any): { allValid: boolean; errors: string[]; sources: any } {
+    
     const errors: string[] = [];
     const sources: any = {};
 
@@ -441,6 +457,7 @@ class BlueprintService {
     support_style: number;
     time_horizon: string;
   }): Promise<{ success: boolean; error?: string }> {
+    
     try {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       
@@ -502,6 +519,7 @@ class BlueprintService {
   }
 
   async saveBlueprintData(blueprintData: BlueprintData): Promise<{ success: boolean; error?: string }> {
+    
     try {
       if (!blueprintData.user_meta?.user_id) {
         return { success: false, error: "User ID is required" };
@@ -544,6 +562,7 @@ class BlueprintService {
   }
 
   async deleteBlueprintData(blueprintId: string): Promise<{ success: boolean; error?: string }> {
+    
     try {
       const { error } = await supabase
         .from('user_blueprints')
