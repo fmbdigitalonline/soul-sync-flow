@@ -1,4 +1,3 @@
-
 interface ConversationContext {
   agentType: 'coach' | 'guide' | 'blend';
   turnNumber: number;
@@ -29,20 +28,20 @@ class ModelRouterService {
       layer: 'core_brain' as const,
       costTier: 'premium' as const
     },
+    'gpt-4o-mini': {
+      maxTokens: 1200,
+      temperature: 0.6,
+      costPerToken: 0.000001, // Much cheaper
+      layer: 'core_brain' as const,
+      costTier: 'economy' as const
+    },
+    // TMG + ACS Layers (keeping existing entries for compatibility)
     'o3-mini': {
       maxTokens: 1200,
       temperature: 0.6,
       costPerToken: 0.00002,
       layer: 'core_brain' as const,
       costTier: 'standard' as const
-    },
-    // TMG + ACS Layers
-    'gpt-4o-mini': {
-      maxTokens: 1000,
-      temperature: 0.5,
-      costPerToken: 0.00001,
-      layer: 'acs' as const,
-      costTier: 'economy' as const
     },
     // PIE Layer Alternative
     'gpt-4.1-mini': {
@@ -57,31 +56,40 @@ class ModelRouterService {
   selectModel(context: ConversationContext): ModelSelection {
     console.log('🎯 Model Router: Analyzing context:', context);
 
-    // Core Brain Layer - Deep personality integration
+    // Only use premium gpt-4o for truly critical scenarios
+    if (this.requiresPremiumModel(context)) {
+      return this.buildSelection('gpt-4o', 'Critical complexity requires premium model');
+    }
+
+    // Core Brain Layer - Use gpt-4o-mini for most cases
     if (this.requiresCoreLayer(context)) {
-      const model = context.complexity === 'high' ? 'gpt-4o' : 'o3-mini';
-      return this.buildSelection(model, 'Deep personality integration required');
+      return this.buildSelection('gpt-4o-mini', 'Core brain layer with cost optimization');
     }
 
-    // PIE Layer - Symbolic insights and emotional patterns
+    // PIE Layer - Use cost-effective models
     if (this.requiresPIELayer(context)) {
-      const model = context.importance > 8 ? 'gpt-4o' : 'gpt-4.1-mini';
-      return this.buildSelection(model, 'Proactive insight generation needed');
+      const model = context.importance > 9 ? 'gpt-4o' : 'gpt-4o-mini';
+      return this.buildSelection(model, 'PIE layer with cost optimization');
     }
 
-    // Exploration Coach Layer - Growth and emotional themes
+    // Exploration Coach Layer - Use gpt-4o-mini primarily
     if (this.requiresExplorationLayer(context)) {
-      const model = context.sessionType === 'onboarding' || context.emotionalThemes ? 'gpt-4o' : 'gpt-4o-mini';
-      return this.buildSelection(model, 'Exploration coaching required');
+      const model = context.sessionType === 'crisis' ? 'gpt-4o' : 'gpt-4o-mini';
+      return this.buildSelection(model, 'Exploration coaching with cost optimization');
     }
 
-    // TMG Layer - Memory operations
+    // TMG Layer - Always use economy tier
     if (this.requiresTMGLayer(context)) {
-      return this.buildSelection('gpt-4o-mini', 'Memory graph operations');
+      return this.buildSelection('gpt-4o-mini', 'Memory operations with cost optimization');
     }
 
-    // ACS Layer - Default for state switching and routine interactions
-    return this.buildSelection('gpt-4o-mini', 'Routine interaction with adaptive context');
+    // ACS Layer - Default to economy tier
+    return this.buildSelection('gpt-4o-mini', 'Cost-optimized default interaction');
+  }
+
+  private requiresPremiumModel(context: ConversationContext): boolean {
+    return (context.importance > 9 && context.complexity === 'high' && context.emotionalThemes) ||
+           context.sessionType === 'crisis';
   }
 
   private requiresCoreLayer(context: ConversationContext): boolean {
@@ -91,7 +99,7 @@ class ModelRouterService {
   }
 
   private requiresPIELayer(context: ConversationContext): boolean {
-    return context.importance > 6 || 
+    return context.importance > 7 || 
            context.sessionType === 'exploration' ||
            (context.emotionalThemes && context.complexity === 'high');
   }
@@ -153,7 +161,7 @@ class ModelRouterService {
 
       // High frequency, expensive model
       if (usage.frequency > 100 && config.costTier === 'premium') {
-        suggestions.push(`Consider using ${usage.model === 'gpt-4o' ? 'o3-mini' : 'gpt-4o-mini'} for routine ${usage.model} calls`);
+        suggestions.push(`Consider using gpt-4o-mini for routine ${usage.model} calls`);
       }
 
       // High token usage

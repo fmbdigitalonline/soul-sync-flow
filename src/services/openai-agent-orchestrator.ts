@@ -1,3 +1,4 @@
+
 /**
  * OpenAI Agent Orchestrator - Core multi-agent system for HACS Growth Mode
  * Implements Tree-of-Thought reasoning with role-based agents
@@ -238,7 +239,7 @@ Make every interaction feel personally crafted and meaningful.`,
     if (depth === 0) return [];
 
     const response = await this.callOpenAI({
-      model: 'gpt-4o',
+      model: 'gpt-4o-mini',
       messages: [
         {
           role: 'system',
@@ -333,7 +334,7 @@ Make every interaction feel personally crafted and meaningful.`,
     };
 
     const response = await this.callOpenAI({
-      model: 'gpt-4o',
+      model: 'gpt-4o-mini',
       messages: [systemMessage, ...messages],
       tools: agent.tools,
       temperature: agentType === 'planner' ? 0.8 : 0.3
@@ -445,7 +446,7 @@ Make every interaction feel personally crafted and meaningful.`,
       const { data, error } = await supabase.functions.invoke('openai-agent', {
         body: {
           messages: params.messages,
-          model: params.model || 'gpt-4o',
+          model: params.model || 'gpt-4o-mini',
           temperature: params.temperature || 0.7,
           tools: params.tools
         }
@@ -531,7 +532,7 @@ Make every interaction feel personally crafted and meaningful.`,
       console.log('🧪 Testing simple OpenAI call...');
       
       const result = await this.callOpenAI({
-        model: 'gpt-4o',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',

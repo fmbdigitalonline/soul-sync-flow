@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -264,7 +265,7 @@ serve(async (req) => {
     const requestData = await req.json();
     console.log('📨 Received request data:', JSON.stringify(requestData, null, 2));
     
-    const { messages, model = 'gpt-4o', temperature = 0.7, tools } = requestData;
+    const { messages, model = 'gpt-4o-mini', temperature = 0.7, tools } = requestData;
 
     if (!messages || !Array.isArray(messages)) {
       console.error('❌ Invalid messages array:', messages);
