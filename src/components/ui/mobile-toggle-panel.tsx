@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MessageSquare, Bell } from 'lucide-react';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
 
 interface MobileTogglePanelProps {
   chatContent: React.ReactNode;
@@ -17,16 +17,16 @@ export const MobileTogglePanel: React.FC<MobileTogglePanelProps> = ({
   activeRemindersCount = 0,
 }) => {
   const [activePanel, setActivePanel] = useState<'chat' | 'reminders'>('chat');
-  const { isMobile } = useIsMobile();
+  const { spacing, touchTargetSize, isMobile } = useResponsiveLayout();
 
   if (!isMobile) {
     // Desktop: Show side by side
     return (
-      <div className="flex h-[calc(100vh-5rem)] w-full gap-4">
+      <div className={`flex h-[calc(100vh-5rem)] w-full ${spacing.gap}`}>
         <div className="flex-1 flex flex-col">
           {chatContent}
         </div>
-        <div className="w-80 flex-shrink-0 p-4 bg-gray-50/50 rounded-lg">
+        <div className={`w-80 flex-shrink-0 ${spacing.container} bg-gray-50/50 rounded-lg`}>
           {remindersContent}
         </div>
       </div>
@@ -37,13 +37,13 @@ export const MobileTogglePanel: React.FC<MobileTogglePanelProps> = ({
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)] w-full max-w-full overflow-hidden">
       {/* Toggle Header */}
-      <div className="flex-shrink-0 p-3 border-b bg-background">
-        <div className="flex gap-1 bg-gray-100 rounded-lg p-1 max-w-full">
+      <div className={`flex-shrink-0 ${spacing.container} border-b bg-background`}>
+        <div className={`flex ${spacing.gap} bg-gray-100 rounded-lg p-1 max-w-full`}>
           <Button
             variant={activePanel === 'chat' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => setActivePanel('chat')}
-            className="flex-1 h-8 min-w-0"
+            className={`flex-1 h-8 min-w-0 ${touchTargetSize}`}
           >
             <MessageSquare className="h-4 w-4 mr-1 flex-shrink-0" />
             <span className="truncate">Companion</span>
@@ -52,7 +52,7 @@ export const MobileTogglePanel: React.FC<MobileTogglePanelProps> = ({
             variant={activePanel === 'reminders' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => setActivePanel('reminders')}
-            className="flex-1 h-8 relative min-w-0"
+            className={`flex-1 h-8 relative min-w-0 ${touchTargetSize}`}
           >
             <Bell className="h-4 w-4 mr-1 flex-shrink-0" />
             <span className="truncate">Reminders</span>
@@ -75,7 +75,7 @@ export const MobileTogglePanel: React.FC<MobileTogglePanelProps> = ({
             {chatContent}
           </div>
         ) : (
-          <div className="h-full p-3 bg-gray-50/50 overflow-y-auto w-full max-w-full mb-20">
+          <div className={`h-full ${spacing.container} bg-gray-50/50 overflow-y-auto w-full max-w-full mb-20`}>
             {remindersContent}
           </div>
         )}
