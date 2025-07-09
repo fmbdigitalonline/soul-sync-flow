@@ -59,7 +59,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
     { to: "/blueprint", icon: Star, label: "Blueprint" },
     { to: "/dreams", icon: Heart, label: "Dreams" },
     { to: "/spiritual-growth", icon: Sparkles, label: t('nav.growth') },
-    { to: "/companion", icon: MessageCircle, label: "Companion" }, // Changed from "Coach" to "Companion"
+    { to: "/companion", icon: MessageCircle, label: "Companion" },
   ];
 
   // Add profile to navigation items for authenticated users
@@ -84,17 +84,17 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
     return false;
   };
 
-  // Show desktop navigation unless explicitly hidden
-  const showDesktopNav = !hideNav;
+  // Force desktop navigation to always show for authenticated users unless explicitly hidden
+  const shouldShowDesktopNav = user && !hideNav;
 
   return (
     <div className="min-h-screen bg-background">
       {/* Mobile Header */}
-      <div className="md:hidden bg-white/80 backdrop-blur-lg border-b border-gray-100 sticky top-0 z-40 w-full">
+      <div className="md:hidden bg-white/80 backdrop-blur-lg border-b border-border sticky top-0 z-40 w-full">
         <div className="flex items-center justify-between p-4 w-full">
           <Link to="/" className="flex items-center space-x-2">
             <SoulOrbAvatar size="sm" />
-            <span className="font-display font-bold text-lg gradient-text">
+            <span className="font-heading font-bold text-lg gradient-text">
               Soul Guide
             </span>
           </Link>
@@ -116,11 +116,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
         
         {/* Mobile Menu Dropdown */}
         {isMenuOpen && user && (
-          <div className="border-t border-gray-100 bg-white/95 backdrop-blur-lg p-4 space-y-2 w-full">
+          <div className="border-t border-border bg-card/95 backdrop-blur-lg p-4 space-y-2 w-full">
             <Button
               variant="ghost"
               onClick={handleSignOut}
-              className="w-full justify-start text-gray-600 rounded-xl"
+              className="w-full justify-start text-muted-foreground rounded-xl"
             >
               <LogOut className="h-5 w-5 mr-3" />
               {t('nav.signOut')}
@@ -130,14 +130,14 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
       </div>
 
       <div className="flex flex-1 min-h-0">
-        {/* Desktop Sidebar */}
-        {user && showDesktopNav && (
-          <div className="hidden md:flex w-64 min-h-full bg-white/80 backdrop-blur-lg border-r border-gray-100 flex-col">
+        {/* Desktop Sidebar - Always show for authenticated users unless hideNav is true */}
+        {shouldShowDesktopNav && (
+          <div className="hidden md:flex w-64 min-h-full bg-card/80 backdrop-blur-lg border-r border-border flex-col">
             {/* Logo and Language Selector */}
-            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+            <div className="p-6 border-b border-border flex items-center justify-between">
               <Link to="/" className="flex items-center space-x-3">
                 <SoulOrbAvatar size="md" />
-                <span className="font-display font-bold text-xl gradient-text">
+                <span className="font-heading font-bold text-xl gradient-text">
                   Soul Guide
                 </span>
               </Link>
@@ -158,8 +158,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
                     className={cn(
                       "flex items-center space-x-3 p-3 rounded-2xl transition-all duration-200",
                       isActive(item.to)
-                        ? "bg-gradient-to-r from-soul-purple/10 to-soul-teal/10 text-soul-purple font-medium border border-soul-purple/20"
-                        : "text-gray-600 hover:bg-gray-50 hover:text-soul-purple"
+                        ? "bg-gradient-to-r from-primary/10 to-accent/10 text-primary font-medium border border-primary/20"
+                        : "text-muted-foreground hover:bg-accent/50 hover:text-primary"
                     )}
                   >
                     <Icon className="h-5 w-5" />
@@ -170,11 +170,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
             </nav>
 
             {/* User Actions */}
-            <div className="p-4 border-t border-gray-100 space-y-2">
+            <div className="p-4 border-t border-border space-y-2">
               <Button
                 variant="ghost"
                 onClick={handleSignOut}
-                className="w-full justify-start text-gray-600 rounded-xl hover:bg-gray-50"
+                className="w-full justify-start text-muted-foreground rounded-xl hover:bg-accent/50"
               >
                 <LogOut className="h-5 w-5 mr-3" />
                 {t('nav.signOut')}
