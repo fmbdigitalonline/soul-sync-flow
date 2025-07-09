@@ -41,7 +41,7 @@ export const JourneyHeader: React.FC<JourneyHeaderProps> = ({
       
       <div className="flex gap-2">
         <Button
-          variant={selectedView === 'overview' ? 'default' : 'outline'}
+          variant={selectedView === 'overview' ? 'filled' : 'outline'}
           size="sm"
           onClick={() => setSelectedView('overview')}
           className="flex items-center gap-2"
@@ -50,7 +50,7 @@ export const JourneyHeader: React.FC<JourneyHeaderProps> = ({
           Overview
         </Button>
         <Button
-          variant={selectedView === 'detailed' ? 'default' : 'outline'}
+          variant={selectedView === 'detailed' ? 'filled' : 'outline'}
           size="sm"
           onClick={() => setSelectedView('detailed')}
           className="flex items-center gap-2"

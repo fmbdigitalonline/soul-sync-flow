@@ -90,7 +90,7 @@ export const GoalAchievement: React.FC<GoalAchievementProps> = ({
       {/* Filter Controls */}
       <div className="flex gap-2 overflow-x-auto pb-2">
         <Button
-          variant={filter === 'all' ? 'default' : 'outline'}
+          variant={filter === 'all' ? 'filled' : 'outline'}
           size="sm"
           onClick={() => setFilter('all')}
           className="whitespace-nowrap"
@@ -98,7 +98,7 @@ export const GoalAchievement: React.FC<GoalAchievementProps> = ({
           All Goals ({currentGoals.length})
         </Button>
         <Button
-          variant={filter === 'active' ? 'default' : 'outline'}
+          variant={filter === 'active' ? 'filled' : 'outline'}
           size="sm"
           onClick={() => setFilter('active')}
           className="whitespace-nowrap"
@@ -106,7 +106,7 @@ export const GoalAchievement: React.FC<GoalAchievementProps> = ({
           Active ({currentGoals.filter(g => !g.completed).length})
         </Button>
         <Button
-          variant={filter === 'completed' ? 'default' : 'outline'}
+          variant={filter === 'completed' ? 'filled' : 'outline'}
           size="sm"
           onClick={() => setFilter('completed')}
           className="whitespace-nowrap"

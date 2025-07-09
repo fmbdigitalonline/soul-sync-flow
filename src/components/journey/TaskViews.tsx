@@ -305,7 +305,7 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
       {/* View Toggle */}
       <div className="flex gap-2">
         <Button
-          variant={activeView === 'kanban' ? 'default' : 'outline'}
+          variant={activeView === 'kanban' ? 'filled' : 'outline'}
           size="sm"
           onClick={() => setActiveView('kanban')}
           className="flex items-center gap-2"
@@ -314,7 +314,7 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
           Flow
         </Button>
         <Button
-          variant={activeView === 'list' ? 'default' : 'outline'}
+          variant={activeView === 'list' ? 'filled' : 'outline'}
           size="sm"
           onClick={() => setActiveView('list')}
           className="flex items-center gap-2"
@@ -323,7 +323,7 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
           Tasks
         </Button>
         <Button
-          variant={activeView === 'calendar' ? 'default' : 'outline'}
+          variant={activeView === 'calendar' ? 'filled' : 'outline'}
           size="sm"
           onClick={() => setActiveView('calendar')}
           className="flex items-center gap-2"
