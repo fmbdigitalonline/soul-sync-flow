@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { BlueprintData } from "./blueprint-service";
 
@@ -30,6 +31,7 @@ class AIPersonalityReportService {
   async generatePersonalityReport(blueprint: BlueprintData): Promise<{ success: boolean; report?: PersonalityReport; quotes?: any[]; error?: string }> {
     try {
       console.log('🎭 Generating comprehensive personality report with personalized quotes...');
+      console.log('📋 Blueprint data:', JSON.stringify(blueprint, null, 2));
       
       const { data, error } = await supabase.functions.invoke("generate-personality-report", {
         body: {
@@ -39,24 +41,26 @@ class AIPersonalityReportService {
       });
 
       if (error) {
-        console.error('Error generating personality report:', error);
+        console.error('❌ Error generating personality report:', error);
         return { success: false, error: error.message };
       }
 
+      console.log('✅ Report generation successful:', data);
       return { 
         success: true, 
         report: data.report,
         quotes: data.quotes || []
       };
     } catch (error) {
-      console.error('Service error generating personality report:', error);
+      console.error('💥 Service error generating personality report:', error);
       return { success: false, error: String(error) };
     }
   }
 
-  // REMOVE TYPESAFE SUPABASE FROM RAW STRING TABLE, CAST TO any TO FIX BUILD
   async getStoredReport(userId: string): Promise<{ success: boolean; report?: PersonalityReport; error?: string }> {
     try {
+      console.log('🔍 Fetching stored report for user:', userId);
+      
       // Query the personality_reports table directly, bypassing supabase type checking for the table
       const { data, error } = await (supabase as any)
         .from('personality_reports')
@@ -67,23 +71,27 @@ class AIPersonalityReportService {
         .maybeSingle();
 
       if (error) {
-        console.error('Error fetching stored report:', error);
+        console.error('❌ Error fetching stored report:', error);
         return { success: false, error: error.message };
       }
 
       if (!data) {
+        console.log('📝 No stored report found for user:', userId);
         return { success: true, report: undefined };
       }
 
+      console.log('✅ Report found:', data);
       return { success: true, report: data as PersonalityReport };
     } catch (error) {
-      console.error('Service error fetching stored report:', error);
+      console.error('💥 Service error fetching stored report:', error);
       return { success: false, error: String(error) };
     }
   }
 
   async hasExistingReport(userId: string): Promise<boolean> {
     try {
+      console.log('🔍 Checking for existing report for user:', userId);
+      
       // Query the personality_reports table directly
       const { data, error } = await (supabase as any)
         .from('personality_reports')
@@ -92,13 +100,15 @@ class AIPersonalityReportService {
         .limit(1);
 
       if (error) {
-        console.error('Error checking for existing report:', error);
+        console.error('❌ Error checking for existing report:', error);
         return false;
       }
 
-      return data && data.length > 0;
+      const hasReport = data && data.length > 0;
+      console.log('📊 Has existing report:', hasReport);
+      return hasReport;
     } catch (error) {
-      console.error('Service error checking existing report:', error);
+      console.error('💥 Service error checking existing report:', error);
       return false;
     }
   }

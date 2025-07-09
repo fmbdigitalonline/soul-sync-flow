@@ -4,9 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { Loader2, RefreshCw, Sparkles, User, Heart, Brain, Compass, Zap } from 'lucide-react';
+import { Loader2, RefreshCw, Sparkles, User, Heart, Brain, Compass, Zap, Plus } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { aiPersonalityReportService, PersonalityReport } from '@/services/ai-personality-report-service';
+import { blueprintService } from '@/services/blueprint-service';
 import { useToast } from '@/hooks/use-toast';
 import { CosmicCard } from '@/components/ui/cosmic-card';
 
@@ -19,6 +20,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
   const { toast } = useToast();
   const [report, setReport] = useState<PersonalityReport | null>(null);
   const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -32,19 +34,72 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
     setError(null);
     
     try {
+      console.log('🔍 Loading personality report for user:', user.id);
       const result = await aiPersonalityReportService.getStoredReport(user.id);
+      
+      console.log('📊 Report loading result:', result);
+      
       if (result.success && result.report) {
         setReport(result.report);
+        console.log('✅ Report loaded successfully');
       } else if (result.error) {
         setError(result.error);
+        console.log('❌ Error loading report:', result.error);
       } else {
-        setError('No personality report found. Generate your blueprint first.');
+        setError('No personality report found. Click "Generate Report" to create one.');
+        console.log('📝 No report found - needs generation');
       }
     } catch (err) {
-      setError('Failed to load personality report');
-      console.error('Error loading personality report:', err);
+      const errorMessage = 'Failed to load personality report';
+      setError(errorMessage);
+      console.error('💥 Error loading personality report:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const generateReport = async () => {
+    if (!user) return;
+    
+    setGenerating(true);
+    setError(null);
+    
+    try {
+      console.log('🎭 Starting personality report generation...');
+      
+      // First, get the user's blueprint
+      const blueprintResult = await blueprintService.getActiveBlueprintData();
+      
+      if (blueprintResult.error || !blueprintResult.data) {
+        throw new Error('No active blueprint found. Please create your blueprint first.');
+      }
+      
+      console.log('📋 Blueprint found, generating report...');
+      
+      // Generate the personality report
+      const result = await aiPersonalityReportService.generatePersonalityReport(blueprintResult.data);
+      
+      if (result.success && result.report) {
+        setReport(result.report);
+        toast({
+          title: "Report Generated",
+          description: "Your personality report has been created successfully!",
+        });
+        console.log('✅ Report generated successfully');
+      } else {
+        throw new Error(result.error || 'Failed to generate personality report');
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to generate personality report';
+      setError(errorMessage);
+      toast({
+        title: "Generation Failed",
+        description: errorMessage,
+        variant: "destructive"
+      });
+      console.error('💥 Error generating personality report:', err);
+    } finally {
+      setGenerating(false);
     }
   };
 
@@ -68,11 +123,36 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
       <div className={`p-4 ${className}`}>
         <Card>
           <CardContent className="p-6 text-center">
-            <p className="text-muted-foreground mb-4">{error || 'No personality report available'}</p>
-            <Button onClick={handleRefresh} variant="outline">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Try Again
-            </Button>
+            <div className="mb-4">
+              <Sparkles className="h-12 w-12 text-soul-purple mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Personality Report</h3>
+              <p className="text-muted-foreground mb-4">
+                {error || 'No personality report available'}
+              </p>
+            </div>
+            <div className="flex gap-2 justify-center">
+              <Button 
+                onClick={generateReport} 
+                disabled={generating}
+                className="bg-soul-purple hover:bg-soul-purple/90"
+              >
+                {generating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Generate Report
+                  </>
+                )}
+              </Button>
+              <Button onClick={handleRefresh} variant="outline">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
