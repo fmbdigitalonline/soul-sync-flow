@@ -17,7 +17,7 @@ export const MobileTogglePanel: React.FC<MobileTogglePanelProps> = ({
   activeRemindersCount = 0,
 }) => {
   const [activePanel, setActivePanel] = useState<'chat' | 'reminders'>('chat');
-  const isMobile = useIsMobile();
+  const { isMobile } = useIsMobile();
 
   if (!isMobile) {
     // Desktop: Show side by side
@@ -33,9 +33,9 @@ export const MobileTogglePanel: React.FC<MobileTogglePanelProps> = ({
     );
   }
 
-  // Mobile: Toggle between panels with proper padding
+  // Mobile: Toggle between panels with coordinated spacing for mobile nav
   return (
-    <div className="flex flex-col h-[calc(100vh-5rem)] w-full max-w-full overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-8rem)] w-full max-w-full overflow-hidden">
       {/* Toggle Header */}
       <div className="flex-shrink-0 p-3 border-b bg-background">
         <div className="flex gap-1 bg-gray-100 rounded-lg p-1 max-w-full">
@@ -46,7 +46,7 @@ export const MobileTogglePanel: React.FC<MobileTogglePanelProps> = ({
             className="flex-1 h-8 min-w-0"
           >
             <MessageSquare className="h-4 w-4 mr-1 flex-shrink-0" />
-            <span className="truncate">Coach</span>
+            <span className="truncate">Companion</span>
           </Button>
           <Button
             variant={activePanel === 'reminders' ? 'default' : 'ghost'}
@@ -68,14 +68,14 @@ export const MobileTogglePanel: React.FC<MobileTogglePanelProps> = ({
         </div>
       </div>
 
-      {/* Content Area with proper mobile constraints */}
+      {/* Content Area - No duplicate input areas, BlendInterface handles mobile input */}
       <div className="flex-1 min-h-0 w-full max-w-full overflow-hidden">
         {activePanel === 'chat' ? (
           <div className="h-full w-full max-w-full">
             {chatContent}
           </div>
         ) : (
-          <div className="h-full p-3 bg-gray-50/50 overflow-y-auto w-full max-w-full">
+          <div className="h-full p-3 bg-gray-50/50 overflow-y-auto w-full max-w-full mb-20">
             {remindersContent}
           </div>
         )}

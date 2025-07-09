@@ -165,7 +165,8 @@ const Coach = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-200px)]">
+          {/* Coordinated height calculation for mobile layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-12rem)]">
             
             <div className="hidden lg:block lg:col-span-1">
               {remindersContent}

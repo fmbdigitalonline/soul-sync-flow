@@ -62,6 +62,10 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
     onFeedback?.(messageId, isPositive);
   };
 
+  // Calculate proper mobile spacing: MobileNav (64px) + safe area + input height (60px) + padding (16px)
+  const mobileBottomSpacing = isMobile ? 'pb-36' : 'pb-4';
+  const mobileInputBottom = isMobile ? 'bottom-20' : '';
+
   return (
     <div className={`flex flex-col h-full max-w-4xl mx-auto`}>
       {/* VFP-Graph Status Header */}
@@ -77,8 +81,8 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
         </div>
       )}
 
-      {/* Messages Area - Adjust padding for mobile input */}
-      <div className={`flex-1 overflow-y-auto space-y-4 ${isMobile ? 'pb-32' : 'pb-4'}`}>
+      {/* Messages Area - Unified spacing calculation */}
+      <div className={`flex-1 overflow-y-auto space-y-4 ${mobileBottomSpacing}`}>
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center p-8">
             <div className={cn("bg-gradient-to-br from-soul-purple to-soul-teal rounded-full mx-auto mb-4 flex items-center justify-center", isMobile ? "w-12 h-12" : "w-16 h-16")}>
@@ -185,11 +189,11 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Area - Fixed positioning for mobile with proper z-index and single instance */}
+      {/* Single Input Area - Proper mobile coordination */}
       <div className={cn(
         "border-t bg-white/95 backdrop-blur-lg",
         isMobile 
-          ? "fixed bottom-16 left-0 right-0 z-50 border-t border-gray-200 shadow-lg p-3" 
+          ? `fixed ${mobileInputBottom} left-0 right-0 z-[100] border-t border-gray-200 shadow-lg p-3` 
           : "p-4"
       )}>
         <div className={cn("flex items-center space-x-2", isMobile ? "max-w-md mx-auto" : "")}>

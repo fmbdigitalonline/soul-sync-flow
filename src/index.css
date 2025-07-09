@@ -164,6 +164,26 @@
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
   }
+
+  /* Mobile Layout Coordination - Prevent Duplicate Inputs */
+  .mobile-input-single {
+    position: fixed;
+    bottom: env(safe-area-inset-bottom, 0px);
+    left: 0;
+    right: 0;
+    z-index: 100;
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+
+  /* Ensure only one mobile input renders */
+  .mobile-duplicate-input-prevention {
+    display: none !important;
+  }
+
+  /* Mobile spacing coordination */
+  .mobile-nav-spacing {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 16px);
+  }
 }
 
 /* Enhanced animations for soul palette */
@@ -199,6 +219,11 @@
   
   h2 {
     @apply text-2xl;
+  }
+
+  /* Mobile Layout Fix - Prevent Input Overlap */
+  .mobile-layout-fix {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
   }
 }
 
@@ -273,6 +298,12 @@
     margin-right: calc(0.5rem * var(--tw-space-x-reverse));
     margin-left: calc(0.5rem * calc(1 - var(--tw-space-x-reverse)));
   }
+
+  /* Ultra-narrow mobile input fix */
+  .mobile-input-ultra-narrow {
+    bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+    padding: 8px;
+  }
 }
 
 /* Fold device specific optimizations (Galaxy Z Fold 5: 344px) */
@@ -310,6 +341,12 @@
   /* Optimize button sizes */
   button {
     @apply min-h-[40px] px-2 py-1 text-sm;
+  }
+
+  /* Fold device mobile input positioning */
+  .mobile-input-fold {
+    bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+    padding: 6px;
   }
 }
 
@@ -351,5 +388,14 @@
     @media (max-width: 350px) {
       @apply text-xs p-1 gap-1;
     }
+  }
+
+  /* Mobile Layout Utilities */
+  .mobile-safe-bottom {
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+
+  .mobile-nav-offset {
+    bottom: calc(64px + env(safe-area-inset-bottom, 0px));
   }
 }
