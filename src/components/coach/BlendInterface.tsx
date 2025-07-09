@@ -63,7 +63,7 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
   };
 
   return (
-    <div className={`flex flex-col h-full max-w-4xl mx-auto ${isMobile ? 'pb-20' : ''}`}>
+    <div className={`flex flex-col h-full max-w-4xl mx-auto`}>
       {/* VFP-Graph Status Header */}
       {vfpGraphStatus?.isAvailable && (
         <div className="bg-gradient-to-r from-soul-purple/10 to-soul-teal/10 border border-soul-purple/20 rounded-lg p-3 mb-4">
@@ -77,8 +77,8 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
         </div>
       )}
 
-      {/* Messages Area - Add extra padding bottom for mobile */}
-      <div className={`flex-1 overflow-y-auto space-y-4 ${isMobile ? 'pb-24' : 'pb-4'}`}>
+      {/* Messages Area - Adjust padding for mobile input */}
+      <div className={`flex-1 overflow-y-auto space-y-4 ${isMobile ? 'pb-32' : 'pb-4'}`}>
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center p-8">
             <div className={cn("bg-gradient-to-br from-soul-purple to-soul-teal rounded-full mx-auto mb-4 flex items-center justify-center", isMobile ? "w-12 h-12" : "w-16 h-16")}>
@@ -185,13 +185,12 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Area - Fixed positioning for mobile with safe area */}
+      {/* Input Area - Fixed positioning for mobile with proper z-index and single instance */}
       <div className={cn(
         "border-t bg-white/95 backdrop-blur-lg",
         isMobile 
-          ? "fixed bottom-16 left-0 right-0 z-50 border-t border-gray-200 shadow-lg" 
-          : "p-4",
-        isMobile ? "p-3" : ""
+          ? "fixed bottom-16 left-0 right-0 z-50 border-t border-gray-200 shadow-lg p-3" 
+          : "p-4"
       )}>
         <div className={cn("flex items-center space-x-2", isMobile ? "max-w-md mx-auto" : "")}>
           <Input
