@@ -1206,6 +1206,89 @@ export type Database = {
         }
         Relationships: []
       }
+      personality_quotes: {
+        Row: {
+          attribution: string | null
+          category: string
+          created_at: string
+          id: string
+          is_favorite: boolean
+          last_shown: string | null
+          personality_alignment: Json
+          personality_report_id: string | null
+          quote_text: string
+          usage_count: number
+          user_id: string
+        }
+        Insert: {
+          attribution?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          is_favorite?: boolean
+          last_shown?: string | null
+          personality_alignment?: Json
+          personality_report_id?: string | null
+          quote_text: string
+          usage_count?: number
+          user_id: string
+        }
+        Update: {
+          attribution?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          is_favorite?: boolean
+          last_shown?: string | null
+          personality_alignment?: Json
+          personality_report_id?: string | null
+          quote_text?: string
+          usage_count?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_personality_quotes_report"
+            columns: ["personality_report_id"]
+            isOneToOne: false
+            referencedRelation: "personality_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personality_reports: {
+        Row: {
+          blueprint_id: string | null
+          blueprint_version: string
+          created_at: string
+          generated_at: string
+          id: string
+          report_content: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          blueprint_id?: string | null
+          blueprint_version?: string
+          created_at?: string
+          generated_at?: string
+          id?: string
+          report_content?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          blueprint_id?: string | null
+          blueprint_version?: string
+          created_at?: string
+          generated_at?: string
+          id?: string
+          report_content?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       personality_scores: {
         Row: {
           big5: Json

@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
@@ -30,7 +29,7 @@ serve(async (req) => {
       throw new Error('Blueprint and userId are required');
     }
 
-    console.log('🎭 Generating comprehensive personality report for user:', userId);
+    console.log('🎭 Generating comprehensive personality report and quotes for user:', userId);
 
     // Extract key blueprint data for the AI prompt
     const mbti = blueprint.cognition_mbti || {};
@@ -40,7 +39,7 @@ serve(async (req) => {
     const bashar = blueprint.bashar_suite || {};
     const userMeta = blueprint.user_meta || {};
 
-    const systemPrompt = `You are an expert personality analyst who creates comprehensive, personalized readings by synthesizing multiple psychological and spiritual systems. Create a detailed personality report that feels personal, insightful, and actionable.
+    const systemPrompt = `You are an expert personality analyst who creates comprehensive, personalized readings by synthesizing multiple psychological and spiritual systems. Create a detailed personality report AND 10 personalized quotes that resonate with their unique blueprint.
 
 USER PROFILE:
 Name: ${userMeta.preferred_name || userMeta.full_name || 'User'}
@@ -61,6 +60,18 @@ Create 5 detailed sections (each 200-300 words) plus a shorter integrated summar
 5. Current Energy & Timing - Present moment guidance
 6. Integrated Summary - A cohesive overview (100-150 words)
 
+THEN create 10 personalized inspirational quotes that specifically resonate with their personality blueprint. Each quote should:
+- Be 1-2 sentences long
+- Connect to their specific MBTI, Human Design, or astrological characteristics
+- Include a brief explanation of why it resonates with their personality
+- Be categorized (Motivation, Self-Discovery, Relationships, Life Purpose, Energy)
+
+Format the quotes section as:
+PERSONALIZED QUOTES:
+1. "[Quote text]" - Category: [category] - Why it resonates: [brief explanation]
+2. "[Quote text]" - Category: [category] - Why it resonates: [brief explanation]
+...and so on for all 10 quotes.
+
 Write in second person ("You are..."), be specific about how the systems interact, and make it feel like a personalized reading from an expert who deeply understands them.`;
 
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -75,11 +86,11 @@ Write in second person ("You are..."), be specific about how the systems interac
           { role: 'system', content: systemPrompt },
           { 
             role: 'user', 
-            content: `Generate a comprehensive personality reading for ${userMeta.preferred_name || 'this person'} based on their complete blueprint data. Make it feel personal and insightful.` 
+            content: `Generate a comprehensive personality reading AND 10 personalized quotes for ${userMeta.preferred_name || 'this person'} based on their complete blueprint data. Make it feel personal and insightful.` 
           }
         ],
         temperature: 0.7,
-        max_tokens: 2500,
+        max_tokens: 3500,
       }),
     });
 
@@ -90,8 +101,11 @@ Write in second person ("You are..."), be specific about how the systems interac
     const openAIData = await openAIResponse.json();
     const generatedContent = openAIData.choices[0].message.content;
 
-    // Parse the AI response into sections (simplified parsing)
-    const sections = generatedContent.split(/\d+\.\s*/).slice(1);
+    // Split content into report sections and quotes
+    const [reportPart, quotesPart] = generatedContent.split('PERSONALIZED QUOTES:');
+    
+    // Parse the report sections
+    const sections = reportPart.split(/\d+\.\s*/).slice(1);
     
     const reportContent = {
       core_personality_pattern: sections[0]?.replace(/^[^:]*:?\s*/, '').trim() || 'Content unavailable',
@@ -99,10 +113,31 @@ Write in second person ("You are..."), be specific about how the systems interac
       relationship_style: sections[2]?.replace(/^[^:]*:?\s*/, '').trim() || 'Content unavailable',
       life_path_purpose: sections[3]?.replace(/^[^:]*:?\s*/, '').trim() || 'Content unavailable',
       current_energy_timing: sections[4]?.replace(/^[^:]*:?\s*/, '').trim() || 'Content unavailable',
-      integrated_summary: sections[5]?.replace(/^[^:]*:?\s*/, '').trim() || generatedContent.slice(-500) // Fallback to last part
+      integrated_summary: sections[5]?.replace(/^[^:]*:?\s*/, '').trim() || reportPart.slice(-500)
     };
 
-    // Store the report in the database directly
+    // Parse quotes
+    const quotes = [];
+    if (quotesPart) {
+      const quoteLines = quotesPart.split(/\d+\.\s*/).slice(1);
+      for (const line of quoteLines) {
+        const quoteMatch = line.match(/"([^"]+)"\s*-\s*Category:\s*([^-]+)\s*-\s*Why it resonates:\s*(.+)/);
+        if (quoteMatch) {
+          quotes.push({
+            quote_text: quoteMatch[1].trim(),
+            category: quoteMatch[2].trim().toLowerCase(),
+            personality_alignment: {
+              explanation: quoteMatch[3].trim(),
+              mbti_connection: mbti.type || null,
+              hd_connection: humanDesign.type || null,
+              astro_connection: astrology.sun_sign || null
+            }
+          });
+        }
+      }
+    }
+
+    // Store the report in the database
     const { data: reportData, error: insertError } = await supabaseClient
       .from('personality_reports')
       .insert({
@@ -118,11 +153,34 @@ Write in second person ("You are..."), be specific about how the systems interac
       throw new Error(`Database error: ${insertError.message}`);
     }
 
-    console.log('✅ Personality report generated and stored successfully');
+    // Store the quotes in the database
+    const quotesToInsert = quotes.map(quote => ({
+      user_id: userId,
+      personality_report_id: reportData.id,
+      quote_text: quote.quote_text,
+      category: quote.category,
+      personality_alignment: quote.personality_alignment
+    }));
+
+    if (quotesToInsert.length > 0) {
+      const { error: quotesError } = await supabaseClient
+        .from('personality_quotes')
+        .insert(quotesToInsert);
+
+      if (quotesError) {
+        console.error('Error storing quotes:', quotesError);
+        // Don't fail the whole operation if quotes fail
+      } else {
+        console.log(`✅ ${quotesToInsert.length} personalized quotes stored successfully`);
+      }
+    }
+
+    console.log('✅ Personality report and quotes generated successfully');
 
     return new Response(JSON.stringify({ 
       success: true, 
-      report: reportData 
+      report: reportData,
+      quotes: quotesToInsert
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

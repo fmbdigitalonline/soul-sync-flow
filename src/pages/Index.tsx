@@ -14,6 +14,7 @@ import { isAdminUser } from "@/utils/isAdminUser";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { LanguageSelector } from "@/components/ui/language-selector";
 import { RotatingText } from "@/components/ui/rotating-text";
+import { PersonalizedQuoteDisplay } from "@/components/ui/personalized-quote-display";
 import MainLayout from "@/components/Layout/MainLayout";
 
 const Index = () => {
@@ -42,8 +43,14 @@ const Index = () => {
     }
   }, [user, hasBlueprint, t]);
 
-  // Get dynamic subtitle messages from translations - access the raw translation object
+  // Get dynamic subtitle messages - personalized quotes for authenticated users with blueprints
   const subtitleMessages = useMemo(() => {
+    if (user && hasBlueprint) {
+      // For authenticated users with blueprints, we'll use personalized quotes
+      // This will be replaced by the PersonalizedQuoteDisplay component
+      return [t("index.subtitle") || "Discover your authentic path through personalized AI guidance and spiritual growth tools."];
+    }
+    
     const messages = t("index.rotatingMessages");
     // Handle both string and array cases safely
     if (Array.isArray(messages)) {
@@ -51,7 +58,7 @@ const Index = () => {
     }
     // Fallback to a default message if translation fails
     return [t("index.subtitle") || "Discover your authentic path through personalized AI guidance and spiritual growth tools."];
-  }, [t, language]);
+  }, [t, language, user, hasBlueprint]);
 
   // Only speak welcome message once when user and blueprint data are loaded
   useEffect(() => {
@@ -108,11 +115,19 @@ const Index = () => {
             dangerouslySetInnerHTML={{ __html: t('index.welcome') }}
           />
           
-          <RotatingText 
-            texts={subtitleMessages}
-            className="text-lg sm:text-xl mb-6 sm:mb-8 px-4 text-muted-foreground min-h-[3.5rem] flex items-center justify-center"
-            interval={4000}
-          />
+          {user && hasBlueprint ? (
+            <PersonalizedQuoteDisplay 
+              className="text-lg sm:text-xl mb-6 sm:mb-8 px-4 text-muted-foreground min-h-[3.5rem] flex items-center justify-center"
+              interval={4000}
+              fallbackQuotes={subtitleMessages}
+            />
+          ) : (
+            <RotatingText 
+              texts={subtitleMessages}
+              className="text-lg sm:text-xl mb-6 sm:mb-8 px-4 text-muted-foreground min-h-[3.5rem] flex items-center justify-center"
+              interval={4000}
+            />
+          )}
 
           {user && <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
                 <Link to="/dreams" className="block">

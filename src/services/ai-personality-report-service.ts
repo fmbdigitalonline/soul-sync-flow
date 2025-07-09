@@ -17,10 +17,19 @@ export interface PersonalityReport {
   blueprint_version: string;
 }
 
+export interface PersonalityReportWithQuotes {
+  report: PersonalityReport;
+  quotes: {
+    quote_text: string;
+    category: string;
+    personality_alignment: any;
+  }[];
+}
+
 class AIPersonalityReportService {
-  async generatePersonalityReport(blueprint: BlueprintData): Promise<{ success: boolean; report?: PersonalityReport; error?: string }> {
+  async generatePersonalityReport(blueprint: BlueprintData): Promise<{ success: boolean; report?: PersonalityReport; quotes?: any[]; error?: string }> {
     try {
-      console.log('🎭 Generating comprehensive personality report...');
+      console.log('🎭 Generating comprehensive personality report with personalized quotes...');
       
       const { data, error } = await supabase.functions.invoke("generate-personality-report", {
         body: {
@@ -34,7 +43,11 @@ class AIPersonalityReportService {
         return { success: false, error: error.message };
       }
 
-      return { success: true, report: data.report };
+      return { 
+        success: true, 
+        report: data.report,
+        quotes: data.quotes || []
+      };
     } catch (error) {
       console.error('Service error generating personality report:', error);
       return { success: false, error: String(error) };
