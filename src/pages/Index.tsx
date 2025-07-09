@@ -15,6 +15,7 @@ import { LanguageSelector } from "@/components/ui/language-selector";
 import { RotatingText } from "@/components/ui/rotating-text";
 import { PersonalizedQuoteDisplay } from "@/components/ui/personalized-quote-display";
 import MainLayout from "@/components/Layout/MainLayout";
+import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 
 const Index = () => {
   const {
@@ -31,6 +32,7 @@ const Index = () => {
   } = useOptimizedBlueprintData();
   const isAdmin = isAdminUser(user);
   const { t, language } = useLanguage();
+  const { spacing, layout, touchTargetSize, getTextSize, isFoldDevice, isUltraNarrow, isMobile } = useResponsiveLayout();
 
   // Memoize the welcome message logic to prevent re-renders
   const welcomeMessage = useMemo(() => {
@@ -87,9 +89,13 @@ const Index = () => {
   if (showDemo) {
     return (
       <MainLayout>
-        <div className="w-full min-h-screen p-4 sm:p-6">
-          <div className="mb-4 sm:mb-6">
-            <Button variant="ghost" onClick={() => setShowDemo(false)} className="mb-4 text-sm sm:text-base">
+        <div className={`w-full min-h-screen ${spacing.container} ${isMobile ? 'pb-20' : ''}`}>
+          <div className={`mb-4 ${spacing.gap}`}>
+            <Button 
+              variant="ghost" 
+              onClick={() => setShowDemo(false)} 
+              className={`mb-4 ${getTextSize('text-sm')} ${touchTargetSize}`}
+            >
               {t("index.backToHome")}
             </Button>
           </div>
@@ -101,101 +107,121 @@ const Index = () => {
   
   return (
     <MainLayout>
-      <div className="w-full min-h-[90vh] flex flex-col justify-center p-4 sm:p-6 pb-24 md:pb-6">
-        <div className="w-full max-w-4xl mx-auto text-center">
-          <div className="flex justify-center mb-6 sm:mb-8">
+      <div className={`w-full min-h-[90vh] flex flex-col justify-center ${spacing.container} ${isMobile ? 'pb-24' : 'pb-6'}`}>
+        <div className={`w-full ${layout.maxWidth} mx-auto text-center`}>
+          <div className={`flex justify-center mb-6 ${spacing.gap}`}>
             <SoulOrbAvatar size="lg" />
           </div>
           
           <h1 
-            className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 px-4"
+            className={`font-heading ${getTextSize('text-3xl')} lg:${getTextSize('text-4xl')} font-bold mb-4 ${spacing.gap} px-4`}
             dangerouslySetInnerHTML={{ __html: t('index.welcome') }}
           />
           
           {user && hasBlueprint ? (
             <PersonalizedQuoteDisplay 
-              className="text-lg sm:text-xl mb-6 sm:mb-8 px-4 text-muted-foreground min-h-[3.5rem] flex items-center justify-center"
+              className={`${getTextSize('text-lg')} mb-6 ${spacing.gap} px-4 text-muted-foreground min-h-[3.5rem] flex items-center justify-center`}
               interval={4000}
               fallbackQuotes={subtitleMessages}
             />
           ) : (
             <RotatingText 
               texts={subtitleMessages}
-              className="text-lg sm:text-xl mb-6 sm:mb-8 px-4 text-muted-foreground min-h-[3.5rem] flex items-center justify-center"
+              className={`${getTextSize('text-lg')} mb-6 ${spacing.gap} px-4 text-muted-foreground min-h-[3.5rem] flex items-center justify-center`}
               interval={4000}
             />
           )}
 
-          {user && <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
+          {user && <div className={`${layout.columns} ${spacing.gap} mb-6 ${spacing.gap} max-w-2xl mx-auto px-4`}>
                 <Link to="/dreams" className="block">
-                  <CosmicCard className="p-3 sm:p-4 hover:scale-105 transition-transform cursor-pointer h-full">
-                    <Heart className="h-6 w-6 sm:h-8 sm:w-8 text-soul-purple mx-auto mb-2" />
-                    <h3 className="font-semibold mb-1 text-sm sm:text-base">{t("index.dreams")}</h3>
-                    <p className="text-xs text-muted-foreground">{t("index.dreamsDesc")}</p>
+                  <CosmicCard className={`${spacing.card} hover:scale-105 transition-transform cursor-pointer h-full backdrop-blur-lg border border-border`}>
+                    <Heart className={`h-6 w-6 ${isFoldDevice ? 'h-5 w-5' : 'sm:h-8 sm:w-8'} text-primary mx-auto mb-2`} />
+                    <h3 className={`font-heading font-semibold mb-1 ${getTextSize('text-sm')}`}>{t("index.dreams")}</h3>
+                    <p className={`${getTextSize('text-xs')} text-muted-foreground`}>{t("index.dreamsDesc")}</p>
                   </CosmicCard>
                 </Link>
                 
                 <Link to="/spiritual-growth" className="block">
-                  <CosmicCard className="p-3 sm:p-4 hover:scale-105 transition-transform cursor-pointer h-full">
-                    <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-blue-400 mx-auto mb-2" />
-                    <h3 className="font-semibold mb-1 text-sm sm:text-base">{t("index.growth")}</h3>
-                    <p className="text-xs text-muted-foreground">{t("index.growthDesc")}</p>
+                  <CosmicCard className={`${spacing.card} hover:scale-105 transition-transform cursor-pointer h-full backdrop-blur-lg border border-border`}>
+                    <Sparkles className={`h-6 w-6 ${isFoldDevice ? 'h-5 w-5' : 'sm:h-8 sm:w-8'} text-accent mx-auto mb-2`} />
+                    <h3 className={`font-heading font-semibold mb-1 ${getTextSize('text-sm')}`}>{t("index.growth")}</h3>
+                    <p className={`${getTextSize('text-xs')} text-muted-foreground`}>{t("index.growthDesc")}</p>
                   </CosmicCard>
                 </Link>
                 
                 <Link to="/coach" className="block">
-                  <CosmicCard className="p-3 sm:p-4 hover:scale-105 transition-transform cursor-pointer h-full">
-                    <Brain className="h-6 w-6 sm:h-8 sm:w-8 text-green-400 mx-auto mb-2" />
-                    <h3 className="font-semibold mb-1 text-sm sm:text-base">{t("index.companion")}</h3>
-                    <p className="text-xs text-muted-foreground">{t("index.companionDesc")}</p>
+                  <CosmicCard className={`${spacing.card} hover:scale-105 transition-transform cursor-pointer h-full backdrop-blur-lg border border-border`}>
+                    <Brain className={`h-6 w-6 ${isFoldDevice ? 'h-5 w-5' : 'sm:h-8 sm:w-8'} text-secondary mx-auto mb-2`} />
+                    <h3 className={`font-heading font-semibold mb-1 ${getTextSize('text-sm')}`}>{t("index.companion")}</h3>
+                    <p className={`${getTextSize('text-xs')} text-muted-foreground`}>{t("index.companionDesc")}</p>
                   </CosmicCard>
                 </Link>
               </div>}
 
           {/* Show the demo button only for admin */}
-          {isAdmin && <div className="mb-4 sm:mb-6 px-4">
-            <Button variant="outline" onClick={() => setShowDemo(true)} className="mb-4 w-full sm:w-auto text-sm sm:text-base h-10 sm:h-11">
-              <Brain className="mr-2 h-4 w-4" />
+          {isAdmin && <div className={`mb-4 ${spacing.gap} px-4`}>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowDemo(true)} 
+              className={`mb-4 ${layout.width} ${isMobile ? 'w-full' : 'sm:w-auto'} ${getTextSize('text-sm')} ${touchTargetSize}`}
+            >
+              <Brain className={`mr-2 h-4 w-4 ${isFoldDevice ? 'h-3 w-3' : ''}`} />
               {t("index.demo")}
             </Button>
           </div>}
           
           {/* Language Selector - positioned above the action buttons */}
-          <div className="flex justify-center mb-6 px-4">
+          <div className={`flex justify-center mb-6 px-4`}>
             <LanguageSelector />
           </div>
           
-          <div className="flex flex-col gap-3 sm:gap-4 px-4 max-w-md mx-auto">
+          <div className={`flex flex-col ${spacing.gap} px-4 max-w-md mx-auto`}>
             {user ? <>
-              <Button size="lg" className="bg-soul-purple hover:bg-soul-purple/90 w-full h-12 text-base" onClick={handleGetStarted}>
+              <Button 
+                size="lg" 
+                className={`bg-primary hover:bg-primary/90 w-full ${touchTargetSize} ${getTextSize('text-base')}`} 
+                onClick={handleGetStarted}
+              >
                 {hasBlueprint ? (
                   <>
-                    <BookOpen className="mr-2 h-4 w-4" />
+                    <BookOpen className={`mr-2 h-4 w-4 ${isFoldDevice ? 'h-3 w-3' : ''}`} />
                     {t("index.takeTour")}
                   </>
                 ) : (
                   <>
                     {t("index.startJourney")}
-                    <ArrowRight className="ml-2 h-4 w-4" />
+                    <ArrowRight className={`ml-2 h-4 w-4 ${isFoldDevice ? 'h-3 w-3' : ''}`} />
                   </>
                 )}
               </Button>
               
               <Link to="/coach" className="block">
-                <Button size="lg" variant="outline" className="w-full h-12 text-base">
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className={`w-full ${touchTargetSize} ${getTextSize('text-base')} backdrop-blur-sm border-border hover:bg-accent hover:text-accent-foreground`}
+                >
                   {t("index.chatWithCompanion")}
                 </Button>
               </Link>
             </> : <>
-              <Button size="lg" className="bg-soul-purple hover:bg-soul-purple/90 w-full h-12 text-base" onClick={handleGetStarted}>
+              <Button 
+                size="lg" 
+                className={`bg-primary hover:bg-primary/90 w-full ${touchTargetSize} ${getTextSize('text-base')}`} 
+                onClick={handleGetStarted}
+              >
                 {t("index.getStarted")}
-                <ArrowRight className="ml-2 h-4 w-4" />
+                <ArrowRight className={`ml-2 h-4 w-4 ${isFoldDevice ? 'h-3 w-3' : ''}`} />
               </Button>
               
               <Link to="/auth" className="block">
-                <Button size="lg" variant="outline" className="w-full h-12 text-base">
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className={`w-full ${touchTargetSize} ${getTextSize('text-base')} backdrop-blur-sm border-border hover:bg-accent hover:text-accent-foreground`}
+                >
                   {t("index.signIn")}
-                  <LogIn className="ml-2 h-4 w-4" />
+                  <LogIn className={`ml-2 h-4 w-4 ${isFoldDevice ? 'h-3 w-3' : ''}`} />
                 </Button>
               </Link>
             </>}
