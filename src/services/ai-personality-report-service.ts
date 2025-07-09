@@ -78,38 +78,78 @@ class AIPersonalityReportService {
   }
 
   private transformBlueprintForEdgeFunction(blueprint: BlueprintData): any {
-    console.log('🔄 Transforming blueprint data for edge function compatibility');
+    console.log('🔄 Transforming blueprint data for edge function - preserving ALL rich data');
     
-    // Ensure the blueprint has the expected structure for the edge function
-    return {
+    // Preserve ALL the rich data structure for comprehensive analysis
+    const transformed = {
       id: blueprint.id,
+      
+      // User metadata with complete personality data
       user_meta: {
         ...blueprint.user_meta,
         user_id: blueprint.user_meta?.user_id || blueprint.user_id,
         preferred_name: blueprint.user_meta?.preferred_name || blueprint.user_meta?.full_name?.split(' ')[0],
-        full_name: blueprint.user_meta?.full_name || 'User'
+        full_name: blueprint.user_meta?.full_name || 'User',
+        // CRITICAL: Preserve the complete personality object with Big Five data
+        personality: blueprint.user_meta?.personality || {}
       },
-      // Map to expected property names for edge function
+      
+      // MBTI data - use the rich structure from user_meta.personality first
       cognition_mbti: blueprint.cognition_mbti || blueprint.mbti || {
-        type: 'Unknown',
+        type: (typeof blueprint.user_meta?.personality === 'object' && blueprint.user_meta?.personality !== null ? 
+               (blueprint.user_meta.personality as any)?.likelyType : null) || 'Unknown',
         dominant_function: 'Unknown',
         auxiliary_function: 'Unknown',
-        core_keywords: []
+        core_keywords: [],
+        // Add probabilities for richer analysis
+        probabilities: (typeof blueprint.user_meta?.personality === 'object' && blueprint.user_meta?.personality !== null ? 
+                       (blueprint.user_meta.personality as any)?.mbtiProbabilities : null) || {}
       },
+      
+      // Human Design - preserve complete gate arrays and center data
       energy_strategy_human_design: blueprint.energy_strategy_human_design || blueprint.human_design || {
         type: 'Unknown',
         authority: 'Unknown',
-        profile: 'Unknown'
+        profile: 'Unknown',
+        gates: {
+          conscious_personality: [],
+          unconscious_design: []
+        },
+        centers: {}
       },
+      
+      // Western Astrology - preserve complete data
       archetype_western: blueprint.archetype_western || blueprint.astrology || {
         sun_sign: 'Unknown',
         moon_sign: 'Unknown',
-        rising_sign: 'Unknown'
+        rising_sign: 'Unknown',
+        sun_keyword: '',
+        moon_keyword: ''
       },
+      
+      // Chinese Astrology - preserve complete data structure
+      archetype_chinese: blueprint.archetype_chinese || {
+        animal: 'Unknown',
+        element: 'Unknown',
+        keyword: 'Unknown',
+        yin_yang: 'Unknown'
+      },
+      
+      // Numerology - preserve ALL number data
       values_life_path: blueprint.values_life_path || blueprint.numerology || {
-        lifePathNumber: 'Unknown',
-        lifePathKeyword: 'Unknown'
+        life_path_number: 'Unknown',
+        life_path_keyword: 'Unknown',
+        soul_urge_number: 'Unknown',
+        soul_urge_keyword: 'Unknown',
+        expression_number: 'Unknown',
+        expression_keyword: 'Unknown',
+        personality_number: 'Unknown',
+        personality_keyword: 'Unknown',
+        birthday_number: 'Unknown',
+        birthday_keyword: 'Unknown'
       },
+      
+      // Bashar suite
       bashar_suite: blueprint.bashar_suite || {
         excitement_compass: { 
           principle: 'Follow your highest excitement' 
@@ -122,9 +162,23 @@ class AIPersonalityReportService {
           quick_ritual: 'Take 3 deep breaths and feel gratitude' 
         }
       },
+      
       goal_stack: blueprint.goal_stack || {},
       metadata: blueprint.metadata || {}
     };
+    
+    console.log('🔍 Transformed blueprint verification:', {
+      hasPersonalityBigFive: !!(transformed.user_meta.personality as any)?.bigFive,
+      hasMBTIType: transformed.cognition_mbti.type,
+      hasHDGates: !!transformed.energy_strategy_human_design.gates,
+      hasChineseAstrology: transformed.archetype_chinese.animal,
+      hasNumerologyComplete: !!transformed.values_life_path.life_path_number,
+      bigFiveOpenness: (transformed.user_meta.personality as any)?.bigFive?.openness,
+      consciousGatesCount: transformed.energy_strategy_human_design.gates?.conscious_personality?.length || 0,
+      unconsciousGatesCount: transformed.energy_strategy_human_design.gates?.unconscious_design?.length || 0
+    });
+    
+    return transformed;
   }
 
   async getStoredReport(userId: string): Promise<{ success: boolean; report?: PersonalityReport; error?: string }> {
