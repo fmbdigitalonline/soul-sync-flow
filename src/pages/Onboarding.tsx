@@ -363,11 +363,6 @@ export default function Onboarding() {
             <p className="text-white/80">
               {t('onboarding.welcomeDesc')}
             </p>
-            {isDevelopment && (
-              <p className="text-xs text-yellow-400 bg-yellow-900/20 p-2 rounded">
-                {t('onboarding.devMode')}
-              </p>
-            )}
             <div className="pt-4">
               <Button 
                 className="w-full bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-colors"
@@ -396,17 +391,6 @@ export default function Onboarding() {
                 />
               </div>
               
-              <div className="space-y-2">
-                <Label htmlFor="preferredName">{t('onboarding.preferredName')}</Label>
-                <Input
-                  id="preferredName"
-                  type="text"
-                  value={formData.preferredName}
-                  onChange={(e) => updateFormData({ preferredName: e.target.value })}
-                  placeholder={t('onboarding.preferredNamePlaceholder')}
-                  className="bg-white/5 border-white/10"
-                />
-              </div>
             </div>
             <div className="flex justify-between pt-4">
               <Button variant="ghost" onClick={goToPrevStep}>{t('back')}</Button>
@@ -597,7 +581,7 @@ export default function Onboarding() {
               key={`blueprint-generator-${blueprintGenerated ? 'complete' : 'active'}`}
               userProfile={{
                 full_name: formData.name || "Anonymous User",
-                preferred_name: formData.preferredName || formData.name.split(" ")[0],
+                preferred_name: formData.name.split(" ")[0], // Use first name as preferred name
                 birth_date: formData.birthDate,
                 birth_time_local: formData.birthTime,
                 birth_location: formData.birthLocation,
