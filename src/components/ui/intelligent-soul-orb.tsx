@@ -66,9 +66,13 @@ export const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
 
   // Get active modules count for display
   const activeModules = intelligence ? Object.keys(HACS_MODULES).filter(module => {
-    const score = intelligence[`${module}_score` as keyof typeof intelligence] as number;
+    const score = intelligence.module_scores && typeof intelligence.module_scores === 'object' 
+      ? (intelligence.module_scores as any)[`${module}_score`] as number || 10
+      : 10;
     return score > 15; // Consider module "active" if score > 15
   }).length : 0;
+
+  const overallIntelligence = intelligence?.overall_intelligence || 10;
 
   return (
     <div className={`relative flex flex-col items-center ${className}`}>
@@ -151,17 +155,19 @@ export const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
       )}
 
       {/* Animation styles */}
-      <style>{`
-        @keyframes soulPulse {
-          0% { transform: scale(1); }
-          100% { transform: scale(1.05); }
-        }
-        
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
+      <style>
+        {`
+          @keyframes soulPulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.05); }
+          }
+          
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+        `}
+      </style>
     </div>
   );
 };

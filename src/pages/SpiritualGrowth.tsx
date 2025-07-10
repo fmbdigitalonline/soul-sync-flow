@@ -155,7 +155,7 @@ const SpiritualGrowth = () => {
             </div>
 
             {/* Unified Chat Interface Container */}
-            <CosmicCard className="w-full h-[calc(100vh-200px)]">
+            <CosmicCard className="w-full min-h-[calc(100vh-200px)]">
               <SpiritualGuideInterface
                 messages={messages}
                 isLoading={isLoading}
