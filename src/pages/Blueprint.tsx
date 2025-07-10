@@ -15,6 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSoulOrb } from "@/contexts/SoulOrbContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useOptimizedBlueprintData } from "@/hooks/use-optimized-blueprint-data";
+import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 import { isAdminUser } from "@/utils/isAdminUser";
 
 const Blueprint = () => {
@@ -25,6 +26,7 @@ const Blueprint = () => {
   const { user, loading: authLoading } = useAuth();
   const { speak } = useSoulOrb();
   const { t } = useLanguage();
+  const { spacing, layout, getTextSize, isMobile, isUltraNarrow, isFoldDevice } = useResponsiveLayout();
   
   const { 
     blueprintData, 
@@ -57,9 +59,9 @@ const Blueprint = () => {
   if (authLoading) {
     return (
       <MainLayout>
-        <div className="w-full min-h-[80vh] flex flex-col items-center justify-center p-3 mobile-container">
+        <div className={`w-full min-h-[80vh] flex flex-col items-center justify-center ${spacing.container} mobile-container`}>
           <Loader2 className="h-8 w-8 animate-spin text-soul-purple" />
-          <p className="mt-2 text-sm">Loading...</p>
+          <p className={`mt-2 ${getTextSize('text-sm')}`}>Loading...</p>
         </div>
       </MainLayout>
     );
@@ -69,12 +71,12 @@ const Blueprint = () => {
   if (!user) {
     return (
       <MainLayout>
-        <div className="w-full min-h-[80vh] flex items-center justify-center p-3 mobile-container">
-          <div className="cosmic-card p-4 sm:p-6 text-center w-full max-w-md">
-            <h1 className="text-lg sm:text-xl font-bold font-display mb-4 break-words">
+        <div className={`w-full min-h-[80vh] flex items-center justify-center ${spacing.container} mobile-container`}>
+          <div className={`cosmic-card ${spacing.card} text-center w-full ${layout.maxWidth}`}>
+            <h1 className={`${getTextSize('text-xl')} font-bold font-display mb-4 break-words`}>
               <span className="gradient-text">Soul Blueprint</span>
             </h1>
-            <p className="mb-6 text-sm break-words">Please sign in to view your blueprint</p>
+            <p className={`mb-6 ${getTextSize('text-sm')} break-words`}>Please sign in to view your blueprint</p>
             <Button 
               className="bg-soul-purple hover:bg-soul-purple/90 w-full max-w-full"
               onClick={() => navigate('/auth')}
@@ -91,9 +93,9 @@ const Blueprint = () => {
   if (loading) {
     return (
       <MainLayout>
-        <div className="w-full min-h-[80vh] flex flex-col items-center justify-center p-3 mobile-container">
+        <div className={`w-full min-h-[80vh] flex flex-col items-center justify-center ${spacing.container} mobile-container`}>
           <Loader2 className="h-8 w-8 animate-spin text-soul-purple" />
-          <p className="mt-2 text-sm break-words">Loading blueprint...</p>
+          <p className={`mt-2 ${getTextSize('text-sm')} break-words`}>Loading blueprint...</p>
         </div>
       </MainLayout>
     );
@@ -107,16 +109,16 @@ const Blueprint = () => {
       console.log("📝 BLUEPRINT PAGE: No blueprint found, should redirect to onboarding");
       return (
         <MainLayout>
-          <div className="w-full min-h-[80vh] flex flex-col items-center justify-center p-3 mobile-container">
-            <div className="cosmic-card p-4 sm:p-6 text-center w-full max-w-md">
+          <div className={`w-full min-h-[80vh] flex flex-col items-center justify-center ${spacing.container} mobile-container`}>
+            <div className={`cosmic-card ${spacing.card} text-center w-full ${layout.maxWidth}`}>
               <AlertCircle className="h-12 w-12 text-soul-purple mx-auto mb-4" />
-              <h2 className="text-base sm:text-lg font-semibold mb-4 break-words">
+              <h2 className={`${getTextSize('text-lg')} font-semibold mb-4 break-words`}>
                 <span className="gradient-text">Create Your Blueprint</span>
               </h2>
-              <p className="text-sm mb-6 break-words text-muted-foreground">
+              <p className={`${getTextSize('text-sm')} mb-6 break-words text-muted-foreground`}>
                 You haven't created your soul blueprint yet. Let's get started!
               </p>
-              <div className="space-y-2">
+              <div className={`space-y-2 ${spacing.gap}`}>
                 <Button 
                   className="bg-soul-purple hover:bg-soul-purple/90 w-full rounded-3xl"
                   onClick={() => navigate('/onboarding')}
@@ -141,12 +143,12 @@ const Blueprint = () => {
     // Other errors (loading/database issues)
     return (
       <MainLayout>
-        <div className="w-full min-h-[80vh] flex flex-col items-center justify-center p-3 mobile-container">
-          <div className="cosmic-card p-4 sm:p-6 text-center w-full max-w-md">
+        <div className={`w-full min-h-[80vh] flex flex-col items-center justify-center ${spacing.container} mobile-container`}>
+          <div className={`cosmic-card ${spacing.card} text-center w-full ${layout.maxWidth}`}>
             <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-base sm:text-lg font-semibold mb-4 text-red-500 break-words">Blueprint Error</h2>
-            <p className="text-red-500 mb-4 text-sm break-words">{error}</p>
-            <div className="space-y-2">
+            <h2 className={`${getTextSize('text-lg')} font-semibold mb-4 text-red-500 break-words`}>Blueprint Error</h2>
+            <p className={`text-red-500 mb-4 ${getTextSize('text-sm')} break-words`}>{error}</p>
+            <div className={`space-y-2 ${spacing.gap}`}>
               <Button onClick={() => refetch()} className="w-full rounded-3xl">
                 <RefreshCw className="mr-2 h-4 w-4" />
                 Try Again
@@ -170,22 +172,22 @@ const Blueprint = () => {
     console.log("📝 BLUEPRINT PAGE: Insufficient blueprint data, redirecting to onboarding");
     return (
       <MainLayout>
-        <div className="w-full min-h-[80vh] flex flex-col items-center justify-center p-3 mobile-container">
-          <div className="cosmic-card p-4 sm:p-6 text-center w-full max-w-md">
+        <div className={`w-full min-h-[80vh] flex flex-col items-center justify-center ${spacing.container} mobile-container`}>
+          <div className={`cosmic-card ${spacing.card} text-center w-full ${layout.maxWidth}`}>
             <AlertCircle className="h-12 w-12 text-soul-purple mx-auto mb-4" />
-            <h2 className="text-base sm:text-lg font-semibold mb-4 break-words">
+            <h2 className={`${getTextSize('text-lg')} font-semibold mb-4 break-words`}>
               <span className="gradient-text">Complete Your Blueprint</span>
             </h2>
-            <p className="text-sm mb-4 break-words text-muted-foreground">
+            <p className={`${getTextSize('text-sm')} mb-4 break-words text-muted-foreground`}>
               Your blueprint needs more information to be complete. 
               {blueprintValidation.missingFields.length > 0 && (
-                <span className="block mt-2 text-xs">
+                <span className={`block mt-2 ${getTextSize('text-xs')}`}>
                   Missing: {blueprintValidation.missingFields.join(', ')}
                 </span>
               )}
             </p>
             <div className="mb-4">
-              <div className="text-xs text-muted-foreground mb-1">
+              <div className={`${getTextSize('text-xs')} text-muted-foreground mb-1`}>
                 Completion: {getBlueprintCompletionPercentage}%
               </div>
               <div className="w-full bg-muted rounded-full h-2">
@@ -195,7 +197,7 @@ const Blueprint = () => {
                 />
               </div>
             </div>
-            <div className="space-y-2">
+            <div className={`space-y-2 ${spacing.gap}`}>
               <Button 
                 className="bg-soul-purple hover:bg-soul-purple/90 w-full rounded-3xl"
                 onClick={() => navigate('/onboarding')}
@@ -353,26 +355,26 @@ const Blueprint = () => {
 
   return (
     <MainLayout>
-      <div className="w-full p-3 sm:p-4 md:p-6 pb-20 mobile-container">
-        {/* Mobile-friendly header with proper constraints */}
-        <div className="flex flex-col gap-3 sm:gap-4 mb-4 sm:mb-6 w-full max-w-full">
+      <div className={`w-full ${spacing.container} pb-20 mobile-container`}>
+        {/* Mobile-friendly header with proper constraints and responsive sizing */}
+        <div className={`flex flex-col ${spacing.gap} mb-6 w-full max-w-full`}>
           <div className="flex items-center justify-between">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold font-display break-words">
+            <h1 className={`${getTextSize('text-3xl')} font-bold font-display break-words`}>
               <span className="gradient-text">Soul Blueprint</span>
             </h1>
             {getBlueprintCompletionPercentage < 100 && (
-              <div className="text-xs text-muted-foreground">
+              <div className={`${getTextSize('text-xs')} text-muted-foreground`}>
                 {getBlueprintCompletionPercentage}% Complete
               </div>
             )}
           </div>
           
-          {/* Action buttons - Mobile Stack with proper sizing */}
-          <div className="flex flex-col gap-2 w-full max-w-full">
+          {/* Action buttons - Mobile Stack with proper sizing and responsive spacing */}
+          <div className={`flex flex-col ${spacing.gap} w-full max-w-full`}>
             {isAdmin && (
               <Button 
                 variant="outline"
-                className="flex items-center justify-center text-sm h-9 w-full max-w-full"
+                className={`flex items-center justify-center ${getTextSize('text-sm')} h-12 w-full max-w-full`}
                 onClick={handleRegenerateBlueprint}
                 disabled={isGenerating}
               >
@@ -381,7 +383,7 @@ const Blueprint = () => {
               </Button>
             )}
             <Button 
-              className="bg-soul-purple hover:bg-soul-purple/90 flex items-center justify-center text-sm h-9 w-full rounded-3xl"
+              className={`bg-soul-purple hover:bg-soul-purple/90 flex items-center justify-center ${getTextSize('text-sm')} h-12 w-full rounded-3xl`}
               onClick={() => navigate('/coach')}
             >
               <MessageCircle className="mr-2 h-4 w-4 flex-shrink-0" />
@@ -391,32 +393,32 @@ const Blueprint = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8 w-full max-w-full">
-          {/* Mobile-responsive tabs with personality report tab */}
-          <TabsList className="w-full max-w-full h-auto p-1 grid grid-cols-2 sm:grid-cols-5 !rounded-3xl">
-            <TabsTrigger value="view" className="text-xs sm:text-sm py-2 px-1 truncate !rounded-3xl">
+          {/* Mobile-responsive tabs with consistent sizing */}
+          <TabsList className={`w-full max-w-full h-auto ${spacing.button} grid ${isMobile ? 'grid-cols-2' : 'grid-cols-5'} !rounded-3xl`}>
+            <TabsTrigger value="view" className={`${getTextSize('text-sm')} py-2 px-1 truncate !rounded-3xl`}>
               Blueprint
             </TabsTrigger>
-            <TabsTrigger value="report" className="text-xs sm:text-sm py-2 px-1 truncate !rounded-3xl">
+            <TabsTrigger value="report" className={`${getTextSize('text-sm')} py-2 px-1 truncate !rounded-3xl`}>
               Report
             </TabsTrigger>
             {isAdmin && (
-              <TabsTrigger value="edit" className="text-xs sm:text-sm py-2 px-1 truncate !rounded-3xl">
+              <TabsTrigger value="edit" className={`${getTextSize('text-sm')} py-2 px-1 truncate !rounded-3xl`}>
                 Edit
               </TabsTrigger>
             )}
             {isAdmin && (
-              <TabsTrigger value="health-check" className="text-xs sm:text-sm py-2 px-1 flex items-center gap-1 min-w-0 !rounded-3xl">
+              <TabsTrigger value="health-check" className={`${getTextSize('text-sm')} py-2 px-1 flex items-center gap-1 min-w-0 !rounded-3xl`}>
                 <Activity className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                <span className="hidden sm:inline truncate">Health Check</span>
-                <span className="sm:hidden truncate">Health</span>
+                <span className={`${isMobile ? 'hidden sm:inline' : 'inline'} truncate`}>Health Check</span>
+                <span className={`${isMobile ? 'sm:hidden' : 'hidden'} truncate`}>Health</span>
               </TabsTrigger>
             )}
-            <TabsTrigger value="generating" disabled={!isGenerating} className="text-xs sm:text-sm py-2 px-1 truncate !rounded-3xl">
+            <TabsTrigger value="generating" disabled={!isGenerating} className={`${getTextSize('text-sm')} py-2 px-1 truncate !rounded-3xl`}>
               Generating
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="view" className="mt-4 sm:mt-6 w-full max-w-full">
+          <TabsContent value="view" className={`mt-6 w-full max-w-full`}>
             {blueprintData && (
               <div className="w-full max-w-full overflow-hidden">
                 <SimplifiedBlueprintViewer blueprint={blueprintData} />
@@ -424,14 +426,14 @@ const Blueprint = () => {
             )}
           </TabsContent>
 
-          <TabsContent value="report" className="mt-4 sm:mt-6 w-full max-w-full">
+          <TabsContent value="report" className={`mt-6 w-full max-w-full`}>
             <div className="w-full max-w-full overflow-hidden">
               <PersonalityReportViewer />
             </div>
           </TabsContent>
           
           {isAdmin && (
-            <TabsContent value="edit" className="mt-4 sm:mt-6 w-full max-w-full">
+            <TabsContent value="edit" className={`mt-6 w-full max-w-full`}>
               <div className="w-full max-w-full overflow-hidden">
                 <BlueprintEditor onSave={handleSaveBlueprint} initialBlueprint={blueprintData ? convertToSaveFormat(blueprintData) : undefined} />
               </div>
@@ -439,14 +441,14 @@ const Blueprint = () => {
           )}
 
           {isAdmin && (
-            <TabsContent value="health-check" className="mt-4 sm:mt-6 w-full max-w-full">
+            <TabsContent value="health-check" className={`mt-6 w-full max-w-full`}>
               <div className="w-full max-w-full overflow-hidden">
                 <BlueprintHealthCheck />
               </div>
             </TabsContent>
           )}
 
-          <TabsContent value="generating" className="mt-4 sm:mt-6 w-full max-w-full">
+          <TabsContent value="generating" className={`mt-6 w-full max-w-full`}>
             {isGenerating && blueprintData && (
               <div className="w-full max-w-full overflow-hidden">
                 <BlueprintGenerator 
