@@ -249,7 +249,7 @@ const Dreams = () => {
                 <Heart className={`h-5 w-5 text-primary-foreground ${isFoldDevice ? 'h-4 w-4' : ''}`} />
               </div>
               <h1 className={`font-heading font-bold mb-3 text-foreground ${getTextSize('text-lg')}`}>
-                {t("dreams.title")}
+                Dreams & Goals
               </h1>
               <p className={`mb-6 text-muted-foreground leading-relaxed px-2 ${getTextSize('text-sm')}`}>{t("dreams.description")}</p>
               <Button 
@@ -301,7 +301,7 @@ const Dreams = () => {
                 <div className={`bg-primary rounded-full flex items-center justify-center ${isFoldDevice ? 'w-5 h-5' : 'w-6 h-6'}`}>
                   <Heart className={`text-primary-foreground ${isFoldDevice ? 'h-2 w-2' : 'h-3 w-3'}`} />
                 </div>
-                <h2 className={`font-heading font-semibold text-foreground ${getTextSize('text-sm')} ${isFoldDevice ? 'hidden' : ''}`}>Dream Discovery</h2>
+                <h2 className={`font-heading font-semibold text-foreground ${getTextSize('text-sm')} ${isFoldDevice ? 'hidden' : ''}`}>Dreams & Goals Discovery</h2>
               </div>
               <div className={isFoldDevice ? 'w-6' : 'w-16'} />
             </div>
@@ -370,7 +370,7 @@ const Dreams = () => {
                 {isFoldDevice ? '' : 'New Dream'}
               </Button>
               <div className={`text-center ${isFoldDevice ? 'w-full' : 'flex-1'}`}>
-                <h1 className={`font-heading font-bold text-foreground ${getTextSize('text-base')}`}>{t("dreams.yourJourney")}</h1>
+                <h1 className={`font-heading font-bold text-foreground ${getTextSize('text-base')}`}>Your Dreams & Goals Journey</h1>
                 {!isFoldDevice && <p className={`text-muted-foreground ${getTextSize('text-xs')}`}>{t("dreams.trackProgress")}</p>}
               </div>
               <div className={isFoldDevice ? 'hidden' : 'w-20'} />
@@ -580,7 +580,7 @@ const Dreams = () => {
                 <Heart className={`text-white ${isFoldDevice ? 'h-6 w-6' : 'h-8 w-8'}`} />
               </div>
               <h1 className={`font-heading font-bold mb-3 bg-gradient-to-r from-soul-purple to-soul-teal bg-clip-text text-transparent ${getTextSize('text-xl')}`}>
-                {t("dreams.whatsYourDream")}
+                Dreams & Goals Creator
               </h1>
               <p className={`text-gray-600 leading-relaxed mb-4 ${getTextSize('text-sm')}`}>
                 Share your deepest aspirations and let's discover what truly lights up your soul
