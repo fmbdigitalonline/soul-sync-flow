@@ -78,7 +78,7 @@ const Blueprint = () => {
             </h1>
             <p className={`mb-6 ${getTextSize('text-sm')} break-words`}>Please sign in to view your blueprint</p>
             <Button 
-              className="bg-soul-purple hover:bg-soul-purple/90 w-full max-w-full"
+              className="bg-soul-purple hover:bg-soul-purple/90 w-full max-w-full rounded-2xl"
               onClick={() => navigate('/auth')}
             >
               Sign In
@@ -120,7 +120,7 @@ const Blueprint = () => {
               </p>
               <div className={`space-y-2 ${spacing.gap}`}>
                 <Button 
-                  className="bg-soul-purple hover:bg-soul-purple/90 w-full rounded-3xl"
+                  className="bg-soul-purple hover:bg-soul-purple/90 w-full rounded-2xl"
                   onClick={() => navigate('/onboarding')}
                 >
                   Create Blueprint
@@ -128,7 +128,7 @@ const Blueprint = () => {
                 <Button 
                   variant="outline" 
                   onClick={() => refetch()} 
-                  className="w-full rounded-3xl"
+                  className="w-full rounded-2xl"
                 >
                   <RefreshCw className="mr-2 h-4 w-4" />
                   Check Again
@@ -149,14 +149,14 @@ const Blueprint = () => {
             <h2 className={`${getTextSize('text-lg')} font-semibold mb-4 text-red-500 break-words`}>Blueprint Error</h2>
             <p className={`text-red-500 mb-4 ${getTextSize('text-sm')} break-words`}>{error}</p>
             <div className={`space-y-2 ${spacing.gap}`}>
-              <Button onClick={() => refetch()} className="w-full rounded-3xl">
+              <Button onClick={() => refetch()} className="w-full rounded-2xl">
                 <RefreshCw className="mr-2 h-4 w-4" />
                 Try Again
               </Button>
               <Button 
                 variant="outline" 
                 onClick={() => navigate('/onboarding')} 
-                className="w-full rounded-3xl"
+                className="w-full rounded-2xl"
               >
                 Create New Blueprint
               </Button>
@@ -199,7 +199,7 @@ const Blueprint = () => {
             </div>
             <div className={`space-y-2 ${spacing.gap}`}>
               <Button 
-                className="bg-soul-purple hover:bg-soul-purple/90 w-full rounded-3xl"
+                className="bg-soul-purple hover:bg-soul-purple/90 w-full rounded-2xl"
                 onClick={() => navigate('/onboarding')}
               >
                 Complete Blueprint
@@ -207,7 +207,7 @@ const Blueprint = () => {
               <Button 
                 variant="outline" 
                 onClick={() => refetch()} 
-                className="w-full rounded-3xl"
+                className="w-full rounded-2xl"
               >
                 <RefreshCw className="mr-2 h-4 w-4" />
                 Refresh
@@ -374,7 +374,7 @@ const Blueprint = () => {
             {isAdmin && (
               <Button 
                 variant="outline"
-                className={`flex items-center justify-center ${getTextSize('text-sm')} h-12 w-full max-w-full`}
+                className={`flex items-center justify-center ${getTextSize('text-sm')} h-12 w-full max-w-full rounded-2xl`}
                 onClick={handleRegenerateBlueprint}
                 disabled={isGenerating}
               >
@@ -383,7 +383,7 @@ const Blueprint = () => {
               </Button>
             )}
             <Button 
-              className={`bg-soul-purple hover:bg-soul-purple/90 flex items-center justify-center ${getTextSize('text-sm')} h-12 w-full rounded-3xl`}
+              className={`bg-soul-purple hover:bg-soul-purple/90 flex items-center justify-center ${getTextSize('text-sm')} h-12 w-full rounded-2xl`}
               onClick={() => navigate('/coach')}
             >
               <MessageCircle className="mr-2 h-4 w-4 flex-shrink-0" />
@@ -394,25 +394,25 @@ const Blueprint = () => {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8 w-full max-w-full">
           {/* Simplified tabs - only showing necessary ones for regular users */}
-          <TabsList className={`w-full max-w-full h-auto ${spacing.button} grid ${isAdmin ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-2'} !rounded-3xl`}>
-            <TabsTrigger value="view" className={`${getTextSize('text-sm')} py-2 px-1 truncate !rounded-3xl`}>
+          <TabsList className={`w-full max-w-full h-auto ${spacing.button} grid ${isAdmin ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-2'} !rounded-2xl`}>
+            <TabsTrigger value="view" className={`${getTextSize('text-sm')} py-2 px-1 truncate !rounded-2xl`}>
               Blueprint
             </TabsTrigger>
-            <TabsTrigger value="report" className={`${getTextSize('text-sm')} py-2 px-1 truncate !rounded-3xl`}>
+            <TabsTrigger value="report" className={`${getTextSize('text-sm')} py-2 px-1 truncate !rounded-2xl`}>
               Report
             </TabsTrigger>
             {isAdmin && (
               <>
-                <TabsTrigger value="edit" className={`${getTextSize('text-sm')} py-2 px-1 truncate !rounded-3xl`}>
+                <TabsTrigger value="edit" className={`${getTextSize('text-sm')} py-2 px-1 truncate !rounded-2xl`}>
                   Edit
                 </TabsTrigger>
-                <TabsTrigger value="health-check" className={`${getTextSize('text-sm')} py-2 px-1 flex items-center gap-1 min-w-0 !rounded-3xl`}>
+                <TabsTrigger value="health-check" className={`${getTextSize('text-sm')} py-2 px-1 flex items-center gap-1 min-w-0 !rounded-2xl`}>
                   <Activity className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                   <span className={`${isMobile ? 'hidden sm:inline' : 'inline'} truncate`}>Health</span>
                 </TabsTrigger>
               </>
             )}
-            <TabsTrigger value="generating" disabled={!isGenerating} className={`${getTextSize('text-sm')} py-2 px-1 truncate !rounded-3xl ${!isAdmin ? 'hidden' : ''}`}>
+            <TabsTrigger value="generating" disabled={!isGenerating} className={`${getTextSize('text-sm')} py-2 px-1 truncate !rounded-2xl ${!isAdmin ? 'hidden' : ''}`}>
               Generating
             </TabsTrigger>
           </TabsList>
