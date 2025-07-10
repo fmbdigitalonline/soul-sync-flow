@@ -14,6 +14,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 import { ActiveReminders } from "@/components/reminders/ActiveReminders";
 import { MobileTogglePanel } from "@/components/ui/mobile-toggle-panel";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Coach = () => {
   const { 
@@ -37,6 +38,7 @@ const Coach = () => {
   const { t } = useLanguage();
   const { hasBlueprint } = useBlueprintCache();
   const { productivityJourney, growthJourney } = useJourneyTracking();
+  const { isMobile } = useIsMobile();
 
   // Check authentication status
   useEffect(() => {
@@ -92,17 +94,16 @@ const Coach = () => {
     );
   }
 
-  const chatContent = (
-    <CosmicCard className="h-full">
-      <BlendInterface
-        messages={messages}
-        isLoading={isLoading}
-        onSendMessage={handleSendMessage}
-        personaReady={personaReady}
-        vfpGraphStatus={vfpGraphStatus}
-        onFeedback={recordVFPGraphFeedback}
-      />
-    </CosmicCard>
+  // Create the main chat interface component
+  const chatInterface = (
+    <BlendInterface
+      messages={messages}
+      isLoading={isLoading}
+      onSendMessage={handleSendMessage}
+      personaReady={personaReady}
+      vfpGraphStatus={vfpGraphStatus}
+      onFeedback={recordVFPGraphFeedback}
+    />
   );
 
   const remindersContent = (
@@ -165,25 +166,28 @@ const Coach = () => {
             </p>
           </div>
 
-          {/* Coordinated height calculation for mobile layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-12rem)]">
-            
-            <div className="hidden lg:block lg:col-span-1">
-              {remindersContent}
-            </div>
-
-            <div className="lg:col-span-3">
-              {chatContent}
-            </div>
-          </div>
-
-          <div className="lg:hidden">
+          {/* Render different layouts based on screen size */}
+          {isMobile ? (
+            // Mobile: Use MobileTogglePanel
             <MobileTogglePanel
-              chatContent={chatContent}
+              chatContent={<CosmicCard className="h-full">{chatInterface}</CosmicCard>}
               remindersContent={remindersContent}
               activeRemindersCount={0}
             />
-          </div>
+          ) : (
+            // Desktop: Use grid layout
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-12rem)]">
+              <div className="lg:col-span-1">
+                {remindersContent}
+              </div>
+
+              <div className="lg:col-span-3">
+                <CosmicCard className="h-full">
+                  {chatInterface}
+                </CosmicCard>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </MainLayout>
