@@ -112,8 +112,15 @@ const Index = () => {
           
           <h1 
             className={`font-heading ${getTextSize('text-3xl')} lg:${getTextSize('text-4xl')} font-bold mb-4 ${spacing.gap} px-4`}
-            dangerouslySetInnerHTML={{ __html: t('index.welcome') }}
-          />
+          >
+            {user ? (
+              <>
+                Welcome to <span className="text-primary">SoulSync</span>, {user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Friend'}
+              </>
+            ) : (
+              <span dangerouslySetInnerHTML={{ __html: t('index.welcome') }} />
+            )}
+          </h1>
           
           {user && hasBlueprint ? (
             <PersonalizedQuoteDisplay 
