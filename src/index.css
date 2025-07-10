@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -11,7 +11,7 @@
     --soul-ivory: 32 28% 98%; /* #FCF8F6 */
     --soul-black: 219 24% 15%; /* #1A1F2C */
 
-    --background: 32 28% 98%; /* soul-ivory #FCF8F6 */
+    --background: 0 0% 100%; /* Pure White */
     --foreground: 219 24% 15%; /* soul-black #1A1F2C */
 
     --card: 0 0% 100%; /* Pure White */
@@ -92,11 +92,11 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
   
   .font-display {
-    font-family: 'Playfair Display', serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
 }
 
