@@ -15,7 +15,7 @@ const CosmicCard = React.forwardRef<HTMLDivElement, CosmicCardProps>(
       className={cn(
         "cosmic-card p-6", 
         floating && "animate-float",
-        glow && "before:absolute before:inset-0 before:rounded-2xl before:bg-primary/20 before:blur-lg before:opacity-30 before:-z-10",
+        glow && "before:absolute before:inset-0 before:rounded-3xl before:bg-primary/20 before:blur-lg before:opacity-30 before:-z-10",
         className
       )}
       {...props}
