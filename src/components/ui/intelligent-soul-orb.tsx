@@ -11,6 +11,8 @@ interface IntelligentSoulOrbProps {
   stage?: "welcome" | "collecting" | "generating" | "complete";
   onClick?: () => void;
   intelligenceLevel?: number; // 0-100
+  hacsHarmony?: number; // 0-1 (HACS system synergy)
+  hacsProcessing?: boolean; // Currently processing through HACS
   showProgressRing?: boolean;
   showIntelligenceTooltip?: boolean;
 }
@@ -23,6 +25,8 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
   stage = "welcome",
   onClick,
   intelligenceLevel = 0,
+  hacsHarmony = 0.7,
+  hacsProcessing = false,
   showProgressRing = true,
   showIntelligenceTooltip = false,
 }) => {
@@ -65,11 +69,27 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
     }
   }, [intelligenceLevel, stage]);
 
-  // Calculate circumference for progress ring
+  // Calculate circumference for split progress rings
   const radius = (ringSize[size] - 6) / 2; // Account for stroke width
   const circumference = 2 * Math.PI * radius;
-  const strokeDasharray = circumference;
-  const strokeDashoffset = circumference - (intelligenceLevel / 100) * circumference;
+  const halfCircumference = circumference / 2;
+  
+  // Intelligence ring (left hemisphere) - gold/amber
+  const intelligenceStrokeDasharray = halfCircumference;
+  const intelligenceStrokeDashoffset = halfCircumference - (intelligenceLevel / 100) * halfCircumference;
+  
+  // HACS harmony ring (right hemisphere) - dynamic colors
+  const hacsStrokeDasharray = halfCircumference;
+  const hacsStrokeDashoffset = halfCircumference - hacsHarmony * halfCircumference;
+  
+  // HACS color based on harmony level
+  const getHacsColor = () => {
+    if (hacsHarmony >= 0.9) return "#00ff88"; // Bright green - perfect harmony
+    if (hacsHarmony >= 0.8) return "#00d4ff"; // Cyan - high harmony  
+    if (hacsHarmony >= 0.7) return "#0088ff"; // Blue - good harmony
+    if (hacsHarmony >= 0.5) return "#ff8800"; // Orange - moderate harmony
+    return "#ff4444"; // Red - low harmony
+  };
 
   // Initialize particles with intelligence-based count
   useEffect(() => {
@@ -134,43 +154,77 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
 
   return (
     <div className="relative flex items-center justify-center">
-      {/* Progress Ring - Made more visible */}
-      {showProgressRing && intelligenceLevel > 0 && (
+      {/* Split Progress Ring - Intelligence + HACS Harmony */}
+      {showProgressRing && (intelligenceLevel > 0 || hacsHarmony > 0) && (
         <svg
           className="absolute"
           width={ringSize[size]}
           height={ringSize[size]}
           style={{ transform: 'rotate(-90deg)' }}
         >
-          {/* Background ring - more visible */}
+          {/* Background rings */}
           <circle
             cx={ringSize[size] / 2}
             cy={ringSize[size] / 2}
             r={radius}
-            stroke="rgba(255, 215, 0, 0.3)" // More visible golden background
+            stroke="rgba(255, 215, 0, 0.2)" // Intelligence background
             strokeWidth="2"
             fill="transparent"
+            strokeDasharray={halfCircumference}
+            strokeDashoffset="0"
           />
-          {/* Progress ring - brighter gold */}
+          <circle
+            cx={ringSize[size] / 2}
+            cy={ringSize[size] / 2}
+            r={radius}
+            stroke="rgba(0, 136, 255, 0.2)" // HACS background
+            strokeWidth="2"
+            fill="transparent"
+            strokeDasharray={halfCircumference}
+            strokeDashoffset={-halfCircumference}
+          />
+          
+          {/* Intelligence Progress Ring (Left Hemisphere) */}
           <motion.circle
             cx={ringSize[size] / 2}
             cy={ringSize[size] / 2}
             r={radius}
-            stroke="#FFD700" // Pure gold color
+            stroke="#FFD700" // Gold for intelligence
             strokeWidth="2"
             fill="transparent"
-            strokeDasharray={strokeDasharray}
-            strokeDashoffset={strokeDashoffset}
+            strokeDasharray={intelligenceStrokeDasharray}
+            strokeDashoffset={intelligenceStrokeDashoffset}
             strokeLinecap="round"
-            initial={{ strokeDashoffset: circumference }}
-            animate={{ strokeDashoffset }}
+            initial={{ strokeDashoffset: halfCircumference }}
+            animate={{ strokeDashoffset: intelligenceStrokeDashoffset }}
             transition={{ duration: 1, ease: "easeInOut" }}
+            style={{
+              filter: "drop-shadow(0 0 3px rgba(255, 215, 0, 0.5))"
+            }}
+          />
+          
+          {/* HACS Harmony Ring (Right Hemisphere) */}
+          <motion.circle
+            cx={ringSize[size] / 2}
+            cy={ringSize[size] / 2}
+            r={radius}
+            stroke={getHacsColor()}
+            strokeWidth="2"
+            fill="transparent"
+            strokeDasharray={hacsStrokeDasharray}
+            strokeDashoffset={-halfCircumference + (hacsHarmony * halfCircumference)}
+            strokeLinecap="round"
+            initial={{ strokeDashoffset: -halfCircumference }}
+            animate={{ 
+              strokeDashoffset: -halfCircumference + (hacsHarmony * halfCircumference),
+              stroke: getHacsColor()
+            }}
+            transition={{ duration: 0.8, ease: "easeInOut" }}
             className={cn(
-              intelligenceLevel >= 100 && "drop-shadow-lg",
-              isLevelingUp && "animate-pulse"
+              hacsProcessing && "animate-pulse"
             )}
             style={{
-              filter: "drop-shadow(0 0 4px rgba(255, 215, 0, 0.6))" // Glow effect
+              filter: `drop-shadow(0 0 3px ${getHacsColor()}40)`
             }}
           />
         </svg>
@@ -282,10 +336,14 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
         </AnimatePresence>
       </motion.div>
 
-      {/* Intelligence tooltip */}
+      {/* Enhanced tooltip with both metrics */}
       {showIntelligenceTooltip && (
         <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-          {getIntelligencePhase()} • {Math.round(intelligenceLevel)}%
+          <div className="flex items-center gap-2">
+            <span style={{ color: "#FFD700" }}>Intelligence: {Math.round(intelligenceLevel)}%</span>
+            <span className="text-gray-400">•</span>
+            <span style={{ color: getHacsColor() }}>HACS: {Math.round(hacsHarmony * 100)}%</span>
+          </div>
         </div>
       )}
     </div>

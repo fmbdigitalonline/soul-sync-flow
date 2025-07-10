@@ -146,6 +146,8 @@ export const SpiritualGuideInterface: React.FC = () => {
             <IntelligentSoulOrb 
               size="lg"
               intelligenceLevel={intelligence?.intelligence_level || 65}
+              hacsHarmony={hacsState.harmonyLevel}
+              hacsProcessing={isLoading}
               showProgressRing={true}
               showIntelligenceTooltip={false}
               stage="welcome"
@@ -189,6 +191,8 @@ export const SpiritualGuideInterface: React.FC = () => {
           <IntelligentSoulOrb 
             size="sm"
             intelligenceLevel={intelligence?.intelligence_level || 65}
+            hacsHarmony={hacsState.harmonyLevel}
+            hacsProcessing={isLoading}
             showProgressRing={true}
             showIntelligenceTooltip={false}
             stage="complete"
@@ -232,6 +236,8 @@ export const SpiritualGuideInterface: React.FC = () => {
                   <IntelligentSoulOrb 
                     size="sm"
                     intelligenceLevel={intelligence?.intelligence_level || 65}
+                    hacsHarmony={message.hacsMetadata?.harmonyScore || hacsState.harmonyLevel}
+                    hacsProcessing={message.isStreaming}
                     showProgressRing={true}
                     speaking={message.isStreaming}
                     stage="complete"
@@ -300,6 +306,8 @@ export const SpiritualGuideInterface: React.FC = () => {
                 <IntelligentSoulOrb 
                   size="sm"
                   intelligenceLevel={intelligence?.intelligence_level || 65}
+                  hacsHarmony={hacsState.harmonyLevel}
+                  hacsProcessing={true}
                   showProgressRing={true}
                   speaking={true}
                   stage="generating"
