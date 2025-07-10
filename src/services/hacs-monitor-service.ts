@@ -6,6 +6,12 @@ import { crossPlaneStateReflector } from "./hermetic-core/cross-plane-state-refl
 import { temporalWaveSynchronizer } from "./hermetic-core/temporal-wave-synchronizer";
 import { harmonicFrequencyModulationEngine } from "./hermetic-core/harmonic-frequency-modulation-engine";
 import { dualPoleEquilibratorModule } from "./hermetic-core/dual-pole-equilibrator-module";
+import { conflictNavigationResolution } from "./hermetic-core/conflict-navigation-resolution";
+import { blueprintPersonalizationSync } from "./hermetic-core/blueprint-personalization-sync";
+import { vectorFusionPersonality } from "./hermetic-core/vector-fusion-personality";
+import { tieredMemoryGraph } from "./hermetic-core/tiered-memory-graph";
+import { productionACSService } from "./production-acs-service";
+import { pieService } from "./pie-service";
 
 export interface HACSModuleHealth {
   moduleId: string;
