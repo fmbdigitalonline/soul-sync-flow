@@ -1,39 +1,59 @@
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Sparkles, Heart, Brain, Loader2, Send } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
-import { IntelligentSoulOrb } from '@/components/ui/intelligent-soul-orb';
-import { useHacsIntelligence } from '@/hooks/use-hacs-intelligence';
+import React, { useState, useRef, useEffect } from 'react';
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Send, RotateCcw, Sparkles, Loader2, Activity, Brain, Zap } from "lucide-react";
+import { IntelligentSoulOrb } from "@/components/IntelligentSoulOrb";
+import { useIntelligence } from "@/hooks/useIntelligence";
+import { useAuth } from "@/contexts/AuthContext";
+import { cn } from "@/lib/utils";
+import { useHACSDreamGuide } from "@/hooks/use-hacs-dream-guide";
 
-interface Message {
-  id: string;
-  content: string;
-  sender: "user" | "assistant";
-  timestamp: Date;
-  isStreaming?: boolean;
-}
+// Device detection
+const useDeviceType = () => {
+  const [isFoldDevice, setIsFoldDevice] = useState(false);
 
-interface SpiritualGuideInterfaceProps {
-  messages: Message[];
-  isLoading: boolean;
-  onSendMessage: (message: string) => void;
-  userDisplayName?: string;
-  coreTraits: string[];
-}
+  useEffect(() => {
+    const checkDevice = () => {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      const aspectRatio = width / height;
+      
+      // Detect fold devices by aspect ratio and screen width
+      const isFold = (width <= 673 && aspectRatio < 1.5) || 
+                   (width >= 673 && width <= 800 && aspectRatio < 2);
+      setIsFoldDevice(isFold);
+    };
 
-export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = ({
-  messages,
-  isLoading,
-  onSendMessage,
-  userDisplayName = 'friend',
-  coreTraits = []
-}) => {
-  const [inputValue, setInputValue] = useState('');
+    checkDevice();
+    window.addEventListener('resize', checkDevice);
+    return () => window.removeEventListener('resize', checkDevice);
+  }, []);
+
+  return isFoldDevice;
+};
+
+export const SpiritualGuideInterface: React.FC = () => {
+  const { user } = useAuth();
+  const { intelligence } = useIntelligence();
+  const isFoldDevice = useDeviceType();
+  
+  // Use complete HACS architecture
+  const { 
+    messages, 
+    isLoading, 
+    sendMessage, 
+    resetConversation, 
+    hacsState,
+    getHACSStatus,
+    isHACSEnabled 
+  } = useHACSDreamGuide();
+  
+  const [inputMessage, setInputMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { getTextSize, touchTargetSize, isFoldDevice, spacing } = useResponsiveLayout();
-  const { intelligence, recordConversationInteraction, getIntelligencePhase } = useHacsIntelligence();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const userDisplayName = user?.user_metadata?.full_name?.split(' ')[0] || 'You';
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -43,12 +63,18 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
     scrollToBottom();
   }, [messages]);
 
-  const handleSendMessage = () => {
-    if (inputValue.trim() && !isLoading) {
-      recordConversationInteraction(inputValue.trim(), 'good');
-      onSendMessage(inputValue.trim());
-      setInputValue('');
+  const handleSendMessage = async () => {
+    if (!inputMessage.trim() || isLoading) return;
+
+    const messageToSend = inputMessage.trim();
+    setInputMessage('');
+    
+    // Reset textarea height
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
     }
+
+    await sendMessage(messageToSend);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -58,109 +84,147 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
     }
   };
 
-  const getGreetingMessage = () => {
-    const traits = coreTraits.slice(0, 2).join(' & ');
-    return `Hello ${userDisplayName}! I'm here to support your spiritual journey${traits ? ` based on your unique blueprint` : ''}. What's calling to your heart today?`;
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInputMessage(e.target.value);
+    
+    // Auto-resize textarea
+    const textarea = e.target;
+    textarea.style.height = 'auto';
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;
   };
 
-  // Show welcome screen only if no messages yet
-  if (messages.length === 0) {
+  const getTextSize = (baseSize: string) => {
+    return isFoldDevice ? baseSize.replace('text-', 'text-xs') : baseSize;
+  };
+
+  const getSpacing = (baseSpacing: string) => {
+    return isFoldDevice ? baseSpacing.replace(/\d+/, (match) => String(Math.max(1, parseInt(match) - 1))) : baseSpacing;
+  };
+
+  // HACS Status Display Component
+  const HacsStatusIndicator = () => {
+    if (!isHACSEnabled) return null;
+
+    const status = getHACSStatus();
+    const systemHealth = status.systemHealth.overall;
+    
     return (
-      <div className="flex flex-col h-full">
-        {/* Welcome Content - Takes most of the space */}
-        <div className="flex-1 flex flex-col justify-center px-4 py-6 overflow-y-auto">
-          <div className="text-center space-y-4 max-w-md mx-auto">
-            <div className="flex justify-center">
-              <IntelligentSoulOrb 
-                size="lg"
-                intelligenceLevel={intelligence?.intelligence_level || 65}
-                showProgressRing={true}
-                showIntelligenceTooltip={false}
-                stage="welcome"
-                pulse={true}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <h2 className={`font-bold text-gray-800 ${getTextSize('text-lg')}`}>
-                Your Personal Spiritual Guide
-              </h2>
-              <p className={`text-gray-600 leading-relaxed ${getTextSize('text-sm')}`}>
-                {getGreetingMessage()}
-              </p>
-            </div>
-
-            {/* User-friendly status indicator */}
-            <div className="space-y-2">
-              <div className={`inline-flex items-center gap-2 bg-soul-purple/10 px-3 py-1.5 rounded-full ${getTextSize('text-xs')}`}>
-                <Heart className={`text-soul-purple ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
-                <span className="text-soul-purple font-medium">
-                  Ready to guide {userDisplayName}
-                </span>
-              </div>
-              
-              {coreTraits.length > 0 && (
-                <div className="flex flex-wrap justify-center gap-1.5">
-                  {coreTraits.slice(0, 3).map((trait, index) => (
-                    <span 
-                      key={index}
-                      className={`bg-soul-teal/10 text-soul-teal px-2 py-0.5 rounded-full font-medium ${getTextSize('text-xs')}`}
-                    >
-                      {trait}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
+      <div className="flex items-center gap-2 mb-4 p-3 bg-gradient-to-r from-soul-purple/5 to-soul-gold/5 rounded-lg border border-soul-purple/10">
+        <div className="flex items-center gap-2">
+          <Brain className={`h-4 w-4 ${systemHealth === 'healthy' ? 'text-green-500' : 'text-yellow-500'}`} />
+          <span className="text-xs font-medium text-soul-purple">
+            HACS {isHACSEnabled ? 'Active' : 'Offline'}
+          </span>
         </div>
+        
+        {hacsState.dreamFocus && (
+          <div className="flex items-center gap-2 ml-4">
+            <Zap className="h-3 w-3 text-soul-gold" />
+            <span className="text-xs text-gray-600 truncate max-w-32">
+              Focus: {hacsState.dreamFocus}
+            </span>
+          </div>
+        )}
+        
+        <div className="flex items-center gap-2 ml-auto">
+          <Activity className="h-3 w-3 text-soul-purple" />
+          <span className="text-xs text-gray-500">
+            Harmony: {Math.round(hacsState.harmonyLevel * 100)}%
+          </span>
+        </div>
+      </div>
+    );
+  };
 
-        {/* Input Area - Fixed at bottom */}
-        <div className="border-t bg-white px-4 py-3">
-          <div className="max-w-2xl mx-auto">
-            <div className="flex gap-2 items-end">
-              <div className="flex-1">
-                <Input
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder={`Share what's on your heart, ${userDisplayName}...`}
-                  className={`border-soul-purple/20 focus:border-soul-purple focus:ring-soul-purple/20 rounded-2xl ${getTextSize('text-sm')} ${touchTargetSize}`}
-                  disabled={isLoading}
-                />
-              </div>
-              <Button
-                onClick={handleSendMessage}
-                disabled={!inputValue.trim() || isLoading}
-                className={`bg-gradient-to-r from-soul-purple to-soul-teal hover:shadow-lg transition-all duration-300 rounded-2xl ${touchTargetSize}`}
-              >
-                {isLoading ? (
-                  <Loader2 className={`animate-spin ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
-                ) : (
-                  <Heart className={`${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
-                )}
-              </Button>
-            </div>
-            
-            <p className={`text-center text-gray-500 mt-2 ${getTextSize('text-xs')}`}>
-              Your personalized spiritual guide is ready to support your journey, {userDisplayName}
+  if (messages.length === 0 && !isLoading) {
+    return (
+      <div className={`max-w-4xl mx-auto ${getSpacing('p-6')} space-y-6`}>
+        <HacsStatusIndicator />
+        
+        <div className="text-center space-y-4 max-w-md mx-auto">
+          <div className="flex justify-center">
+            <IntelligentSoulOrb 
+              size="lg"
+              intelligenceLevel={intelligence?.intelligence_level || 65}
+              showProgressRing={true}
+              showIntelligenceTooltip={false}
+              stage="welcome"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <h2 className={`font-semibold text-soul-purple ${getTextSize('text-xl')}`}>
+              HACS Dream Guide
+            </h2>
+            <p className={`text-gray-600 ${getTextSize('text-sm')} leading-relaxed`}>
+              {isHACSEnabled 
+                ? "Complete Hermetic Architecture is active. I'm ready to guide you through your dreams using all 11 systems of consciousness."
+                : "Initializing complete HACS architecture... Please wait while all systems come online."
+              }
             </p>
           </div>
+
+          {isHACSEnabled && (
+            <div className="grid grid-cols-2 gap-2 text-xs text-gray-500 bg-gray-50 p-3 rounded-lg">
+              <div>✓ Neural Intent Processing</div>
+              <div>✓ Personality Vector Fusion</div>
+              <div>✓ Temporal Wisdom Synthesis</div>
+              <div>✓ Harmonic Frequency Modulation</div>
+              <div>✓ Memory Graph Integration</div>
+              <div>✓ Proactive Insight Engine</div>
+            </div>
+          )}
         </div>
       </div>
     );
   }
 
-  // Show conversation interface with input at bottom
   return (
-    <div className="flex flex-col h-full">
-      {/* Messages Area - Takes most space and scrolls */}
-      <div className="flex-1 overflow-y-auto px-4 py-4">
-        <div className="max-w-2xl mx-auto space-y-4">
+    <div className={`max-w-4xl mx-auto ${getSpacing('p-4')} flex flex-col h-[calc(100vh-8rem)]`}>
+      <HacsStatusIndicator />
+      
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <IntelligentSoulOrb 
+            size="sm"
+            intelligenceLevel={intelligence?.intelligence_level || 65}
+            showProgressRing={true}
+            showIntelligenceTooltip={false}
+            stage="active"
+          />
+          <div>
+            <h1 className={`font-semibold text-soul-purple ${getTextSize('text-lg')}`}>
+              HACS Dream Guide
+            </h1>
+            <p className={`text-gray-500 ${getTextSize('text-xs')}`}>
+              {isHACSEnabled ? 'Complete Hermetic Architecture Active' : 'Initializing HACS...'}
+            </p>
+          </div>
+        </div>
+        
+        <Button
+          onClick={resetConversation}
+          variant="ghost"
+          size={isFoldDevice ? "sm" : "default"}
+          className="text-gray-500 hover:text-gray-700"
+          disabled={isLoading}
+        >
+          <RotateCcw className={isFoldDevice ? "h-3 w-3" : "h-4 w-4"} />
+          {!isFoldDevice && <span className="ml-2">Reset</span>}
+        </Button>
+      </div>
+
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto mb-4">
+        <div className="space-y-4">
           {messages.map((message) => (
             <div
               key={message.id}
-              className={`flex items-start gap-3 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+              className={cn(
+                "flex",
+                message.sender === 'user' ? "justify-end" : "justify-start items-start gap-3"
+              )}
             >
               {/* Avatar for assistant messages */}
               {message.sender === 'assistant' && (
@@ -175,11 +239,11 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
                   />
                 </div>
               )}
-              
+
               <div
-                className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-sm ${
+                className={`max-w-[80%] rounded-2xl px-4 py-3 ${
                   message.sender === 'user'
-                    ? 'bg-gradient-to-r from-soul-purple to-soul-teal text-white'
+                    ? 'bg-soul-purple text-white'
                     : 'bg-gray-50 text-gray-800 border border-gray-100'
                 }`}
               >
@@ -195,8 +259,13 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
                   <div className="flex items-center gap-2 mb-2">
                     <Sparkles className={`text-soul-purple ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
                     <span className={`font-medium text-soul-purple ${getTextSize('text-xs')}`}>
-                      Dream Guide
+                      HACS Dream Guide
                     </span>
+                    {message.hacsMetadata?.harmonyScore && (
+                      <span className="text-xs text-gray-400 ml-2">
+                        ⚡ {Math.round(message.hacsMetadata.harmonyScore * 100)}%
+                      </span>
+                    )}
                   </div>
                 )}
                 
@@ -206,6 +275,20 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
                     <span className="inline-block w-2 h-4 bg-current ml-1 animate-pulse" />
                   )}
                 </div>
+
+                {/* HACS Metadata Display */}
+                {message.hacsMetadata && message.hacsMetadata.insights && message.hacsMetadata.insights.length > 0 && (
+                  <div className="mt-3 pt-2 border-t border-gray-200">
+                    <div className="text-xs text-gray-500 space-y-1">
+                      {message.hacsMetadata.insights.slice(0, 2).map((insight: any, idx: number) => (
+                        <div key={idx} className="flex items-center gap-2">
+                          <Zap className="h-3 w-3 text-soul-gold" />
+                          <span>{insight.title}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -227,13 +310,14 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
                 <div className="flex items-center gap-2 mb-2">
                   <Sparkles className={`text-soul-purple ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
                   <span className={`font-medium text-soul-purple ${getTextSize('text-xs')}`}>
-                    Dream Guide
+                    HACS Dream Guide
                   </span>
+                  <Brain className="h-3 w-3 text-soul-gold animate-pulse" />
                 </div>
                 <div className="flex items-center gap-2">
                   <Loader2 className={`animate-spin text-soul-purple ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
                   <span className={`text-gray-600 ${getTextSize('text-sm')}`}>
-                    Thinking deeply about your dreams...
+                    Processing through complete HACS architecture...
                   </span>
                 </div>
               </div>
@@ -244,33 +328,31 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
         </div>
       </div>
 
-      {/* Input Area - Fixed at bottom */}
-      <div className="border-t bg-white px-4 py-3">
-        <div className="max-w-2xl mx-auto">
-          <div className="flex gap-2 items-end">
-            <div className="flex-1">
-              <Input
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder={`Continue sharing with your guide, ${userDisplayName}...`}
-                className={`border-soul-purple/20 focus:border-soul-purple focus:ring-soul-purple/20 rounded-2xl ${getTextSize('text-sm')} ${touchTargetSize}`}
-                disabled={isLoading}
-              />
-            </div>
-            <Button
-              onClick={handleSendMessage}
-              disabled={!inputValue.trim() || isLoading}
-              className={`bg-gradient-to-r from-soul-purple to-soul-teal hover:shadow-lg transition-all duration-300 rounded-2xl ${touchTargetSize}`}
-            >
-              {isLoading ? (
-                <Loader2 className={`animate-spin ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
-              ) : (
-                <Send className={`${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
-              )}
-            </Button>
-          </div>
+      {/* Input */}
+      <div className="flex gap-2 items-end">
+        <div className="flex-1">
+          <Textarea
+            ref={textareaRef}
+            value={inputMessage}
+            onChange={handleTextareaChange}
+            onKeyPress={handleKeyPress}
+            placeholder={isHACSEnabled 
+              ? "Share your dreams and aspirations... HACS is listening with all systems active."
+              : "Waiting for HACS initialization..."
+            }
+            disabled={isLoading || !isHACSEnabled}
+            className={`resize-none min-h-[44px] max-h-[120px] ${getTextSize('text-sm')}`}
+            style={{ height: 'auto' }}
+          />
         </div>
+        <Button
+          onClick={handleSendMessage}
+          disabled={!inputMessage.trim() || isLoading || !isHACSEnabled}
+          size={isFoldDevice ? "sm" : "default"}
+          className="shrink-0 bg-soul-purple hover:bg-soul-purple/90"
+        >
+          <Send className={isFoldDevice ? "h-3 w-3" : "h-4 w-4"} />
+        </Button>
       </div>
     </div>
   );
