@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
-import { Heart, Sparkles, Moon, BookOpen, Calendar, MessageCircle, Compass, TrendingUp, ArrowLeft, Target } from "lucide-react";
+import { Sparkles, Moon, BookOpen, Calendar, MessageCircle, Settings, TrendingUp, ArrowLeft, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useEnhancedAICoach } from "@/hooks/use-enhanced-ai-coach";
 import { supabase } from "@/integrations/supabase/client";
@@ -111,7 +111,7 @@ const SpiritualGrowth = () => {
         <div className="min-h-screen bg-white flex items-center justify-center p-4">
           <CosmicCard className="w-full max-w-md text-center space-y-6">
             <div className="w-16 h-16 mx-auto bg-primary rounded-full flex items-center justify-center">
-              <Heart className="h-8 w-8 text-primary-foreground" />
+              <Sparkles className="h-8 w-8 text-primary-foreground" />
             </div>
             <div>
               <h1 className="text-2xl font-heading font-bold text-foreground mb-2">{t("spiritualGrowth.title")}</h1>
@@ -479,7 +479,7 @@ const SpiritualGrowth = () => {
             <CosmicCard className="group hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1" onClick={handleStartSpiritualGrowth}>
               <div className="flex flex-col items-center text-center space-y-4">
                 <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Heart className="h-8 w-8 text-primary-foreground" />
+                  <Sparkles className="h-8 w-8 text-primary-foreground" />
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold text-foreground mb-2">Heart-Centered Coach</h3>
@@ -497,7 +497,7 @@ const SpiritualGrowth = () => {
             <CosmicCard className="group hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1" onClick={() => setActiveView('life_os_choices')}>
               <div className="flex flex-col items-center text-center space-y-4">
                 <div className="w-16 h-16 bg-gradient-to-br from-secondary to-primary rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Target className="h-8 w-8 text-secondary-foreground" />
+                  <Settings className="h-8 w-8 text-secondary-foreground" />
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold text-foreground mb-2">Life Operating System</h3>
@@ -533,7 +533,7 @@ const SpiritualGrowth = () => {
             <CosmicCard className="group hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1" onClick={() => setActiveView('tools')}>
               <div className="flex flex-col items-center text-center space-y-4">
                 <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Compass className="h-8 w-8 text-primary-foreground" />
+                  <BookOpen className="h-8 w-8 text-primary-foreground" />
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold text-foreground mb-2">Spiritual Tools</h3>
