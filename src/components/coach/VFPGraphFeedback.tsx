@@ -36,7 +36,7 @@ export const VFPGraphFeedback: React.FC<VFPGraphFeedbackProps> = ({
           : '👎 Got it. I\'ll adjust my approach.'
       );
 
-      console.log(`✅ VFP-Graph feedback recorded: ${isPositive ? '👍' : '👎'}`);
+      console.log(`✅ Feedback recorded: ${isPositive ? '👍' : '👎'}`);
     } catch (error) {
       console.error('❌ Error submitting feedback:', error);
       toast.error('Unable to record feedback. Please try again.');

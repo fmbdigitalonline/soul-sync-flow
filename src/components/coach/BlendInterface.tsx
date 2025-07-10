@@ -1,8 +1,7 @@
-
 import React, { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowRight, SendHorizontal, Loader2, Sparkles } from "lucide-react";
+import { ArrowRight, SendHorizontal, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Message } from "@/hooks/use-ai-coach";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -67,7 +66,7 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
   };
 
   const handleVFPGraphFeedback = (messageId: string, isPositive: boolean) => {
-    console.log(`VFP-Graph feedback from BlendInterface: ${messageId} - ${isPositive ? '👍' : '👎'}`);
+    console.log(`Feedback from BlendInterface: ${messageId} - ${isPositive ? '👍' : '👎'}`);
     onFeedback?.(messageId, isPositive);
   };
 
@@ -77,19 +76,6 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
 
   return (
     <div className={`flex flex-col h-full max-w-4xl mx-auto`}>
-      {/* VFP-Graph Status Header */}
-      {vfpGraphStatus?.isAvailable && (
-        <div className="bg-gradient-to-r from-soul-purple/10 to-soul-teal/10 border border-soul-purple/20 rounded-lg p-3 mb-4">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-soul-purple" />
-            <span className="text-sm font-medium text-soul-purple">VFP-Graph Powered</span>
-            <span className="text-xs text-muted-foreground">
-              {vfpGraphStatus.vectorDimensions}D • {vfpGraphStatus.personalitySummary}
-            </span>
-          </div>
-        </div>
-      )}
-
       {/* Messages Area - Unified spacing calculation */}
       <div className={`flex-1 overflow-y-auto space-y-4 ${mobileBottomSpacing}`}>
         {messages.length === 0 && (
@@ -99,24 +85,19 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
                 size="lg"
                 pulse={true}
                 stage="welcome"
-                intelligenceLevel={vfpGraphStatus?.isAvailable ? 85 : 45}
+                intelligenceLevel={85}
                 showProgressRing={true}
                 showIntelligenceTooltip={false}
               />
             </div>
             <h3 className={cn("font-semibold mb-2", isMobile ? "text-lg" : "text-xl")}>
-              {vfpGraphStatus?.isAvailable ? 'VFP-Graph Enhanced' : 'AI'} Companion
+              AI Companion
             </h3>
             <p className={cn("text-muted-foreground max-w-md", isMobile ? "text-sm" : "text-base")}>
-              {personaReady || vfpGraphStatus?.isAvailable
+              {personaReady
                 ? `Hello ${userName}! I understand your unique blueprint and am ready to provide personalized guidance that blends coaching and mentoring approaches.`
                 : `Hello ${userName}! I'm here to provide balanced guidance that combines coaching questions with direct mentoring advice.`}
             </p>
-            {vfpGraphStatus?.isAvailable && (
-              <div className="mt-3 px-3 py-1 bg-soul-purple/10 text-soul-purple text-xs rounded-full">
-                Powered by 128-dimensional personality intelligence
-              </div>
-            )}
           </div>
         )}
 
@@ -136,8 +117,6 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
               </div>
             );
           } else {
-            const isVFPGraphPowered = vfpGraphStatus?.isAvailable && personaReady;
-            
             return (
               <div key={message.id} className={cn("flex justify-start items-start gap-3", isMobile ? "px-2" : "px-4")}>
                 <div className="flex-shrink-0 mt-1">
@@ -146,40 +125,25 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
                     pulse={false}
                     speaking={isLoading && idx === messages.length - 1}
                     stage="complete"
-                    intelligenceLevel={isVFPGraphPowered ? 85 : 45}
+                    intelligenceLevel={85}
                     showProgressRing={true}
                   />
                 </div>
                 <div className={cn("max-w-[85%] rounded-2xl border bg-slate-50", isMobile ? "p-3" : "p-4")}>
                   <div className="flex items-center gap-2 mb-2">
                     <span className={cn("font-medium text-slate-700", isMobile ? "text-xs" : "text-sm")}>
-                      {isVFPGraphPowered ? 'VFP-Graph' : 'AI'} Companion
+                      AI Companion
                     </span>
-                    {isVFPGraphPowered && (
-                      <Sparkles className="h-3 w-3 text-soul-purple" />
-                    )}
                   </div>
                   <div className={cn("text-slate-800 whitespace-pre-line leading-relaxed", isMobile ? "text-sm" : "text-base")}>
                     {message.content}
                   </div>
                   
-                  {/* VFP-Graph Feedback Integration */}
-                  {isVFPGraphPowered && (
-                    <VFPGraphFeedback
-                      messageId={message.id}
-                      onFeedbackGiven={(isPositive) => handleVFPGraphFeedback(message.id, isPositive)}
-                    />
-                  )}
-                  
-                  {/* Personality Insight Display */}
-                  {isVFPGraphPowered && vfpGraphStatus && (
-                    <div className="mt-2 px-2 py-1 bg-soul-purple/5 rounded text-xs text-soul-purple/70">
-                      Personalized using your {vfpGraphStatus.vectorDimensions}D personality vector
-                      {vfpGraphStatus.vectorMagnitude && (
-                        <span className="ml-1">• Intensity: {vfpGraphStatus.vectorMagnitude}</span>
-                      )}
-                    </div>
-                  )}
+                  {/* Feedback Integration - Keep internal functionality */}
+                  <VFPGraphFeedback
+                    messageId={message.id}
+                    onFeedbackGiven={(isPositive) => handleVFPGraphFeedback(message.id, isPositive)}
+                  />
                 </div>
               </div>
             );
@@ -194,26 +158,20 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
                 pulse={true}
                 speaking={true}
                 stage="generating"
-                intelligenceLevel={vfpGraphStatus?.isAvailable ? 85 : 45}
+                intelligenceLevel={85}
                 showProgressRing={true}
               />
             </div>
             <div className={cn("border border-green-200/20 max-w-[80%] rounded-2xl bg-slate-50", isMobile ? "p-3" : "p-4")}>
               <div className="flex items-center space-x-2">
                 <p className={cn("font-medium", isMobile ? "text-xs" : "text-sm")}>
-                  {vfpGraphStatus?.isAvailable ? 'VFP-Graph' : 'AI'} Companion
+                  AI Companion
                 </p>
-                {vfpGraphStatus?.isAvailable && (
-                  <Sparkles className="h-3 w-3 text-soul-purple" />
-                )}
               </div>
               <div className="flex items-center space-x-2 mt-2">
                 <Loader2 className="h-4 w-4 animate-spin text-soul-purple" />
                 <p className={cn("text-slate-600", isMobile ? "text-xs" : "text-sm")}>
-                  {vfpGraphStatus?.isAvailable 
-                    ? "Analyzing with VFP-Graph intelligence..." 
-                    : "Thinking..."
-                  }
+                  Thinking...
                 </p>
               </div>
             </div>
@@ -235,11 +193,7 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyPress}
-            placeholder={
-              vfpGraphStatus?.isAvailable 
-                ? `Ask me anything, ${userName} - I understand your unique blueprint...`
-                : `Ask me anything, ${userName} - I'll blend coaching questions with direct guidance...`
-            }
+            placeholder={`Ask me anything, ${userName} - I'll blend coaching questions with direct guidance...`}
             className={cn("flex-1", isFoldDevice ? "text-sm" : "")}
             disabled={isLoading}
           />
@@ -253,10 +207,7 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
           </Button>
         </div>
         <p className={cn("text-center text-muted-foreground mt-2", isMobile ? "text-xs" : "text-sm")}>
-          {vfpGraphStatus?.isAvailable 
-            ? `VFP-Graph powered companion guidance for ${userName} • ${vfpGraphStatus.personalitySummary}`
-            : `Balanced guidance that combines questions with direct advice for ${userName}`
-          }
+          Balanced guidance that combines questions with direct advice for {userName}
         </p>
       </div>
     </div>
