@@ -8,6 +8,7 @@ import { Message } from "@/hooks/use-ai-coach";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { VFPGraphFeedback } from "./VFPGraphFeedback";
+import { IntelligentSoulOrb } from "@/components/ui/intelligent-soul-orb";
 
 interface BlendInterfaceProps {
   messages: Message[];
@@ -85,8 +86,15 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
       <div className={`flex-1 overflow-y-auto space-y-4 ${mobileBottomSpacing}`}>
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center p-8">
-            <div className={cn("bg-gradient-to-br from-soul-purple to-soul-teal rounded-full mx-auto mb-4 flex items-center justify-center", isMobile ? "w-12 h-12" : "w-16 h-16")}>
-              <Sparkles className={cn("text-white", isMobile ? "h-6 w-6" : "h-8 w-8")} />
+            <div className="mb-6">
+              <IntelligentSoulOrb
+                size="lg"
+                pulse={true}
+                stage="welcome"
+                intelligenceLevel={vfpGraphStatus?.isAvailable ? 85 : 45}
+                showProgressRing={true}
+                showIntelligenceTooltip={false}
+              />
             </div>
             <h3 className={cn("font-semibold mb-2", isMobile ? "text-lg" : "text-xl")}>
               {vfpGraphStatus?.isAvailable ? 'VFP-Graph Enhanced' : 'AI'} Companion
@@ -123,10 +131,19 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
             const isVFPGraphPowered = vfpGraphStatus?.isAvailable && personaReady;
             
             return (
-              <div key={message.id} className={cn("flex justify-start", isMobile ? "px-2" : "px-4")}>
+              <div key={message.id} className={cn("flex justify-start items-start gap-3", isMobile ? "px-2" : "px-4")}>
+                <div className="flex-shrink-0 mt-1">
+                  <IntelligentSoulOrb
+                    size="sm"
+                    pulse={false}
+                    speaking={isLoading && idx === messages.length - 1}
+                    stage="complete"
+                    intelligenceLevel={isVFPGraphPowered ? 85 : 45}
+                    showProgressRing={false}
+                  />
+                </div>
                 <div className={cn("max-w-[85%] rounded-2xl border bg-slate-50", isMobile ? "p-3" : "p-4")}>
                   <div className="flex items-center gap-2 mb-2">
-                    <ArrowRight className={cn("text-green-400", isMobile ? "h-3 w-3" : "h-4 w-4")} />
                     <span className={cn("font-medium text-slate-700", isMobile ? "text-xs" : "text-sm")}>
                       {isVFPGraphPowered ? 'VFP-Graph' : 'AI'} Companion
                     </span>
@@ -162,10 +179,19 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
         })}
 
         {isLoading && (
-          <div className={cn("flex justify-start", isMobile ? "px-2" : "px-4")}>
+          <div className={cn("flex justify-start items-start gap-3", isMobile ? "px-2" : "px-4")}>
+            <div className="flex-shrink-0 mt-1">
+              <IntelligentSoulOrb
+                size="sm"
+                pulse={true}
+                speaking={true}
+                stage="generating"
+                intelligenceLevel={vfpGraphStatus?.isAvailable ? 85 : 45}
+                showProgressRing={false}
+              />
+            </div>
             <div className={cn("border border-green-200/20 max-w-[80%] rounded-2xl bg-slate-50", isMobile ? "p-3" : "p-4")}>
               <div className="flex items-center space-x-2">
-                <ArrowRight className="h-4 w-4 text-green-400" />
                 <p className={cn("font-medium", isMobile ? "text-xs" : "text-sm")}>
                   {vfpGraphStatus?.isAvailable ? 'VFP-Graph' : 'AI'} Companion
                 </p>
