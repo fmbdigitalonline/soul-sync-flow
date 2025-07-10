@@ -115,7 +115,7 @@ export const AIPersonalityReport: React.FC<AIPersonalityReportProps> = ({
           Generate Your Comprehensive Reading
         </h2>
         <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-          Create a detailed, AI-generated personality report that weaves together all aspects of your blueprint into one comprehensive analysis. This will be saved for you to revisit anytime.
+          Create a detailed, Soul-generated personality report that weaves together all aspects of your blueprint into one comprehensive analysis. This will be saved for you to revisit anytime.
         </p>
         
         <Button

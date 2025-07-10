@@ -76,14 +76,14 @@ const ACSEnhancedCoachInterface: React.FC<ACSEnhancedCoachInterfaceProps> = ({
         interventionApplied = acsResult.interventionApplied;
         fallbackUsed = acsResult.fallbackUsed;
       } catch (acsError) {
-        console.log("ACS failed, using regular AI coach:", acsError);
+        console.log("ACS failed, using regular Soul coach:", acsError);
         
-        // Fallback to regular AI coach
+        // Fallback to regular Soul coach
         const { data, error } = await supabase.functions.invoke("ai-coach", {
           body: {
             message: inputValue.trim(),
             sessionId,
-            systemPrompt: "You are a helpful AI assistant. Respond naturally and helpfully to user questions.",
+            systemPrompt: "You are a helpful Soul assistant. Respond naturally and helpfully to user questions.",
             temperature: 0.7,
             maxTokens: 200,
             includeBlueprint: false,
@@ -247,9 +247,9 @@ const ACSEnhancedCoachInterface: React.FC<ACSEnhancedCoachInterfaceProps> = ({
               className="self-end"
             >
               {isLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="w-4 w-4 animate-spin" />
               ) : (
-                <Send className="w-4 h-4" />
+                <Send className="w-4 w-4" />
               )}
             </Button>
           </div>

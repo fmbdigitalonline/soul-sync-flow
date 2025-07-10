@@ -129,7 +129,7 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
           </div>
           
           <p className={`text-center text-gray-500 ${getTextSize('text-xs')}`}>
-            Your personalized spiritual coach is ready to support your journey {/* Updated from "guide" to "coach" */}
+            Your personalized spiritual coach is ready to support your journey
           </p>
         </div>
       </div>

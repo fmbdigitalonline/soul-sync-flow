@@ -79,8 +79,8 @@ const Coach = () => {
               <MessageCircle className="h-8 w-8 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-foreground mb-2">AI Companion</h1>
-              <p className="text-muted-foreground">Your personal AI companion for integrated support and guidance.</p>
+              <h1 className="text-2xl font-bold text-foreground mb-2">Soul Companion</h1>
+              <p className="text-muted-foreground">Your personal Soul companion for integrated support and guidance.</p>
             </div>
             <Button 
               className="w-full"
@@ -159,10 +159,10 @@ const Coach = () => {
           
           <div className="text-center mb-6">
             <h1 className="text-3xl font-bold gradient-text mb-2">
-              AI Companion
+              Soul Companion
             </h1>
             <p className="text-muted-foreground">
-              Your integrated AI companion combining coaching and guidance
+              Your integrated Soul companion combining coaching and guidance
             </p>
           </div>
 

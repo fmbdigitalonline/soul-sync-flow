@@ -217,7 +217,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto mt-3 sm:mt-0">
           <Badge variant="outline" className="bg-soul-purple/10 text-soul-purple border-soul-purple/20 justify-center sm:justify-start">
             <Sparkles className="h-3 w-3 mr-1 flex-shrink-0" />
-            <span className="truncate">AI Generated</span>
+            <span className="truncate">Soul Generated</span>
           </Badge>
           <div className="flex gap-2 w-full sm:w-auto">
             <Button 
