@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, RotateCcw, Sparkles, Loader2, Activity, Brain, Zap } from "lucide-react";
-import { IntelligentSoulOrb } from "@/components/IntelligentSoulOrb";
+import { IntelligentSoulOrb } from "@/components/ui/intelligent-soul-orb";
 import { useIntelligence } from "@/hooks/useIntelligence";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
