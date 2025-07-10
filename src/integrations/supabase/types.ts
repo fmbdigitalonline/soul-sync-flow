@@ -814,6 +814,39 @@ export type Database = {
           },
         ]
       }
+      hacs_intelligence: {
+        Row: {
+          created_at: string
+          id: string
+          intelligence_level: number
+          interaction_count: number
+          last_update: string
+          module_scores: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          intelligence_level?: number
+          interaction_count?: number
+          last_update?: string
+          module_scores?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          intelligence_level?: number
+          interaction_count?: number
+          last_update?: string
+          module_scores?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       hot_memory_cache: {
         Row: {
           access_count: number

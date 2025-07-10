@@ -4,6 +4,8 @@ import { Sparkles, Heart, Brain, Loader2, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
+import { IntelligentSoulOrb } from '@/components/ui/intelligent-soul-orb';
+import { useHacsIntelligence } from '@/hooks/use-hacs-intelligence';
 
 interface Message {
   id: string;
@@ -31,6 +33,7 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { getTextSize, touchTargetSize, isFoldDevice, spacing } = useResponsiveLayout();
+  const { intelligence, recordConversationInteraction, getIntelligencePhase } = useHacsIntelligence();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -42,6 +45,8 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
 
   const handleSendMessage = () => {
     if (inputValue.trim() && !isLoading) {
+      // Record the interaction for HACS learning
+      recordConversationInteraction(inputValue.trim(), 'good');
       onSendMessage(inputValue.trim());
       setInputValue('');
     }
@@ -66,13 +71,20 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
         {/* Welcome Content - Takes most of the space */}
         <div className="flex-1 flex flex-col justify-center px-4 py-6">
           <div className="text-center space-y-6 max-w-md mx-auto">
-            <div className={`mx-auto bg-gradient-to-br from-soul-purple to-soul-teal rounded-full flex items-center justify-center shadow-lg ${isFoldDevice ? 'w-12 h-12' : 'w-16 h-16'}`}>
-              <Heart className={`text-white ${isFoldDevice ? 'h-6 w-6' : 'h-8 w-8'}`} />
+            <div className="flex justify-center">
+              <IntelligentSoulOrb 
+                size={isFoldDevice ? "sm" : "md"}
+                intelligenceLevel={intelligence?.intelligence_level || 0}
+                showProgressRing={true}
+                showIntelligenceTooltip={true}
+                stage="welcome"
+                pulse={true}
+              />
             </div>
             
             <div className="space-y-2">
               <h2 className={`font-bold text-gray-800 ${getTextSize('text-lg')}`}>
-                Ready to Connect
+                {getIntelligencePhase()} Intelligence
               </h2>
               <p className={`text-gray-600 leading-relaxed ${getTextSize('text-sm')}`}>
                 {getGreetingMessage()}
@@ -82,8 +94,10 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
             {/* Status indicator */}
             <div className="space-y-3">
               <div className={`inline-flex items-center gap-2 bg-soul-purple/10 px-4 py-2 rounded-full ${getTextSize('text-xs')}`}>
-                <Sparkles className={`text-soul-purple ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
-                <span className="text-soul-purple font-medium">Connected & Ready</span>
+                <Brain className={`text-soul-purple ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
+                <span className="text-soul-purple font-medium">
+                  HACS {getIntelligencePhase()} • {Math.round(intelligence?.intelligence_level || 0)}%
+                </span>
               </div>
               
               {coreTraits.length > 0 && (
@@ -147,8 +161,21 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
           {messages.map((message) => (
             <div
               key={message.id}
-              className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+              className={`flex items-start gap-3 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
             >
+              {/* Avatar for assistant messages */}
+              {message.sender === 'assistant' && (
+                <div className="flex-shrink-0">
+                  <IntelligentSoulOrb 
+                    size="sm"
+                    intelligenceLevel={intelligence?.intelligence_level || 0}
+                    showProgressRing={false}
+                    speaking={message.isStreaming}
+                    stage="complete"
+                  />
+                </div>
+              )}
+              
               <div
                 className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-sm ${
                   message.sender === 'user'
