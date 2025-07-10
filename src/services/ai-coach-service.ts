@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { PersonalityEngine } from "./personality-engine";
 import { LayeredBlueprint, AgentMode } from "@/types/personality-modules";
@@ -71,14 +70,14 @@ class AICoachService {
         }
       }
 
-      // Fallback to regular AI coach processing
+      // Fallback to regular AI coach processing with enhanced prompts
       const systemPrompt = includeBlueprint 
         ? (agentType === "guide" 
             ? this.personalityEngine.generateSystemPrompt("guide", message)
             : this.personalityEngine.generateSystemPrompt(agentType as AgentMode))
-        : null;
+        : this.getUniversalConversationalPrompt(agentType);
 
-      console.log("Using regular AI coach service, prompt length:", systemPrompt?.length || 0);
+      console.log("Using regular AI coach service with universal conversational rules, prompt length:", systemPrompt?.length || 0);
 
       const { data, error } = await supabase.functions.invoke("ai-coach", {
         body: {
@@ -100,6 +99,56 @@ class AICoachService {
     } catch (error) {
       console.error("Error in AI coach service:", error);
       throw error;
+    }
+  }
+
+  private getUniversalConversationalPrompt(agentType: AgentType): string {
+    return `# Universal Conversational Guidelines
+
+You are a warm, supportive AI companion. Follow these critical rules for ALL conversations:
+
+## LANGUAGE RULES (MANDATORY):
+- ALWAYS use the user's name naturally in conversation when you know it
+- NEVER use technical personality terms like "ENFP", "Generator", "Manifestor", etc.
+- When referring to personality insights, always call it their "blueprint" or "unique patterns"
+- Speak in plain, warm language that feels personal and supportive
+- Only explain technical details if the user specifically asks "how do you know this?" or similar drilling-down questions
+
+## COMMUNICATION STYLE:
+- Be warm, genuine, and personally supportive
+- Use natural, conversational language
+- Reference their unique patterns and strengths when relevant, but describe them in everyday terms
+- Ask thoughtful follow-up questions to deepen the conversation
+- Provide actionable insights based on their individual nature
+
+## ROLE-SPECIFIC GUIDANCE:
+${this.getRoleSpecificGuidance(agentType)}
+
+Remember: Every response should feel like it comes from someone who truly knows and cares about the user, while keeping all language accessible and avoiding technical jargon unless specifically requested.`;
+  }
+
+  private getRoleSpecificGuidance(agentType: AgentType): string {
+    switch (agentType) {
+      case 'coach':
+        return `- Focus on practical productivity and goal achievement
+- Help them work with their natural energy and patterns
+- Provide actionable steps that fit their unique style
+- Support them in breaking through obstacles using their strengths`;
+
+      case 'guide':
+        return `- Focus on deeper life questions and spiritual growth
+- Help them understand their patterns and purpose
+- Provide gentle wisdom for their personal journey
+- Support their authentic self-expression and growth`;
+
+      case 'blend':
+        return `- Adapt fluidly between practical and spiritual guidance
+- Meet them wherever they need support most
+- Balance action-oriented help with deeper reflection
+- Support their whole journey with integrated wisdom`;
+
+      default:
+        return '- Provide thoughtful, personalized support for their unique journey';
     }
   }
 
@@ -137,14 +186,14 @@ class AICoachService {
         }
       }
       
-      // Fallback to regular streaming
+      // Fallback to regular streaming with enhanced prompts
       const systemPrompt = includeBlueprint 
         ? (agentType === "guide" 
             ? this.personalityEngine.generateSystemPrompt("guide", message)
             : this.personalityEngine.generateSystemPrompt(agentType as AgentMode))
-        : null;
+        : this.getUniversalConversationalPrompt(agentType);
 
-      console.log("Using regular streaming, prompt length:", systemPrompt?.length || 0);
+      console.log("Using regular streaming with universal conversational rules, prompt length:", systemPrompt?.length || 0);
       
       const response = await fetch(`https://qxaajirrqrcnmvtowjbg.supabase.co/functions/v1/ai-coach-stream`, {
         method: 'POST',

@@ -14,6 +14,7 @@ interface GuideInterfaceProps {
   messagesEndRef: React.RefObject<HTMLDivElement>;
   streamingContent?: string;
   isStreaming?: boolean;
+  userDisplayName?: string;
 }
 
 export const GuideInterface: React.FC<GuideInterfaceProps> = ({
@@ -22,7 +23,8 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
   onSendMessage,
   messagesEndRef,
   streamingContent,
-  isStreaming = false
+  isStreaming = false,
+  userDisplayName = 'friend'
 }) => {
   const [input, setInput] = useState('');
 
@@ -38,6 +40,10 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, streamingContent, isStreaming, messagesEndRef]);
+
+  const getPlaceholderText = () => {
+    return `Share what's on your heart, ${userDisplayName}...`;
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -104,7 +110,7 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Share what's on your heart..."
+            placeholder={getPlaceholderText()}
             disabled={isLoading || isStreaming}
             className="flex-1"
           />
