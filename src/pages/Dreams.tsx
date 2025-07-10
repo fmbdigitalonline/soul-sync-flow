@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MainLayout from "@/components/Layout/MainLayout";
@@ -254,7 +253,7 @@ const Dreams = () => {
               </h1>
               <p className={`mb-6 text-muted-foreground leading-relaxed px-2 ${getTextSize('text-sm')}`}>{t("dreams.description")}</p>
               <Button 
-                className={`w-full hover:shadow-lg transition-all duration-300 rounded-2xl font-medium ${touchTargetSize} ${getTextSize('text-sm')}`}
+                className={`w-full hover:shadow-lg transition-all duration-300 rounded-2xl font-medium font-ui ${touchTargetSize} ${getTextSize('text-sm')}`}
                 onClick={() => window.location.href = '/auth'}
               >
                 {t("dreams.getStarted")}
@@ -293,7 +292,7 @@ const Dreams = () => {
                 variant="ghost" 
                 size="sm" 
                 onClick={() => setCurrentView('create')}
-                className={`flex items-center gap-2 text-muted-foreground hover:text-primary rounded-xl ${isFoldDevice ? 'px-1 py-1' : 'px-2 py-1'} ${getTextSize('text-sm')} ${touchTargetSize}`}
+                className={`flex items-center gap-2 text-muted-foreground hover:text-primary rounded-xl font-ui ${isFoldDevice ? 'px-1 py-1' : 'px-2 py-1'} ${getTextSize('text-sm')} ${touchTargetSize}`}
               >
                 <ArrowLeft className={`h-4 w-4 ${isFoldDevice ? 'h-3 w-3' : ''}`} />
                 {!isFoldDevice && 'Back'}
@@ -365,7 +364,7 @@ const Dreams = () => {
                 variant="ghost" 
                 size="sm" 
                 onClick={() => setCurrentView('create')}
-                className={`flex items-center gap-2 text-muted-foreground hover:text-primary rounded-xl ${isFoldDevice ? 'px-1 py-1' : 'px-2 py-1'} ${getTextSize('text-sm')} ${touchTargetSize}`}
+                className={`flex items-center gap-2 text-muted-foreground hover:text-primary rounded-xl font-ui ${isFoldDevice ? 'px-1 py-1' : 'px-2 py-1'} ${getTextSize('text-sm')} ${touchTargetSize}`}
               >
                 <ArrowLeft className={`h-4 w-4 ${isFoldDevice ? 'h-3 w-3' : ''}`} />
                 {isFoldDevice ? '' : 'New Dream'}
@@ -387,7 +386,7 @@ const Dreams = () => {
                     variant={activeTab === 'journey' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setActiveTab('journey')}
-                    className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 font-medium transition-all ${getTextSize('text-xs')} ${touchTargetSize}`}
+                    className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 font-medium transition-all font-ui ${getTextSize('text-xs')} ${touchTargetSize}`}
                   >
                     <MapPin className={`${isFoldDevice ? 'h-2 w-2' : 'h-3 w-3'}`} />
                     {isFoldDevice ? 'Map' : 'Journey'}
@@ -396,7 +395,7 @@ const Dreams = () => {
                     variant={activeTab === 'tasks' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setActiveTab('tasks')}
-                    className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 font-medium transition-all ${getTextSize('text-xs')} ${touchTargetSize} ${
+                    className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 font-medium transition-all font-ui ${getTextSize('text-xs')} ${touchTargetSize} ${
                       activeTab === 'tasks' 
                         ? 'bg-gradient-to-r from-soul-purple to-soul-teal text-white shadow-md' 
                         : 'text-gray-600 hover:text-soul-purple hover:bg-gray-50'
@@ -411,7 +410,7 @@ const Dreams = () => {
                         variant={activeTab === 'focus' ? 'default' : 'ghost'}
                         size="sm"
                         onClick={() => setActiveTab('focus')}
-                        className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 font-medium transition-all ${getTextSize('text-xs')} ${touchTargetSize} ${
+                        className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 font-medium transition-all font-ui ${getTextSize('text-xs')} ${touchTargetSize} ${
                           activeTab === 'focus' 
                             ? 'bg-gradient-to-r from-soul-purple to-soul-teal text-white shadow-md' 
                             : 'text-gray-600 hover:text-soul-purple hover:bg-gray-50'
@@ -424,7 +423,7 @@ const Dreams = () => {
                         variant={activeTab === 'habits' ? 'default' : 'ghost'}
                         size="sm"
                         onClick={() => setActiveTab('habits')}
-                        className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 font-medium transition-all ${getTextSize('text-xs')} ${touchTargetSize} ${
+                        className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 font-medium transition-all font-ui ${getTextSize('text-xs')} ${touchTargetSize} ${
                           activeTab === 'habits' 
                             ? 'bg-gradient-to-r from-soul-purple to-soul-teal text-white shadow-md' 
                             : 'text-gray-600 hover:text-soul-purple hover:bg-gray-50'
@@ -444,7 +443,7 @@ const Dreams = () => {
                       variant={activeTab === 'focus' ? 'default' : 'ghost'}
                       size="sm"
                       onClick={() => setActiveTab('focus')}
-                      className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 font-medium transition-all ${getTextSize('text-xs')} ${touchTargetSize} ${
+                      className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 font-medium transition-all font-ui ${getTextSize('text-xs')} ${touchTargetSize} ${
                         activeTab === 'focus' 
                           ? 'bg-gradient-to-r from-soul-purple to-soul-teal text-white shadow-md' 
                           : 'text-gray-600 hover:text-soul-purple hover:bg-gray-50'
@@ -457,7 +456,7 @@ const Dreams = () => {
                       variant={activeTab === 'habits' ? 'default' : 'ghost'}
                       size="sm"
                       onClick={() => setActiveTab('habits')}
-                      className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 font-medium transition-all ${getTextSize('text-xs')} ${touchTargetSize} ${
+                      className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 font-medium transition-all font-ui ${getTextSize('text-xs')} ${touchTargetSize} ${
                         activeTab === 'habits' 
                           ? 'bg-gradient-to-r from-soul-purple to-soul-teal text-white shadow-md' 
                           : 'text-gray-600 hover:text-soul-purple hover:bg-gray-50'
@@ -479,7 +478,7 @@ const Dreams = () => {
                         <MapPin className={`text-white ${isFoldDevice ? 'h-2 w-2' : 'h-3 w-3'}`} />
                       </div>
                       <div className="flex-1">
-                        <h2 className={`font-semibold text-gray-800 ${getTextSize('text-sm')}`}>Journey Map</h2>
+                        <h2 className={`font-heading font-semibold text-gray-800 ${getTextSize('text-sm')}`}>Journey Map</h2>
                         {!isFoldDevice && <p className={`text-gray-500 ${getTextSize('text-xs')}`}>{getBlueprintInsight()}</p>}
                       </div>
                     </div>
@@ -496,7 +495,7 @@ const Dreams = () => {
                 {activeTab === 'tasks' && (
                   <div className="w-full">
                     <div className={`flex items-center justify-between mb-3 ${isFoldDevice ? 'flex-col items-start gap-1' : ''}`}>
-                      <h3 className={`font-semibold flex items-center gap-2 text-gray-800 ${getTextSize('text-sm')}`}>
+                      <h3 className={`font-heading font-semibold flex items-center gap-2 text-gray-800 ${getTextSize('text-sm')}`}>
                         <Target className={`text-soul-purple ${isFoldDevice ? 'h-4 w-4' : 'h-5 w-5'}`} />
                         Your Tasks
                       </h3>
@@ -515,7 +514,7 @@ const Dreams = () => {
                   <div className="w-full">
                     <div className="flex items-center gap-2 mb-3">
                       <Clock className={`text-soul-purple ${isFoldDevice ? 'h-4 w-4' : 'h-5 w-5'}`} />
-                      <h3 className={`font-semibold text-gray-800 ${getTextSize('text-sm')}`}>Focus Session</h3>
+                      <h3 className={`font-heading font-semibold text-gray-800 ${getTextSize('text-sm')}`}>Focus Session</h3>
                     </div>
                     <div className="w-full">
                       <PomodoroTimer />
@@ -527,7 +526,7 @@ const Dreams = () => {
                   <div className="w-full">
                     <div className="flex items-center gap-2 mb-3">
                       <CheckCircle className={`text-soul-purple ${isFoldDevice ? 'h-4 w-4' : 'h-5 w-5'}`} />
-                      <h3 className={`font-semibold text-gray-800 ${getTextSize('text-sm')}`}>Habits</h3>
+                      <h3 className={`font-heading font-semibold text-gray-800 ${getTextSize('text-sm')}`}>Habits</h3>
                     </div>
                     <div className="w-full">
                       <HabitTracker />
@@ -542,7 +541,6 @@ const Dreams = () => {
     );
   }
 
-  // Create Dream View (default) - Mobile Responsive
   if (currentView === 'decomposing') {
     return (
       <MainLayout>
@@ -581,7 +579,7 @@ const Dreams = () => {
               <div className={`mx-auto bg-gradient-to-br from-soul-purple via-soul-purple to-soul-teal rounded-full flex items-center justify-center mb-4 shadow-xl ${isFoldDevice ? 'w-12 h-12' : 'w-16 h-16'}`}>
                 <Heart className={`text-white ${isFoldDevice ? 'h-6 w-6' : 'h-8 w-8'}`} />
               </div>
-              <h1 className={`font-bold mb-3 bg-gradient-to-r from-soul-purple to-soul-teal bg-clip-text text-transparent ${getTextSize('text-xl')}`}>
+              <h1 className={`font-heading font-bold mb-3 bg-gradient-to-r from-soul-purple to-soul-teal bg-clip-text text-transparent ${getTextSize('text-xl')}`}>
                 {t("dreams.whatsYourDream")}
               </h1>
               <p className={`text-gray-600 leading-relaxed mb-4 ${getTextSize('text-sm')}`}>
@@ -598,64 +596,64 @@ const Dreams = () => {
               <div className={`space-y-4`}>
                 {/* Dream Input */}
                 <div className="space-y-2">
-                  <label className={`font-semibold text-gray-700 block ${getTextSize('text-sm')}`}>{t("dreams.whatsYourDream")}</label>
+                  <label className={`font-heading font-semibold text-gray-700 block ${getTextSize('text-sm')}`}>{t("dreams.whatsYourDream")}</label>
                   <Input
                     placeholder={t("dreams.placeholderDream")}
                     value={dreamForm.title}
                     onChange={(e) => setDreamForm(prev => ({ ...prev, title: e.target.value }))}
-                    className={`border-gray-200 rounded-xl focus:border-soul-purple focus:ring-soul-purple/20 w-full ${getTextSize('text-sm')} ${touchTargetSize}`}
+                    className={`border-gray-200 rounded-xl focus:border-soul-purple focus:ring-soul-purple/20 w-full font-ui ${getTextSize('text-sm')} ${touchTargetSize}`}
                   />
                 </div>
 
                 {/* Why Input */}
                 <div className="space-y-2">
-                  <label className={`font-semibold text-gray-700 block ${getTextSize('text-sm')}`}>{t("dreams.whyImportant")}</label>
+                  <label className={`font-heading font-semibold text-gray-700 block ${getTextSize('text-sm')}`}>{t("dreams.whyImportant")}</label>
                   <Textarea
                     placeholder={t("dreams.placeholderWhy")}
                     value={dreamForm.description}
                     onChange={(e) => setDreamForm(prev => ({ ...prev, description: e.target.value }))}
-                    className={`border-gray-200 rounded-xl focus:border-soul-purple focus:ring-soul-purple/20 resize-none w-full ${getTextSize('text-sm')} ${isFoldDevice ? 'min-h-[60px]' : 'min-h-[70px]'}`}
+                    className={`border-gray-200 rounded-xl focus:border-soul-purple focus:ring-soul-purple/20 resize-none w-full font-ui ${getTextSize('text-sm')} ${isFoldDevice ? 'min-h-[60px]' : 'min-h-[70px]'}`}
                   />
                 </div>
 
                 {/* Category & Timeline - Stack on mobile */}
                 <div className={`space-y-4`}>
                   <div className="space-y-2">
-                    <label className={`font-semibold text-gray-700 block ${getTextSize('text-sm')}`}>{t("dreams.category")}</label>
+                    <label className={`font-heading font-semibold text-gray-700 block ${getTextSize('text-sm')}`}>{t("dreams.category")}</label>
                     <Select 
                       value={dreamForm.category} 
                       onValueChange={(value) => setDreamForm(prev => ({ ...prev, category: value }))}
                     >
-                      <SelectTrigger className={`border-gray-200 rounded-xl focus:border-soul-purple w-full ${getTextSize('text-sm')} ${touchTargetSize}`}>
+                      <SelectTrigger className={`border-gray-200 rounded-xl focus:border-soul-purple w-full font-ui ${getTextSize('text-sm')} ${touchTargetSize}`}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="rounded-xl border-gray-200">
-                        <SelectItem value="personal_growth" className={`rounded-lg ${getTextSize('text-sm')}`}>{t("goals.categoryPersonal")}</SelectItem>
-                        <SelectItem value="career" className={`rounded-lg ${getTextSize('text-sm')}`}>{t("goals.categoryCareer")}</SelectItem>
-                        <SelectItem value="health" className={`rounded-lg ${getTextSize('text-sm')}`}>{t("goals.categoryHealth")}</SelectItem>
-                        <SelectItem value="relationships" className={`rounded-lg ${getTextSize('text-sm')}`}>{t("goals.categoryRelationships")}</SelectItem>
-                        <SelectItem value="creativity" className={`rounded-lg ${getTextSize('text-sm')}`}>{t("goals.categoryCreative")}</SelectItem>
-                        <SelectItem value="financial" className={`rounded-lg ${getTextSize('text-sm')}`}>{t("goals.categoryFinancial")}</SelectItem>
-                        <SelectItem value="spiritual" className={`rounded-lg ${getTextSize('text-sm')}`}>{t("goals.categorySpiritual")}</SelectItem>
+                        <SelectItem value="personal_growth" className={`rounded-lg font-ui ${getTextSize('text-sm')}`}>{t("goals.categoryPersonal")}</SelectItem>
+                        <SelectItem value="career" className={`rounded-lg font-ui ${getTextSize('text-sm')}`}>{t("goals.categoryCareer")}</SelectItem>
+                        <SelectItem value="health" className={`rounded-lg font-ui ${getTextSize('text-sm')}`}>{t("goals.categoryHealth")}</SelectItem>
+                        <SelectItem value="relationships" className={`rounded-lg font-ui ${getTextSize('text-sm')}`}>{t("goals.categoryRelationships")}</SelectItem>
+                        <SelectItem value="creativity" className={`rounded-lg font-ui ${getTextSize('text-sm')}`}>{t("goals.categoryCreative")}</SelectItem>
+                        <SelectItem value="financial" className={`rounded-lg font-ui ${getTextSize('text-sm')}`}>{t("goals.categoryFinancial")}</SelectItem>
+                        <SelectItem value="spiritual" className={`rounded-lg font-ui ${getTextSize('text-sm')}`}>{t("goals.categorySpiritual")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="space-y-2">
-                    <label className={`font-semibold text-gray-700 block ${getTextSize('text-sm')}`}>{t("dreams.timeline")}</label>
+                    <label className={`font-heading font-semibold text-gray-700 block ${getTextSize('text-sm')}`}>{t("dreams.timeline")}</label>
                     <Select 
                       value={dreamForm.timeframe} 
                       onValueChange={(value) => setDreamForm(prev => ({ ...prev, timeframe: value }))}
                     >
-                      <SelectTrigger className={`border-gray-200 rounded-xl focus:border-soul-purple w-full ${getTextSize('text-sm')} ${touchTargetSize}`}>
+                      <SelectTrigger className={`border-gray-200 rounded-xl focus:border-soul-purple w-full font-ui ${getTextSize('text-sm')} ${touchTargetSize}`}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="rounded-xl border-gray-200">
-                        <SelectItem value="1 month" className={`rounded-lg ${getTextSize('text-sm')}`}>{t("goals.targetDate") + " - 1 Month"}</SelectItem>
-                        <SelectItem value="3 months" className={`rounded-lg ${getTextSize('text-sm')}`}>{t("goals.targetDate") + " - 3 Months"}</SelectItem>
-                        <SelectItem value="6 months" className={`rounded-lg ${getTextSize('text-sm')}`}>{t("goals.targetDate") + " - 6 Months"}</SelectItem>
-                        <SelectItem value="1 year" className={`rounded-lg ${getTextSize('text-sm')}`}>{t("goals.targetDate") + " - 1 Year"}</SelectItem>
-                        <SelectItem value="2 years" className={`rounded-lg ${getTextSize('text-sm')}`}>{t("goals.targetDate") + " - 2+ Years"}</SelectItem>
+                        <SelectItem value="1 month" className={`rounded-lg font-ui ${getTextSize('text-sm')}`}>{t("goals.targetDate") + " - 1 Month"}</SelectItem>
+                        <SelectItem value="3 months" className={`rounded-lg font-ui ${getTextSize('text-sm')}`}>{t("goals.targetDate") + " - 3 Months"}</SelectItem>
+                        <SelectItem value="6 months" className={`rounded-lg font-ui ${getTextSize('text-sm')}`}>{t("goals.targetDate") + " - 6 Months"}</SelectItem>
+                        <SelectItem value="1 year" className={`rounded-lg font-ui ${getTextSize('text-sm')}`}>{t("goals.targetDate") + " - 1 Year"}</SelectItem>
+                        <SelectItem value="2 years" className={`rounded-lg font-ui ${getTextSize('text-sm')}`}>{t("goals.targetDate") + " - 2+ Years"}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -665,7 +663,7 @@ const Dreams = () => {
                 <Button 
                   onClick={handleCreateDream}
                   disabled={isCreatingDream || !dreamForm.title.trim()}
-                  className={`w-full bg-gradient-to-r from-soul-purple to-soul-teal hover:shadow-lg text-white py-4 rounded-xl font-semibold transition-all duration-300 disabled:opacity-50 ${getTextSize('text-sm')} ${touchTargetSize}`}
+                  className={`w-full bg-gradient-to-r from-soul-purple to-soul-teal hover:shadow-lg text-white py-4 rounded-xl font-semibold transition-all duration-300 disabled:opacity-50 font-ui ${getTextSize('text-sm')} ${touchTargetSize}`}
                 >
                   {isCreatingDream ? (
                     <>
@@ -693,7 +691,7 @@ const Dreams = () => {
               <Button 
                 onClick={handleStartAIGuidance}
                 variant="outline"
-                className={`w-full border-2 border-soul-purple/20 bg-soul-purple/5 hover:bg-soul-purple/10 text-soul-purple py-4 rounded-xl font-medium transition-all duration-300 ${getTextSize('text-sm')} ${touchTargetSize}`}
+                className={`w-full border-2 border-soul-purple/20 bg-soul-purple/5 hover:bg-soul-purple/10 text-soul-purple py-4 rounded-xl font-medium transition-all duration-300 font-ui ${getTextSize('text-sm')} ${touchTargetSize}`}
               >
                 <Heart className={`mr-2 ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
                 Start Heart-Centered Discovery
@@ -702,7 +700,7 @@ const Dreams = () => {
               <Button 
                 onClick={() => setCurrentView('journey')}
                 variant="outline"
-                className={`w-full border-2 border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700 py-4 rounded-xl font-medium transition-all duration-300 ${getTextSize('text-sm')} ${touchTargetSize}`}
+                className={`w-full border-2 border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700 py-4 rounded-xl font-medium transition-all duration-300 font-ui ${getTextSize('text-sm')} ${touchTargetSize}`}
               >
                 <MapPin className={`mr-2 ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
                 {t("dreams.viewJourney")}
