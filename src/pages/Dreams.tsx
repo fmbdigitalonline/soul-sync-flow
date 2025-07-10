@@ -377,7 +377,7 @@ const Dreams = () => {
               <div className={isFoldDevice ? 'hidden' : 'w-20'} />
             </div>
 
-            {/* Mobile Responsive Single Card */}
+            {/* Mobile Responsive Single Card - Updated with consistent 1px border */}
             <div className="bg-card rounded-2xl border border-border overflow-hidden w-full">
               
               {/* Mobile Optimized Tab Navigation */}
@@ -592,8 +592,8 @@ const Dreams = () => {
               </div>
             </div>
 
-            {/* Mobile Optimized Dream Creation Form */}
-            <div className={`bg-white/80 rounded-2xl mb-4 border border-white/20 w-full p-4`}>
+            {/* Mobile Optimized Dream Creation Form - Updated with consistent 1px border */}
+            <div className={`bg-white/80 rounded-2xl mb-4 border border-border w-full p-4`}>
               <div className={`space-y-4`}>
                 {/* Dream Input */}
                 <div className="space-y-2">
