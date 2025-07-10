@@ -116,17 +116,17 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
             <CardContent className="p-4 sm:p-6 pt-0">
               <div className="grid grid-cols-1 gap-4 sm:gap-6 w-full max-w-full">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-                  <div className="text-center p-3 bg-soul-purple/5 rounded-lg">
+                  <div className="text-center p-3 bg-soul-purple/5 rounded-3xl">
                     <h4 className="font-semibold text-soul-purple text-sm break-words">MBTI Type</h4>
                     <p className="text-xl sm:text-2xl font-bold text-soul-purple break-words">{mbtiType}</p>
                     <p className="text-xs sm:text-sm text-gray-600 break-words">{dominantFunction}</p>
                   </div>
-                  <div className="text-center p-3 bg-soul-purple/5 rounded-lg">
+                  <div className="text-center p-3 bg-soul-purple/5 rounded-3xl">
                     <h4 className="font-semibold text-soul-purple text-sm break-words">Life Path</h4>
                     <p className="text-xl sm:text-2xl font-bold text-soul-purple">{lifePath}</p>
                     <p className="text-xs sm:text-sm text-gray-600 break-words">{lifePathKeyword}</p>
                   </div>
-                  <div className="text-center p-3 bg-soul-purple/5 rounded-lg">
+                  <div className="text-center p-3 bg-soul-purple/5 rounded-3xl">
                     <h4 className="font-semibold text-soul-purple text-sm break-words">Sun Sign</h4>
                     <p className="text-xl sm:text-2xl font-bold text-soul-purple break-words">{sunSign}</p>
                     <p className="text-xs sm:text-sm text-gray-600 break-words">Core identity</p>
@@ -134,12 +134,12 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mt-4">
-                  <div className="text-center p-3 bg-soul-purple/5 rounded-lg">
+                  <div className="text-center p-3 bg-soul-purple/5 rounded-3xl">
                     <h4 className="font-semibold text-soul-purple text-sm break-words">Human Design</h4>
                     <p className="text-base sm:text-lg font-bold text-soul-purple break-words">{hdType}</p>
                     <p className="text-xs sm:text-sm text-gray-600 break-words">{authority} Authority</p>
                   </div>
-                  <div className="text-center p-3 bg-soul-purple/5 rounded-lg">
+                  <div className="text-center p-3 bg-soul-purple/5 rounded-3xl">
                     <h4 className="font-semibold text-soul-purple text-sm break-words">Chinese Zodiac</h4>
                     <p className="text-base sm:text-lg font-bold text-soul-purple break-words">{chineseZodiac}</p>
                     <p className="text-xs sm:text-sm text-gray-600 break-words">{element} Element</p>
@@ -232,20 +232,20 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
             <h3 className="text-lg sm:text-xl font-display font-bold mb-4 sm:mb-6 break-words">Complete Numerology Profile</h3>
             <div className="grid grid-cols-1 gap-6 sm:gap-8 w-full max-w-full">
               <div className="space-y-4 sm:space-y-6">
-                <div className="p-3 bg-soul-purple/5 rounded-lg">
+                <div className="p-3 bg-soul-purple/5 rounded-3xl">
                   <h4 className="font-semibold text-soul-purple text-sm sm:text-base break-words">Life Path Number</h4>
                   <p className="text-3xl sm:text-4xl font-bold text-soul-purple">{lifePath}</p>
                   <p className="text-xs sm:text-sm text-gray-600 font-medium break-words">{lifePathKeyword}</p>
                   <p className="text-xs text-gray-500 break-words">Your life's core purpose and direction</p>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="p-3 bg-soul-purple/5 rounded-lg">
+                  <div className="p-3 bg-soul-purple/5 rounded-3xl">
                     <h4 className="font-semibold text-soul-purple text-sm break-words">Expression Number</h4>
                     <p className="text-2xl sm:text-3xl font-bold text-soul-purple">{expressionNumber}</p>
                     <p className="text-xs sm:text-sm text-gray-600 font-medium break-words">{expressionKeyword}</p>
                     <p className="text-xs text-gray-500 break-words">Your natural talents and abilities</p>
                   </div>
-                  <div className="p-3 bg-soul-purple/5 rounded-lg">
+                  <div className="p-3 bg-soul-purple/5 rounded-3xl">
                     <h4 className="font-semibold text-soul-purple text-sm break-words">Soul Urge Number</h4>
                     <p className="text-2xl sm:text-3xl font-bold text-soul-purple">{soulUrgeNumber}</p>
                     <p className="text-xs sm:text-sm text-gray-600 font-medium break-words">{soulUrgeKeyword}</p>
@@ -253,13 +253,13 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="p-3 bg-soul-purple/5 rounded-lg">
+                  <div className="p-3 bg-soul-purple/5 rounded-3xl">
                     <h4 className="font-semibold text-soul-purple text-sm break-words">Personality Number</h4>
                     <p className="text-2xl sm:text-3xl font-bold text-soul-purple">{personalityNumber}</p>
                     <p className="text-xs sm:text-sm text-gray-600 font-medium break-words">{personalityKeyword}</p>
                     <p className="text-xs text-gray-500 break-words">How others perceive you</p>
                   </div>
-                  <div className="p-3 bg-soul-purple/5 rounded-lg">
+                  <div className="p-3 bg-soul-purple/5 rounded-3xl">
                     <h4 className="font-semibold text-soul-purple text-sm break-words">Birthday Number</h4>
                     <p className="text-2xl sm:text-3xl font-bold text-soul-purple">{birthdayNumber}</p>
                     <p className="text-xs sm:text-sm text-gray-600 font-medium break-words">{birthdayKeyword}</p>
@@ -284,17 +284,17 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
             <CardContent className="p-4 sm:p-6 pt-0">
               <div className="space-y-4 sm:space-y-6 w-full max-w-full">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-                  <div className="text-center p-3 bg-soul-purple/5 rounded-lg">
+                  <div className="text-center p-3 bg-soul-purple/5 rounded-3xl">
                     <h4 className="font-semibold text-soul-purple text-sm break-words">Sun Sign</h4>
                     <p className="text-2xl sm:text-3xl font-bold text-soul-purple break-words">{sunSign}</p>
                     <p className="text-xs sm:text-sm text-gray-600 break-words">Core identity & ego</p>
                   </div>
-                  <div className="text-center p-3 bg-soul-purple/5 rounded-lg">
+                  <div className="text-center p-3 bg-soul-purple/5 rounded-3xl">
                     <h4 className="font-semibold text-soul-purple text-sm break-words">Moon Sign</h4>
                     <p className="text-2xl sm:text-3xl font-bold text-soul-purple break-words">{moonSign}</p>
                     <p className="text-xs sm:text-sm text-gray-600 break-words">Emotional nature</p>
                   </div>
-                  <div className="text-center p-3 bg-soul-purple/5 rounded-lg">
+                  <div className="text-center p-3 bg-soul-purple/5 rounded-3xl">
                     <h4 className="font-semibold text-soul-purple text-sm break-words">Rising Sign</h4>
                     <p className="text-2xl sm:text-3xl font-bold text-soul-purple break-words">{risingSign}</p>
                     <p className="text-xs sm:text-sm text-gray-600 break-words">First impression</p>
@@ -316,7 +316,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                   </div>
                 </div>
 
-                <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-soul-purple/5 rounded-lg">
+                <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-soul-purple/5 rounded-3xl">
                   <h5 className="font-semibold text-soul-purple mb-2 text-sm break-words">Generational Influence</h5>
                   <p className="text-base sm:text-lg font-bold text-soul-purple break-words">{chineseZodiac} {element}</p>
                   <p className="text-xs sm:text-sm text-gray-600 break-words">Chinese astrology adds generational wisdom to your profile</p>
