@@ -1,175 +1,292 @@
-
-import React, { useEffect, useState } from 'react';
-import { useHacsIntelligence } from '@/hooks/use-hacs-intelligence';
+import React, { useRef, useEffect, useState, useMemo } from "react";
+import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface IntelligentSoulOrbProps {
-  size?: 'sm' | 'md' | 'lg' | 'xl';
-  showLevel?: boolean;
-  showProgress?: boolean;
+  speaking?: boolean;
+  pulse?: boolean;
+  size?: "sm" | "md" | "lg";
   className?: string;
-  onInteraction?: () => void;
+  stage?: "welcome" | "collecting" | "generating" | "complete";
+  onClick?: () => void;
+  intelligenceLevel?: number; // 0-100
+  showProgressRing?: boolean;
+  showIntelligenceTooltip?: boolean;
 }
 
-export const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
-  size = 'md',
-  showLevel = true,
-  showProgress = true,
-  className = '',
-  onInteraction
+const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
+  speaking = false,
+  pulse = true,
+  size = "md",
+  className,
+  stage = "welcome",
+  onClick,
+  intelligenceLevel = 0,
+  showProgressRing = true,
+  showIntelligenceTooltip = false,
 }) => {
-  const { intelligence, getIntelligenceLevel, HACS_MODULES } = useHacsIntelligence();
-  const [isAnimating, setIsAnimating] = useState(false);
-
-  const level = getIntelligenceLevel();
-  const progress = intelligence ? (intelligence.overall_intelligence % 10) * 10 : 0;
-
-  // Size configurations
-  const sizes = {
-    sm: { orb: 40, ring: 44, stroke: 2 },
-    md: { orb: 60, ring: 68, stroke: 3 },
-    lg: { orb: 80, ring: 92, stroke: 4 },
-    xl: { orb: 120, ring: 136, stroke: 5 }
+  const orbRef = useRef<HTMLDivElement>(null);
+  const [particles, setParticles] = useState<Array<{ x: number, y: number, size: number, speed: number, angle: number }>>([]);
+  const [isLevelingUp, setIsLevelingUp] = useState(false);
+  
+  // Size mapping
+  const sizeMap = {
+    sm: "w-16 h-16",
+    md: "w-24 h-24",
+    lg: "w-32 h-32",
   };
 
-  const config = sizes[size];
-  const radius = (config.ring - config.stroke * 2) / 2;
+  // Progress ring size mapping
+  const ringSize = {
+    sm: 72, // 18 * 4
+    md: 104, // 26 * 4  
+    lg: 136, // 34 * 4
+  };
+
+  // Intelligence-based color enhancement
+  const getOrbColors = useMemo(() => {
+    const baseColors = {
+      welcome: "from-cyan-400 via-cyan-300 to-cyan-200",
+      collecting: "from-cyan-400 via-cyan-300 to-cyan-200",
+      generating: "from-cyan-400 via-cyan-300 to-cyan-200",
+      complete: "from-cyan-400 via-cyan-300 to-cyan-200",
+    };
+
+    // Enhanced colors based on intelligence level
+    if (intelligenceLevel >= 90) {
+      return "from-amber-300 via-yellow-200 to-amber-100"; // Golden for high intelligence
+    } else if (intelligenceLevel >= 70) {
+      return "from-cyan-300 via-blue-200 to-cyan-100"; // Enhanced cyan
+    } else if (intelligenceLevel >= 50) {
+      return "from-cyan-400 via-cyan-300 to-cyan-200"; // Standard cyan
+    } else {
+      return baseColors[stage]; // Base colors for low intelligence
+    }
+  }, [intelligenceLevel, stage]);
+
+  // Calculate circumference for progress ring
+  const radius = (ringSize[size] - 8) / 2; // Account for stroke width
   const circumference = 2 * Math.PI * radius;
   const strokeDasharray = circumference;
-  const strokeDashoffset = circumference - (progress / 100) * circumference;
+  const strokeDashoffset = circumference - (intelligenceLevel / 100) * circumference;
 
-  // Intelligence-based visual evolution
-  const getOrbStyles = () => {
-    const baseIntensity = Math.min(level * 0.1 + 0.3, 1);
-    const pulseSpeed = Math.max(4 - level * 0.3, 1);
+  // Initialize particles with intelligence-based count
+  useEffect(() => {
+    const baseParticleCount = 12;
+    const bonusParticles = Math.floor(intelligenceLevel / 10); // More particles with higher intelligence
+    const particleCount = Math.min(baseParticleCount + bonusParticles, 24);
+    const newParticles = [];
     
-    return {
-      background: `radial-gradient(circle, 
-        hsl(45, 100%, ${50 + level * 3}%) 0%, 
-        hsl(35, 90%, ${40 + level * 2}%) 30%, 
-        hsl(25, 80%, ${30 + level}%) 70%, 
-        transparent 100%)`,
-      boxShadow: `
-        0 0 ${config.orb * 0.3}px hsl(45, 100%, 60% / ${baseIntensity * 0.6}),
-        0 0 ${config.orb * 0.6}px hsl(45, 100%, 50% / ${baseIntensity * 0.4}),
-        0 0 ${config.orb * 0.9}px hsl(45, 100%, 40% / ${baseIntensity * 0.2}),
-        inset 0 0 ${config.orb * 0.2}px hsl(45, 100%, 80% / 0.3)
-      `,
-      animation: `soulPulse ${pulseSpeed}s ease-in-out infinite alternate`,
+    for (let i = 0; i < particleCount; i++) {
+      newParticles.push({
+        x: 50,
+        y: 50,
+        size: Math.random() * 3 + 1.5 + (intelligenceLevel / 100), // Larger particles with higher intelligence
+        speed: Math.random() * 0.3 + 0.3 + (intelligenceLevel / 200), // Faster particles with higher intelligence
+        angle: (Math.PI * 2 / particleCount) * i,
+      });
+    }
+    
+    setParticles(newParticles);
+  }, [intelligenceLevel]);
+  
+  // Animation loop for particles
+  useEffect(() => {
+    if (!orbRef.current) return;
+    
+    let animationId: number;
+    
+    const animate = () => {
+      setParticles(prevParticles => 
+        prevParticles.map(particle => ({
+          ...particle,
+          angle: particle.angle + (particle.speed * 0.01),
+        }))
+      );
+      
+      animationId = requestAnimationFrame(animate);
     };
+    
+    animationId = requestAnimationFrame(animate);
+    
+    return () => {
+      cancelAnimationFrame(animationId);
+    };
+  }, [intelligenceLevel]);
+
+  // Level up animation trigger
+  useEffect(() => {
+    if (intelligenceLevel === 100) {
+      setIsLevelingUp(true);
+      const timeout = setTimeout(() => setIsLevelingUp(false), 2000);
+      return () => clearTimeout(timeout);
+    }
+  }, [intelligenceLevel]);
+
+  const getIntelligencePhase = () => {
+    if (intelligenceLevel >= 100) return "Autonomous";
+    if (intelligenceLevel >= 75) return "Advanced";
+    if (intelligenceLevel >= 50) return "Developing";
+    if (intelligenceLevel >= 25) return "Learning";
+    return "Awakening";
   };
-
-  const handleClick = () => {
-    setIsAnimating(true);
-    onInteraction?.();
-    setTimeout(() => setIsAnimating(false), 600);
-  };
-
-  // Get active modules count for display
-  const activeModules = intelligence ? Object.keys(HACS_MODULES).filter(module => {
-    const score = intelligence.module_scores && typeof intelligence.module_scores === 'object' 
-      ? (intelligence.module_scores as any)[`${module}_score`] as number || 10
-      : 10;
-    return score > 15; // Consider module "active" if score > 15
-  }).length : 0;
-
-  const overallIntelligence = intelligence?.overall_intelligence || 10;
 
   return (
-    <div className={`relative flex flex-col items-center ${className}`}>
+    <div className="relative flex items-center justify-center">
       {/* Progress Ring */}
-      {showProgress && (
-        <div className="relative">
-          <svg
-            width={config.ring}
-            height={config.ring}
-            className="transform -rotate-90"
-          >
-            {/* Background ring */}
-            <circle
-              cx={config.ring / 2}
-              cy={config.ring / 2}
-              r={radius}
-              stroke="hsl(45, 30%, 20%)"
-              strokeWidth={config.stroke}
-              fill="none"
-              opacity={0.3}
-            />
-            
-            {/* Progress ring */}
-            <circle
-              cx={config.ring / 2}
-              cy={config.ring / 2}
-              r={radius}
-              stroke="hsl(45, 100%, 60%)"
-              strokeWidth={config.stroke}
-              fill="none"
-              strokeDasharray={strokeDasharray}
-              strokeDashoffset={strokeDashoffset}
-              strokeLinecap="round"
-              className="transition-all duration-1000 ease-out"
+      {showProgressRing && (
+        <svg
+          className="absolute"
+          width={ringSize[size]}
+          height={ringSize[size]}
+          style={{ transform: 'rotate(-90deg)' }}
+        >
+          {/* Background ring */}
+          <circle
+            cx={ringSize[size] / 2}
+            cy={ringSize[size] / 2}
+            r={radius}
+            stroke="rgba(255, 215, 0, 0.2)" // Golden background
+            strokeWidth="3"
+            fill="transparent"
+          />
+          {/* Progress ring */}
+          <motion.circle
+            cx={ringSize[size] / 2}
+            cy={ringSize[size] / 2}
+            r={radius}
+            stroke="url(#goldGradient)"
+            strokeWidth="3"
+            fill="transparent"
+            strokeDasharray={strokeDasharray}
+            strokeDashoffset={strokeDashoffset}
+            strokeLinecap="round"
+            initial={{ strokeDashoffset: circumference }}
+            animate={{ strokeDashoffset }}
+            transition={{ duration: 1, ease: "easeInOut" }}
+            className={cn(
+              intelligenceLevel >= 100 && "drop-shadow-lg",
+              isLevelingUp && "animate-pulse"
+            )}
+          />
+          {/* Gradient definition */}
+          <defs>
+            <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#FFD700" />
+              <stop offset="50%" stopColor="#FFA500" />
+              <stop offset="100%" stopColor="#FFD700" />
+            </linearGradient>
+          </defs>
+        </svg>
+      )}
+
+      {/* Main Soul Orb */}
+      <div 
+        ref={orbRef}
+        onClick={onClick}
+        className={cn(
+          "relative flex items-center justify-center rounded-full cursor-pointer overflow-hidden", 
+          sizeMap[size],
+          className
+        )}
+      >
+        {/* Core orb */}
+        <div 
+          className={cn(
+            "absolute inset-0 rounded-full bg-gradient-to-r", 
+            getOrbColors,
+            pulse && "animate-pulse-soft",
+            speaking && "animate-pulse",
+            isLevelingUp && "animate-ping"
+          )}
+        />
+        
+        {/* Enhanced glow effect based on intelligence */}
+        <div 
+          className={cn(
+            "absolute inset-0 rounded-full blur-md",
+            intelligenceLevel >= 90 ? "bg-amber-400 opacity-30" :
+            intelligenceLevel >= 70 ? "bg-cyan-400 opacity-25" :
+            "bg-cyan-400 opacity-20"
+          )} 
+        />
+        
+        {/* Star in the center */}
+        <div className="absolute w-1/2 h-1/2 bg-white rounded-full blur-[1px]" />
+        <div className="absolute w-[30%] h-[30%]">
+          <div className="absolute left-[45%] top-0 w-[10%] h-[100%] bg-white transform rotate-0" />
+          <div className="absolute left-[45%] top-0 w-[10%] h-[100%] bg-white transform rotate-90" />
+          <div className="absolute left-[45%] top-0 w-[10%] h-[100%] bg-white transform rotate-45" />
+          <div className="absolute left-[45%] top-0 w-[10%] h-[100%] bg-white transform rotate-[135deg]" />
+        </div>
+        
+        {/* Intelligence-enhanced orbital particles */}
+        {particles.map((particle, index) => {
+          const x = 50 + Math.cos(particle.angle) * 30;
+          const y = 50 + Math.sin(particle.angle) * 30;
+          
+          return (
+            <div 
+              key={index}
+              className={cn(
+                "absolute rounded-full",
+                intelligenceLevel >= 90 ? "bg-amber-200" : "bg-white"
+              )}
               style={{
-                filter: `drop-shadow(0 0 ${config.stroke * 2}px hsl(45, 100%, 60% / 0.6))`
+                left: `${x}%`,
+                top: `${y}%`,
+                width: `${particle.size}px`,
+                height: `${particle.size}px`,
+                opacity: 0.7 + (intelligenceLevel / 200),
+                transform: `translate(-50%, -50%)`,
               }}
             />
-          </svg>
+          );
+        })}
+        
+        {/* Enhanced orbital lines */}
+        <div className="absolute inset-2">
+          <div className={cn(
+            "absolute inset-0 rounded-full border opacity-50 rotate-45",
+            intelligenceLevel >= 90 ? "border-amber-200" : "border-white"
+          )} />
+          <div className={cn(
+            "absolute inset-0 rounded-full border opacity-50 rotate-90",
+            intelligenceLevel >= 90 ? "border-amber-200" : "border-white"
+          )} />
+          <div className={cn(
+            "absolute inset-0 rounded-full border opacity-50",
+            intelligenceLevel >= 90 ? "border-amber-200" : "border-white"
+          )} />
         </div>
-      )}
+        
+        {/* Speaking indicator */}
+        {speaking && (
+          <div className="absolute inset-0 rounded-full border-4 border-white opacity-70 animate-ping" />
+        )}
 
-      {/* Soul Orb */}
-      <div
-        className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 
-                   rounded-full cursor-pointer transition-all duration-300 
-                   ${isAnimating ? 'scale-110' : 'hover:scale-105'}`}
-        style={{
-          width: config.orb,
-          height: config.orb,
-          ...getOrbStyles()
-        }}
-        onClick={handleClick}
-      >
-        {/* Inner consciousness patterns */}
-        <div className="absolute inset-2 rounded-full opacity-40"
-             style={{
-               background: `conic-gradient(from 0deg, 
-                 hsl(45, 100%, 70%), hsl(60, 100%, 60%), 
-                 hsl(30, 100%, 60%), hsl(45, 100%, 70%))`,
-               animation: `spin ${12 - level}s linear infinite`
-             }} />
+        {/* Level up celebration effect */}
+        <AnimatePresence>
+          {isLevelingUp && (
+            <motion.div
+              className="absolute inset-0 rounded-full border-4 border-amber-400"
+              initial={{ scale: 1, opacity: 1 }}
+              animate={{ scale: 3, opacity: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 2, ease: "easeOut" }}
+            />
+          )}
+        </AnimatePresence>
       </div>
 
-      {/* Intelligence Level Display */}
-      {showLevel && (
-        <div className="mt-2 text-center">
-          <div className="text-sm font-bold text-gold-400">
-            Level {level}
-          </div>
-          <div className="text-xs text-gold-300 opacity-75">
-            {activeModules}/11 Modules Active
-          </div>
-          {intelligence && (
-            <div className="text-xs text-gold-200 opacity-60">
-              {intelligence.interaction_count} interactions
-            </div>
-          )}
+      {/* Intelligence tooltip */}
+      {showIntelligenceTooltip && (
+        <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+          {getIntelligencePhase()} • {Math.round(intelligenceLevel)}%
         </div>
       )}
-
-      {/* Animation styles */}
-      <style>
-        {`
-          @keyframes soulPulse {
-            0% { transform: scale(1); }
-            100% { transform: scale(1.05); }
-          }
-          
-          @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
-        `}
-      </style>
     </div>
   );
 };
 
-export default IntelligentSoulOrb;
+export { IntelligentSoulOrb };
