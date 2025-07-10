@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MainLayout from "@/components/Layout/MainLayout";
@@ -572,7 +573,7 @@ const Dreams = () => {
   return (
     <MainLayout>
       <ErrorBoundary>
-        <div className={`min-h-screen bg-gradient-to-br from-soul-purple/10 via-white to-soul-teal/5 w-full ${isMobile ? 'pb-20' : ''}`}>
+        <div className={`min-h-screen bg-white w-full ${isMobile ? 'pb-20' : ''}`}>
           <div className={`w-full max-w-lg mx-auto py-4 px-3 ${isMobile ? 'pb-24' : 'pb-20'}`}>
             
             {/* Mobile Optimized Hero Section */}
