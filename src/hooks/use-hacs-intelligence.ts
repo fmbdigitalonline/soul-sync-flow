@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -11,6 +12,9 @@ export interface HacsIntelligence {
   last_update: string;
   created_at: string;
   updated_at: string;
+  pie_score: number;
+  vfp_score: number;
+  tmg_score: number;
 }
 
 export interface ModuleScores {
@@ -22,6 +26,9 @@ export interface ModuleScores {
   CNR: number;    // Conflict Navigation & Resolution
   BPSC: number;   // Blueprint Personalization & Sync Center
   ACS: number;    // Adaptive Conversation System
+  PIE: number;    // Predictive Intelligence Engine
+  VFP: number;    // Vector Fusion Processor
+  TMG: number;    // Temporal Memory Graph
 }
 
 export const useHacsIntelligence = () => {
@@ -51,12 +58,32 @@ export const useHacsIntelligence = () => {
       }
 
       if (existing) {
+        const moduleScores = (existing.module_scores as unknown) as ModuleScores || {};
+        
+        // Ensure all 11 modules are present
+        const completeModuleScores: ModuleScores = {
+          NIK: moduleScores.NIK || 0,
+          CPSR: moduleScores.CPSR || 0,
+          TWS: moduleScores.TWS || 0,
+          HFME: moduleScores.HFME || 0,
+          DPEM: moduleScores.DPEM || 0,
+          CNR: moduleScores.CNR || 0,
+          BPSC: moduleScores.BPSC || 0,
+          ACS: moduleScores.ACS || 0,
+          PIE: existing.pie_score || 0,
+          VFP: existing.vfp_score || 0,
+          TMG: existing.tmg_score || 0,
+        };
+
         setIntelligence({
           ...existing,
-          module_scores: (existing.module_scores as unknown) as ModuleScores
+          module_scores: completeModuleScores,
+          pie_score: existing.pie_score || 0,
+          vfp_score: existing.vfp_score || 0,
+          tmg_score: existing.tmg_score || 0,
         });
       } else {
-        // Create initial intelligence record
+        // Create initial intelligence record with all 11 modules
         const initialModuleScores: ModuleScores = {
           NIK: 0,
           CPSR: 0,
@@ -66,6 +93,9 @@ export const useHacsIntelligence = () => {
           CNR: 0,
           BPSC: 0,
           ACS: 0,
+          PIE: 0,
+          VFP: 0,
+          TMG: 0,
         };
 
         const { data: newIntelligence, error: createError } = await supabase
@@ -75,6 +105,9 @@ export const useHacsIntelligence = () => {
             intelligence_level: 0,
             module_scores: initialModuleScores as any,
             interaction_count: 0,
+            pie_score: 0,
+            vfp_score: 0,
+            tmg_score: 0,
           })
           .select()
           .single();
@@ -82,7 +115,10 @@ export const useHacsIntelligence = () => {
         if (createError) throw createError;
         setIntelligence({
           ...newIntelligence,
-          module_scores: (newIntelligence.module_scores as unknown) as ModuleScores
+          module_scores: initialModuleScores,
+          pie_score: 0,
+          vfp_score: 0,
+          tmg_score: 0,
         });
       }
     } catch (err) {
@@ -112,11 +148,11 @@ export const useHacsIntelligence = () => {
         newModuleScores[module as keyof ModuleScores] = Math.min(100, currentScore + adjustedImprovement);
       });
 
-      // Calculate overall intelligence level (average of all modules)
+      // Calculate overall intelligence level (average of all 11 modules)
       const moduleValues = Object.values(newModuleScores);
       const newIntelligenceLevel = moduleValues.reduce((sum, score) => sum + score, 0) / moduleValues.length;
 
-      // Update database
+      // Update database with all module scores
       const { data: updated, error: updateError } = await supabase
         .from('hacs_intelligence')
         .update({
@@ -124,6 +160,9 @@ export const useHacsIntelligence = () => {
           module_scores: newModuleScores as any,
           interaction_count: intelligence.interaction_count + 1,
           last_update: new Date().toISOString(),
+          pie_score: newModuleScores.PIE,
+          vfp_score: newModuleScores.VFP,
+          tmg_score: newModuleScores.TMG,
         })
         .eq('user_id', user.id)
         .select()
@@ -133,7 +172,10 @@ export const useHacsIntelligence = () => {
 
       setIntelligence({
         ...updated,
-        module_scores: (updated.module_scores as unknown) as ModuleScores
+        module_scores: newModuleScores,
+        pie_score: newModuleScores.PIE,
+        vfp_score: newModuleScores.VFP,
+        tmg_score: newModuleScores.TMG,
       });
 
       // Show level up notification if crossing major thresholds
@@ -145,13 +187,13 @@ export const useHacsIntelligence = () => {
         if (newIntelligenceLevel >= 100) {
           toast({
             title: "🎉 Autonomous Intelligence Unlocked!",
-            description: "Your HACS system has achieved full autonomous capability.",
+            description: "Your HACS system has achieved full autonomous capability across all 11 modules.",
             duration: 5000,
           });
         } else if (phases[newLevel]) {
           toast({
             title: `🧠 Intelligence Level Up!`,
-            description: `Your HACS has evolved to the ${phases[newLevel]} phase.`,
+            description: `Your HACS has evolved to the ${phases[newLevel]} phase across all neural pathways.`,
             duration: 3000,
           });
         }
@@ -162,7 +204,7 @@ export const useHacsIntelligence = () => {
     }
   }, [intelligence, toast]);
 
-  // Simulate learning from conversation quality
+  // Simulate learning from conversation quality with enhanced module training
   const recordConversationInteraction = useCallback(async (
     messageContent: string,
     responseQuality: 'excellent' | 'good' | 'average' | 'poor' = 'average'
@@ -178,16 +220,21 @@ export const useHacsIntelligence = () => {
       NIK: 0.5, // Neural integration from processing
       CPSR: 0.3, // Pattern recognition from content analysis
       ACS: 0.8, // Conversation system from interaction
+      PIE: 0.4, // Predictive insights from conversation flow
+      VFP: 0.3, // Vector processing from personality alignment
+      TMG: 0.2, // Temporal memory from context retention
     };
 
     // Additional improvements based on content complexity
     if (messageContent.length > 100) {
       baseImprovements.TWS = 0.4; // Temporal wisdom from complex discussions
       baseImprovements.DPEM = 0.3; // Personality expression adaptation
+      baseImprovements.HFME = 0.2; // Framework management
     }
 
     if (messageContent.includes('?')) {
       baseImprovements.CNR = 0.2; // Conflict navigation from questions
+      baseImprovements.BPSC = 0.1; // Blueprint sync from personalization
     }
 
     await updateIntelligence(baseImprovements, qualityMultipliers[responseQuality]);
@@ -210,6 +257,23 @@ export const useHacsIntelligence = () => {
     return intelligence?.intelligence_level >= 100;
   }, [intelligence]);
 
+  // Get all module names and descriptions
+  const getModuleInfo = useCallback(() => {
+    return [
+      { key: 'NIK', name: 'Neural Integration Kernel', description: 'Core neural processing' },
+      { key: 'CPSR', name: 'Cognitive Pattern State Recognition', description: 'Pattern recognition' },
+      { key: 'TWS', name: 'Temporal Wisdom Synthesis', description: 'Wisdom integration' },
+      { key: 'HFME', name: 'Holistic Framework Management Engine', description: 'Framework coordination' },
+      { key: 'DPEM', name: 'Dynamic Personality Expression Module', description: 'Personality adaptation' },
+      { key: 'CNR', name: 'Conflict Navigation & Resolution', description: 'Conflict resolution' },
+      { key: 'BPSC', name: 'Blueprint Personalization & Sync Center', description: 'Blueprint integration' },
+      { key: 'ACS', name: 'Adaptive Conversation System', description: 'Conversation flow' },
+      { key: 'PIE', name: 'Predictive Intelligence Engine', description: 'Future insights' },
+      { key: 'VFP', name: 'Vector Fusion Processor', description: 'Data fusion' },
+      { key: 'TMG', name: 'Temporal Memory Graph', description: 'Memory connections' },
+    ];
+  }, []);
+
   useEffect(() => {
     initializeIntelligence();
   }, [initializeIntelligence]);
@@ -222,6 +286,7 @@ export const useHacsIntelligence = () => {
     recordConversationInteraction,
     getIntelligencePhase,
     isAutonomousUnlocked,
+    getModuleInfo,
     refreshIntelligence: initializeIntelligence,
   };
 };

@@ -822,8 +822,11 @@ export type Database = {
           interaction_count: number
           last_update: string
           module_scores: Json
+          pie_score: number | null
+          tmg_score: number | null
           updated_at: string
           user_id: string
+          vfp_score: number | null
         }
         Insert: {
           created_at?: string
@@ -832,8 +835,11 @@ export type Database = {
           interaction_count?: number
           last_update?: string
           module_scores?: Json
+          pie_score?: number | null
+          tmg_score?: number | null
           updated_at?: string
           user_id: string
+          vfp_score?: number | null
         }
         Update: {
           created_at?: string
@@ -842,8 +848,11 @@ export type Database = {
           interaction_count?: number
           last_update?: string
           module_scores?: Json
+          pie_score?: number | null
+          tmg_score?: number | null
           updated_at?: string
           user_id?: string
+          vfp_score?: number | null
         }
         Relationships: []
       }

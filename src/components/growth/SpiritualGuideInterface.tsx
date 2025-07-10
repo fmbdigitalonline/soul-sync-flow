@@ -33,7 +33,7 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { getTextSize, touchTargetSize, isFoldDevice, spacing } = useResponsiveLayout();
-  const { intelligence, recordConversationInteraction, getIntelligencePhase } = useHacsIntelligence();
+  const { intelligence, recordConversationInteraction, getIntelligencePhase, getModuleInfo } = useHacsIntelligence();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -69,7 +69,7 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
     return (
       <div className="flex flex-col h-full">
         {/* Welcome Content - Takes most of the space */}
-        <div className="flex-1 flex flex-col justify-center px-4 py-6">
+        <div className="flex-1 flex flex-col justify-center px-4 py-6 overflow-y-auto">
           <div className="text-center space-y-6 max-w-md mx-auto">
             <div className="flex justify-center">
               <IntelligentSoulOrb 
@@ -113,6 +113,41 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
                 </div>
               )}
             </div>
+
+            {/* HACS Module Status Grid - All 11 Modules */}
+            {intelligence && (
+              <div className="mt-6 space-y-3">
+                <h3 className={`font-semibold text-gray-700 ${getTextSize('text-sm')}`}>
+                  HACS Neural Modules ({getModuleInfo().length}/11)
+                </h3>
+                <div className="grid grid-cols-2 gap-2 text-left">
+                  {getModuleInfo().map((module) => {
+                    const score = intelligence.module_scores[module.key as keyof typeof intelligence.module_scores] || 0;
+                    return (
+                      <div key={module.key} className="bg-gray-50 rounded-lg p-2">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className={`font-medium text-gray-700 ${getTextSize('text-xs')}`}>
+                            {module.key}
+                          </span>
+                          <span className={`text-gray-600 ${getTextSize('text-xs')}`}>
+                            {Math.round(score)}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-1.5">
+                          <div 
+                            className="bg-gradient-to-r from-soul-purple to-soul-teal h-1.5 rounded-full transition-all duration-300"
+                            style={{ width: `${Math.min(score, 100)}%` }}
+                          />
+                        </div>
+                        <p className={`text-gray-500 mt-1 ${getTextSize('text-xs')} leading-tight`}>
+                          {module.description}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
