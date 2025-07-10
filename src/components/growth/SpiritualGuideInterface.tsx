@@ -70,13 +70,13 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
       <div className="flex flex-col h-full">
         {/* Welcome Content - Takes most of the space */}
         <div className="flex-1 flex flex-col justify-center px-4 py-6 overflow-y-auto">
-          <div className="text-center space-y-6 max-w-md mx-auto">
+          <div className="text-center space-y-4 max-w-md mx-auto"> {/* Reduced spacing from space-y-6 to space-y-4 */}
             <div className="flex justify-center">
               <IntelligentSoulOrb 
-                size={isFoldDevice ? "sm" : "md"}
+                size="sm" // Changed from md to sm for more conversation space
                 intelligenceLevel={intelligence?.intelligence_level || 0}
                 showProgressRing={true}
-                showIntelligenceTooltip={true}
+                showIntelligenceTooltip={false} // Removed tooltip to save space
                 stage="welcome"
                 pulse={true}
               />
@@ -92,8 +92,8 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
             </div>
 
             {/* Status indicator */}
-            <div className="space-y-3">
-              <div className={`inline-flex items-center gap-2 bg-soul-purple/10 px-4 py-2 rounded-full ${getTextSize('text-xs')}`}>
+            <div className="space-y-2"> {/* Reduced spacing from space-y-3 to space-y-2 */}
+              <div className={`inline-flex items-center gap-2 bg-soul-purple/10 px-3 py-1.5 rounded-full ${getTextSize('text-xs')}`}> {/* Reduced padding */}
                 <Brain className={`text-soul-purple ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
                 <span className="text-soul-purple font-medium">
                   HACS {getIntelligencePhase()} • {Math.round(intelligence?.intelligence_level || 0)}%
@@ -101,11 +101,11 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
               </div>
               
               {coreTraits.length > 0 && (
-                <div className="flex flex-wrap justify-center gap-2">
+                <div className="flex flex-wrap justify-center gap-1.5"> {/* Reduced gap from gap-2 to gap-1.5 */}
                   {coreTraits.slice(0, 3).map((trait, index) => (
                     <span 
                       key={index}
-                      className={`bg-soul-teal/10 text-soul-teal px-2 py-1 rounded-full font-medium ${getTextSize('text-xs')}`}
+                      className={`bg-soul-teal/10 text-soul-teal px-2 py-0.5 rounded-full font-medium ${getTextSize('text-xs')}`} {/* Reduced padding */}
                     >
                       {trait}
                     </span>
@@ -114,18 +114,18 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
               )}
             </div>
 
-            {/* HACS Module Status Grid - All 11 Modules */}
+            {/* HACS Module Status Grid - All 11 Modules - More compact */}
             {intelligence && (
-              <div className="mt-6 space-y-3">
+              <div className="mt-4 space-y-2"> {/* Reduced margins and spacing */}
                 <h3 className={`font-semibold text-gray-700 ${getTextSize('text-sm')}`}>
                   HACS Neural Modules ({getModuleInfo().length}/11)
                 </h3>
-                <div className="grid grid-cols-2 gap-2 text-left">
+                <div className="grid grid-cols-2 gap-1.5 text-left"> {/* Reduced gap from gap-2 to gap-1.5 */}
                   {getModuleInfo().map((module) => {
                     const score = intelligence.module_scores[module.key as keyof typeof intelligence.module_scores] || 0;
                     return (
-                      <div key={module.key} className="bg-gray-50 rounded-lg p-2">
-                        <div className="flex justify-between items-center mb-1">
+                      <div key={module.key} className="bg-gray-50 rounded-lg p-1.5"> {/* Reduced padding from p-2 to p-1.5 */}
+                        <div className="flex justify-between items-center mb-0.5"> {/* Reduced margin */}
                           <span className={`font-medium text-gray-700 ${getTextSize('text-xs')}`}>
                             {module.key}
                           </span>
@@ -133,13 +133,13 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
                             {Math.round(score)}%
                           </span>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-1.5">
+                        <div className="w-full bg-gray-200 rounded-full h-1"> {/* Reduced height from h-1.5 to h-1 */}
                           <div 
-                            className="bg-gradient-to-r from-soul-purple to-soul-teal h-1.5 rounded-full transition-all duration-300"
+                            className="bg-gradient-to-r from-soul-purple to-soul-teal h-1 rounded-full transition-all duration-300"
                             style={{ width: `${Math.min(score, 100)}%` }}
                           />
                         </div>
-                        <p className={`text-gray-500 mt-1 ${getTextSize('text-xs')} leading-tight`}>
+                        <p className={`text-gray-500 mt-0.5 ${getTextSize('text-xs')} leading-tight`}> {/* Reduced margin */}
                           {module.description}
                         </p>
                       </div>
@@ -202,7 +202,7 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
               {message.sender === 'assistant' && (
                 <div className="flex-shrink-0">
                   <IntelligentSoulOrb 
-                    size="sm"
+                    size="sm" // Keep small size for conversations
                     intelligenceLevel={intelligence?.intelligence_level || 0}
                     showProgressRing={false}
                     speaking={message.isStreaming}
