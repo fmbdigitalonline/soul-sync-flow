@@ -33,7 +33,7 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { getTextSize, touchTargetSize, isFoldDevice, spacing } = useResponsiveLayout();
-  const { intelligence, recordConversationInteraction, getIntelligencePhase, getModuleInfo } = useHacsIntelligence();
+  const { intelligence, recordConversationInteraction, getIntelligencePhase } = useHacsIntelligence();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -45,7 +45,6 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
 
   const handleSendMessage = () => {
     if (inputValue.trim() && !isLoading) {
-      // Record the interaction for HACS learning
       recordConversationInteraction(inputValue.trim(), 'good');
       onSendMessage(inputValue.trim());
       setInputValue('');
@@ -91,12 +90,12 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
               </p>
             </div>
 
-            {/* Status indicator */}
+            {/* User-friendly status indicator */}
             <div className="space-y-2">
               <div className={`inline-flex items-center gap-2 bg-soul-purple/10 px-3 py-1.5 rounded-full ${getTextSize('text-xs')}`}>
                 <Brain className={`text-soul-purple ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
                 <span className="text-soul-purple font-medium">
-                  HACS {getIntelligencePhase()} • {Math.round(intelligence?.intelligence_level || 0)}%
+                  AI Coach Ready • {getIntelligencePhase()} Level
                 </span>
               </div>
               
@@ -113,41 +112,6 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
                 </div>
               )}
             </div>
-
-            {/* HACS Module Status Grid - All 11 Modules - More compact */}
-            {intelligence && (
-              <div className="mt-4 space-y-2">
-                <h3 className={`font-semibold text-gray-700 ${getTextSize('text-sm')}`}>
-                  HACS Neural Modules ({getModuleInfo().length}/11)
-                </h3>
-                <div className="grid grid-cols-2 gap-1.5 text-left">
-                  {getModuleInfo().map((module) => {
-                    const score = intelligence.module_scores[module.key as keyof typeof intelligence.module_scores] || 0;
-                    return (
-                      <div key={module.key} className="bg-gray-50 rounded-lg p-1.5">
-                        <div className="flex justify-between items-center mb-0.5">
-                          <span className={`font-medium text-gray-700 ${getTextSize('text-xs')}`}>
-                            {module.key}
-                          </span>
-                          <span className={`text-gray-600 ${getTextSize('text-xs')}`}>
-                            {Math.round(score)}%
-                          </span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-1">
-                          <div 
-                            className="bg-gradient-to-r from-soul-purple to-soul-teal h-1 rounded-full transition-all duration-300"
-                            style={{ width: `${Math.min(score, 100)}%` }}
-                          />
-                        </div>
-                        <p className={`text-gray-500 mt-0.5 ${getTextSize('text-xs')} leading-tight`}>
-                          {module.description}
-                        </p>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
