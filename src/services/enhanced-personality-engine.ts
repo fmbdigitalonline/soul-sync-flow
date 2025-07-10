@@ -1,3 +1,4 @@
+
 import { LayeredBlueprint, AgentMode } from "@/types/personality-modules";
 import { personalityVectorService } from "./personality-vector-service";
 import { holisticCoachService } from "./holistic-coach-service";
@@ -25,31 +26,56 @@ export class EnhancedPersonalityEngine {
   getUserName(): string {
     // Extract user name with multiple fallback options
     const userMeta = this.blueprint.user_meta;
+    
+    console.log("🎯 Enhanced Engine: Full blueprint user_meta:", userMeta);
+    
     if (!userMeta) {
       console.log("🎯 Enhanced Engine: No user_meta found in blueprint");
       return 'friend';
     }
 
+    // Check all possible name fields
     const preferredName = userMeta.preferred_name;
     const fullName = userMeta.full_name;
+    const firstName = userMeta.first_name;
+    const displayName = userMeta.display_name;
     
     console.log("🎯 Enhanced Engine: Extracting user name from blueprint:", {
       preferred_name: preferredName,
-      full_name: fullName
+      full_name: fullName,
+      first_name: firstName,
+      display_name: displayName
     });
 
-    // Priority: preferred_name > first part of full_name > 'friend'
+    // Priority: preferred_name > first_name > first part of full_name > display_name > 'friend'
     if (preferredName && typeof preferredName === 'string' && preferredName.trim()) {
+      console.log("🎯 Using preferred_name:", preferredName.trim());
       return preferredName.trim();
     }
     
+    if (firstName && typeof firstName === 'string' && firstName.trim()) {
+      console.log("🎯 Using first_name:", firstName.trim());
+      return firstName.trim();
+    }
+    
     if (fullName && typeof fullName === 'string' && fullName.trim()) {
-      const firstName = fullName.trim().split(' ')[0];
-      if (firstName) {
-        return firstName;
+      const firstNameFromFull = fullName.trim().split(' ')[0];
+      if (firstNameFromFull && firstNameFromFull.length > 2) { // Avoid initials or very short strings
+        console.log("🎯 Using first part of full_name:", firstNameFromFull);
+        return firstNameFromFull;
       }
     }
     
+    if (displayName && typeof displayName === 'string' && displayName.trim()) {
+      const cleanDisplayName = displayName.trim();
+      // Avoid email-like strings or very short strings
+      if (!cleanDisplayName.includes('@') && cleanDisplayName.length > 2) {
+        console.log("🎯 Using display_name:", cleanDisplayName);
+        return cleanDisplayName;
+      }
+    }
+    
+    console.log("🎯 Falling back to 'friend'");
     return 'friend';
   }
 

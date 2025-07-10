@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { blueprintService } from '@/services/blueprint-service';
 
@@ -138,9 +139,50 @@ export const useBlueprintData = () => {
   };
 
   const getDisplayName = () => {
-    return blueprintData?.user_meta?.preferred_name || 
-           blueprintData?.user_meta?.full_name?.split(' ')[0] || 
-           'User';
+    if (!blueprintData?.user_meta) {
+      console.log('🎯 getDisplayName: No user_meta in blueprint data');
+      return 'User';
+    }
+
+    const userMeta = blueprintData.user_meta;
+    
+    console.log('🎯 getDisplayName: Available user_meta fields:', {
+      preferred_name: userMeta.preferred_name,
+      first_name: userMeta.first_name,
+      full_name: userMeta.full_name,
+      display_name: userMeta.display_name
+    });
+
+    // Priority: preferred_name > first_name > first part of full_name > display_name > 'User'
+    if (userMeta.preferred_name && typeof userMeta.preferred_name === 'string' && userMeta.preferred_name.trim()) {
+      console.log('🎯 getDisplayName: Using preferred_name:', userMeta.preferred_name.trim());
+      return userMeta.preferred_name.trim();
+    }
+    
+    if (userMeta.first_name && typeof userMeta.first_name === 'string' && userMeta.first_name.trim()) {
+      console.log('🎯 getDisplayName: Using first_name:', userMeta.first_name.trim());
+      return userMeta.first_name.trim();
+    }
+    
+    if (userMeta.full_name && typeof userMeta.full_name === 'string' && userMeta.full_name.trim()) {
+      const firstName = userMeta.full_name.trim().split(' ')[0];
+      if (firstName && firstName.length > 2) { // Avoid initials or very short strings
+        console.log('🎯 getDisplayName: Using first part of full_name:', firstName);
+        return firstName;
+      }
+    }
+    
+    if (userMeta.display_name && typeof userMeta.display_name === 'string' && userMeta.display_name.trim()) {
+      const cleanDisplayName = userMeta.display_name.trim();
+      // Avoid email-like strings or very short strings
+      if (!cleanDisplayName.includes('@') && cleanDisplayName.length > 2) {
+        console.log('🎯 getDisplayName: Using display_name:', cleanDisplayName);
+        return cleanDisplayName;
+      }
+    }
+    
+    console.log('🎯 getDisplayName: Falling back to "User"');
+    return 'User';
   };
 
   const getBlueprintCompletionPercentage = () => {
