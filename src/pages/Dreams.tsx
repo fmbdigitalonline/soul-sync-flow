@@ -243,7 +243,7 @@ const Dreams = () => {
     return (
       <MainLayout>
         <ErrorBoundary>
-          <div className={`min-h-screen bg-background flex items-center justify-center p-3 ${isMobile ? 'pb-20' : ''}`}>
+          <div className={`min-h-screen bg-white flex items-center justify-center p-3 ${isMobile ? 'pb-20' : ''}`}>
             <div className={`bg-card backdrop-blur-lg rounded-2xl shadow-lg border border-border text-center w-full max-w-sm mx-auto ${spacing.card}`}>
               <div className={`w-10 h-10 mx-auto bg-primary rounded-full mb-4 flex items-center justify-center ${isFoldDevice ? 'w-8 h-8' : ''}`}>
                 <Heart className={`h-5 w-5 text-primary-foreground ${isFoldDevice ? 'h-4 w-4' : ''}`} />
@@ -269,7 +269,7 @@ const Dreams = () => {
   if (currentView === 'task-coach' && selectedTask) {
     return (
       <MainLayout>
-        <div className={`min-h-screen bg-background w-full ${isMobile ? 'pb-20' : ''}`}>
+        <div className={`min-h-screen bg-white w-full ${isMobile ? 'pb-20' : ''}`}>
           <TaskCoachInterface
             task={selectedTask}
             onBack={handleBackFromTaskCoach}
@@ -284,7 +284,7 @@ const Dreams = () => {
   if (currentView === 'chat') {
     return (
       <MainLayout>
-        <div className={`min-h-screen flex flex-col bg-background w-full ${isMobile ? 'pb-20' : ''}`}>
+        <div className={`min-h-screen flex flex-col bg-white w-full ${isMobile ? 'pb-20' : ''}`}>
           {/* Mobile Optimized Header */}
           <div className={`bg-card/80 backdrop-blur-lg border-b border-border sticky top-0 z-10 w-full ${isMobile ? 'px-3 py-2' : 'px-4 py-3'}`}>
             <div className={`flex items-center justify-between w-full max-w-4xl mx-auto`}>
@@ -355,7 +355,7 @@ const Dreams = () => {
   if (currentView === 'journey') {
     return (
       <MainLayout>
-        <div className={`min-h-screen bg-background w-full ${isMobile ? 'pb-20' : ''}`}>
+        <div className={`min-h-screen bg-white w-full ${isMobile ? 'pb-20' : ''}`}>
           <div className={`w-full max-w-4xl mx-auto py-3 ${isMobile ? 'px-3 pb-24' : 'px-6 pb-20'}`}>
             
             {/* Mobile Optimized Header */}
