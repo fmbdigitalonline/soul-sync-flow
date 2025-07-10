@@ -113,7 +113,7 @@ const Index = () => {
         <div className={`w-full ${layout.maxWidth} mx-auto text-center`}>
           
           <h1 
-            className={`font-heading ${getTextSize('text-3xl')} lg:${getTextSize('text-4xl')} font-bold mb-4 ${spacing.gap} px-4`}
+            className={`font-heading ${getTextSize('text-3xl')} lg:${getTextSize('text-4xl')} font-bold mb-8 ${spacing.gap} px-4`}
           >
             {user ? (
               <>
@@ -134,14 +134,14 @@ const Index = () => {
           
           {user && hasBlueprint ? (
             <PersonalizedQuoteDisplay 
-              className={`${getTextSize('text-sm')} mb-6 ${spacing.gap} px-4 text-muted-foreground min-h-[3.5rem] flex items-center justify-center italic`}
+              className={`${getTextSize('text-sm')} mb-8 ${spacing.gap} px-4 text-muted-foreground min-h-[3.5rem] flex items-center justify-center italic`}
               interval={4000}
               fallbackQuotes={subtitleMessages}
             />
           ) : (
             <RotatingText 
               texts={subtitleMessages}
-              className={`${getTextSize('text-sm')} mb-6 ${spacing.gap} px-4 text-muted-foreground min-h-[3.5rem] flex items-center justify-center`}
+              className={`${getTextSize('text-sm')} mb-8 ${spacing.gap} px-4 text-muted-foreground min-h-[3.5rem] flex items-center justify-center`}
               interval={4000}
             />
           )}
