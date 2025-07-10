@@ -60,7 +60,7 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
 
   const getGreetingMessage = () => {
     const traits = coreTraits.slice(0, 2).join(' & ');
-    return `Hello ${userDisplayName}! I'm here to support your spiritual journey${traits ? ` as a ${traits}` : ''}. What's calling to your heart today?`;
+    return `Hello ${userDisplayName}! I'm here to support your spiritual journey${traits ? ` based on your unique blueprint` : ''}. What's calling to your heart today?`;
   };
 
   // Show welcome screen only if no messages yet
@@ -83,7 +83,7 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
             
             <div className="space-y-2">
               <h2 className={`font-bold text-gray-800 ${getTextSize('text-lg')}`}>
-                {getIntelligencePhase()} Intelligence
+                Your Personal Spiritual Guide
               </h2>
               <p className={`text-gray-600 leading-relaxed ${getTextSize('text-sm')}`}>
                 {getGreetingMessage()}
@@ -93,9 +93,9 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
             {/* User-friendly status indicator */}
             <div className="space-y-2">
               <div className={`inline-flex items-center gap-2 bg-soul-purple/10 px-3 py-1.5 rounded-full ${getTextSize('text-xs')}`}>
-                <Brain className={`text-soul-purple ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
+                <Heart className={`text-soul-purple ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
                 <span className="text-soul-purple font-medium">
-                  AI Coach Ready • {getIntelligencePhase()} Level
+                  Ready to guide {userDisplayName}
                 </span>
               </div>
               
@@ -124,7 +124,7 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Share what's on your heart..."
+                  placeholder={`Share what's on your heart, ${userDisplayName}...`}
                   className={`border-soul-purple/20 focus:border-soul-purple focus:ring-soul-purple/20 rounded-2xl ${getTextSize('text-sm')} ${touchTargetSize}`}
                   disabled={isLoading}
                 />
@@ -143,7 +143,7 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
             </div>
             
             <p className={`text-center text-gray-500 mt-2 ${getTextSize('text-xs')}`}>
-              Your personalized spiritual coach is ready to support your journey
+              Your personalized spiritual guide is ready to support your journey, {userDisplayName}
             </p>
           </div>
         </div>
@@ -204,7 +204,7 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Continue your spiritual conversation..."
+                placeholder={`Continue sharing with your guide, ${userDisplayName}...`}
                 className={`border-soul-purple/20 focus:border-soul-purple focus:ring-soul-purple/20 rounded-2xl ${getTextSize('text-sm')} ${touchTargetSize}`}
                 disabled={isLoading}
               />
