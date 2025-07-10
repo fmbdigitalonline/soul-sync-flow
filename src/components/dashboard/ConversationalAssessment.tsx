@@ -273,7 +273,13 @@ ${fullConversation}`;
           {/* Chat Interface */}
           <div className="lg:col-span-3">
             <Card className="h-[calc(100vh-300px)]">
-              <SpiritualGuideInterface />
+              <SpiritualGuideInterface
+                messages={messages}
+                isLoading={isLoading}
+                onSendMessage={(message) => sendMessage(message, true, message, "life-assessment")}
+                userDisplayName={getUserDisplayName()}
+                coreTraits={getCoreTraits()}
+              />
             </Card>
             
             {/* Stage Controls */}
