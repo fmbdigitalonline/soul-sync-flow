@@ -109,9 +109,6 @@ const Index = () => {
     <MainLayout>
       <div className={`w-full min-h-[90vh] flex flex-col justify-center ${spacing.container} ${isMobile ? 'pb-24' : 'pb-6'}`}>
         <div className={`w-full ${layout.maxWidth} mx-auto text-center`}>
-          <div className={`flex justify-center mb-6 ${spacing.gap}`}>
-            <SoulOrbAvatar size="lg" />
-          </div>
           
           <h1 
             className={`font-heading ${getTextSize('text-3xl')} lg:${getTextSize('text-4xl')} font-bold mb-4 ${spacing.gap} px-4`}
