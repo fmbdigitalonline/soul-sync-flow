@@ -22,6 +22,37 @@ export class EnhancedPersonalityEngine {
     console.log("✅ Blueprint updated with VFP-Graph integration");
   }
 
+  getUserName(): string {
+    // Extract user name with multiple fallback options
+    const userMeta = this.blueprint.user_meta;
+    if (!userMeta) {
+      console.log("🎯 Enhanced Engine: No user_meta found in blueprint");
+      return 'friend';
+    }
+
+    const preferredName = userMeta.preferred_name;
+    const fullName = userMeta.full_name;
+    
+    console.log("🎯 Enhanced Engine: Extracting user name from blueprint:", {
+      preferred_name: preferredName,
+      full_name: fullName
+    });
+
+    // Priority: preferred_name > first part of full_name > 'friend'
+    if (preferredName && typeof preferredName === 'string' && preferredName.trim()) {
+      return preferredName.trim();
+    }
+    
+    if (fullName && typeof fullName === 'string' && fullName.trim()) {
+      const firstName = fullName.trim().split(' ')[0];
+      if (firstName) {
+        return firstName;
+      }
+    }
+    
+    return 'friend';
+  }
+
   async generateSystemPrompt(mode: AgentMode, userMessage?: string): Promise<string> {
     console.log(`🎯 Enhanced Personality Engine: Generating unified brain prompt for ${mode} mode`);
     
@@ -56,9 +87,8 @@ export class EnhancedPersonalityEngine {
     vector: Float32Array, 
     summary: string
   ): Promise<string> {
-    const userName = this.blueprint.user_meta?.preferred_name || 
-                     this.blueprint.user_meta?.full_name?.split(' ')[0] || 
-                     'friend';
+    const userName = this.getUserName();
+    console.log(`🎯 Enhanced Engine: Using user name "${userName}" for unified brain prompt`);
 
     // Analyze vector for personality insights
     const vectorInsights = this.analyzePersonalityVector(vector);
@@ -144,7 +174,7 @@ IMPORTANT: You are ${userName}'s personalized spiritual guide who knows them int
   }
 
   private getUnifiedBrainModeGuidance(mode: AgentMode, insights: any): string {
-    const userName = this.blueprint.user_meta?.preferred_name || 'friend';
+    const userName = this.getUserName();
     
     switch (mode) {
       case 'coach':
@@ -180,7 +210,8 @@ IMPORTANT: You are ${userName}'s personalized spiritual guide who knows them int
   }
 
   private getFallbackPrompt(mode: AgentMode): string {
-    return `You are a helpful spiritual guide in ${mode} mode. Provide thoughtful, personalized responses that honor the user's unique journey and avoid technical jargon unless specifically requested.`;
+    const userName = this.getUserName();
+    return `You are a helpful spiritual guide for ${userName} in ${mode} mode. Provide thoughtful, personalized responses that honor ${userName}'s unique journey and avoid technical jargon unless specifically requested.`;
   }
 
   private getGenericPrompt(mode: AgentMode): string {
