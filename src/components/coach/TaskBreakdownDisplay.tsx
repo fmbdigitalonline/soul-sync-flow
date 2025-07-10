@@ -110,7 +110,7 @@ export const TaskBreakdownDisplay: React.FC<TaskBreakdownDisplayProps> = ({
         {!allCompleted && (
           <Button
             onClick={onStartAll}
-            className="flex-1 bg-gradient-to-r from-soul-purple to-soul-teal hover:shadow-lg text-white"
+            className="flex-1 bg-gradient-to-r from-soul-purple to-soul-teal text-white transition-colors duration-300"
             size="sm"
           >
             <TrendingUp className="h-4 w-4 mr-2" />

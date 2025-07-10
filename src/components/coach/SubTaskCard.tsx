@@ -63,7 +63,7 @@ export const SubTaskCard: React.FC<SubTaskCardProps> = ({
 
   return (
     <div className="space-y-3">
-      <Card className={`transition-all duration-200 hover:shadow-md ${
+      <Card className={`transition-colors duration-300 hover:bg-accent/30 ${
         subTask.completed 
           ? 'bg-emerald-50 border-emerald-200' 
           : 'bg-white border-gray-200 hover:border-soul-purple/30'

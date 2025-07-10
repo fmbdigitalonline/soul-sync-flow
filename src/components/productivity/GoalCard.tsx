@@ -32,7 +32,7 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal, onDoubleTap, onSingleT
 
   return (
     <Card 
-      className="cursor-pointer transition-all duration-200 hover:shadow-lg transform active:scale-[0.98] border-2"
+      className="cursor-pointer transition-colors duration-300 hover:bg-accent/50 border-2"
       {...doubleTapHandlers}
     >
       <CardContent className="p-4">

@@ -52,9 +52,9 @@ export const DreamSuggestionCard: React.FC<DreamSuggestionCardProps> = ({
   const categoryColor = getCategoryColor(suggestion.category);
 
   return (
-    <Card className={`border-2 transition-all duration-300 cursor-pointer hover:shadow-lg ${
+    <Card className={`border-2 transition-colors duration-300 cursor-pointer hover:bg-accent/30 ${
       isSelected 
-        ? 'border-soul-purple bg-soul-purple/5 shadow-lg' 
+        ? 'border-soul-purple bg-soul-purple/5' 
         : 'border-gray-200 hover:border-soul-purple/50'
     }`}>
       <div className={`p-4 ${isFoldDevice ? 'p-3' : ''}`}>
@@ -94,7 +94,7 @@ export const DreamSuggestionCard: React.FC<DreamSuggestionCardProps> = ({
         {/* Action button */}
         <Button
           onClick={() => onSelect(suggestion)}
-          className={`w-full bg-gradient-to-r from-soul-purple to-soul-teal hover:shadow-lg text-white rounded-xl font-medium transition-all duration-300 ${getTextSize('text-sm')} ${touchTargetSize}`}
+          className={`w-full bg-gradient-to-r from-soul-purple to-soul-teal text-white rounded-xl font-medium transition-colors duration-300 ${getTextSize('text-sm')} ${touchTargetSize}`}
         >
           <Heart className={`mr-2 ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
           Explore This Dream

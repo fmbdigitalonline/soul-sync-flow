@@ -130,7 +130,7 @@
 
 @layer components {
   .cosmic-card {
-    @apply bg-card/80 backdrop-blur-lg border border-border shadow-lg rounded-3xl;
+    @apply bg-card/80 backdrop-blur-lg border border-border rounded-3xl;
   }
   
   .cosmic-bg {
@@ -151,12 +151,12 @@
   
   /* Interactive elements with soul styling */
   .interactive-element {
-    @apply min-h-[48px] min-w-[48px] cursor-pointer transition-all duration-300;
+    @apply min-h-[48px] min-w-[48px] cursor-pointer transition-colors duration-300;
   }
   
   /* Soul button hover effects */
   .app-button {
-    @apply transform transition-all duration-300 hover:scale-105 active:scale-95;
+    @apply transform transition-colors duration-300;
   }
   
   /* Smooth scrolling for mobile */

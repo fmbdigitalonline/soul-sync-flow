@@ -27,7 +27,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({ habit, onDoubleTap, onSing
 
   return (
     <Card 
-      className={`cursor-pointer transition-all duration-200 hover:shadow-md transform active:scale-[0.98] w-full ${
+      className={`cursor-pointer transition-colors duration-300 hover:bg-accent/50 w-full ${
         todayCompleted ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-white'
       }`}
       {...doubleTapHandlers}
