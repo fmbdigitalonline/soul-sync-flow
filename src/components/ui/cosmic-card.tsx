@@ -13,7 +13,7 @@ const CosmicCard = React.forwardRef<HTMLDivElement, CosmicCardProps>(
     <div
       ref={ref}
       className={cn(
-        "cosmic-card p-6", 
+        "bg-card border border-border rounded-3xl p-6 transition-colors duration-300 hover:bg-accent/5", 
         floating && "animate-float",
         glow && "before:absolute before:inset-0 before:rounded-3xl before:bg-primary/20 before:blur-lg before:opacity-30 before:-z-10",
         className
