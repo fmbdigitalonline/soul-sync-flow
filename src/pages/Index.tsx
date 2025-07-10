@@ -27,8 +27,10 @@ const Index = () => {
   const navigate = useNavigate();
   const [showDemo, setShowDemo] = useState(false);
   const {
+    blueprintData,
     hasBlueprint,
-    loading
+    loading,
+    getDisplayName
   } = useOptimizedBlueprintData();
   const isAdmin = isAdminUser(user);
   const { t, language } = useLanguage();
@@ -115,7 +117,15 @@ const Index = () => {
           >
             {user ? (
               <>
-                Welcome to <span className="text-primary">SoulSync</span>, {user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Friend'}
+                Welcome to <span className="text-primary">SoulSync</span>, {
+                  // Priority: 1. Blueprint preferred name, 2. getDisplayName, 3. User metadata, 4. Email username, 5. 'Friend'
+                  blueprintData?.user_meta?.preferred_name || 
+                  getDisplayName ||
+                  user.user_metadata?.full_name || 
+                  user.user_metadata?.name || 
+                  user.email?.split('@')[0] || 
+                  'Friend'
+                }
               </>
             ) : (
               <span dangerouslySetInnerHTML={{ __html: t('index.welcome') }} />
