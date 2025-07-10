@@ -151,7 +151,7 @@ export const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
       )}
 
       {/* Animation styles */}
-      <style jsx>{`
+      <style>{`
         @keyframes soulPulse {
           0% { transform: scale(1); }
           100% { transform: scale(1.05); }
