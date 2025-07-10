@@ -72,8 +72,8 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
           <div className="text-center space-y-4 max-w-md mx-auto">
             <div className="flex justify-center">
               <IntelligentSoulOrb 
-                size="sm"
-                intelligenceLevel={intelligence?.intelligence_level || 0}
+                size="lg"
+                intelligenceLevel={intelligence?.intelligence_level || 65}
                 showProgressRing={true}
                 showIntelligenceTooltip={false}
                 stage="welcome"
@@ -164,13 +164,14 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
             >
               {/* Avatar for assistant messages */}
               {message.sender === 'assistant' && (
-                <div className="flex-shrink-0">
+                <div className="flex-shrink-0 mt-1">
                   <IntelligentSoulOrb 
                     size="sm"
-                    intelligenceLevel={intelligence?.intelligence_level || 0}
-                    showProgressRing={false}
+                    intelligenceLevel={intelligence?.intelligence_level || 65}
+                    showProgressRing={true}
                     speaking={message.isStreaming}
                     stage="complete"
+                    pulse={false}
                   />
                 </div>
               )}
@@ -182,6 +183,23 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
                     : 'bg-gray-50 text-gray-800 border border-gray-100'
                 }`}
               >
+                {/* User label for user messages */}
+                {message.sender === 'user' && (
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-xs font-medium opacity-90">{userDisplayName}</span>
+                  </div>
+                )}
+                
+                {/* Assistant label for assistant messages */}
+                {message.sender === 'assistant' && (
+                  <div className="flex items-center gap-2 mb-2">
+                    <Sparkles className={`text-soul-purple ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
+                    <span className={`font-medium text-soul-purple ${getTextSize('text-xs')}`}>
+                      Dream Guide
+                    </span>
+                  </div>
+                )}
+                
                 <div className={`${getTextSize('text-sm')} leading-relaxed whitespace-pre-wrap`}>
                   {message.content}
                   {message.isStreaming && (
@@ -191,6 +209,37 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
               </div>
             </div>
           ))}
+          
+          {/* Loading indicator */}
+          {isLoading && (
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 mt-1">
+                <IntelligentSoulOrb 
+                  size="sm"
+                  intelligenceLevel={intelligence?.intelligence_level || 65}
+                  showProgressRing={true}
+                  speaking={true}
+                  stage="generating"
+                  pulse={true}
+                />
+              </div>
+              <div className="bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <Sparkles className={`text-soul-purple ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
+                  <span className={`font-medium text-soul-purple ${getTextSize('text-xs')}`}>
+                    Dream Guide
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Loader2 className={`animate-spin text-soul-purple ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
+                  <span className={`text-gray-600 ${getTextSize('text-sm')}`}>
+                    Thinking deeply about your dreams...
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+          
           <div ref={messagesEndRef} />
         </div>
       </div>
