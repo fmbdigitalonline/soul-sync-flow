@@ -132,7 +132,7 @@ const Index = () => {
             />
           )}
 
-          {user && <div className={`${layout.columns} ${spacing.gap} mb-6 ${spacing.gap} max-w-2xl mx-auto px-4`}>
+          {user && <div className={`grid ${layout.columns} ${spacing.gap} mb-6 max-w-2xl mx-auto px-4`}>
                 <Link to="/dreams" className="block">
                   <CosmicCard className={`${spacing.card} hover:scale-105 transition-transform cursor-pointer h-full backdrop-blur-lg border border-border`}>
                     <Heart className={`h-6 w-6 ${isFoldDevice ? 'h-5 w-5' : 'sm:h-8 sm:w-8'} text-primary mx-auto mb-2`} />
