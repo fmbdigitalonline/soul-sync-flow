@@ -41,7 +41,7 @@ export const RotatingText: React.FC<RotatingTextProps> = ({
           isVisible ? "opacity-100" : "opacity-0"
         )}
       >
-        {texts[currentIndex]}
+        "{texts[currentIndex]}"
       </span>
     </div>
   );

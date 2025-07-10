@@ -134,7 +134,7 @@ const Index = () => {
           
           {user && hasBlueprint ? (
             <PersonalizedQuoteDisplay 
-              className={`${getTextSize('text-lg')} mb-6 ${spacing.gap} px-4 text-muted-foreground min-h-[3.5rem] flex items-center justify-center`}
+              className={`${getTextSize('text-base')} mb-6 ${spacing.gap} px-4 text-muted-foreground min-h-[3.5rem] flex items-center justify-center italic`}
               interval={4000}
               fallbackQuotes={subtitleMessages}
             />
