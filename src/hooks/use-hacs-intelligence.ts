@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -58,18 +57,17 @@ export const useHacsIntelligence = () => {
       }
 
       if (existing) {
-        const moduleScores = (existing.module_scores as unknown) as ModuleScores || {};
-        
-        // Ensure all 11 modules are present
-        const completeModuleScores: ModuleScores = {
-          NIK: moduleScores.NIK || 0,
-          CPSR: moduleScores.CPSR || 0,
-          TWS: moduleScores.TWS || 0,
-          HFME: moduleScores.HFME || 0,
-          DPEM: moduleScores.DPEM || 0,
-          CNR: moduleScores.CNR || 0,
-          BPSC: moduleScores.BPSC || 0,
-          ACS: moduleScores.ACS || 0,
+        // Safely parse module_scores with proper type checking
+        const rawModuleScores = existing.module_scores;
+        const moduleScores: ModuleScores = {
+          NIK: (rawModuleScores as any)?.NIK || 0,
+          CPSR: (rawModuleScores as any)?.CPSR || 0,
+          TWS: (rawModuleScores as any)?.TWS || 0,
+          HFME: (rawModuleScores as any)?.HFME || 0,
+          DPEM: (rawModuleScores as any)?.DPEM || 0,
+          CNR: (rawModuleScores as any)?.CNR || 0,
+          BPSC: (rawModuleScores as any)?.BPSC || 0,
+          ACS: (rawModuleScores as any)?.ACS || 0,
           PIE: existing.pie_score || 0,
           VFP: existing.vfp_score || 0,
           TMG: existing.tmg_score || 0,
@@ -77,7 +75,7 @@ export const useHacsIntelligence = () => {
 
         setIntelligence({
           ...existing,
-          module_scores: completeModuleScores,
+          module_scores: moduleScores,
           pie_score: existing.pie_score || 0,
           vfp_score: existing.vfp_score || 0,
           tmg_score: existing.tmg_score || 0,
