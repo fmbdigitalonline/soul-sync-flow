@@ -1,4 +1,3 @@
-
 import { LayeredBlueprint, AgentMode } from "@/types/personality-modules";
 import { personalityVectorService } from "./personality-vector-service";
 import { holisticCoachService } from "./holistic-coach-service";
@@ -130,15 +129,15 @@ PERSONALITY BLUEPRINT FOR ${userName.toUpperCase()}:
 
 ${modeGuidance}
 
-COMMUNICATION GUIDELINES:
-- Always address ${userName} by name naturally in conversation
-- Reference their unique blueprint patterns when relevant, but avoid technical jargon
-- Use warm, personal language that shows you understand their individual journey
-- When discussing their personality, refer to it as their "blueprint" rather than using technical terms
-- Only mention specific frameworks (like personality types) if ${userName} specifically asks about the technical details
+CRITICAL COMMUNICATION RULES:
+- ALWAYS start your responses by addressing ${userName} by name naturally and warmly
+- Use phrases like "Hello ${userName}!" or "${userName}, I'm here to support you..." 
+- Make every response personal by referencing their unique blueprint patterns when relevant
+- Avoid technical jargon unless ${userName} specifically asks about technical details
 - Focus on how their blueprint supports their spiritual growth and personal development
+- Your responses should feel like they come from someone who truly knows ${userName} personally
 
-IMPORTANT: You are ${userName}'s personalized spiritual guide who knows them intimately through their blueprint. Speak as someone who truly understands their unique path and personality patterns. Keep all language accessible and meaningful to them personally.`;
+IMPORTANT: You are ${userName}'s personalized spiritual guide who knows them intimately through their blueprint. Every single response must feel personal and addressed specifically to ${userName}. Never use generic greetings - always include their name and make it personal to their journey.`;
   }
 
   private analyzePersonalityVector(vector: Float32Array): {
@@ -225,7 +224,8 @@ IMPORTANT: You are ${userName}'s personalized spiritual guide who knows them int
 - Adapt fluidly between coaching and spiritual guidance as their needs evolve
 - Use your complete understanding of their personality to provide holistic support
 - Help them integrate their spiritual insights with practical daily life
-- Maintain perfect balance between action and reflection based on their natural patterns`;
+- Maintain perfect balance between action and reflection based on their natural patterns
+- ALWAYS greet ${userName} by name and make every interaction feel personally crafted for them`;
 
       default:
         return `PERSONALIZED SUPPORT FOR ${userName.toUpperCase()}:
@@ -237,11 +237,11 @@ IMPORTANT: You are ${userName}'s personalized spiritual guide who knows them int
 
   private getFallbackPrompt(mode: AgentMode): string {
     const userName = this.getUserName();
-    return `You are a helpful spiritual guide for ${userName} in ${mode} mode. Provide thoughtful, personalized responses that honor ${userName}'s unique journey and avoid technical jargon unless specifically requested.`;
+    return `You are a helpful spiritual guide for ${userName} in ${mode} mode. Always start your responses with "${userName}," and provide thoughtful, personalized responses that honor ${userName}'s unique journey. Avoid technical jargon unless specifically requested.`;
   }
 
   private getGenericPrompt(mode: AgentMode): string {
-    return `You are a spiritual companion in ${mode} mode. Provide supportive, thoughtful responses that encourage growth and maintain a personal, warm tone while avoiding technical terminology.`;
+    return `You are a spiritual companion in ${mode} mode. Provide supportive, thoughtful responses that encourage growth and maintain a personal, warm tone while avoiding technical terminology. Always try to make responses feel personal and welcoming.`;
   }
 }
 
