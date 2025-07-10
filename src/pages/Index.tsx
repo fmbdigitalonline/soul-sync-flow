@@ -150,7 +150,7 @@ const Index = () => {
                 <Link to="/dreams" className="block">
                   <CosmicCard className={`${spacing.card} hover:scale-105 transition-transform cursor-pointer h-full backdrop-blur-lg border border-border`}>
                     <Heart className={`h-6 w-6 ${isFoldDevice ? 'h-5 w-5' : 'sm:h-8 sm:w-8'} text-primary mx-auto mb-2`} />
-                    <h3 className={`font-heading font-semibold mb-1 ${getTextSize('text-sm')}`}>{t("index.dreams")}</h3>
+                    <h3 className={`font-heading font-semibold mb-1 ${getTextSize('text-base')}`}>{t("index.dreams")}</h3>
                     <p className={`${getTextSize('text-xs')} text-muted-foreground`}>{t("index.dreamsDesc")}</p>
                   </CosmicCard>
                 </Link>
@@ -158,7 +158,7 @@ const Index = () => {
                 <Link to="/spiritual-growth" className="block">
                   <CosmicCard className={`${spacing.card} hover:scale-105 transition-transform cursor-pointer h-full backdrop-blur-lg border border-border`}>
                     <Sparkles className={`h-6 w-6 ${isFoldDevice ? 'h-5 w-5' : 'sm:h-8 sm:w-8'} text-accent mx-auto mb-2`} />
-                    <h3 className={`font-heading font-semibold mb-1 ${getTextSize('text-sm')}`}>{t("index.growth")}</h3>
+                    <h3 className={`font-heading font-semibold mb-1 ${getTextSize('text-base')}`}>{t("index.growth")}</h3>
                     <p className={`${getTextSize('text-xs')} text-muted-foreground`}>{t("index.growthDesc")}</p>
                   </CosmicCard>
                 </Link>
@@ -166,7 +166,7 @@ const Index = () => {
                 <Link to="/coach" className="block">
                   <CosmicCard className={`${spacing.card} hover:scale-105 transition-transform cursor-pointer h-full backdrop-blur-lg border border-border`}>
                     <Brain className={`h-6 w-6 ${isFoldDevice ? 'h-5 w-5' : 'sm:h-8 sm:w-8'} text-secondary mx-auto mb-2`} />
-                    <h3 className={`font-heading font-semibold mb-1 ${getTextSize('text-sm')}`}>{t("index.companion")}</h3>
+                    <h3 className={`font-heading font-semibold mb-1 ${getTextSize('text-base')}`}>{t("index.companion")}</h3>
                     <p className={`${getTextSize('text-xs')} text-muted-foreground`}>{t("index.companionDesc")}</p>
                   </CosmicCard>
                 </Link>
