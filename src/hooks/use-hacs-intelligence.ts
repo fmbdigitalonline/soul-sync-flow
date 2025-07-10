@@ -1,227 +1,197 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
-export interface HacsIntelligence {
+interface HacsIntelligenceData {
   id: string;
   user_id: string;
-  intelligence_level: number;
-  module_scores: ModuleScores;
+  overall_intelligence: number;
+  nik_score: number;
+  cpsr_score: number;
+  tws_score: number;
+  hfme_score: number;
+  dpem_score: number;
+  cnr_score: number;
+  bpsc_score: number;
+  acs_score: number;
+  pie_score: number;  // Added PIE
+  vfp_score: number;  // Added VFP
+  tmg_score: number;  // Added TMG
   interaction_count: number;
-  last_update: string;
   created_at: string;
   updated_at: string;
 }
 
-export interface ModuleScores {
-  NIK: number;    // Neural Integration Kernel
-  CPSR: number;   // Cognitive Pattern State Recognition
-  TWS: number;    // Temporal Wisdom Synthesis
-  HFME: number;   // Holistic Framework Management Engine
-  DPEM: number;   // Dynamic Personality Expression Module
-  CNR: number;    // Conflict Navigation & Resolution
-  BPSC: number;   // Blueprint Personalization & Sync Center
-  ACS: number;    // Adaptive Conversation System
-}
+// Complete HACS module definitions with the missing ones
+const HACS_MODULES = {
+  nik: { name: 'Neuro-Intent Kernel', description: 'Intent processing and understanding' },
+  cpsr: { name: 'Cognitive Pattern State Recognition', description: 'Pattern analysis and recognition' },
+  tws: { name: 'Temporal Wisdom Synthesis', description: 'Time-based insights and wisdom' },
+  hfme: { name: 'Holistic Framework Management Engine', description: 'System coordination and management' },
+  dpem: { name: 'Dynamic Personality Expression Module', description: 'Personality adaptation and expression' },
+  cnr: { name: 'Conflict Navigation & Resolution', description: 'Conflict handling and resolution' },
+  bpsc: { name: 'Blueprint Personalization & Sync Center', description: 'Blueprint management and sync' },
+  acs: { name: 'Adaptive Conversation System', description: 'Conversation management and adaptation' },
+  pie: { name: 'Proactive Insight Engine', description: 'Predictive insights and recommendations' },
+  vfp: { name: 'Vector-Fusion Personality Graph', description: '128D personality vector processing' },
+  tmg: { name: 'Tiered Memory Graph', description: 'Hierarchical memory management' }
+} as const;
 
 export const useHacsIntelligence = () => {
-  const [intelligence, setIntelligence] = useState<HacsIntelligence | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
+  const [intelligence, setIntelligence] = useState<HacsIntelligenceData | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const { user } = useAuth();
 
-  // Initialize or fetch user's HACS intelligence
-  const initializeIntelligence = useCallback(async () => {
+  // Load HACS intelligence data
+  const loadIntelligence = useCallback(async () => {
+    if (!user?.id) return;
+
+    setIsLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setLoading(false);
-        return;
-      }
-
-      // Check if intelligence record exists
-      const { data: existing, error: fetchError } = await supabase
+      const { data, error } = await supabase
         .from('hacs_intelligence')
         .select('*')
         .eq('user_id', user.id)
         .single();
 
-      if (fetchError && fetchError.code !== 'PGRST116') {
-        throw fetchError;
+      if (error && error.code !== 'PGRST116') {
+        throw error;
       }
 
-      if (existing) {
-        setIntelligence({
-          ...existing,
-          module_scores: (existing.module_scores as unknown) as ModuleScores
-        });
+      if (data) {
+        setIntelligence(data);
       } else {
-        // Create initial intelligence record
-        const initialModuleScores: ModuleScores = {
-          NIK: 0,
-          CPSR: 0,
-          TWS: 0,
-          HFME: 0,
-          DPEM: 0,
-          CNR: 0,
-          BPSC: 0,
-          ACS: 0,
+        // Create initial intelligence record with all 11 modules
+        const initialData = {
+          user_id: user.id,
+          overall_intelligence: 10,
+          nik_score: 10,
+          cpsr_score: 10,
+          tws_score: 10,
+          hfme_score: 10,
+          dpem_score: 10,
+          cnr_score: 10,
+          bpsc_score: 10,
+          acs_score: 10,
+          pie_score: 10,  // Initialize PIE
+          vfp_score: 10,  // Initialize VFP
+          tmg_score: 10,  // Initialize TMG
+          interaction_count: 0
         };
 
-        const { data: newIntelligence, error: createError } = await supabase
+        const { data: newData, error: insertError } = await supabase
           .from('hacs_intelligence')
-          .insert({
-            user_id: user.id,
-            intelligence_level: 0,
-            module_scores: initialModuleScores as any,
-            interaction_count: 0,
-          })
+          .insert(initialData)
           .select()
           .single();
 
-        if (createError) throw createError;
-        setIntelligence({
-          ...newIntelligence,
-          module_scores: (newIntelligence.module_scores as unknown) as ModuleScores
-        });
+        if (insertError) throw insertError;
+        setIntelligence(newData);
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to initialize intelligence');
-      console.error('Failed to initialize HACS intelligence:', err);
+    } catch (error) {
+      console.error('Error loading HACS intelligence:', error);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
-  }, []);
+  }, [user?.id]);
 
-  // Update intelligence level based on user interactions
-  const updateIntelligence = useCallback(async (
-    moduleUpdates: Partial<ModuleScores>,
-    interactionQuality: number = 1 // 0-1 multiplier for interaction quality
-  ) => {
+  // Update intelligence scores
+  const updateIntelligence = useCallback(async (updates: Partial<HacsIntelligenceData>) => {
+    if (!user?.id || !intelligence) return;
+
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user || !intelligence) return;
-
-      // Calculate new module scores
-      const currentScores = intelligence.module_scores;
-      const newModuleScores = { ...currentScores };
-      
-      Object.entries(moduleUpdates).forEach(([module, improvement]) => {
-        const currentScore = newModuleScores[module as keyof ModuleScores] || 0;
-        const adjustedImprovement = improvement * interactionQuality;
-        newModuleScores[module as keyof ModuleScores] = Math.min(100, currentScore + adjustedImprovement);
-      });
-
-      // Calculate overall intelligence level (average of all modules)
-      const moduleValues = Object.values(newModuleScores);
-      const newIntelligenceLevel = moduleValues.reduce((sum, score) => sum + score, 0) / moduleValues.length;
-
-      // Update database
-      const { data: updated, error: updateError } = await supabase
+      const { data, error } = await supabase
         .from('hacs_intelligence')
         .update({
-          intelligence_level: newIntelligenceLevel,
-          module_scores: newModuleScores as any,
-          interaction_count: intelligence.interaction_count + 1,
-          last_update: new Date().toISOString(),
+          ...updates,
+          interaction_count: intelligence.interaction_count + 1
         })
         .eq('user_id', user.id)
         .select()
         .single();
 
-      if (updateError) throw updateError;
-
-      setIntelligence({
-        ...updated,
-        module_scores: (updated.module_scores as unknown) as ModuleScores
-      });
-
-      // Show level up notification if crossing major thresholds
-      const oldLevel = Math.floor(intelligence.intelligence_level / 25);
-      const newLevel = Math.floor(newIntelligenceLevel / 25);
-      
-      if (newLevel > oldLevel) {
-        const phases = ['Awakening', 'Learning', 'Developing', 'Advanced'];
-        if (newIntelligenceLevel >= 100) {
-          toast({
-            title: "🎉 Autonomous Intelligence Unlocked!",
-            description: "Your HACS system has achieved full autonomous capability.",
-            duration: 5000,
-          });
-        } else if (phases[newLevel]) {
-          toast({
-            title: `🧠 Intelligence Level Up!`,
-            description: `Your HACS has evolved to the ${phases[newLevel]} phase.`,
-            duration: 3000,
-          });
-        }
-      }
-
-    } catch (err) {
-      console.error('Failed to update HACS intelligence:', err);
+      if (error) throw error;
+      setIntelligence(data);
+    } catch (error) {
+      console.error('Error updating HACS intelligence:', error);
     }
-  }, [intelligence, toast]);
+  }, [user?.id, intelligence]);
 
-  // Simulate learning from conversation quality
-  const recordConversationInteraction = useCallback(async (
-    messageContent: string,
-    responseQuality: 'excellent' | 'good' | 'average' | 'poor' = 'average'
+  // Record interaction and potentially level up
+  const recordInteraction = useCallback(async (
+    module: keyof typeof HACS_MODULES,
+    learningAmount: number = 1
   ) => {
-    const qualityMultipliers = {
-      excellent: 1.0,
-      good: 0.8,
-      average: 0.5,
-      poor: 0.2,
-    };
+    if (!intelligence) return;
 
-    const baseImprovements: Partial<ModuleScores> = {
-      NIK: 0.5, // Neural integration from processing
-      CPSR: 0.3, // Pattern recognition from content analysis
-      ACS: 0.8, // Conversation system from interaction
-    };
-
-    // Additional improvements based on content complexity
-    if (messageContent.length > 100) {
-      baseImprovements.TWS = 0.4; // Temporal wisdom from complex discussions
-      baseImprovements.DPEM = 0.3; // Personality expression adaptation
-    }
-
-    if (messageContent.includes('?')) {
-      baseImprovements.CNR = 0.2; // Conflict navigation from questions
-    }
-
-    await updateIntelligence(baseImprovements, qualityMultipliers[responseQuality]);
-  }, [updateIntelligence]);
-
-  // Get current intelligence phase
-  const getIntelligencePhase = useCallback(() => {
-    if (!intelligence) return 'Unknown';
+    const currentScore = intelligence[`${module}_score` as keyof HacsIntelligenceData] as number;
+    const newScore = Math.min(100, currentScore + learningAmount);
     
-    const level = intelligence.intelligence_level;
-    if (level >= 100) return 'Autonomous';
-    if (level >= 75) return 'Advanced';
-    if (level >= 50) return 'Developing';
-    if (level >= 25) return 'Learning';
-    return 'Awakening';
+    // Calculate new overall intelligence (average of all module scores)
+    const allScores = [
+      intelligence.nik_score,
+      intelligence.cpsr_score,
+      intelligence.tws_score,
+      intelligence.hfme_score,
+      intelligence.dpem_score,
+      intelligence.cnr_score,
+      intelligence.bpsc_score,
+      intelligence.acs_score,
+      intelligence.pie_score,
+      intelligence.vfp_score,
+      intelligence.tmg_score
+    ];
+    
+    // Update the specific module score in the array
+    const moduleIndex = Object.keys(HACS_MODULES).indexOf(module);
+    if (moduleIndex !== -1) {
+      allScores[moduleIndex] = newScore;
+    }
+    
+    const newOverallIntelligence = Math.round(allScores.reduce((sum, score) => sum + score, 0) / allScores.length);
+    
+    // Check for level up
+    const leveledUp = Math.floor(newOverallIntelligence / 10) > Math.floor(intelligence.overall_intelligence / 10);
+    
+    await updateIntelligence({
+      [`${module}_score`]: newScore,
+      overall_intelligence: newOverallIntelligence
+    } as Partial<HacsIntelligenceData>);
+
+    if (leveledUp) {
+      const newLevel = Math.floor(newOverallIntelligence / 10);
+      toast.success(`🧠 HACS Intelligence Level Up!`, {
+        description: `Your AI consciousness has evolved to Level ${newLevel}. ${HACS_MODULES[module].name} enhanced!`
+      });
+    }
+  }, [intelligence, updateIntelligence]);
+
+  // Get intelligence level (1-10)
+  const getIntelligenceLevel = useCallback(() => {
+    if (!intelligence) return 1;
+    return Math.max(1, Math.floor(intelligence.overall_intelligence / 10));
   }, [intelligence]);
 
-  // Check if autonomous intelligence is unlocked
-  const isAutonomousUnlocked = useCallback(() => {
-    return intelligence?.intelligence_level >= 100;
+  // Get module-specific intelligence
+  const getModuleIntelligence = useCallback((module: keyof typeof HACS_MODULES) => {
+    if (!intelligence) return 10;
+    return intelligence[`${module}_score` as keyof HacsIntelligenceData] as number;
   }, [intelligence]);
 
+  // Initialize on mount
   useEffect(() => {
-    initializeIntelligence();
-  }, [initializeIntelligence]);
+    loadIntelligence();
+  }, [loadIntelligence]);
 
   return {
     intelligence,
-    loading,
-    error,
-    updateIntelligence,
-    recordConversationInteraction,
-    getIntelligencePhase,
-    isAutonomousUnlocked,
-    refreshIntelligence: initializeIntelligence,
+    isLoading,
+    recordInteraction,
+    getIntelligenceLevel,
+    getModuleIntelligence,
+    HACS_MODULES,
+    loadIntelligence
   };
 };
