@@ -101,12 +101,14 @@ export const useResponsiveLayout = () => {
 
   const getTextSize = (base: string) => {
     const sizeMap: Record<string, string> = {
-      'text-xs': isFoldDevice ? 'text-sm' : 'text-xs', // Increased from text-[10px] to text-sm
-      'text-sm': isFoldDevice ? 'text-sm' : 'text-sm', // Kept as text-sm instead of text-xs
-      'text-base': isFoldDevice ? 'text-base' : isUltraNarrow ? 'text-sm' : 'text-base', // Increased from text-sm to text-base
-      'text-lg': isFoldDevice ? 'text-lg' : isUltraNarrow ? 'text-base' : 'text-lg', // Increased from text-base to text-lg
-      'text-xl': isFoldDevice ? 'text-xl' : isUltraNarrow ? 'text-lg' : 'text-xl', // Increased from text-lg to text-xl
-      'text-2xl': isFoldDevice ? 'text-xl' : isUltraNarrow ? 'text-xl' : 'text-2xl' // Only this one stays smaller for fold
+      'text-xs': isFoldDevice ? 'text-base' : 'text-xs', // Increased to text-base for better readability
+      'text-sm': isFoldDevice ? 'text-base' : 'text-sm', // Increased to text-base for better readability
+      'text-base': isFoldDevice ? 'text-lg' : isUltraNarrow ? 'text-sm' : 'text-base', // Increased to text-lg for better readability
+      'text-lg': isFoldDevice ? 'text-xl' : isUltraNarrow ? 'text-base' : 'text-lg', // Increased to text-xl for better readability
+      'text-xl': isFoldDevice ? 'text-2xl' : isUltraNarrow ? 'text-lg' : 'text-xl', // Increased to text-2xl for better readability
+      'text-2xl': isFoldDevice ? 'text-2xl' : isUltraNarrow ? 'text-xl' : 'text-2xl', // Kept same size for headers
+      'text-3xl': isFoldDevice ? 'text-3xl' : isUltraNarrow ? 'text-2xl' : 'text-3xl', // Added mapping for larger headers
+      'text-4xl': isFoldDevice ? 'text-4xl' : isUltraNarrow ? 'text-3xl' : 'text-4xl' // Added mapping for largest headers
     };
     
     return sizeMap[base] || base;
