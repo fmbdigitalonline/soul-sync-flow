@@ -9,6 +9,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { VFPGraphFeedback } from "./VFPGraphFeedback";
 import { IntelligentSoulOrb } from "@/components/ui/intelligent-soul-orb";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface BlendInterfaceProps {
   messages: Message[];
@@ -36,6 +37,13 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
   const { t } = useLanguage();
   const { isMobile, isFoldDevice, isUltraNarrow } = useIsMobile();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
+
+  // Get user's display name
+  const userName = user?.user_metadata?.preferred_name || 
+                   user?.user_metadata?.full_name?.split(' ')[0] || 
+                   user?.email?.split('@')[0] || 
+                   'friend';
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -101,8 +109,8 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
             </h3>
             <p className={cn("text-muted-foreground max-w-md", isMobile ? "text-sm" : "text-base")}>
               {personaReady || vfpGraphStatus?.isAvailable
-                ? "I understand your unique personality and am ready to provide personalized guidance that blends coaching and mentoring approaches."
-                : "I'm here to provide balanced guidance that combines coaching questions with direct mentoring advice."}
+                ? `Hello ${userName}! I understand your unique blueprint and am ready to provide personalized guidance that blends coaching and mentoring approaches.`
+                : `Hello ${userName}! I'm here to provide balanced guidance that combines coaching questions with direct mentoring advice.`}
             </p>
             {vfpGraphStatus?.isAvailable && (
               <div className="mt-3 px-3 py-1 bg-soul-purple/10 text-soul-purple text-xs rounded-full">
@@ -119,7 +127,7 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
                 <div className={cn("max-w-[80%] rounded-2xl bg-green-600 text-white", isMobile ? "px-3 py-2" : "px-4 py-3")}>
                   <div className="flex items-center gap-2 mb-1">
                     <ArrowRight className="h-3 w-3" />
-                    <span className="text-xs font-medium">You</span>
+                    <span className="text-xs font-medium">{userName}</span>
                   </div>
                   <div className={cn("whitespace-pre-line", isMobile ? "text-sm" : "text-base")}>
                     {message.content}
@@ -139,7 +147,7 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
                     speaking={isLoading && idx === messages.length - 1}
                     stage="complete"
                     intelligenceLevel={isVFPGraphPowered ? 85 : 45}
-                    showProgressRing={false}
+                    showProgressRing={true}
                   />
                 </div>
                 <div className={cn("max-w-[85%] rounded-2xl border bg-slate-50", isMobile ? "p-3" : "p-4")}>
@@ -187,7 +195,7 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
                 speaking={true}
                 stage="generating"
                 intelligenceLevel={vfpGraphStatus?.isAvailable ? 85 : 45}
-                showProgressRing={false}
+                showProgressRing={true}
               />
             </div>
             <div className={cn("border border-green-200/20 max-w-[80%] rounded-2xl bg-slate-50", isMobile ? "p-3" : "p-4")}>
@@ -229,8 +237,8 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
             onKeyDown={handleKeyPress}
             placeholder={
               vfpGraphStatus?.isAvailable 
-                ? "Ask me anything - I understand your unique personality..."
-                : "Ask me anything - I'll blend coaching questions with direct guidance..."
+                ? `Ask me anything, ${userName} - I understand your unique blueprint...`
+                : `Ask me anything, ${userName} - I'll blend coaching questions with direct guidance...`
             }
             className={cn("flex-1", isFoldDevice ? "text-sm" : "")}
             disabled={isLoading}
@@ -246,8 +254,8 @@ export const BlendInterface: React.FC<BlendInterfaceProps> = ({
         </div>
         <p className={cn("text-center text-muted-foreground mt-2", isMobile ? "text-xs" : "text-sm")}>
           {vfpGraphStatus?.isAvailable 
-            ? `VFP-Graph powered companion guidance • ${vfpGraphStatus.personalitySummary}`
-            : "Balanced guidance that combines questions with direct advice"
+            ? `VFP-Graph powered companion guidance for ${userName} • ${vfpGraphStatus.personalitySummary}`
+            : `Balanced guidance that combines questions with direct advice for ${userName}`
           }
         </p>
       </div>
