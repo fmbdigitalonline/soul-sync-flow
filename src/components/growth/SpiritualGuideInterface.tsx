@@ -191,7 +191,7 @@ export const SpiritualGuideInterface: React.FC = () => {
             intelligenceLevel={intelligence?.intelligence_level || 65}
             showProgressRing={true}
             showIntelligenceTooltip={false}
-            stage="active"
+            stage="complete"
           />
           <div>
             <h1 className={`font-semibold text-soul-purple ${getTextSize('text-lg')}`}>

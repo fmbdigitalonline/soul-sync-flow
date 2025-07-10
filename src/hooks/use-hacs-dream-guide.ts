@@ -252,6 +252,7 @@ export const useHACSDreamGuide = () => {
       JSON.stringify(harmonicPrompt),
       sessionIdRef.current,
       {
+        enableRL: false,
         personalityScaling: true,
         frustrationThreshold: 0.3,
         sentimentSlopeNeg: -0.2,

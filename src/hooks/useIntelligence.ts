@@ -30,7 +30,11 @@ export const useIntelligence = () => {
         }
 
         if (data) {
-          setIntelligence(data);
+          setIntelligence({
+            intelligence_level: data.intelligence_level,
+            interaction_count: data.interaction_count,
+            module_scores: (data.module_scores as Record<string, number>) || {}
+          });
         } else {
           // Create initial intelligence record
           const { data: newData, error: insertError } = await supabase
@@ -47,7 +51,11 @@ export const useIntelligence = () => {
           if (insertError) {
             console.error('Error creating intelligence record:', insertError);
           } else {
-            setIntelligence(newData);
+            setIntelligence({
+              intelligence_level: newData.intelligence_level,
+              interaction_count: newData.interaction_count,
+              module_scores: (newData.module_scores as Record<string, number>) || {}
+            });
           }
         }
       } catch (error) {
