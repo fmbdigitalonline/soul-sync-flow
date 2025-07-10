@@ -118,7 +118,7 @@ const Blueprint = () => {
               </p>
               <div className="space-y-2">
                 <Button 
-                  className="bg-soul-purple hover:bg-soul-purple/90 w-full max-w-full"
+                  className="bg-soul-purple hover:bg-soul-purple/90 w-full rounded-3xl"
                   onClick={() => navigate('/onboarding')}
                 >
                   Create Blueprint
@@ -126,7 +126,7 @@ const Blueprint = () => {
                 <Button 
                   variant="outline" 
                   onClick={() => refetch()} 
-                  className="w-full max-w-full"
+                  className="w-full rounded-3xl"
                 >
                   <RefreshCw className="mr-2 h-4 w-4" />
                   Check Again
@@ -147,14 +147,14 @@ const Blueprint = () => {
             <h2 className="text-base sm:text-lg font-semibold mb-4 text-red-500 break-words">Blueprint Error</h2>
             <p className="text-red-500 mb-4 text-sm break-words">{error}</p>
             <div className="space-y-2">
-              <Button onClick={() => refetch()} className="w-full max-w-full">
+              <Button onClick={() => refetch()} className="w-full rounded-3xl">
                 <RefreshCw className="mr-2 h-4 w-4" />
                 Try Again
               </Button>
               <Button 
                 variant="outline" 
                 onClick={() => navigate('/onboarding')} 
-                className="w-full max-w-full"
+                className="w-full rounded-3xl"
               >
                 Create New Blueprint
               </Button>
@@ -197,7 +197,7 @@ const Blueprint = () => {
             </div>
             <div className="space-y-2">
               <Button 
-                className="bg-soul-purple hover:bg-soul-purple/90 w-full max-w-full"
+                className="bg-soul-purple hover:bg-soul-purple/90 w-full rounded-3xl"
                 onClick={() => navigate('/onboarding')}
               >
                 Complete Blueprint
@@ -205,7 +205,7 @@ const Blueprint = () => {
               <Button 
                 variant="outline" 
                 onClick={() => refetch()} 
-                className="w-full max-w-full"
+                className="w-full rounded-3xl"
               >
                 <RefreshCw className="mr-2 h-4 w-4" />
                 Refresh
@@ -381,7 +381,7 @@ const Blueprint = () => {
               </Button>
             )}
             <Button 
-              className="bg-soul-purple hover:bg-soul-purple/90 flex items-center justify-center text-sm h-9 w-full max-w-full"
+              className="bg-soul-purple hover:bg-soul-purple/90 flex items-center justify-center text-sm h-9 w-full rounded-3xl"
               onClick={() => navigate('/coach')}
             >
               <MessageCircle className="mr-2 h-4 w-4 flex-shrink-0" />
