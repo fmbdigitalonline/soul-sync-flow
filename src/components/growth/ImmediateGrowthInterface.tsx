@@ -4,6 +4,7 @@ import { Sparkles, Heart, Brain, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
+import { useBlueprintData } from '@/hooks/use-blueprint-data';
 
 interface ImmediateGrowthInterfaceProps {
   onSendMessage: (message: string) => void;
@@ -24,6 +25,17 @@ export const ImmediateGrowthInterface: React.FC<ImmediateGrowthInterfaceProps> =
 }) => {
   const [inputValue, setInputValue] = useState('');
   const { getTextSize, touchTargetSize, isFoldDevice, spacing } = useResponsiveLayout();
+  const { blueprintData, getDisplayName } = useBlueprintData();
+
+  // Get the actual user name from blueprint data
+  const actualUserName = React.useMemo(() => {
+    if (blueprintData) {
+      const nameFromBlueprint = getDisplayName();
+      console.log("🎯 ImmediateGrowthInterface: Using name from blueprint:", nameFromBlueprint);
+      return nameFromBlueprint !== 'User' ? nameFromBlueprint : userDisplayName;
+    }
+    return userDisplayName;
+  }, [blueprintData, getDisplayName, userDisplayName]);
 
   const handleSendMessage = () => {
     if (inputValue.trim() && !isLoading) {
@@ -44,11 +56,11 @@ export const ImmediateGrowthInterface: React.FC<ImmediateGrowthInterfaceProps> =
     
     switch (domain) {
       case 'spiritual-growth':
-        return `Hello ${userDisplayName}! I'm here to support your spiritual journey${traits ? ` as a ${traits}` : ''}. What's calling to your heart today?`;
+        return `Hello ${actualUserName}! I'm here to support your spiritual journey${traits ? ` as a ${traits}` : ''}. What's calling to your heart today?`;
       case 'dreams':
-        return `Welcome ${userDisplayName}! Let's explore what your soul is dreaming into reality${traits ? `. Your ${traits} nature` : ''} brings unique gifts to this world. What dream is stirring within you?`;
+        return `Welcome ${actualUserName}! Let's explore what your soul is dreaming into reality${traits ? `. Your ${traits} nature` : ''} brings unique gifts to this world. What dream is stirring within you?`;
       default:
-        return `Hi ${userDisplayName}! I'm your personalized guide, ready to support your growth journey. What would you like to explore?`;
+        return `Hi ${actualUserName}! I'm your personalized guide, ready to support your growth journey. What would you like to explore?`;
     }
   };
 

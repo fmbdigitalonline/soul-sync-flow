@@ -1,4 +1,3 @@
-
 import { LayeredBlueprint, AgentMode } from "@/types/personality-modules";
 import { holisticCoachService } from "./holistic-coach-service";
 
@@ -28,6 +27,37 @@ export class PersonalityEngine {
     });
   }
 
+  getUserName(): string {
+    // Extract user name with multiple fallback options
+    const userMeta = this.blueprint.user_meta;
+    if (!userMeta) {
+      console.log("🎯 No user_meta found in blueprint");
+      return 'friend';
+    }
+
+    const preferredName = userMeta.preferred_name;
+    const fullName = userMeta.full_name;
+    
+    console.log("🎯 Extracting user name from blueprint:", {
+      preferred_name: preferredName,
+      full_name: fullName
+    });
+
+    // Priority: preferred_name > first part of full_name > 'friend'
+    if (preferredName && typeof preferredName === 'string' && preferredName.trim()) {
+      return preferredName.trim();
+    }
+    
+    if (fullName && typeof fullName === 'string' && fullName.trim()) {
+      const firstName = fullName.trim().split(' ')[0];
+      if (firstName) {
+        return firstName;
+      }
+    }
+    
+    return 'friend';
+  }
+
   generateSystemPrompt(mode: AgentMode, userMessage?: string): string {
     console.log(`🎯 Personality Engine: Generating system prompt for ${mode} mode`);
     
@@ -43,10 +73,7 @@ export class PersonalityEngine {
       return this.getGenericPrompt(mode);
     }
 
-    const userName = this.blueprint.user_meta?.preferred_name || 
-                     this.blueprint.user_meta?.full_name?.split(' ')[0] || 
-                     'friend';
-
+    const userName = this.getUserName();
     console.log(`✅ Generating personalized prompt for ${userName} based on their unique blueprint`);
 
     const personalityInsights = this.generatePersonalityInsights();
@@ -93,7 +120,7 @@ IMPORTANT: This is ${userName}'s personalized experience. Always speak as if you
   }
 
   private getModeSpecificGuidance(mode: AgentMode): string {
-    const userName = this.blueprint.user_meta?.preferred_name || 'friend';
+    const userName = this.getUserName();
     
     switch (mode) {
       case 'coach':
