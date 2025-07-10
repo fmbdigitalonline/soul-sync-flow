@@ -146,6 +146,13 @@ const Index = () => {
             />
           )}
 
+          {user && hasBlueprint && (
+            <p className={`${getTextSize('text-xs')} text-muted-foreground mb-6 px-4`}>
+              <Sparkles className="inline h-3 w-3 mr-1" />
+              Personalized for your unique blueprint
+            </p>
+          )}
+
           {user && <div className={`grid ${layout.columns} ${spacing.gap} mb-6 max-w-2xl mx-auto px-4`}>
                 <Link to="/dreams" className="block">
                   <CosmicCard className={`${spacing.card} hover:scale-105 transition-transform cursor-pointer h-full backdrop-blur-lg border border-border`}>
