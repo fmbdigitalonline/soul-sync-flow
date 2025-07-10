@@ -16,7 +16,6 @@ import { RotatingText } from "@/components/ui/rotating-text";
 import { PersonalizedQuoteDisplay } from "@/components/ui/personalized-quote-display";
 import MainLayout from "@/components/Layout/MainLayout";
 import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
-
 const Index = () => {
   const {
     user
@@ -33,8 +32,19 @@ const Index = () => {
     getDisplayName
   } = useOptimizedBlueprintData();
   const isAdmin = isAdminUser(user);
-  const { t, language } = useLanguage();
-  const { spacing, layout, touchTargetSize, getTextSize, isFoldDevice, isUltraNarrow, isMobile } = useResponsiveLayout();
+  const {
+    t,
+    language
+  } = useLanguage();
+  const {
+    spacing,
+    layout,
+    touchTargetSize,
+    getTextSize,
+    isFoldDevice,
+    isUltraNarrow,
+    isMobile
+  } = useResponsiveLayout();
 
   // Memoize the welcome message logic to prevent re-renders
   const welcomeMessage = useMemo(() => {
@@ -53,7 +63,6 @@ const Index = () => {
       // This will be replaced by the PersonalizedQuoteDisplay component
       return [t("index.subtitle") || "Discover your authentic path through personalized AI guidance and spiritual growth tools."];
     }
-    
     const messages = t("index.rotatingMessages");
     // Handle both string and array cases safely
     if (Array.isArray(messages)) {
@@ -73,7 +82,6 @@ const Index = () => {
       return () => clearTimeout(timer);
     }
   }, [user, loading, welcomeMessage, speak]);
-  
   const handleGetStarted = () => {
     if (user) {
       if (hasBlueprint) {
@@ -87,71 +95,35 @@ const Index = () => {
       navigate("/auth");
     }
   };
-  
   if (showDemo) {
-    return (
-      <MainLayout>
+    return <MainLayout>
         <div className={`w-full min-h-screen ${spacing.container} ${isMobile ? 'pb-20' : ''}`}>
           <div className={`mb-4 ${spacing.gap}`}>
-            <Button 
-              variant="ghost" 
-              onClick={() => setShowDemo(false)} 
-              className={`mb-4 ${getTextSize('text-sm')} ${touchTargetSize}`}
-            >
+            <Button variant="ghost" onClick={() => setShowDemo(false)} className={`mb-4 ${getTextSize('text-sm')} ${touchTargetSize}`}>
               {t("index.backToHome")}
             </Button>
           </div>
           <PersonalityDemo />
         </div>
-      </MainLayout>
-    );
+      </MainLayout>;
   }
-  
-  return (
-    <MainLayout>
+  return <MainLayout>
       <div className={`w-full min-h-[90vh] flex flex-col justify-center ${spacing.container} ${isMobile ? 'pb-24' : 'pb-6'}`}>
         <div className={`w-full ${layout.maxWidth} mx-auto text-center`}>
           
-          <h1 
-            className={`font-heading ${getTextSize('text-3xl')} lg:${getTextSize('text-4xl')} font-bold mb-8 ${spacing.gap} px-4`}
-          >
-            {user ? (
-              <>
+          <h1 className={`font-heading ${getTextSize('text-3xl')} lg:${getTextSize('text-4xl')} font-bold mb-8 ${spacing.gap} px-4`}>
+            {user ? <>
                 Welcome to <span className="text-primary">SoulSync</span>, {
-                  // Priority: 1. Blueprint preferred name, 2. getDisplayName, 3. User metadata, 4. Email username, 5. 'Friend'
-                  blueprintData?.user_meta?.preferred_name || 
-                  getDisplayName ||
-                  user.user_metadata?.full_name || 
-                  user.user_metadata?.name || 
-                  user.email?.split('@')[0] || 
-                  'Friend'
-                }
-              </>
-            ) : (
-              <span dangerouslySetInnerHTML={{ __html: t('index.welcome') }} />
-            )}
+            // Priority: 1. Blueprint preferred name, 2. getDisplayName, 3. User metadata, 4. Email username, 5. 'Friend'
+            blueprintData?.user_meta?.preferred_name || getDisplayName || user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Friend'}
+              </> : <span dangerouslySetInnerHTML={{
+            __html: t('index.welcome')
+          }} />}
           </h1>
           
-          {user && hasBlueprint ? (
-            <PersonalizedQuoteDisplay 
-              className={`${getTextSize('text-sm')} mb-8 ${spacing.gap} px-4 text-muted-foreground min-h-[3.5rem] flex items-center justify-center italic`}
-              interval={8000}
-              fallbackQuotes={subtitleMessages}
-            />
-          ) : (
-            <RotatingText 
-              texts={subtitleMessages}
-              className={`${getTextSize('text-sm')} mb-8 ${spacing.gap} px-4 text-muted-foreground min-h-[3.5rem] flex items-center justify-center`}
-              interval={8000}
-            />
-          )}
+          {user && hasBlueprint ? <PersonalizedQuoteDisplay className={`${getTextSize('text-sm')} mb-8 ${spacing.gap} px-4 text-muted-foreground min-h-[3.5rem] flex items-center justify-center italic`} interval={8000} fallbackQuotes={subtitleMessages} /> : <RotatingText texts={subtitleMessages} className={`${getTextSize('text-sm')} mb-8 ${spacing.gap} px-4 text-muted-foreground min-h-[3.5rem] flex items-center justify-center`} interval={8000} />}
 
-          {user && hasBlueprint && (
-            <p className={`${getTextSize('text-xs')} text-muted-foreground mb-6 px-4`}>
-              <Sparkles className="inline h-3 w-3 mr-1" />
-              Personalized for your unique blueprint
-            </p>
-          )}
+          {user && hasBlueprint}
 
           {user && <div className={`grid ${layout.columns} ${spacing.gap} mb-6 max-w-2xl mx-auto px-4`}>
                 <Link to="/dreams" className="block">
@@ -181,11 +153,7 @@ const Index = () => {
 
           {/* Show the demo button only for admin */}
           {isAdmin && <div className={`mb-4 ${spacing.gap} px-4`}>
-            <Button 
-              variant="outline" 
-              onClick={() => setShowDemo(true)} 
-              className={`mb-4 ${layout.width} ${isMobile ? 'w-full' : 'sm:w-auto'} ${getTextSize('text-sm')} ${touchTargetSize}`}
-            >
+            <Button variant="outline" onClick={() => setShowDemo(true)} className={`mb-4 ${layout.width} ${isMobile ? 'w-full' : 'sm:w-auto'} ${getTextSize('text-sm')} ${touchTargetSize}`}>
               <Brain className={`mr-2 h-4 w-4 ${isFoldDevice ? 'h-3 w-3' : ''}`} />
               {t("index.demo")}
             </Button>
@@ -198,49 +166,29 @@ const Index = () => {
           
           <div className={`flex flex-col ${spacing.gap} px-4 max-w-md mx-auto`}>
             {user ? <>
-              <Button 
-                size="lg" 
-                className={`bg-primary hover:bg-primary/90 w-full ${touchTargetSize} ${getTextSize('text-base')}`} 
-                onClick={handleGetStarted}
-              >
-                {hasBlueprint ? (
-                  <>
+              <Button size="lg" className={`bg-primary hover:bg-primary/90 w-full ${touchTargetSize} ${getTextSize('text-base')}`} onClick={handleGetStarted}>
+                {hasBlueprint ? <>
                     <BookOpen className={`mr-2 h-4 w-4 ${isFoldDevice ? 'h-3 w-3' : ''}`} />
                     {t("index.takeTour")}
-                  </>
-                ) : (
-                  <>
+                  </> : <>
                     {t("index.startJourney")}
                     <ArrowRight className={`ml-2 h-4 w-4 ${isFoldDevice ? 'h-3 w-3' : ''}`} />
-                  </>
-                )}
+                  </>}
               </Button>
               
               <Link to="/coach" className="block">
-                <Button 
-                  size="lg" 
-                  variant="outline" 
-                  className={`w-full ${touchTargetSize} ${getTextSize('text-base')} backdrop-blur-sm border-border hover:bg-accent hover:text-accent-foreground`}
-                >
+                <Button size="lg" variant="outline" className={`w-full ${touchTargetSize} ${getTextSize('text-base')} backdrop-blur-sm border-border hover:bg-accent hover:text-accent-foreground`}>
                   {t("index.chatWithCompanion")}
                 </Button>
               </Link>
             </> : <>
-              <Button 
-                size="lg" 
-                className={`bg-primary hover:bg-primary/90 w-full ${touchTargetSize} ${getTextSize('text-base')}`} 
-                onClick={handleGetStarted}
-              >
+              <Button size="lg" className={`bg-primary hover:bg-primary/90 w-full ${touchTargetSize} ${getTextSize('text-base')}`} onClick={handleGetStarted}>
                 {t("index.getStarted")}
                 <ArrowRight className={`ml-2 h-4 w-4 ${isFoldDevice ? 'h-3 w-3' : ''}`} />
               </Button>
               
               <Link to="/auth" className="block">
-                <Button 
-                  size="lg" 
-                  variant="outline" 
-                  className={`w-full ${touchTargetSize} ${getTextSize('text-base')} backdrop-blur-sm border-border hover:bg-accent hover:text-accent-foreground`}
-                >
+                <Button size="lg" variant="outline" className={`w-full ${touchTargetSize} ${getTextSize('text-base')} backdrop-blur-sm border-border hover:bg-accent hover:text-accent-foreground`}>
                   {t("index.signIn")}
                   <LogIn className={`ml-2 h-4 w-4 ${isFoldDevice ? 'h-3 w-3' : ''}`} />
                 </Button>
@@ -249,8 +197,6 @@ const Index = () => {
           </div>
         </div>
       </div>
-    </MainLayout>
-  );
+    </MainLayout>;
 };
-
 export default Index;
