@@ -100,12 +100,12 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
       </div>
 
       <Tabs defaultValue="overview" className="w-full max-w-full">
-        <TabsList className="w-full max-w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 h-auto p-1">
-          <TabsTrigger value="overview" className="text-xs sm:text-sm py-2 px-1 truncate">Overview</TabsTrigger>
-          <TabsTrigger value="mbti" className="text-xs sm:text-sm py-2 px-1 truncate">MBTI</TabsTrigger>
-          <TabsTrigger value="humanDesign" className="text-xs sm:text-sm py-2 px-1 truncate">HD</TabsTrigger>
-          <TabsTrigger value="numerology" className="text-xs sm:text-sm py-2 px-1 truncate">Numbers</TabsTrigger>
-          <TabsTrigger value="astrology" className="text-xs sm:text-sm py-2 px-1 truncate">Astro</TabsTrigger>
+        <TabsList className="w-full max-w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 h-auto p-1 !rounded-3xl">
+          <TabsTrigger value="overview" className="text-xs sm:text-sm py-2 px-1 truncate !rounded-3xl">Overview</TabsTrigger>
+          <TabsTrigger value="mbti" className="text-xs sm:text-sm py-2 px-1 truncate !rounded-3xl">MBTI</TabsTrigger>
+          <TabsTrigger value="humanDesign" className="text-xs sm:text-sm py-2 px-1 truncate !rounded-3xl">HD</TabsTrigger>
+          <TabsTrigger value="numerology" className="text-xs sm:text-sm py-2 px-1 truncate !rounded-3xl">Numbers</TabsTrigger>
+          <TabsTrigger value="astrology" className="text-xs sm:text-sm py-2 px-1 truncate !rounded-3xl">Astro</TabsTrigger>
         </TabsList>
         
         <TabsContent value="overview" className="mt-4 sm:mt-6 w-full max-w-full">

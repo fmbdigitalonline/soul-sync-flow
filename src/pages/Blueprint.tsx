@@ -392,26 +392,26 @@ const Blueprint = () => {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8 w-full max-w-full">
           {/* Mobile-responsive tabs with personality report tab */}
-          <TabsList className="w-full max-w-full h-auto p-1 grid grid-cols-2 sm:grid-cols-5">
-            <TabsTrigger value="view" className="text-xs sm:text-sm py-2 px-1 truncate">
+          <TabsList className="w-full max-w-full h-auto p-1 grid grid-cols-2 sm:grid-cols-5 !rounded-3xl">
+            <TabsTrigger value="view" className="text-xs sm:text-sm py-2 px-1 truncate !rounded-3xl">
               Blueprint
             </TabsTrigger>
-            <TabsTrigger value="report" className="text-xs sm:text-sm py-2 px-1 truncate">
+            <TabsTrigger value="report" className="text-xs sm:text-sm py-2 px-1 truncate !rounded-3xl">
               Report
             </TabsTrigger>
             {isAdmin && (
-              <TabsTrigger value="edit" className="text-xs sm:text-sm py-2 px-1 truncate">
+              <TabsTrigger value="edit" className="text-xs sm:text-sm py-2 px-1 truncate !rounded-3xl">
                 Edit
               </TabsTrigger>
             )}
             {isAdmin && (
-              <TabsTrigger value="health-check" className="text-xs sm:text-sm py-2 px-1 flex items-center gap-1 min-w-0">
+              <TabsTrigger value="health-check" className="text-xs sm:text-sm py-2 px-1 flex items-center gap-1 min-w-0 !rounded-3xl">
                 <Activity className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                 <span className="hidden sm:inline truncate">Health Check</span>
                 <span className="sm:hidden truncate">Health</span>
               </TabsTrigger>
             )}
-            <TabsTrigger value="generating" disabled={!isGenerating} className="text-xs sm:text-sm py-2 px-1 truncate">
+            <TabsTrigger value="generating" disabled={!isGenerating} className="text-xs sm:text-sm py-2 px-1 truncate !rounded-3xl">
               Generating
             </TabsTrigger>
           </TabsList>
