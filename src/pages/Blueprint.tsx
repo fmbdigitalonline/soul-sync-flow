@@ -356,7 +356,7 @@ const Blueprint = () => {
   return (
     <MainLayout>
       <div className={`w-full ${spacing.container} pb-20 mobile-container`}>
-        {/* Mobile-friendly header with proper constraints and responsive sizing */}
+        {/* Simplified header with just the main title and action buttons */}
         <div className={`flex flex-col ${spacing.gap} mb-6 w-full max-w-full`}>
           <div className="flex items-center justify-between">
             <h1 className={`${getTextSize('text-3xl')} font-bold font-display break-words`}>
@@ -393,8 +393,8 @@ const Blueprint = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8 w-full max-w-full">
-          {/* Mobile-responsive tabs with consistent sizing */}
-          <TabsList className={`w-full max-w-full h-auto ${spacing.button} grid ${isMobile ? 'grid-cols-2' : 'grid-cols-5'} !rounded-3xl`}>
+          {/* Simplified tabs - only showing necessary ones for regular users */}
+          <TabsList className={`w-full max-w-full h-auto ${spacing.button} grid ${isAdmin ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-2'} !rounded-3xl`}>
             <TabsTrigger value="view" className={`${getTextSize('text-sm')} py-2 px-1 truncate !rounded-3xl`}>
               Blueprint
             </TabsTrigger>
@@ -402,18 +402,17 @@ const Blueprint = () => {
               Report
             </TabsTrigger>
             {isAdmin && (
-              <TabsTrigger value="edit" className={`${getTextSize('text-sm')} py-2 px-1 truncate !rounded-3xl`}>
-                Edit
-              </TabsTrigger>
+              <>
+                <TabsTrigger value="edit" className={`${getTextSize('text-sm')} py-2 px-1 truncate !rounded-3xl`}>
+                  Edit
+                </TabsTrigger>
+                <TabsTrigger value="health-check" className={`${getTextSize('text-sm')} py-2 px-1 flex items-center gap-1 min-w-0 !rounded-3xl`}>
+                  <Activity className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                  <span className={`${isMobile ? 'hidden sm:inline' : 'inline'} truncate`}>Health</span>
+                </TabsTrigger>
+              </>
             )}
-            {isAdmin && (
-              <TabsTrigger value="health-check" className={`${getTextSize('text-sm')} py-2 px-1 flex items-center gap-1 min-w-0 !rounded-3xl`}>
-                <Activity className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                <span className={`${isMobile ? 'hidden sm:inline' : 'inline'} truncate`}>Health Check</span>
-                <span className={`${isMobile ? 'sm:hidden' : 'hidden'} truncate`}>Health</span>
-              </TabsTrigger>
-            )}
-            <TabsTrigger value="generating" disabled={!isGenerating} className={`${getTextSize('text-sm')} py-2 px-1 truncate !rounded-3xl`}>
+            <TabsTrigger value="generating" disabled={!isGenerating} className={`${getTextSize('text-sm')} py-2 px-1 truncate !rounded-3xl ${!isAdmin ? 'hidden' : ''}`}>
               Generating
             </TabsTrigger>
           </TabsList>
