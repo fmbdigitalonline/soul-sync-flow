@@ -30,7 +30,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     triggerMicroLearning
   } = useHACSMicroLearning();
 
-  console.log('FloatingHACSOrb render:', { loading, intelligence });
+  console.log('FloatingHACSOrb render:', { loading, intelligence, currentQuestion, isGenerating });
 
   const intelligenceLevel = intelligence?.intelligence_level || 0;
 
