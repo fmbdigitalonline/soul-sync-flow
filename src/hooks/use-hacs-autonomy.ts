@@ -28,6 +28,33 @@ export const useHACSAutonomy = () => {
 
     setIsGenerating(true);
     try {
+      // Try the new intelligent conversation system first
+      const { data: intelligentData, error: intelligentError } = await supabase.functions.invoke('hacs-intelligent-conversation', {
+        body: {
+          action: 'generate_question',
+          userId: user.id,
+          sessionId: `autonomous_${Date.now()}`,
+          messageHistory: []
+        }
+      });
+
+      if (!intelligentError && intelligentData?.generatedQuestion) {
+        const newMessage: HACSMessage = {
+          id: `hacs_${Date.now()}`,
+          text: intelligentData.generatedQuestion.text,
+          hacsModule: intelligentData.generatedQuestion.module,
+          interventionType: 'autonomous_question',
+          messageType: 'deep_conversation',
+          timestamp: new Date(),
+          acknowledged: false
+        };
+
+        setCurrentMessage(newMessage);
+        setMessageHistory(prev => [newMessage, ...prev].slice(0, 10));
+        return newMessage;
+      }
+
+      // Fallback to original system
       const { data, error } = await supabase.functions.invoke('hacs-autonomous-text', {
         body: {
           hacsModule,

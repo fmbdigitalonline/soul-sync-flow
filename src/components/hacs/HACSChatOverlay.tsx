@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { X } from 'lucide-react';
+import { X, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CosmicCard } from '@/components/ui/cosmic-card';
 import { IntelligentSoulOrb } from '@/components/ui/intelligent-soul-orb';
+import { InteractiveHACSChat } from './InteractiveHACSChat';
 import { type HACSMessage } from '@/hooks/use-hacs-autonomy';
+import { type ConversationMessage } from '@/hooks/use-hacs-conversation';
 
 interface HACSChatOverlayProps {
   isOpen: boolean;
@@ -19,6 +21,30 @@ export const HACSChatOverlay: React.FC<HACSChatOverlayProps> = ({
   currentMessage,
   intelligenceLevel
 }) => {
+  const [showInteractiveChat, setShowInteractiveChat] = useState(false);
+
+  // Convert HACSMessage to ConversationMessage if needed
+  const initialMessage: ConversationMessage | null = currentMessage ? {
+    id: currentMessage.id,
+    role: 'hacs' as const,
+    content: currentMessage.text,
+    timestamp: currentMessage.timestamp.toISOString(),
+    module: currentMessage.hacsModule,
+    messageType: currentMessage.messageType
+  } : null;
+
+  if (showInteractiveChat) {
+    return (
+      <InteractiveHACSChat
+        isOpen={isOpen}
+        onClose={() => {
+          setShowInteractiveChat(false);
+          onClose();
+        }}
+        initialMessage={initialMessage}
+      />
+    );
+  }
   return (
     <AnimatePresence>
       {isOpen && (
@@ -116,9 +142,10 @@ export const HACSChatOverlay: React.FC<HACSChatOverlayProps> = ({
                       </Button>
                       <Button
                         size="sm"
-                        onClick={onClose}
+                        onClick={() => setShowInteractiveChat(true)}
                         className="flex-1"
                       >
+                        <MessageSquare className="h-4 w-4 mr-2" />
                         Continue Conversation
                       </Button>
                     </div>
