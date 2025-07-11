@@ -282,7 +282,7 @@ ${ASSESSMENT_STAGES[0].prompt}`;
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-background">
       <div className="container mx-auto py-6 px-4 max-w-4xl">
         
         {/* Header */}
