@@ -354,9 +354,6 @@ ${ASSESSMENT_STAGES[0].prompt}`;
           <div className="lg:col-span-3">
             <Card className="h-[calc(100vh-300px)]">
               <SpiritualGuideInterface
-                messages={messages}
-                isLoading={isLoading}
-                onSendMessage={(message) => sendMessage(message, true, message, "guide")}
                 userDisplayName={getUserDisplayName()}
                 coreTraits={getCoreTraits()}
               />

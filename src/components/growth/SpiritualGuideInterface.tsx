@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
 import { IntelligentSoulOrb } from '@/components/ui/intelligent-soul-orb';
 import { useHacsIntelligence } from '@/hooks/use-hacs-intelligence';
+import { useHACSConversation } from '@/hooks/use-hacs-conversation';
 
 interface Message {
   id: string;
@@ -16,24 +17,26 @@ interface Message {
 }
 
 interface SpiritualGuideInterfaceProps {
-  messages: Message[];
-  isLoading: boolean;
-  onSendMessage: (message: string) => void;
   userDisplayName?: string;
   coreTraits: string[];
 }
 
 export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = ({
-  messages,
-  isLoading,
-  onSendMessage,
   userDisplayName = 'friend',
   coreTraits = []
 }) => {
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { getTextSize, touchTargetSize, isFoldDevice, spacing } = useResponsiveLayout();
-  const { intelligence, recordConversationInteraction, getIntelligencePhase } = useHacsIntelligence();
+  const { intelligence, refreshIntelligence } = useHacsIntelligence();
+  
+  // CRITICAL FIX: Use HACS conversation instead of enhanced AI coach
+  const { 
+    messages, 
+    isLoading, 
+    sendMessage: hacseSendMessage,
+    conversationId 
+  } = useHACSConversation();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -43,11 +46,16 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
     scrollToBottom();
   }, [messages]);
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (inputValue.trim() && !isLoading) {
-      recordConversationInteraction(inputValue.trim(), 'good');
-      onSendMessage(inputValue.trim());
+      const message = inputValue.trim();
       setInputValue('');
+      
+      // CRITICAL FIX: Send through HACS conversation for real intelligence updates
+      await hacseSendMessage(message);
+      
+      // Refresh intelligence display after successful conversation
+      await refreshIntelligence();
     }
   };
 
@@ -160,16 +168,16 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
           {messages.map((message) => (
             <div
               key={message.id}
-              className={`flex items-start gap-3 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+              className={`flex items-start gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
-              {/* Avatar for assistant messages */}
-              {message.sender === 'assistant' && (
+              {/* Avatar for HACS messages */}
+              {message.role === 'hacs' && (
                 <div className="flex-shrink-0 mt-1">
                   <IntelligentSoulOrb 
                     size="sm"
-                    intelligenceLevel={intelligence?.intelligence_level || 65}
+                    intelligenceLevel={intelligence?.intelligence_level || 0}
                     showProgressRing={true}
-                    speaking={message.isStreaming}
+                    speaking={false}
                     stage="complete"
                     pulse={false}
                   />
@@ -178,33 +186,35 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
               
               <div
                 className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-sm ${
-                  message.sender === 'user'
+                  message.role === 'user'
                     ? 'bg-gradient-to-r from-soul-purple to-soul-teal text-white'
                     : 'bg-gray-50 text-gray-800 border border-gray-100'
                 }`}
               >
                 {/* User label for user messages */}
-                {message.sender === 'user' && (
+                {message.role === 'user' && (
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-xs font-medium opacity-90">{userDisplayName}</span>
                   </div>
                 )}
                 
-                {/* Assistant label for assistant messages */}
-                {message.sender === 'assistant' && (
+                {/* HACS label for HACS messages */}
+                {message.role === 'hacs' && (
                   <div className="flex items-center gap-2 mb-2">
-                    <Sparkles className={`text-soul-purple ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
+                    <Brain className={`text-soul-purple ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
                     <span className={`font-medium text-soul-purple ${getTextSize('text-xs')}`}>
-                      Dream Guide
+                      HACS {message.isQuestion ? '(Question)' : ''}
                     </span>
+                    {message.module && (
+                      <span className={`text-xs bg-soul-teal/10 text-soul-teal px-1.5 py-0.5 rounded-full`}>
+                        {message.module}
+                      </span>
+                    )}
                   </div>
                 )}
                 
                 <div className={`${getTextSize('text-sm')} leading-relaxed whitespace-pre-wrap`}>
                   {message.content}
-                  {message.isStreaming && (
-                    <span className="inline-block w-2 h-4 bg-current ml-1 animate-pulse" />
-                  )}
                 </div>
               </div>
             </div>
@@ -225,15 +235,15 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
               </div>
               <div className="bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3">
                 <div className="flex items-center gap-2 mb-2">
-                  <Sparkles className={`text-soul-purple ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
+                  <Brain className={`text-soul-purple ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
                   <span className={`font-medium text-soul-purple ${getTextSize('text-xs')}`}>
-                    Dream Guide
+                    HACS Learning System
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Loader2 className={`animate-spin text-soul-purple ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
                   <span className={`text-gray-600 ${getTextSize('text-sm')}`}>
-                    Thinking deeply about your dreams...
+                    Processing and learning from your interaction...
                   </span>
                 </div>
               </div>
