@@ -73,6 +73,10 @@ const Coach = () => {
     });
   };
 
+  const handleFeedback = (messageId: string, isPositive: boolean) => {
+    recordVFPGraphFeedback(messageId, isPositive);
+  };
+
   if (!isAuthenticated) {
     return (
       <MainLayout>
@@ -97,16 +101,22 @@ const Coach = () => {
     );
   }
 
+  // Transform messages to match BlendInterface expected format
+  const transformedMessages = messages.map(msg => ({
+    ...msg,
+    isUser: msg.role === 'user'
+  }));
+
   // Create the main chat interface component
   const chatInterface = (
     <div className="relative h-full">
       <BlendInterface
-        messages={messages}
+        messages={transformedMessages}
         isLoading={isLoading}
         onSendMessage={handleSendMessage}
         personaReady={personaReady}
         vfpGraphStatus={vfpGraphStatus}
-        onFeedback={recordVFPGraphFeedback}
+        onFeedback={handleFeedback}
         hideMessageOrbs={true}
       />
       
