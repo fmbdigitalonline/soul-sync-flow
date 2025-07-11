@@ -48,7 +48,8 @@ class AICoachService {
     sessionId: string,
     includeBlueprint: boolean = false,
     agentType: AgentType = "guide",
-    language: string = "en"
+    language: string = "en",
+    userDisplayName: string = "friend"
   ): Promise<{ response: string; conversationId: string }> {
     try {
       // Try unified brain first if enabled
@@ -75,7 +76,7 @@ class AICoachService {
         ? (agentType === "guide" 
             ? this.personalityEngine.generateSystemPrompt("guide", message)
             : this.personalityEngine.generateSystemPrompt(agentType as AgentMode))
-        : this.getUniversalConversationalPrompt(agentType);
+        : this.getUniversalConversationalPrompt(agentType, userDisplayName);
 
       console.log("Using regular AI coach service with universal conversational rules, prompt length:", systemPrompt?.length || 0);
 
@@ -87,6 +88,7 @@ class AICoachService {
           agentType,
           language,
           systemPrompt,
+          userDisplayName,
         },
       });
 
@@ -102,29 +104,30 @@ class AICoachService {
     }
   }
 
-  private getUniversalConversationalPrompt(agentType: AgentType): string {
-    return `# Universal Conversational Guidelines
+  private getUniversalConversationalPrompt(agentType: AgentType, userDisplayName: string = "friend"): string {
+    return `# Universal Conversational Guidelines for ${userDisplayName}
 
-You are a warm, supportive AI companion. Follow these critical rules for ALL conversations:
+You are a warm, supportive AI companion for ${userDisplayName}. Follow these critical rules for ALL conversations:
 
 ## LANGUAGE RULES (MANDATORY):
-- ALWAYS use the user's name naturally in conversation when you know it
+- ALWAYS use ${userDisplayName}'s name naturally in conversation - it is mandatory
+- NEVER use "you" or impersonal language - always address ${userDisplayName} by name
 - NEVER use technical personality terms like "ENFP", "Generator", "Manifestor", etc.
-- When referring to personality insights, always call it their "blueprint" or "unique patterns"
-- Speak in plain, warm language that feels personal and supportive
-- Only explain technical details if the user specifically asks "how do you know this?" or similar drilling-down questions
+- When referring to personality insights, always call it ${userDisplayName}'s "blueprint" or "unique patterns"
+- Speak in plain, warm language that feels personal and supportive to ${userDisplayName}
+- Only explain technical details if ${userDisplayName} specifically asks "how do you know this?" or similar drilling-down questions
 
 ## COMMUNICATION STYLE:
-- Be warm, genuine, and personally supportive
-- Use natural, conversational language
-- Reference their unique patterns and strengths when relevant, but describe them in everyday terms
-- Ask thoughtful follow-up questions to deepen the conversation
-- Provide actionable insights based on their individual nature
+- Be warm, genuine, and personally supportive to ${userDisplayName}
+- Use natural, conversational language that addresses ${userDisplayName} directly
+- Reference ${userDisplayName}'s unique patterns and strengths when relevant, but describe them in everyday terms
+- Ask thoughtful follow-up questions to deepen the conversation with ${userDisplayName}
+- Provide actionable insights based on ${userDisplayName}'s individual nature
 
 ## ROLE-SPECIFIC GUIDANCE:
 ${this.getRoleSpecificGuidance(agentType)}
 
-Remember: Every response should feel like it comes from someone who truly knows and cares about the user, while keeping all language accessible and avoiding technical jargon unless specifically requested.`;
+Remember: Every response should feel like it comes from someone who truly knows and cares about ${userDisplayName}, using ${userDisplayName}'s name naturally and keeping all language warm and accessible.`;
   }
 
   private getRoleSpecificGuidance(agentType: AgentType): string {
@@ -158,7 +161,8 @@ Remember: Every response should feel like it comes from someone who truly knows 
     includeBlueprint: boolean = false,
     agentType: AgentType = "guide",
     language: string = "en",
-    callbacks: StreamingResponse
+    callbacks: StreamingResponse,
+    userDisplayName: string = "friend"
   ): Promise<void> {
     try {
       console.log('Starting streaming request...');
@@ -191,7 +195,7 @@ Remember: Every response should feel like it comes from someone who truly knows 
         ? (agentType === "guide" 
             ? this.personalityEngine.generateSystemPrompt("guide", message)
             : this.personalityEngine.generateSystemPrompt(agentType as AgentMode))
-        : this.getUniversalConversationalPrompt(agentType);
+        : this.getUniversalConversationalPrompt(agentType, userDisplayName);
 
       console.log("Using regular streaming with universal conversational rules, prompt length:", systemPrompt?.length || 0);
       
@@ -208,6 +212,7 @@ Remember: Every response should feel like it comes from someone who truly knows 
           agentType,
           language,
           systemPrompt,
+          userDisplayName,
         }),
       });
 

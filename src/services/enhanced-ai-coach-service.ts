@@ -10,6 +10,7 @@ import { useACSIntegration } from '@/hooks/use-acs-integration';
 import { ACSConfig, DialogueHealthMetrics, DialogueState, StateTransition, PromptStrategyConfig, ACSMetrics, HelpSignal } from '@/types/acs-types';
 import { modelRouterService } from "./model-router-service";
 import { costMonitoringService } from "./cost-monitoring-service";
+import { getUniversalConversationalPrompt } from "./universal-conversational-rules";
 
 export type AgentType = "coach" | "guide" | "blend";
 
@@ -145,10 +146,10 @@ class EnhancedAICoachService {
     }
   }
 
-  private async getOrCreatePersona(usePersona: boolean, agentType: AgentType, userMessage?: string): Promise<string | null> {
+  private async getOrCreatePersona(usePersona: boolean, agentType: AgentType, userMessage?: string, userDisplayName: string = "friend"): Promise<string | null> {
     if (!usePersona || !this.currentUserId) {
-      console.log("⚠️ Persona not requested or no user ID available");
-      return null;
+      console.log("⚠️ Persona not requested or no user ID available, using universal conversational rules");
+      return getUniversalConversationalPrompt(userDisplayName, this.getRoleSpecificGuidance(agentType));
     }
 
     try {
@@ -182,8 +183,8 @@ class EnhancedAICoachService {
         console.log("📊 Blueprint validation for persona generation:", validation);
         comprehensivePrompt = UnifiedBlueprintService.formatBlueprintForAI(blueprint);
       } else {
-        console.log("⚠️ No personality data available, using basic personality engine");
-        return this.personalityEngine.generateSystemPrompt(agentType as AgentMode);
+        console.log("⚠️ No personality data available, using universal conversational rules");
+        return getUniversalConversationalPrompt(userDisplayName, this.getRoleSpecificGuidance(agentType));
       }
 
       // ENHANCED MEMORY INTEGRATION: Always try to enhance with memory context
@@ -291,7 +292,8 @@ Seamlessly blend VFP-Graph intelligence with the detailed blueprint information 
     sessionId: string,
     usePersona: boolean = false,
     agentType: AgentType = "guide",
-    language: string = "en"
+    language: string = "en",
+    userDisplayName: string = "friend"
   ): Promise<{ response: string; conversationId: string; modelUsed: string }> {
     try {
       console.log(`📤 Layered AI Coach: Sending message (${agentType}, Persona: ${usePersona})`);
@@ -304,7 +306,7 @@ Seamlessly blend VFP-Graph intelligence with the detailed blueprint information 
       
       console.log(`🎯 Model Selection: ${modelSelection.model} (${modelSelection.layer}) - ${modelSelection.reasoning}`);
 
-      const systemPrompt = await this.getOrCreatePersona(usePersona, agentType, message);
+      const systemPrompt = await this.getOrCreatePersona(usePersona, agentType, message, userDisplayName);
       
       const { data, error } = await supabase.functions.invoke("ai-coach", {
         body: {
@@ -518,9 +520,10 @@ Seamlessly blend VFP-Graph intelligence with the detailed blueprint information 
     sessionId: string,
     usePersona: boolean = false,
     agentType: AgentType = "guide",
-    language: string = "en"
+    language: string = "en",
+    userDisplayName: string = "friend"
   ): Promise<{ response: string; conversationId: string }> {
-    const result = await this.sendMessageWithLayeredModel(message, sessionId, usePersona, agentType, language);
+    const result = await this.sendMessageWithLayeredModel(message, sessionId, usePersona, agentType, language, userDisplayName);
     
     return {
       response: result.response,
@@ -547,12 +550,13 @@ Seamlessly blend VFP-Graph intelligence with the detailed blueprint information 
     usePersona: boolean = false,
     agentType: AgentType = "guide",
     language: string = "en",
-    callbacks: StreamingResponse
+    callbacks: StreamingResponse,
+    userDisplayName: string = "friend"
   ): Promise<void> {
     try {
       console.log(`📡 VFP-Graph Enhanced Streaming: Starting (${agentType}, VFP-Graph: ${usePersona && !!this.vfpGraphCache.vector}, ACS: ${this.acsEnabled})`);
       
-      const systemPrompt = await this.getOrCreatePersona(usePersona, agentType, message);
+      const systemPrompt = await this.getOrCreatePersona(usePersona, agentType, message, userDisplayName);
       
       const blueprint = usePersona ? await this.getBlueprintFromCache() : null;
       const blueprintFilter = blueprint ? createBlueprintFilter(blueprint) : null;
@@ -922,6 +926,31 @@ Seamlessly blend VFP-Graph intelligence with the detailed blueprint information 
 
   isACSEnabled(): boolean {
     return this.acsEnabled;
+  }
+
+  private getRoleSpecificGuidance(agentType: AgentType): string {
+    switch (agentType) {
+      case 'coach':
+        return `- Focus on practical productivity and goal achievement
+- Help them work with their natural energy and patterns
+- Provide actionable steps that fit their unique style
+- Support them in breaking through obstacles using their strengths`;
+
+      case 'guide':
+        return `- Focus on deeper life questions and spiritual growth
+- Help them understand their patterns and purpose
+- Provide gentle wisdom for their personal journey
+- Support their authentic self-expression and growth`;
+
+      case 'blend':
+        return `- Adapt fluidly between practical and spiritual guidance
+- Meet them wherever they need support most
+- Balance action-oriented help with deeper reflection
+- Support their whole journey with integrated wisdom`;
+
+      default:
+        return '- Provide thoughtful, personalized support for their unique journey';
+    }
   }
 }
 

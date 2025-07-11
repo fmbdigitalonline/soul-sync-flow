@@ -78,6 +78,12 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide", pageContex
   const { blueprintData, hasBlueprint, loading: blueprintLoading } = useBlueprintCache();
   const { user } = useAuth();
   
+  // Get user's display name
+  const userName = user?.user_metadata?.preferred_name || 
+                   user?.user_metadata?.full_name?.split(' ')[0] || 
+                   user?.email?.split('@')[0] || 
+                   'friend';
+  
   const {
     streamingContent,
     isStreaming,
@@ -351,7 +357,7 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide", pageContex
           acsState
         });
         
-        await enhancedAICoachService.sendStreamingMessage(
+         await enhancedAICoachService.sendStreamingMessage(
           content,
           currentSessionId,
           canUsePersona,
@@ -399,7 +405,8 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide", pageContex
               );
               setIsLoading(false);
             }
-          }
+          },
+          userName
         );
       } catch (error) {
         console.error(`❌ Domain-isolated streaming error for ${effectiveContext}:`, error);
@@ -422,7 +429,8 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide", pageContex
           currentSessionId,
           canUsePersona,
           currentAgent,
-          language
+          language,
+          userName
         );
 
         const assistantMessage: Message = {

@@ -4,6 +4,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useBlueprintData } from "./use-blueprint-data";
 import { LayeredBlueprint } from "@/types/personality-modules";
 import { useStreamingMessage } from "./use-streaming-message";
+import { useAuth } from "@/contexts/AuthContext";
 
 export interface Message {
   id: string;
@@ -21,6 +22,13 @@ export const useAICoach = () => {
   const [currentSessionId] = useState(() => aiCoachService.createNewSession());
   const { language } = useLanguage();
   const { blueprintData } = useBlueprintData();
+  const { user } = useAuth();
+
+  // Get user's display name
+  const userName = user?.user_metadata?.preferred_name || 
+                   user?.user_metadata?.full_name?.split(' ')[0] || 
+                   user?.email?.split('@')[0] || 
+                   'friend';
   
   const {
     streamingContent,
@@ -182,7 +190,8 @@ export const useAICoach = () => {
               handleNonStreamingMessage(content);
               completeStreaming();
             }
-          }
+          },
+          userName
         );
       } catch (error) {
         console.error("Error with streaming, falling back:", error);
@@ -202,7 +211,8 @@ export const useAICoach = () => {
         currentSessionId,
         true, // Always include blueprint for personalized responses
         currentAgent,
-        language
+        language,
+        userName
       );
 
       const assistantMessage: Message = {

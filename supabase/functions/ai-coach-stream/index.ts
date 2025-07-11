@@ -54,7 +54,8 @@ serve(async (req) => {
       enableBlueprintFiltering = false,
       maxTokens = 1000,
       temperature = 0.7,
-      contextDepth = 'normal' // New parameter for layered model selection
+      contextDepth = 'normal', // New parameter for layered model selection
+      userDisplayName = 'friend'
     } = await req.json();
 
     console.log(`🚀 Starting streaming chat completion (${agentType}, Blueprint: ${includeBlueprint}, Context: ${contextDepth}, User: ${user.id})`);
@@ -87,10 +88,10 @@ serve(async (req) => {
       console.log(`📝 Using custom system prompt (length: ${systemPrompt.length})`);
       messages.push({ role: 'system', content: systemPrompt });
     } else {
-      // Fallback system prompt based on agent type
+      // Fallback system prompt based on agent type with user name
       const fallbackPrompt = agentType === 'coach' 
-        ? `You are a helpful AI coach focused on productivity and goal achievement. Provide thoughtful, actionable responses.`
-        : `You are a helpful AI guide focused on personal growth and guidance. Provide thoughtful, complete responses.`;
+        ? `You are a helpful AI coach for ${userDisplayName} focused on productivity and goal achievement. Use ${userDisplayName}'s name naturally in conversation and provide thoughtful, actionable responses.`
+        : `You are a helpful AI guide for ${userDisplayName} focused on personal growth and guidance. Use ${userDisplayName}'s name naturally in conversation and provide thoughtful, complete responses.`;
       messages.push({ role: 'system', content: fallbackPrompt });
     }
 
