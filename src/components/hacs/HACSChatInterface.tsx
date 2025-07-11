@@ -35,9 +35,11 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const {
-    generateResponse,
-    isProcessing
-  } = useHACSIntelligence();
+    intelligence,
+    loading,
+    updateIntelligence,
+    recordConversationInteraction
+  } = useHacsIntelligence();
 
   // Initialize with HACS greeting and initial message
   useEffect(() => {
@@ -72,8 +74,23 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
+  const generateHACSResponse = useCallback(async (userInput: string): Promise<string> => {
+    // Simulate AI processing delay
+    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
+    
+    // Generate contextual response based on intelligence level and user input
+    const responses = [
+      "I'm analyzing your patterns and see some interesting insights emerging from your journey.",
+      `Based on your current intelligence level of ${Math.round(intelligenceLevel)}, I can help you explore deeper connections.`,
+      "Your growth trajectory shows unique patterns that I'm learning to understand better.",
+      "Let me process this through my active components and provide you with personalized guidance.",
+    ];
+    
+    return responses[Math.floor(Math.random() * responses.length)];
+  }, [intelligenceLevel]);
+
   const handleSendMessage = useCallback(async () => {
-    if (!inputValue.trim() || isProcessing) return;
+    if (!inputValue.trim() || loading) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -87,15 +104,18 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
     setIsTyping(true);
 
     try {
+      // Record conversation interaction
+      await recordConversationInteraction(inputValue.trim(), 'good');
+      
       // Generate HACS response
-      const response = await generateResponse(inputValue.trim());
+      const response = await generateHACSResponse(inputValue.trim());
       
       const hacsMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: "hacs",
-        content: response.message,
+        content: response,
         timestamp: new Date(),
-        components: response.activeComponents
+        components: activeComponents.slice(0, 3)
       };
 
       setMessages(prev => [...prev, hacsMessage]);
@@ -114,7 +134,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
     } finally {
       setIsTyping(false);
     }
-  }, [inputValue, isProcessing, generateResponse]);
+  }, [inputValue, loading, recordConversationInteraction, generateHACSResponse, activeComponents]);
 
   const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -186,7 +206,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
         
         {/* Typing Indicator */}
         <AnimatePresence>
-          {(isTyping || isProcessing) && (
+          {(isTyping || loading) && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -224,7 +244,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
               onKeyPress={handleKeyPress}
               placeholder="Ask HACS anything about your journey..."
               className="pr-12 rounded-xl border-border focus:border-primary"
-              disabled={isProcessing}
+              disabled={loading}
             />
             <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
               <Zap className="h-3 w-3 text-muted-foreground" />
@@ -236,11 +256,11 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
           
           <Button
             onClick={handleSendMessage}
-            disabled={!inputValue.trim() || isProcessing}
+            disabled={!inputValue.trim() || loading}
             size="icon"
             className="rounded-xl bg-primary hover:bg-primary/90"
           >
-            {isProcessing ? (
+            {loading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <Send className="h-4 w-4" />

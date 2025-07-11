@@ -20,17 +20,26 @@ export const FloatingHACSOrb: React.FC<FloatingHACSOrbProps> = ({
   const [bubbleMessage, setBubbleMessage] = useState("");
   
   const {
-    intelligenceLevel,
-    activeComponents,
-    generateProactiveMessage,
-    isProcessing,
-    currentInsight
-  } = useHACSIntelligence();
+    intelligence,
+    loading,
+    updateIntelligence,
+    getIntelligencePhase,
+    isAutonomousUnlocked
+  } = useHacsIntelligence();
 
   // Handle proactive messages from HACS
   useEffect(() => {
-    if (currentInsight && !isExpanded) {
-      setBubbleMessage(currentInsight.message);
+    if (intelligence && !isExpanded && !loading) {
+      // Generate proactive message based on intelligence level
+      const phase = getIntelligencePhase();
+      const messages = [
+        "I'm learning from your interactions. How can I help you today?",
+        `Your HACS intelligence is at ${phase} level. Want to explore your growth?`,
+        "I notice patterns in your journey. Let's discuss your insights.",
+      ];
+      
+      const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+      setBubbleMessage(randomMessage);
       setShowBubble(true);
       
       // Auto-hide bubble after 8 seconds
@@ -40,7 +49,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSOrbProps> = ({
       
       return () => clearTimeout(timer);
     }
-  }, [currentInsight, isExpanded]);
+  }, [intelligence, isExpanded, loading, getIntelligencePhase]);
 
   const handleOrbClick = useCallback(() => {
     if (showBubble) {
@@ -61,14 +70,19 @@ export const FloatingHACSOrb: React.FC<FloatingHACSOrbProps> = ({
 
   // Determine orb stage based on HACS activity
   const getOrbStage = () => {
-    if (isProcessing) return "generating";
-    if (activeComponents.length > 5) return "complete";
-    if (activeComponents.length > 2) return "collecting";
+    if (loading) return "generating";
+    if (intelligence && intelligence.intelligence_level >= 75) return "complete";
+    if (intelligence && intelligence.intelligence_level >= 25) return "collecting";
     return "welcome";
   };
 
   // Determine if orb should pulse based on activity
-  const shouldPulse = activeComponents.length > 0 || isProcessing;
+  const shouldPulse = intelligence && intelligence.intelligence_level > 0;
+
+  const intelligenceLevel = intelligence?.intelligence_level || 0;
+  const activeComponents = intelligence ? Object.keys(intelligence.module_scores).filter(key => 
+    intelligence.module_scores[key as keyof typeof intelligence.module_scores] > 0
+  ) : [];
 
   return (
     <>
@@ -116,7 +130,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSOrbProps> = ({
             size="md"
             stage={getOrbStage()}
             pulse={shouldPulse}
-            speaking={isProcessing}
+            speaking={loading}
             intelligenceLevel={intelligenceLevel}
             showProgressRing={intelligenceLevel > 0}
             showIntelligenceTooltip={false}
@@ -170,7 +184,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSOrbProps> = ({
                     size="sm"
                     stage={getOrbStage()}
                     pulse={shouldPulse}
-                    speaking={isProcessing}
+                    speaking={loading}
                     intelligenceLevel={intelligenceLevel}
                     showProgressRing={false}
                   />
@@ -196,7 +210,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSOrbProps> = ({
               <div className="flex-1 overflow-hidden">
                 <HACSChatInterface
                   onClose={handleClose}
-                  initialMessage={currentInsight?.message}
+                  initialMessage={bubbleMessage}
                   activeComponents={activeComponents}
                   intelligenceLevel={intelligenceLevel}
                 />
