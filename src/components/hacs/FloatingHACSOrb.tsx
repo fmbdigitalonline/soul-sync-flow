@@ -182,7 +182,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     <>
       {/* Fixed positioning container */}
       <div className={cn(
-        "fixed top-20 right-6 z-50 pointer-events-none",
+        "fixed top-32 right-4 z-50 pointer-events-none",
         className
       )}>
         <div className="relative pointer-events-auto">
