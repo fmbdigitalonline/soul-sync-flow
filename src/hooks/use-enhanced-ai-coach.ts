@@ -142,8 +142,8 @@ export function useEnhancedAICoach(
         // For now, create a simple status based on available data
         const hasPersonalityData = !!(
           blueprintData.user_meta ||
-          blueprintData.cognition_mbti ||
-          blueprintData.energy_strategy_human_design
+          blueprintData.cognitiveTemperamental ||
+          blueprintData.energyDecisionStrategy
         );
         
         setVfpGraphStatus({
@@ -183,13 +183,13 @@ export function useEnhancedAICoach(
     let completedSections = 0;
 
     if (blueprintData.user_meta) completedSections++;
-    if (blueprintData.cognition_mbti?.type !== 'Unknown') completedSections++;
-    if (blueprintData.energy_strategy_human_design?.type !== 'Unknown') completedSections++;
-    if (blueprintData.archetype_western?.sun_sign !== 'Unknown') completedSections++;
-    if (blueprintData.archetype_chinese?.animal !== 'Unknown') completedSections++;
-    if (blueprintData.values_life_path?.life_path_number) completedSections++;
-    if (blueprintData.goal_stack) completedSections++;
-    if (blueprintData.bashar_suite) completedSections++;
+    if (blueprintData.cognitiveTemperamental?.mbtiType !== 'Unknown') completedSections++;
+    if (blueprintData.energyDecisionStrategy?.humanDesignType !== 'Unknown') completedSections++;
+    if (blueprintData.publicArchetype?.sunSign !== 'Unknown') completedSections++;
+    if (blueprintData.generationalCode?.chineseZodiac !== 'Unknown') completedSections++;
+    if (blueprintData.coreValuesNarrative?.lifePath) completedSections++;
+    if (blueprintData.goalPersona) completedSections++;
+    if (blueprintData.motivationBeliefEngine) completedSections++;
 
     const percentage = Math.round((completedSections / totalSections) * 100);
 
@@ -280,6 +280,11 @@ export function useEnhancedAICoach(
       
       const sessionId = enhancedAICoachService.createNewSession(effectiveAgent);
       
+      // Initialize streaming state
+      console.log(`🌊 Stream started for ${pageContext}`);
+      setIsStreaming(true);
+      setStreamingContent("");
+
       await enhancedAICoachService.sendStreamingMessage(
         content,
         sessionId,
@@ -287,11 +292,6 @@ export function useEnhancedAICoach(
         effectiveAgent,
         "en",
         {
-          onStreamStart: () => {
-            console.log(`🌊 Stream started for ${pageContext}`);
-            setIsStreaming(true);
-            setStreamingContent("");
-          },
           onChunk: (chunk: string) => {
             console.log(`📝 Stream chunk received for ${pageContext}:`, chunk.substring(0, 50) + '...');
             setStreamingContent(prev => prev + chunk);
@@ -312,7 +312,7 @@ export function useEnhancedAICoach(
             setStreamingContent("");
             setIsLoading(false);
           },
-          onError: (error: string) => {
+          onError: (error: Error) => {
             console.error(`❌ Stream error for ${pageContext}:`, error);
             setIsStreaming(false);
             setStreamingContent("");

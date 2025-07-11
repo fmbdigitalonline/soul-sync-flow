@@ -117,13 +117,16 @@ const UnifiedCoachInterface: React.FC<UnifiedCoachInterfaceProps> = ({
         content: msg.content,
         isUser: msg.sender === 'user',
         timestamp: msg.timestamp,
-        agentMode: msg.agentType || agentMode
+        agentMode: msg.agent_mode || agentMode
       }));
       
       // Update with converted messages, avoiding duplicates
       setMessages(prev => {
         const existingIds = new Set(prev.map(m => m.id));
-        const newMessages = convertedMessages.filter(m => !existingIds.has(m.id));
+        const newMessages = convertedMessages.filter(m => !existingIds.has(m.id)).map(msg => ({
+          ...msg,
+          agentMode: (msg.agentMode as AgentMode) || agentMode
+        }));
         return [...prev, ...newMessages];
       });
       
