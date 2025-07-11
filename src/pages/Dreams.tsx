@@ -1,255 +1,716 @@
 
-import React, { useState, useRef, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Card } from "@/components/ui/card";
+import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import MainLayout from "@/components/Layout/MainLayout";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import BlueprintViewer from "@/components/blueprint/BlueprintViewer";
+import EnhancedBlueprintViewer from "@/components/blueprint/EnhancedBlueprintViewer";
+import BlueprintEditor from "@/components/blueprint/BlueprintEditor";
+import { BlueprintHealthCheck } from "@/components/blueprint/BlueprintHealthCheck";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Sparkles, Heart, Target, Calendar, ArrowRight, Lightbulb } from "lucide-react";
+import { Loader2, MessageCircle, RefreshCw, ToggleLeft, ToggleRight, Activity, ArrowLeft, Plus, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useDreamDiscoveryCoach } from "@/hooks/use-dream-discovery-coach";
+import { BlueprintData, blueprintService } from "@/services/blueprint-service";
+import { useNavigate } from "react-router-dom";
+import { BlueprintGenerator } from "@/components/blueprint/BlueprintGenerationFlow";
+import { useAuth } from "@/contexts/AuthContext";
+import { useSoulOrb } from "@/contexts/SoulOrbContext";
+import { BlueprintEnhancementService } from "@/services/blueprint-enhancement-service";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useOptimizedBlueprintData } from "@/hooks/use-optimized-blueprint-data";
+import { CosmicCard } from "@/components/ui/cosmic-card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Heart, Target, MapPin, Calendar, Zap, Brain, Clock, CheckCircle } from "lucide-react";
+import { useBlueprintAwareDreamDiscoveryCoach } from "@/hooks/use-blueprint-aware-dream-discovery-coach";
+import { DreamSuggestionCard } from "@/components/dream/DreamSuggestionCard";
+import { supabase } from "@/integrations/supabase/client";
+import { CoachInterface } from "@/components/coach/CoachInterface";
+import { useBlueprintData } from "@/hooks/use-blueprint-data";
+import { aiGoalDecompositionService } from "@/services/ai-goal-decomposition-service";
+import { JourneyMap } from "@/components/journey/JourneyMap";
+import { EnhancedJourneyMap } from "@/components/journey/EnhancedJourneyMap";
+import { TaskViews } from "@/components/journey/TaskViews";
+import { TaskCoachInterface } from "@/components/task/TaskCoachInterface";
+import { PomodoroTimer } from "@/components/productivity/PomodoroTimer";
+import { HabitTracker } from "@/components/productivity/HabitTracker";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { DreamDecompositionPage } from "@/components/dream/DreamDecompositionPage";
+import { DreamSuccessPage } from "@/components/dream/DreamSuccessPage";
+import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 import { DreamDiscoveryChat } from "@/components/dream/DreamDiscoveryChat";
-import { LifeDomain } from "@/types/growth-program";
-import { FloatingHACSOrb } from "@/components/hacs/FloatingHACSOrb";
+
+interface Task {
+  id: string;
+  title: string;
+  description?: string;
+  status: 'todo' | 'in_progress' | 'stuck' | 'completed';
+  due_date?: string;
+  estimated_duration: string;
+  energy_level_required: string;
+  category: string;
+  optimal_time_of_day: string[];
+  goal_id?: string;
+}
 
 const Dreams = () => {
-  const [conversationStarted, setConversationStarted] = useState(false);
-  const [intakeData, setIntakeData] = useState({
-    title: "",
-    description: "",
-    category: "",
-    timeframe: "",
-  });
-  const { toast } = useToast();
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Use the proper dream discovery coach
-  const {
-    messages,
-    isLoading,
-    sendMessage,
-    resetConversation,
+  const { 
+    messages: dreamMessages, 
+    isLoading: dreamLoading, 
+    sendMessage: sendDreamMessage, 
+    resetConversation: resetDreamConversation,
     conversationPhase,
-    intakeData: coachIntakeData,
-    isReadyForDecomposition,
-  } = useDreamDiscoveryCoach();
+    dreamSuggestions,
+    selectedSuggestion,
+    selectDreamSuggestion,
+    intakeData,
+    isReadyForDecomposition
+  } = useBlueprintAwareDreamDiscoveryCoach();
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [currentView, setCurrentView] = useState<'create' | 'chat' | 'journey' | 'task-coach' | 'decomposing' | 'success'>('create');
+  const [activeTab, setActiveTab] = useState<'journey' | 'tasks' | 'focus' | 'habits'>('journey');
+  const [focusedMilestone, setFocusedMilestone] = useState<any>(null);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [isCreatingDream, setIsCreatingDream] = useState(false);
+  const [createdGoal, setCreatedGoal] = useState<any>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
+  const { t } = useLanguage();
+  const { blueprintData } = useBlueprintData();
+  const { spacing, layout, touchTargetSize, getTextSize, isFoldDevice, isUltraNarrow, isMobile } = useResponsiveLayout();
 
-  const [selectedCategory, setSelectedCategory] = useState<LifeDomain | null>(null);
+  // Dream creation form state
+  const [dreamForm, setDreamForm] = useState({
+    title: '',
+    description: '',
+    category: 'personal_growth',
+    timeframe: '3 months'
+  });
 
-  const handleCategorySelect = (category: LifeDomain) => {
-    setSelectedCategory(category);
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setIntakeData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleStartDreamDiscovery = () => {
-    if (!intakeData.title || !intakeData.description || !selectedCategory) {
+  // Memoize handlers to prevent unnecessary re-renders
+  const handleCreateDream = useCallback(async () => {
+    if (!dreamForm.title.trim()) {
       toast({
-        title: "Missing Information",
-        description: "Please fill out all fields and select a category.",
+        title: "Dream Required",
+        description: "Please enter your dream or goal",
+        variant: "destructive"
       });
       return;
     }
 
-    setConversationStarted(true);
+    setIsCreatingDream(true);
+    setCurrentView('decomposing');
+    setCreatedGoal(null);
+  }, [dreamForm.title, toast]);
+
+  const handleDecompositionComplete = useCallback((decomposedGoal: any) => {
+    setCreatedGoal(decomposedGoal);
+    setCurrentView('success');
+    setIsCreatingDream(false);
     
-    // Send initial message to start the dream discovery process
-    const initialMessage = `I want to explore my dream: "${intakeData.title}". ${intakeData.description}. This relates to ${selectedCategory} and I'd like to achieve this in ${intakeData.timeframe}.`;
-    sendMessage(initialMessage);
+    setDreamForm({
+      title: '',
+      description: '',
+      category: 'personal_growth',
+      timeframe: '3 months'
+    });
+  }, []);
+
+  const handleStartAIGuidance = useCallback(() => {
+    // Reset dream discovery conversation to ensure clean context
+    resetDreamConversation();
+    sendDreamMessage("I'm ready to explore my dreams with you. Help me discover what truly lights up my soul and what I'm meant to create in this world.");
+    setCurrentView('chat');
+  }, [sendDreamMessage, resetDreamConversation]);
+
+  // Add the missing success page handlers
+  const handleSuccessTaskStart = useCallback((task: any) => {
+    setSelectedTask(task);
+    setCurrentView('task-coach');
+  }, []);
+
+  const handleSuccessViewJourney = useCallback(() => {
+    setCurrentView('journey');
+  }, []);
+
+  const handleDiscoveryComplete = useCallback(() => {
+    if (isReadyForDecomposition && intakeData) {
+      // Set the form data from the discovery conversation
+      setDreamForm({
+        title: intakeData.title,
+        description: intakeData.description || '',
+        category: intakeData.category,
+        timeframe: intakeData.timeframe
+      });
+      
+      // Trigger decomposition
+      setCurrentView('decomposing');
+      setIsCreatingDream(true);
+    }
+  }, [isReadyForDecomposition, intakeData]);
+
+  const getBlueprintInsight = useCallback(() => {
+    if (!blueprintData) return "Your journey will be personalized once your blueprint is complete";
+    
+    const traits = [];
+    if (blueprintData.cognition_mbti?.type && blueprintData.cognition_mbti.type !== 'Unknown') {
+      traits.push(blueprintData.cognition_mbti.type);
+    }
+    if (blueprintData.energy_strategy_human_design?.type && blueprintData.energy_strategy_human_design.type !== 'Unknown') {
+      traits.push(blueprintData.energy_strategy_human_design.type);
+    }
+    if (blueprintData.values_life_path?.lifePathNumber) {
+      traits.push(`Life Path ${blueprintData.values_life_path.lifePathNumber}`);
+    }
+    
+    if (traits.length === 0) {
+      return "Your journey will be personalized based on your unique blueprint";
+    }
+    
+    return `This journey will be optimized for your ${traits.slice(0, 2).join(' & ')} nature`;
+  }, [blueprintData]);
+
+  // Check authentication status
+  useEffect(() => {
+    let mounted = true;
+    
+    const checkAuth = async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (mounted) {
+          setIsAuthenticated(!!data.session);
+        }
+      } catch (error) {
+        console.error('Auth check error:', error);
+        if (mounted) {
+          setIsAuthenticated(false);
+        }
+      }
+    };
+    
+    checkAuth();
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (mounted) {
+        setIsAuthenticated(!!session);
+      }
+    });
+    
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, []);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [dreamMessages, scrollToBottom]);
+
+  const handleTaskSelect = (task: Task) => {
+    setSelectedTask(task);
+    setCurrentView('task-coach');
   };
 
-  const handleReadyForDecomposition = () => {
+  const handleTaskComplete = async (taskId: string) => {
+    // Update task status to completed
+    // This will be handled by the task coach interface
     toast({
-      title: "Dream Ready",
-      description: "Your dream is ready for decomposition and planning!",
+      title: "🎉 Task Completed!",
+      description: "Great work! The task has been marked as complete.",
     });
   };
 
-  // Custom messages for dreams page
-  const dreamsMessages = [
-    "I sense you're exploring something meaningful here...",
-    "Your dreams are uniquely yours - let's explore them together.",
-    "Sometimes the most powerful dreams start with a single step.",
-    "I'm here to help you transform dreams into reality.",
-    "Your blueprint suggests you have natural intuition - trust it."
-  ];
+  const handleBackFromTaskCoach = () => {
+    setSelectedTask(null);
+    setCurrentView('journey');
+  };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-soul-purple/10 via-white to-soul-teal/10">
-      <header className="bg-white/80 backdrop-blur-lg border-b border-gray-100">
-        <div className="container mx-auto px-4 py-6">
-          <motion.h1
-            className="text-2xl font-semibold text-gray-800 flex items-center gap-2"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Sparkles className="text-soul-purple" />
-            Dream Discovery
-          </motion.h1>
-          <p className="text-gray-600 mt-2">
-            Explore your dreams and aspirations with personalized guidance.
-          </p>
-        </div>
-      </header>
+  const handleMilestoneClick = (milestoneId: string) => {
+    // Find the milestone and focus on it
+    const milestone = { id: milestoneId }; // You can expand this to get full milestone data
+    setFocusedMilestone(milestone);
+  };
 
-      {conversationStarted ? (
-        <div className="container mx-auto px-4 py-8 h-screen flex flex-col">
-          <DreamDiscoveryChat
-            messages={messages}
-            isLoading={isLoading}
-            onSendMessage={sendMessage}
-            messagesEndRef={messagesEndRef}
-            conversationPhase={conversationPhase}
-            intakeData={coachIntakeData}
-            onReadyForDecomposition={handleReadyForDecomposition}
+  const handleTaskClick = (taskId: string) => {
+    // Focus on specific task - for now just switch to task view
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <MainLayout>
+        <ErrorBoundary>
+          <div className={`min-h-screen bg-white flex items-center justify-center p-3 ${isMobile ? 'pb-20' : ''}`}>
+            <div className={`bg-card rounded-2xl border border-border text-center w-full max-w-sm mx-auto ${spacing.card}`}>
+              <div className={`w-10 h-10 mx-auto bg-primary rounded-full mb-4 flex items-center justify-center ${isFoldDevice ? 'w-8 h-8' : ''}`}>
+                <Heart className={`h-5 w-5 text-primary-foreground ${isFoldDevice ? 'h-4 w-4' : ''}`} />
+              </div>
+              <h1 className={`font-heading font-bold mb-3 text-foreground ${getTextSize('text-lg')}`}>
+                Dreams & Goals
+              </h1>
+              <p className={`mb-6 text-muted-foreground leading-relaxed px-2 ${getTextSize('text-sm')}`}>{t("dreams.description")}</p>
+              <Button 
+                className={`w-full hover:shadow-lg transition-all duration-300 rounded-2xl font-medium font-ui ${touchTargetSize} ${getTextSize('text-sm')}`}
+                onClick={() => window.location.href = '/auth'}
+              >
+                {t("dreams.getStarted")}
+              </Button>
+            </div>
+          </div>
+        </ErrorBoundary>
+      </MainLayout>
+    );
+  }
+
+  // Task Coach View - uses task-specific hook
+  if (currentView === 'task-coach' && selectedTask) {
+    return (
+      <MainLayout>
+        <div className={`min-h-screen bg-white w-full ${isMobile ? 'pb-20' : ''}`}>
+          <TaskCoachInterface
+            task={selectedTask}
+            onBack={handleBackFromTaskCoach}
+            onTaskComplete={handleTaskComplete}
           />
         </div>
-      ) : (
-        <>
-          <section className="container mx-auto px-4 py-8">
-            <motion.div
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3, duration: 0.5 }}
-            >
-              <Card className="p-4 flex flex-col items-center justify-center text-center hover:shadow-lg transition-shadow duration-300 cursor-pointer">
-                <Heart className="text-red-500 w-8 h-8 mb-2" />
-                <h3 className="text-lg font-semibold text-gray-700 mb-1">
-                  Relationships &amp; Love
-                </h3>
-                <p className="text-gray-500">
-                  Explore your dreams related to love, family, and friendships.
-                </p>
-                <Button
-                  variant="link"
-                  className="mt-2"
-                  onClick={() => handleCategorySelect("relationships")}
-                >
-                  Explore
-                  <ArrowRight className="ml-2 w-4 h-4" />
-                </Button>
-              </Card>
+      </MainLayout>
+    );
+  }
 
-              <Card className="p-4 flex flex-col items-center justify-center text-center hover:shadow-lg transition-shadow duration-300 cursor-pointer">
-                <Lightbulb className="text-yellow-500 w-8 h-8 mb-2" />
-                <h3 className="text-lg font-semibold text-gray-700 mb-1">
-                  Personal Growth
-                </h3>
-                <p className="text-gray-500">
-                  Uncover your dreams for self-improvement and spiritual
-                  development.
-                </p>
-                <Button
-                  variant="link"
-                  className="mt-2"
-                  onClick={() => handleCategorySelect("spirituality")}
-                >
-                  Explore
-                  <ArrowRight className="ml-2 w-4 h-4" />
-                </Button>
-              </Card>
-
-              <Card className="p-4 flex flex-col items-center justify-center text-center hover:shadow-lg transition-shadow duration-300 cursor-pointer">
-                <Target className="text-green-500 w-8 h-8 mb-2" />
-                <h3 className="text-lg font-semibold text-gray-700 mb-1">Career &amp; Productivity</h3>
-                <p className="text-gray-500">
-                  Visualize your dreams for career success and productivity
-                  enhancement.
-                </p>
-                <Button
-                  variant="link"
-                  className="mt-2"
-                  onClick={() => handleCategorySelect("productivity")}
-                >
-                  Explore
-                  <ArrowRight className="ml-2 w-4 h-4" />
-                </Button>
-              </Card>
-            </motion.div>
-          </section>
-
-          <section className="container mx-auto px-4 py-8">
-            <motion.div
-              className="max-w-2xl mx-auto bg-white/80 backdrop-blur-lg rounded-lg shadow-md p-6 border border-gray-100"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.5 }}
-            >
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                Share Your Dream
-              </h2>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="title">Dream Title</Label>
-                  <Input
-                    type="text"
-                    id="title"
-                    name="title"
-                    placeholder="A brief title for your dream"
-                    className="mt-1"
-                    onChange={handleInputChange}
-                  />
+  // Dream Discovery Chat View - enhanced with blueprint suggestions
+  if (currentView === 'chat') {
+    return (
+      <MainLayout>
+        <div className={`min-h-screen flex flex-col bg-white w-full ${isMobile ? 'pb-20' : ''}`}>
+          {/* Mobile Optimized Header */}
+          <div className={`bg-card/80 border-b border-border sticky top-0 z-10 w-full ${isMobile ? 'px-3 py-2' : 'px-4 py-3'}`}>
+            <div className={`flex items-center justify-between w-full max-w-4xl mx-auto`}>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setCurrentView('create')}
+                className={`flex items-center gap-2 text-muted-foreground hover:text-primary rounded-xl font-ui ${isFoldDevice ? 'px-1 py-1' : 'px-2 py-1'} ${getTextSize('text-sm')} ${touchTargetSize}`}
+              >
+                <ArrowLeft className={`h-4 w-4 ${isFoldDevice ? 'h-3 w-3' : ''}`} />
+                {!isFoldDevice && 'Back'}
+              </Button>
+              <div className="flex items-center gap-2">
+                <div className={`bg-primary rounded-full flex items-center justify-center ${isFoldDevice ? 'w-5 h-5' : 'w-6 h-6'}`}>
+                  <Heart className={`text-primary-foreground ${isFoldDevice ? 'h-2 w-2' : 'h-3 w-3'}`} />
                 </div>
-                <div>
-                  <Label htmlFor="description">Dream Description</Label>
-                  <Textarea
-                    id="description"
-                    name="description"
-                    placeholder="Describe your dream in detail"
-                    className="mt-1"
-                    rows={4}
-                    onChange={handleInputChange}
-                  />
+                <h2 className={`font-heading font-semibold text-foreground ${getTextSize('text-sm')} ${isFoldDevice ? 'hidden' : ''}`}>Dreams & Goals Discovery</h2>
+              </div>
+              <div className={isFoldDevice ? 'w-6' : 'w-16'} />
+            </div>
+          </div>
+          
+          <div className={`flex-1 w-full overflow-hidden max-w-4xl mx-auto ${isMobile ? 'px-0' : 'px-4'}`}>
+            {/* Show suggestions if in suggestion phase */}
+            {conversationPhase === 'suggestion_presentation' && dreamSuggestions.length > 0 && (
+              <div className={`bg-card/90 border-b border-border ${spacing.container} py-4`}>
+                <div className="max-w-2xl mx-auto">
+                  <div className="text-center mb-4">
+                    <h3 className={`font-heading font-semibold text-foreground mb-2 ${getTextSize('text-sm')}`}>
+                      Dreams Aligned with Your Blueprint
+                    </h3>
+                    <p className={`text-muted-foreground ${getTextSize('text-xs')}`}>
+                      Based on your personality, here are some dreams that might resonate with you:
+                    </p>
+                  </div>
+                  <div className="space-y-3">
+                    {dreamSuggestions.map((suggestion) => (
+                      <DreamSuggestionCard
+                        key={suggestion.id}
+                        suggestion={suggestion}
+                        onSelect={(selected) => {
+                          selectDreamSuggestion(selected);
+                          sendDreamMessage(`I'm interested in exploring "${selected.title}". This really resonates with me because ${selected.blueprintReason.toLowerCase()}.`);
+                        }}
+                        isSelected={selectedSuggestion?.id === suggestion.id}
+                      />
+                    ))}
+                  </div>
                 </div>
-                <div>
-                  <Label>Category</Label>
-                  {selectedCategory ? (
-                    <Badge variant="secondary">
-                      {selectedCategory}
-                    </Badge>
-                  ) : (
-                    <p className="text-gray-500">Select a category above.</p>
+              </div>
+            )}
+            
+            <DreamDiscoveryChat
+              messages={dreamMessages}
+              isLoading={dreamLoading}
+              onSendMessage={sendDreamMessage}
+              messagesEndRef={messagesEndRef}
+              conversationPhase={conversationPhase}
+              intakeData={intakeData}
+              onReadyForDecomposition={handleDiscoveryComplete}
+            />
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (currentView === 'journey') {
+    return (
+      <MainLayout>
+        <div className={`min-h-screen bg-white w-full ${isMobile ? 'pb-20' : ''}`}>
+          <div className={`w-full max-w-4xl mx-auto py-3 ${isMobile ? 'px-3 pb-24' : 'px-6 pb-20'}`}>
+            
+            {/* Mobile Optimized Header */}
+            <div className={`flex items-center justify-between mb-4 w-full ${isFoldDevice ? 'flex-col gap-2' : ''}`}>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setCurrentView('create')}
+                className={`flex items-center gap-2 text-muted-foreground hover:text-primary rounded-xl font-ui ${isFoldDevice ? 'px-1 py-1' : 'px-2 py-1'} ${getTextSize('text-sm')} ${touchTargetSize}`}
+              >
+                <ArrowLeft className={`h-4 w-4 ${isFoldDevice ? 'h-3 w-3' : ''}`} />
+                {isFoldDevice ? '' : 'New Dream'}
+              </Button>
+              <div className={`text-center ${isFoldDevice ? 'w-full' : 'flex-1'}`}>
+                <h1 className={`font-heading font-bold text-foreground ${getTextSize('text-base')}`}>Your Dreams & Goals Journey</h1>
+                {!isFoldDevice && <p className={`text-muted-foreground ${getTextSize('text-xs')}`}>{t("dreams.trackProgress")}</p>}
+              </div>
+              <div className={isFoldDevice ? 'hidden' : 'w-20'} />
+            </div>
+
+            {/* Mobile Responsive Single Card - Updated with consistent 1px border */}
+            <div className="bg-card rounded-2xl border border-border overflow-hidden w-full">
+              
+              {/* Mobile Optimized Tab Navigation */}
+              <div className={`border-b border-border bg-card/50 w-full ${isFoldDevice ? 'p-1' : 'p-2'}`}>
+                <div className={`w-full ${isFoldDevice ? 'grid grid-cols-2 gap-1' : 'flex gap-2'}`}>
+                  <Button
+                    variant={activeTab === 'journey' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setActiveTab('journey')}
+                    className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 font-medium transition-all font-ui ${getTextSize('text-xs')} ${touchTargetSize}`}
+                  >
+                    <MapPin className={`${isFoldDevice ? 'h-2 w-2' : 'h-3 w-3'}`} />
+                    {isFoldDevice ? 'Map' : 'Journey'}
+                  </Button>
+                  <Button
+                    variant={activeTab === 'tasks' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setActiveTab('tasks')}
+                    className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 font-medium transition-all font-ui ${getTextSize('text-xs')} ${touchTargetSize} ${
+                      activeTab === 'tasks' 
+                        ? 'bg-gradient-to-r from-soul-purple to-soul-teal text-white shadow-md' 
+                        : 'text-gray-600 hover:text-soul-purple hover:bg-gray-50'
+                    }`}
+                  >
+                    <Target className={`${isFoldDevice ? 'h-2 w-2' : 'h-3 w-3'}`} />
+                    Tasks
+                  </Button>
+                  {!isFoldDevice && (
+                    <>
+                      <Button
+                        variant={activeTab === 'focus' ? 'default' : 'ghost'}
+                        size="sm"
+                        onClick={() => setActiveTab('focus')}
+                        className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 font-medium transition-all font-ui ${getTextSize('text-xs')} ${touchTargetSize} ${
+                          activeTab === 'focus' 
+                            ? 'bg-gradient-to-r from-soul-purple to-soul-teal text-white shadow-md' 
+                            : 'text-gray-600 hover:text-soul-purple hover:bg-gray-50'
+                        }`}
+                      >
+                        <Clock className="h-3 w-3" />
+                        Focus
+                      </Button>
+                      <Button
+                        variant={activeTab === 'habits' ? 'default' : 'ghost'}
+                        size="sm"
+                        onClick={() => setActiveTab('habits')}
+                        className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 font-medium transition-all font-ui ${getTextSize('text-xs')} ${touchTargetSize} ${
+                          activeTab === 'habits' 
+                            ? 'bg-gradient-to-r from-soul-purple to-soul-teal text-white shadow-md' 
+                            : 'text-gray-600 hover:text-soul-purple hover:bg-gray-50'
+                        }`}
+                      >
+                        <CheckCircle className="h-3 w-3" />
+                        Habits
+                      </Button>
+                    </>
                   )}
                 </div>
-                <div>
-                  <Label htmlFor="timeframe">Timeframe</Label>
+                
+                {/* Secondary row for Fold devices */}
+                {isFoldDevice && (
+                  <div className="flex gap-1 w-full mt-1">
+                    <Button
+                      variant={activeTab === 'focus' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => setActiveTab('focus')}
+                      className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 font-medium transition-all font-ui ${getTextSize('text-xs')} ${touchTargetSize} ${
+                        activeTab === 'focus' 
+                          ? 'bg-gradient-to-r from-soul-purple to-soul-teal text-white shadow-md' 
+                          : 'text-gray-600 hover:text-soul-purple hover:bg-gray-50'
+                      }`}
+                    >
+                      <Clock className="h-2 w-2" />
+                      Focus
+                    </Button>
+                    <Button
+                      variant={activeTab === 'habits' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => setActiveTab('habits')}
+                      className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 font-medium transition-all font-ui ${getTextSize('text-xs')} ${touchTargetSize} ${
+                        activeTab === 'habits' 
+                          ? 'bg-gradient-to-r from-soul-purple to-soul-teal text-white shadow-md' 
+                          : 'text-gray-600 hover:text-soul-purple hover:bg-gray-50'
+                      }`}
+                    >
+                      <CheckCircle className="h-2 w-2" />
+                      Habits
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              {/* Content Area - Mobile Optimized */}
+              <div className={`w-full ${spacing.card}`}>
+                {activeTab === 'journey' && (
+                  <div className="w-full">
+                    <div className={`flex items-center gap-2 mb-3 ${isFoldDevice ? 'flex-col items-start gap-1' : ''}`}>
+                      <div className={`bg-gradient-to-br from-soul-purple to-soul-teal rounded-xl flex items-center justify-center ${isFoldDevice ? 'w-5 h-5' : 'w-6 h-6'}`}>
+                        <MapPin className={`text-white ${isFoldDevice ? 'h-2 w-2' : 'h-3 w-3'}`} />
+                      </div>
+                      <div className="flex-1">
+                        <h2 className={`font-heading font-semibold text-gray-800 ${getTextSize('text-sm')}`}>Journey Map</h2>
+                        {!isFoldDevice && <p className={`text-gray-500 ${getTextSize('text-xs')}`}>{getBlueprintInsight()}</p>}
+                      </div>
+                    </div>
+                    
+                    <div className="w-full">
+                      <EnhancedJourneyMap 
+                        onTaskClick={handleTaskClick}
+                        onMilestoneClick={handleMilestoneClick}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'tasks' && (
+                  <div className="w-full">
+                    <div className={`flex items-center justify-between mb-3 ${isFoldDevice ? 'flex-col items-start gap-1' : ''}`}>
+                      <h3 className={`font-heading font-semibold flex items-center gap-2 text-gray-800 ${getTextSize('text-sm')}`}>
+                        <Target className={`text-soul-purple ${isFoldDevice ? 'h-4 w-4' : 'h-5 w-5'}`} />
+                        Your Tasks
+                      </h3>
+                    </div>
+                    <div className="w-full">
+                      <TaskViews 
+                        focusedMilestone={focusedMilestone}
+                        onBackToJourney={() => setActiveTab('journey')}
+                        onTaskSelect={handleTaskSelect}
+                      />
+                    </div>
+                  </div>
+                )}
+                
+                {activeTab === 'focus' && (
+                  <div className="w-full">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Clock className={`text-soul-purple ${isFoldDevice ? 'h-4 w-4' : 'h-5 w-5'}`} />
+                      <h3 className={`font-heading font-semibold text-gray-800 ${getTextSize('text-sm')}`}>Focus Session</h3>
+                    </div>
+                    <div className="w-full">
+                      <PomodoroTimer />
+                    </div>
+                  </div>
+                )}
+                
+                {activeTab === 'habits' && (
+                  <div className="w-full">
+                    <div className="flex items-center gap-2 mb-3">
+                      <CheckCircle className={`text-soul-purple ${isFoldDevice ? 'h-4 w-4' : 'h-5 w-5'}`} />
+                      <h3 className={`font-heading font-semibold text-gray-800 ${getTextSize('text-sm')}`}>Habits</h3>
+                    </div>
+                    <div className="w-full">
+                      <HabitTracker />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (currentView === 'decomposing') {
+    return (
+      <MainLayout>
+        <DreamDecompositionPage
+          dreamTitle={dreamForm.title}
+          dreamDescription={dreamForm.description}
+          dreamCategory={dreamForm.category}
+          dreamTimeframe={dreamForm.timeframe}
+          onComplete={handleDecompositionComplete}
+          blueprintData={blueprintData}
+        />
+      </MainLayout>
+    );
+  }
+
+  if (currentView === 'success' && createdGoal) {
+    return (
+      <MainLayout>
+        <DreamSuccessPage
+          goal={createdGoal}
+          onStartTask={handleSuccessTaskStart}
+          onViewJourney={handleSuccessViewJourney}
+        />
+      </MainLayout>
+    );
+  }
+
+  return (
+    <MainLayout>
+      <ErrorBoundary>
+        <div className={`min-h-screen bg-white w-full ${isMobile ? 'pb-20' : ''}`}>
+          <div className={`w-full max-w-lg mx-auto py-4 px-3 ${isMobile ? 'pb-24' : 'pb-20'}`}>
+            
+            {/* Mobile Optimized Hero Section */}
+            <div className={`text-center mb-6 px-2`}>
+              <div className={`mx-auto bg-gradient-to-br from-soul-purple via-soul-purple to-soul-teal rounded-full flex items-center justify-center mb-4 ${isFoldDevice ? 'w-12 h-12' : 'w-16 h-16'}`}>
+                <Heart className={`text-white ${isFoldDevice ? 'h-6 w-6' : 'h-8 w-8'}`} />
+              </div>
+              <h1 className={`font-heading font-bold mb-3 bg-gradient-to-r from-soul-purple to-soul-teal bg-clip-text text-transparent ${getTextSize('text-xl')}`}>
+                Dreams & Goals Creator
+              </h1>
+              <p className={`text-gray-600 leading-relaxed mb-4 ${getTextSize('text-sm')}`}>
+                Share your deepest aspirations and let's discover what truly lights up your soul
+              </p>
+              <div className={`inline-flex items-center gap-2 bg-soul-purple/10 px-3 py-1 rounded-full`}>
+                <div className="w-2 h-2 bg-soul-purple rounded-full animate-pulse"></div>
+                <p className={`text-soul-purple font-medium ${getTextSize('text-xs')} text-center leading-tight`}>{getBlueprintInsight()}</p>
+              </div>
+            </div>
+
+            {/* Mobile Optimized Dream Creation Form - Updated with consistent 1px border */}
+            <div className={`bg-white/80 rounded-2xl mb-4 border border-border w-full p-4`}>
+              <div className={`space-y-4`}>
+                {/* Dream Input */}
+                <div className="space-y-2">
+                  <label className={`font-heading font-semibold text-gray-700 block ${getTextSize('text-sm')}`}>{t("dreams.whatsYourDream")}</label>
                   <Input
-                    type="text"
-                    id="timeframe"
-                    name="timeframe"
-                    placeholder="Desired timeframe to achieve this dream"
-                    className="mt-1"
-                    onChange={handleInputChange}
+                    placeholder={t("dreams.placeholderDream")}
+                    value={dreamForm.title}
+                    onChange={(e) => setDreamForm(prev => ({ ...prev, title: e.target.value }))}
+                    className={`border-gray-200 rounded-xl focus:border-soul-purple focus:ring-soul-purple/20 w-full font-ui ${getTextSize('text-sm')} ${touchTargetSize}`}
                   />
                 </div>
-                <Button
-                  className="bg-gradient-to-r from-soul-purple to-soul-teal text-white hover:shadow-md"
-                  onClick={handleStartDreamDiscovery}
-                  disabled={isLoading}
+
+                {/* Why Input */}
+                <div className="space-y-2">
+                  <label className={`font-heading font-semibold text-gray-700 block ${getTextSize('text-sm')}`}>{t("dreams.whyImportant")}</label>
+                  <Textarea
+                    placeholder={t("dreams.placeholderWhy")}
+                    value={dreamForm.description}
+                    onChange={(e) => setDreamForm(prev => ({ ...prev, description: e.target.value }))}
+                    className={`border-gray-200 rounded-xl focus:border-soul-purple focus:ring-soul-purple/20 resize-none w-full font-ui ${getTextSize('text-sm')} ${isFoldDevice ? 'min-h-[60px]' : 'min-h-[70px]'}`}
+                  />
+                </div>
+
+                {/* Category & Timeline - Stack on mobile */}
+                <div className={`space-y-4`}>
+                  <div className="space-y-2">
+                    <label className={`font-heading font-semibold text-gray-700 block ${getTextSize('text-sm')}`}>{t("dreams.category")}</label>
+                    <Select 
+                      value={dreamForm.category} 
+                      onValueChange={(value) => setDreamForm(prev => ({ ...prev, category: value }))}
+                    >
+                      <SelectTrigger className={`border-gray-200 rounded-xl focus:border-soul-purple w-full font-ui ${getTextSize('text-sm')} ${touchTargetSize}`}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl border-gray-200">
+                        <SelectItem value="personal_growth" className={`rounded-lg font-ui ${getTextSize('text-sm')}`}>{t("goals.categoryPersonal")}</SelectItem>
+                        <SelectItem value="career" className={`rounded-lg font-ui ${getTextSize('text-sm')}`}>{t("goals.categoryCareer")}</SelectItem>
+                        <SelectItem value="health" className={`rounded-lg font-ui ${getTextSize('text-sm')}`}>{t("goals.categoryHealth")}</SelectItem>
+                        <SelectItem value="relationships" className={`rounded-lg font-ui ${getTextSize('text-sm')}`}>{t("goals.categoryRelationships")}</SelectItem>
+                        <SelectItem value="creativity" className={`rounded-lg font-ui ${getTextSize('text-sm')}`}>{t("goals.categoryCreative")}</SelectItem>
+                        <SelectItem value="financial" className={`rounded-lg font-ui ${getTextSize('text-sm')}`}>{t("goals.categoryFinancial")}</SelectItem>
+                        <SelectItem value="spiritual" className={`rounded-lg font-ui ${getTextSize('text-sm')}`}>{t("goals.categorySpiritual")}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className={`font-heading font-semibold text-gray-700 block ${getTextSize('text-sm')}`}>{t("dreams.timeline")}</label>
+                    <Select 
+                      value={dreamForm.timeframe} 
+                      onValueChange={(value) => setDreamForm(prev => ({ ...prev, timeframe: value }))}
+                    >
+                      <SelectTrigger className={`border-gray-200 rounded-xl focus:border-soul-purple w-full font-ui ${getTextSize('text-sm')} ${touchTargetSize}`}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl border-gray-200">
+                        <SelectItem value="1 month" className={`rounded-lg font-ui ${getTextSize('text-sm')}`}>{t("goals.targetDate") + " - 1 Month"}</SelectItem>
+                        <SelectItem value="3 months" className={`rounded-lg font-ui ${getTextSize('text-sm')}`}>{t("goals.targetDate") + " - 3 Months"}</SelectItem>
+                        <SelectItem value="6 months" className={`rounded-lg font-ui ${getTextSize('text-sm')}`}>{t("goals.targetDate") + " - 6 Months"}</SelectItem>
+                        <SelectItem value="1 year" className={`rounded-lg font-ui ${getTextSize('text-sm')}`}>{t("goals.targetDate") + " - 1 Year"}</SelectItem>
+                        <SelectItem value="2 years" className={`rounded-lg font-ui ${getTextSize('text-sm')}`}>{t("goals.targetDate") + " - 2+ Years"}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Create Button */}
+                <Button 
+                  onClick={handleCreateDream}
+                  disabled={isCreatingDream || !dreamForm.title.trim()}
+                  className={`w-full bg-gradient-to-r from-soul-purple to-soul-teal hover:shadow-lg text-white py-4 rounded-xl font-semibold transition-all duration-300 disabled:opacity-50 font-ui ${getTextSize('text-sm')} ${touchTargetSize}`}
                 >
-                  Start Dream Discovery
-                  <Sparkles className="ml-2 w-4 h-4" />
+                  {isCreatingDream ? (
+                    <>
+                      <Brain className={`mr-2 animate-pulse ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
+                      {t("dreams.creatingJourney")}
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className={`mr-2 ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
+                      {t("dreams.createJourney")}
+                    </>
+                  )}
                 </Button>
               </div>
-            </motion.div>
-          </section>
-        </>
-      )}
+            </div>
 
-      {/* Floating HACS Orb */}
-      <FloatingHACSOrb
-        position="bottom-right"
-        staticMessages={dreamsMessages}
-        showInterval={20000} // Show message every 20 seconds
-      />
-    </div>
+            {/* Mobile Optimized Alternative Options */}
+            <div className="space-y-3 w-full">
+              <div className="text-center">
+                <p className={`text-gray-500 mb-3 ${getTextSize('text-xs')}`}>
+                  Or explore with your dream guide
+                </p>
+              </div>
+              
+              <Button 
+                onClick={handleStartAIGuidance}
+                variant="outline"
+                className={`w-full border-2 border-soul-purple/20 bg-soul-purple/5 hover:bg-soul-purple/10 text-soul-purple py-4 rounded-xl font-medium transition-all duration-300 font-ui ${getTextSize('text-sm')} ${touchTargetSize}`}
+              >
+                <Heart className={`mr-2 ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
+                Start Heart-Centered Discovery
+              </Button>
+              
+              <Button 
+                onClick={() => setCurrentView('journey')}
+                variant="outline"
+                className={`w-full border-2 border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700 py-4 rounded-xl font-medium transition-all duration-300 font-ui ${getTextSize('text-sm')} ${touchTargetSize}`}
+              >
+                <MapPin className={`mr-2 ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
+                {t("dreams.viewJourney")}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </ErrorBoundary>
+    </MainLayout>
   );
 };
 
