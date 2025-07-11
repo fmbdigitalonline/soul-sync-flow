@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { personalizedQuotesService, PersonalityQuote } from '@/services/personalized-quotes-service';
@@ -11,7 +12,10 @@ export const usePersonalizedQuotes = (count: number = 3) => {
 
   useEffect(() => {
     const fetchQuotes = async () => {
+      console.log('🎭 usePersonalizedQuotes: Starting fetch for user:', user?.id);
+      
       if (!user) {
+        console.log('🎭 usePersonalizedQuotes: No user, setting loading false');
         setLoading(false);
         return;
       }
@@ -20,29 +24,44 @@ export const usePersonalizedQuotes = (count: number = 3) => {
       
       try {
         // Check if user has personalized quotes
+        console.log('🎭 usePersonalizedQuotes: Checking for user quotes...');
         const hasQuotes = await personalizedQuotesService.hasUserQuotes(user.id);
+        console.log('🎭 usePersonalizedQuotes: Has quotes result:', hasQuotes);
         setHasPersonalizedQuotes(hasQuotes);
         
         if (hasQuotes) {
           // Get rotating personalized quotes
+          console.log('🎭 usePersonalizedQuotes: Fetching rotating quotes...');
           const result = await personalizedQuotesService.getRotatingQuotes(user.id, count);
+          console.log('🎭 usePersonalizedQuotes: Rotating quotes result:', result);
+          
           if (result.success && result.quotes) {
             setQuotes(result.quotes);
+            console.log('🎭 usePersonalizedQuotes: Set personalized quotes:', result.quotes.length);
+          } else {
+            console.log('🎭 usePersonalizedQuotes: Failed to get rotating quotes, using defaults');
+            const defaults = personalizedQuotesService.getDefaultQuotes();
+            const shuffled = defaults.sort(() => 0.5 - Math.random()).slice(0, count);
+            setDefaultQuotes(shuffled);
           }
         } else {
           // Use default quotes
+          console.log('🎭 usePersonalizedQuotes: No personalized quotes, using defaults');
           const defaults = personalizedQuotesService.getDefaultQuotes();
           const shuffled = defaults.sort(() => 0.5 - Math.random()).slice(0, count);
           setDefaultQuotes(shuffled);
+          console.log('🎭 usePersonalizedQuotes: Set default quotes:', shuffled);
         }
       } catch (error) {
-        console.error('Error fetching quotes:', error);
+        console.error('🎭 usePersonalizedQuotes: Error fetching quotes:', error);
         // Fallback to default quotes
         const defaults = personalizedQuotesService.getDefaultQuotes();
         const shuffled = defaults.sort(() => 0.5 - Math.random()).slice(0, count);
         setDefaultQuotes(shuffled);
+        console.log('🎭 usePersonalizedQuotes: Error fallback, set default quotes:', shuffled);
       } finally {
         setLoading(false);
+        console.log('🎭 usePersonalizedQuotes: Fetch complete');
       }
     };
 
@@ -65,7 +84,7 @@ export const usePersonalizedQuotes = (count: number = 3) => {
         setDefaultQuotes(shuffled);
       }
     } catch (error) {
-      console.error('Error refreshing quotes:', error);
+      console.error('🎭 usePersonalizedQuotes: Error refreshing quotes:', error);
     } finally {
       setLoading(false);
     }
@@ -74,6 +93,14 @@ export const usePersonalizedQuotes = (count: number = 3) => {
   const displayQuotes = hasPersonalizedQuotes 
     ? quotes.map(q => q.quote_text)
     : defaultQuotes;
+
+  console.log('🎭 usePersonalizedQuotes: Final state:', {
+    hasPersonalizedQuotes,
+    quotesCount: quotes.length,
+    defaultQuotesCount: defaultQuotes.length,
+    displayQuotesCount: displayQuotes.length,
+    loading
+  });
 
   return {
     quotes: displayQuotes,
