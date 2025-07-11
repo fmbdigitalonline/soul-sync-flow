@@ -2,10 +2,12 @@
 import { useState } from "react";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 import { useBlueprintData } from "@/hooks/use-blueprint-data";
+import { useEnhancedJourneyTracking } from "@/hooks/use-enhanced-journey-tracking";
 
 export const useJourneyMapData = () => {
   const { productivityJourney } = useJourneyTracking();
   const { blueprintData } = useBlueprintData();
+  const { enhancedMetrics, journeyInsights } = useEnhancedJourneyTracking();
   const [selectedView, setSelectedView] = useState<'overview' | 'detailed'>('overview');
   const [focusedMilestone, setFocusedMilestone] = useState<any>(null);
   const [preserveSuccessView, setPreserveSuccessView] = useState(false);
@@ -30,13 +32,24 @@ export const useJourneyMapData = () => {
       preserveSuccessView,
       setPreserveSuccessView,
       currentDetailView,
-      setCurrentDetailView
+      setCurrentDetailView,
+      enhancedMetrics: null,
+      journeyInsights: []
     };
   }
 
+  // Use enhanced metrics when available, fall back to basic calculation
   const completedMilestones = mainGoal.milestones?.filter((m: any) => m.completed) || [];
   const totalMilestones = mainGoal.milestones?.length || 0;
-  const progress = totalMilestones > 0 ? Math.round((completedMilestones.length / totalMilestones) * 100) : 0;
+  
+  // Calculate progress using enhanced metrics if available
+  const basicProgress = totalMilestones > 0 ? Math.round((completedMilestones.length / totalMilestones) * 100) : 0;
+  const enhancedProgress = enhancedMetrics?.engagementScore || 0;
+  
+  // Weighted combination of basic milestone completion and enhanced engagement
+  const progress = enhancedMetrics 
+    ? Math.round((basicProgress * 0.4) + (enhancedProgress * 0.6))
+    : basicProgress;
   
   const currentMilestone = mainGoal.milestones?.find((m: any) => !m.completed);
   const nextTasks = mainGoal.tasks?.filter((t: any) => !t.completed).slice(0, 3) || [];
@@ -68,6 +81,8 @@ export const useJourneyMapData = () => {
     preserveSuccessView,
     setPreserveSuccessView,
     currentDetailView,
-    setCurrentDetailView
+    setCurrentDetailView,
+    enhancedMetrics,
+    journeyInsights
   };
 };

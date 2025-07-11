@@ -1,14 +1,15 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { CheckCircle, ArrowLeft, Play, Star, Target, MessageSquare } from 'lucide-react';
+import { CheckCircle, ArrowLeft, Play, Star, Target, MessageSquare, TrendingUp } from 'lucide-react';
 import { ProgramWeek } from '@/types/growth-program';
 import { useEnhancedAICoach } from '@/hooks/use-enhanced-ai-coach';
 import { GuideInterface } from '@/components/coach/GuideInterface';
 import { useToast } from '@/hooks/use-toast';
+import { useMilestoneTracker } from '@/hooks/use-milestone-tracker';
 
 interface WeekDetailViewProps {
   week: ProgramWeek;
@@ -23,8 +24,10 @@ export const WeekDetailView: React.FC<WeekDetailViewProps> = ({
 }) => {
   const [activeActivity, setActiveActivity] = useState<string | null>(null);
   const [completedActivities, setCompletedActivities] = useState<string[]>([]);
+  const [weekProgress, setWeekProgress] = useState<any>(null);
   const { messages, isLoading, sendMessage, resetConversation } = useEnhancedAICoach("guide");
   const { toast } = useToast();
+  const { calculateMilestoneProgress, getProgressInsights, updateMilestoneTracking } = useMilestoneTracker();
 
   // Generate week-specific conversation starter
   const getWeekConversationStarter = () => {
@@ -56,8 +59,11 @@ export const WeekDetailView: React.FC<WeekDetailViewProps> = ({
     }
   };
 
-  const handleMarkWeekComplete = () => {
+  const handleMarkWeekComplete = async () => {
     if (completedActivities.length >= week.completion_criteria.length) {
+      // Update milestone tracking before marking complete
+      await updateMilestoneTracking(`week-${week.week_number}`);
+      
       onMarkComplete(week.week_number);
       toast({
         title: "Week Completed!",
@@ -72,7 +78,30 @@ export const WeekDetailView: React.FC<WeekDetailViewProps> = ({
     }
   };
 
-  const progressPercentage = (completedActivities.length / week.completion_criteria.length) * 100;
+  // Calculate real progress from multiple sources
+  const calculateRealProgress = () => {
+    const activityProgress = (completedActivities.length / week.completion_criteria.length) * 100;
+    const milestoneProgress = weekProgress?.metrics?.overall_progress || 0;
+    
+    // Weighted combination of activity completion and milestone progress
+    return Math.round((activityProgress * 0.6) + (milestoneProgress * 0.4));
+  };
+
+  const progressPercentage = calculateRealProgress();
+
+  // Load week progress on mount
+  useEffect(() => {
+    const loadWeekProgress = async () => {
+      try {
+        const insights = await getProgressInsights(`week-${week.week_number}`);
+        setWeekProgress(insights);
+      } catch (error) {
+        console.error('Error loading week progress:', error);
+      }
+    };
+    
+    loadWeekProgress();
+  }, [week.week_number, completedActivities.length]);
 
   return (
     <div className="space-y-6">
@@ -117,6 +146,49 @@ export const WeekDetailView: React.FC<WeekDetailViewProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Activities Panel */}
         <div className="space-y-4">
+          {/* Real Progress Insights */}
+          {weekProgress && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center">
+                  <TrendingUp className="h-5 w-5 mr-2" />
+                  Your Progress Analytics
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <div className="text-muted-foreground">Task Completion</div>
+                    <div className="font-semibold">{weekProgress.metrics.task_completion_rate.toFixed(1)}%</div>
+                  </div>
+                  <div>
+                    <div className="text-muted-foreground">Consistency</div>
+                    <div className="font-semibold">{weekProgress.metrics.time_consistency.toFixed(1)}%</div>
+                  </div>
+                  <div>
+                    <div className="text-muted-foreground">Engagement</div>
+                    <div className="font-semibold">{weekProgress.metrics.engagement_quality.toFixed(1)}%</div>
+                  </div>
+                  <div>
+                    <div className="text-muted-foreground">Reflection Depth</div>
+                    <div className="font-semibold">{weekProgress.metrics.reflection_depth.toFixed(1)}%</div>
+                  </div>
+                </div>
+                
+                {weekProgress.insights.length > 0 && (
+                  <div className="mt-4 p-3 bg-soul-purple/10 rounded-lg">
+                    <div className="text-sm font-medium mb-2">Personalized Insights:</div>
+                    <ul className="text-sm space-y-1">
+                      {weekProgress.insights.slice(0, 2).map((insight: string, idx: number) => (
+                        <li key={idx} className="text-muted-foreground">• {insight}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           {/* Key Activities */}
           <Card>
             <CardHeader>
