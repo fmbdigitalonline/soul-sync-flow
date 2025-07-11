@@ -57,7 +57,7 @@ export const useHacsIntelligence = () => {
         .from('hacs_intelligence')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (fetchError && fetchError.code !== 'PGRST116') {
         throw fetchError;

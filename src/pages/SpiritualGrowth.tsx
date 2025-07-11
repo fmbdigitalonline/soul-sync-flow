@@ -21,6 +21,7 @@ import { ProgressiveJourneyAssessment } from "@/components/dashboard/Progressive
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 import { useBlueprintData } from "@/hooks/use-blueprint-data";
+import { useAuth } from "@/contexts/AuthContext";
 import { LifeDomain } from "@/types/growth-program";
 
 type ActiveView = 'welcome' | 'immediate_chat' | 'growth_program' | 'tools' | 'mood' | 'reflection' | 'insight' | 'weekly' | 'life_os_choices' | 'life_os_quick_focus' | 'life_os_full' | 'life_os_guided' | 'life_os_progressive' | null;
@@ -33,6 +34,7 @@ const SpiritualGrowth = () => {
   const { toast } = useToast();
   const { t } = useLanguage();
   const { blueprintData } = useBlueprintData();
+  const { user } = useAuth();
   
   const { growthJourney, addMoodEntry, addReflectionEntry, addInsightEntry } = useJourneyTracking();
 
@@ -386,13 +388,61 @@ const SpiritualGrowth = () => {
 
   // Full Assessment Dashboard
   if (activeView === 'life_os_full') {
-    const handleCreateProgram = (primaryDomain: LifeDomain, supportingDomains: LifeDomain[]) => {
-      console.log('🚀 Creating program with Life OS integration:', { primaryDomain, supportingDomains });
-      toast({
-        title: "Program Created! 🎯",
-        description: `Multi-domain growth plan created with ${primaryDomain} as primary focus.`,
-      });
-      setActiveView('growth_program');
+    const handleCreateProgram = async (primaryDomain: LifeDomain, supportingDomains: LifeDomain[]) => {
+      if (!user || !blueprintData) {
+        toast({
+          title: "Blueprint Required",
+          description: "Please complete your blueprint first to create a personalized growth program.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      console.log('🚀 Creating REAL multi-domain program with HACS:', { primaryDomain, supportingDomains });
+      
+      try {
+        // Import the agent growth integration
+        const { agentGrowthIntegration } = await import('@/services/agent-growth-integration');
+        
+        // Create multi-domain configuration in blueprint
+        const enhancedBlueprint = {
+          ...blueprintData,
+          multiDomainConfig: {
+            primaryDomain,
+            supportingDomains,
+            integrationLevel: 'high',
+            createdAt: new Date().toISOString()
+          }
+        };
+        
+        // Create program with real HACS system
+        const program = await agentGrowthIntegration.createProgram(
+          user.id, 
+          primaryDomain, 
+          enhancedBlueprint
+        );
+        
+        // Update program to active status
+        await agentGrowthIntegration.updateProgramProgress(program.id, { 
+          status: 'active' 
+        });
+        
+        toast({
+          title: "Multi-Domain Program Created! 🎯",
+          description: `Your AI-powered growth program integrating ${primaryDomain} with ${supportingDomains.length} supporting domains is ready.`,
+        });
+        
+        // Switch to growth program view to see the results
+        setActiveView('growth_program');
+        
+      } catch (error) {
+        console.error('❌ Error creating multi-domain program:', error);
+        toast({
+          title: "Error Creating Program",
+          description: "There was an issue creating your multi-domain growth program. Please try again.",
+          variant: "destructive"
+        });
+      }
     };
 
     return (
