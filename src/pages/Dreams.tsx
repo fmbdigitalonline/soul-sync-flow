@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
@@ -8,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, Heart, Target, Calendar, ArrowRight, Lightbulb } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useProgramAwareCoach } from "@/hooks/use-program-aware-coach";
+import { useDreamDiscoveryCoach } from "@/hooks/use-dream-discovery-coach";
 import { DreamDiscoveryChat } from "@/components/dream/DreamDiscoveryChat";
 import { LifeDomain } from "@/types/growth-program";
 import { FloatingHACSOrb } from "@/components/hacs/FloatingHACSOrb";
@@ -21,33 +22,21 @@ const Dreams = () => {
     category: "",
     timeframe: "",
   });
-  const [conversationPhase, setConversationPhase] = useState<
-    "blueprint_analysis" | "suggestion_presentation" | "exploration" | "refinement" | "ready_for_decomposition"
-  >("blueprint_analysis");
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Use the proper dream discovery coach
   const {
     messages,
     isLoading,
     sendMessage,
     resetConversation,
-    getProgramContext,
-    initializeConversation,
-    initializeBeliefDrilling,
-    recoverConversation,
-    currentSessionId,
-    hasError,
-    errorCount,
-    streamingContent,
-    isStreaming,
-  } = useProgramAwareCoach("dreams");
+    conversationPhase,
+    intakeData: coachIntakeData,
+    isReadyForDecomposition,
+  } = useDreamDiscoveryCoach();
 
   const [selectedCategory, setSelectedCategory] = useState<LifeDomain | null>(null);
-
-  useEffect(() => {
-    initializeConversation();
-  }, [initializeConversation]);
 
   const handleCategorySelect = (category: LifeDomain) => {
     setSelectedCategory(category);
@@ -68,11 +57,13 @@ const Dreams = () => {
     }
 
     setConversationStarted(true);
-    setConversationPhase("blueprint_analysis");
+    
+    // Send initial message to start the dream discovery process
+    const initialMessage = `I want to explore my dream: "${intakeData.title}". ${intakeData.description}. This relates to ${selectedCategory} and I'd like to achieve this in ${intakeData.timeframe}.`;
+    sendMessage(initialMessage);
   };
 
   const handleReadyForDecomposition = () => {
-    setConversationPhase("ready_for_decomposition");
     toast({
       title: "Dream Ready",
       description: "Your dream is ready for decomposition and planning!",
@@ -115,7 +106,7 @@ const Dreams = () => {
             onSendMessage={sendMessage}
             messagesEndRef={messagesEndRef}
             conversationPhase={conversationPhase}
-            intakeData={intakeData}
+            intakeData={coachIntakeData}
             onReadyForDecomposition={handleReadyForDecomposition}
           />
         </div>
