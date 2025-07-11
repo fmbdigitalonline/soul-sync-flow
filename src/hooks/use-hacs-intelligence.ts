@@ -36,6 +36,24 @@ export const useHacsIntelligence = () => {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
+  // Check if user has blueprint to determine initial intelligence boost
+  const checkBlueprintCompletion = useCallback(async (userId: string) => {
+    try {
+      const { data: blueprint } = await supabase
+        .from('blueprints')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .limit(1)
+        .single();
+      
+      return blueprint ? 20 : 0; // 20% boost for users with blueprints
+    } catch (error) {
+      console.log('No blueprint found, starting at 0%');
+      return 0;
+    }
+  }, []);
+
   // Initialize or fetch user's HACS intelligence
   const initializeIntelligence = useCallback(async () => {
     try {
@@ -81,31 +99,36 @@ export const useHacsIntelligence = () => {
           tmg_score: existing.tmg_score || 0,
         });
       } else {
-        // Create initial intelligence record with all 11 modules
+        // Check blueprint completion for intelligence boost
+        const initialIntelligenceLevel = await checkBlueprintCompletion(user.id);
+        console.log('Initial intelligence level (blueprint boost):', initialIntelligenceLevel);
+
+        // Create initial intelligence record with blueprint boost
+        const baseScore = initialIntelligenceLevel * 0.1; // Distribute boost across modules
         const initialModuleScores: ModuleScores = {
-          NIK: 0,
-          CPSR: 0,
-          TWS: 0,
-          HFME: 0,
-          DPEM: 0,
-          CNR: 0,
-          BPSC: 0,
-          ACS: 0,
-          PIE: 0,
-          VFP: 0,
-          TMG: 0,
+          NIK: baseScore,
+          CPSR: baseScore,
+          TWS: baseScore,
+          HFME: baseScore,
+          DPEM: baseScore,
+          CNR: baseScore,
+          BPSC: baseScore,
+          ACS: baseScore,
+          PIE: baseScore,
+          VFP: baseScore,
+          TMG: baseScore,
         };
 
         const { data: newIntelligence, error: createError } = await supabase
           .from('hacs_intelligence')
           .insert({
             user_id: user.id,
-            intelligence_level: 0,
+            intelligence_level: initialIntelligenceLevel,
             module_scores: initialModuleScores as any,
             interaction_count: 0,
-            pie_score: 0,
-            vfp_score: 0,
-            tmg_score: 0,
+            pie_score: baseScore,
+            vfp_score: baseScore,
+            tmg_score: baseScore,
           })
           .select()
           .single();
@@ -114,9 +137,9 @@ export const useHacsIntelligence = () => {
         setIntelligence({
           ...newIntelligence,
           module_scores: initialModuleScores,
-          pie_score: 0,
-          vfp_score: 0,
-          tmg_score: 0,
+          pie_score: baseScore,
+          vfp_score: baseScore,
+          tmg_score: baseScore,
         });
       }
     } catch (err) {
@@ -125,7 +148,7 @@ export const useHacsIntelligence = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [checkBlueprintCompletion]);
 
   // Update intelligence level based on user interactions
   const updateIntelligence = useCallback(async (

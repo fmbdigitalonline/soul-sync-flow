@@ -13,6 +13,9 @@ interface IntelligentSoulOrbProps {
   intelligenceLevel?: number; // 0-100
   showProgressRing?: boolean;
   showIntelligenceTooltip?: boolean;
+  isThinking?: boolean;
+  activeModule?: string; // NIK, CPSR, TWS, HFME, DPEM, CNR, BPSC, ACS, PIE, VFP, TMG
+  moduleActivity?: boolean;
 }
 
 const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
@@ -25,6 +28,9 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
   intelligenceLevel = 0,
   showProgressRing = true,
   showIntelligenceTooltip = false,
+  isThinking = false,
+  activeModule,
+  moduleActivity = false,
 }) => {
   const orbRef = useRef<HTMLDivElement>(null);
   const [particles, setParticles] = useState<Array<{ x: number, y: number, size: number, speed: number, angle: number }>>([]);
@@ -44,26 +50,42 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
     lg: 88, // Reduced from 136
   };
 
-  // Intelligence-based color enhancement
+  // Reverse color psychology: Yellow (learning) → Teal (mastery)
   const getOrbColors = useMemo(() => {
-    const baseColors = {
-      welcome: "from-cyan-400 via-cyan-300 to-cyan-200",
-      collecting: "from-cyan-400 via-cyan-300 to-cyan-200",
-      generating: "from-cyan-400 via-cyan-300 to-cyan-200",
-      complete: "from-cyan-400 via-cyan-300 to-cyan-200",
-    };
-
-    // Enhanced colors based on intelligence level
-    if (intelligenceLevel >= 90) {
-      return "from-amber-300 via-yellow-200 to-amber-100"; // Golden for high intelligence
-    } else if (intelligenceLevel >= 70) {
-      return "from-cyan-300 via-blue-200 to-cyan-100"; // Enhanced cyan
+    // Intelligence Evolution Journey: Yellow → Teal
+    if (intelligenceLevel >= 100) {
+      return "from-teal-400 via-teal-300 to-teal-200"; // Pure teal mastery
+    } else if (intelligenceLevel >= 75) {
+      return "from-teal-300 via-cyan-300 to-cyan-200"; // Advanced - teal dominant
     } else if (intelligenceLevel >= 50) {
-      return "from-cyan-400 via-cyan-300 to-cyan-200"; // Standard cyan
+      return "from-cyan-400 via-yellow-300 to-yellow-200"; // Developing - transition phase
+    } else if (intelligenceLevel >= 25) {
+      return "from-yellow-400 via-yellow-300 to-yellow-200"; // Learning - yellow dominant
     } else {
-      return baseColors[stage]; // Base colors for low intelligence
+      return "from-amber-400 via-yellow-300 to-yellow-200"; // Awakening - warm yellow
     }
-  }, [intelligenceLevel, stage]);
+  }, [intelligenceLevel]);
+
+  // Module-specific animation variants
+  const getModuleAnimation = useMemo(() => {
+    if (!activeModule || !moduleActivity) return { animate: {}, transition: undefined };
+    
+    const animations = {
+      NIK: { animate: { scale: [1, 1.02, 1] }, transition: { duration: 1.5, repeat: Infinity } }, // Neural integration pulse
+      CPSR: { animate: { opacity: [1, 0.8, 1] }, transition: { duration: 0.3, repeat: 3 } }, // Pattern recognition flicker
+      TWS: { animate: { rotate: [0, 2, -2, 0] }, transition: { duration: 4, repeat: Infinity } }, // Wisdom wave
+      HFME: { animate: { scale: [1, 1.03, 1], rotate: [0, 5, 0] }, transition: { duration: 2, repeat: Infinity } }, // Framework shift
+      DPEM: { animate: { filter: ["hue-rotate(0deg)", "hue-rotate(30deg)", "hue-rotate(0deg)"] }, transition: { duration: 1, repeat: 2 } }, // Personality adaptation flash
+      CNR: { animate: { scale: [1, 0.98, 1.02, 1] }, transition: { duration: 0.5, repeat: 2 } }, // Conflict resolution pulse
+      BPSC: { animate: { rotate: [0, 360] }, transition: { duration: 3, ease: "linear" } }, // Blueprint sync rotation
+      ACS: { animate: { scale: [1, 1.05, 1] }, transition: { duration: 0.8, repeat: 2 } }, // Conversation ripple
+      PIE: { animate: { opacity: [1, 0.7, 1], scale: [1, 1.01, 1] }, transition: { duration: 0.4, repeat: 1 } }, // Prediction flash
+      VFP: { animate: { scale: [1, 1.02, 1], rotate: [0, 180, 360] }, transition: { duration: 2 } }, // Vector processing merge
+      TMG: { animate: { opacity: [1, 0.9, 0.8, 0.9, 1] }, transition: { duration: 1.5, repeat: 1 } }, // Memory echo
+    };
+    
+    return animations[activeModule as keyof typeof animations] || { animate: {}, transition: undefined };
+  }, [activeModule, moduleActivity]);
 
   // Calculate circumference for progress ring
   const radius = (ringSize[size] - 6) / 2; // Account for stroke width
@@ -176,7 +198,7 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
         </svg>
       )}
 
-      {/* Main Soul Orb with breathing animation */}
+      {/* Main Soul Orb with enhanced animations */}
       <motion.div 
         ref={orbRef}
         onClick={onClick}
@@ -186,11 +208,12 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
           className
         )}
         animate={{
-          scale: pulse && !speaking ? [1, 1.05, 1] : 1,
+          scale: isThinking ? [1, 1.03, 1] : pulse && !speaking ? [1, 1.05, 1] : 1,
+          ...getModuleAnimation.animate,
         }}
-        transition={{
-          duration: 3, // Slow breathing
-          repeat: pulse && !speaking ? Infinity : 0,
+        transition={getModuleAnimation.transition || {
+          duration: isThinking ? 1.5 : 3, // Faster when thinking
+          repeat: (pulse && !speaking) || isThinking ? Infinity : 0,
           ease: "easeInOut"
         }}
       >
@@ -204,13 +227,15 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
           )}
         />
         
-        {/* Enhanced glow effect based on intelligence */}
+        {/* Enhanced glow effect - reverse color psychology */}
         <div 
           className={cn(
             "absolute inset-0 rounded-full blur-sm", // Reduced blur for smaller orb
-            intelligenceLevel >= 90 ? "bg-amber-400 opacity-30" :
-            intelligenceLevel >= 70 ? "bg-cyan-400 opacity-25" :
-            "bg-cyan-400 opacity-20"
+            intelligenceLevel >= 100 ? "bg-teal-400 opacity-40" : // Pure teal mastery
+            intelligenceLevel >= 75 ? "bg-teal-400 opacity-30" : // Advanced teal
+            intelligenceLevel >= 50 ? "bg-cyan-400 opacity-25" : // Transition phase
+            intelligenceLevel >= 25 ? "bg-yellow-400 opacity-25" : // Learning yellow
+            "bg-amber-400 opacity-20" // Awakening warm yellow
           )} 
         />
         

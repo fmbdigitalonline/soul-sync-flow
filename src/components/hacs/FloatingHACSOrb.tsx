@@ -15,6 +15,9 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   const [showBubble, setShowBubble] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [orbStage, setOrbStage] = useState<"welcome" | "collecting" | "generating" | "complete">("welcome");
+  const [activeModule, setActiveModule] = useState<string | undefined>();
+  const [moduleActivity, setModuleActivity] = useState(false);
+  const [isThinking, setIsThinking] = useState(false);
   
   const { intelligence, loading } = useHacsIntelligence();
   const { 
@@ -59,15 +62,55 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     }
   }, [currentMessage, acknowledgeMessage]);
 
-  // Demo trigger - can be removed in production
+  // Enhanced autonomous triggers with module activities
   useEffect(() => {
     const demoTimer = setTimeout(() => {
       if (!currentMessage && !loading) {
-        triggerPIEInsight("Regular usage detected");
+        // Simulate thinking state before generating insight
+        setIsThinking(true);
+        setActiveModule('PIE');
+        setModuleActivity(true);
+        
+        setTimeout(() => {
+          triggerPIEInsight("Your usage patterns suggest optimal productivity windows");
+          setIsThinking(false);
+          setModuleActivity(false);
+        }, 1500); // Show thinking animation for 1.5s
       }
-    }, 5000);
+    }, 3000); // Reduced from 5 seconds to 3 seconds for more frequent activity
     return () => clearTimeout(demoTimer);
   }, [triggerPIEInsight, currentMessage, loading]);
+
+  // Module activity simulation based on HACS state
+  useEffect(() => {
+    if (currentMessage && !currentMessage.acknowledged) {
+      const moduleMap: Record<string, string> = {
+        PIE: 'PIE',
+        CNR: 'CNR', 
+        TMG: 'TMG',
+        DPEM: 'DPEM',
+        ACS: 'ACS',
+        NIK: 'NIK',
+        CPSR: 'CPSR',
+        TWS: 'TWS',
+        HFME: 'HFME',
+        BPSC: 'BPSC',
+        VFP: 'VFP'
+      };
+      
+      const module = moduleMap[currentMessage.hacsModule] || 'ACS';
+      setActiveModule(module);
+      setModuleActivity(true);
+      
+      // Clear module activity after message is processed
+      const clearTimer = setTimeout(() => {
+        setModuleActivity(false);
+        setActiveModule(undefined);
+      }, 3000);
+      
+      return () => clearTimeout(clearTimer);
+    }
+  }, [currentMessage]);
 
   const handleOrbClick = () => {
     if (currentMessage && !currentMessage.acknowledged) {
@@ -159,6 +202,9 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
               intelligenceLevel={intelligenceLevel}
               showProgressRing={intelligenceLevel > 0}
               showIntelligenceTooltip={false}
+              isThinking={isThinking}
+              activeModule={activeModule}
+              moduleActivity={moduleActivity}
               onClick={handleOrbClick}
               className="shadow-lg hover:shadow-xl transition-shadow"
             />
