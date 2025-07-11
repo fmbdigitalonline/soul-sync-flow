@@ -110,7 +110,7 @@ const SpiritualGrowth = () => {
   if (!isAuthenticated) {
     return (
       <MainLayout>
-        <div className="min-h-screen bg-white flex items-center justify-center p-4">
+        <div className="min-h-screen bg-background flex items-center justify-center p-4">
           <CosmicCard className="w-full max-w-md text-center space-y-6">
             <div className="w-16 h-16 mx-auto bg-primary rounded-full flex items-center justify-center">
               <Sparkles className="h-8 w-8 text-primary-foreground" />
@@ -135,7 +135,7 @@ const SpiritualGrowth = () => {
   if (activeView === 'immediate_chat') {
     return (
       <MainLayout>
-        <div className="min-h-screen bg-white">
+        <div className="min-h-screen bg-background">
           <div className="container mx-auto py-6 px-4 max-w-4xl">
             
             {/* Header with back button */}
@@ -177,7 +177,7 @@ const SpiritualGrowth = () => {
     return (
       <TelemetryTracker>
         <MainLayout>
-          <div className="min-h-screen bg-white">
+          <div className="min-h-screen bg-background">
             <div className="container mx-auto py-6 px-4 max-w-6xl">
               <div className="mb-6">
                 <Button 
@@ -447,7 +447,7 @@ const SpiritualGrowth = () => {
 
     return (
         <MainLayout>
-          <div className="min-h-screen bg-white">
+          <div className="min-h-screen bg-background">
             <div className="container mx-auto py-6 px-4 max-w-7xl">
             <div className="mb-6">
               <Button 
@@ -512,7 +512,7 @@ const SpiritualGrowth = () => {
   // Welcome view with all growth options including Life Operating System
   return (
     <MainLayout>
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-background">
         <div className="container mx-auto py-8 px-4 max-w-6xl">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-heading font-bold text-foreground mb-2">
