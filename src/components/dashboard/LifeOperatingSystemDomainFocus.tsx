@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
@@ -43,7 +44,7 @@ export function LifeOperatingSystemDomainFocus({ onBack, onComplete }: LifeOpera
 
   if (showAssessment) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
+      <div className="min-h-screen bg-background">
         <div className="container mx-auto py-6 px-4 max-w-4xl">
           <div className="mb-6">
             <Button 
@@ -72,7 +73,7 @@ export function LifeOperatingSystemDomainFocus({ onBack, onComplete }: LifeOpera
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-background">
       <div className="container mx-auto py-6 px-4 max-w-6xl">
         
         <div className="mb-6">
