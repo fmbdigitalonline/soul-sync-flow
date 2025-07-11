@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
@@ -14,8 +15,6 @@ import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 import { ActiveReminders } from "@/components/reminders/ActiveReminders";
 import { MobileTogglePanel } from "@/components/ui/mobile-toggle-panel";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { IntelligentSoulOrb } from "@/components/ui/intelligent-soul-orb";
-import { useHacsIntelligence } from "@/hooks/use-hacs-intelligence";
 
 const Coach = () => {
   const { 
@@ -40,7 +39,6 @@ const Coach = () => {
   const { hasBlueprint } = useBlueprintCache();
   const { productivityJourney, growthJourney } = useJourneyTracking();
   const { isMobile } = useIsMobile();
-  const { intelligence } = useHacsIntelligence();
 
   // Check authentication status
   useEffect(() => {
@@ -72,13 +70,6 @@ const Coach = () => {
     });
   };
 
-  const handleFeedback = (feedback: any) => {
-    // Handle feedback - this matches the expected signature
-    if (feedback && typeof feedback === 'object') {
-      recordVFPGraphFeedback(feedback.messageId, feedback.isPositive);
-    }
-  };
-
   if (!isAuthenticated) {
     return (
       <MainLayout>
@@ -103,42 +94,16 @@ const Coach = () => {
     );
   }
 
-  // Transform messages to match BlendInterface expected format
-  const transformedMessages = messages.map(msg => ({
-    id: msg.id,
-    content: msg.content,
-    isUser: msg.role === 'user',
-    timestamp: msg.timestamp || new Date(),
-    isStreaming: msg.isStreaming
-  }));
-
   // Create the main chat interface component
   const chatInterface = (
-    <div className="relative h-full">
-      <BlendInterface
-        messages={transformedMessages}
-        isLoading={isLoading}
-        onSendMessage={handleSendMessage}
-        personaReady={personaReady}
-        vfpGraphStatus={vfpGraphStatus}
-        onFeedback={handleFeedback}
-        hideMessageOrbs={true}
-      />
-      
-      {/* Show orb only when AI is thinking/loading */}
-      {isLoading && (
-        <div className="absolute top-4 left-4 z-10">
-          <IntelligentSoulOrb 
-            size="sm"
-            intelligenceLevel={intelligence?.intelligence_level || 65}
-            showProgressRing={true}
-            speaking={true}
-            stage="generating"
-            pulse={true}
-          />
-        </div>
-      )}
-    </div>
+    <BlendInterface
+      messages={messages}
+      isLoading={isLoading}
+      onSendMessage={handleSendMessage}
+      personaReady={personaReady}
+      vfpGraphStatus={vfpGraphStatus}
+      onFeedback={recordVFPGraphFeedback}
+    />
   );
 
   const remindersContent = (
