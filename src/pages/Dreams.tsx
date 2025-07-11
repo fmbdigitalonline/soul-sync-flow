@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MainLayout from "@/components/Layout/MainLayout";
@@ -575,15 +574,21 @@ const Dreams = () => {
         <div className={`min-h-screen bg-white w-full ${isMobile ? 'pb-20' : ''}`}>
           <div className={`w-full max-w-lg mx-auto py-4 px-3 ${isMobile ? 'pb-24' : 'pb-20'}`}>
             
-            {/* Mobile Optimized Hero Section */}
+            {/* Enhanced Mobile Optimized Hero Section with Better Title Visibility */}
             <div className={`text-center mb-6 px-2`}>
               <div className={`mx-auto bg-gradient-to-br from-soul-purple via-soul-purple to-soul-teal rounded-full flex items-center justify-center mb-4 ${isFoldDevice ? 'w-12 h-12' : 'w-16 h-16'}`}>
                 <Heart className={`text-white ${isFoldDevice ? 'h-6 w-6' : 'h-8 w-8'}`} />
               </div>
-              <h1 className={`font-heading font-bold mb-3 bg-gradient-to-r from-soul-purple to-soul-teal bg-clip-text text-transparent ${getTextSize('text-xl')}`}>
-                Dreams & Goals Creator
-              </h1>
-              <p className={`text-gray-600 leading-relaxed mb-4 ${getTextSize('text-sm')}`}>
+              
+              {/* Enhanced Title with Better Visibility */}
+              <div className="mb-4">
+                <h1 className={`font-heading font-bold mb-2 bg-gradient-to-r from-soul-purple to-soul-teal bg-clip-text text-transparent leading-tight ${getTextSize('text-2xl')} ${isFoldDevice ? 'text-xl' : 'text-2xl lg:text-3xl'}`}>
+                  Dreams & Goals Creator
+                </h1>
+                <div className="w-16 h-1 bg-gradient-to-r from-soul-purple to-soul-teal rounded-full mx-auto mb-3"></div>
+              </div>
+              
+              <p className={`text-gray-600 leading-relaxed mb-4 ${getTextSize('text-sm')} ${isFoldDevice ? 'text-xs' : 'text-sm lg:text-base'}`}>
                 Share your deepest aspirations and let's discover what truly lights up your soul
               </p>
               <div className={`inline-flex items-center gap-2 bg-soul-purple/10 px-3 py-1 rounded-full`}>
