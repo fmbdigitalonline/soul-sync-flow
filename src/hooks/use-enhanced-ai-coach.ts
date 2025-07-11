@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { enhancedAICoachService, AgentType } from "@/services/enhanced-ai-coach-service";
 import { UnifiedBlueprintService } from "@/services/unified-blueprint-service";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -78,13 +77,29 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide", pageContex
   const { blueprintData, hasBlueprint, loading: blueprintLoading } = useBlueprintCache();
   const { user } = useAuth();
   
-  // Get user's display name - prioritize blueprint data over auth metadata
-  const userName = blueprintData?.user_meta?.preferred_name ||
-                   user?.user_metadata?.preferred_name || 
-                   user?.user_metadata?.full_name?.split(' ')[0] || 
-                   user?.email?.split('@')[0] || 
-                   'friend';
-  
+  // Get user's display name - now reactive using useMemo
+  const userName = useMemo(() => {
+    const resolvedName = blueprintData?.user_meta?.preferred_name ||
+                         user?.user_metadata?.preferred_name || 
+                         user?.user_metadata?.full_name?.split(' ')[0] || 
+                         user?.email?.split('@')[0] || 
+                         'friend';
+    
+    // Debug logging to track name resolution
+    console.log(`👤 userName resolved for ${pageContext}:`, {
+      resolvedName,
+      hasBlueprintData: !!blueprintData,
+      blueprintPreferredName: blueprintData?.user_meta?.preferred_name,
+      userMetadataPreferredName: user?.user_metadata?.preferred_name,
+      userEmail: user?.email,
+      fallbackPath: !blueprintData?.user_meta?.preferred_name ? 
+        (!user?.user_metadata?.preferred_name ? 
+          (!user?.user_metadata?.full_name ? 'email' : 'full_name') : 'user_metadata') : 'blueprint'
+    });
+    
+    return resolvedName;
+  }, [blueprintData?.user_meta?.preferred_name, user?.user_metadata?.preferred_name, user?.user_metadata?.full_name, user?.email, pageContext]);
+
   const {
     streamingContent,
     isStreaming,
@@ -310,7 +325,8 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide", pageContex
       authInitialized,
       blueprintLoading,
       acsEnabled,
-      acsState
+      acsState,
+      userName
     });
 
     if (acsEnabled && acsInitialized) {
@@ -355,7 +371,8 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide", pageContex
           currentAgent: effectiveAgent,
           blueprintAvailable: integrationReport.blueprintLoaded,
           acsEnabled,
-          acsState
+          acsState,
+          userName
         });
         
          await enhancedAICoachService.sendStreamingMessage(
