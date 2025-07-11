@@ -18,6 +18,7 @@ export const useHACSMicroLearning = () => {
   const generateMicroQuestion = useCallback(async () => {
     if (!user || isGenerating) return null;
 
+    console.log('🧠 Generating HACS micro-question...');
     setIsGenerating(true);
     try {
       const { data, error } = await supabase.functions.invoke('hacs-intelligent-conversation', {
@@ -29,9 +30,15 @@ export const useHACSMicroLearning = () => {
         }
       });
 
-      if (error) throw error;
+      console.log('🧠 Edge function response:', { data, error });
 
-      if (data.generatedQuestion) {
+      if (error) {
+        console.error('🧠 Edge function error:', error);
+        throw error;
+      }
+
+      // Check for the actual response structure from the edge function
+      if (data?.generatedQuestion) {
         const question: HACSQuestion = {
           id: data.generatedQuestion.id,
           text: data.generatedQuestion.text,
@@ -39,13 +46,27 @@ export const useHACSMicroLearning = () => {
           type: data.generatedQuestion.type
         };
         
+        console.log('✅ Question generated successfully:', question);
+        setCurrentQuestion(question);
+        return question;
+      } else if (data?.question) {
+        // Try alternate response structure
+        const question: HACSQuestion = {
+          id: data.question.id || `q_${Date.now()}`,
+          text: data.question.question_text || data.question.text,
+          module: data.question.hacs_module || data.question.module,
+          type: data.question.question_type || data.question.type || 'foundational'
+        };
+        
+        console.log('✅ Question generated (alt structure):', question);
         setCurrentQuestion(question);
         return question;
       }
 
+      console.log('❌ No question in response:', data);
       return null;
     } catch (error) {
-      console.error('Error generating micro question:', error);
+      console.error('❌ Error generating micro question:', error);
       return null;
     } finally {
       setIsGenerating(false);
@@ -85,15 +106,25 @@ export const useHACSMicroLearning = () => {
 
   // Trigger micro-learning session based on user activity
   const triggerMicroLearning = useCallback(async (context?: string) => {
+    console.log('🎯 triggerMicroLearning called:', { currentQuestion: !!currentQuestion, isGenerating, context });
+    
     // Don't trigger if already have a question or generating
-    if (currentQuestion || isGenerating) return false;
+    if (currentQuestion || isGenerating) {
+      console.log('🎯 Skipping: already have question or generating');
+      return false;
+    }
 
     // Smart timing: trigger after user engagement, not randomly
     const shouldTrigger = Math.random() < 0.3; // 30% chance
     
+    console.log('🎯 Should trigger learning?', shouldTrigger);
+    
     if (shouldTrigger) {
+      console.log('🎯 Triggering micro-learning generation...');
       const question = await generateMicroQuestion();
-      return !!question;
+      const success = !!question;
+      console.log('🎯 Micro-learning result:', success ? 'SUCCESS' : 'FAILED');
+      return success;
     }
     
     return false;

@@ -15,11 +15,11 @@ export const ActiveReminders: React.FC = () => {
   useEffect(() => {
     loadActiveReminders();
     
-    // Set up polling for new reminders every 30 seconds
-    const interval = setInterval(loadActiveReminders, 30000);
+    // Set up polling for new reminders every 2 minutes, not every 30 seconds
+    const interval = setInterval(loadActiveReminders, 120000);
     
     return () => clearInterval(interval);
-  }, []);
+  }, []); // Empty dependency array is correct here - we want this to run once on mount
 
   const loadActiveReminders = async () => {
     try {

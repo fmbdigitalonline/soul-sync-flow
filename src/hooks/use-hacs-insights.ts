@@ -43,10 +43,11 @@ export const useHACSInsights = () => {
     // Prevent too frequent insight generation (minimum 5 minutes between insights)
     const now = Date.now();
     if (now - lastInsightTime < 5 * 60 * 1000) {
-      console.log('Too soon for next insight, waiting...');
+      console.log('🔍 Too soon for next insight, waiting...');
       return null;
     }
 
+    console.log('🔍 Generating HACS insight...');
     setIsGenerating(true);
     try {
       const { data, error } = await supabase.functions.invoke('hacs-authentic-insights', {
@@ -57,15 +58,20 @@ export const useHACSInsights = () => {
         }
       });
 
-      if (error) throw error;
+      console.log('🔍 Insight edge function response:', { data, error });
 
-      if (data.insight) {
+      if (error) {
+        console.error('🔍 Insight edge function error:', error);
+        throw error;
+      }
+
+      if (data?.insight) {
         const insight: HACSInsight = {
-          id: data.insight.id,
-          text: data.insight.text,
-          module: data.insight.module,
-          type: data.insight.type,
-          confidence: data.insight.confidence,
+          id: data.insight.id || `insight_${Date.now()}`,
+          text: data.insight.text || data.insight.message,
+          module: data.insight.module || data.insight.hacs_module || 'NIK',
+          type: data.insight.type || data.insight.insight_type || 'learning',
+          confidence: data.insight.confidence || 0.7,
           evidence: data.insight.evidence || [],
           timestamp: new Date(),
           acknowledged: false
@@ -75,7 +81,7 @@ export const useHACSInsights = () => {
         setInsightHistory(prev => [insight, ...prev].slice(0, 20)); // Keep last 20 insights
         setLastInsightTime(now);
 
-        console.log('Generated authentic insight:', {
+        console.log('✅ Insight generated successfully:', {
           module: insight.module,
           type: insight.type,
           confidence: insight.confidence,
@@ -84,12 +90,12 @@ export const useHACSInsights = () => {
 
         return insight;
       } else {
-        console.log('No insight generated:', data.reason, data.message);
+        console.log('❌ No insight in response:', data?.reason, data?.message);
         return null;
       }
 
     } catch (error) {
-      console.error('Error generating insight:', error);
+      console.error('❌ Error generating insight:', error);
       return null;
     } finally {
       setIsGenerating(false);
@@ -118,6 +124,8 @@ export const useHACSInsights = () => {
 
   // Smart insight triggers based on real activity patterns
   const triggerInsightCheck = useCallback(async (activityType: string, context?: any) => {
+    console.log('🔍 triggerInsightCheck called:', { activityType, currentInsight: !!currentInsight, isGenerating });
+    
     // Track the activity first
     await trackActivity(activityType, context);
 
@@ -127,19 +135,25 @@ export const useHACSInsights = () => {
       'learning_session_completed',
       'conversation_ended',
       'task_completed',
-      'pattern_detected'
+      'pattern_detected',
+      'periodic_activity' // Add periodic activity as meaningful
     ];
 
     if (meaningfulActivities.includes(activityType)) {
       // Random chance to generate insight (30% for high-value activities)
       const shouldGenerate = Math.random() < 0.3;
       
+      console.log('🔍 Should generate insight?', shouldGenerate, 'Activity:', activityType);
+      
       if (shouldGenerate && !currentInsight) {
+        console.log('🔍 Triggering insight generation...');
         const insight = await generateInsight(activityType);
+        console.log('🔍 Insight generation result:', insight ? 'SUCCESS' : 'FAILED');
         return insight;
       }
     }
 
+    console.log('🔍 No insight generated for activity:', activityType);
     return null;
   }, [trackActivity, generateInsight, currentInsight]);
 
