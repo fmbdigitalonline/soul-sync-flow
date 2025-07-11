@@ -96,12 +96,12 @@
   }
   
   .font-display {
-    font-family: 'Satoshi', 'Nunito Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Inter', 'Nunito Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
 
-  /* Apply font hierarchy */
+  /* Apply font hierarchy with Inter for headings */
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Satoshi', 'Nunito Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Inter', 'Nunito Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
 
   button, input, select, textarea {
