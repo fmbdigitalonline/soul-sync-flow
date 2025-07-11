@@ -97,5 +97,10 @@ verify_jwt = false
 cors = ["*"]
 methods = ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
 
+[functions.conversational-assessment]
+verify_jwt = true
+cors = ["*"]
+methods = ["POST", "OPTIONS"]
+
 [analytics]
 enabled = false

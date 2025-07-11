@@ -7,6 +7,8 @@ import { SpiritualGuideInterface } from '@/components/growth/SpiritualGuideInter
 import { useEnhancedAICoach } from '@/hooks/use-enhanced-ai-coach';
 import { useBlueprintData } from '@/hooks/use-blueprint-data';
 import { LifeDomain, LifeWheelAssessment } from '@/types/growth-program';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface ConversationalAssessmentProps {
   onComplete: (assessmentData: LifeWheelAssessment[]) => void;
@@ -53,6 +55,7 @@ export function ConversationalAssessment({ onComplete, onBack }: ConversationalA
   
   const { messages, isLoading, sendMessage, resetConversation } = useEnhancedAICoach("guide", "life-assessment");
   const { blueprintData } = useBlueprintData();
+  const { toast } = useToast();
 
   // Initialize conversation with STRICT isolation - reset and start fresh
   useEffect(() => {
@@ -131,52 +134,129 @@ ${ASSESSMENT_STAGES[0].prompt}`;
     setIsProcessing(true);
     
     try {
+      console.log('Starting real conversational assessment processing...');
+      
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
       // Combine all conversation data
       const fullConversation = conversationData.join('\n\n') + '\n\n' + 
         messages.slice(-10).map(m => m.content).join('\n');
       
-      // Send processing prompt to extract assessment data
-      const processingPrompt = `Based on our conversation, please provide a life wheel assessment with scores from 1-10 for each domain. Format your response as JSON with this structure:
+      console.log('Conversation data prepared, calling assessment API...');
 
-{
-  "assessments": [
-    {
-      "domain": "wellbeing",
-      "current_score": 7,
-      "desired_score": 9,
-      "importance_rating": 8,
-      "notes": "Brief insight about this domain"
-    }
-  ]
-}
+      // Call the real assessment edge function
+      const { data: assessmentResult, error } = await supabase.functions.invoke('conversational-assessment', {
+        body: {
+          conversationData: fullConversation,
+          userId: user.id,
+          sessionId: crypto.randomUUID(),
+          blueprintData: blueprintData
+        },
+      });
 
-Include assessments for these domains: wellbeing, energy, career, relationships, finances, health, personal_growth.
+      if (error) {
+        console.error('Assessment API error:', error);
+        throw error;
+      }
 
-Based on our conversation, here's what I gathered:
-${fullConversation}`;
+      if (!assessmentResult?.success) {
+        console.error('Assessment processing failed:', assessmentResult);
+        throw new Error('Assessment processing failed');
+      }
 
-      const response = await sendMessage(processingPrompt, false, "Processing your assessment...", "life-assessment");
-      
-      // Parse the response and extract assessment data
-      const mockAssessments = [
-        { domain: 'wellbeing', current_score: 6, desired_score: 9, importance_rating: 8, notes: 'Seeking more balance and inner peace' },
-        { domain: 'energy', current_score: 5, desired_score: 8, importance_rating: 7, notes: 'Need more vitality and motivation' },
-        { domain: 'career', current_score: 7, desired_score: 9, importance_rating: 9, notes: 'Want more fulfillment and growth' },
-        { domain: 'relationships', current_score: 6, desired_score: 8, importance_rating: 8, notes: 'Desire deeper connections' },
-        { domain: 'finances', current_score: 5, desired_score: 8, importance_rating: 7, notes: 'Need better financial security' },
-        { domain: 'health', current_score: 6, desired_score: 9, importance_rating: 9, notes: 'Want to optimize physical wellness' },
-        { domain: 'personal_growth', current_score: 7, desired_score: 10, importance_rating: 10, notes: 'Committed to continuous evolution' }
-      ] as LifeWheelAssessment[];
-      
-      onComplete(mockAssessments);
+      console.log('Assessment completed successfully:', assessmentResult.assessments.length, 'domains');
+
+      // Show success message
+      toast({
+        title: "Assessment Complete! ✨",
+        description: `Analyzed your conversation and created personalized insights for ${assessmentResult.assessments.length} life domains.`,
+      });
+
+      // Pass the real assessment data to completion handler
+      onComplete(assessmentResult.assessments);
       
     } catch (error) {
       console.error('Error processing conversational assessment:', error);
-      // Fallback to default assessment completion
-      onComplete([]);
+      
+      // Show error message
+      toast({
+        title: "Assessment Processing Error",
+        description: "We'll use a basic assessment for now. Your conversation data is still valuable!",
+        variant: "destructive"
+      });
+
+      // Fallback: Create basic assessment from conversation keywords
+      const fallbackAssessments = createFallbackAssessments(conversationData.join(' ') + ' ' + messages.map(m => m.content).join(' '));
+      onComplete(fallbackAssessments);
+      
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  // Fallback assessment creation for offline/error scenarios
+  const createFallbackAssessments = (conversationText: string): LifeWheelAssessment[] => {
+    const domains: LifeDomain[] = ['wellbeing', 'energy', 'career', 'relationships', 'finances', 'health', 'personal_growth'];
+    const lowerText = conversationText.toLowerCase();
+    const currentTime = new Date().toISOString();
+    
+    return domains.map(domain => {
+      // Simple sentiment analysis for domain scoring
+      let currentScore = 6; // Default middle score
+      let desiredScore = 8;  // Default improvement target
+      let importanceRating = 7; // Default importance
+      
+      // Look for domain-specific keywords and sentiment
+      const domainKeywords = {
+        wellbeing: ['happy', 'peace', 'balance', 'satisfaction', 'fulfillment'],
+        energy: ['energy', 'motivation', 'vitality', 'tired', 'exhausted'],
+        career: ['work', 'job', 'career', 'professional', 'employment'],
+        relationships: ['family', 'friends', 'relationship', 'social', 'love'],
+        finances: ['money', 'financial', 'income', 'budget', 'savings'],
+        health: ['health', 'fitness', 'exercise', 'wellness', 'medical'],
+        personal_growth: ['growth', 'learning', 'development', 'goals', 'improvement']
+      };
+
+      const keywords = domainKeywords[domain as keyof typeof domainKeywords] || [];
+      const positiveWords = ['good', 'great', 'excellent', 'satisfied', 'strong', 'positive'];
+      const negativeWords = ['poor', 'bad', 'struggling', 'difficult', 'challenging', 'stressed'];
+      
+      // Adjust scores based on keyword presence and sentiment
+      keywords.forEach(keyword => {
+        if (lowerText.includes(keyword)) {
+          importanceRating = Math.min(10, importanceRating + 1);
+          
+          // Check surrounding context for sentiment
+          const keywordIndex = lowerText.indexOf(keyword);
+          const contextWindow = lowerText.substring(Math.max(0, keywordIndex - 50), keywordIndex + 50);
+          
+          if (positiveWords.some(word => contextWindow.includes(word))) {
+            currentScore = Math.min(9, currentScore + 1);
+          } else if (negativeWords.some(word => contextWindow.includes(word))) {
+            currentScore = Math.max(2, currentScore - 2);
+            desiredScore = Math.min(10, desiredScore + 1); // Higher desire for improvement
+          }
+        }
+      });
+
+      return {
+        id: crypto.randomUUID(),
+        user_id: 'fallback-user', // Will be replaced by parent component
+        domain,
+        current_score: currentScore,
+        desired_score: desiredScore,
+        importance_rating: importanceRating,
+        gap_size: desiredScore - currentScore,
+        assessment_version: 1,
+        notes: `Assessment based on conversation analysis. Areas mentioned: ${keywords.filter(k => lowerText.includes(k)).join(', ') || 'general discussion'}.`,
+        created_at: currentTime,
+        updated_at: currentTime
+      } as LifeWheelAssessment;
+    });
   };
 
   const progress = ((currentStage + 1) / ASSESSMENT_STAGES.length) * 100;
