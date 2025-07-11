@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
@@ -73,8 +72,11 @@ const Coach = () => {
     });
   };
 
-  const handleFeedback = (messageId: string, isPositive: boolean) => {
-    recordVFPGraphFeedback(messageId, isPositive);
+  const handleFeedback = (feedback: any) => {
+    // Handle feedback - this matches the expected signature
+    if (feedback && typeof feedback === 'object') {
+      recordVFPGraphFeedback(feedback.messageId, feedback.isPositive);
+    }
   };
 
   if (!isAuthenticated) {
@@ -103,8 +105,11 @@ const Coach = () => {
 
   // Transform messages to match BlendInterface expected format
   const transformedMessages = messages.map(msg => ({
-    ...msg,
-    isUser: msg.role === 'user'
+    id: msg.id,
+    content: msg.content,
+    isUser: msg.role === 'user',
+    timestamp: msg.timestamp || new Date(),
+    isStreaming: msg.isStreaming
   }));
 
   // Create the main chat interface component
