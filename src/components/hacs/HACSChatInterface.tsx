@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { IntelligentSoulOrb } from "@/components/ui/intelligent-soul-orb";
-import { useHACSIntelligence } from "@/hooks/use-hacs-intelligence";
+import { useHacsIntelligence } from "@/hooks/use-hacs-intelligence";
 import { Send, Loader2, Brain, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -37,7 +36,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
   const {
     generateResponse,
     isProcessing
-  } = useHACSIntelligence();
+  } = useHacsIntelligence();
 
   // Initialize with HACS greeting and initial message
   useEffect(() => {

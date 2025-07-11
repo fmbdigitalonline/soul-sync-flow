@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { IntelligentSoulOrb } from "@/components/ui/intelligent-soul-orb";
 import { SpeechBubble } from "@/components/ui/speech-bubble";
 import { HACSChatInterface } from "./HACSChatInterface";
-import { useHACSIntelligence } from "@/hooks/use-hacs-intelligence";
+import { useHacsIntelligence } from "@/hooks/use-hacs-intelligence";
 import { X, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
