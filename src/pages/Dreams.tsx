@@ -580,9 +580,9 @@ const Dreams = () => {
                 <Heart className={`text-white ${isFoldDevice ? 'h-6 w-6' : 'h-8 w-8'}`} />
               </div>
               
-              {/* Enhanced Title with Better Visibility */}
+              {/* Enhanced Title with Black Text */}
               <div className="mb-4">
-                <h1 className={`font-heading font-bold mb-2 bg-gradient-to-r from-soul-purple to-soul-teal bg-clip-text text-transparent leading-tight ${getTextSize('text-2xl')} ${isFoldDevice ? 'text-xl' : 'text-2xl lg:text-3xl'}`}>
+                <h1 className={`font-heading font-bold mb-2 text-black leading-tight ${getTextSize('text-2xl')} ${isFoldDevice ? 'text-xl' : 'text-2xl lg:text-3xl'}`}>
                   Dreams & Goals Creator
                 </h1>
                 <div className="w-16 h-1 bg-gradient-to-r from-soul-purple to-soul-teal rounded-full mx-auto mb-3"></div>
