@@ -102,5 +102,35 @@ verify_jwt = true
 cors = ["*"]
 methods = ["POST", "OPTIONS"]
 
+[functions.hacs-intelligent-conversation]
+verify_jwt = true
+cors = ["*"]
+methods = ["POST", "OPTIONS"]
+
+[functions.hacs-authentic-insights]
+verify_jwt = true
+cors = ["*"]
+methods = ["POST", "OPTIONS"]
+
+[functions.hacs-autonomous-text]
+verify_jwt = true
+cors = ["*"]
+methods = ["POST", "OPTIONS"]
+
+[functions.hacs-response-analysis]
+verify_jwt = true
+cors = ["*"]
+methods = ["POST", "OPTIONS"]
+
+[functions.generate-personality-report]
+verify_jwt = true
+cors = ["*"]
+methods = ["POST", "OPTIONS"]
+
+[functions.openai-embeddings]
+verify_jwt = true
+cors = ["*"]
+methods = ["POST", "OPTIONS"]
+
 [analytics]
 enabled = false
