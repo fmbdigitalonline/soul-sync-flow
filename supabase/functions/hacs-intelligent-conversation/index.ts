@@ -37,6 +37,12 @@ serve(async (req) => {
   }
 
   try {
+    const requestBody = await req.json();
+    console.log('Request received:', { 
+      action: requestBody.action, 
+      userId: requestBody.userId?.substring(0, 8) + '...' 
+    });
+
     const { 
       action, // 'generate_question', 'respond_to_user', 'analyze_gap'
       userId,
@@ -45,12 +51,21 @@ serve(async (req) => {
       userMessage,
       messageHistory = [],
       forceQuestionGeneration = false
-    } = await req.json();
+    } = requestBody;
+
+    if (!userId) {
+      throw new Error('userId is required');
+    }
+
+    if (!openAIApiKey) {
+      throw new Error('OpenAI API key is not configured');
+    }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
+    console.log('Supabase client created');
 
     // Get user blueprint and HACS intelligence
-    const [{ data: blueprint }, { data: hacsData }] = await Promise.all([
+    const [blueprintResult, hacsResult] = await Promise.all([
       supabase
         .from('blueprints')
         .select('*')
@@ -63,6 +78,16 @@ serve(async (req) => {
         .eq('user_id', userId)
         .single()
     ]);
+
+    console.log('Database queries completed', {
+      blueprintFound: !!blueprintResult.data,
+      hacsFound: !!hacsResult.data,
+      blueprintError: blueprintResult.error?.message,
+      hacsError: hacsResult.error?.message
+    });
+
+    const blueprint = blueprintResult.data;
+    const hacsData = hacsResult.data;
 
     // Authentic intelligence system - no hardcoded fallbacks
     const intelligenceData: HACSIntelligenceData = hacsData || { 
@@ -331,6 +356,11 @@ Generate a ${questionType} question for the ${targetModule} module to help me le
     }),
   });
 
+  if (!response.ok) {
+    console.error('OpenAI API error:', response.status, response.statusText);
+    throw new Error(`OpenAI API error: ${response.status}`);
+  }
+
   const data = await response.json();
   const questionText = data.choices[0]?.message?.content?.trim() || 
     `I'm curious about your ${targetModule.toLowerCase()} patterns. Could you share more about that?`;
@@ -413,6 +443,11 @@ Respond as HACS:`;
       temperature: 0.7,
     }),
   });
+
+  if (!response.ok) {
+    console.error('OpenAI API error in conversation response:', response.status, response.statusText);
+    throw new Error(`OpenAI API error: ${response.status}`);
+  }
 
   const data = await response.json();
   return data.choices[0]?.message?.content?.trim() || 
