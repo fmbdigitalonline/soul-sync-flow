@@ -4,8 +4,10 @@ import { IntelligentSoulOrb } from '@/components/ui/intelligent-soul-orb';
 import { SpeechBubble } from '@/components/ui/speech-bubble';
 import { useHacsIntelligence } from '@/hooks/use-hacs-intelligence';
 import { useHACSMicroLearning } from '@/hooks/use-hacs-micro-learning';
+import { useHACSInsights } from '@/hooks/use-hacs-insights';
 import { HACSMicroLearning } from './HACSMicroLearning';
 import { HACSChatOverlay } from './HACSChatOverlay';
+import { HACSInsightDisplay } from './HACSInsightDisplay';
 import { cn } from '@/lib/utils';
 
 interface FloatingHACSProps {
@@ -29,17 +31,26 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     clearCurrentQuestion,
     triggerMicroLearning
   } = useHACSMicroLearning();
+  const {
+    currentInsight,
+    isGenerating: isGeneratingInsight,
+    acknowledgeInsight,
+    dismissInsight,
+    triggerInsightCheck
+  } = useHACSInsights();
 
-  console.log('FloatingHACSOrb render:', { loading, intelligence, currentQuestion, isGenerating });
+  console.log('FloatingHACSOrb render:', { loading, intelligence, currentQuestion, currentInsight, isGenerating, isGeneratingInsight });
 
   const intelligenceLevel = intelligence?.intelligence_level || 0;
 
   // Update orb stage based on authentic HACS state
   useEffect(() => {
-    if (isGenerating) {
+    if (isGenerating || isGeneratingInsight) {
       setOrbStage("generating");
     } else if (currentQuestion) {
       setOrbStage("collecting");
+    } else if (currentInsight) {
+      setOrbStage("complete");
     } else if (intelligenceLevel > 70) {
       setOrbStage("complete");
     } else if (intelligenceLevel > 0) {
@@ -47,53 +58,69 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     } else {
       setOrbStage("welcome");
     }
-  }, [isGenerating, currentQuestion, intelligenceLevel]);
+  }, [isGenerating, isGeneratingInsight, currentQuestion, currentInsight, intelligenceLevel]);
 
-  // Show speech bubble when there's a current question
+  // Show speech bubble for questions or insights
   useEffect(() => {
     if (currentQuestion) {
       setShowBubble(true);
-      // Auto-dismiss bubble after 15 seconds
+      // Auto-dismiss bubble after 15 seconds for questions
       const timer = setTimeout(() => {
         setShowBubble(false);
         clearCurrentQuestion();
       }, 15000);
       return () => clearTimeout(timer);
+    } else if (currentInsight && !currentInsight.acknowledged) {
+      // Insights show in their own display component, no bubble needed
+      setShowBubble(false);
     } else {
       setShowBubble(false);
     }
-  }, [currentQuestion, clearCurrentQuestion]);
+  }, [currentQuestion, currentInsight, clearCurrentQuestion]);
 
-  // Authentic micro-learning triggers
+  // Authentic triggers for both learning and insights
   useEffect(() => {
-    const learningTimer = setTimeout(() => {
-      if (!currentQuestion && !loading && !isGenerating) {
-        // Trigger thinking state before generating authentic question
+    const activityTimer = setTimeout(() => {
+      if (!currentQuestion && !currentInsight && !loading && !isGenerating && !isGeneratingInsight) {
+        // Trigger thinking state before generating content
         setIsThinking(true);
         setActiveModule('NIK');
         setModuleActivity(true);
         
         setTimeout(async () => {
-          const triggered = await triggerMicroLearning();
+          // Randomly choose between learning and insight generation
+          const shouldGenerateInsight = Math.random() < 0.4; // 40% chance for insight
+          
+          if (shouldGenerateInsight) {
+            await triggerInsightCheck('periodic_activity', { source: 'autonomous_trigger' });
+          } else {
+            await triggerMicroLearning();
+          }
+          
           setIsThinking(false);
           setModuleActivity(false);
-          
-          if (triggered && currentQuestion) {
-            setShowBubble(true);
-          }
         }, 1500);
       }
-    }, 8000); // Less frequent, more thoughtful triggers
-    return () => clearTimeout(learningTimer);
-  }, [currentQuestion, loading, isGenerating, triggerMicroLearning]);
+    }, 10000); // Every 10 seconds check for triggers
+    return () => clearTimeout(activityTimer);
+  }, [currentQuestion, currentInsight, loading, isGenerating, isGeneratingInsight, triggerMicroLearning, triggerInsightCheck]);
 
-  // Module activity based on current question
+  // Module activity based on current question or insight
   useEffect(() => {
     if (currentQuestion) {
       setActiveModule(currentQuestion.module);
       setModuleActivity(true);
       
-      // Clear module activity after question is processed
+      const clearTimer = setTimeout(() => {
+        setModuleActivity(false);
+        setActiveModule(undefined);
+      }, 3000);
+      
+      return () => clearTimeout(clearTimer);
+    } else if (currentInsight) {
+      setActiveModule(currentInsight.module);
+      setModuleActivity(true);
+      
       const clearTimer = setTimeout(() => {
         setModuleActivity(false);
         setActiveModule(undefined);
@@ -101,7 +128,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
       
       return () => clearTimeout(clearTimer);
     }
-  }, [currentQuestion]);
+  }, [currentQuestion, currentInsight]);
 
   const handleOrbClick = () => {
     if (currentQuestion) {
@@ -140,7 +167,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     }
   };
 
-  console.log('FloatingHACSOrb state:', { loading, intelligence, currentQuestion, showBubble, showChat, showMicroLearning });
+  console.log('FloatingHACSOrb state:', { loading, intelligence, currentQuestion, currentInsight, showBubble, showChat, showMicroLearning });
   
   // Show a visible debug version when loading
   if (loading) {
@@ -193,20 +220,20 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
             <IntelligentSoulOrb
               size="md"
               stage={orbStage}
-              speaking={isGenerating}
+              speaking={isGenerating || isGeneratingInsight}
               intelligenceLevel={intelligenceLevel}
               showProgressRing={intelligenceLevel > 0}
               showIntelligenceTooltip={false}
               isThinking={isThinking}
               activeModule={activeModule}
-              moduleActivity={moduleActivity}
+              moduleActivity={moduleActivity || isGeneratingInsight}
               onClick={handleOrbClick}
               className="shadow-lg hover:shadow-xl transition-shadow"
             />
           </motion.div>
 
-          {/* Pulse indicator for new questions */}
-          {currentQuestion && (
+          {/* Pulse indicator for new questions or insights */}
+          {(currentQuestion || (currentInsight && !currentInsight.acknowledged)) && (
             <motion.div
               className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full"
               animate={{ scale: [1, 1.2, 1] }}
@@ -215,6 +242,16 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
           )}
         </div>
       </div>
+
+      {/* Insight Display */}
+      {currentInsight && !currentInsight.acknowledged && (
+        <HACSInsightDisplay
+          insight={currentInsight}
+          onAcknowledge={() => acknowledgeInsight(currentInsight.id)}
+          onDismiss={dismissInsight}
+          position="bottom-right"
+        />
+      )}
 
       {/* Micro Learning Modal */}
       <HACSMicroLearning
