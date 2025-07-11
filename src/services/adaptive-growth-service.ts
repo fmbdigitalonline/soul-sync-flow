@@ -26,6 +26,8 @@ interface AdaptiveGrowthProgram extends GrowthProgram {
 }
 
 export class AdaptiveGrowthService {
+  private static creationInProgress = new Map<string, Promise<AdaptiveGrowthProgram>>();
+
   // Core Growth Loop Functions
   async generateAdaptiveProgram(
     userId: string,
@@ -34,6 +36,15 @@ export class AdaptiveGrowthService {
     currentState?: any
   ): Promise<AdaptiveGrowthProgram> {
     console.log('🌱 Generating adaptive growth program with AI agents');
+
+    // Create a unique key for this request
+    const requestKey = `${userId}-${domain}`;
+    
+    // Check if there's already a program creation in progress for this user+domain
+    if (AdaptiveGrowthService.creationInProgress.has(requestKey)) {
+      console.log('🔄 Program creation already in progress, returning existing promise');
+      return AdaptiveGrowthService.creationInProgress.get(requestKey)!;
+    }
 
     // Check for Life Wheel Assessment first
     const { lifeOrchestratorService } = await import('./life-orchestrator-service');
@@ -49,12 +60,31 @@ export class AdaptiveGrowthService {
     console.log('🎯 Life Orchestrator Plan:', orchestratorPlan);
 
     // Check for existing active program to prevent duplicates
-    const existingProgram = await this.getCurrentPrograms(userId);
-    if (existingProgram.length > 0 && existingProgram.some(p => p.status === 'active' && p.domain === domain)) {
+    const existingPrograms = await this.getCurrentPrograms(userId);
+    const activeProgramForDomain = existingPrograms.find(p => 
+      p.status === 'active' && p.domain === domain
+    );
+    
+    if (activeProgramForDomain) {
       console.log('⚠️ Active program already exists for this domain, returning existing');
-      return this.getAdaptiveProgram(existingProgram[0].id) as Promise<AdaptiveGrowthProgram>;
+      AdaptiveGrowthService.creationInProgress.delete(requestKey);
+      return this.getAdaptiveProgram(activeProgramForDomain.id) as Promise<AdaptiveGrowthProgram>;
     }
 
+    // Create a promise for this operation and store it
+    const creationPromise = this.executeGenerateAdaptiveProgram(userId, domain, blueprint, currentState, requestKey);
+    AdaptiveGrowthService.creationInProgress.set(requestKey, creationPromise);
+    
+    return creationPromise;
+  }
+
+  private async executeGenerateAdaptiveProgram(
+    userId: string,
+    domain: LifeDomain,
+    blueprint: LayeredBlueprint,
+    currentState: any,
+    requestKey: string
+  ): Promise<AdaptiveGrowthProgram> {
     try {
       // 1. Process blueprint into dual memory format
       await blueprintEmbeddingService.processAndStoreBlueprintMemory(userId, blueprint);
@@ -105,10 +135,18 @@ export class AdaptiveGrowthService {
       await this.insertAdaptiveProgram(adaptiveProgram);
 
       console.log('✅ Adaptive growth program generated successfully');
+      
+      // Clean up the creation tracking
+      AdaptiveGrowthService.creationInProgress.delete(requestKey);
+      
       return adaptiveProgram;
 
     } catch (error) {
       console.error('❌ Adaptive program generation failed:', error);
+      
+      // Clean up the creation tracking on error
+      AdaptiveGrowthService.creationInProgress.delete(requestKey);
+      
       throw error;
     }
   }

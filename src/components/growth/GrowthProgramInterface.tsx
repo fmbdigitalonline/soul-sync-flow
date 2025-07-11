@@ -30,6 +30,7 @@ export const GrowthProgramInterface: React.FC<GrowthProgramInterfaceProps> = ({
   const [showGuide, setShowGuide] = useState(true); // Start with guide visible
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [creatingDomain, setCreatingDomain] = useState<LifeDomain | null>(null);
   const [apiStatus, setApiStatus] = useState<'checking' | 'ready' | 'error'>('checking');
   const [aiGeneratedContent, setAiGeneratedContent] = useState<any>(null);
   const [showEnhancedView, setShowEnhancedView] = useState(false);
@@ -69,6 +70,13 @@ export const GrowthProgramInterface: React.FC<GrowthProgramInterfaceProps> = ({
     loadCurrentProgram();
   }, [user]);
 
+  // Prevent auto-generation by checking if we're already creating
+  useEffect(() => {
+    if (creating || creatingDomain) {
+      console.log('🚫 Program creation in progress, preventing new attempts');
+    }
+  }, [creating, creatingDomain]);
+
   // Initialize conversation appropriately
   useEffect(() => {
     if (user && !loading) {
@@ -79,8 +87,15 @@ export const GrowthProgramInterface: React.FC<GrowthProgramInterfaceProps> = ({
   const loadCurrentProgram = async () => {
     if (!user) return;
     
+    // Don't reload if we're currently creating a program
+    if (creating || creatingDomain) {
+      console.log('🚫 Skipping program load during creation');
+      return;
+    }
+    
     try {
       setLoading(true);
+      console.log('📊 Loading current program for user:', user.id);
       const program = await agentGrowthIntegration.getCurrentProgram(user.id);
       
       if (program) {
@@ -112,10 +127,17 @@ export const GrowthProgramInterface: React.FC<GrowthProgramInterfaceProps> = ({
       });
       return;
     }
+
+    // Prevent multiple simultaneous calls for the same domain
+    if (creating || creatingDomain === domain) {
+      console.log('🚫 Program creation already in progress for domain:', domain);
+      return;
+    }
     
     try {
       setCreating(true);
-      console.log('Creating growth program for domain:', domain);
+      setCreatingDomain(domain);
+      console.log('🚀 Creating growth program for domain:', domain);
       
       if (currentProgram) {
         await agentGrowthIntegration.updateProgramProgress(currentProgram.id, {
@@ -154,6 +176,7 @@ export const GrowthProgramInterface: React.FC<GrowthProgramInterfaceProps> = ({
       });
     } finally {
       setCreating(false);
+      setCreatingDomain(null);
     }
   };
 
@@ -364,7 +387,7 @@ export const GrowthProgramInterface: React.FC<GrowthProgramInterfaceProps> = ({
               Cancel
             </Button>
           </div>
-          <GrowthProgramStarter onDomainSelect={handleCreateProgram} loading={creating} />
+          <GrowthProgramStarter onDomainSelect={handleCreateProgram} loading={creating} creatingDomain={creatingDomain} />
         </div>
         
         {/* Intelligent Guide */}
@@ -405,7 +428,7 @@ export const GrowthProgramInterface: React.FC<GrowthProgramInterfaceProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Program Creation Guide */}
         <div className="space-y-4">
-          <GrowthProgramStarter onDomainSelect={handleCreateProgram} loading={creating} />
+          <GrowthProgramStarter onDomainSelect={handleCreateProgram} loading={creating} creatingDomain={creatingDomain} />
         </div>
         
         {/* Intelligent Guide */}

@@ -9,11 +9,13 @@ import { LifeDomain } from '@/types/growth-program';
 interface GrowthProgramStarterProps {
   onDomainSelect: (domain: LifeDomain) => void;
   loading?: boolean;
+  creatingDomain?: LifeDomain | null;
 }
 
 export const GrowthProgramStarter: React.FC<GrowthProgramStarterProps> = ({
   onDomainSelect,
-  loading = false
+  loading = false,
+  creatingDomain = null
 }) => {
   const [selectedDomain, setSelectedDomain] = useState<LifeDomain | null>(null);
 
@@ -135,10 +137,10 @@ export const GrowthProgramStarter: React.FC<GrowthProgramStarterProps> = ({
             
             <Button 
               onClick={handleStartProgram}
-              disabled={loading}
+              disabled={loading || creatingDomain !== null}
               className="w-full bg-soul-purple hover:bg-soul-purple/90"
             >
-              {loading ? (
+              {loading || creatingDomain === selectedDomain ? (
                 <>
                   <Clock className="h-4 w-4 mr-2 animate-spin" />
                   Creating Your Program...
