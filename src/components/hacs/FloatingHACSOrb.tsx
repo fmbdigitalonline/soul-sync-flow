@@ -25,6 +25,8 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     triggerPIEInsight 
   } = useHACSAutonomy();
 
+  console.log('FloatingHACSOrb render:', { loading, intelligence });
+
   const intelligenceLevel = intelligence?.intelligence_level || 0;
 
   // Update orb stage based on HACS state
@@ -98,7 +100,16 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     }
   };
 
-  if (loading) return null;
+  console.log('FloatingHACSOrb state:', { loading, intelligence, currentMessage, showBubble, showChat });
+  
+  // Show a visible debug version when loading
+  if (loading) {
+    return (
+      <div className="fixed bottom-6 right-6 z-50 p-4 bg-red-500 text-white rounded">
+        HACS Loading...
+      </div>
+    );
+  }
 
   return (
     <>
