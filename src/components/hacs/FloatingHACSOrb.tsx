@@ -88,8 +88,8 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
         setModuleActivity(true);
         
         setTimeout(async () => {
-          // Randomly choose between learning and insight generation
-          const shouldGenerateInsight = Math.random() < 0.4; // 40% chance for insight
+          // Balanced choice between learning and insight generation
+          const shouldGenerateInsight = Math.random() < 0.6; // 60% chance for insight
           
           if (shouldGenerateInsight) {
             await triggerInsightCheck('periodic_activity', { source: 'autonomous_trigger' });
@@ -101,7 +101,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
           setModuleActivity(false);
         }, 1500);
       }
-    }, 10000); // Every 10 seconds check for triggers
+    }, 2000); // Every 2 seconds check for triggers
     return () => clearTimeout(activityTimer);
   }, [currentQuestion, currentInsight, loading, isGenerating, isGeneratingInsight, triggerMicroLearning, triggerInsightCheck]);
 

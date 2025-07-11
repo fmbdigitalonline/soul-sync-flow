@@ -40,9 +40,9 @@ export const useHACSInsights = () => {
   const generateInsight = useCallback(async (currentContext?: string) => {
     if (!user || isGenerating) return null;
 
-    // Prevent too frequent insight generation (minimum 5 minutes between insights)
+    // Prevent too frequent insight generation (minimum 30 seconds between insights)
     const now = Date.now();
-    if (now - lastInsightTime < 5 * 60 * 1000) {
+    if (now - lastInsightTime < 30 * 1000) {
       console.log('🔍 Too soon for next insight, waiting...');
       return null;
     }
@@ -140,8 +140,8 @@ export const useHACSInsights = () => {
     ];
 
     if (meaningfulActivities.includes(activityType)) {
-      // Random chance to generate insight (30% for high-value activities)
-      const shouldGenerate = Math.random() < 0.3;
+      // High probability to generate insight (70% for meaningful activities)
+      const shouldGenerate = Math.random() < 0.7;
       
       console.log('🔍 Should generate insight?', shouldGenerate, 'Activity:', activityType);
       

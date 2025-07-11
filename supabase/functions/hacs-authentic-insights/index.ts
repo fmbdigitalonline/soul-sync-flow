@@ -74,7 +74,7 @@ serve(async (req) => {
       .order('last_activity', { ascending: false })
       .limit(5);
 
-    if (!activityLogs || activityLogs.length < 5) {
+    if (!activityLogs || activityLogs.length < 2) {
       console.log('Insufficient data for authentic insights');
       return new Response(JSON.stringify({ 
         insight: null,
