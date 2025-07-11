@@ -70,30 +70,45 @@ serve(async (req) => {
     const chineseAstrology = blueprintData.archetype_chinese || {};
     const numerology = blueprintData.values_life_path || {};
 
-    // Generate 10 personalized quotes using OpenAI
-    const systemPrompt = `You are a master personality analyst creating personalized inspirational quotes. Generate exactly 10 unique, meaningful quotes that resonate with this person's specific personality blend.
+    // Extract deep insights from personality report
+    const reportContent = reportData.report_content || {};
+    const corePattern = reportContent.core_personality_pattern || '';
+    const decisionStyle = reportContent.decision_making_style || '';
+    const relationshipStyle = reportContent.relationship_style || '';
+    const energyTiming = reportContent.current_energy_timing || '';
+    const integratedSummary = reportContent.integrated_summary || '';
 
-USER PROFILE:
-- MBTI: ${personality.likelyType || 'Unknown'}
-- Human Design: ${humanDesign.type} ${humanDesign.profile} (${humanDesign.strategy}, ${humanDesign.authority})
-- Chinese Astrology: ${chineseAstrology.animal} ${chineseAstrology.element}
-- Life Path: ${numerology.life_path_number}
-- Sun Sign: ${astrology.sun_sign}
+    // Generate 10 personalized quotes using OpenAI with deep context
+    const systemPrompt = `You are a master personality analyst creating deeply personalized, emotionally resonant quotes. Generate exactly 10 unique quotes that feel like they were written specifically for this person's soul journey.
 
-QUOTE CATEGORIES to include (vary these):
-- inspiration, growth, resilience, life_path, energy, timing, relationships, motivation, wisdom, authenticity
+DEEP PERSONALITY INSIGHTS:
+${integratedSummary}
 
-FORMAT REQUIRED - exactly like this:
-1. "Quote text here" - Category: inspiration - Why it resonates: Brief explanation
-2. "Quote text here" - Category: growth - Why it resonates: Brief explanation
+CORE PATTERN: ${corePattern}
+DECISION STYLE: ${decisionStyle}
+RELATIONSHIP APPROACH: ${relationshipStyle}
+ENERGY & TIMING: ${energyTiming}
+
+PERSONALITY ARCHITECTURE:
+- Type: ${personality.likelyType || 'Unique'} with ${humanDesign.type} energy (${humanDesign.authority} authority)
+- Archetype: ${chineseAstrology.animal} ${chineseAstrology.element} with Life Path ${numerology.life_path_number}
+- Profile: ${humanDesign.profile} - ${humanDesign.strategy}
+
+SPECIALIZED QUOTE CATEGORIES (use these specific to their journey):
+- visionary_grounding, intuitive_logic_balance, projector_energy_wisdom, splenic_authority_trust, creative_expression, meaningful_connections, practical_imagination, harmonious_navigation, growth_through_grace, authentic_leadership
+
+FORMAT REQUIRED:
+1. "Quote text here" - Category: visionary_grounding - Why it resonates: Deep personal explanation
+2. "Quote text here" - Category: intuitive_logic_balance - Why it resonates: Deep personal explanation
 [Continue for exactly 10 quotes]
 
-REQUIREMENTS:
-- Each quote must be unique and meaningful
-- Vary the categories across all 10 quotes
-- Make quotes specific to their personality blend
-- Keep quotes inspiring but authentic to their traits
-- Each quote should be 8-20 words long`;
+CRITICAL REQUIREMENTS:
+- Each quote must feel personally crafted for THIS specific soul
+- Draw from their actual personality insights, not generic types
+- Use language that echoes their journey: "grace and insight", "harmonious interplay", "visionary with pragmatic edge"
+- Create quotes that acknowledge their unique challenges and gifts
+- Make each quote emotionally moving and deeply inspiring
+- Quote length: 10-25 words for emotional impact`;
 
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -102,7 +117,7 @@ REQUIREMENTS:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o',
         messages: [
           { role: 'system', content: systemPrompt },
           { 
