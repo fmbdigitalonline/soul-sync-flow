@@ -13,6 +13,7 @@ import Auth from './pages/Auth';
 import Blueprint from './pages/Blueprint';
 import Profile from './pages/Profile';
 import TestEnvironmentPage from './pages/TestEnvironmentPage';
+import { TestFunctionsPage } from './pages/TestFunctionsPage';
 import { Toaster } from '@/components/ui/toaster';
 import { SoulOrbProvider } from './contexts/SoulOrbContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -41,6 +42,7 @@ function App() {
                     <Route path="/profile" element={<ProtectedRoute><MainLayout><Profile /></MainLayout></ProtectedRoute>} />
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/test-environment" element={<ProtectedRoute><MainLayout><TestEnvironmentPage /></MainLayout></ProtectedRoute>} />
+                    <Route path="/test-functions" element={<ProtectedRoute><MainLayout><TestFunctionsPage /></MainLayout></ProtectedRoute>} />
                     <Route 
                       path="/admin" 
                       element={
