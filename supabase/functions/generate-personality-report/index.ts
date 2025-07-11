@@ -1,4 +1,5 @@
 
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
@@ -74,7 +75,9 @@ serve(async (req) => {
       unconsciousGates: humanDesign.gates?.unconscious_design?.length || 0
     });
 
-    const systemPrompt = `You are a master Human Design and personality analyst creating a comprehensive personality report. You MUST follow the EXACT format specified below.
+    // FIXED: Separate system prompts for personality reports vs conversations
+    // This system prompt is ONLY for personality report generation - uses "you" as requested
+    const personalityReportSystemPrompt = `You are a master Human Design and personality analyst creating a comprehensive personality report. You MUST follow the EXACT format specified below.
 
 CRITICAL FORMAT REQUIREMENT: You must create exactly 6 detailed sections followed by 10 quotes. Each section must be substantial analysis (300-400 words), NOT inspirational quotes. Always address the person as "you" throughout the report.
 
@@ -131,7 +134,9 @@ PERSONALIZED QUOTES:
 2. "Quote text" - Category: growth - Why it resonates: Brief explanation
 [Continue for exactly 10 quotes]
 
-CRITICAL: Each numbered section (1-6) MUST contain detailed analysis, not quotes. Quotes come only at the end after "PERSONALIZED QUOTES:".`;
+CRITICAL: Each numbered section (1-6) MUST contain detailed analysis, not quotes. Quotes come only at the end after "PERSONALIZED QUOTES:". This prompt is ONLY for personality report generation and should use "you" throughout.`;
+
+    console.log('🎯 Using personality report system prompt (uses "you" as requested for reports only)');
 
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -142,7 +147,7 @@ CRITICAL: Each numbered section (1-6) MUST contain detailed analysis, not quotes
       body: JSON.stringify({
         model: 'gpt-4o',
         messages: [
-          { role: 'system', content: systemPrompt },
+          { role: 'system', content: personalityReportSystemPrompt },
            { 
              role: 'user', 
              content: `Generate a comprehensive personality reading that integrates ALL the blueprint data: Big Five scores, MBTI probabilities, Chinese astrology (${chineseAstrology.animal} ${chineseAstrology.element}), Human Design gates, and numerology. Address the person as "you" throughout. Include 10 warm, inspiring quotes that reflect the unique personality blend.` 
@@ -359,3 +364,4 @@ CRITICAL: Each numbered section (1-6) MUST contain detailed analysis, not quotes
     });
   }
 });
+
