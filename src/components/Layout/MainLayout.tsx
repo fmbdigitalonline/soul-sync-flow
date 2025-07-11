@@ -1,7 +1,9 @@
+
 import React from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { FloatingHACSOrb } from "@/components/hacs/FloatingHACSOrb";
+import MobileNavigation from "./MobileNavigation";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -19,6 +21,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, className }) => {
       {user && (
         <FloatingHACSOrb />
       )}
+      
+      {/* Mobile Navigation */}
+      <MobileNavigation />
     </div>
   );
 };
