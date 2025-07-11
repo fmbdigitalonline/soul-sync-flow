@@ -158,7 +158,7 @@ const Dreams = () => {
                 <Button
                   variant="link"
                   className="mt-2"
-                  onClick={() => handleCategorySelect("spiritual-growth")}
+                  onClick={() => handleCategorySelect("spirituality")}
                 >
                   Explore
                   <ArrowRight className="ml-2 w-4 h-4" />
