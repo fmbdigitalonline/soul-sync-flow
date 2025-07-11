@@ -149,7 +149,7 @@ export function ProgressiveJourneyAssessment({ onComplete, onBack }: Progressive
   const progress = ((currentStep + 1) / JOURNEY_STEPS.length) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-background">
       <div className="container mx-auto py-6 px-4 max-w-6xl">
         
         {/* Header */}
