@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "./index.css";
 
 import { Toaster } from "@/components/ui/toaster";
+import MainLayout from "./components/Layout/MainLayout";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -44,22 +45,20 @@ const queryClient = new QueryClient({
 // Root layout component with consistent provider nesting order
 const RootLayout = () => {
   return (
-    <div className="min-h-screen bg-white">
-      <ErrorBoundary>
-        <AuthProvider>
-          <LanguageProvider>
-            <ModeProvider>
-              <SoulOrbProvider>
-                <BlueprintCacheProvider>
-                  <Outlet />
-                  <Toaster />
-                </BlueprintCacheProvider>
-              </SoulOrbProvider>
-            </ModeProvider>
-          </LanguageProvider>
-        </AuthProvider>
-      </ErrorBoundary>
-    </div>
+    <ErrorBoundary>
+      <AuthProvider>
+        <LanguageProvider>
+          <ModeProvider>
+            <SoulOrbProvider>
+              <BlueprintCacheProvider>
+                <Outlet />
+                <Toaster />
+              </BlueprintCacheProvider>
+            </SoulOrbProvider>
+          </ModeProvider>
+        </LanguageProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 };
 
@@ -70,21 +69,21 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Index /> },
       { path: "auth", element: <Auth /> },
-      { path: "onboarding", element: <ProtectedRoute><Onboarding /></ProtectedRoute> },
-      { path: "dashboard", element: <ProtectedRoute><Dashboard /></ProtectedRoute> },
-      { path: "blueprint", element: <ProtectedRoute><Blueprint /></ProtectedRoute> },
-      { path: "companion", element: <ProtectedRoute><Coach /></ProtectedRoute> },
+      { path: "onboarding", element: <ProtectedRoute><MainLayout><Onboarding /></MainLayout></ProtectedRoute> },
+      { path: "dashboard", element: <ProtectedRoute><MainLayout><Dashboard /></MainLayout></ProtectedRoute> },
+      { path: "blueprint", element: <ProtectedRoute><MainLayout><Blueprint /></MainLayout></ProtectedRoute> },
+      { path: "companion", element: <ProtectedRoute><MainLayout><Coach /></MainLayout></ProtectedRoute> },
       { path: "coach", element: <Navigate to="/companion" replace /> },
-      { path: "tasks", element: <ProtectedRoute><Tasks /></ProtectedRoute> },
-      { path: "dreams", element: <ProtectedRoute><Dreams /></ProtectedRoute> },
-      { path: "spiritual-growth", element: <ProtectedRoute><SpiritualGrowth /></ProtectedRoute> },
-      { path: "profile", element: <ProtectedRoute><Profile /></ProtectedRoute> },
+      { path: "tasks", element: <ProtectedRoute><MainLayout><Tasks /></MainLayout></ProtectedRoute> },
+      { path: "dreams", element: <ProtectedRoute><MainLayout><Dreams /></MainLayout></ProtectedRoute> },
+      { path: "spiritual-growth", element: <ProtectedRoute><MainLayout><SpiritualGrowth /></MainLayout></ProtectedRoute> },
+      { path: "profile", element: <ProtectedRoute><MainLayout><Profile /></MainLayout></ProtectedRoute> },
       { path: "test-ephemeris", element: <TestEphemeris /> },
       { path: "human-design-debug", element: <HumanDesignDebug /> },
       { path: "persona-test", element: <PersonaTest /> },
-      { path: "seven-layer-test", element: <ProtectedRoute><SevenLayerTest /></ProtectedRoute> },
-      { path: "phase3-memory-test", element: <ProtectedRoute><Phase3MemoryTestPage /></ProtectedRoute> },
-      { path: "test-environment", element: <ProtectedRoute><TestEnvironmentPage /></ProtectedRoute> },
+      { path: "seven-layer-test", element: <ProtectedRoute><MainLayout><SevenLayerTest /></MainLayout></ProtectedRoute> },
+      { path: "phase3-memory-test", element: <ProtectedRoute><MainLayout><Phase3MemoryTestPage /></MainLayout></ProtectedRoute> },
+      { path: "test-environment", element: <ProtectedRoute><MainLayout><TestEnvironmentPage /></MainLayout></ProtectedRoute> },
       { path: "*", element: <NotFound /> }
     ]
   }
