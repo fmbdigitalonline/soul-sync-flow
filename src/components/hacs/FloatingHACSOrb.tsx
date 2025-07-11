@@ -3,7 +3,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { IntelligentSoulOrb } from '@/components/ui/intelligent-soul-orb';
 import { SpeechBubble } from '@/components/ui/speech-bubble';
 import { useHacsIntelligence } from '@/hooks/use-hacs-intelligence';
-import { useHACSAutonomy, type HACSMessage } from '@/hooks/use-hacs-autonomy';
+import { useHACSMicroLearning } from '@/hooks/use-hacs-micro-learning';
+import { HACSMicroLearning } from './HACSMicroLearning';
 import { HACSChatOverlay } from './HACSChatOverlay';
 import { cn } from '@/lib/utils';
 
@@ -14,95 +15,85 @@ interface FloatingHACSProps {
 export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   const [showBubble, setShowBubble] = useState(false);
   const [showChat, setShowChat] = useState(false);
+  const [showMicroLearning, setShowMicroLearning] = useState(false);
   const [orbStage, setOrbStage] = useState<"welcome" | "collecting" | "generating" | "complete">("welcome");
   const [activeModule, setActiveModule] = useState<string | undefined>();
   const [moduleActivity, setModuleActivity] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
   
-  const { intelligence, loading } = useHacsIntelligence();
+  const { intelligence, loading, refreshIntelligence } = useHacsIntelligence();
   const { 
-    currentMessage, 
-    isGenerating, 
-    acknowledgeMessage, 
-    dismissMessage,
-    triggerPIEInsight 
-  } = useHACSAutonomy();
+    currentQuestion,
+    isGenerating,
+    generateMicroQuestion,
+    clearCurrentQuestion,
+    triggerMicroLearning
+  } = useHACSMicroLearning();
 
   console.log('FloatingHACSOrb render:', { loading, intelligence });
 
   const intelligenceLevel = intelligence?.intelligence_level || 0;
 
-  // Update orb stage based on HACS state
+  // Update orb stage based on authentic HACS state
   useEffect(() => {
     if (isGenerating) {
       setOrbStage("generating");
-    } else if (currentMessage && !currentMessage.acknowledged) {
-      setOrbStage("complete");
+    } else if (currentQuestion) {
+      setOrbStage("collecting");
     } else if (intelligenceLevel > 70) {
       setOrbStage("complete");
+    } else if (intelligenceLevel > 0) {
+      setOrbStage("welcome");
     } else {
       setOrbStage("welcome");
     }
-  }, [isGenerating, currentMessage, intelligenceLevel]);
+  }, [isGenerating, currentQuestion, intelligenceLevel]);
 
-  // Show speech bubble when there's a current message
+  // Show speech bubble when there's a current question
   useEffect(() => {
-    if (currentMessage && !currentMessage.acknowledged) {
+    if (currentQuestion) {
       setShowBubble(true);
-      // Auto-dismiss bubble after 10 seconds for quick bubbles
-      if (currentMessage.messageType === 'quick_bubble') {
-        const timer = setTimeout(() => {
-          setShowBubble(false);
-          acknowledgeMessage(currentMessage.id);
-        }, 10000);
-        return () => clearTimeout(timer);
-      }
+      // Auto-dismiss bubble after 15 seconds
+      const timer = setTimeout(() => {
+        setShowBubble(false);
+        clearCurrentQuestion();
+      }, 15000);
+      return () => clearTimeout(timer);
     } else {
       setShowBubble(false);
     }
-  }, [currentMessage, acknowledgeMessage]);
+  }, [currentQuestion, clearCurrentQuestion]);
 
-  // Enhanced autonomous triggers with module activities
+  // Authentic micro-learning triggers
   useEffect(() => {
-    const demoTimer = setTimeout(() => {
-      if (!currentMessage && !loading) {
-        // Simulate thinking state before generating insight
+    const learningTimer = setTimeout(() => {
+      if (!currentQuestion && !loading && !isGenerating) {
+        // Trigger thinking state before generating authentic question
         setIsThinking(true);
-        setActiveModule('PIE');
+        setActiveModule('NIK');
         setModuleActivity(true);
         
-        setTimeout(() => {
-          triggerPIEInsight("Your usage patterns suggest optimal productivity windows");
+        setTimeout(async () => {
+          const triggered = await triggerMicroLearning();
           setIsThinking(false);
           setModuleActivity(false);
-        }, 1500); // Show thinking animation for 1.5s
+          
+          if (triggered && currentQuestion) {
+            setShowBubble(true);
+          }
+        }, 1500);
       }
-    }, 3000); // Reduced from 5 seconds to 3 seconds for more frequent activity
-    return () => clearTimeout(demoTimer);
-  }, [triggerPIEInsight, currentMessage, loading]);
+    }, 8000); // Less frequent, more thoughtful triggers
+    return () => clearTimeout(learningTimer);
+  }, [currentQuestion, loading, isGenerating, triggerMicroLearning]);
 
-  // Module activity simulation based on HACS state
+  // Module activity based on current question
   useEffect(() => {
-    if (currentMessage && !currentMessage.acknowledged) {
-      const moduleMap: Record<string, string> = {
-        PIE: 'PIE',
-        CNR: 'CNR', 
-        TMG: 'TMG',
-        DPEM: 'DPEM',
-        ACS: 'ACS',
-        NIK: 'NIK',
-        CPSR: 'CPSR',
-        TWS: 'TWS',
-        HFME: 'HFME',
-        BPSC: 'BPSC',
-        VFP: 'VFP'
-      };
-      
-      const module = moduleMap[currentMessage.hacsModule] || 'ACS';
-      setActiveModule(module);
+    if (currentQuestion) {
+      setActiveModule(currentQuestion.module);
       setModuleActivity(true);
       
-      // Clear module activity after message is processed
+      // Clear module activity after question is processed
       const clearTimer = setTimeout(() => {
         setModuleActivity(false);
         setActiveModule(undefined);
@@ -110,40 +101,46 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
       
       return () => clearTimeout(clearTimer);
     }
-  }, [currentMessage]);
+  }, [currentQuestion]);
 
   const handleOrbClick = () => {
-    if (currentMessage && !currentMessage.acknowledged) {
-      if (currentMessage.messageType === 'quick_bubble') {
-        acknowledgeMessage(currentMessage.id);
-        setShowBubble(false);
-      } else {
-        setShowChat(true);
-      }
+    if (currentQuestion) {
+      setShowMicroLearning(true);
+      setShowBubble(false);
     } else {
       setShowChat(true);
     }
   };
 
   const handleBubbleClick = () => {
-    if (currentMessage) {
-      if (currentMessage.messageType === 'quick_bubble') {
-        acknowledgeMessage(currentMessage.id);
-        setShowBubble(false);
-      } else {
-        setShowChat(true);
-      }
+    if (currentQuestion) {
+      setShowMicroLearning(true);
+      setShowBubble(false);
     }
   };
 
   const handleCloseChat = () => {
     setShowChat(false);
-    if (currentMessage && !currentMessage.acknowledged) {
-      acknowledgeMessage(currentMessage.id);
+  };
+
+  const handleCloseMicroLearning = () => {
+    setShowMicroLearning(false);
+    setShowBubble(false);
+    clearCurrentQuestion();
+  };
+
+  const handleLearningComplete = (growth: number) => {
+    // Refresh intelligence data to show updated levels
+    refreshIntelligence();
+    
+    // Show module activity based on growth
+    if (growth > 0) {
+      setModuleActivity(true);
+      setTimeout(() => setModuleActivity(false), 2000);
     }
   };
 
-  console.log('FloatingHACSOrb state:', { loading, intelligence, currentMessage, showBubble, showChat });
+  console.log('FloatingHACSOrb state:', { loading, intelligence, currentQuestion, showBubble, showChat, showMicroLearning });
   
   // Show a visible debug version when loading
   if (loading) {
@@ -164,7 +161,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
         <div className="relative pointer-events-auto">
           {/* Speech Bubble */}
           <AnimatePresence>
-            {showBubble && currentMessage && (
+            {showBubble && currentQuestion && (
               <div 
                 className="mb-3 cursor-pointer hover:scale-105 transition-transform"
                 onClick={handleBubbleClick}
@@ -175,14 +172,12 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
                 >
                 <div className="text-sm">
                   <div className="font-medium text-primary mb-1">
-                    {currentMessage.hacsModule}
+                    {currentQuestion.module} Learning
                   </div>
-                  <div>{currentMessage.text}</div>
-                  {currentMessage.messageType !== 'quick_bubble' && (
-                    <div className="text-xs text-muted-foreground mt-2">
-                      Click to expand
-                    </div>
-                  )}
+                  <div>{currentQuestion.text}</div>
+                  <div className="text-xs text-muted-foreground mt-2">
+                    Click to answer • Quick learning session
+                  </div>
                 </div>
                 </SpeechBubble>
               </div>
@@ -210,8 +205,8 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
             />
           </motion.div>
 
-          {/* Pulse indicator for new messages */}
-          {currentMessage && !currentMessage.acknowledged && (
+          {/* Pulse indicator for new questions */}
+          {currentQuestion && (
             <motion.div
               className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full"
               animate={{ scale: [1, 1.2, 1] }}
@@ -221,11 +216,20 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
         </div>
       </div>
 
+      {/* Micro Learning Modal */}
+      <HACSMicroLearning
+        isOpen={showMicroLearning}
+        onClose={handleCloseMicroLearning}
+        question={currentQuestion || undefined}
+        intelligenceLevel={intelligenceLevel}
+        onLearningComplete={handleLearningComplete}
+      />
+
       {/* Chat Overlay */}
       <HACSChatOverlay
         isOpen={showChat}
         onClose={handleCloseChat}
-        currentMessage={currentMessage}
+        currentMessage={null}
         intelligenceLevel={intelligenceLevel}
       />
     </>

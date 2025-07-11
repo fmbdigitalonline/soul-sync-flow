@@ -64,9 +64,10 @@ serve(async (req) => {
         .single()
     ]);
 
+    // Authentic intelligence system - no hardcoded fallbacks
     const intelligenceData: HACSIntelligenceData = hacsData || { 
-      intelligence_level: 50, 
-      module_scores: HACS_MODULES.reduce((acc, module) => ({ ...acc, [module]: 50 }), {})
+      intelligence_level: 0, 
+      module_scores: HACS_MODULES.reduce((acc, module) => ({ ...acc, [module]: 0 }), {})
     };
 
     // Get or create conversation record
@@ -466,9 +467,9 @@ async function analyzeIntelligenceGaps(
   
   const gaps = HACS_MODULES.map(module => ({
     module,
-    score: moduleScores[module] || 50,
-    gapSize: 100 - (moduleScores[module] || 50),
-    priority: calculatePriority(module, moduleScores[module] || 50, blueprint)
+    score: moduleScores[module] || 0,
+    gapSize: 100 - (moduleScores[module] || 0),
+    priority: calculatePriority(module, moduleScores[module] || 0, blueprint)
   })).sort((a, b) => b.priority - a.priority);
 
   return {
