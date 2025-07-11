@@ -182,7 +182,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     <>
       {/* Fixed positioning container */}
       <div className={cn(
-        "fixed bottom-6 right-6 z-50 pointer-events-none",
+        "fixed top-20 left-6 z-50 pointer-events-none",
         className
       )}>
         <div className="relative pointer-events-auto">
@@ -218,7 +218,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
             className="cursor-pointer"
           >
             <IntelligentSoulOrb
-              size="md"
+              size="sm"
               stage={orbStage}
               speaking={isGenerating || isGeneratingInsight}
               intelligenceLevel={intelligenceLevel}
