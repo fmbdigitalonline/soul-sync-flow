@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { LanguageSelector } from "@/components/ui/language-selector";
 import { isAdminUser } from "@/utils/isAdminUser";
 import MobileNavigation from "./MobileNavigation";
+import { FloatingHACSOrb } from "@/components/hacs/FloatingHACSOrb";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -193,6 +194,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
 
       {/* Mobile Bottom Navigation - Always show */}
       <MobileNavigation />
+
+      {/* HACS Floating Orb - Always visible when authenticated */}
+      {user && <FloatingHACSOrb />}
     </div>
   );
 };
