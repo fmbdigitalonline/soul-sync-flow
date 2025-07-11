@@ -19,7 +19,7 @@ interface Message {
   content: string;
   isUser: boolean;
   timestamp: Date;
-  agentMode: AgentMode;
+  agentMode?: AgentMode;
   brainMetrics?: any;
   interventionApplied?: boolean;
 }
@@ -267,9 +267,9 @@ const UnifiedCoachInterface: React.FC<UnifiedCoachInterfaceProps> = ({
                   {!message.isUser && (
                     <div className="flex items-center justify-between mt-2 text-xs">
                       <div className="flex items-center space-x-2">
-                        <Badge variant="outline" className={getModeColor(message.agentMode)}>
-                          {getModeIcon(message.agentMode)}
-                          <span className="ml-1 capitalize">{message.agentMode}</span>
+                        <Badge variant="outline" className={getModeColor(message.agentMode || agentMode)}>
+                          {getModeIcon(message.agentMode || agentMode)}
+                          <span className="ml-1 capitalize">{message.agentMode || agentMode}</span>
                         </Badge>
                         {message.interventionApplied && (
                           <Badge variant="outline" className="bg-orange-100 text-orange-800">

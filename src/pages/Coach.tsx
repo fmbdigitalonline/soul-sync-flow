@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
@@ -31,7 +30,7 @@ const Coach = () => {
     recordVFPGraphFeedback,
     acsEnabled,
     acsState
-  } = useEnhancedAICoach("blend", "companion");
+  } = useEnhancedAICoach("blend", "companion-chat");
 
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const { toast } = useToast();
@@ -59,7 +58,7 @@ const Coach = () => {
   }, []);
 
   const handleSendMessage = async (message: string) => {
-    await sendMessage(message, true, undefined, 'companion');
+    await sendMessage(message, true, undefined, 'blend');
   };
 
   const handleReset = () => {

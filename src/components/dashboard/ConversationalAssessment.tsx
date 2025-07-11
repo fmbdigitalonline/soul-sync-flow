@@ -70,7 +70,7 @@ I'm your assessment guide, and I'll help you explore different areas of your lif
 
 ${ASSESSMENT_STAGES[0].prompt}`;
       
-      sendMessage(welcomeMessage, true, "", "life-assessment");
+      sendMessage(welcomeMessage, true, "", "guide");
     };
     
     // Delay to ensure conversation reset is complete
@@ -121,7 +121,7 @@ ${ASSESSMENT_STAGES[0].prompt}`;
       if (nextStage < ASSESSMENT_STAGES.length - 1) {
         // Send next stage prompt
         setTimeout(() => {
-          sendMessage(ASSESSMENT_STAGES[nextStage].prompt, true, "", "life-assessment");
+          sendMessage(ASSESSMENT_STAGES[nextStage].prompt, true, "", "guide");
         }, 1000);
       } else {
         // Final stage - process assessment
@@ -356,7 +356,7 @@ ${ASSESSMENT_STAGES[0].prompt}`;
               <SpiritualGuideInterface
                 messages={messages}
                 isLoading={isLoading}
-                onSendMessage={(message) => sendMessage(message, true, message, "life-assessment")}
+                onSendMessage={(message) => sendMessage(message, true, message, "guide")}
                 userDisplayName={getUserDisplayName()}
                 coreTraits={getCoreTraits()}
               />

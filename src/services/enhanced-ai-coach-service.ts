@@ -71,6 +71,34 @@ class EnhancedAICoachService {
     await this.preloadVFPGraphData();
   }
 
+  async clearCachedPersona(userId: string): Promise<void> {
+    console.log("🧹 Clearing cached persona for user:", userId);
+    this.blueprintCache = null;
+    this.vfpGraphCache = { vector: null, summary: null };
+    this.conversationCache.clear();
+  }
+
+  async initializePersona(
+    userId: string,
+    agentType: AgentType,
+    blueprintData?: any
+  ): Promise<{ success: boolean }> {
+    try {
+      console.log("🎭 Initializing persona for user:", userId, "agent:", agentType);
+      
+      await this.setCurrentUser(userId);
+      
+      if (blueprintData) {
+        this.updateUserBlueprint(blueprintData);
+      }
+      
+      return { success: true };
+    } catch (error) {
+      console.error("❌ Error initializing persona:", error);
+      return { success: false };
+    }
+  }
+
   private async preloadVFPGraphData() {
     if (!this.currentUserId) return;
 
