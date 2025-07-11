@@ -46,7 +46,7 @@ const SpiritualGrowth = () => {
     
     checkAuth();
     
-    const { data } { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       const authenticated = !!session;
       setIsAuthenticated(authenticated);
     });
