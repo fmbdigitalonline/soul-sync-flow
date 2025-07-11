@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useHacsIntelligence } from './use-hacs-intelligence';
 
 export interface HACSQuestion {
   id: string;
@@ -11,6 +12,7 @@ export interface HACSQuestion {
 
 export const useHACSMicroLearning = () => {
   const { user } = useAuth();
+  const { refreshIntelligence } = useHacsIntelligence();
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState<HACSQuestion | null>(null);
   const [sessionId] = useState(`micro_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
@@ -93,12 +95,19 @@ export const useHACSMicroLearning = () => {
       });
 
       if (error) throw error;
+
+      // CRITICAL: Refresh intelligence after learning analysis
+      if (data?.intelligenceUpdated) {
+        console.log('🧠 Intelligence updated from micro-learning, refreshing...');
+        await refreshIntelligence();
+      }
+
       return data;
     } catch (error) {
       console.error('Error submitting response:', error);
       return null;
     }
-  }, [user, sessionId]);
+  }, [user, sessionId, refreshIntelligence]);
 
   const clearCurrentQuestion = useCallback(() => {
     setCurrentQuestion(null);

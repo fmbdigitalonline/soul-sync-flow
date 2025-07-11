@@ -192,6 +192,49 @@ serve(async (req) => {
           })
           .eq('id', conversation.id);
 
+        // CRITICAL: Update intelligence from conversation interaction
+        const messageQuality = determineConversationQuality(userMessage, response);
+        const moduleImprovements = {
+          ACS: 0.2, // Adaptive Conversation System
+          NIK: 0.1, // Neural Integration from processing
+          CPSR: 0.1 // Pattern recognition from content
+        };
+
+        // Additional improvements based on content complexity
+        if (userMessage.length > 100) {
+          moduleImprovements.TWS = 0.1; // Temporal wisdom from complex discussions
+        }
+
+        const currentModuleScores = intelligenceData.module_scores || {};
+        const newModuleScores = { ...currentModuleScores };
+        
+        Object.entries(moduleImprovements).forEach(([module, improvement]) => {
+          const currentScore = newModuleScores[module] || 0;
+          newModuleScores[module] = Math.min(100, currentScore + improvement * messageQuality);
+        });
+
+        const moduleValues = Object.values(newModuleScores);
+        const newIntelligenceLevel = moduleValues.reduce((sum: number, score: any) => sum + Number(score), 0) / moduleValues.length;
+
+        await supabase
+          .from('hacs_intelligence')
+          .update({
+            intelligence_level: newIntelligenceLevel,
+            module_scores: newModuleScores,
+            interaction_count: (intelligenceData.intelligence_level > 0 ? 1 : 0) + 1,
+            last_update: new Date().toISOString(),
+            pie_score: newModuleScores.PIE || 0,
+            vfp_score: newModuleScores.VFP || 0,
+            tmg_score: newModuleScores.TMG || 0,
+          })
+          .eq('user_id', userId);
+
+        console.log('Intelligence updated from conversation:', { 
+          oldLevel: intelligenceData.intelligence_level || 0, 
+          newLevel: newIntelligenceLevel,
+          messageQuality 
+        });
+
         // Generate question if needed
         if (shouldGenerateQuestion || forceQuestionGeneration) {
           const questionResult = await generateAutonomousQuestion(
@@ -225,7 +268,8 @@ serve(async (req) => {
         response_length: response.length,
         question_generated: !!generatedQuestion,
         intelligence_level: intelligenceData.intelligence_level,
-        conversation_id: conversation.id
+        conversation_id: conversation.id,
+        intelligence_updated: action === 'respond_to_user'
       },
       session_id: sessionId
     });
@@ -527,4 +571,16 @@ function calculatePriority(module: string, score: number, blueprint: any): numbe
   }
   
   return priority;
+}
+
+function determineConversationQuality(userMessage: string, hacsResponse: string): number {
+  const messageLength = userMessage.length;
+  const hasQuestions = userMessage.includes('?');
+  const isEngaged = messageLength > 50 && (hasQuestions || userMessage.split(' ').length > 10);
+  const isDeepResponse = hacsResponse.length > 100;
+  
+  if (isEngaged && isDeepResponse) return 1.0; // excellent
+  if (isEngaged || isDeepResponse) return 0.8; // good
+  if (messageLength > 20) return 0.5; // average
+  return 0.2; // poor
 }

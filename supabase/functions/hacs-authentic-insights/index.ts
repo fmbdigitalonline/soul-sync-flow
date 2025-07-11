@@ -110,6 +110,46 @@ serve(async (req) => {
       });
     }
 
+    // CRITICAL: Update intelligence from insights generation
+    if (insight.confidence > 0.7) {
+      // High-confidence insights contribute to learning
+      const moduleImprovements = {
+        [insight.module]: 0.3, // Small but real improvement
+        PIE: 0.2, // Predictive insights always improve PIE
+        ACS: 0.1  // Adaptive conversation system learns from context
+      };
+
+      // Update HACS intelligence
+      const currentModuleScores = hacsData?.module_scores || {};
+      const newModuleScores = { ...currentModuleScores };
+      
+      Object.entries(moduleImprovements).forEach(([module, improvement]) => {
+        const currentScore = newModuleScores[module] || 0;
+        newModuleScores[module] = Math.min(100, currentScore + improvement);
+      });
+
+      const moduleValues = Object.values(newModuleScores);
+      const newIntelligenceLevel = moduleValues.reduce((sum: number, score: any) => sum + Number(score), 0) / moduleValues.length;
+
+      await supabase
+        .from('hacs_intelligence')
+        .update({
+          intelligence_level: newIntelligenceLevel,
+          module_scores: newModuleScores,
+          interaction_count: (hacsData?.interaction_count || 0) + 1,
+          last_update: new Date().toISOString(),
+          pie_score: newModuleScores.PIE || 0,
+          vfp_score: newModuleScores.VFP || 0,
+          tmg_score: newModuleScores.TMG || 0,
+        })
+        .eq('user_id', userId);
+
+      console.log('Intelligence updated from insight generation:', { 
+        oldLevel: hacsData?.intelligence_level || 0, 
+        newLevel: newIntelligenceLevel 
+      });
+    }
+
     // Store the authentic insight for learning
     await supabase.from('hacs_module_insights').insert({
       user_id: userId,
@@ -134,7 +174,8 @@ serve(async (req) => {
         module: insight.module,
         confidence: insight.confidence,
         data_points_analyzed: activityLogs.length,
-        patterns_found: patterns.length
+        patterns_found: patterns.length,
+        intelligence_updated: insight.confidence > 0.7
       },
       session_id: sessionId
     });

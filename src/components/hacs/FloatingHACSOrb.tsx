@@ -93,8 +93,12 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
           
           if (shouldGenerateInsight) {
             await triggerInsightCheck('periodic_activity', { source: 'autonomous_trigger' });
+            // Refresh intelligence after insight generation
+            await refreshIntelligence();
           } else {
             await triggerMicroLearning();
+            // Refresh intelligence after micro-learning
+            await refreshIntelligence();
           }
           
           setIsThinking(false);
@@ -156,9 +160,10 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     clearCurrentQuestion();
   };
 
-  const handleLearningComplete = (growth: number) => {
-    // Refresh intelligence data to show updated levels
-    refreshIntelligence();
+  const handleLearningComplete = async (growth: number) => {
+    // CRITICAL: Refresh intelligence data to show updated levels in real-time
+    console.log('🎯 Learning completed, refreshing intelligence for visual update...');
+    await refreshIntelligence();
     
     // Show module activity based on growth
     if (growth > 0) {

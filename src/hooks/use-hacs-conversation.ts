@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useHacsIntelligence } from './use-hacs-intelligence';
 
 export interface ConversationMessage {
   id: string;
@@ -22,6 +23,7 @@ export interface HACSQuestion {
 
 export const useHACSConversation = () => {
   const { user } = useAuth();
+  const { recordConversationInteraction, refreshIntelligence } = useHacsIntelligence();
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
@@ -102,6 +104,15 @@ export const useHACSConversation = () => {
 
       setMessages(prev => [...prev, hacsMessage]);
       setConversationId(data.conversationId);
+
+      // CRITICAL: Record conversation interaction for intelligence growth
+      await recordConversationInteraction(
+        content.trim(),
+        determineResponseQuality(data.response, content.trim())
+      );
+
+      // Refresh intelligence to update visuals
+      await refreshIntelligence();
 
       // Handle generated question
       if (data.generatedQuestion) {
@@ -209,6 +220,19 @@ export const useHACSConversation = () => {
     setMessages([]);
     setConversationId(null);
     setCurrentQuestion(null);
+  }, []);
+
+  // Helper function to determine conversation quality
+  const determineResponseQuality = useCallback((hacsResponse: string, userMessage: string): 'excellent' | 'good' | 'average' | 'poor' => {
+    const messageLength = userMessage.length;
+    const hasQuestions = userMessage.includes('?');
+    const isEngaged = messageLength > 50 && (hasQuestions || userMessage.split(' ').length > 10);
+    const isDeepResponse = hacsResponse.length > 100;
+    
+    if (isEngaged && isDeepResponse) return 'excellent';
+    if (isEngaged || isDeepResponse) return 'good';
+    if (messageLength > 20) return 'average';
+    return 'poor';
   }, []);
 
   return {
