@@ -78,8 +78,9 @@ export const useEnhancedAICoach = (defaultAgent: AgentType = "guide", pageContex
   const { blueprintData, hasBlueprint, loading: blueprintLoading } = useBlueprintCache();
   const { user } = useAuth();
   
-  // Get user's display name
-  const userName = user?.user_metadata?.preferred_name || 
+  // Get user's display name - prioritize blueprint data over auth metadata
+  const userName = blueprintData?.user_meta?.preferred_name ||
+                   user?.user_metadata?.preferred_name || 
                    user?.user_metadata?.full_name?.split(' ')[0] || 
                    user?.email?.split('@')[0] || 
                    'friend';
