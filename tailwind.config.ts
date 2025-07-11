@@ -136,12 +136,12 @@ export default {
 				'200': '200%'
 			},
 			fontFamily: {
-				// Soul Font Hierarchy
-				body: ['Nunito Sans', 'sans-serif'], // Primary body text
-				ui: ['IBM Plex Sans', 'sans-serif'], // UI elements, buttons, forms
-				heading: ['Satoshi', 'sans-serif'], // Headlines, titles
-				focus: ['Lexend', 'sans-serif'], // Reading mode, focused content
-				sans: ['Nunito Sans', 'sans-serif'] // Default fallback
+				// Inter-based font hierarchy
+				sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'], // Primary Inter font
+				body: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'], // Primary body text
+				ui: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'], // UI elements, buttons, forms
+				heading: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'], // Headlines, titles
+				focus: ['Lexend', 'Inter', 'system-ui', 'sans-serif'], // Reading mode, focused content
 			},
 			spacing: {
 				'grid-8': '8px',
