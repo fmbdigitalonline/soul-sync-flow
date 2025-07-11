@@ -36,7 +36,7 @@ export const InteractiveHACSChat: React.FC<InteractiveHACSChatProps> = ({
   } = useHACSConversation();
 
   const { intelligence, loading: intelligenceLoading } = useHacsIntelligence();
-  const intelligenceLevel = intelligence?.intelligence_level || 50;
+  const intelligenceLevel = intelligence?.intelligence_level || 0; // Use 0 as fallback, not fake data
 
   // Add initial message to conversation if provided
   useEffect(() => {

@@ -6,6 +6,7 @@ import { Send, Sparkles, User } from 'lucide-react';
 import { SlowStreamingMessage } from './SlowStreamingMessage';
 import { Message } from '@/services/program-aware-coach-service';
 import { IntelligentSoulOrb } from '@/components/ui/intelligent-soul-orb';
+import { useHacsIntelligence } from '@/hooks/use-hacs-intelligence';
 
 interface GuideInterfaceProps {
   messages: Message[];
@@ -27,6 +28,10 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
   userDisplayName = 'friend'
 }) => {
   const [input, setInput] = useState('');
+  
+  // Use REAL intelligence data, no hardcoded values
+  const { intelligence } = useHacsIntelligence();
+  const intelligenceLevel = intelligence?.intelligence_level || 0;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,7 +63,7 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
                 size="lg" 
                 pulse={true}
                 stage="welcome"
-                intelligenceLevel={65}
+                intelligenceLevel={intelligenceLevel}
                 showProgressRing={true}
                 showIntelligenceTooltip={false}
               />
@@ -93,7 +98,7 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
                     pulse={false}
                     speaking={isStreaming && index === messages.length - 1}
                     stage="complete"
-                    intelligenceLevel={65}
+                    intelligenceLevel={intelligenceLevel}
                     showProgressRing={false}
                   />
                 </div>
@@ -134,7 +139,7 @@ export const GuideInterface: React.FC<GuideInterfaceProps> = ({
                 pulse={true}
                 speaking={true}
                 stage="generating"
-                intelligenceLevel={65}
+                intelligenceLevel={intelligenceLevel}
                 showProgressRing={false}
               />
             </div>

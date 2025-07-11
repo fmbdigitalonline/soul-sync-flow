@@ -210,12 +210,12 @@ export const GrowthProgramInterface: React.FC<GrowthProgramInterfaceProps> = ({
 
   const getProgramTypeInfo = (programType: string) => {
     const info = {
-      sprint: { label: 'Sprint Program', duration: '3 weeks', intensity: 'High' },
-      standard: { label: 'Standard Program', duration: '6 weeks', intensity: 'Medium' },
-      deep_dive: { label: 'Deep Dive Program', duration: '8 weeks', intensity: 'Deep' },
-      light_touch: { label: 'Light Touch Program', duration: '4 weeks', intensity: 'Light' }
+      sprint: { label: 'AI Sprint Program', duration: '3 weeks', intensity: 'High' },
+      standard: { label: 'AI Growth Program', duration: '6 weeks', intensity: 'Medium' },
+      deep_dive: { label: 'AI Deep Dive Program', duration: '8 weeks', intensity: 'Deep' },
+      light_touch: { label: 'AI Light Touch Program', duration: '4 weeks', intensity: 'Light' }
     };
-    return info[programType] || info.standard;
+    return info[programType] || { label: 'AI Agentic Program', duration: 'Dynamic', intensity: 'Adaptive' };
   };
 
   const loadAIGeneratedContent = async (program: GrowthProgram) => {
@@ -295,37 +295,10 @@ export const GrowthProgramInterface: React.FC<GrowthProgramInterfaceProps> = ({
       }
     });
     
-    // Fallback: create generic branches if none found
+    // NO FALLBACK - Only use AI-generated content from agentic orchestrator
+    // If no branches found, the system should use the raw agentic content
     if (branches.length === 0) {
-      branches.push(
-        {
-          title: 'Gradual Personal Growth Development',
-          strategy: 'Emphasize a slow and steady approach to personal growth',
-          objectives: ['Continue building on methods that show positive results', 'Reflect and internalize experiences'],
-          actionSteps: ['Daily journaling and reflection', 'Select manageable reinforcing tasks'],
-          advantages: ['Sustainable pace', 'Lower resistance to change', 'Easier adaptation'],
-          challenges: ['Progress may feel slow', 'Requires patience and consistency'],
-          isRecommended: false
-        },
-        {
-          title: 'Intensive Personal Growth Transformation',
-          strategy: 'Adopt an accelerated approach for immediate results',
-          objectives: ['Identify key areas for focused attention', 'Commit to rigorous schedule'],
-          actionSteps: ['Workshop enrollment or course signup', 'Daily challenging goals'],
-          advantages: ['Potential for rapid results', 'High momentum', 'Clear commitment'],
-          challenges: ['Higher risk of stress and burnout', 'Requires energy monitoring'],
-          isRecommended: false
-        },
-        {
-          title: 'Balanced Personal Growth Integration',
-          strategy: 'Integrate activities with natural energy rhythms',
-          objectives: ['Align activities with peak energy periods', 'Balance growth with self-care'],
-          actionSteps: ['Schedule alignment with energy patterns', 'Incorporate holistic practices'],
-          advantages: ['Honors natural rhythms', 'Sustainable growth', 'Deeper self-awareness'],
-          challenges: ['Requires careful planning', 'Needs strong self-awareness'],
-          isRecommended: true
-        }
-      );
+      console.log('⚠️ No plan branches found in AI content - will show raw agentic content instead');
     }
     
     return branches;
