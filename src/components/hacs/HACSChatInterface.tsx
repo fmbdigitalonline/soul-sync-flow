@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { IntelligentSoulOrb } from "@/components/ui/intelligent-soul-orb";
-import { useHacsIntelligence } from "@/hooks/use-hacs-intelligence";
+import { useHacsIntelligence } from "@/hooks/use-hacs-intelligence.tsx";
 import { Send, Loader2, Brain, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 
