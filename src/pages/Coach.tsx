@@ -15,6 +15,8 @@ import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 import { ActiveReminders } from "@/components/reminders/ActiveReminders";
 import { MobileTogglePanel } from "@/components/ui/mobile-toggle-panel";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { IntelligentSoulOrb } from "@/components/ui/intelligent-soul-orb";
+import { useHacsIntelligence } from "@/hooks/use-hacs-intelligence";
 
 const Coach = () => {
   const { 
@@ -39,6 +41,7 @@ const Coach = () => {
   const { hasBlueprint } = useBlueprintCache();
   const { productivityJourney, growthJourney } = useJourneyTracking();
   const { isMobile } = useIsMobile();
+  const { intelligence } = useHacsIntelligence();
 
   // Check authentication status
   useEffect(() => {
@@ -96,14 +99,31 @@ const Coach = () => {
 
   // Create the main chat interface component
   const chatInterface = (
-    <BlendInterface
-      messages={messages}
-      isLoading={isLoading}
-      onSendMessage={handleSendMessage}
-      personaReady={personaReady}
-      vfpGraphStatus={vfpGraphStatus}
-      onFeedback={recordVFPGraphFeedback}
-    />
+    <div className="relative h-full">
+      <BlendInterface
+        messages={messages}
+        isLoading={isLoading}
+        onSendMessage={handleSendMessage}
+        personaReady={personaReady}
+        vfpGraphStatus={vfpGraphStatus}
+        onFeedback={recordVFPGraphFeedback}
+        hideMessageOrbs={true}
+      />
+      
+      {/* Show orb only when AI is thinking/loading */}
+      {isLoading && (
+        <div className="absolute top-4 left-4 z-10">
+          <IntelligentSoulOrb 
+            size="sm"
+            intelligenceLevel={intelligence?.intelligence_level || 65}
+            showProgressRing={true}
+            speaking={true}
+            stage="generating"
+            pulse={true}
+          />
+        </div>
+      )}
+    </div>
   );
 
   const remindersContent = (
