@@ -53,14 +53,16 @@ export class HACSRoutingService {
         throw new Error('User not authenticated for HACS routing');
       }
 
-      // Route through HACS intelligent conversation for learning
+      // Route through HACS intelligent conversation WITH unified brain integration
       const { data: hacsResponse, error: hacsError } = await supabase.functions.invoke('hacs-intelligent-conversation', {
         body: {
           action: 'respond_to_user',
           userId: user.id,
           sessionId: request.sessionId,
           userMessage: request.message,
-          messageHistory: []
+          messageHistory: [],
+          useUnifiedBrain: true, // CRITICAL: Enable unified brain processing
+          agentMode: request.agentType || 'guide'
         }
       });
 
@@ -200,7 +202,9 @@ export class HACSRoutingService {
           userId: user.id,
           sessionId,
           userMessage: message,
-          messageHistory: []
+          messageHistory: [],
+          useUnifiedBrain: true, // CRITICAL: Enable unified brain processing
+          agentMode: agentType
         }
       });
 

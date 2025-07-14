@@ -51,7 +51,9 @@ serve(async (req) => {
       conversationId,
       userMessage,
       messageHistory = [],
-      forceQuestionGeneration = false
+      forceQuestionGeneration = false,
+      useUnifiedBrain = false, // CRITICAL: Enable unified brain processing
+      agentMode = 'guide'
     } = requestBody;
 
     if (!userId) {
@@ -196,21 +198,79 @@ serve(async (req) => {
         break;
 
       case 'respond_to_user':
+        // CRITICAL: Route through Unified Brain if flag is enabled
+        if (useUnifiedBrain) {
+          console.log('🧠 Routing through Unified Brain (all 11 Hermetic components)');
+          
+          try {
+            // Call the unified brain processor
+            const unifiedBrainResponse = await fetch(`${supabaseUrl}/functions/v1/unified-brain-processor`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${supabaseKey}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                userId,
+                sessionId,
+                message: userMessage,
+                agentMode,
+                currentState: 'NORMAL'
+              }),
+            });
+
+            if (!unifiedBrainResponse.ok) {
+              throw new Error(`Unified Brain failed: ${unifiedBrainResponse.status}`);
+            }
+
+            const unifiedData = await unifiedBrainResponse.json();
+            response = unifiedData.response;
+            
+            console.log(`✅ Unified Brain processed through ${unifiedData.processedModules}/11 Hermetic components`);
+            
+            // Log successful unified brain processing
+            await supabase.from('dream_activity_logs').insert({
+              user_id: userId,
+              activity_type: 'unified_brain_conversation',
+              activity_data: {
+                processed_modules: unifiedData.processedModules,
+                hermetic_results: unifiedData.hermeticResults?.length || 0,
+                brain_metrics: unifiedData.brainMetrics
+              },
+              session_id: sessionId
+            });
+
+          } catch (error) {
+            console.error('❌ Unified Brain routing failed, falling back to HACS:', error);
+            
+            // Fallback to original HACS processing
+            response = await generateConversationalResponse(
+              userMessage,
+              messageHistory,
+              intelligenceData,
+              personalityContext,
+              blueprint
+            );
+          }
+        } else {
+          // Original HACS processing (legacy mode)
+          console.log('📡 Using legacy HACS processing (bypassing unified brain)');
+          
+          response = await generateConversationalResponse(
+            userMessage,
+            messageHistory,
+            intelligenceData,
+            personalityContext,
+            blueprint
+          );
+        }
+
         // Check if we should generate a question after responding
         shouldGenerateQuestion = await shouldAskQuestion(
           supabase,
           userId,
           intelligenceData,
           messageHistory
-        );
-
-        // Generate conversational response
-        response = await generateConversationalResponse(
-          userMessage,
-          messageHistory,
-          intelligenceData,
-          personalityContext,
-          blueprint
         );
 
         // Store user message and response

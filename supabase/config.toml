@@ -132,5 +132,10 @@ verify_jwt = true
 cors = ["*"]
 methods = ["POST", "OPTIONS"]
 
+[functions.unified-brain-processor]
+verify_jwt = true
+cors = ["*"]
+methods = ["POST", "OPTIONS"]
+
 [analytics]
 enabled = false
