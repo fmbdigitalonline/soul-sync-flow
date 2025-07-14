@@ -125,13 +125,55 @@ class UnifiedBrainService {
     }
 
     const startTime = performance.now();
-    console.log(`🧠 Processing message through unified brain with layered models - Mode: ${agentMode}, State: ${currentState}`);
+    console.log(`🧠 Processing message through unified brain - Mode: ${agentMode}, State: ${currentState}`);
 
     // Check if HACS should be used or fallback to legacy pipeline
     if (hacsMonitorService.shouldUseFallback()) {
       console.log('🛡️ HACS fallback triggered - using legacy pipeline');
       return this.processMessageWithFallback(message, sessionId, agentMode, currentState);
     }
+
+    // **PHASE 2: MODE-AWARE ROUTING** - Route to appropriate mode-specific edge function
+    console.log(`🎯 UBS: Routing to mode-specific edge function: ${agentMode}`);
+    const modeSpecificResult = await this.routeToModeSpecificFunction(message, sessionId, agentMode);
+    
+    if (modeSpecificResult) {
+      console.log(`✅ UBS: Mode-specific response received from ${agentMode} mode`);
+      
+      // Still run HACS components for intelligence tracking but don't override response
+      await this.processIntentWithNIK(message, sessionId, agentMode);
+      await this.processCPSRStateSync(message, sessionId, agentMode, currentState);
+      await this.updateHFMEMetrics(sessionId, agentMode);
+      await this.monitorDualPoleBalance(message, agentMode);
+      await this.shareCrossModeIntent(sessionId, agentMode);
+      await this.collectPIEDataFromMessage(message, agentMode);
+      
+      // Store in memory using mode-specific response
+      const memoryStartTime = performance.now();
+      const memoryId = await this.storeInSharedMemory(message, sessionId, agentMode);
+      await this.storeInSharedMemory(modeSpecificResult.response, sessionId, agentMode, false);
+      const memoryLatency = performance.now() - memoryStartTime;
+      
+      const totalLatency = performance.now() - startTime;
+      console.log(`✅ Mode-aware unified brain processing complete in ${totalLatency.toFixed(1)}ms`);
+      
+      return {
+        response: modeSpecificResult.response,
+        newState: currentState,
+        memoryStored: !!memoryId,
+        personalityApplied: true,
+        interventionApplied: false,
+        continuityMaintained: true,
+        brainMetrics: {
+          memoryLatency,
+          personalityCoherence: this.calculatePersonalityCoherence(),
+          adaptiveResponse: !!modeSpecificResult.intelligenceBonus
+        }
+      };
+    }
+
+    // Fallback to original flow if mode-specific routing fails
+    console.log('⚠️ Mode-specific routing failed, using original flow');
 
     // HACS Step 0: NIK - Intent Analysis and Persistence
     await this.processIntentWithNIK(message, sessionId, agentMode);
@@ -588,7 +630,73 @@ class UnifiedBrainService {
     }
   }
 
-  // HACS CPSR Integration - Process state synchronization with Cross-Plane State Reflector
+  // **PHASE 2: MODE-AWARE ROUTING** - Route to appropriate mode-specific edge function
+  private async routeToModeSpecificFunction(
+    message: string,
+    sessionId: string,
+    agentMode: AgentMode
+  ): Promise<any> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      let functionName: string;
+      let expectedModule: string;
+
+      // Route to appropriate mode-specific edge function
+      switch (agentMode) {
+        case 'coach':
+          functionName = 'hacs-coach-conversation';
+          expectedModule = 'productivity';
+          break;
+        case 'guide':
+          functionName = 'hacs-growth-conversation';
+          expectedModule = 'growth';
+          break;
+        case 'blend':
+          functionName = 'hacs-blend-conversation';
+          expectedModule = 'integration';
+          break;
+        case 'dream':
+          functionName = 'hacs-dream-conversation';
+          expectedModule = 'subconscious';
+          break;
+        default:
+          console.warn(`🎯 UBS: Unknown mode ${agentMode}, falling back to guide mode`);
+          functionName = 'hacs-growth-conversation';
+          expectedModule = 'growth';
+      }
+
+      console.log(`🎯 UBS: Calling ${functionName} for ${agentMode} mode`);
+
+      const { data, error } = await supabase.functions.invoke(functionName, {
+        body: {
+          message,
+          conversationHistory: [], // Edge function will load its own conversation history
+          userId: user.id
+        }
+      });
+
+      if (error) {
+        console.error(`🎯 UBS: Error calling ${functionName}:`, error);
+        return null;
+      }
+
+      if (data && data.response && data.module === expectedModule) {
+        console.log(`✅ UBS: Received valid response from ${functionName}`);
+        return data;
+      } else {
+        console.warn(`🎯 UBS: Invalid response from ${functionName}:`, data);
+        return null;
+      }
+
+    } catch (error) {
+      console.error('🎯 UBS: Mode-specific routing failed:', error);
+      return null;
+    }
+  }
+
+  // **PHASE 4: CPSR INFINITE RECURSION FIX** - Process state synchronization with mode awareness
   private async processCPSRStateSync(
     message: string, 
     sessionId: string, 
@@ -596,46 +704,115 @@ class UnifiedBrainService {
     currentState: DialogueState
   ): Promise<void> {
     try {
-      console.log('🔄 CPSR: Processing cross-plane state synchronization');
+      console.log(`🔄 CPSR: Processing mode-aware state synchronization for ${agentMode}`);
       
-      // External State Updates (from user input and environment)
-      crossPlaneStateReflector.updateExternalState('user_input', message, 'unified_brain');
-      crossPlaneStateReflector.updateExternalState('session_id', sessionId, 'unified_brain');
-      crossPlaneStateReflector.updateExternalState('domain_context', agentMode, 'unified_brain');
-      crossPlaneStateReflector.updateExternalState('system_mode', currentState, 'unified_brain');
-      crossPlaneStateReflector.updateExternalState('timestamp', Date.now(), 'unified_brain');
+      // **FIX: Mode-specific state updates to prevent cross-mode interference**
+      crossPlaneStateReflector.updateExternalState('user_input', message, `user_${agentMode}_mode`);
+      crossPlaneStateReflector.updateExternalState('agent_mode', agentMode, 'mode_router');
+      crossPlaneStateReflector.updateExternalState('session_id', sessionId, 'session_manager');
+      crossPlaneStateReflector.updateExternalState('domain_context', agentMode, `${agentMode}_domain`);
       
-      // Internal State Updates (from cognitive processing)
-      const currentIntent = neuroIntentKernel.getCurrentIntent();
-      if (currentIntent) {
-        crossPlaneStateReflector.updateInternalState('current_intent', currentIntent.primary, 'nik');
-        crossPlaneStateReflector.updateInternalState('intent_priority', currentIntent.priority, 'nik');
-      }
+      // **FIX: Mode-specific internal state tracking**
+      crossPlaneStateReflector.updateInternalState('active_mode', agentMode, `${agentMode}_processor`);
+      crossPlaneStateReflector.updateInternalState('processing_stage', 'message_analysis', `${agentMode}_engine`);
+      crossPlaneStateReflector.updateInternalState('dialogue_state', currentState, `${agentMode}_dialogue_manager`);
       
-      crossPlaneStateReflector.updateInternalState('active_domain', agentMode, 'personality_engine');
-      crossPlaneStateReflector.updateInternalState('processing_mode', currentState, 'unified_brain');
-      crossPlaneStateReflector.updateInternalState('user_id', this.userId, 'unified_brain');
+      // **FIX: Mode-specific intelligence level tracking to prevent shared state conflicts**
+      await this.updateModeSpecificIntelligence(agentMode, sessionId);
       
-      // Meta State Updates (system performance and health)
-      crossPlaneStateReflector.updateMetaState('message_length', message.length, 'metrics');
-      crossPlaneStateReflector.updateMetaState('session_active', true, 'session_manager');
-      crossPlaneStateReflector.updateMetaState('last_interaction', Date.now(), 'activity_tracker');
+      // **FIX: Prevent recursion by limiting state reflection cycles**
+      crossPlaneStateReflector.updateMetaState('processing_mode', agentMode, 'unified_brain_service');
+      crossPlaneStateReflector.updateMetaState('last_message_length', message.length, 'message_analyzer');
+      crossPlaneStateReflector.updateMetaState('session_activity', Date.now(), 'activity_tracker');
       
-      // Get reflection state for context awareness
-      const unifiedState = crossPlaneStateReflector.getUnifiedState();
-      console.log(`🔄 CPSR: State synchronized across planes - External: ${Object.keys(unifiedState.external).length} keys, Internal: ${Object.keys(unifiedState.internal).length} keys, Meta: ${Object.keys(unifiedState.meta).length} keys`);
-      
-      // Store state snapshot in session memory for continuity
-      this.sessionMemory.set(`cpsr_state_${sessionId}`, {
-        timestamp: Date.now(),
-        unifiedState,
-        agentMode,
-        sessionId
-      });
+      console.log(`✅ CPSR: Mode-aware state sync completed for ${agentMode}`);
       
     } catch (error) {
-      console.error('🔄 CPSR: Error in state synchronization:', error);
-      // CPSR failure should not break the flow - continue without state sync
+      console.error('🔄 CPSR: State synchronization failed:', error);
+      // CPSR failure should not break the flow - continue with degraded state tracking
+    }
+  }
+
+  // **PHASE 4: MODE-SPECIFIC INTELLIGENCE TRACKING** - Update intelligence in mode-specific tables
+  private async updateModeSpecificIntelligence(agentMode: AgentMode, sessionId: string): Promise<void> {
+    try {
+      if (!this.userId) return;
+
+      const intelligenceData = await this.getCurrentModeIntelligence(agentMode);
+      
+      // Update CPSR with current mode intelligence to prevent shared state conflicts
+      crossPlaneStateReflector.updateMetaState(
+        `${agentMode}_intelligence_level`, 
+        intelligenceData?.intelligence_level || 50, 
+        `${agentMode}_intelligence_tracker`
+      );
+      
+      crossPlaneStateReflector.updateMetaState(
+        `${agentMode}_interaction_count`, 
+        (intelligenceData?.interaction_count || 0) + 1, 
+        `${agentMode}_interaction_counter`
+      );
+      
+      console.log(`🔄 CPSR: Updated ${agentMode} mode intelligence tracking`);
+      
+    } catch (error) {
+      console.error(`🔄 CPSR: Failed to update ${agentMode} intelligence:`, error);
+    }
+  }
+
+  // **PHASE 4: MODE-SPECIFIC INTELLIGENCE RETRIEVAL** - Get intelligence from appropriate mode table
+  private async getCurrentModeIntelligence(agentMode: AgentMode): Promise<any> {
+    try {
+      if (!this.userId) return null;
+
+      let data, error;
+      
+      switch (agentMode) {
+        case 'coach':
+          ({ data, error } = await supabase
+            .from('hacs_coach_intelligence')
+            .select('intelligence_level, interaction_count, module_scores')
+            .eq('user_id', this.userId)
+            .single());
+          break;
+        case 'guide':
+          ({ data, error } = await supabase
+            .from('hacs_growth_intelligence')
+            .select('intelligence_level, interaction_count, module_scores')
+            .eq('user_id', this.userId)
+            .single());
+          break;
+        case 'blend':
+          ({ data, error } = await supabase
+            .from('hacs_blend_intelligence')
+            .select('intelligence_level, interaction_count, module_scores')
+            .eq('user_id', this.userId)
+            .single());
+          break;
+        case 'dream':
+          ({ data, error } = await supabase
+            .from('hacs_dream_intelligence')
+            .select('intelligence_level, interaction_count, module_scores')
+            .eq('user_id', this.userId)
+            .single());
+          break;
+        default:
+          ({ data, error } = await supabase
+            .from('hacs_intelligence')
+            .select('intelligence_level, interaction_count, module_scores')
+            .eq('user_id', this.userId)
+            .single());
+      }
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
+        console.error(`Error fetching ${agentMode} intelligence:`, error);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error(`Failed to get ${agentMode} intelligence:`, error);
+      return null;
     }
   }
 
@@ -1277,7 +1454,8 @@ class UnifiedBrainService {
     const modeFrequencies: Record<AgentMode, number> = {
       'coach': 8.0,     // Task-focused, medium-high frequency
       'guide': 4.0,     // Reflective, lower frequency
-      'blend': 6.0      // Conversational, balanced frequency
+      'blend': 6.0,     // Conversational, balanced frequency
+      'dream': 3.0      // Intuitive, slow frequency
     };
     
     return modeFrequencies[agentMode] || 5.0;
