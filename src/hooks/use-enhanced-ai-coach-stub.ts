@@ -9,7 +9,7 @@ export interface Message {
   agent_mode?: string;
 }
 
-export type AgentType = "coach" | "guide" | "blend";
+export type AgentType = "coach" | "guide" | "blend" | "dream";
 
 // Comprehensive stub to prevent build errors in remaining files
 export const useEnhancedAICoach = (agentType?: AgentType, sessionId?: string) => {

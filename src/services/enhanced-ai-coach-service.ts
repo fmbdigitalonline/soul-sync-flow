@@ -12,7 +12,7 @@ import { modelRouterService } from "./model-router-service";
 import { costMonitoringService } from "./cost-monitoring-service";
 import { getUniversalConversationalPrompt } from "./universal-conversational-rules";
 
-export type AgentType = "coach" | "guide" | "blend";
+export type AgentType = "coach" | "guide" | "blend" | "dream";
 
 export interface ChatMessage {
   id: string;
@@ -29,7 +29,7 @@ export interface StreamingResponse {
 }
 
 interface ConversationContext {
-  agentType: 'coach' | 'guide' | 'blend';
+  agentType: AgentType;
   turnNumber: number;
   emotionalThemes: boolean;
   blueprintHeavy: boolean;
@@ -975,6 +975,12 @@ Seamlessly blend VFP-Graph intelligence with the detailed blueprint information 
 - Meet them wherever they need support most
 - Balance action-oriented help with deeper reflection
 - Support their whole journey with integrated wisdom`;
+
+      case 'dream':
+        return `- Focus on subconscious wisdom and dream interpretation
+- Help them explore symbolic thinking and archetypal patterns
+- Provide insights into their inner world and intuitive wisdom
+- Support shadow work and unconscious integration`;
 
       default:
         return '- Provide thoughtful, personalized support for their unique journey';

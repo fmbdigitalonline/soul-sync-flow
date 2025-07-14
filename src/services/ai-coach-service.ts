@@ -3,7 +3,7 @@ import { PersonalityEngine } from "./personality-engine";
 import { LayeredBlueprint, AgentMode } from "@/types/personality-modules";
 import { unifiedBrainService } from "./unified-brain-service";
 
-export type AgentType = "coach" | "guide" | "blend";
+export type AgentType = "coach" | "guide" | "blend" | "dream";
 
 export interface ChatMessage {
   id: string;
