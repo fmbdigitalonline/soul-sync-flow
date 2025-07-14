@@ -814,6 +814,292 @@ export type Database = {
           },
         ]
       }
+      hacs_blend_conversations: {
+        Row: {
+          context_summary: string | null
+          conversation_data: Json
+          created_at: string
+          id: string
+          intelligence_level_end: number | null
+          intelligence_level_start: number | null
+          last_activity: string
+          session_id: string
+          started_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          context_summary?: string | null
+          conversation_data?: Json
+          created_at?: string
+          id?: string
+          intelligence_level_end?: number | null
+          intelligence_level_start?: number | null
+          last_activity?: string
+          session_id: string
+          started_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          context_summary?: string | null
+          conversation_data?: Json
+          created_at?: string
+          id?: string
+          intelligence_level_end?: number | null
+          intelligence_level_start?: number | null
+          last_activity?: string
+          session_id?: string
+          started_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      hacs_blend_intelligence: {
+        Row: {
+          created_at: string | null
+          id: string
+          intelligence_level: number | null
+          interaction_count: number | null
+          last_update: string | null
+          module_scores: Json | null
+          pie_score: number | null
+          tmg_score: number | null
+          updated_at: string | null
+          user_id: string
+          vfp_score: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          intelligence_level?: number | null
+          interaction_count?: number | null
+          last_update?: string | null
+          module_scores?: Json | null
+          pie_score?: number | null
+          tmg_score?: number | null
+          updated_at?: string | null
+          user_id: string
+          vfp_score?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          intelligence_level?: number | null
+          interaction_count?: number | null
+          last_update?: string | null
+          module_scores?: Json | null
+          pie_score?: number | null
+          tmg_score?: number | null
+          updated_at?: string | null
+          user_id?: string
+          vfp_score?: number | null
+        }
+        Relationships: []
+      }
+      hacs_blend_questions: {
+        Row: {
+          answered_at: string | null
+          asked_at: string
+          conversation_id: string | null
+          created_at: string
+          generated_context: Json
+          hacs_module: string
+          id: string
+          intelligence_level_when_asked: number
+          learning_value: number | null
+          question_text: string
+          question_type: string
+          response_quality_score: number | null
+          user_id: string
+          user_response: string | null
+        }
+        Insert: {
+          answered_at?: string | null
+          asked_at?: string
+          conversation_id?: string | null
+          created_at?: string
+          generated_context?: Json
+          hacs_module: string
+          id?: string
+          intelligence_level_when_asked: number
+          learning_value?: number | null
+          question_text: string
+          question_type: string
+          response_quality_score?: number | null
+          user_id: string
+          user_response?: string | null
+        }
+        Update: {
+          answered_at?: string | null
+          asked_at?: string
+          conversation_id?: string | null
+          created_at?: string
+          generated_context?: Json
+          hacs_module?: string
+          id?: string
+          intelligence_level_when_asked?: number
+          learning_value?: number | null
+          question_text?: string
+          question_type?: string
+          response_quality_score?: number | null
+          user_id?: string
+          user_response?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hacs_blend_questions_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "hacs_blend_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hacs_coach_conversations: {
+        Row: {
+          context_summary: string | null
+          conversation_data: Json
+          created_at: string
+          id: string
+          intelligence_level_end: number | null
+          intelligence_level_start: number | null
+          last_activity: string
+          session_id: string
+          started_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          context_summary?: string | null
+          conversation_data?: Json
+          created_at?: string
+          id?: string
+          intelligence_level_end?: number | null
+          intelligence_level_start?: number | null
+          last_activity?: string
+          session_id: string
+          started_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          context_summary?: string | null
+          conversation_data?: Json
+          created_at?: string
+          id?: string
+          intelligence_level_end?: number | null
+          intelligence_level_start?: number | null
+          last_activity?: string
+          session_id?: string
+          started_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      hacs_coach_intelligence: {
+        Row: {
+          created_at: string | null
+          id: string
+          intelligence_level: number | null
+          interaction_count: number | null
+          last_update: string | null
+          module_scores: Json | null
+          pie_score: number | null
+          tmg_score: number | null
+          updated_at: string | null
+          user_id: string
+          vfp_score: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          intelligence_level?: number | null
+          interaction_count?: number | null
+          last_update?: string | null
+          module_scores?: Json | null
+          pie_score?: number | null
+          tmg_score?: number | null
+          updated_at?: string | null
+          user_id: string
+          vfp_score?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          intelligence_level?: number | null
+          interaction_count?: number | null
+          last_update?: string | null
+          module_scores?: Json | null
+          pie_score?: number | null
+          tmg_score?: number | null
+          updated_at?: string | null
+          user_id?: string
+          vfp_score?: number | null
+        }
+        Relationships: []
+      }
+      hacs_coach_questions: {
+        Row: {
+          answered_at: string | null
+          asked_at: string
+          conversation_id: string | null
+          created_at: string
+          generated_context: Json
+          hacs_module: string
+          id: string
+          intelligence_level_when_asked: number
+          learning_value: number | null
+          question_text: string
+          question_type: string
+          response_quality_score: number | null
+          user_id: string
+          user_response: string | null
+        }
+        Insert: {
+          answered_at?: string | null
+          asked_at?: string
+          conversation_id?: string | null
+          created_at?: string
+          generated_context?: Json
+          hacs_module: string
+          id?: string
+          intelligence_level_when_asked: number
+          learning_value?: number | null
+          question_text: string
+          question_type: string
+          response_quality_score?: number | null
+          user_id: string
+          user_response?: string | null
+        }
+        Update: {
+          answered_at?: string | null
+          asked_at?: string
+          conversation_id?: string | null
+          created_at?: string
+          generated_context?: Json
+          hacs_module?: string
+          id?: string
+          intelligence_level_when_asked?: number
+          learning_value?: number | null
+          question_text?: string
+          question_type?: string
+          response_quality_score?: number | null
+          user_id?: string
+          user_response?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hacs_coach_questions_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "hacs_coach_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hacs_conversations: {
         Row: {
           context_summary: string | null
@@ -855,6 +1141,292 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      hacs_dream_conversations: {
+        Row: {
+          context_summary: string | null
+          conversation_data: Json
+          created_at: string
+          id: string
+          intelligence_level_end: number | null
+          intelligence_level_start: number | null
+          last_activity: string
+          session_id: string
+          started_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          context_summary?: string | null
+          conversation_data?: Json
+          created_at?: string
+          id?: string
+          intelligence_level_end?: number | null
+          intelligence_level_start?: number | null
+          last_activity?: string
+          session_id: string
+          started_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          context_summary?: string | null
+          conversation_data?: Json
+          created_at?: string
+          id?: string
+          intelligence_level_end?: number | null
+          intelligence_level_start?: number | null
+          last_activity?: string
+          session_id?: string
+          started_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      hacs_dream_intelligence: {
+        Row: {
+          created_at: string | null
+          id: string
+          intelligence_level: number | null
+          interaction_count: number | null
+          last_update: string | null
+          module_scores: Json | null
+          pie_score: number | null
+          tmg_score: number | null
+          updated_at: string | null
+          user_id: string
+          vfp_score: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          intelligence_level?: number | null
+          interaction_count?: number | null
+          last_update?: string | null
+          module_scores?: Json | null
+          pie_score?: number | null
+          tmg_score?: number | null
+          updated_at?: string | null
+          user_id: string
+          vfp_score?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          intelligence_level?: number | null
+          interaction_count?: number | null
+          last_update?: string | null
+          module_scores?: Json | null
+          pie_score?: number | null
+          tmg_score?: number | null
+          updated_at?: string | null
+          user_id?: string
+          vfp_score?: number | null
+        }
+        Relationships: []
+      }
+      hacs_dream_questions: {
+        Row: {
+          answered_at: string | null
+          asked_at: string
+          conversation_id: string | null
+          created_at: string
+          generated_context: Json
+          hacs_module: string
+          id: string
+          intelligence_level_when_asked: number
+          learning_value: number | null
+          question_text: string
+          question_type: string
+          response_quality_score: number | null
+          user_id: string
+          user_response: string | null
+        }
+        Insert: {
+          answered_at?: string | null
+          asked_at?: string
+          conversation_id?: string | null
+          created_at?: string
+          generated_context?: Json
+          hacs_module: string
+          id?: string
+          intelligence_level_when_asked: number
+          learning_value?: number | null
+          question_text: string
+          question_type: string
+          response_quality_score?: number | null
+          user_id: string
+          user_response?: string | null
+        }
+        Update: {
+          answered_at?: string | null
+          asked_at?: string
+          conversation_id?: string | null
+          created_at?: string
+          generated_context?: Json
+          hacs_module?: string
+          id?: string
+          intelligence_level_when_asked?: number
+          learning_value?: number | null
+          question_text?: string
+          question_type?: string
+          response_quality_score?: number | null
+          user_id?: string
+          user_response?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hacs_dream_questions_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "hacs_dream_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hacs_growth_conversations: {
+        Row: {
+          context_summary: string | null
+          conversation_data: Json
+          created_at: string
+          id: string
+          intelligence_level_end: number | null
+          intelligence_level_start: number | null
+          last_activity: string
+          session_id: string
+          started_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          context_summary?: string | null
+          conversation_data?: Json
+          created_at?: string
+          id?: string
+          intelligence_level_end?: number | null
+          intelligence_level_start?: number | null
+          last_activity?: string
+          session_id: string
+          started_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          context_summary?: string | null
+          conversation_data?: Json
+          created_at?: string
+          id?: string
+          intelligence_level_end?: number | null
+          intelligence_level_start?: number | null
+          last_activity?: string
+          session_id?: string
+          started_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      hacs_growth_intelligence: {
+        Row: {
+          created_at: string | null
+          id: string
+          intelligence_level: number | null
+          interaction_count: number | null
+          last_update: string | null
+          module_scores: Json | null
+          pie_score: number | null
+          tmg_score: number | null
+          updated_at: string | null
+          user_id: string
+          vfp_score: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          intelligence_level?: number | null
+          interaction_count?: number | null
+          last_update?: string | null
+          module_scores?: Json | null
+          pie_score?: number | null
+          tmg_score?: number | null
+          updated_at?: string | null
+          user_id: string
+          vfp_score?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          intelligence_level?: number | null
+          interaction_count?: number | null
+          last_update?: string | null
+          module_scores?: Json | null
+          pie_score?: number | null
+          tmg_score?: number | null
+          updated_at?: string | null
+          user_id?: string
+          vfp_score?: number | null
+        }
+        Relationships: []
+      }
+      hacs_growth_questions: {
+        Row: {
+          answered_at: string | null
+          asked_at: string
+          conversation_id: string | null
+          created_at: string
+          generated_context: Json
+          hacs_module: string
+          id: string
+          intelligence_level_when_asked: number
+          learning_value: number | null
+          question_text: string
+          question_type: string
+          response_quality_score: number | null
+          user_id: string
+          user_response: string | null
+        }
+        Insert: {
+          answered_at?: string | null
+          asked_at?: string
+          conversation_id?: string | null
+          created_at?: string
+          generated_context?: Json
+          hacs_module: string
+          id?: string
+          intelligence_level_when_asked: number
+          learning_value?: number | null
+          question_text: string
+          question_type: string
+          response_quality_score?: number | null
+          user_id: string
+          user_response?: string | null
+        }
+        Update: {
+          answered_at?: string | null
+          asked_at?: string
+          conversation_id?: string | null
+          created_at?: string
+          generated_context?: Json
+          hacs_module?: string
+          id?: string
+          intelligence_level_when_asked?: number
+          learning_value?: number | null
+          question_text?: string
+          question_type?: string
+          response_quality_score?: number | null
+          user_id?: string
+          user_response?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hacs_growth_questions_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "hacs_growth_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       hacs_intelligence: {
         Row: {
