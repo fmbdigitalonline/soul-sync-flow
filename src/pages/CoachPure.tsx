@@ -5,29 +5,22 @@ import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
 import { Sparkles, MessageCircle, RotateCcw, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useHACSConversation } from "@/hooks/use-hacs-conversation";
 import { useBlueprintCache } from "@/contexts/BlueprintCacheContext";
 import { supabase } from "@/integrations/supabase/client";
-import { HACSChatInterface } from "@/components/hacs/HACSChatInterface";
+import { PureHACSInterface } from "@/components/hacs/PureHACSInterface";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ActiveReminders } from "@/components/reminders/ActiveReminders";
 import { MobileTogglePanel } from "@/components/ui/mobile-toggle-panel";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { HACSSystemStatus } from "@/components/hacs/HACSSystemStatus";
+import { useHacsIntelligence } from "@/hooks/use-hacs-intelligence";
 
-const Coach = () => {
-  const {
-    messages,
-    isLoading,
-    sendMessage,
-    clearConversation
-  } = useHACSConversation();
-
+const CoachPure = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const { toast } = useToast();
   const { t } = useLanguage();
   const { hasBlueprint } = useBlueprintCache();
   const { isMobile } = useIsMobile();
+  const { intelligence } = useHacsIntelligence();
   
   // Check authentication status
   useEffect(() => {
@@ -47,15 +40,10 @@ const Coach = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const handleSendMessage = async (message: string) => {
-    await sendMessage(message);
-  };
-
   const handleReset = () => {
-    clearConversation();
     toast({
-      title: "Conversation Reset",
-      description: "Your companion conversation has been cleared.",
+      title: "System Status",
+      description: "Pure HACS Intelligence - No fallbacks active",
     });
   };
 
@@ -68,8 +56,8 @@ const Coach = () => {
               <MessageCircle className="h-8 w-8 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-foreground mb-2">Soul Companion</h1>
-              <p className="text-muted-foreground">Your personal Soul companion for integrated support and guidance.</p>
+              <h1 className="text-2xl font-bold text-foreground mb-2">Pure HACS Intelligence</h1>
+              <p className="text-muted-foreground">Advanced intelligence learning without fallbacks.</p>
             </div>
             <Button 
               className="w-full"
@@ -85,11 +73,7 @@ const Coach = () => {
 
   // Create the main chat interface component
   const chatInterface = (
-    <HACSChatInterface
-      messages={messages}
-      isLoading={isLoading}
-      onSendMessage={handleSendMessage}
-    />
+    <PureHACSInterface />
   );
 
   const remindersContent = (
@@ -99,7 +83,7 @@ const Coach = () => {
       <CosmicCard className="p-4">
         <h3 className="font-semibold mb-3 flex items-center">
           <RotateCcw className="h-4 w-4 mr-2" />
-          Reset Chat
+          System Control
         </h3>
         <Button
           onClick={handleReset}
@@ -107,19 +91,24 @@ const Coach = () => {
           size="sm"
           className="w-full"
         >
-          Clear Conversation
+          Show Status
         </Button>
       </CosmicCard>
-
-      {/* Pure HACS System Status */}
-      <HACSSystemStatus />
 
       <CosmicCard className="p-4">
         <h3 className="font-semibold mb-3 flex items-center">
           <Sparkles className="h-4 w-4 mr-2" />
-          System Status
+          Intelligence Status
         </h3>
         <div className="space-y-2 text-sm">
+          <div className="flex justify-between">
+            <span>Level:</span>
+            <span className="text-primary">{intelligence?.intelligence_level || 0}%</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Interactions:</span>
+            <span className="text-primary">{intelligence?.interaction_count || 0}</span>
+          </div>
           <div className="flex justify-between">
             <span>Blueprint:</span>
             <span className={hasBlueprint ? "text-green-600" : "text-amber-600"}>
@@ -128,11 +117,7 @@ const Coach = () => {
           </div>
           <div className="flex justify-between">
             <span>Mode:</span>
-            <span className="text-primary">Companion</span>
-          </div>
-          <div className="flex justify-between">
-            <span>HACS:</span>
-            <span className="text-blue-600">Pure Intelligence</span>
+            <span className="text-blue-600">Pure HACS</span>
           </div>
         </div>
       </CosmicCard>
@@ -146,10 +131,10 @@ const Coach = () => {
           
           <div className="text-center mb-6">
             <h1 className="text-3xl font-bold gradient-text mb-2">
-              Soul Companion
+              Pure HACS Intelligence
             </h1>
             <p className="text-muted-foreground">
-              Your integrated Soul companion combining coaching and guidance
+              Advanced intelligence learning without fallbacks
             </p>
           </div>
 
@@ -181,4 +166,4 @@ const Coach = () => {
   );
 };
 
-export default Coach;
+export default CoachPure;
