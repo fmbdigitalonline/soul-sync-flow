@@ -858,6 +858,90 @@ export type Database = {
       }
       hacs_intelligence: {
         Row: {
+          created_at: string | null
+          id: string
+          intelligence_level: number | null
+          interaction_count: number | null
+          last_update: string | null
+          module_scores: Json | null
+          pie_score: number | null
+          tmg_score: number | null
+          updated_at: string | null
+          user_id: string | null
+          vfp_score: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id: string
+          intelligence_level?: number | null
+          interaction_count?: number | null
+          last_update?: string | null
+          module_scores?: Json | null
+          pie_score?: number | null
+          tmg_score?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          vfp_score?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          intelligence_level?: number | null
+          interaction_count?: number | null
+          last_update?: string | null
+          module_scores?: Json | null
+          pie_score?: number | null
+          tmg_score?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          vfp_score?: number | null
+        }
+        Relationships: []
+      }
+      hacs_intelligence_backup: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          intelligence_level: number | null
+          interaction_count: number | null
+          last_update: string | null
+          module_scores: Json | null
+          pie_score: number | null
+          tmg_score: number | null
+          updated_at: string | null
+          user_id: string | null
+          vfp_score: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string | null
+          intelligence_level?: number | null
+          interaction_count?: number | null
+          last_update?: string | null
+          module_scores?: Json | null
+          pie_score?: number | null
+          tmg_score?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          vfp_score?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string | null
+          intelligence_level?: number | null
+          interaction_count?: number | null
+          last_update?: string | null
+          module_scores?: Json | null
+          pie_score?: number | null
+          tmg_score?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          vfp_score?: number | null
+        }
+        Relationships: []
+      }
+      hacs_intelligence_corrupted: {
+        Row: {
           created_at: string
           id: string
           intelligence_level: number
