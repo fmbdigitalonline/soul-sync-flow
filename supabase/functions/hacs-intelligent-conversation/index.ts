@@ -218,16 +218,19 @@ serve(async (req) => {
 
         await supabase
           .from('hacs_intelligence')
-          .update({
-            intelligence_level: newIntelligenceLevel,
+          .upsert({
+            user_id: userId,
+            intelligence_level: Math.round(newIntelligenceLevel),
             module_scores: newModuleScores,
             interaction_count: (intelligenceData.intelligence_level > 0 ? 1 : 0) + 1,
             last_update: new Date().toISOString(),
-            pie_score: newModuleScores.PIE || 0,
-            vfp_score: newModuleScores.VFP || 0,
-            tmg_score: newModuleScores.TMG || 0,
-          })
-          .eq('user_id', userId);
+            pie_score: Math.round(newModuleScores.PIE || 0),
+            vfp_score: Math.round(newModuleScores.VFP || 0),
+            tmg_score: Math.round(newModuleScores.TMG || 0),
+            updated_at: new Date().toISOString()
+          }, {
+            onConflict: 'user_id'
+          });
 
         console.log('Intelligence updated from conversation:', { 
           oldLevel: intelligenceData.intelligence_level || 0, 

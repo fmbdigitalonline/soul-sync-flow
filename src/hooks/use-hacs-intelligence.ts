@@ -109,13 +109,17 @@ export const useHacsIntelligence = () => {
         const { data: newIntelligence, error: createError } = await supabase
           .from('hacs_intelligence')
           .insert({
+            id: crypto.randomUUID(), // Generate explicit ID
             user_id: user.id,
             intelligence_level: 0, // Start at 0% - no fake boosts
             module_scores: initialModuleScores as any,
             interaction_count: 0,
+            last_update: new Date().toISOString(),
             pie_score: 0,
             vfp_score: 0,
             tmg_score: 0,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
           })
           .select()
           .single();
@@ -160,23 +164,29 @@ export const useHacsIntelligence = () => {
       const moduleValues = Object.values(newModuleScores);
       const newIntelligenceLevel = moduleValues.reduce((sum, score) => sum + score, 0) / moduleValues.length;
 
-      // Update database with all module scores
+      // Update database with UPSERT to prevent duplicate user errors
       const { data: updated, error: updateError } = await supabase
         .from('hacs_intelligence')
-        .update({
-          intelligence_level: newIntelligenceLevel,
+        .upsert({
+          id: intelligence.id, // Include existing ID for proper UPSERT
+          user_id: user.id,
+          intelligence_level: Math.round(newIntelligenceLevel),
           module_scores: newModuleScores as any,
           interaction_count: intelligence.interaction_count + 1,
           last_update: new Date().toISOString(),
-          pie_score: newModuleScores.PIE,
-          vfp_score: newModuleScores.VFP,
-          tmg_score: newModuleScores.TMG,
+          pie_score: Math.round(newModuleScores.PIE),
+          vfp_score: Math.round(newModuleScores.VFP),
+          tmg_score: Math.round(newModuleScores.TMG),
+          created_at: intelligence.created_at, // Preserve creation timestamp
+          updated_at: new Date().toISOString()
         })
-        .eq('user_id', user.id)
         .select()
         .single();
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Failed to update HACS intelligence:', updateError);
+        throw updateError;
+      }
 
       setIntelligence({
         ...updated,
