@@ -1,6 +1,5 @@
-
 import { useState, useEffect, useMemo } from "react";
-import { enhancedAICoachService, AgentType } from "@/services/enhanced-ai-coach-service";
+import { hacsEnhancedAICoachService } from "@/services/hacs-enhanced-ai-coach-service";
 import { UnifiedBlueprintService } from "@/services/unified-blueprint-service";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useBlueprintCache } from "@/contexts/BlueprintCacheContext";
@@ -108,11 +107,11 @@ export function useEnhancedAICoach(
         console.log(`🎭 Initializing persona for ${pageContext} with user: ${userName}`);
         
         // Set current user for the service
-        await enhancedAICoachService.setCurrentUser(user.id);
+        await hacsEnhancedAICoachService.setCurrentUser(user.id);
         
         // Update blueprint if available
         if (blueprintData) {
-          enhancedAICoachService.updateUserBlueprint(blueprintData);
+          hacsEnhancedAICoachService.updateUserBlueprint(blueprintData);
         }
         
         console.log(`✅ Persona initialization result for ${pageContext}: ready`);
@@ -208,7 +207,7 @@ export function useEnhancedAICoach(
   ) => {
     if (!content.trim()) return;
 
-    console.log(`💬 Sending message in ${pageContext}:`, {
+    console.log(`💬 Sending message in ${pageContext} (HACS-enabled):`, {
       content: content.substring(0, 100) + '...',
       usePersonalization,
       currentAgent: agentOverride || currentAgent,
@@ -229,19 +228,9 @@ export function useEnhancedAICoach(
     setIsLoading(true);
 
     try {
-      // Create integration report and effective agent BEFORE using them
-      const integrationReport = {
-        blueprintLoaded: hasBlueprint,
-        blueprintData: blueprintData || null,
-        personaInitialized: personaReady,
-        userAuthenticated: authInitialized,
-        contextualData: context || {},
-        userDisplayName: userName
-      };
-
       const effectiveAgent = agentOverride || currentAgent;
       
-      console.log(`🚀 Sending message via enhanced AI coach service for ${pageContext}:`, {
+      console.log(`🚀 Sending message via HACS-enhanced AI coach service for ${pageContext}:`, {
         hasPersona: personaReady,
         agent: effectiveAgent,
         userDisplayName: userName,
@@ -249,43 +238,20 @@ export function useEnhancedAICoach(
         context: {
           pageContext,
           currentAgent: effectiveAgent,
-          blueprintAvailable: integrationReport.blueprintLoaded,
-          userName
-        }
-      });
-
-      console.log(`📊 Integration report for ${pageContext}:`, {
-        ...integrationReport,
-        effectiveAgent,
-        pageContext
-      });
-
-      console.log(`🎯 About to call sendStreamingMessage with:`, {
-        messageContent: content.substring(0, 50) + '...',
-        usePersonalization,
-        integrationReport: {
-          blueprintLoaded: integrationReport.blueprintLoaded,
-          personaInitialized: integrationReport.personaInitialized,
-          userAuthenticated: integrationReport.userAuthenticated,
-          userDisplayName: integrationReport.userDisplayName
-        },
-        effectiveAgent,
-        context: {
-          pageContext,
-          currentAgent: effectiveAgent,
-          blueprintAvailable: integrationReport.blueprintLoaded,
+          blueprintAvailable: hasBlueprint,
           userName
         }
       });
       
-      const sessionId = enhancedAICoachService.createNewSession(effectiveAgent);
+      const sessionId = hacsEnhancedAICoachService.createNewSession(effectiveAgent);
       
       // Initialize streaming state
-      console.log(`🌊 Stream started for ${pageContext}`);
+      console.log(`🌊 Stream started for ${pageContext} (HACS-enabled)`);
       setIsStreaming(true);
       setStreamingContent("");
 
-      await enhancedAICoachService.sendStreamingMessage(
+      // CRITICAL: Use HACS-enhanced service for intelligence learning
+      await hacsEnhancedAICoachService.sendStreamingMessage(
         content,
         sessionId,
         usePersonalization,
@@ -297,7 +263,7 @@ export function useEnhancedAICoach(
             setStreamingContent(prev => prev + chunk);
           },
           onComplete: (fullContent: string) => {
-            console.log(`✅ Stream completed for ${pageContext}:`, fullContent.substring(0, 100) + '...');
+            console.log(`✅ Stream completed for ${pageContext} (HACS intelligence updated):`, fullContent.substring(0, 100) + '...');
             
             const assistantMessage: Message = {
               id: (Date.now() + 1).toString(),

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { MessageCircle, ArrowLeft, ArrowRight, Check } from 'lucide-react';
 import { SpiritualGuideInterface } from '@/components/growth/SpiritualGuideInterface';
-import { useEnhancedAICoach } from '@/hooks/use-enhanced-ai-coach';
+import { useHACSConversationAdapter } from '@/hooks/use-hacs-conversation-adapter';
 import { useBlueprintData } from '@/hooks/use-blueprint-data';
 import { LifeDomain, LifeWheelAssessment } from '@/types/growth-program';
 import { supabase } from '@/integrations/supabase/client';
@@ -53,7 +53,8 @@ export function ConversationalAssessment({ onComplete, onBack }: ConversationalA
   const [isProcessing, setIsProcessing] = useState(false);
   const [conversationData, setConversationData] = useState<string[]>([]);
   
-  const { messages, isLoading, sendMessage, resetConversation } = useEnhancedAICoach("guide", "life-assessment");
+  // CRITICAL FIX: Use HACS adapter instead of useEnhancedAICoach to ensure intelligence learning
+  const { messages, isLoading, sendMessage, resetConversation } = useHACSConversationAdapter("guide", "life-assessment");
   const { blueprintData } = useBlueprintData();
   const { toast } = useToast();
 
