@@ -670,6 +670,7 @@ class UnifiedBrainService {
       }
 
       console.log(`🎯 UBS: Calling ${functionName} for ${agentMode} mode with conversation history`);
+      console.log(`🎯 UBS: Mode validation - received: ${agentMode}, mapped to function: ${functionName}, expected module: ${expectedModule}`);
 
       const { data, error } = await supabase.functions.invoke(functionName, {
         body: {
@@ -680,20 +681,22 @@ class UnifiedBrainService {
       });
 
       if (error) {
-        console.error(`🎯 UBS: Error calling ${functionName}:`, error);
+        console.error(`🎯 UBS: Error calling ${functionName} for ${agentMode} mode:`, error);
+        console.error(`🎯 UBS: Function invocation details - name: ${functionName}, mode: ${agentMode}, userId: ${user.id}`);
         return null;
       }
 
       if (data && data.response && data.module === expectedModule) {
-        console.log(`✅ UBS: Received valid response from ${functionName}`);
+        console.log(`✅ UBS: Received valid response from ${functionName} for ${agentMode} mode`);
         return data;
       } else {
-        console.warn(`🎯 UBS: Invalid response from ${functionName}:`, data);
+        console.warn(`🎯 UBS: Invalid response from ${functionName} for ${agentMode} mode:`, data);
+        console.warn(`🎯 UBS: Expected module: ${expectedModule}, received module: ${data?.module}`);
         return null;
       }
 
     } catch (error) {
-      console.error('🎯 UBS: Mode-specific routing failed:', error);
+      console.error(`🎯 UBS: Mode-specific routing failed for ${agentMode} mode:`, error);
       return null;
     }
   }

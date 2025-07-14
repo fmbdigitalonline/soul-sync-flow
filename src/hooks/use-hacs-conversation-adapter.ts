@@ -77,9 +77,10 @@ export const useHACSConversationAdapter = (
       // The UBS already processed through all 11 Hermetic components
       
     } catch (error) {
-      console.error('❌ Unified Brain routing failed, using fallback:', error);
-      // Fallback to original HACS conversation if unified brain fails
-      await hacsConversation.sendMessage(content);
+      const currentMode = agentOverride || initialAgent;
+      console.error(`❌ Unified Brain routing failed for ${currentMode} mode, no fallback to avoid mode confusion:`, error);
+      // Re-throw the error to surface the actual problem instead of masking it with wrong mode fallback
+      throw error;
     }
   }, [hacsConversation.sendMessage, initialAgent]);
 
