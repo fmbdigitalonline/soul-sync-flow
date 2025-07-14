@@ -47,6 +47,7 @@ class UnifiedBrainService {
     
     // Initialize enhanced NIK with TMG integration
     neuroIntentKernel.setTMGReference(tieredMemoryGraph);
+    neuroIntentKernel.setUserId(userId);
     
     // Register NIK with other HACS modules
     neuroIntentKernel.registerModule('acs', (broadcast) => {
@@ -263,7 +264,7 @@ class UnifiedBrainService {
       const sentiment = this.analyzeSentiment(message);
       
       const sentimentData: PIEDataPoint = {
-        id: `sentiment_${Date.now()}`,
+        id: crypto.randomUUID(),
         userId: this.userId,
         timestamp: new Date().toISOString(),
         dataType: 'sentiment',

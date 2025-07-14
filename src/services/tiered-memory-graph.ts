@@ -378,6 +378,12 @@ class TieredMemoryGraphService {
   // METRICS AND MONITORING
   async recordMetrics(metrics: MemoryMetrics): Promise<void> {
     try {
+      // Validate required fields before insertion
+      if (!metrics.user_id || !metrics.memory_tier || !metrics.access_type) {
+        console.warn('Skipping metrics recording due to missing required fields:', metrics);
+        return;
+      }
+
       await supabase
         .from('memory_metrics')
         .insert({

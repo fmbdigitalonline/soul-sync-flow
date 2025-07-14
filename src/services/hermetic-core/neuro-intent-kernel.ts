@@ -43,11 +43,17 @@ class NeuroIntentKernel {
   private internalGenerationEnabled: boolean = true;
   private lastUserActivity: Date = new Date();
   private intentSuggestions: string[] = [];
+  private currentUserId: string | null = null;
 
   // Initialize TMG reference for persistence
   setTMGReference(tmgReference: any): void {
     this.tmgReference = tmgReference;
     console.log('🧠 NIK: TMG reference set for intent persistence');
+  }
+
+  // Set the current user ID for intent operations
+  setUserId(userId: string): void {
+    this.currentUserId = userId;
   }
 
   // Initialize intent from external command or internal generation
@@ -277,7 +283,7 @@ class NeuroIntentKernel {
       };
       
       await this.tmgReference.storeInHotMemory(
-        'system', // Use system as user for intent storage
+        this.currentUserId || 'anonymous', // Use actual user ID for intent storage
         this.currentIntent.sessionId,
         intentData,
         8.0 // High importance for active intents
@@ -294,7 +300,7 @@ class NeuroIntentKernel {
     if (!this.tmgReference) return null;
     
     try {
-      const memories = await this.tmgReference.getFromHotMemory('system', sessionId, 5);
+      const memories = await this.tmgReference.getFromHotMemory(this.currentUserId || 'anonymous', sessionId, 5);
       const intentMemory = memories.find((m: any) => 
         m.raw_content?.intentType === 'active_intent'
       );
