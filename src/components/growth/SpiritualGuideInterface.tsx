@@ -6,15 +6,7 @@ import { Input } from '@/components/ui/input';
 import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
 import { IntelligentSoulOrb } from '@/components/ui/intelligent-soul-orb';
 import { useHacsIntelligence } from '@/hooks/use-hacs-intelligence';
-import { useHACSConversation } from '@/hooks/use-hacs-conversation';
-
-interface Message {
-  id: string;
-  content: string;
-  sender: "user" | "assistant";
-  timestamp: Date;
-  isStreaming?: boolean;
-}
+import { useHACSGrowthConversation } from '@/hooks/use-hacs-growth-conversation';
 
 interface SpiritualGuideInterfaceProps {
   userDisplayName?: string;
@@ -30,13 +22,12 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
   const { getTextSize, touchTargetSize, isFoldDevice, spacing } = useResponsiveLayout();
   const { intelligence, refreshIntelligence } = useHacsIntelligence();
   
-  // CRITICAL FIX: Use HACS conversation instead of enhanced AI coach
+  // CRITICAL FIX: Use dedicated growth conversation hook instead of generic adapter
   const { 
     messages, 
     isLoading, 
-    sendMessage: hacseSendMessage,
-    conversationId 
-  } = useHACSConversation();
+    sendMessage: growthSendMessage
+  } = useHACSGrowthConversation();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -51,8 +42,10 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
       const message = inputValue.trim();
       setInputValue('');
       
-      // CRITICAL FIX: Send through HACS conversation for real intelligence updates
-      await hacseSendMessage(message);
+      console.log('🌱 Spiritual Guide: Sending message through growth conversation system');
+      
+      // CRITICAL FIX: Send through dedicated growth conversation system
+      await growthSendMessage(message);
       
       // Refresh intelligence display after successful conversation
       await refreshIntelligence();
@@ -203,7 +196,7 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
                   <div className="flex items-center gap-2 mb-2">
                     <Brain className={`text-soul-purple ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
                     <span className={`font-medium text-soul-purple ${getTextSize('text-xs')}`}>
-                      HACS {message.isQuestion ? '(Question)' : ''}
+                      Spiritual Guide {message.isQuestion ? '(Question)' : ''}
                     </span>
                     {message.module && (
                       <span className={`text-xs bg-soul-teal/10 text-soul-teal px-1.5 py-0.5 rounded-full`}>
@@ -237,13 +230,13 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
                 <div className="flex items-center gap-2 mb-2">
                   <Brain className={`text-soul-purple ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
                   <span className={`font-medium text-soul-purple ${getTextSize('text-xs')}`}>
-                    HACS Learning System
+                    Spiritual Growth Intelligence
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Loader2 className={`animate-spin text-soul-purple ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
                   <span className={`text-gray-600 ${getTextSize('text-sm')}`}>
-                    Processing and learning from your interaction...
+                    Processing your spiritual inquiry with deep wisdom...
                   </span>
                 </div>
               </div>
