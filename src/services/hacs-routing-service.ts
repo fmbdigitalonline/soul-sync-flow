@@ -112,10 +112,18 @@ export class HACSRoutingService {
     console.log('⚠️ HACS Routing: Using fallback ai-coach-stream (no intelligence learning)');
     
     try {
-      const response = await fetch(`${supabase.supabaseUrl}/functions/v1/ai-coach-stream`, {
+      // Use the correct Supabase URL construction
+      const supabaseUrl = 'https://qxaajirrqrcnmvtowjbg.supabase.co';
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) {
+        throw new Error('No authentication session for fallback');
+      }
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/ai-coach-stream`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${supabase.supabaseKey}`,
+          'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(request),

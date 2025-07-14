@@ -1,9 +1,13 @@
+
 import { useState, useEffect, useMemo } from "react";
 import { hacsEnhancedAICoachService } from "@/services/hacs-enhanced-ai-coach-service";
 import { UnifiedBlueprintService } from "@/services/unified-blueprint-service";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useBlueprintCache } from "@/contexts/BlueprintCacheContext";
 import { useAuth } from "@/contexts/AuthContext";
+
+// Import AgentType from the correct location
+type AgentType = "coach" | "guide" | "blend";
 
 export interface Message {
   id: string;

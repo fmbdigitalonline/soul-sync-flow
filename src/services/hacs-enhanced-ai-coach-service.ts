@@ -2,6 +2,9 @@
 import { enhancedAICoachService } from './enhanced-ai-coach-service';
 import { hacsRoutingService } from './hacs-routing-service';
 
+// Import AgentType from the correct location
+type AgentType = "coach" | "guide" | "blend";
+
 /**
  * HACS-Enhanced AI Coach Service
  * Wraps the existing enhanced AI coach service to route all calls through HACS
@@ -18,7 +21,7 @@ class HACSEnhancedAICoachService {
     message: string,
     sessionId: string,
     usePersonalization: boolean = true,
-    agentType: string = "guide",
+    agentType: AgentType = "guide",
     language: string = "en",
     callbacks: {
       onChunk?: (chunk: string) => void;
@@ -43,7 +46,7 @@ class HACSEnhancedAICoachService {
   }
 
   /**
-   * Preserve all other methods from original service
+   * Preserve existing methods from original service
    */
   setCurrentUser(userId: string) {
     return this.originalService.setCurrentUser(userId);
@@ -53,37 +56,12 @@ class HACSEnhancedAICoachService {
     return this.originalService.updateUserBlueprint(blueprintData);
   }
 
-  createNewSession(agentType: string): string {
+  createNewSession(agentType: AgentType): string {
     return this.originalService.createNewSession(agentType);
   }
 
-  getCurrentUser() {
-    return this.originalService.getCurrentUser();
-  }
-
-  getUserBlueprint() {
-    return this.originalService.getUserBlueprint();
-  }
-
-  getPersonalityContext(blueprintData: any) {
-    return this.originalService.getPersonalityContext(blueprintData);
-  }
-
-  buildSystemPrompt(
-    agentType: string,
-    blueprintData: any,
-    personalityContext: any,
-    language: string,
-    userDisplayName: string
-  ) {
-    return this.originalService.buildSystemPrompt(
-      agentType,
-      blueprintData,
-      personalityContext,
-      language,
-      userDisplayName
-    );
-  }
+  // Remove non-existent methods that were causing errors
+  // The original service doesn't have these methods, so we don't expose them
 }
 
 // Export singleton instance that preserves all functionality while adding HACS routing
