@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -78,21 +77,18 @@ export const useHACSGrowthConversation = () => {
 
       setMessages(prev => [...prev, userMessage]);
 
-      // Call the dedicated growth conversation edge function with correct parameters
-      const { data, error } = await supabase.functions.invoke('hacs-growth-conversation', {
-        body: {
-          message: content,
-          conversationHistory: messages,
-          userId: user.id
-        }
-      });
+      // **PHASE 2: Route through Unified Brain Service (11 Hermetic Components)**
+      const { unifiedBrainService } = await import('../services/unified-brain-service');
+      await unifiedBrainService.initialize(user.id);
+      
+      const sessionId = `growth_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const data = await unifiedBrainService.processMessageForModeHook(
+        content,
+        sessionId,
+        'guide',
+        messages
+      );
 
-      if (error) {
-        console.error('Growth conversation error:', error);
-        throw error;
-      }
-
-      // Create HACS response message
       const hacsMessage: GrowthConversationMessage = {
         id: crypto.randomUUID(),
         role: 'hacs',
@@ -104,18 +100,16 @@ export const useHACSGrowthConversation = () => {
       const updatedMessages = [...messages, userMessage, hacsMessage];
       setMessages(updatedMessages);
 
-      // Save to growth-specific conversation table
       await saveConversation(updatedMessages, user.id);
+      await recordConversationInteraction(user.id, content, data.response);
+      await refreshIntelligence();
 
-      // Handle generated questions
       if (data.question) {
         setCurrentQuestion(data.question);
       }
 
     } catch (error) {
       console.error('Error sending growth message:', error);
-      // Remove the user message if the response failed
-      setMessages(prev => prev.slice(0, -1));
     } finally {
       setIsLoading(false);
       setIsTyping(false);
@@ -148,6 +142,58 @@ export const useHACSGrowthConversation = () => {
       }
     } catch (error) {
       console.error('Error saving growth conversation:', error);
+    }
+  };
+
+  const recordConversationInteraction = async (userId: string, userMessage: string, hacsResponse: string) => {
+    try {
+      const { data: intelligence } = await supabase
+        .from('hacs_growth_intelligence')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (intelligence) {
+        await supabase
+          .from('hacs_growth_intelligence')
+          .update({
+            interaction_count: (intelligence.interaction_count || 0) + 1,
+            last_update: new Date().toISOString()
+          })
+          .eq('user_id', userId);
+      } else {
+        await supabase
+          .from('hacs_growth_intelligence')
+          .insert({
+            user_id: userId,
+            intelligence_level: 50,
+            interaction_count: 1,
+            module_scores: {}
+          });
+      }
+
+      const quality = determineResponseQuality(hacsResponse, userMessage);
+      await updateIntelligenceBasedOnQuality(userId, quality);
+
+    } catch (error) {
+      console.error('Error recording growth conversation interaction:', error);
+    }
+  };
+
+  const refreshIntelligence = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data } = await supabase
+        .from('hacs_growth_intelligence')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      console.log('Growth intelligence refreshed:', data);
+    } catch (error) {
+      console.error('Error refreshing growth intelligence:', error);
     }
   };
 
@@ -233,6 +279,41 @@ export const useHACSGrowthConversation = () => {
       "How do you cultivate compassion for yourself and others?"
     ];
     return questions[Math.floor(Math.random() * questions.length)];
+  };
+
+  const determineResponseQuality = (hacsResponse: string, userMessage: string): 'excellent' | 'good' | 'average' | 'poor' => {
+    if (hacsResponse.length > 100 && (hacsResponse.includes('spiritual') || hacsResponse.includes('growth'))) {
+      return 'excellent';
+    } else if (hacsResponse.length > 50) {
+      return 'good';
+    } else if (hacsResponse.length > 20) {
+      return 'average';
+    }
+    return 'poor';
+  };
+
+  const updateIntelligenceBasedOnQuality = async (userId: string, quality: string) => {
+    const bonusMap = { excellent: 5, good: 3, average: 1, poor: 0 };
+    const bonus = bonusMap[quality as keyof typeof bonusMap] || 0;
+
+    try {
+      const { data: intelligence } = await supabase
+        .from('hacs_growth_intelligence')
+        .select('intelligence_level')
+        .eq('user_id', userId)
+        .single();
+
+      const currentLevel = intelligence?.intelligence_level || 50;
+      const newLevel = Math.min(100, currentLevel + bonus);
+
+      await supabase
+        .from('hacs_growth_intelligence')
+        .update({ intelligence_level: newLevel })
+        .eq('user_id', userId);
+
+    } catch (error) {
+      console.error('Error updating growth intelligence:', error);
+    }
   };
 
   return {
