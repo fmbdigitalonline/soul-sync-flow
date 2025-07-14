@@ -316,6 +316,166 @@ class UnifiedBrainService {
     return response + insightIntegration;
   }
 
+  // Mode-Aware Processing for Hooks - Routes through all 11 Hermetic Components then to mode-specific edge function
+  async processMessageForModeHook(
+    message: string,
+    sessionId: string,
+    targetMode: AgentMode,
+    conversationHistory: any[] = []
+  ): Promise<{ response: string; module: string; question?: any }> {
+    if (!this.userId) {
+      throw new Error("Brain service not initialized - no user ID");
+    }
+
+    console.log(`🧠 Processing message for ${targetMode} mode through UBS + 11 Hermetic Components`);
+
+    // Step 1: Process through all 11 Hermetic Components
+    const hermeticResult = await this.processMessage(message, sessionId, targetMode, 'NORMAL');
+
+    // Step 2: Route to mode-specific edge function with processed context
+    const modeSpecificResult = await this.routeToModeSpecificFunction(
+      message, 
+      targetMode, 
+      conversationHistory,
+      hermeticResult
+    );
+
+    // Step 3: Sync intelligence to main table
+    await this.syncModeIntelligenceToMain(targetMode);
+
+    return modeSpecificResult;
+  }
+
+  // Route to mode-specific edge function after Hermetic processing
+  private async routeToModeSpecificFunction(
+    message: string,
+    targetMode: AgentMode,
+    conversationHistory: any[],
+    hermeticResult: UnifiedBrainResponse
+  ): Promise<{ response: string; module: string; question?: any }> {
+    try {
+      const edgeFunctionMap = {
+        'coach': 'hacs-coach-conversation',
+        'guide': 'hacs-growth-conversation', 
+        'blend': 'hacs-blend-conversation',
+        'dream': 'hacs-dream-conversation'
+      };
+
+      const functionName = edgeFunctionMap[targetMode];
+      if (!functionName) {
+        throw new Error(`No edge function mapped for mode: ${targetMode}`);
+      }
+
+      console.log(`🔄 Routing to ${functionName} after Hermetic processing`);
+
+      const { data, error } = await supabase.functions.invoke(functionName, {
+        body: { 
+          message,
+          conversationHistory,
+          userId: this.userId,
+          hermeticContext: {
+            personalityApplied: hermeticResult.personalityApplied,
+            memoryStored: hermeticResult.memoryStored,
+            brainMetrics: hermeticResult.brainMetrics
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      return {
+        response: data.response,
+        module: data.module || targetMode,
+        question: data.question
+      };
+
+    } catch (error) {
+      console.error(`Failed to route to ${targetMode} mode:`, error);
+      throw new Error(`Failed to get response from ${targetMode} mode`);
+    }
+  }
+
+  // Sync mode-specific intelligence to main hacs_intelligence table
+  private async syncModeIntelligenceToMain(targetMode: AgentMode): Promise<void> {
+    try {
+      let modeIntelligence: any = null;
+
+      // Get mode-specific intelligence using explicit table queries
+      switch (targetMode) {
+        case 'coach':
+          const { data: coachData } = await supabase
+            .from('hacs_coach_intelligence')
+            .select('intelligence_level, interaction_count, pie_score, tmg_score, vfp_score, module_scores')
+            .eq('user_id', this.userId)
+            .single();
+          modeIntelligence = coachData;
+          break;
+        case 'guide':
+          const { data: growthData } = await supabase
+            .from('hacs_growth_intelligence')
+            .select('intelligence_level, interaction_count, pie_score, tmg_score, vfp_score, module_scores')
+            .eq('user_id', this.userId)
+            .single();
+          modeIntelligence = growthData;
+          break;
+        case 'blend':
+          const { data: blendData } = await supabase
+            .from('hacs_blend_intelligence')
+            .select('intelligence_level, interaction_count, pie_score, tmg_score, vfp_score, module_scores')
+            .eq('user_id', this.userId)
+            .single();
+          modeIntelligence = blendData;
+          break;
+        case 'dream':
+          const { data: dreamData } = await supabase
+            .from('hacs_dream_intelligence')
+            .select('intelligence_level, interaction_count, pie_score, tmg_score, vfp_score, module_scores')
+            .eq('user_id', this.userId)
+            .single();
+          modeIntelligence = dreamData;
+          break;
+      }
+
+      if (!modeIntelligence) return;
+
+      // Update main intelligence table with aggregated data
+      const { data: mainIntelligence } = await supabase
+        .from('hacs_intelligence')
+        .select('*')
+        .eq('user_id', this.userId)
+        .single();
+
+      if (mainIntelligence) {
+        // Calculate weighted average intelligence
+        const modeWeight = 0.25; // Each mode contributes 25% to overall intelligence
+        const currentOverall = mainIntelligence.intelligence_level || 50;
+        const modeLevel = modeIntelligence.intelligence_level || 50;
+        const newOverall = Math.round(currentOverall * (1 - modeWeight) + modeLevel * modeWeight);
+
+        const existingModuleScores = (mainIntelligence.module_scores as any) || {};
+        const updatedModuleScores = {
+          ...existingModuleScores,
+          [`${targetMode}_intelligence`]: modeLevel
+        };
+
+        await supabase
+          .from('hacs_intelligence')
+          .update({
+            intelligence_level: newOverall,
+            interaction_count: (mainIntelligence.interaction_count || 0) + 1,
+            last_update: new Date().toISOString(),
+            module_scores: updatedModuleScores
+          })
+          .eq('user_id', this.userId);
+
+        console.log(`📊 Synced ${targetMode} intelligence (${modeLevel}) to main table (new overall: ${newOverall})`);
+      }
+
+    } catch (error) {
+      console.error(`Error syncing ${targetMode} intelligence:`, error);
+    }
+  }
+
   // PIE: Collect mood data
   async collectMoodData(moodValue: number): Promise<void> {
     if (!this.userId) return;
@@ -1277,7 +1437,8 @@ class UnifiedBrainService {
     const modeFrequencies: Record<AgentMode, number> = {
       'coach': 8.0,     // Task-focused, medium-high frequency
       'guide': 4.0,     // Reflective, lower frequency
-      'blend': 6.0      // Conversational, balanced frequency
+      'blend': 6.0,     // Conversational, balanced frequency
+      'dream': 3.0      // Subconscious analysis, lowest frequency
     };
     
     return modeFrequencies[agentMode] || 5.0;

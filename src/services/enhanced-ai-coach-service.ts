@@ -12,7 +12,7 @@ import { modelRouterService } from "./model-router-service";
 import { costMonitoringService } from "./cost-monitoring-service";
 import { getUniversalConversationalPrompt } from "./universal-conversational-rules";
 
-export type AgentType = "coach" | "guide" | "blend";
+export type AgentType = "coach" | "guide" | "blend" | "dream";
 
 export interface ChatMessage {
   id: string;
@@ -29,7 +29,7 @@ export interface StreamingResponse {
 }
 
 interface ConversationContext {
-  agentType: 'coach' | 'guide' | 'blend';
+  agentType: AgentType;
   turnNumber: number;
   emotionalThemes: boolean;
   blueprintHeavy: boolean;
