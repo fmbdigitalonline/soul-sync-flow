@@ -118,7 +118,8 @@ class UnifiedBrainService {
     message: string,
     sessionId: string,
     agentMode: AgentMode = 'guide',
-    currentState: DialogueState = 'NORMAL'
+    currentState: DialogueState = 'NORMAL',
+    conversationHistory: any[] = []
   ): Promise<UnifiedBrainResponse> {
     if (!this.userId) {
       throw new Error("Brain service not initialized - no user ID");
@@ -135,7 +136,7 @@ class UnifiedBrainService {
 
     // **PHASE 2: MODE-AWARE ROUTING** - Route to appropriate mode-specific edge function
     console.log(`🎯 UBS: Routing to mode-specific edge function: ${agentMode}`);
-    const modeSpecificResult = await this.routeToModeSpecificFunction(message, sessionId, agentMode);
+    const modeSpecificResult = await this.routeToModeSpecificFunction(message, sessionId, agentMode, conversationHistory);
     
     if (modeSpecificResult) {
       console.log(`✅ UBS: Mode-specific response received from ${agentMode} mode`);
@@ -634,7 +635,8 @@ class UnifiedBrainService {
   private async routeToModeSpecificFunction(
     message: string,
     sessionId: string,
-    agentMode: AgentMode
+    agentMode: AgentMode,
+    conversationHistory: any[] = []
   ): Promise<any> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -667,12 +669,12 @@ class UnifiedBrainService {
           expectedModule = 'growth';
       }
 
-      console.log(`🎯 UBS: Calling ${functionName} for ${agentMode} mode`);
+      console.log(`🎯 UBS: Calling ${functionName} for ${agentMode} mode with conversation history`);
 
       const { data, error } = await supabase.functions.invoke(functionName, {
         body: {
           message,
-          conversationHistory: [], // Edge function will load its own conversation history
+          conversationHistory,
           userId: user.id
         }
       });
@@ -814,6 +816,43 @@ class UnifiedBrainService {
       console.error(`Failed to get ${agentMode} intelligence:`, error);
       return null;
     }
+  }
+
+  // **PHASE 2: PUBLIC METHOD FOR MODE HOOKS** - Process message with conversation history
+  async processMessageForModeHook(
+    message: string,
+    sessionId: string,
+    agentMode: AgentMode,
+    conversationHistory: any[] = []
+  ): Promise<any> {
+    if (!this.userId) {
+      throw new Error("Brain service not initialized - no user ID");
+    }
+
+    console.log(`🧠 UBS: Processing ${agentMode} mode message through unified brain + 11 Hermetic components`);
+
+    // Process through ALL 11 Hermetic components: NIK → CPSR → HFME → DPEM → TWS → CNR → BPSC + VPG → PIE → TMG → ACS
+    await this.processIntentWithNIK(message, sessionId, agentMode);
+    await this.processCPSRStateSync(message, sessionId, agentMode, 'NORMAL');
+    await this.updateHFMEMetrics(sessionId, agentMode);
+    await this.monitorDualPoleBalance(message, agentMode);
+    await this.shareCrossModeIntent(sessionId, agentMode);
+    await this.collectPIEDataFromMessage(message, agentMode);
+
+    // Route to mode-specific edge function
+    const modeSpecificResult = await this.routeToModeSpecificFunction(message, sessionId, agentMode, conversationHistory);
+    
+    if (modeSpecificResult) {
+      console.log(`✅ UBS: ${agentMode} mode processed through all 11 Hermetic components`);
+      
+      // Store in shared memory
+      await this.storeInSharedMemory(message, sessionId, agentMode);
+      await this.storeInSharedMemory(modeSpecificResult.response, sessionId, agentMode, false);
+      
+      return modeSpecificResult;
+    }
+
+    throw new Error(`Failed to get response from ${agentMode} mode`);
   }
 
   // Get current CPSR state for debugging/monitoring

@@ -77,16 +77,17 @@ export const useHACSGrowthConversation = () => {
 
       setMessages(prev => [...prev, userMessage]);
 
-      // Call growth-specific edge function
-      const { data, error } = await supabase.functions.invoke('hacs-growth-conversation', {
-        body: { 
-          message: content,
-          conversationHistory: messages,
-          userId: user.id
-        }
-      });
-
-      if (error) throw error;
+      // **PHASE 2: Route through Unified Brain Service (11 Hermetic Components)**
+      const { unifiedBrainService } = await import('../services/unified-brain-service');
+      await unifiedBrainService.initialize(user.id);
+      
+      const sessionId = `growth_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const data = await unifiedBrainService.processMessageForModeHook(
+        content,
+        sessionId,
+        'guide',
+        messages
+      );
 
       const hacsMessage: GrowthConversationMessage = {
         id: crypto.randomUUID(),
