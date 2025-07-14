@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { useEnhancedAICoach } from "./use-enhanced-ai-coach";
+import { useEnhancedAICoach } from "./use-enhanced-ai-coach-stub";
 import { enhancedTaskCoachIntegrationService } from "@/services/enhanced-task-coach-integration-service";
 import { TaskContext, TaskAction } from "@/services/task-coach-integration-service";
 import { dreamActivityLogger } from "@/services/dream-activity-logger";

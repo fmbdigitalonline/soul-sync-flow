@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent } from "@/components/ui/card";
 import { Send, Menu, X } from "lucide-react";
-import { useEnhancedAICoach } from "@/hooks/use-enhanced-ai-coach";
+import { useEnhancedAICoach } from "@/hooks/use-enhanced-ai-coach-stub";
 import { useACSIntegration } from "@/hooks/use-acs-integration";
 import { useTieredMemory } from "@/hooks/use-tiered-memory";
 import { usePIEEnhancedCoach } from "@/hooks/use-pie-enhanced-coach";

@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { useEnhancedAICoach } from "./use-enhanced-ai-coach";
+import { useEnhancedAICoach } from "./use-enhanced-ai-coach-stub";
 import { dreamActivityLogger } from "@/services/dream-activity-logger";
 import { useBlueprintData } from "./use-blueprint-data";
 
