@@ -15,6 +15,15 @@ export interface StateChange {
   source: string;
 }
 
+export interface ReflectionInsight {
+  cycle: number;
+  timestamp: Date;
+  insights: string[];
+  patterns: string[];
+  tensions: string[];
+  recommendations: string[];
+}
+
 class CrossPlaneStateReflector {
   private state: PlaneState = {
     external: {},
@@ -24,6 +33,14 @@ class CrossPlaneStateReflector {
   
   private changeListeners: ((change: StateChange) => void)[] = [];
   private reflectionRules: Map<string, (change: StateChange) => StateChange[]> = new Map();
+  
+  // Logging optimization properties
+  private cognitiveCache: number = 0;
+  private lastLoggedCycle: number = 0;
+  private reflectionInsights: ReflectionInsight[] = [];
+  private maxCyclesPerInput: number = 50;
+  private currentInputCycles: number = 0;
+  private currentInput: string | null = null;
 
   constructor() {
     this.setupDefaultReflectionRules();
@@ -31,6 +48,12 @@ class CrossPlaneStateReflector {
 
   // Update external state (from environment, user, sensors)
   updateExternalState(key: string, value: any, source: string = 'external'): void {
+    // Reset cycle count for new input
+    if (key === 'user_input' && value !== this.currentInput) {
+      this.currentInput = value;
+      this.currentInputCycles = 0;
+    }
+
     const change: StateChange = {
       plane: 'external',
       key,
@@ -90,7 +113,31 @@ class CrossPlaneStateReflector {
 
   // Process state change and trigger reflections
   private processStateChange(change: StateChange): void {
-    console.log(`🔄 CPSR: ${change.plane}.${change.key} = ${JSON.stringify(change.value).substring(0, 100)}`);
+    // Increment cognitive cycle count
+    this.cognitiveCache++;
+    this.currentInputCycles++;
+    
+    // Update meta state with current cycle count
+    this.state.meta.cognitive_cycle_count = this.cognitiveCache;
+
+    // Check max cycle ceiling to prevent infinite recursion
+    if (this.currentInputCycles > this.maxCyclesPerInput) {
+      console.warn(`🔄 CPSR: Max cycles reached (${this.maxCyclesPerInput}) for current input. Preventing infinite recursion.`);
+      return;
+    }
+
+    // Throttled logging - only log every 100th cycle or significant changes
+    const shouldLogCycle = (this.cognitiveCache % 100 === 0) || this.isSignificantChange(change);
+    
+    if (shouldLogCycle) {
+      console.log(`🔄 CPSR: Cycle ${this.cognitiveCache} - ${change.plane}.${change.key} = ${JSON.stringify(change.value).substring(0, 50)}`);
+      this.lastLoggedCycle = this.cognitiveCache;
+    }
+
+    // Generate reflection insights every 10 cycles
+    if (this.cognitiveCache % 10 === 0) {
+      this.generateReflectionInsight();
+    }
     
     // Notify listeners
     this.changeListeners.forEach(listener => listener(change));
@@ -110,10 +157,124 @@ class CrossPlaneStateReflector {
     this.applyCorrespondenceRules(change);
   }
 
+  // Determine if a change is significant enough to log immediately
+  private isSignificantChange(change: StateChange): boolean {
+    const significantKeys = [
+      'user_input', 'current_intent', 'system_mode', 'agent_mode',
+      'domain_context', 'intervention_triggered', 'error_detected'
+    ];
+    
+    return significantKeys.includes(change.key) || 
+           change.source.includes('error') || 
+           change.source.includes('intervention');
+  }
+
+  // Generate meaningful reflection insights
+  private generateReflectionInsight(): void {
+    const insights: string[] = [];
+    const patterns: string[] = [];
+    const tensions: string[] = [];
+    const recommendations: string[] = [];
+
+    // Analyze current state for insights
+    const externalKeys = Object.keys(this.state.external);
+    const internalKeys = Object.keys(this.state.internal);
+    const metaKeys = Object.keys(this.state.meta);
+
+    // Pattern detection
+    if (externalKeys.includes('user_input') && internalKeys.includes('current_intent')) {
+      patterns.push('User-Intent alignment active');
+    }
+
+    if (metaKeys.includes('system_load') && this.state.meta.system_load > 0.8) {
+      tensions.push('High system load detected');
+      recommendations.push('Consider load balancing');
+    }
+
+    // State coherence analysis
+    const coherenceScore = this.calculateStateCoherence();
+    if (coherenceScore < 0.7) {
+      tensions.push(`Low state coherence: ${coherenceScore.toFixed(2)}`);
+      recommendations.push('Review state synchronization');
+    }
+
+    // Memory efficiency insights
+    const memorySize = this.state.meta.memory_size || 0;
+    if (memorySize > 10) {
+      insights.push(`Memory usage: ${memorySize} items`);
+      recommendations.push('Consider memory cleanup');
+    }
+
+    // Active sessions monitoring
+    const activeSessions = this.state.meta.active_sessions || 0;
+    if (activeSessions > 1) {
+      insights.push(`Multiple active sessions: ${activeSessions}`);
+    }
+
+    // Only log if we have meaningful insights
+    if (insights.length > 0 || patterns.length > 0 || tensions.length > 0) {
+      const reflection: ReflectionInsight = {
+        cycle: this.cognitiveCache,
+        timestamp: new Date(),
+        insights,
+        patterns,
+        tensions,
+        recommendations
+      };
+
+      this.reflectionInsights.push(reflection);
+      
+      // Keep only last 10 reflection insights
+      if (this.reflectionInsights.length > 10) {
+        this.reflectionInsights.shift();
+      }
+
+      console.log(`🪞 CPSR Reflection [Cycle ${this.cognitiveCache}]:`, {
+        insights: insights.length > 0 ? insights : ['System operating normally'],
+        patterns: patterns.length > 0 ? patterns : undefined,
+        tensions: tensions.length > 0 ? tensions : undefined,
+        recommendations: recommendations.length > 0 ? recommendations : undefined
+      });
+    }
+  }
+
+  // Calculate overall state coherence
+  private calculateStateCoherence(): number {
+    let coherenceScore = 1.0;
+    
+    // Check for state misalignments
+    const externalMode = this.state.external.agent_mode;
+    const internalMode = this.state.internal.active_mode;
+    
+    if (externalMode && internalMode && externalMode !== internalMode) {
+      coherenceScore -= 0.2;
+    }
+
+    // Check for intent-context alignment
+    const currentIntent = this.state.internal.current_intent;
+    const domainContext = this.state.external.domain_context;
+    
+    if (currentIntent && domainContext && !currentIntent.includes(domainContext)) {
+      coherenceScore -= 0.1;
+    }
+
+    // Check system health indicators
+    const systemHealth = this.state.meta.overall_system_health;
+    if (systemHealth && systemHealth < 0.8) {
+      coherenceScore -= (1.0 - systemHealth) * 0.3;
+    }
+
+    return Math.max(0, coherenceScore);
+  }
+
   // Apply reflected change without triggering infinite loops
   private applyReflectedChange(change: StateChange): void {
     this.state[change.plane][change.key] = change.value;
-    console.log(`🔄 CPSR: Reflected ${change.plane}.${change.key} from correspondence rule`);
+    
+    // Only log significant reflected changes to avoid spam
+    if (this.isSignificantChange(change)) {
+      console.log(`🔄 CPSR: Reflected ${change.plane}.${change.key} from correspondence rule`);
+    }
   }
 
   // Setup default reflection rules
@@ -178,7 +339,7 @@ class CrossPlaneStateReflector {
   }
 
   // Subscribe to state changes
-  onStateChange(listener: (change: StateChange) => void): () => void {
+  onStateChange(listener: (intent: StateChange | null) => void): () => void {
     this.changeListeners.push(listener);
     return () => {
       const index = this.changeListeners.indexOf(listener);
@@ -212,6 +373,41 @@ class CrossPlaneStateReflector {
         this.state[toPlane][toKey] = value;
       }
     });
+  }
+
+  // Get recent reflection insights
+  getReflectionInsights(count: number = 5): ReflectionInsight[] {
+    return this.reflectionInsights.slice(-count);
+  }
+
+  // Get cognitive cycle statistics
+  getCognitiveStats(): {
+    totalCycles: number;
+    currentInputCycles: number;
+    lastLoggedCycle: number;
+    averageInsightsPerCycle: number;
+    stateCoherence: number;
+  } {
+    return {
+      totalCycles: this.cognitiveCache,
+      currentInputCycles: this.currentInputCycles,
+      lastLoggedCycle: this.lastLoggedCycle,
+      averageInsightsPerCycle: this.reflectionInsights.length / Math.max(1, this.cognitiveCache / 10),
+      stateCoherence: this.calculateStateCoherence()
+    };
+  }
+
+  // Reset cycle count for new session/input
+  resetCycles(): void {
+    this.currentInputCycles = 0;
+    this.currentInput = null;
+    console.log('🔄 CPSR: Cycle count reset for new session');
+  }
+
+  // Set maximum cycles per input (for debugging/testing)
+  setMaxCyclesPerInput(max: number): void {
+    this.maxCyclesPerInput = max;
+    console.log(`🔄 CPSR: Max cycles per input set to ${max}`);
   }
 }
 
