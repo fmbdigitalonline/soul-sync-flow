@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
@@ -64,30 +65,45 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
     console.log('Supabase client created');
 
-    // Get user blueprint and HACS intelligence
-    const [blueprintResult, hacsResult] = await Promise.all([
-      supabase
-        .from('blueprints')
+    // Get user blueprint and HACS intelligence with proper error handling
+    let blueprintResult, hacsResult;
+    
+    try {
+      // Query the correct user_blueprints table that actually exists
+      blueprintResult = await supabase
+        .from('user_blueprints')
         .select('*')
         .eq('user_id', userId)
         .eq('is_active', true)
-        .single(),
-      supabase
+        .single();
+      
+      console.log('Blueprint query result:', { 
+        hasData: !!blueprintResult.data,
+        error: blueprintResult.error?.message 
+      });
+    } catch (error) {
+      console.error('Blueprint query failed:', error);
+      blueprintResult = { data: null, error };
+    }
+
+    try {
+      hacsResult = await supabase
         .from('hacs_intelligence')
         .select('intelligence_level, module_scores')
         .eq('user_id', userId)
-        .single()
-    ]);
+        .single();
+      
+      console.log('HACS intelligence query result:', { 
+        hasData: !!hacsResult.data,
+        error: hacsResult.error?.message 
+      });
+    } catch (error) {
+      console.error('HACS intelligence query failed:', error);
+      hacsResult = { data: null, error };
+    }
 
-    console.log('Database queries completed', {
-      blueprintFound: !!blueprintResult.data,
-      hacsFound: !!hacsResult.data,
-      blueprintError: blueprintResult.error?.message,
-      hacsError: hacsResult.error?.message
-    });
-
-    const blueprint = blueprintResult.data;
-    const hacsData = hacsResult.data;
+    const blueprint = blueprintResult?.data;
+    const hacsData = hacsResult?.data;
 
     // Authentic intelligence system - no hardcoded fallbacks
     const intelligenceData: HACSIntelligenceData = hacsData || { 
@@ -120,21 +136,44 @@ serve(async (req) => {
       conversation = newConversation;
     }
 
-    // Build personality context from actual blueprint data
-    const personalityContext = blueprint ? {
-      name: blueprint.user_meta?.preferred_name,
-      fullName: blueprint.user_meta?.full_name,
-      mbti: blueprint.user_meta?.personality?.likelyType || blueprint.cognition_mbti?.type,
-      sunSign: blueprint.archetype_western?.sun_sign,
-      hdType: blueprint.energy_strategy_human_design?.type,
-      hdStrategy: blueprint.energy_strategy_human_design?.strategy,
-      hdAuthority: blueprint.energy_strategy_human_design?.authority,
-      lifePath: blueprint.values_life_path?.life_path_number,
-      chineseZodiac: `${blueprint.archetype_chinese?.element} ${blueprint.archetype_chinese?.animal}`,
-      bigFive: blueprint.user_meta?.personality?.bigFive,
-      birthDate: blueprint.user_meta?.birth_date,
-      timezone: blueprint.user_meta?.timezone
-    } : null;
+    // Build personality context from actual blueprint data with safe access
+    let personalityContext = null;
+    
+    if (blueprint?.blueprint) {
+      try {
+        const blueprintData = blueprint.blueprint;
+        console.log('Processing blueprint data for personality context');
+        
+        personalityContext = {
+          name: blueprintData.user_meta?.preferred_name || 
+                blueprintData.user_meta?.full_name?.split(' ')[0] || 
+                'friend',
+          fullName: blueprintData.user_meta?.full_name,
+          // Use the correct path for MBTI from personality assessment
+          mbti: blueprintData.user_meta?.personality?.likelyType || 
+                blueprintData.cognition_mbti?.type,
+          sunSign: blueprintData.archetype_western?.sun_sign,
+          hdType: blueprintData.energy_strategy_human_design?.type,
+          hdStrategy: blueprintData.energy_strategy_human_design?.strategy,
+          hdAuthority: blueprintData.energy_strategy_human_design?.authority,
+          lifePath: blueprintData.values_life_path?.life_path_number,
+          chineseZodiac: `${blueprintData.archetype_chinese?.element} ${blueprintData.archetype_chinese?.animal}`,
+          bigFive: blueprintData.user_meta?.personality?.bigFive,
+          birthDate: blueprintData.user_meta?.birth_date,
+          timezone: blueprintData.user_meta?.timezone
+        };
+        
+        console.log('Personality context built:', {
+          name: personalityContext.name,
+          mbti: personalityContext.mbti,
+          hdType: personalityContext.hdType,
+          sunSign: personalityContext.sunSign
+        });
+      } catch (error) {
+        console.error('Error building personality context:', error);
+        personalityContext = null;
+      }
+    }
 
     let response = '';
     let generatedQuestion = null;
@@ -392,7 +431,7 @@ MODULE PURPOSES:
 - EVOLVE: Transcendence & Higher Purpose
 
 Generate ONE thoughtful, personalized question that:
-- Helps HACS learn more about ${personalityContext.name} in the ${targetModule} domain
+- Helps HACS learn more about ${personalityContext?.name || 'the user'} in the ${targetModule} domain
 - Is appropriate for their ${questionType} level
 - Considers their personality type and recent conversation
 - Avoids repeating recent questions
@@ -402,7 +441,7 @@ Respond with ONLY the question, no explanation.`;
 
   const userPrompt = `Recent conversation context: ${JSON.stringify(questionContext.recentConversation)}
 
-Generate a ${questionType} question for the ${targetModule} module to help me learn more about ${personalityContext.name}.`;
+Generate a ${questionType} question for the ${targetModule} module to help me learn more about ${personalityContext?.name || 'the user'}.`;
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
