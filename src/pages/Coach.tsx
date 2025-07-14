@@ -5,7 +5,7 @@ import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
 import { Sparkles, MessageCircle, RotateCcw, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useHACSConversation } from "@/hooks/use-hacs-conversation";
+import { useHACSConversationAdapter } from "@/hooks/use-hacs-conversation-adapter";
 import { useBlueprintCache } from "@/contexts/BlueprintCacheContext";
 import { supabase } from "@/integrations/supabase/client";
 import { HACSChatInterface } from "@/components/hacs/HACSChatInterface";
@@ -20,8 +20,8 @@ const Coach = () => {
     messages,
     isLoading,
     sendMessage,
-    clearConversation
-  } = useHACSConversation();
+    resetConversation
+  } = useHACSConversationAdapter("guide", "companion");
 
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const { toast } = useToast();
@@ -52,7 +52,7 @@ const Coach = () => {
   };
 
   const handleReset = () => {
-    clearConversation();
+    resetConversation();
     toast({
       title: "Conversation Reset",
       description: "Your companion conversation has been cleared.",
