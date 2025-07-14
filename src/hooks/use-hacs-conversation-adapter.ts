@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useHACSConversation } from './use-hacs-conversation';
-import { useEnhancedAICoach } from './use-enhanced-ai-coach';
+import { useEnhancedAICoach } from './use-enhanced-ai-coach-stub';
 
 // Adapter interface that matches useEnhancedAICoach exactly
 export interface HACSConversationAdapter {

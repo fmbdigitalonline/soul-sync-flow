@@ -133,17 +133,13 @@ export const useHACSConversation = () => {
       }
 
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('❌ HACS CONVERSATION FAILED - NO FALLBACK:', error);
       
-      // Add fallback message
-      const fallbackMessage: ConversationMessage = {
-        id: `fallback_${Date.now()}`,
-        role: 'hacs',
-        content: 'I apologize, but I encountered an issue. Could you please try again?',
-        timestamp: new Date().toISOString()
-      };
-
-      setMessages(prev => [...prev, fallbackMessage]);
+      // Remove user message since conversation failed
+      setMessages(prev => prev.slice(0, -1));
+      
+      // Re-throw error to surface the problem
+      throw error;
     } finally {
       setIsLoading(false);
       setIsTyping(false);

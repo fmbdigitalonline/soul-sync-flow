@@ -65,9 +65,8 @@ export class HACSRoutingService {
       });
 
       if (hacsError) {
-        console.warn('HACS routing failed, falling back to ai-coach-stream:', hacsError);
-        // Fallback to original ai-coach-stream if HACS fails
-        return this.fallbackToAICoachStream(request, callbacks);
+        console.error('❌ HACS routing FAILED - NO FALLBACK:', hacsError);
+        throw new Error(`HACS intelligence system failed: ${hacsError.message}`);
       }
 
       // Simulate streaming for compatibility with existing code
@@ -91,13 +90,11 @@ export class HACSRoutingService {
       console.log('✅ HACS Routing: Successfully routed conversation through HACS intelligence system');
 
     } catch (error) {
-      console.error('❌ HACS Routing error:', error);
+      console.error('❌ HACS Routing CRITICAL ERROR - NO FALLBACK:', error);
       if (callbacks.onError) {
         callbacks.onError(error as Error);
-      } else {
-        // Fallback to original service
-        return this.fallbackToAICoachStream(request, callbacks);
       }
+      throw error;
     }
   }
 
@@ -208,22 +205,8 @@ export class HACSRoutingService {
       });
 
       if (hacsError) {
-        console.warn('HACS routing failed, falling back to ai-coach:', hacsError);
-        // Fallback to original ai-coach
-        const { data: fallbackResponse, error: fallbackError } = await supabase.functions.invoke('ai-coach', {
-          body: {
-            message,
-            sessionId,
-            systemPrompt,
-            agentType,
-            includeBlueprint: false,
-            temperature: 0.7,
-            maxTokens: 200
-          }
-        });
-
-        if (fallbackError) throw fallbackError;
-        return { response: fallbackResponse.response };
+        console.error('❌ HACS ai-coach routing FAILED - NO FALLBACK:', hacsError);
+        throw new Error(`HACS intelligence system failed: ${hacsError.message}`);
       }
 
       console.log('✅ HACS Routing: Successfully routed ai-coach call through HACS');

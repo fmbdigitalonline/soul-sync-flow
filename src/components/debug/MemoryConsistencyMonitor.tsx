@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBlueprintCache } from '@/contexts/BlueprintCacheContext';
-import { useEnhancedAICoach } from '@/hooks/use-enhanced-ai-coach';
+import { useEnhancedAICoach } from '@/hooks/use-enhanced-ai-coach-stub';
 import { useSoulSync } from '@/hooks/use-soul-sync';
 import { memoryService } from '@/services/memory-service';
 import { enhancedAICoachService } from '@/services/enhanced-ai-coach-service';

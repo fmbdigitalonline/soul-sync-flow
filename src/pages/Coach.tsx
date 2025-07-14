@@ -4,41 +4,29 @@ import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
 import { Sparkles, MessageCircle, RotateCcw, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useEnhancedAICoach } from "@/hooks/use-enhanced-ai-coach";
-import { useSoulSync } from "@/hooks/use-soul-sync";
+import { useHACSConversation } from "@/hooks/use-hacs-conversation";
 import { useBlueprintCache } from "@/contexts/BlueprintCacheContext";
 import { supabase } from "@/integrations/supabase/client";
-import { BlendInterface } from "@/components/coach/BlendInterface";
+import { HACSChatInterface } from "@/components/hacs/HACSChatInterface";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 import { ActiveReminders } from "@/components/reminders/ActiveReminders";
 import { MobileTogglePanel } from "@/components/ui/mobile-toggle-panel";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const Coach = () => {
-  const { 
-    messages, 
-    isLoading, 
-    sendMessage, 
-    resetConversation, 
-    currentAgent, 
-    switchAgent,
-    personaReady,
-    authInitialized,
-    blueprintStatus,
-    vfpGraphStatus,
-    recordVFPGraphFeedback,
-    acsEnabled,
-    acsState
-  } = useEnhancedAICoach("blend", "companion-chat");
+  const {
+    messages,
+    isLoading,
+    sendMessage,
+    clearConversation
+  } = useHACSConversation();
 
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const { toast } = useToast();
   const { t } = useLanguage();
   const { hasBlueprint } = useBlueprintCache();
-  const { productivityJourney, growthJourney } = useJourneyTracking();
   const { isMobile } = useIsMobile();
-
+  
   // Check authentication status
   useEffect(() => {
     const checkAuth = async () => {
@@ -58,11 +46,11 @@ const Coach = () => {
   }, []);
 
   const handleSendMessage = async (message: string) => {
-    await sendMessage(message, true, undefined, 'blend');
+    await sendMessage(message);
   };
 
   const handleReset = () => {
-    resetConversation();
+    clearConversation();
     toast({
       title: "Conversation Reset",
       description: "Your companion conversation has been cleared.",
@@ -95,13 +83,10 @@ const Coach = () => {
 
   // Create the main chat interface component
   const chatInterface = (
-    <BlendInterface
+    <HACSChatInterface
       messages={messages}
       isLoading={isLoading}
       onSendMessage={handleSendMessage}
-      personaReady={personaReady}
-      vfpGraphStatus={vfpGraphStatus}
-      onFeedback={recordVFPGraphFeedback}
     />
   );
 
@@ -140,12 +125,10 @@ const Coach = () => {
             <span>Mode:</span>
             <span className="text-primary">Companion</span>
           </div>
-          {acsEnabled && (
-            <div className="flex justify-between">
-              <span>ACS:</span>
-              <span className="text-blue-600">Active</span>
-            </div>
-          )}
+          <div className="flex justify-between">
+            <span>HACS:</span>
+            <span className="text-blue-600">Pure Intelligence</span>
+          </div>
         </div>
       </CosmicCard>
     </div>
