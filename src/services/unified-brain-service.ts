@@ -765,29 +765,44 @@ class UnifiedBrainService {
     try {
       if (!this.userId) return null;
 
-      let tableName: string;
+      let data, error;
+      
       switch (agentMode) {
         case 'coach':
-          tableName = 'hacs_coach_intelligence';
+          ({ data, error } = await supabase
+            .from('hacs_coach_intelligence')
+            .select('intelligence_level, interaction_count, module_scores')
+            .eq('user_id', this.userId)
+            .single());
           break;
         case 'guide':
-          tableName = 'hacs_growth_intelligence';
+          ({ data, error } = await supabase
+            .from('hacs_growth_intelligence')
+            .select('intelligence_level, interaction_count, module_scores')
+            .eq('user_id', this.userId)
+            .single());
           break;
         case 'blend':
-          tableName = 'hacs_blend_intelligence';
+          ({ data, error } = await supabase
+            .from('hacs_blend_intelligence')
+            .select('intelligence_level, interaction_count, module_scores')
+            .eq('user_id', this.userId)
+            .single());
           break;
         case 'dream':
-          tableName = 'hacs_dream_intelligence';
+          ({ data, error } = await supabase
+            .from('hacs_dream_intelligence')
+            .select('intelligence_level, interaction_count, module_scores')
+            .eq('user_id', this.userId)
+            .single());
           break;
         default:
-          tableName = 'hacs_intelligence'; // fallback to main table
+          ({ data, error } = await supabase
+            .from('hacs_intelligence')
+            .select('intelligence_level, interaction_count, module_scores')
+            .eq('user_id', this.userId)
+            .single());
       }
-
-      const { data, error } = await supabase
-        .from(tableName)
-        .select('intelligence_level, interaction_count, module_scores')
-        .eq('user_id', this.userId)
-        .single();
 
       if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
         console.error(`Error fetching ${agentMode} intelligence:`, error);
@@ -798,47 +813,6 @@ class UnifiedBrainService {
     } catch (error) {
       console.error(`Failed to get ${agentMode} intelligence:`, error);
       return null;
-    }
-  }
-      
-      // External State Updates (from user input and environment)
-      crossPlaneStateReflector.updateExternalState('user_input', message, 'unified_brain');
-      crossPlaneStateReflector.updateExternalState('session_id', sessionId, 'unified_brain');
-      crossPlaneStateReflector.updateExternalState('domain_context', agentMode, 'unified_brain');
-      crossPlaneStateReflector.updateExternalState('system_mode', currentState, 'unified_brain');
-      crossPlaneStateReflector.updateExternalState('timestamp', Date.now(), 'unified_brain');
-      
-      // Internal State Updates (from cognitive processing)
-      const currentIntent = neuroIntentKernel.getCurrentIntent();
-      if (currentIntent) {
-        crossPlaneStateReflector.updateInternalState('current_intent', currentIntent.primary, 'nik');
-        crossPlaneStateReflector.updateInternalState('intent_priority', currentIntent.priority, 'nik');
-      }
-      
-      crossPlaneStateReflector.updateInternalState('active_domain', agentMode, 'personality_engine');
-      crossPlaneStateReflector.updateInternalState('processing_mode', currentState, 'unified_brain');
-      crossPlaneStateReflector.updateInternalState('user_id', this.userId, 'unified_brain');
-      
-      // Meta State Updates (system performance and health)
-      crossPlaneStateReflector.updateMetaState('message_length', message.length, 'metrics');
-      crossPlaneStateReflector.updateMetaState('session_active', true, 'session_manager');
-      crossPlaneStateReflector.updateMetaState('last_interaction', Date.now(), 'activity_tracker');
-      
-      // Get reflection state for context awareness
-      const unifiedState = crossPlaneStateReflector.getUnifiedState();
-      console.log(`🔄 CPSR: State synchronized across planes - External: ${Object.keys(unifiedState.external).length} keys, Internal: ${Object.keys(unifiedState.internal).length} keys, Meta: ${Object.keys(unifiedState.meta).length} keys`);
-      
-      // Store state snapshot in session memory for continuity
-      this.sessionMemory.set(`cpsr_state_${sessionId}`, {
-        timestamp: Date.now(),
-        unifiedState,
-        agentMode,
-        sessionId
-      });
-      
-    } catch (error) {
-      console.error('🔄 CPSR: Error in state synchronization:', error);
-      // CPSR failure should not break the flow - continue without state sync
     }
   }
 
