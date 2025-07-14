@@ -80,16 +80,19 @@ export const useHACSConversation = () => {
 
       setMessages(prev => [...prev, userMessage]);
 
-      // **PHASE 2: Route through Unified Brain Service (11 Hermetic Components)**
-      const { unifiedBrainService } = await import('../services/unified-brain-service');
-      await unifiedBrainService.initialize(user.id);
-      
-      const data = await unifiedBrainService.processMessageForModeHook(
-        content.trim(),
-        sessionIdRef.current,
-        'guide',
-        [...messages, userMessage]
-      );
+      // Send to HACS intelligent conversation
+      const { data, error } = await supabase.functions.invoke('hacs-intelligent-conversation', {
+        body: {
+          action: 'respond_to_user',
+          userId: user.id,
+          sessionId: sessionIdRef.current,
+          conversationId,
+          userMessage: content.trim(),
+          messageHistory: [...messages, userMessage]
+        }
+      });
+
+      if (error) throw error;
 
       // Add HACS response
       const hacsMessage: ConversationMessage = {

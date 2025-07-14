@@ -80,17 +80,16 @@ export const useHACSCoachConversation = () => {
 
       setMessages(prev => [...prev, userMessage]);
 
-      // **PHASE 2: Route through Unified Brain Service (11 Hermetic Components)**
-      const { unifiedBrainService } = await import('../services/unified-brain-service');
-      await unifiedBrainService.initialize(user.id);
-      
-      const sessionId = `coach_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      const data = await unifiedBrainService.processMessageForModeHook(
-        content,
-        sessionId,
-        'coach',
-        messages
-      );
+      // Call coach-specific edge function
+      const { data, error } = await supabase.functions.invoke('hacs-coach-conversation', {
+        body: { 
+          message: content,
+          conversationHistory: messages,
+          userId: user.id
+        }
+      });
+
+      if (error) throw error;
 
       // Create HACS response message
       const hacsMessage: CoachConversationMessage = {
