@@ -194,7 +194,7 @@ export interface LayeredBlueprint {
   voiceTokens: VoiceTokens;
 }
 
-export type AgentMode = 'coach' | 'guide' | 'blend' | 'dream';
+export type AgentMode = 'coach' | 'guide' | 'blend';
 
 export interface EnrichmentData {
   mbtiCognitiveFunctions: {

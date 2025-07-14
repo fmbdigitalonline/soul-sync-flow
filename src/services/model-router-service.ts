@@ -1,5 +1,5 @@
 interface ConversationContext {
-  agentType: 'coach' | 'guide' | 'blend' | 'dream';
+  agentType: 'coach' | 'guide' | 'blend';
   turnNumber: number;
   emotionalThemes: boolean;
   blueprintHeavy: boolean;
