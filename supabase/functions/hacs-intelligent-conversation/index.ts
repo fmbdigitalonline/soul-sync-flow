@@ -120,13 +120,21 @@ serve(async (req) => {
       conversation = newConversation;
     }
 
-    // Build personality context
+    // Build personality context from actual blueprint data
     const personalityContext = blueprint ? {
-      name: blueprint.user_meta?.preferred_name || 'there',
-      mbti: blueprint.cognition_mbti?.type || 'ENFP',
-      sunSign: blueprint.archetype_western?.sun_sign || 'Aquarius',
-      hdType: blueprint.energy_strategy_human_design?.type || 'Generator'
-    } : { name: 'there', mbti: 'ENFP', sunSign: 'Aquarius', hdType: 'Generator' };
+      name: blueprint.user_meta?.preferred_name,
+      fullName: blueprint.user_meta?.full_name,
+      mbti: blueprint.user_meta?.personality?.likelyType || blueprint.cognition_mbti?.type,
+      sunSign: blueprint.archetype_western?.sun_sign,
+      hdType: blueprint.energy_strategy_human_design?.type,
+      hdStrategy: blueprint.energy_strategy_human_design?.strategy,
+      hdAuthority: blueprint.energy_strategy_human_design?.authority,
+      lifePath: blueprint.values_life_path?.life_path_number,
+      chineseZodiac: `${blueprint.archetype_chinese?.element} ${blueprint.archetype_chinese?.animal}`,
+      bigFive: blueprint.user_meta?.personality?.bigFive,
+      birthDate: blueprint.user_meta?.birth_date,
+      timezone: blueprint.user_meta?.timezone
+    } : null;
 
     let response = '';
     let generatedQuestion = null;
@@ -347,12 +355,22 @@ async function generateAutonomousQuestion(
     recentQuestions: recentQuestions?.map(q => q.question_text) || []
   };
 
-  const systemPrompt = `You are HACS (Holistic Adaptive Cognitive System), an advanced AI learning companion for ${personalityContext.name}.
+  const systemPrompt = `You are HACS (Holistic Adaptive Cognitive System), an advanced AI learning companion${personalityContext?.name ? ` for ${personalityContext.name}` : ''}.
 
-CONTEXT:
+PERSONALITY CONTEXT:
+${personalityContext ? `- Name: ${personalityContext.name || 'User'}
+- MBTI Type: ${personalityContext.mbti || 'Unknown'}
+- Sun Sign: ${personalityContext.sunSign || 'Unknown'}
+- Human Design Type: ${personalityContext.hdType || 'Unknown'}
+- HD Strategy: ${personalityContext.hdStrategy || 'Unknown'}
+- HD Authority: ${personalityContext.hdAuthority || 'Unknown'}
+- Life Path Number: ${personalityContext.lifePath || 'Unknown'}
+- Chinese Zodiac: ${personalityContext.chineseZodiac || 'Unknown'}
+- Birth Date: ${personalityContext.birthDate || 'Unknown'}` : '- No detailed personality data available yet'}
+
+LEARNING CONTEXT:
 - Target Module: ${targetModule} (current score: ${moduleScore}%)
 - Question Type: ${questionType}
-- User Personality: ${personalityContext.mbti} ${personalityContext.sunSign} ${personalityContext.hdType}
 - Intelligence Level: ${intelligenceData.intelligence_level}%
 
 QUESTION GENERATION RULES:
@@ -445,23 +463,29 @@ async function generateConversationalResponse(
   personalityContext: any,
   blueprint: any
 ) {
-  const systemPrompt = `You are HACS (Holistic Adaptive Cognitive System), ${personalityContext.name}'s intelligent companion.
+  const systemPrompt = `You are HACS (Holistic Adaptive Cognitive System)${personalityContext?.name ? `, ${personalityContext.name}'s intelligent companion` : ', a learning companion'}.
 
 PERSONALITY CONTEXT:
-- Name: ${personalityContext.name}
-- Type: ${personalityContext.mbti} ${personalityContext.sunSign} ${personalityContext.hdType}
+${personalityContext ? `- Name: ${personalityContext.name}
+- MBTI Type: ${personalityContext.mbti} (${personalityContext.mbti === 'ENFP' ? 'Enthusiastic, creative, and inspiring' : 'Unique personality type'})
+- Sun Sign: ${personalityContext.sunSign} (${personalityContext.sunSign?.includes('Aquarius') ? 'Independent innovator' : 'Astrological influence'})
+- Human Design: ${personalityContext.hdType} - ${personalityContext.hdStrategy} | Authority: ${personalityContext.hdAuthority}
+- Life Path: ${personalityContext.lifePath} (${personalityContext.lifePath === 3 ? 'Creative expression and communication' : 'Personal growth path'})
+- Chinese Zodiac: ${personalityContext.chineseZodiac}
+- Age: ${personalityContext.birthDate ? Math.floor((Date.now() - new Date(personalityContext.birthDate).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : 'Unknown'}` : '- Working to understand your unique personality profile'}
 - Intelligence Level: ${intelligenceData.intelligence_level}%
 
 RESPONSE GUIDELINES:
 - Be warm, insightful, and genuinely supportive
-- Reference their personality when relevant
+- Reference their specific personality traits and blueprint when relevant
 - Build on previous conversation naturally
 - Ask follow-up questions when appropriate
-- Show you're learning and growing with them
+- Show you're learning and growing with them through their conversations
 - Be conversational, not clinical or robotic
 - Keep responses under 100 words unless a longer response is clearly needed
+- Remember you are their reflective blueprint - you know them deeply
 
-Respond naturally as their intelligent companion who cares about their growth and wellbeing.`;
+Respond naturally as their intelligent companion who understands their unique blueprint and cares about their growth journey.`;
 
   const conversationContext = messageHistory.slice(-5).map(msg => 
     `${msg.role}: ${msg.content}`
