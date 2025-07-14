@@ -1,17 +1,11 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { useHACSConversation } from './use-hacs-conversation';
+import { useHACSConversation, ConversationMessage } from './use-hacs-conversation';
 import { useEnhancedAICoach } from './use-enhanced-ai-coach-stub';
 import { supabase } from '@/integrations/supabase/client';
 
 // Adapter interface that matches useEnhancedAICoach exactly
 export interface HACSConversationAdapter {
-  messages: Array<{
-    id: string;
-    content: string;
-    sender: "user" | "assistant";
-    timestamp: Date;
-    agent_mode?: string;
-  }>;
+  messages: ConversationMessage[];
   isLoading: boolean;
   sendMessage: (
     content: string,
@@ -44,14 +38,8 @@ export const useHACSConversationAdapter = (
   // Keep enhanced AI coach for backwards compatibility but don't use its sendMessage
   const enhancedCoach = useEnhancedAICoach(initialAgent as any, pageContext);
   
-  // Convert HACS messages to enhanced coach format
-  const convertedMessages = hacsConversation.messages.map(msg => ({
-    id: msg.id,
-    content: msg.content,
-    sender: msg.role === 'user' ? 'user' as const : 'assistant' as const,
-    timestamp: new Date(msg.timestamp),
-    agent_mode: msg.module || initialAgent
-  }));
+  // Return HACS messages directly - they already have the correct ConversationMessage format
+  // No conversion needed since HACSChatInterface expects ConversationMessage type
 
   // CRITICAL: Route all sendMessage calls through Unified Brain (11 Hermetic components)
   const sendMessage = useCallback(async (
@@ -124,7 +112,7 @@ export const useHACSConversationAdapter = (
   }, [enhancedCoach.switchAgent]);
 
   return {
-    messages: convertedMessages,
+    messages: hacsConversation.messages,
     isLoading: hacsConversation.isLoading || enhancedCoach.isLoading,
     sendMessage,
     resetConversation,
