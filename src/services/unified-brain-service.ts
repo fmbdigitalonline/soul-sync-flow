@@ -850,8 +850,29 @@ class UnifiedBrainService {
     }
   }
 
+  // Add debouncing properties for cognitive sync
+  private lastCognitiveSyncTime = 0;
+  private cognitiveSyncInProgress = false;
+  private readonly COGNITIVE_SYNC_MIN_INTERVAL = 1000; // 1 second minimum between syncs
+
   // Periodic cognitive synchronization triggered by TWS
   private performCognitiveSync(): void {
+    // Circuit breaker: prevent concurrent syncs
+    if (this.cognitiveSyncInProgress) {
+      console.log('⏰ TWS: Cognitive sync already in progress, skipping');
+      return;
+    }
+
+    // Debouncing: enforce minimum interval between syncs
+    const now = Date.now();
+    if (now - this.lastCognitiveSyncTime < this.COGNITIVE_SYNC_MIN_INTERVAL) {
+      console.log('⏰ TWS: Cognitive sync rate limited, skipping');
+      return;
+    }
+
+    this.cognitiveSyncInProgress = true;
+    this.lastCognitiveSyncTime = now;
+
     try {
       // Sync session memory states
       const activeSessionCount = Array.from(this.sessionMemory.keys())
@@ -876,6 +897,8 @@ class UnifiedBrainService {
       
     } catch (error) {
       console.error('⏰ TWS: Error in cognitive sync:', error);
+    } finally {
+      this.cognitiveSyncInProgress = false;
     }
   }
 
