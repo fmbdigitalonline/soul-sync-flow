@@ -154,8 +154,8 @@ class UnifiedBrainService {
     const personality = this.vfpService.getPersonality();
     console.log(`🧬 Personality: ${personality?.name}`);
 
-    // 6. PIE - Proactive Insight Engine
-    const insights = await this.pieService.generateInsights();
+    // 6. PIE - Proactive Insight Engine - Fix: provide required arguments
+    const insights = await this.pieService.generateInsights(this.userId, 'coach');
     console.log(`💡 Insights: ${insights.length} generated`);
 
     return {
