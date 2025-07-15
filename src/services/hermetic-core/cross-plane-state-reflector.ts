@@ -52,6 +52,24 @@ class CrossPlaneStateReflector {
     this.setupDefaultReflectionRules();
   }
 
+  // VPG Integration Point #3: Set blueprint context for internal constants
+  setBlueprintContext(vgpBlueprint: VPGBlueprint): void {
+    this.vgpBlueprint = vgpBlueprint;
+    
+    // Persist key blueprint facts as internal constants for all modules to access
+    this.state.internal.blueprint = {
+      userName: vgpBlueprint.user.name,
+      cognitiveStyle: vgpBlueprint.personality.traits.cognitiveStyle,
+      energySignature: vgpBlueprint.personality.traits.energySignature,
+      communicationStyle: vgpBlueprint.personality.traits.communicationStyle,
+      dominantPatterns: vgpBlueprint.personality.traits.dominantPatterns,
+      preferences: vgpBlueprint.user.preferences,
+      summary: vgpBlueprint.personality.summary
+    };
+    
+    console.log(`🔄 CPSR: Blueprint loaded (cached) for ${vgpBlueprint.user.name} - internal constants set`);
+  }
+
   // Update external state (from environment, user, sensors)
   updateExternalState(key: string, value: any, source: string = 'external'): void {
     // Reset cycle count for new input

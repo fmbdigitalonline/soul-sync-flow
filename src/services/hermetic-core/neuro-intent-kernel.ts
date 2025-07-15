@@ -44,6 +44,7 @@ class NeuroIntentKernel {
   private lastUserActivity: Date = new Date();
   private intentSuggestions: string[] = [];
   private currentUserId: string | null = null;
+  private vgpBlueprint: VPGBlueprint | null = null; // VPG Integration Point #2
 
   // Initialize TMG reference for persistence
   setTMGReference(tmgReference: any): void {
@@ -54,6 +55,12 @@ class NeuroIntentKernel {
   // Set the current user ID for intent operations
   setUserId(userId: string): void {
     this.currentUserId = userId;
+  }
+
+  // VPG Integration Point #2: Set blueprint context for intent biasing
+  setBlueprintContext(vgpBlueprint: VPGBlueprint): void {
+    this.vgpBlueprint = vgpBlueprint;
+    console.log(`🧠 NIK: Blueprint loaded (cached) for ${vgpBlueprint.user.name} - cognitive style: ${vgpBlueprint.personality.traits.cognitiveStyle}`);
   }
 
   // Initialize intent from external command or internal generation

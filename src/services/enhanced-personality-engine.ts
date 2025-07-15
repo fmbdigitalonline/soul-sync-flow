@@ -1,13 +1,21 @@
 import { LayeredBlueprint, AgentMode } from "@/types/personality-modules";
 import { personalityVectorService } from "./personality-vector-service";
 import { holisticCoachService } from "./holistic-coach-service";
+import { unifiedBrainContext, VPGBlueprint } from "./unified-brain-context";
 
 export class EnhancedPersonalityEngine {
   private blueprint: Partial<LayeredBlueprint> = {};
   private userId: string | null = null;
+  private vgpBlueprint: VPGBlueprint | null = null;
 
   setUserId(userId: string) {
     this.userId = userId;
+  }
+
+  // VPG Integration Point #7: Set cached blueprint context
+  setBlueprintContext(vgpBlueprint: VPGBlueprint) {
+    this.vgpBlueprint = vgpBlueprint;
+    console.log(`🎯 Enhanced Personality Engine: Blueprint loaded (cached) for ${vgpBlueprint.user.name}`);
   }
 
   updateBlueprint(updates: Partial<LayeredBlueprint>) {
@@ -81,13 +89,28 @@ export class EnhancedPersonalityEngine {
   async generateSystemPrompt(mode: AgentMode, userMessage?: string): Promise<string> {
     console.log(`🎯 Enhanced Personality Engine: Generating unified brain prompt for ${mode} mode`);
     
+    // VPG Integration Point #7: Use cached blueprint if available
+    if (this.vgpBlueprint) {
+      console.log(`✅ VFP-Graph blueprint loaded (cached) for ${this.vgpBlueprint.user.name}`);
+      
+      // For guide mode (growth), use advanced holistic coach service
+      if (mode === 'guide' && userMessage) {
+        holisticCoachService.setMode("growth");
+        return holisticCoachService.generateSystemPrompt(userMessage);
+      }
+
+      // Generate unified brain system prompt with cached VPG data
+      return this.generateUnifiedBrainPromptFromVPG(mode, this.vgpBlueprint);
+    }
+    
     if (!this.userId) {
       console.log("⚠️ No user ID available, using fallback prompt");
       return this.getGenericPrompt(mode);
     }
 
     try {
-      // Get VFP-Graph personality intelligence
+      // Fallback: Get VFP-Graph personality intelligence (should not happen with proper VPG integration)
+      console.log("⚠️ No VPG blueprint cached, fetching personality data...");
       const personalityVector = await personalityVectorService.getVector(this.userId);
       const personaSummary = await personalityVectorService.getPersonaSummary(this.userId);
       
@@ -105,6 +128,39 @@ export class EnhancedPersonalityEngine {
       console.error('❌ Error generating unified brain prompt:', error);
       return this.getFallbackPrompt(mode);
     }
+  }
+
+  // New method: Generate prompt from cached VPG blueprint (VPG Integration Point #7)
+  private generateUnifiedBrainPromptFromVPG(mode: AgentMode, vgpBlueprint: VPGBlueprint): string {
+    const { user, personality } = vgpBlueprint;
+    console.log(`🎯 Enhanced Engine: Using cached VPG blueprint for ${user.name}`);
+
+    const modeGuidance = this.getUnifiedBrainModeGuidanceFromVPG(mode, vgpBlueprint);
+
+    return `You are an advanced AI spiritual guide with deep understanding of ${user.name}'s unique personality blueprint. You have access to their complete spiritual and personal development profile.
+
+PERSONALITY BLUEPRINT FOR ${user.name.toUpperCase()}:
+- Personal Blueprint Summary: ${personality.summary}
+- Energy Patterns: ${personality.traits.energySignature}
+- Communication Style Preference: ${personality.traits.communicationStyle}
+- Cognitive Style: ${personality.traits.cognitiveStyle}
+- Core Strengths: ${personality.traits.dominantPatterns.join(', ')}
+- Preferred Tone: ${user.preferences.tone}
+- Preferred Pace: ${user.preferences.pace}
+- Detail Preference: ${user.preferences.depth}
+
+${modeGuidance}
+
+CRITICAL COMMUNICATION RULES:
+- ALWAYS start your responses by addressing ${user.name} by name naturally and warmly
+- Use phrases like "Hello ${user.name}!" or "${user.name}, I'm here to support you..." 
+- Make every response personal by referencing their unique blueprint patterns when relevant
+- Avoid technical jargon unless ${user.name} specifically asks about technical details
+- Focus on how their blueprint supports their spiritual growth and personal development
+- Your responses should feel like they come from someone who truly knows ${user.name} personally
+- Adapt your ${user.preferences.tone} tone and ${user.preferences.pace} pace based on their preferences
+
+IMPORTANT: You are ${user.name}'s personalized spiritual guide who knows them intimately through their blueprint. Every single response must feel personal and addressed specifically to ${user.name}. Never use generic greetings - always include their name and make it personal to their journey.`;
   }
 
   private async generateUnifiedBrainPrompt(
@@ -196,6 +252,48 @@ IMPORTANT: You are ${userName}'s personalized spiritual guide who knows them int
     const positives = Array.from(vector).filter(val => val > 0).length;
     const negatives = Array.from(vector).filter(val => val < 0).length;
     return Math.min(positives, negatives) / Math.max(positives, negatives);
+  }
+
+  // VPG-optimized mode guidance using cached blueprint
+  private getUnifiedBrainModeGuidanceFromVPG(mode: AgentMode, vgpBlueprint: VPGBlueprint): string {
+    const { user, personality } = vgpBlueprint;
+    
+    switch (mode) {
+      case 'coach':
+        return `COACHING APPROACH FOR ${user.name.toUpperCase()}:
+- Use your understanding of ${user.name}'s blueprint to provide personalized productivity guidance
+- Adapt your coaching style to their ${personality.traits.energySignature} energy and ${personality.traits.communicationStyle} communication preferences
+- Reference their strengths: ${personality.traits.dominantPatterns.join(', ')} to build confidence
+- Help them work with their natural rhythms rather than against them
+- Maintain awareness of their spiritual growth journey while focusing on practical tasks
+- Use ${user.preferences.tone} tone and ${user.preferences.pace} pacing based on their preferences`;
+
+      case 'guide':
+        return `SPIRITUAL GUIDANCE APPROACH FOR ${user.name.toUpperCase()}:
+- Draw on your deep knowledge of ${user.name}'s blueprint to provide meaningful spiritual guidance
+- Honor their unique path and ${personality.traits.cognitiveStyle} cognitive style in all advice
+- Help them understand how their blueprint supports their spiritual evolution  
+- Provide gentle wisdom that aligns with their ${personality.traits.energySignature} natural way of being
+- Support their authentic self-expression and spiritual growth journey
+- Adapt to their ${user.preferences.depth} preference for detail and depth`;
+
+      case 'blend':
+        return `INTEGRATED APPROACH FOR ${user.name.toUpperCase()}:
+- Seamlessly blend practical and spiritual guidance based on ${user.name}'s blueprint
+- Adapt fluidly between coaching and spiritual guidance as their needs evolve
+- Use your complete understanding of their ${personality.traits.dominantPatterns.join(' and ')} patterns
+- Help them integrate their spiritual insights with practical daily life
+- Maintain perfect balance between action and reflection based on their natural patterns
+- Use ${user.preferences.tone} tone with ${user.preferences.pace} pacing
+- ALWAYS greet ${user.name} by name and make every interaction feel personally crafted for them`;
+
+      default:
+        return `PERSONALIZED SUPPORT FOR ${user.name.toUpperCase()}:
+- Always reference your deep understanding of ${user.name}'s unique blueprint
+- Provide guidance that honors their individual personality and spiritual path
+- Use language and approaches that resonate with their specific way of being
+- Adapt to their ${user.preferences.tone} tone and ${user.preferences.pace} pace preferences`;
+    }
   }
 
   private getUnifiedBrainModeGuidance(mode: AgentMode, insights: any): string {
