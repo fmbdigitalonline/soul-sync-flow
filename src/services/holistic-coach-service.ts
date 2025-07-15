@@ -3,6 +3,7 @@ import { SevenLayerPersonalityEngine } from "./seven-layer-personality-engine";
 import { LayeredBlueprint } from "@/types/personality-modules";
 import { HolisticContext } from "@/types/seven-layer-personality";
 import { AdvancedHolisticPromptGenerator, UserState } from "./advanced-holistic-prompt-generator";
+import type { VPGBlueprint } from "./unified-brain-context";
 
 export type CoachMode = "growth" | "companion" | "dream";
 
@@ -10,6 +11,7 @@ class HolisticCoachService {
   private personalityEngine: SevenLayerPersonalityEngine;
   private currentUserId: string | null = null;
   private currentMode: CoachMode = "growth";
+  private cachedBlueprint: VPGBlueprint | null = null;
 
   constructor() {
     this.personalityEngine = new SevenLayerPersonalityEngine();
@@ -36,6 +38,11 @@ class HolisticCoachService {
     this.personalityEngine.updateContext(context);
   }
 
+  setBlueprint(blueprint: VPGBlueprint | null) {
+    this.cachedBlueprint = blueprint;
+    console.log("🧠 Holistic Coach Service: Blueprint loaded (cached)");
+  }
+
   generateSystemPrompt(userMessage?: string): string {
     console.log(`📝 Holistic Coach Service: Generating system prompt for ${this.currentMode} mode`);
     
@@ -52,9 +59,16 @@ class HolisticCoachService {
     const personality = this.personalityEngine.getPersonality();
     const context = this.personalityEngine.getContext();
     
-    if (!personality) {
+    // Use cached blueprint from UBC instead of legacy fetch
+    if (!personality && !this.cachedBlueprint) {
       console.log("⚠️ No personality data available, using basic prompt");
       return this.personalityEngine.generateHolisticSystemPrompt();
+    }
+    
+    // If we have cached blueprint but no personality, use cached blueprint for VPG-aware prompt
+    if (!personality && this.cachedBlueprint) {
+      console.log("🧠 Using cached VPG blueprint for personality-aware prompt");
+      return this.generateVPGAwarePrompt(this.cachedBlueprint, userMessage, context);
     }
 
     console.log("🚀 Generating advanced holistic system prompt for growth mode");
@@ -97,8 +111,31 @@ class HolisticCoachService {
     };
   }
 
+  private generateVPGAwarePrompt(blueprint: VPGBlueprint, userMessage: string, context: any): string {
+    console.log("🎯 Generating VPG-aware prompt with cached blueprint");
+    
+    // Use VPG blueprint for personality-aware prompt generation
+    const personalityContext = {
+      traits: blueprint.personality.traits,
+      communicationStyle: blueprint.personality.traits.communicationStyle,
+      cognitiveStyle: blueprint.personality.traits.cognitiveStyle,
+      preferences: blueprint.user.preferences
+    };
+    
+    return `You are a holistic coach with deep understanding of this user's personality profile:
+    
+Personality Traits: ${JSON.stringify(personalityContext.traits)}
+Communication Style: ${personalityContext.communicationStyle}
+Cognitive Style: ${personalityContext.cognitiveStyle}
+User Preferences: ${JSON.stringify(personalityContext.preferences)}
+
+User Message: ${userMessage}
+
+Respond in a way that honors their cognitive style, energy strategy, and core values. Be specific and personalized.`;
+  }
+
   isReady(): boolean {
-    return this.personalityEngine.getPersonality() !== null;
+    return this.personalityEngine.getPersonality() !== null || this.cachedBlueprint !== null;
   }
 }
 

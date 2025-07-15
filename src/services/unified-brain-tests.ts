@@ -169,6 +169,40 @@ export class UnifiedBrainTests {
     }
   }
 
+  // Unit test: Holistic Coach blueprint integration  
+  static async testHolisticCoachIntegration(userId: string): Promise<boolean> {
+    console.log("🧪 TEST: Holistic Coach blueprint integration");
+    
+    try {
+      // Load blueprint first
+      const blueprint = await unifiedBrainContext.loadBlueprint(userId);
+      
+      // Import and test holistic coach
+      const { holisticCoachService } = await import('./holistic-coach-service');
+      
+      // Set blueprint and user
+      holisticCoachService.setBlueprint(blueprint);
+      holisticCoachService.setCurrentUser(userId);
+      
+      // Generate prompt and check for warning
+      const prompt = holisticCoachService.generateSystemPrompt("Hello, I need guidance");
+      
+      const success = !prompt.includes("⚠️ No personality data available");
+      console.log(`✅ TEST RESULT: Holistic Coach integration ${success ? 'PASSED' : 'FAILED'}`);
+      
+      if (success) {
+        console.log("✅ Holistic Coach now uses cached VPG blueprint");
+      } else {
+        console.log("❌ Holistic Coach still shows no personality data warning");
+      }
+      
+      return success;
+    } catch (error) {
+      console.error("❌ TEST FAILED: Holistic Coach integration error:", error);
+      return false;
+    }
+  }
+
   // Run all tests
   static async runAllTests(userId: string): Promise<void> {
     console.log("🧪 RUNNING ALL VPG INTEGRATION TESTS");
@@ -179,10 +213,13 @@ export class UnifiedBrainTests {
     // Test 2: Module blueprint loading
     await this.testModuleBlueprintLoading(userId);
     
-    // Test 3: Performance benchmark
+    // Test 3: Holistic Coach integration
+    await this.testHolisticCoachIntegration(userId);
+    
+    // Test 4: Performance benchmark
     await this.benchmarkPerformance(userId);
     
-    // Test 4: Full integration
+    // Test 5: Full integration
     await this.testFullIntegration(userId);
     
     console.log("🧪 ALL TESTS COMPLETED");

@@ -256,4 +256,13 @@ class UnifiedBrainContext {
   }
 }
 
+// Static helper methods for global access
+export class UnifiedBrainContextHelper {
+  static getBlueprint(): VPGBlueprint | null {
+    // Since we don't have a specific userId in global context, return null
+    // The proper way is to use instance.get('blueprint', userId)
+    return null;
+  }
+}
+
 export const unifiedBrainContext = UnifiedBrainContext.getInstance();

@@ -284,6 +284,11 @@ class UnifiedBrainService {
       console.warn(`💸 ${costAlert.message}`);
     }
     
+    // Inject cached blueprint into Holistic Coach (VPG Integration Point #7)
+    const { holisticCoachService } = await import('./holistic-coach-service');
+    const cachedBlueprint = unifiedBrainContext.get('blueprint', this.userId!);
+    holisticCoachService.setBlueprint(cachedBlueprint);
+    
     console.log(`✅ Unified brain processing complete in ${totalLatency.toFixed(1)}ms (Coach: ${coachLatency.toFixed(1)}ms, Memory: ${memoryLatency.toFixed(1)}ms)`);
 
     return {
