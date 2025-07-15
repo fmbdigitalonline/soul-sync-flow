@@ -20,7 +20,7 @@ import { calculateWeeklyInsights, WeeklyInsights } from "@/services/insights-ser
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 
-const Profile = () => {
+const ProfileMain = () => {
   const { toast } = useToast();
   const { t } = useLanguage();
   const [darkMode, setDarkMode] = useState(false);
@@ -389,6 +389,17 @@ const GoalCard = ({ goal, onComplete, onProgressUpdate }: GoalCardProps) => {
         )}
       </div>
     </CosmicCard>
+  );
+};
+
+const Profile = () => {
+  return (
+    <Routes>
+      <Route index element={<ProfileMain />} />
+      <Route path="settings" element={<ProfileMain />} />
+      <Route path="goals" element={<ProfileMain />} />
+      <Route path="stats" element={<ProfileMain />} />
+    </Routes>
   );
 };
 

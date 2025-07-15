@@ -644,11 +644,11 @@ const Coach = () => {
   return (
     <MainLayout>
       <Routes>
-        <Route path="/" element={<CompanionWelcome />} />
-        <Route path="/chat" element={<CompanionChat />} />
-        <Route path="/coach" element={<CompanionCoach />} />
-        <Route path="/guide" element={<CompanionGuide />} />
-        <Route path="/blend" element={<CompanionBlend />} />
+        <Route index element={<CompanionWelcome />} />
+        <Route path="chat" element={<CompanionChat />} />
+        <Route path="coach" element={<CompanionCoach />} />
+        <Route path="guide" element={<CompanionGuide />} />
+        <Route path="blend" element={<CompanionBlend />} />
       </Routes>
     </MainLayout>
   );

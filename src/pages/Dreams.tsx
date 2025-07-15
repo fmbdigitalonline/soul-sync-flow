@@ -660,12 +660,12 @@ const Dreams = () => {
     <MainLayout>
       <ErrorBoundary>
         <Routes>
-          <Route path="/" element={<DreamsCreate />} />
-          <Route path="/chat" element={<DreamsChat />} />
-          <Route path="/journey" element={<DreamsJourney />} />
-          <Route path="/task-coach" element={<DreamsTaskCoach />} />
-          <Route path="/decomposing" element={<DreamsDecomposing />} />
-          <Route path="/success" element={<DreamsSuccess />} />
+          <Route index element={<DreamsCreate />} />
+          <Route path="chat" element={<DreamsChat />} />
+          <Route path="journey" element={<DreamsJourney />} />
+          <Route path="task-coach" element={<DreamsTaskCoach />} />
+          <Route path="decomposing" element={<DreamsDecomposing />} />
+          <Route path="success" element={<DreamsSuccess />} />
         </Routes>
       </ErrorBoundary>
     </MainLayout>

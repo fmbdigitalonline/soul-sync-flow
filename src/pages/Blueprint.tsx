@@ -18,7 +18,7 @@ import { useOptimizedBlueprintData } from "@/hooks/use-optimized-blueprint-data"
 import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 import { isAdminUser } from "@/utils/isAdminUser";
 
-const Blueprint = () => {
+const BlueprintMain = () => {
   const [activeTab, setActiveTab] = useState("view");
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
@@ -467,6 +467,17 @@ const Blueprint = () => {
         </Tabs>
       </div>
     </MainLayout>
+  );
+};
+
+const Blueprint = () => {
+  return (
+    <Routes>
+      <Route index element={<BlueprintMain />} />
+      <Route path="view" element={<BlueprintMain />} />
+      <Route path="edit" element={<BlueprintMain />} />
+      <Route path="report" element={<BlueprintMain />} />
+    </Routes>
   );
 };
 
