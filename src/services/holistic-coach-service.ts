@@ -46,6 +46,11 @@ class HolisticCoachService {
   generateSystemPrompt(userMessage?: string): string {
     console.log(`📝 Holistic Coach Service: Generating system prompt for ${this.currentMode} mode`);
     
+    // GUARD: Ensure blueprint is available before prompt generation
+    if (!this.cachedBlueprint && !this.personalityEngine.getPersonality()) {
+      throw new Error("Blueprint not ready - cannot generate personality-aware prompt");
+    }
+    
     // Only use advanced system prompt for growth mode
     if (this.currentMode === "growth" && userMessage) {
       return this.generateAdvancedSystemPrompt(userMessage);
@@ -61,8 +66,7 @@ class HolisticCoachService {
     
     // Use cached blueprint from UBC instead of legacy fetch
     if (!personality && !this.cachedBlueprint) {
-      console.log("⚠️ No personality data available, using basic prompt");
-      return this.personalityEngine.generateHolisticSystemPrompt();
+      throw new Error("No personality data available - blueprint injection failed");
     }
     
     // If we have cached blueprint but no personality, use cached blueprint for VPG-aware prompt
