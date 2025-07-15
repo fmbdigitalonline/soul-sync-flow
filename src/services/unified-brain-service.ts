@@ -346,7 +346,7 @@ class UnifiedBrainService {
     return modeSpecificResult;
   }
 
-  // Route through AI Coach Service with includeBlueprint: true after Hermetic processing
+  // Route to mode-specific edge function after Hermetic processing
   private async routeToModeSpecificFunction(
     message: string,
     targetMode: AgentMode,
@@ -354,32 +354,43 @@ class UnifiedBrainService {
     hermeticResult: UnifiedBrainResponse
   ): Promise<{ response: string; module: string; question?: any }> {
     try {
-      console.log(`🔄 Routing to AI Coach Service with includeBlueprint: true for ${targetMode} mode after Hermetic processing`);
+      const edgeFunctionMap = {
+        'coach': 'hacs-coach-conversation',
+        'guide': 'hacs-growth-conversation', 
+        'blend': 'hacs-blend-conversation',
+        'dream': 'hacs-dream-conversation'
+      };
 
-      // Import and use AI Coach Service with includeBlueprint: true
-      const { aiCoachService } = await import('./ai-coach-service');
-      
-      const sessionId = `${targetMode}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      
-      const result = await aiCoachService.sendMessage(
-        message,
-        sessionId,
-        true, // includeBlueprint: true - This ensures persona/blueprint is used!
-        targetMode as any, // AgentType
-        'en',
-        'friend'
-      );
+      const functionName = edgeFunctionMap[targetMode];
+      if (!functionName) {
+        throw new Error(`No edge function mapped for mode: ${targetMode}`);
+      }
 
-      console.log(`✅ AI Coach Service response received for ${targetMode} mode with persona data`);
+      console.log(`🔄 Routing to ${functionName} after Hermetic processing`);
+
+      const { data, error } = await supabase.functions.invoke(functionName, {
+        body: { 
+          message,
+          conversationHistory,
+          userId: this.userId,
+          hermeticContext: {
+            personalityApplied: hermeticResult.personalityApplied,
+            memoryStored: hermeticResult.memoryStored,
+            brainMetrics: hermeticResult.brainMetrics
+          }
+        }
+      });
+
+      if (error) throw error;
 
       return {
-        response: result.response,
-        module: targetMode,
-        question: null // Edge functions had question generation, but AI coach service handles this differently
+        response: data.response,
+        module: data.module || targetMode,
+        question: data.question
       };
 
     } catch (error) {
-      console.error(`Failed to route to ${targetMode} mode through AI Coach Service:`, error);
+      console.error(`Failed to route to ${targetMode} mode:`, error);
       throw new Error(`Failed to get response from ${targetMode} mode`);
     }
   }

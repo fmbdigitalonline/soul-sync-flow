@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -81,70 +80,60 @@ export const useHACSConversation = () => {
 
       setMessages(prev => [...prev, userMessage]);
 
-      // Use AI Coach Service directly with includeBlueprint: true
-      const { aiCoachService } = await import('../services/ai-coach-service');
-      
-      console.log('🔄 HACS Conversation: Using AI Coach Service with blueprint data');
-      
-      const result = await aiCoachService.sendMessage(
-        content.trim(),
-        sessionIdRef.current,
-        true, // includeBlueprint: true - ensures persona/blueprint is used
-        'guide', // AgentType
-        'en',
-        'friend'
-      );
+      // Send to HACS intelligent conversation
+      const { data, error } = await supabase.functions.invoke('hacs-intelligent-conversation', {
+        body: {
+          action: 'respond_to_user',
+          userId: user.id,
+          sessionId: sessionIdRef.current,
+          conversationId,
+          userMessage: content.trim(),
+          messageHistory: [...messages, userMessage]
+        }
+      });
+
+      if (error) throw error;
 
       // Add HACS response
       const hacsMessage: ConversationMessage = {
         id: `hacs_${Date.now()}`,
         role: 'hacs',
-        content: result.response,
+        content: data.response,
         timestamp: new Date().toISOString()
       };
 
-      const updatedMessages = [...messages, userMessage, hacsMessage];
-      setMessages(updatedMessages);
-
-      // Save conversation to database
-      if (conversationId) {
-        await supabase
-          .from('hacs_conversations')
-          .update({
-            conversation_data: updatedMessages as any,
-            last_activity: new Date().toISOString()
-          })
-          .eq('id', conversationId);
-      } else {
-        const { data: newConversation } = await supabase
-          .from('hacs_conversations')
-          .insert({
-            user_id: user.id,
-            session_id: sessionIdRef.current,
-            conversation_data: updatedMessages as any,
-            intelligence_level_start: 50
-          })
-          .select()
-          .single();
-        
-        if (newConversation) {
-          setConversationId(newConversation.id);
-        }
-      }
+      setMessages(prev => [...prev, hacsMessage]);
+      setConversationId(data.conversationId);
 
       // CRITICAL: Record conversation interaction for intelligence growth
       await recordConversationInteraction(
         content.trim(),
-        determineResponseQuality(result.response, content.trim())
+        determineResponseQuality(data.response, content.trim())
       );
 
       // Refresh intelligence to update visuals
       await refreshIntelligence();
 
-      console.log('✅ HACS Conversation: Successfully processed through AI Coach Service with blueprint');
+      // Handle generated question
+      if (data.generatedQuestion) {
+        setCurrentQuestion(data.generatedQuestion);
+        
+        // Add question as a special message
+        const questionMessage: ConversationMessage = {
+          id: `question_${Date.now()}`,
+          role: 'hacs',
+          content: data.generatedQuestion.text,
+          timestamp: new Date().toISOString(),
+          module: data.generatedQuestion.module,
+          questionId: data.generatedQuestion.id,
+          isQuestion: true
+        };
+
+        setMessages(prev => [...prev, questionMessage]);
+      }
 
     } catch (error) {
-      console.error('❌ HACS CONVERSATION FAILED:', error);
+      console.error('❌ HACS CONVERSATION FAILED - NO FALLBACK:', error);
       
       // Remove user message since conversation failed
       setMessages(prev => prev.slice(0, -1));
@@ -155,50 +144,48 @@ export const useHACSConversation = () => {
       setIsLoading(false);
       setIsTyping(false);
     }
-  }, [user, messages, conversationId, recordConversationInteraction, refreshIntelligence]);
+  }, [user, messages, conversationId]);
 
   const generateQuestion = useCallback(async () => {
     if (!user) return;
 
     setIsLoading(true);
     try {
-      // Generate a simple question for now - the AI Coach Service handles more complex question generation
-      const questions = [
-        "What's on your mind today?",
-        "How are you feeling about your current goals?",
-        "What would you like to explore together?",
-        "What aspects of your growth are you most curious about?"
-      ];
-      
-      const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
-      
-      const question: HACSQuestion = {
-        id: `question_${Date.now()}`,
-        text: randomQuestion,
-        module: 'hacs',
-        type: 'foundational'
-      };
+      const { data, error } = await supabase.functions.invoke('hacs-intelligent-conversation', {
+        body: {
+          action: 'generate_question',
+          userId: user.id,
+          sessionId: sessionIdRef.current,
+          conversationId,
+          messageHistory: messages
+        }
+      });
 
-      setCurrentQuestion(question);
+      if (error) throw error;
 
-      // Add question as a message
-      const questionMessage: ConversationMessage = {
-        id: question.id,
-        role: 'hacs',
-        content: question.text,
-        timestamp: new Date().toISOString(),
-        module: question.module,
-        questionId: question.id,
-        isQuestion: true
-      };
+      if (data.generatedQuestion) {
+        setCurrentQuestion(data.generatedQuestion);
+        setConversationId(data.conversationId);
 
-      setMessages(prev => [...prev, questionMessage]);
+        // Add question as a message
+        const questionMessage: ConversationMessage = {
+          id: `question_${Date.now()}`,
+          role: 'hacs',
+          content: data.generatedQuestion.text,
+          timestamp: new Date().toISOString(),
+          module: data.generatedQuestion.module,
+          questionId: data.generatedQuestion.id,
+          isQuestion: true
+        };
+
+        setMessages(prev => [...prev, questionMessage]);
+      }
     } catch (error) {
       console.error('Error generating question:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user, messages, conversationId]);
 
   const provideFeedback = useCallback(async (
     feedbackType: 'helpful' | 'not_helpful' | 'rating',

@@ -1,14 +1,26 @@
+
+# A string used to distinguish different Supabase projects on the same host. Defaults to the project ID.
 project_id = "qxaajirrqrcnmvtowjbg"
 
 [api]
+# Port to use for the API URL.
 port = 54321
+# Schemas to expose in your API. Tables, views and stored procedures in this schema will get API
+# endpoints. public and storage are always included.
 schemas = ["public", "storage", "extensions"]
+# Extra schemas to add to the search_path of every request. public is always included.
 extra_search_path = ["extensions"]
+# The maximum number of rows returns from a view, table, or stored procedure. Limits payload size
+# for accidental or malicious requests.
 max_rows = 1000
 
 [db]
+# Port to use for the local database URL.
 port = 54322
+# Port used by db diff command to initialize the shadow database.
 shadow_port = 54320
+# The database major version to use. This has to be the same as your remote database's. Run `SHOW
+# server_version;` on the remote database to check.
 major_version = 15
 
 [db.pooler]
@@ -28,6 +40,8 @@ enabled = true
 port = 54324
 api_url = "http://localhost"
 
+# Email testing server. Emails sent with the local dev setup are not actually sent - rather, they
+# are monitored, and you can view the emails that would have been sent from the web interface.
 [inbucket]
 enabled = true
 port = 54325
@@ -41,7 +55,9 @@ port = 54328
 [auth]
 enabled = true
 port = 54330
+# allowlist of URLs that auth providers are permitted to redirect to post authentication
 redirect_urls = ["https://localhost:3000", "https://lovable.dev", "https://preview--qxaajirrqrcnmvtowjbg.lovable.dev"]
+# Supabase test JWT 
 additional_redirect_urls = ["https://preview--qxaajirrqrcnmvtowjbg.lovable.dev"]
 
 [analytics]
@@ -52,6 +68,7 @@ vector_port = 54332
 [experimental]
 minimal_apis = true
 
+# Configure Edge Functions
 [functions]
 enabled = true
 port = 54333
@@ -105,26 +122,6 @@ verify_jwt = true
 cors = ["*"]
 methods = ["POST", "OPTIONS"]
 
-[functions.hacs-coach-conversation]
-verify_jwt = true
-cors = ["*"]
-methods = ["POST", "OPTIONS"]
-
-[functions.hacs-growth-conversation]
-verify_jwt = true
-cors = ["*"]
-methods = ["POST", "OPTIONS"]
-
-[functions.hacs-blend-conversation]
-verify_jwt = true
-cors = ["*"]
-methods = ["POST", "OPTIONS"]
-
-[functions.hacs-dream-conversation]
-verify_jwt = true
-cors = ["*"]
-methods = ["POST", "OPTIONS"]
-
 [functions.generate-personality-report]
 verify_jwt = true
 cors = ["*"]
@@ -139,3 +136,6 @@ methods = ["POST", "OPTIONS"]
 verify_jwt = true
 cors = ["*"]
 methods = ["POST", "OPTIONS"]
+
+[analytics]
+enabled = false
