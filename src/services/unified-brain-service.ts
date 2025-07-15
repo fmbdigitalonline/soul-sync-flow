@@ -19,6 +19,8 @@ import { causalNexusRouter } from "./hermetic-core/causal-nexus-router";
 import { biPrincipleSynthesisCore } from "./hermetic-core/bi-principle-synthesis-core";
 import { unifiedBrainContext } from "./unified-brain-context";
 import { unifiedBrainTests } from "./unified-brain-tests";
+import { userContextService } from "./user-context-service";
+import { holisticCoachService } from "./holistic-coach-service";
 
 export interface UnifiedBrainResponse {
   response: string;
@@ -47,10 +49,20 @@ class UnifiedBrainService {
     
     this.userId = userId;
     
+    // Initialize user context service for cross-module state management
+    userContextService.initializeUser(userId);
+    
     // STAGE 0: Load VPG Blueprint and cache in session context (VPG Integration Point #1)
     console.log("🎯 Stage 0: Loading VPG Blueprint for session...");
     const vgpBlueprint = await unifiedBrainContext.loadBlueprint(userId);
     console.log(`✅ Stage 0: VPG Blueprint loaded (cached) for ${vgpBlueprint.user.name}`);
+    
+    // Update user context with VPG blueprint
+    userContextService.updateVPGBlueprint(userId, vgpBlueprint);
+    
+    // Initialize Holistic Coach Service with user context
+    holisticCoachService.setCurrentUser(userId);
+    holisticCoachService.setBlueprint(vgpBlueprint);
     
     // Initialize HACS monitoring first
     hacsMonitorService.initialize();
@@ -130,7 +142,9 @@ class UnifiedBrainService {
           // may not match the LayeredBlueprint interface exactly
         };
         
+        // Update both personality engine and user context service
         enhancedPersonalityEngine.updateBlueprint(this.currentBlueprint);
+        userContextService.updateBlueprint(this.userId!, this.currentBlueprint);
         console.log("📋 User blueprint loaded and applied to personality engine");
       }
     } catch (error) {
@@ -216,6 +230,10 @@ class UnifiedBrainService {
     
     // Step 3: Process through Enhanced AI Coach with layered model selection
     const coachStartTime = performance.now();
+    
+    // Ensure Enhanced AI Coach has user context
+    await enhancedAICoachService.setCurrentUser(this.userId!);
+    
     const acsResult = await enhancedAICoachService.sendMessage(
       message,
       sessionId,
@@ -284,10 +302,11 @@ class UnifiedBrainService {
       console.warn(`💸 ${costAlert.message}`);
     }
     
-    // Inject cached blueprint into Holistic Coach (VPG Integration Point #7)
-    const { holisticCoachService } = await import('./holistic-coach-service');
+    // Ensure Holistic Coach has current user context (VPG Integration Point #7)
     const cachedBlueprint = unifiedBrainContext.get('blueprint', this.userId!);
-    holisticCoachService.setBlueprint(cachedBlueprint);
+    if (cachedBlueprint) {
+      holisticCoachService.setBlueprint(cachedBlueprint);
+    }
     
     console.log(`✅ Unified brain processing complete in ${totalLatency.toFixed(1)}ms (Coach: ${coachLatency.toFixed(1)}ms, Memory: ${memoryLatency.toFixed(1)}ms)`);
 

@@ -175,8 +175,13 @@ class EnhancedAICoachService {
   }
 
   private async getOrCreatePersona(usePersona: boolean, agentType: AgentType, userMessage?: string, userDisplayName: string = "friend"): Promise<string | null> {
-    if (!usePersona || !this.currentUserId) {
-      console.log("⚠️ Persona not requested or no user ID available, using universal conversational rules");
+    if (!usePersona) {
+      console.log("⚠️ Persona not requested, using universal conversational rules");
+      return getUniversalConversationalPrompt(userDisplayName, this.getRoleSpecificGuidance(agentType));
+    }
+    
+    if (!this.currentUserId) {
+      console.error("❌ Enhanced AI Coach Service: No user ID available for persona generation");
       return getUniversalConversationalPrompt(userDisplayName, this.getRoleSpecificGuidance(agentType));
     }
 

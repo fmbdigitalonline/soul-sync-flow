@@ -46,6 +46,12 @@ class HolisticCoachService {
   generateSystemPrompt(userMessage?: string): string {
     console.log(`📝 Holistic Coach Service: Generating system prompt for ${this.currentMode} mode`);
     
+    // Validate user context before proceeding
+    if (!this.currentUserId) {
+      console.warn("⚠️ Holistic Coach Service: No user ID set, using basic prompt");
+      return this.personalityEngine.generateHolisticSystemPrompt();
+    }
+    
     // Only use advanced system prompt for growth mode
     if (this.currentMode === "growth" && userMessage) {
       return this.generateAdvancedSystemPrompt(userMessage);
