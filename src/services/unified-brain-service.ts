@@ -4,7 +4,7 @@ import { enhancedPersonalityEngine } from "./enhanced-personality-engine";
 import { neuroIntentKernel } from "./hermetic-core/neuro-intent-kernel";
 import { crossPlaneStateReflector } from "./hermetic-core/cross-plane-state-reflector";
 import { holisticCoachService } from "./holistic-coach-service";
-import { unifiedBrainContext } from "./unified-brain-context";
+import { unifiedBrainContext, type VPGBlueprint } from "./unified-brain-context";
 
 export class UnifiedBrainService {
   private static instance: UnifiedBrainService;
@@ -90,7 +90,7 @@ export class UnifiedBrainService {
     const blueprint = unifiedBrainContext.get('blueprint', userId);
     if (blueprint) {
       // Re-inject to ensure all modules have latest blueprint
-      holisticCoachService.setBlueprint(blueprint);
+      holisticCoachService.setBlueprint(blueprint as VPGBlueprint);
     }
 
     try {
@@ -147,7 +147,7 @@ export class UnifiedBrainService {
     message: string,
     sessionId: string,
     mode: string,
-    state: string
+    state?: string
   ): Promise<{
     systemPrompt: string;
     personalityInsights: any;
@@ -157,6 +157,8 @@ export class UnifiedBrainService {
     memoryStored: boolean;
     personalityApplied: boolean;
     continuityMaintained: boolean;
+    module?: string;
+    question?: string;
   }> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
@@ -164,7 +166,13 @@ export class UnifiedBrainService {
     // Map mode string to valid mode type
     const validMode = ['guide', 'coach', 'dream'].includes(mode) ? mode as 'guide' | 'coach' | 'dream' : 'guide';
     
-    return this.processMessage(user.id, message, validMode);
+    const result = await this.processMessage(user.id, message, validMode);
+    
+    return {
+      ...result,
+      module: mode,
+      question: undefined // Would be populated by HACS if there's a follow-up question
+    };
   }
 
   // Agent mode switching
@@ -226,7 +234,7 @@ export class UnifiedBrainService {
   reset() {
     this.isInitialized = false;
     try {
-      unifiedBrainContext.clearAll?.();
+      unifiedBrainContext.clearAll();
     } catch (error) {
       console.warn("Failed to clear unified brain context:", error);
     }

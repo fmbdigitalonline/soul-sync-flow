@@ -2,6 +2,9 @@ import { AgentMode } from "@/types/personality-modules";
 import { supabase } from "@/integrations/supabase/client";
 import { unifiedBrainService } from "./unified-brain-service";
 
+// Export AgentMode as AgentType for backwards compatibility
+export type AgentType = AgentMode;
+
 export class AICoachService {
   private messages: { role: string; content: string }[] = [];
 
@@ -96,6 +99,25 @@ export class AICoachService {
 
   clearMessages() {
     this.messages = [];
+  }
+
+  // Additional methods required by hooks
+  async createNewSession(): Promise<string> {
+    this.clearMessages();
+    return `session-${Date.now()}`;
+  }
+
+  async updateUserBlueprint(blueprintData: any): Promise<void> {
+    // This would typically update the user's blueprint in the database
+    console.log("Updating user blueprint:", blueprintData);
+  }
+
+  async sendStreamingMessage(
+    message: string,
+    agentMode: AgentMode,
+    onChunk: (chunk: string) => void
+  ): Promise<void> {
+    return this.streamMessage(message, agentMode, onChunk);
   }
 }
 

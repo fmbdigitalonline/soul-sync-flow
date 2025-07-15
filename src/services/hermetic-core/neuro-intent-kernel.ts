@@ -2,9 +2,17 @@ import type { VPGBlueprint } from "../unified-brain-context";
 
 interface IntentAnalysis {
   intent: string;
+  primary?: string;
+  id?: string;
   confidence: number;
+  priority?: number;
+  coherenceScore?: number;
+  context?: any;
   biasFactors: string[];
   contextualModifiers: Record<string, any>;
+  subIntents?: any[];
+  constraints?: any[];
+  decomposition?: any[];
 }
 
 class NeuroIntentKernel {
@@ -145,6 +153,64 @@ class NeuroIntentKernel {
       userId: this.currentUserId,
       blueprintLoaded: !!this.vgpBlueprint,
       intentHistoryCount: this.intentHistory.length
+    };
+  }
+
+  // Additional methods required by components
+  setIntent(intentOrContext: string | any, primary?: string, id?: string, priority?: number): IntentAnalysis {
+    console.log("🎯 NIK: Setting intent:", intentOrContext);
+    
+    // Handle both string intent and object context
+    const intent = typeof intentOrContext === 'string' ? intentOrContext : 'complex_intent';
+    
+    return {
+      intent,
+      primary: primary || intent,
+      id: id || `intent-${Date.now()}`,
+      confidence: 0.8,
+      priority: priority || 1,
+      coherenceScore: 0.9,
+      context: typeof intentOrContext === 'object' ? intentOrContext : {},
+      biasFactors: ['manual_set'],
+      contextualModifiers: {},
+      subIntents: [{ steps: ['step1', 'step2'], estimatedDuration: 30 }],
+      constraints: [{ steps: [], estimatedDuration: 0 }],
+      decomposition: [{ steps: ['analyze', 'execute'], estimatedDuration: 60 }]
+    };
+  }
+
+  persistIntent(): Promise<void> {
+    console.log("💾 NIK: Persisting intent");
+    // Implementation would save to database
+    return Promise.resolve();
+  }
+
+  restoreFromTMG(context?: any): Promise<IntentAnalysis | null> {
+    console.log("🔄 NIK: Restoring from TMG");
+    // Implementation would restore from Temporal Memory Graph
+    return Promise.resolve({
+      intent: 'restored',
+      confidence: 0.7,
+      biasFactors: ['tmg'],
+      contextualModifiers: {}
+    });
+  }
+
+  generateInternalIntent(context: any): IntentAnalysis {
+    console.log("🔮 NIK: Generating internal intent");
+    return {
+      intent: 'internal_generated',
+      confidence: 0.6,
+      biasFactors: ['internal'],
+      contextualModifiers: context
+    };
+  }
+
+  getIntentState(): any {
+    return {
+      currentIntent: this.intentHistory[this.intentHistory.length - 1] || null,
+      historyCount: this.intentHistory.length,
+      lastUpdate: new Date().toISOString()
     };
   }
 }

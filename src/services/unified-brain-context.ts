@@ -1,13 +1,15 @@
-import { Database } from "@/integrations/supabase/database.types";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface VPGBlueprint {
   user: {
     id: string;
+    name?: string;
     preferences: any;
     profile: any;
   };
   personality: {
     traits: any;
+    summary?: string;
     cognitiveStyle: string;
     communicationStyle: string;
     energyStrategy: string;
@@ -59,41 +61,59 @@ class UnifiedBrainContext {
 
     try {
       console.log("🧠 UBC: Fetching VPG blueprint from Supabase...");
-      const { data, error } = await supabase
-        .from('user_blueprints')
+      // Try from blueprints table first, fallback to user_blueprints
+      let blueprintData = null;
+      
+      const { data: bpData, error: bpError } = await supabase
+        .from('blueprints')
         .select('*')
         .eq('user_id', userId)
+        .eq('is_active', true)
         .single();
 
-      if (error) {
-        console.error("❌ UBC: Error fetching VPG blueprint:", error);
-        return null;
+      if (bpData) {
+        blueprintData = bpData;
+      } else {
+        // Fallback to user_blueprints table structure
+        const { data: ubData, error: ubError } = await supabase
+          .from('user_blueprints')
+          .select('*')
+          .eq('user_id', userId)
+          .single();
+        
+        if (ubData) {
+          blueprintData = ubData;
+        }
       }
 
-      if (!data) {
+      if (!blueprintData) {
         console.warn("⚠️ UBC: No VPG blueprint found in Supabase");
         return null;
       }
 
+      // Handle different table structures
+      const isBlueprints = !!bpData;
       const blueprint: VPGBlueprint = {
         user: {
           id: userId,
-          preferences: data.user_preferences || {},
-          profile: data.user_profile || {}
+          name: isBlueprints ? blueprintData.user_meta?.preferred_name : undefined,
+          preferences: isBlueprints ? blueprintData.user_meta : (blueprintData.user_preferences || {}),
+          profile: isBlueprints ? blueprintData.user_meta : (blueprintData.user_profile || {})
         },
         personality: {
-          traits: data.personality_traits || {},
-          cognitiveStyle: data.cognitive_style || 'balanced',
-          communicationStyle: data.communication_style || 'adaptive',
-          energyStrategy: data.energy_strategy || 'sustainable'
+          traits: isBlueprints ? blueprintData.cognition_mbti : (blueprintData.personality_traits || {}),
+          summary: isBlueprints ? "MBTI-based personality" : undefined,
+          cognitiveStyle: isBlueprints ? 'analytical' : (blueprintData.cognitive_style || 'balanced'),
+          communicationStyle: isBlueprints ? 'adaptive' : (blueprintData.communication_style || 'adaptive'),
+          energyStrategy: isBlueprints ? 'sustainable' : (blueprintData.energy_strategy || 'sustainable')
         },
         goals: {
-          current: data.current_goals || [],
-          aspirations: data.aspirations || []
+          current: isBlueprints ? (blueprintData.goal_stack || []) : (blueprintData.current_goals || []),
+          aspirations: isBlueprints ? [] : (blueprintData.aspirations || [])
         },
         sessionContext: {
-          lastActivity: data.last_activity || 'none',
-          focusMetrics: data.focus_metrics || {}
+          lastActivity: isBlueprints ? 'recent' : (blueprintData.last_activity || 'none'),
+          focusMetrics: isBlueprints ? {} : (blueprintData.focus_metrics || {})
         }
       };
 
@@ -149,6 +169,11 @@ class UnifiedBrainContext {
       sessionCount: this.sessionCache.size,
       memoryUsage: `${JSON.stringify([...this.cache.entries()]).length} bytes`
     };
+  }
+
+  clearCache(): void {
+    console.log("🧠 UBC: Clearing cache");
+    this.cache.clear();
   }
 }
 
