@@ -34,13 +34,25 @@ function App() {
                 <BlueprintCacheProvider>
                   <Routes>
                     <Route path="/" element={<Index />} />
-                    <Route path="/dreams" element={<ProtectedRoute><MainLayout><Dreams /></MainLayout></ProtectedRoute>} />
-                    <Route path="/spiritual-growth" element={<ProtectedRoute><MainLayout><SpiritualGrowth /></MainLayout></ProtectedRoute>} />
-                    <Route path="/companion" element={<ProtectedRoute><MainLayout><Coach /></MainLayout></ProtectedRoute>} />
+                    
+                    {/* Dreams with sub-routes */}
+                    <Route path="/dreams/*" element={<ProtectedRoute><MainLayout><Dreams /></MainLayout></ProtectedRoute>} />
+                    
+                    {/* Spiritual Growth with sub-routes */}
+                    <Route path="/spiritual-growth/*" element={<ProtectedRoute><MainLayout><SpiritualGrowth /></MainLayout></ProtectedRoute>} />
+                    
+                    {/* Companion with sub-routes */}
+                    <Route path="/companion/*" element={<ProtectedRoute><MainLayout><Coach /></MainLayout></ProtectedRoute>} />
+                    
                     {/* Legacy redirect from /coach to /companion */}
                     <Route path="/coach" element={<Navigate to="/companion" replace />} />
-                    <Route path="/blueprint" element={<ProtectedRoute><MainLayout><Blueprint /></MainLayout></ProtectedRoute>} />
-                    <Route path="/profile" element={<ProtectedRoute><MainLayout><Profile /></MainLayout></ProtectedRoute>} />
+                    
+                    {/* Blueprint with sub-routes */}
+                    <Route path="/blueprint/*" element={<ProtectedRoute><MainLayout><Blueprint /></MainLayout></ProtectedRoute>} />
+                    
+                    {/* Profile with sub-routes */}
+                    <Route path="/profile/*" element={<ProtectedRoute><MainLayout><Profile /></MainLayout></ProtectedRoute>} />
+                    
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/test-environment" element={<ProtectedRoute><MainLayout><TestEnvironmentPage /></MainLayout></ProtectedRoute>} />
                     <Route path="/test-functions" element={<ProtectedRoute><MainLayout><TestFunctionsPage /></MainLayout></ProtectedRoute>} />
