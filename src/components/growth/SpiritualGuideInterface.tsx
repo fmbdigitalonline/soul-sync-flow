@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
 import { IntelligentSoulOrb } from '@/components/ui/intelligent-soul-orb';
 import { useHacsIntelligence } from '@/hooks/use-hacs-intelligence';
-import { useHACSConversation } from '@/hooks/use-hacs-conversation';
+import { useHACSGrowthConversation } from '@/hooks/use-hacs-growth-conversation';
 
 interface Message {
   id: string;
@@ -34,9 +34,8 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
   const { 
     messages, 
     isLoading, 
-    sendMessage: hacseSendMessage,
-    conversationId 
-  } = useHACSConversation();
+    sendMessage: hacseSendMessage 
+  } = useHACSGrowthConversation();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
