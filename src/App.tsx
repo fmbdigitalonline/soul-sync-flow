@@ -20,7 +20,6 @@ import { SoulOrbProvider } from './contexts/SoulOrbContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BlueprintCacheProvider } from './contexts/BlueprintCacheContext';
 import AdminDashboard from "@/pages/AdminDashboard";
-import NotFound from './pages/NotFound';
 
 const queryClient = new QueryClient();
 
@@ -35,25 +34,13 @@ function App() {
                 <BlueprintCacheProvider>
                   <Routes>
                     <Route path="/" element={<Index />} />
-                    
-                    {/* Dreams with sub-routes */}
-                    <Route path="/dreams/*" element={<ProtectedRoute><Dreams /></ProtectedRoute>} />
-                    
-                    {/* Spiritual Growth with sub-routes */}
-                    <Route path="/spiritual-growth/*" element={<ProtectedRoute><SpiritualGrowth /></ProtectedRoute>} />
-                    
-                    {/* Companion with sub-routes */}
-                    <Route path="/companion/*" element={<ProtectedRoute><Coach /></ProtectedRoute>} />
-                    
+                    <Route path="/dreams" element={<ProtectedRoute><MainLayout><Dreams /></MainLayout></ProtectedRoute>} />
+                    <Route path="/spiritual-growth" element={<ProtectedRoute><MainLayout><SpiritualGrowth /></MainLayout></ProtectedRoute>} />
+                    <Route path="/companion" element={<ProtectedRoute><MainLayout><Coach /></MainLayout></ProtectedRoute>} />
                     {/* Legacy redirect from /coach to /companion */}
                     <Route path="/coach" element={<Navigate to="/companion" replace />} />
-                    
-                    {/* Blueprint with sub-routes */}
-                    <Route path="/blueprint/*" element={<ProtectedRoute><Blueprint /></ProtectedRoute>} />
-                    
-                    {/* Profile with sub-routes */}
-                    <Route path="/profile/*" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-                    
+                    <Route path="/blueprint" element={<ProtectedRoute><MainLayout><Blueprint /></MainLayout></ProtectedRoute>} />
+                    <Route path="/profile" element={<ProtectedRoute><MainLayout><Profile /></MainLayout></ProtectedRoute>} />
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/test-environment" element={<ProtectedRoute><MainLayout><TestEnvironmentPage /></MainLayout></ProtectedRoute>} />
                     <Route path="/test-functions" element={<ProtectedRoute><MainLayout><TestFunctionsPage /></MainLayout></ProtectedRoute>} />
@@ -68,9 +55,6 @@ function App() {
                         </ProtectedRoute>
                       } 
                     />
-                    
-                    {/* Catch-all route for 404 */}
-                    <Route path="*" element={<NotFound />} />
                   </Routes>
                   <Toaster />
                 </BlueprintCacheProvider>

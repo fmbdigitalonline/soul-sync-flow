@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from "react";
-import { Routes, Route, useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MainLayout from "@/components/Layout/MainLayout";
 import SimplifiedBlueprintViewer from "@/components/blueprint/SimplifiedBlueprintViewer";
@@ -10,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, MessageCircle, RefreshCw, Activity, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { BlueprintData, blueprintService } from "@/services/blueprint-service";
+import { useNavigate } from "react-router-dom";
 import { BlueprintGenerator } from "@/components/blueprint/BlueprintGenerationFlow";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSoulOrb } from "@/contexts/SoulOrbContext";
@@ -18,7 +18,7 @@ import { useOptimizedBlueprintData } from "@/hooks/use-optimized-blueprint-data"
 import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 import { isAdminUser } from "@/utils/isAdminUser";
 
-const BlueprintMain = () => {
+const Blueprint = () => {
   const [activeTab, setActiveTab] = useState("view");
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
@@ -467,17 +467,6 @@ const BlueprintMain = () => {
         </Tabs>
       </div>
     </MainLayout>
-  );
-};
-
-const Blueprint = () => {
-  return (
-    <Routes>
-      <Route index element={<BlueprintMain />} />
-      <Route path="view" element={<BlueprintMain />} />
-      <Route path="edit" element={<BlueprintMain />} />
-      <Route path="report" element={<BlueprintMain />} />
-    </Routes>
   );
 };
 

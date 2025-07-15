@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from "react";
-import { Routes, Route, useNavigate } from "react-router-dom";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
@@ -20,7 +19,7 @@ import { calculateWeeklyInsights, WeeklyInsights } from "@/services/insights-ser
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 
-const ProfileMain = () => {
+const Profile = () => {
   const { toast } = useToast();
   const { t } = useLanguage();
   const [darkMode, setDarkMode] = useState(false);
@@ -389,17 +388,6 @@ const GoalCard = ({ goal, onComplete, onProgressUpdate }: GoalCardProps) => {
         )}
       </div>
     </CosmicCard>
-  );
-};
-
-const Profile = () => {
-  return (
-    <Routes>
-      <Route index element={<ProfileMain />} />
-      <Route path="settings" element={<ProfileMain />} />
-      <Route path="goals" element={<ProfileMain />} />
-      <Route path="stats" element={<ProfileMain />} />
-    </Routes>
   );
 };
 
