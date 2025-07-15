@@ -58,8 +58,7 @@ class AICoachService {
           const brainResponse = await unifiedBrainService.processMessage(
             message,
             sessionId,
-            agentType,
-            'NORMAL'
+            agentType as AgentMode
           );
           
           return {
@@ -174,8 +173,7 @@ Remember: Every response should feel like it comes from someone who truly knows 
           const brainResponse = await unifiedBrainService.processMessage(
             message,
             sessionId,
-            agentType,
-            'NORMAL'
+            agentType as AgentMode
           );
           
           // Simulate streaming for unified brain response
