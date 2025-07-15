@@ -1,280 +1,101 @@
+import { AgentMode } from "@/types/personality-modules";
 import { supabase } from "@/integrations/supabase/client";
-import { PersonalityEngine } from "./personality-engine";
-import { LayeredBlueprint, AgentMode } from "@/types/personality-modules";
 import { unifiedBrainService } from "./unified-brain-service";
 
-export type AgentType = "coach" | "guide" | "blend" | "dream";
-
-export interface ChatMessage {
-  id: string;
-  content: string;
-  sender: "user" | "assistant";
-  timestamp: Date;
-}
-
-export interface StreamingResponse {
-  onChunk: (chunk: string) => void;
-  onComplete: (fullResponse: string) => void;
-  onError: (error: Error) => void;
-}
-
-class AICoachService {
-  private sessions: Map<string, string> = new Map();
-  private personalityEngine: PersonalityEngine;
-  private useUnifiedBrain: boolean = true;
-
-  constructor() {
-    this.personalityEngine = new PersonalityEngine();
-  }
-
-  createNewSession(): string {
-    const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    this.sessions.set(sessionId, "");
-    return sessionId;
-  }
-
-  updateUserBlueprint(blueprint: Partial<LayeredBlueprint>) {
-    this.personalityEngine.updateBlueprint(blueprint);
-    console.log("Updated user blueprint in AI coach service:", blueprint);
-  }
-
-  enableUnifiedBrain(enabled: boolean = true) {
-    this.useUnifiedBrain = enabled;
-    console.log(`🧠 Unified brain ${enabled ? 'enabled' : 'disabled'} in AI coach service`);
-  }
+export class AICoachService {
+  private messages: { role: string; content: string }[] = [];
 
   async sendMessage(
-    message: string,
-    sessionId: string,
-    includeBlueprint: boolean = false,
-    agentType: AgentType = "guide",
-    language: string = "en",
-    userDisplayName: string = "friend"
-  ): Promise<{ response: string; conversationId: string }> {
+    message: string, 
+    agentMode: AgentMode, 
+    usePersonalization: boolean = true
+  ): Promise<string> {
     try {
-      // Try unified brain first if enabled
-      if (this.useUnifiedBrain) {
-        try {
-          const brainResponse = await unifiedBrainService.processMessage(
-            message,
-            sessionId,
-            agentType as AgentMode
-          );
-          
-          return {
-            response: brainResponse.response,
-            conversationId: sessionId,
-          };
-        } catch (brainError) {
-          console.warn("🧠 Unified brain failed, falling back to regular coach:", brainError);
-          // Fall through to regular processing
-        }
-      }
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
 
-      // Fallback to regular AI coach processing with enhanced prompts
-      const systemPrompt = includeBlueprint 
-        ? (agentType === "guide" 
-            ? this.personalityEngine.generateSystemPrompt("guide", message)
-            : this.personalityEngine.generateSystemPrompt(agentType as AgentMode))
-        : this.getUniversalConversationalPrompt(agentType, userDisplayName);
+      await unifiedBrainService.initialize(user.id);
 
-      console.log("Using regular AI coach service with universal conversational rules, prompt length:", systemPrompt?.length || 0);
+      // Map AgentMode to valid mode types for UnifiedBrainService
+      const validMode = this.mapAgentModeToValidMode(agentMode);
+      
+      const brainResponse = await unifiedBrainService.processMessage(
+        user.id,
+        message,
+        validMode
+      );
 
-      const { data, error } = await supabase.functions.invoke("ai-coach", {
-        body: {
-          message,
-          sessionId,
-          includeBlueprint,
-          agentType,
-          language,
-          systemPrompt,
-          userDisplayName,
-        },
-      });
+      const response = brainResponse.response || brainResponse.systemPrompt;
 
-      if (error) throw error;
+      this.messages.push({ role: 'user', content: message });
+      this.messages.push({ role: 'coach', content: response });
+      
+      return response;
 
-      return {
-        response: data.response,
-        conversationId: data.conversationId || sessionId,
-      };
     } catch (error) {
-      console.error("Error in AI coach service:", error);
+      console.error('❌ AI Coach Service error:', error);
       throw error;
     }
   }
 
-  private getUniversalConversationalPrompt(agentType: AgentType, userDisplayName: string = "friend"): string {
-    return `# Universal Conversational Guidelines for ${userDisplayName}
-
-You are a warm, supportive AI companion for ${userDisplayName}. Follow these critical rules for ALL conversations:
-
-## LANGUAGE RULES (MANDATORY):
-- ALWAYS use ${userDisplayName}'s name naturally in conversation - it is mandatory
-- NEVER use "you" or impersonal language - always address ${userDisplayName} by name
-- NEVER use technical personality terms like "ENFP", "Generator", "Manifestor", etc.
-- When referring to personality insights, always call it ${userDisplayName}'s "blueprint" or "unique patterns"
-- Speak in plain, warm language that feels personal and supportive to ${userDisplayName}
-- Only explain technical details if ${userDisplayName} specifically asks "how do you know this?" or similar drilling-down questions
-
-## COMMUNICATION STYLE:
-- Be warm, genuine, and personally supportive to ${userDisplayName}
-- Use natural, conversational language that addresses ${userDisplayName} directly
-- Reference ${userDisplayName}'s unique patterns and strengths when relevant, but describe them in everyday terms
-- Ask thoughtful follow-up questions to deepen the conversation with ${userDisplayName}
-- Provide actionable insights based on ${userDisplayName}'s individual nature
-
-## ROLE-SPECIFIC GUIDANCE:
-${this.getRoleSpecificGuidance(agentType)}
-
-Remember: Every response should feel like it comes from someone who truly knows and cares about ${userDisplayName}, using ${userDisplayName}'s name naturally and keeping all language warm and accessible.`;
-  }
-
-  private getRoleSpecificGuidance(agentType: AgentType): string {
-    switch (agentType) {
+  private mapAgentModeToValidMode(agentMode: AgentMode): 'guide' | 'coach' | 'dream' {
+    switch (agentMode) {
       case 'coach':
-        return `- Focus on practical productivity and goal achievement
-- Help them work with their natural energy and patterns
-- Provide actionable steps that fit their unique style
-- Support them in breaking through obstacles using their strengths`;
-
+        return 'coach';
+      case 'dream':
+        return 'dream';
       case 'guide':
-        return `- Focus on deeper life questions and spiritual growth
-- Help them understand their patterns and purpose
-- Provide gentle wisdom for their personal journey
-- Support their authentic self-expression and growth`;
-
       case 'blend':
-        return `- Adapt fluidly between practical and spiritual guidance
-- Meet them wherever they need support most
-- Balance action-oriented help with deeper reflection
-- Support their whole journey with integrated wisdom`;
-
       default:
-        return '- Provide thoughtful, personalized support for their unique journey';
+        return 'guide'; // Default fallback for 'blend' and unknown modes
     }
   }
 
-  async sendStreamingMessage(
-    message: string,
-    sessionId: string,
-    includeBlueprint: boolean = false,
-    agentType: AgentType = "guide",
-    language: string = "en",
-    callbacks: StreamingResponse,
-    userDisplayName: string = "friend"
+  async streamMessage(
+    message: string, 
+    agentMode: AgentMode, 
+    onChunk: (chunk: string) => void,
+    usePersonalization: boolean = true
   ): Promise<void> {
     try {
-      console.log('Starting streaming request...');
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      await unifiedBrainService.initialize(user.id);
+
+      // Map AgentMode to valid mode types
+      const validMode = this.mapAgentModeToValidMode(agentMode);
       
-      // Try unified brain first if enabled
-      if (this.useUnifiedBrain) {
-        try {
-          const brainResponse = await unifiedBrainService.processMessage(
-            message,
-            sessionId,
-            agentType as AgentMode
-          );
-          
-          // Simulate streaming for unified brain response
-          const words = brainResponse.response.split(' ');
-          for (const word of words) {
-            callbacks.onChunk(word + ' ');
-            await new Promise(resolve => setTimeout(resolve, 50)); // Small delay for streaming effect
-          }
-          callbacks.onComplete(brainResponse.response);
-          return;
-        } catch (brainError) {
-          console.warn("🧠 Unified brain streaming failed, falling back:", brainError);
-          // Fall through to regular streaming
-        }
-      }
-      
-      // Fallback to regular streaming with enhanced prompts
-      const systemPrompt = includeBlueprint 
-        ? (agentType === "guide" 
-            ? this.personalityEngine.generateSystemPrompt("guide", message)
-            : this.personalityEngine.generateSystemPrompt(agentType as AgentMode))
-        : this.getUniversalConversationalPrompt(agentType, userDisplayName);
+      const brainResponse = await unifiedBrainService.processMessage(
+        user.id,
+        message,
+        validMode
+      );
 
-      console.log("Using regular streaming with universal conversational rules, prompt length:", systemPrompt?.length || 0);
-      
-      const response = await fetch(`https://qxaajirrqrcnmvtowjbg.supabase.co/functions/v1/ai-coach-stream`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4YWFqaXJycXJjbm12dG93amJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM5NzQ1NDcsImV4cCI6MjA1OTU1MDU0N30.HZRTlihPe3PNQVWxNHCrwjoa9R6Wvo8WOKlQVGunYIw`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message,
-          sessionId,
-          includeBlueprint,
-          agentType,
-          language,
-          systemPrompt,
-          userDisplayName,
-        }),
-      });
+      const response = brainResponse.response || brainResponse.systemPrompt;
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      this.messages.push({ role: 'user', content: message });
+      this.messages.push({ role: 'coach', content: response });
+
+      // Simulate streaming by sending the response in chunks
+      const chunks = response.match(/.{1,50}/g) || [response];
+      for (const chunk of chunks) {
+        onChunk(chunk);
+        await new Promise(resolve => setTimeout(resolve, 50));
       }
 
-      if (!response.body) {
-        throw new Error('No response body');
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let fullResponse = '';
-
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          
-          if (done) break;
-          
-          const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split('\n');
-          
-          for (const line of lines) {
-            if (line.trim() === '') continue;
-            
-            if (line.startsWith('data: ')) {
-              const data = line.slice(6).trim();
-              
-              if (data === '[DONE]') {
-                callbacks.onComplete(fullResponse);
-                return;
-              }
-              
-              if (data && data !== '[DONE]') {
-                try {
-                  const parsed = JSON.parse(data);
-                  const content = parsed.choices?.[0]?.delta?.content;
-                  
-                  if (content) {
-                    fullResponse += content;
-                    callbacks.onChunk(content);
-                  }
-                } catch (parseError) {
-                  console.log('Skipping non-JSON data:', data);
-                }
-              }
-            }
-          }
-        }
-      } finally {
-        reader.releaseLock();
-      }
-      
-      if (fullResponse) {
-        callbacks.onComplete(fullResponse);
-      }
     } catch (error) {
-      console.error("Error in streaming AI coach service:", error);
-      callbacks.onError(error as Error);
+      console.error('❌ AI Coach Service streaming error:', error);
+      throw error;
     }
+  }
+
+  getMessages() {
+    return this.messages;
+  }
+
+  clearMessages() {
+    this.messages = [];
   }
 }
 

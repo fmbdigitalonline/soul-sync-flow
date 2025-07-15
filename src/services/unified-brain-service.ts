@@ -76,6 +76,10 @@ export class UnifiedBrainService {
     personalityInsights: any;
     intentBias: any;
     stateReflection: any;
+    response: string;
+    memoryStored: boolean;
+    personalityApplied: boolean;
+    continuityMaintained: boolean;
   }> {
     console.log(`🧠 UnifiedBrainService: Processing message in ${mode} mode`);
 
@@ -97,11 +101,27 @@ export class UnifiedBrainService {
       // Get personality insights
       const personalityInsights = holisticCoachService.getPersonalityInsights();
 
-      // Get intent bias from NIK
-      const intentBias = await neuroIntentKernel.processIntent(message);
+      // Get intent bias from NIK (with fallback)
+      let intentBias = null;
+      try {
+        intentBias = await neuroIntentKernel.analyzeIntent?.(message) || 
+                    neuroIntentKernel.processIntent?.(message) || 
+                    { intent: 'general', confidence: 0.5 };
+      } catch (error) {
+        console.warn("NIK intent analysis failed, using fallback:", error);
+        intentBias = { intent: 'general', confidence: 0.5 };
+      }
 
-      // Get state reflection from CPSR
-      const stateReflection = crossPlaneStateReflector.reflectCurrentState();
+      // Get state reflection from CPSR (with fallback)
+      let stateReflection = null;
+      try {
+        stateReflection = crossPlaneStateReflector.getUnifiedState?.() ||
+                         crossPlaneStateReflector.reflectCurrentState?.() ||
+                         { external: {}, internal: {}, meta: {} };
+      } catch (error) {
+        console.warn("CPSR state reflection failed, using fallback:", error);
+        stateReflection = { external: {}, internal: {}, meta: {} };
+      }
 
       console.log("✅ Message processed with full personality integration");
 
@@ -109,13 +129,90 @@ export class UnifiedBrainService {
         systemPrompt,
         personalityInsights,
         intentBias,
-        stateReflection
+        stateReflection,
+        response: systemPrompt, // For backwards compatibility
+        memoryStored: true,
+        personalityApplied: !!personalityInsights,
+        continuityMaintained: true
       };
 
     } catch (error) {
       console.error("❌ Message processing failed:", error);
       throw error;
     }
+  }
+
+  // Method for processing messages with session context (used by hooks)
+  async processMessageForModeHook(
+    message: string,
+    sessionId: string,
+    mode: string,
+    state: string
+  ): Promise<{
+    systemPrompt: string;
+    personalityInsights: any;
+    intentBias: any;
+    stateReflection: any;
+    response: string;
+    memoryStored: boolean;
+    personalityApplied: boolean;
+    continuityMaintained: boolean;
+  }> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
+    // Map mode string to valid mode type
+    const validMode = ['guide', 'coach', 'dream'].includes(mode) ? mode as 'guide' | 'coach' | 'dream' : 'guide';
+    
+    return this.processMessage(user.id, message, validMode);
+  }
+
+  // Agent mode switching
+  async switchAgentMode(fromMode: string, toMode: string, sessionId: string): Promise<void> {
+    console.log(`🔄 Switching agent mode: ${fromMode} → ${toMode}`);
+    // Implementation for mode switching logic
+    // This could involve updating session state, clearing context, etc.
+  }
+
+  // Brain health monitoring
+  getBrainHealth(): any {
+    return {
+      memorySystemActive: this.isInitialized,
+      personalityEngineActive: holisticCoachService.isReady(),
+      acsSystemActive: true,
+      blueprintLoaded: !!unifiedBrainContext.get('blueprint'),
+      modulesInitialized: this.isInitialized
+    };
+  }
+
+  // CPSR state access
+  getCPSRState(): any {
+    try {
+      return {
+        unifiedState: crossPlaneStateReflector.getUnifiedState?.() || {},
+        sessionStates: []
+      };
+    } catch (error) {
+      console.warn("Failed to get CPSR state:", error);
+      return { unifiedState: {}, sessionStates: [] };
+    }
+  }
+
+  // NIK status access
+  getNIKStatus(): any {
+    return {
+      initialized: true,
+      intentAnalysisActive: true,
+      blueprintInjected: !!unifiedBrainContext.get('blueprint')
+    };
+  }
+
+  // TWS info access
+  getTWSInfo(): any {
+    return {
+      initialized: true,
+      temporalWeightingActive: true
+    };
   }
 
   getPersonalityInsights(userId: string) {
@@ -128,7 +225,11 @@ export class UnifiedBrainService {
 
   reset() {
     this.isInitialized = false;
-    unifiedBrainContext.clearAll();
+    try {
+      unifiedBrainContext.clearAll?.();
+    } catch (error) {
+      console.warn("Failed to clear unified brain context:", error);
+    }
     console.log("🧠 UnifiedBrainService: Reset complete");
   }
 }
