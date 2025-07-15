@@ -20,6 +20,7 @@ import { SoulOrbProvider } from './contexts/SoulOrbContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BlueprintCacheProvider } from './contexts/BlueprintCacheContext';
 import AdminDashboard from "@/pages/AdminDashboard";
+import NotFound from './pages/NotFound';
 
 const queryClient = new QueryClient();
 
@@ -67,6 +68,9 @@ function App() {
                         </ProtectedRoute>
                       } 
                     />
+                    
+                    {/* Catch-all route for 404 */}
+                    <Route path="*" element={<NotFound />} />
                   </Routes>
                   <Toaster />
                 </BlueprintCacheProvider>
