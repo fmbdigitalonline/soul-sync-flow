@@ -1,7 +1,287 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
-import { HermeticEngine } from './hermetic-engine.ts';
+
+// Inline Hermetic Engine to avoid import issues
+interface HermeticLaw {
+  name: string;
+  essence: string;
+  interpretation: string;
+}
+
+interface HermeticFractal {
+  trait: string;
+  laws: HermeticLaw[];
+  activationPrompt: string;
+  shadowWork: string;
+  practicalWisdom: string;
+}
+
+class HermeticEngine {
+  private static readonly HERMETIC_LAWS = {
+    MENTALISM: "The All is Mind; the Universe is Mental",
+    CORRESPONDENCE: "As Above, So Below; As Below, So Above", 
+    VIBRATION: "Nothing rests; everything moves; everything vibrates",
+    POLARITY: "Everything is dual; everything has its opposite",
+    RHYTHM: "Everything flows, out and in; everything has its tides",
+    CAUSE_EFFECT: "Every cause has its effect; every effect has its cause",
+    GENDER: "Gender is in everything; everything has its masculine and feminine principles"
+  };
+
+  static generateHermeticFractal(blueprint: any): HermeticFractal[] {
+    console.log('🔮 HERMETIC ENGINE: Starting generateHermeticFractal');
+    const fractals: HermeticFractal[] = [];
+    
+    if (!blueprint) {
+      console.log('🔮 HERMETIC ENGINE: No blueprint provided');
+      return fractals;
+    }
+
+    console.log('🔮 HERMETIC ENGINE: Blueprint structure:', Object.keys(blueprint));
+
+    // Transform MBTI through Hermetic lens
+    if (blueprint.cognition_mbti?.type) {
+      console.log('🔮 HERMETIC ENGINE: Processing MBTI:', blueprint.cognition_mbti.type);
+      fractals.push(this.transformMBTI(blueprint.cognition_mbti));
+    }
+
+    // Transform Human Design through Hermetic lens
+    if (blueprint.energy_strategy_human_design?.type) {
+      console.log('🔮 HERMETIC ENGINE: Processing Human Design:', blueprint.energy_strategy_human_design.type);
+      fractals.push(this.transformHumanDesign(blueprint.energy_strategy_human_design));
+    }
+
+    // Transform Astrological elements through Hermetic lens
+    if (blueprint.archetype_western?.sun_sign) {
+      console.log('🔮 HERMETIC ENGINE: Processing Astrology:', blueprint.archetype_western.sun_sign);
+      fractals.push(this.transformAstrology(blueprint.archetype_western));
+    }
+
+    // Transform Life Path through Hermetic lens
+    if (blueprint.values_life_path?.lifePathNumber) {
+      console.log('🔮 HERMETIC ENGINE: Processing Life Path:', blueprint.values_life_path.lifePathNumber);
+      fractals.push(this.transformLifePath(blueprint.values_life_path));
+    }
+
+    console.log('🔮 HERMETIC ENGINE: Generated', fractals.length, 'fractals');
+    return fractals;
+  }
+
+  private static transformMBTI(mbti: any): HermeticFractal {
+    const type = mbti.type || 'Unknown';
+    
+    return {
+      trait: `MBTI: ${type}`,
+      laws: [
+        {
+          name: "Mentalism",
+          essence: this.HERMETIC_LAWS.MENTALISM,
+          interpretation: this.getMBTIMentalism(type)
+        },
+        {
+          name: "Correspondence", 
+          essence: this.HERMETIC_LAWS.CORRESPONDENCE,
+          interpretation: this.getMBTICorrespondence(type)
+        }
+      ],
+      activationPrompt: this.getMBTIActivation(type),
+      shadowWork: this.getMBTIShadow(type),
+      practicalWisdom: this.getMBTIPractical(type)
+    };
+  }
+
+  private static transformHumanDesign(hd: any): HermeticFractal {
+    const type = hd.type || 'Unknown';
+    const authority = hd.authority || 'Unknown';
+    
+    return {
+      trait: `Human Design: ${type}`,
+      laws: [
+        {
+          name: "Rhythm",
+          essence: this.HERMETIC_LAWS.RHYTHM,
+          interpretation: this.getHDRhythm(type, authority)
+        },
+        {
+          name: "Gender",
+          essence: this.HERMETIC_LAWS.GENDER,
+          interpretation: this.getHDGender(type, authority)
+        }
+      ],
+      activationPrompt: this.getHDActivation(type, authority),
+      shadowWork: this.getHDShadow(type),
+      practicalWisdom: this.getHDPractical(type, authority)
+    };
+  }
+
+  private static transformAstrology(astro: any): HermeticFractal {
+    const sunSign = astro.sun_sign || 'Unknown';
+    const moonSign = astro.moon_sign || 'Unknown';
+    
+    return {
+      trait: `Astrology: ${sunSign} Sun, ${moonSign} Moon`,
+      laws: [
+        {
+          name: "Correspondence",
+          essence: this.HERMETIC_LAWS.CORRESPONDENCE,
+          interpretation: `Your ${sunSign} sun consciousness mirrors your outer expression, while your ${moonSign} moon essence reflects your inner emotional world.`
+        }
+      ],
+      activationPrompt: `Today, align your ${sunSign} solar purpose with your ${moonSign} lunar wisdom.`,
+      shadowWork: `Your shadow emerges when ${sunSign} and ${moonSign} energies are disconnected.`,
+      practicalWisdom: `Balance your ${sunSign} expression with ${moonSign} emotional needs.`
+    };
+  }
+
+  private static transformLifePath(lifePath: any): HermeticFractal {
+    const number = lifePath.lifePathNumber || 'Unknown';
+    
+    return {
+      trait: `Life Path: ${number}`,
+      laws: [
+        {
+          name: "Cause & Effect",
+          essence: this.HERMETIC_LAWS.CAUSE_EFFECT,
+          interpretation: `Your Life Path ${number} creates specific effects through aligned action.`
+        }
+      ],
+      activationPrompt: `Today, embody your Life Path ${number} essence through conscious choice.`,
+      shadowWork: `Your Life Path ${number} shadow emerges when you resist your soul's calling.`,
+      practicalWisdom: `Live your Life Path ${number} through daily aligned decisions.`
+    };
+  }
+
+  // Simplified MBTI interpretations
+  private static getMBTIMentalism(type: string): string {
+    const patterns: { [key: string]: string } = {
+      'ENFP': 'Your mind naturally perceives infinite possibilities. This mental framework creates reality through enthusiastic vision.',
+      'INTJ': 'Your mind operates as a strategic architect. This mental discipline manifests systematic transformation.',
+      'ENFJ': 'Your mind harmonizes collective potential. This mental orientation creates inspiring leadership.',
+      'INFP': 'Your mind seeks authentic truth. This mental purity manifests deep personal transformation.'
+    };
+    return patterns[type] || 'Your mind shapes reality through your unique cognitive perspective.';
+  }
+
+  private static getMBTICorrespondence(type: string): string {
+    const patterns: { [key: string]: string } = {
+      'ENFP': 'Your inner enthusiasm reflects in outer inspiration. When scattered internally, external chaos manifests.',
+      'INTJ': 'Your inner vision mirrors outer strategic action. Inner clarity creates outer systematic success.',
+      'ENFJ': 'Your inner harmony reflects in outer community healing. Inner wellness creates outer flourishing.',
+      'INFP': 'Your inner authenticity mirrors outer creative expression. Inner alignment creates outer manifestation.'
+    };
+    return patterns[type] || 'Your inner state directly reflects in your outer experience.';
+  }
+
+  private static getMBTIActivation(type: string): string {
+    const patterns: { [key: string]: string } = {
+      'ENFP': 'Today, channel your enthusiasm into one focused creative project. Let inspiration birth something tangible.',
+      'INTJ': 'Today, trust your strategic vision and take one concrete step toward transformation.',
+      'ENFJ': 'Today, serve others while honoring your own needs. Lead through authentic example.',
+      'INFP': 'Today, express your authentic truth through creative action. Let values guide manifestation.'
+    };
+    return patterns[type] || 'Today, embody your highest potential through conscious action.';
+  }
+
+  private static getMBTIShadow(type: string): string {
+    const patterns: { [key: string]: string } = {
+      'ENFP': 'Your shadow emerges when enthusiasm becomes scattered escapism. Ground vision in commitment.',
+      'INTJ': 'Your shadow emerges when strategic thinking becomes cold detachment. Warm plans with heart.',
+      'ENFJ': 'Your shadow emerges when others-focus becomes self-neglect. Honor your needs as sacred.',
+      'INFP': 'Your shadow emerges when authenticity becomes isolated perfectionism. Share truth courageously.'
+    };
+    return patterns[type] || 'Your shadow holds the key to your greatest transformation.';
+  }
+
+  private static getMBTIPractical(type: string): string {
+    const patterns: { [key: string]: string } = {
+      'ENFP': 'Create daily inspiration rituals. Set boundaries. Channel enthusiasm into focused projects.',
+      'INTJ': 'Trust strategic intuition. Balance solitude with meaningful connection.',
+      'ENFJ': 'Schedule self-care as non-negotiable. Practice saying no to preserve energy.',
+      'INFP': 'Honor creative rhythms. Express values through small daily actions.'
+    };
+    return patterns[type] || 'Apply your unique gifts through consistent, conscious practice.';
+  }
+
+  // Human Design helper methods
+  private static getHDRhythm(type: string, authority: string): string {
+    const patterns: { [key: string]: string } = {
+      'Manifestor': 'Your rhythm flows in powerful bursts followed by rest. Honor natural initiating cycles.',
+      'Generator': 'Your rhythm sustains through consistent response. Follow sacral timing for optimal flow.',
+      'Projector': 'Your rhythm operates through invitation and rest. Balance guidance with restoration.',
+      'Reflector': 'Your rhythm mirrors lunar cycles. Attune to monthly rhythms for decision clarity.'
+    };
+    return patterns[type] || 'Your energy follows natural rhythmic patterns for optimal manifestation.';
+  }
+
+  private static getHDGender(type: string, authority: string): string {
+    const patterns: { [key: string]: string } = {
+      'Manifestor': 'Balance masculine initiation with feminine receptivity. Lead with power and intuition.',
+      'Generator': 'Balance masculine action with feminine response. Create through doing and allowing.',
+      'Projector': 'Balance masculine guidance with feminine wisdom. Guide through directing and receiving.',
+      'Reflector': 'Balance masculine discernment with feminine reflection. Decide through clarity and feeling.'
+    };
+    return patterns[type] || 'Your design integrates both masculine and feminine energies for complete expression.';
+  }
+
+  private static getHDActivation(type: string, authority: string): string {
+    const patterns: { [key: string]: string } = {
+      'Manifestor': 'Today, initiate something that serves your highest vision. Trust your manifesting power.',
+      'Generator': 'Today, respond to opportunities that light you up. Trust your sacral wisdom.',
+      'Projector': 'Today, share your unique insights where invited. Trust your guiding wisdom.',
+      'Reflector': 'Today, reflect on what feels right in your environment. Trust your lunar timing.'
+    };
+    return patterns[type] || 'Today, honor your design through aligned action.';
+  }
+
+  private static getHDShadow(type: string): string {
+    const patterns: { [key: string]: string } = {
+      'Manifestor': 'Your shadow emerges when power becomes control. Lead through inspired invitation.',
+      'Generator': 'Your shadow emerges when response becomes reaction. Choose conscious response.',
+      'Projector': 'Your shadow emerges when guidance becomes unsolicited advice. Wait for invitation.',
+      'Reflector': 'Your shadow emerges when reflection becomes endless uncertainty. Trust lunar clarity.'
+    };
+    return patterns[type] || 'Your shadow holds the key to your design mastery.';
+  }
+
+  private static getHDPractical(type: string, authority: string): string {
+    const patterns: { [key: string]: string } = {
+      'Manifestor': 'Inform others before initiating. Take regular rest. Trust your urges to create.',
+      'Generator': 'Follow gut responses. Engage in work that lights you up. Honor sacral timing.',
+      'Projector': 'Wait for invitations. Focus on mastery over activity. Rest when energy is low.',
+      'Reflector': 'Take time for major decisions. Surround yourself with healthy environments.'
+    };
+    return patterns[type] || 'Live your design through daily conscious practice.';
+  }
+
+  static generateHermeticWisdom(fractals: HermeticFractal[]): string {
+    console.log('🔮 HERMETIC ENGINE: Generating wisdom from', fractals.length, 'fractals');
+    
+    if (!fractals || fractals.length === 0) {
+      console.log('🔮 HERMETIC ENGINE: No fractals provided, returning fallback wisdom');
+      return 'HERMETIC SOUL BLUEPRINT:\nYour consciousness emerges through the Seven Hermetic Laws, revealing pathways for transformation.';
+    }
+
+    let wisdom = 'HERMETIC SOUL BLUEPRINT:\n\n';
+    
+    fractals.forEach((fractal, index) => {
+      wisdom += `${fractal.trait}\n`;
+      
+      // Add selected laws
+      fractal.laws.forEach(law => {
+        wisdom += `• ${law.name}: ${law.interpretation}\n`;
+      });
+      
+      wisdom += `\nACTIVATION: ${fractal.activationPrompt}\n`;
+      wisdom += `SHADOW WORK: ${fractal.shadowWork}\n`;
+      wisdom += `PRACTICAL WISDOM: ${fractal.practicalWisdom}\n`;
+      
+      if (index < fractals.length - 1) wisdom += '\n---\n\n';
+    });
+
+    console.log('🔮 HERMETIC ENGINE: Generated wisdom length:', wisdom.length);
+    return wisdom;
+  }
+}
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -45,15 +325,19 @@ serve(async (req) => {
         .eq('user_id', userId)
         .single(),
       supabase
-        .from('user_blueprints')
-        .select('blueprint')
+        .from('blueprints')
+        .select('*')
         .eq('user_id', userId)
         .eq('is_active', true)
         .single()
     ]);
 
     const intelligence = intelligenceResult.data;
-    const blueprint = blueprintResult.data?.blueprint;
+    const blueprint = blueprintResult.data; // Blueprint data is directly on the record
+
+    console.log('🔮 HERMETIC DEBUG: Blueprint query result:', blueprintResult);
+    console.log('🔮 HERMETIC DEBUG: Blueprint error:', blueprintResult.error);
+    console.log('🔮 HERMETIC DEBUG: Blueprint data keys:', blueprint ? Object.keys(blueprint) : 'No blueprint');
 
     // Generate Hermetic Fractal wisdom from blueprint
     console.log('🔮 HERMETIC DEBUG: Starting Hermetic Engine processing');
