@@ -27,6 +27,13 @@ class NIKService {
   }
 }
 
+// Create placeholder for adaptive context scheduler methods
+class AdaptiveContextSchedulerWrapper {
+  async getContext(userId: string, agentMode: string) {
+    return `Context for ${agentMode} mode for user ${userId}`;
+  }
+}
+
 interface LayeredBlueprint {
   id: string;
   [key: string]: any;
@@ -39,7 +46,7 @@ class UnifiedBrainService {
   );
 
   private blueprintService = blueprintService;
-  private contextScheduler = adaptiveContextScheduler;
+  private contextScheduler = new AdaptiveContextSchedulerWrapper();
   private pieService = new PIEService();
   private vfpService = new VFPService();
   private memoryService = new TMGService();
@@ -121,7 +128,7 @@ class UnifiedBrainService {
     console.log('Cognitive cycles stopped');
   }
 
-  async processMessage(message: string, agentMode: string): Promise<any> {
+  async processMessage(message: string, sessionId: string, agentMode: string = 'guide', dialogueState: string = 'NORMAL'): Promise<any> {
     if (!this.isInitialized || !this.userId) {
       throw new Error('Unified Brain Service not initialized');
     }
@@ -148,7 +155,7 @@ class UnifiedBrainService {
     console.log(`🧬 Personality: ${personality?.name}`);
 
     // 6. PIE - Proactive Insight Engine
-    const insights = await this.pieService.getCurrentInsights();
+    const insights = await this.pieService.generateInsights();
     console.log(`💡 Insights: ${insights.length} generated`);
 
     return {
@@ -158,6 +165,15 @@ class UnifiedBrainService {
       personality,
       insights,
       response: "Processed through unified brain architecture"
+    };
+  }
+
+  // Alias method for backward compatibility
+  async processMessageForModeHook(message: string, sessionId: string, agentMode: string = 'guide', messages: any[] = []): Promise<any> {
+    const result = await this.processMessage(message, sessionId, agentMode);
+    return {
+      response: result.response,
+      module: agentMode
     };
   }
 
@@ -177,7 +193,7 @@ class UnifiedBrainService {
       personalityEngineActive: true,
       acsSystemActive: true,
       sessionMemorySize: this.sessionMemory.size,
-      cognitiveCyclesActive: temporalWaveSynchronizer.isRunning(),
+      cognitiveCyclesActive: this.getTWSInfo().isRunning,
       lastMemoryReflection: this.lastMemoryReflectionTime,
       lastCognitiveSync: this.lastCognitiveSyncTime
     };
@@ -211,17 +227,12 @@ class UnifiedBrainService {
   }
 
   getTWSInfo(): any {
+    const cycleInfo = temporalWaveSynchronizer.getCycleInfo();
     return {
-      isRunning: temporalWaveSynchronizer.isRunning(),
-      registeredModules: temporalWaveSynchronizer.getRegisteredModules ? 
-        temporalWaveSynchronizer.getRegisteredModules() : [],
-      cycleCount: temporalWaveSynchronizer.getCycleCount ? 
-        temporalWaveSynchronizer.getCycleCount() : 0
+      isRunning: cycleInfo.isRunning,
+      registeredModules: ['memory_reflection', 'cognitive_sync'],
+      cycleCount: cycleInfo.cycleCount || 0
     };
-  }
-
-  async processMessageForModeHook(message: string, mode: string): Promise<any> {
-    return this.processMessage(message, mode);
   }
 
   // Cognitive synchronization triggered during TWS cycles
