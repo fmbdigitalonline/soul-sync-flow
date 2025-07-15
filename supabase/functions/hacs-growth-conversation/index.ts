@@ -47,8 +47,11 @@ serve(async (req) => {
     const blueprint = blueprintResult.data?.blueprint;
 
     // Generate Hermetic Fractal wisdom from blueprint
+    console.log('🔮 HERMETIC DEBUG: Blueprint data:', JSON.stringify(blueprint, null, 2));
     const hermeticFractals = HermeticEngine.generateHermeticFractal(blueprint);
+    console.log('🔮 HERMETIC DEBUG: Generated fractals:', hermeticFractals.length);
     const hermeticWisdom = HermeticEngine.generateHermeticWisdom(hermeticFractals);
+    console.log('🔮 HERMETIC DEBUG: Generated wisdom length:', hermeticWisdom.length);
 
     // Growth-specific system prompt focused on spiritual development
     const systemPrompt = `You are a specialized SPIRITUAL GROWTH GUIDE within the HACS (Holistic Adaptive Cognition System) framework. Your sole purpose is to help users deepen their spiritual connection, self-awareness, and personal transformation.
