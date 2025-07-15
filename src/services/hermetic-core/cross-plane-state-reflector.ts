@@ -1,6 +1,8 @@
 // Cross-Plane State Reflector (CPSR) - State Synchronization
 // Implements Hermetic Principle of Correspondence ("As Above, So Below")
 
+import type { VPGBlueprint } from "../unified-brain-context";
+
 export interface PlaneState {
   external: Record<string, any>; // Environment, user inputs, sensor data
   internal: Record<string, any>; // AI cognitive state, goals, context
@@ -47,6 +49,9 @@ class CrossPlaneStateReflector {
   private readonly MAX_CONCURRENT_PROCESSING = 5;
   private circuitBreakerCooldownUntil: number = 0;
   private readonly CIRCUIT_BREAKER_COOLDOWN = 5000; // 5 seconds
+  
+  // VPG Integration Point #3
+  private vgpBlueprint: VPGBlueprint | null = null;
 
   constructor() {
     this.setupDefaultReflectionRules();

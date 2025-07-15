@@ -1,6 +1,8 @@
 // Neuro-Intent Kernel (NIK) - Persistent Intent Management
 // Implements Hermetic Principle of Mentalism ("All is Mind")
 
+import type { VPGBlueprint } from "../unified-brain-context";
+
 export interface Intent {
   id: string;
   primary: string;
