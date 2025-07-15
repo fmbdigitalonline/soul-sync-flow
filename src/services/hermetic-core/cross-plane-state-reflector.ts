@@ -41,6 +41,12 @@ class CrossPlaneStateReflector {
   private maxCyclesPerInput: number = 50;
   private currentInputCycles: number = 0;
   private currentInput: string | null = null;
+  
+  // Global circuit breaker properties
+  private concurrentProcessingCalls: number = 0;
+  private readonly MAX_CONCURRENT_PROCESSING = 5;
+  private circuitBreakerCooldownUntil: number = 0;
+  private readonly CIRCUIT_BREAKER_COOLDOWN = 5000; // 5 seconds
 
   constructor() {
     this.setupDefaultReflectionRules();
@@ -92,16 +98,29 @@ class CrossPlaneStateReflector {
 
     this.state.meta[key] = value;
     
-    // Skip recursive processing for ALL TWS-related and memory reflection updates
+    // Skip recursive processing for ALL routine operational sources
     const bypassSources = [
       'memory_reflector',
       'tws_sync',
       'tws_monitor', 
       'tws_reflection',
-      'cpsr_correspondence'
+      'cpsr_correspondence',
+      // Operational routine sources that shouldn't trigger reflection cascades
+      'metrics',
+      'session_manager',
+      'activity_tracker',
+      'personality_engine',
+      'unified_brain',
+      'performance_monitor',
+      'health_checker',
+      'stats_collector'
     ];
     
-    if (bypassSources.includes(source) || source.startsWith('tws_')) {
+    // Also bypass any source ending with common operational suffixes
+    const operationalSuffixes = ['_tracker', '_manager', '_monitor', '_collector', '_engine'];
+    const isOperationalSource = operationalSuffixes.some(suffix => source.endsWith(suffix));
+    
+    if (bypassSources.includes(source) || source.startsWith('tws_') || isOperationalSource) {
       console.log(`🔄 CPSR: Meta state updated (${key}) - ${source} bypass`);
       return;
     }
@@ -128,18 +147,35 @@ class CrossPlaneStateReflector {
 
   // Process state change and trigger reflections
   private processStateChange(change: StateChange): void {
-    // Increment cognitive cycle count
-    this.cognitiveCache++;
-    this.currentInputCycles++;
-    
-    // Update meta state with current cycle count
-    this.state.meta.cognitive_cycle_count = this.cognitiveCache;
-
-    // Check max cycle ceiling to prevent infinite recursion
-    if (this.currentInputCycles > this.maxCyclesPerInput) {
-      console.warn(`🔄 CPSR: Max cycles reached (${this.maxCyclesPerInput}) for current input. Preventing infinite recursion.`);
+    // Global circuit breaker: check cooldown period
+    const now = Date.now();
+    if (now < this.circuitBreakerCooldownUntil) {
+      console.log('🔄 CPSR: Circuit breaker active, skipping state processing');
       return;
     }
+    
+    // Global circuit breaker: check concurrent processing limit
+    if (this.concurrentProcessingCalls >= this.MAX_CONCURRENT_PROCESSING) {
+      console.warn('🔄 CPSR: Max concurrent processing calls reached, activating circuit breaker');
+      this.circuitBreakerCooldownUntil = now + this.CIRCUIT_BREAKER_COOLDOWN;
+      return;
+    }
+    
+    this.concurrentProcessingCalls++;
+    
+    try {
+      // Increment cognitive cycle count
+      this.cognitiveCache++;
+      this.currentInputCycles++;
+      
+      // Update meta state with current cycle count
+      this.state.meta.cognitive_cycle_count = this.cognitiveCache;
+
+      // Check max cycle ceiling to prevent infinite recursion
+      if (this.currentInputCycles > this.maxCyclesPerInput) {
+        console.warn(`🔄 CPSR: Max cycles reached (${this.maxCyclesPerInput}) for current input. Preventing infinite recursion.`);
+        return;
+      }
 
     // Throttled logging - only log every 100th cycle or significant changes
     const shouldLogCycle = (this.cognitiveCache % 100 === 0) || this.isSignificantChange(change);
@@ -168,8 +204,11 @@ class CrossPlaneStateReflector {
       });
     }
 
-    // Apply general correspondence rules
-    this.applyCorrespondenceRules(change);
+      // Apply general correspondence rules
+      this.applyCorrespondenceRules(change);
+    } finally {
+      this.concurrentProcessingCalls--;
+    }
   }
 
   // Determine if a change is significant enough to log immediately
