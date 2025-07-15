@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { 
   PIEPattern, 
@@ -408,6 +407,62 @@ export class PIEService {
     this.isInitialized = false;
     this.userId = null;
     this.configuration = null;
+  }
+
+  // ADD MISSING METHOD
+  async generateInsights(userId: string, message: string): Promise<any[]> {
+    console.log("🔮 Generating insights for message:", message);
+    
+    if (!this.isInitialized || !this.configuration?.enabled) {
+      return [];
+    }
+
+    try {
+      // Get existing insights
+      const existingInsights = await this.getCurrentInsights();
+      
+      // Simple insight generation based on message content
+      const insights = [];
+      
+      if (message.toLowerCase().includes('mood') || message.toLowerCase().includes('feeling')) {
+        insights.push({
+          id: crypto.randomUUID(),
+          userId,
+          title: 'Mood Pattern Detected',
+          message: 'Your recent messages suggest you might benefit from mood tracking.',
+          insightType: 'behavioral_pattern',
+          priority: 'medium',
+          confidence: 0.7,
+          triggerEvent: 'mood_mention',
+          triggerTime: new Date().toISOString(),
+          expirationTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
+          delivered: false,
+          acknowledged: false
+        });
+      }
+      
+      if (message.toLowerCase().includes('productivity') || message.toLowerCase().includes('work')) {
+        insights.push({
+          id: crypto.randomUUID(),
+          userId,
+          title: 'Productivity Focus',
+          message: 'Consider tracking your productivity patterns for better insights.',
+          insightType: 'optimization_opportunity',
+          priority: 'medium',
+          confidence: 0.6,
+          triggerEvent: 'productivity_mention',
+          triggerTime: new Date().toISOString(),
+          expirationTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+          delivered: false,
+          acknowledged: false
+        });
+      }
+      
+      return insights;
+    } catch (error) {
+      console.error("Error generating insights:", error);
+      return [];
+    }
   }
 }
 
