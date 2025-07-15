@@ -13,14 +13,23 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 serve(async (req) => {
+  console.log('🌱 EDGE FUNCTION: hacs-growth-conversation called');
+  console.log('🌱 EDGE FUNCTION: Request method:', req.method);
+  
   if (req.method === 'OPTIONS') {
+    console.log('🌱 EDGE FUNCTION: Handling OPTIONS request');
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    console.log('🌱 EDGE FUNCTION: Parsing request body');
     const { message, conversationHistory, userId } = await req.json();
+    console.log('🌱 EDGE FUNCTION: Request parsed successfully');
+    console.log('🌱 EDGE FUNCTION: userId:', userId);
+    console.log('🌱 EDGE FUNCTION: message length:', message?.length);
 
     if (!message || !userId) {
+      console.error('🌱 EDGE FUNCTION: Missing required parameters');
       throw new Error('Missing required parameters: message and userId');
     }
 
@@ -47,11 +56,31 @@ serve(async (req) => {
     const blueprint = blueprintResult.data?.blueprint;
 
     // Generate Hermetic Fractal wisdom from blueprint
+    console.log('🔮 HERMETIC DEBUG: Starting Hermetic Engine processing');
     console.log('🔮 HERMETIC DEBUG: Blueprint data:', JSON.stringify(blueprint, null, 2));
-    const hermeticFractals = HermeticEngine.generateHermeticFractal(blueprint);
-    console.log('🔮 HERMETIC DEBUG: Generated fractals:', hermeticFractals.length);
-    const hermeticWisdom = HermeticEngine.generateHermeticWisdom(hermeticFractals);
-    console.log('🔮 HERMETIC DEBUG: Generated wisdom length:', hermeticWisdom.length);
+    
+    let hermeticWisdom = '';
+    
+    try {
+      console.log('🔮 HERMETIC DEBUG: Calling HermeticEngine.generateHermeticFractal');
+      const hermeticFractals = HermeticEngine.generateHermeticFractal(blueprint);
+      console.log('🔮 HERMETIC DEBUG: Generated fractals:', hermeticFractals.length);
+      
+      if (hermeticFractals && hermeticFractals.length > 0) {
+        console.log('🔮 HERMETIC DEBUG: Calling HermeticEngine.generateHermeticWisdom');
+        hermeticWisdom = HermeticEngine.generateHermeticWisdom(hermeticFractals);
+        console.log('🔮 HERMETIC DEBUG: Generated wisdom length:', hermeticWisdom.length);
+        console.log('🔮 HERMETIC DEBUG: Generated wisdom preview:', hermeticWisdom.substring(0, 200) + '...');
+      } else {
+        console.log('🔮 HERMETIC DEBUG: No fractals generated, using fallback wisdom');
+        hermeticWisdom = 'HERMETIC SOUL BLUEPRINT:\nYour unique consciousness pattern emerges through the Seven Hermetic Laws, revealing pathways for profound spiritual transformation.';
+      }
+    } catch (hermeticError) {
+      console.error('🔮 HERMETIC ERROR: Failed to generate wisdom:', hermeticError);
+      hermeticWisdom = 'HERMETIC SOUL BLUEPRINT:\nYour unique consciousness pattern emerges through the Seven Hermetic Laws, revealing pathways for profound spiritual transformation.';
+    }
+    
+    console.log('🔮 HERMETIC DEBUG: Final wisdom length:', hermeticWisdom.length);
 
     // Growth-specific system prompt focused on spiritual development
     const systemPrompt = `You are a specialized SPIRITUAL GROWTH GUIDE within the HACS (Holistic Adaptive Cognition System) framework. Your sole purpose is to help users deepen their spiritual connection, self-awareness, and personal transformation.

@@ -437,21 +437,39 @@ class UnifiedBrainService {
       }
 
       console.log(`🔄 Routing to ${functionName} after Hermetic processing`);
+      console.log(`🔄 ROUTE DEBUG: Calling ${functionName} with userId: ${this.userId}`);
+      console.log(`🔄 ROUTE DEBUG: Message length: ${message.length}`);
+
+      const payload = { 
+        message,
+        conversationHistory,
+        userId: this.userId,
+        hermeticContext: {
+          personalityApplied: hermeticResult.personalityApplied,
+          memoryStored: hermeticResult.memoryStored,
+          brainMetrics: hermeticResult.brainMetrics
+        }
+      };
+
+      console.log(`🔄 ROUTE DEBUG: Payload prepared for ${functionName}`);
 
       const { data, error } = await supabase.functions.invoke(functionName, {
-        body: { 
-          message,
-          conversationHistory,
-          userId: this.userId,
-          hermeticContext: {
-            personalityApplied: hermeticResult.personalityApplied,
-            memoryStored: hermeticResult.memoryStored,
-            brainMetrics: hermeticResult.brainMetrics
-          }
-        }
+        body: payload
       });
 
-      if (error) throw error;
+      console.log(`🔄 ROUTE DEBUG: Edge function response:`, { data, error });
+
+      if (error) {
+        console.error(`🔄 ROUTE ERROR: ${functionName} failed:`, error);
+        throw error;
+      }
+
+      if (!data) {
+        console.error(`🔄 ROUTE ERROR: ${functionName} returned no data`);
+        throw new Error(`${functionName} returned no data`);
+      }
+
+      console.log(`🔄 ROUTE SUCCESS: ${functionName} returned response length: ${data.response?.length || 0}`);
 
       return {
         response: data.response,
@@ -460,8 +478,9 @@ class UnifiedBrainService {
       };
 
     } catch (error) {
-      console.error(`Failed to route to ${targetMode} mode:`, error);
-      throw new Error(`Failed to get response from ${targetMode} mode`);
+      console.error(`🔄 ROUTE FAILURE: Failed to route to ${targetMode} mode:`, error);
+      console.error(`🔄 ROUTE FAILURE: Error details:`, error.message);
+      throw new Error(`Failed to get response from ${targetMode} mode: ${error.message}`);
     }
   }
 
