@@ -1,180 +1,268 @@
+// Unified Brain Context - Session-level Blueprint Caching
+// Implements SoulSync Engineering Protocol directive for shared context
+
+import { LayeredBlueprint } from "@/types/personality-modules";
+import { personalityVectorService } from "./personality-vector-service";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface VPGBlueprint {
+  // Core personality data
+  personality: {
+    vector: Float32Array;
+    summary: string;
+    traits: {
+      dominantPatterns: string[];
+      energySignature: string;
+      communicationStyle: string;
+      cognitiveStyle: string;
+    };
+  };
+  
+  // User metadata
   user: {
     id: string;
-    name?: string;
-    preferences: any;
-    profile: any;
+    name: string;
+    preferences: {
+      tone: string;
+      pace: string;
+      depth: string;
+    };
   };
-  personality: {
-    traits: any;
-    summary?: string;
-    cognitiveStyle: string;
-    communicationStyle: string;
-    energyStrategy: string;
+  
+  // Session info
+  session: {
+    loadedAt: Date;
+    version: string;
+    cacheExpiry: Date;
   };
-  goals: {
-    current: any[];
-    aspirations: any[];
-  };
-  sessionContext: {
-    lastActivity: string;
-    focusMetrics: any;
-  };
+  
+  // Raw blueprint data
+  raw: Partial<LayeredBlueprint>;
 }
 
 class UnifiedBrainContext {
-  private cache = new Map<string, any>();
-  private sessionCache = new Map<string, Map<string, any>>();
+  private static instance: UnifiedBrainContext;
+  private blueprintCache = new Map<string, VPGBlueprint>();
+  private readonly CACHE_DURATION_MS = 30 * 60 * 1000; // 30 minutes
 
-  get<T>(key: string, userId?: string): T | null {
-    const fullKey = userId ? `${userId}-${key}` : key;
-    return this.cache.get(fullKey) || null;
-  }
-
-  set<T>(key: string, value: T, userId?: string): void {
-    const fullKey = userId ? `${userId}-${key}` : key;
-    this.cache.set(fullKey, value);
-  }
-
-  getSessionData<T>(sessionId: string, key: string): T | null {
-    const sessionData = this.sessionCache.get(sessionId);
-    return sessionData ? sessionData.get(key) || null : null;
-  }
-
-  setSessionData<T>(sessionId: string, key: string, value: T): void {
-    let sessionData = this.sessionCache.get(sessionId);
-    if (!sessionData) {
-      sessionData = new Map<string, any>();
-      this.sessionCache.set(sessionId, sessionData);
+  static getInstance(): UnifiedBrainContext {
+    if (!UnifiedBrainContext.instance) {
+      UnifiedBrainContext.instance = new UnifiedBrainContext();
     }
-    sessionData.set(key, value);
+    return UnifiedBrainContext.instance;
   }
 
-  async loadBlueprint(userId: string): Promise<VPGBlueprint | null> {
-    const cachedBlueprint = this.get<VPGBlueprint>('blueprint', userId);
-    if (cachedBlueprint) {
-      console.log("🧠 UBC: Loaded VPG blueprint from cache");
-      return cachedBlueprint;
-    }
-
+  // Load and cache VPG blueprint for session (Stage 0)
+  async loadBlueprint(userId: string): Promise<VPGBlueprint> {
+    console.log(`🧠 UBC: Loading VPG blueprint for user ${userId}`);
+    
     try {
-      console.log("🧠 UBC: Fetching VPG blueprint from Supabase...");
-      // Try from blueprints table first, fallback to user_blueprints
-      let blueprintData = null;
+      // Check cache first
+      const cached = this.blueprintCache.get(userId);
+      if (cached && cached.session.cacheExpiry > new Date()) {
+        console.log(`✅ UBC: Blueprint loaded (cached) for ${userId}`);
+        return cached;
+      }
+
+      // Load fresh blueprint
+      const startTime = performance.now();
       
-      const { data: bpData, error: bpError } = await supabase
+      // 1. Get personality vector and summary
+      const [personalityVector, personaSummary] = await Promise.all([
+        personalityVectorService.getVector(userId),
+        personalityVectorService.getPersonaSummary(userId)
+      ]);
+
+      // 2. Get raw blueprint data
+      const { data: blueprint } = await supabase
         .from('blueprints')
         .select('*')
         .eq('user_id', userId)
         .eq('is_active', true)
-        .single();
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-      if (bpData) {
-        blueprintData = bpData;
-      } else {
-        // Fallback to user_blueprints table structure
-        const { data: ubData, error: ubError } = await supabase
-          .from('user_blueprints')
-          .select('*')
-          .eq('user_id', userId)
-          .single();
-        
-        if (ubData) {
-          blueprintData = ubData;
-        }
-      }
+      // 3. Analyze personality traits
+      const traits = this.analyzePersonalityTraits(personalityVector);
 
-      if (!blueprintData) {
-        console.warn("⚠️ UBC: No VPG blueprint found in Supabase");
-        return null;
-      }
+      // 4. Extract user preferences
+      const userMeta = blueprint?.user_meta as any || {};
+      const userName = this.extractUserName(userMeta);
+      const preferences = this.extractUserPreferences(personalityVector, userMeta);
 
-      // Handle different table structures
-      const isBlueprints = !!bpData;
-      const blueprint: VPGBlueprint = {
+      // 5. Create VPG blueprint
+      const vgpBlueprint: VPGBlueprint = {
+        personality: {
+          vector: personalityVector,
+          summary: personaSummary,
+          traits
+        },
         user: {
           id: userId,
-          name: isBlueprints ? blueprintData.user_meta?.preferred_name : undefined,
-          preferences: isBlueprints ? blueprintData.user_meta : (blueprintData.user_preferences || {}),
-          profile: isBlueprints ? blueprintData.user_meta : (blueprintData.user_profile || {})
+          name: userName,
+          preferences
         },
-        personality: {
-          traits: isBlueprints ? blueprintData.cognition_mbti : (blueprintData.personality_traits || {}),
-          summary: isBlueprints ? "MBTI-based personality" : undefined,
-          cognitiveStyle: isBlueprints ? 'analytical' : (blueprintData.cognitive_style || 'balanced'),
-          communicationStyle: isBlueprints ? 'adaptive' : (blueprintData.communication_style || 'adaptive'),
-          energyStrategy: isBlueprints ? 'sustainable' : (blueprintData.energy_strategy || 'sustainable')
+        session: {
+          loadedAt: new Date(),
+          version: '1.0.0',
+          cacheExpiry: new Date(Date.now() + this.CACHE_DURATION_MS)
         },
-        goals: {
-          current: isBlueprints ? (blueprintData.goal_stack || []) : (blueprintData.current_goals || []),
-          aspirations: isBlueprints ? [] : (blueprintData.aspirations || [])
-        },
-        sessionContext: {
-          lastActivity: isBlueprints ? 'recent' : (blueprintData.last_activity || 'none'),
-          focusMetrics: isBlueprints ? {} : (blueprintData.focus_metrics || {})
-        }
+        raw: { user_meta: userMeta }
       };
 
-      this.set('blueprint', blueprint, userId);
-      console.log("✅ UBC: VPG blueprint loaded and cached");
-      return blueprint;
-
+      // Cache the blueprint
+      this.blueprintCache.set(userId, vgpBlueprint);
+      
+      const loadTime = performance.now() - startTime;
+      console.log(`✅ UBC: VPG blueprint loaded and cached for ${userName} in ${loadTime.toFixed(1)}ms`);
+      
+      return vgpBlueprint;
     } catch (error) {
-      console.error("❌ UBC: Failed to load VPG blueprint:", error);
-      return null;
+      console.error('❌ UBC: Failed to load VPG blueprint:', error);
+      return this.getFallbackBlueprint(userId);
     }
   }
 
-  clearAll(): void {
-    console.log("🧠 UBC: Clearing all cached data");
-    this.cache.clear();
-    this.sessionCache.clear();
+  // Get cached blueprint (used by all stages)
+  get(key: 'blueprint', userId: string): VPGBlueprint | null {
+    const cached = this.blueprintCache.get(userId);
+    if (cached && cached.session.cacheExpiry > new Date()) {
+      return cached;
+    }
+    return null;
   }
 
-  clearSession(sessionId: string): void {
-    console.log("🧠 UBC: Clearing session data for:", sessionId);
-    this.sessionCache.delete(sessionId);
+  // Set blueprint in cache
+  set(key: 'blueprint', userId: string, blueprint: VPGBlueprint): void {
+    this.blueprintCache.set(userId, blueprint);
   }
 
-  clearUser(userId: string): void {
-    console.log("🧠 UBC: Clearing user data for:", userId);
-    
-    // Clear user-specific keys from main cache
-    const keysToDelete: string[] = [];
-    this.cache.forEach((value, key) => {
-      if (key.includes(userId)) {
-        keysToDelete.push(key);
-      }
-    });
-    
-    keysToDelete.forEach(key => this.cache.delete(key));
-    
-    // Clear session cache entries for this user
-    this.sessionCache.forEach((sessionData, sessionId) => {
-      if (sessionData.has('userId') && sessionData.get('userId') === userId) {
-        this.sessionCache.delete(sessionId);
-      }
-    });
+  // Clear cache for user
+  clearCache(userId: string): void {
+    this.blueprintCache.delete(userId);
+    console.log(`🧠 UBC: Cache cleared for user ${userId}`);
   }
 
-  getStats(): {
-    cacheSize: number;
-    sessionCount: number;
-    memoryUsage: string;
-  } {
+  // Analyze personality traits from 128D vector
+  private analyzePersonalityTraits(vector: Float32Array): VPGBlueprint['personality']['traits'] {
+    // MBTI section analysis (dimensions 0-31)
+    const mbtiSection = Array.from(vector.slice(0, 32));
+    const mbtiSum = mbtiSection.reduce((sum, val) => sum + val, 0);
+    
+    // Human Design section (dimensions 32-95)
+    const hdSection = Array.from(vector.slice(32, 96));
+    const hdActivation = hdSection.filter(val => val > 0.5).length;
+    
+    // Astrology section (dimensions 96-127)
+    const astroSection = Array.from(vector.slice(96, 128));
+    const astroVariance = this.calculateVariance(astroSection);
+
+    // Analyze dominant patterns
+    const dominantPatterns = [];
+    if (mbtiSum > 10) dominantPatterns.push('intuitive thinking');
+    else if (mbtiSum < -10) dominantPatterns.push('practical sensing');
+    
+    if (hdActivation > 20) dominantPatterns.push('defined energy centers');
+    if (astroVariance > 0.3) dominantPatterns.push('complex archetypal influences');
+
+    // Energy signature
+    const totalEnergy = Array.from(vector).reduce((sum, val) => sum + Math.abs(val), 0);
+    let energySignature: string;
+    if (totalEnergy > 80) energySignature = 'high-intensity, dynamic';
+    else if (totalEnergy > 60) energySignature = 'moderate, balanced';
+    else energySignature = 'calm, steady';
+
+    // Communication style
+    const vectorBalance = this.calculateBalance(vector);
+    let communicationStyle: string;
+    if (vectorBalance > 0.7) communicationStyle = 'direct and clear';
+    else if (vectorBalance > 0.4) communicationStyle = 'nuanced and adaptive';
+    else communicationStyle = 'gentle and exploratory';
+
+    // Cognitive style (based on MBTI patterns)
+    let cognitiveStyle: string;
+    if (mbtiSum > 15) cognitiveStyle = 'conceptual and abstract';
+    else if (mbtiSum > 0) cognitiveStyle = 'balanced analytical';
+    else cognitiveStyle = 'concrete and detailed';
+
     return {
-      cacheSize: this.cache.size,
-      sessionCount: this.sessionCache.size,
-      memoryUsage: `${JSON.stringify([...this.cache.entries()]).length} bytes`
+      dominantPatterns,
+      energySignature,
+      communicationStyle,
+      cognitiveStyle
     };
   }
 
-  clearCache(): void {
-    console.log("🧠 UBC: Clearing cache");
-    this.cache.clear();
+  private calculateVariance(values: number[]): number {
+    const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
+    return values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length;
+  }
+
+  private calculateBalance(vector: Float32Array): number {
+    const positives = Array.from(vector).filter(val => val > 0).length;
+    const negatives = Array.from(vector).filter(val => val < 0).length;
+    return Math.min(positives, negatives) / Math.max(positives, negatives);
+  }
+
+  private extractUserName(userMeta: any): string {
+    return userMeta?.preferred_name || userMeta?.first_name || 
+           userMeta?.full_name?.split(' ')[0] || 'friend';
+  }
+
+  private extractUserPreferences(vector: Float32Array, userMeta: any): VPGBlueprint['user']['preferences'] {
+    // Derive preferences from personality vector
+    const totalEnergy = Array.from(vector).reduce((sum, val) => sum + Math.abs(val), 0);
+    const balance = this.calculateBalance(vector);
+    
+    return {
+      tone: balance > 0.6 ? 'direct' : 'gentle',
+      pace: totalEnergy > 70 ? 'energetic' : 'calm',
+      depth: Array.from(vector.slice(0, 32)).reduce((sum, val) => sum + val, 0) > 5 ? 'detailed' : 'concise'
+    };
+  }
+
+  private getFallbackBlueprint(userId: string): VPGBlueprint {
+    const fallbackVector = new Float32Array(128);
+    fallbackVector.fill(0.5);
+    
+    return {
+      personality: {
+        vector: fallbackVector,
+        summary: 'Dynamic personality profile',
+        traits: {
+          dominantPatterns: ['balanced'],
+          energySignature: 'moderate, balanced',
+          communicationStyle: 'adaptive',
+          cognitiveStyle: 'balanced analytical'
+        }
+      },
+      user: {
+        id: userId,
+        name: 'friend',
+        preferences: {
+          tone: 'gentle',
+          pace: 'calm',
+          depth: 'balanced'
+        }
+      },
+      session: {
+        loadedAt: new Date(),
+        version: '1.0.0-fallback',
+        cacheExpiry: new Date(Date.now() + this.CACHE_DURATION_MS)
+      },
+      raw: {}
+    };
   }
 }
 
-export const unifiedBrainContext = new UnifiedBrainContext();
+// Static helper methods for global access
+export class UnifiedBrainContextHelper {
+  static getBlueprint(): VPGBlueprint | null {
+    // Since we don't have a specific userId in global context, return null
+    // The proper way is to use instance.get('blueprint', userId)
+    return null;
+  }
+}
+
+export const unifiedBrainContext = UnifiedBrainContext.getInstance();

@@ -1,132 +1,490 @@
+// Cross-Plane State Reflector (CPSR) - State Synchronization
+// Implements Hermetic Principle of Correspondence ("As Above, So Below")
 
 import type { VPGBlueprint } from "../unified-brain-context";
 
 export interface PlaneState {
-  external: Record<string, any>;
-  internal: Record<string, any>;
-  meta: Record<string, any>;
+  external: Record<string, any>; // Environment, user inputs, sensor data
+  internal: Record<string, any>; // AI cognitive state, goals, context
+  meta: Record<string, any>;     // System metrics, performance data
 }
 
 export interface StateChange {
   plane: 'external' | 'internal' | 'meta';
   key: string;
   value: any;
+  timestamp: Date;
   source: string;
-  timestamp: number;
 }
 
-type StateChangeListener = (change: StateChange) => void;
+export interface ReflectionInsight {
+  cycle: number;
+  timestamp: Date;
+  insights: string[];
+  patterns: string[];
+  tensions: string[];
+  recommendations: string[];
+}
 
 class CrossPlaneStateReflector {
-  private externalState: Record<string, any> = {};
-  private internalState: Record<string, any> = {};
-  private metaState: Record<string, any> = {};
-  private stateChangeListeners: StateChangeListener[] = [];
+  private state: PlaneState = {
+    external: {},
+    internal: {},
+    meta: {}
+  };
+  
+  private changeListeners: ((change: StateChange) => void)[] = [];
+  private reflectionRules: Map<string, (change: StateChange) => StateChange[]> = new Map();
+  
+  // Logging optimization properties
+  private cognitiveCache: number = 0;
+  private lastLoggedCycle: number = 0;
+  private reflectionInsights: ReflectionInsight[] = [];
+  private maxCyclesPerInput: number = 50;
+  private currentInputCycles: number = 0;
+  private currentInput: string | null = null;
+  
+  // Global circuit breaker properties
+  private concurrentProcessingCalls: number = 0;
+  private readonly MAX_CONCURRENT_PROCESSING = 5;
+  private circuitBreakerCooldownUntil: number = 0;
+  private readonly CIRCUIT_BREAKER_COOLDOWN = 5000; // 5 seconds
+  
+  // VPG Integration Point #3
   private vgpBlueprint: VPGBlueprint | null = null;
 
   constructor() {
-    console.log("🔄 Cross-Plane State Reflector: Initialized");
+    this.setupDefaultReflectionRules();
   }
 
-  setBlueprintContext(blueprint: VPGBlueprint) {
-    this.vgpBlueprint = blueprint;
-    console.log("🧠 CPSR: VPG Blueprint context injected");
+  // VPG Integration Point #3: Set blueprint context for internal constants
+  setBlueprintContext(vgpBlueprint: VPGBlueprint): void {
+    this.vgpBlueprint = vgpBlueprint;
     
-    // Apply blueprint-based internal constants
-    this.updateInternalConstants();
+    // Persist key blueprint facts as internal constants for all modules to access
+    this.state.internal.blueprint = {
+      userName: vgpBlueprint.user.name,
+      cognitiveStyle: vgpBlueprint.personality.traits.cognitiveStyle,
+      energySignature: vgpBlueprint.personality.traits.energySignature,
+      communicationStyle: vgpBlueprint.personality.traits.communicationStyle,
+      dominantPatterns: vgpBlueprint.personality.traits.dominantPatterns,
+      preferences: vgpBlueprint.user.preferences,
+      summary: vgpBlueprint.personality.summary
+    };
+    
+    console.log(`🔄 CPSR: Blueprint loaded (cached) for ${vgpBlueprint.user.name} - internal constants set`);
   }
 
-  private updateInternalConstants() {
-    if (!this.vgpBlueprint) return;
-
-    // Set internal constants based on blueprint personality traits
-    const traits = this.vgpBlueprint.personality?.traits;
-    if (traits) {
-      this.internalState.personality_type = traits.cognitiveStyle || 'balanced';
-      this.internalState.energy_strategy = traits.energyStrategy || 'sustainable';
-      this.internalState.communication_preference = traits.communicationStyle || 'adaptive';
+  // Update external state (from environment, user, sensors)
+  updateExternalState(key: string, value: any, source: string = 'external'): void {
+    // Reset cycle count for new input
+    if (key === 'user_input' && value !== this.currentInput) {
+      this.currentInput = value;
+      this.currentInputCycles = 0;
     }
 
-    console.log("🔄 CPSR: Internal constants updated from blueprint");
-  }
-
-  updateExternalState(key: string, value: any, source: string = 'system') {
-    this.externalState[key] = value;
-    this.notifyStateChange('external', key, value, source);
-    this.applyCorrespondenceRules(key, value);
-  }
-
-  updateInternalState(key: string, value: any, source: string = 'system') {
-    this.internalState[key] = value;
-    this.notifyStateChange('internal', key, value, source);
-  }
-
-  updateMetaState(key: string, value: any, source: string = 'system') {
-    this.metaState[key] = value;
-    this.notifyStateChange('meta', key, value, source);
-  }
-
-  private applyCorrespondenceRules(externalKey: string, externalValue: any) {
-    // Hermetic principle: As above, so below
-    const correspondenceMap: Record<string, string> = {
-      'user_input': 'current_context',
-      'system_mode': 'processing_mode',
-      'session_id': 'active_session',
-      'domain_context': 'active_domain'
-    };
-
-    const internalKey = correspondenceMap[externalKey];
-    if (internalKey) {
-      this.updateInternalState(internalKey, externalValue, 'correspondence_rule');
-    }
-  }
-
-  getUnifiedState(): PlaneState {
-    return {
-      external: { ...this.externalState },
-      internal: { ...this.internalState },
-      meta: { ...this.metaState }
-    };
-  }
-
-  reflectCurrentState(): PlaneState {
-    return this.getUnifiedState();
-  }
-
-  synchronizePlanes() {
-    // Force synchronization between planes
-    Object.entries(this.externalState).forEach(([key, value]) => {
-      this.applyCorrespondenceRules(key, value);
-    });
-    console.log("🔄 CPSR: Plane synchronization completed");
-  }
-
-  onStateChange(listener: StateChangeListener): () => void {
-    this.stateChangeListeners.push(listener);
-    return () => {
-      const index = this.stateChangeListeners.indexOf(listener);
-      if (index > -1) {
-        this.stateChangeListeners.splice(index, 1);
-      }
-    };
-  }
-
-  private notifyStateChange(plane: 'external' | 'internal' | 'meta', key: string, value: any, source: string) {
     const change: StateChange = {
-      plane,
+      plane: 'external',
       key,
       value,
-      source,
-      timestamp: Date.now()
+      timestamp: new Date(),
+      source
     };
 
-    this.stateChangeListeners.forEach(listener => {
-      try {
-        listener(change);
-      } catch (error) {
-        console.error("Error in state change listener:", error);
+    this.state.external[key] = value;
+    this.processStateChange(change);
+  }
+
+  // Update internal state (from cognitive modules)
+  updateInternalState(key: string, value: any, source: string = 'internal'): void {
+    const change: StateChange = {
+      plane: 'internal',
+      key,
+      value,
+      timestamp: new Date(),
+      source
+    };
+
+    this.state.internal[key] = value;
+    this.processStateChange(change);
+  }
+
+  // Update meta state (system performance, module states)
+  updateMetaState(key: string, value: any, source: string = 'meta'): void {
+    const change: StateChange = {
+      plane: 'meta',
+      key,
+      value,
+      timestamp: new Date(),
+      source
+    };
+
+    this.state.meta[key] = value;
+    
+    // Skip recursive processing for ALL routine operational sources
+    const bypassSources = [
+      'memory_reflector',
+      'tws_sync',
+      'tws_monitor', 
+      'tws_reflection',
+      'cpsr_correspondence',
+      // Operational routine sources that shouldn't trigger reflection cascades
+      'metrics',
+      'session_manager',
+      'activity_tracker',
+      'personality_engine',
+      'unified_brain',
+      'performance_monitor',
+      'health_checker',
+      'stats_collector'
+    ];
+    
+    // Also bypass any source ending with common operational suffixes
+    const operationalSuffixes = ['_tracker', '_manager', '_monitor', '_collector', '_engine'];
+    const isOperationalSource = operationalSuffixes.some(suffix => source.endsWith(suffix));
+    
+    if (bypassSources.includes(source) || source.startsWith('tws_') || isOperationalSource) {
+      console.log(`🔄 CPSR: Meta state updated (${key}) - ${source} bypass`);
+      return;
+    }
+    
+    this.processStateChange(change);
+  }
+
+  // Get state from any plane
+  getState(plane: keyof PlaneState, key?: string): any {
+    if (key) {
+      return this.state[plane][key];
+    }
+    return { ...this.state[plane] };
+  }
+
+  // Get unified state view
+  getUnifiedState(): PlaneState {
+    return {
+      external: { ...this.state.external },
+      internal: { ...this.state.internal },
+      meta: { ...this.state.meta }
+    };
+  }
+
+  // Process state change and trigger reflections
+  private processStateChange(change: StateChange): void {
+    // Global circuit breaker: check cooldown period
+    const now = Date.now();
+    if (now < this.circuitBreakerCooldownUntil) {
+      console.log('🔄 CPSR: Circuit breaker active, skipping state processing');
+      return;
+    }
+    
+    // Global circuit breaker: check concurrent processing limit
+    if (this.concurrentProcessingCalls >= this.MAX_CONCURRENT_PROCESSING) {
+      console.warn('🔄 CPSR: Max concurrent processing calls reached, activating circuit breaker');
+      this.circuitBreakerCooldownUntil = now + this.CIRCUIT_BREAKER_COOLDOWN;
+      return;
+    }
+    
+    this.concurrentProcessingCalls++;
+    
+    try {
+      // Increment cognitive cycle count
+      this.cognitiveCache++;
+      this.currentInputCycles++;
+      
+      // Update meta state with current cycle count
+      this.state.meta.cognitive_cycle_count = this.cognitiveCache;
+
+      // Check max cycle ceiling to prevent infinite recursion
+      if (this.currentInputCycles > this.maxCyclesPerInput) {
+        console.warn(`🔄 CPSR: Max cycles reached (${this.maxCyclesPerInput}) for current input. Preventing infinite recursion.`);
+        return;
+      }
+
+    // Throttled logging - only log every 100th cycle or significant changes
+    const shouldLogCycle = (this.cognitiveCache % 100 === 0) || this.isSignificantChange(change);
+    
+    if (shouldLogCycle) {
+      console.log(`🔄 CPSR: Cycle ${this.cognitiveCache} - ${change.plane}.${change.key} = ${JSON.stringify(change.value).substring(0, 50)}`);
+      this.lastLoggedCycle = this.cognitiveCache;
+    }
+
+    // Generate reflection insights every 10 cycles
+    if (this.cognitiveCache % 10 === 0) {
+      this.generateReflectionInsight();
+    }
+    
+    // Notify listeners
+    this.changeListeners.forEach(listener => listener(change));
+    
+    // Apply reflection rules
+    const reflectionKey = `${change.plane}.${change.key}`;
+    const rule = this.reflectionRules.get(reflectionKey);
+    
+    if (rule) {
+      const reflectedChanges = rule(change);
+      reflectedChanges.forEach(reflectedChange => {
+        this.applyReflectedChange(reflectedChange);
+      });
+    }
+
+      // Apply general correspondence rules
+      this.applyCorrespondenceRules(change);
+    } finally {
+      this.concurrentProcessingCalls--;
+    }
+  }
+
+  // Determine if a change is significant enough to log immediately
+  private isSignificantChange(change: StateChange): boolean {
+    const significantKeys = [
+      'user_input', 'current_intent', 'system_mode', 'agent_mode',
+      'domain_context', 'intervention_triggered', 'error_detected'
+    ];
+    
+    return significantKeys.includes(change.key) || 
+           change.source.includes('error') || 
+           change.source.includes('intervention');
+  }
+
+  // Generate meaningful reflection insights
+  private generateReflectionInsight(): void {
+    const insights: string[] = [];
+    const patterns: string[] = [];
+    const tensions: string[] = [];
+    const recommendations: string[] = [];
+
+    // Analyze current state for insights
+    const externalKeys = Object.keys(this.state.external);
+    const internalKeys = Object.keys(this.state.internal);
+    const metaKeys = Object.keys(this.state.meta);
+
+    // Pattern detection
+    if (externalKeys.includes('user_input') && internalKeys.includes('current_intent')) {
+      patterns.push('User-Intent alignment active');
+    }
+
+    if (metaKeys.includes('system_load') && this.state.meta.system_load > 0.8) {
+      tensions.push('High system load detected');
+      recommendations.push('Consider load balancing');
+    }
+
+    // State coherence analysis
+    const coherenceScore = this.calculateStateCoherence();
+    if (coherenceScore < 0.7) {
+      tensions.push(`Low state coherence: ${coherenceScore.toFixed(2)}`);
+      recommendations.push('Review state synchronization');
+    }
+
+    // Memory efficiency insights
+    const memorySize = this.state.meta.memory_size || 0;
+    if (memorySize > 10) {
+      insights.push(`Memory usage: ${memorySize} items`);
+      recommendations.push('Consider memory cleanup');
+    }
+
+    // Active sessions monitoring
+    const activeSessions = this.state.meta.active_sessions || 0;
+    if (activeSessions > 1) {
+      insights.push(`Multiple active sessions: ${activeSessions}`);
+    }
+
+    // Only log if we have meaningful insights
+    if (insights.length > 0 || patterns.length > 0 || tensions.length > 0) {
+      const reflection: ReflectionInsight = {
+        cycle: this.cognitiveCache,
+        timestamp: new Date(),
+        insights,
+        patterns,
+        tensions,
+        recommendations
+      };
+
+      this.reflectionInsights.push(reflection);
+      
+      // Keep only last 10 reflection insights
+      if (this.reflectionInsights.length > 10) {
+        this.reflectionInsights.shift();
+      }
+
+      console.log(`🪞 CPSR Reflection [Cycle ${this.cognitiveCache}]:`, {
+        insights: insights.length > 0 ? insights : ['System operating normally'],
+        patterns: patterns.length > 0 ? patterns : undefined,
+        tensions: tensions.length > 0 ? tensions : undefined,
+        recommendations: recommendations.length > 0 ? recommendations : undefined
+      });
+    }
+  }
+
+  // Calculate overall state coherence
+  private calculateStateCoherence(): number {
+    let coherenceScore = 1.0;
+    
+    // Check for state misalignments
+    const externalMode = this.state.external.agent_mode;
+    const internalMode = this.state.internal.active_mode;
+    
+    if (externalMode && internalMode && externalMode !== internalMode) {
+      coherenceScore -= 0.2;
+    }
+
+    // Check for intent-context alignment
+    const currentIntent = this.state.internal.current_intent;
+    const domainContext = this.state.external.domain_context;
+    
+    if (currentIntent && domainContext && !currentIntent.includes(domainContext)) {
+      coherenceScore -= 0.1;
+    }
+
+    // Check system health indicators
+    const systemHealth = this.state.meta.overall_system_health;
+    if (systemHealth && systemHealth < 0.8) {
+      coherenceScore -= (1.0 - systemHealth) * 0.3;
+    }
+
+    return Math.max(0, coherenceScore);
+  }
+
+  // Apply reflected change without triggering infinite loops
+  private applyReflectedChange(change: StateChange): void {
+    this.state[change.plane][change.key] = change.value;
+    
+    // Only log significant reflected changes to avoid spam
+    if (this.isSignificantChange(change)) {
+      console.log(`🔄 CPSR: Reflected ${change.plane}.${change.key} from correspondence rule`);
+    }
+  }
+
+  // Setup default reflection rules
+  private setupDefaultReflectionRules(): void {
+    // External user input -> Internal current_topic
+    this.reflectionRules.set('external.user_input', (change) => [
+      {
+        plane: 'internal',
+        key: 'current_context',
+        value: { user_input: change.value, timestamp: change.timestamp },
+        timestamp: change.timestamp,
+        source: 'cpsr_reflection'
+      }
+    ]);
+
+    // Internal intent_change -> External intent_signal
+    this.reflectionRules.set('internal.current_intent', (change) => [
+      {
+        plane: 'external',
+        key: 'intent_signal',
+        value: change.value,
+        timestamp: change.timestamp,
+        source: 'cpsr_reflection'
+      }
+    ]);
+
+    // External context_switch -> Internal mode_change
+    this.reflectionRules.set('external.domain_context', (change) => [
+      {
+        plane: 'internal',
+        key: 'active_domain',
+        value: change.value,
+        timestamp: change.timestamp,
+        source: 'cpsr_reflection'
+      }
+    ]);
+  }
+
+  // Apply general correspondence rules (as above, so below)
+  private applyCorrespondenceRules(change: StateChange): void {
+    // Macro-level changes reflect to micro-level
+    if (change.key === 'system_mode' && change.plane === 'external') {
+      this.updateInternalState('processing_mode', change.value, 'cpsr_correspondence');
+    }
+
+    // Micro-level changes aggregate to macro-level
+    if (change.key.startsWith('module_') && change.plane === 'meta') {
+      this.updateMetaState('overall_system_health', this.calculateSystemHealth(), 'cpsr_correspondence');
+    }
+  }
+
+  // Calculate system health from module states
+  private calculateSystemHealth(): number {
+    const moduleStates = Object.entries(this.state.meta)
+      .filter(([key]) => key.startsWith('module_'))
+      .map(([, value]) => value);
+    
+    if (moduleStates.length === 0) return 1.0;
+    
+    const avgHealth = moduleStates.reduce((sum, state) => sum + (state?.health || 1.0), 0) / moduleStates.length;
+    return Math.max(0, Math.min(1, avgHealth));
+  }
+
+  // Subscribe to state changes
+  onStateChange(listener: (intent: StateChange | null) => void): () => void {
+    this.changeListeners.push(listener);
+    return () => {
+      const index = this.changeListeners.indexOf(listener);
+      if (index > -1) this.changeListeners.splice(index, 1);
+    };
+  }
+
+  // Add custom reflection rule
+  addReflectionRule(key: string, rule: (change: StateChange) => StateChange[]): void {
+    this.reflectionRules.set(key, rule);
+    console.log(`🔄 CPSR: Added reflection rule for ${key}`);
+  }
+
+  // Force synchronization between planes
+  synchronizePlanes(): void {
+    console.log('🔄 CPSR: Forcing plane synchronization');
+    
+    // Ensure critical correspondences are aligned
+    const criticalMappings = [
+      { from: 'external.current_mode', to: 'internal.active_mode' },
+      { from: 'internal.current_intent', to: 'external.intent_signal' },
+      { from: 'meta.system_load', to: 'internal.processing_capacity' }
+    ];
+
+    criticalMappings.forEach(({ from, to }) => {
+      const [fromPlane, fromKey] = from.split('.') as [keyof PlaneState, string];
+      const [toPlane, toKey] = to.split('.') as [keyof PlaneState, string];
+      
+      const value = this.state[fromPlane][fromKey];
+      if (value !== undefined) {
+        this.state[toPlane][toKey] = value;
       }
     });
+  }
+
+  // Get recent reflection insights
+  getReflectionInsights(count: number = 5): ReflectionInsight[] {
+    return this.reflectionInsights.slice(-count);
+  }
+
+  // Get cognitive cycle statistics
+  getCognitiveStats(): {
+    totalCycles: number;
+    currentInputCycles: number;
+    lastLoggedCycle: number;
+    averageInsightsPerCycle: number;
+    stateCoherence: number;
+  } {
+    return {
+      totalCycles: this.cognitiveCache,
+      currentInputCycles: this.currentInputCycles,
+      lastLoggedCycle: this.lastLoggedCycle,
+      averageInsightsPerCycle: this.reflectionInsights.length / Math.max(1, this.cognitiveCache / 10),
+      stateCoherence: this.calculateStateCoherence()
+    };
+  }
+
+  // Reset cycle count for new session/input
+  resetCycles(): void {
+    this.currentInputCycles = 0;
+    this.currentInput = null;
+    console.log('🔄 CPSR: Cycle count reset for new session');
+  }
+
+  // Set maximum cycles per input (for debugging/testing)
+  setMaxCyclesPerInput(max: number): void {
+    this.maxCyclesPerInput = max;
+    console.log(`🔄 CPSR: Max cycles per input set to ${max}`);
   }
 }
 
