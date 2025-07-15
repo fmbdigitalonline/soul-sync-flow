@@ -1,3 +1,4 @@
+
 // Cross-Plane State Reflector (CPSR) - State Synchronization
 // Implements Hermetic Principle of Correspondence ("As Above, So Below")
 
@@ -92,9 +93,19 @@ class CrossPlaneStateReflector {
 
     this.state.meta[key] = value;
     
-    // Skip recursive processing for memory reflection updates
-    if (source === 'memory_reflector') {
-      console.log(`🔄 CPSR: Meta state updated (${key}) - memory reflection bypass`);
+    // Skip recursive processing for TWS-related and memory reflection updates
+    const bypassSources = [
+      'memory_reflector',
+      'tws_sync',
+      'tws_monitor', 
+      'tws_reflection',
+      'tws_cognitive_sync',
+      'tws_cycle_update'
+    ];
+    
+    // Also bypass any source starting with 'tws_'
+    if (bypassSources.includes(source) || source.startsWith('tws_')) {
+      console.log(`🔄 CPSR: Meta state updated (${key}) - ${source} bypass`);
       return;
     }
     
