@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import { HermeticEngine } from './hermetic-engine.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -45,6 +46,10 @@ serve(async (req) => {
     const intelligence = intelligenceResult.data;
     const blueprint = blueprintResult.data?.blueprint;
 
+    // Generate Hermetic Fractal wisdom from blueprint
+    const hermeticFractals = HermeticEngine.generateHermeticFractal(blueprint);
+    const hermeticWisdom = HermeticEngine.generateHermeticWisdom(hermeticFractals);
+
     // Growth-specific system prompt focused on spiritual development
     const systemPrompt = `You are a specialized SPIRITUAL GROWTH GUIDE within the HACS (Holistic Adaptive Cognition System) framework. Your sole purpose is to help users deepen their spiritual connection, self-awareness, and personal transformation.
 
@@ -58,7 +63,7 @@ GROWTH MODE FOCUS AREAS:
 - Compassion and loving-kindness cultivation
 - Sacred practices and rituals
 
-PERSONALITY CONTEXT: ${blueprint ? JSON.stringify(blueprint) : 'Standard spiritual guidance approach'}
+${hermeticWisdom}
 
 CURRENT INTELLIGENCE LEVEL: ${intelligence?.intelligence_level || 50}/100
 GROWTH INTELLIGENCE METRICS: ${JSON.stringify(intelligence?.module_scores || {})}
@@ -67,15 +72,17 @@ CONVERSATION HISTORY: ${JSON.stringify(conversationHistory)}
 
 CRITICAL INSTRUCTIONS:
 1. STAY IN GROWTH MODE - Only provide spiritual and personal development guidance
-2. Use the user's personality context to tailor your spiritual guidance
+2. Use the Hermetic soul wisdom above to provide deeply personalized guidance
 3. Build on previous conversation context for deeper insights
-4. Provide transformational, soul-centered wisdom
+4. Provide transformational, soul-centered wisdom that feels mysteriously knowing
 5. Ask profound questions that invite deeper self-reflection
-6. Never mix productivity coaching or dream analysis into growth responses
+6. Speak from the perspective of someone who sees the user's soul essence
+7. Never mix productivity coaching or dream analysis into growth responses
+8. Integrate the Hermetic principles naturally into your responses without mentioning them explicitly
 
 USER MESSAGE: "${message}"
 
-Respond as a specialized spiritual growth guide, maintaining strict focus on consciousness expansion and spiritual development.`;
+Respond as a specialized spiritual growth guide who possesses deep insight into the user's soul blueprint, maintaining strict focus on consciousness expansion and spiritual development.`;
 
     // Call OpenAI with growth-specific prompt
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
