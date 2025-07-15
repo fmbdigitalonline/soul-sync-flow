@@ -36,6 +36,9 @@ class UnifiedBrainService {
   private userId: string | null = null;
   private currentBlueprint: Partial<LayeredBlueprint> = {};
   private sessionMemory = new Map<string, any>();
+  private memoryReflectionLock = false;
+  private lastMemoryReflectionTime = 0;
+  private memoryReflectionDebounceMs = 1000;
 
   async initialize(userId: string) {
     console.log("🧠 Initializing Unified Brain Service for user:", userId);
@@ -878,6 +881,22 @@ class UnifiedBrainService {
 
   // Memory reflection triggered during TWS reflection phase
   private performMemoryReflection(): void {
+    // Circuit breaker: Prevent concurrent memory reflections
+    if (this.memoryReflectionLock) {
+      console.log('🔄 Memory reflection already in progress, skipping');
+      return;
+    }
+    
+    // Debouncing: Don't reflect too frequently
+    const now = Date.now();
+    if (now - this.lastMemoryReflectionTime < this.memoryReflectionDebounceMs) {
+      console.log('🔄 Memory reflection debounced, skipping');
+      return;
+    }
+    
+    this.memoryReflectionLock = true;
+    this.lastMemoryReflectionTime = now;
+    
     try {
       // Clean up old session memory entries (older than 1 hour)
       const oneHourAgo = Date.now() - (60 * 60 * 1000);
@@ -897,12 +916,14 @@ class UnifiedBrainService {
         console.log(`⏰ TWS: Cleaned up ${cleanupCount} old session memory entries`);
       }
       
-      // Update reflection metrics
-      crossPlaneStateReflector.updateMetaState('memory_cleanup_count', cleanupCount, 'tws_reflection');
-      crossPlaneStateReflector.updateMetaState('memory_size', this.sessionMemory.size, 'tws_reflection');
+      // Update reflection metrics - use source to bypass recursive processing
+      crossPlaneStateReflector.updateMetaState('memory_cleanup_count', cleanupCount, 'memory_reflector');
+      crossPlaneStateReflector.updateMetaState('memory_size', this.sessionMemory.size, 'memory_reflector');
       
     } catch (error) {
       console.error('⏰ TWS: Error in memory reflection:', error);
+    } finally {
+      this.memoryReflectionLock = false;
     }
   }
 

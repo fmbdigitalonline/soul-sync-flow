@@ -32,6 +32,8 @@ class TemporalWaveSynchronizer {
   private intervalId: NodeJS.Timeout | null = null;
   private eventListeners: Map<CycleEventType, ((event: CycleEvent) => void)[]> = new Map();
   private moduleTimers: Map<string, { frequency: number; lastTick: number; callback: () => void }> = new Map();
+  private lastCycleEventTime = 0;
+  private cycleEventDebounceMs = 2000;
 
   constructor() {
     this.baseCycle = this.createDefaultCycle();
@@ -239,6 +241,15 @@ class TemporalWaveSynchronizer {
   }
 
   private emitEvent(event: CycleEvent): void {
+    // Debounce cycle events to prevent rapid firing
+    const now = Date.now();
+    if (event.type === 'phase_start' || event.type === 'cycle_complete') {
+      if (now - this.lastCycleEventTime < this.cycleEventDebounceMs) {
+        return; // Skip event emission
+      }
+      this.lastCycleEventTime = now;
+    }
+    
     const listeners = this.eventListeners.get(event.type) || [];
     listeners.forEach(listener => {
       try {

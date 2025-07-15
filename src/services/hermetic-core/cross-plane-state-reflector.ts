@@ -91,6 +91,13 @@ class CrossPlaneStateReflector {
     };
 
     this.state.meta[key] = value;
+    
+    // Skip recursive processing for memory reflection updates
+    if (source === 'memory_reflector') {
+      console.log(`🔄 CPSR: Meta state updated (${key}) - memory reflection bypass`);
+      return;
+    }
+    
     this.processStateChange(change);
   }
 

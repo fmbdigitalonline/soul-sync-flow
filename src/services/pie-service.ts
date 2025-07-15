@@ -189,7 +189,7 @@ export class PIEService {
     // Create rule only if confidence meets threshold
     if (confidence >= PIE_CONFIDENCE_THRESHOLD) {
       const rule: PIEPredictiveRule = {
-        id: `rule_${pattern.id}_${Date.now()}`,
+        id: crypto.randomUUID(), // Use proper UUID instead of string concatenation
         userId: pattern.userId,
         eventType: pattern.eventTrigger || `${pattern.patternType}_${pattern.dataType}`,
         direction,
