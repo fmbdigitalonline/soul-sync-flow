@@ -333,11 +333,14 @@ serve(async (req) => {
     ]);
 
     const intelligence = intelligenceResult.data;
-    const blueprint = blueprintResult.data; // Blueprint data is directly on the record
+    const blueprint = blueprintResult.data; // Blueprint data extracted correctly
 
+    console.log('🔮 HERMETIC DEBUG: Intelligence result:', intelligenceResult);
     console.log('🔮 HERMETIC DEBUG: Blueprint query result:', blueprintResult);
     console.log('🔮 HERMETIC DEBUG: Blueprint error:', blueprintResult.error);
     console.log('🔮 HERMETIC DEBUG: Blueprint data keys:', blueprint ? Object.keys(blueprint) : 'No blueprint');
+    console.log('🔮 HERMETIC DEBUG: Blueprint data type:', typeof blueprint);
+    console.log('🔮 HERMETIC DEBUG: Has blueprint?', !!blueprint);
 
     // Generate Hermetic Fractal wisdom from blueprint
     console.log('🔮 HERMETIC DEBUG: Starting Hermetic Engine processing');
