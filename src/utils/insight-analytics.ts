@@ -434,9 +434,9 @@ export const analyzeModulePerformance = (intelligence: HacsIntelligence): Module
 
       return {
         moduleName: module.name,
-        currentScore,
+        currentScore: Math.round(currentScore * 10) / 10, // Fix floating point precision
         trend,
-        changeRate: relativePerformance
+        changeRate: Math.round(relativePerformance * 10) / 10 // Fix floating point precision
       };
     }).sort((a, b) => b.currentScore - a.currentScore);
   } catch (error) {

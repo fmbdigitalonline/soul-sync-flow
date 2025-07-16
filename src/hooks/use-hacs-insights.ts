@@ -12,6 +12,8 @@ import {
   trackQuestionDifficulty
 } from '@/utils/insight-analytics';
 import { useHacsIntelligence } from './use-hacs-intelligence';
+import { translateAnalyticsToOracle, PersonalityContext } from '@/utils/oracle-insight-translator';
+import { usePersonalityEngine } from './use-personality-engine';
 
 export interface HACSInsight {
   id: string;
@@ -27,6 +29,7 @@ export interface HACSInsight {
 export const useHACSInsights = () => {
   const { user } = useAuth();
   const { intelligence } = useHacsIntelligence();
+  const { generateOraclePrompt } = usePersonalityEngine();
   const [currentInsight, setCurrentInsight] = useState<HACSInsight | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [insightHistory, setInsightHistory] = useState<HACSInsight[]>([]);
@@ -49,16 +52,30 @@ export const useHACSInsights = () => {
   }, [user]);
 
   // Generate analytics-based insights using real user data
-  const generateAnalyticsInsight = useCallback(async (): Promise<HACSInsight | null> => {
+  const generateAnalyticsInsight = useCallback(async (personalityContext?: PersonalityContext): Promise<HACSInsight | null> => {
     if (!user || !intelligence) return null;
 
     try {
+      // Get user blueprint for personality-aware insights
+      const { data: blueprint } = await supabase
+        .from('blueprints')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .single();
+
+      const personalityCtx: PersonalityContext = {
+        blueprint: blueprint || null,
+        communicationStyle: personalityContext?.communicationStyle || 'mystical',
+        preferredTone: personalityContext?.preferredTone || 'supportive',
+        timingPattern: personalityContext?.timingPattern || 'immediate'
+      };
       // Try different analytics in order of complexity (low hanging fruit first)
       
       // 1. Intelligence trend analysis
       const intelligenceTrend = await calculateIntelligenceTrend(user.id, 168); // 7 days
       if (intelligenceTrend && intelligenceTrend.direction !== 'stable') {
-        return {
+        const rawInsight: HACSInsight = {
           id: `trend_${Date.now()}`,
           text: `Your intelligence has been ${intelligenceTrend.direction} by ${intelligenceTrend.changePercent.toFixed(1)}% over the past week. Current level: ${intelligenceTrend.currentLevel}%`,
           module: 'Analytics',
@@ -68,12 +85,13 @@ export const useHACSInsights = () => {
           timestamp: new Date(),
           acknowledged: false
         };
+        return translateAnalyticsToOracle(rawInsight, personalityCtx);
       }
 
       // 2. Learning streak analysis
       const learningStreak = await calculateLearningStreak(user.id);
       if (learningStreak && learningStreak.currentStreak > 1) {
-        return {
+        const rawInsight: HACSInsight = {
           id: `streak_${Date.now()}`,
           text: `You're on a ${learningStreak.currentStreak}-day learning streak! Your longest streak was ${learningStreak.longestStreak} days.`,
           module: 'Analytics',
@@ -83,12 +101,13 @@ export const useHACSInsights = () => {
           timestamp: new Date(),
           acknowledged: false
         };
+        return translateAnalyticsToOracle(rawInsight, personalityCtx);
       }
 
       // 3. Performance trend analysis
       const performanceScore = await getRecentPerformanceScore(user.id, 72); // 3 days
       if (performanceScore && performanceScore.trend !== 'stable' && performanceScore.sampleSize >= 3) {
-        return {
+        const rawInsight: HACSInsight = {
           id: `performance_${Date.now()}`,
           text: `Your response quality has been ${performanceScore.trend} with an average score of ${performanceScore.averageScore.toFixed(1)} over ${performanceScore.sampleSize} interactions.`,
           module: 'Analytics',
@@ -98,6 +117,7 @@ export const useHACSInsights = () => {
           timestamp: new Date(),
           acknowledged: false
         };
+        return translateAnalyticsToOracle(rawInsight, personalityCtx);
       }
 
       // 4. Module performance analysis
@@ -106,7 +126,7 @@ export const useHACSInsights = () => {
       const bottomModule = modulePerformance[modulePerformance.length - 1];
       
       if (topModule && bottomModule && topModule.currentScore - bottomModule.currentScore > 10) {
-        return {
+        const rawInsight: HACSInsight = {
           id: `modules_${Date.now()}`,
           text: `Your strongest module is ${topModule.moduleName} (${topModule.currentScore}%), while ${bottomModule.moduleName} (${bottomModule.currentScore}%) could use more attention.`,
           module: 'Analytics',
@@ -116,6 +136,7 @@ export const useHACSInsights = () => {
           timestamp: new Date(),
           acknowledged: false
         };
+        return translateAnalyticsToOracle(rawInsight, personalityCtx);
       }
 
       // 5. Peak learning times analysis
@@ -125,7 +146,7 @@ export const useHACSInsights = () => {
         const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
         const timeStr = `${topTime.hour}:00`;
         
-        return {
+        const rawInsight: HACSInsight = {
           id: `peak_${Date.now()}`,
           text: `Your peak learning time is ${days[topTime.dayOfWeek]} at ${timeStr} with ${topTime.activityCount} activities and ${(topTime.averagePerformance * 100).toFixed(0)}% average performance.`,
           module: 'Analytics',
@@ -135,6 +156,7 @@ export const useHACSInsights = () => {
           timestamp: new Date(),
           acknowledged: false
         };
+        return translateAnalyticsToOracle(rawInsight, personalityCtx);
       }
 
       // 6. Activity frequency patterns
@@ -142,7 +164,7 @@ export const useHACSInsights = () => {
       if (activityFreqs.length > 0) {
         const topActivity = activityFreqs[0];
         
-        return {
+        const rawInsight: HACSInsight = {
           id: `activity_${Date.now()}`,
           text: `Your most frequent activity is "${topActivity.activityType}" with ${topActivity.count} occurrences. This happens ${topActivity.frequency}.`,
           module: 'Analytics',
@@ -152,6 +174,7 @@ export const useHACSInsights = () => {
           timestamp: new Date(),
           acknowledged: false
         };
+        return translateAnalyticsToOracle(rawInsight, personalityCtx);
       }
 
       // 7. Memory access patterns
@@ -159,7 +182,7 @@ export const useHACSInsights = () => {
       if (memoryPatterns.length > 0) {
         const topTier = memoryPatterns[0];
         
-        return {
+        const rawInsight: HACSInsight = {
           id: `memory_${Date.now()}`,
           text: `Your most accessed memory tier is "${topTier.tier}" with ${topTier.accessCount} accesses and ${topTier.averageLatency.toFixed(0)}ms average latency.`,
           module: 'Analytics',
@@ -169,6 +192,7 @@ export const useHACSInsights = () => {
           timestamp: new Date(),
           acknowledged: false
         };
+        return translateAnalyticsToOracle(rawInsight, personalityCtx);
       }
 
       // 8. Question difficulty progression
@@ -176,7 +200,7 @@ export const useHACSInsights = () => {
       if (difficultyProgress && Math.abs(difficultyProgress.progressionRate) > 5) {
         const direction = difficultyProgress.progressionRate > 0 ? 'increasing' : 'decreasing';
         
-        return {
+        const rawInsight: HACSInsight = {
           id: `difficulty_${Date.now()}`,
           text: `Your question difficulty is ${direction} with an average difficulty of ${difficultyProgress.averageDifficulty.toFixed(1)} and a progression rate of ${Math.abs(difficultyProgress.progressionRate).toFixed(1)}.`,
           module: 'Analytics',
@@ -186,6 +210,7 @@ export const useHACSInsights = () => {
           timestamp: new Date(),
           acknowledged: false
         };
+        return translateAnalyticsToOracle(rawInsight, personalityCtx);
       }
 
       return null;
