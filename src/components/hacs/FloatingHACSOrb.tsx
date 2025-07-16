@@ -109,6 +109,23 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     return () => clearTimeout(activityTimer);
   }, [currentQuestion, currentInsight, loading, isGenerating, isGeneratingInsight, triggerMicroLearning, triggerInsightCheck]);
 
+  // Periodic analytics check (every 60 seconds when active)
+  useEffect(() => {
+    if (intelligence && intelligence.interaction_count > 0) {
+      const analyticsTimer = setInterval(async () => {
+        if (!currentInsight && !isGeneratingInsight) {
+          console.log('🔍 Triggering periodic analytics insight check...');
+          await triggerInsightCheck('intelligence_check', { 
+            trigger: 'periodic_analytics',
+            intelligence_level: intelligence.intelligence_level 
+          });
+        }
+      }, 60000); // Every 60 seconds
+      
+      return () => clearInterval(analyticsTimer);
+    }
+  }, [intelligence, currentInsight, isGeneratingInsight, triggerInsightCheck]);
+
   // Module activity based on current question or insight
   useEffect(() => {
     if (currentQuestion) {

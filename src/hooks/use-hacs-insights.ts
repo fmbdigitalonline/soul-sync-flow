@@ -1,12 +1,23 @@
 import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { 
+  calculateIntelligenceTrend, 
+  calculateLearningStreak, 
+  getRecentPerformanceScore,
+  analyzePeakLearningTimes,
+  calculateActivityFrequency,
+  analyzeModulePerformance,
+  getMemoryAccessPatterns,
+  trackQuestionDifficulty
+} from '@/utils/insight-analytics';
+import { useHacsIntelligence } from './use-hacs-intelligence';
 
 export interface HACSInsight {
   id: string;
   text: string;
   module: string;
-  type: 'productivity' | 'behavioral' | 'growth' | 'learning';
+  type: 'productivity' | 'behavioral' | 'growth' | 'learning' | 'intelligence_trend' | 'learning_streak' | 'performance_trend' | 'peak_times' | 'activity_frequency' | 'module_performance' | 'memory_patterns' | 'difficulty_progression';
   confidence: number;
   evidence: string[];
   timestamp: Date;
@@ -15,6 +26,7 @@ export interface HACSInsight {
 
 export const useHACSInsights = () => {
   const { user } = useAuth();
+  const { intelligence } = useHacsIntelligence();
   const [currentInsight, setCurrentInsight] = useState<HACSInsight | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [insightHistory, setInsightHistory] = useState<HACSInsight[]>([]);
@@ -36,7 +48,154 @@ export const useHACSInsights = () => {
     }
   }, [user]);
 
-  // Generate authentic insights based on real user data
+  // Generate analytics-based insights using real user data
+  const generateAnalyticsInsight = useCallback(async (): Promise<HACSInsight | null> => {
+    if (!user || !intelligence) return null;
+
+    try {
+      // Try different analytics in order of complexity (low hanging fruit first)
+      
+      // 1. Intelligence trend analysis
+      const intelligenceTrend = await calculateIntelligenceTrend(user.id, 168); // 7 days
+      if (intelligenceTrend && intelligenceTrend.direction !== 'stable') {
+        return {
+          id: `trend_${Date.now()}`,
+          text: `Your intelligence has been ${intelligenceTrend.direction} by ${intelligenceTrend.changePercent.toFixed(1)}% over the past week. Current level: ${intelligenceTrend.currentLevel}%`,
+          module: 'Analytics',
+          type: 'intelligence_trend',
+          confidence: 0.9,
+          evidence: [`Previous level: ${intelligenceTrend.previousLevel}%`, `Current level: ${intelligenceTrend.currentLevel}%`],
+          timestamp: new Date(),
+          acknowledged: false
+        };
+      }
+
+      // 2. Learning streak analysis
+      const learningStreak = await calculateLearningStreak(user.id);
+      if (learningStreak && learningStreak.currentStreak > 1) {
+        return {
+          id: `streak_${Date.now()}`,
+          text: `You're on a ${learningStreak.currentStreak}-day learning streak! Your longest streak was ${learningStreak.longestStreak} days.`,
+          module: 'Analytics',
+          type: 'learning_streak',
+          confidence: 0.95,
+          evidence: [`Current streak: ${learningStreak.currentStreak} days`, `Personal best: ${learningStreak.longestStreak} days`],
+          timestamp: new Date(),
+          acknowledged: false
+        };
+      }
+
+      // 3. Performance trend analysis
+      const performanceScore = await getRecentPerformanceScore(user.id, 72); // 3 days
+      if (performanceScore && performanceScore.trend !== 'stable' && performanceScore.sampleSize >= 3) {
+        return {
+          id: `performance_${Date.now()}`,
+          text: `Your response quality has been ${performanceScore.trend} with an average score of ${performanceScore.averageScore.toFixed(1)} over ${performanceScore.sampleSize} interactions.`,
+          module: 'Analytics',
+          type: 'performance_trend',
+          confidence: 0.8,
+          evidence: [`Average score: ${performanceScore.averageScore.toFixed(1)}`, `Sample size: ${performanceScore.sampleSize} interactions`],
+          timestamp: new Date(),
+          acknowledged: false
+        };
+      }
+
+      // 4. Module performance analysis
+      const modulePerformance = analyzeModulePerformance(intelligence);
+      const topModule = modulePerformance[0];
+      const bottomModule = modulePerformance[modulePerformance.length - 1];
+      
+      if (topModule && bottomModule && topModule.currentScore - bottomModule.currentScore > 10) {
+        return {
+          id: `modules_${Date.now()}`,
+          text: `Your strongest module is ${topModule.moduleName} (${topModule.currentScore}%), while ${bottomModule.moduleName} (${bottomModule.currentScore}%) could use more attention.`,
+          module: 'Analytics',
+          type: 'module_performance',
+          confidence: 0.85,
+          evidence: [`Strongest: ${topModule.moduleName} (${topModule.currentScore}%)`, `Developing: ${bottomModule.moduleName} (${bottomModule.currentScore}%)`],
+          timestamp: new Date(),
+          acknowledged: false
+        };
+      }
+
+      // 5. Peak learning times analysis
+      const peakTimes = await analyzePeakLearningTimes(user.id);
+      if (peakTimes.length > 0) {
+        const topTime = peakTimes[0];
+        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const timeStr = `${topTime.hour}:00`;
+        
+        return {
+          id: `peak_${Date.now()}`,
+          text: `Your peak learning time is ${days[topTime.dayOfWeek]} at ${timeStr} with ${topTime.activityCount} activities and ${(topTime.averagePerformance * 100).toFixed(0)}% average performance.`,
+          module: 'Analytics',
+          type: 'peak_times',
+          confidence: 0.8,
+          evidence: [`${topTime.activityCount} activities`, `${(topTime.averagePerformance * 100).toFixed(0)}% performance`],
+          timestamp: new Date(),
+          acknowledged: false
+        };
+      }
+
+      // 6. Activity frequency patterns
+      const activityFreqs = await calculateActivityFrequency(user.id);
+      if (activityFreqs.length > 0) {
+        const topActivity = activityFreqs[0];
+        
+        return {
+          id: `activity_${Date.now()}`,
+          text: `Your most frequent activity is "${topActivity.activityType}" with ${topActivity.count} occurrences. This happens ${topActivity.frequency}.`,
+          module: 'Analytics',
+          type: 'activity_frequency',
+          confidence: 0.75,
+          evidence: [`${topActivity.count} occurrences`, `${topActivity.frequency} frequency`],
+          timestamp: new Date(),
+          acknowledged: false
+        };
+      }
+
+      // 7. Memory access patterns
+      const memoryPatterns = await getMemoryAccessPatterns(user.id);
+      if (memoryPatterns.length > 0) {
+        const topTier = memoryPatterns[0];
+        
+        return {
+          id: `memory_${Date.now()}`,
+          text: `Your most accessed memory tier is "${topTier.tier}" with ${topTier.accessCount} accesses and ${topTier.averageLatency.toFixed(0)}ms average latency.`,
+          module: 'Analytics',
+          type: 'memory_patterns',
+          confidence: 0.7,
+          evidence: [`${topTier.accessCount} accesses`, `${topTier.averageLatency.toFixed(0)}ms latency`],
+          timestamp: new Date(),
+          acknowledged: false
+        };
+      }
+
+      // 8. Question difficulty progression
+      const difficultyProgress = await trackQuestionDifficulty(user.id);
+      if (difficultyProgress && Math.abs(difficultyProgress.progressionRate) > 5) {
+        const direction = difficultyProgress.progressionRate > 0 ? 'increasing' : 'decreasing';
+        
+        return {
+          id: `difficulty_${Date.now()}`,
+          text: `Your question difficulty is ${direction} with an average difficulty of ${difficultyProgress.averageDifficulty.toFixed(1)} and a progression rate of ${Math.abs(difficultyProgress.progressionRate).toFixed(1)}.`,
+          module: 'Analytics',
+          type: 'difficulty_progression',
+          confidence: 0.8,
+          evidence: [`Average difficulty: ${difficultyProgress.averageDifficulty.toFixed(1)}`, `${direction} progression`],
+          timestamp: new Date(),
+          acknowledged: false
+        };
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error generating analytics insight:', error);
+      return null;
+    }
+  }, [user, intelligence]);
+
+  // Generate authentic insights based on real user data (enhanced)
   const generateInsight = useCallback(async (currentContext?: string) => {
     if (!user || isGenerating) return null;
 
@@ -49,7 +208,20 @@ export const useHACSInsights = () => {
 
     console.log('🔍 Generating HACS insight...');
     setIsGenerating(true);
+    
     try {
+      // First try analytics-based insights (fast, local analysis)
+      const analyticsInsight = await generateAnalyticsInsight();
+      if (analyticsInsight) {
+        setCurrentInsight(analyticsInsight);
+        setInsightHistory(prev => [analyticsInsight, ...prev].slice(0, 20));
+        setLastInsightTime(now);
+        
+        console.log('✅ Analytics insight generated:', analyticsInsight.type);
+        return analyticsInsight;
+      }
+
+      // Fall back to edge function for complex analysis
       const { data, error } = await supabase.functions.invoke('hacs-authentic-insights', {
         body: {
           userId: user.id,
@@ -100,7 +272,7 @@ export const useHACSInsights = () => {
     } finally {
       setIsGenerating(false);
     }
-  }, [user, isGenerating, lastInsightTime]);
+  }, [user, isGenerating, lastInsightTime, generateAnalyticsInsight]);
 
   // Acknowledge an insight
   const acknowledgeInsight = useCallback((insightId: string) => {
@@ -136,12 +308,14 @@ export const useHACSInsights = () => {
       'conversation_ended',
       'task_completed',
       'pattern_detected',
-      'periodic_activity' // Add periodic activity as meaningful
+      'periodic_activity', // Add periodic activity as meaningful
+      'intelligence_check', // New analytics trigger
+      'performance_review' // New analytics trigger
     ];
 
     if (meaningfulActivities.includes(activityType)) {
-      // High probability to generate insight (70% for meaningful activities)
-      const shouldGenerate = Math.random() < 0.7;
+      // Higher probability for analytics-based insights (80% for meaningful activities)
+      const shouldGenerate = Math.random() < 0.8;
       
       console.log('🔍 Should generate insight?', shouldGenerate, 'Activity:', activityType);
       
@@ -173,6 +347,7 @@ export const useHACSInsights = () => {
     insightHistory,
     isGenerating,
     generateInsight,
+    generateAnalyticsInsight,
     acknowledgeInsight,
     dismissInsight,
     triggerInsightCheck,
