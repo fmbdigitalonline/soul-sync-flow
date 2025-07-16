@@ -469,17 +469,10 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                   return (
                     <div key={key} className="space-y-4">
                       {Object.entries(content).map(([lawKey, lawContent]) => {
-                        // Handle nested object structure - extract string content
-                        let displayContent = '';
-                        if (typeof lawContent === 'string') {
-                          displayContent = lawContent;
-                        } else if (lawContent && typeof lawContent === 'object') {
-                          // If it's an object, try to find string content or stringify
-                          const stringValues = Object.values(lawContent).filter(v => typeof v === 'string');
-                          displayContent = stringValues.length > 0 ? stringValues.join('\n\n') : JSON.stringify(lawContent, null, 2);
-                        }
+                        // Use the extractDisplayContent function for consistent handling
+                        const displayContent = extractDisplayContent(lawContent);
                         
-                        if (!displayContent) return null;
+                        if (!displayContent || displayContent === 'Content unavailable') return null;
                         
                         return (
                           <CosmicCard key={`${key}-${lawKey}`} className="w-full max-w-full border-purple-200 bg-gradient-to-br from-purple-50 to-blue-50">
@@ -513,17 +506,10 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                   return (
                     <div key={key} className="space-y-4">
                       {Object.entries(content).map(([systemKey, systemContent]) => {
-                        // Handle nested object structure - extract string content
-                        let displayContent = '';
-                        if (typeof systemContent === 'string') {
-                          displayContent = systemContent;
-                        } else if (systemContent && typeof systemContent === 'object') {
-                          // If it's an object, try to find string content or stringify
-                          const stringValues = Object.values(systemContent).filter(v => typeof v === 'string');
-                          displayContent = stringValues.length > 0 ? stringValues.join('\n\n') : JSON.stringify(systemContent, null, 2);
-                        }
+                        // Use the extractDisplayContent function for consistent handling
+                        const displayContent = extractDisplayContent(systemContent);
                         
-                        if (!displayContent) return null;
+                        if (!displayContent || displayContent === 'Content unavailable') return null;
                         
                         return (
                           <CosmicCard key={`${key}-${systemKey}`} className="w-full max-w-full border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50">
