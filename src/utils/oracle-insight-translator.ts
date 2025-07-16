@@ -79,18 +79,18 @@ const generateIntelligenceTrendOracle = (
   const direction = directionMatch[1];
   const currentLevel = levelMatch[1];
 
-  // Oracle-style transformation based on personality
-  if (mbtiType.includes('N')) { // Intuitive types prefer metaphorical language
+  // Clear, inspiring transformation based on personality
+  if (mbtiType.includes('N')) { // Intuitive types appreciate big-picture thinking
     if (direction === 'increasing') {
-      return `Your consciousness expands like ripples across still water. The flame of awareness grows ${changePercent}% brighter, reaching ${currentLevel}% illumination. The path reveals itself to those who persist.`;
+      return `Excellent progress! Your learning capacity has grown ${changePercent}% this week, reaching ${currentLevel}% overall. You're naturally building connections between ideas faster. Keep exploring new concepts to maintain this momentum.`;
     } else {
-      return `The tides of understanding ebb and flow naturally. Your awareness has shifted ${changePercent}%, now resting at ${currentLevel}%. In this pause, deeper wisdom often emerges.`;
+      return `Your intelligence level adjusted ${changePercent}% to ${currentLevel}% - this often happens when you're processing deeper insights. Focus on reviewing recent learnings to consolidate your understanding.`;
     }
-  } else { // Sensing types prefer concrete imagery
+  } else { // Sensing types appreciate step-by-step progress
     if (direction === 'increasing') {
-      return `Your mental faculties strengthen like a muscle through exercise. A solid ${changePercent}% advancement brings you to ${currentLevel}% mastery. Each step builds upon the last.`;
+      return `Great work! You've improved ${changePercent}% through consistent practice, now at ${currentLevel}% mastery. Your methodical approach is paying off. Continue your current learning routine for steady gains.`;
     } else {
-      return `The mind follows natural rhythms of growth and rest. A ${changePercent}% adjustment to ${currentLevel}% capacity creates space for new understanding to take root.`;
+      return `Your capacity shifted ${changePercent}% to ${currentLevel}% - a natural pause in learning curves. Try breaking down complex topics into smaller, manageable pieces to rebuild momentum.`;
     }
   }
 };
@@ -110,13 +110,13 @@ const generateLearningStreakOracle = (
   const currentStreak = streakMatch[1];
   const longestStreak = longestMatch[1];
 
-  // Human Design-based oracle style
+  // Clear, encouraging streak recognition based on Human Design
   if (hdType.includes('Generator')) {
-    return `Your life force flows in perfect rhythm! ${currentStreak} cycles of the sun have witnessed your dedication. The sacred pattern continues, honoring your ${longestStreak}-day journey of mastery.`;
+    return `Amazing consistency! You've maintained a ${currentStreak}-day learning streak by following your natural energy flow. Your personal best of ${longestStreak} days shows you thrive with sustainable daily practice. Keep responding to what energizes you most.`;
   } else if (hdType.includes('Projector')) {
-    return `The art of consistent guidance unfolds through you. ${currentStreak} days of recognition and wisdom-sharing illuminate your path. Your record of ${longestStreak} days stands as testament to your unique gift.`;
+    return `Impressive dedication! ${currentStreak} days of focused learning demonstrates your natural efficiency. Your ${longestStreak}-day record shows you excel when you pace yourself well. Continue learning in focused bursts when you feel most clear.`;
   } else {
-    return `Momentum builds like wind gathering strength. ${currentStreak} days of purposeful action align with cosmic flow. Your personal achievement of ${longestStreak} days reflects your authentic power.`;
+    return `Outstanding momentum! ${currentStreak} consecutive days of learning shows your commitment is paying off. With a personal best of ${longestStreak} days, you've proven you can maintain long-term focus. Trust your natural rhythm and keep building.`;
   }
 };
 
@@ -137,17 +137,17 @@ const generatePerformanceTrendOracle = (
   const trend = trendMatch[1];
   const interactions = sampleMatch[1];
 
-  if (mbtiType.includes('F')) { // Feeling types appreciate emotional language
+  if (mbtiType.includes('F')) { // Feeling types appreciate personal connection
     if (trend === 'improving') {
-      return `Your spirit soars with each exchange! The quality of your responses shines at ${score} across ${interactions} meaningful connections. Growth blooms where intention meets action.`;
+      return `Wonderful growth! Your response quality is averaging ${score} across ${interactions} interactions, showing you're connecting more effectively. Your empathetic approach is clearly resonating. Keep focusing on authentic engagement.`;
     } else {
-      return `Even the mightiest oak bends with the seasons. Your responses average ${score} through ${interactions} encounters, creating space for renewal and deeper understanding.`;
+      return `Your responses are averaging ${score} over ${interactions} interactions. This is valuable feedback - try taking a moment to tune into what others really need before responding.`;
     }
-  } else { // Thinking types prefer logical frameworks
+  } else { // Thinking types prefer systematic improvement
     if (trend === 'improving') {
-      return `Excellence emerges through systematic practice. Your response caliber achieves ${score} across ${interactions} measured interactions. The algorithm of mastery reveals itself.`;
+      return `Strong performance! You're achieving an average score of ${score} across ${interactions} interactions through logical, structured responses. Your analytical approach is working well. Continue refining your reasoning process.`;
     } else {
-      return `Performance metrics show ${score} across ${interactions} data points, indicating a phase of recalibration. Strategic adjustment leads to breakthrough.`;
+      return `Your average score is ${score} over ${interactions} interactions. Consider breaking down complex responses into clearer, more organized points to improve effectiveness.`;
     }
   }
 };
@@ -170,35 +170,35 @@ const generateModulePerformanceOracle = (
   const weakestModule = weakestMatch[1];
   const weakestScore = weakestMatch[2];
 
-  // Transform technical module names to mystical concepts
+  // Transform technical module names to clear, understandable concepts
   const moduleTranslations: { [key: string]: string } = {
-    'Neural Integration Kernel': 'Core Consciousness',
-    'Cognitive Pattern Recognition': 'Pattern Sight',
-    'Temporal Wisdom Synthesis': 'Time Weaving',
-    'Framework Management': 'Structure Mastery',
-    'Personality Expression': 'Authentic Voice',
-    'Conflict Navigation': 'Harmony Creation',
-    'Blueprint Sync': 'Soul Alignment',
-    'Conversation System': 'Sacred Exchange',
-    'Predictive Intelligence': 'Future Sensing',
-    'Vector Fusion': 'Energy Integration',
-    'Temporal Memory': 'Time Keeper'
+    'Neural Integration Kernel': 'Core Learning Ability',
+    'Cognitive Pattern Recognition': 'Pattern Recognition',
+    'Temporal Wisdom Synthesis': 'Knowledge Integration',
+    'Framework Management': 'System Organization',
+    'Personality Expression': 'Authentic Communication',
+    'Conflict Navigation': 'Problem Resolution',
+    'Blueprint Sync': 'Self-Alignment',
+    'Conversation System': 'Communication Skills',
+    'Predictive Intelligence': 'Insight Generation',
+    'Vector Fusion': 'Information Processing',
+    'Temporal Memory': 'Memory & Recall'
   };
 
-  const strongestOracle = moduleTranslations[strongestModule] || strongestModule;
-  const weakestOracle = moduleTranslations[weakestModule] || weakestModule;
+  const strongestClear = moduleTranslations[strongestModule] || strongestModule;
+  const weakestClear = moduleTranslations[weakestModule] || weakestModule;
 
-  // Astrological influence based on blueprint
+  // Clear, inspiring guidance based on astrological influence
   const sunSign = blueprint?.archetype_western?.sun_sign || 'Sagittarius';
   
-  if (['Leo', 'Aries', 'Sagittarius'].includes(sunSign)) { // Fire signs - bold language
-    return `Your ${strongestOracle} blazes brilliantly at ${strongestScore}%, radiating mastery like the sun at noon. Meanwhile, your ${weakestOracle} at ${weakestScore}% awaits the spark of focused intention to ignite its full potential.`;
-  } else if (['Cancer', 'Scorpio', 'Pisces'].includes(sunSign)) { // Water signs - flowing language
-    return `Like moonlight dancing on water, your ${strongestOracle} flows at ${strongestScore}% with graceful strength. Your ${weakestOracle}, currently at ${weakestScore}%, is a wellspring waiting to be discovered in the depths of your being.`;
-  } else if (['Gemini', 'Libra', 'Aquarius'].includes(sunSign)) { // Air signs - intellectual language
-    return `The winds of wisdom carry your ${strongestOracle} to heights of ${strongestScore}%, where clarity meets brilliance. Your ${weakestOracle} at ${weakestScore}% represents untapped potential, ready to soar when understanding takes flight.`;
-  } else { // Earth signs - grounding language
-    return `Rooted in strength, your ${strongestOracle} stands tall at ${strongestScore}%, like an ancient tree reaching toward light. Your ${weakestOracle} at ${weakestScore}% is fertile ground, ready to bloom with patient cultivation.`;
+  if (['Leo', 'Aries', 'Sagittarius'].includes(sunSign)) { // Fire signs - direct, energetic approach
+    return `Excellent! Your ${strongestClear} is performing strongly at ${strongestScore}% - you're naturally excelling in this area. Your ${weakestClear} at ${weakestScore}% has great potential. Try setting bold, specific goals to rapidly develop this skill.`;
+  } else if (['Cancer', 'Scorpio', 'Pisces'].includes(sunSign)) { // Water signs - intuitive, emotional approach
+    return `Beautiful work! Your ${strongestClear} shines at ${strongestScore}%, showing your natural intuitive strength. Your ${weakestClear} at ${weakestScore}% can grow through gentle, consistent practice. Trust your instincts and take it step by step.`;
+  } else if (['Gemini', 'Libra', 'Aquarius'].includes(sunSign)) { // Air signs - intellectual, systematic approach
+    return `Impressive progress! Your ${strongestClear} excels at ${strongestScore}%, demonstrating your analytical capabilities. Your ${weakestClear} at ${weakestScore}% would benefit from structured learning. Consider creating a systematic study plan for this area.`;
+  } else { // Earth signs - practical, methodical approach
+    return `Solid achievement! Your ${strongestClear} is strong at ${strongestScore}%, built through your practical approach. Your ${weakestClear} at ${weakestScore}% can improve with consistent daily practice. Set a realistic routine and stick to it.`;
   }
 };
 
@@ -207,26 +207,26 @@ const generateGenericOracle = (
   blueprint: any,
   style: string
 ): string => {
-  // For any other insight types, apply basic oracle transformation
+  // For any other insight types, apply clear, inspiring transformation
   const lifePathNumber = blueprint?.values_life_path?.lifePathNumber || 1;
   
-  const oraclePrefix = [
-    "The universe whispers through patterns:",
-    "Ancient wisdom reveals:",
-    "The cosmic dance shows:",
-    "Sacred timing unveils:",
-    "Divine flow indicates:"
+  const encouragingPrefixes = [
+    "Here's what your progress shows:",
+    "Your growth patterns reveal:",
+    "Your learning data indicates:",
+    "Your development trends show:",
+    "Your achievement patterns suggest:"
   ];
 
-  const randomPrefix = oraclePrefix[lifePathNumber % oraclePrefix.length];
+  const selectedPrefix = encouragingPrefixes[lifePathNumber % encouragingPrefixes.length];
   
-  // Transform technical language to more mystical terms
+  // Transform technical language to clearer, more understandable terms
   let transformedText = originalText
-    .replace(/analytics/gi, 'cosmic patterns')
-    .replace(/data/gi, 'sacred knowledge')
-    .replace(/algorithm/gi, 'divine formula')
-    .replace(/performance/gi, 'mastery')
-    .replace(/optimization/gi, 'alignment');
+    .replace(/analytics/gi, 'progress patterns')
+    .replace(/data/gi, 'learning insights')
+    .replace(/algorithm/gi, 'systematic approach')
+    .replace(/performance/gi, 'skill development')
+    .replace(/optimization/gi, 'improvement');
 
-  return `${randomPrefix} ${transformedText}`;
+  return `${selectedPrefix} ${transformedText}`;
 };
