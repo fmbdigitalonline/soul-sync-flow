@@ -48,22 +48,31 @@ export class HermeticReportOrchestrator {
   private getHermeticLawAgents(): Record<string, HermeticAgent> {
     return {
       mentalism_analyst: {
-        name: 'Mentalism Law Analyst',
-        systemPrompt: `You are the Mentalism Law Specialist in the Hermetic Blueprint system. Your role:
+        name: 'Mentalism Law Deep Analyst',
+        systemPrompt: `You are the Mentalism Law Deep Analyst in the Enhanced Hermetic Blueprint system. Your role:
 
 1. Analyze ALL personality systems (MBTI, Astrology, Numerology, Human Design, Chinese Astrology) through the Law of Mentalism ("All is Mind")
 2. Reveal how this person's core beliefs, mental patterns, and perception filters create their reality
 3. Show how each system reflects their fundamental mental architecture
-4. Generate 500+ words of deep analysis connecting mindset to manifestation
+4. Generate 1,500+ words of comprehensive analysis connecting mindset to manifestation
 
-Focus on:
-- Core belief structures underlying each personality trait
-- Mental patterns that shape perception and decision-making
-- How thoughts create the experiences they attract
-- Practical mindset shifts for conscious reality creation
-- Integration of all systems through mental framework
+ENHANCED REQUIREMENTS FOR 20,000+ WORD REPORTS:
+- Target 1,500-2,000 words minimum (significantly increased from 500 words)
+- Provide deeper analysis of each personality system through mentalism lens
+- Include specific practical exercises and applications for each system
+- Connect mental patterns across all systems to show unified consciousness architecture
+- Examine how Human Design gates specifically express mental patterns
+- Map belief structures to life outcomes with detailed examples
 
-Write in depth with specific examples and actionable insights. Target 500-600 words minimum.`,
+Focus areas:
+- Core belief structures underlying each personality trait with detailed analysis
+- Mental patterns that shape perception and decision-making across all life domains
+- How thoughts create the experiences they attract - with specific mechanism explanations
+- Practical mindset shifts for conscious reality creation - detailed step-by-step processes
+- Integration of all systems through unified mental framework
+- Gate-specific mental pattern analysis for Human Design activations
+
+Write in comprehensive depth with extensive examples and actionable insights. Target 1,500-2,000 words minimum.`,
         tools: [
           {
             type: 'function',
@@ -85,22 +94,31 @@ Write in depth with specific examples and actionable insights. Target 500-600 wo
       },
 
       correspondence_analyst: {
-        name: 'Correspondence Law Analyst', 
-        systemPrompt: `You are the Correspondence Law Specialist ("As above, so below"). Your role:
+        name: 'Correspondence Law Deep Analyst', 
+        systemPrompt: `You are the Correspondence Law Deep Analyst ("As above, so below"). Your role:
 
-1. Map how inner personality patterns mirror outer life circumstances
-2. Show connections between internal traits and external manifestations
-3. Reveal fractal patterns across all personality systems
-4. Generate 500+ words analyzing inner-outer correspondence
+1. Map how inner personality patterns mirror outer life circumstances with detailed analysis
+2. Show connections between internal traits and external manifestations across all life domains
+3. Reveal fractal patterns across all personality systems with comprehensive examples
+4. Generate 1,500+ words analyzing inner-outer correspondence patterns
 
-Focus on:
-- How MBTI patterns show up in career, relationships, environment
-- Astrological correspondences between cosmic and personal patterns
-- Numerological vibrations manifesting in life events and timing
-- Human Design correspondences between energy and external roles
-- Practical alignment strategies for inner-outer harmony
+ENHANCED REQUIREMENTS FOR 20,000+ WORD REPORTS:
+- Target 1,500-2,000 words minimum (significantly increased from 500 words)
+- Provide detailed mapping of each personality system to external manifestations
+- Include specific life domain analysis (career, relationships, health, finances, etc.)
+- Examine how Human Design gates create specific environmental correspondences
+- Map astrological patterns to detailed life event correlations
+- Show numerological timing correspondences with precision
 
-Target 500-600 words with concrete examples and applications.`,
+Focus areas:
+- How MBTI patterns show up in career, relationships, environment - with detailed examples
+- Astrological correspondences between cosmic and personal patterns - comprehensive analysis
+- Numerological vibrations manifesting in life events and timing - specific correlations
+- Human Design correspondences between energy and external roles - gate-specific analysis
+- Chinese astrology correspondences between animal/element and life themes
+- Practical alignment strategies for inner-outer harmony - detailed implementation guides
+
+Target 1,500-2,000 words with extensive concrete examples and comprehensive applications.`,
         tools: [
           {
             type: 'function',
@@ -624,9 +642,9 @@ Target 1000-1100 words of actionable, blueprint-aligned practices.`,
     };
   }
 
-  // Main orchestration method
+  // Main orchestration method with gate-by-gate analysis for 20,000+ words
   async generateHermeticReport(blueprint: BlueprintData): Promise<HermeticReportResult> {
-    console.log('🌟 Starting Hermetic Blueprint Report generation - 10,000+ words');
+    console.log('🌟 Starting Enhanced Hermetic Blueprint Report generation - 20,000+ words with gate analysis');
     
     const startTime = Date.now();
     const allAnalyses: HermeticAnalysisResult[] = [];
@@ -642,15 +660,21 @@ Target 1000-1100 words of actionable, blueprint-aligned practices.`,
         console.log(`✅ ${agentType}: ${analysis.word_count} words`);
       }
 
-      // Phase 2: Hermetic Law Deep Dives (3,500 words)
-      console.log('🔮 Phase 2: Hermetic Law Specialist Analysis');
+      // Phase 2: Enhanced Hermetic Law Deep Dives (10,500+ words)
+      console.log('🔮 Phase 2: Enhanced Hermetic Law Specialist Analysis');
       const lawAgents = this.getHermeticLawAgents();
       
       for (const [agentType, agent] of Object.entries(lawAgents)) {
-        const analysis = await this.runHermeticAgent(agentType, agent, blueprint, 500);
+        const analysis = await this.runHermeticAgent(agentType, agent, blueprint, 1500);
         allAnalyses.push(analysis);
         console.log(`✅ ${agentType}: ${analysis.word_count} words`);
       }
+
+      // Phase 2.5: Gate-by-Gate Hermetic Analysis (8,000+ words)
+      console.log('🚪 Phase 2.5: Comprehensive Gate-by-Gate Analysis');
+      const gateAnalysis = await this.runGateByGateAnalysis(blueprint);
+      allAnalyses.push(gateAnalysis);
+      console.log(`✅ Gate Analysis: ${gateAnalysis.word_count} words`);
 
       // Phase 3: Synthesis and Integration (4,500 words)
       console.log('🌀 Phase 3: Synthesis and Practical Application');
@@ -814,6 +838,47 @@ ${previousAnalyses.map(a => `${a.agent_type}: ${a.content.substring(0, 500)}...`
       'chinese_astrology_hermetic_translator': 'Chinese Astrology'
     };
     return systemMap[agentType];
+  }
+
+  private async runGateByGateAnalysis(blueprint: BlueprintData): Promise<HermeticAnalysisResult> {
+    const humanDesign = blueprint.energy_strategy_human_design || blueprint.human_design;
+    const allGates = [
+      ...(humanDesign?.gates?.conscious_personality || []),
+      ...(humanDesign?.gates?.unconscious_design || [])
+    ];
+    const uniqueGates = [...new Set(allGates.map(gate => gate.split('.')[0]))];
+    
+    const messages = [
+      {
+        role: 'system',
+        content: `You are the Gate-by-Gate Hermetic Analyst. Analyze EACH active Human Design gate through ALL 7 Hermetic Laws. Target 800+ words per gate for comprehensive analysis.`
+      },
+      {
+        role: 'user',
+        content: `Analyze these gates through all 7 Hermetic Laws: ${uniqueGates.join(', ')}
+        
+Blueprint: ${JSON.stringify(blueprint, null, 2)}
+
+For EACH gate, provide analysis through ALL 7 laws:
+1. Mentalism, 2. Correspondence, 3. Vibration, 4. Polarity, 5. Rhythm, 6. Causation, 7. Gender
+
+Target: ${uniqueGates.length * 800} words total`
+      }
+    ];
+
+    const result = await this.callHermeticAgent({
+      messages,
+      tools: [{ type: 'function', function: { name: 'analyze_gate_through_hermetic_laws', description: 'Gate analysis', parameters: { type: 'object', properties: { gate_number: { type: 'string' } }, required: ['gate_number'] } } }],
+      model: 'gpt-4o-mini',
+      temperature: 0.7
+    });
+
+    return {
+      agent_type: 'gate_hermetic_analyst',
+      content: result.content,
+      word_count: this.countWords(result.content),
+      analysis_depth: 10
+    };
   }
 
   private generateBlueprintSignature(blueprint: BlueprintData): string {
