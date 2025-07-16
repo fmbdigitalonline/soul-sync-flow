@@ -9,6 +9,10 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    cors: {
+      origin: ["https://lovable.dev", "https://f5c26e06-9b0d-480a-b195-919d6cbffd25.lovableproject.com"],
+      credentials: true
+    }
   },
   plugins: [
     react(),
