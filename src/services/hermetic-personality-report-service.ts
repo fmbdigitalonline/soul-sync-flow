@@ -136,7 +136,7 @@ class HermeticPersonalityReportService {
     return {
       id: crypto.randomUUID(),
       user_id: blueprint.user_id || blueprint.user_meta?.user_id || '',
-      blueprint_id: blueprint.id || null,
+      blueprint_id: blueprint.id || '',
       report_content: {
         // Standard sections (enhanced with Hermetic perspective)
         core_personality_pattern: this.extractCorePattern(sevenLaws, systemTranslations),

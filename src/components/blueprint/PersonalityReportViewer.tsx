@@ -425,34 +425,6 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
             // Handle Hermetic report structure
             if (isHermetic) {
               const hermeticContent = reportContent as any; // Type assertion for Hermetic content
-              
-              // Helper function to extract displayable content from any nested structure
-              const extractDisplayContent = (content: any): string => {
-                console.log("🕵️‍♀️ rendering content:", content, typeof content);
-                
-                if (typeof content === 'string') {
-                  return content;
-                }
-                if (content && typeof content === 'object') {
-                  // Recursively extract string values from nested objects
-                  const extractStrings = (obj: any, depth = 0): string[] => {
-                    if (depth > 5) return []; // Prevent infinite recursion
-                    const strings: string[] = [];
-                    for (const [key, value] of Object.entries(obj)) {
-                      if (typeof value === 'string' && value.length > 10) { // Only meaningful strings
-                        strings.push(`**${key.replace(/_/g, ' ').toUpperCase()}:**\n${value}`);
-                      } else if (value && typeof value === 'object') {
-                        strings.push(...extractStrings(value, depth + 1));
-                      }
-                    }
-                    return strings;
-                  };
-                  const extractedStrings = extractStrings(content);
-                  return extractedStrings.length > 0 ? extractedStrings.join('\n\n') : JSON.stringify(content, null, 2);
-                }
-                return String(content);
-              };
-              
               const hermeticEntries = [
                 ['hermetic_fractal_analysis', hermeticContent.hermetic_fractal_analysis],
                 ['consciousness_integration_map', hermeticContent.consciousness_integration_map],
@@ -471,10 +443,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                   return (
                     <div key={key} className="space-y-4">
                       {Object.entries(content).map(([lawKey, lawContent]) => {
-                        // Use the extractDisplayContent function for consistent handling
-                        const displayContent = extractDisplayContent(lawContent);
-                        
-                        if (!displayContent || displayContent === 'Content unavailable') return null;
+                        if (!lawContent || typeof lawContent !== 'string') return null;
                         
                         return (
                           <CosmicCard key={`${key}-${lawKey}`} className="w-full max-w-full border-purple-200 bg-gradient-to-br from-purple-50 to-blue-50">
@@ -485,16 +454,14 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                                   <span className="break-words">Law of {lawKey.charAt(0).toUpperCase() + lawKey.slice(1)}</span>
                                 </div>
                                 <Badge variant="outline" className="bg-purple-100 text-purple-700 border-purple-300 w-fit">
-                                  {displayContent.length} chars
+                                  {lawContent.length} chars
                                 </Badge>
                               </CardTitle>
                             </CardHeader>
                             <CardContent>
                               <div className="prose prose-sm max-w-none w-full">
                                 <p className={`text-gray-700 leading-relaxed whitespace-pre-wrap break-words w-full ${getTextSize('text-sm')}`}>
-                                  {typeof displayContent === "string"
-                                    ? displayContent
-                                    : JSON.stringify(displayContent, null, 2)}
+                                  {lawContent}
                                 </p>
                               </div>
                             </CardContent>
@@ -510,10 +477,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                   return (
                     <div key={key} className="space-y-4">
                       {Object.entries(content).map(([systemKey, systemContent]) => {
-                        // Use the extractDisplayContent function for consistent handling
-                        const displayContent = extractDisplayContent(systemContent);
-                        
-                        if (!displayContent || displayContent === 'Content unavailable') return null;
+                        if (!systemContent || typeof systemContent !== 'string') return null;
                         
                         return (
                           <CosmicCard key={`${key}-${systemKey}`} className="w-full max-w-full border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50">
@@ -524,16 +488,14 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                                   <span className="break-words">{systemKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
                                 </div>
                                 <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-300 w-fit">
-                                  {displayContent.length} chars
+                                  {systemContent.length} chars
                                 </Badge>
                               </CardTitle>
                             </CardHeader>
                             <CardContent>
                               <div className="prose prose-sm max-w-none w-full">
                                 <p className={`text-gray-700 leading-relaxed whitespace-pre-wrap break-words w-full ${getTextSize('text-sm')}`}>
-                                  {typeof displayContent === "string"
-                                    ? displayContent
-                                    : JSON.stringify(displayContent, null, 2)}
+                                  {systemContent}
                                 </p>
                               </div>
                             </CardContent>
@@ -544,10 +506,8 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                   );
                 }
                 
-                // Regular Hermetic sections - use comprehensive content extraction
-                const displayContent = extractDisplayContent(content);
-                
-                if (!displayContent || displayContent === 'Content unavailable') {
+                // Regular Hermetic sections
+                if (!content || typeof content !== 'string' || content === 'Content unavailable') {
                   return (
                     <CosmicCard key={key} className="border-orange-200 bg-orange-50 w-full max-w-full">
                       <CardHeader className="pb-3">
@@ -579,16 +539,14 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                           <span className="break-words">{title}</span>
                         </div>
                         <Badge variant="outline" className="bg-purple-100 text-purple-700 border-purple-300 w-fit">
-                          {displayContent.length} chars
+                          {content.length} chars
                         </Badge>
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="prose prose-sm max-w-none w-full">
                         <p className={`text-gray-700 leading-relaxed whitespace-pre-wrap break-words w-full ${getTextSize('text-sm')}`}>
-                          {typeof displayContent === "string"
-                            ? displayContent
-                            : JSON.stringify(displayContent, null, 2)}
+                          {content}
                         </p>
                       </div>
                     </CardContent>

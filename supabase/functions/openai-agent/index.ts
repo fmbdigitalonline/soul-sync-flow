@@ -52,22 +52,6 @@ async function executeTool(toolCall: any, context: any = {}): Promise<any> {
       case 'analyze_hermetic_gender':
         return await analyzeHermeticGender(parsedArgs);
       
-      // NEW: Gate-specific Hermetic analysis tools for 20,000+ word reports
-      case 'analyze_gate_through_hermetic_laws':
-        return await analyzeGateThroughHermeticLaws(parsedArgs);
-      
-      case 'analyze_profile_gate_integration':
-        return await analyzeProfileGateIntegration(parsedArgs);
-      
-      case 'analyze_authority_gate_expression':
-        return await analyzeAuthorityGateExpression(parsedArgs);
-      
-      case 'analyze_conscious_unconscious_gates':
-        return await analyzeConsciousUnconsciousGates(parsedArgs);
-      
-      case 'analyze_center_gate_harmony':
-        return await analyzeCenterGateHarmony(parsedArgs);
-      
       case 'translate_mbti_hermetic':
         return await translateMBTIHermetic(parsedArgs);
       
@@ -461,105 +445,6 @@ async function generatePracticalApplications(args: any): Promise<any> {
       'Blueprint-aligned customization',
       'Real-world application focus'
     ],
-    depth_score: 10
-  };
-}
-
-// NEW: Gate-specific analysis functions for comprehensive reports
-async function analyzeGateThroughHermeticLaws(args: any): Promise<any> {
-  const { gate_number, gate_data, blueprint_context, analysis_depth } = args;
-  console.log(`🚪 Analyzing Gate ${gate_number} through all 7 Hermetic Laws`);
-  
-  return {
-    gate_focus: `Gate ${gate_number}`,
-    hermetic_analysis: {
-      mentalism: `Gate ${gate_number} mental patterns and thought structures`,
-      correspondence: `Gate ${gate_number} inner-outer manifestation patterns`,
-      vibration: `Gate ${gate_number} energetic frequency and resonance`,
-      polarity: `Gate ${gate_number} shadow integration and balance points`,
-      rhythm: `Gate ${gate_number} timing cycles and natural rhythms`,
-      causation: `Gate ${gate_number} cause-effect patterns and conscious creation`,
-      gender: `Gate ${gate_number} creative-receptive energy balance`
-    },
-    integration_depth: 'Comprehensive gate wisdom through universal principles',
-    practical_applications: [
-      `Gate ${gate_number}-specific daily practices`,
-      `Hermetic law activation through gate energy`,
-      `Conscious gate expression techniques`
-    ],
-    word_count_target: 1200,
-    depth_score: 10
-  };
-}
-
-async function analyzeProfileGateIntegration(args: any): Promise<any> {
-  const { profile_data, gates_data, integration_focus } = args;
-  console.log('👥 Analyzing Profile-Gate Integration patterns');
-  
-  return {
-    analysis_type: 'Profile-Gate Integration',
-    integration_patterns: 'How profile lines express through each active gate',
-    conscious_design_interplay: 'Personality-Design gate relationships',
-    practical_applications: [
-      'Profile-specific gate activation practices',
-      'Line-gate wisdom integration',
-      'Personality-Design harmony techniques'
-    ],
-    word_count_target: 2000,
-    depth_score: 10
-  };
-}
-
-async function analyzeAuthorityGateExpression(args: any): Promise<any> {
-  const { authority_type, gates_data, expression_patterns } = args;
-  console.log('⚡ Analyzing Authority-Gate Expression patterns');
-  
-  return {
-    analysis_type: 'Authority-Gate Expression',
-    authority_patterns: 'How decision-making authority flows through active gates',
-    gate_authority_activation: 'Conscious decision-making through gate wisdom',
-    practical_applications: [
-      'Authority-gate alignment practices',
-      'Decision-making through gate energy',
-      'Gate-informed choice techniques'
-    ],
-    word_count_target: 1800,
-    depth_score: 10
-  };
-}
-
-async function analyzeConsciousUnconsciousGates(args: any): Promise<any> {
-  const { conscious_gates, unconscious_gates, integration_approach } = args;
-  console.log('🌗 Analyzing Conscious-Unconscious Gate dynamics');
-  
-  return {
-    analysis_type: 'Conscious-Unconscious Gate Integration',
-    personality_design_bridge: 'Bridging conscious awareness and unconscious design',
-    integration_opportunities: 'Bringing unconscious patterns into conscious expression',
-    practical_applications: [
-      'Consciousness bridge practices',
-      'Shadow gate integration work',
-      'Personality-Design unity techniques'
-    ],
-    word_count_target: 2200,
-    depth_score: 10
-  };
-}
-
-async function analyzeCenterGateHarmony(args: any): Promise<any> {
-  const { centers_data, gates_data, harmony_focus } = args;
-  console.log('🎯 Analyzing Center-Gate Harmony patterns');
-  
-  return {
-    analysis_type: 'Center-Gate Harmony',
-    energy_flow_patterns: 'How gates create center definitions and energy flows',
-    defined_undefined_dynamics: 'Balancing defined centers with open gate wisdom',
-    practical_applications: [
-      'Center-gate energy practices',
-      'Defined-undefined balance work',
-      'Energy flow optimization techniques'
-    ],
-    word_count_target: 1600,
     depth_score: 10
   };
 }
