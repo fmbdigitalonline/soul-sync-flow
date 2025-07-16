@@ -42,6 +42,19 @@ class HermeticReportOrchestrator {
     'chinese_astrology_hermetic_translator'
   ];
 
+  // Helper method to safely extract string content from API responses
+  private safeExtractContent(data: any): string {
+    let content = data?.content || 'No content returned.';
+    
+    // Check if the content is an object and not a string. If so, stringify it.
+    if (typeof content === 'object' && content !== null) {
+      console.log('🔍 API returned object instead of string:', content);
+      content = JSON.stringify(content, null, 2); // The '2' formats it nicely
+    }
+    
+    return String(content); // Ensure it's always a string
+  }
+
   async generateHermeticReport(blueprint: BlueprintData): Promise<HermeticOrchestrationResult> {
     console.log('🌟 Hermetic Orchestrator: Starting multi-agent report generation');
     
@@ -142,7 +155,8 @@ class HermeticReportOrchestrator {
       throw new Error(`Failed to generate ${agentType} analysis: ${error.message}`);
     }
 
-    const content = data.content || '';
+    // Use safe content extraction
+    const content = this.safeExtractContent(data);
     
     return {
       agent_type: agentType,
@@ -201,7 +215,8 @@ class HermeticReportOrchestrator {
       throw new Error(`Failed to generate ${translatorType} translation: ${error.message}`);
     }
 
-    const content = data.content || '';
+    // Use safe content extraction
+    const content = this.safeExtractContent(data);
     
     return {
       agent_type: translatorType,
@@ -256,7 +271,8 @@ class HermeticReportOrchestrator {
       throw new Error(`Failed to generate fractal synthesis: ${error.message}`);
     }
 
-    return data.content || '';
+    // Use safe content extraction
+    return this.safeExtractContent(data);
   }
 
   private async generateConsciousnessMap(sections: Array<any>, blueprint: BlueprintData): Promise<string> {
@@ -303,7 +319,8 @@ class HermeticReportOrchestrator {
       throw new Error(`Failed to generate consciousness map: ${error.message}`);
     }
 
-    return data.content || '';
+    // Use safe content extraction
+    return this.safeExtractContent(data);
   }
 
   private async generatePracticalApplications(sections: Array<any>, blueprint: BlueprintData): Promise<string> {
@@ -350,7 +367,8 @@ class HermeticReportOrchestrator {
       throw new Error(`Failed to generate practical applications: ${error.message}`);
     }
 
-    return data.content || '';
+    // Use safe content extraction
+    return this.safeExtractContent(data);
   }
 
   private generateBlueprintSignature(blueprint: BlueprintData, sections: Array<any>): string {
