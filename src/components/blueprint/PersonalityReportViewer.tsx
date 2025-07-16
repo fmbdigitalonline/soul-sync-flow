@@ -292,7 +292,8 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
     practical_activation_framework: Zap,
     seven_laws_integration: Sparkles,
     system_translations: Compass,
-    blueprint_signature: User
+    blueprint_signature: User,
+    generation_metadata: Zap
   };
 
   const hermeticSectionTitles = {
@@ -301,7 +302,8 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
     practical_activation_framework: 'Practical Activation Framework',
     seven_laws_integration: 'Seven Hermetic Laws Integration',
     system_translations: 'System Translations',
-    blueprint_signature: 'Blueprint Signature'
+    blueprint_signature: 'Blueprint Signature',
+    generation_metadata: 'Generation Metadata'
   };
 
   return (
@@ -431,7 +433,8 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                 ['practical_activation_framework', hermeticContent.practical_activation_framework],
                 ['seven_laws_integration', hermeticContent.seven_laws_integration],
                 ['system_translations', hermeticContent.system_translations],
-                ['blueprint_signature', hermeticContent.blueprint_signature]
+                ['blueprint_signature', hermeticContent.blueprint_signature],
+                ['generation_metadata', hermeticContent.generation_metadata]
               ];
               
               return hermeticEntries.map(([key, content]) => {
@@ -503,6 +506,39 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                         );
                       })}
                     </div>
+                  );
+                }
+                
+                // Handle generation_metadata structure
+                if (key === 'generation_metadata' && content && typeof content === 'object') {
+                  return (
+                    <CosmicCard key={key} className="w-full max-w-full border-green-200 bg-gradient-to-br from-green-50 to-emerald-50">
+                      <CardHeader className="pb-3">
+                        <CardTitle className={`flex flex-col sm:flex-row sm:items-center gap-2 ${getTextSize('text-lg')} break-words`}>
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Zap className="h-5 w-5 text-green-600 flex-shrink-0" />
+                            <span className="break-words">Generation Metadata</span>
+                          </div>
+                          <Badge variant="outline" className="bg-green-100 text-green-700 border-green-300 w-fit">
+                            Metadata
+                          </Badge>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          {Object.entries(content).map(([metaKey, metaValue]) => (
+                            <div key={metaKey} className="flex flex-col sm:flex-row gap-2">
+                              <span className="text-sm font-medium text-green-700 min-w-0 break-words">
+                                {metaKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:
+                              </span>
+                              <span className="text-sm text-gray-700 break-words">
+                                {typeof metaValue === 'object' ? JSON.stringify(metaValue) : String(metaValue)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </CosmicCard>
                   );
                 }
                 
