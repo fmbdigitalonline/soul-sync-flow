@@ -74,7 +74,7 @@ Write in depth with specific examples and actionable insights. Target 500-600 wo
                 type: 'object',
                 properties: {
                   blueprint_data: { type: 'object' },
-                  focus_systems: { type: 'array' },
+                  focus_systems: { type: 'array', items: { type: 'string' } },
                   analysis_depth: { type: 'string' }
                 },
                 required: ['blueprint_data']
@@ -111,7 +111,7 @@ Target 500-600 words with concrete examples and applications.`,
                 type: 'object',
                 properties: {
                   blueprint_data: { type: 'object' },
-                  life_domains: { type: 'array' },
+                  life_domains: { type: 'array', items: { type: 'string' } },
                   correspondence_depth: { type: 'string' }
                 },
                 required: ['blueprint_data']
@@ -148,7 +148,7 @@ Target 500-600 words with specific vibrational practices and insights.`,
                 type: 'object',
                 properties: {
                   blueprint_data: { type: 'object' },
-                  energy_domains: { type: 'array' },
+                  energy_domains: { type: 'array', items: { type: 'string' } },
                   vibration_analysis: { type: 'string' }
                 },
                 required: ['blueprint_data']
@@ -185,7 +185,7 @@ Target 500-600 words with specific integration practices and examples.`,
                 type: 'object',
                 properties: {
                   blueprint_data: { type: 'object' },
-                  polarity_focus: { type: 'array' },
+                  polarity_focus: { type: 'array', items: { type: 'string' } },
                   integration_approach: { type: 'string' }
                 },
                 required: ['blueprint_data']
@@ -222,7 +222,7 @@ Target 500-600 words with specific timing guidance and cycle practices.`,
                 type: 'object',
                 properties: {
                   blueprint_data: { type: 'object' },
-                  cycle_types: { type: 'array' },
+                  cycle_types: { type: 'array', items: { type: 'string' } },
                   timing_focus: { type: 'string' }
                 },
                 required: ['blueprint_data']
@@ -259,7 +259,7 @@ Target 500-600 words with specific cause-effect mappings and intervention strate
                 type: 'object',
                 properties: {
                   blueprint_data: { type: 'object' },
-                  causation_domains: { type: 'array' },
+                  causation_domains: { type: 'array', items: { type: 'string' } },
                   intervention_focus: { type: 'string' }
                 },
                 required: ['blueprint_data']
@@ -296,7 +296,7 @@ Target 500-600 words with specific balancing practices and integration methods.`
                 type: 'object',
                 properties: {
                   blueprint_data: { type: 'object' },
-                  energy_balance: { type: 'array' },
+                  energy_balance: { type: 'array', items: { type: 'string' } },
                   integration_approach: { type: 'string' }
                 },
                 required: ['blueprint_data']
@@ -340,7 +340,7 @@ Target 400-450 words with practical applications.`,
                 type: 'object',
                 properties: {
                   mbti_data: { type: 'object' },
-                  hermetic_integration: { type: 'array' },
+                  hermetic_integration: { type: 'array', items: { type: 'string' } },
                   practical_focus: { type: 'boolean' }
                 },
                 required: ['mbti_data']
@@ -379,7 +379,7 @@ Target 400-450 words with specific chart interpretations.`,
                 type: 'object',
                 properties: {
                   astrology_data: { type: 'object' },
-                  hermetic_integration: { type: 'array' },
+                  hermetic_integration: { type: 'array', items: { type: 'string' } },
                   chart_focus: { type: 'string' }
                 },
                 required: ['astrology_data']
@@ -418,7 +418,7 @@ Target 400-450 words with specific number interpretations and applications.`,
                 type: 'object',
                 properties: {
                   numerology_data: { type: 'object' },
-                  hermetic_integration: { type: 'array' },
+                  hermetic_integration: { type: 'array', items: { type: 'string' } },
                   number_focus: { type: 'string' }
                 },
                 required: ['numerology_data']
@@ -457,7 +457,7 @@ Target 400-450 words with specific chart interpretations and practical applicati
                 type: 'object',
                 properties: {
                   human_design_data: { type: 'object' },
-                  hermetic_integration: { type: 'array' },
+                  hermetic_integration: { type: 'array', items: { type: 'string' } },
                   energy_focus: { type: 'string' }
                 },
                 required: ['human_design_data']
@@ -496,7 +496,7 @@ Target 400-450 words with specific archetype interpretations and practical wisdo
                 type: 'object',
                 properties: {
                   chinese_astrology_data: { type: 'object' },
-                  hermetic_integration: { type: 'array' },
+                  hermetic_integration: { type: 'array', items: { type: 'string' } },
                   archetype_focus: { type: 'string' }
                 },
                 required: ['chinese_astrology_data']
@@ -537,9 +537,9 @@ Target 2000-2200 words of profound synthesis that reveals the unified blueprint.
               parameters: {
                 type: 'object',
                 properties: {
-                  all_analyses: { type: 'array' },
+                  all_analyses: { type: 'array', items: { type: 'object' } },
                   pattern_depth: { type: 'string' },
-                  synthesis_focus: { type: 'array' }
+                  synthesis_focus: { type: 'array', items: { type: 'string' } }
                 },
                 required: ['all_analyses']
               }
@@ -575,7 +575,7 @@ Target 1500-1600 words with specific practices and integration strategies.`,
                 type: 'object',
                 properties: {
                   integration_data: { type: 'object' },
-                  dimension_focus: { type: 'array' },
+                  dimension_focus: { type: 'array', items: { type: 'string' } },
                   mapping_depth: { type: 'string' }
                 },
                 required: ['integration_data']
@@ -612,7 +612,7 @@ Target 1000-1100 words of actionable, blueprint-aligned practices.`,
                 type: 'object',
                 properties: {
                   synthesis_insights: { type: 'object' },
-                  application_areas: { type: 'array' },
+                  application_areas: { type: 'array', items: { type: 'string' } },
                   personalization_level: { type: 'string' }
                 },
                 required: ['synthesis_insights']
