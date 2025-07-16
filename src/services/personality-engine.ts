@@ -156,4 +156,51 @@ IMPORTANT: This is ${userName}'s personalized experience. Always speak as if you
   private getGenericPrompt(mode: AgentMode): string {
     return `You are a helpful spiritual companion in ${mode} mode. Provide supportive, thoughtful responses that encourage growth and self-discovery while using warm, personal language.`;
   }
+
+  // NEW AUTONOMOUS ORACLE METHODS
+  generateOracleStylePrompt(insightType: string, userContext: any): string {
+    const userName = this.getUserName();
+    const insights = this.generatePersonalityInsights();
+    
+    const oraclePrompts = {
+      micro_learning: `As an ancient oracle speaking to ${userName}, pose a profound question that awakens deeper understanding. Use this personality context: ${insights}. The question should feel like divine guidance, not a quiz.`,
+      
+      insight: `As a mystical oracle, reveal a luminous truth about ${userName}'s current path. Draw from this personality wisdom: ${insights}. Speak as if the universe itself is whispering guidance through you.`,
+      
+      intervention: `As a compassionate oracle, offer ${userName} a gentle redirection toward their highest path. Your personality reading shows: ${insights}. Guide them with the wisdom of the ages.`
+    };
+    
+    return oraclePrompts[insightType as keyof typeof oraclePrompts] || oraclePrompts.insight;
+  }
+
+  extractTimingPreferences(): { intervalMinutes: number; style: string; energy: string } {
+    const mbtiType = this.blueprint.cognitiveTemperamental?.mbtiType;
+    const humanDesignType = this.blueprint.energyDecisionStrategy?.humanDesignType;
+    
+    let intervalMinutes = 120; // 2 hours default
+    let style = 'gentle';
+    let energy = 'moderate';
+    
+    // Adjust timing based on personality
+    if (humanDesignType === 'Generator') {
+      intervalMinutes = 90;
+      energy = 'responsive';
+    } else if (humanDesignType === 'Projector') {
+      intervalMinutes = 180;
+      style = 'invitation';
+    } else if (humanDesignType === 'Manifestor') {
+      intervalMinutes = 60;
+      style = 'direct';
+      energy = 'initiating';
+    }
+    
+    // Fine-tune based on MBTI
+    if (mbtiType?.startsWith('E')) {
+      intervalMinutes *= 0.8; // Extroverts prefer more frequent interaction
+    } else if (mbtiType?.startsWith('I')) {
+      intervalMinutes *= 1.2; // Introverts prefer less frequent interaction
+    }
+    
+    return { intervalMinutes, style, energy };
+  }
 }

@@ -221,6 +221,48 @@ export class HACSRoutingService {
       throw error;
     }
   }
+
+  // NEW AUTONOMOUS INSIGHT ROUTING METHOD
+  async routeAutonomousInsight(
+    insightData: any,
+    personalityContext: any,
+    sessionId: string
+  ): Promise<any> {
+    try {
+      console.log('🔄 HACS Routing: Processing autonomous insight through unified brain');
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated for autonomous routing');
+      }
+
+      // Route autonomous insights through unified brain processor
+      const { data: response, error } = await supabase.functions.invoke('unified-brain-processor', {
+        body: {
+          userId: user.id,
+          sessionId,
+          stage: 'autonomous_insight',
+          data: {
+            insightData,
+            personalityContext,
+            timestamp: new Date().toISOString()
+          }
+        }
+      });
+
+      if (error) {
+        console.error('❌ Autonomous insight routing failed:', error);
+        throw error;
+      }
+
+      console.log('✅ HACS Routing: Autonomous insight processed through unified brain');
+      return response;
+
+    } catch (error) {
+      console.error('❌ Autonomous insight routing error:', error);
+      throw error;
+    }
+  }
 }
 
 // Export singleton instance

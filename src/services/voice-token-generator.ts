@@ -301,4 +301,92 @@ export class VoiceTokenGenerator {
       transitionWords: []
     };
   }
+
+  // NEW AUTONOMOUS METHODS FOR ORACLE-STYLE COMMUNICATION
+  static generateAutonomousPhrase(
+    insightType: string,
+    blueprint: any,
+    context: string
+  ): string {
+    const voiceTokens = this.generateVoiceTokens(blueprint);
+    const userName = this.extractUserName(blueprint);
+    
+    // Generate oracle-style phrases based on personality
+    const basePhrase = this.selectBasePhrase(insightType, voiceTokens);
+    const personalizedPhrase = this.personalizePhrase(basePhrase, userName, voiceTokens);
+    
+    return personalizedPhrase;
+  }
+
+  static getPersonalizedTiming(blueprint: any): number {
+    const humanDesignType = blueprint.energyDecisionStrategy?.humanDesignType;
+    const mbtiType = blueprint.cognitiveTemperamental?.mbtiType;
+    
+    // Calculate optimal intervention timing based on personality (in minutes)
+    let baseInterval = 120; // 2 hours default
+    
+    if (humanDesignType === 'Generator') {
+      baseInterval = 90; // More frequent for generators
+    } else if (humanDesignType === 'Projector') {
+      baseInterval = 180; // Less frequent for projectors
+    } else if (humanDesignType === 'Manifestor') {
+      baseInterval = 60; // Most frequent for manifestors
+    }
+    
+    // Adjust based on MBTI extroversion/introversion
+    if (mbtiType && mbtiType.startsWith('E')) {
+      baseInterval *= 0.8; // 20% more frequent for extroverts
+    } else if (mbtiType && mbtiType.startsWith('I')) {
+      baseInterval *= 1.2; // 20% less frequent for introverts
+    }
+    
+    return baseInterval;
+  }
+
+  private static selectBasePhrase(insightType: string, voiceTokens: VoiceTokens): string {
+    const phrases = {
+      micro_learning: [
+        'What unfolds when you explore this question?',
+        'Your soul calls for deeper understanding here',
+        'Notice what emerges when you contemplate this',
+        'The universe whispers wisdom through this inquiry'
+      ],
+      insight: [
+        'Your patterns reveal a profound truth',
+        'The stars align to show you this pathway',
+        'Your inner wisdom recognizes this pattern',
+        'Sacred geometry emerges in your growth'
+      ],
+      intervention: [
+        'Your highest self guides you to pause here',
+        'Divine timing brings this awareness',
+        'Your soul compass points toward this truth',
+        'Universal flow redirects your attention'
+      ]
+    };
+    
+    const options = phrases[insightType as keyof typeof phrases] || phrases.insight;
+    const randomIndex = Math.floor(Math.random() * options.length);
+    return options[randomIndex];
+  }
+
+  private static personalizePhrase(phrase: string, userName: string, voiceTokens: VoiceTokens): string {
+    // Add personality-based modifications
+    if (voiceTokens.conversationStyle.personalSharing === 'warm' && userName !== 'friend') {
+      phrase = `${phrase}, ${userName}`;
+    }
+    
+    // Adjust for expressiveness
+    if (voiceTokens.expressiveness.exclamationTendency === 'enthusiastic') {
+      phrase = phrase.replace(/\.$/, '!');
+    }
+    
+    // Add signature style
+    if (voiceTokens.vocabulary.metaphorUsage === 'frequent') {
+      phrase = phrase.replace(/truth/g, 'luminous truth');
+      phrase = phrase.replace(/wisdom/g, 'ancient wisdom');
+    }
+    
+    return phrase;
+  }
 }

@@ -5,6 +5,9 @@ import { SpeechBubble } from '@/components/ui/speech-bubble';
 import { useHacsIntelligence } from '@/hooks/use-hacs-intelligence';
 import { useHACSMicroLearning } from '@/hooks/use-hacs-micro-learning';
 import { useHACSInsights } from '@/hooks/use-hacs-insights';
+import { useAutonomousOrchestration } from '@/hooks/use-autonomous-orchestration';
+import { usePersonalityEngine } from '@/hooks/use-personality-engine';
+import { VoiceTokenGenerator } from '@/services/voice-token-generator';
 import { HACSMicroLearning } from './HACSMicroLearning';
 import { HACSChatOverlay } from './HACSChatOverlay';
 import { HACSInsightDisplay } from './HACSInsightDisplay';
@@ -24,7 +27,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   const [isThinking, setIsThinking] = useState(false);
   
   const { intelligence, loading, refreshIntelligence } = useHacsIntelligence();
-  const { 
+  const {
     currentQuestion,
     isGenerating,
     generateMicroQuestion,
@@ -38,6 +41,10 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     dismissInsight,
     triggerInsightCheck
   } = useHACSInsights();
+  
+  // NEW: Add autonomous orchestration
+  const { triggerIntelligentIntervention, generatePersonalizedInsight } = useAutonomousOrchestration();
+  const { generateOraclePrompt, getOptimalTimingPreferences } = usePersonalityEngine();
 
   console.log('FloatingHACSOrb render:', { loading, intelligence, currentQuestion, currentInsight, isGenerating, isGeneratingInsight });
 

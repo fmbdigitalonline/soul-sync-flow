@@ -141,22 +141,33 @@ export const useHacsIntelligence = () => {
     }
   }, [checkBlueprintCompletion]);
 
-  // Update intelligence level based on user interactions
-  const updateIntelligence = useCallback(async (
+  // Update intelligence level based on user interactions (enhanced with personality weighting)
+  const updateIntelligenceWithPersonality = useCallback(async (
     moduleUpdates: Partial<ModuleScores>,
-    interactionQuality: number = 1 // 0-1 multiplier for interaction quality
+    interactionQuality: number = 1, // 0-1 multiplier for interaction quality
+    personalityContext?: any // NEW: Optional personality context for weighting
   ) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user || !intelligence) return;
 
-      // Calculate new module scores
+      // Calculate new module scores with personality weighting
       const currentScores = intelligence.module_scores;
       const newModuleScores = { ...currentScores };
       
       Object.entries(moduleUpdates).forEach(([module, improvement]) => {
         const currentScore = newModuleScores[module as keyof ModuleScores] || 0;
-        const adjustedImprovement = improvement * interactionQuality;
+        let adjustedImprovement = improvement * interactionQuality;
+        
+        // NEW: Apply personality weighting if context provided
+        if (personalityContext) {
+          adjustedImprovement = applyPersonalityWeighting(
+            module, 
+            adjustedImprovement, 
+            personalityContext
+          );
+        }
+        
         newModuleScores[module as keyof ModuleScores] = Math.min(100, currentScore + adjustedImprovement);
       });
 
@@ -221,6 +232,53 @@ export const useHacsIntelligence = () => {
       console.error('Failed to update HACS intelligence:', err);
     }
   }, [intelligence, toast]);
+
+  // Keep original update method for backward compatibility
+  const updateIntelligence = useCallback(async (
+    moduleUpdates: Partial<ModuleScores>,
+    interactionQuality: number = 1
+  ) => {
+    return updateIntelligenceWithPersonality(moduleUpdates, interactionQuality);
+  }, [updateIntelligenceWithPersonality]);
+
+  // NEW: Apply personality weighting to learning improvements
+  const applyPersonalityWeighting = useCallback((
+    module: string,
+    improvement: number,
+    personalityContext: any
+  ): number => {
+    // Default weighting
+    let weightingFactor = 1.0;
+    
+    // Apply personality-specific learning multipliers
+    const mbtiType = personalityContext?.cognitiveTemperamental?.mbtiType;
+    const humanDesignType = personalityContext?.energyDecisionStrategy?.humanDesignType;
+    
+    // Adjust based on cognitive preferences
+    if (mbtiType) {
+      // Thinking types learn logic modules faster
+      if (['NIK', 'CPSR', 'TWS'].includes(module) && mbtiType.includes('T')) {
+        weightingFactor *= 1.2;
+      }
+      // Feeling types learn emotion/personality modules faster  
+      if (['DPEM', 'CNR', 'ACS'].includes(module) && mbtiType.includes('F')) {
+        weightingFactor *= 1.2;
+      }
+      // Intuitive types learn pattern modules faster
+      if (['PIE', 'VFP', 'TMG'].includes(module) && mbtiType.includes('N')) {
+        weightingFactor *= 1.15;
+      }
+    }
+    
+    // Adjust based on energy strategy
+    if (humanDesignType === 'Generator' && ['ACS', 'PIE'].includes(module)) {
+      weightingFactor *= 1.1; // Generators excel at response and creation
+    } else if (humanDesignType === 'Projector' && ['CNR', 'HFME'].includes(module)) {
+      weightingFactor *= 1.15; // Projectors excel at guidance and systems
+    }
+    
+    return improvement * weightingFactor;
+  }, []);
 
   // Simulate learning from conversation quality with enhanced module training
   const recordConversationInteraction = useCallback(async (
@@ -301,6 +359,7 @@ export const useHacsIntelligence = () => {
     loading,
     error,
     updateIntelligence,
+    updateIntelligenceWithPersonality, // NEW: Enhanced method with personality weighting
     recordConversationInteraction,
     getIntelligencePhase,
     isAutonomousUnlocked,

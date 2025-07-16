@@ -195,8 +195,8 @@ export const useHACSInsights = () => {
     }
   }, [user, intelligence]);
 
-  // Generate authentic insights based on real user data (enhanced)
-  const generateInsight = useCallback(async (currentContext?: string) => {
+  // Generate authentic insights based on real user data (enhanced with personality)
+  const generateInsight = useCallback(async (currentContext?: string, personalityContext?: any) => {
     if (!user || isGenerating) return null;
 
     // Prevent too frequent insight generation (minimum 30 seconds between insights)
@@ -221,12 +221,13 @@ export const useHACSInsights = () => {
         return analyticsInsight;
       }
 
-      // Fall back to edge function for complex analysis
+      // Fall back to edge function for complex analysis (enhanced with personality)
       const { data, error } = await supabase.functions.invoke('hacs-authentic-insights', {
         body: {
           userId: user.id,
           sessionId: `insight_${Date.now()}`,
-          currentContext: currentContext || 'general_usage'
+          currentContext: currentContext || 'general_usage',
+          personalityContext: personalityContext || null // NEW: Include personality context
         }
       });
 

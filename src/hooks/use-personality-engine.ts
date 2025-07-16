@@ -20,10 +20,21 @@ export function usePersonalityEngine() {
     return engine.generateSystemPrompt(mode);
   }, [engine]);
 
+  // NEW AUTONOMOUS METHODS FOR ORACLE-STYLE COMMUNICATION
+  const generateOraclePrompt = useCallback((insightType: string, userContext: any) => {
+    return engine.generateOracleStylePrompt(insightType, userContext);
+  }, [engine]);
+
+  const getOptimalTimingPreferences = useCallback(() => {
+    return engine.extractTimingPreferences();
+  }, [engine]);
+
   return {
     currentMode,
     updatePersonalityBlueprint,
     generatePrompt,
     switchMode,
+    generateOraclePrompt,        // NEW
+    getOptimalTimingPreferences, // NEW
   };
 }

@@ -254,6 +254,59 @@ class UnifiedBrainContext {
       raw: {}
     };
   }
+
+  // NEW PERSONALITY-AWARE METHODS FOR AUTONOMOUS BEHAVIOR
+  getPersonalityTimingPattern(userId: string): any {
+    const blueprint = this.get('blueprint', userId);
+    if (!blueprint) return null;
+
+    const traits = blueprint.personality.traits;
+    const preferences = blueprint.user.preferences;
+    
+    return {
+      optimalIntervalMinutes: this.calculateOptimalInterval(traits),
+      preferredCommunicationStyle: traits.communicationStyle,
+      energyPattern: traits.energySignature,
+      userPreferences: preferences
+    };
+  }
+
+  getOptimalInterventionStyle(userId: string): string {
+    const blueprint = this.get('blueprint', userId);
+    if (!blueprint) return 'gentle';
+
+    const communicationStyle = blueprint.personality.traits.communicationStyle;
+    const userTone = blueprint.user.preferences.tone;
+    
+    // Map personality traits to intervention styles
+    if (communicationStyle === 'direct and clear' && userTone === 'direct') {
+      return 'direct_oracle';
+    } else if (communicationStyle === 'gentle and exploratory') {
+      return 'gentle_wisdom';
+    } else {
+      return 'adaptive_insight';
+    }
+  }
+
+  private calculateOptimalInterval(traits: VPGBlueprint['personality']['traits']): number {
+    let baseInterval = 120; // 2 hours default
+    
+    // Adjust based on energy signature
+    if (traits.energySignature.includes('high-intensity')) {
+      baseInterval = 90; // More frequent for high energy
+    } else if (traits.energySignature.includes('calm')) {
+      baseInterval = 180; // Less frequent for calm energy
+    }
+    
+    // Adjust based on communication style
+    if (traits.communicationStyle === 'direct and clear') {
+      baseInterval *= 0.8; // More direct personalities want more interaction
+    } else if (traits.communicationStyle === 'gentle and exploratory') {
+      baseInterval *= 1.3; // Gentle personalities prefer less frequent interaction
+    }
+    
+    return Math.max(60, Math.min(300, baseInterval)); // Clamp between 1-5 hours
+  }
 }
 
 // Static helper methods for global access
