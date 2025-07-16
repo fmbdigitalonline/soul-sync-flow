@@ -425,6 +425,32 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
             // Handle Hermetic report structure
             if (isHermetic) {
               const hermeticContent = reportContent as any; // Type assertion for Hermetic content
+              
+              // Helper function to extract displayable content from any nested structure
+              const extractDisplayContent = (content: any): string => {
+                if (typeof content === 'string') {
+                  return content;
+                }
+                if (content && typeof content === 'object') {
+                  // Recursively extract string values from nested objects
+                  const extractStrings = (obj: any, depth = 0): string[] => {
+                    if (depth > 5) return []; // Prevent infinite recursion
+                    const strings: string[] = [];
+                    for (const [key, value] of Object.entries(obj)) {
+                      if (typeof value === 'string' && value.length > 10) { // Only meaningful strings
+                        strings.push(`**${key.replace(/_/g, ' ').toUpperCase()}:**\n${value}`);
+                      } else if (value && typeof value === 'object') {
+                        strings.push(...extractStrings(value, depth + 1));
+                      }
+                    }
+                    return strings;
+                  };
+                  const extractedStrings = extractStrings(content);
+                  return extractedStrings.length > 0 ? extractedStrings.join('\n\n') : JSON.stringify(content, null, 2);
+                }
+                return String(content);
+              };
+              
               const hermeticEntries = [
                 ['hermetic_fractal_analysis', hermeticContent.hermetic_fractal_analysis],
                 ['consciousness_integration_map', hermeticContent.consciousness_integration_map],
@@ -526,8 +552,10 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                   );
                 }
                 
-                // Regular Hermetic sections
-                if (!content || typeof content !== 'string' || content === 'Content unavailable') {
+                // Regular Hermetic sections - use comprehensive content extraction
+                const displayContent = extractDisplayContent(content);
+                
+                if (!displayContent || displayContent === 'Content unavailable') {
                   return (
                     <CosmicCard key={key} className="border-orange-200 bg-orange-50 w-full max-w-full">
                       <CardHeader className="pb-3">
@@ -559,14 +587,14 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                           <span className="break-words">{title}</span>
                         </div>
                         <Badge variant="outline" className="bg-purple-100 text-purple-700 border-purple-300 w-fit">
-                          {content.length} chars
+                          {displayContent.length} chars
                         </Badge>
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="prose prose-sm max-w-none w-full">
                         <p className={`text-gray-700 leading-relaxed whitespace-pre-wrap break-words w-full ${getTextSize('text-sm')}`}>
-                          {content}
+                          {displayContent}
                         </p>
                       </div>
                     </CardContent>
