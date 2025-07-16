@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -291,8 +292,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
     practical_activation_framework: Zap,
     seven_laws_integration: Sparkles,
     system_translations: Compass,
-    blueprint_signature: User,
-    generation_metadata: Zap
+    blueprint_signature: User
   };
 
   const hermeticSectionTitles = {
@@ -301,8 +301,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
     practical_activation_framework: 'Practical Activation Framework',
     seven_laws_integration: 'Seven Hermetic Laws Integration',
     system_translations: 'System Translations',
-    blueprint_signature: 'Blueprint Signature',
-    generation_metadata: 'Generation Metadata'
+    blueprint_signature: 'Blueprint Signature'
   };
 
   return (
@@ -432,8 +431,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                 ['practical_activation_framework', hermeticContent.practical_activation_framework],
                 ['seven_laws_integration', hermeticContent.seven_laws_integration],
                 ['system_translations', hermeticContent.system_translations],
-                ['blueprint_signature', hermeticContent.blueprint_signature],
-                ['generation_metadata', hermeticContent.generation_metadata]
+                ['blueprint_signature', hermeticContent.blueprint_signature]
               ];
               
               return hermeticEntries.map(([key, content]) => {
@@ -445,6 +443,8 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                   return (
                     <div key={key} className="space-y-4">
                       {Object.entries(content).map(([lawKey, lawContent]) => {
+                        if (!lawContent || typeof lawContent !== 'string') return null;
+                        
                         return (
                           <CosmicCard key={`${key}-${lawKey}`} className="w-full max-w-full border-purple-200 bg-gradient-to-br from-purple-50 to-blue-50">
                             <CardHeader className="pb-3">
@@ -454,14 +454,14 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                                   <span className="break-words">Law of {lawKey.charAt(0).toUpperCase() + lawKey.slice(1)}</span>
                                 </div>
                                 <Badge variant="outline" className="bg-purple-100 text-purple-700 border-purple-300 w-fit">
-                                  {typeof lawContent === 'string' ? `${lawContent.length} chars` : 'Object'}
+                                  {lawContent.length} chars
                                 </Badge>
                               </CardTitle>
                             </CardHeader>
                             <CardContent>
                               <div className="prose prose-sm max-w-none w-full">
                                 <p className={`text-gray-700 leading-relaxed whitespace-pre-wrap break-words w-full ${getTextSize('text-sm')}`}>
-                                  {typeof lawContent === 'object' ? JSON.stringify(lawContent, null, 2) : String(lawContent)}
+                                  {lawContent}
                                 </p>
                               </div>
                             </CardContent>
@@ -477,6 +477,8 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                   return (
                     <div key={key} className="space-y-4">
                       {Object.entries(content).map(([systemKey, systemContent]) => {
+                        if (!systemContent || typeof systemContent !== 'string') return null;
+                        
                         return (
                           <CosmicCard key={`${key}-${systemKey}`} className="w-full max-w-full border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50">
                             <CardHeader className="pb-3">
@@ -486,14 +488,14 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                                   <span className="break-words">{systemKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
                                 </div>
                                 <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-300 w-fit">
-                                  {typeof systemContent === 'string' ? `${systemContent.length} chars` : 'Object'}
+                                  {systemContent.length} chars
                                 </Badge>
                               </CardTitle>
                             </CardHeader>
                             <CardContent>
                               <div className="prose prose-sm max-w-none w-full">
                                 <p className={`text-gray-700 leading-relaxed whitespace-pre-wrap break-words w-full ${getTextSize('text-sm')}`}>
-                                  {typeof systemContent === 'object' ? JSON.stringify(systemContent, null, 2) : String(systemContent)}
+                                  {systemContent}
                                 </p>
                               </div>
                             </CardContent>
@@ -504,41 +506,8 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                   );
                 }
                 
-                // Handle generation_metadata structure
-                if (key === 'generation_metadata' && content && typeof content === 'object') {
-                  return (
-                    <CosmicCard key={key} className="w-full max-w-full border-green-200 bg-gradient-to-br from-green-50 to-emerald-50">
-                      <CardHeader className="pb-3">
-                        <CardTitle className={`flex flex-col sm:flex-row sm:items-center gap-2 ${getTextSize('text-lg')} break-words`}>
-                          <div className="flex items-center gap-2 min-w-0">
-                            <Zap className="h-5 w-5 text-green-600 flex-shrink-0" />
-                            <span className="break-words">Generation Metadata</span>
-                          </div>
-                          <Badge variant="outline" className="bg-green-100 text-green-700 border-green-300 w-fit">
-                            Metadata
-                          </Badge>
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-3">
-                          {Object.entries(content).map(([metaKey, metaValue]) => (
-                            <div key={metaKey} className="flex flex-col sm:flex-row gap-2">
-                              <span className="text-sm font-medium text-green-700 min-w-0 break-words">
-                                {metaKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:
-                              </span>
-                              <span className="text-sm text-gray-700 break-words">
-                                {typeof metaValue === 'object' ? JSON.stringify(metaValue) : String(metaValue)}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </CosmicCard>
-                  );
-                }
-                
                 // Regular Hermetic sections
-                if (!content || content === 'Content unavailable') {
+                if (!content || typeof content !== 'string' || content === 'Content unavailable') {
                   return (
                     <CosmicCard key={key} className="border-orange-200 bg-orange-50 w-full max-w-full">
                       <CardHeader className="pb-3">
@@ -570,14 +539,14 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                           <span className="break-words">{title}</span>
                         </div>
                         <Badge variant="outline" className="bg-purple-100 text-purple-700 border-purple-300 w-fit">
-                          {typeof content === 'string' ? `${content.length} chars` : 'Object'}
+                          {content.length} chars
                         </Badge>
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="prose prose-sm max-w-none w-full">
                         <p className={`text-gray-700 leading-relaxed whitespace-pre-wrap break-words w-full ${getTextSize('text-sm')}`}>
-                          {typeof content === 'object' ? JSON.stringify(content, null, 2) : String(content)}
+                          {content}
                         </p>
                       </div>
                     </CardContent>
@@ -637,14 +606,14 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                         <span className="break-words">{title}</span>
                       </div>
                       <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 w-fit">
-                        {typeof content === 'string' ? `${content.length} chars` : 'Object'}
+                        {content.length} chars
                       </Badge>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="prose prose-sm max-w-none w-full">
                       <p className={`text-gray-700 leading-relaxed whitespace-pre-wrap break-words w-full ${getTextSize('text-sm')}`}>
-                        {typeof content === 'object' ? JSON.stringify(content, null, 2) : String(content)}
+                        {content}
                       </p>
                     </div>
                   </CardContent>
