@@ -169,16 +169,16 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
             cx={ringSize[size] / 2}
             cy={ringSize[size] / 2}
             r={radius}
-            stroke="rgba(20, 184, 166, 0.3)" // More visible teal background
+            stroke="hsl(var(--soul-teal) / 0.3)" // Design system teal with transparency
             strokeWidth="2"
             fill="transparent"
           />
-          {/* Progress ring - brighter teal */}
+          {/* Progress ring - using design system teal */}
           <motion.circle
             cx={ringSize[size] / 2}
             cy={ringSize[size] / 2}
             r={radius}
-            stroke="#14B8A6" // Pure teal color
+            stroke="hsl(var(--soul-teal))" // Design system teal color
             strokeWidth="2"
             fill="transparent"
             strokeDasharray={strokeDasharray}
