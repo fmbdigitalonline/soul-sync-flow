@@ -428,6 +428,8 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
               
               // Helper function to extract displayable content from any nested structure
               const extractDisplayContent = (content: any): string => {
+                console.log("🕵️‍♀️ rendering content:", content, typeof content);
+                
                 if (typeof content === 'string') {
                   return content;
                 }
@@ -490,7 +492,9 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                             <CardContent>
                               <div className="prose prose-sm max-w-none w-full">
                                 <p className={`text-gray-700 leading-relaxed whitespace-pre-wrap break-words w-full ${getTextSize('text-sm')}`}>
-                                  {displayContent}
+                                  {typeof displayContent === "string"
+                                    ? displayContent
+                                    : JSON.stringify(displayContent, null, 2)}
                                 </p>
                               </div>
                             </CardContent>
@@ -527,7 +531,9 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                             <CardContent>
                               <div className="prose prose-sm max-w-none w-full">
                                 <p className={`text-gray-700 leading-relaxed whitespace-pre-wrap break-words w-full ${getTextSize('text-sm')}`}>
-                                  {displayContent}
+                                  {typeof displayContent === "string"
+                                    ? displayContent
+                                    : JSON.stringify(displayContent, null, 2)}
                                 </p>
                               </div>
                             </CardContent>
@@ -580,7 +586,9 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                     <CardContent>
                       <div className="prose prose-sm max-w-none w-full">
                         <p className={`text-gray-700 leading-relaxed whitespace-pre-wrap break-words w-full ${getTextSize('text-sm')}`}>
-                          {displayContent}
+                          {typeof displayContent === "string"
+                            ? displayContent
+                            : JSON.stringify(displayContent, null, 2)}
                         </p>
                       </div>
                     </CardContent>
