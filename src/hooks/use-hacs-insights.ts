@@ -58,14 +58,14 @@ export const useHACSInsights = () => {
     try {
       // Get user blueprint for personality-aware insights
       const { data: blueprint } = await supabase
-        .from('blueprints')
-        .select('*')
+        .from('user_blueprints')
+        .select('blueprint')
         .eq('user_id', user.id)
         .eq('is_active', true)
-        .single();
+        .maybeSingle();
 
       const personalityCtx: PersonalityContext = {
-        blueprint: blueprint || null,
+        blueprint: blueprint?.blueprint || null,
         communicationStyle: personalityContext?.communicationStyle || 'mystical',
         preferredTone: personalityContext?.preferredTone || 'supportive',
         timingPattern: personalityContext?.timingPattern || 'immediate'
