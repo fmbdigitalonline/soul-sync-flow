@@ -425,6 +425,32 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
             // Handle Hermetic report structure
             if (isHermetic) {
               const hermeticContent = reportContent as any; // Type assertion for Hermetic content
+              
+              // Helper function to extract displayable content from any nested structure
+              const extractDisplayContent = (content: any): string => {
+                if (typeof content === 'string') {
+                  return content;
+                }
+                if (content && typeof content === 'object') {
+                  // Recursively extract string values from nested objects
+                  const extractStrings = (obj: any, depth = 0): string[] => {
+                    if (depth > 5) return []; // Prevent infinite recursion
+                    const strings: string[] = [];
+                    for (const [key, value] of Object.entries(obj)) {
+                      if (typeof value === 'string' && value.length > 10) { // Only meaningful strings
+                        strings.push(`**${key.replace(/_/g, ' ').toUpperCase()}:**\n${value}`);
+                      } else if (value && typeof value === 'object') {
+                        strings.push(...extractStrings(value, depth + 1));
+                      }
+                    }
+                    return strings;
+                  };
+                  const extractedStrings = extractStrings(content);
+                  return extractedStrings.length > 0 ? extractedStrings.join('\n\n') : JSON.stringify(content, null, 2);
+                }
+                return String(content);
+              };
+              
               const hermeticEntries = [
                 ['hermetic_fractal_analysis', hermeticContent.hermetic_fractal_analysis],
                 ['consciousness_integration_map', hermeticContent.consciousness_integration_map],
@@ -443,7 +469,17 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                   return (
                     <div key={key} className="space-y-4">
                       {Object.entries(content).map(([lawKey, lawContent]) => {
-                        if (!lawContent || typeof lawContent !== 'string') return null;
+                        // Handle nested object structure - extract string content
+                        let displayContent = '';
+                        if (typeof lawContent === 'string') {
+                          displayContent = lawContent;
+                        } else if (lawContent && typeof lawContent === 'object') {
+                          // If it's an object, try to find string content or stringify
+                          const stringValues = Object.values(lawContent).filter(v => typeof v === 'string');
+                          displayContent = stringValues.length > 0 ? stringValues.join('\n\n') : JSON.stringify(lawContent, null, 2);
+                        }
+                        
+                        if (!displayContent) return null;
                         
                         return (
                           <CosmicCard key={`${key}-${lawKey}`} className="w-full max-w-full border-purple-200 bg-gradient-to-br from-purple-50 to-blue-50">
@@ -454,14 +490,14 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                                   <span className="break-words">Law of {lawKey.charAt(0).toUpperCase() + lawKey.slice(1)}</span>
                                 </div>
                                 <Badge variant="outline" className="bg-purple-100 text-purple-700 border-purple-300 w-fit">
-                                  {lawContent.length} chars
+                                  {displayContent.length} chars
                                 </Badge>
                               </CardTitle>
                             </CardHeader>
                             <CardContent>
                               <div className="prose prose-sm max-w-none w-full">
                                 <p className={`text-gray-700 leading-relaxed whitespace-pre-wrap break-words w-full ${getTextSize('text-sm')}`}>
-                                  {lawContent}
+                                  {displayContent}
                                 </p>
                               </div>
                             </CardContent>
@@ -477,7 +513,17 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                   return (
                     <div key={key} className="space-y-4">
                       {Object.entries(content).map(([systemKey, systemContent]) => {
-                        if (!systemContent || typeof systemContent !== 'string') return null;
+                        // Handle nested object structure - extract string content
+                        let displayContent = '';
+                        if (typeof systemContent === 'string') {
+                          displayContent = systemContent;
+                        } else if (systemContent && typeof systemContent === 'object') {
+                          // If it's an object, try to find string content or stringify
+                          const stringValues = Object.values(systemContent).filter(v => typeof v === 'string');
+                          displayContent = stringValues.length > 0 ? stringValues.join('\n\n') : JSON.stringify(systemContent, null, 2);
+                        }
+                        
+                        if (!displayContent) return null;
                         
                         return (
                           <CosmicCard key={`${key}-${systemKey}`} className="w-full max-w-full border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50">
@@ -488,14 +534,14 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                                   <span className="break-words">{systemKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
                                 </div>
                                 <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-300 w-fit">
-                                  {systemContent.length} chars
+                                  {displayContent.length} chars
                                 </Badge>
                               </CardTitle>
                             </CardHeader>
                             <CardContent>
                               <div className="prose prose-sm max-w-none w-full">
                                 <p className={`text-gray-700 leading-relaxed whitespace-pre-wrap break-words w-full ${getTextSize('text-sm')}`}>
-                                  {systemContent}
+                                  {displayContent}
                                 </p>
                               </div>
                             </CardContent>
@@ -506,8 +552,10 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                   );
                 }
                 
-                // Regular Hermetic sections
-                if (!content || typeof content !== 'string' || content === 'Content unavailable') {
+                // Regular Hermetic sections - use comprehensive content extraction
+                const displayContent = extractDisplayContent(content);
+                
+                if (!displayContent || displayContent === 'Content unavailable') {
                   return (
                     <CosmicCard key={key} className="border-orange-200 bg-orange-50 w-full max-w-full">
                       <CardHeader className="pb-3">
@@ -539,14 +587,14 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                           <span className="break-words">{title}</span>
                         </div>
                         <Badge variant="outline" className="bg-purple-100 text-purple-700 border-purple-300 w-fit">
-                          {content.length} chars
+                          {displayContent.length} chars
                         </Badge>
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="prose prose-sm max-w-none w-full">
                         <p className={`text-gray-700 leading-relaxed whitespace-pre-wrap break-words w-full ${getTextSize('text-sm')}`}>
-                          {content}
+                          {displayContent}
                         </p>
                       </div>
                     </CardContent>
