@@ -343,8 +343,21 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
             className="bg-card/95 backdrop-blur border border-border rounded-lg shadow-2xl max-w-md w-full mx-4"
           >
             <div className="p-6 text-center">
+              {/* Soul Alchemist Orb - Speaking State */}
+              <div className="flex justify-center mb-6">
+                <IntelligentSoulOrb
+                  stage="collecting"
+                  speaking={true}
+                  pulse={true}
+                  size="lg"
+                  intelligenceLevel={40}
+                  showProgressRing={true}
+                  className="animate-pulse"
+                />
+              </div>
+              
               <div className="mb-6">
-                <h1 className="text-2xl font-bold mb-2 text-card-foreground">HACS Companion</h1>
+                <h1 className="text-2xl font-bold mb-2 text-card-foreground">Soul Alchemist</h1>
                 <p className="text-sm text-muted-foreground mb-4">Holistic Adaptive Cognitive System</p>
                 
                 {/* Current step content */}
@@ -353,18 +366,19 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
                     <h2 className="text-lg font-semibold mb-3 text-card-foreground">
                       {introductionState.steps[introductionState.currentStep].title}
                     </h2>
-                    <p className="text-muted-foreground leading-relaxed">
-                      {introductionState.steps[introductionState.currentStep].message}
+                    <p className="text-muted-foreground leading-relaxed text-left bg-muted/20 p-4 rounded-lg border-l-4 border-primary">
+                      "{introductionState.steps[introductionState.currentStep].message}"
                     </p>
                   </div>
                 )}
 
-                <p className="text-sm text-muted-foreground mb-6">
-                  Your HACS companion is ready to assist with insights and guidance.
+                <p className="text-sm text-muted-foreground mb-2">
+                  Your Soul Alchemist is ready to guide your transformation.
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  Intelligence Level: 0%
-                </p>
+                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                  <div className="w-2 h-2 bg-primary rounded-full"></div>
+                  <span>Blueprint Understanding: 40%</span>
+                </div>
               </div>
 
               {/* Continue button */}
