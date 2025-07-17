@@ -73,7 +73,8 @@ class HermeticReportOrchestrator {
 
     console.log('🔍 Human Design data structure:', JSON.stringify(hdData, null, 2));
 
-    // Check for gates in the actual blueprint structure
+    // Enhanced gate extraction - check all possible structures comprehensively
+    // Check for gates in the main gates object
     if (hdData.gates) {
       console.log('🔍 Found gates object:', hdData.gates);
       
@@ -83,7 +84,29 @@ class HermeticReportOrchestrator {
         hdData.gates.conscious_personality.forEach((gateData: any) => {
           if (gateData && gateData.gate && typeof gateData.gate === 'number') {
             gates.push(gateData.gate);
-            console.log(`🚪 Added conscious gate: ${gateData.gate}`);
+            console.log(`🚪 Added conscious personality gate: ${gateData.gate}`);
+          }
+        });
+      }
+      
+      // Check unconscious personality gates (often missed)
+      if (hdData.gates.unconscious_personality && Array.isArray(hdData.gates.unconscious_personality)) {
+        console.log('🔍 Found unconscious_personality gates:', hdData.gates.unconscious_personality);
+        hdData.gates.unconscious_personality.forEach((gateData: any) => {
+          if (gateData && gateData.gate && typeof gateData.gate === 'number') {
+            gates.push(gateData.gate);
+            console.log(`🚪 Added unconscious personality gate: ${gateData.gate}`);
+          }
+        });
+      }
+      
+      // Check conscious design gates
+      if (hdData.gates.conscious_design && Array.isArray(hdData.gates.conscious_design)) {
+        console.log('🔍 Found conscious_design gates:', hdData.gates.conscious_design);
+        hdData.gates.conscious_design.forEach((gateData: any) => {
+          if (gateData && gateData.gate && typeof gateData.gate === 'number') {
+            gates.push(gateData.gate);
+            console.log(`🚪 Added conscious design gate: ${gateData.gate}`);
           }
         });
       }
@@ -94,7 +117,7 @@ class HermeticReportOrchestrator {
         hdData.gates.unconscious_design.forEach((gateData: any) => {
           if (gateData && gateData.gate && typeof gateData.gate === 'number') {
             gates.push(gateData.gate);
-            console.log(`🚪 Added unconscious gate: ${gateData.gate}`);
+            console.log(`🚪 Added unconscious design gate: ${gateData.gate}`);
           }
         });
       }
@@ -139,6 +162,32 @@ class HermeticReportOrchestrator {
       });
     }
 
+    // Check for planets with gates (astrology mapping)
+    if (hdData.planets) {
+      console.log('🔍 Checking planets for gates:', Object.keys(hdData.planets));
+      Object.values(hdData.planets).forEach((planet: any) => {
+        if (planet && planet.gate && typeof planet.gate === 'number') {
+          gates.push(planet.gate);
+          console.log(`🚪 Added planet gate: ${planet.gate}`);
+        }
+      });
+    }
+
+    // Check for channels data which contains gates
+    if (hdData.channels) {
+      console.log('🔍 Checking channels for gates:', hdData.channels);
+      hdData.channels.forEach((channel: any) => {
+        if (channel && channel.gates && Array.isArray(channel.gates)) {
+          channel.gates.forEach((gateNum: any) => {
+            if (typeof gateNum === 'number') {
+              gates.push(gateNum);
+              console.log(`🚪 Added channel gate: ${gateNum}`);
+            }
+          });
+        }
+      });
+    }
+
     // Check for any other gate properties in the HD data
     Object.keys(hdData).forEach(key => {
       if (key.toLowerCase().includes('gate') && Array.isArray(hdData[key])) {
@@ -157,6 +206,11 @@ class HermeticReportOrchestrator {
     const uniqueGates = [...new Set(gates)].sort((a, b) => a - b);
     console.log(`🚪 Final extracted gates (${uniqueGates.length} unique):`, uniqueGates);
     
+    // Verify we have the expected 26 gates
+    if (uniqueGates.length < 26) {
+      console.warn(`⚠️ Expected 26 gates but found only ${uniqueGates.length}. Missing gates may need additional extraction logic.`);
+    }
+    
     return uniqueGates;
   }
 
@@ -173,21 +227,41 @@ class HermeticReportOrchestrator {
             messages: [
               {
                 role: 'system',
-                content: `You are the Gate Hermetic Analyst. You specialize in analyzing specific Human Design gates through the lens of the 7 Hermetic Laws.
+                content: `You are the Gate Hermetic Analyst. You specialize in analyzing specific Human Design gates through the lens of the 7 Hermetic Laws with deep shadow work integration.
 
-Your task is to provide a comprehensive 1,200+ word analysis of Gate ${gateNumber} through all 7 Hermetic Laws:
+Your task is to provide a comprehensive 1,500+ word analysis of Gate ${gateNumber} through all 7 Hermetic Laws with shadow integration:
 
 1. MENTALISM - How this gate influences mental patterns, thoughts, and consciousness
+   - Include shadow mental patterns and unconscious programming
+   - Light aspect: conscious mental mastery
+   
 2. CORRESPONDENCE - How this gate manifests "as above, so below" - inner and outer reflections
+   - Shadow correspondence: how inner wounds reflect in outer reality
+   - Light correspondence: how inner mastery creates external harmony
+   
 3. VIBRATION - The energetic frequency and vibrational qualities of this gate
+   - Low vibration shadow expressions and triggers
+   - High vibration light expressions and elevating practices
+   
 4. POLARITY - The opposing forces and shadow/light aspects of this gate
+   - Deep exploration of the shadow side and its gifts
+   - Integration practices for balancing polarities
+   
 5. RHYTHM - The natural cycles, timing, and rhythmic patterns of this gate
+   - Shadow rhythm disruptions and when energy goes awry
+   - Sacred timing and natural flow states
+   
 6. CAUSATION - The cause-and-effect patterns and how conscious choice activates this gate
+   - Unconscious reactive patterns and their consequences
+   - Conscious response patterns and their transformative effects
+   
 7. GENDER - The creative/receptive, active/passive energy dynamics of this gate
+   - Shadow expressions of masculine/feminine imbalances
+   - Integrated gender energy expressions
 
-Include practical applications for consciously activating the wisdom of Gate ${gateNumber}.
+Include practical shadow work techniques and conscious activation practices for Gate ${gateNumber}.
 
-Generate a comprehensive, flowing analysis that integrates all 7 laws naturally.`
+Generate a comprehensive, flowing analysis that integrates all 7 laws with deep shadow work naturally.`
               },
               {
                 role: 'user',
@@ -303,7 +377,16 @@ Generate 1,200+ words of deep, integrated analysis.`
             messages: [
               {
                 role: 'system',
-                content: `You are the ${agent}. Generate 1,500+ words analyzing the blueprint through your specific Hermetic Law. Focus on deep insights, practical applications, and consciousness activation techniques.`
+                content: `You are the ${agent}. Generate 1,500+ words analyzing the blueprint through your specific Hermetic Law with comprehensive shadow work integration. Focus on:
+
+1. Light and shadow expressions of this law in the person's blueprint
+2. Unconscious patterns and shadow projections related to this law
+3. Practical shadow work techniques for integration
+4. Conscious activation practices for embodying the light aspect
+5. How this law's shadow shows up in relationships and life patterns
+6. Transformative practices for mastering both polarities
+
+Provide deep insights that help the person understand both their unconscious programming (shadow) and their conscious potential (light) through this Hermetic Law.`
               },
               {
                 role: 'user',
@@ -352,7 +435,15 @@ Generate comprehensive analysis with practical applications.`
             messages: [
               {
                 role: 'system',
-                content: `You are the ${translator}. Translate the personality system through all 7 Hermetic Laws. Generate 400+ words of integration analysis.`
+                content: `You are the ${translator}. Translate the personality system through all 7 Hermetic Laws with shadow work integration. Generate 500+ words analyzing:
+
+1. How this personality system expresses through each Hermetic Law
+2. Shadow patterns and unconscious expressions of this system
+3. Light expressions and conscious mastery potential
+4. Integration techniques for balancing shadow and light aspects
+5. How this system's energies can be consciously directed
+
+Focus on practical shadow work and conscious activation through your specific system expertise.`
               },
               {
                 role: 'user',
@@ -396,7 +487,7 @@ Focus on your specific system expertise.`
           messages: [
             {
               role: 'system',
-              content: 'You are the Fractal Synthesizer. Create 1,500+ words synthesizing all analyses into unified fractal patterns.'
+              content: 'You are the Fractal Synthesizer. Create 1,500+ words synthesizing all analyses into unified fractal patterns with deep shadow integration. Show how shadow and light patterns repeat across all systems and gates, creating a comprehensive map for conscious transformation.'
             },
             {
               role: 'user',
@@ -426,7 +517,7 @@ ${sections.map(s => `${s.agent_type}: ${s.content.substring(0, 500)}...`).join('
           messages: [
             {
               role: 'system',
-              content: 'You are the Consciousness Mapper. Generate 1,500+ words mapping consciousness across dimensions.'
+              content: 'You are the Consciousness Mapper. Generate 1,500+ words mapping consciousness across dimensions with shadow integration. Create a comprehensive map showing how to navigate from unconscious shadow patterns to conscious light mastery across all analyzed systems and gates.'
             },
             {
               role: 'user',
@@ -456,7 +547,7 @@ ${sections.map(s => `${s.agent_type}: ${s.content.substring(0, 300)}...`).join('
           messages: [
             {
               role: 'system',
-              content: 'You are the Practical Application Generator. Generate 1,500+ words of actionable practices and applications.'
+              content: 'You are the Practical Application Generator. Generate 1,500+ words of actionable shadow work practices and conscious activation techniques. Provide specific daily practices, meditation techniques, journaling prompts, and integration exercises for transforming shadow patterns into light mastery.'
             },
             {
               role: 'user',

@@ -40,7 +40,12 @@ export interface HermeticPersonalityReport {
       human_design_hermetic: string;
       chinese_astrology_hermetic: string;
     };
-    gate_analyses: { [gateNumber: string]: string }; // NEW: Individual gate analyses
+    gate_analyses: { [gateNumber: string]: string }; // Individual gate analyses with shadow work
+    shadow_work_integration: {
+      shadow_patterns: string;
+      integration_practices: string;
+      transformation_roadmap: string;
+    }; // NEW: Comprehensive shadow work sections
     blueprint_signature: string;
     word_count: number;
     generation_metadata: {
@@ -119,8 +124,22 @@ class HermeticPersonalityReportService {
     const sections = hermeticResult.sections;
     console.log(`📊 Building report from ${sections.length} sections`);
     
-    // Extract gate analyses specifically
-    const gateSections = sections.filter((s: any) => s.gate_number && s.agent_type === 'gate_hermetic_analyst');
+    // Extract gate analyses specifically - ENSURE ALL GATE SECTIONS ARE CAPTURED
+    const gateSections = sections.filter((s: any) => 
+      s.gate_number && 
+      s.agent_type === 'gate_hermetic_analyst' && 
+      s.content && 
+      s.content.length > 0
+    );
+    
+    console.log(`🚪 Found ${gateSections.length} gate sections out of ${sections.length} total sections`);
+    console.log(`🚪 Gate sections structure:`, gateSections.map(s => ({ 
+      gate: s.gate_number, 
+      agent: s.agent_type, 
+      hasContent: !!s.content,
+      contentLength: s.content?.length || 0 
+    })));
+    
     const gateAnalyses: { [gateNumber: string]: string } = {};
     const analyzedGates: number[] = [];
     
@@ -131,9 +150,13 @@ class HermeticPersonalityReportService {
       console.log(`🚪 Added Gate ${section.gate_number} analysis (${section.content.length} chars)`);
     });
     
-    console.log(`🚪 Total gate analyses: ${Object.keys(gateAnalyses).length}`);
+    console.log(`🚪 Total gate analyses stored: ${Object.keys(gateAnalyses).length}`);
     console.log(`🚪 Gates analyzed: ${analyzedGates.sort((a, b) => a - b).join(', ')}`);
     
+    // CRITICAL: Verify no gate analysis was lost
+    if (gateSections.length !== Object.keys(gateAnalyses).length) {
+      console.error(`❌ GATE DATA LOSS DETECTED: ${gateSections.length} sections found but only ${Object.keys(gateAnalyses).length} stored!`);
+    }
     const sevenLaws = {
       mentalism: sections.find((s: any) => s.agent_type === 'mentalism_analyst')?.content || '',
       correspondence: sections.find((s: any) => s.agent_type === 'correspondence_analyst')?.content || '',
@@ -171,7 +194,12 @@ class HermeticPersonalityReportService {
         practical_activation_framework: hermeticResult.practical_applications,
         seven_laws_integration: sevenLaws,
         system_translations: systemTranslations,
-        gate_analyses: gateAnalyses, // NEW: Include all gate analyses
+        gate_analyses: gateAnalyses, // Include all gate analyses with shadow work
+        shadow_work_integration: {
+          shadow_patterns: this.extractShadowPatterns(sevenLaws, gateAnalyses),
+          integration_practices: this.extractIntegrationPractices(hermeticResult.practical_applications),
+          transformation_roadmap: this.extractTransformationRoadmap(hermeticResult.consciousness_map)
+        }, // NEW: Comprehensive shadow work integration
         blueprint_signature: hermeticResult.blueprint_signature,
         word_count: hermeticResult.total_word_count,
         generation_metadata: {
@@ -214,6 +242,68 @@ Numerological purpose pattern: ${numerologyHermetic.substring(0, 250)}...`;
     return `Natural rhythms and timing: ${rhythmAnalysis.substring(0, 250)}...
 
 Vibrational energy patterns: ${vibrationAnalysis.substring(0, 250)}...`;
+  }
+
+  private extractShadowPatterns(sevenLaws: any, gateAnalyses: any): string {
+    const shadowElements = [];
+    
+    // Extract shadow patterns from seven laws
+    Object.entries(sevenLaws).forEach(([law, content]) => {
+      if (typeof content === 'string' && content.includes('shadow')) {
+        const shadowMatch = content.match(/(shadow[^.]*\.)/gi);
+        if (shadowMatch) {
+          shadowElements.push(`**${law.toUpperCase()} Shadow**: ${shadowMatch[0]}`);
+        }
+      }
+    });
+    
+    // Extract shadow patterns from gate analyses
+    Object.entries(gateAnalyses).forEach(([gate, content]) => {
+      if (typeof content === 'string' && content.includes('shadow')) {
+        const shadowMatch = content.match(/(shadow[^.]*\.)/gi);
+        if (shadowMatch) {
+          shadowElements.push(`**${gate.toUpperCase()} Shadow**: ${shadowMatch[0]}`);
+        }
+      }
+    });
+    
+    return shadowElements.length > 0 
+      ? shadowElements.join('\n\n') 
+      : 'Shadow patterns are integrated throughout the analysis above.';
+  }
+
+  private extractIntegrationPractices(practicalApplications: string): string {
+    const practices = [];
+    
+    if (typeof practicalApplications === 'string') {
+      // Extract practice-related sentences
+      const practiceMatches = practicalApplications.match(/(practice[^.]*\.)/gi) || [];
+      const exerciseMatches = practicalApplications.match(/(exercise[^.]*\.)/gi) || [];
+      const techniqueMatches = practicalApplications.match(/(technique[^.]*\.)/gi) || [];
+      
+      practices.push(...practiceMatches, ...exerciseMatches, ...techniqueMatches);
+    }
+    
+    return practices.length > 0 
+      ? practices.slice(0, 10).join('\n\n') 
+      : 'Integration practices are woven throughout the practical applications section.';
+  }
+
+  private extractTransformationRoadmap(consciousnessMap: string): string {
+    const roadmapElements = [];
+    
+    if (typeof consciousnessMap === 'string') {
+      // Extract transformation-related guidance
+      const stepMatches = consciousnessMap.match(/(step[^.]*\.)/gi) || [];
+      const stageMatches = consciousnessMap.match(/(stage[^.]*\.)/gi) || [];
+      const levelMatches = consciousnessMap.match(/(level[^.]*\.)/gi) || [];
+      
+      roadmapElements.push(...stepMatches, ...stageMatches, ...levelMatches);
+    }
+    
+    return roadmapElements.length > 0 
+      ? roadmapElements.slice(0, 8).join('\n\n') 
+      : 'The transformation roadmap is detailed within the consciousness integration map.';
   }
 
   private async storeHermeticReport(report: HermeticPersonalityReport): Promise<HermeticPersonalityReport> {

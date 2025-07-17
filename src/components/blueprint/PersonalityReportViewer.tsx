@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { Loader2, RefreshCw, Sparkles, User, Heart, Brain, Compass, Zap, Plus, Trash2, Star } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Loader2, RefreshCw, Sparkles, User, Heart, Brain, Compass, Zap, Plus, Trash2, Star, ChevronDown, ChevronRight, Target, Moon } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { aiPersonalityReportService, PersonalityReport } from '@/services/ai-personality-report-service';
 import { hermeticPersonalityReportService, HermeticPersonalityReport } from '@/services/hermetic-personality-report-service';
@@ -26,6 +27,14 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reportType, setReportType] = useState<'standard' | 'hermetic'>('standard');
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    overview: true,
+    hermetic_laws: false,
+    gate_analyses: false,
+    shadow_work: false,
+    system_translations: false,
+    practical_framework: false
+  });
 
   useEffect(() => {
     loadReport();
@@ -332,6 +341,61 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
     blueprint_signature: 'Blueprint Signature'
   };
 
+  const toggleSection = (sectionKey: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [sectionKey]: !prev[sectionKey]
+    }));
+  };
+
+  const CollapsibleSection = ({ 
+    title, 
+    sectionKey, 
+    icon: Icon, 
+    children, 
+    badge,
+    className = "border border-gray-200 bg-white"
+  }: {
+    title: string;
+    sectionKey: string;
+    icon: any;
+    children: React.ReactNode;
+    badge?: string;
+    className?: string;
+  }) => {
+    const isExpanded = expandedSections[sectionKey];
+    
+    return (
+      <Collapsible 
+        open={isExpanded} 
+        onOpenChange={() => toggleSection(sectionKey)}
+        className={`rounded-lg ${className}`}
+      >
+        <CollapsibleTrigger asChild>
+          <div className="w-full p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors rounded-lg">
+            <div className="flex items-center gap-3">
+              <Icon className="h-5 w-5 text-purple-600 flex-shrink-0" />
+              <h2 className={`font-bold ${getTextSize('text-lg')} break-words`}>{title}</h2>
+              {badge && (
+                <Badge variant="outline" className="bg-purple-100 text-purple-700 border-purple-300">
+                  {badge}
+                </Badge>
+              )}
+            </div>
+            {isExpanded ? (
+              <ChevronDown className="h-4 w-4 text-gray-500" />
+            ) : (
+              <ChevronRight className="h-4 w-4 text-gray-500" />
+            )}
+          </div>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="px-4 pb-4">
+          {children}
+        </CollapsibleContent>
+      </Collapsible>
+    );
+  };
+
   return (
     <div className={`${className} w-full max-w-full overflow-hidden`}>
       {/* Report Type Toggle */}
@@ -450,104 +514,197 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
             const icons = isHermetic ? hermeticSectionIcons : sectionIcons;
             const titles = isHermetic ? hermeticSectionTitles : sectionTitles;
             
-            // Handle Hermetic report structure
+            // Handle Hermetic report structure with collapsible sections
             if (isHermetic) {
               const hermeticContent = reportContent as any;
-              const hermeticEntries = [
-                ['hermetic_fractal_analysis', hermeticContent.hermetic_fractal_analysis],
-                ['consciousness_integration_map', hermeticContent.consciousness_integration_map],
-                ['practical_activation_framework', hermeticContent.practical_activation_framework],
-                ['seven_laws_integration', hermeticContent.seven_laws_integration],
-                ['system_translations', hermeticContent.system_translations],
-                ['blueprint_signature', hermeticContent.blueprint_signature]
-              ];
               
-              return hermeticEntries.map(([key, content]) => {
-                const IconComponent = icons[key as keyof typeof icons];
-                const title = titles[key as keyof typeof titles];
-                
-                // Handle seven laws structure
-                if (key === 'seven_laws_integration' && content && typeof content === 'object') {
-                  return (
-                    <div key={key} className="space-y-4">
-                      {Object.entries(content).map(([lawKey, lawContent]) => {
+              return (
+                <div className="space-y-4">
+                  {/* Overview Section */}
+                  <CollapsibleSection
+                    title="Overview"
+                    sectionKey="overview"
+                    icon={Sparkles}
+                    badge={`${hermeticContent.word_count || 0}+ words`}
+                    className="border-green-200 bg-gradient-to-br from-green-50 to-emerald-50"
+                  >
+                    <div className="space-y-4">
+                      <CosmicCard className="border-green-200">
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <Brain className="h-5 w-5 text-green-600" />
+                            Integrated Summary
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="prose prose-sm max-w-none">
+                            {renderSafeContent(hermeticContent.integrated_summary, 'Integrated Summary')}
+                          </div>
+                        </CardContent>
+                      </CosmicCard>
+                    </div>
+                  </CollapsibleSection>
+
+                  {/* Seven Hermetic Laws Section */}
+                  <CollapsibleSection
+                    title="Seven Hermetic Laws Analysis"
+                    sectionKey="hermetic_laws"
+                    icon={Star}
+                    badge={`${Object.keys(hermeticContent.seven_laws_integration || {}).length} laws`}
+                    className="border-purple-200 bg-gradient-to-br from-purple-50 to-blue-50"
+                  >
+                    <div className="space-y-4">
+                      {hermeticContent.seven_laws_integration && Object.entries(hermeticContent.seven_laws_integration).map(([lawKey, lawContent]) => (
+                        <CosmicCard key={lawKey} className="border-purple-200">
+                          <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                              <Star className="h-5 w-5 text-purple-600" />
+                              <h3>Law of {lawKey.charAt(0).toUpperCase() + lawKey.slice(1)}</h3>
+                              <Badge variant="outline" className="bg-purple-100 text-purple-700">
+                                {typeof lawContent === 'string' ? `${lawContent.length} chars` : 'Object'}
+                              </Badge>
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="prose prose-sm max-w-none">
+                              {renderSafeContent(lawContent, `Law of ${lawKey}`)}
+                            </div>
+                          </CardContent>
+                        </CosmicCard>
+                      ))}
+                    </div>
+                  </CollapsibleSection>
+
+                  {/* Gate Analyses Section */}
+                  <CollapsibleSection
+                    title="Gate Analyses"
+                    sectionKey="gate_analyses"
+                    icon={Target}
+                    badge={`${Object.keys(hermeticContent.gate_analyses || {}).length} gates`}
+                    className="border-orange-200 bg-gradient-to-br from-orange-50 to-yellow-50"
+                  >
+                    <div className="space-y-4">
+                      {hermeticContent.gate_analyses && Object.entries(hermeticContent.gate_analyses).map(([gateKey, gateContent]) => {
+                        const gateNumber = gateKey.replace('gate_', '');
                         return (
-                          <CosmicCard key={`${key}-${lawKey}`} className="w-full max-w-full border-purple-200 bg-gradient-to-br from-purple-50 to-blue-50">
-                            <CardHeader className="pb-3">
-                              <CardTitle className={`flex flex-col sm:flex-row sm:items-center gap-2 ${getTextSize('text-lg')} break-words`}>
-                                <div className="flex items-center gap-2 min-w-0">
-                                  <Star className="h-5 w-5 text-purple-600 flex-shrink-0" />
-                                  <span className="break-words">Law of {lawKey.charAt(0).toUpperCase() + lawKey.slice(1)}</span>
-                                </div>
-                                <Badge variant="outline" className="bg-purple-100 text-purple-700 border-purple-300 w-fit">
-                                  {typeof lawContent === 'string' ? `${lawContent.length} chars` : 'Object'}
+                          <CosmicCard key={gateKey} className="border-orange-200">
+                            <CardHeader>
+                              <CardTitle className="flex items-center gap-2">
+                                <Target className="h-5 w-5 text-orange-600" />
+                                <h3>Gate {gateNumber}</h3>
+                                <Badge variant="outline" className="bg-orange-100 text-orange-700">
+                                  {typeof gateContent === 'string' ? `${gateContent.length} chars` : 'Object'}
                                 </Badge>
                               </CardTitle>
                             </CardHeader>
                             <CardContent>
-                              <div className="prose prose-sm max-w-none w-full">
-                                {renderSafeContent(lawContent, `Law of ${lawKey}`)}
+                              <div className="prose prose-sm max-w-none">
+                                {renderSafeContent(gateContent, `Gate ${gateNumber}`)}
                               </div>
                             </CardContent>
                           </CosmicCard>
                         );
                       })}
                     </div>
-                  );
-                }
-                
-                // Handle system translations structure
-                if (key === 'system_translations' && content && typeof content === 'object') {
-                  return (
-                    <div key={key} className="space-y-4">
-                      {Object.entries(content).map(([systemKey, systemContent]) => {
-                        return (
-                          <CosmicCard key={`${key}-${systemKey}`} className="w-full max-w-full border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50">
-                            <CardHeader className="pb-3">
-                              <CardTitle className={`flex flex-col sm:flex-row sm:items-center gap-2 ${getTextSize('text-lg')} break-words`}>
-                                <div className="flex items-center gap-2 min-w-0">
-                                  <Compass className="h-5 w-5 text-blue-600 flex-shrink-0" />
-                                  <span className="break-words">{systemKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
-                                </div>
-                                <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-300 w-fit">
-                                  {typeof systemContent === 'string' ? `${systemContent.length} chars` : 'Object'}
-                                </Badge>
-                              </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                              <div className="prose prose-sm max-w-none w-full">
-                                {renderSafeContent(systemContent, systemKey)}
-                              </div>
-                            </CardContent>
-                          </CosmicCard>
-                        );
-                      })}
+                  </CollapsibleSection>
+
+                  {/* Shadow Work Integration Section */}
+                  <CollapsibleSection
+                    title="Shadow Work Integration"
+                    sectionKey="shadow_work"
+                    icon={Moon}
+                    badge="Deep Integration"
+                    className="border-indigo-200 bg-gradient-to-br from-indigo-50 to-purple-50"
+                  >
+                    <div className="space-y-4">
+                      {hermeticContent.shadow_work_integration && Object.entries(hermeticContent.shadow_work_integration).map(([shadowKey, shadowContent]) => (
+                        <CosmicCard key={shadowKey} className="border-indigo-200">
+                          <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                              <Moon className="h-5 w-5 text-indigo-600" />
+                              <h3>{shadowKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</h3>
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="prose prose-sm max-w-none">
+                              {renderSafeContent(shadowContent, shadowKey)}
+                            </div>
+                          </CardContent>
+                        </CosmicCard>
+                      ))}
                     </div>
-                  );
-                }
-                
-                // Regular Hermetic sections - using safe rendering
-                return (
-                  <CosmicCard key={key} className="w-full max-w-full border-purple-200 bg-gradient-to-br from-purple-50 to-blue-50">
-                    <CardHeader className="pb-3">
-                      <CardTitle className={`flex flex-col sm:flex-row sm:items-center gap-2 ${getTextSize('text-lg')} break-words`}>
-                         <div className="flex items-center gap-2 min-w-0">
-                          {IconComponent && React.createElement(IconComponent, { className: "h-5 w-5 text-purple-600 flex-shrink-0" })}
-                          <span className="break-words">{title}</span>
-                        </div>
-                        <Badge variant="outline" className="bg-purple-100 text-purple-700 border-purple-300 w-fit">
-                          {typeof content === 'string' ? `${content.length} chars` : 'Object'}
-                        </Badge>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="prose prose-sm max-w-none w-full">
-                        {renderSafeContent(content, title || key)}
-                      </div>
-                    </CardContent>
-                  </CosmicCard>
-                );
-              });
+                  </CollapsibleSection>
+
+                  {/* System Translations Section */}
+                  <CollapsibleSection
+                    title="System Translations"
+                    sectionKey="system_translations"
+                    icon={Compass}
+                    badge={`${Object.keys(hermeticContent.system_translations || {}).length} systems`}
+                    className="border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50"
+                  >
+                    <div className="space-y-4">
+                      {hermeticContent.system_translations && Object.entries(hermeticContent.system_translations).map(([systemKey, systemContent]) => (
+                        <CosmicCard key={systemKey} className="border-blue-200">
+                          <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                              <Compass className="h-5 w-5 text-blue-600" />
+                              <h3>{systemKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</h3>
+                              <Badge variant="outline" className="bg-blue-100 text-blue-700">
+                                {typeof systemContent === 'string' ? `${systemContent.length} chars` : 'Object'}
+                              </Badge>
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="prose prose-sm max-w-none">
+                              {renderSafeContent(systemContent, systemKey)}
+                            </div>
+                          </CardContent>
+                        </CosmicCard>
+                      ))}
+                    </div>
+                  </CollapsibleSection>
+
+                  {/* Practical Framework Section */}
+                  <CollapsibleSection
+                    title="Practical Framework"
+                    sectionKey="practical_framework"
+                    icon={Zap}
+                    badge="Applications"
+                    className="border-emerald-200 bg-gradient-to-br from-emerald-50 to-green-50"
+                  >
+                    <div className="space-y-4">
+                      <CosmicCard className="border-emerald-200">
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <Zap className="h-5 w-5 text-emerald-600" />
+                            Practical Activation Framework
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="prose prose-sm max-w-none">
+                            {renderSafeContent(hermeticContent.practical_activation_framework, 'Practical Framework')}
+                          </div>
+                        </CardContent>
+                      </CosmicCard>
+                      
+                      <CosmicCard className="border-emerald-200">
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <Brain className="h-5 w-5 text-emerald-600" />
+                            Consciousness Integration Map
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="prose prose-sm max-w-none">
+                            {renderSafeContent(hermeticContent.consciousness_integration_map, 'Consciousness Map')}
+                          </div>
+                        </CardContent>
+                      </CosmicCard>
+                    </div>
+                  </CollapsibleSection>
+                </div>
+              );
             }
             
             // Standard report rendering with safe content handling
