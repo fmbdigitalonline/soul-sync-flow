@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { StewardIntroductionStep, StewardIntroductionState } from '@/types/steward-introduction';
-import { aiPersonalityReportService } from '@/services/ai-personality-report-service';
+import { hermeticPersonalityReportService } from '@/services/hermetic-personality-report-service';
 
 export const useStewardIntroduction = () => {
   const { user } = useAuth();
@@ -134,7 +134,7 @@ export const useStewardIntroduction = () => {
       }
 
       // Generate the hermetic report - use the existing service method that handles the transformation
-      const result = await aiPersonalityReportService.generatePersonalityReport(blueprint as any);
+      const result = await hermeticPersonalityReportService.generateHermeticReport(blueprint as any);
       
       if (result.success) {
         // Mark introduction as completed

@@ -7,6 +7,7 @@ import { useHACSMicroLearning } from '@/hooks/use-hacs-micro-learning';
 import { useHACSInsights } from '@/hooks/use-hacs-insights';
 import { useAutonomousOrchestration } from '@/hooks/use-autonomous-orchestration';
 import { usePersonalityEngine } from '@/hooks/use-personality-engine';
+import { useStewardIntroduction } from '@/hooks/use-steward-introduction';
 import { VoiceTokenGenerator } from '@/services/voice-token-generator';
 import { HACSMicroLearning } from './HACSMicroLearning';
 import { HACSChatOverlay } from './HACSChatOverlay';
@@ -45,6 +46,16 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   // NEW: Add autonomous orchestration
   const { triggerIntelligentIntervention, generatePersonalizedInsight } = useAutonomousOrchestration();
   const { generateOraclePrompt, getOptimalTimingPreferences } = usePersonalityEngine();
+  
+  // Introduction system integration
+  const {
+    introductionState,
+    isGeneratingReport,
+    startIntroduction,
+    continueIntroduction,
+    completeIntroductionWithReport,
+    shouldStartIntroduction
+  } = useStewardIntroduction();
 
   console.log('FloatingHACSOrb render:', { loading, intelligence, currentQuestion, currentInsight, isGenerating, isGeneratingInsight });
 
@@ -87,20 +98,29 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
 
   // Check for steward introduction on mount for new users
   useEffect(() => {
-    const checkStewardIntroduction = async () => {
-      if (!loading && !currentQuestion && !currentInsight && !isGenerating && !isGeneratingInsight) {
-        console.log('🎭 Checking steward introduction for new user...');
-        await triggerInsightCheck('check_steward_introduction');
+    const checkForIntroduction = async () => {
+      if (!loading) {
+        console.log('🎭 Checking if steward introduction should start...');
+        const shouldStart = await shouldStartIntroduction();
+        if (shouldStart) {
+          console.log('🎭 Triggering Steward Introduction...');
+          startIntroduction();
+        } else {
+          console.log('✅ Steward Introduction already completed or not needed.');
+        }
       }
     };
 
-    // Delay check to allow component to stabilize
-    const introTimer = setTimeout(checkStewardIntroduction, 1000);
-    return () => clearTimeout(introTimer);
-  }, [loading]); // Only run when loading changes
+    checkForIntroduction();
+  }, [loading, shouldStartIntroduction, startIntroduction]);
 
   // Authentic triggers for both learning and insights
   useEffect(() => {
+    // Gate autonomous behaviors during introduction
+    if (introductionState.isActive || isGeneratingReport) {
+      return;
+    }
+
     const activityTimer = setTimeout(() => {
       if (!currentQuestion && !currentInsight && !loading && !isGenerating && !isGeneratingInsight) {
         // Trigger thinking state before generating content
@@ -128,7 +148,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
       }
     }, 2000); // Every 2 seconds check for triggers
     return () => clearTimeout(activityTimer);
-  }, [currentQuestion, currentInsight, loading, isGenerating, isGeneratingInsight, triggerMicroLearning, triggerInsightCheck]);
+  }, [introductionState.isActive, isGeneratingReport, currentQuestion, currentInsight, loading, isGenerating, isGeneratingInsight, triggerMicroLearning, triggerInsightCheck]);
 
   // Periodic analytics check (every 60 seconds when active)
   useEffect(() => {
@@ -312,6 +332,82 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
         currentMessage={null}
         intelligenceLevel={intelligenceLevel}
       />
+
+      {/* Steward Introduction Modal */}
+      {introductionState.isActive && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-card/95 backdrop-blur border border-border rounded-lg shadow-2xl max-w-md w-full mx-4"
+          >
+            <div className="p-6 text-center">
+              <div className="mb-6">
+                <h1 className="text-2xl font-bold mb-2 text-card-foreground">HACS Companion</h1>
+                <p className="text-sm text-muted-foreground mb-4">Holistic Adaptive Cognitive System</p>
+                
+                {/* Current step content */}
+                {introductionState.steps && introductionState.steps[introductionState.currentStep] && (
+                  <div className="mb-6">
+                    <h2 className="text-lg font-semibold mb-3 text-card-foreground">
+                      {introductionState.steps[introductionState.currentStep].title}
+                    </h2>
+                    <p className="text-muted-foreground leading-relaxed">
+                      {introductionState.steps[introductionState.currentStep].message}
+                    </p>
+                  </div>
+                )}
+
+                <p className="text-sm text-muted-foreground mb-6">
+                  Your HACS companion is ready to assist with insights and guidance.
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Intelligence Level: 0%
+                </p>
+              </div>
+
+              {/* Continue button */}
+              {introductionState.steps && 
+               introductionState.steps[introductionState.currentStep] && 
+               introductionState.steps[introductionState.currentStep].showContinue && (
+                <button
+                  onClick={async () => {
+                    // Handle final step - trigger report generation
+                    if (introductionState.currentStep === introductionState.steps.length - 1) {
+                      await completeIntroductionWithReport();
+                    } else {
+                      continueIntroduction();
+                    }
+                  }}
+                  disabled={isGeneratingReport}
+                  className="w-full bg-primary text-primary-foreground px-6 py-3 rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                >
+                  {isGeneratingReport ? 'Activating Steward...' : 'Continue'}
+                </button>
+              )}
+
+              {/* Step indicator */}
+              {introductionState.steps && introductionState.steps.length > 1 && (
+                <div className="flex justify-center mt-4 space-x-2">
+                  {introductionState.steps.map((_, index) => (
+                    <div
+                      key={index}
+                      className={`w-2 h-2 rounded-full transition-colors ${
+                        index === introductionState.currentStep 
+                          ? 'bg-primary' 
+                          : index < introductionState.currentStep 
+                            ? 'bg-primary/50' 
+                            : 'bg-muted-foreground/30'
+                      }`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        </div>
+      )}
     </>
   );
 };
