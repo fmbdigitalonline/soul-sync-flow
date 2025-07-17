@@ -15,9 +15,27 @@ export const useStewardIntroduction = () => {
   });
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
 
+  // Session-based tracking to prevent re-triggering during same session
+  const getSessionIntroductionKey = () => `steward_intro_completed_${user?.id}`;
+
+  const hasCompletedIntroductionInSession = () => {
+    if (!user) return false;
+    return sessionStorage.getItem(getSessionIntroductionKey()) === 'true';
+  };
+
+  const markIntroductionCompletedInSession = () => {
+    if (!user) return;
+    sessionStorage.setItem(getSessionIntroductionKey(), 'true');
+  };
+
   // Check if user has completed introduction
   const checkIntroductionStatus = useCallback(async () => {
     if (!user) return false;
+
+    // First check session storage for immediate completion tracking
+    if (hasCompletedIntroductionInSession()) {
+      return true;
+    }
 
     try {
       const { data, error } = await supabase
@@ -32,16 +50,26 @@ export const useStewardIntroduction = () => {
         return false;
       }
 
-      return data?.steward_introduction_completed || false;
+      const dbCompleted = data?.steward_introduction_completed || false;
+      
+      // If completed in DB, also mark in session
+      if (dbCompleted) {
+        markIntroductionCompletedInSession();
+      }
+
+      return dbCompleted;
     } catch (error) {
       console.error('Error checking introduction status:', error);
       return false;
     }
   }, [user]);
 
-  // Mark introduction as completed
+  // Mark introduction as completed immediately when flow finishes
   const markIntroductionCompleted = useCallback(async () => {
     if (!user) return;
+
+    // Immediately mark in session to prevent re-triggering
+    markIntroductionCompletedInSession();
 
     try {
       await supabase
@@ -129,9 +157,12 @@ export const useStewardIntroduction = () => {
     });
   }, []);
 
-  // Generate hermetic report in background after modal closes
+  // Complete introduction and start background report generation
   const completeIntroductionWithReport = useCallback(async () => {
     if (!user) return;
+
+    // CRITICAL: Mark introduction as completed IMMEDIATELY to prevent re-triggering
+    await markIntroductionCompleted();
 
     // Close modal immediately
     setIntroductionState(prev => ({
@@ -162,8 +193,6 @@ export const useStewardIntroduction = () => {
       const result = await hermeticPersonalityReportService.generateHermeticReport(blueprint as any);
       
       if (result.success) {
-        // Mark introduction as completed
-        await markIntroductionCompleted();
         console.log('✅ Hermetic report generated successfully in background');
         return { success: true, report: result.report };
       } else {
@@ -180,6 +209,11 @@ export const useStewardIntroduction = () => {
   // Check if introduction should start for new users
   const shouldStartIntroduction = useCallback(async () => {
     if (!user) return false;
+
+    // First check session storage - if completed in this session, don't start
+    if (hasCompletedIntroductionInSession()) {
+      return false;
+    }
 
     try {
       // Check user_blueprints and blueprints for introduction status
@@ -201,6 +235,7 @@ export const useStewardIntroduction = () => {
       // 1. Has a valid user blueprint
       // 2. Blueprint exists
       // 3. Introduction is not marked completed
+      // 4. Not completed in current session
       return !!userBlueprint && !!blueprint && !blueprint.steward_introduction_completed;
     } catch (error) {
       console.error('Error checking if introduction should start:', error);
