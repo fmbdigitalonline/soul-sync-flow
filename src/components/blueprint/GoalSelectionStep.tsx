@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -6,6 +5,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Slider } from '@/components/ui/slider';
 import { CheckCircle2, ArrowLeft } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useNavigate } from 'react-router-dom';
 
 interface GoalSelectionStepProps {
   onComplete: (preferences: {
@@ -18,6 +18,7 @@ interface GoalSelectionStepProps {
 
 export function GoalSelectionStep({ onComplete, onBack }: GoalSelectionStepProps) {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const [primaryGoal, setPrimaryGoal] = useState('');
   const [supportStyle, setSupportStyle] = useState([3]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -41,7 +42,7 @@ export function GoalSelectionStep({ onComplete, onBack }: GoalSelectionStepProps
     console.log('GoalSelectionStep: Starting submission with preferences:', {
       primary_goal: primaryGoal,
       support_style: supportStyle[0],
-      time_horizon: 'flexible' // Default since we removed time selection
+      time_horizon: 'flexible'
     });
 
     setIsSubmitting(true);
@@ -51,10 +52,17 @@ export function GoalSelectionStep({ onComplete, onBack }: GoalSelectionStepProps
       await onComplete({
         primary_goal: primaryGoal,
         support_style: supportStyle[0],
-        time_horizon: 'flexible' // Default value
+        time_horizon: 'flexible'
       });
       
       console.log('GoalSelectionStep: Submission completed successfully');
+      
+      // Navigate to home with fromOnboarding state to trigger Steward introduction
+      navigate('/', { 
+        replace: true, 
+        state: { fromOnboarding: true } 
+      });
+      
     } catch (error) {
       console.error('GoalSelectionStep: Error during submission:', error);
       

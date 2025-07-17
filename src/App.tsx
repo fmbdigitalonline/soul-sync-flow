@@ -1,78 +1,52 @@
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+} from "react-router-dom";
+import Index from "./pages/Index";
+import Auth from "./pages/Auth";
+import Onboarding from "./pages/Onboarding";
+import Blueprint from "./pages/Blueprint";
+import Growth from "./pages/Growth";
+import { Toaster } from "@/components/ui/toaster"
+import {
+  QueryClient,
+  QueryClientProvider,
+} from '@tanstack/react-query'
+import { LanguageProvider } from "./contexts/LanguageContext";
+import { AuthProvider } from "./contexts/AuthContext";
+import { SoulOrbProvider } from "./contexts/SoulOrbContext";
+import { FloatingHACSOrb } from "./components/hacs/FloatingHACSOrb";
+import { StewardIntroductionProvider } from "@/contexts/StewardIntroductionContext";
 
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { LanguageProvider } from './contexts/LanguageContext';
-import { ModeProvider } from './contexts/ModeContext';
-import MainLayout from './components/Layout/MainLayout';
-import Index from './pages/Index';
-import Dreams from './pages/Dreams';
-import SpiritualGrowth from './pages/SpiritualGrowth';
-import Coach from './pages/Coach';
-import Auth from './pages/Auth';
-import Blueprint from './pages/Blueprint';
-import Profile from './pages/Profile';
-import TestEnvironmentPage from './pages/TestEnvironmentPage';
-import { TestFunctionsPage } from './pages/TestFunctionsPage';
-import DesignAnalysisPage from './pages/DesignAnalysisPage';
-import { Toaster } from '@/components/ui/toaster';
-import { SoulOrbProvider } from './contexts/SoulOrbContext';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BlueprintCacheProvider } from './contexts/BlueprintCacheContext';
-import AdminDashboard from "@/pages/AdminDashboard";
-
-const queryClient = new QueryClient();
+const queryClient = new QueryClient()
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <AuthProvider>
+        <SoulOrbProvider>
           <LanguageProvider>
-            <ModeProvider>
-              <SoulOrbProvider>
-                <BlueprintCacheProvider>
+            <AuthProvider>
+              <StewardIntroductionProvider>
+                <div className="min-h-screen bg-gradient-to-b from-soul-black to-soul-purple/10">
                   <Routes>
                     <Route path="/" element={<Index />} />
-                    <Route path="/dreams" element={<ProtectedRoute><MainLayout><Dreams /></MainLayout></ProtectedRoute>} />
-                    <Route path="/spiritual-growth" element={<ProtectedRoute><MainLayout><SpiritualGrowth /></MainLayout></ProtectedRoute>} />
-                    <Route path="/companion" element={<ProtectedRoute><MainLayout><Coach /></MainLayout></ProtectedRoute>} />
-                    {/* Legacy redirect from /coach to /companion */}
-                    <Route path="/coach" element={<Navigate to="/companion" replace />} />
-                    <Route path="/blueprint" element={<ProtectedRoute><MainLayout><Blueprint /></MainLayout></ProtectedRoute>} />
-                    <Route path="/profile" element={<ProtectedRoute><MainLayout><Profile /></MainLayout></ProtectedRoute>} />
                     <Route path="/auth" element={<Auth />} />
-                    <Route path="/test-environment" element={<ProtectedRoute><MainLayout><TestEnvironmentPage /></MainLayout></ProtectedRoute>} />
-                    <Route path="/test-functions" element={<ProtectedRoute><MainLayout><TestFunctionsPage /></MainLayout></ProtectedRoute>} />
-                    <Route path="/design-analysis" element={<ProtectedRoute><DesignAnalysisPage /></ProtectedRoute>} />
-                    <Route 
-                      path="/admin" 
-                      element={
-                        <ProtectedRoute>
-                          <MainLayout>
-                            <AdminDashboard />
-                          </MainLayout>
-                        </ProtectedRoute>
-                      } 
-                    />
+                    <Route path="/onboarding" element={<Onboarding />} />
+                    <Route path="/blueprint" element={<Blueprint />} />
+                    <Route path="/growth" element={<Growth />} />
                   </Routes>
-                  <Toaster />
-                </BlueprintCacheProvider>
-              </SoulOrbProvider>
-            </ModeProvider>
+                </div>
+                <FloatingHACSOrb />
+                <Toaster />
+              </StewardIntroductionProvider>
+            </AuthProvider>
           </LanguageProvider>
-        </AuthProvider>
+        </SoulOrbProvider>
       </BrowserRouter>
     </QueryClientProvider>
   );
 }
-
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user } = useAuth();
-  if (!user) {
-    return <Navigate to="/auth" />;
-  }
-  return children;
-};
 
 export default App;

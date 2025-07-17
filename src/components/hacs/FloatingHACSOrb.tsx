@@ -12,6 +12,7 @@ import { HACSMicroLearning } from './HACSMicroLearning';
 import { HACSChatOverlay } from './HACSChatOverlay';
 import { HACSInsightDisplay } from './HACSInsightDisplay';
 import { cn } from '@/lib/utils';
+import { useStewardIntroduction } from '@/contexts/StewardIntroductionContext';
 
 interface FloatingHACSProps {
   className?: string;
@@ -29,7 +30,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   const { intelligence, loading, refreshIntelligence } = useHacsIntelligence();
   const {
     currentQuestion,
-    isGenerating,
+    isGenerating: isGeneratingMicroLearning,
     generateMicroQuestion,
     clearCurrentQuestion,
     triggerMicroLearning
@@ -46,13 +47,17 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   const { triggerIntelligentIntervention, generatePersonalizedInsight } = useAutonomousOrchestration();
   const { generateOraclePrompt, getOptimalTimingPreferences } = usePersonalityEngine();
 
+  const { isGenerating, generationProgress } = useStewardIntroduction();
+
   console.log('FloatingHACSOrb render:', { loading, intelligence, currentQuestion, currentInsight, isGenerating, isGeneratingInsight });
 
   const intelligenceLevel = intelligence?.intelligence_level || 0;
 
-  // Update orb stage based on authentic HACS state
+  // Update orb stage to reflect steward generation
   useEffect(() => {
-    if (isGenerating || isGeneratingInsight) {
+    if (isGenerating) {
+      setOrbStage("generating");
+    } else if (isGenerating || isGeneratingInsight) {
       setOrbStage("generating");
     } else if (currentQuestion) {
       setOrbStage("collecting");
@@ -249,11 +254,11 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
             <IntelligentSoulOrb
               size="sm"
               stage={orbStage}
-              speaking={isGenerating || isGeneratingInsight}
-              intelligenceLevel={intelligenceLevel}
-              showProgressRing={intelligenceLevel > 0}
+              speaking={isGenerating || isGeneratingInsight || speaking}
+              intelligenceLevel={isGenerating ? generationProgress : intelligenceLevel}
+              showProgressRing={isGenerating || intelligenceLevel > 0}
               showIntelligenceTooltip={false}
-              isThinking={isThinking}
+              isThinking={isGenerating || isThinking}
               activeModule={activeModule}
               moduleActivity={moduleActivity || isGeneratingInsight}
               onClick={handleOrbClick}
