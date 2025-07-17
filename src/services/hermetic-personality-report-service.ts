@@ -1,5 +1,5 @@
 /**
- * Hermetic Personality Report Service - Parallel service for comprehensive 10,000+ word reports
+ * Hermetic Personality Report Service - Parallel service for comprehensive 25,000+ word reports
  * Operates independently from existing ai-personality-report-service to avoid conflicts
  */
 
@@ -40,12 +40,14 @@ export interface HermeticPersonalityReport {
       human_design_hermetic: string;
       chinese_astrology_hermetic: string;
     };
+    gate_analyses: { [gateNumber: string]: string }; // NEW: Individual gate analyses
     blueprint_signature: string;
     word_count: number;
     generation_metadata: {
       agents_used: string[];
       total_processing_time: number;
       hermetic_depth_score: number;
+      gates_analyzed: number[]; // NEW: Track which gates were analyzed
     };
   };
   generated_at: string;
@@ -70,7 +72,7 @@ class HermeticPersonalityReportService {
     error?: string 
   }> {
     try {
-      console.log('🌟 Generating comprehensive Hermetic Blueprint Report (10,000+ words)...');
+      console.log('🌟 Generating comprehensive Hermetic Blueprint Report (25,000+ words)...');
       console.log('📋 Blueprint structure:', {
         blueprintId: blueprint.id,
         userId: blueprint.user_id,
@@ -115,6 +117,23 @@ class HermeticPersonalityReportService {
     
     // Extract sections by agent type
     const sections = hermeticResult.sections;
+    console.log(`📊 Building report from ${sections.length} sections`);
+    
+    // Extract gate analyses specifically
+    const gateSections = sections.filter((s: any) => s.gate_number && s.agent_type === 'gate_hermetic_analyst');
+    const gateAnalyses: { [gateNumber: string]: string } = {};
+    const analyzedGates: number[] = [];
+    
+    gateSections.forEach((section: any) => {
+      const gateNum = section.gate_number.toString();
+      gateAnalyses[`gate_${gateNum}`] = section.content;
+      analyzedGates.push(section.gate_number);
+      console.log(`🚪 Added Gate ${section.gate_number} analysis (${section.content.length} chars)`);
+    });
+    
+    console.log(`🚪 Total gate analyses: ${Object.keys(gateAnalyses).length}`);
+    console.log(`🚪 Gates analyzed: ${analyzedGates.sort((a, b) => a - b).join(', ')}`);
+    
     const sevenLaws = {
       mentalism: sections.find((s: any) => s.agent_type === 'mentalism_analyst')?.content || '',
       correspondence: sections.find((s: any) => s.agent_type === 'correspondence_analyst')?.content || '',
@@ -152,12 +171,14 @@ class HermeticPersonalityReportService {
         practical_activation_framework: hermeticResult.practical_applications,
         seven_laws_integration: sevenLaws,
         system_translations: systemTranslations,
+        gate_analyses: gateAnalyses, // NEW: Include all gate analyses
         blueprint_signature: hermeticResult.blueprint_signature,
         word_count: hermeticResult.total_word_count,
         generation_metadata: {
           agents_used: sections.map((s: any) => s.agent_type),
           total_processing_time: 0, // Will be calculated
-          hermetic_depth_score: 10 // Maximum depth achieved
+          hermetic_depth_score: 10, // Maximum depth achieved
+          gates_analyzed: analyzedGates // NEW: Track analyzed gates
         }
       },
       generated_at: hermeticResult.generated_at,

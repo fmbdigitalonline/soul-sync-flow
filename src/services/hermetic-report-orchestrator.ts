@@ -61,6 +61,7 @@ class HermeticReportOrchestrator {
 
   private extractHumanDesignGates(blueprint: BlueprintData): number[] {
     console.log('🔍 Extracting Human Design gates from blueprint...');
+    console.log('🔍 Full blueprint structure:', JSON.stringify(blueprint, null, 2));
     
     const gates: number[] = [];
     const hdData = blueprint.energy_strategy_human_design;
@@ -70,37 +71,97 @@ class HermeticReportOrchestrator {
       return [];
     }
 
-    // Check for gates in various possible locations
-    if (hdData.gates && Array.isArray(hdData.gates)) {
-      gates.push(...hdData.gates.map(g => typeof g === 'object' ? g.gate : g).filter(Boolean));
+    console.log('🔍 Human Design data structure:', JSON.stringify(hdData, null, 2));
+
+    // Check for gates in the actual blueprint structure
+    if (hdData.gates) {
+      console.log('🔍 Found gates object:', hdData.gates);
+      
+      // Check conscious personality gates
+      if (hdData.gates.conscious_personality && Array.isArray(hdData.gates.conscious_personality)) {
+        console.log('🔍 Found conscious_personality gates:', hdData.gates.conscious_personality);
+        hdData.gates.conscious_personality.forEach((gateData: any) => {
+          if (gateData && gateData.gate && typeof gateData.gate === 'number') {
+            gates.push(gateData.gate);
+            console.log(`🚪 Added conscious gate: ${gateData.gate}`);
+          }
+        });
+      }
+      
+      // Check unconscious design gates
+      if (hdData.gates.unconscious_design && Array.isArray(hdData.gates.unconscious_design)) {
+        console.log('🔍 Found unconscious_design gates:', hdData.gates.unconscious_design);
+        hdData.gates.unconscious_design.forEach((gateData: any) => {
+          if (gateData && gateData.gate && typeof gateData.gate === 'number') {
+            gates.push(gateData.gate);
+            console.log(`🚪 Added unconscious gate: ${gateData.gate}`);
+          }
+        });
+      }
     }
-    
+
+    // Also check direct gate arrays (fallback for different data structures)
     if (hdData.personality_gates && Array.isArray(hdData.personality_gates)) {
-      gates.push(...hdData.personality_gates.map(g => typeof g === 'object' ? g.gate : g).filter(Boolean));
+      console.log('🔍 Found personality_gates array:', hdData.personality_gates);
+      hdData.personality_gates.forEach((gateData: any) => {
+        const gateNum = typeof gateData === 'object' ? gateData.gate : gateData;
+        if (typeof gateNum === 'number') {
+          gates.push(gateNum);
+          console.log(`🚪 Added personality gate: ${gateNum}`);
+        }
+      });
     }
     
     if (hdData.design_gates && Array.isArray(hdData.design_gates)) {
-      gates.push(...hdData.design_gates.map(g => typeof g === 'object' ? g.gate : g).filter(Boolean));
-    }
-
-    // Check for gates in centers data
-    if (hdData.centers) {
-      Object.values(hdData.centers).forEach((center: any) => {
-        if (center && center.gates && Array.isArray(center.gates)) {
-          gates.push(...center.gates.map(g => typeof g === 'object' ? g.gate : g).filter(Boolean));
+      console.log('🔍 Found design_gates array:', hdData.design_gates);
+      hdData.design_gates.forEach((gateData: any) => {
+        const gateNum = typeof gateData === 'object' ? gateData.gate : gateData;
+        if (typeof gateNum === 'number') {
+          gates.push(gateNum);
+          console.log(`🚪 Added design gate: ${gateNum}`);
         }
       });
     }
 
+    // Check for gates in centers data
+    if (hdData.centers) {
+      console.log('🔍 Checking centers for gates:', Object.keys(hdData.centers));
+      Object.values(hdData.centers).forEach((center: any) => {
+        if (center && center.gates && Array.isArray(center.gates)) {
+          center.gates.forEach((gateData: any) => {
+            const gateNum = typeof gateData === 'object' ? gateData.gate : gateData;
+            if (typeof gateNum === 'number') {
+              gates.push(gateNum);
+              console.log(`🚪 Added center gate: ${gateNum}`);
+            }
+          });
+        }
+      });
+    }
+
+    // Check for any other gate properties in the HD data
+    Object.keys(hdData).forEach(key => {
+      if (key.toLowerCase().includes('gate') && Array.isArray(hdData[key])) {
+        console.log(`🔍 Found additional gate array: ${key}`, hdData[key]);
+        hdData[key].forEach((gateData: any) => {
+          const gateNum = typeof gateData === 'object' ? gateData.gate : gateData;
+          if (typeof gateNum === 'number') {
+            gates.push(gateNum);
+            console.log(`🚪 Added ${key} gate: ${gateNum}`);
+          }
+        });
+      }
+    });
+
     // Remove duplicates and sort
     const uniqueGates = [...new Set(gates)].sort((a, b) => a - b);
-    console.log(`🚪 Found ${uniqueGates.length} unique gates:`, uniqueGates);
+    console.log(`🚪 Final extracted gates (${uniqueGates.length} unique):`, uniqueGates);
     
     return uniqueGates;
   }
 
   private async generateGateAnalysis(blueprint: BlueprintData, gates: number[]): Promise<HermeticAnalysisSection[]> {
-    console.log('🚪 Starting Gate-by-Gate Analysis phase...');
+    console.log(`🚪 Starting Gate-by-Gate Analysis phase for ${gates.length} gates...`);
     const sections: HermeticAnalysisSection[] = [];
     
     for (const gateNumber of gates) {
@@ -112,49 +173,35 @@ class HermeticReportOrchestrator {
             messages: [
               {
                 role: 'system',
-                content: `You are the Gate Hermetic Analyst. Analyze Human Design Gate ${gateNumber} through all 7 Hermetic Laws.
+                content: `You are the Gate Hermetic Analyst. You specialize in analyzing specific Human Design gates through the lens of the 7 Hermetic Laws.
 
-Generate 1,200+ words analyzing Gate ${gateNumber} through:
-1. Mentalism - Mental patterns and thought structures
-2. Correspondence - Inner-outer manifestation patterns  
-3. Vibration - Energetic frequency and resonance
-4. Polarity - Shadow integration and balance points
-5. Rhythm - Timing cycles and natural rhythms
-6. Causation - Cause-effect patterns and conscious creation
-7. Gender - Creative-receptive energy balance
+Your task is to provide a comprehensive 1,200+ word analysis of Gate ${gateNumber} through all 7 Hermetic Laws:
 
-Include practical applications for activating Gate ${gateNumber} wisdom.`
+1. MENTALISM - How this gate influences mental patterns, thoughts, and consciousness
+2. CORRESPONDENCE - How this gate manifests "as above, so below" - inner and outer reflections
+3. VIBRATION - The energetic frequency and vibrational qualities of this gate
+4. POLARITY - The opposing forces and shadow/light aspects of this gate
+5. RHYTHM - The natural cycles, timing, and rhythmic patterns of this gate
+6. CAUSATION - The cause-and-effect patterns and how conscious choice activates this gate
+7. GENDER - The creative/receptive, active/passive energy dynamics of this gate
+
+Include practical applications for consciously activating the wisdom of Gate ${gateNumber}.
+
+Generate a comprehensive, flowing analysis that integrates all 7 laws naturally.`
               },
               {
                 role: 'user',
-                content: `Analyze Gate ${gateNumber} through all 7 Hermetic Laws for this blueprint:
+                content: `Analyze Gate ${gateNumber} through all 7 Hermetic Laws for this individual's blueprint:
 
-Blueprint Data: ${JSON.stringify(blueprint, null, 2)}
+Blueprint Context: ${JSON.stringify(blueprint, null, 2)}
 
-Focus on Gate ${gateNumber} specifically and how it expresses through each Hermetic Law. Provide detailed analysis with practical applications.`
+Focus specifically on Gate ${gateNumber} and how it expresses through each Hermetic Law in this person's unique configuration. Provide detailed analysis with practical applications for conscious gate activation.
+
+Generate 1,200+ words of deep, integrated analysis.`
               }
             ],
             model: 'gpt-4o-mini',
-            temperature: 0.7,
-            tools: [
-              {
-                type: 'function',
-                function: {
-                  name: 'analyze_gate_through_hermetic_laws',
-                  description: 'Analyze specific Human Design gate through all 7 Hermetic Laws',
-                  parameters: {
-                    type: 'object',
-                    properties: {
-                      gate_number: { type: 'number' },
-                      gate_data: { type: 'object' },
-                      blueprint_context: { type: 'object' },
-                      analysis_depth: { type: 'string' }
-                    },
-                    required: ['gate_number', 'blueprint_context']
-                  }
-                }
-              }
-            ]
+            temperature: 0.7
           }
         });
 
@@ -165,13 +212,14 @@ Focus on Gate ${gateNumber} specifically and how it expresses through each Herme
 
         const content = this.safeExtractContent(data, `Gate ${gateNumber} Analysis`);
         
-        sections.push({
+        const section: HermeticAnalysisSection = {
           agent_type: 'gate_hermetic_analyst',
           content: content,
           word_count: content.length,
           gate_number: gateNumber
-        });
-
+        };
+        
+        sections.push(section);
         console.log(`✅ Gate ${gateNumber} analysis complete (${content.length} chars)`);
         
       } catch (error) {
@@ -193,21 +241,26 @@ Focus on Gate ${gateNumber} specifically and how it expresses through each Herme
       console.log('📋 Phase 1: System Integration Analysis...');
       const systemSections = await this.generateSystemTranslation(blueprint);
       sections.push(...systemSections);
+      console.log(`📋 Phase 1 complete: ${systemSections.length} sections added`);
 
       // Phase 2: Enhanced Hermetic Laws (1,500+ words each = 10,500+ words)
       console.log('🔮 Phase 2: Enhanced Hermetic Law Analysis...');
       const hermeticSections = await this.generateHermeticLawAnalysis(blueprint);
       sections.push(...hermeticSections);
+      console.log(`🔮 Phase 2 complete: ${hermeticSections.length} sections added`);
 
-      // Phase 3: Gate-by-Gate Analysis (NEW - 8,000+ words)
+      // Phase 3: Gate-by-Gate Analysis (NEW - 25,000+ words)
       console.log('🚪 Phase 3: Gate-by-Gate Hermetic Analysis...');
       const gates = this.extractHumanDesignGates(blueprint);
       
       if (gates.length > 0) {
+        console.log(`🚪 Found ${gates.length} gates to analyze:`, gates);
         const gateSections = await this.generateGateAnalysis(blueprint, gates);
         sections.push(...gateSections);
+        console.log(`🚪 Phase 3 complete: ${gateSections.length} gate sections added`);
       } else {
         console.warn('⚠️ No gates found for analysis - skipping gate phase');
+        console.log('⚠️ Blueprint HD data:', blueprint.energy_strategy_human_design);
       }
 
       // Phase 4: Synthesis & Integration (4,500+ words)
@@ -216,10 +269,12 @@ Focus on Gate ${gateNumber} specifically and how it expresses through each Herme
       const consciousnessMap = await this.generateConsciousnessMap(blueprint, sections);
       const practicalApplications = await this.generatePracticalApplications(blueprint, sections);
 
-      const totalWordCount = sections.reduce((total, section) => total + section.word_count, 0) +
+      const totalCharCount = sections.reduce((total, section) => total + section.word_count, 0) +
                            synthesis.length + consciousnessMap.length + practicalApplications.length;
 
-      console.log(`✅ Hermetic Report complete: ${totalWordCount} total characters`);
+      const endTime = Date.now();
+      console.log(`✅ Hermetic Report complete: ${totalCharCount} total characters in ${endTime - startTime}ms`);
+      console.log(`📊 Report breakdown: ${sections.length} sections, ${sections.filter(s => s.gate_number).length} gate analyses`);
 
       return {
         sections,
@@ -227,7 +282,7 @@ Focus on Gate ${gateNumber} specifically and how it expresses through each Herme
         consciousness_map: consciousnessMap,
         practical_applications: practicalApplications,
         blueprint_signature: this.generateBlueprintSignature(blueprint),
-        total_word_count: Math.floor(totalWordCount / 5), // Rough word estimate
+        total_word_count: Math.floor(totalCharCount / 5), // Rough word estimate
         generated_at: new Date().toISOString()
       };
 
