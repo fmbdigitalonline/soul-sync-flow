@@ -36,6 +36,7 @@ export const HACSInsightDisplay: React.FC<HACSInsightDisplayProps> = ({
       case 'behavioral': return Target;
       case 'growth': return Brain;
       case 'learning': return Lightbulb;
+      case 'steward_introduction': return Brain;
       default: return Lightbulb;
     }
   };
@@ -46,6 +47,7 @@ export const HACSInsightDisplay: React.FC<HACSInsightDisplayProps> = ({
       case 'behavioral': return 'text-purple-400';
       case 'growth': return 'text-green-400';
       case 'learning': return 'text-orange-400';
+      case 'steward_introduction': return 'text-primary';
       default: return 'text-primary';
     }
   };
@@ -62,7 +64,8 @@ export const HACSInsightDisplay: React.FC<HACSInsightDisplayProps> = ({
       CPSR: 'text-yellow-400',
       TWS: 'text-indigo-400',
       HFME: 'text-emerald-400',
-      BPSC: 'text-rose-400'
+      BPSC: 'text-rose-400',
+      Steward: 'text-primary'
     };
     return colors[module] || 'text-primary';
   };
@@ -156,22 +159,49 @@ export const HACSInsightDisplay: React.FC<HACSInsightDisplayProps> = ({
 
           {/* Actions */}
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onDismiss}
-              className="flex-1 h-8 text-xs"
-            >
-              Dismiss
-            </Button>
-            <Button
-              size="sm"
-              onClick={onAcknowledge}
-              className="flex-1 h-8 text-xs"
-            >
-              <CheckCircle className="h-3 w-3 mr-1" />
-              Got It
-            </Button>
+            {insight.type === 'steward_introduction' && insight.showContinue ? (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onDismiss}
+                  className="flex-1 h-8 text-xs"
+                >
+                  Dismiss
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    if (insight.onContinue) {
+                      insight.onContinue();
+                    }
+                    onAcknowledge();
+                  }}
+                  className="flex-1 h-8 text-xs"
+                >
+                  Continue
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onDismiss}
+                  className="flex-1 h-8 text-xs"
+                >
+                  Dismiss
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={onAcknowledge}
+                  className="flex-1 h-8 text-xs"
+                >
+                  <CheckCircle className="h-3 w-3 mr-1" />
+                  Got It
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Timestamp */}

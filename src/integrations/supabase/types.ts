@@ -391,6 +391,7 @@ export type Database = {
           id: string
           is_active: boolean
           metadata: Json
+          steward_introduction_completed: boolean | null
           task_graph: Json
           timing_overlays: Json
           updated_at: string
@@ -412,6 +413,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           metadata: Json
+          steward_introduction_completed?: boolean | null
           task_graph?: Json
           timing_overlays: Json
           updated_at?: string
@@ -433,6 +435,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           metadata?: Json
+          steward_introduction_completed?: boolean | null
           task_graph?: Json
           timing_overlays?: Json
           updated_at?: string

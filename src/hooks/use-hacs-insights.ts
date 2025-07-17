@@ -14,22 +14,33 @@ import {
 import { useHacsIntelligence } from './use-hacs-intelligence';
 import { translateAnalyticsToOracle, PersonalityContext } from '@/utils/oracle-insight-translator';
 import { usePersonalityEngine } from './use-personality-engine';
+import { useStewardIntroduction } from './use-steward-introduction';
 
 export interface HACSInsight {
   id: string;
   text: string;
   module: string;
-  type: 'productivity' | 'behavioral' | 'growth' | 'learning' | 'intelligence_trend' | 'learning_streak' | 'performance_trend' | 'peak_times' | 'activity_frequency' | 'module_performance' | 'memory_patterns' | 'difficulty_progression';
+  type: 'productivity' | 'behavioral' | 'growth' | 'learning' | 'intelligence_trend' | 'learning_streak' | 'performance_trend' | 'peak_times' | 'activity_frequency' | 'module_performance' | 'memory_patterns' | 'difficulty_progression' | 'steward_introduction';
   confidence: number;
   evidence: string[];
   timestamp: Date;
   acknowledged: boolean;
+  showContinue?: boolean;
+  onContinue?: () => void;
 }
 
 export const useHACSInsights = () => {
   const { user } = useAuth();
   const { intelligence } = useHacsIntelligence();
   const { generateOraclePrompt } = usePersonalityEngine();
+  const { 
+    introductionState, 
+    isGeneratingReport, 
+    continueIntroduction, 
+    completeIntroductionWithReport,
+    shouldStartIntroduction,
+    startIntroduction 
+  } = useStewardIntroduction();
   const [currentInsight, setCurrentInsight] = useState<HACSInsight | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [insightHistory, setInsightHistory] = useState<HACSInsight[]>([]);
@@ -220,9 +231,45 @@ export const useHACSInsights = () => {
     }
   }, [user, intelligence]);
 
+  // Create steward introduction insight
+  const createStewardIntroductionInsight = useCallback(() => {
+    if (!introductionState.isActive || !introductionState.steps[introductionState.currentStep]) {
+      return null;
+    }
+
+    const currentStep = introductionState.steps[introductionState.currentStep];
+    const isLastStep = introductionState.currentStep === introductionState.steps.length - 1;
+
+    const insight: HACSInsight = {
+      id: `steward_intro_${currentStep.id}`,
+      text: currentStep.message,
+      module: 'Steward',
+      type: 'steward_introduction',
+      confidence: 1.0,
+      evidence: [currentStep.title],
+      timestamp: new Date(),
+      acknowledged: false,
+      showContinue: true,
+      onContinue: isLastStep ? completeIntroductionWithReport : continueIntroduction
+    };
+
+    return insight;
+  }, [introductionState, continueIntroduction, completeIntroductionWithReport]);
+
   // Generate authentic insights based on real user data (enhanced with personality)
   const generateInsight = useCallback(async (currentContext?: string, personalityContext?: any) => {
     if (!user || isGenerating) return null;
+
+    // Check for steward introduction first
+    if (introductionState.isActive) {
+      const introInsight = createStewardIntroductionInsight();
+      if (introInsight) {
+        setCurrentInsight(introInsight);
+        setInsightHistory(prev => [introInsight, ...prev].slice(0, 20));
+        console.log('✅ Steward introduction insight created:', introInsight.text);
+        return introInsight;
+      }
+    }
 
     // Prevent too frequent insight generation (minimum 30 seconds between insights)
     const now = Date.now();
@@ -327,6 +374,22 @@ export const useHACSInsights = () => {
     // Track the activity first
     await trackActivity(activityType, context);
 
+    // Check for steward introduction trigger first
+    if (activityType === 'check_steward_introduction') {
+      const shouldStart = await shouldStartIntroduction();
+      if (shouldStart) {
+        await startIntroduction();
+        const introInsight = createStewardIntroductionInsight();
+        if (introInsight) {
+          setCurrentInsight(introInsight);
+          setInsightHistory(prev => [introInsight, ...prev].slice(0, 20));
+          console.log('✅ Steward introduction triggered');
+          return introInsight;
+        }
+      }
+      return null;
+    }
+
     // Only generate insights for meaningful activities
     const meaningfulActivities = [
       'blueprint_completed',
@@ -336,7 +399,8 @@ export const useHACSInsights = () => {
       'pattern_detected',
       'periodic_activity', // Add periodic activity as meaningful
       'intelligence_check', // New analytics trigger
-      'performance_review' // New analytics trigger
+      'performance_review', // New analytics trigger
+      'check_steward_introduction' // Steward introduction check
     ];
 
     if (meaningfulActivities.includes(activityType)) {
@@ -371,12 +435,15 @@ export const useHACSInsights = () => {
   return {
     currentInsight,
     insightHistory,
-    isGenerating,
+    isGenerating: isGenerating || isGeneratingReport,
     generateInsight,
     generateAnalyticsInsight,
     acknowledgeInsight,
     dismissInsight,
     triggerInsightCheck,
-    trackActivity
+    trackActivity,
+    // Steward introduction state
+    introductionState,
+    isGeneratingReport
   };
 };

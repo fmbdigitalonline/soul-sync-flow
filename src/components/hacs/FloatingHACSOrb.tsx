@@ -85,6 +85,20 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     }
   }, [currentQuestion, currentInsight, clearCurrentQuestion]);
 
+  // Check for steward introduction on mount for new users
+  useEffect(() => {
+    const checkStewardIntroduction = async () => {
+      if (!loading && !currentQuestion && !currentInsight && !isGenerating && !isGeneratingInsight) {
+        console.log('🎭 Checking steward introduction for new user...');
+        await triggerInsightCheck('check_steward_introduction');
+      }
+    };
+
+    // Delay check to allow component to stabilize
+    const introTimer = setTimeout(checkStewardIntroduction, 1000);
+    return () => clearTimeout(introTimer);
+  }, [loading]); // Only run when loading changes
+
   // Authentic triggers for both learning and insights
   useEffect(() => {
     const activityTimer = setTimeout(() => {
