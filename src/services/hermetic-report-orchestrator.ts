@@ -206,10 +206,9 @@ class HermeticReportOrchestrator {
     const uniqueGates = [...new Set(gates)].sort((a, b) => a - b);
     console.log(`🚪 Final extracted gates (${uniqueGates.length} unique):`, uniqueGates);
     
-    // Verify we have the expected 26 gates
-    if (uniqueGates.length < 26) {
-      console.warn(`⚠️ Expected 26 gates but found only ${uniqueGates.length}. Missing gates may need additional extraction logic.`);
-    }
+    // Note: Human Design charts typically have 19-20 unique activated gates, not 26
+    // The initial 26 count includes duplicates from conscious/unconscious and personality/design
+    console.log(`✅ Successfully extracted ${uniqueGates.length} unique gates for analysis`);
     
     return uniqueGates;
   }
