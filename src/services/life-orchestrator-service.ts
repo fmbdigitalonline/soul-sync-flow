@@ -231,14 +231,7 @@ export class LifeOrchestratorService {
       'home_family': 6.0,
       'personal_growth': 8.0,
       'productivity': 7.0,
-      'stress': 5.0,
-      'education_learning': 7.0,
-      'social_community': blueprint.cognitiveTemperamental?.mbtiType?.includes('E') ? 8.0 : 6.0,
-      'recreation_fun': 6.0,
-      'environment_living': 6.0,
-      'contribution_service': blueprint.cognitiveTemperamental?.mbtiType?.includes('F') ? 8.0 : 6.0,
-      'adventure_travel': 6.0,
-      'physical_fitness': 7.0
+      'stress': 5.0
     };
 
     return domainAlignmentMap[domain] || 5.0;
@@ -342,25 +335,13 @@ export class LifeOrchestratorService {
   // Get suggested domains for initial assessment
   getSuggestedDomains(): LifeDomain[] {
     return [
+      'wellbeing',
+      'energy', 
       'career',
-      'relationships', 
+      'relationships',
       'finances',
       'health',
-      'personal_growth',
-      'spirituality',
-      'creativity',
-      'wellbeing',
-      'energy',
-      'home_family',
-      'social_community',
-      'recreation_fun',
-      'education_learning',
-      'contribution_service',
-      'physical_fitness',
-      'environment_living',
-      'adventure_travel',
-      'productivity',
-      'stress'
+      'personal_growth'
     ];
   }
 }

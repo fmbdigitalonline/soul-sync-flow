@@ -32,14 +32,7 @@ export type LifeDomain =
   | 'energy'
   | 'personal_growth'
   | 'productivity'
-  | 'stress'
-  | 'education_learning'
-  | 'social_community'
-  | 'recreation_fun'
-  | 'environment_living'
-  | 'contribution_service'
-  | 'adventure_travel'
-  | 'physical_fitness';
+  | 'stress';
 
 export type ProgramStatus = 'pending' | 'active' | 'paused' | 'completed' | 'abandoned';
 
