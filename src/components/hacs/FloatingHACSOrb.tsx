@@ -254,7 +254,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
             <IntelligentSoulOrb
               size="sm"
               stage={orbStage}
-              speaking={isGenerating || isGeneratingInsight || speaking}
+              speaking={isGenerating || isGeneratingInsight}
               intelligenceLevel={isGenerating ? generationProgress : intelligenceLevel}
               showProgressRing={isGenerating || intelligenceLevel > 0}
               showIntelligenceTooltip={false}

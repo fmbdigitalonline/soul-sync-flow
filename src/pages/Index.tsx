@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -16,8 +17,6 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { blueprintService } from "@/services/blueprint-service";
 import { hermeticPersonalityReportService } from "@/services/hermetic-personality-report-service";
-import { quoteService } from "@/services/quote-service";
-import { aiPersonalityReportService } from "@/services/ai-personality-report-service";
 import { useStewardIntroductionTrigger } from '@/hooks/use-steward-introduction-trigger';
 import { StewardIntroductionPopup } from '@/components/steward/StewardIntroductionPopup';
 
@@ -32,8 +31,14 @@ export default function Index() {
   useEffect(() => {
     const checkExistingReport = async () => {
       if (user) {
-        const hasReport = await aiPersonalityReportService.hasPersonalityReport(user.id);
-        setHasPersonalityReport(hasReport);
+        // Simple check for personality report
+        try {
+          const { data } = await hermeticPersonalityReportService.getPersonalityReport(user.id);
+          setHasPersonalityReport(!!data);
+        } catch (error) {
+          console.error('Error checking personality report:', error);
+          setHasPersonalityReport(false);
+        }
       }
     };
 

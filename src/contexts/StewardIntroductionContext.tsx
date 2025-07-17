@@ -46,7 +46,7 @@ export const StewardIntroductionProvider: React.FC<{ children: React.ReactNode }
       // Check if user has completed steward introduction
       const { data: profile, error } = await supabase
         .from('user_profiles')
-        .select('steward_introduction_completed')
+        .select('*')
         .eq('user_id', user.id)
         .single();
 
@@ -68,7 +68,8 @@ export const StewardIntroductionProvider: React.FC<{ children: React.ReactNode }
         return;
       }
 
-      const needsIntroduction = !profile?.steward_introduction_completed && (!report || report.length === 0);
+      // For now, we'll assume the introduction is needed if the user doesn't have a hermetic report
+      const needsIntroduction = (!report || report.length === 0);
       
       setState(prev => ({
         ...prev,
@@ -148,14 +149,9 @@ export const StewardIntroductionProvider: React.FC<{ children: React.ReactNode }
       clearInterval(progressInterval);
 
       if (result.success) {
-        // Mark introduction as completed
-        await supabase
-          .from('user_profiles')
-          .upsert({
-            user_id: user.id,
-            steward_introduction_completed: true,
-          });
-
+        // Mark introduction as completed in user_profiles when it exists
+        // For now we'll skip this until the column is added
+        
         setState(prev => ({
           ...prev,
           currentStep: 'complete',

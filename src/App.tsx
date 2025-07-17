@@ -1,3 +1,4 @@
+
 import {
   BrowserRouter,
   Routes,
@@ -16,8 +17,6 @@ import {
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { SoulOrbProvider } from "./contexts/SoulOrbContext";
-import { FloatingHACSOrb } from "./components/hacs/FloatingHACSOrb";
-import { StewardIntroductionProvider } from "@/contexts/StewardIntroductionContext";
 
 const queryClient = new QueryClient()
 
@@ -28,19 +27,16 @@ function App() {
         <SoulOrbProvider>
           <LanguageProvider>
             <AuthProvider>
-              <StewardIntroductionProvider>
-                <div className="min-h-screen bg-gradient-to-b from-soul-black to-soul-purple/10">
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/auth" element={<Auth />} />
-                    <Route path="/onboarding" element={<Onboarding />} />
-                    <Route path="/blueprint" element={<Blueprint />} />
-                    <Route path="/growth" element={<Growth />} />
-                  </Routes>
-                </div>
-                <FloatingHACSOrb />
-                <Toaster />
-              </StewardIntroductionProvider>
+              <div className="min-h-screen bg-gradient-to-b from-soul-black to-soul-purple/10">
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/onboarding" element={<Onboarding />} />
+                  <Route path="/blueprint" element={<Blueprint />} />
+                  <Route path="/growth" element={<Growth />} />
+                </Routes>
+              </div>
+              <Toaster />
             </AuthProvider>
           </LanguageProvider>
         </SoulOrbProvider>
