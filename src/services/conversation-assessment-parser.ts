@@ -36,7 +36,14 @@ export class ConversationAssessmentParser {
     spirituality: ['spirituality', 'spiritual', 'meditation', 'faith', 'beliefs', 'meaning', 'soul', 'consciousness', 'mindfulness'],
     home_family: ['home', 'family', 'house', 'household', 'domestic', 'children', 'parenting', 'spouse', 'living situation'],
     productivity: ['productivity', 'efficient', 'organized', 'time management', 'focus', 'discipline', 'habits', 'routine'],
-    stress: ['stress', 'anxiety', 'pressure', 'overwhelm', 'tension', 'worry', 'burden', 'strain', 'overwhelmed']
+    stress: ['stress', 'anxiety', 'pressure', 'overwhelm', 'tension', 'worry', 'burden', 'strain', 'overwhelmed'],
+    education_learning: ['education', 'learning', 'study', 'knowledge', 'school', 'university', 'course', 'training', 'skills', 'intellectual'],
+    social_community: ['community', 'social', 'networking', 'belonging', 'groups', 'society', 'cultural', 'civic', 'volunteer'],
+    recreation_fun: ['fun', 'recreation', 'entertainment', 'hobbies', 'leisure', 'enjoyment', 'play', 'relaxation', 'activities'],
+    environment_living: ['environment', 'living space', 'home environment', 'surroundings', 'space', 'location', 'neighborhood', 'climate'],
+    contribution_service: ['contribution', 'service', 'giving back', 'helping', 'volunteering', 'impact', 'difference', 'charity', 'purpose'],
+    adventure_travel: ['adventure', 'travel', 'exploration', 'journey', 'experiences', 'discovery', 'wanderlust', 'vacation', 'trip'],
+    physical_fitness: ['fitness', 'physical fitness', 'exercise', 'workout', 'strength', 'cardio', 'athletic', 'sports', 'training']
   };
 
   private static SATISFACTION_INDICATORS = {
