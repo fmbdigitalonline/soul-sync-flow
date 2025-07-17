@@ -385,7 +385,53 @@ Vibrational energy patterns: ${vibrationAnalysis.substring(0, 250)}...`;
       }
 
       console.log('✅ Hermetic report found:', data.id);
-      return { success: true, report: data as unknown as HermeticPersonalityReport };
+      
+      // Ensure proper structure mapping for JSONB content with type assertion
+      const reportContent = data.report_content as any;
+      const structuredReport: HermeticPersonalityReport = {
+        id: data.id,
+        user_id: data.user_id,
+        blueprint_id: data.blueprint_id,
+        generated_at: data.generated_at,
+        blueprint_version: data.blueprint_version,
+        report_content: {
+          core_personality_pattern: reportContent?.core_personality_pattern || '',
+          decision_making_style: reportContent?.decision_making_style || '',
+          relationship_style: reportContent?.relationship_style || '',
+          life_path_purpose: reportContent?.life_path_purpose || '',
+          current_energy_timing: reportContent?.current_energy_timing || '',
+          integrated_summary: reportContent?.integrated_summary || '',
+          hermetic_fractal_analysis: reportContent?.hermetic_fractal_analysis || '',
+          consciousness_integration_map: reportContent?.consciousness_integration_map || '',
+          practical_activation_framework: reportContent?.practical_activation_framework || '',
+          seven_laws_integration: reportContent?.seven_laws_integration || {
+            mentalism: '', correspondence: '', vibration: '', polarity: '', 
+            rhythm: '', causation: '', gender: ''
+          },
+          system_translations: reportContent?.system_translations || {
+            mbti_hermetic: '', astrology_hermetic: '', numerology_hermetic: '', 
+            human_design_hermetic: '', chinese_astrology_hermetic: ''
+          },
+          gate_analyses: reportContent?.gate_analyses || {},
+          shadow_work_integration: reportContent?.shadow_work_integration || {
+            shadow_patterns: '', integration_practices: '', transformation_roadmap: ''
+          },
+          blueprint_signature: reportContent?.blueprint_signature || '',
+          word_count: reportContent?.word_count || 0,
+          generation_metadata: reportContent?.generation_metadata || {
+            agents_used: [], total_processing_time: 0, hermetic_depth_score: 0, gates_analyzed: []
+          }
+        }
+      };
+      
+      console.log('📊 Report structure check:', {
+        hasGateAnalyses: !!structuredReport.report_content.gate_analyses,
+        hasSevenLaws: !!structuredReport.report_content.seven_laws_integration,
+        hasShadowWork: !!structuredReport.report_content.shadow_work_integration,
+        gateCount: structuredReport.report_content.gate_analyses ? Object.keys(structuredReport.report_content.gate_analyses).length : 0
+      });
+      
+      return { success: true, report: structuredReport };
       
     } catch (error) {
       console.error('❌ Service error fetching Hermetic report:', error);
