@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -113,7 +114,7 @@ export const useStewardIntroduction = () => {
       const nextStep = prev.currentStep + 1;
       
       if (nextStep >= prev.steps.length) {
-        // Introduction complete - trigger hermetic report generation
+        // Introduction complete - close modal immediately
         return {
           ...prev,
           isActive: false,
@@ -128,13 +129,23 @@ export const useStewardIntroduction = () => {
     });
   }, []);
 
-  // Generate hermetic report and complete introduction
+  // Generate hermetic report in background after modal closes
   const completeIntroductionWithReport = useCallback(async () => {
     if (!user) return;
 
+    // Close modal immediately
+    setIntroductionState(prev => ({
+      ...prev,
+      isActive: false,
+      completed: true
+    }));
+
+    // Start background report generation
     setIsGeneratingReport(true);
     
     try {
+      console.log('🔄 Starting background hermetic report generation...');
+      
       // Get user's blueprint
       const { data: blueprint, error: blueprintError } = await supabase
         .from('blueprints')
@@ -147,26 +158,19 @@ export const useStewardIntroduction = () => {
         throw new Error('No active blueprint found');
       }
 
-      // Generate the hermetic report - use the existing service method that handles the transformation
+      // Generate the hermetic report in background
       const result = await hermeticPersonalityReportService.generateHermeticReport(blueprint as any);
       
       if (result.success) {
         // Mark introduction as completed
         await markIntroductionCompleted();
-        
-        setIntroductionState(prev => ({
-          ...prev,
-          isActive: false,
-          completed: true
-        }));
-
-        console.log('✅ Hermetic report generated and introduction completed');
+        console.log('✅ Hermetic report generated successfully in background');
         return { success: true, report: result.report };
       } else {
         throw new Error(result.error || 'Failed to generate report');
       }
     } catch (error) {
-      console.error('Error generating hermetic report:', error);
+      console.error('❌ Background hermetic report generation failed:', error);
       return { success: false, error: String(error) };
     } finally {
       setIsGeneratingReport(false);
