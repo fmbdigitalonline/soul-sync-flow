@@ -164,7 +164,14 @@ export const useStewardIntroduction = () => {
     if (!user) return false;
 
     try {
-      // Check if user has blueprint but hasn't completed introduction
+      // Check user_blueprints and blueprints for introduction status
+      const { data: userBlueprint, error: userBlueprintError } = await supabase
+        .from('user_blueprints')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .maybeSingle();
+
       const { data: blueprint, error: blueprintError } = await supabase
         .from('blueprints')
         .select('steward_introduction_completed')
@@ -172,12 +179,11 @@ export const useStewardIntroduction = () => {
         .eq('is_active', true)
         .maybeSingle();
 
-      if (blueprintError || !blueprint) {
-        return false; // No blueprint means user hasn't completed onboarding
-      }
-
-      // Start introduction if not completed
-      return !blueprint.steward_introduction_completed;
+      // User needs introduction if:
+      // 1. Has a valid user blueprint
+      // 2. Blueprint exists
+      // 3. Introduction is not marked completed
+      return !!userBlueprint && !!blueprint && !blueprint.steward_introduction_completed;
     } catch (error) {
       console.error('Error checking if introduction should start:', error);
       return false;

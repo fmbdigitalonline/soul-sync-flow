@@ -376,16 +376,30 @@ export const useHACSInsights = () => {
 
     // Check for steward introduction trigger first
     if (activityType === 'check_steward_introduction') {
+      console.log('🎭 Checking if steward introduction should start...');
       const shouldStart = await shouldStartIntroduction();
+      console.log('🎭 Should start introduction:', shouldStart);
+      
       if (shouldStart) {
+        console.log('🎭 Starting steward introduction...');
         await startIntroduction();
+        
+        // Small delay to allow introduction state to update
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         const introInsight = createStewardIntroductionInsight();
+        console.log('🎭 Created introduction insight:', !!introInsight);
+        
         if (introInsight) {
           setCurrentInsight(introInsight);
           setInsightHistory(prev => [introInsight, ...prev].slice(0, 20));
-          console.log('✅ Steward introduction triggered');
+          console.log('✅ Steward introduction triggered successfully');
           return introInsight;
+        } else {
+          console.log('❌ Failed to create steward introduction insight');
         }
+      } else {
+        console.log('🎭 Steward introduction not needed or already completed');
       }
       return null;
     }
