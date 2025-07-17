@@ -250,7 +250,7 @@ export default function Onboarding() {
         
         // Redirect to home page after onboarding is fully complete
         setTimeout(() => {
-          navigate("/", { replace: true });
+          navigate("/?from=onboarding", { replace: true });
         }, 2000);
       } else {
         console.error("Error updating blueprint preferences:", error);

@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { blueprintService, BlueprintData } from '@/services/blueprint-service';
 import { useAuth } from '@/contexts/AuthContext';
 import { LayeredBlueprint } from '@/types/personality-modules';
+import { useLocation } from 'react-router-dom';
 
 interface BlueprintCacheContextType {
   blueprintData: LayeredBlueprint | null;
@@ -16,6 +17,7 @@ const BlueprintCacheContext = createContext<BlueprintCacheContextType | undefine
 
 export function BlueprintCacheProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
+  const location = useLocation();
   
   const {
     data: blueprintResult,
@@ -23,7 +25,7 @@ export function BlueprintCacheProvider({ children }: { children: React.ReactNode
     error,
     refetch: queryRefetch
   } = useQuery({
-    queryKey: ['blueprint-cache', user?.id],
+    queryKey: ['blueprint-cache', user?.id, location.pathname],
     queryFn: async () => {
       if (!user) return { data: null, error: 'No user' };
       
@@ -57,7 +59,7 @@ export function BlueprintCacheProvider({ children }: { children: React.ReactNode
       }
     },
     enabled: !!user,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 30 * 1000, // Reduced to 30 seconds for fresh data after onboarding
     gcTime: 10 * 60 * 1000, // 10 minutes
     refetchOnWindowFocus: false,
     refetchOnMount: true,
@@ -78,6 +80,17 @@ export function BlueprintCacheProvider({ children }: { children: React.ReactNode
     hasBlueprint: !!blueprintResult?.data && !blueprintResult?.error
   };
 
+  // Auto-refetch when arriving from onboarding
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const fromOnboarding = searchParams.get('from') === 'onboarding';
+    
+    if (fromOnboarding && user) {
+      console.log('🔄 Blueprint Cache: Detected navigation from onboarding, triggering fresh fetch');
+      queryRefetch();
+    }
+  }, [location.search, user, queryRefetch]);
+
   // Log state changes for debugging
   useEffect(() => {
     console.log('🎯 Blueprint Cache State Update:', {
@@ -88,9 +101,10 @@ export function BlueprintCacheProvider({ children }: { children: React.ReactNode
       userName: value.blueprintData?.user_meta?.preferred_name,
       lifePath: value.blueprintData?.coreValuesNarrative?.lifePath,
       mbtiType: value.blueprintData?.cognitiveTemperamental?.mbtiType,
-      sunSign: value.blueprintData?.publicArchetype?.sunSign
+      sunSign: value.blueprintData?.publicArchetype?.sunSign,
+      currentPath: location.pathname
     });
-  }, [value.blueprintData, value.loading, value.error, value.hasBlueprint]);
+  }, [value.blueprintData, value.loading, value.error, value.hasBlueprint, location.pathname]);
 
   return (
     <BlueprintCacheContext.Provider value={value}>
