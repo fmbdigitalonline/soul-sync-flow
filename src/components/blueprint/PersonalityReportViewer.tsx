@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, FileText, Sparkles, ArrowLeft } from "lucide-react";
 import { CosmicCard } from "@/components/ui/cosmic-card";
@@ -7,7 +6,9 @@ import { PersonalityReport, aiPersonalityReportService } from "@/services/ai-per
 import { BlueprintData } from "@/services/blueprint-service";
 import { useToast } from "@/hooks/use-toast";
 import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
-import { AIPersonalityReport } from "./AIPersonalityReport";
+import { PersonalityReportHeader } from "./PersonalityReportHeader";
+import { PersonalityReportContent } from "./PersonalityReportContent";
+import { useState, useEffect } from "react";
 
 interface PersonalityReportViewerProps {
   blueprint: BlueprintData;
@@ -15,10 +16,10 @@ interface PersonalityReportViewerProps {
   onBack: () => void;
 }
 
-export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = ({ 
-  blueprint, 
-  userId, 
-  onBack 
+export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = ({
+  blueprint,
+  userId,
+  onBack
 }) => {
   const [report, setReport] = useState<PersonalityReport | null>(null);
   const [loading, setLoading] = useState(true);
@@ -36,7 +37,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
       setLoading(true);
       const hasReport = await aiPersonalityReportService.hasExistingReport(userId);
       setHasExisting(hasReport);
-      
+
       if (hasReport) {
         const result = await aiPersonalityReportService.getStoredReport(userId);
         if (result.success && result.report) {
@@ -53,14 +54,14 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
   const generateReport = async () => {
     try {
       setGenerating(true);
-      
+
       toast({
         title: "Generating Your Comprehensive Reading",
         description: "This may take 30-60 seconds as we analyze your complete blueprint...",
       });
 
       const result = await aiPersonalityReportService.generatePersonalityReport(blueprint);
-      
+
       if (result.success && result.report) {
         setReport(result.report);
         setHasExisting(true);
@@ -89,11 +90,9 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
 
   if (loading) {
     return (
-      <div className={`w-full max-w-full min-h-0 overflow-hidden box-border ${spacing.container}`}>
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="h-8 w-8 animate-spin text-soul-purple" />
-          <span className={`ml-2 ${getTextSize('text-base')}`}>Loading your reading...</span>
-        </div>
+      <div className={`flex items-center justify-center ${spacing.container} w-full max-w-full overflow-hidden`}>
+        <Loader2 className="h-8 w-8 animate-spin text-soul-purple" />
+        <span className={`ml-2 ${getTextSize('text-base')}`}>Loading your reading...</span>
       </div>
     );
   }
@@ -101,7 +100,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
   // Show generation prompt if no existing report
   if (!hasExisting) {
     return (
-      <div className={`w-full max-w-full min-h-0 overflow-hidden box-border ${spacing.container}`}>
+      <div className={`mobile-container ${spacing.container} w-full max-w-full overflow-hidden`}>
         <CosmicCard className={`${spacing.card} text-center w-full max-w-full overflow-hidden`}>
           <div className={spacing.gap}>
             <Button
@@ -113,7 +112,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
               Back to Blueprint
             </Button>
           </div>
-          
+
           <FileText className={`${isMobile ? 'h-12 w-12' : 'h-16 w-16'} text-soul-purple mx-auto ${spacing.gap}`} />
           <h2 className={`${getTextSize('text-2xl')} font-bold ${spacing.text} gradient-text break-words`}>
             Generate Your Comprehensive Reading
@@ -121,7 +120,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
           <p className={`text-muted-foreground ${spacing.gap} max-w-md mx-auto ${getTextSize('text-sm')} break-words`}>
             Create a detailed, Soul-generated personality report that weaves together all aspects of your blueprint into one comprehensive analysis. This will be saved for you to revisit anytime.
           </p>
-          
+
           <Button
             onClick={generateReport}
             disabled={generating}
@@ -140,7 +139,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
               </>
             )}
           </Button>
-          
+
           {generating && (
             <p className={`${getTextSize('text-sm')} text-muted-foreground ${spacing.text} break-words`}>
               This process typically takes 30-60 seconds...
@@ -151,14 +150,29 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
     );
   }
 
-  // Show the generated report using AIPersonalityReport component
+  // Show the generated report
+  if (!report) {
+    return (
+      <div className={`flex items-center justify-center ${spacing.container} w-full max-w-full overflow-hidden`}>
+        <p className={`${getTextSize('text-base')} break-words`}>Loading your saved reading...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="w-full max-w-full min-h-0 overflow-hidden box-border">
-      <AIPersonalityReport 
-        blueprint={blueprint}
-        userId={userId}
-        onBack={onBack}
-      />
+    <div className="w-full max-w-full overflow-hidden box-border px-2 sm:px-4 lg:px-6">
+      <div className="w-full max-w-full overflow-hidden">
+        <div className={`mobile-container ${spacing.container} w-full max-w-full overflow-hidden`}>
+          <div className="space-y-6 w-full max-w-full overflow-hidden">
+            <PersonalityReportHeader
+              onBack={onBack}
+              generatedAt={report.generated_at}
+            />
+
+            <PersonalityReportContent report={report} />
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
