@@ -2810,45 +2810,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_dreams: {
-        Row: {
-          category: string | null
-          created_at: string
-          description: string | null
-          id: string
-          importance_level: string | null
-          status: string
-          timeframe: string | null
-          title: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          category?: string | null
-          created_at?: string
-          description?: string | null
-          id?: string
-          importance_level?: string | null
-          status?: string
-          timeframe?: string | null
-          title: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          category?: string | null
-          created_at?: string
-          description?: string | null
-          id?: string
-          importance_level?: string | null
-          status?: string
-          timeframe?: string | null
-          title?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       user_goals: {
         Row: {
           aligned_traits: Json | null

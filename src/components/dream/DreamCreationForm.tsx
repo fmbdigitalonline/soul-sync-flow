@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card } from '@/components/ui/card';
 import { Sparkles, Target, Calendar, Tag } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -24,7 +25,7 @@ export const DreamCreationForm: React.FC<DreamCreationFormProps> = ({
     description: '',
     category: '',
     timeframe: '',
-    importance_level: ''
+    importance: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -43,7 +44,7 @@ export const DreamCreationForm: React.FC<DreamCreationFormProps> = ({
           description: formData.description,
           category: formData.category,
           timeframe: formData.timeframe,
-          importance_level: formData.importance_level,
+          importance_level: formData.importance,
           status: 'active'
         });
 
@@ -159,7 +160,7 @@ export const DreamCreationForm: React.FC<DreamCreationFormProps> = ({
           <label className="font-inter text-sm font-medium text-gray-700">
             How important is this to you right now?
           </label>
-          <Select value={formData.importance_level} onValueChange={(value) => handleInputChange('importance_level', value)}>
+          <Select value={formData.importance} onValueChange={(value) => handleInputChange('importance', value)}>
             <SelectTrigger className="font-inter">
               <SelectValue placeholder="Rate the importance" />
             </SelectTrigger>

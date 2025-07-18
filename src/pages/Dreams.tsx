@@ -10,22 +10,10 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Heart, Sparkles, Target } from 'lucide-react';
 
-interface Dream {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  timeframe: string;
-  importance_level: string;
-  status: string;
-  created_at: string;
-  user_id: string;
-}
-
 export default function Dreams() {
   const { user } = useAuth();
   const [showCreationForm, setShowCreationForm] = useState(false);
-  const [selectedDream, setSelectedDream] = useState<Dream | null>(null);
+  const [selectedDream, setSelectedDream] = useState(null);
   const [showDecomposition, setShowDecomposition] = useState(false);
 
   const { data: dreams, isLoading, refetch } = useQuery({
@@ -50,7 +38,7 @@ export default function Dreams() {
     refetch();
   };
 
-  const handleDreamSelect = (dream: Dream) => {
+  const handleDreamSelect = (dream: any) => {
     setSelectedDream(dream);
     setShowDecomposition(true);
   };
