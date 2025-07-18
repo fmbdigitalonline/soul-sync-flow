@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { TutorialStep, TutorialState } from '@/types/tutorial';
@@ -98,14 +99,18 @@ export const useTutorialFlow = () => {
 
     console.log('🎓 Tutorial steps created:', steps.length);
     
-    setTutorialState({
+    const newState = {
       isActive: true,
       currentStep: 0,
       steps,
       completed: false
-    });
+    };
 
+    setTutorialState(newState);
     console.log('🎓 Tutorial started with', steps.length, 'steps');
+    
+    // Return the new state so it can be used immediately
+    return newState;
   }, [user]);
 
   // Continue to next step
