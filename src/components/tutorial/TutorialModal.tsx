@@ -1,26 +1,26 @@
+
 import React from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { X, ArrowRight, Sparkles } from 'lucide-react';
-import { useTutorialFlow } from '@/hooks/use-tutorial-flow';
+import { TutorialState } from '@/types/tutorial';
 
 interface TutorialModalProps {
   isOpen: boolean;
   onClose: () => void;
+  tutorialState: TutorialState;
+  onContinue: () => void;
+  onComplete: () => void;
 }
 
 export const TutorialModal: React.FC<TutorialModalProps> = ({
   isOpen,
-  onClose
+  onClose,
+  tutorialState,
+  onContinue,
+  onComplete
 }) => {
   console.log('🎭 TutorialModal render - isOpen:', isOpen);
-  
-  const {
-    tutorialState,
-    continueTutorial,
-    completeTutorial
-  } = useTutorialFlow();
-
   console.log('🎭 TutorialModal - tutorialState:', tutorialState);
 
   const currentStep = tutorialState.steps[tutorialState.currentStep];
@@ -28,10 +28,10 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({
 
   const handleContinue = () => {
     if (isLastStep) {
-      completeTutorial();
+      onComplete();
       onClose();
     } else {
-      continueTutorial();
+      onContinue();
     }
   };
 

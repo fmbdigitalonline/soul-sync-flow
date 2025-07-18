@@ -42,7 +42,12 @@ const Index = () => {
     isUltraNarrow,
     isMobile
   } = useResponsiveLayout();
-  const { startTutorial, tutorialState } = useTutorialFlow();
+  const { 
+    tutorialState, 
+    startTutorial, 
+    continueTutorial, 
+    completeTutorial 
+  } = useTutorialFlow();
 
   console.log('🎭 Index render - user:', !!user, 'showTutorial:', showTutorial, 'tutorialState:', tutorialState);
 
@@ -224,6 +229,9 @@ const Index = () => {
           console.log('🎭 Closing tutorial modal');
           setShowTutorial(false);
         }}
+        tutorialState={tutorialState}
+        onContinue={continueTutorial}
+        onComplete={completeTutorial}
       />
     </MainLayout>;
 };
