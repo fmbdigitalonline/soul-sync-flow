@@ -22,6 +22,7 @@ export const useTutorialFlow = () => {
 
   // Start tutorial sequence
   const startTutorial = useCallback(() => {
+    console.log('🎓 Tutorial startTutorial called, user:', !!user);
     if (!user) return;
 
     const userName = getDisplayName();
@@ -95,6 +96,8 @@ export const useTutorialFlow = () => {
       }
     ];
 
+    console.log('🎓 Tutorial steps created:', steps.length);
+    
     setTutorialState({
       isActive: true,
       currentStep: 0,

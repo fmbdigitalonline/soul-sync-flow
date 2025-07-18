@@ -13,11 +13,15 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({
   isOpen,
   onClose
 }) => {
+  console.log('🎭 TutorialModal render - isOpen:', isOpen);
+  
   const {
     tutorialState,
     continueTutorial,
     completeTutorial
   } = useTutorialFlow();
+
+  console.log('🎭 TutorialModal - tutorialState:', tutorialState);
 
   const currentStep = tutorialState.steps[tutorialState.currentStep];
   const isLastStep = tutorialState.currentStep === tutorialState.steps.length - 1;

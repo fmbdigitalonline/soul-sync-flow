@@ -101,8 +101,10 @@ const Index = () => {
   };
 
   const handleTutorialStart = () => {
+    console.log('🎭 Tutorial button clicked, starting tutorial...');
     startTutorial();
     setShowTutorial(true);
+    console.log('🎭 Tutorial modal should now be visible');
   };
   if (showDemo) {
     return <MainLayout>
