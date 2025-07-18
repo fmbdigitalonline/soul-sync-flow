@@ -18,13 +18,10 @@ import MainLayout from "@/components/Layout/MainLayout";
 import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 import { useTutorialFlow } from "@/hooks/use-tutorial-flow";
 import { TutorialModal } from "@/components/tutorial/TutorialModal";
+
 const Index = () => {
-  const {
-    user
-  } = useAuth();
-  const {
-    speak
-  } = useSoulOrb();
+  const { user } = useAuth();
+  const { speak } = useSoulOrb();
   const navigate = useNavigate();
   const [showDemo, setShowDemo] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
@@ -35,10 +32,7 @@ const Index = () => {
     getDisplayName
   } = useOptimizedBlueprintData();
   const isAdmin = isAdminUser(user);
-  const {
-    t,
-    language
-  } = useLanguage();
+  const { t, language } = useLanguage();
   const {
     spacing,
     layout,
@@ -48,9 +42,10 @@ const Index = () => {
     isUltraNarrow,
     isMobile
   } = useResponsiveLayout();
-  const { startTutorial } = useTutorialFlow();
+  const { startTutorial, tutorialState } = useTutorialFlow();
 
-  // Memoize the welcome message logic to prevent re-renders
+  console.log('🎭 Index render - user:', !!user, 'showTutorial:', showTutorial, 'tutorialState:', tutorialState);
+
   const welcomeMessage = useMemo(() => {
     if (!user) return null;
     if (hasBlueprint) {
@@ -60,36 +55,29 @@ const Index = () => {
     }
   }, [user, hasBlueprint, t]);
 
-  // Get dynamic subtitle messages - personalized quotes for authenticated users with blueprints
   const subtitleMessages = useMemo(() => {
     if (user && hasBlueprint) {
-      // For authenticated users with blueprints, we'll use personalized quotes
-      // This will be replaced by the PersonalizedQuoteDisplay component
       return [t("index.subtitle") || "Discover your authentic path through personalized AI guidance and spiritual growth tools."];
     }
     const messages = t("index.rotatingMessages");
-    // Handle both string and array cases safely
     if (Array.isArray(messages)) {
       return messages;
     }
-    // Fallback to a default message if translation fails
     return [t("index.subtitle") || "Discover your authentic path through personalized AI guidance and spiritual growth tools."];
   }, [t, language, user, hasBlueprint]);
 
-  // Only speak welcome message once when user and blueprint data are loaded
   useEffect(() => {
     if (user && !loading && welcomeMessage) {
-      // Add a small delay to prevent rapid-fire speaking
       const timer = setTimeout(() => {
         speak(welcomeMessage);
       }, 1000);
       return () => clearTimeout(timer);
     }
   }, [user, loading, welcomeMessage, speak]);
+
   const handleGetStarted = () => {
     if (user) {
       if (hasBlueprint) {
-        // User has blueprint - navigate to blueprint page
         speak(t("index.startingTutorial"));
         navigate("/blueprint");
       } else {
@@ -101,11 +89,19 @@ const Index = () => {
   };
 
   const handleTutorialStart = () => {
-    console.log('🎭 Tutorial button clicked, starting tutorial...');
-    startTutorial();
+    console.log('🎭 Tutorial button clicked, user:', !!user);
+    if (!user) {
+      console.log('🎭 No user found, cannot start tutorial');
+      return;
+    }
+    
+    console.log('🎭 Starting tutorial...');
+    const newTutorialState = startTutorial();
+    console.log('🎭 Tutorial started, new state:', newTutorialState);
     setShowTutorial(true);
-    console.log('🎭 Tutorial modal should now be visible');
+    console.log('🎭 Tutorial modal should now be visible, showTutorial:', true);
   };
+
   if (showDemo) {
     return <MainLayout>
         <div className={`w-full min-h-screen ${spacing.container} ${isMobile ? 'pb-20' : ''}`}>
@@ -118,6 +114,7 @@ const Index = () => {
         </div>
       </MainLayout>;
   }
+
   return <MainLayout>
       <div className={`w-full min-h-[90vh] flex flex-col justify-center ${spacing.container} ${isMobile ? 'pb-24' : 'pb-6'}`}>
         <div className={`w-full ${layout.maxWidth} mx-auto text-center`}>
@@ -125,7 +122,6 @@ const Index = () => {
           <h1 className={`font-heading ${getTextSize('text-3xl')} lg:${getTextSize('text-4xl')} font-bold mb-8 ${spacing.gap} px-4`}>
             {user ? <>
                 Welcome to <span className="text-primary">SoulSync</span>, {
-            // Priority: 1. Blueprint preferred name, 2. getDisplayName, 3. User metadata, 4. Email username, 5. 'Friend'
             blueprintData?.user_meta?.preferred_name || getDisplayName || user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Friend'}
               </> : <span dangerouslySetInnerHTML={{
             __html: t('index.welcome')
@@ -162,7 +158,6 @@ const Index = () => {
                 </Link>
               </div>}
 
-          {/* Show the demo button only for admin */}
           {isAdmin && <div className={`mb-4 ${spacing.gap} px-4`}>
             <Button variant="outline" onClick={() => setShowDemo(true)} className={`mb-4 ${layout.width} ${isMobile ? 'w-full' : 'sm:w-auto'} ${getTextSize('text-sm')} ${touchTargetSize}`}>
               <Brain className={`mr-2 h-4 w-4 ${isFoldDevice ? 'h-3 w-3' : ''}`} />
@@ -170,7 +165,6 @@ const Index = () => {
             </Button>
           </div>}
           
-          {/* Language Selector - positioned above the action buttons */}
           <div className={`flex justify-center mb-6 px-4`}>
             <LanguageSelector />
           </div>
@@ -212,11 +206,14 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Tutorial Modal */}
       <TutorialModal 
         isOpen={showTutorial}
-        onClose={() => setShowTutorial(false)}
+        onClose={() => {
+          console.log('🎭 Closing tutorial modal');
+          setShowTutorial(false);
+        }}
       />
     </MainLayout>;
 };
+
 export default Index;
