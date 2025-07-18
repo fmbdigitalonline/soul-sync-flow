@@ -1,7 +1,5 @@
 
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { DreamCreationForm } from '@/components/dream/DreamCreationForm';
 import { DreamsList } from '@/components/dream/DreamsList';
 import { DreamDecomposition } from '@/components/dream/DreamDecomposition';
@@ -16,26 +14,12 @@ export default function Dreams() {
   const [selectedDream, setSelectedDream] = useState(null);
   const [showDecomposition, setShowDecomposition] = useState(false);
 
-  const { data: dreams, isLoading, refetch } = useQuery({
-    queryKey: ['dreams', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return [];
-      
-      const { data, error } = await supabase
-        .from('user_dreams')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!user?.id,
-  });
+  // Mock data for now - will be replaced with real data once database is set up
+  const dreams = [];
 
   const handleDreamCreated = () => {
     setShowCreationForm(false);
-    refetch();
+    // TODO: Refetch dreams when database is connected
   };
 
   const handleDreamSelect = (dream: any) => {
@@ -138,7 +122,7 @@ export default function Dreams() {
             </div>
 
             {/* Dreams List */}
-            {!isLoading && dreams && dreams.length > 0 && (
+            {dreams && dreams.length > 0 && (
               <div className="space-y-4">
                 <h2 className="font-cormorant text-xl font-semibold text-gray-800">
                   Your Dreams Journey
@@ -150,10 +134,12 @@ export default function Dreams() {
               </div>
             )}
 
-            {isLoading && (
+            {/* Empty State */}
+            {dreams.length === 0 && (
               <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-soul-purple mx-auto"></div>
-                <p className="font-inter text-sm text-gray-600 mt-2">Loading your dreams...</p>
+                <p className="font-inter text-sm text-gray-600">
+                  No dreams created yet. Start by creating your first dream journey above.
+                </p>
               </div>
             )}
           </div>
