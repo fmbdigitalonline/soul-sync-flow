@@ -38,7 +38,7 @@ export const MoodTracker: React.FC<MoodTrackerProps> = ({ onMoodSave }) => {
       setSaved(true);
       toast({
         title: t('moodTracker.moodTracked'),
-        description: `${selectedMood} ${t('moodTracker.moodSaved', { energy: selectedEnergy })}`,
+        description: `${selectedMood} mood saved with ${selectedEnergy} energy`,
       });
       
       // Reset after 2 seconds

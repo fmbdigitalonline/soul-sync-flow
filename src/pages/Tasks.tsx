@@ -63,7 +63,7 @@ const Tasks = () => {
     resetConversation();
     toast({
       title: t('coach.newConversation'),
-      description: t('newConversationStarted', { agent: t('coach.soulCoach') }),
+      description: `New conversation started with ${t('coach.soulCoach')}`,
     });
   };
 

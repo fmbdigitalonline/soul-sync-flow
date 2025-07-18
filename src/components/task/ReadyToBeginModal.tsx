@@ -25,7 +25,7 @@ export const ReadyToBeginModal: React.FC<ReadyToBeginModalProps> = ({
       <div className="bg-white rounded-xl shadow-2xl p-8 max-w-xs w-full border border-slate-200">
         <div className="text-xl font-semibold mb-3 text-center">{t('modal.readyToBegin')}</div>
         <div className="text-gray-700 mb-4 text-center">
-          {t('modal.sessionDuration', { duration: estimatedDuration || "~30 mins" })}<br />
+          Session duration: {estimatedDuration || "~30 mins"}<br />
           {t('modal.coachGuide')}<br />
           {t('modal.readyToFocus')}
         </div>

@@ -49,10 +49,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({ habit, onDoubleTap, onSing
           <div className="flex items-center gap-1">
             <Flame className={`text-orange-500 ${isFoldDevice ? 'h-2 w-2' : 'h-3 w-3'}`} />
             <span className={`text-gray-600 ${getTextSize('text-xs')}`}>
-              {t('habits.streak', { 
-                count: streak.toString(), 
-                unit: streak === 1 ? t('habits.daysSingular') : t('habits.daysPlural')
-              })}
+              {streak} {streak === 1 ? 'day' : 'days'} streak
             </span>
           </div>
           <Badge variant="outline" className={`${getTextSize('text-xs')} ${isFoldDevice ? 'self-end' : ''}`}>

@@ -87,7 +87,7 @@ const translations: Record<Language, Translations> = {
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: string) => string | string[];
+  t: (key: string) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -108,18 +108,25 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
     localStorage.setItem('soulsync-language', language);
   }, [language]);
 
-  const t = (key: string): string | string[] => {
+  const t = (key: string): string => {
     const value = getNestedValue(translations[language], key);
     
     if (value !== undefined) {
-      return value;
+      // Handle arrays by returning first element or joining them
+      if (Array.isArray(value)) {
+        return value[0] || key;
+      }
+      return typeof value === 'string' ? value : key;
     }
     
     // Fallback to English if current language doesn't have the key
     const fallbackValue = getNestedValue(translations.en, key);
     if (fallbackValue !== undefined) {
       console.warn(`Translation missing for key "${key}" in language "${language}", using English fallback`);
-      return fallbackValue;
+      if (Array.isArray(fallbackValue)) {
+        return fallbackValue[0] || key;
+      }
+      return typeof fallbackValue === 'string' ? fallbackValue : key;
     }
     
     // Final fallback: return the key itself but log it

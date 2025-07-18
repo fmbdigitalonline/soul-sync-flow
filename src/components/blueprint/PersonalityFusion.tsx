@@ -339,7 +339,7 @@ export const PersonalityFusion: React.FC<PersonalityFusionProps> = ({
             <h3 className="text-lg font-medium">{step.title}</h3>
           </div>
           <p className="text-sm text-muted-foreground">
-            {t('personality.quickQuestion', { current: (currentStep + 1).toString(), total: steps.length.toString() })}
+            Quick question {currentStep + 1} of {steps.length}
           </p>
         </div>
         
@@ -402,7 +402,7 @@ export const PersonalityFusion: React.FC<PersonalityFusionProps> = ({
               <CardTitle className="text-base">
                 {t('personality.likelyStyle')} {personalityEstimate.likelyType}
               </CardTitle>
-              <Badge variant="secondary">{t('personality.confidence', { confidence: confidence.toString() })}</Badge>
+              <Badge variant="secondary">Confidence: {confidence}%</Badge>
             </div>
           </CardHeader>
           <CardContent>
@@ -454,7 +454,7 @@ export const PersonalityFusion: React.FC<PersonalityFusionProps> = ({
                 {['😕', '😐', '🙂', '😊', '🤩'][confidenceRating[0] - 1]}
               </div>
               <div className="text-xs text-muted-foreground">
-                {t('personality.outOfStars', { rating: confidenceRating[0].toString() })}
+                {confidenceRating[0]} out of 5 stars
               </div>
             </div>
           </div>
