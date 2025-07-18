@@ -355,10 +355,10 @@ const Blueprint = () => {
 
   return (
     <MainLayout>
-      <div className={`w-full ${spacing.container} pb-20 mobile-container overflow-x-hidden`}>
+      <div className={`w-full min-w-0 max-w-full ${spacing.container} pb-20 mobile-container overflow-x-hidden box-border`}>
         {/* Simplified header with just the main title and action buttons */}
-        <div className={`flex flex-col ${spacing.gap} mb-6 w-full max-w-full overflow-hidden`}>
-          <div className="flex items-center justify-between w-full overflow-hidden">
+        <div className={`flex flex-col ${spacing.gap} mb-6 w-full min-w-0 max-w-full overflow-hidden box-border`}>
+          <div className="flex items-center justify-between w-full min-w-0 max-w-full overflow-hidden">
             <h1 className={`${getTextSize('text-3xl')} font-bold font-display break-words flex-1 min-w-0`}>
               <span className="gradient-text">Soul Blueprint</span>
             </h1>
@@ -417,16 +417,16 @@ const Blueprint = () => {
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="view" className={`mt-6 w-full max-w-full overflow-hidden`}>
+          <TabsContent value="view" className={`mt-6 w-full min-w-0 max-w-full overflow-hidden box-border`}>
             {blueprintData && (
-              <div className="w-full max-w-full overflow-hidden">
+              <div className="w-full min-w-0 max-w-full overflow-hidden box-border">
                 <SimplifiedBlueprintViewer blueprint={blueprintData} />
               </div>
             )}
           </TabsContent>
 
-          <TabsContent value="report" className={`mt-6 w-full max-w-full overflow-hidden`}>
-            <div className="w-full max-w-full overflow-hidden">
+          <TabsContent value="report" className={`mt-6 w-full min-w-0 max-w-full overflow-hidden box-border`}>
+            <div className="w-full min-w-0 max-w-full overflow-hidden box-border">
               <PersonalityReportViewer />
             </div>
           </TabsContent>

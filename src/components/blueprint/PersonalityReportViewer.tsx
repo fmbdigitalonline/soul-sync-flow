@@ -397,7 +397,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
   };
 
   return (
-    <div className={`${className} w-full max-w-full overflow-hidden`}>
+    <div className={`${className} w-full min-w-0 max-w-full overflow-hidden box-border`}>
       {/* Report Type Toggle */}
       {(report || hermeticReport) && (
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
@@ -466,7 +466,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
         </div>
       )}
 
-      <div className={`flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 ${spacing.gap} w-full`}>
+      <div className={`flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 ${spacing.gap} w-full min-w-0 max-w-full overflow-hidden`}>
         <div className="min-w-0 flex-1">
           <h3 className={`font-bold font-display break-words ${getTextSize('text-xl')}`}>
             {reportType === 'hermetic' ? 'Hermetic Blueprint Report' : 'Personality Report'}
