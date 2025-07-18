@@ -63,7 +63,7 @@ const MobileNavigation: React.FC = () => {
                 active ? "scale-110" : ""
               )} />
               <span className={cn(
-                "text-xs font-medium transition-all duration-200 font-cormorant",
+                "text-xs font-medium transition-all duration-200",
                 active ? "text-soul-purple" : "text-gray-400"
               )}>
                 {item.label}
