@@ -95,7 +95,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
         <div className="flex items-center justify-between p-4 w-full">
           <Link to="/" className="flex items-center space-x-2">
             <SoulOrbAvatar size="sm" />
-            <span className="font-heading font-bold text-lg gradient-text">
+            <span className="font-cormorant font-bold text-lg gradient-text brand-text">
               Soul Guide
             </span>
           </Link>
@@ -121,7 +121,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
             <Button
               variant="ghost"
               onClick={handleSignOut}
-              className="w-full justify-start text-muted-foreground rounded-xl"
+              className="w-full justify-start text-muted-foreground rounded-xl font-inter"
             >
               <LogOut className="h-5 w-5 mr-3" />
               {t('nav.signOut')}
@@ -138,7 +138,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
             <div className="p-6 border-b border-border flex items-center justify-between">
               <Link to="/" className="flex items-center space-x-3">
                 <SoulOrbAvatar size="md" />
-                <span className="font-heading font-bold text-xl gradient-text">
+                <span className="font-cormorant font-bold text-xl gradient-text brand-text">
                   Soul Guide
                 </span>
               </Link>
@@ -157,9 +157,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
                     key={item.to}
                     to={item.to}
                     className={cn(
-                      "flex items-center space-x-3 p-3 rounded-2xl transition-all duration-200",
+                      "flex items-center space-x-3 p-3 rounded-2xl transition-all duration-200 font-cormorant font-medium",
                       isActive(item.to)
-                        ? "bg-gradient-to-r from-primary/10 to-accent/10 text-primary font-medium border border-primary/20"
+                        ? "bg-gradient-to-r from-primary/10 to-accent/10 text-primary font-semibold border border-primary/20"
                         : "text-muted-foreground hover:bg-accent/50 hover:text-primary"
                     )}
                   >
@@ -175,7 +175,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
               <Button
                 variant="ghost"
                 onClick={handleSignOut}
-                className="w-full justify-start text-muted-foreground rounded-xl hover:bg-accent/50"
+                className="w-full justify-start text-muted-foreground rounded-xl hover:bg-accent/50 font-inter"
               >
                 <LogOut className="h-5 w-5 mr-3" />
                 {t('nav.signOut')}
