@@ -16,6 +16,7 @@ import TestEnvironmentPage from './pages/TestEnvironmentPage';
 import { TestFunctionsPage } from './pages/TestFunctionsPage';
 import DesignAnalysisPage from './pages/DesignAnalysisPage';
 import User360Page from './pages/User360Page';
+import NotFound from './pages/NotFound';
 import { Toaster } from '@/components/ui/toaster';
 import { SoulOrbProvider } from './contexts/SoulOrbContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -68,6 +69,8 @@ function App() {
                         </ProtectedRoute>
                       } 
                     />
+                    {/* Catch-all route for 404s */}
+                    <Route path="*" element={<NotFound />} />
                   </Routes>
                   <Toaster />
                 </BlueprintCacheProvider>
