@@ -1,8 +1,9 @@
+
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MainLayout from "@/components/Layout/MainLayout";
 import { Button } from "@/components/ui/button";
-import { Loader2, MessageCircle, Map } from "lucide-react";
+import { Loader2, MessageCircle, Map, Database } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -13,6 +14,7 @@ import { EnhancedProductivityDashboard } from "@/components/productivity/Enhance
 import { PIENotificationSystem } from "@/components/pie/PIENotificationSystem";
 import { PIEContextualInsights } from "@/components/pie/PIEContextualInsights";
 import { PIEUserExperienceHub } from "@/components/pie/PIEUserExperienceHub";
+import User360Dashboard from "@/components/User360Dashboard";
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
@@ -141,11 +143,15 @@ const Dashboard = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
-          <TabsList className="grid grid-cols-2 sm:grid-cols-5 w-full max-w-5xl mx-auto h-auto p-1">
+          <TabsList className="grid grid-cols-2 sm:grid-cols-6 w-full max-w-5xl mx-auto h-auto p-1">
             <TabsTrigger value="overview" className="text-xs sm:text-sm py-2">Overview</TabsTrigger>
             <TabsTrigger value="productivity" className="text-xs sm:text-sm py-2">Productivity</TabsTrigger>
             <TabsTrigger value="growth" className="text-xs sm:text-sm py-2">Growth</TabsTrigger>
             <TabsTrigger value="blueprint" className="text-xs sm:text-sm py-2">Blueprint</TabsTrigger>
+            <TabsTrigger value="user360" className="text-xs sm:text-sm py-2">
+              <Database className="mr-1 h-3 w-3" />
+              360° Profile
+            </TabsTrigger>
             <TabsTrigger value="pie" className="text-xs sm:text-sm py-2">PIE Hub</TabsTrigger>
           </TabsList>
           
@@ -164,6 +170,10 @@ const Dashboard = () => {
                 <div className="space-y-2">
                   <Button onClick={() => navigate('/coach')} className="w-full">Chat with Coach</Button>
                   <Button onClick={() => navigate('/journey')} className="w-full">View Journey</Button>
+                  <Button onClick={() => setActiveTab('user360')} variant="outline" className="w-full">
+                    <Database className="mr-2 h-4 w-4" />
+                    View 360° Profile
+                  </Button>
                 </div>
               </div>
             </div>
@@ -192,6 +202,10 @@ const Dashboard = () => {
               <h2 className="text-xl font-bold mb-4">Soul Blueprint</h2>
               <p>Dive deep into your unique astrological and personality insights.</p>
             </div>
+          </TabsContent>
+
+          <TabsContent value="user360" className="mt-6">
+            <User360Dashboard />
           </TabsContent>
 
           <TabsContent value="pie" className="mt-6">
