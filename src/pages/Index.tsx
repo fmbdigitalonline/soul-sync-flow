@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -204,7 +205,7 @@ const Index = () => {
                 onClick={handleTutorialStart}
                 type="button"
               >
-                Begin Your Journey
+                View Blueprint
               </Button>
             </> : <>
               <Button size="lg" className={`bg-primary hover:bg-primary/90 w-full ${touchTargetSize} ${getTextSize('text-base')}`} onClick={handleGetStarted}>
