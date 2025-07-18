@@ -61,7 +61,7 @@ const Blueprint = () => {
       <MainLayout>
         <div className={`w-full min-h-[80vh] flex flex-col items-center justify-center ${spacing.container} mobile-container`}>
           <Loader2 className="h-8 w-8 animate-spin text-soul-purple" />
-          <p className={`mt-2 ${getTextSize('text-sm')}`}>Loading...</p>
+          <p className={`mt-2 ${getTextSize('text-sm')} font-inter`}>Loading...</p>
         </div>
       </MainLayout>
     );
@@ -73,12 +73,12 @@ const Blueprint = () => {
       <MainLayout>
         <div className={`w-full min-h-[80vh] flex items-center justify-center ${spacing.container} mobile-container`}>
           <div className={`cosmic-card ${spacing.card} text-center w-full ${layout.maxWidth}`}>
-            <h1 className={`${getTextSize('text-xl')} font-bold font-display mb-4 break-words`}>
+            <h1 className={`${getTextSize('text-xl')} font-bold font-cormorant mb-4 break-words`}>
               <span className="gradient-text">Soul Blueprint</span>
             </h1>
-            <p className={`mb-6 ${getTextSize('text-sm')} break-words`}>Please sign in to view your blueprint</p>
+            <p className={`mb-6 ${getTextSize('text-sm')} break-words font-inter`}>Please sign in to view your blueprint</p>
             <Button 
-              className="bg-soul-purple hover:bg-soul-purple/90 w-full max-w-full rounded-2xl"
+              className="bg-soul-purple hover:bg-soul-purple/90 w-full max-w-full rounded-2xl font-inter font-medium"
               onClick={() => navigate('/auth')}
             >
               Sign In
@@ -95,7 +95,7 @@ const Blueprint = () => {
       <MainLayout>
         <div className={`w-full min-h-[80vh] flex flex-col items-center justify-center ${spacing.container} mobile-container`}>
           <Loader2 className="h-8 w-8 animate-spin text-soul-purple" />
-          <p className={`mt-2 ${getTextSize('text-sm')} break-words`}>Loading blueprint...</p>
+          <p className={`mt-2 ${getTextSize('text-sm')} break-words font-inter`}>Loading blueprint...</p>
         </div>
       </MainLayout>
     );
@@ -112,15 +112,15 @@ const Blueprint = () => {
           <div className={`w-full min-h-[80vh] flex flex-col items-center justify-center ${spacing.container} mobile-container`}>
             <div className={`cosmic-card ${spacing.card} text-center w-full ${layout.maxWidth}`}>
               <AlertCircle className="h-12 w-12 text-soul-purple mx-auto mb-4" />
-              <h2 className={`${getTextSize('text-lg')} font-semibold mb-4 break-words`}>
+              <h2 className={`${getTextSize('text-lg')} font-semibold mb-4 break-words font-cormorant`}>
                 <span className="gradient-text">Create Your Blueprint</span>
               </h2>
-              <p className={`${getTextSize('text-sm')} mb-6 break-words text-muted-foreground`}>
+              <p className={`${getTextSize('text-sm')} mb-6 break-words text-muted-foreground font-inter`}>
                 You haven't created your soul blueprint yet. Let's get started!
               </p>
               <div className={`space-y-2 ${spacing.gap}`}>
                 <Button 
-                  className="bg-soul-purple hover:bg-soul-purple/90 w-full rounded-2xl"
+                  className="bg-soul-purple hover:bg-soul-purple/90 w-full rounded-2xl font-inter font-medium"
                   onClick={() => navigate('/onboarding')}
                 >
                   Create Blueprint
@@ -128,7 +128,7 @@ const Blueprint = () => {
                 <Button 
                   variant="outline" 
                   onClick={() => refetch()} 
-                  className="w-full rounded-2xl"
+                  className="w-full rounded-2xl font-inter"
                 >
                   <RefreshCw className="mr-2 h-4 w-4" />
                   Check Again
@@ -146,17 +146,17 @@ const Blueprint = () => {
         <div className={`w-full min-h-[80vh] flex flex-col items-center justify-center ${spacing.container} mobile-container`}>
           <div className={`cosmic-card ${spacing.card} text-center w-full ${layout.maxWidth}`}>
             <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h2 className={`${getTextSize('text-lg')} font-semibold mb-4 text-red-500 break-words`}>Blueprint Error</h2>
-            <p className={`text-red-500 mb-4 ${getTextSize('text-sm')} break-words`}>{error}</p>
+            <h2 className={`${getTextSize('text-lg')} font-semibold mb-4 text-red-500 break-words font-cormorant`}>Blueprint Error</h2>
+            <p className={`text-red-500 mb-4 ${getTextSize('text-sm')} break-words font-inter`}>{error}</p>
             <div className={`space-y-2 ${spacing.gap}`}>
-              <Button onClick={() => refetch()} className="w-full rounded-2xl">
+              <Button onClick={() => refetch()} className="w-full rounded-2xl font-inter font-medium">
                 <RefreshCw className="mr-2 h-4 w-4" />
                 Try Again
               </Button>
               <Button 
                 variant="outline" 
                 onClick={() => navigate('/onboarding')} 
-                className="w-full rounded-2xl"
+                className="w-full rounded-2xl font-inter"
               >
                 Create New Blueprint
               </Button>
@@ -175,19 +175,19 @@ const Blueprint = () => {
         <div className={`w-full min-h-[80vh] flex flex-col items-center justify-center ${spacing.container} mobile-container`}>
           <div className={`cosmic-card ${spacing.card} text-center w-full ${layout.maxWidth}`}>
             <AlertCircle className="h-12 w-12 text-soul-purple mx-auto mb-4" />
-            <h2 className={`${getTextSize('text-lg')} font-semibold mb-4 break-words`}>
+            <h2 className={`${getTextSize('text-lg')} font-semibold mb-4 break-words font-cormorant`}>
               <span className="gradient-text">Complete Your Blueprint</span>
             </h2>
-            <p className={`${getTextSize('text-sm')} mb-4 break-words text-muted-foreground`}>
+            <p className={`${getTextSize('text-sm')} mb-4 break-words text-muted-foreground font-inter`}>
               Your blueprint needs more information to be complete. 
               {blueprintValidation.missingFields.length > 0 && (
-                <span className={`block mt-2 ${getTextSize('text-xs')}`}>
+                <span className={`block mt-2 ${getTextSize('text-xs')} font-inter`}>
                   Missing: {blueprintValidation.missingFields.join(', ')}
                 </span>
               )}
             </p>
             <div className="mb-4">
-              <div className={`${getTextSize('text-xs')} text-muted-foreground mb-1`}>
+              <div className={`${getTextSize('text-xs')} text-muted-foreground mb-1 font-inter`}>
                 Completion: {getBlueprintCompletionPercentage}%
               </div>
               <div className="w-full bg-muted rounded-full h-2">
@@ -199,7 +199,7 @@ const Blueprint = () => {
             </div>
             <div className={`space-y-2 ${spacing.gap}`}>
               <Button 
-                className="bg-soul-purple hover:bg-soul-purple/90 w-full rounded-2xl"
+                className="bg-soul-purple hover:bg-soul-purple/90 w-full rounded-2xl font-inter font-medium"
                 onClick={() => navigate('/onboarding')}
               >
                 Complete Blueprint
@@ -207,7 +207,7 @@ const Blueprint = () => {
               <Button 
                 variant="outline" 
                 onClick={() => refetch()} 
-                className="w-full rounded-2xl"
+                className="w-full rounded-2xl font-inter"
               >
                 <RefreshCw className="mr-2 h-4 w-4" />
                 Refresh
@@ -221,7 +221,6 @@ const Blueprint = () => {
 
   const isAdmin = isAdminUser(user);
 
-  // Convert LayeredBlueprint to BlueprintData format for save operations
   const convertToSaveFormat = (layeredBlueprint: any) => {
     return {
       user_meta: layeredBlueprint.user_meta || {},
@@ -356,25 +355,25 @@ const Blueprint = () => {
   return (
     <MainLayout>
       <div className={`w-full ${spacing.container} pb-20 mobile-container`}>
-        {/* Simplified header with just the main title and action buttons */}
+        {/* Header with proper typography hierarchy */}
         <div className={`flex flex-col ${spacing.gap} mb-6 w-full max-w-full`}>
           <div className="flex items-center justify-between">
-            <h1 className={`${getTextSize('text-3xl')} font-bold font-display break-words`}>
+            <h1 className={`${getTextSize('text-3xl')} font-bold font-cormorant break-words`}>
               <span className="gradient-text">Soul Blueprint</span>
             </h1>
             {getBlueprintCompletionPercentage < 100 && (
-              <div className={`${getTextSize('text-xs')} text-muted-foreground`}>
+              <div className={`${getTextSize('text-xs')} text-muted-foreground font-inter`}>
                 {getBlueprintCompletionPercentage}% Complete
               </div>
             )}
           </div>
           
-          {/* Action buttons - Mobile Stack with proper sizing and responsive spacing */}
+          {/* Action buttons with proper font styling */}
           <div className={`flex flex-col ${spacing.gap} w-full max-w-full`}>
             {isAdmin && (
               <Button 
                 variant="outline"
-                className={`flex items-center justify-center ${getTextSize('text-sm')} h-12 w-full max-w-full rounded-2xl`}
+                className={`flex items-center justify-center ${getTextSize('text-sm')} h-12 w-full max-w-full rounded-2xl font-inter font-medium`}
                 onClick={handleRegenerateBlueprint}
                 disabled={isGenerating}
               >
@@ -383,7 +382,7 @@ const Blueprint = () => {
               </Button>
             )}
             <Button 
-              className={`bg-soul-purple hover:bg-soul-purple/90 flex items-center justify-center ${getTextSize('text-sm')} h-12 w-full rounded-2xl`}
+              className={`bg-soul-purple hover:bg-soul-purple/90 flex items-center justify-center ${getTextSize('text-sm')} h-12 w-full rounded-2xl font-inter font-medium`}
               onClick={() => navigate('/coach')}
             >
               <MessageCircle className="mr-2 h-4 w-4 flex-shrink-0" />
@@ -393,26 +392,26 @@ const Blueprint = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8 w-full max-w-full">
-          {/* Simplified tabs - only showing necessary ones for regular users */}
-          <TabsList className={`w-full max-w-full h-auto ${spacing.button} grid ${isAdmin ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-2'} !rounded-2xl`}>
-            <TabsTrigger value="view" className={`${getTextSize('text-sm')} py-2 px-1 truncate !rounded-2xl`}>
+          {/* Tabs with Inter font */}
+          <TabsList className={`w-full max-w-full h-auto ${spacing.button} grid ${isAdmin ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-2'} !rounded-2xl font-inter`}>
+            <TabsTrigger value="view" className={`${getTextSize('text-sm')} py-2 px-1 truncate !rounded-2xl font-medium`}>
               Blueprint
             </TabsTrigger>
-            <TabsTrigger value="report" className={`${getTextSize('text-sm')} py-2 px-1 truncate !rounded-2xl`}>
+            <TabsTrigger value="report" className={`${getTextSize('text-sm')} py-2 px-1 truncate !rounded-2xl font-medium`}>
               Report
             </TabsTrigger>
             {isAdmin && (
               <>
-                <TabsTrigger value="edit" className={`${getTextSize('text-sm')} py-2 px-1 truncate !rounded-2xl`}>
+                <TabsTrigger value="edit" className={`${getTextSize('text-sm')} py-2 px-1 truncate !rounded-2xl font-medium`}>
                   Edit
                 </TabsTrigger>
-                <TabsTrigger value="health-check" className={`${getTextSize('text-sm')} py-2 px-1 flex items-center gap-1 min-w-0 !rounded-2xl`}>
+                <TabsTrigger value="health-check" className={`${getTextSize('text-sm')} py-2 px-1 flex items-center gap-1 min-w-0 !rounded-2xl font-medium`}>
                   <Activity className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                   <span className={`${isMobile ? 'hidden sm:inline' : 'inline'} truncate`}>Health</span>
                 </TabsTrigger>
               </>
             )}
-            <TabsTrigger value="generating" disabled={!isGenerating} className={`${getTextSize('text-sm')} py-2 px-1 truncate !rounded-2xl ${!isAdmin ? 'hidden' : ''}`}>
+            <TabsTrigger value="generating" disabled={!isGenerating} className={`${getTextSize('text-sm')} py-2 px-1 truncate !rounded-2xl font-medium ${!isAdmin ? 'hidden' : ''}`}>
               Generating
             </TabsTrigger>
           </TabsList>
@@ -440,7 +439,7 @@ const Blueprint = () => {
           )}
 
           {isAdmin && (
-            <TabsContent value="health-check" className={`mt-6 w-full max-w-full`}>
+            <TabsContent value="health-check" className={`mt-6 w-full max-www-full`}>
               <div className="w-full max-w-full overflow-hidden">
                 <BlueprintHealthCheck />
               </div>
