@@ -355,22 +355,22 @@ const Blueprint = () => {
 
   return (
     <MainLayout>
-      <div className={`w-full ${spacing.container} pb-20 mobile-container`}>
+      <div className={`w-full ${spacing.container} pb-20 mobile-container overflow-x-hidden`}>
         {/* Simplified header with just the main title and action buttons */}
-        <div className={`flex flex-col ${spacing.gap} mb-6 w-full max-w-full`}>
-          <div className="flex items-center justify-between">
-            <h1 className={`${getTextSize('text-3xl')} font-bold font-display break-words`}>
+        <div className={`flex flex-col ${spacing.gap} mb-6 w-full max-w-full overflow-hidden`}>
+          <div className="flex items-center justify-between w-full overflow-hidden">
+            <h1 className={`${getTextSize('text-3xl')} font-bold font-display break-words flex-1 min-w-0`}>
               <span className="gradient-text">Soul Blueprint</span>
             </h1>
             {getBlueprintCompletionPercentage < 100 && (
-              <div className={`${getTextSize('text-xs')} text-muted-foreground`}>
+              <div className={`${getTextSize('text-xs')} text-muted-foreground flex-shrink-0 ml-2`}>
                 {getBlueprintCompletionPercentage}% Complete
               </div>
             )}
           </div>
           
           {/* Action buttons - Mobile Stack with proper sizing and responsive spacing */}
-          <div className={`flex flex-col ${spacing.gap} w-full max-w-full`}>
+          <div className={`flex flex-col ${spacing.gap} w-full max-w-full overflow-hidden`}>
             {isAdmin && (
               <Button 
                 variant="outline"
@@ -392,7 +392,7 @@ const Blueprint = () => {
           </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8 w-full max-w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8 w-full max-w-full overflow-hidden">
           {/* Simplified tabs - only showing necessary ones for regular users */}
           <TabsList className={`w-full max-w-full h-auto ${spacing.button} grid ${isAdmin ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-2'} !rounded-2xl`}>
             <TabsTrigger value="view" className={`${getTextSize('text-sm')} py-2 px-1 truncate !rounded-2xl`}>
@@ -417,7 +417,7 @@ const Blueprint = () => {
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="view" className={`mt-6 w-full max-w-full`}>
+          <TabsContent value="view" className={`mt-6 w-full max-w-full overflow-hidden`}>
             {blueprintData && (
               <div className="w-full max-w-full overflow-hidden">
                 <SimplifiedBlueprintViewer blueprint={blueprintData} />
@@ -425,7 +425,7 @@ const Blueprint = () => {
             )}
           </TabsContent>
 
-          <TabsContent value="report" className={`mt-6 w-full max-w-full`}>
+          <TabsContent value="report" className={`mt-6 w-full max-w-full overflow-hidden`}>
             <div className="w-full max-w-full overflow-hidden">
               <PersonalityReportViewer />
             </div>
