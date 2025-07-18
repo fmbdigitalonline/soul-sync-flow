@@ -1,7 +1,5 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { useUserProfile } from '@/hooks/use-user-profile';
-import { useBlueprintCache } from '@/contexts/BlueprintCacheContext';
 
 export interface DataAvailability {
   blueprint: { 
