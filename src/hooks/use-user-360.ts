@@ -3,10 +3,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { user360Service, User360Profile, DataAvailability } from '@/services/user-360-service';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useUser360Sync } from './use-user-360-sync';
 
 export const useUser360 = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { syncActive, lastSyncTime, triggerSync } = useUser360Sync();
+  
   const [profile, setProfile] = useState<User360Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +34,8 @@ export const useUser360 = () => {
       if (userProfile) {
         console.log('✅ 360° Profile loaded successfully', {
           dataSources: userProfile.dataSources.length,
-          version: userProfile.version
+          version: userProfile.version,
+          syncActive
         });
       } else {
         console.log('⚠️ No 360° profile data available - this is normal for new users');
@@ -50,7 +54,7 @@ export const useUser360 = () => {
     } finally {
       setLoading(false);
     }
-  }, [user, toast]);
+  }, [user, toast, syncActive]);
 
   const refreshProfile = useCallback(async () => {
     if (!user) return;
@@ -72,10 +76,41 @@ export const useUser360 = () => {
     }
   }, [user, toast]);
 
+  // Enhanced refresh that also triggers sync
+  const forceRefreshWithSync = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      console.log('🔄 Force refreshing with sync trigger');
+      
+      // Trigger sync first to ensure fresh data
+      await triggerSync();
+      
+      // Wait a moment for sync to process
+      setTimeout(async () => {
+        await refreshProfile();
+      }, 1000);
+      
+    } catch (err) {
+      console.error('❌ Error in force refresh with sync:', err);
+    }
+  }, [user, triggerSync, refreshProfile]);
+
   // Initial load
   useEffect(() => {
     fetchProfile();
   }, [fetchProfile]);
+
+  // Auto-refresh when sync updates occur
+  useEffect(() => {
+    if (lastSyncTime && profile) {
+      // If sync happened after our last refresh, automatically refresh
+      if (lastRefresh && lastSyncTime > lastRefresh) {
+        console.log('🔄 Auto-refreshing profile due to sync update');
+        fetchProfile();
+      }
+    }
+  }, [lastSyncTime, lastRefresh, profile, fetchProfile]);
 
   // Calculate data completeness score
   const completenessScore = profile?.dataAvailability ? 
@@ -89,11 +124,15 @@ export const useUser360 = () => {
     lastRefresh,
     completenessScore: Math.round(completenessScore),
     refreshProfile,
+    forceRefreshWithSync,
     // Transparent availability info
     dataAvailability: profile?.dataAvailability || null,
     dataSources: profile?.dataSources || [],
     hasProfile: profile !== null,
     isDataAvailable: (section: keyof DataAvailability) => 
-      profile?.dataAvailability?.[section]?.available || false
+      profile?.dataAvailability?.[section]?.available || false,
+    // Sync status
+    syncActive,
+    lastSyncTime
   };
 };

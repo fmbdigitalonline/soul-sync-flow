@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
@@ -20,10 +19,21 @@ import { SoulOrbProvider } from './contexts/SoulOrbContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BlueprintCacheProvider } from './contexts/BlueprintCacheContext';
 import AdminDashboard from "@/pages/AdminDashboard";
+import { user360Cleanup } from '@/utils/user-360-cleanup';
 
 const queryClient = new QueryClient();
 
 function App() {
+  // Initialize 360° cleanup system
+  useEffect(() => {
+    user360Cleanup.registerCleanup();
+    
+    // Cleanup on app unmount
+    return () => {
+      user360Cleanup.cleanup();
+    };
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>

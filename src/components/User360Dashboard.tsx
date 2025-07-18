@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
-import { RefreshCw, Brain, Target, TrendingUp, MessageSquare, Activity, Zap, Heart } from 'lucide-react';
+import { RefreshCw, Brain, Target, TrendingUp, MessageSquare, Activity, Zap, Heart, Wifi, WifiOff } from 'lucide-react';
 import { useUser360 } from '@/hooks/use-user-360';
 import { DataAvailability } from '@/services/user-360-service';
 
@@ -81,43 +81,43 @@ const DataAvailabilityIndicator: React.FC<DataAvailabilityIndicatorProps> = ({
                   </Badge>
                   
                   {/* Show specific metrics when available */}
-                  {isAvailable && key === 'blueprint' && 'completionPercentage' in sectionData && sectionData.completionPercentage && (
+                  {isAvailable && key === 'blueprint' && sectionData && 'completionPercentage' in sectionData && sectionData.completionPercentage && (
                     <p className="text-xs text-muted-foreground font-inter">
                       {sectionData.completionPercentage}% complete
                     </p>
                   )}
-                  {isAvailable && key === 'intelligence' && 'totalScore' in sectionData && sectionData.totalScore && (
+                  {isAvailable && key === 'intelligence' && sectionData && 'totalScore' in sectionData && sectionData.totalScore && (
                     <p className="text-xs text-muted-foreground font-inter">
                       Level {Math.round(sectionData.totalScore)}
                     </p>
                   )}
-                  {isAvailable && key === 'memory' && 'nodeCount' in sectionData && 'edgeCount' in sectionData && (
+                  {isAvailable && key === 'memory' && sectionData && 'nodeCount' in sectionData && 'edgeCount' in sectionData && (
                     <p className="text-xs text-muted-foreground font-inter">
                       {sectionData.nodeCount} nodes, {sectionData.edgeCount} edges
                     </p>
                   )}
-                  {isAvailable && key === 'patterns' && 'patternCount' in sectionData && (
+                  {isAvailable && key === 'patterns' && sectionData && 'patternCount' in sectionData && (
                     <p className="text-xs text-muted-foreground font-inter">
                       {sectionData.patternCount} patterns
                       {'confidence' in sectionData && sectionData.confidence && ` (${Math.round(sectionData.confidence * 100)}%)`}
                     </p>
                   )}
-                  {isAvailable && key === 'growth' && 'entriesCount' in sectionData && (
+                  {isAvailable && key === 'growth' && sectionData && 'entriesCount' in sectionData && (
                     <p className="text-xs text-muted-foreground font-inter">
                       {sectionData.entriesCount} entries
                     </p>
                   )}
-                  {isAvailable && key === 'activities' && 'totalActivities' in sectionData && 'totalPoints' in sectionData && (
+                  {isAvailable && key === 'activities' && sectionData && 'totalActivities' in sectionData && 'totalPoints' in sectionData && (
                     <p className="text-xs text-muted-foreground font-inter">
                       {sectionData.totalActivities} activities, {sectionData.totalPoints} points
                     </p>
                   )}
-                  {isAvailable && key === 'goals' && 'activeGoals' in sectionData && 'completedGoals' in sectionData && (
+                  {isAvailable && key === 'goals' && sectionData && 'activeGoals' in sectionData && 'completedGoals' in sectionData && (
                     <p className="text-xs text-muted-foreground font-inter">
                       {sectionData.activeGoals} active, {sectionData.completedGoals} completed
                     </p>
                   )}
-                  {isAvailable && key === 'conversations' && 'totalConversations' in sectionData && (
+                  {isAvailable && key === 'conversations' && sectionData && 'totalConversations' in sectionData && (
                     <p className="text-xs text-muted-foreground font-inter">
                       {sectionData.totalConversations} conversations
                     </p>
@@ -140,9 +140,12 @@ const User360Dashboard: React.FC = () => {
     lastRefresh, 
     completenessScore, 
     refreshProfile,
+    forceRefreshWithSync,
     dataAvailability,
     dataSources,
-    hasProfile 
+    hasProfile,
+    syncActive,
+    lastSyncTime
   } = useUser360();
 
   if (loading) {
@@ -177,10 +180,16 @@ const User360Dashboard: React.FC = () => {
             <p className="font-inter text-sm bg-destructive/10 p-3 rounded border">
               {error}
             </p>
-            <Button onClick={refreshProfile} className="w-full font-cormorant">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Try Again
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={refreshProfile} className="flex-1 font-cormorant">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Try Again
+              </Button>
+              <Button onClick={forceRefreshWithSync} variant="outline" className="flex-1 font-cormorant">
+                <Wifi className="h-4 w-4 mr-2" />
+                Force Sync
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -205,10 +214,16 @@ const User360Dashboard: React.FC = () => {
               <li>No data has been collected yet</li>
               <li>Blueprint creation is still in progress</li>
             </ul>
-            <Button onClick={refreshProfile} className="w-full font-cormorant">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Check Again
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={refreshProfile} className="flex-1 font-cormorant">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Check Again
+              </Button>
+              <Button onClick={forceRefreshWithSync} variant="outline" className="flex-1 font-cormorant">
+                <Wifi className="h-4 w-4 mr-2" />
+                Force Sync
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -230,20 +245,48 @@ const User360Dashboard: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-3">
+            {/* Sync Status Indicator */}
+            <div className="flex items-center gap-2">
+              {syncActive ? (
+                <div className="flex items-center gap-1 text-green-600">
+                  <Wifi className="h-4 w-4" />
+                  <span className="font-inter text-xs">Live Sync</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1 text-muted-foreground">
+                  <WifiOff className="h-4 w-4" />
+                  <span className="font-inter text-xs">Offline</span>
+                </div>
+              )}
+            </div>
+            
             {lastRefresh && (
               <p className="font-inter text-xs text-muted-foreground">
                 Updated {lastRefresh.toLocaleTimeString()}
               </p>
             )}
-            <Button 
-              onClick={refreshProfile} 
-              variant="outline" 
-              size="sm"
-              className="font-cormorant"
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
+            
+            <div className="flex gap-2">
+              <Button 
+                onClick={refreshProfile} 
+                variant="outline" 
+                size="sm"
+                className="font-cormorant"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+              
+              <Button 
+                onClick={forceRefreshWithSync} 
+                variant="default" 
+                size="sm"
+                className="font-cormorant"
+              >
+                <Wifi className="h-4 w-4 mr-2" />
+                Force Sync
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -259,7 +302,7 @@ const User360Dashboard: React.FC = () => {
         )}
 
         {/* Profile Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Data Sources */}
           <Card>
             <CardHeader>
@@ -333,6 +376,38 @@ const User360Dashboard: React.FC = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Sync Status */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-cormorant text-lg">Real-Time Sync</CardTitle>
+              <CardDescription className="font-inter">
+                Live data synchronization status
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  {syncActive ? (
+                    <div className="flex items-center gap-2 text-green-600">
+                      <Wifi className="h-5 w-5" />
+                      <span className="font-cormorant text-lg font-bold">Active</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <WifiOff className="h-5 w-5" />
+                      <span className="font-cormorant text-lg font-bold">Offline</span>
+                    </div>
+                  )}
+                </div>
+                {lastSyncTime && (
+                  <p className="font-inter text-xs text-muted-foreground">
+                    Last sync: {lastSyncTime.toLocaleTimeString()}
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Detailed Profile Data - Only show when data is actually available */}
@@ -354,7 +429,7 @@ const User360Dashboard: React.FC = () => {
                       <h3 className="font-cormorant text-lg font-semibold mb-2 capitalize">
                         {key.replace(/([A-Z])/g, ' $1').trim()}
                       </h3>
-                      <div className="bg-muted/50 p-3 rounded font-mono text-xs overflow-auto">
+                      <div className="bg-muted/50 p-3 rounded font-mono text-xs overflow-auto max-h-48">
                         <pre>{JSON.stringify(value, null, 2)}</pre>
                       </div>
                     </div>
