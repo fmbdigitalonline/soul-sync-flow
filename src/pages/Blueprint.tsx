@@ -355,22 +355,22 @@ const Blueprint = () => {
 
   return (
     <MainLayout>
-      <div className={`w-full min-w-0 max-w-full ${spacing.container} pb-20 mobile-container overflow-x-hidden box-border`}>
+      <div className={`w-full ${spacing.container} pb-20 mobile-container`}>
         {/* Simplified header with just the main title and action buttons */}
-        <div className={`flex flex-col ${spacing.gap} mb-6 w-full min-w-0 max-w-full overflow-hidden box-border`}>
-          <div className="flex items-center justify-between w-full min-w-0 max-w-full overflow-hidden">
-            <h1 className={`${getTextSize('text-3xl')} font-bold font-display break-words flex-1 min-w-0`}>
+        <div className={`flex flex-col ${spacing.gap} mb-6 w-full max-w-full`}>
+          <div className="flex items-center justify-between">
+            <h1 className={`${getTextSize('text-3xl')} font-bold font-display break-words`}>
               <span className="gradient-text">Soul Blueprint</span>
             </h1>
             {getBlueprintCompletionPercentage < 100 && (
-              <div className={`${getTextSize('text-xs')} text-muted-foreground flex-shrink-0 ml-2`}>
+              <div className={`${getTextSize('text-xs')} text-muted-foreground`}>
                 {getBlueprintCompletionPercentage}% Complete
               </div>
             )}
           </div>
           
           {/* Action buttons - Mobile Stack with proper sizing and responsive spacing */}
-          <div className={`flex flex-col ${spacing.gap} w-full max-w-full overflow-hidden`}>
+          <div className={`flex flex-col ${spacing.gap} w-full max-w-full`}>
             {isAdmin && (
               <Button 
                 variant="outline"
@@ -392,7 +392,7 @@ const Blueprint = () => {
           </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8 w-full max-w-full overflow-hidden">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8 w-full max-w-full">
           {/* Simplified tabs - only showing necessary ones for regular users */}
           <TabsList className={`w-full max-w-full h-auto ${spacing.button} grid ${isAdmin ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-2'} !rounded-2xl`}>
             <TabsTrigger value="view" className={`${getTextSize('text-sm')} py-2 px-1 truncate !rounded-2xl`}>
@@ -417,16 +417,16 @@ const Blueprint = () => {
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="view" className={`mt-6 w-full min-w-0 max-w-full overflow-hidden box-border`}>
+          <TabsContent value="view" className={`mt-6 w-full max-w-full`}>
             {blueprintData && (
-              <div className="w-full min-w-0 max-w-full overflow-hidden box-border">
+              <div className="w-full max-w-full overflow-hidden">
                 <SimplifiedBlueprintViewer blueprint={blueprintData} />
               </div>
             )}
           </TabsContent>
 
-          <TabsContent value="report" className={`mt-6 w-full min-w-0 max-w-full overflow-hidden box-border`}>
-            <div className="w-full min-w-0 max-w-full overflow-hidden box-border">
+          <TabsContent value="report" className={`mt-6 w-full max-w-full`}>
+            <div className="w-full max-w-full overflow-hidden">
               <PersonalityReportViewer />
             </div>
           </TabsContent>

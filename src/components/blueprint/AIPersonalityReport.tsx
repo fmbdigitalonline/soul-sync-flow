@@ -1,14 +1,13 @@
 
 import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, FileText, Sparkles, ArrowLeft } from "lucide-react";
+import { Loader2, FileText, Sparkles, Download, ArrowLeft } from "lucide-react";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { PersonalityReport, aiPersonalityReportService } from "@/services/ai-personality-report-service";
 import { BlueprintData } from "@/services/blueprint-service";
 import { useToast } from "@/hooks/use-toast";
-import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
-import { PersonalityReportHeader } from "./PersonalityReportHeader";
-import { PersonalityReportContent } from "./PersonalityReportContent";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface AIPersonalityReportProps {
   blueprint: BlueprintData;
@@ -26,7 +25,6 @@ export const AIPersonalityReport: React.FC<AIPersonalityReportProps> = ({
   const [generating, setGenerating] = useState(false);
   const [hasExisting, setHasExisting] = useState(false);
   const { toast } = useToast();
-  const { spacing, getTextSize, isMobile } = useResponsiveLayout();
 
   useEffect(() => {
     checkForExistingReport();
@@ -90,9 +88,9 @@ export const AIPersonalityReport: React.FC<AIPersonalityReportProps> = ({
 
   if (loading) {
     return (
-      <div className={`flex items-center justify-center ${spacing.container} w-full max-w-full overflow-hidden`}>
+      <div className="flex items-center justify-center p-8">
         <Loader2 className="h-8 w-8 animate-spin text-soul-purple" />
-        <span className={`ml-2 ${getTextSize('text-base')}`}>Loading your reading...</span>
+        <span className="ml-2">Loading your reading...</span>
       </div>
     );
   }
@@ -100,75 +98,150 @@ export const AIPersonalityReport: React.FC<AIPersonalityReportProps> = ({
   // Show generation prompt if no existing report
   if (!hasExisting) {
     return (
-      <div className={`mobile-container ${spacing.container} w-full max-w-full overflow-hidden`}>
-        <CosmicCard className={`${spacing.card} text-center w-full max-w-full overflow-hidden`}>
-          <div className={spacing.gap}>
-            <Button
-              variant="ghost"
-              onClick={onBack}
-              className={`${spacing.button} self-start`}
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Blueprint
-            </Button>
-          </div>
-          
-          <FileText className={`${isMobile ? 'h-12 w-12' : 'h-16 w-16'} text-soul-purple mx-auto ${spacing.gap}`} />
-          <h2 className={`${getTextSize('text-2xl')} font-bold ${spacing.text} gradient-text break-words`}>
-            Generate Your Comprehensive Reading
-          </h2>
-          <p className={`text-muted-foreground ${spacing.gap} max-w-md mx-auto ${getTextSize('text-sm')} break-words`}>
-            Create a detailed, Soul-generated personality report that weaves together all aspects of your blueprint into one comprehensive analysis. This will be saved for you to revisit anytime.
-          </p>
-          
+      <CosmicCard className="p-6 text-center">
+        <div className="mb-6">
           <Button
-            onClick={generateReport}
-            disabled={generating}
-            className="bg-soul-purple hover:bg-soul-purple/90"
-            size={isMobile ? "default" : "lg"}
+            variant="ghost"
+            onClick={onBack}
+            className="mb-4 self-start"
           >
-            {generating ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Generating Reading...
-              </>
-            ) : (
-              <>
-                <Sparkles className="h-4 w-4 mr-2" />
-                Generate My Reading
-              </>
-            )}
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Blueprint
           </Button>
-          
-          {generating && (
-            <p className={`${getTextSize('text-sm')} text-muted-foreground ${spacing.text} break-words`}>
-              This process typically takes 30-60 seconds...
-            </p>
+        </div>
+        
+        <FileText className="h-16 w-16 text-soul-purple mx-auto mb-4" />
+        <h2 className="text-2xl font-bold mb-4 gradient-text">
+          Generate Your Comprehensive Reading
+        </h2>
+        <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+          Create a detailed, Soul-generated personality report that weaves together all aspects of your blueprint into one comprehensive analysis. This will be saved for you to revisit anytime.
+        </p>
+        
+        <Button
+          onClick={generateReport}
+          disabled={generating}
+          className="bg-soul-purple hover:bg-soul-purple/90"
+          size="lg"
+        >
+          {generating ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Generating Reading...
+            </>
+          ) : (
+            <>
+              <Sparkles className="h-4 w-4 mr-2" />
+              Generate My Reading
+            </>
           )}
-        </CosmicCard>
-      </div>
+        </Button>
+        
+        {generating && (
+          <p className="text-sm text-muted-foreground mt-4">
+            This process typically takes 30-60 seconds...
+          </p>
+        )}
+      </CosmicCard>
     );
   }
 
   // Show the generated report
   if (!report) {
     return (
-      <div className={`flex items-center justify-center ${spacing.container} w-full max-w-full overflow-hidden`}>
-        <p className={`${getTextSize('text-base')} break-words`}>Loading your saved reading...</p>
+      <div className="flex items-center justify-center p-8">
+        <p>Loading your saved reading...</p>
       </div>
     );
   }
 
   return (
-    <div className={`mobile-container ${spacing.container} w-full max-w-full overflow-hidden`}>
-      <div className="space-y-6 w-full max-w-full overflow-hidden">
-        <PersonalityReportHeader 
-          onBack={onBack}
-          generatedAt={report.generated_at}
-        />
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <Button
+          variant="ghost"
+          onClick={onBack}
+          className="mb-4"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Blueprint
+        </Button>
         
-        <PersonalityReportContent report={report} />
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <FileText className="h-4 w-4" />
+          Generated on {new Date(report.generated_at).toLocaleDateString()}
+        </div>
       </div>
+
+      <div className="text-center mb-6">
+        <h1 className="text-3xl font-bold gradient-text mb-2">
+          Your Comprehensive Personality Reading
+        </h1>
+        <p className="text-muted-foreground">
+          A detailed analysis of your complete Soul Blueprint
+        </p>
+      </div>
+
+      <ScrollArea className="h-[70vh]">
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-soul-purple" />
+                Your Core Personality Pattern
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="whitespace-pre-wrap">{report.report_content.core_personality_pattern}</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>How You Make Decisions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="whitespace-pre-wrap">{report.report_content.decision_making_style}</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Your Relationship Style</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="whitespace-pre-wrap">{report.report_content.relationship_style}</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Your Life Path & Purpose</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="whitespace-pre-wrap">{report.report_content.life_path_purpose}</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Current Energy & Timing</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="whitespace-pre-wrap">{report.report_content.current_energy_timing}</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-soul-purple/20">
+            <CardHeader>
+              <CardTitle className="text-soul-purple">Integrated Summary</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="whitespace-pre-wrap text-lg">{report.report_content.integrated_summary}</p>
+            </CardContent>
+          </Card>
+        </div>
+      </ScrollArea>
     </div>
   );
 };
