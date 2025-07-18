@@ -204,7 +204,7 @@ const Index = () => {
                 onClick={handleTutorialStart}
                 type="button"
               >
-                {t("index.chatWithCompanion")}
+                Begin Your Journey
               </Button>
             </> : <>
               <Button size="lg" className={`bg-primary hover:bg-primary/90 w-full ${touchTargetSize} ${getTextSize('text-base')}`} onClick={handleGetStarted}>
