@@ -69,7 +69,7 @@ function App() {
                         </ProtectedRoute>
                       } 
                     />
-                    {/* Catch-all route for 404s */}
+                    {/* Catch-all route for 404s - MUST be last */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                   <Toaster />
