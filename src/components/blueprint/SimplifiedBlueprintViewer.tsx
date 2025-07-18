@@ -132,31 +132,31 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
             <div className="grid grid-cols-1 gap-4 w-full max-w-full">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="text-center p-3 bg-soul-purple/5 rounded-3xl">
-                  <h4 className={`font-inter font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>MBTI Type</h4>
-                  <p className={`${getTextSize('text-2xl')} font-inter font-bold text-soul-purple break-words`}>{mbtiType}</p>
+                  <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>MBTI Type</h4>
+                  <p className={`${getTextSize('text-2xl')} font-cormorant font-bold text-soul-purple break-words`}>{mbtiType}</p>
                   <p className={`${getTextSize('text-xs')} font-inter text-gray-600 break-words`}>{dominantFunction}</p>
                 </div>
                 <div className="text-center p-3 bg-soul-purple/5 rounded-3xl">
-                  <h4 className={`font-inter font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>Life Path</h4>
-                  <p className={`${getTextSize('text-2xl')} font-inter font-bold text-soul-purple`}>{lifePath}</p>
+                  <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>Life Path</h4>
+                  <p className={`${getTextSize('text-2xl')} font-cormorant font-bold text-soul-purple`}>{lifePath}</p>
                   <p className={`${getTextSize('text-xs')} font-inter text-gray-600 break-words`}>{lifePathKeyword}</p>
                 </div>
                 <div className="text-center p-3 bg-soul-purple/5 rounded-3xl">
-                  <h4 className={`font-inter font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>Sun Sign</h4>
-                  <p className={`${getTextSize('text-2xl')} font-inter font-bold text-soul-purple break-words`}>{sunSign}</p>
+                  <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>Sun Sign</h4>
+                  <p className={`${getTextSize('text-2xl')} font-cormorant font-bold text-soul-purple break-words`}>{sunSign}</p>
                   <p className={`${getTextSize('text-xs')} font-inter text-gray-600 break-words`}>Core identity</p>
                 </div>
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                 <div className="text-center p-3 bg-soul-purple/5 rounded-3xl">
-                  <h4 className={`font-inter font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>Human Design</h4>
-                  <p className={`${getTextSize('text-lg')} font-inter font-bold text-soul-purple break-words`}>{hdType}</p>
+                  <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>Human Design</h4>
+                  <p className={`${getTextSize('text-lg')} font-cormorant font-bold text-soul-purple break-words`}>{hdType}</p>
                   <p className={`${getTextSize('text-xs')} font-inter text-gray-600 break-words`}>{authority} Authority</p>
                 </div>
                 <div className="text-center p-3 bg-soul-purple/5 rounded-3xl">
-                  <h4 className={`font-inter font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>Chinese Zodiac</h4>
-                  <p className={`${getTextSize('text-lg')} font-inter font-bold text-soul-purple break-words`}>{chineseZodiac}</p>
+                  <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>Chinese Zodiac</h4>
+                  <p className={`${getTextSize('text-lg')} font-cormorant font-bold text-soul-purple break-words`}>{chineseZodiac}</p>
                   <p className={`${getTextSize('text-xs')} font-inter text-gray-600 break-words`}>{element} Element</p>
                 </div>
               </div>
@@ -180,7 +180,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <h4 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-base')} break-words`}>Personality Type</h4>
-                  <p className={`${getTextSize('text-3xl')} font-inter font-bold text-soul-purple break-words`}>{mbtiType}</p>
+                  <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple break-words`}>{mbtiType}</p>
                 </div>
                 <div>
                   <h4 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-base')} break-words`}>Cognitive Functions</h4>
@@ -191,15 +191,15 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
               
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <h5 className={`font-inter font-semibold text-gray-700 mb-1 ${getTextSize('text-sm')} break-words`}>Task Approach</h5>
+                  <h5 className={`font-cormorant font-semibold text-gray-700 mb-1 ${getTextSize('text-sm')} break-words`}>Task Approach</h5>
                   <p className={`${getTextSize('text-sm')} font-inter text-gray-600 capitalize break-words`}>{taskApproach}</p>
                 </div>
                 <div>
-                  <h5 className={`font-inter font-semibold text-gray-700 mb-1 ${getTextSize('text-sm')} break-words`}>Communication</h5>
+                  <h5 className={`font-cormorant font-semibold text-gray-700 mb-1 ${getTextSize('text-sm')} break-words`}>Communication</h5>
                   <p className={`${getTextSize('text-sm')} font-inter text-gray-600 capitalize break-words`}>{communicationStyle}</p>
                 </div>
                 <div>
-                  <h5 className={`font-inter font-semibold text-gray-700 mb-1 ${getTextSize('text-sm')} break-words`}>Decision Making</h5>
+                  <h5 className={`font-cormorant font-semibold text-gray-700 mb-1 ${getTextSize('text-sm')} break-words`}>Decision Making</h5>
                   <p className={`${getTextSize('text-sm')} font-inter text-gray-600 capitalize break-words`}>{decisionMaking}</p>
                 </div>
               </div>
@@ -223,27 +223,27 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <h4 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-base')} break-words`}>Energy Type</h4>
-                  <p className={`${getTextSize('text-3xl')} font-inter font-bold text-soul-purple break-words`}>{hdType}</p>
+                  <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple break-words`}>{hdType}</p>
                   <p className={`${getTextSize('text-sm')} font-inter text-gray-600 break-words`}>{energyType} energy</p>
                 </div>
                 <div>
                   <h4 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-base')} break-words`}>Decision Authority</h4>
-                  <p className={`${getTextSize('text-xl')} font-inter font-bold text-soul-purple break-words`}>{authority}</p>
+                  <p className={`${getTextSize('text-xl')} font-cormorant font-bold text-soul-purple break-words`}>{authority}</p>
                   <p className={`${getTextSize('text-sm')} font-inter text-gray-600 break-words`}>Inner authority</p>
                 </div>
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <h5 className={`font-inter font-semibold text-gray-700 mb-1 ${getTextSize('text-sm')} break-words`}>Strategy</h5>
+                  <h5 className={`font-cormorant font-semibold text-gray-700 mb-1 ${getTextSize('text-sm')} break-words`}>Strategy</h5>
                   <p className={`${getTextSize('text-sm')} font-inter text-gray-600 capitalize break-words`}>{strategy}</p>
                 </div>
                 <div>
-                  <h5 className={`font-inter font-semibold text-gray-700 mb-1 ${getTextSize('text-sm')} break-words`}>Profile</h5>
+                  <h5 className={`font-cormorant font-semibold text-gray-700 mb-1 ${getTextSize('text-sm')} break-words`}>Profile</h5>
                   <p className={`${getTextSize('text-sm')} font-inter text-gray-600 break-words`}>{profile}</p>
                 </div>
                 <div>
-                  <h5 className={`font-inter font-semibold text-gray-700 mb-1 ${getTextSize('text-sm')} break-words`}>Pacing</h5>
+                  <h5 className={`font-cormorant font-semibold text-gray-700 mb-1 ${getTextSize('text-sm')} break-words`}>Pacing</h5>
                   <p className={`${getTextSize('text-sm')} font-inter text-gray-600 capitalize break-words`}>{pacing}</p>
                 </div>
               </div>
@@ -267,20 +267,20 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
               <div className="space-y-4">
                 <div className="p-3 bg-soul-purple/5 rounded-3xl">
                   <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-base')} break-words`}>Life Path Number</h4>
-                  <p className={`${getTextSize('text-4xl')} font-inter font-bold text-soul-purple`}>{lifePath}</p>
+                  <p className={`${getTextSize('text-4xl')} font-cormorant font-bold text-soul-purple`}>{lifePath}</p>
                   <p className={`${getTextSize('text-sm')} font-inter text-gray-600 font-medium break-words`}>{lifePathKeyword}</p>
                   <p className={`${getTextSize('text-xs')} font-inter text-gray-500 break-words`}>Your life's core purpose and direction</p>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="p-3 bg-soul-purple/5 rounded-3xl">
                     <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>Expression Number</h4>
-                    <p className={`${getTextSize('text-3xl')} font-inter font-bold text-soul-purple`}>{expressionNumber}</p>
+                    <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple`}>{expressionNumber}</p>
                     <p className={`${getTextSize('text-sm')} font-inter text-gray-600 font-medium break-words`}>{expressionKeyword}</p>
                     <p className={`${getTextSize('text-xs')} font-inter text-gray-500 break-words`}>Your natural talents and abilities</p>
                   </div>
                   <div className="p-3 bg-soul-purple/5 rounded-3xl">
                     <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>Soul Urge Number</h4>
-                    <p className={`${getTextSize('text-3xl')} font-inter font-bold text-soul-purple`}>{soulUrgeNumber}</p>
+                    <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple`}>{soulUrgeNumber}</p>
                     <p className={`${getTextSize('text-sm')} font-inter text-gray-600 font-medium break-words`}>{soulUrgeKeyword}</p>
                     <p className={`${getTextSize('text-xs')} font-inter text-gray-500 break-words`}>Your heart's deepest desires</p>
                   </div>
@@ -288,13 +288,13 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="p-3 bg-soul-purple/5 rounded-3xl">
                     <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>Personality Number</h4>
-                    <p className={`${getTextSize('text-3xl')} font-inter font-bold text-soul-purple`}>{personalityNumber}</p>
+                    <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple`}>{personalityNumber}</p>
                     <p className={`${getTextSize('text-sm')} font-inter text-gray-600 font-medium break-words`}>{personalityKeyword}</p>
                     <p className={`${getTextSize('text-xs')} font-inter text-gray-500 break-words`}>How others perceive you</p>
                   </div>
                   <div className="p-3 bg-soul-purple/5 rounded-3xl">
                     <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>Birthday Number</h4>
-                    <p className={`${getTextSize('text-3xl')} font-inter font-bold text-soul-purple`}>{birthdayNumber}</p>
+                    <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple`}>{birthdayNumber}</p>
                     <p className={`${getTextSize('text-sm')} font-inter text-gray-600 font-medium break-words`}>{birthdayKeyword}</p>
                     <p className={`${getTextSize('text-xs')} font-inter text-gray-500 break-words`}>Special talents from birth date</p>
                   </div>
@@ -324,40 +324,40 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
             <div className="space-y-4 w-full max-w-full">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="text-center p-3 bg-soul-purple/5 rounded-3xl">
-                  <h4 className={`font-inter font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>Sun Sign</h4>
-                  <p className={`${getTextSize('text-3xl')} font-inter font-bold text-soul-purple break-words`}>{sunSign}</p>
+                  <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>Sun Sign</h4>
+                  <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple break-words`}>{sunSign}</p>
                   <p className={`${getTextSize('text-sm')} font-inter text-gray-600 break-words`}>Core identity & ego</p>
                 </div>
                 <div className="text-center p-3 bg-soul-purple/5 rounded-3xl">
-                  <h4 className={`font-inter font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>Moon Sign</h4>
-                  <p className={`${getTextSize('text-3xl')} font-inter font-bold text-soul-purple break-words`}>{moonSign}</p>
+                  <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>Moon Sign</h4>
+                  <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple break-words`}>{moonSign}</p>
                   <p className={`${getTextSize('text-sm')} font-inter text-gray-600 break-words`}>Emotional nature</p>
                 </div>
                 <div className="text-center p-3 bg-soul-purple/5 rounded-3xl">
-                  <h4 className={`font-inter font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>Rising Sign</h4>
-                  <p className={`${getTextSize('text-3xl')} font-inter font-bold text-soul-purple break-words`}>{risingSign}</p>
+                  <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>Rising Sign</h4>
+                  <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple break-words`}>{risingSign}</p>
                   <p className={`${getTextSize('text-sm')} font-inter text-gray-600 break-words`}>First impression</p>
                 </div>
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6">
                 <div>
-                  <h5 className={`font-inter font-semibold text-gray-700 mb-1 ${getTextSize('text-sm')} break-words`}>Social Style</h5>
+                  <h5 className={`font-cormorant font-semibold text-gray-700 mb-1 ${getTextSize('text-sm')} break-words`}>Social Style</h5>
                   <p className={`${getTextSize('text-sm')} font-inter text-gray-600 capitalize break-words`}>{socialStyle}</p>
                 </div>
                 <div>
-                  <h5 className={`font-inter font-semibold text-gray-700 mb-1 ${getTextSize('text-sm')} break-words`}>Public Vibe</h5>
+                  <h5 className={`font-cormorant font-semibold text-gray-700 mb-1 ${getTextSize('text-sm')} break-words`}>Public Vibe</h5>
                   <p className={`${getTextSize('text-sm')} font-inter text-gray-600 capitalize break-words`}>{publicVibe}</p>
                 </div>
                 <div>
-                  <h5 className={`font-inter font-semibold text-gray-700 mb-1 ${getTextSize('text-sm')} break-words`}>Leadership Style</h5>
+                  <h5 className={`font-cormorant font-semibold text-gray-700 mb-1 ${getTextSize('text-sm')} break-words`}>Leadership Style</h5>
                   <p className={`${getTextSize('text-sm')} font-inter text-gray-600 capitalize break-words`}>{leadershipStyle}</p>
                 </div>
               </div>
 
               <div className="mt-4 p-3 bg-soul-purple/5 rounded-3xl">
                 <h5 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-sm')} break-words`}>Generational Influence</h5>
-                <p className={`${getTextSize('text-lg')} font-inter font-bold text-soul-purple break-words`}>{chineseZodiac} {element}</p>
+                <p className={`${getTextSize('text-lg')} font-cormorant font-bold text-soul-purple break-words`}>{chineseZodiac} {element}</p>
                 <p className={`${getTextSize('text-sm')} font-inter text-gray-600 break-words`}>Chinese astrology adds generational wisdom to your profile</p>
               </div>
             </div>
