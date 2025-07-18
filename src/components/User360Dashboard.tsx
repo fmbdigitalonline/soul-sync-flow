@@ -81,43 +81,43 @@ const DataAvailabilityIndicator: React.FC<DataAvailabilityIndicatorProps> = ({
                   </Badge>
                   
                   {/* Show specific metrics when available */}
-                  {isAvailable && key === 'blueprint' && sectionData.completionPercentage && (
+                  {isAvailable && key === 'blueprint' && 'completionPercentage' in sectionData && sectionData.completionPercentage && (
                     <p className="text-xs text-muted-foreground font-inter">
                       {sectionData.completionPercentage}% complete
                     </p>
                   )}
-                  {isAvailable && key === 'intelligence' && sectionData.totalScore && (
+                  {isAvailable && key === 'intelligence' && 'totalScore' in sectionData && sectionData.totalScore && (
                     <p className="text-xs text-muted-foreground font-inter">
                       Level {Math.round(sectionData.totalScore)}
                     </p>
                   )}
-                  {isAvailable && key === 'memory' && (
+                  {isAvailable && key === 'memory' && 'nodeCount' in sectionData && 'edgeCount' in sectionData && (
                     <p className="text-xs text-muted-foreground font-inter">
                       {sectionData.nodeCount} nodes, {sectionData.edgeCount} edges
                     </p>
                   )}
-                  {isAvailable && key === 'patterns' && (
+                  {isAvailable && key === 'patterns' && 'patternCount' in sectionData && (
                     <p className="text-xs text-muted-foreground font-inter">
                       {sectionData.patternCount} patterns
-                      {sectionData.confidence && ` (${Math.round(sectionData.confidence * 100)}%)`}
+                      {'confidence' in sectionData && sectionData.confidence && ` (${Math.round(sectionData.confidence * 100)}%)`}
                     </p>
                   )}
-                  {isAvailable && key === 'growth' && (
+                  {isAvailable && key === 'growth' && 'entriesCount' in sectionData && (
                     <p className="text-xs text-muted-foreground font-inter">
                       {sectionData.entriesCount} entries
                     </p>
                   )}
-                  {isAvailable && key === 'activities' && (
+                  {isAvailable && key === 'activities' && 'totalActivities' in sectionData && 'totalPoints' in sectionData && (
                     <p className="text-xs text-muted-foreground font-inter">
                       {sectionData.totalActivities} activities, {sectionData.totalPoints} points
                     </p>
                   )}
-                  {isAvailable && key === 'goals' && (
+                  {isAvailable && key === 'goals' && 'activeGoals' in sectionData && 'completedGoals' in sectionData && (
                     <p className="text-xs text-muted-foreground font-inter">
                       {sectionData.activeGoals} active, {sectionData.completedGoals} completed
                     </p>
                   )}
-                  {isAvailable && key === 'conversations' && (
+                  {isAvailable && key === 'conversations' && 'totalConversations' in sectionData && (
                     <p className="text-xs text-muted-foreground font-inter">
                       {sectionData.totalConversations} conversations
                     </p>

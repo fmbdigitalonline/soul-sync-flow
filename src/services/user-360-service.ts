@@ -4,14 +4,51 @@ import { useUserProfile } from '@/hooks/use-user-profile';
 import { useBlueprintCache } from '@/contexts/BlueprintCacheContext';
 
 export interface DataAvailability {
-  blueprint: { available: boolean; lastUpdated?: string; completionPercentage?: number; };
-  intelligence: { available: boolean; modules: string[]; totalScore?: number; };
-  memory: { available: boolean; nodeCount: number; edgeCount: number; };
-  patterns: { available: boolean; patternCount: number; confidence?: number; };
-  growth: { available: boolean; entriesCount: number; lastReflection?: string; };
-  activities: { available: boolean; totalActivities: number; totalPoints: number; };
-  goals: { available: boolean; activeGoals: number; completedGoals: number; };
-  conversations: { available: boolean; totalConversations: number; lastActivity?: string; };
+  blueprint: { 
+    available: boolean; 
+    lastUpdated?: string; 
+    completionPercentage?: number; 
+  };
+  intelligence: { 
+    available: boolean; 
+    modules: string[]; 
+    totalScore?: number; 
+  };
+  memory: { 
+    available: boolean; 
+    nodeCount: number; 
+    edgeCount: number; 
+  };
+  patterns: { 
+    available: boolean; 
+    patternCount: number; 
+    confidence?: number; 
+  };
+  growth: { 
+    available: boolean; 
+    entriesCount: number; 
+    lastReflection?: string; 
+  };
+  activities: { 
+    available: boolean; 
+    totalActivities: number; 
+    totalPoints: number; 
+  };
+  goals: { 
+    available: boolean; 
+    activeGoals: number; 
+    completedGoals: number; 
+  };
+  conversations: { 
+    available: boolean; 
+    totalConversations: number; 
+    lastActivity?: string; 
+  };
+}
+
+// Type guard for array-like Json values
+function isJsonArray(value: any): value is any[] {
+  return Array.isArray(value);
 }
 
 export interface User360Profile {
@@ -81,19 +118,24 @@ class User360DataService {
         },
         memory: {
           available: memoryNodesResult.status === 'fulfilled' && memoryNodesResult.value !== null,
-          nodeCount: memoryNodesResult.status === 'fulfilled' ? memoryNodesResult.value?.length || 0 : 0,
-          edgeCount: memoryEdgesResult.status === 'fulfilled' ? memoryEdgesResult.value?.length || 0 : 0
+          nodeCount: memoryNodesResult.status === 'fulfilled' && isJsonArray(memoryNodesResult.value) ? 
+            memoryNodesResult.value.length : 0,
+          edgeCount: memoryEdgesResult.status === 'fulfilled' && isJsonArray(memoryEdgesResult.value) ? 
+            memoryEdgesResult.value.length : 0
         },
         patterns: {
           available: patternsResult.status === 'fulfilled' && patternsResult.value !== null,
-          patternCount: patternsResult.status === 'fulfilled' ? patternsResult.value?.length || 0 : 0,
-          confidence: patternsResult.status === 'fulfilled' && patternsResult.value?.length > 0 ?
+          patternCount: patternsResult.status === 'fulfilled' && isJsonArray(patternsResult.value) ? 
+            patternsResult.value.length : 0,
+          confidence: patternsResult.status === 'fulfilled' && isJsonArray(patternsResult.value) && patternsResult.value.length > 0 ?
             patternsResult.value.reduce((sum: number, p: any) => sum + p.confidence, 0) / patternsResult.value.length : undefined
         },
         growth: {
           available: growthResult.status === 'fulfilled' && growthResult.value !== null,
-          entriesCount: growthResult.status === 'fulfilled' && growthResult.value ?
-            (growthResult.value.reflection_entries?.length || 0) + (growthResult.value.mood_entries?.length || 0) : 0,
+          entriesCount: growthResult.status === 'fulfilled' && growthResult.value ? (
+            (isJsonArray(growthResult.value.reflection_entries) ? growthResult.value.reflection_entries.length : 0) +
+            (isJsonArray(growthResult.value.mood_entries) ? growthResult.value.mood_entries.length : 0)
+          ) : 0,
           lastReflection: growthResult.status === 'fulfilled' && growthResult.value?.last_reflection_date ?
             growthResult.value.last_reflection_date : undefined
         },
@@ -341,7 +383,7 @@ class User360DataService {
     const profilePayload = {
       user_id: userId,
       profile_data: profileData,
-      data_availability: dataAvailability,
+      data_availability: dataAvailability as any, // Cast to Json for Supabase compatibility
       data_sources: dataSources,
       last_updated: new Date().toISOString(),
       version: existing ? existing.version + 1 : 1
