@@ -2756,6 +2756,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_360_profiles: {
+        Row: {
+          created_at: string
+          data_availability: Json
+          data_sources: string[]
+          id: string
+          last_updated: string
+          profile_data: Json
+          updated_at: string
+          user_id: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          data_availability?: Json
+          data_sources?: string[]
+          id?: string
+          last_updated?: string
+          profile_data?: Json
+          updated_at?: string
+          user_id: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          data_availability?: Json
+          data_sources?: string[]
+          id?: string
+          last_updated?: string
+          profile_data?: Json
+          updated_at?: string
+          user_id?: string
+          version?: number
+        }
+        Relationships: []
+      }
       user_activities: {
         Row: {
           activity_data: Json

@@ -122,6 +122,18 @@ export const useUserProfile = () => {
       setStatistics(statsData);
       setGoals(transformedGoals);
       setError(null);
+
+      // 🆕 Trigger 360° profile refresh when user data changes
+      // This is additive - doesn't break existing functionality
+      try {
+        const { user360Service } = await import('@/services/user-360-service');
+        await user360Service.refreshUserProfile(user.id);
+        console.log('✅ 360° profile updated after user data fetch');
+      } catch (error) {
+        console.warn('⚠️ 360° profile update failed (non-critical):', error);
+        // Don't break existing functionality if 360° update fails
+      }
+      
     } catch (err) {
       console.error('Error in fetchUserData:', err);
       setError('An unexpected error occurred');
