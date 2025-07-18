@@ -1,28 +1,71 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DreamCreationForm } from '@/components/dream/DreamCreationForm';
 import { DreamsList } from '@/components/dream/DreamsList';
 import { DreamDecomposition } from '@/components/dream/DreamDecomposition';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Heart, Sparkles, Target } from 'lucide-react';
+import { toast } from 'sonner';
+
+interface Dream {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  timeframe: string;
+  importance_level: string;
+  created_at: string;
+}
 
 export default function Dreams() {
   const { user } = useAuth();
   const [showCreationForm, setShowCreationForm] = useState(false);
-  const [selectedDream, setSelectedDream] = useState(null);
+  const [selectedDream, setSelectedDream] = useState<Dream | null>(null);
   const [showDecomposition, setShowDecomposition] = useState(false);
+  const [dreams, setDreams] = useState<Dream[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data for now - will be replaced with real data once database is set up
-  const dreams = [];
+  // Fetch dreams from database
+  useEffect(() => {
+    if (user?.id) {
+      fetchDreams();
+    }
+  }, [user?.id]);
+
+  const fetchDreams = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('user_dreams')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching dreams:', error);
+        toast.error('Failed to load dreams');
+      } else {
+        setDreams(data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching dreams:', error);
+      toast.error('Failed to load dreams');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleDreamCreated = () => {
     setShowCreationForm(false);
-    // TODO: Refetch dreams when database is connected
+    fetchDreams(); // Refresh the dreams list
+    toast.success('Dream created successfully!');
   };
 
-  const handleDreamSelect = (dream: any) => {
+  const handleDreamSelect = (dream: Dream) => {
     setSelectedDream(dream);
     setShowDecomposition(true);
   };
@@ -38,6 +81,19 @@ export default function Dreams() {
         dream={selectedDream}
         onBack={handleBackToDreams}
       />
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-soul-purple/5 via-white to-soul-teal/5 mobile-container">
+        <div className="max-w-4xl mx-auto px-4 py-6">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-soul-purple mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading your dreams...</p>
+          </div>
+        </div>
+      </div>
     );
   }
 
@@ -65,7 +121,7 @@ export default function Dreams() {
           <div className="bg-soul-purple/10 rounded-xl p-4 border border-soul-purple/20 max-w-md mx-auto">
             <p className="font-inter text-sm text-soul-purple font-medium flex items-center gap-2">
               <Target className="h-4 w-4" />
-              This journey will be optimized for your ENFP & Generator nature
+              This journey will be optimized for your unique nature
             </p>
           </div>
         </div>
@@ -135,7 +191,7 @@ export default function Dreams() {
             )}
 
             {/* Empty State */}
-            {dreams.length === 0 && (
+            {dreams.length === 0 && !loading && (
               <div className="text-center py-8">
                 <p className="font-inter text-sm text-gray-600">
                   No dreams created yet. Start by creating your first dream journey above.
