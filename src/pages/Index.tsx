@@ -16,6 +16,8 @@ import { RotatingText } from "@/components/ui/rotating-text";
 import { PersonalizedQuoteDisplay } from "@/components/ui/personalized-quote-display";
 import MainLayout from "@/components/Layout/MainLayout";
 import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
+import { useTutorialFlow } from "@/hooks/use-tutorial-flow";
+import { TutorialModal } from "@/components/tutorial/TutorialModal";
 const Index = () => {
   const {
     user
@@ -25,6 +27,7 @@ const Index = () => {
   } = useSoulOrb();
   const navigate = useNavigate();
   const [showDemo, setShowDemo] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
   const {
     blueprintData,
     hasBlueprint,
@@ -45,6 +48,7 @@ const Index = () => {
     isUltraNarrow,
     isMobile
   } = useResponsiveLayout();
+  const { startTutorial } = useTutorialFlow();
 
   // Memoize the welcome message logic to prevent re-renders
   const welcomeMessage = useMemo(() => {
@@ -94,6 +98,11 @@ const Index = () => {
     } else {
       navigate("/auth");
     }
+  };
+
+  const handleTutorialStart = () => {
+    startTutorial();
+    setShowTutorial(true);
   };
   if (showDemo) {
     return <MainLayout>
@@ -176,11 +185,14 @@ const Index = () => {
                   </>}
               </Button>
               
-              <Link to="/coach" className="block">
-                <Button size="lg" variant="outline" className={`w-full ${touchTargetSize} ${getTextSize('text-base')} backdrop-blur-sm border-border hover:bg-accent hover:text-accent-foreground`}>
-                  {t("index.chatWithCompanion")}
-                </Button>
-              </Link>
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className={`w-full ${touchTargetSize} ${getTextSize('text-base')} backdrop-blur-sm border-border hover:bg-accent hover:text-accent-foreground`}
+                onClick={handleTutorialStart}
+              >
+                {t("index.chatWithCompanion")}
+              </Button>
             </> : <>
               <Button size="lg" className={`bg-primary hover:bg-primary/90 w-full ${touchTargetSize} ${getTextSize('text-base')}`} onClick={handleGetStarted}>
                 {t("index.getStarted")}
@@ -197,6 +209,12 @@ const Index = () => {
           </div>
         </div>
       </div>
+
+      {/* Tutorial Modal */}
+      <TutorialModal 
+        isOpen={showTutorial}
+        onClose={() => setShowTutorial(false)}
+      />
     </MainLayout>;
 };
 export default Index;
