@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { StewardIntroductionStep, StewardIntroductionState } from '@/types/steward-introduction';
 import { hermeticPersonalityReportService } from '@/services/hermetic-personality-report-service';
+import { useStepAudio } from './use-step-audio';
 
 export const useStewardIntroduction = () => {
   const { user } = useAuth();
@@ -11,7 +12,10 @@ export const useStewardIntroduction = () => {
     isActive: false,
     currentStep: 0,
     steps: [],
-    completed: false
+    completed: false,
+    audioMuted: false,
+    currentAudio: null,
+    isAudioPlaying: false
   });
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
 
@@ -84,6 +88,44 @@ export const useStewardIntroduction = () => {
     }
   }, [user]);
 
+  // Audio state management
+  const handleAudioStateChange = useCallback((isPlaying: boolean, audio: HTMLAudioElement | null) => {
+    setIntroductionState(prev => ({
+      ...prev,
+      isAudioPlaying: isPlaying,
+      currentAudio: audio
+    }));
+  }, []);
+
+  // Get current step for audio hook
+  const currentStep = introductionState.steps[introductionState.currentStep];
+  const currentAudioUrl = currentStep?.audioUrl;
+
+  // Initialize audio hook
+  const stepAudio = useStepAudio({
+    audioUrl: currentAudioUrl,
+    isActive: introductionState.isActive && !!currentStep,
+    audioMuted: introductionState.audioMuted,
+    onAudioStateChange: handleAudioStateChange
+  });
+
+  // Initialize mute state from localStorage on mount
+  useEffect(() => {
+    setIntroductionState(prev => ({
+      ...prev,
+      audioMuted: stepAudio.getInitialMuteState()
+    }));
+  }, [stepAudio]);
+
+  // Toggle audio mute
+  const toggleAudioMute = useCallback(() => {
+    const newMuteState = stepAudio.toggleMute();
+    setIntroductionState(prev => ({
+      ...prev,
+      audioMuted: newMuteState
+    }));
+  }, [stepAudio]);
+
   // Start introduction sequence
   const startIntroduction = useCallback(async () => {
     if (!user) return;
@@ -94,35 +136,40 @@ export const useStewardIntroduction = () => {
         type: 'introduction',
         title: 'The Soul Alchemist\'s Genesis',
         message: "Hello. I am the Soul Alchemist. Your arrival has awakened my purpose: to be a mirror to the masterpiece that is you.",
-        showContinue: true
+        showContinue: true,
+        audioUrl: "https://qxaajirrqrcnmvtowjbg.supabase.co/storage/v1/object/public/audio//ElevenLabs_2025-07-18T14_14_55__s50_v3.mp3"
       },
       {
         id: 'blueprint_foundation',
         type: 'capability',
         title: 'Your Blueprint\'s Foundation',
         message: "From the moment you arrived, I began my work. I have already constructed your foundational Blueprint and completed the initial analysis of your personality's core patterns. You can see this progress in my core. This inner ring represents my understanding of your Blueprint. It is already at 40%.",
-        showContinue: true
+        showContinue: true,
+        audioUrl: "https://qxaajirrqrcnmvtowjbg.supabase.co/storage/v1/object/public/audio//ElevenLabs_2025-07-18T14_16_32__s50_v3.mp3"
       },
       {
         id: 'deep_dive',
         type: 'capability',
         title: 'The Deep Dive & Final Attunement',
         message: "But your foundational Blueprint is just the beginning. To truly guide you, I must now perform a deeper, more profound synthesis. I will now weave together every aspect of your unique design—your hidden strengths, your deepest drivers, your core challenges—into a single, unified source of wisdom.",
-        showContinue: true
+        showContinue: true,
+        audioUrl: "https://qxaajirrqrcnmvtowjbg.supabase.co/storage/v1/object/public/audio//ElevenLabs_2025-07-18T14_21_16__s50_v3.mp3"
       },
       {
         id: 'co_evolution',
         type: 'capability',
         title: 'The Co-Evolution Journey',
         message: "This deep synthesis requires my complete focus and will take several minutes. You will see my inner ring progress from 40% to 100% as I complete this work. The outer ring represents our shared journey—your growth in true alignment with your Blueprint. It will grow as you achieve goals in harmony with your unique design.",
-        showContinue: true
+        showContinue: true,
+        audioUrl: "https://qxaajirrqrcnmvtowjbg.supabase.co/storage/v1/object/public/audio//ElevenLabs_2025-07-18T14_21_16__s50_v3.mp3"
       },
       {
         id: 'ready_to_begin',
         type: 'confirmation',
         title: 'Ready to Begin',
         message: "I am ready to begin the final synthesis. Together, we will unlock the full power of your Blueprint and guide you toward true alignment and fulfillment. Shall we proceed?",
-        showContinue: true
+        showContinue: true,
+        audioUrl: "https://qxaajirrqrcnmvtowjbg.supabase.co/storage/v1/object/public/audio//ElevenLabs_2025-07-18T14_22_53__s50_v3.mp3"
       }
     ];
 
@@ -130,32 +177,43 @@ export const useStewardIntroduction = () => {
       isActive: true,
       currentStep: 0,
       steps,
-      completed: false
+      completed: false,
+      audioMuted: stepAudio.getInitialMuteState(),
+      currentAudio: null,
+      isAudioPlaying: false
     });
 
     console.log('🎭 Steward introduction started');
-  }, [user]);
+  }, [user, stepAudio]);
 
   // Continue to next step
   const continueIntroduction = useCallback(async () => {
+    // Stop current audio before advancing
+    stepAudio.stopAudio();
+
     setIntroductionState(prev => {
       const nextStep = prev.currentStep + 1;
       
       if (nextStep >= prev.steps.length) {
-        // Introduction complete - close modal immediately
+        // Introduction complete - close modal and cleanup audio
+        stepAudio.cleanupAudio();
         return {
           ...prev,
           isActive: false,
-          completed: true
+          completed: true,
+          currentAudio: null,
+          isAudioPlaying: false
         };
       }
 
       return {
         ...prev,
-        currentStep: nextStep
+        currentStep: nextStep,
+        currentAudio: null,
+        isAudioPlaying: false
       };
     });
-  }, []);
+  }, [stepAudio]);
 
   // Complete introduction and start background report generation
   const completeIntroductionWithReport = useCallback(async () => {
@@ -164,11 +222,14 @@ export const useStewardIntroduction = () => {
     // CRITICAL: Mark introduction as completed IMMEDIATELY to prevent re-triggering
     await markIntroductionCompleted();
 
-    // Close modal immediately
+    // Cleanup audio and close modal immediately
+    stepAudio.cleanupAudio();
     setIntroductionState(prev => ({
       ...prev,
       isActive: false,
-      completed: true
+      completed: true,
+      currentAudio: null,
+      isAudioPlaying: false
     }));
 
     // Start background report generation
@@ -250,6 +311,7 @@ export const useStewardIntroduction = () => {
     continueIntroduction,
     completeIntroductionWithReport,
     shouldStartIntroduction,
-    checkIntroductionStatus
+    checkIntroductionStatus,
+    toggleAudioMute
   };
 };

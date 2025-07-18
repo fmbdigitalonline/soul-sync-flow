@@ -14,6 +14,7 @@ import { HACSMicroLearning } from './HACSMicroLearning';
 import { HACSChatOverlay } from './HACSChatOverlay';
 import { HACSInsightDisplay } from './HACSInsightDisplay';
 import { cn } from '@/lib/utils';
+import { Volume2, VolumeX } from 'lucide-react';
 
 interface FloatingHACSProps {
   className?: string;
@@ -55,7 +56,8 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     startIntroduction,
     continueIntroduction,
     completeIntroductionWithReport,
-    shouldStartIntroduction
+    shouldStartIntroduction,
+    toggleAudioMute
   } = useStewardIntroduction();
 
   console.log('FloatingHACSOrb render:', { loading, intelligence, currentQuestion, currentInsight, isGenerating, isGeneratingInsight });
@@ -385,17 +387,49 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
             exit={{ opacity: 0, scale: 0.95 }}
             className="bg-card/95 backdrop-blur border border-border rounded-lg shadow-2xl max-w-md w-full mx-4"
           >
-            <div className="p-6 text-center">
+            {/* Audio Controls Header */}
+            <div className="flex justify-between items-center p-4 pb-0">
+              <div className="flex items-center gap-2">
+                {/* Audio playing indicator */}
+                {introductionState.isAudioPlaying && !introductionState.audioMuted && (
+                  <motion.div
+                    className="flex items-center gap-1 text-xs text-primary"
+                    animate={{ opacity: [0.5, 1, 0.5] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  >
+                    <div className="w-1 h-3 bg-primary rounded-full"></div>
+                    <div className="w-1 h-2 bg-primary rounded-full"></div>
+                    <div className="w-1 h-4 bg-primary rounded-full"></div>
+                    <span className="ml-1">Speaking</span>
+                  </motion.div>
+                )}
+              </div>
+              
+              {/* Mute/Unmute Button */}
+              <button
+                onClick={toggleAudioMute}
+                className="p-2 hover:bg-muted rounded-lg transition-colors"
+                aria-label={introductionState.audioMuted ? "Unmute audio" : "Mute audio"}
+              >
+                {introductionState.audioMuted ? (
+                  <VolumeX className="w-5 h-5 text-muted-foreground" />
+                ) : (
+                  <Volume2 className="w-5 h-5 text-primary" />
+                )}
+              </button>
+            </div>
+
+            <div className="p-6 pt-2 text-center">
               {/* Soul Alchemist Orb - Speaking State */}
               <div className="flex justify-center mb-6">
                 <IntelligentSoulOrb
                   stage="collecting"
-                  speaking={true}
+                  speaking={introductionState.isAudioPlaying && !introductionState.audioMuted}
                   pulse={true}
                   size="lg"
                   intelligenceLevel={40}
                   showProgressRing={true}
-                  className="animate-pulse"
+                  className={introductionState.isAudioPlaying && !introductionState.audioMuted ? "animate-pulse" : ""}
                 />
               </div>
               
