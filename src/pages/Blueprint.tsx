@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MainLayout from "@/components/Layout/MainLayout";
@@ -428,13 +427,7 @@ const Blueprint = () => {
 
           <TabsContent value="report" className={`mt-6 w-full max-w-full overflow-hidden`}>
             <div className="w-full max-w-full overflow-hidden">
-              {blueprintData && user && (
-                <PersonalityReportViewer 
-                  blueprint={blueprintData}
-                  userId={user.id}
-                  onBack={() => setActiveTab("view")}
-                />
-              )}
+              <PersonalityReportViewer />
             </div>
           </TabsContent>
           
