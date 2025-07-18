@@ -89,17 +89,28 @@ const Index = () => {
   };
 
   const handleTutorialStart = () => {
-    console.log('🎭 Tutorial button clicked, user:', !!user);
+    console.log('🎭 TUTORIAL BUTTON CLICKED - Starting handleTutorialStart');
+    console.log('🎭 User exists:', !!user);
+    console.log('🎭 Current showTutorial state:', showTutorial);
+    console.log('🎭 Current tutorialState:', tutorialState);
+    
     if (!user) {
-      console.log('🎭 No user found, cannot start tutorial');
+      console.log('🎭 ERROR: No user found, cannot start tutorial');
       return;
     }
     
-    console.log('🎭 Starting tutorial...');
-    const newTutorialState = startTutorial();
-    console.log('🎭 Tutorial started, new state:', newTutorialState);
-    setShowTutorial(true);
-    console.log('🎭 Tutorial modal should now be visible, showTutorial:', true);
+    try {
+      console.log('🎭 Calling startTutorial()...');
+      const newTutorialState = startTutorial();
+      console.log('🎭 startTutorial() returned:', newTutorialState);
+      
+      console.log('🎭 Setting showTutorial to true...');
+      setShowTutorial(true);
+      console.log('🎭 Tutorial modal should now be visible');
+      
+    } catch (error) {
+      console.error('🎭 ERROR in handleTutorialStart:', error);
+    }
   };
 
   if (showDemo) {
@@ -186,6 +197,7 @@ const Index = () => {
                 variant="outline" 
                 className={`w-full ${touchTargetSize} ${getTextSize('text-base')} backdrop-blur-sm border-border hover:bg-accent hover:text-accent-foreground`}
                 onClick={handleTutorialStart}
+                type="button"
               >
                 {t("index.chatWithCompanion")}
               </Button>
