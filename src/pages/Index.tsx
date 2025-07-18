@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -141,7 +140,7 @@ const Index = () => {
                 Welcome to <span className="text-primary">SoulSync</span>, {
             blueprintData?.user_meta?.preferred_name || getDisplayName || user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Friend'}
               </> : <span dangerouslySetInnerHTML={{
-            __html: t('index.welcome')
+            __html: t('index.welcome') as string
           }} />}
           </h1>
           
