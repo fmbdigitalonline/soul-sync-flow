@@ -63,9 +63,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
     { to: "/companion", icon: MessageCircle, label: "Companion" },
   ];
 
-  // Add profile to navigation items for authenticated users
+  // Add profile and 360° profile to navigation items for authenticated users
   const userNavItems = user 
-    ? [...baseNavItems, { to: "/profile", icon: User, label: "Profile" }]
+    ? [
+        ...baseNavItems, 
+        { to: "/profile", icon: User, label: "Profile" },
+        { to: "/user-360", icon: User, label: "360° Profile" }
+      ]
     : baseNavItems;
 
   // Add Admin Dashboard and Test Environment for admin users

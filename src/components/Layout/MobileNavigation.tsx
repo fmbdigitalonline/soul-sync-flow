@@ -6,7 +6,8 @@ import {
   Heart, 
   MessageCircle, 
   Sparkles, 
-  Star
+  Star,
+  User
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
@@ -20,7 +21,8 @@ const MobileNavigation: React.FC = () => {
     { to: "/blueprint", icon: Star, label: "Blueprint" },
     { to: "/dreams", icon: Heart, label: "Dreams" },
     { to: "/spiritual-growth", icon: Sparkles, label: t('nav.growth') },
-    { to: "/companion", icon: MessageCircle, label: "Companion" }, // Changed from "Coach" to "Companion"
+    { to: "/companion", icon: MessageCircle, label: "Companion" },
+    { to: "/user-360", icon: User, label: "360° Profile" },
   ];
 
   const isActive = (path: string) => {

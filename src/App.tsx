@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -14,6 +15,7 @@ import Profile from './pages/Profile';
 import TestEnvironmentPage from './pages/TestEnvironmentPage';
 import { TestFunctionsPage } from './pages/TestFunctionsPage';
 import DesignAnalysisPage from './pages/DesignAnalysisPage';
+import User360Page from './pages/User360Page';
 import { Toaster } from '@/components/ui/toaster';
 import { SoulOrbProvider } from './contexts/SoulOrbContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -51,6 +53,7 @@ function App() {
                     <Route path="/coach" element={<Navigate to="/companion" replace />} />
                     <Route path="/blueprint" element={<ProtectedRoute><MainLayout><Blueprint /></MainLayout></ProtectedRoute>} />
                     <Route path="/profile" element={<ProtectedRoute><MainLayout><Profile /></MainLayout></ProtectedRoute>} />
+                    <Route path="/user-360" element={<ProtectedRoute><MainLayout><User360Page /></MainLayout></ProtectedRoute>} />
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/test-environment" element={<ProtectedRoute><MainLayout><TestEnvironmentPage /></MainLayout></ProtectedRoute>} />
                     <Route path="/test-functions" element={<ProtectedRoute><MainLayout><TestFunctionsPage /></MainLayout></ProtectedRoute>} />
