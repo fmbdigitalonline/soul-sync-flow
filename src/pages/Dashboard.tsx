@@ -1,4 +1,5 @@
 
+
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MainLayout from "@/components/Layout/MainLayout";
@@ -15,6 +16,7 @@ import { PIENotificationSystem } from "@/components/pie/PIENotificationSystem";
 import { PIEContextualInsights } from "@/components/pie/PIEContextualInsights";
 import { PIEUserExperienceHub } from "@/components/pie/PIEUserExperienceHub";
 import User360Dashboard from "@/components/User360Dashboard";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
@@ -22,6 +24,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { t } = useLanguage();
+  const { isMobile } = useIsMobile();
   
   const { 
     blueprintData, 
@@ -143,17 +146,89 @@ const Dashboard = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
-          <TabsList className="grid grid-cols-2 sm:grid-cols-6 w-full max-w-5xl mx-auto h-auto p-1">
-            <TabsTrigger value="overview" className="text-xs sm:text-sm py-2">Overview</TabsTrigger>
-            <TabsTrigger value="productivity" className="text-xs sm:text-sm py-2">Productivity</TabsTrigger>
-            <TabsTrigger value="growth" className="text-xs sm:text-sm py-2">Growth</TabsTrigger>
-            <TabsTrigger value="blueprint" className="text-xs sm:text-sm py-2">Blueprint</TabsTrigger>
-            <TabsTrigger value="user360" className="text-xs sm:text-sm py-2">
-              <Database className="mr-1 h-3 w-3" />
-              360° Profile
-            </TabsTrigger>
-            <TabsTrigger value="pie" className="text-xs sm:text-sm py-2">PIE Hub</TabsTrigger>
-          </TabsList>
+          {/* Mobile: Use a scrollable horizontal tabs layout */}
+          {isMobile ? (
+            <div className="relative mb-6">
+              <div className="overflow-x-auto scrollbar-hide">
+                <div className="flex space-x-1 min-w-max p-1 bg-muted rounded-3xl">
+                  <button
+                    onClick={() => setActiveTab("overview")}
+                    className={`flex items-center justify-center gap-2 py-2 px-3 rounded-2xl transition-all whitespace-nowrap text-xs font-medium ${
+                      activeTab === "overview" 
+                        ? "bg-background text-foreground shadow-sm" 
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    Overview
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("productivity")}
+                    className={`flex items-center justify-center gap-2 py-2 px-3 rounded-2xl transition-all whitespace-nowrap text-xs font-medium ${
+                      activeTab === "productivity" 
+                        ? "bg-background text-foreground shadow-sm" 
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    Productivity
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("growth")}
+                    className={`flex items-center justify-center gap-2 py-2 px-3 rounded-2xl transition-all whitespace-nowrap text-xs font-medium ${
+                      activeTab === "growth" 
+                        ? "bg-background text-foreground shadow-sm" 
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    Growth
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("blueprint")}
+                    className={`flex items-center justify-center gap-2 py-2 px-3 rounded-2xl transition-all whitespace-nowrap text-xs font-medium ${
+                      activeTab === "blueprint" 
+                        ? "bg-background text-foreground shadow-sm" 
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    Blueprint
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("user360")}
+                    className={`flex items-center justify-center gap-1 py-2 px-3 rounded-2xl transition-all whitespace-nowrap text-xs font-medium ${
+                      activeTab === "user360" 
+                        ? "bg-background text-foreground shadow-sm" 
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Database className="h-3 w-3 flex-shrink-0" />
+                    360°
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("pie")}
+                    className={`flex items-center justify-center gap-2 py-2 px-3 rounded-2xl transition-all whitespace-nowrap text-xs font-medium ${
+                      activeTab === "pie" 
+                        ? "bg-background text-foreground shadow-sm" 
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    PIE Hub
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* Desktop: Use standard TabsList */
+            <TabsList className="grid grid-cols-6 w-full max-w-5xl mx-auto h-auto p-1">
+              <TabsTrigger value="overview" className="text-xs sm:text-sm py-2">Overview</TabsTrigger>
+              <TabsTrigger value="productivity" className="text-xs sm:text-sm py-2">Productivity</TabsTrigger>
+              <TabsTrigger value="growth" className="text-xs sm:text-sm py-2">Growth</TabsTrigger>
+              <TabsTrigger value="blueprint" className="text-xs sm:text-sm py-2">Blueprint</TabsTrigger>
+              <TabsTrigger value="user360" className="text-xs sm:text-sm py-2 flex items-center gap-1">
+                <Database className="h-3 w-3" />
+                360° Profile
+              </TabsTrigger>
+              <TabsTrigger value="pie" className="text-xs sm:text-sm py-2">PIE Hub</TabsTrigger>
+            </TabsList>
+          )}
           
           <TabsContent value="overview" className="mt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -218,3 +293,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
