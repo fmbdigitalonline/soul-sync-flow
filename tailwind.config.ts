@@ -136,11 +136,17 @@ export default {
 				'200': '200%'
 			},
 			fontFamily: {
-				// Inter as primary font system
-				sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'], // Default fallback
+				// Primary font system - Inter for body text and UI
+				sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+				inter: ['Inter', 'system-ui', 'sans-serif'], // Primary body font
+				
+				// Secondary font system - Cormorant Garamond for headings and branding
+				cormorant: ['Cormorant Garamond', 'Georgia', 'Times New Roman', 'serif'], // Elegant headings
+				
+				// Legacy font mappings (preserved for backward compatibility)
 				body: ['Inter', 'system-ui', 'sans-serif'], // Primary body text
 				ui: ['IBM Plex Sans', 'Inter', 'sans-serif'], // UI elements, buttons, forms
-				heading: ['Inter', 'system-ui', 'sans-serif'], // Headlines, titles
+				heading: ['Cormorant Garamond', 'Inter', 'serif'], // Headlines, titles (now uses Cormorant)
 				focus: ['Lexend', 'Inter', 'sans-serif'], // Reading mode, focused content
 			},
 			spacing: {

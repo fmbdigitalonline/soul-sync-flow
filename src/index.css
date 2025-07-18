@@ -48,8 +48,11 @@
     --chart-4: 219 24% 60%;
     --chart-5: 0 84% 60%;
 
-    /* Inter font system */
-    --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    /* Font system variables */
+    --font-inter: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-cormorant: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+    --font-ui: 'IBM Plex Sans', 'Inter', sans-serif;
+    --font-focus: 'Lexend', 'Inter', sans-serif;
   }
 
   .dark {
@@ -96,31 +99,66 @@
   
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-sans);
+    font-family: var(--font-inter);
     font-weight: 400;
     line-height: 1.6;
   }
   
   .font-display {
-    font-family: var(--font-sans);
+    font-family: var(--font-inter);
   }
 
-  /* Apply font hierarchy with Inter */
+  /* Typography hierarchy with new font system */
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-sans);
+    font-family: var(--font-cormorant);
     font-weight: 700;
+    line-height: 1.2;
   }
 
+  /* Specific heading sizes following the design system */
+  h1 {
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  h2 {
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 1.4;
+  }
+
+  p {
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.6;
+  }
+
+  .caption {
+    font-size: 12px;
+    font-weight: 300;
+    line-height: 1.4;
+  }
+
+  /* Form elements use Inter */
   button, input, select, textarea {
-    font-family: 'IBM Plex Sans', var(--font-sans);
+    font-family: var(--font-inter);
   }
 
   .card-title {
+    font-family: var(--font-cormorant);
     font-weight: 600; /* semi-bold for card headings */
   }
 
   .card-subtitle {
+    font-family: var(--font-inter);
     font-weight: 400; /* regular for card body text */
+  }
+
+  /* Mystical class for elegant Cormorant Garamond usage */
+  .mystical {
+    font-family: var(--font-cormorant);
+    font-weight: 600;
   }
 }
 
@@ -153,7 +191,47 @@
 
   /* Focus mode uses Lexend for better readability */
   .focus-mode {
-    font-family: 'Lexend', var(--font-sans);
+    font-family: var(--font-focus);
+  }
+
+  /* Font utility classes for the new system */
+  .font-inter {
+    font-family: var(--font-inter);
+  }
+
+  .font-cormorant {
+    font-family: var(--font-cormorant);
+  }
+
+  /* Brand/Logo styling */
+  .brand-text {
+    font-family: var(--font-cormorant);
+    font-weight: 700;
+  }
+
+  /* Typography scale utilities */
+  .text-heading {
+    font-size: 32px;
+    line-height: 1.2;
+    font-weight: 700;
+  }
+
+  .text-subheading {
+    font-size: 20px;
+    line-height: 1.4;
+    font-weight: 500;
+  }
+
+  .text-body {
+    font-size: 16px;
+    line-height: 1.6;
+    font-weight: 400;
+  }
+
+  .text-caption {
+    font-size: 12px;
+    line-height: 1.4;
+    font-weight: 300;
   }
 }
 
