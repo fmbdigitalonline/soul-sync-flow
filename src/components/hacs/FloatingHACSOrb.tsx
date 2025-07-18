@@ -115,6 +115,9 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     checkForIntroduction();
   }, [loading, shouldStartIntroduction, startIntroduction]);
 
+  // 🔒 INSIGHTS PAUSED - Feature flag for automatic insight generation
+  const AUTO_INSIGHTS_ENABLED = false; // Set to true to re-enable automatic insights
+  
   // Authentic triggers for both learning and insights
   useEffect(() => {
     // Gate autonomous behaviors during introduction OR during background report generation
@@ -122,38 +125,49 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
       return;
     }
 
-    const activityTimer = setTimeout(() => {
-      if (!currentQuestion && !currentInsight && !loading && !isGenerating && !isGeneratingInsight) {
-        // Trigger thinking state before generating content
-        setIsThinking(true);
-        setActiveModule('NIK');
-        setModuleActivity(true);
-        
-        setTimeout(async () => {
-          // Balanced choice between learning and insight generation
-          const shouldGenerateInsight = Math.random() < 0.6; // 60% chance for insight
+    // 🔒 INSIGHTS PAUSED - Only show learning, no automatic insights
+    if (AUTO_INSIGHTS_ENABLED) {
+      const activityTimer = setTimeout(() => {
+        if (!currentQuestion && !currentInsight && !loading && !isGenerating && !isGeneratingInsight) {
+          // Trigger thinking state before generating content
+          setIsThinking(true);
+          setActiveModule('NIK');
+          setModuleActivity(true);
           
-          if (shouldGenerateInsight) {
-            await triggerInsightCheck('periodic_activity', { source: 'autonomous_trigger' });
-            // Refresh intelligence after insight generation
-            await refreshIntelligence();
-          } else {
-            await triggerMicroLearning();
-            // Refresh intelligence after micro-learning
-            await refreshIntelligence();
-          }
-          
-          setIsThinking(false);
-          setModuleActivity(false);
-        }, 1500);
-      }
-    }, 2000); // Every 2 seconds check for triggers
-    return () => clearTimeout(activityTimer);
-  }, [introductionState.isActive, isGeneratingReport, currentQuestion, currentInsight, loading, isGenerating, isGeneratingInsight, triggerMicroLearning, triggerInsightCheck]);
+          setTimeout(async () => {
+            // Balanced choice between learning and insight generation
+            const shouldGenerateInsight = Math.random() < 0.6; // 60% chance for insight
+            
+            if (shouldGenerateInsight) {
+              await triggerInsightCheck('periodic_activity', { source: 'autonomous_trigger' });
+              // Refresh intelligence after insight generation
+              await refreshIntelligence();
+            } else {
+              await triggerMicroLearning();
+              // Refresh intelligence after micro-learning
+              await refreshIntelligence();
+            }
+            
+            setIsThinking(false);
+            setModuleActivity(false);
+          }, 1500);
+        }
+      }, 2000); // Every 2 seconds check for triggers
+      return () => clearTimeout(activityTimer);
+    } else {
+      // 🔒 INSIGHTS PAUSED - Log when automatic triggers would have fired
+      const debugTimer = setTimeout(() => {
+        if (!currentQuestion && !currentInsight && !loading && !isGenerating && !isGeneratingInsight) {
+          console.log('🔇 [INSIGHTS PAUSED] Would have triggered automatic insight/learning here');
+        }
+      }, 2000);
+      return () => clearTimeout(debugTimer);
+    }
+  }, [introductionState.isActive, isGeneratingReport, currentQuestion, currentInsight, loading, isGenerating, isGeneratingInsight, triggerMicroLearning, triggerInsightCheck, AUTO_INSIGHTS_ENABLED]);
 
-  // Periodic analytics check (every 60 seconds when active)
+  // 🔒 INSIGHTS PAUSED - Periodic analytics check (every 60 seconds when active)
   useEffect(() => {
-    if (intelligence && intelligence.interaction_count > 0) {
+    if (AUTO_INSIGHTS_ENABLED && intelligence && intelligence.interaction_count > 0) {
       const analyticsTimer = setInterval(async () => {
         if (!currentInsight && !isGeneratingInsight) {
           console.log('🔍 Triggering periodic analytics insight check...');
@@ -165,8 +179,16 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
       }, 60000); // Every 60 seconds
       
       return () => clearInterval(analyticsTimer);
+    } else if (!AUTO_INSIGHTS_ENABLED && intelligence && intelligence.interaction_count > 0) {
+      // 🔒 INSIGHTS PAUSED - Log when analytics would have been triggered
+      const debugTimer = setInterval(() => {
+        if (!currentInsight && !isGeneratingInsight) {
+          console.log('🔇 [INSIGHTS PAUSED] Would have triggered periodic analytics insight check here');
+        }
+      }, 60000);
+      return () => clearInterval(debugTimer);
     }
-  }, [intelligence, currentInsight, isGeneratingInsight, triggerInsightCheck]);
+  }, [intelligence, currentInsight, isGeneratingInsight, triggerInsightCheck, AUTO_INSIGHTS_ENABLED]);
 
   // Module activity based on current question or insight
   useEffect(() => {
