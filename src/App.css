@@ -47,7 +47,7 @@
 /* Mobile-specific fixes */
 @media (max-width: 768px) {
   #root {
-    padding: 0 !important; /* Force override of desktop padding */
+    padding: 0 !important;
     max-width: 100vw !important;
     width: 100vw !important;
     overflow-x: hidden !important;
@@ -99,6 +99,7 @@
     margin-left: auto !important;
     margin-right: auto !important;
     box-sizing: border-box !important;
+    overflow-x: hidden !important;
   }
   
   /* Fix mobile padding for page containers */
@@ -113,19 +114,28 @@
   
   /* Prevent any element from exceeding viewport width */
   .w-full {
-    max-width: 100vw;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
   }
   
   /* Fix button and input widths on mobile */
   button, input, textarea, select {
-    max-width: 100%;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
   }
   
   /* Ensure text doesn't break layout */
   p, h1, h2, h3, h4, h5, h6, span, div {
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    hyphens: auto;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    hyphens: auto !important;
+    max-width: 100% !important;
+  }
+  
+  /* Force all containers to respect mobile boundaries */
+  * {
+    max-width: 100vw !important;
+    box-sizing: border-box !important;
   }
 }
 
