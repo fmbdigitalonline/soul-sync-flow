@@ -210,26 +210,30 @@ export const useStewardIntroduction = () => {
     console.log('🎭 Steward introduction started');
   }, [user, stepAudio]);
 
-  // Continue to next step
+  // Continue to next step with proper audio cleanup
   const continueIntroduction = useCallback(async () => {
-    // Stop current audio before advancing
+    console.log('🎭 Continue introduction - stopping current audio first');
+    
+    // PHASE 1: Immediate audio cleanup before state changes
     stepAudio.stopAudio();
+    stepAudio.cleanupAudio();
 
     setIntroductionState(prev => {
       const nextStep = prev.currentStep + 1;
       
       if (nextStep >= prev.steps.length) {
+        console.log('🎭 Introduction complete - final cleanup');
         // Introduction complete - close modal and cleanup audio
-        stepAudio.cleanupAudio();
         return {
           ...prev,
-          isActive: false,
+          isActive: false, // This will trigger audio cleanup in useStepAudio
           completed: true,
           currentAudio: null,
           isAudioPlaying: false
         };
       }
 
+      console.log(`🎭 Moving to step ${nextStep}`);
       return {
         ...prev,
         currentStep: nextStep,
@@ -243,14 +247,20 @@ export const useStewardIntroduction = () => {
   const completeIntroductionWithReport = useCallback(async () => {
     if (!user) return;
 
-    // CRITICAL: Mark introduction as completed IMMEDIATELY to prevent re-triggering
+    console.log('🎭 Completing introduction with report generation');
+
+    // PHASE 1: CRITICAL - Mark introduction as completed IMMEDIATELY to prevent re-triggering
     await markIntroductionCompleted();
 
-    // Cleanup audio and close modal immediately
+    // PHASE 1: CRITICAL - Immediate audio cleanup before any other operations
+    console.log('🧹 Immediate audio cleanup before completion');
+    stepAudio.stopAudio();
     stepAudio.cleanupAudio();
+
+    // PHASE 4: Close modal immediately and set inactive state
     setIntroductionState(prev => ({
       ...prev,
-      isActive: false,
+      isActive: false, // This triggers cleanup in useStepAudio
       completed: true,
       currentAudio: null,
       isAudioPlaying: false
@@ -289,7 +299,7 @@ export const useStewardIntroduction = () => {
     } finally {
       setIsGeneratingReport(false);
     }
-  }, [user, markIntroductionCompleted]);
+  }, [user, markIntroductionCompleted, stepAudio]);
 
   // 🧭 Safe introduction check with circuit breaker (Build Transparently)
   const safeIntroductionCheck = useCallback(async (): Promise<boolean> => {
@@ -367,7 +377,7 @@ export const useStewardIntroduction = () => {
       
       return false;
     }
-  }, [user, introductionCheckState.failureCount, introductionCheckState.lastCheckTime, hasCompletedIntroductionInSession]);
+  }, [user, introductionCheckState.failureCount, introductionCheckState.lastCheckTime]);
 
   // 🚫 Debounced introduction check to prevent excessive calls (No Hardcoded Data)
   const debouncedIntroductionCheck = useMemo(
