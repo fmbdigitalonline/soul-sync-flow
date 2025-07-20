@@ -139,7 +139,7 @@ export const useStewardIntroduction = () => {
       ...prev,
       audioMuted: stepAudio.getInitialMuteState()
     }));
-  }, [stepAudio]);
+  }, []); // Only run once on mount
 
   // Toggle audio mute
   const toggleAudioMute = useCallback(() => {
