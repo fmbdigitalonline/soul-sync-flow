@@ -14,7 +14,6 @@ import { HACSMicroLearning } from './HACSMicroLearning';
 import { HACSChatOverlay } from './HACSChatOverlay';
 import { HACSInsightDisplay } from './HACSInsightDisplay';
 import { cn } from '@/lib/utils';
-import { Volume2, VolumeX, AlertCircle } from 'lucide-react';
 
 interface FloatingHACSProps {
   className?: string;
@@ -56,14 +55,10 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     startIntroduction,
     continueIntroduction,
     completeIntroductionWithReport,
-    shouldStartIntroduction,
-    toggleAudioMute
+    shouldStartIntroduction
   } = useStewardIntroduction();
 
-  // 🧭 Conditional logging for development only (Build Transparently)
-  if (process.env.NODE_ENV === 'development') {
-    console.log('FloatingHACSOrb render:', { loading, intelligence, currentQuestion, currentInsight, isGenerating, isGeneratingInsight });
-  }
+  console.log('FloatingHACSOrb render:', { loading, intelligence, currentQuestion, currentInsight, isGenerating, isGeneratingInsight });
 
   const intelligenceLevel = intelligence?.intelligence_level || 0;
 
@@ -102,32 +97,23 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     }
   }, [currentQuestion, currentInsight, clearCurrentQuestion]);
 
-  // 🔒 Fixed introduction check to prevent infinite loops (Never Break Functionality)
-  const [hasTriggeredIntroductionCheck, setHasTriggeredIntroductionCheck] = useState(false);
-  
+  // Check for steward introduction on mount for new users
   useEffect(() => {
-    // Only check once when component mounts and user is loaded
-    if (!loading && !hasTriggeredIntroductionCheck) {
-      const checkForIntroduction = async () => {
-        try {
-          console.log('🎭 Checking if steward introduction should start...');
-          const shouldStart = await shouldStartIntroduction();
-          if (shouldStart && !introductionState.isActive) {
-            console.log('🎭 Triggering Steward Introduction...');
-            startIntroduction();
-          } else {
-            console.log('✅ Steward Introduction already completed or not needed.');
-          }
-        } catch (error) {
-          console.error('🔴 Introduction check failed:', error);
-        } finally {
-          setHasTriggeredIntroductionCheck(true);
+    const checkForIntroduction = async () => {
+      if (!loading) {
+        console.log('🎭 Checking if steward introduction should start...');
+        const shouldStart = await shouldStartIntroduction();
+        if (shouldStart) {
+          console.log('🎭 Triggering Steward Introduction...');
+          startIntroduction();
+        } else {
+          console.log('✅ Steward Introduction already completed or not needed.');
         }
-      };
+      }
+    };
 
-      checkForIntroduction();
-    }
-  }, [loading, hasTriggeredIntroductionCheck]); // 🧭 Stable dependencies only
+    checkForIntroduction();
+  }, [loading, shouldStartIntroduction, startIntroduction]);
 
   // 🔒 INSIGHTS PAUSED - Feature flag for automatic insight generation
   const AUTO_INSIGHTS_ENABLED = false; // Set to true to re-enable automatic insights
@@ -267,10 +253,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     }
   };
 
-  // 🧭 Conditional state logging for development only (Build Transparently)
-  if (process.env.NODE_ENV === 'development') {
-    console.log('FloatingHACSOrb state:', { loading, intelligence, currentQuestion, currentInsight, showBubble, showChat, showMicroLearning });
-  }
+  console.log('FloatingHACSOrb state:', { loading, intelligence, currentQuestion, currentInsight, showBubble, showChat, showMicroLearning });
   
   // Show a visible debug version when loading
   if (loading) {
@@ -402,49 +385,17 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
             exit={{ opacity: 0, scale: 0.95 }}
             className="bg-card/95 backdrop-blur border border-border rounded-lg shadow-2xl max-w-md w-full mx-4"
           >
-            {/* Audio Controls Header */}
-            <div className="flex justify-between items-center p-4 pb-0">
-              <div className="flex items-center gap-2">
-                {/* Audio playing indicator */}
-                {introductionState.isAudioPlaying && !introductionState.audioMuted && (
-                  <motion.div
-                    className="flex items-center gap-1 text-xs text-primary"
-                    animate={{ opacity: [0.5, 1, 0.5] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
-                  >
-                    <div className="w-1 h-3 bg-primary rounded-full"></div>
-                    <div className="w-1 h-2 bg-primary rounded-full"></div>
-                    <div className="w-1 h-4 bg-primary rounded-full"></div>
-                    <span className="ml-1">Speaking</span>
-                  </motion.div>
-                )}
-              </div>
-              
-              {/* Mute/Unmute Button */}
-              <button
-                onClick={toggleAudioMute}
-                className="p-2 hover:bg-muted rounded-lg transition-colors"
-                aria-label={introductionState.audioMuted ? "Unmute audio" : "Mute audio"}
-              >
-                {introductionState.audioMuted ? (
-                  <VolumeX className="w-5 h-5 text-muted-foreground" />
-                ) : (
-                  <Volume2 className="w-5 h-5 text-primary" />
-                )}
-              </button>
-            </div>
-
-            <div className="p-6 pt-2 text-center">
+            <div className="p-6 text-center">
               {/* Soul Alchemist Orb - Speaking State */}
               <div className="flex justify-center mb-6">
                 <IntelligentSoulOrb
                   stage="collecting"
-                  speaking={introductionState.isAudioPlaying && !introductionState.audioMuted}
+                  speaking={true}
                   pulse={true}
                   size="lg"
                   intelligenceLevel={40}
                   showProgressRing={true}
-                  className={introductionState.isAudioPlaying && !introductionState.audioMuted ? "animate-pulse" : ""}
+                  className="animate-pulse"
                 />
               </div>
               

@@ -5,7 +5,6 @@ export interface StewardIntroductionStep {
   title: string;
   showContinue: boolean;
   isComplete?: boolean;
-  audioUrl?: string;
 }
 
 export interface StewardIntroductionState {
@@ -13,7 +12,4 @@ export interface StewardIntroductionState {
   currentStep: number;
   steps: StewardIntroductionStep[];
   completed: boolean;
-  audioMuted: boolean;
-  currentAudio: HTMLAudioElement | null;
-  isAudioPlaying: boolean;
 }
