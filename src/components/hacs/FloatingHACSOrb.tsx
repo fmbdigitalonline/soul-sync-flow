@@ -14,7 +14,7 @@ import { HACSMicroLearning } from './HACSMicroLearning';
 import { HACSChatOverlay } from './HACSChatOverlay';
 import { HACSInsightDisplay } from './HACSInsightDisplay';
 import { cn } from '@/lib/utils';
-import { Volume2, VolumeX } from 'lucide-react';
+import { Volume2, VolumeX, AlertCircle } from 'lucide-react';
 
 interface FloatingHACSProps {
   className?: string;
@@ -60,7 +60,10 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     toggleAudioMute
   } = useStewardIntroduction();
 
-  console.log('FloatingHACSOrb render:', { loading, intelligence, currentQuestion, currentInsight, isGenerating, isGeneratingInsight });
+  // 🧭 Conditional logging for development only (Build Transparently)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('FloatingHACSOrb render:', { loading, intelligence, currentQuestion, currentInsight, isGenerating, isGeneratingInsight });
+  }
 
   const intelligenceLevel = intelligence?.intelligence_level || 0;
 
@@ -99,23 +102,32 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     }
   }, [currentQuestion, currentInsight, clearCurrentQuestion]);
 
-  // Check for steward introduction on mount for new users
+  // 🔒 Fixed introduction check to prevent infinite loops (Never Break Functionality)
+  const [hasTriggeredIntroductionCheck, setHasTriggeredIntroductionCheck] = useState(false);
+  
   useEffect(() => {
-    const checkForIntroduction = async () => {
-      if (!loading) {
-        console.log('🎭 Checking if steward introduction should start...');
-        const shouldStart = await shouldStartIntroduction();
-        if (shouldStart) {
-          console.log('🎭 Triggering Steward Introduction...');
-          startIntroduction();
-        } else {
-          console.log('✅ Steward Introduction already completed or not needed.');
+    // Only check once when component mounts and user is loaded
+    if (!loading && !hasTriggeredIntroductionCheck) {
+      const checkForIntroduction = async () => {
+        try {
+          console.log('🎭 Checking if steward introduction should start...');
+          const shouldStart = await shouldStartIntroduction();
+          if (shouldStart && !introductionState.isActive) {
+            console.log('🎭 Triggering Steward Introduction...');
+            startIntroduction();
+          } else {
+            console.log('✅ Steward Introduction already completed or not needed.');
+          }
+        } catch (error) {
+          console.error('🔴 Introduction check failed:', error);
+        } finally {
+          setHasTriggeredIntroductionCheck(true);
         }
-      }
-    };
+      };
 
-    checkForIntroduction();
-  }, [loading, shouldStartIntroduction, startIntroduction]);
+      checkForIntroduction();
+    }
+  }, [loading, hasTriggeredIntroductionCheck]); // 🧭 Stable dependencies only
 
   // 🔒 INSIGHTS PAUSED - Feature flag for automatic insight generation
   const AUTO_INSIGHTS_ENABLED = false; // Set to true to re-enable automatic insights
@@ -255,7 +267,10 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     }
   };
 
-  console.log('FloatingHACSOrb state:', { loading, intelligence, currentQuestion, currentInsight, showBubble, showChat, showMicroLearning });
+  // 🧭 Conditional state logging for development only (Build Transparently)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('FloatingHACSOrb state:', { loading, intelligence, currentQuestion, currentInsight, showBubble, showChat, showMicroLearning });
+  }
   
   // Show a visible debug version when loading
   if (loading) {

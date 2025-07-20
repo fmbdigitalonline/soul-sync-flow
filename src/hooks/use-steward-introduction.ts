@@ -1,10 +1,22 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { StewardIntroductionStep, StewardIntroductionState } from '@/types/steward-introduction';
 import { hermeticPersonalityReportService } from '@/services/hermetic-personality-report-service';
 import { useStepAudio } from './use-step-audio';
+
+// Debounce utility function
+const debounce = <T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): ((...args: Parameters<T>) => void) => {
+  let timeout: NodeJS.Timeout;
+  return (...args: Parameters<T>) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+};
 
 export const useStewardIntroduction = () => {
   const { user } = useAuth();
@@ -18,6 +30,18 @@ export const useStewardIntroduction = () => {
     isAudioPlaying: false
   });
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+  
+  // 🧭 Circuit breaker pattern for failed introduction checks (Build Transparently)
+  const [introductionCheckState, setIntroductionCheckState] = useState({
+    isChecking: false,
+    hasChecked: false,
+    error: null as string | null,
+    failureCount: 0,
+    lastCheckTime: 0
+  });
+  
+  const MAX_FAILURES = 3;
+  const CHECK_COOLDOWN = 30000; // 30 seconds
 
   // Session-based tracking to prevent re-triggering during same session
   const getSessionIntroductionKey = () => `steward_intro_completed_${user?.id}`;
@@ -267,14 +291,33 @@ export const useStewardIntroduction = () => {
     }
   }, [user, markIntroductionCompleted]);
 
-  // Check if introduction should start for new users
-  const shouldStartIntroduction = useCallback(async () => {
+  // 🧭 Safe introduction check with circuit breaker (Build Transparently)
+  const safeIntroductionCheck = useCallback(async (): Promise<boolean> => {
     if (!user) return false;
+
+    // Circuit breaker: prevent excessive failed requests
+    if (introductionCheckState.failureCount >= MAX_FAILURES) {
+      const timeSinceLastCheck = Date.now() - introductionCheckState.lastCheckTime;
+      if (timeSinceLastCheck < CHECK_COOLDOWN) {
+        console.warn('🔴 Introduction check circuit breaker active - too many failures');
+        return false;
+      } else {
+        // Reset circuit breaker after cooldown
+        setIntroductionCheckState(prev => ({ ...prev, failureCount: 0 }));
+      }
+    }
 
     // First check session storage - if completed in this session, don't start
     if (hasCompletedIntroductionInSession()) {
       return false;
     }
+
+    setIntroductionCheckState(prev => ({ 
+      ...prev, 
+      isChecking: true, 
+      error: null,
+      lastCheckTime: Date.now()
+    }));
 
     try {
       // Check user_blueprints and blueprints for introduction status
@@ -292,6 +335,19 @@ export const useStewardIntroduction = () => {
         .eq('is_active', true)
         .maybeSingle();
 
+      // Handle errors transparently
+      if (userBlueprintError || blueprintError) {
+        throw new Error(`Database query failed: ${userBlueprintError?.message || blueprintError?.message}`);
+      }
+
+      // Update state on successful check
+      setIntroductionCheckState(prev => ({ 
+        ...prev, 
+        isChecking: false, 
+        hasChecked: true,
+        failureCount: 0 
+      }));
+
       // User needs introduction if:
       // 1. Has a valid user blueprint
       // 2. Blueprint exists
@@ -299,10 +355,30 @@ export const useStewardIntroduction = () => {
       // 4. Not completed in current session
       return !!userBlueprint && !!blueprint && !blueprint.steward_introduction_completed;
     } catch (error) {
-      console.error('Error checking if introduction should start:', error);
+      console.error('🔴 Error checking if introduction should start:', error);
+      
+      // Update failure state
+      setIntroductionCheckState(prev => ({ 
+        ...prev, 
+        isChecking: false,
+        error: String(error),
+        failureCount: prev.failureCount + 1
+      }));
+      
       return false;
     }
-  }, [user]);
+  }, [user, introductionCheckState.failureCount, introductionCheckState.lastCheckTime, hasCompletedIntroductionInSession]);
+
+  // 🚫 Debounced introduction check to prevent excessive calls (No Hardcoded Data)
+  const debouncedIntroductionCheck = useMemo(
+    () => debounce(safeIntroductionCheck, 1000),
+    [safeIntroductionCheck]
+  );
+
+  // Legacy wrapper for backward compatibility (🔒 Never Break Functionality)
+  const shouldStartIntroduction = useCallback(async () => {
+    return await safeIntroductionCheck();
+  }, [safeIntroductionCheck]);
 
   return {
     introductionState,

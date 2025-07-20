@@ -1,10 +1,16 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 
 interface UseStepAudioProps {
   audioUrl?: string;
   isActive: boolean;
   audioMuted: boolean;
   onAudioStateChange: (isPlaying: boolean, audio: HTMLAudioElement | null) => void;
+}
+
+interface AudioError {
+  message: string;
+  url?: string;
+  timestamp: number;
 }
 
 export const useStepAudio = ({ 
@@ -15,6 +21,11 @@ export const useStepAudio = ({
 }: UseStepAudioProps) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const isPlayingRef = useRef(false);
+  
+  // 🧭 Error state tracking (Build Transparently)
+  const [audioError, setAudioError] = useState<AudioError | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const MAX_RETRIES = 2;
 
   // Audio preference key
   const AUDIO_MUTE_KEY = 'steward_intro_audio_muted';
@@ -81,18 +92,45 @@ export const useStepAudio = ({
       };
 
       audio.onerror = (error) => {
-        console.warn(`🎵 Audio error for ${audioUrl}:`, error);
+        const audioError: AudioError = {
+          message: `Audio loading failed for ${audioUrl}`,
+          url: audioUrl,
+          timestamp: Date.now()
+        };
+        setAudioError(audioError);
+        console.warn(`🔴 Audio error for ${audioUrl}:`, error);
         isPlayingRef.current = false;
         onAudioStateChange(false, null);
       };
 
       // Start playing
       await audio.play();
+      
+      // Clear any previous error on successful play
+      if (audioError) {
+        setAudioError(null);
+        setRetryCount(0);
+      }
     } catch (error) {
-      console.warn(`🎵 Failed to play audio ${audioUrl}:`, error);
+      const errorObj: AudioError = {
+        message: `Failed to play audio: ${String(error)}`,
+        url: audioUrl,
+        timestamp: Date.now()
+      };
+      setAudioError(errorObj);
+      
+      // Retry logic with exponential backoff
+      if (retryCount < MAX_RETRIES) {
+        console.warn(`🔄 Audio playback failed, retrying (${retryCount + 1}/${MAX_RETRIES}):`, error);
+        setRetryCount(prev => prev + 1);
+        setTimeout(() => playStepAudio(), 1000 * (retryCount + 1));
+      } else {
+        console.error(`🔴 Audio playback failed after ${MAX_RETRIES} retries:`, error);
+      }
+      
       cleanupAudio();
     }
-  }, [audioUrl, audioMuted, cleanupAudio, onAudioStateChange]);
+  }, [audioUrl, audioMuted, cleanupAudio, onAudioStateChange, audioError, retryCount]);
 
   // Stop current audio
   const stopAudio = useCallback(() => {
@@ -141,6 +179,8 @@ export const useStepAudio = ({
     getInitialMuteState,
     toggleMute,
     stopAudio,
-    cleanupAudio
+    cleanupAudio,
+    audioError, // 🧭 Expose error state for transparent debugging
+    retryCount
   };
 };
