@@ -93,9 +93,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
   const shouldShowDesktopNav = user && !hideNav;
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       {/* Mobile Header */}
-      <div className="md:hidden bg-white/80 backdrop-blur-lg border-b border-border sticky top-0 z-40 w-full">
+      <div className="md:hidden bg-background/80 backdrop-blur-lg border-b border-border sticky top-0 z-40 w-full">
         <div className="flex items-center justify-between p-4 w-full">
           <Link to="/" className="flex items-center space-x-2">
             <SoulOrbAvatar size="sm" />

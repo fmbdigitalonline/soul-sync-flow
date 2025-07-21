@@ -1,50 +1,51 @@
 
-import React, { useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
-import { LanguageProvider } from './contexts/LanguageContext';
-import { ModeProvider } from './contexts/ModeContext';
-import { Toaster } from '@/components/ui/toaster';
-import { SoulOrbProvider } from './contexts/SoulOrbContext';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BlueprintCacheProvider } from './contexts/BlueprintCacheContext';
-import { user360Cleanup } from '@/utils/user-360-cleanup';
-import { ErrorBoundary } from './components/ErrorBoundary';
+import { Toaster } from "@/components/ui/toaster";
+import { Outlet } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
+import { SoulOrbProvider } from "@/contexts/SoulOrbContext";
+import { SupabaseProvider } from "@/contexts/SupabaseContext";
+import { Analytics } from "@/components/Analytics/Analytics";
+import { ResponseTimeProvider } from "@/contexts/ResponseTimeContext";
+import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
+import { FloatingInsights } from "@/components/Insights/FloatingInsights";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 3,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
+    },
+  },
+});
 
 function App() {
-  // Initialize 360° cleanup system
-  useEffect(() => {
-    user360Cleanup.registerCleanup();
-    
-    // Cleanup on app unmount
-    return () => {
-      user360Cleanup.cleanup();
-    };
-  }, []);
-
   return (
-    <div className="min-h-screen bg-white">
-      <ErrorBoundary>
+    <div className="min-h-screen bg-background text-foreground">
+      <GlobalErrorBoundary>
         <QueryClientProvider client={queryClient}>
-          <AuthProvider>
+          <SupabaseProvider>
             <LanguageProvider>
-              <ModeProvider>
+              <AuthProvider>
                 <SoulOrbProvider>
-                  <BlueprintCacheProvider>
-                    <Outlet />
+                  <ResponseTimeProvider>
+                    <div className="relative">
+                      <Outlet />
+                      <Analytics />
+                      <FloatingInsights />
+                    </div>
                     <Toaster />
-                  </BlueprintCacheProvider>
+                  </ResponseTimeProvider>
                 </SoulOrbProvider>
-              </ModeProvider>
+              </AuthProvider>
             </LanguageProvider>
-          </AuthProvider>
+          </SupabaseProvider>
         </QueryClientProvider>
-      </ErrorBoundary>
+      </GlobalErrorBoundary>
     </div>
   );
 }
-
 
 export default App;
