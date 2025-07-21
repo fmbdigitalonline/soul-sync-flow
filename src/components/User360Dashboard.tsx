@@ -231,42 +231,42 @@ const User360Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 space-y-6">
+    <div className="min-h-screen bg-background p-component space-y-spacing-6">
       {/* Header */}
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-spacing-4">
           <div>
-            <h1 className="font-cormorant text-3xl lg:text-4xl font-bold">
+            <h1 className="font-display text-heading-3xl lg:text-heading-4xl">
               360° Soul Profile
             </h1>
-            <p className="font-inter text-muted-foreground mt-1">
+            <p className="font-body text-text-secondary mt-spacing-1">
               Unified view of your complete soul data ecosystem
             </p>
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-spacing-3">
             {/* Sync Status Indicator */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-spacing-2">
               {syncActive ? (
-                <div className="flex items-center gap-1 text-success">
+                <div className="flex items-center gap-spacing-1 text-success">
                   <Wifi className="h-4 w-4" />
-                  <span className="font-inter text-xs">Live Sync</span>
+                  <span className="font-body text-caption-xs">Live Sync</span>
                 </div>
               ) : (
-                <div className="flex items-center gap-1 text-muted-foreground">
+                <div className="flex items-center gap-spacing-1 text-text-secondary">
                   <WifiOff className="h-4 w-4" />
-                  <span className="font-inter text-xs">Offline</span>
+                  <span className="font-body text-caption-xs">Offline</span>
                 </div>
               )}
             </div>
             
             {lastRefresh && (
-              <p className="font-inter text-xs text-muted-foreground">
+              <p className="font-body text-caption-xs text-text-secondary">
                 Updated {lastRefresh.toLocaleTimeString()}
               </p>
             )}
             
-            <div className="flex gap-2">
+            <div className="flex gap-spacing-2">
               <Button 
                 onClick={refreshProfile} 
                 variant="outline" 

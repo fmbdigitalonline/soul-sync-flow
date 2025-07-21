@@ -110,14 +110,14 @@ const SpiritualGrowth = () => {
   if (!isAuthenticated) {
     return (
       <MainLayout>
-        <div className="min-h-screen bg-background flex items-center justify-center p-4">
-          <CosmicCard className="w-full max-w-md text-center space-y-6">
-            <div className="w-16 h-16 mx-auto bg-primary rounded-full flex items-center justify-center">
+        <div className="min-h-screen bg-background flex items-center justify-center p-component">
+          <CosmicCard className="w-full max-w-md text-center space-y-spacing-6">
+            <div className="w-16 h-16 mx-auto bg-primary rounded-shape-full flex items-center justify-center">
               <Sparkles className="h-8 w-8 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-2xl font-heading font-bold text-foreground mb-2">{t("spiritualGrowth.title")}</h1>
-              <p className="text-muted-foreground">{t("spiritualGrowth.description")}</p>
+              <h1 className="text-heading-lg font-display text-text-main mb-spacing-2">{t("spiritualGrowth.title")}</h1>
+              <p className="text-text-secondary">{t("spiritualGrowth.description")}</p>
             </div>
             <Button 
               className="w-full"
