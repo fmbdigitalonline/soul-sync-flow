@@ -398,67 +398,127 @@
      SEMANTIC TYPOGRAPHY UTILITIES - Use these instead of hardcoded sizes
      ===================================================================== */
   
-  /* Semantic Heading Utilities */
+  /* Semantic Heading Utilities - Fixed circular dependencies */
   .text-heading-xs {
-    @apply text-heading-xs font-cormorant font-semibold text-text-main;
+    font-size: 16px;
+    line-height: 1.3;
+    font-weight: 600;
+    font-family: var(--font-cormorant);
+    color: hsl(var(--color-text-main));
   }
   
   .text-heading-sm {
-    @apply text-heading-sm font-cormorant font-semibold text-text-main;
+    font-size: 18px;
+    line-height: 1.3;
+    font-weight: 600;
+    font-family: var(--font-cormorant);
+    color: hsl(var(--color-text-main));
   }
   
   .text-heading-md {
-    @apply text-heading-md font-cormorant font-medium text-text-main;
+    font-size: 20px;
+    line-height: 1.4;
+    font-weight: 500;
+    font-family: var(--font-cormorant);
+    color: hsl(var(--color-text-main));
   }
   
   .text-heading-lg {
-    @apply text-heading-lg font-cormorant font-semibold text-text-main;
+    font-size: 24px;
+    line-height: 1.3;
+    font-weight: 600;
+    font-family: var(--font-cormorant);
+    color: hsl(var(--color-text-main));
   }
   
   .text-heading-xl {
-    @apply text-heading-xl font-cormorant font-bold text-text-main;
+    font-size: 28px;
+    line-height: 1.2;
+    font-weight: 700;
+    font-family: var(--font-cormorant);
+    color: hsl(var(--color-text-main));
   }
   
   .text-heading-2xl {
-    @apply text-heading-2xl font-cormorant font-bold text-text-main;
+    font-size: 32px;
+    line-height: 1.2;
+    font-weight: 700;
+    font-family: var(--font-cormorant);
+    color: hsl(var(--color-text-main));
   }
   
-  /* Semantic Body Text Utilities */
+  /* Semantic Body Text Utilities - Fixed circular dependencies */
   .text-body-xs {
-    @apply text-text-xs font-inter text-text-main;
+    font-size: 10px;
+    line-height: 1.2;
+    font-weight: 300;
+    font-family: var(--font-inter);
+    color: hsl(var(--color-text-main));
   }
   
   .text-body-sm {
-    @apply text-text-sm font-inter text-text-main;
+    font-size: 12px;
+    line-height: 1.4;
+    font-weight: 300;
+    font-family: var(--font-inter);
+    color: hsl(var(--color-text-main));
   }
   
   .text-body-base {
-    @apply text-text-base font-inter text-text-main;
+    font-size: 14px;
+    line-height: 1.5;
+    font-weight: 400;
+    font-family: var(--font-inter);
+    color: hsl(var(--color-text-main));
   }
   
   .text-body-md {
-    @apply text-text-md font-inter text-text-main;
+    font-size: 16px;
+    line-height: 1.6;
+    font-weight: 400;
+    font-family: var(--font-inter);
+    color: hsl(var(--color-text-main));
   }
   
   .text-body-lg {
-    @apply text-text-lg font-inter text-text-main;
+    font-size: 18px;
+    line-height: 1.6;
+    font-weight: 400;
+    font-family: var(--font-inter);
+    color: hsl(var(--color-text-main));
   }
   
-  /* Semantic Caption/Label Utilities */
+  /* Semantic Caption/Label Utilities - Fixed circular dependencies */
   .text-caption-xs {
-    @apply text-caption-xs font-inter text-text-muted;
+    font-size: 10px;
+    line-height: 1.2;
+    font-weight: 300;
+    font-family: var(--font-inter);
+    color: hsl(var(--color-text-muted));
   }
   
   .text-caption-sm {
-    @apply text-caption-sm font-inter text-text-muted;
+    font-size: 12px;
+    line-height: 1.4;
+    font-weight: 300;
+    font-family: var(--font-inter);
+    color: hsl(var(--color-text-muted));
   }
   
   .text-label-sm {
-    @apply text-label-sm font-inter font-medium text-text-main;
+    font-size: 12px;
+    line-height: 1.4;
+    font-weight: 500;
+    font-family: var(--font-inter);
+    color: hsl(var(--color-text-main));
   }
   
   .text-label-md {
-    @apply text-label-md font-inter font-medium text-text-main;
+    font-size: 14px;
+    line-height: 1.4;
+    font-weight: 500;
+    font-family: var(--font-inter);
+    color: hsl(var(--color-text-main));
   }
   
   /* Legacy Typography (preserved for backward compatibility) */
@@ -490,33 +550,39 @@
      SEMANTIC SPACING UTILITIES - Use these instead of hardcoded spacing
      ===================================================================== */
   
-  /* Margin Utilities */
-  .margin-xs { @apply m-space-xs; }
-  .margin-sm { @apply m-space-sm; }
-  .margin-md { @apply m-space-md; }
-  .margin-lg { @apply m-space-lg; }
-  .margin-xl { @apply m-space-xl; }
+  /* Margin Utilities - Fixed circular dependencies */
+  .margin-xs { margin: 4px; }
+  .margin-sm { margin: 8px; }
+  .margin-md { margin: 16px; }
+  .margin-lg { margin: 24px; }
+  .margin-xl { margin: 32px; }
   
-  /* Padding Utilities */
-  .padding-xs { @apply p-space-xs; }
-  .padding-sm { @apply p-space-sm; }
-  .padding-md { @apply p-space-md; }
-  .padding-lg { @apply p-space-lg; }
-  .padding-xl { @apply p-space-xl; }
+  .margin-bottom-xs { margin-bottom: 4px; }
+  .margin-bottom-sm { margin-bottom: 8px; }
+  .margin-bottom-md { margin-bottom: 16px; }
+  .margin-bottom-lg { margin-bottom: 24px; }
+  .margin-bottom-xl { margin-bottom: 32px; }
   
-  /* Component Spacing */
-  .component-spacing-xs { @apply p-component-xs; }
-  .component-spacing-sm { @apply p-component-sm; }
-  .component-spacing-md { @apply p-component-md; }
-  .component-spacing-lg { @apply p-component-lg; }
-  .component-spacing-xl { @apply p-component-xl; }
+  /* Padding Utilities - Fixed circular dependencies */
+  .padding-xs { padding: 4px; }
+  .padding-sm { padding: 8px; }
+  .padding-md { padding: 16px; }
+  .padding-lg { padding: 24px; }
+  .padding-xl { padding: 32px; }
   
-  /* Layout Spacing */
-  .layout-spacing-xs { @apply p-layout-xs; }
-  .layout-spacing-sm { @apply p-layout-sm; }
-  .layout-spacing-md { @apply p-layout-md; }
-  .layout-spacing-lg { @apply p-layout-lg; }
-  .layout-spacing-xl { @apply p-layout-xl; }
+  /* Component Spacing - Fixed circular dependencies */
+  .component-spacing-xs { padding: 2px; }
+  .component-spacing-sm { padding: 6px; }
+  .component-spacing-md { padding: 12px; }
+  .component-spacing-lg { padding: 20px; }
+  .component-spacing-xl { padding: 28px; }
+  
+  /* Layout Spacing - Fixed circular dependencies */
+  .layout-spacing-xs { padding: 16px; }
+  .layout-spacing-sm { padding: 24px; }
+  .layout-spacing-md { padding: 32px; }
+  .layout-spacing-lg { padding: 48px; }
+  .layout-spacing-xl { padding: 64px; }
 }
 
 @keyframes float {

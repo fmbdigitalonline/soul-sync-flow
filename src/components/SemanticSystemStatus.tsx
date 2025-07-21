@@ -101,30 +101,30 @@ export const SemanticSystemStatus: React.FC<SystemStatusProps> = ({ className })
   ];
 
   return (
-    <div className={cn("space-y-space-lg", className)}>
+    <div className={cn("space-y-6", className)}>
       {/* Header */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>🚀 Semantic Design System Status</span>
-            <div className="flex items-center space-x-space-sm">
+            <div className="flex items-center space-x-2">
               <span className="text-caption-sm text-text-muted">Dark Mode:</span>
               <ThemeToggle size="sm" />
             </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-space-lg">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <h3 className="text-heading-sm margin-bottom-sm">Implementation Phases</h3>
-              <div className="space-y-space-sm">
+              <h3 className="text-heading-sm mb-3">Implementation Phases</h3>
+              <div className="space-y-3">
                 {phases.map((phase) => {
                   const Icon = phase.icon;
                   return (
-                    <div key={phase.id} className="flex items-start space-x-space-sm">
+                    <div key={phase.id} className="flex items-start space-x-3">
                       <Icon className="h-5 w-5 mt-1 text-primary" />
                       <div>
-                        <div className="flex items-center space-x-space-xs">
+                        <div className="flex items-center space-x-2">
                           <h4 className="text-label-sm">{phase.title}</h4>
                           {phase.status === 'complete' ? (
                             <CheckCircle className="h-4 w-4 text-success" />
@@ -145,10 +145,10 @@ export const SemanticSystemStatus: React.FC<SystemStatusProps> = ({ className })
             </div>
 
             <div>
-              <h3 className="text-heading-sm margin-bottom-sm">SoulSync Principles ✅</h3>
-              <div className="space-y-space-xs">
+              <h3 className="text-heading-sm mb-3">SoulSync Principles ✅</h3>
+              <div className="space-y-2">
                 {soulSyncPrinciples.map((principle) => (
-                  <div key={principle.id} className="flex items-center space-x-space-sm">
+                  <div key={principle.id} className="flex items-center space-x-3">
                     <CheckCircle className="h-4 w-4 text-success flex-shrink-0" />
                     <div>
                       <span className="text-label-sm">{principle.title}</span>
@@ -178,16 +178,16 @@ export const SemanticSystemStatus: React.FC<SystemStatusProps> = ({ className })
         </CardHeader>
         {showTokens && (
           <CardContent>
-            <div className="space-y-space-lg">
+            <div className="space-y-6">
               {/* Color Tokens */}
               <div>
-                <h3 className="text-heading-sm margin-bottom-sm">Color Tokens</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-space-sm">
+                <h3 className="text-heading-sm mb-3">Color Tokens</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {colorTokenPreview.map((token) => (
                     <div
                       key={token.name}
                       className={cn(
-                        "padding-sm rounded-lg",
+                        "p-3 rounded-lg",
                         token.class
                       )}
                     >
@@ -200,10 +200,10 @@ export const SemanticSystemStatus: React.FC<SystemStatusProps> = ({ className })
 
               {/* Typography Tokens */}
               <div>
-                <h3 className="text-heading-sm margin-bottom-sm">Typography Tokens</h3>
-                <div className="space-y-space-sm">
+                <h3 className="text-heading-sm mb-3">Typography Tokens</h3>
+                <div className="space-y-3">
                   {typographyPreview.map((token) => (
-                    <div key={token.name} className="flex items-center space-x-space-md">
+                    <div key={token.name} className="flex items-center space-x-4">
                       <span className="text-caption-sm text-text-muted w-24">{token.name}:</span>
                       <span className={token.class}>{token.text}</span>
                     </div>
@@ -213,17 +213,17 @@ export const SemanticSystemStatus: React.FC<SystemStatusProps> = ({ className })
 
               {/* Spacing Tokens */}
               <div>
-                <h3 className="text-heading-sm margin-bottom-sm">Spacing Tokens</h3>
-                <div className="space-y-space-sm">
+                <h3 className="text-heading-sm mb-3">Spacing Tokens</h3>
+                <div className="space-y-3">
                   <div className="text-caption-sm text-text-muted">
                     space-xs (4px) • space-sm (8px) • space-md (16px) • space-lg (24px) • space-xl (32px)
                   </div>
-                  <div className="flex items-center space-x-space-xs">
-                    <div className="w-space-xs h-4 bg-primary"></div>
-                    <div className="w-space-sm h-4 bg-secondary"></div>
-                    <div className="w-space-md h-4 bg-success"></div>
-                    <div className="w-space-lg h-4 bg-warning"></div>
-                    <div className="w-space-xl h-4 bg-error"></div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-1 h-4 bg-primary"></div>
+                    <div className="w-2 h-4 bg-secondary"></div>
+                    <div className="w-4 h-4 bg-success"></div>
+                    <div className="w-6 h-4 bg-warning"></div>
+                    <div className="w-8 h-4 bg-error"></div>
                   </div>
                 </div>
               </div>
@@ -238,7 +238,7 @@ export const SemanticSystemStatus: React.FC<SystemStatusProps> = ({ className })
           <CardTitle className="text-primary">🎯 Next Phase: Complete Component Migration</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-body-md text-text-main space-y-space-sm">
+          <div className="text-body-md text-text-main space-y-3">
             <p>
               <strong>Foundation Complete!</strong> The semantic design system is fully operational.
               Dark mode works instantly across the entire application.
