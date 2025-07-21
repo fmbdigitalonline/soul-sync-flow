@@ -109,13 +109,13 @@ const Profile = () => {
 
   if (profileError) {
     return (
-      <MainLayout>
+      <div className="p-6 max-w-md mx-auto">
         <div className="p-6 max-w-md mx-auto">
           <CosmicCard className="p-6 text-center">
             <p className="text-destructive">{t('profile.errorLoading')}: {profileError}</p>
           </CosmicCard>
         </div>
-      </MainLayout>
+      </div>
     );
   }
 
@@ -125,7 +125,7 @@ const Profile = () => {
   const activeGoals = goals.filter(g => g.status === 'active');
 
   return (
-    <MainLayout>
+    <div className="p-6 max-w-md mx-auto">
       <div className="p-6 max-w-md mx-auto">
         <div className="flex flex-col items-center text-center mb-6">
           <Avatar className="h-20 w-20 mb-4 shadow-soft-ui">
@@ -315,7 +315,7 @@ const Profile = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </MainLayout>
+    </div>
   );
 };
 

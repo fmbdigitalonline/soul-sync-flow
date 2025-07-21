@@ -97,7 +97,7 @@ const Tasks = () => {
   }
 
   return (
-    <MainLayout>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-25">
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-25">
         <div className="w-full px-3 py-4">
           
@@ -352,7 +352,7 @@ const Tasks = () => {
           </div>
         </div>
       </div>
-    </MainLayout>
+    </div>
   );
 };
 

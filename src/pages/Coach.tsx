@@ -138,7 +138,7 @@ const Coach = () => {
   );
 
   return (
-    <MainLayout>
+    <div className="min-h-screen bg-background">
       <div className="min-h-screen bg-background">
         <div className="container mx-auto py-6 px-4 max-w-6xl">
           
@@ -175,7 +175,7 @@ const Coach = () => {
           )}
         </div>
       </div>
-    </MainLayout>
+    </div>
   );
 };
 
