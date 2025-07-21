@@ -19,14 +19,14 @@ const DataAvailabilityIndicator: React.FC<DataAvailabilityIndicatorProps> = ({
   completenessScore
 }) => {
   const sections = [
-    { key: 'blueprint', label: 'Soul Blueprint', icon: Heart, color: 'bg-purple-500' },
-    { key: 'intelligence', label: 'HACS Intelligence', icon: Brain, color: 'bg-blue-500' },
-    { key: 'memory', label: 'Memory Graph', icon: Zap, color: 'bg-yellow-500' },
-    { key: 'patterns', label: 'Behavioral Patterns', icon: TrendingUp, color: 'bg-green-500' },
-    { key: 'growth', label: 'Growth Journey', icon: Target, color: 'bg-indigo-500' },
-    { key: 'activities', label: 'Activities', icon: Activity, color: 'bg-orange-500' },
-    { key: 'goals', label: 'Goals', icon: Target, color: 'bg-red-500' },
-    { key: 'conversations', label: 'Conversations', icon: MessageSquare, color: 'bg-cyan-500' }
+    { key: 'blueprint', label: 'Soul Blueprint', icon: Heart, color: 'bg-primary' },
+    { key: 'intelligence', label: 'HACS Intelligence', icon: Brain, color: 'bg-secondary' },
+    { key: 'memory', label: 'Memory Graph', icon: Zap, color: 'bg-warning' },
+    { key: 'patterns', label: 'Behavioral Patterns', icon: TrendingUp, color: 'bg-success' },
+    { key: 'growth', label: 'Growth Journey', icon: Target, color: 'bg-accent' },
+    { key: 'activities', label: 'Activities', icon: Activity, color: 'bg-warning' },
+    { key: 'goals', label: 'Goals', icon: Target, color: 'bg-destructive' },
+    { key: 'conversations', label: 'Conversations', icon: MessageSquare, color: 'bg-info' }
   ] as const;
 
   return (
@@ -248,7 +248,7 @@ const User360Dashboard: React.FC = () => {
             {/* Sync Status Indicator */}
             <div className="flex items-center gap-2">
               {syncActive ? (
-                <div className="flex items-center gap-1 text-green-600">
+                <div className="flex items-center gap-1 text-success">
                   <Wifi className="h-4 w-4" />
                   <span className="font-inter text-xs">Live Sync</span>
                 </div>
@@ -389,7 +389,7 @@ const User360Dashboard: React.FC = () => {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   {syncActive ? (
-                    <div className="flex items-center gap-2 text-green-600">
+                    <div className="flex items-center gap-2 text-success">
                       <Wifi className="h-5 w-5" />
                       <span className="font-cormorant text-lg font-bold">Active</span>
                     </div>
