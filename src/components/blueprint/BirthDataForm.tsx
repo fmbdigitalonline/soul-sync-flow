@@ -80,7 +80,7 @@ export const BirthDataForm: React.FC<BirthDataFormProps> = ({ onSubmit, classNam
   return (
     <Card className={className}>
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-bold text-soul-purple">Create Your Soul Blueprint</CardTitle>
+        <CardTitle className="text-2xl font-bold text-primary">Create Your Soul Blueprint</CardTitle>
         <CardDescription className="text-gray-400">
           We'll automatically calculate your accurate timezone from your birth location - no need to know UTC offsets!
         </CardDescription>
@@ -192,7 +192,7 @@ export const BirthDataForm: React.FC<BirthDataFormProps> = ({ onSubmit, classNam
 
           <Button 
             type="submit" 
-            className="w-full bg-soul-purple hover:bg-soul-purple/80 text-white py-3 text-lg font-semibold"
+            className="w-full bg-primary hover:bg-primary/80 text-primary-foreground py-3 text-lg font-semibold"
           >
             Generate My Soul Blueprint
           </Button>

@@ -123,7 +123,7 @@ export function GoalSelectionStep({ onComplete, onBack }: GoalSelectionStepProps
                         {goal.label}
                       </Label>
                       {primaryGoal === goal.id && (
-                        <CheckCircle2 className="w-4 h-4 text-soul-purple mt-1 flex-shrink-0" />
+                        <CheckCircle2 className="w-4 h-4 text-primary mt-1 flex-shrink-0" />
                       )}
                     </div>
                   ))}
@@ -138,7 +138,7 @@ export function GoalSelectionStep({ onComplete, onBack }: GoalSelectionStepProps
               </Label>
               <div className="space-y-3">
                 <div className="text-center">
-                  <span className="text-lg font-medium text-soul-purple">
+                  <span className="text-lg font-medium text-primary">
                     {supportStyle[0]}/5
                   </span>
                 </div>
@@ -167,7 +167,7 @@ export function GoalSelectionStep({ onComplete, onBack }: GoalSelectionStepProps
           {/* Selection Summary */}
           {primaryGoal && (
             <div className="bg-white/5 rounded-lg p-4 space-y-2">
-              <h4 className="text-sm font-medium text-soul-purple">{t('goals.yourSelections')}</h4>
+              <h4 className="text-sm font-medium text-primary">{t('goals.yourSelections')}</h4>
               <div className="text-xs space-y-1">
                 <p><span className="text-white/60">{t('goals.focus')}</span> {selectedGoalLabel}</p>
                 <p><span className="text-white/60">{t('goals.guidanceLevelLabel')}</span> {supportStyle[0]}/5</p>
@@ -179,7 +179,7 @@ export function GoalSelectionStep({ onComplete, onBack }: GoalSelectionStepProps
           <Button 
             onClick={handleSubmit}
             disabled={!isValid}
-            className="w-full bg-soul-purple hover:bg-soul-purple/90 disabled:opacity-50 py-3 text-base font-medium"
+            className="w-full bg-primary hover:bg-primary/90 disabled:opacity-50 py-3 text-base font-medium"
           >
             {isSubmitting ? (
               <div className="flex items-center gap-2">

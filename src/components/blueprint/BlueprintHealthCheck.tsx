@@ -286,7 +286,7 @@ export const BlueprintHealthCheck: React.FC = () => {
             <Button 
               onClick={runHealthCheck} 
               disabled={isRunning}
-              className="bg-soul-purple hover:bg-soul-purple/80"
+              className="bg-primary hover:bg-primary/80"
             >
               {isRunning ? (
                 <>

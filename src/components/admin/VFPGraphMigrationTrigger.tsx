@@ -109,7 +109,7 @@ export const VFPGraphMigrationTrigger: React.FC = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Brain className="h-5 w-5 text-soul-purple" />
+            <Brain className="h-5 w-5 text-primary" />
             VFP-Graph Migration Status
           </CardTitle>
         </CardHeader>
@@ -160,7 +160,7 @@ export const VFPGraphMigrationTrigger: React.FC = () => {
             <Button 
               onClick={runMigration}
               disabled={!migrationStatus || migrationStatus.pendingMigration === 0 || migrationProgress.isRunning}
-              className="bg-soul-purple hover:bg-soul-purple/90"
+              className="bg-primary hover:bg-primary/90"
             >
               {migrationProgress.isRunning ? (
                 <>

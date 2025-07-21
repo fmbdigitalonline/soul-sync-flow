@@ -70,7 +70,7 @@ const BlueprintEditor: React.FC<BlueprintEditorProps> = ({ onSave, initialBluepr
       
       <div className="flex justify-end">
         <Button
-          className="bg-soul-purple hover:bg-soul-purple/90"
+          className="bg-primary hover:bg-primary/90"
           onClick={handleSave}
           disabled={isLoading}
         >

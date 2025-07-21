@@ -174,17 +174,17 @@ export const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint }) =
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
                   <div className="text-center">
                     <h4 className="font-semibold">Sun Sign</h4>
-                    <p className="text-lg text-soul-purple">{westernData.sun_sign}</p>
+                    <p className="text-lg text-primary">{westernData.sun_sign}</p>
                     <p className="text-sm text-gray-600">{westernData.sun_keyword}</p>
                   </div>
                   <div className="text-center">
                     <h4 className="font-semibold">Moon Sign</h4>
-                    <p className="text-lg text-soul-purple">{westernData.moon_sign}</p>
+                    <p className="text-lg text-primary">{westernData.moon_sign}</p>
                     <p className="text-sm text-gray-600">{westernData.moon_keyword}</p>
                   </div>
                   <div className="text-center">
                     <h4 className="font-semibold">Life Path</h4>
-                    <p className="text-lg text-soul-purple">{numerologyData.lifePathNumber}</p>
+                    <p className="text-lg text-primary">{numerologyData.lifePathNumber}</p>
                     <p className="text-sm text-gray-600">Your spiritual journey</p>
                   </div>
                 </div>
@@ -284,25 +284,25 @@ export const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint }) =
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <div>
-                  <h4 className="font-semibold text-soul-purple">Life Path Number</h4>
-                  <p className="text-3xl font-bold text-soul-purple">{numerologyData.lifePathNumber}</p>
+                  <h4 className="font-semibold text-primary">Life Path Number</h4>
+                  <p className="text-3xl font-bold text-primary">{numerologyData.lifePathNumber}</p>
                   <p className="text-sm text-gray-600">{numerologyData.lifePathKeyword || "Your life's purpose and journey"}</p>
                 </div>
                 <div>
-                  <h4 className="font-semibold text-soul-purple">Expression Number</h4>
-                  <p className="text-3xl font-bold text-soul-purple">{numerologyData.expressionNumber}</p>
+                  <h4 className="font-semibold text-primary">Expression Number</h4>
+                  <p className="text-3xl font-bold text-primary">{numerologyData.expressionNumber}</p>
                   <p className="text-sm text-gray-600">{numerologyData.expressionKeyword || "Your natural talents and abilities"}</p>
                 </div>
                 <div>
-                  <h4 className="font-semibold text-soul-purple">Soul Urge Number</h4>
-                  <p className="text-3xl font-bold text-soul-purple">{numerologyData.soulUrgeNumber}</p>
+                  <h4 className="font-semibold text-primary">Soul Urge Number</h4>
+                  <p className="text-3xl font-bold text-primary">{numerologyData.soulUrgeNumber}</p>
                   <p className="text-sm text-gray-600">{numerologyData.soulUrgeKeyword || "Your inner desires and motivations"}</p>
                 </div>
               </div>
               <div className="space-y-4">
                 <div>
-                  <h4 className="font-semibold text-soul-purple">Birthday Number</h4>
-                  <p className="text-3xl font-bold text-soul-purple">{numerologyData.birthdayNumber}</p>
+                  <h4 className="font-semibold text-primary">Birthday Number</h4>
+                  <p className="text-3xl font-bold text-primary">{numerologyData.birthdayNumber}</p>
                   <p className="text-sm text-gray-600">{numerologyData.birthdayKeyword || "Special talents from your birth day"}</p>
                 </div>
               </div>
