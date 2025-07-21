@@ -99,23 +99,23 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
     <div className="min-h-screen bg-background">
       {/* Mobile Header - only show if not hiding nav and user is authenticated */}
       {shouldShowMobileNav && (
-        <div className="md:hidden bg-background/80 backdrop-blur-lg border-b border-border sticky top-0 z-40 w-full">
-          <div className="flex items-center justify-between p-4 w-full">
-            <Link to="/" className="flex items-center space-x-2">
+        <div className="md:hidden bg-background/80 backdrop-blur-lg border-b border-border-default sticky top-0 z-40 w-full">
+          <div className="flex items-center justify-between p-component w-full">
+            <Link to="/" className="flex items-center space-x-spacing-2">
               <SoulOrbAvatar size="sm" />
-              <span className="font-cormorant font-bold text-lg gradient-text brand-text">
+              <span className="font-display font-bold text-body-lg gradient-text brand-text">
                 Soul Guide
               </span>
             </Link>
             {/* Theme and Language controls on mobile top right */}
-            <div className="flex items-center space-x-1">
+            <div className="flex items-center space-x-spacing-1">
               <ThemeToggle size="icon" />
               <LanguageSelector />
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="md:hidden rounded-xl"
+                className="md:hidden rounded-shape-lg"
               >
                 {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </Button>
@@ -124,13 +124,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
           
           {/* Mobile Menu Dropdown */}
           {isMenuOpen && (
-            <div className="border-t border-border bg-card/95 backdrop-blur-lg p-4 space-y-2 w-full">
+            <div className="border-t border-border-default bg-card/95 backdrop-blur-lg p-component space-y-spacing-2 w-full">
               <Button
                 variant="ghost"
                 onClick={handleSignOut}
-                className="w-full justify-start text-muted-foreground rounded-xl font-inter"
+                className="w-full justify-start text-text-secondary rounded-shape-lg font-body"
               >
-                <LogOut className="h-5 w-5 mr-3" />
+                <LogOut className="h-5 w-5 mr-spacing-3" />
                 {t('nav.signOut')}
               </Button>
             </div>
@@ -141,24 +141,24 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
       <div className="flex flex-1 min-h-0">
         {/* Desktop Sidebar - Only show for authenticated users unless hideNav is true */}
         {shouldShowDesktopNav && (
-          <div className="hidden md:flex w-64 min-h-full bg-card/80 backdrop-blur-lg border-r border-border flex-col">
+          <div className="hidden md:flex w-64 min-h-full bg-card/80 backdrop-blur-lg border-r border-border-default flex-col">
             {/* Logo and Language Selector */}
-            <div className="p-6 border-b border-border flex items-center justify-between">
-              <Link to="/" className="flex items-center space-x-3">
+            <div className="p-container border-b border-border-default flex items-center justify-between">
+              <Link to="/" className="flex items-center space-x-spacing-3">
                 <SoulOrbAvatar size="md" />
-                <span className="font-cormorant font-bold text-xl gradient-text brand-text">
+                <span className="font-display font-bold text-body-xl gradient-text brand-text">
                   Soul Guide
                 </span>
               </Link>
               {/* Theme and Language controls on desktop sidebar */}
-              <div className="flex items-center space-x-1">
+              <div className="flex items-center space-x-spacing-1">
                 <ThemeToggle size="icon" />
                 <LanguageSelector />
               </div>
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 p-4 space-y-2">
+            <nav className="flex-1 p-component space-y-spacing-2">
               {navItems.map((item) => {
                 const Icon = item.icon;
                 return (
@@ -166,10 +166,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
                     key={item.to}
                     to={item.to}
                     className={cn(
-                      "flex items-center space-x-3 p-3 rounded-2xl transition-all duration-200 font-cormorant font-medium",
+                      "flex items-center space-x-spacing-3 p-component rounded-shape-xl transition-all duration-200 font-display font-medium",
                       isActive(item.to)
                         ? "bg-gradient-to-r from-primary/10 to-accent/10 text-primary font-semibold border border-primary/20"
-                        : "text-muted-foreground hover:bg-accent/50 hover:text-primary"
+                        : "text-text-secondary hover:bg-accent/50 hover:text-primary"
                     )}
                   >
                     <Icon className="h-5 w-5" />
@@ -180,13 +180,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
             </nav>
 
             {/* User Actions */}
-            <div className="p-4 border-t border-border space-y-2">
+            <div className="p-component border-t border-border-default space-y-spacing-2">
               <Button
                 variant="ghost"
                 onClick={handleSignOut}
-                className="w-full justify-start text-muted-foreground rounded-xl hover:bg-accent/50 font-inter"
+                className="w-full justify-start text-text-secondary rounded-shape-lg hover:bg-accent/50 font-body"
               >
-                <LogOut className="h-5 w-5 mr-3" />
+                <LogOut className="h-5 w-5 mr-spacing-3" />
                 {t('nav.signOut')}
               </Button>
             </div>
@@ -197,7 +197,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
         <div className="flex-1 flex flex-col">
           <div className={cn(
             "flex-1",
-            shouldShowMobileNav ? "pb-20 md:pb-0" : "pb-0"
+            shouldShowMobileNav ? "pb-spacing-8 md:pb-0" : "pb-0"
           )}>
             {children}
           </div>

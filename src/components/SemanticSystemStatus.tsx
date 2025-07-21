@@ -114,15 +114,15 @@ export const SemanticSystemStatus: React.FC<SystemStatusProps> = ({ className })
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-spacing-6">
             <div>
-              <h3 className="text-heading-sm mb-3">Implementation Phases</h3>
+              <h3 className="text-heading-sm mb-spacing-3">Implementation Phases</h3>
               <div className="space-y-3">
                 {phases.map((phase) => {
                   const Icon = phase.icon;
                   return (
                     <div key={phase.id} className="flex items-start space-x-3">
-                      <Icon className="h-5 w-5 mt-1 text-primary" />
+                      <Icon className="h-5 w-5 mt-spacing-1 text-primary" />
                       <div>
                         <div className="flex items-center space-x-2">
                           <h4 className="text-label-sm">{phase.title}</h4>
@@ -145,7 +145,7 @@ export const SemanticSystemStatus: React.FC<SystemStatusProps> = ({ className })
             </div>
 
             <div>
-              <h3 className="text-heading-sm mb-3">SoulSync Principles ✅</h3>
+              <h3 className="text-heading-sm mb-spacing-3">SoulSync Principles ✅</h3>
               <div className="space-y-2">
                 {soulSyncPrinciples.map((principle) => (
                   <div key={principle.id} className="flex items-center space-x-3">
@@ -181,13 +181,13 @@ export const SemanticSystemStatus: React.FC<SystemStatusProps> = ({ className })
             <div className="space-y-6">
               {/* Color Tokens */}
               <div>
-                <h3 className="text-heading-sm mb-3">Color Tokens</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <h3 className="text-heading-sm mb-spacing-3">Color Tokens</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-spacing-3">
                   {colorTokenPreview.map((token) => (
                     <div
                       key={token.name}
                       className={cn(
-                        "p-3 rounded-lg",
+                        "p-component rounded-shape-lg",
                         token.class
                       )}
                     >
@@ -200,7 +200,7 @@ export const SemanticSystemStatus: React.FC<SystemStatusProps> = ({ className })
 
               {/* Typography Tokens */}
               <div>
-                <h3 className="text-heading-sm mb-3">Typography Tokens</h3>
+                <h3 className="text-heading-sm mb-spacing-3">Typography Tokens</h3>
                 <div className="space-y-3">
                   {typographyPreview.map((token) => (
                     <div key={token.name} className="flex items-center space-x-4">
@@ -213,7 +213,7 @@ export const SemanticSystemStatus: React.FC<SystemStatusProps> = ({ className })
 
               {/* Spacing Tokens */}
               <div>
-                <h3 className="text-heading-sm mb-3">Spacing Tokens</h3>
+                <h3 className="text-heading-sm mb-spacing-3">Spacing Tokens</h3>
                 <div className="space-y-3">
                   <div className="text-caption-sm text-text-muted">
                     space-xs (4px) • space-sm (8px) • space-md (16px) • space-lg (24px) • space-xl (32px)

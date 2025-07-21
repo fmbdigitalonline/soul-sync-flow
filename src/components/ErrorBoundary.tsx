@@ -28,22 +28,22 @@ export class ErrorBoundary extends React.Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-gradient-secondary-surface flex items-center justify-center p-4">
-          <div className="bg-background/80 backdrop-blur-lg rounded-3xl p-8 shadow-2xl border border-border text-center max-w-md w-full">
-            <div className="w-16 h-16 bg-destructive/10 rounded-full mx-auto mb-6 flex items-center justify-center">
+        <div className="min-h-screen bg-gradient-secondary-surface flex items-center justify-center p-component">
+          <div className="bg-background/80 backdrop-blur-lg rounded-shape-3xl p-container shadow-overlay border border-border-default text-center max-w-md w-full">
+            <div className="w-16 h-16 bg-destructive/10 rounded-shape-full mx-auto mb-spacing-6 flex items-center justify-center">
               <AlertTriangle className="h-8 w-8 text-destructive" />
             </div>
-            <h1 className="text-xl font-bold mb-3 text-foreground font-cormorant">
+            <h1 className="text-heading-lg mb-spacing-3 text-text-main font-display">
               Something went wrong
             </h1>
-            <p className="mb-6 text-muted-foreground text-sm font-inter">
+            <p className="mb-spacing-6 text-text-secondary text-caption-sm font-body">
               We encountered an unexpected error. Please try refreshing the page.
             </p>
             <Button 
               onClick={() => window.location.reload()}
-              className="w-full bg-gradient-primary hover:shadow-lg transition-all duration-300 rounded-2xl h-12 font-medium font-cormorant"
+              className="w-full bg-gradient-primary hover:shadow-lg transition-all duration-300 rounded-shape-xl h-12 font-medium font-display"
             >
-              <RefreshCw className="h-4 w-4 mr-2" />
+              <RefreshCw className="h-4 w-4 mr-spacing-2" />
               Refresh Page
             </Button>
           </div>

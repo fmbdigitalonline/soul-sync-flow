@@ -32,7 +32,7 @@ const DataAvailabilityIndicator: React.FC<DataAvailabilityIndicatorProps> = ({
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle className="font-cormorant text-xl flex items-center gap-2">
+        <CardTitle className="font-display text-heading-lg flex items-center gap-spacing-2">
           <Activity className="h-5 w-5" />
           Data Availability
         </CardTitle>
@@ -51,7 +51,7 @@ const DataAvailabilityIndicator: React.FC<DataAvailabilityIndicatorProps> = ({
         
         <Separator />
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-spacing-3">
           {sections.map(({ key, label, icon: Icon, color }) => {
             const sectionData = availability[key];
             const isAvailable = sectionData?.available || false;
@@ -65,9 +65,9 @@ const DataAvailabilityIndicator: React.FC<DataAvailabilityIndicatorProps> = ({
                     : 'bg-muted/50 border-muted'
                 }`}
               >
-                <div className="flex items-center gap-2 mb-2">
-                  <div className={`p-1 rounded ${isAvailable ? color : 'bg-muted'}`}>
-                    <Icon className={`h-3 w-3 ${isAvailable ? 'text-white' : 'text-muted-foreground'}`} />
+                <div className="flex items-center gap-spacing-2 mb-spacing-2">
+                  <div className={`p-spacing-1 rounded-shape-sm ${isAvailable ? color : 'bg-surface-elevated'}`}>
+                    <Icon className={`h-3 w-3 ${isAvailable ? 'text-white' : 'text-text-secondary'}`} />
                   </div>
                   <span className="font-inter text-sm font-medium">{label}</span>
                 </div>
@@ -82,7 +82,7 @@ const DataAvailabilityIndicator: React.FC<DataAvailabilityIndicatorProps> = ({
                   
                   {/* Show specific metrics when available */}
                   {isAvailable && key === 'blueprint' && sectionData && 'completionPercentage' in sectionData && sectionData.completionPercentage && (
-                    <p className="text-xs text-muted-foreground font-inter">
+                    <p className="text-caption-xs text-text-secondary font-body">
                       {sectionData.completionPercentage}% complete
                     </p>
                   )}
