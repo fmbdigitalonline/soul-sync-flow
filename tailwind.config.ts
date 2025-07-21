@@ -201,6 +201,12 @@ export default {
 				'200': '200%'
 			},
 			fontFamily: {
+				// ============= TWO-FONT SYSTEM (Golden Standard) =============
+				// Display Font (Serif): For major headings and large numbers
+				'display': ['Cormorant Garamond', 'Georgia', 'Times New Roman', 'serif'],
+				// UI Font (Sans-serif): For all other text, labels, body copy, navigation
+				'body': ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+				
 				// Primary font system - Inter for body text and UI
 				sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
 				inter: ['Inter', 'system-ui', 'sans-serif'], // Primary body font
@@ -209,7 +215,6 @@ export default {
 				cormorant: ['Cormorant Garamond', 'Georgia', 'Times New Roman', 'serif'], // Elegant headings
 				
 				// Legacy font mappings (preserved for backward compatibility)
-				body: ['Inter', 'system-ui', 'sans-serif'], // Primary body text
 				ui: ['IBM Plex Sans', 'Inter', 'sans-serif'], // UI elements, buttons, forms
 				heading: ['Cormorant Garamond', 'Inter', 'serif'], // Headlines, titles (now uses Cormorant)
 				focus: ['Lexend', 'Inter', 'sans-serif'], // Reading mode, focused content
@@ -246,6 +251,12 @@ export default {
 				'grid-24': '24px',
 			},
 			boxShadow: {
+				// ============= SEMANTIC SHADOW SYSTEM (Golden Standard) =============
+				'card': 'var(--shadow-card)', // Golden Standard card shadow
+				'elevated': 'var(--shadow-elevated)', // Elevated surfaces
+				'overlay': 'var(--shadow-overlay)', // Modal/overlay shadows
+				
+				// Legacy shadows (preserved for backward compatibility)
 				'soft-ui': '4px 4px 10px rgba(155, 135, 245, 0.1)', // soul-purple based
 				'soul-glow': '0 0 20px hsl(var(--primary) / 0.3)'
 			},

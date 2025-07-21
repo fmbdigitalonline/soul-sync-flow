@@ -124,7 +124,11 @@
     --chart-4: 219 24% 60%;
     --chart-5: 0 84% 60%;
 
-    /* Font system variables */
+    /* ========== Two-Font Typography System (Golden Standard) ========== */
+    --font-display: 'Cormorant Garamond', Georgia, 'Times New Roman', serif; /* Major headings & large numbers */
+    --font-body: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; /* All other text */
+    
+    /* Font system variables (legacy compatibility) */
     --font-inter: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     --font-cormorant: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
     --font-ui: 'IBM Plex Sans', 'Inter', sans-serif;
@@ -212,9 +216,7 @@
     line-height: 1.6;
   }
   
-  .font-display {
-    font-family: var(--font-inter);
-  }
+  /* Legacy font-display definition - now correctly using display font */
 
   /* Typography hierarchy with new font system */
   h1, h2, h3, h4, h5, h6 {
@@ -382,6 +384,15 @@
   /* Focus mode uses Lexend for better readability */
   .focus-mode {
     font-family: var(--font-focus);
+  }
+
+  /* ========== Semantic Font System Utilities (Golden Standard) ========== */
+  .font-display {
+    font-family: var(--font-display); /* Major headings and large numbers */
+  }
+
+  .font-body {
+    font-family: var(--font-body); /* All other text, labels, body copy, navigation */
   }
 
   /* Font utility classes for the new system */
