@@ -10,47 +10,50 @@
        All colors are HSL format. Never use hardcoded colors in components.
        ============================================================================= */
     
-    /* ========== Primary Brand Colors ========== */
-    --color-primary: 265 82% 62%;     /* Soul Purple - Main brand color */
-    --color-primary-dark: 265 82% 45%; /* Darker purple for emphasis */
-    --color-primary-light: 265 82% 75%; /* Lighter purple for backgrounds */
-    --color-primary-subtle: 265 82% 95%; /* Very light purple for backgrounds */
+    /* ========== Primary Brand Colors (Golden Standard v3.0) ========== */
+    --color-primary: 265 82% 62%;     /* #6A4CFF - Default state for primary buttons, active links, focus rings */
+    --color-primary-dark: 265 82% 45%; /* #3F20CF - Hover/active state for primary interactive elements */
+    --color-primary-light: 265 82% 75%; /* #A390FF - Lighter accents, less-critical interactive elements */
+    --color-primary-subtle: 265 82% 95%; /* #F0ECFF - Subtle backgrounds for highlighted sections or alerts */
+    --color-text-on-brand: 0 0% 100%; /* #FFFFFF - Text that appears on top of a primary/secondary background */
     
-    --color-secondary: 180 68% 55%;   /* Soul Teal - Secondary brand color */
-    --color-secondary-dark: 180 68% 35%; /* Darker teal */
-    --color-secondary-light: 180 68% 75%; /* Lighter teal */
-    --color-secondary-subtle: 180 68% 95%; /* Very light teal */
+    --color-secondary: 180 68% 55%;   /* #4CD9D9 - Secondary accent color */
     
-    /* ========== Surface & Background Colors ========== */
-    --color-surface: 0 0% 100%;       /* Golden Standard - Pure White card backgrounds */
-    --color-surface-elevated: 0 0% 100%; /* Golden Standard - Pure White elevated surfaces */
-    --color-surface-sunken: 0 0% 100%; /* Golden Standard - Pure White sunken surfaces */
-    --color-surface-overlay: 0 0% 100%; /* Modal/overlay backgrounds */
+    /* ========== Surface & Background Colors (Golden Standard v3.0) ========== */
+    --background: 0 0% 100%;          /* #FFFFFF - Default background for all cards, modals, and popovers */
+    --color-surface: 0 0% 100%;       /* #FFFFFF - Default background for all cards, modals, and popovers */
+    --color-surface-elevated: 0 0% 100%; /* #FFFFFF - Pure White elevated surfaces */
+    --color-surface-sunken: 0 0% 100%; /* #FFFFFF - Pure White sunken surfaces */
+    --color-surface-overlay: 0 0% 100%; /* #FFFFFF - Modal/overlay backgrounds */
     
-    /* ========== Text Colors ========== */
-    --color-text-main: 219 24% 15%;   /* Soul Black - Primary text */
+    /* ========== Text Colors (Golden Standard v3.0) ========== */
+    --foreground: 219 24% 15%;        /* #1D232F - Main text color for headings and body copy */
+    --color-text-main: 219 24% 15%;   /* #1D232F - Main text color for headings and body copy. Never use pure black */
     --color-text-secondary: 219 24% 35%; /* Secondary text */
-    --color-text-muted: 219 24% 45%;  /* Muted text color */
+    --muted-foreground: 219 24% 45%;  /* #5C667A - Subtitles and descriptive text to create visual hierarchy */
+    --color-text-muted: 219 24% 45%;  /* #5C667A - Subtitles and descriptive text to create visual hierarchy */
     --color-text-subtle: 219 24% 65%; /* Very subtle text */
-    --color-text-on-brand: 0 0% 100%; /* Text on brand colors */
     --color-text-on-dark: 0 0% 100%; /* Text on dark backgrounds */
     --color-text-disabled: 219 24% 75%; /* Disabled text */
     
-    /* ========== State Colors ========== */
-    --color-success: 142 76% 36%;     /* Green for success states */
+    /* ========== Feedback Palette (Golden Standard v3.0) ========== */
+    --destructive: 0 84% 60%;         /* #F24E4E - Errors, delete actions, destructive buttons */
+    --destructive-foreground: 0 0% 100%; /* #FFFFFF - Text on top of a destructive background */
+    --color-success: 142 76% 36%;     /* #1A9F4E - Success indicators, confirmation messages */
     --color-success-light: 142 76% 85%; /* Light green backgrounds */
-    --color-warning: 45 93% 47%;      /* Yellow/orange for warnings */
+    --color-warning: 45 93% 47%;      /* #F2B81A - Warnings that require user attention */
     --color-warning-light: 45 93% 85%; /* Light warning backgrounds */
-    --color-error: 0 84% 60%;         /* Red for errors */
+    --color-error: 0 84% 60%;         /* #F24E4E - Red for errors */
     --color-error-light: 0 84% 85%;   /* Light error backgrounds */
-    --color-info: 207 90% 54%;        /* Blue for info */
+    --color-info: 207 90% 54%;        /* #2196F3 - Neutral, informational alerts */
     --color-info-light: 207 90% 85%;  /* Light info backgrounds */
     
-    /* ========== Neutral Colors ========== */
+    /* ========== Neutral Palette (Golden Standard v3.0) ========== */
+    /* Sophisticated cool gray scale with blue undertones - the backbone of the UI */
     --color-neutral-50: 0 0% 98%;     /* Lightest neutral */
     --color-neutral-100: 0 0% 96%;    /* Very light neutral */
     --color-neutral-200: 0 0% 90%;    /* Light neutral */
-    --color-neutral-300: 0 0% 83%;    /* Medium-light neutral */
+    --color-neutral-300: 0 0% 83%;    /* #D4D4D4 - Disabled component backgrounds and other subtle gray uses */
     --color-neutral-400: 0 0% 64%;    /* Medium neutral */
     --color-neutral-500: 0 0% 45%;    /* Medium-dark neutral */
     --color-neutral-600: 0 0% 32%;    /* Dark neutral */
@@ -64,17 +67,25 @@
     --color-interactive-active: var(--color-primary-dark);
     --color-interactive-disabled: var(--color-neutral-300);
     
-    /* ========== Border Colors ========== */
-    --color-border-default: 219 24% 85%; /* Default border color */
+    /* ========== Border Colors (Golden Standard v3.0) ========== */
+    --border: 219 24% 85%;            /* #D0D6E2 - The default, subtle border color for cards and dividers */
+    --color-border-default: 219 24% 85%; /* #D0D6E2 - The default, subtle border color for cards and dividers */
+    --input: 219 24% 90%;             /* #E1E5EC - Border color specifically for form inputs */
+    --color-border-input: 219 24% 90%; /* #E1E5EC - Border color specifically for form inputs */
     --color-border-muted: 219 24% 90%;   /* Muted borders */
     --color-border-subtle: 219 24% 95%;  /* Very subtle borders */
     --color-border-focus: var(--color-primary); /* Focus borders */
     --color-border-error: var(--color-error); /* Error borders */
     
-    /* ========== Shadow System ========== */
-    --shadow-card: 0 1px 3px 0 hsl(219 24% 15% / 0.1), 0 1px 2px 0 hsl(219 24% 15% / 0.06); /* Golden Standard card shadow */
-    --shadow-elevated: 0 4px 6px -1px hsl(219 24% 15% / 0.1), 0 2px 4px -1px hsl(219 24% 15% / 0.06); /* Elevated surfaces */
-    --shadow-overlay: 0 10px 15px -3px hsl(219 24% 15% / 0.1), 0 4px 6px -2px hsl(219 24% 15% / 0.05); /* Modal/overlay shadows */
+    /* ========== Shape & Elevation System (Golden Standard v3.0) ========== */
+    /* Radius */
+    --radius: 0.5rem;                 /* 8px - Default rounding for cards, modals, popovers */
+    --radius-card: 0.5rem;            /* 8px - Default rounding for cards, modals, popovers */
+    
+    /* Shadows */
+    --shadow-card: 0 1px 3px 0 hsl(219 24% 15% / 0.1), 0 1px 2px 0 hsl(219 24% 15% / 0.06); /* Default, subtle shadow for all cards */
+    --shadow-elevated: 0 4px 6px -1px hsl(219 24% 15% / 0.1), 0 2px 4px -1px hsl(219 24% 15% / 0.06); /* For elements that pop, like dropdowns */
+    --shadow-overlay: 0 10px 15px -3px hsl(219 24% 15% / 0.1), 0 4px 6px -2px hsl(219 24% 15% / 0.05); /* For modals and dialogs */
     
     /* Legacy shadow colors (for compatibility) */
     --color-shadow-default: 219 24% 15% / 0.1; /* Default shadow */
@@ -124,9 +135,10 @@
     --chart-4: 219 24% 60%;
     --chart-5: 0 84% 60%;
 
-    /* ========== Two-Font Typography System (Golden Standard) ========== */
-    --font-display: 'Cormorant Garamond', Georgia, 'Times New Roman', serif; /* Major headings & large numbers */
-    --font-body: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; /* All other text */
+    /* ========== Typography System (Golden Standard v3.0) ========== */
+    /* Two-font system balances elegance with readability */
+    --font-display: 'Cormorant Garamond', Georgia, 'Times New Roman', serif; /* For major headings and large numbers */
+    --font-body: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; /* For all UI text, labels, paragraphs, and buttons */
     
     /* Font system variables (legacy compatibility) */
     --font-inter: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
