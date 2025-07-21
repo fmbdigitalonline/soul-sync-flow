@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { SoulOrbProvider } from "@/contexts/SoulOrbContext";
+import { BlueprintCacheProvider } from "@/contexts/BlueprintCacheContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const queryClient = new QueryClient({
@@ -24,12 +25,14 @@ function App() {
         <QueryClientProvider client={queryClient}>
           <LanguageProvider>
             <AuthProvider>
-              <SoulOrbProvider>
-                <div className="relative">
-                  <Outlet />
-                </div>
-                <Toaster />
-              </SoulOrbProvider>
+              <BlueprintCacheProvider>
+                <SoulOrbProvider>
+                  <div className="relative">
+                    <Outlet />
+                  </div>
+                  <Toaster />
+                </SoulOrbProvider>
+              </BlueprintCacheProvider>
             </AuthProvider>
           </LanguageProvider>
         </QueryClientProvider>
