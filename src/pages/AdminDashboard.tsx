@@ -64,29 +64,29 @@ const AdminDashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-background p-container">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-spacing-7">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-              <p className="text-gray-600 mt-2">Monitor and configure Soul Guide innovations</p>
+              <h1 className="text-heading-2xl font-display text-text-main">Admin Dashboard</h1>
+              <p className="text-text-secondary mt-spacing-2">Monitor and configure Soul Guide innovations</p>
             </div>
-            <div className="flex items-center gap-4">
-              <Badge variant="outline" className="text-sm">
-                <Activity className="w-3 h-3 mr-1" />
+            <div className="flex items-center gap-spacing-4">
+              <Badge variant="outline" className="text-caption-sm">
+                <Activity className="w-3 h-3 mr-spacing-1" />
                 Real-time monitoring
               </Badge>
               <Button variant="outline" size="sm">
-                <Settings className="w-4 h-4 mr-2" />
+                <Settings className="w-4 h-4 mr-spacing-2" />
                 Settings
               </Button>
             </div>
           </div>
 
           {/* System Health Summary */}
-          <div className="grid grid-cols-4 gap-4 mt-6">
+          <div className="grid grid-cols-4 gap-spacing-4 mt-spacing-6">
             {Object.entries(systemHealth).map(([key, health]) => (
               <Card key={key} className="p-4">
                 <div className="flex items-center justify-between">

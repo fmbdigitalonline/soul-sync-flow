@@ -355,38 +355,38 @@ const Dreams = () => {
   if (currentView === 'journey') {
     return (
       <MainLayout>
-        <div className={`min-h-screen bg-white w-full ${isMobile ? 'pb-20' : ''}`}>
-          <div className={`w-full max-w-4xl mx-auto py-3 ${isMobile ? 'px-3 pb-24' : 'px-6 pb-20'}`}>
+        <div className={`min-h-screen bg-white w-full ${isMobile ? 'pb-spacing-8' : ''}`}>
+          <div className={`w-full max-w-4xl mx-auto py-spacing-3 ${isMobile ? 'px-component pb-spacing-10' : 'px-container pb-spacing-8'}`}>
             
             {/* Mobile Optimized Header */}
-            <div className={`flex items-center justify-between mb-4 w-full ${isFoldDevice ? 'flex-col gap-2' : ''}`}>
+            <div className={`flex items-center justify-between mb-spacing-4 w-full ${isFoldDevice ? 'flex-col gap-spacing-2' : ''}`}>
               <Button 
                 variant="ghost" 
                 size="sm" 
                 onClick={() => setCurrentView('create')}
-                className={`flex items-center gap-2 text-muted-foreground hover:text-primary rounded-xl font-ui ${isFoldDevice ? 'px-1 py-1' : 'px-2 py-1'} ${getTextSize('text-sm')} ${touchTargetSize}`}
+                className={`flex items-center gap-spacing-2 text-text-secondary hover:text-primary rounded-shape-lg font-body ${isFoldDevice ? 'px-spacing-1 py-spacing-1' : 'px-spacing-2 py-spacing-1'} ${getTextSize('text-sm')} ${touchTargetSize}`}
               >
                 <ArrowLeft className={`h-4 w-4 ${isFoldDevice ? 'h-3 w-3' : ''}`} />
                 {isFoldDevice ? '' : 'New Dream'}
               </Button>
               <div className={`text-center ${isFoldDevice ? 'w-full' : 'flex-1'}`}>
-                <h1 className={`font-heading font-bold text-foreground ${getTextSize('text-base')}`}>Your Dreams & Goals Journey</h1>
-                {!isFoldDevice && <p className={`text-muted-foreground ${getTextSize('text-xs')}`}>{t("dreams.trackProgress")}</p>}
+                <h1 className={`font-display text-text-main ${getTextSize('text-base')}`}>Your Dreams & Goals Journey</h1>
+                {!isFoldDevice && <p className={`text-text-secondary ${getTextSize('text-xs')}`}>{t("dreams.trackProgress")}</p>}
               </div>
               <div className={isFoldDevice ? 'hidden' : 'w-20'} />
             </div>
 
-            {/* Mobile Responsive Single Card - Updated with consistent 1px border */}
-            <div className="bg-card rounded-2xl border border-border overflow-hidden w-full">
+            {/* Mobile Responsive Single Card */}
+            <div className="bg-card rounded-shape-xl border border-border-default overflow-hidden w-full">
               
               {/* Mobile Optimized Tab Navigation */}
-              <div className={`border-b border-border bg-card/50 w-full ${isFoldDevice ? 'p-1' : 'p-2'}`}>
-                <div className={`w-full ${isFoldDevice ? 'grid grid-cols-2 gap-1' : 'flex gap-2'}`}>
+              <div className={`border-b border-border-default bg-card/50 w-full ${isFoldDevice ? 'p-spacing-1' : 'p-spacing-2'}`}>
+                <div className={`w-full ${isFoldDevice ? 'grid grid-cols-2 gap-spacing-1' : 'flex gap-spacing-2'}`}>
                   <Button
                     variant={activeTab === 'journey' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setActiveTab('journey')}
-                    className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 font-medium transition-all font-ui ${getTextSize('text-xs')} ${touchTargetSize}`}
+                    className={`flex items-center gap-spacing-1 rounded-shape-lg flex-1 px-spacing-2 py-spacing-2 font-medium transition-all font-body ${getTextSize('text-xs')} ${touchTargetSize}`}
                   >
                     <MapPin className={`${isFoldDevice ? 'h-2 w-2' : 'h-3 w-3'}`} />
                     {isFoldDevice ? 'Map' : 'Journey'}
@@ -395,10 +395,10 @@ const Dreams = () => {
                     variant={activeTab === 'tasks' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setActiveTab('tasks')}
-                    className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 font-medium transition-all font-ui ${getTextSize('text-xs')} ${touchTargetSize} ${
+                    className={`flex items-center gap-spacing-1 rounded-shape-lg flex-1 px-spacing-2 py-spacing-2 font-medium transition-all font-body ${getTextSize('text-xs')} ${touchTargetSize} ${
                       activeTab === 'tasks' 
-                        ? 'bg-gradient-to-r from-soul-purple to-soul-teal text-white shadow-md' 
-                        : 'text-gray-600 hover:text-soul-purple hover:bg-gray-50'
+                        ? 'bg-gradient-to-r from-primary to-secondary text-white shadow-md' 
+                        : 'text-text-secondary hover:text-primary hover:bg-surface-elevated'
                     }`}
                   >
                     <Target className={`${isFoldDevice ? 'h-2 w-2' : 'h-3 w-3'}`} />
@@ -410,10 +410,10 @@ const Dreams = () => {
                         variant={activeTab === 'focus' ? 'default' : 'ghost'}
                         size="sm"
                         onClick={() => setActiveTab('focus')}
-                        className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 font-medium transition-all font-ui ${getTextSize('text-xs')} ${touchTargetSize} ${
+                        className={`flex items-center gap-spacing-1 rounded-shape-lg flex-1 px-spacing-2 py-spacing-2 font-medium transition-all font-body ${getTextSize('text-xs')} ${touchTargetSize} ${
                           activeTab === 'focus' 
-                            ? 'bg-gradient-to-r from-soul-purple to-soul-teal text-white shadow-md' 
-                            : 'text-gray-600 hover:text-soul-purple hover:bg-gray-50'
+                            ? 'bg-gradient-to-r from-primary to-secondary text-white shadow-md' 
+                            : 'text-text-secondary hover:text-primary hover:bg-surface-elevated'
                         }`}
                       >
                         <Clock className="h-3 w-3" />
@@ -423,10 +423,10 @@ const Dreams = () => {
                         variant={activeTab === 'habits' ? 'default' : 'ghost'}
                         size="sm"
                         onClick={() => setActiveTab('habits')}
-                        className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 font-medium transition-all font-ui ${getTextSize('text-xs')} ${touchTargetSize} ${
+                        className={`flex items-center gap-spacing-1 rounded-shape-lg flex-1 px-spacing-2 py-spacing-2 font-medium transition-all font-body ${getTextSize('text-xs')} ${touchTargetSize} ${
                           activeTab === 'habits' 
-                            ? 'bg-gradient-to-r from-soul-purple to-soul-teal text-white shadow-md' 
-                            : 'text-gray-600 hover:text-soul-purple hover:bg-gray-50'
+                            ? 'bg-gradient-to-r from-primary to-secondary text-white shadow-md' 
+                            : 'text-text-secondary hover:text-primary hover:bg-surface-elevated'
                         }`}
                       >
                         <CheckCircle className="h-3 w-3" />
@@ -438,15 +438,15 @@ const Dreams = () => {
                 
                 {/* Secondary row for Fold devices */}
                 {isFoldDevice && (
-                  <div className="flex gap-1 w-full mt-1">
+                  <div className="flex gap-spacing-1 w-full mt-spacing-1">
                     <Button
                       variant={activeTab === 'focus' ? 'default' : 'ghost'}
                       size="sm"
                       onClick={() => setActiveTab('focus')}
-                      className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 font-medium transition-all font-ui ${getTextSize('text-xs')} ${touchTargetSize} ${
+                      className={`flex items-center gap-spacing-1 rounded-shape-lg flex-1 px-spacing-2 py-spacing-2 font-medium transition-all font-body ${getTextSize('text-xs')} ${touchTargetSize} ${
                         activeTab === 'focus' 
-                          ? 'bg-gradient-to-r from-soul-purple to-soul-teal text-white shadow-md' 
-                          : 'text-gray-600 hover:text-soul-purple hover:bg-gray-50'
+                          ? 'bg-gradient-to-r from-primary to-secondary text-white shadow-md' 
+                          : 'text-text-secondary hover:text-primary hover:bg-surface-elevated'
                       }`}
                     >
                       <Clock className="h-2 w-2" />
@@ -456,10 +456,10 @@ const Dreams = () => {
                       variant={activeTab === 'habits' ? 'default' : 'ghost'}
                       size="sm"
                       onClick={() => setActiveTab('habits')}
-                      className={`flex items-center gap-1 rounded-lg flex-1 px-2 py-2 font-medium transition-all font-ui ${getTextSize('text-xs')} ${touchTargetSize} ${
+                      className={`flex items-center gap-spacing-1 rounded-shape-lg flex-1 px-spacing-2 py-spacing-2 font-medium transition-all font-body ${getTextSize('text-xs')} ${touchTargetSize} ${
                         activeTab === 'habits' 
-                          ? 'bg-gradient-to-r from-soul-purple to-soul-teal text-white shadow-md' 
-                          : 'text-gray-600 hover:text-soul-purple hover:bg-gray-50'
+                          ? 'bg-gradient-to-r from-primary to-secondary text-white shadow-md' 
+                          : 'text-text-secondary hover:text-primary hover:bg-surface-elevated'
                       }`}
                     >
                       <CheckCircle className="h-2 w-2" />
@@ -473,13 +473,13 @@ const Dreams = () => {
               <div className={`w-full ${spacing.card}`}>
                 {activeTab === 'journey' && (
                   <div className="w-full">
-                    <div className={`flex items-center gap-2 mb-3 ${isFoldDevice ? 'flex-col items-start gap-1' : ''}`}>
-                      <div className={`bg-gradient-to-br from-soul-purple to-soul-teal rounded-xl flex items-center justify-center ${isFoldDevice ? 'w-5 h-5' : 'w-6 h-6'}`}>
+                    <div className={`flex items-center gap-spacing-2 mb-spacing-3 ${isFoldDevice ? 'flex-col items-start gap-spacing-1' : ''}`}>
+                      <div className={`bg-gradient-to-br from-primary to-secondary rounded-shape-lg flex items-center justify-center ${isFoldDevice ? 'w-5 h-5' : 'w-6 h-6'}`}>
                         <MapPin className={`text-white ${isFoldDevice ? 'h-2 w-2' : 'h-3 w-3'}`} />
                       </div>
                       <div className="flex-1">
-                        <h2 className={`font-heading font-semibold text-gray-800 ${getTextSize('text-sm')}`}>Journey Map</h2>
-                        {!isFoldDevice && <p className={`text-gray-500 ${getTextSize('text-xs')}`}>{getBlueprintInsight()}</p>}
+                        <h2 className={`font-display font-semibold text-text-main ${getTextSize('text-sm')}`}>Journey Map</h2>
+                        {!isFoldDevice && <p className={`text-text-secondary ${getTextSize('text-xs')}`}>{getBlueprintInsight()}</p>}
                       </div>
                     </div>
                     
