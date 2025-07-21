@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import MainLayout from "@/components/Layout/MainLayout";
+
 import { Button } from "@/components/ui/button";
 import { Loader2, MessageCircle, Map, Database } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";

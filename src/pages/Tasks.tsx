@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
-import MainLayout from "@/components/Layout/MainLayout";
+
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
 import { Target, TrendingUp, CheckCircle, Plus, MessageCircle, Brain, Clock, ArrowLeft } from "lucide-react";

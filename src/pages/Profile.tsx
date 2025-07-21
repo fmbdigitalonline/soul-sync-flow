@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import MainLayout from "@/components/Layout/MainLayout";
+
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
