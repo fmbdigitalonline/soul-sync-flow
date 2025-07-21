@@ -61,25 +61,23 @@ const Coach = () => {
 
   if (!isAuthenticated) {
     return (
-      <MainLayout>
-        <div className="min-h-screen bg-background flex items-center justify-center p-component">
-          <CosmicCard className="w-full max-w-md text-center space-y-spacing-6">
-            <div className="w-16 h-16 mx-auto bg-gradient-primary rounded-shape-full flex items-center justify-center">
-              <MessageCircle className="h-8 w-8 text-text-inverse" />
-            </div>
-            <div>
-              <h1 className="text-heading-2xl font-bold text-text-main mb-spacing-2">Soul Companion</h1>
-              <p className="text-text-secondary">Your personal Soul companion for integrated support and guidance.</p>
-            </div>
-            <Button 
-              className="w-full"
-              onClick={() => window.location.href = '/auth'}
-            >
-              Get Started
-            </Button>
-          </CosmicCard>
-        </div>
-      </MainLayout>
+      <div className="min-h-screen bg-background flex items-center justify-center p-component">
+        <CosmicCard className="w-full max-w-md text-center space-y-spacing-6">
+          <div className="w-16 h-16 mx-auto bg-gradient-primary rounded-shape-full flex items-center justify-center">
+            <MessageCircle className="h-8 w-8 text-text-inverse" />
+          </div>
+          <div>
+            <h1 className="text-heading-2xl font-bold text-text-main mb-spacing-2">Soul Companion</h1>
+            <p className="text-text-secondary">Your personal Soul companion for integrated support and guidance.</p>
+          </div>
+          <Button 
+            className="w-full"
+            onClick={() => window.location.href = '/auth'}
+          >
+            Get Started
+          </Button>
+        </CosmicCard>
+      </div>
     );
   }
 
