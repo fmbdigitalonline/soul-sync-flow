@@ -243,17 +243,17 @@ const Dreams = () => {
     return (
       <MainLayout>
         <ErrorBoundary>
-          <div className={`min-h-screen bg-white flex items-center justify-center p-3 ${isMobile ? 'pb-20' : ''}`}>
-            <div className={`bg-card rounded-2xl border border-border text-center w-full max-w-sm mx-auto ${spacing.card}`}>
-              <div className={`w-10 h-10 mx-auto bg-primary rounded-full mb-4 flex items-center justify-center ${isFoldDevice ? 'w-8 h-8' : ''}`}>
+          <div className={`min-h-screen bg-white flex items-center justify-center p-component ${isMobile ? 'pb-spacing-8' : ''}`}>
+            <div className={`bg-card rounded-shape-xl border border-border-default text-center w-full max-w-sm mx-auto ${spacing.card}`}>
+              <div className={`w-10 h-10 mx-auto bg-primary rounded-shape-full mb-spacing-4 flex items-center justify-center ${isFoldDevice ? 'w-8 h-8' : ''}`}>
                 <Heart className={`h-5 w-5 text-primary-foreground ${isFoldDevice ? 'h-4 w-4' : ''}`} />
               </div>
-              <h1 className={`font-heading font-bold mb-3 text-foreground ${getTextSize('text-lg')}`}>
+              <h1 className={`font-display text-text-main mb-spacing-3 ${getTextSize('text-lg')}`}>
                 Dreams & Goals
               </h1>
-              <p className={`mb-6 text-muted-foreground leading-relaxed px-2 ${getTextSize('text-sm')}`}>{t("dreams.description")}</p>
+              <p className={`mb-spacing-6 text-text-secondary leading-relaxed px-spacing-2 ${getTextSize('text-sm')}`}>{t("dreams.description")}</p>
               <Button 
-                className={`w-full hover:shadow-lg transition-all duration-300 rounded-2xl font-medium font-ui ${touchTargetSize} ${getTextSize('text-sm')}`}
+                className={`w-full hover:shadow-lg transition-all duration-300 rounded-shape-xl font-medium font-body ${touchTargetSize} ${getTextSize('text-sm')}`}
                 onClick={() => window.location.href = '/auth'}
               >
                 {t("dreams.getStarted")}
@@ -269,7 +269,7 @@ const Dreams = () => {
   if (currentView === 'task-coach' && selectedTask) {
     return (
       <MainLayout>
-        <div className={`min-h-screen bg-white w-full ${isMobile ? 'pb-20' : ''}`}>
+        <div className={`min-h-screen bg-white w-full ${isMobile ? 'pb-spacing-8' : ''}`}>
           <TaskCoachInterface
             task={selectedTask}
             onBack={handleBackFromTaskCoach}
@@ -284,43 +284,43 @@ const Dreams = () => {
   if (currentView === 'chat') {
     return (
       <MainLayout>
-        <div className={`min-h-screen flex flex-col bg-white w-full ${isMobile ? 'pb-20' : ''}`}>
+        <div className={`min-h-screen flex flex-col bg-white w-full ${isMobile ? 'pb-spacing-8' : ''}`}>
           {/* Mobile Optimized Header */}
-          <div className={`bg-card/80 border-b border-border sticky top-0 z-10 w-full ${isMobile ? 'px-3 py-2' : 'px-4 py-3'}`}>
+          <div className={`bg-card/80 border-b border-border-default sticky top-0 z-10 w-full ${isMobile ? 'px-component py-spacing-2' : 'px-component py-spacing-3'}`}>
             <div className={`flex items-center justify-between w-full max-w-4xl mx-auto`}>
               <Button 
                 variant="ghost" 
                 size="sm" 
                 onClick={() => setCurrentView('create')}
-                className={`flex items-center gap-2 text-muted-foreground hover:text-primary rounded-xl font-ui ${isFoldDevice ? 'px-1 py-1' : 'px-2 py-1'} ${getTextSize('text-sm')} ${touchTargetSize}`}
+                className={`flex items-center gap-spacing-2 text-text-secondary hover:text-primary rounded-shape-lg font-body ${isFoldDevice ? 'px-spacing-1 py-spacing-1' : 'px-spacing-2 py-spacing-1'} ${getTextSize('text-sm')} ${touchTargetSize}`}
               >
                 <ArrowLeft className={`h-4 w-4 ${isFoldDevice ? 'h-3 w-3' : ''}`} />
                 {!isFoldDevice && 'Back'}
               </Button>
-              <div className="flex items-center gap-2">
-                <div className={`bg-primary rounded-full flex items-center justify-center ${isFoldDevice ? 'w-5 h-5' : 'w-6 h-6'}`}>
+              <div className="flex items-center gap-spacing-2">
+                <div className={`bg-primary rounded-shape-full flex items-center justify-center ${isFoldDevice ? 'w-5 h-5' : 'w-6 h-6'}`}>
                   <Heart className={`text-primary-foreground ${isFoldDevice ? 'h-2 w-2' : 'h-3 w-3'}`} />
                 </div>
-                <h2 className={`font-heading font-semibold text-foreground ${getTextSize('text-sm')} ${isFoldDevice ? 'hidden' : ''}`}>Dreams & Goals Discovery</h2>
+                <h2 className={`font-display font-semibold text-text-main ${getTextSize('text-sm')} ${isFoldDevice ? 'hidden' : ''}`}>Dreams & Goals Discovery</h2>
               </div>
               <div className={isFoldDevice ? 'w-6' : 'w-16'} />
             </div>
           </div>
           
-          <div className={`flex-1 w-full overflow-hidden max-w-4xl mx-auto ${isMobile ? 'px-0' : 'px-4'}`}>
+          <div className={`flex-1 w-full overflow-hidden max-w-4xl mx-auto ${isMobile ? 'px-0' : 'px-component'}`}>
             {/* Show suggestions if in suggestion phase */}
             {conversationPhase === 'suggestion_presentation' && dreamSuggestions.length > 0 && (
-              <div className={`bg-card/90 border-b border-border ${spacing.container} py-4`}>
+              <div className={`bg-card/90 border-b border-border-default ${spacing.container} py-spacing-4`}>
                 <div className="max-w-2xl mx-auto">
-                  <div className="text-center mb-4">
-                    <h3 className={`font-heading font-semibold text-foreground mb-2 ${getTextSize('text-sm')}`}>
+                  <div className="text-center mb-spacing-4">
+                    <h3 className={`font-display font-semibold text-text-main mb-spacing-2 ${getTextSize('text-sm')}`}>
                       Dreams Aligned with Your Blueprint
                     </h3>
-                    <p className={`text-muted-foreground ${getTextSize('text-xs')}`}>
+                    <p className={`text-text-secondary ${getTextSize('text-xs')}`}>
                       Based on your personality, here are some dreams that might resonate with you:
                     </p>
                   </div>
-                  <div className="space-y-3">
+                  <div className="space-y-spacing-3">
                     {dreamSuggestions.map((suggestion) => (
                       <DreamSuggestionCard
                         key={suggestion.id}

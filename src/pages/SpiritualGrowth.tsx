@@ -510,25 +510,25 @@ const SpiritualGrowth = () => {
   return (
     <MainLayout>
       <div className="min-h-screen bg-background">
-        <div className="container mx-auto py-8 px-4 max-w-6xl">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-heading font-bold text-foreground mb-2">
+        <div className="container mx-auto py-spacing-7 px-component max-w-6xl">
+          <div className="text-center mb-spacing-7">
+            <h1 className="text-heading-2xl font-display text-text-main mb-spacing-2">
               {t("spiritualGrowth.title")}
             </h1>
-            <p className="text-muted-foreground text-lg">
+            <p className="text-text-secondary text-body-lg">
               {t("spiritualGrowth.subtitle")}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-spacing-6">
             
             {/* Heart-Centered Coaching Option */}
-            <CosmicCard className="group hover:shadow-md transition-all duration-300 cursor-pointer transform hover:-translate-y-1 p-4" onClick={handleStartSpiritualGrowth}>
-              <div className="flex flex-col items-center text-center space-y-3">
+            <CosmicCard className="group hover:shadow-md transition-all duration-300 cursor-pointer transform hover:-translate-y-1 p-component" onClick={handleStartSpiritualGrowth}>
+              <div className="flex flex-col items-center text-center space-y-spacing-3">
                 <Sparkles className="h-6 w-6 text-primary" />
                 <div>
-                  <h3 className="text-lg font-semibold text-foreground mb-1">Heart-Centered Coach</h3>
-                  <p className="text-muted-foreground text-sm">
+                  <h3 className="text-body-lg font-semibold text-text-main mb-spacing-1">Heart-Centered Coach</h3>
+                  <p className="text-text-secondary text-caption-sm">
                     Immediate personalized spiritual guidance.
                   </p>
                 </div>
@@ -536,12 +536,12 @@ const SpiritualGrowth = () => {
             </CosmicCard>
 
             {/* Life Operating System */}
-            <CosmicCard className="group hover:shadow-md transition-all duration-300 cursor-pointer transform hover:-translate-y-1 p-4" onClick={() => setActiveView('life_os_choices')}>
-              <div className="flex flex-col items-center text-center space-y-3">
+            <CosmicCard className="group hover:shadow-md transition-all duration-300 cursor-pointer transform hover:-translate-y-1 p-component" onClick={() => setActiveView('life_os_choices')}>
+              <div className="flex flex-col items-center text-center space-y-spacing-3">
                 <Settings className="h-6 w-6 text-secondary" />
                 <div>
-                  <h3 className="text-lg font-semibold text-foreground mb-1">Life Operating System</h3>
-                  <p className="text-muted-foreground text-sm">
+                  <h3 className="text-body-lg font-semibold text-text-main mb-spacing-1">Life Operating System</h3>
+                  <p className="text-text-secondary text-caption-sm">
                     Holistic life assessment and growth coordination.
                   </p>
                 </div>
@@ -549,12 +549,12 @@ const SpiritualGrowth = () => {
             </CosmicCard>
 
             {/* Growth Program Option */}
-            <CosmicCard className="group hover:shadow-md transition-all duration-300 cursor-pointer transform hover:-translate-y-1 p-4" onClick={() => setActiveView('growth_program')}>
-              <div className="flex flex-col items-center text-center space-y-3">
+            <CosmicCard className="group hover:shadow-md transition-all duration-300 cursor-pointer transform hover:-translate-y-1 p-component" onClick={() => setActiveView('growth_program')}>
+              <div className="flex flex-col items-center text-center space-y-spacing-3">
                 <TrendingUp className="h-6 w-6 text-accent" />
                 <div>
-                  <h3 className="text-lg font-semibold text-foreground mb-1">Structured Program</h3>
-                  <p className="text-muted-foreground text-sm">
+                  <h3 className="text-body-lg font-semibold text-text-main mb-spacing-1">Structured Program</h3>
+                  <p className="text-text-secondary text-caption-sm">
                     12-week journey for deep transformation.
                   </p>
                 </div>
@@ -562,12 +562,12 @@ const SpiritualGrowth = () => {
             </CosmicCard>
 
             {/* Tools & Practices */}
-            <CosmicCard className="group hover:shadow-md transition-all duration-300 cursor-pointer transform hover:-translate-y-1 p-4" onClick={() => setActiveView('tools')}>
-              <div className="flex flex-col items-center text-center space-y-3">
+            <CosmicCard className="group hover:shadow-md transition-all duration-300 cursor-pointer transform hover:-translate-y-1 p-component" onClick={() => setActiveView('tools')}>
+              <div className="flex flex-col items-center text-center space-y-spacing-3">
                 <BookOpen className="h-6 w-6 text-primary" />
                 <div>
-                  <h3 className="text-lg font-semibold text-foreground mb-1">Spiritual Tools</h3>
-                  <p className="text-muted-foreground text-sm">
+                  <h3 className="text-body-lg font-semibold text-text-main mb-spacing-1">Spiritual Tools</h3>
+                  <p className="text-text-secondary text-caption-sm">
                     Mood tracking and reflection practices.
                   </p>
                 </div>
