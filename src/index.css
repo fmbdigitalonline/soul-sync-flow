@@ -71,7 +71,12 @@
     --color-border-focus: var(--color-primary); /* Focus borders */
     --color-border-error: var(--color-error); /* Error borders */
     
-    /* ========== Shadow Colors ========== */
+    /* ========== Shadow System ========== */
+    --shadow-card: 0 1px 3px 0 hsl(219 24% 15% / 0.1), 0 1px 2px 0 hsl(219 24% 15% / 0.06); /* Golden Standard card shadow */
+    --shadow-elevated: 0 4px 6px -1px hsl(219 24% 15% / 0.1), 0 2px 4px -1px hsl(219 24% 15% / 0.06); /* Elevated surfaces */
+    --shadow-overlay: 0 10px 15px -3px hsl(219 24% 15% / 0.1), 0 4px 6px -2px hsl(219 24% 15% / 0.05); /* Modal/overlay shadows */
+    
+    /* Legacy shadow colors (for compatibility) */
     --color-shadow-default: 219 24% 15% / 0.1; /* Default shadow */
     --color-shadow-elevated: 219 24% 15% / 0.15; /* Elevated shadow */
     --color-shadow-primary: var(--color-primary) / 0.2; /* Primary color shadow */
