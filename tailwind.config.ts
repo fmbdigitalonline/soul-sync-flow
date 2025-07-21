@@ -126,18 +126,7 @@ export default {
 				'border-focus': 'hsl(var(--color-border-focus) / <alpha-value>)',
 				'border-error': 'hsl(var(--color-border-error) / <alpha-value>)',
 
-				// Legacy Soul palette - preserved for backward compatibility
-				soul: {
-					ivory: 'hsl(var(--color-surface))',
-					teal: 'hsl(var(--color-secondary))',
-					pewter: 'hsl(var(--muted))',
-					purple: 'hsl(var(--color-primary))',
-					indigo: '234 89% 74%',
-					blue: '232 65% 61%',
-					lavender: 'hsl(var(--accent))',
-					gold: '51 95% 65%',
-					black: 'hsl(var(--color-text-main))'
-				}
+				// REMOVED: Legacy Soul palette - enforcing semantic tokens only
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -191,11 +180,7 @@ export default {
 				// Semantic gradients using design system tokens
 				'gradient-brand': 'linear-gradient(135deg, hsl(var(--color-primary)), hsl(var(--color-secondary)))',
 				'gradient-brand-radial': 'radial-gradient(circle, hsl(var(--color-primary) / 0.2) 0%, hsl(var(--color-secondary) / 0.1) 50%, hsl(var(--background)) 100%)',
-				// Legacy gradients (mapped to semantic tokens)
-				'cosmic-gradient': 'linear-gradient(to right, hsl(var(--color-primary)), hsl(var(--accent)))',
-				'cosmic-radial': 'radial-gradient(circle, hsl(var(--color-primary) / 0.15) 0%, hsl(var(--accent) / 0.05) 70%, hsl(var(--background)) 100%)',
-				'soul-gradient': 'linear-gradient(to right, hsl(var(--color-primary)), hsl(var(--color-secondary)))',
-				'soul-radial': 'radial-gradient(circle, hsl(var(--color-primary) / 0.2) 0%, hsl(var(--color-secondary) / 0.1) 50%, hsl(var(--background)) 100%)'
+				// REMOVED: Legacy gradients - use gradient-brand instead
 			},
 			backgroundSize: {
 				'200': '200%'
@@ -214,10 +199,7 @@ export default {
 				// Secondary font system - Cormorant Garamond for headings and branding
 				cormorant: ['Cormorant Garamond', 'Georgia', 'Times New Roman', 'serif'], // Elegant headings
 				
-				// Legacy font mappings (preserved for backward compatibility)
-				ui: ['IBM Plex Sans', 'Inter', 'sans-serif'], // UI elements, buttons, forms
-				heading: ['Cormorant Garamond', 'Inter', 'serif'], // Headlines, titles (now uses Cormorant)
-				focus: ['Lexend', 'Inter', 'sans-serif'], // Reading mode, focused content
+				// REMOVED: Legacy font mappings - use font-display and font-body instead
 			},
 			// ============= SEMANTIC SPACING SYSTEM =============
 			spacing: {
@@ -245,10 +227,7 @@ export default {
 				'layout-xl': '64px',   // Extra large layout spacing
 				'layout-2xl': '96px',  // 2x large layout spacing
 				
-				// Legacy grid spacing (preserved)
-				'grid-8': '8px',
-				'grid-16': '16px',
-				'grid-24': '24px',
+				// REMOVED: Legacy grid spacing - use semantic space-* tokens instead
 			},
 			boxShadow: {
 				// ============= SEMANTIC SHADOW SYSTEM (Golden Standard) =============
@@ -256,9 +235,7 @@ export default {
 				'elevated': 'var(--shadow-elevated)', // Elevated surfaces
 				'overlay': 'var(--shadow-overlay)', // Modal/overlay shadows
 				
-				// Legacy shadows (preserved for backward compatibility)
-				'soft-ui': '4px 4px 10px rgba(155, 135, 245, 0.1)', // soul-purple based
-				'soul-glow': '0 0 20px hsl(var(--primary) / 0.3)'
+				// REMOVED: Legacy shadows - use semantic shadow tokens instead
 			},
 			lineHeight: {
 				'normal': '1.5',
@@ -293,13 +270,7 @@ export default {
 				'label-sm': ['12px', { lineHeight: '1.4', fontWeight: '500' }],
 				'label-md': ['14px', { lineHeight: '1.4', fontWeight: '500' }],
 				
-				// Legacy sizes (preserved for backward compatibility)
-				'base': '16px',
-				'lg': '20px',
-				'xl': '24px',
-				'2xl': '24px',
-				'3xl': '32px',
-				'4xl': '32px',
+				// REMOVED: Legacy font sizes - use semantic text-* and heading-* tokens instead
 			},
 		}
 	},
