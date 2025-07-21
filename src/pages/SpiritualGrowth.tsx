@@ -139,19 +139,19 @@ const SpiritualGrowth = () => {
           <div className="container mx-auto py-6 px-4 max-w-4xl">
             
             {/* Header with back button */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-spacing-6">
               <Button 
                 variant="ghost" 
                 size="sm" 
                 onClick={() => setActiveView('welcome')}
-                className="flex items-center gap-2 text-muted-foreground hover:text-primary"
+                className="flex items-center gap-spacing-2 text-text-secondary hover:text-primary"
               >
                 <ArrowLeft className="h-4 w-4" />
                 Back to Options
               </Button>
               <div className="text-center">
-                <h1 className="text-xl font-heading font-bold text-foreground">Heart-Centered Coach</h1>
-                <p className="text-sm text-muted-foreground">Connected & Ready</p>
+                <h1 className="text-heading-xl font-display font-bold text-text-main">Heart-Centered Coach</h1>
+                <p className="text-body-sm text-text-secondary">Connected & Ready</p>
               </div>
               <div className="w-20" />
             </div>
@@ -199,25 +199,25 @@ const SpiritualGrowth = () => {
   if (activeView === 'tools') {
     return (
       <MainLayout>
-        <div className="flex flex-col h-[calc(100vh-5rem)] w-full p-4">
-          <div className="mb-4">
+        <div className="flex flex-col h-[calc(100vh-5rem)] w-full p-component">
+          <div className="mb-spacing-4">
             <Button 
               variant="outline" 
               onClick={() => setActiveView('welcome')}
-              className="mb-2"
+              className="mb-spacing-2"
             >
-              <ArrowLeft className="h-4 w-4 mr-2" />
+              <ArrowLeft className="h-4 w-4 mr-spacing-2" />
               Back to Growth Coach
             </Button>
           </div>
 
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold text-center gradient-text mb-6">Growth Tools</h2>
-            <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-spacing-4">
+            <h2 className="text-heading-xl font-bold text-center gradient-text mb-spacing-6">Growth Tools</h2>
+            <div className="grid grid-cols-2 gap-spacing-4">
               <Button
                 variant="outline"
                 onClick={() => setActiveView('mood')}
-                className="h-20 flex-col gap-2"
+                className="h-20 flex-col gap-spacing-2"
               >
                 <Heart className="h-6 w-6" />
                 Mood Tracker
@@ -225,7 +225,7 @@ const SpiritualGrowth = () => {
               <Button
                 variant="outline"
                 onClick={() => setActiveView('reflection')}
-                className="h-20 flex-col gap-2"
+                className="h-20 flex-col gap-spacing-2"
               >
                 <Sparkles className="h-6 w-6" />
                 Reflection
@@ -233,7 +233,7 @@ const SpiritualGrowth = () => {
               <Button
                 variant="outline"
                 onClick={() => setActiveView('insight')}
-                className="h-20 flex-col gap-2"
+                className="h-20 flex-col gap-spacing-2"
               >
                 <BookOpen className="h-6 w-6" />
                 Insights
@@ -241,7 +241,7 @@ const SpiritualGrowth = () => {
               <Button
                 variant="outline"
                 onClick={() => setActiveView('weekly')}
-                className="h-20 flex-col gap-2"
+                className="h-20 flex-col gap-spacing-2"
               >
                 <Calendar className="h-6 w-6" />
                 Weekly Review

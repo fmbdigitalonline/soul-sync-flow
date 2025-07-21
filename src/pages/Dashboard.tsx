@@ -48,9 +48,9 @@ const Dashboard = () => {
     return (
       <MainLayout>
         <PIENotificationSystem />
-        <div className="w-full min-h-[80vh] flex flex-col items-center justify-center p-4 sm:p-6">
-          <Loader2 className="h-8 w-8 animate-spin text-soul-purple" />
-          <p className="mt-2 text-sm sm:text-base">Loading...</p>
+        <div className="w-full min-h-[80vh] flex flex-col items-center justify-center p-component sm:p-spacing-6">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="mt-spacing-2 text-body-sm sm:text-body-base">Loading...</p>
         </div>
       </MainLayout>
     );
@@ -60,14 +60,14 @@ const Dashboard = () => {
   if (!user) {
     return (
       <MainLayout>
-        <div className="w-full min-h-[80vh] flex items-center justify-center p-4 sm:p-6">
-          <div className="cosmic-card p-6 sm:p-8 text-center max-w-md w-full">
-            <h1 className="text-xl sm:text-2xl font-bold font-display mb-4">
+        <div className="w-full min-h-[80vh] flex items-center justify-center p-component sm:p-spacing-6">
+          <div className="cosmic-card p-spacing-6 sm:p-spacing-8 text-center max-w-md w-full">
+            <h1 className="text-heading-xl sm:text-heading-2xl font-bold font-display mb-spacing-4">
               <span className="gradient-text">Soul Dashboard</span>
             </h1>
-            <p className="mb-6 text-sm sm:text-base">Please sign in to view your dashboard</p>
+            <p className="mb-spacing-6 text-body-sm sm:text-body-base">Please sign in to view your dashboard</p>
             <Button 
-              className="bg-soul-purple hover:bg-soul-purple/90 w-full"
+              className="bg-primary hover:bg-primary/90 w-full"
               onClick={() => navigate('/auth')}
             >
               Sign In
