@@ -9,12 +9,19 @@ import {
   Star,
   User
 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
 
 const MobileNavigation: React.FC = () => {
+  const { user } = useAuth();
   const { t } = useLanguage();
   const location = useLocation();
+
+  // Only show navigation if user is authenticated
+  if (!user) {
+    return null;
+  }
 
   const navItems = [
     { to: "/", icon: Home, label: t('nav.home') },

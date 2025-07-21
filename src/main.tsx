@@ -32,7 +32,7 @@ const router = createBrowserRouter([
     element: <RootLayout />,
     errorElement: <NotFound />,
     children: [
-      { index: true, element: <Index /> },
+      { index: true, element: <MainLayout hideNav={true}><Index /></MainLayout> },
       { path: "auth", element: <Auth /> },
       { path: "dreams", element: <ProtectedRoute><MainLayout><Dreams /></MainLayout></ProtectedRoute> },
       { path: "spiritual-growth", element: <ProtectedRoute><MainLayout><SpiritualGrowth /></MainLayout></ProtectedRoute> },
@@ -43,7 +43,7 @@ const router = createBrowserRouter([
       { path: "user-360", element: <ProtectedRoute><MainLayout><User360Page /></MainLayout></ProtectedRoute> },
       { path: "test-environment", element: <ProtectedRoute><MainLayout><TestEnvironmentPage /></MainLayout></ProtectedRoute> },
       { path: "test-functions", element: <ProtectedRoute><MainLayout><TestFunctionsPage /></MainLayout></ProtectedRoute> },
-      { path: "design-analysis", element: <ProtectedRoute><DesignAnalysisPage /></ProtectedRoute> },
+      { path: "design-analysis", element: <ProtectedRoute><MainLayout><DesignAnalysisPage /></MainLayout></ProtectedRoute> },
       { path: "admin", element: <ProtectedRoute><MainLayout><AdminDashboard /></MainLayout></ProtectedRoute> },
       { path: "*", element: <NotFound /> }
     ]

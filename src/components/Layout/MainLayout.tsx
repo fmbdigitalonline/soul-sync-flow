@@ -90,25 +90,27 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
     return false;
   };
 
-  // Force desktop navigation to always show for authenticated users unless explicitly hidden
+  // Only show desktop navigation for authenticated users unless explicitly hidden
   const shouldShowDesktopNav = user && !hideNav;
+  // Only show mobile navigation for authenticated users unless explicitly hidden
+  const shouldShowMobileNav = user && !hideNav;
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Mobile Header */}
-      <div className="md:hidden bg-background/80 backdrop-blur-lg border-b border-border sticky top-0 z-40 w-full">
-        <div className="flex items-center justify-between p-4 w-full">
-          <Link to="/" className="flex items-center space-x-2">
-            <SoulOrbAvatar size="sm" />
-            <span className="font-cormorant font-bold text-lg gradient-text brand-text">
-              Soul Guide
-            </span>
-          </Link>
-          {/* Theme and Language controls on mobile top right */}
-          <div className="flex items-center space-x-1">
-            <ThemeToggle size="icon" />
-            <LanguageSelector />
-            {user && (
+      {/* Mobile Header - only show if not hiding nav and user is authenticated */}
+      {shouldShowMobileNav && (
+        <div className="md:hidden bg-background/80 backdrop-blur-lg border-b border-border sticky top-0 z-40 w-full">
+          <div className="flex items-center justify-between p-4 w-full">
+            <Link to="/" className="flex items-center space-x-2">
+              <SoulOrbAvatar size="sm" />
+              <span className="font-cormorant font-bold text-lg gradient-text brand-text">
+                Soul Guide
+              </span>
+            </Link>
+            {/* Theme and Language controls on mobile top right */}
+            <div className="flex items-center space-x-1">
+              <ThemeToggle size="icon" />
+              <LanguageSelector />
               <Button
                 variant="ghost"
                 size="icon"
@@ -117,27 +119,27 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
               >
                 {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </Button>
-            )}
+            </div>
           </div>
+          
+          {/* Mobile Menu Dropdown */}
+          {isMenuOpen && (
+            <div className="border-t border-border bg-card/95 backdrop-blur-lg p-4 space-y-2 w-full">
+              <Button
+                variant="ghost"
+                onClick={handleSignOut}
+                className="w-full justify-start text-muted-foreground rounded-xl font-inter"
+              >
+                <LogOut className="h-5 w-5 mr-3" />
+                {t('nav.signOut')}
+              </Button>
+            </div>
+          )}
         </div>
-        
-        {/* Mobile Menu Dropdown */}
-        {isMenuOpen && user && (
-          <div className="border-t border-border bg-card/95 backdrop-blur-lg p-4 space-y-2 w-full">
-            <Button
-              variant="ghost"
-              onClick={handleSignOut}
-              className="w-full justify-start text-muted-foreground rounded-xl font-inter"
-            >
-              <LogOut className="h-5 w-5 mr-3" />
-              {t('nav.signOut')}
-            </Button>
-          </div>
-        )}
-      </div>
+      )}
 
       <div className="flex flex-1 min-h-0">
-        {/* Desktop Sidebar - Always show for authenticated users unless hideNav is true */}
+        {/* Desktop Sidebar - Only show for authenticated users unless hideNav is true */}
         {shouldShowDesktopNav && (
           <div className="hidden md:flex w-64 min-h-full bg-card/80 backdrop-blur-lg border-r border-border flex-col">
             {/* Logo and Language Selector */}
@@ -193,17 +195,20 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col">
-          <div className="flex-1 pb-20 md:pb-0">
+          <div className={cn(
+            "flex-1",
+            shouldShowMobileNav ? "pb-20 md:pb-0" : "pb-0"
+          )}>
             {children}
           </div>
         </div>
       </div>
 
-      {/* Mobile Bottom Navigation - Always show */}
-      <MobileNavigation />
+      {/* Mobile Bottom Navigation - Only show for authenticated users unless hideNav is true */}
+      {shouldShowMobileNav && <MobileNavigation />}
 
-      {/* HACS Floating Orb - Always visible when authenticated */}
-      {user && <FloatingHACSOrb />}
+      {/* HACS Floating Orb - Only show for authenticated users */}
+      {user && !hideNav && <FloatingHACSOrb />}
     </div>
   );
 };
