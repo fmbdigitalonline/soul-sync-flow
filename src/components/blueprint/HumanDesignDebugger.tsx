@@ -182,7 +182,7 @@ export const HumanDesignDebugger: React.FC = () => {
             <Button 
               onClick={runHumanDesignTest} 
               disabled={isLoading}
-              className="bg-primary hover:bg-primary/80"
+              className="bg-soul-purple hover:bg-soul-purple/80"
             >
               {isLoading ? 'Testing...' : 'Test Full Blueprint Calculator'}
             </Button>

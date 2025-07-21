@@ -26,7 +26,7 @@ export const MobileTogglePanel: React.FC<MobileTogglePanelProps> = ({
         <div className="flex-1 flex flex-col">
           {chatContent}
         </div>
-        <div className="w-80 flex-shrink-0 p-4 bg-muted/30 rounded-lg">
+        <div className="w-80 flex-shrink-0 p-4 bg-gray-50/50 rounded-lg">
           {remindersContent}
         </div>
       </div>
@@ -38,7 +38,7 @@ export const MobileTogglePanel: React.FC<MobileTogglePanelProps> = ({
     <div className="flex flex-col h-[calc(100vh-8rem)] w-full max-w-full overflow-hidden">
       {/* Toggle Header */}
       <div className="flex-shrink-0 p-3 border-b bg-background">
-        <div className="flex gap-1 bg-muted rounded-lg p-1 max-w-full">
+        <div className="flex gap-1 bg-gray-100 rounded-lg p-1 max-w-full">
           <Button
             variant={activePanel === 'chat' ? 'default' : 'ghost'}
             size="sm"
@@ -46,7 +46,7 @@ export const MobileTogglePanel: React.FC<MobileTogglePanelProps> = ({
             className="flex-1 h-8 min-w-0"
           >
             <MessageSquare className="h-4 w-4 mr-1 flex-shrink-0" />
-            <span className="font-inter truncate">Companion</span>
+            <span className="truncate">Companion</span>
           </Button>
           <Button
             variant={activePanel === 'reminders' ? 'default' : 'ghost'}
@@ -55,7 +55,7 @@ export const MobileTogglePanel: React.FC<MobileTogglePanelProps> = ({
             className="flex-1 h-8 relative min-w-0"
           >
             <Bell className="h-4 w-4 mr-1 flex-shrink-0" />
-            <span className="font-inter truncate">Reminders</span>
+            <span className="truncate">Reminders</span>
             {activeRemindersCount > 0 && (
               <Badge
                 variant="destructive"
@@ -75,7 +75,7 @@ export const MobileTogglePanel: React.FC<MobileTogglePanelProps> = ({
             {chatContent}
           </div>
         ) : (
-          <div className="h-full p-3 bg-muted/30 overflow-y-auto w-full max-w-full mb-20">
+          <div className="h-full p-3 bg-gray-50/50 overflow-y-auto w-full max-w-full mb-20">
             {remindersContent}
           </div>
         )}

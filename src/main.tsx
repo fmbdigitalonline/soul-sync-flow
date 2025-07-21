@@ -1,50 +1,90 @@
 
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Outlet, Navigate } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "./index.css";
 
-import App from "./App";
+import { Toaster } from "@/components/ui/toaster";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import Dashboard from "./pages/Dashboard";
 import Blueprint from "./pages/Blueprint";
 import Coach from "./pages/Coach";
+import Tasks from "./pages/Tasks";
 import Dreams from "./pages/Dreams";
 import SpiritualGrowth from "./pages/SpiritualGrowth";
 import Profile from "./pages/Profile";
+import Onboarding from "./pages/Onboarding";
+import HumanDesignDebug from "./pages/HumanDesignDebug";
+import TestEphemeris from "./pages/TestEphemeris";
+import PersonaTest from "./pages/PersonaTest";
+import SevenLayerTest from "./pages/SevenLayerTest";
+import Phase3MemoryTestPage from "./pages/Phase3MemoryTest";
 import TestEnvironmentPage from "./pages/TestEnvironmentPage";
-import { TestFunctionsPage } from "./pages/TestFunctionsPage";
-import DesignAnalysisPage from "./pages/DesignAnalysisPage";
-import User360Page from "./pages/User360Page";
-import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
-import MainLayout from "./components/Layout/MainLayout";
+import { AuthProvider } from "./contexts/AuthContext";
+import { BlueprintCacheProvider } from "./contexts/BlueprintCacheContext";
+import { SoulOrbProvider } from "./contexts/SoulOrbContext";
+import { LanguageProvider } from "./contexts/LanguageContext";
+import { ModeProvider } from "./contexts/ModeContext";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
-// Root layout component - uses App.tsx for provider management
+// Create stable QueryClient instance outside of component to prevent recreation
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+// Root layout component with consistent provider nesting order
 const RootLayout = () => {
-  return <App />;
+  return (
+    <div className="min-h-screen bg-white">
+      <ErrorBoundary>
+        <AuthProvider>
+          <LanguageProvider>
+            <ModeProvider>
+              <SoulOrbProvider>
+                <BlueprintCacheProvider>
+                  <Outlet />
+                  <Toaster />
+                </BlueprintCacheProvider>
+              </SoulOrbProvider>
+            </ModeProvider>
+          </LanguageProvider>
+        </AuthProvider>
+      </ErrorBoundary>
+    </div>
+  );
 };
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <RootLayout />,
-    errorElement: <NotFound />,
     children: [
-      { index: true, element: <MainLayout hideNav={true}><Index /></MainLayout> },
+      { index: true, element: <Index /> },
       { path: "auth", element: <Auth /> },
-      { path: "dreams", element: <ProtectedRoute><MainLayout><Dreams /></MainLayout></ProtectedRoute> },
-      { path: "spiritual-growth", element: <ProtectedRoute><MainLayout><SpiritualGrowth /></MainLayout></ProtectedRoute> },
-      { path: "companion", element: <ProtectedRoute><MainLayout><Coach /></MainLayout></ProtectedRoute> },
+      { path: "onboarding", element: <ProtectedRoute><Onboarding /></ProtectedRoute> },
+      { path: "dashboard", element: <ProtectedRoute><Dashboard /></ProtectedRoute> },
+      { path: "blueprint", element: <ProtectedRoute><Blueprint /></ProtectedRoute> },
+      { path: "companion", element: <ProtectedRoute><Coach /></ProtectedRoute> },
       { path: "coach", element: <Navigate to="/companion" replace /> },
-      { path: "blueprint", element: <ProtectedRoute><MainLayout><Blueprint /></MainLayout></ProtectedRoute> },
-      { path: "profile", element: <ProtectedRoute><MainLayout><Profile /></MainLayout></ProtectedRoute> },
-      { path: "user-360", element: <ProtectedRoute><MainLayout><User360Page /></MainLayout></ProtectedRoute> },
-      { path: "test-environment", element: <ProtectedRoute><MainLayout><TestEnvironmentPage /></MainLayout></ProtectedRoute> },
-      { path: "test-functions", element: <ProtectedRoute><MainLayout><TestFunctionsPage /></MainLayout></ProtectedRoute> },
-      { path: "design-analysis", element: <ProtectedRoute><MainLayout><DesignAnalysisPage /></MainLayout></ProtectedRoute> },
-      { path: "admin", element: <ProtectedRoute><MainLayout><AdminDashboard /></MainLayout></ProtectedRoute> },
+      { path: "tasks", element: <ProtectedRoute><Tasks /></ProtectedRoute> },
+      { path: "dreams", element: <ProtectedRoute><Dreams /></ProtectedRoute> },
+      { path: "spiritual-growth", element: <ProtectedRoute><SpiritualGrowth /></ProtectedRoute> },
+      { path: "profile", element: <ProtectedRoute><Profile /></ProtectedRoute> },
+      { path: "test-ephemeris", element: <TestEphemeris /> },
+      { path: "human-design-debug", element: <HumanDesignDebug /> },
+      { path: "persona-test", element: <PersonaTest /> },
+      { path: "seven-layer-test", element: <ProtectedRoute><SevenLayerTest /></ProtectedRoute> },
+      { path: "phase3-memory-test", element: <ProtectedRoute><Phase3MemoryTestPage /></ProtectedRoute> },
+      { path: "test-environment", element: <ProtectedRoute><TestEnvironmentPage /></ProtectedRoute> },
       { path: "*", element: <NotFound /> }
     ]
   }
@@ -52,6 +92,8 @@ const router = createBrowserRouter([
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>
   </React.StrictMode>
 );

@@ -182,7 +182,7 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
           <p>Generating your Soul Blueprint...</p>
           <div className="w-full bg-gray-800 rounded-full h-2.5 mb-4">
             <div
-              className="bg-primary h-2.5 rounded-full"
+              className="bg-soul-purple h-2.5 rounded-full"
               style={{ width: `${progress}%` }}
             ></div>
           </div>
@@ -236,7 +236,7 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
             {retryCount < maxRetries ? (
               <button
                 onClick={handleTryAgain}
-                className="bg-primary hover:bg-primary/80 text-primary-foreground px-4 py-2 rounded-md flex items-center mx-auto"
+                className="bg-soul-purple hover:bg-soul-purple/80 text-white px-4 py-2 rounded-md flex items-center mx-auto"
               >
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Try Again ({retryCount + 1}/{maxRetries + 1})

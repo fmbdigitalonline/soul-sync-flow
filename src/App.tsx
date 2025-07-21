@@ -1,44 +1,94 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Outlet } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { LanguageProvider } from "@/contexts/LanguageContext";
-import { SoulOrbProvider } from "@/contexts/SoulOrbContext";
-import { BlueprintCacheProvider } from "@/contexts/BlueprintCacheContext";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
+import React, { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { LanguageProvider } from './contexts/LanguageContext';
+import { ModeProvider } from './contexts/ModeContext';
+import MainLayout from './components/Layout/MainLayout';
+import Index from './pages/Index';
+import Dreams from './pages/Dreams';
+import SpiritualGrowth from './pages/SpiritualGrowth';
+import Coach from './pages/Coach';
+import Auth from './pages/Auth';
+import Blueprint from './pages/Blueprint';
+import Profile from './pages/Profile';
+import TestEnvironmentPage from './pages/TestEnvironmentPage';
+import { TestFunctionsPage } from './pages/TestFunctionsPage';
+import DesignAnalysisPage from './pages/DesignAnalysisPage';
+import User360Page from './pages/User360Page';
+import NotFound from './pages/NotFound';
+import { Toaster } from '@/components/ui/toaster';
+import { SoulOrbProvider } from './contexts/SoulOrbContext';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { BlueprintCacheProvider } from './contexts/BlueprintCacheContext';
+import AdminDashboard from "@/pages/AdminDashboard";
+import { user360Cleanup } from '@/utils/user-360-cleanup';
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 3,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
-    },
-  },
-});
+const queryClient = new QueryClient();
 
 function App() {
+  // Initialize 360° cleanup system
+  useEffect(() => {
+    user360Cleanup.registerCleanup();
+    
+    // Cleanup on app unmount
+    return () => {
+      user360Cleanup.cleanup();
+    };
+  }, []);
+
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <ErrorBoundary>
-        <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <AuthProvider>
           <LanguageProvider>
-            <AuthProvider>
-              <BlueprintCacheProvider>
-                <SoulOrbProvider>
-                  <div className="relative">
-                    <Outlet />
-                  </div>
+            <ModeProvider>
+              <SoulOrbProvider>
+                <BlueprintCacheProvider>
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/dreams" element={<ProtectedRoute><MainLayout><Dreams /></MainLayout></ProtectedRoute>} />
+                    <Route path="/spiritual-growth" element={<ProtectedRoute><MainLayout><SpiritualGrowth /></MainLayout></ProtectedRoute>} />
+                    <Route path="/companion" element={<ProtectedRoute><MainLayout><Coach /></MainLayout></ProtectedRoute>} />
+                    {/* Legacy redirect from /coach to /companion */}
+                    <Route path="/coach" element={<Navigate to="/companion" replace />} />
+                    <Route path="/blueprint" element={<ProtectedRoute><MainLayout><Blueprint /></MainLayout></ProtectedRoute>} />
+                    <Route path="/profile" element={<ProtectedRoute><MainLayout><Profile /></MainLayout></ProtectedRoute>} />
+                    <Route path="/user-360" element={<ProtectedRoute><MainLayout><User360Page /></MainLayout></ProtectedRoute>} />
+                    <Route path="/auth" element={<Auth />} />
+                    <Route path="/test-environment" element={<ProtectedRoute><MainLayout><TestEnvironmentPage /></MainLayout></ProtectedRoute>} />
+                    <Route path="/test-functions" element={<ProtectedRoute><MainLayout><TestFunctionsPage /></MainLayout></ProtectedRoute>} />
+                    <Route path="/design-analysis" element={<ProtectedRoute><DesignAnalysisPage /></ProtectedRoute>} />
+                    <Route 
+                      path="/admin" 
+                      element={
+                        <ProtectedRoute>
+                          <MainLayout>
+                            <AdminDashboard />
+                          </MainLayout>
+                        </ProtectedRoute>
+                      } 
+                    />
+                    {/* Catch-all route for 404s - MUST be last */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
                   <Toaster />
-                </SoulOrbProvider>
-              </BlueprintCacheProvider>
-            </AuthProvider>
+                </BlueprintCacheProvider>
+              </SoulOrbProvider>
+            </ModeProvider>
           </LanguageProvider>
-        </QueryClientProvider>
-      </ErrorBoundary>
-    </div>
+        </AuthProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }
+
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useAuth();
+  if (!user) {
+    return <Navigate to="/auth" />;
+  }
+  return children;
+};
 
 export default App;

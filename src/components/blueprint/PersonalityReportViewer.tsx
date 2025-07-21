@@ -222,7 +222,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
     return (
       <div className={`flex items-center justify-center ${spacing.container} ${className}`}>
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-2" />
+          <Loader2 className="h-8 w-8 animate-spin text-soul-purple mx-auto mb-2" />
           <p className={`text-muted-foreground ${getTextSize('text-sm')}`}>Loading your personality report...</p>
         </div>
       </div>
@@ -235,7 +235,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
         <Card>
           <CardContent className={`${spacing.card} text-center`}>
             <div className="mb-4">
-              <Sparkles className="h-12 w-12 text-primary mx-auto mb-4" />
+              <Sparkles className="h-12 w-12 text-soul-purple mx-auto mb-4" />
               <h3 className={`font-semibold mb-2 ${getTextSize('text-lg')}`}>Personality Report</h3>
               <p className={`text-muted-foreground mb-4 ${getTextSize('text-sm')} break-words`}>
                 {error || 'No personality reports available'}
@@ -246,7 +246,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                 <Button 
                   onClick={() => generateReport(false)} 
                   disabled={generating}
-                  className="bg-primary hover:bg-primary/90 w-full sm:w-auto"
+                  className="bg-soul-purple hover:bg-soul-purple/90 w-full sm:w-auto"
                   size={isMobile ? "default" : "default"}
                 >
                   {generating ? (
@@ -476,7 +476,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
           </p>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto mt-3 sm:mt-0">
-          <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 justify-center sm:justify-start">
+          <Badge variant="outline" className="bg-soul-purple/10 text-soul-purple border-soul-purple/20 justify-center sm:justify-start">
             <Sparkles className="h-3 w-3 mr-1 flex-shrink-0" />
             <span className="truncate">Soul Generated</span>
           </Badge>
@@ -754,7 +754,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                   <CardHeader className="pb-3">
                     <CardTitle className={`flex flex-col sm:flex-row sm:items-center gap-2 ${getTextSize('text-lg')} break-words`}>
                        <div className="flex items-center gap-2 min-w-0">
-                        {IconComponent && React.createElement(IconComponent, { className: "h-5 w-5 text-primary flex-shrink-0" })}
+                        {IconComponent && React.createElement(IconComponent, { className: "h-5 w-5 text-soul-purple flex-shrink-0" })}
                         <span className="break-words">{title}</span>
                       </div>
                       <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 w-fit">

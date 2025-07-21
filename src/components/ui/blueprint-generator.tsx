@@ -284,13 +284,13 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
             <SoulOrb size="md" pulse={true} stage="generating" />
           </div>
           <p>Generating your Soul Blueprint...</p>
-          <div className="w-full bg-muted rounded-full h-2.5 mb-4">
+          <div className="w-full bg-gray-800 rounded-full h-2.5 mb-4">
             <div
-              className="bg-primary h-2.5 rounded-full"
+              className="bg-soul-purple h-2.5 rounded-full"
               style={{ width: `${progress}%` }}
             ></div>
           </div>
-          <p className="text-sm font-inter text-muted-foreground">
+          <p className="text-sm text-gray-400">
             {progress < 30
               ? "Connecting to celestial database..."
               : progress < 60
@@ -318,7 +318,7 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
 
       {status === "error" && (
         <div className="text-center space-y-4">
-          <div className="text-destructive flex items-center justify-center space-x-2">
+          <div className="text-red-500 flex items-center justify-center space-x-2">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-6 w-6"
@@ -333,20 +333,20 @@ export const BlueprintGenerator: React.FC<BlueprintGeneratorProps> = ({
                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
               />
             </svg>
-            <p className="font-cormorant font-medium">Blueprint Generation Error</p>
+            <p className="font-medium">Blueprint Generation Error</p>
           </div>
-          <p className="text-sm font-inter">{errorMessage || "An unknown error occurred"}</p>
+          <p className="text-sm">{errorMessage || "An unknown error occurred"}</p>
           <div>
             {retryCountRef.current < maxRetries ? (
               <button
                 onClick={handleTryAgain}
-                className="bg-primary hover:bg-primary/80 text-primary-foreground font-cormorant px-4 py-2 rounded-md flex items-center mx-auto"
+                className="bg-soul-purple hover:bg-soul-purple/80 text-white px-4 py-2 rounded-md flex items-center mx-auto"
               >
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Try Again ({retryCountRef.current + 1}/{maxRetries + 1})
               </button>
             ) : (
-              <div className="text-amber-500 dark:text-amber-400 text-sm font-inter">
+              <div className="text-amber-500 text-sm">
                 Maximum retry attempts reached. Please check your information and try again later.
               </div>
             )}

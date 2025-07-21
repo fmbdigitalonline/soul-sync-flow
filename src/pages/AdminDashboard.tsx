@@ -47,10 +47,10 @@ const AdminDashboard: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'healthy': return 'text-status-success';
-      case 'warning': return 'text-status-warning';
-      case 'error': return 'text-status-error';
-      default: return 'text-text-tertiary';
+      case 'healthy': return 'text-green-600';
+      case 'warning': return 'text-yellow-600';
+      case 'error': return 'text-red-600';
+      default: return 'text-gray-600';
     }
   };
 
@@ -64,42 +64,42 @@ const AdminDashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background p-container">
+    <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-spacing-7">
+        <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-heading-2xl font-display text-text-main">Admin Dashboard</h1>
-              <p className="text-text-secondary mt-spacing-2">Monitor and configure Soul Guide innovations</p>
+              <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+              <p className="text-gray-600 mt-2">Monitor and configure Soul Guide innovations</p>
             </div>
-            <div className="flex items-center gap-spacing-4">
-              <Badge variant="outline" className="text-caption-sm">
-                <Activity className="w-3 h-3 mr-spacing-1" />
+            <div className="flex items-center gap-4">
+              <Badge variant="outline" className="text-sm">
+                <Activity className="w-3 h-3 mr-1" />
                 Real-time monitoring
               </Badge>
               <Button variant="outline" size="sm">
-                <Settings className="w-4 h-4 mr-spacing-2" />
+                <Settings className="w-4 h-4 mr-2" />
                 Settings
               </Button>
             </div>
           </div>
 
           {/* System Health Summary */}
-          <div className="grid grid-cols-4 gap-spacing-4 mt-spacing-6">
+          <div className="grid grid-cols-4 gap-4 mt-6">
             {Object.entries(systemHealth).map(([key, health]) => (
-              <Card key={key} className="p-component">
+              <Card key={key} className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-caption-sm font-medium text-text-tertiary uppercase">
+                    <p className="text-sm font-medium text-gray-600 uppercase">
                       {key === 'vfpGraph' ? 'VFP-Graph' : key.toUpperCase()}
                     </p>
-                    <div className={`flex items-center gap-spacing-2 mt-spacing-1 ${getStatusColor(health.status)}`}>
+                    <div className={`flex items-center gap-2 mt-1 ${getStatusColor(health.status)}`}>
                       {getStatusIcon(health.status)}
                       <span className="font-semibold">{health.score}%</span>
                     </div>
                   </div>
-                  <TrendingUp className="w-5 h-5 text-text-tertiary" />
+                  <TrendingUp className="w-5 h-5 text-gray-400" />
                 </div>
               </Card>
             ))}
@@ -107,37 +107,37 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         {/* Main Content */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-spacing-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-8">
-            <TabsTrigger value="overview" className="flex items-center gap-spacing-2">
+            <TabsTrigger value="overview" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
               Overview
             </TabsTrigger>
-            <TabsTrigger value="pie" className="flex items-center gap-spacing-2">
+            <TabsTrigger value="pie" className="flex items-center gap-2">
               <Brain className="w-4 h-4" />
               PIE
             </TabsTrigger>
-            <TabsTrigger value="vfp" className="flex items-center gap-spacing-2">
+            <TabsTrigger value="vfp" className="flex items-center gap-2">
               <Zap className="w-4 h-4" />
               VFP-Graph
             </TabsTrigger>
-            <TabsTrigger value="tmg" className="flex items-center gap-spacing-2">
+            <TabsTrigger value="tmg" className="flex items-center gap-2">
               <Database className="w-4 h-4" />
               TMG
             </TabsTrigger>
-            <TabsTrigger value="acs" className="flex items-center gap-spacing-2">
+            <TabsTrigger value="acs" className="flex items-center gap-2">
               <Settings className="w-4 h-4" />
               ACS
             </TabsTrigger>
-            <TabsTrigger value="users" className="flex items-center gap-spacing-2">
+            <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="w-4 h-4" />
               Users
             </TabsTrigger>
-            <TabsTrigger value="health" className="flex items-center gap-spacing-2">
+            <TabsTrigger value="health" className="flex items-center gap-2">
               <Activity className="w-4 h-4" />
               Health
             </TabsTrigger>
-            <TabsTrigger value="config" className="flex items-center gap-spacing-2">
+            <TabsTrigger value="config" className="flex items-center gap-2">
               <Settings className="w-4 h-4" />
               Config
             </TabsTrigger>

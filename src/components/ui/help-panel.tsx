@@ -68,11 +68,11 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({
 
   const getHelpTypeColor = (helpType: string) => {
     switch (helpType) {
-      case 'concrete_steps': return 'bg-emerald-100 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800';
-      case 'examples': return 'bg-blue-100 dark:bg-blue-950/20 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800';
-      case 'tools_needed': return 'bg-purple-100 dark:bg-purple-950/20 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800';
-      case 'time_breakdown': return 'bg-orange-100 dark:bg-orange-950/20 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800';
-      default: return 'bg-muted text-muted-foreground border-border';
+      case 'concrete_steps': return 'bg-green-100 text-green-700 border-green-200';
+      case 'examples': return 'bg-blue-100 text-blue-700 border-blue-200';
+      case 'tools_needed': return 'bg-purple-100 text-purple-700 border-purple-200';
+      case 'time_breakdown': return 'bg-orange-100 text-orange-700 border-orange-200';
+      default: return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
 
@@ -80,15 +80,15 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({
   const progressPercentage = Math.round((completedSteps.size / response.actionableSteps.length) * 100);
 
   return (
-    <Card className="p-4 bg-gradient-to-br from-primary/5 to-secondary/5 border-primary/20">
+    <Card className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <HelpTypeIcon className="h-4 w-4 text-primary-foreground" />
+          <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+            <HelpTypeIcon className="h-4 w-4 text-white" />
           </div>
           <div>
-            <h3 className="font-cormorant font-semibold text-foreground text-sm">Interactive Help</h3>
+            <h3 className="font-semibold text-gray-800 text-sm">Interactive Help</h3>
             <Badge variant="outline" className={`text-xs ${getHelpTypeColor(response.helpType)}`}>
               {response.helpType.replace('_', ' ')}
             </Badge>
@@ -105,7 +105,7 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({
 
       {/* Content */}
       <div className="mb-4">
-        <p className="text-sm font-inter text-foreground/80 leading-relaxed">
+        <p className="text-sm text-gray-700 leading-relaxed">
           {response.content}
         </p>
       </div>
@@ -114,12 +114,12 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({
       {completedSteps.size > 0 && (
         <div className="mb-4">
           <div className="flex justify-between text-xs mb-1">
-            <span className="font-inter text-muted-foreground">Your Progress</span>
-            <span className="font-cormorant font-medium text-foreground">{completedSteps.size}/{response.actionableSteps.length} steps</span>
+            <span className="text-gray-600">Your Progress</span>
+            <span className="font-medium text-gray-800">{completedSteps.size}/{response.actionableSteps.length} steps</span>
           </div>
-          <div className="w-full bg-muted rounded-full h-2">
+          <div className="w-full bg-gray-200 rounded-full h-2">
             <div 
-              className="bg-primary h-2 rounded-full transition-all duration-300"
+              className="bg-blue-500 h-2 rounded-full transition-all duration-300"
               style={{ width: `${progressPercentage}%` }}
             />
           </div>
@@ -129,7 +129,7 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({
       {/* Actionable Steps */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="font-cormorant font-medium text-sm text-foreground">Step-by-Step Actions</h4>
+          <h4 className="font-medium text-sm text-gray-800">Step-by-Step Actions</h4>
           <Button
             onClick={() => toggleSection('steps')}
             variant="ghost"
@@ -150,8 +150,8 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({
                 key={index}
                 className={`flex items-start gap-3 p-3 rounded-lg border transition-all duration-200 ${
                   completedSteps.has(index) 
-                    ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800' 
-                    : 'bg-card border-border hover:border-primary/50'
+                    ? 'bg-green-50 border-green-200' 
+                    : 'bg-white border-gray-200 hover:border-blue-300'
                 }`}
               >
                 <button
@@ -160,18 +160,18 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({
                 >
                   <CheckCircle2 className={`h-5 w-5 ${
                     completedSteps.has(index) 
-                      ? 'text-emerald-600 dark:text-emerald-400' 
-                      : 'text-muted-foreground hover:text-primary'
+                      ? 'text-green-600' 
+                      : 'text-gray-300 hover:text-blue-500'
                   }`} />
                 </button>
                 
                 <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-inter leading-relaxed ${
+                  <p className={`text-sm leading-relaxed ${
                     completedSteps.has(index) 
-                      ? 'line-through text-muted-foreground' 
-                      : 'text-foreground/80'
+                      ? 'line-through text-gray-500' 
+                      : 'text-gray-700'
                   }`}>
-                    <span className="font-cormorant font-medium text-primary mr-2">
+                    <span className="font-medium text-blue-600 mr-2">
                       {index + 1}.
                     </span>
                     {step}
@@ -196,7 +196,7 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({
       {response.toolsNeeded.length > 0 && (
         <div className="mt-4 space-y-2">
           <div className="flex items-center justify-between">
-            <h4 className="font-cormorant font-medium text-sm text-foreground flex items-center gap-2">
+            <h4 className="font-medium text-sm text-gray-800 flex items-center gap-2">
               <Wrench className="h-4 w-4" />
               Tools You'll Need
             </h4>
@@ -216,7 +216,7 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({
           {expandedSections.has('tools') && (
             <div className="flex flex-wrap gap-2">
               {response.toolsNeeded.map((tool, index) => (
-                <Badge key={index} variant="outline" className="text-xs font-inter">
+                <Badge key={index} variant="outline" className="text-xs">
                   {tool}
                 </Badge>
               ))}
@@ -229,7 +229,7 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({
       {response.successCriteria.length > 0 && (
         <div className="mt-4 space-y-2">
           <div className="flex items-center justify-between">
-            <h4 className="font-cormorant font-medium text-sm text-foreground flex items-center gap-2">
+            <h4 className="font-medium text-sm text-gray-800 flex items-center gap-2">
               <Target className="h-4 w-4" />
               How You'll Know You're Done
             </h4>
@@ -250,8 +250,8 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({
             <div className="space-y-1">
               {response.successCriteria.map((criteria, index) => (
                 <div key={index} className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-500 dark:text-emerald-400 mt-0.5 flex-shrink-0" />
-                  <p className="text-sm font-inter text-foreground/80">{criteria}</p>
+                  <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                  <p className="text-sm text-gray-700">{criteria}</p>
                 </div>
               ))}
             </div>
@@ -261,12 +261,12 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({
 
       {/* Quick Actions */}
       {onActionClick && (
-        <div className="mt-4 pt-3 border-t border-border flex gap-2">
+        <div className="mt-4 pt-3 border-t border-gray-200 flex gap-2">
           <Button
             onClick={() => onActionClick('need_more_help')}
             variant="outline"
             size="sm"
-            className="text-xs font-inter px-3 py-1"
+            className="text-xs px-3 py-1"
           >
             Still need help?
           </Button>
@@ -274,7 +274,7 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({
             onClick={() => onActionClick('working_well')}
             variant="outline"
             size="sm"
-            className="text-xs font-inter px-3 py-1"
+            className="text-xs px-3 py-1"
           >
             This is working! ✓
           </Button>

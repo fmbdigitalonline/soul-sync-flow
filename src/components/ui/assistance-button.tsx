@@ -24,25 +24,25 @@ const assistanceConfig = {
   stuck: {
     icon: HelpCircle,
     label: "I'm stuck",
-    color: 'bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700',
+    color: 'bg-orange-500 hover:bg-orange-600',
     description: 'Get step-by-step help to move forward'
   },
   need_details: {
     icon: MessageCircle,
     label: 'Need more details',
-    color: 'bg-primary hover:bg-primary/90',
+    color: 'bg-blue-500 hover:bg-blue-600',
     description: 'Get specific instructions and examples'
   },
   how_to: {
     icon: BookOpen,
     label: 'How do I...?',
-    color: 'bg-purple-500 hover:bg-purple-600 dark:bg-purple-600 dark:hover:bg-purple-700',
+    color: 'bg-purple-500 hover:bg-purple-600',
     description: 'Learn the exact process and tools needed'
   },
   examples: {
     icon: Lightbulb,
     label: 'Show examples',
-    color: 'bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-700',
+    color: 'bg-green-500 hover:bg-green-600',
     description: 'See concrete examples and templates'
   }
 };
@@ -77,7 +77,7 @@ export const AssistanceButton: React.FC<AssistanceButtonProps> = ({
         onClick={handleRequest}
         disabled={isLoading}
         size="sm"
-        className={`${config.color} text-primary-foreground font-inter text-xs px-2 py-1 h-7`}
+        className={`${config.color} text-white text-xs px-2 py-1 h-7`}
       >
         <Icon className="h-3 w-3 mr-1" />
         {config.label}
@@ -92,7 +92,7 @@ export const AssistanceButton: React.FC<AssistanceButtonProps> = ({
         <Button
           onClick={handleRequest}
           disabled={isLoading}
-          className={`${config.color} text-primary-foreground font-inter text-sm px-3 py-2 h-8 flex-1`}
+          className={`${config.color} text-white text-sm px-3 py-2 h-8 flex-1`}
         >
           <Icon className="h-4 w-4 mr-2" />
           {config.label}
@@ -111,18 +111,18 @@ export const AssistanceButton: React.FC<AssistanceButtonProps> = ({
       </div>
       
       {expanded && (
-        <div className="p-3 bg-muted/30 rounded-lg border space-y-3">
-          <p className="text-xs font-inter text-muted-foreground">{config.description}</p>
+        <div className="p-3 bg-gray-50 rounded-lg border space-y-3">
+          <p className="text-xs text-gray-600">{config.description}</p>
           
           <div className="space-y-2">
-            <label className="text-xs font-cormorant font-medium text-foreground">
+            <label className="text-xs font-medium text-gray-700">
               Tell me more about what you need help with:
             </label>
             <textarea
               value={customMessage}
               onChange={(e) => setCustomMessage(e.target.value)}
               placeholder="Optional: Describe what specifically you're stuck on..."
-              className="w-full font-inter text-xs p-2 border rounded resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full text-xs p-2 border rounded resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
               rows={2}
             />
           </div>
@@ -132,14 +132,14 @@ export const AssistanceButton: React.FC<AssistanceButtonProps> = ({
               onClick={() => setExpanded(false)}
               variant="outline"
               size="sm"
-              className="text-xs font-inter px-3 py-1"
+              className="text-xs px-3 py-1"
             >
               Cancel
             </Button>
             <Button
               onClick={handleRequest}
               disabled={isLoading}
-              className={`${config.color} text-primary-foreground font-inter text-xs px-3 py-1`}
+              className={`${config.color} text-white text-xs px-3 py-1`}
             >
               Get Help
             </Button>

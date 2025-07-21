@@ -87,14 +87,14 @@ export function GoalSelectionStep({ onComplete, onBack }: GoalSelectionStepProps
   };
 
   return (
-    <div className="h-screen flex flex-col bg-background overflow-hidden">
+    <div className="h-screen flex flex-col bg-soul-black overflow-hidden">
       {/* Back Button */}
       {onBack && (
-        <div className="p-4 border-b border-border">
+        <div className="p-4 border-b border-white/10">
           <Button
             variant="ghost"
             onClick={onBack}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+            className="flex items-center gap-2 text-white/80 hover:text-white"
           >
             <ArrowLeft className="w-4 h-4" />
             {t('back')}
@@ -105,25 +105,25 @@ export function GoalSelectionStep({ onComplete, onBack }: GoalSelectionStepProps
       {/* Scrollable Content Area */}
       <div className="flex-1 overflow-y-auto px-4 pt-4 pb-4">
         <div className="space-y-6 max-w-md mx-auto">
-          <div className="bg-card/50 backdrop-blur-sm rounded-xl p-6 border border-border space-y-6">
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 space-y-6">
             {/* Primary Goal Selection */}
             <div className="space-y-4">
-              <Label className="text-base font-cormorant font-medium text-center block">
+              <Label className="text-base font-medium text-center block">
                 {t('goals.primaryFocus')}
               </Label>
               <RadioGroup value={primaryGoal} onValueChange={setPrimaryGoal} disabled={isSubmitting}>
                 <div className="space-y-3">
                   {goals.map((goal) => (
-                    <div key={goal.id} className="flex items-start space-x-3 p-2 rounded-lg hover:bg-muted/50 transition-colors">
+                    <div key={goal.id} className="flex items-start space-x-3 p-2 rounded-lg hover:bg-white/5 transition-colors">
                       <RadioGroupItem value={goal.id} id={goal.id} className="mt-1 flex-shrink-0" />
                       <Label 
                         htmlFor={goal.id} 
-                        className="text-sm font-inter cursor-pointer leading-relaxed flex-1"
+                        className="text-sm cursor-pointer leading-relaxed flex-1"
                       >
                         {goal.label}
                       </Label>
                       {primaryGoal === goal.id && (
-                        <CheckCircle2 className="w-4 h-4 text-primary mt-1 flex-shrink-0" />
+                        <CheckCircle2 className="w-4 h-4 text-soul-purple mt-1 flex-shrink-0" />
                       )}
                     </div>
                   ))}
@@ -133,12 +133,12 @@ export function GoalSelectionStep({ onComplete, onBack }: GoalSelectionStepProps
 
             {/* Support Style */}
             <div className="space-y-4">
-              <Label className="text-base font-cormorant font-medium text-center block">
+              <Label className="text-base font-medium text-center block">
                 {t('goals.guidanceLevel')}
               </Label>
               <div className="space-y-3">
                 <div className="text-center">
-                  <span className="text-lg font-cormorant font-medium text-primary">
+                  <span className="text-lg font-medium text-soul-purple">
                     {supportStyle[0]}/5
                   </span>
                 </div>
@@ -151,12 +151,12 @@ export function GoalSelectionStep({ onComplete, onBack }: GoalSelectionStepProps
                   className="w-full"
                   disabled={isSubmitting}
                 />
-                <div className="flex justify-between text-xs font-inter text-muted-foreground px-1">
+                <div className="flex justify-between text-xs text-white/60 px-1">
                   <span>{t('goals.lightTouch')}</span>
                   <span>{t('goals.structuredGuidance')}</span>
                 </div>
                 {supportStyle[0] && (
-                  <p className="text-xs font-inter text-muted-foreground text-center px-2">
+                  <p className="text-xs text-white/80 text-center px-2">
                     {getSupportStyleDescription(supportStyle[0])}
                   </p>
                 )}
@@ -166,11 +166,11 @@ export function GoalSelectionStep({ onComplete, onBack }: GoalSelectionStepProps
 
           {/* Selection Summary */}
           {primaryGoal && (
-            <div className="bg-muted/30 rounded-lg p-4 space-y-2">
-              <h4 className="text-sm font-cormorant font-medium text-primary">{t('goals.yourSelections')}</h4>
-              <div className="text-xs font-inter space-y-1">
-                <p><span className="text-muted-foreground">{t('goals.focus')}</span> {selectedGoalLabel}</p>
-                <p><span className="text-muted-foreground">{t('goals.guidanceLevelLabel')}</span> {supportStyle[0]}/5</p>
+            <div className="bg-white/5 rounded-lg p-4 space-y-2">
+              <h4 className="text-sm font-medium text-soul-purple">{t('goals.yourSelections')}</h4>
+              <div className="text-xs space-y-1">
+                <p><span className="text-white/60">{t('goals.focus')}</span> {selectedGoalLabel}</p>
+                <p><span className="text-white/60">{t('goals.guidanceLevelLabel')}</span> {supportStyle[0]}/5</p>
               </div>
             </div>
           )}
@@ -179,11 +179,11 @@ export function GoalSelectionStep({ onComplete, onBack }: GoalSelectionStepProps
           <Button 
             onClick={handleSubmit}
             disabled={!isValid}
-            className="w-full bg-primary hover:bg-primary/90 disabled:opacity-50 py-3 text-base font-cormorant font-medium"
+            className="w-full bg-soul-purple hover:bg-soul-purple/90 disabled:opacity-50 py-3 text-base font-medium"
           >
             {isSubmitting ? (
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 {t('goals.saving')}
               </div>
             ) : (
@@ -193,14 +193,14 @@ export function GoalSelectionStep({ onComplete, onBack }: GoalSelectionStepProps
 
           {/* Error Message */}
           {submitError && (
-            <div className="bg-destructive/10 border border-destructive/50 rounded-xl p-4 space-y-3">
-              <div className="text-destructive text-sm font-inter">
+            <div className="bg-red-900/20 border border-red-500/50 rounded-xl p-4 space-y-3">
+              <div className="text-red-300 text-sm">
                 <strong>{t('error')}:</strong> {submitError}
               </div>
               <Button 
                 onClick={handleRetry}
                 variant="outline"
-                className="w-full border-destructive/50 text-destructive hover:bg-destructive/10 font-cormorant"
+                className="w-full border-red-500/50 text-red-300 hover:bg-red-900/30"
               >
                 {t('goals.tryAgain')}
               </Button>

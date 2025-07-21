@@ -46,14 +46,14 @@ export const PIENotificationSystem: React.FC = () => {
     insights.forEach((insight, index) => {
       setTimeout(() => {
         toast.custom((t) => (
-          <Card className="p-4 max-w-md bg-gradient-subtle border-l-4 border-l-primary">
+          <Card className="p-4 max-w-md bg-gradient-to-r from-purple-50 to-blue-50 border-l-4 border-l-purple-500">
             <div className="flex items-start space-x-3">
-              <Brain className="w-5 h-5 text-primary mt-0.5" />
+              <Brain className="w-5 h-5 text-purple-600 mt-0.5" />
               <div className="flex-1">
-                <h4 className="font-semibold text-sm font-cormorant text-foreground">{insight.title}</h4>
-                <p className="text-xs text-muted-foreground mt-1 font-inter">{insight.message}</p>
+                <h4 className="font-semibold text-sm">{insight.title}</h4>
+                <p className="text-xs text-gray-600 mt-1">{insight.message}</p>
                 <div className="flex items-center space-x-2 mt-2">
-                  <span className="text-xs text-primary bg-primary/10 px-2 py-1 rounded font-inter">
+                  <span className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded">
                     PIE Insight • {Math.round(insight.confidence * 100)}% confidence
                   </span>
                 </div>

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-
+import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -97,25 +97,27 @@ const Profile = () => {
 
   if (loading) {
     return (
-      <div className="p-6 max-w-md mx-auto">
-        <div className="flex flex-col items-center text-center mb-6">
-          <div className="h-20 w-20 mb-4 bg-gray-200 rounded-full animate-pulse"></div>
-          <div className="h-6 w-32 bg-gray-200 rounded animate-pulse mb-2"></div>
-          <div className="h-4 w-48 bg-gray-200 rounded animate-pulse"></div>
+      <MainLayout>
+        <div className="p-6 max-w-md mx-auto">
+          <div className="flex flex-col items-center text-center mb-6">
+            <div className="h-20 w-20 mb-4 bg-gray-200 rounded-full animate-pulse"></div>
+            <div className="h-6 w-32 bg-gray-200 rounded animate-pulse mb-2"></div>
+            <div className="h-4 w-48 bg-gray-200 rounded animate-pulse"></div>
+          </div>
         </div>
-      </div>
+      </MainLayout>
     );
   }
 
   if (profileError) {
     return (
-      <div className="p-6 max-w-md mx-auto">
+      <MainLayout>
         <div className="p-6 max-w-md mx-auto">
           <CosmicCard className="p-6 text-center">
             <p className="text-destructive">{t('profile.errorLoading')}: {profileError}</p>
           </CosmicCard>
         </div>
-      </div>
+      </MainLayout>
     );
   }
 
@@ -125,7 +127,7 @@ const Profile = () => {
   const activeGoals = goals.filter(g => g.status === 'active');
 
   return (
-    <div className="p-6 max-w-md mx-auto">
+    <MainLayout>
       <div className="p-6 max-w-md mx-auto">
         <div className="flex flex-col items-center text-center mb-6">
           <Avatar className="h-20 w-20 mb-4 shadow-soft-ui">
@@ -315,7 +317,7 @@ const Profile = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </MainLayout>
   );
 };
 

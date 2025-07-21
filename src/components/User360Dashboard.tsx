@@ -19,20 +19,20 @@ const DataAvailabilityIndicator: React.FC<DataAvailabilityIndicatorProps> = ({
   completenessScore
 }) => {
   const sections = [
-    { key: 'blueprint', label: 'Soul Blueprint', icon: Heart, color: 'bg-primary' },
-    { key: 'intelligence', label: 'HACS Intelligence', icon: Brain, color: 'bg-secondary' },
-    { key: 'memory', label: 'Memory Graph', icon: Zap, color: 'bg-warning' },
-    { key: 'patterns', label: 'Behavioral Patterns', icon: TrendingUp, color: 'bg-success' },
-    { key: 'growth', label: 'Growth Journey', icon: Target, color: 'bg-accent' },
-    { key: 'activities', label: 'Activities', icon: Activity, color: 'bg-warning' },
-    { key: 'goals', label: 'Goals', icon: Target, color: 'bg-destructive' },
-    { key: 'conversations', label: 'Conversations', icon: MessageSquare, color: 'bg-info' }
+    { key: 'blueprint', label: 'Soul Blueprint', icon: Heart, color: 'bg-purple-500' },
+    { key: 'intelligence', label: 'HACS Intelligence', icon: Brain, color: 'bg-blue-500' },
+    { key: 'memory', label: 'Memory Graph', icon: Zap, color: 'bg-yellow-500' },
+    { key: 'patterns', label: 'Behavioral Patterns', icon: TrendingUp, color: 'bg-green-500' },
+    { key: 'growth', label: 'Growth Journey', icon: Target, color: 'bg-indigo-500' },
+    { key: 'activities', label: 'Activities', icon: Activity, color: 'bg-orange-500' },
+    { key: 'goals', label: 'Goals', icon: Target, color: 'bg-red-500' },
+    { key: 'conversations', label: 'Conversations', icon: MessageSquare, color: 'bg-cyan-500' }
   ] as const;
 
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle className="font-display text-heading-lg flex items-center gap-spacing-2">
+        <CardTitle className="font-cormorant text-xl flex items-center gap-2">
           <Activity className="h-5 w-5" />
           Data Availability
         </CardTitle>
@@ -51,7 +51,7 @@ const DataAvailabilityIndicator: React.FC<DataAvailabilityIndicatorProps> = ({
         
         <Separator />
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-spacing-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {sections.map(({ key, label, icon: Icon, color }) => {
             const sectionData = availability[key];
             const isAvailable = sectionData?.available || false;
@@ -65,9 +65,9 @@ const DataAvailabilityIndicator: React.FC<DataAvailabilityIndicatorProps> = ({
                     : 'bg-muted/50 border-muted'
                 }`}
               >
-                <div className="flex items-center gap-spacing-2 mb-spacing-2">
-                  <div className={`p-spacing-1 rounded-shape-sm ${isAvailable ? color : 'bg-surface-elevated'}`}>
-                    <Icon className={`h-3 w-3 ${isAvailable ? 'text-white' : 'text-text-secondary'}`} />
+                <div className="flex items-center gap-2 mb-2">
+                  <div className={`p-1 rounded ${isAvailable ? color : 'bg-muted'}`}>
+                    <Icon className={`h-3 w-3 ${isAvailable ? 'text-white' : 'text-muted-foreground'}`} />
                   </div>
                   <span className="font-inter text-sm font-medium">{label}</span>
                 </div>
@@ -82,7 +82,7 @@ const DataAvailabilityIndicator: React.FC<DataAvailabilityIndicatorProps> = ({
                   
                   {/* Show specific metrics when available */}
                   {isAvailable && key === 'blueprint' && sectionData && 'completionPercentage' in sectionData && sectionData.completionPercentage && (
-                    <p className="text-caption-xs text-text-secondary font-body">
+                    <p className="text-xs text-muted-foreground font-inter">
                       {sectionData.completionPercentage}% complete
                     </p>
                   )}
@@ -231,42 +231,42 @@ const User360Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background p-component space-y-spacing-6">
+    <div className="min-h-screen bg-background p-4 space-y-6">
       {/* Header */}
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-spacing-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="font-display text-heading-3xl lg:text-heading-4xl">
+            <h1 className="font-cormorant text-3xl lg:text-4xl font-bold">
               360° Soul Profile
             </h1>
-            <p className="font-body text-text-secondary mt-spacing-1">
+            <p className="font-inter text-muted-foreground mt-1">
               Unified view of your complete soul data ecosystem
             </p>
           </div>
           
-          <div className="flex items-center gap-spacing-3">
+          <div className="flex items-center gap-3">
             {/* Sync Status Indicator */}
-            <div className="flex items-center gap-spacing-2">
+            <div className="flex items-center gap-2">
               {syncActive ? (
-                <div className="flex items-center gap-spacing-1 text-success">
+                <div className="flex items-center gap-1 text-green-600">
                   <Wifi className="h-4 w-4" />
-                  <span className="font-body text-caption-xs">Live Sync</span>
+                  <span className="font-inter text-xs">Live Sync</span>
                 </div>
               ) : (
-                <div className="flex items-center gap-spacing-1 text-text-secondary">
+                <div className="flex items-center gap-1 text-muted-foreground">
                   <WifiOff className="h-4 w-4" />
-                  <span className="font-body text-caption-xs">Offline</span>
+                  <span className="font-inter text-xs">Offline</span>
                 </div>
               )}
             </div>
             
             {lastRefresh && (
-              <p className="font-body text-caption-xs text-text-secondary">
+              <p className="font-inter text-xs text-muted-foreground">
                 Updated {lastRefresh.toLocaleTimeString()}
               </p>
             )}
             
-            <div className="flex gap-spacing-2">
+            <div className="flex gap-2">
               <Button 
                 onClick={refreshProfile} 
                 variant="outline" 
@@ -389,7 +389,7 @@ const User360Dashboard: React.FC = () => {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   {syncActive ? (
-                    <div className="flex items-center gap-2 text-success">
+                    <div className="flex items-center gap-2 text-green-600">
                       <Wifi className="h-5 w-5" />
                       <span className="font-cormorant text-lg font-bold">Active</span>
                     </div>

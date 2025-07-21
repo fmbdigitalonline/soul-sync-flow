@@ -5,98 +5,11 @@
 
 @layer base {
   :root {
-    /* =============================================================================
-       SEMANTIC COLOR SYSTEM - The Complete Design Dictionary
-       All colors are HSL format. Never use hardcoded colors in components.
-       ============================================================================= */
-    
-    /* ========== Primary Brand Colors (Golden Standard v3.0) ========== */
-    --color-primary: 265 82% 62%;     /* #6A4CFF - Default state for primary buttons, active links, focus rings */
-    --color-primary-dark: 265 82% 45%; /* #3F20CF - Hover/active state for primary interactive elements */
-    --color-primary-light: 265 82% 75%; /* #A390FF - Lighter accents, less-critical interactive elements */
-    --color-primary-subtle: 265 82% 95%; /* #F0ECFF - Subtle backgrounds for highlighted sections or alerts */
-    --color-text-on-brand: 0 0% 100%; /* #FFFFFF - Text that appears on top of a primary/secondary background */
-    
-    --color-secondary: 180 68% 55%;   /* #4CD9D9 - Secondary accent color */
-    
-    /* ========== Surface & Background Colors (Golden Standard v3.0) ========== */
-    --background: 0 0% 100%;          /* #FFFFFF - Default background for all cards, modals, and popovers */
-    --color-surface: 0 0% 100%;       /* #FFFFFF - Default background for all cards, modals, and popovers */
-    --color-surface-elevated: 0 0% 100%; /* #FFFFFF - Pure White elevated surfaces */
-    --color-surface-sunken: 0 0% 100%; /* #FFFFFF - Pure White sunken surfaces */
-    --color-surface-overlay: 0 0% 100%; /* #FFFFFF - Modal/overlay backgrounds */
-    
-    /* ========== Text Colors (Golden Standard v3.0) ========== */
-    --foreground: 219 24% 15%;        /* #1D232F - Main text color for headings and body copy */
-    --color-text-main: 219 24% 15%;   /* #1D232F - Main text color for headings and body copy. Never use pure black */
-    --color-text-secondary: 219 24% 35%; /* Secondary text */
-    --muted-foreground: 219 24% 45%;  /* #5C667A - Subtitles and descriptive text to create visual hierarchy */
-    --color-text-muted: 219 24% 45%;  /* #5C667A - Subtitles and descriptive text to create visual hierarchy */
-    --color-text-subtle: 219 24% 65%; /* Very subtle text */
-    --color-text-on-dark: 0 0% 100%; /* Text on dark backgrounds */
-    --color-text-disabled: 219 24% 75%; /* Disabled text */
-    
-    /* ========== Feedback Palette (Golden Standard v3.0) ========== */
-    --destructive: 0 84% 60%;         /* #F24E4E - Errors, delete actions, destructive buttons */
-    --destructive-foreground: 0 0% 100%; /* #FFFFFF - Text on top of a destructive background */
-    --color-success: 142 76% 36%;     /* #1A9F4E - Success indicators, confirmation messages */
-    --color-success-light: 142 76% 85%; /* Light green backgrounds */
-    --color-warning: 45 93% 47%;      /* #F2B81A - Warnings that require user attention */
-    --color-warning-light: 45 93% 85%; /* Light warning backgrounds */
-    --color-error: 0 84% 60%;         /* #F24E4E - Red for errors */
-    --color-error-light: 0 84% 85%;   /* Light error backgrounds */
-    --color-info: 207 90% 54%;        /* #2196F3 - Neutral, informational alerts */
-    --color-info-light: 207 90% 85%;  /* Light info backgrounds */
-    
-    /* ========== Neutral Palette (Golden Standard v3.0) ========== */
-    /* Sophisticated cool gray scale with blue undertones - the backbone of the UI */
-    --color-neutral-50: 0 0% 98%;     /* Lightest neutral */
-    --color-neutral-100: 0 0% 96%;    /* Very light neutral */
-    --color-neutral-200: 0 0% 90%;    /* Light neutral */
-    --color-neutral-300: 0 0% 83%;    /* #D4D4D4 - Disabled component backgrounds and other subtle gray uses */
-    --color-neutral-400: 0 0% 64%;    /* Medium neutral */
-    --color-neutral-500: 0 0% 45%;    /* Medium-dark neutral */
-    --color-neutral-600: 0 0% 32%;    /* Dark neutral */
-    --color-neutral-700: 0 0% 25%;    /* Darker neutral */
-    --color-neutral-800: 0 0% 15%;    /* Very dark neutral */
-    --color-neutral-900: 0 0% 9%;     /* Darkest neutral */
-    
-    /* ========== Interactive Colors ========== */
-    --color-interactive-default: var(--color-primary);
-    --color-interactive-hover: var(--color-primary-dark);
-    --color-interactive-active: var(--color-primary-dark);
-    --color-interactive-disabled: var(--color-neutral-300);
-    
-    /* ========== Border Colors (Golden Standard v3.0) ========== */
-    --border: 219 24% 85%;            /* #D0D6E2 - The default, subtle border color for cards and dividers */
-    --color-border-default: 219 24% 85%; /* #D0D6E2 - The default, subtle border color for cards and dividers */
-    --input: 219 24% 90%;             /* #E1E5EC - Border color specifically for form inputs */
-    --color-border-input: 219 24% 90%; /* #E1E5EC - Border color specifically for form inputs */
-    --color-border-muted: 219 24% 90%;   /* Muted borders */
-    --color-border-subtle: 219 24% 95%;  /* Very subtle borders */
-    --color-border-focus: var(--color-primary); /* Focus borders */
-    --color-border-error: var(--color-error); /* Error borders */
-    
-    /* ========== Shape & Elevation System (Golden Standard v3.0) ========== */
-    /* Radius */
-    --radius: 0.5rem;                 /* 8px - Default rounding for cards, modals, popovers */
-    --radius-card: 0.5rem;            /* 8px - Default rounding for cards, modals, popovers */
-    
-    /* Shadows */
-    --shadow-card: 0 1px 3px 0 hsl(219 24% 15% / 0.1), 0 1px 2px 0 hsl(219 24% 15% / 0.06); /* Default, subtle shadow for all cards */
-    --shadow-elevated: 0 4px 6px -1px hsl(219 24% 15% / 0.1), 0 2px 4px -1px hsl(219 24% 15% / 0.06); /* For elements that pop, like dropdowns */
-    --shadow-overlay: 0 10px 15px -3px hsl(219 24% 15% / 0.1), 0 4px 6px -2px hsl(219 24% 15% / 0.05); /* For modals and dialogs */
-    
-    /* Legacy shadow colors (for compatibility) */
-    --color-shadow-default: 219 24% 15% / 0.1; /* Default shadow */
-    --color-shadow-elevated: 219 24% 15% / 0.15; /* Elevated shadow */
-    --color-shadow-primary: var(--color-primary) / 0.2; /* Primary color shadow */
-    
-    /* Legacy Brand Colors (mapped to semantic tokens) */
-    --soul-purple: var(--color-primary);
-    --soul-teal: var(--color-secondary);
-    --soul-ivory: var(--color-surface);
-    --soul-black: var(--color-text-main);
+    /* Soul Guide Brand Colors */
+    --soul-purple: 265 82% 62%; /* #7C3AED */
+    --soul-teal: 180 68% 55%; /* #22D3EE */
+    --soul-ivory: 32 28% 98%; /* #FCF8F6 */
+    --soul-black: 219 24% 15%; /* #1A1F2C */
 
     --background: 0 0% 100%; /* Pure White */
     --foreground: 219 24% 15%; /* soul-black #1A1F2C */
@@ -107,11 +20,11 @@
     --popover: 0 0% 100%;
     --popover-foreground: 219 24% 15%;
 
-    --primary: var(--color-primary);
-    --primary-foreground: var(--color-text-on-brand);
+    --primary: 265 82% 62%; /* soul-purple */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: var(--color-secondary);
-    --secondary-foreground: var(--color-text-on-brand);
+    --secondary: 180 68% 55%; /* soul-teal */
+    --secondary-foreground: 0 0% 100%;
 
     --muted: 32 28% 95%;
     --muted-foreground: 219 24% 45%;
@@ -135,12 +48,7 @@
     --chart-4: 219 24% 60%;
     --chart-5: 0 84% 60%;
 
-    /* ========== Typography System (Golden Standard v3.0) ========== */
-    /* Two-font system balances elegance with readability */
-    --font-display: 'Cormorant Garamond', Georgia, 'Times New Roman', serif; /* For major headings and large numbers */
-    --font-body: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; /* For all UI text, labels, paragraphs, and buttons */
-    
-    /* Font system variables (legacy compatibility) */
+    /* Font system variables */
     --font-inter: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     --font-cormorant: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
     --font-ui: 'IBM Plex Sans', 'Inter', sans-serif;
@@ -148,38 +56,6 @@
   }
 
   .dark {
-    /* ========== Dark Mode Color Overrides ========== */
-    /* Surface & Background Colors */
-    --color-surface: 219 24% 10%;
-    --color-surface-elevated: 219 24% 12%;
-    --color-surface-sunken: 219 24% 8%;
-    --color-surface-overlay: 219 24% 15%;
-    
-    /* Text Colors */
-    --color-text-main: 0 0% 98%;
-    --color-text-secondary: 0 0% 85%;
-    --color-text-muted: 0 0% 65%;
-    --color-text-subtle: 0 0% 45%;
-    --color-text-disabled: 0 0% 35%;
-    
-    /* Border Colors */
-    --color-border-default: 219 24% 20%;
-    --color-border-muted: 219 24% 15%;
-    --color-border-subtle: 219 24% 12%;
-    
-    /* Neutral Colors (dark mode adjusted) */
-    --color-neutral-50: 219 24% 8%;
-    --color-neutral-100: 219 24% 10%;
-    --color-neutral-200: 219 24% 15%;
-    --color-neutral-300: 219 24% 25%;
-    --color-neutral-400: 219 24% 35%;
-    --color-neutral-500: 219 24% 45%;
-    --color-neutral-600: 219 24% 55%;
-    --color-neutral-700: 219 24% 65%;
-    --color-neutral-800: 219 24% 75%;
-    --color-neutral-900: 219 24% 85%;
-
-    /* Legacy shadcn/ui tokens */
     --background: 219 24% 8%;
     --foreground: 0 0% 98%;
 
@@ -228,7 +104,9 @@
     line-height: 1.6;
   }
   
-  /* Legacy font-display definition - now correctly using display font */
+  .font-display {
+    font-family: var(--font-inter);
+  }
 
   /* Typography hierarchy with new font system */
   h1, h2, h3, h4, h5, h6 {
@@ -285,101 +163,19 @@
 }
 
 @layer components {
-  /* =====================================================================
-     SEMANTIC COMPONENT UTILITIES - Use these instead of hardcoded styles
-     ===================================================================== */
-  
-  /* Card Components */
   .cosmic-card {
     @apply bg-card border border-border rounded-3xl transition-colors duration-300 hover:bg-accent/5;
   }
   
-  .card-elevated {
-    @apply bg-surface-elevated border border-border-muted rounded-lg shadow-lg;
-  }
-  
-  .card-interactive {
-    @apply bg-card border border-border-default rounded-lg transition-colors hover:bg-surface-elevated cursor-pointer;
-  }
-  
-  /* Background Utilities */
   .cosmic-bg {
-    background: linear-gradient(135deg, hsl(var(--color-primary)) 0%, hsl(var(--color-secondary)) 100%);
+    background: linear-gradient(135deg, hsl(var(--soul-purple)) 0%, hsl(var(--soul-teal)) 100%);
   }
   
-  .bg-surface-main {
-    @apply bg-surface;
-  }
-  
-  .bg-surface-raised {
-    @apply bg-surface-elevated;
-  }
-  
-  .bg-surface-lowered {
-    @apply bg-surface-sunken;
-  }
-  
-  /* Text Utilities */
   .gradient-text {
-    background: linear-gradient(135deg, hsl(var(--color-primary)) 0%, hsl(var(--color-secondary)) 100%);
+    background: linear-gradient(135deg, hsl(var(--soul-purple)) 0%, hsl(var(--soul-teal)) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-  }
-  
-  .text-primary-content {
-    @apply text-text-main;
-  }
-  
-  .text-secondary-content {
-    @apply text-text-secondary;
-  }
-  
-  .text-muted-content {
-    @apply text-text-muted;
-  }
-  
-  .text-subtle-content {
-    @apply text-text-subtle;
-  }
-
-  /* Semantic gradient utilities */
-  .bg-gradient-brand {
-    background: linear-gradient(135deg, hsl(var(--color-primary)) 0%, hsl(var(--color-secondary)) 100%);
-  }
-  
-  .bg-gradient-surface {
-    background: linear-gradient(135deg, hsl(var(--color-surface)) 0%, hsl(var(--color-surface-elevated)) 100%);
-  }
-  
-  /* Interactive States */
-  .interactive-element {
-    @apply transition-colors duration-200 hover:bg-surface-elevated focus:bg-surface-elevated active:bg-surface-sunken;
-  }
-  
-  .button-primary {
-    @apply bg-primary text-primary-foreground hover:bg-primary-dark transition-colors;
-  }
-  
-  .button-secondary {
-    @apply bg-secondary text-secondary-foreground hover:bg-secondary-dark transition-colors;
-  }
-  
-  /* State Utilities */
-  .state-success {
-    @apply bg-success-light text-success border border-success;
-  }
-  
-  .state-warning {
-    @apply bg-warning-light text-warning border border-warning;
-  }
-  
-  .state-error {
-    @apply bg-error-light text-error border border-error;
-  }
-  
-  .state-info {
-    @apply bg-info-light text-info border border-info;
   }
 
   .mobile-container {
@@ -398,15 +194,6 @@
     font-family: var(--font-focus);
   }
 
-  /* ========== Semantic Font System Utilities (Golden Standard) ========== */
-  .font-display {
-    font-family: var(--font-display); /* Major headings and large numbers */
-  }
-
-  .font-body {
-    font-family: var(--font-body); /* All other text, labels, body copy, navigation */
-  }
-
   /* Font utility classes for the new system */
   .font-inter {
     font-family: var(--font-inter);
@@ -422,134 +209,7 @@
     font-weight: 700;
   }
 
-  /* =====================================================================
-     SEMANTIC TYPOGRAPHY UTILITIES - Use these instead of hardcoded sizes
-     ===================================================================== */
-  
-  /* Semantic Heading Utilities - Fixed circular dependencies */
-  .text-heading-xs {
-    font-size: 16px;
-    line-height: 1.3;
-    font-weight: 600;
-    font-family: var(--font-cormorant);
-    color: hsl(var(--color-text-main));
-  }
-  
-  .text-heading-sm {
-    font-size: 18px;
-    line-height: 1.3;
-    font-weight: 600;
-    font-family: var(--font-cormorant);
-    color: hsl(var(--color-text-main));
-  }
-  
-  .text-heading-md {
-    font-size: 20px;
-    line-height: 1.4;
-    font-weight: 500;
-    font-family: var(--font-cormorant);
-    color: hsl(var(--color-text-main));
-  }
-  
-  .text-heading-lg {
-    font-size: 24px;
-    line-height: 1.3;
-    font-weight: 600;
-    font-family: var(--font-cormorant);
-    color: hsl(var(--color-text-main));
-  }
-  
-  .text-heading-xl {
-    font-size: 28px;
-    line-height: 1.2;
-    font-weight: 700;
-    font-family: var(--font-cormorant);
-    color: hsl(var(--color-text-main));
-  }
-  
-  .text-heading-2xl {
-    font-size: 32px;
-    line-height: 1.2;
-    font-weight: 700;
-    font-family: var(--font-cormorant);
-    color: hsl(var(--color-text-main));
-  }
-  
-  /* Semantic Body Text Utilities - Fixed circular dependencies */
-  .text-body-xs {
-    font-size: 10px;
-    line-height: 1.2;
-    font-weight: 300;
-    font-family: var(--font-inter);
-    color: hsl(var(--color-text-main));
-  }
-  
-  .text-body-sm {
-    font-size: 12px;
-    line-height: 1.4;
-    font-weight: 300;
-    font-family: var(--font-inter);
-    color: hsl(var(--color-text-main));
-  }
-  
-  .text-body-base {
-    font-size: 14px;
-    line-height: 1.5;
-    font-weight: 400;
-    font-family: var(--font-inter);
-    color: hsl(var(--color-text-main));
-  }
-  
-  .text-body-md {
-    font-size: 16px;
-    line-height: 1.6;
-    font-weight: 400;
-    font-family: var(--font-inter);
-    color: hsl(var(--color-text-main));
-  }
-  
-  .text-body-lg {
-    font-size: 18px;
-    line-height: 1.6;
-    font-weight: 400;
-    font-family: var(--font-inter);
-    color: hsl(var(--color-text-main));
-  }
-  
-  /* Semantic Caption/Label Utilities - Fixed circular dependencies */
-  .text-caption-xs {
-    font-size: 10px;
-    line-height: 1.2;
-    font-weight: 300;
-    font-family: var(--font-inter);
-    color: hsl(var(--color-text-muted));
-  }
-  
-  .text-caption-sm {
-    font-size: 12px;
-    line-height: 1.4;
-    font-weight: 300;
-    font-family: var(--font-inter);
-    color: hsl(var(--color-text-muted));
-  }
-  
-  .text-label-sm {
-    font-size: 12px;
-    line-height: 1.4;
-    font-weight: 500;
-    font-family: var(--font-inter);
-    color: hsl(var(--color-text-main));
-  }
-  
-  .text-label-md {
-    font-size: 14px;
-    line-height: 1.4;
-    font-weight: 500;
-    font-family: var(--font-inter);
-    color: hsl(var(--color-text-main));
-  }
-  
-  /* Legacy Typography (preserved for backward compatibility) */
+  /* Typography scale utilities */
   .text-heading {
     font-size: 32px;
     line-height: 1.2;
@@ -573,69 +233,6 @@
     line-height: 1.4;
     font-weight: 300;
   }
-  
-  /* =====================================================================
-     SEMANTIC SPACING UTILITIES - Use these instead of hardcoded spacing
-     ===================================================================== */
-  
-  /* Margin Utilities - Fixed circular dependencies */
-  .margin-xs { margin: 4px; }
-  .margin-sm { margin: 8px; }
-  .margin-md { margin: 16px; }
-  .margin-lg { margin: 24px; }
-  .margin-xl { margin: 32px; }
-  
-  .margin-bottom-xs { margin-bottom: 4px; }
-  .margin-bottom-sm { margin-bottom: 8px; }
-  .margin-bottom-md { margin-bottom: 16px; }
-  .margin-bottom-lg { margin-bottom: 24px; }
-  .margin-bottom-xl { margin-bottom: 32px; }
-  
-  /* Padding Utilities - Fixed circular dependencies */
-  .padding-xs { padding: 4px; }
-  .padding-sm { padding: 8px; }
-  .padding-md { padding: 16px; }
-  .padding-lg { padding: 24px; }
-  .padding-xl { padding: 32px; }
-  
-  /* Component Spacing - Fixed circular dependencies */
-  .component-spacing-xs { padding: 2px; }
-  .component-spacing-sm { padding: 6px; }
-  .component-spacing-md { padding: 12px; }
-  .component-spacing-lg { padding: 20px; }
-  .component-spacing-xl { padding: 28px; }
-  
-  /* Layout Spacing - Fixed circular dependencies */
-  .layout-spacing-xs { padding: 16px; }
-  .layout-spacing-sm { padding: 24px; }
-  .layout-spacing-md { padding: 32px; }
-  .layout-spacing-lg { padding: 48px; }
-  .layout-spacing-xl { padding: 64px; }
-  
-  /* =====================================================================
-     SEMANTIC SHAPE & ELEVATION UTILITIES - Use these instead of hardcoded values
-     ===================================================================== */
-  
-  /* Border Radius Utilities */
-  .radius-none { border-radius: 0; }
-  .radius-sm { border-radius: 2px; }
-  .radius-default { border-radius: var(--radius); }
-  .radius-md { border-radius: calc(var(--radius) - 2px); }
-  .radius-lg { border-radius: calc(var(--radius) + 4px); }
-  .radius-xl { border-radius: calc(var(--radius) + 8px); }
-  .radius-full { border-radius: 9999px; }
-  
-  /* Component-specific radius */
-  .radius-card { border-radius: var(--radius); }
-  .radius-button { border-radius: calc(var(--radius) - 2px); }
-  .radius-input { border-radius: calc(var(--radius) - 2px); }
-  .radius-badge { border-radius: calc(var(--radius) - 4px); }
-  
-  /* Shadow Utilities */
-  .shadow-card { box-shadow: 0 1px 3px 0 hsl(var(--color-shadow-default)); }
-  .shadow-card-hover { box-shadow: 0 4px 6px -1px hsl(var(--color-shadow-default)); }
-  .shadow-overlay { box-shadow: 0 10px 15px -3px hsl(var(--color-shadow-elevated)); }
-  .shadow-primary { box-shadow: 0 4px 6px -1px hsl(var(--color-shadow-primary)); }
 }
 
 @keyframes float {

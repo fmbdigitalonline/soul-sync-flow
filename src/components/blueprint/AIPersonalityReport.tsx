@@ -89,7 +89,7 @@ export const AIPersonalityReport: React.FC<AIPersonalityReportProps> = ({
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-soul-purple" />
         <span className="ml-2">Loading your reading...</span>
       </div>
     );
@@ -110,7 +110,7 @@ export const AIPersonalityReport: React.FC<AIPersonalityReportProps> = ({
           </Button>
         </div>
         
-        <FileText className="h-16 w-16 text-primary mx-auto mb-4" />
+        <FileText className="h-16 w-16 text-soul-purple mx-auto mb-4" />
         <h2 className="text-2xl font-bold mb-4 gradient-text">
           Generate Your Comprehensive Reading
         </h2>
@@ -121,7 +121,7 @@ export const AIPersonalityReport: React.FC<AIPersonalityReportProps> = ({
         <Button
           onClick={generateReport}
           disabled={generating}
-          className="bg-primary hover:bg-primary/90"
+          className="bg-soul-purple hover:bg-soul-purple/90"
           size="lg"
         >
           {generating ? (
@@ -187,7 +187,7 @@ export const AIPersonalityReport: React.FC<AIPersonalityReportProps> = ({
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-primary" />
+                <Sparkles className="h-5 w-5 text-soul-purple" />
                 Your Core Personality Pattern
               </CardTitle>
             </CardHeader>
@@ -232,9 +232,9 @@ export const AIPersonalityReport: React.FC<AIPersonalityReportProps> = ({
             </CardContent>
           </Card>
 
-          <Card className="border-primary/20">
+          <Card className="border-soul-purple/20">
             <CardHeader>
-              <CardTitle className="text-primary">Integrated Summary</CardTitle>
+              <CardTitle className="text-soul-purple">Integrated Summary</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="whitespace-pre-wrap text-lg">{report.report_content.integrated_summary}</p>

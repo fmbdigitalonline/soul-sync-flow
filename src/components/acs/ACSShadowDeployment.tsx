@@ -128,7 +128,7 @@ const ACSShadowDeployment: React.FC = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <Activity className="w-5 h-5 text-primary" />
+            <Activity className="w-5 h-5 text-blue-600" />
             <span>ACS Shadow Deployment</span>
             <Badge variant={isEnabled ? "default" : "secondary"}>
               {isEnabled ? "Active" : "Inactive"}
@@ -144,8 +144,8 @@ const ACSShadowDeployment: React.FC = () => {
           
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-cormorant font-medium">Deployment Control</h3>
-              <p className="text-sm font-inter text-muted-foreground">Manage ACS shadow deployment settings</p>
+              <h3 className="font-medium">Deployment Control</h3>
+              <p className="text-sm text-gray-600">Manage ACS shadow deployment settings</p>
             </div>
             <div className="flex space-x-2">
               {!isEnabled ? (
@@ -172,18 +172,18 @@ const ACSShadowDeployment: React.FC = () => {
           {isEnabled && (
             <div className="grid grid-cols-3 gap-4 pt-4 border-t">
               <div className="text-center">
-                <div className="text-2xl font-bold font-cormorant text-primary">{deploymentHours}h</div>
-                <div className="text-sm font-inter text-muted-foreground">Running Time</div>
+                <div className="text-2xl font-bold text-blue-600">{deploymentHours}h</div>
+                <div className="text-sm text-gray-600">Running Time</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold font-cormorant text-emerald-600 dark:text-emerald-400">{trafficPercentage}%</div>
-                <div className="text-sm font-inter text-muted-foreground">Traffic Split</div>
+                <div className="text-2xl font-bold text-green-600">{trafficPercentage}%</div>
+                <div className="text-sm text-gray-600">Traffic Split</div>
               </div>
               <div className="text-center">
-                <div className={`text-2xl font-bold font-cormorant text-${health.color}-600 dark:text-${health.color}-400 capitalize`}>
+                <div className={`text-2xl font-bold text-${health.color}-600 capitalize`}>
                   {health.status}
                 </div>
-                <div className="text-sm font-inter text-muted-foreground">Health Status</div>
+                <div className="text-sm text-gray-600">Health Status</div>
               </div>
             </div>
           )}
@@ -222,7 +222,7 @@ const ACSShadowDeployment: React.FC = () => {
                   value={Math.max(0, 100 - (metrics.p95Latency / 30))} 
                   className="h-2" 
                 />
-                <div className="text-xs font-inter text-muted-foreground">
+                <div className="text-xs text-gray-500">
                   Target: &lt; 3000ms
                 </div>
               </div>
@@ -236,7 +236,7 @@ const ACSShadowDeployment: React.FC = () => {
                   value={Math.max(0, 100 - (metrics.fallbackRate * 20))} 
                   className="h-2" 
                 />
-                <div className="text-xs font-inter text-muted-foreground">
+                <div className="text-xs text-gray-500">
                   Target: &lt; 2%
                 </div>
               </div>
@@ -256,12 +256,12 @@ const ACSShadowDeployment: React.FC = () => {
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <div className="text-2xl font-bold font-cormorant">{metrics.totalSessions}</div>
-                  <div className="text-sm font-inter text-muted-foreground">Total Sessions</div>
+                  <div className="text-2xl font-bold">{metrics.totalSessions}</div>
+                  <div className="text-sm text-gray-600">Total Sessions</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold font-cormorant text-primary">{metrics.acsEnabledSessions}</div>
-                  <div className="text-sm font-inter text-muted-foreground">ACS Sessions</div>
+                  <div className="text-2xl font-bold text-blue-600">{metrics.acsEnabledSessions}</div>
+                  <div className="text-sm text-gray-600">ACS Sessions</div>
                 </div>
               </div>
 
@@ -271,7 +271,7 @@ const ACSShadowDeployment: React.FC = () => {
                   <span>{metrics.interventionRate.toFixed(1)}%</span>
                 </div>
                 <Progress value={metrics.interventionRate} className="h-2" />
-                <div className="text-xs font-inter text-muted-foreground">
+                <div className="text-xs text-gray-500">
                   How often ACS adapts responses
                 </div>
               </div>
@@ -282,7 +282,7 @@ const ACSShadowDeployment: React.FC = () => {
                   <span>{metrics.userSatisfaction.toFixed(1)}/5.0</span>
                 </div>
                 <Progress value={(metrics.userSatisfaction / 5) * 100} className="h-2" />
-                <div className="text-xs font-inter text-muted-foreground">
+                <div className="text-xs text-gray-500">
                   Based on user feedback
                 </div>
               </div>
@@ -310,11 +310,11 @@ const ACSShadowDeployment: React.FC = () => {
             ].map((check, index) => (
               <div key={index} className="flex items-center space-x-3">
                 {check.status ? (
-                  <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                  <CheckCircle className="w-5 h-5 text-green-600" />
                 ) : (
-                  <Clock className="w-5 h-5 text-muted-foreground" />
+                  <Clock className="w-5 h-5 text-gray-400" />
                 )}
-                <span className={check.status ? "text-emerald-700 dark:text-emerald-300 font-inter" : "text-muted-foreground font-inter"}>
+                <span className={check.status ? "text-green-700" : "text-gray-600"}>
                   {check.item}
                 </span>
               </div>
@@ -322,14 +322,14 @@ const ACSShadowDeployment: React.FC = () => {
           </div>
           
           {deploymentHours >= 48 && trafficPercentage >= 10 && metrics.successRate > 95 && (
-            <div className="mt-6 p-4 bg-emerald-50 dark:bg-emerald-950/20 rounded-lg border border-emerald-200 dark:border-emerald-800">
+            <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
               <div className="flex items-center space-x-2">
-                <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                <span className="font-cormorant font-medium text-emerald-800 dark:text-emerald-200">
+                <CheckCircle className="w-5 h-5 text-green-600" />
+                <span className="font-medium text-green-800">
                   Ready for full production deployment!
                 </span>
               </div>
-              <p className="text-sm font-inter text-emerald-700 dark:text-emerald-300 mt-1">
+              <p className="text-sm text-green-700 mt-1">
                 All criteria met. ACS can be rolled out to 100% of users.
               </p>
             </div>

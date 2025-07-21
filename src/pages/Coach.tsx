@@ -1,6 +1,6 @@
 
 import React, { useRef, useEffect, useState } from "react";
-
+import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
 import { Sparkles, MessageCircle, RotateCcw, Zap } from "lucide-react";
@@ -61,23 +61,25 @@ const Coach = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-component">
-        <CosmicCard className="w-full max-w-md text-center space-y-spacing-6">
-          <div className="w-16 h-16 mx-auto bg-gradient-primary rounded-shape-full flex items-center justify-center">
-            <MessageCircle className="h-8 w-8 text-text-inverse" />
-          </div>
-          <div>
-            <h1 className="text-heading-2xl font-bold text-text-main mb-spacing-2">Soul Companion</h1>
-            <p className="text-text-secondary">Your personal Soul companion for integrated support and guidance.</p>
-          </div>
-          <Button 
-            className="w-full"
-            onClick={() => window.location.href = '/auth'}
-          >
-            Get Started
-          </Button>
-        </CosmicCard>
-      </div>
+      <MainLayout>
+        <div className="min-h-screen bg-background flex items-center justify-center p-4">
+          <CosmicCard className="w-full max-w-md text-center space-y-6">
+            <div className="w-16 h-16 mx-auto bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center">
+              <MessageCircle className="h-8 w-8 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground mb-2">Soul Companion</h1>
+              <p className="text-muted-foreground">Your personal Soul companion for integrated support and guidance.</p>
+            </div>
+            <Button 
+              className="w-full"
+              onClick={() => window.location.href = '/auth'}
+            >
+              Get Started
+            </Button>
+          </CosmicCard>
+        </div>
+      </MainLayout>
     );
   }
 
@@ -120,7 +122,7 @@ const Coach = () => {
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span>Blueprint:</span>
-            <span className={hasBlueprint ? "text-status-success" : "text-status-warning"}>
+            <span className={hasBlueprint ? "text-green-600" : "text-amber-600"}>
               {hasBlueprint ? "Ready" : "Partial"}
             </span>
           </div>
@@ -130,7 +132,7 @@ const Coach = () => {
           </div>
           <div className="flex justify-between">
             <span>HACS:</span>
-            <span className="text-accent">Pure Intelligence</span>
+            <span className="text-blue-600">Pure Intelligence</span>
           </div>
         </div>
       </CosmicCard>
@@ -138,15 +140,15 @@ const Coach = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background">
+    <MainLayout>
       <div className="min-h-screen bg-background">
         <div className="container mx-auto py-6 px-4 max-w-6xl">
           
           <div className="text-center mb-6">
-            <h1 className="text-heading-3xl font-bold gradient-text mb-spacing-2">
+            <h1 className="text-3xl font-bold gradient-text mb-2">
               Soul Companion
             </h1>
-            <p className="text-text-secondary">
+            <p className="text-muted-foreground">
               Your integrated Soul companion combining coaching and guidance
             </p>
           </div>
@@ -175,7 +177,7 @@ const Coach = () => {
           )}
         </div>
       </div>
-    </div>
+    </MainLayout>
   );
 };
 

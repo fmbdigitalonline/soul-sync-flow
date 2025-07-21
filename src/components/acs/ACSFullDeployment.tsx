@@ -117,7 +117,7 @@ const ACSFullDeployment: React.FC = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <Rocket className="w-5 h-5 text-primary" />
+            <Rocket className="w-5 h-5 text-blue-600" />
             <span>ACS Full Production Deployment</span>
             <Badge variant={status.isEnabled ? "default" : "secondary"}>
               {status.isEnabled ? "Live - 100% Traffic" : "Inactive"}
@@ -128,12 +128,12 @@ const ACSFullDeployment: React.FC = () => {
           
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-cormorant font-medium">Production Deployment Control</h3>
-              <p className="text-sm font-inter text-muted-foreground">Deploy ACS to 100% of users immediately</p>
+              <h3 className="font-medium">Production Deployment Control</h3>
+              <p className="text-sm text-gray-600">Deploy ACS to 100% of users immediately</p>
             </div>
             <div className="flex space-x-2">
               {!status.isEnabled ? (
-                <Button onClick={handleFullDeployment} className="bg-emerald-600 hover:bg-emerald-700">
+                <Button onClick={handleFullDeployment} className="bg-green-600 hover:bg-green-700">
                   <Rocket className="w-4 h-4 mr-2" />
                   Deploy to Production
                 </Button>
@@ -149,22 +149,22 @@ const ACSFullDeployment: React.FC = () => {
           {status.isEnabled && (
             <div className="grid grid-cols-4 gap-4 pt-4 border-t">
               <div className="text-center">
-                <div className="text-2xl font-bold font-cormorant text-primary">{deploymentHours}h</div>
-                <div className="text-sm font-inter text-muted-foreground">Uptime</div>
+                <div className="text-2xl font-bold text-blue-600">{deploymentHours}h</div>
+                <div className="text-sm text-gray-600">Uptime</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold font-cormorant text-emerald-600 dark:text-emerald-400">100%</div>
-                <div className="text-sm font-inter text-muted-foreground">Traffic</div>
+                <div className="text-2xl font-bold text-green-600">100%</div>
+                <div className="text-sm text-gray-600">Traffic</div>
               </div>
               <div className="text-center">
-                <div className={`text-2xl font-bold font-cormorant text-${health.color}-600 dark:text-${health.color}-400 capitalize`}>
+                <div className={`text-2xl font-bold text-${health.color}-600 capitalize`}>
                   {health.status}
                 </div>
-                <div className="text-sm font-inter text-muted-foreground">Health</div>
+                <div className="text-sm text-gray-600">Health</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold font-cormorant text-purple-600 dark:text-purple-400">{metrics.uptime.toFixed(1)}%</div>
-                <div className="text-sm font-inter text-muted-foreground">Uptime</div>
+                <div className="text-2xl font-bold text-purple-600">{metrics.uptime.toFixed(1)}%</div>
+                <div className="text-sm text-gray-600">Uptime</div>
               </div>
             </div>
           )}
@@ -182,7 +182,7 @@ const ACSFullDeployment: React.FC = () => {
               <CardTitle className="flex items-center space-x-2">
                 <BarChart3 className="w-4 h-4" />
                 <span>Performance Metrics</span>
-                <Badge variant="outline" className="bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800">Live</Badge>
+                <Badge variant="outline" className="bg-green-50">Live</Badge>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -237,19 +237,19 @@ const ACSFullDeployment: React.FC = () => {
               <CardTitle className="flex items-center space-x-2">
                 <Users className="w-4 h-4" />
                 <span>Usage & Satisfaction</span>
-                <Badge variant="outline" className="bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800">Real-time</Badge>
+                <Badge variant="outline" className="bg-blue-50">Real-time</Badge>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <div className="text-2xl font-bold font-cormorant">{metrics.totalSessions}</div>
-                  <div className="text-sm font-inter text-muted-foreground">Total Sessions</div>
+                  <div className="text-2xl font-bold">{metrics.totalSessions}</div>
+                  <div className="text-sm text-gray-600">Total Sessions</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold font-cormorant text-primary">{status.interventionsCount}</div>
-                  <div className="text-sm font-inter text-muted-foreground">Live Adaptations</div>
+                  <div className="text-2xl font-bold text-blue-600">{status.interventionsCount}</div>
+                  <div className="text-sm text-gray-600">Live Adaptations</div>
                 </div>
               </div>
 
@@ -259,7 +259,7 @@ const ACSFullDeployment: React.FC = () => {
                   <span>{metrics.interventionRate.toFixed(1)}%</span>
                 </div>
                 <Progress value={metrics.interventionRate} className="h-2" />
-                <div className="text-xs font-inter text-muted-foreground">
+                <div className="text-xs text-gray-500">
                   How often ACS adapts responses
                 </div>
               </div>
@@ -270,7 +270,7 @@ const ACSFullDeployment: React.FC = () => {
                   <span>{metrics.userSatisfaction.toFixed(1)}/5.0</span>
                 </div>
                 <Progress value={(metrics.userSatisfaction / 5) * 100} className="h-2" />
-                <div className="text-xs font-inter text-muted-foreground">
+                <div className="text-xs text-gray-500">
                   Based on user feedback
                 </div>
               </div>
@@ -298,12 +298,12 @@ const ACSFullDeployment: React.FC = () => {
               const IconComponent = check.icon;
               return (
                 <div key={index} className="flex items-center space-x-3">
-                  <IconComponent className={`w-5 h-5 ${check.status ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}`} />
-                  <span className={check.status ? "text-emerald-700 dark:text-emerald-300 font-inter" : "text-muted-foreground font-inter"}>
+                  <IconComponent className={`w-5 h-5 ${check.status ? 'text-green-600' : 'text-gray-400'}`} />
+                  <span className={check.status ? "text-green-700" : "text-gray-600"}>
                     {check.item}
                   </span>
                   {check.status && (
-                    <Badge variant="outline" className="ml-auto bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800">
+                    <Badge variant="outline" className="ml-auto bg-green-50 text-green-700">
                       Active
                     </Badge>
                   )}
@@ -313,14 +313,14 @@ const ACSFullDeployment: React.FC = () => {
           </div>
           
           {status.isEnabled && (
-            <div className="mt-6 p-4 bg-emerald-50 dark:bg-emerald-950/20 rounded-lg border border-emerald-200 dark:border-emerald-800">
+            <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
               <div className="flex items-center space-x-2">
-                <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                <span className="font-cormorant font-medium text-emerald-800 dark:text-emerald-200">
+                <CheckCircle className="w-5 h-5 text-green-600" />
+                <span className="font-medium text-green-800">
                   🚀 ACS is live in production!
                 </span>
               </div>
-              <p className="text-sm font-inter text-emerald-700 dark:text-emerald-300 mt-1">
+              <p className="text-sm text-green-700 mt-1">
                 Serving 100% of users with adaptive context-aware responses. All systems operational.
               </p>
             </div>

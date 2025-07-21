@@ -83,7 +83,7 @@ export const PIEContextualInsights: React.FC<PIEContextualInsightsProps> = ({
       <div className="space-y-3">
         {[...Array(2)].map((_, i) => (
           <div key={i} className="animate-pulse">
-            <div className="h-20 bg-muted rounded-lg"></div>
+            <div className="h-20 bg-gray-200 rounded-lg"></div>
           </div>
         ))}
       </div>

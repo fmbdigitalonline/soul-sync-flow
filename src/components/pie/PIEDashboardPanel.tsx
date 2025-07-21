@@ -54,19 +54,19 @@ export const PIEDashboardPanel: React.FC = () => {
 
   const getPriorityIcon = (priority: string) => {
     switch (priority) {
-      case 'critical': return <Star className="w-4 h-4 text-destructive" />;
-      case 'high': return <TrendingUp className="w-4 h-4 text-warning" />;
-      case 'medium': return <Brain className="w-4 h-4 text-secondary" />;
-      default: return <Sparkles className="w-4 h-4 text-muted-foreground" />;
+      case 'critical': return <Star className="w-4 h-4 text-red-500" />;
+      case 'high': return <TrendingUp className="w-4 h-4 text-orange-500" />;
+      case 'medium': return <Brain className="w-4 h-4 text-blue-500" />;
+      default: return <Sparkles className="w-4 h-4 text-gray-500" />;
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'critical': return 'bg-destructive/10 text-destructive';
-      case 'high': return 'bg-warning/10 text-warning';
-      case 'medium': return 'bg-secondary/10 text-secondary';
-      default: return 'bg-muted text-muted-foreground';
+      case 'critical': return 'bg-red-100 text-red-800';
+      case 'high': return 'bg-orange-100 text-orange-800';
+      case 'medium': return 'bg-blue-100 text-blue-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -74,8 +74,8 @@ export const PIEDashboardPanel: React.FC = () => {
     return (
       <Card className="p-4">
         <div className="flex items-center space-x-2">
-          <Brain className="w-5 h-5 animate-pulse text-primary" />
-          <span className="font-inter text-muted-foreground">Loading PIE insights...</span>
+          <Brain className="w-5 h-5 animate-pulse" />
+          <span>Loading PIE insights...</span>
         </div>
       </Card>
     );
@@ -85,8 +85,8 @@ export const PIEDashboardPanel: React.FC = () => {
     <Card className="p-4">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-2">
-          <Brain className="w-5 h-5 text-primary" />
-          <h3 className="font-semibold font-cormorant text-foreground">AI Insights (PIE)</h3>
+          <Brain className="w-5 h-5 text-purple-600" />
+          <h3 className="font-semibold">AI Insights (PIE)</h3>
           <Badge variant={pieHealth?.enabled ? "default" : "secondary"}>
             {pieHealth?.enabled ? "Active" : "Inactive"}
           </Badge>
@@ -97,16 +97,16 @@ export const PIEDashboardPanel: React.FC = () => {
       </div>
 
       {insights.length === 0 ? (
-        <div className="text-center py-6 text-muted-foreground">
-          <Brain className="w-12 h-12 mx-auto mb-2 text-muted-foreground/50" />
-          <p className="text-sm font-inter">Building your personalized insights...</p>
-          <p className="text-xs mt-1 font-inter">Keep using the app to unlock AI-powered patterns!</p>
+        <div className="text-center py-6 text-gray-500">
+          <Brain className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+          <p className="text-sm">Building your personalized insights...</p>
+          <p className="text-xs mt-1">Keep using the app to unlock AI-powered patterns!</p>
         </div>
       ) : (
         <ScrollArea className="h-64">
           <div className="space-y-3">
             {insights.map((insight) => (
-              <div key={insight.id} className="border rounded-lg p-3 bg-gradient-subtle">
+              <div key={insight.id} className="border rounded-lg p-3 bg-gradient-to-r from-purple-50 to-blue-50">
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex items-center space-x-2">
                     {getPriorityIcon(insight.priority)}
@@ -119,11 +119,11 @@ export const PIEDashboardPanel: React.FC = () => {
                   </Badge>
                 </div>
                 
-                <h4 className="font-medium text-sm mb-1 font-cormorant text-foreground">{insight.title}</h4>
-                <p className="text-xs text-muted-foreground mb-3 font-inter">{insight.message}</p>
+                <h4 className="font-medium text-sm mb-1">{insight.title}</h4>
+                <p className="text-xs text-gray-600 mb-3">{insight.message}</p>
                 
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground font-inter">
+                  <span className="text-xs text-gray-500">
                     {insight.insightType} • {new Date(insight.triggerTime).toLocaleDateString()}
                   </span>
                   <div className="flex space-x-1">
@@ -153,7 +153,7 @@ export const PIEDashboardPanel: React.FC = () => {
 
       {pieHealth && (
         <div className="mt-4 pt-3 border-t">
-          <div className="flex items-center justify-between text-xs text-muted-foreground font-inter">
+          <div className="flex items-center justify-between text-xs text-gray-500">
             <span>Patterns: {pieHealth.patternDetectionActive ? '✅' : '❌'}</span>
             <span>Data: {pieHealth.dataCollectionActive ? '✅' : '❌'}</span>
             <span>Scheduling: {pieHealth.schedulingActive ? '✅' : '❌'}</span>

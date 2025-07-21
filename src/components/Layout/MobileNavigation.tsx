@@ -9,19 +9,12 @@ import {
   Star,
   User
 } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
 
 const MobileNavigation: React.FC = () => {
-  const { user } = useAuth();
   const { t } = useLanguage();
   const location = useLocation();
-
-  // Only show navigation if user is authenticated
-  if (!user) {
-    return null;
-  }
 
   const navItems = [
     { to: "/", icon: Home, label: t('nav.home') },
@@ -42,7 +35,7 @@ const MobileNavigation: React.FC = () => {
 
   return (
     <div 
-      className="md:hidden fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-lg border-t border-border-default px-spacing-2 py-spacing-2 shadow-overlay safe-area-inset-bottom"
+      className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-gray-100 px-2 py-2 shadow-lg safe-area-inset-bottom"
       style={{ 
         zIndex: 9999,
         position: 'fixed',
@@ -61,10 +54,10 @@ const MobileNavigation: React.FC = () => {
               key={item.to}
               to={item.to}
               className={cn(
-                "flex flex-col items-center gap-spacing-1 p-spacing-2 rounded-shape-xl transition-all duration-200 min-w-[60px] min-h-[56px]",
+                "flex flex-col items-center gap-1 p-2 rounded-2xl transition-all duration-200 min-w-[60px] min-h-[56px]",
                 active
-                  ? "bg-gradient-to-t from-primary/10 to-secondary/10 text-primary"
-                  : "text-text-secondary hover:text-primary"
+                  ? "bg-gradient-to-t from-soul-purple/10 to-soul-teal/10 text-soul-purple"
+                  : "text-gray-500 hover:text-soul-purple"
               )}
             >
               <Icon className={cn(
@@ -72,8 +65,8 @@ const MobileNavigation: React.FC = () => {
                 active ? "scale-110" : ""
               )} />
               <span className={cn(
-                "text-caption-xs font-medium transition-all duration-200 font-display",
-                active ? "text-primary" : "text-text-secondary"
+                "text-xs font-medium transition-all duration-200 font-cormorant",
+                active ? "text-soul-purple" : "text-gray-400"
               )}>
                 {item.label}
               </span>

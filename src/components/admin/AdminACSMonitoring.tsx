@@ -59,33 +59,33 @@ export const AdminACSMonitoring: React.FC = () => {
 
   const getStateColor = (state: string) => {
     const colors = {
-      'NORMAL': 'bg-state-success/10 text-state-success',
-      'FRUSTRATED': 'bg-state-error/10 text-state-error',
-      'CONFUSED': 'bg-state-warning/10 text-state-warning',
-      'CLARIFICATION': 'bg-interactive-secondary/10 text-interactive-secondary'
+      'NORMAL': 'bg-green-100 text-green-800',
+      'FRUSTRATED': 'bg-red-100 text-red-800',
+      'CONFUSED': 'bg-yellow-100 text-yellow-800',
+      'CLARIFICATION': 'bg-blue-100 text-blue-800'
     };
-    return colors[state as keyof typeof colors] || 'bg-surface-tertiary text-content-tertiary';
+    return colors[state as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
 
   const getSuccessIcon = (success: boolean) => {
     return success ? 
-      <CheckCircle className="w-4 h-4 text-state-success" /> : 
-      <AlertTriangle className="w-4 h-4 text-state-error" />;
+      <CheckCircle className="w-4 h-4 text-green-600" /> : 
+      <AlertTriangle className="w-4 h-4 text-red-600" />;
   };
 
   return (
-    <div className="space-content">
+    <div className="space-y-6">
       {/* ACS Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-heading-lg flex items-center gap-2 text-content-primary">
-            <Settings className="w-6 h-6 text-interactive-primary" />
+          <h2 className="text-2xl font-bold flex items-center gap-2">
+            <Settings className="w-6 h-6 text-purple-600" />
             ACS (Adaptive Context Scheduler) Monitoring
           </h2>
-          <p className="text-content-secondary mt-1 text-caption-base">Real-time dialogue state management and adaptive interventions</p>
+          <p className="text-gray-600 mt-1">Real-time dialogue state management and adaptive interventions</p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="text-state-success">
+          <Badge variant="outline" className="text-green-600">
             95% Production Ready
           </Badge>
           <Button onClick={handleRefreshMetrics} variant="outline" size="sm">
@@ -96,54 +96,54 @@ export const AdminACSMonitoring: React.FC = () => {
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-component">
-        <Card className="bg-surface-secondary border-subtle shadow-elevated">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-component-sm">
-            <CardTitle className="text-body-sm text-content-secondary">Total Interventions</CardTitle>
-            <Activity className="h-4 w-4 text-content-tertiary" />
+      <div className="grid grid-cols-4 gap-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Interventions</CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-heading-md text-content-primary">{acsMetrics.totalInterventions.toLocaleString()}</div>
-            <p className="text-caption-sm text-content-tertiary">
+            <div className="text-2xl font-bold">{acsMetrics.totalInterventions.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">
               +{acsMetrics.dailyInterventions} today
             </p>
           </CardContent>
         </Card>
 
-        <Card className="bg-surface-secondary border-subtle shadow-elevated">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-component-sm">
-            <CardTitle className="text-body-sm text-content-secondary">Active Users</CardTitle>
-            <Users className="h-4 w-4 text-content-tertiary" />
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Users</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-heading-md text-content-primary">{acsMetrics.activeUsers}</div>
-            <p className="text-caption-sm text-content-tertiary">
+            <div className="text-2xl font-bold">{acsMetrics.activeUsers}</div>
+            <p className="text-xs text-muted-foreground">
               Users with ACS active
             </p>
           </CardContent>
         </Card>
 
-        <Card className="bg-surface-secondary border-subtle shadow-elevated">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-component-sm">
-            <CardTitle className="text-body-sm text-content-secondary">Success Rate</CardTitle>
-            <Target className="h-4 w-4 text-content-tertiary" />
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
+            <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-heading-md text-content-primary">{acsMetrics.successRate}%</div>
-            <p className="text-caption-sm text-content-tertiary">
+            <div className="text-2xl font-bold">{acsMetrics.successRate}%</div>
+            <p className="text-xs text-muted-foreground">
               Intervention success rate
             </p>
           </CardContent>
         </Card>
 
-        <Card className="bg-surface-secondary border-subtle shadow-elevated">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-component-sm">
-            <CardTitle className="text-body-sm text-content-secondary">Response Time</CardTitle>
-            <TrendingUp className="h-4 w-4 text-content-tertiary" />
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Response Time</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-heading-md text-content-primary">{acsMetrics.avgResponseTime}s</div>
-            <p className="text-caption-sm text-content-tertiary">
+            <div className="text-2xl font-bold">{acsMetrics.avgResponseTime}s</div>
+            <p className="text-xs text-muted-foreground">
               Average response time
             </p>
           </CardContent>
@@ -151,50 +151,38 @@ export const AdminACSMonitoring: React.FC = () => {
       </div>
 
       {/* Performance Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-component">
-        <Card className="bg-surface-secondary border-subtle shadow-elevated">
+      <div className="grid grid-cols-2 gap-6">
+        <Card>
           <CardHeader>
-            <CardTitle className="text-heading-sm text-content-primary">ACS Performance Trends</CardTitle>
+            <CardTitle>ACS Performance Trends</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={mockACSData}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-border-subtle" />
-                <XAxis dataKey="date" className="text-content-tertiary" />
-                <YAxis className="text-content-tertiary" />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'hsl(var(--color-surface-secondary))',
-                    border: '1px solid hsl(var(--color-border-subtle))',
-                    borderRadius: 'var(--radius-md)'
-                  }}
-                />
-                <Line type="monotone" dataKey="interventions" stroke="hsl(var(--color-interactive-primary))" name="Interventions" strokeWidth={2} />
-                <Line type="monotone" dataKey="success" stroke="hsl(var(--color-state-success))" name="Success Rate %" strokeWidth={2} />
-                <Line type="monotone" dataKey="states" stroke="hsl(var(--color-state-warning))" name="State Transitions" strokeWidth={2} />
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Line type="monotone" dataKey="interventions" stroke="#8884d8" name="Interventions" />
+                <Line type="monotone" dataKey="success" stroke="#82ca9d" name="Success Rate %" />
+                <Line type="monotone" dataKey="states" stroke="#ffc658" name="State Transitions" />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        <Card className="bg-surface-secondary border-subtle shadow-elevated">
+        <Card>
           <CardHeader>
-            <CardTitle className="text-heading-sm text-content-primary">Dialogue State Distribution</CardTitle>
+            <CardTitle>Dialogue State Distribution</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={stateDistribution}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-border-subtle" />
-                <XAxis dataKey="state" className="text-content-tertiary" />
-                <YAxis className="text-content-tertiary" />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'hsl(var(--color-surface-secondary))',
-                    border: '1px solid hsl(var(--color-border-subtle))',
-                    borderRadius: 'var(--radius-md)'
-                  }}
-                />
-                <Bar dataKey="count" fill="hsl(var(--color-interactive-primary))" radius={4} />
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="state" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="count" fill="#8884d8" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -202,21 +190,21 @@ export const AdminACSMonitoring: React.FC = () => {
       </div>
 
       {/* State Distribution Details */}
-      <Card className="bg-surface-secondary border-subtle shadow-elevated">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-heading-sm text-content-primary">Dialogue State Breakdown</CardTitle>
+          <CardTitle>Dialogue State Breakdown</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-component">
+          <div className="space-y-4">
             {stateDistribution.map((state, index) => (
-              <div key={index} className="flex items-center justify-between p-component bg-surface-tertiary rounded-shape-md">
+              <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div className="flex items-center gap-3">
                   <Badge className={getStateColor(state.state)}>
                     {state.state}
                   </Badge>
                   <div>
-                    <p className="text-body-base text-content-primary">{state.count} occurrences</p>
-                    <p className="text-caption-sm text-content-secondary">{state.percentage}% of total states</p>
+                    <p className="font-medium">{state.count} occurrences</p>
+                    <p className="text-sm text-gray-600">{state.percentage}% of total states</p>
                   </div>
                 </div>
                 <div className="w-32">
@@ -229,99 +217,99 @@ export const AdminACSMonitoring: React.FC = () => {
       </Card>
 
       {/* System Performance */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-component">
-        <Card className="bg-surface-secondary border-subtle shadow-elevated">
+      <div className="grid grid-cols-3 gap-6">
+        <Card>
           <CardHeader>
-            <CardTitle className="text-heading-sm text-content-primary">Detection Accuracy</CardTitle>
+            <CardTitle>Detection Accuracy</CardTitle>
           </CardHeader>
-          <CardContent className="space-component">
+          <CardContent className="space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-body-sm text-content-secondary">System Accuracy</span>
-              <span className="text-body-base text-content-primary">{acsMetrics.systemAccuracy}%</span>
+              <span className="text-sm">System Accuracy</span>
+              <span className="font-bold">{acsMetrics.systemAccuracy}%</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-body-sm text-content-secondary">False Positives</span>
-              <span className="text-body-base text-content-primary">2.1%</span>
+              <span className="text-sm">False Positives</span>
+              <span className="font-bold">2.1%</span>
             </div>
             <Progress value={acsMetrics.systemAccuracy} className="h-2" />
           </CardContent>
         </Card>
 
-        <Card className="bg-surface-secondary border-subtle shadow-elevated">
+        <Card>
           <CardHeader>
-            <CardTitle className="text-heading-sm text-content-primary">User Experience</CardTitle>
+            <CardTitle>User Experience</CardTitle>
           </CardHeader>
-          <CardContent className="space-component">
+          <CardContent className="space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-body-sm text-content-secondary">User Satisfaction</span>
-              <span className="text-body-base text-content-primary">{acsMetrics.userSatisfaction}/5</span>
+              <span className="text-sm">User Satisfaction</span>
+              <span className="font-bold">{acsMetrics.userSatisfaction}/5</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-body-sm text-content-secondary">Seamless Transitions</span>
-              <span className="text-body-base text-content-primary">94.8%</span>
+              <span className="text-sm">Seamless Transitions</span>
+              <span className="font-bold">94.8%</span>
             </div>
             <Progress value={94.8} className="h-2" />
           </CardContent>
         </Card>
 
-        <Card className="bg-surface-secondary border-subtle shadow-elevated">
+        <Card>
           <CardHeader>
-            <CardTitle className="text-heading-sm text-content-primary">System Health</CardTitle>
+            <CardTitle>System Health</CardTitle>
           </CardHeader>
-          <CardContent className="space-component">
+          <CardContent className="space-y-4">
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-state-success rounded-shape-full"></div>
-              <span className="text-body-sm text-content-secondary">State Detection: Active</span>
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span className="text-sm">State Detection: Active</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-state-success rounded-shape-full"></div>
-              <span className="text-body-sm text-content-secondary">Context Analysis: Active</span>
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span className="text-sm">Context Analysis: Active</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-state-success rounded-shape-full"></div>
-              <span className="text-body-sm text-content-secondary">Intervention Engine: Active</span>
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span className="text-sm">Intervention Engine: Active</span>
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Recent Interventions */}
-      <Card className="bg-surface-secondary border-subtle shadow-elevated">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-heading-sm text-content-primary">Recent ACS Interventions</CardTitle>
+          <CardTitle>Recent ACS Interventions</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-content-secondary">User</TableHead>
-                <TableHead className="text-content-secondary">State Transition</TableHead>
-                <TableHead className="text-content-secondary">Trigger Reason</TableHead>
-                <TableHead className="text-content-secondary">Success</TableHead>
-                <TableHead className="text-content-secondary">Time</TableHead>
+                <TableHead>User</TableHead>
+                <TableHead>State Transition</TableHead>
+                <TableHead>Trigger Reason</TableHead>
+                <TableHead>Success</TableHead>
+                <TableHead>Time</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {recentInterventions.map((intervention) => (
                 <TableRow key={intervention.id}>
-                  <TableCell className="text-body-base text-content-primary">{intervention.user}</TableCell>
+                  <TableCell className="font-medium">{intervention.user}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Badge className={getStateColor(intervention.from)} variant="outline">
                         {intervention.from}
                       </Badge>
-                      <span className="text-content-tertiary">→</span>
+                      <span>→</span>
                       <Badge className={getStateColor(intervention.to)}>
                         {intervention.to}
                       </Badge>
                     </div>
                   </TableCell>
-                  <TableCell className="text-body-sm text-content-secondary">{intervention.reason}</TableCell>
+                  <TableCell>{intervention.reason}</TableCell>
                   <TableCell className="flex items-center gap-2">
                     {getSuccessIcon(intervention.success)}
-                    <span className="text-body-sm text-content-secondary">{intervention.success ? 'Success' : 'Failed'}</span>
+                    {intervention.success ? 'Success' : 'Failed'}
                   </TableCell>
-                  <TableCell className="text-caption-sm text-content-tertiary">{intervention.time}</TableCell>
+                  <TableCell className="text-gray-500">{intervention.time}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
