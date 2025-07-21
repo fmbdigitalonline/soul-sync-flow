@@ -20,7 +20,7 @@ export const TaskPreview: React.FC<TaskPreviewProps> = ({ task }) => {
   return (
     <div className="my-2">
       <button
-        className="flex items-center text-soul-purple font-medium focus:outline-none hover:underline"
+        className="flex items-center text-primary font-medium focus:outline-none hover:underline"
         onClick={() => setExpanded((e) => !e)}
         aria-expanded={expanded}
       >
@@ -28,16 +28,16 @@ export const TaskPreview: React.FC<TaskPreviewProps> = ({ task }) => {
         <span className="text-xl">{expanded ? "−" : "+"}</span>
       </button>
       {expanded && (
-        <div className="bg-slate-50 rounded-xl p-4 mt-2 animate-fade-in border border-slate-200">
+        <div className="bg-surface rounded-xl p-4 mt-2 animate-fade-in border">
           <div className="mb-2">
             <strong>What happens next:</strong>
-            <div className="text-sm text-muted-foreground mt-1">
+            <div className="text-sm text-muted mt-1">
               You’ll work side-by-side with your Soul Coach to break this task into manageable, motivating mini-steps.
             </div>
           </div>
           <div className="mb-2">
             <strong>Outcome / Goal:</strong>
-            <div className="text-sm">{task.goal || "See this task through to completion"}</div>
+            <div className="text-sm text-main">{task.goal || "See this task through to completion"}</div>
           </div>
           <div>
             <strong>Mini-steps:</strong>

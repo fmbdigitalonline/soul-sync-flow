@@ -63,18 +63,24 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
+				// Semantic Color Extensions
+				'text-main': 'hsl(var(--color-text-main) / <alpha-value>)',
+				'text-muted': 'hsl(var(--color-text-muted) / <alpha-value>)',
+				'text-on-brand': 'hsl(var(--color-text-on-brand) / <alpha-value>)',
+				'surface': 'hsl(var(--color-surface) / <alpha-value>)',
+
 				// Soul palette - now properly mapped to semantic tokens
 				soul: {
 					// Legacy soul colors mapped to design system
-					ivory: 'hsl(var(--background))', // #FCF8F6
-					teal: '180 100% 41%', // #00BBD1 - kept for specific gradients
-					pewter: 'hsl(var(--muted))', // #96A1A8
-					purple: 'hsl(var(--primary))', // #9b87f5
+					ivory: 'hsl(var(--color-surface))',
+					teal: 'hsl(var(--color-secondary))',
+					pewter: 'hsl(var(--muted))',
+					purple: 'hsl(var(--color-primary))',
 					indigo: '234 89% 74%', // #6366f1
 					blue: '232 65% 61%', // #4f74e3
 					lavender: 'hsl(var(--accent))', // #d6bcfa
 					gold: '51 95% 65%', // #fad161
-					black: 'hsl(var(--foreground))' // #1A1F2C
+					black: 'hsl(var(--color-text-main))'
 				}
 			},
 			borderRadius: {
@@ -126,11 +132,14 @@ export default {
 				'micro-bounce': 'micro-bounce 0.2s ease-in-out'
 			},
 			backgroundImage: {
-				// Soul-based gradients using semantic tokens
-				'cosmic-gradient': 'linear-gradient(to right, hsl(var(--primary)), hsl(var(--accent)))',
-				'cosmic-radial': 'radial-gradient(circle, hsl(var(--primary) / 0.15) 0%, hsl(var(--accent) / 0.05) 70%, hsl(var(--background)) 100%)',
-				'soul-gradient': 'linear-gradient(to right, hsl(var(--primary)), hsl(var(--accent)))',
-				'soul-radial': 'radial-gradient(circle, hsl(var(--primary) / 0.2) 0%, hsl(var(--accent) / 0.1) 50%, hsl(var(--background)) 100%)'
+				// Semantic gradients using design system tokens
+				'gradient-brand': 'linear-gradient(135deg, hsl(var(--color-primary)), hsl(var(--color-secondary)))',
+				'gradient-brand-radial': 'radial-gradient(circle, hsl(var(--color-primary) / 0.2) 0%, hsl(var(--color-secondary) / 0.1) 50%, hsl(var(--background)) 100%)',
+				// Legacy gradients (mapped to semantic tokens)
+				'cosmic-gradient': 'linear-gradient(to right, hsl(var(--color-primary)), hsl(var(--accent)))',
+				'cosmic-radial': 'radial-gradient(circle, hsl(var(--color-primary) / 0.15) 0%, hsl(var(--accent) / 0.05) 70%, hsl(var(--background)) 100%)',
+				'soul-gradient': 'linear-gradient(to right, hsl(var(--color-primary)), hsl(var(--color-secondary)))',
+				'soul-radial': 'radial-gradient(circle, hsl(var(--color-primary) / 0.2) 0%, hsl(var(--color-secondary) / 0.1) 50%, hsl(var(--background)) 100%)'
 			},
 			backgroundSize: {
 				'200': '200%'

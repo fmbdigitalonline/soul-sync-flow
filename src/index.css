@@ -5,11 +5,19 @@
 
 @layer base {
   :root {
-    /* Soul Guide Brand Colors */
-    --soul-purple: 265 82% 62%; /* #7C3AED */
-    --soul-teal: 180 68% 55%; /* #22D3EE */
-    --soul-ivory: 32 28% 98%; /* #FCF8F6 */
-    --soul-black: 219 24% 15%; /* #1A1F2C */
+    /* Semantic Color System - The Design Dictionary */
+    --color-primary: 265 82% 62%;     /* Soul Purple - Main brand color */
+    --color-secondary: 180 68% 55%;   /* Soul Teal - Secondary brand color */
+    --color-surface: 32 28% 98%;      /* Soul Ivory - Card/surface backgrounds */
+    --color-text-main: 219 24% 15%;   /* Soul Black - Primary text */
+    --color-text-muted: 219 24% 45%;  /* Muted text color */
+    --color-text-on-brand: 0 0% 100%; /* Text on brand colors */
+    
+    /* Legacy Brand Colors (mapped to semantic tokens) */
+    --soul-purple: var(--color-primary);
+    --soul-teal: var(--color-secondary);
+    --soul-ivory: var(--color-surface);
+    --soul-black: var(--color-text-main);
 
     --background: 0 0% 100%; /* Pure White */
     --foreground: 219 24% 15%; /* soul-black #1A1F2C */
@@ -20,11 +28,11 @@
     --popover: 0 0% 100%;
     --popover-foreground: 219 24% 15%;
 
-    --primary: 265 82% 62%; /* soul-purple */
-    --primary-foreground: 0 0% 100%;
+    --primary: var(--color-primary);
+    --primary-foreground: var(--color-text-on-brand);
 
-    --secondary: 180 68% 55%; /* soul-teal */
-    --secondary-foreground: 0 0% 100%;
+    --secondary: var(--color-secondary);
+    --secondary-foreground: var(--color-text-on-brand);
 
     --muted: 32 28% 95%;
     --muted-foreground: 219 24% 45%;
@@ -168,14 +176,19 @@
   }
   
   .cosmic-bg {
-    background: linear-gradient(135deg, hsl(var(--soul-purple)) 0%, hsl(var(--soul-teal)) 100%);
+    background: linear-gradient(135deg, hsl(var(--color-primary)) 0%, hsl(var(--color-secondary)) 100%);
   }
   
   .gradient-text {
-    background: linear-gradient(135deg, hsl(var(--soul-purple)) 0%, hsl(var(--soul-teal)) 100%);
+    background: linear-gradient(135deg, hsl(var(--color-primary)) 0%, hsl(var(--color-secondary)) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+  }
+
+  /* Semantic gradient utilities */
+  .bg-gradient-brand {
+    background: linear-gradient(135deg, hsl(var(--color-primary)) 0%, hsl(var(--color-secondary)) 100%);
   }
 
   .mobile-container {
