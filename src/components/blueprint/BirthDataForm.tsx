@@ -80,17 +80,17 @@ export const BirthDataForm: React.FC<BirthDataFormProps> = ({ onSubmit, classNam
   return (
     <Card className={className}>
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-bold text-primary">Create Your Soul Blueprint</CardTitle>
-        <CardDescription className="text-gray-400">
+        <CardTitle className="text-heading-xl font-cormorant text-primary">Create Your Soul Blueprint</CardTitle>
+        <CardDescription className="text-body-md text-text-secondary">
           We'll automatically calculate your accurate timezone from your birth location - no need to know UTC offsets!
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-space-lg">
           {/* Name Fields */}
-          <div className="space-y-4">
+          <div className="space-y-space-md">
             <div>
-              <Label htmlFor="full_name" className="flex items-center gap-2 text-gray-300">
+              <Label htmlFor="full_name" className="flex items-center gap-2 text-text-main">
                 <User className="w-4 h-4" />
                 Full Name *
               </Label>
@@ -100,13 +100,13 @@ export const BirthDataForm: React.FC<BirthDataFormProps> = ({ onSubmit, classNam
                 placeholder="Your complete legal name"
                 value={formData.full_name}
                 onChange={(e) => handleInputChange('full_name', e.target.value)}
-                className={`mt-1 bg-gray-800 border-gray-700 text-white ${errors.full_name ? 'border-red-500' : ''}`}
+                className={`mt-1 ${errors.full_name ? 'border-error' : ''}`}
               />
-              {errors.full_name && <p className="text-red-500 text-sm mt-1">{errors.full_name}</p>}
+              {errors.full_name && <p className="text-error text-caption-sm mt-1">{errors.full_name}</p>}
             </div>
 
             <div>
-              <Label htmlFor="preferred_name" className="flex items-center gap-2 text-gray-300">
+              <Label htmlFor="preferred_name" className="flex items-center gap-2 text-text-main">
                 <User className="w-4 h-4" />
                 Preferred Name (Optional)
               </Label>
@@ -116,15 +116,15 @@ export const BirthDataForm: React.FC<BirthDataFormProps> = ({ onSubmit, classNam
                 placeholder="What you'd like to be called"
                 value={formData.preferred_name}
                 onChange={(e) => handleInputChange('preferred_name', e.target.value)}
-                className="mt-1 bg-gray-800 border-gray-700 text-white"
+                className="mt-1"
               />
             </div>
           </div>
 
           {/* Birth Information */}
-          <div className="space-y-4">
+          <div className="space-y-space-md">
             <div>
-              <Label htmlFor="birth_date" className="flex items-center gap-2 text-gray-300">
+              <Label htmlFor="birth_date" className="flex items-center gap-2 text-text-main">
                 <Calendar className="w-4 h-4" />
                 Birth Date *
               </Label>
@@ -133,13 +133,13 @@ export const BirthDataForm: React.FC<BirthDataFormProps> = ({ onSubmit, classNam
                 type="date"
                 value={formData.birth_date}
                 onChange={(e) => handleInputChange('birth_date', e.target.value)}
-                className={`mt-1 bg-gray-800 border-gray-700 text-white ${errors.birth_date ? 'border-red-500' : ''}`}
+                className={`mt-1 ${errors.birth_date ? 'border-error' : ''}`}
               />
-              {errors.birth_date && <p className="text-red-500 text-sm mt-1">{errors.birth_date}</p>}
+              {errors.birth_date && <p className="text-error text-caption-sm mt-1">{errors.birth_date}</p>}
             </div>
 
             <div>
-              <Label htmlFor="birth_time_local" className="flex items-center gap-2 text-gray-300">
+              <Label htmlFor="birth_time_local" className="flex items-center gap-2 text-text-main">
                 <Clock className="w-4 h-4" />
                 Birth Time (Local Time) *
               </Label>
@@ -148,16 +148,16 @@ export const BirthDataForm: React.FC<BirthDataFormProps> = ({ onSubmit, classNam
                 type="time"
                 value={formData.birth_time_local}
                 onChange={(e) => handleInputChange('birth_time_local', e.target.value)}
-                className={`mt-1 bg-gray-800 border-gray-700 text-white ${errors.birth_time_local ? 'border-red-500' : ''}`}
+                className={`mt-1 ${errors.birth_time_local ? 'border-error' : ''}`}
               />
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="text-caption-sm text-text-muted mt-1">
                 Enter the local time where you were born - we'll automatically handle timezone conversion
               </p>
-              {errors.birth_time_local && <p className="text-red-500 text-sm mt-1">{errors.birth_time_local}</p>}
+              {errors.birth_time_local && <p className="text-error text-caption-sm mt-1">{errors.birth_time_local}</p>}
             </div>
 
             <div>
-              <Label htmlFor="birth_location" className="flex items-center gap-2 text-gray-300">
+              <Label htmlFor="birth_location" className="flex items-center gap-2 text-text-main">
                 <MapPin className="w-4 h-4" />
                 Birth Location *
               </Label>
@@ -167,32 +167,32 @@ export const BirthDataForm: React.FC<BirthDataFormProps> = ({ onSubmit, classNam
                 placeholder="City, Country (e.g., Paramaribo, Suriname)"
                 value={formData.birth_location}
                 onChange={(e) => handleInputChange('birth_location', e.target.value)}
-                className={`mt-1 bg-gray-800 border-gray-700 text-white ${errors.birth_location ? 'border-red-500' : ''}`}
+                className={`mt-1 ${errors.birth_location ? 'border-error' : ''}`}
               />
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="text-caption-sm text-text-muted mt-1">
                 We'll automatically find the exact coordinates and historical timezone
               </p>
-              {errors.birth_location && <p className="text-red-500 text-sm mt-1">{errors.birth_location}</p>}
+              {errors.birth_location && <p className="text-error text-caption-sm mt-1">{errors.birth_location}</p>}
             </div>
           </div>
 
           {/* MBTI Selector */}
           <div>
-            <Label className="text-gray-300 mb-3 block">
+            <Label className="text-text-main margin-bottom-sm block">
               Personality Type (Optional)
             </Label>
             <MBTISelector
               value={formData.personality}
               onChange={(value) => handleInputChange('personality', value)}
             />
-            <p className="text-sm text-gray-400 mt-2">
+            <p className="text-caption-sm text-text-muted mt-2">
               This helps personalize your AI Soul Coach interactions
             </p>
           </div>
 
           <Button 
             type="submit" 
-            className="w-full bg-primary hover:bg-primary/80 text-primary-foreground py-3 text-lg font-semibold"
+            className="w-full bg-primary hover:bg-primary-dark text-primary-foreground padding-md text-body-lg font-cormorant font-semibold"
           >
             Generate My Soul Blueprint
           </Button>
