@@ -609,7 +609,6 @@
   .shadow-overlay { box-shadow: 0 10px 15px -3px hsl(var(--color-shadow-elevated)); }
   .shadow-primary { box-shadow: 0 4px 6px -1px hsl(var(--color-shadow-primary)); }
 }
-}
 
 @keyframes float {
 	0% {
