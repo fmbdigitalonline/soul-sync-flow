@@ -47,10 +47,10 @@ const AdminDashboard: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'healthy': return 'text-green-600';
-      case 'warning': return 'text-yellow-600';
-      case 'error': return 'text-red-600';
-      default: return 'text-gray-600';
+      case 'healthy': return 'text-status-success';
+      case 'warning': return 'text-status-warning';
+      case 'error': return 'text-status-error';
+      default: return 'text-text-tertiary';
     }
   };
 
@@ -88,18 +88,18 @@ const AdminDashboard: React.FC = () => {
           {/* System Health Summary */}
           <div className="grid grid-cols-4 gap-spacing-4 mt-spacing-6">
             {Object.entries(systemHealth).map(([key, health]) => (
-              <Card key={key} className="p-4">
+              <Card key={key} className="p-component">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600 uppercase">
+                    <p className="text-caption-sm font-medium text-text-tertiary uppercase">
                       {key === 'vfpGraph' ? 'VFP-Graph' : key.toUpperCase()}
                     </p>
-                    <div className={`flex items-center gap-2 mt-1 ${getStatusColor(health.status)}`}>
+                    <div className={`flex items-center gap-spacing-2 mt-spacing-1 ${getStatusColor(health.status)}`}>
                       {getStatusIcon(health.status)}
                       <span className="font-semibold">{health.score}%</span>
                     </div>
                   </div>
-                  <TrendingUp className="w-5 h-5 text-gray-400" />
+                  <TrendingUp className="w-5 h-5 text-text-tertiary" />
                 </div>
               </Card>
             ))}
@@ -107,37 +107,37 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         {/* Main Content */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-spacing-6">
           <TabsList className="grid w-full grid-cols-8">
-            <TabsTrigger value="overview" className="flex items-center gap-2">
+            <TabsTrigger value="overview" className="flex items-center gap-spacing-2">
               <BarChart3 className="w-4 h-4" />
               Overview
             </TabsTrigger>
-            <TabsTrigger value="pie" className="flex items-center gap-2">
+            <TabsTrigger value="pie" className="flex items-center gap-spacing-2">
               <Brain className="w-4 h-4" />
               PIE
             </TabsTrigger>
-            <TabsTrigger value="vfp" className="flex items-center gap-2">
+            <TabsTrigger value="vfp" className="flex items-center gap-spacing-2">
               <Zap className="w-4 h-4" />
               VFP-Graph
             </TabsTrigger>
-            <TabsTrigger value="tmg" className="flex items-center gap-2">
+            <TabsTrigger value="tmg" className="flex items-center gap-spacing-2">
               <Database className="w-4 h-4" />
               TMG
             </TabsTrigger>
-            <TabsTrigger value="acs" className="flex items-center gap-2">
+            <TabsTrigger value="acs" className="flex items-center gap-spacing-2">
               <Settings className="w-4 h-4" />
               ACS
             </TabsTrigger>
-            <TabsTrigger value="users" className="flex items-center gap-2">
+            <TabsTrigger value="users" className="flex items-center gap-spacing-2">
               <Users className="w-4 h-4" />
               Users
             </TabsTrigger>
-            <TabsTrigger value="health" className="flex items-center gap-2">
+            <TabsTrigger value="health" className="flex items-center gap-spacing-2">
               <Activity className="w-4 h-4" />
               Health
             </TabsTrigger>
-            <TabsTrigger value="config" className="flex items-center gap-2">
+            <TabsTrigger value="config" className="flex items-center gap-spacing-2">
               <Settings className="w-4 h-4" />
               Config
             </TabsTrigger>

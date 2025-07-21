@@ -123,14 +123,14 @@ export default function Auth() {
   if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-soul-purple"></div>
+        <div className="animate-spin rounded-shape-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-soul-black to-soul-purple/20 p-4">
-      <Card className="w-full max-w-md bg-card/50 backdrop-blur-sm border-white/10">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-secondary p-component">
+      <Card className="w-full max-w-md bg-card/50 backdrop-blur-sm border-border-elevated/10">
         <CardHeader className="space-y-4 text-center">
           <div className="flex justify-end">
             <LanguageSelector />

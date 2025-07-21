@@ -6,13 +6,13 @@ import { AuthProvider } from '@/contexts/AuthContext';
 const BedtimeActionPage: React.FC = () => {
   return (
     <AuthProvider>
-      <div className="min-h-screen bg-gradient-to-br from-indigo-100 to-purple-100">
-        <div className="container mx-auto py-8 px-4">
-          <div className="mb-8 text-center">
-            <h1 className="text-3xl font-bold text-indigo-900 mb-4">
+      <div className="min-h-screen bg-gradient-tertiary">
+        <div className="container mx-auto py-spacing-8 px-container">
+          <div className="mb-spacing-8 text-center">
+            <h1 className="text-heading-3xl font-display text-text-main mb-spacing-4">
               🌙 Bedtime Routine
             </h1>
-            <p className="text-lg text-indigo-700">
+            <p className="text-body-lg text-text-secondary">
               Your next scheduled bedtime action to help you wind down for better sleep
             </p>
           </div>
