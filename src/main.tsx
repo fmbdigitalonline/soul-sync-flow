@@ -1,11 +1,9 @@
 
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { createBrowserRouter, RouterProvider, Outlet, Navigate } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 import "./index.css";
 
-import { Toaster } from "@/components/ui/toaster";
 import App from "./App";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -23,17 +21,7 @@ import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import MainLayout from "./components/Layout/MainLayout";
 
-// Create stable QueryClient instance outside of component to prevent recreation
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      refetchOnWindowFocus: false,
-    },
-  },
-});
-
-// Root layout component - now uses App.tsx for provider management
+// Root layout component - uses App.tsx for provider management
 const RootLayout = () => {
   return <App />;
 };
@@ -64,8 +52,6 @@ const router = createBrowserRouter([
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>
+    <RouterProvider router={router} />
   </React.StrictMode>
 );

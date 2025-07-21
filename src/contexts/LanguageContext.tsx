@@ -13,7 +13,8 @@ const translations: Record<Language, Translations> = {
       home: 'Home',
       growth: 'Growth',
       coach: 'Coach',
-      companion: 'Companion'
+      companion: 'Companion',
+      signIn: 'Sign In'
     },
     language: {
       english: 'English',
@@ -70,7 +71,8 @@ const translations: Record<Language, Translations> = {
       home: 'Thuis',
       growth: 'Groei',
       coach: 'Coach',
-      companion: 'Metgezel'
+      companion: 'Metgezel',
+      signIn: 'Inloggen'
     },
     language: {
       english: 'English',
