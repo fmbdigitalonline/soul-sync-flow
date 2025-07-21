@@ -1,6 +1,4 @@
 
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SoulOrbAvatar } from "@/components/ui/avatar";
@@ -9,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { LanguageSelector } from "@/components/ui/language-selector";
 import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
   const { user } = useAuth();
@@ -16,11 +15,7 @@ const Index = () => {
   const navigate = useNavigate();
   const { spacing, layout, getTextSize } = useResponsiveLayout();
 
-  useEffect(() => {
-    if (user) {
-      navigate("/blueprint");
-    }
-  }, [user, navigate]);
+  // Removed the automatic redirect logic - users can now access homepage even when authenticated
 
   const features = [
     {
@@ -62,12 +57,21 @@ const Index = () => {
           </div>
           <div className="flex items-center space-x-4">
             <LanguageSelector />
-            <Button 
-              onClick={() => navigate("/auth")}
-              className="bg-primary hover:bg-primary/90 rounded-2xl font-cormorant font-medium"
-            >
-              {t('auth.signIn')}
-            </Button>
+            {user ? (
+              <Button 
+                onClick={() => navigate("/blueprint")}
+                className="bg-primary hover:bg-primary/90 rounded-2xl font-cormorant font-medium"
+              >
+                Go to Blueprint
+              </Button>
+            ) : (
+              <Button 
+                onClick={() => navigate("/auth")}
+                className="bg-primary hover:bg-primary/90 rounded-2xl font-cormorant font-medium"
+              >
+                {t('auth.signIn')}
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -85,22 +89,45 @@ const Index = () => {
           </div>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              size="lg"
-              onClick={() => navigate("/auth")}
-              className="bg-primary hover:bg-primary/90 rounded-2xl font-cormorant font-medium"
-            >
-              {t('landing.getStarted')}
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-            <Button 
-              size="lg"
-              variant="outline"
-              onClick={() => navigate("/auth")}
-              className="rounded-2xl font-cormorant font-medium"
-            >
-              {t('landing.learnMore')}
-            </Button>
+            {user ? (
+              <>
+                <Button 
+                  size="lg"
+                  onClick={() => navigate("/blueprint")}
+                  className="bg-primary hover:bg-primary/90 rounded-2xl font-cormorant font-medium"
+                >
+                  View Your Blueprint
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+                <Button 
+                  size="lg"
+                  variant="outline"
+                  onClick={() => navigate("/companion")}
+                  className="rounded-2xl font-cormorant font-medium"
+                >
+                  Talk to Companion
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button 
+                  size="lg"
+                  onClick={() => navigate("/auth")}
+                  className="bg-primary hover:bg-primary/90 rounded-2xl font-cormorant font-medium"
+                >
+                  {t('landing.getStarted')}
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+                <Button 
+                  size="lg"
+                  variant="outline"
+                  onClick={() => navigate("/auth")}
+                  className="rounded-2xl font-cormorant font-medium"
+                >
+                  {t('landing.learnMore')}
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -155,13 +182,23 @@ const Index = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button 
-                size="lg"
-                onClick={() => navigate("/auth")}
-                className="bg-primary hover:bg-primary/90 rounded-2xl font-cormorant font-medium"
-              >
-                {t('landing.startJourney')}
-              </Button>
+              {user ? (
+                <Button 
+                  size="lg"
+                  onClick={() => navigate("/blueprint")}
+                  className="bg-primary hover:bg-primary/90 rounded-2xl font-cormorant font-medium"
+                >
+                  Continue Your Journey
+                </Button>
+              ) : (
+                <Button 
+                  size="lg"
+                  onClick={() => navigate("/auth")}
+                  className="bg-primary hover:bg-primary/90 rounded-2xl font-cormorant font-medium"
+                >
+                  {t('landing.startJourney')}
+                </Button>
+              )}
             </CardContent>
           </Card>
         </div>
