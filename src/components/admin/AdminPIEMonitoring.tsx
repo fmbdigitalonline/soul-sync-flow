@@ -27,10 +27,10 @@ const mockPIEData = [
 ];
 
 const insightTypes = [
-  { name: 'Mood Patterns', value: 35, color: '#8884d8' },
-  { name: 'Productivity', value: 28, color: '#82ca9d' },
-  { name: 'Behavioral', value: 22, color: '#ffc658' },
-  { name: 'Predictive', value: 15, color: '#ff7300' }
+  { name: 'Mood Patterns', value: 35, color: 'hsl(var(--color-interactive-secondary))' },
+  { name: 'Productivity', value: 28, color: 'hsl(var(--color-state-success))' },
+  { name: 'Behavioral', value: 22, color: 'hsl(var(--color-state-warning))' },
+  { name: 'Predictive', value: 15, color: 'hsl(var(--color-interactive-primary))' }
 ];
 
 export const AdminPIEMonitoring: React.FC = () => {
@@ -59,27 +59,27 @@ export const AdminPIEMonitoring: React.FC = () => {
 
   const getInsightTypeColor = (type: string) => {
     const colors = {
-      mood: 'bg-secondary/10 text-secondary',
-      behavioral: 'bg-success/10 text-success',
-      predictive: 'bg-primary/10 text-primary',
-      productivity: 'bg-warning/10 text-warning'
+      mood: 'bg-interactive-secondary/10 text-interactive-secondary',
+      behavioral: 'bg-state-success/10 text-state-success',
+      predictive: 'bg-interactive-primary/10 text-interactive-primary',
+      productivity: 'bg-state-warning/10 text-state-warning'
     };
-    return colors[type as keyof typeof colors] || 'bg-muted text-muted-foreground';
+    return colors[type as keyof typeof colors] || 'bg-surface-tertiary text-content-tertiary';
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-content">
       {/* PIE Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold flex items-center gap-2 font-cormorant text-foreground">
-            <Brain className="w-6 h-6 text-primary" />
+          <h2 className="text-heading-lg flex items-center gap-2 text-content-primary">
+            <Brain className="w-6 h-6 text-interactive-primary" />
             PIE (Proactive Insight Engine) Monitoring
           </h2>
-          <p className="text-muted-foreground mt-1 font-inter">Real-time analytics for intelligent insight generation</p>
+          <p className="text-content-secondary mt-1 text-caption-base">Real-time analytics for intelligent insight generation</p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="text-secondary font-inter">
+          <Badge variant="outline" className="text-interactive-secondary">
             85% Beta Ready
           </Badge>
           <Button onClick={handleRefreshMetrics} variant="outline" size="sm">
@@ -90,54 +90,54 @@ export const AdminPIEMonitoring: React.FC = () => {
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Insights</CardTitle>
-            <MessageSquare className="h-4 w-4 text-muted-foreground" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-component">
+        <Card className="bg-surface-secondary border-subtle shadow-elevated">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-component-sm">
+            <CardTitle className="text-body-sm text-content-secondary">Total Insights</CardTitle>
+            <MessageSquare className="h-4 w-4 text-content-tertiary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{pieMetrics.totalInsights.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-heading-md text-content-primary">{pieMetrics.totalInsights.toLocaleString()}</div>
+            <p className="text-caption-sm text-content-tertiary">
               +{pieMetrics.insightGeneration} generated today
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Users</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+        <Card className="bg-surface-secondary border-subtle shadow-elevated">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-component-sm">
+            <CardTitle className="text-body-sm text-content-secondary">Active Users</CardTitle>
+            <Users className="h-4 w-4 text-content-tertiary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{pieMetrics.activeUsers}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-heading-md text-content-primary">{pieMetrics.activeUsers}</div>
+            <p className="text-caption-sm text-content-tertiary">
               Users with PIE enabled
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Accuracy</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+        <Card className="bg-surface-secondary border-subtle shadow-elevated">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-component-sm">
+            <CardTitle className="text-body-sm text-content-secondary">Avg Accuracy</CardTitle>
+            <TrendingUp className="h-4 w-4 text-content-tertiary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{pieMetrics.avgAccuracy}%</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-heading-md text-content-primary">{pieMetrics.avgAccuracy}%</div>
+            <p className="text-caption-sm text-content-tertiary">
               Insight accuracy rate
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">User Satisfaction</CardTitle>
-            <Star className="h-4 w-4 text-muted-foreground" />
+        <Card className="bg-surface-secondary border-subtle shadow-elevated">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-component-sm">
+            <CardTitle className="text-body-sm text-content-secondary">User Satisfaction</CardTitle>
+            <Star className="h-4 w-4 text-content-tertiary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{pieMetrics.userSatisfaction}/5</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-heading-md text-content-primary">{pieMetrics.userSatisfaction}/5</div>
+            <p className="text-caption-sm text-content-tertiary">
               Average user rating
             </p>
           </CardContent>
@@ -145,28 +145,34 @@ export const AdminPIEMonitoring: React.FC = () => {
       </div>
 
       {/* Performance Charts */}
-      <div className="grid grid-cols-2 gap-6">
-        <Card>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-component">
+        <Card className="bg-surface-secondary border-subtle shadow-elevated">
           <CardHeader>
-            <CardTitle>PIE Performance Trends</CardTitle>
+            <CardTitle className="text-heading-sm text-content-primary">PIE Performance Trends</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={mockPIEData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Line type="monotone" dataKey="insights" stroke="#8884d8" name="Daily Insights" />
-                <Line type="monotone" dataKey="accuracy" stroke="#82ca9d" name="Accuracy %" />
+                <CartesianGrid strokeDasharray="3 3" className="stroke-border-subtle" />
+                <XAxis dataKey="date" className="text-content-tertiary" />
+                <YAxis className="text-content-tertiary" />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'hsl(var(--color-surface-secondary))',
+                    border: '1px solid hsl(var(--color-border-subtle))',
+                    borderRadius: 'var(--radius-md)'
+                  }}
+                />
+                <Line type="monotone" dataKey="insights" stroke="hsl(var(--color-interactive-primary))" name="Daily Insights" strokeWidth={2} />
+                <Line type="monotone" dataKey="accuracy" stroke="hsl(var(--color-state-success))" name="Accuracy %" strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-surface-secondary border-subtle shadow-elevated">
           <CardHeader>
-            <CardTitle>Insight Types Distribution</CardTitle>
+            <CardTitle className="text-heading-sm text-content-primary">Insight Types Distribution</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -176,7 +182,7 @@ export const AdminPIEMonitoring: React.FC = () => {
                   cx="50%"
                   cy="50%"
                   outerRadius={80}
-                  fill="#8884d8"
+                  fill="hsl(var(--color-interactive-primary))"
                   dataKey="value"
                   label
                 >
@@ -184,7 +190,13 @@ export const AdminPIEMonitoring: React.FC = () => {
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'hsl(var(--color-surface-secondary))',
+                    border: '1px solid hsl(var(--color-border-subtle))',
+                    borderRadius: 'var(--radius-md)'
+                  }}
+                />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>
@@ -192,88 +204,88 @@ export const AdminPIEMonitoring: React.FC = () => {
       </div>
 
       {/* Detailed Metrics */}
-      <div className="grid grid-cols-3 gap-6">
-        <Card>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-component">
+        <Card className="bg-surface-secondary border-subtle shadow-elevated">
           <CardHeader>
-            <CardTitle>Data Collection</CardTitle>
+            <CardTitle className="text-heading-sm text-content-primary">Data Collection</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-component">
             <div className="flex justify-between items-center">
-              <span className="text-sm">Data Points</span>
-              <span className="font-bold">{pieMetrics.dataPoints.toLocaleString()}</span>
+              <span className="text-body-sm text-content-secondary">Data Points</span>
+              <span className="text-body-base text-content-primary">{pieMetrics.dataPoints.toLocaleString()}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm">Pattern Detection</span>
-              <span className="font-bold">{pieMetrics.patternDetection}%</span>
+              <span className="text-body-sm text-content-secondary">Pattern Detection</span>
+              <span className="text-body-base text-content-primary">{pieMetrics.patternDetection}%</span>
             </div>
             <Progress value={pieMetrics.patternDetection} className="h-2" />
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-surface-secondary border-subtle shadow-elevated">
           <CardHeader>
-            <CardTitle>Delivery Performance</CardTitle>
+            <CardTitle className="text-heading-sm text-content-primary">Delivery Performance</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-component">
             <div className="flex justify-between items-center">
-              <span className="text-sm">Delivery Rate</span>
-              <span className="font-bold">{pieMetrics.deliveryRate}%</span>
+              <span className="text-body-sm text-content-secondary">Delivery Rate</span>
+              <span className="text-body-base text-content-primary">{pieMetrics.deliveryRate}%</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm">Response Time</span>
-              <span className="font-bold">1.2s</span>
+              <span className="text-body-sm text-content-secondary">Response Time</span>
+              <span className="text-body-base text-content-primary">1.2s</span>
             </div>
             <Progress value={pieMetrics.deliveryRate} className="h-2" />
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-surface-secondary border-subtle shadow-elevated">
           <CardHeader>
-            <CardTitle>System Health</CardTitle>
+            <CardTitle className="text-heading-sm text-content-primary">System Health</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-component">
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-success rounded-full"></div>
-              <span className="text-sm font-inter">Pattern Engine: Healthy</span>
+              <div className="w-2 h-2 bg-state-success rounded-shape-full"></div>
+              <span className="text-body-sm text-content-secondary">Pattern Engine: Healthy</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-success rounded-full"></div>
-              <span className="text-sm font-inter">Data Pipeline: Healthy</span>
+              <div className="w-2 h-2 bg-state-success rounded-shape-full"></div>
+              <span className="text-body-sm text-content-secondary">Data Pipeline: Healthy</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-warning rounded-full"></div>
-              <span className="text-sm font-inter">Scheduler: Minor Issues</span>
+              <div className="w-2 h-2 bg-state-warning rounded-shape-full"></div>
+              <span className="text-body-sm text-content-secondary">Scheduler: Minor Issues</span>
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Recent Insights */}
-      <Card>
+      <Card className="bg-surface-secondary border-subtle shadow-elevated">
         <CardHeader>
-          <CardTitle>Recent Insights Generated</CardTitle>
+          <CardTitle className="text-heading-sm text-content-primary">Recent Insights Generated</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="space-component">
             {recentInsights.map((insight) => (
-              <div key={insight.id} className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+              <div key={insight.id} className="flex items-center justify-between p-component bg-surface-tertiary rounded-shape-md">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <Badge className={getInsightTypeColor(insight.type)}>
                       {insight.type}
                     </Badge>
-                    <span className="text-sm text-muted-foreground font-inter">{insight.user}</span>
-                    <Badge variant="outline" className="text-xs font-inter">
+                    <span className="text-body-sm text-content-secondary">{insight.user}</span>
+                    <Badge variant="outline" className="text-caption-xs text-content-tertiary">
                       {insight.confidence}% confidence
                     </Badge>
                   </div>
-                  <p className="text-sm font-inter text-foreground">{insight.insight}</p>
+                  <p className="text-body-sm text-content-primary">{insight.insight}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   {insight.delivered ? (
-                    <Badge variant="outline" className="text-success font-inter">Delivered</Badge>
+                    <Badge variant="outline" className="text-state-success">Delivered</Badge>
                   ) : (
-                    <Badge variant="outline" className="text-warning font-inter">Pending</Badge>
+                    <Badge variant="outline" className="text-state-warning">Pending</Badge>
                   )}
                 </div>
               </div>
