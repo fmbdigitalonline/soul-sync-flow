@@ -43,6 +43,26 @@ const translations: Record<Language, Translations> = {
       startJourney: 'Start Your Journey',
       getStarted: 'Get Started',
       signIn: 'Sign In'
+    },
+    auth: {
+      welcomeBack: 'Welcome Back',
+      continueJourney: 'Continue your spiritual journey',
+      email: 'Email',
+      enterEmail: 'Enter your email',
+      password: 'Password',
+      enterPassword: 'Enter your password',
+      confirmPassword: 'Confirm Password',
+      enterConfirmPassword: 'Confirm your password',
+      createAccount: 'Create Account',
+      signUpSuccess: 'Account created successfully! Please check your email to verify your account.',
+      passwordsDontMatch: 'Passwords don\'t match',
+      passwordTooShort: 'Password must be at least 6 characters',
+      needAccount: 'Need an account?',
+      alreadyHaveAccount: 'Already have an account?',
+      signUp: 'Sign Up',
+      signIn: 'Sign In',
+      signUpTitle: 'Create Your Account',
+      joinCommunity: 'Join our spiritual community'
     }
   },
   nl: {
@@ -80,6 +100,26 @@ const translations: Record<Language, Translations> = {
       startJourney: 'Begin Je Reis',
       getStarted: 'Aan de Slag',
       signIn: 'Inloggen'
+    },
+    auth: {
+      welcomeBack: 'Welkom Terug',
+      continueJourney: 'Zet je spirituele reis voort',
+      email: 'E-mail',
+      enterEmail: 'Voer je e-mail in',
+      password: 'Wachtwoord',
+      enterPassword: 'Voer je wachtwoord in',
+      confirmPassword: 'Bevestig Wachtwoord',
+      enterConfirmPassword: 'Bevestig je wachtwoord',
+      createAccount: 'Account Aanmaken',
+      signUpSuccess: 'Account succesvol aangemaakt! Controleer je e-mail om je account te verifiëren.',
+      passwordsDontMatch: 'Wachtwoorden komen niet overeen',
+      passwordTooShort: 'Wachtwoord moet minimaal 6 tekens bevatten',
+      needAccount: 'Heb je een account nodig?',
+      alreadyHaveAccount: 'Heb je al een account?',
+      signUp: 'Registreren',
+      signIn: 'Inloggen',
+      signUpTitle: 'Maak Je Account Aan',
+      joinCommunity: 'Word lid van onze spirituele gemeenschap'
     }
   }
 };
