@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { SoulOrbAvatar } from "@/components/ui/avatar";
@@ -21,6 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
 import { LanguageSelector } from "@/components/ui/language-selector";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { isAdminUser } from "@/utils/isAdminUser";
 import MobileNavigation from "./MobileNavigation";
 import { FloatingHACSOrb } from "@/components/hacs/FloatingHACSOrb";
@@ -103,8 +104,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
               Soul Guide
             </span>
           </Link>
-          {/* Language selector on mobile top right */}
-          <div className="flex items-center space-x-2">
+          {/* Theme and Language controls on mobile top right */}
+          <div className="flex items-center space-x-1">
+            <ThemeToggle size="icon" />
             <LanguageSelector />
             {user && (
               <Button
@@ -146,8 +148,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
                   Soul Guide
                 </span>
               </Link>
-              {/* Language Selector on desktop, top right of sidebar */}
-              <div className="ml-2">
+              {/* Theme and Language controls on desktop sidebar */}
+              <div className="flex items-center space-x-1">
+                <ThemeToggle size="icon" />
                 <LanguageSelector />
               </div>
             </div>
