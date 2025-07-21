@@ -14,8 +14,7 @@ const translations: Record<Language, Translations> = {
       growth: 'Growth',
       coach: 'Coach',
       companion: 'Companion',
-      signIn: 'Sign In',
-      signOut: 'Sign Out'
+      signIn: 'Sign In'
     },
     language: {
       english: 'English',
@@ -55,7 +54,6 @@ const translations: Record<Language, Translations> = {
       enterPassword: 'Enter your password',
       confirmPassword: 'Confirm Password',
       enterConfirmPassword: 'Confirm your password',
-      confirmPasswordPlaceholder: 'Confirm your password',
       createAccount: 'Create Account',
       signUpSuccess: 'Account created successfully! Please check your email to verify your account.',
       passwordsDontMatch: 'Passwords don\'t match',
@@ -65,62 +63,8 @@ const translations: Record<Language, Translations> = {
       signUp: 'Sign Up',
       signIn: 'Sign In',
       signUpTitle: 'Create Your Account',
-      joinCommunity: 'Join our spiritual community',
-      startJourney: 'Start your personalized journey of self-discovery and growth.',
-      success: 'Success',
-      signUpFailed: 'Sign up failed',
-      signInFailed: 'Sign in failed',
-      welcomeBackMessage: 'Welcome back! You have successfully signed in.',
-      signOutSuccess: 'Signed out successfully',
-      signOutSuccessDescription: 'You have been safely signed out of your account.',
-      signOutError: 'Sign out failed',
-      signOutErrorDescription: 'There was an error signing you out. Please try again.'
-    },
-    common: {
-      loading: 'Loading...',
-      save: 'Save',
-      cancel: 'Cancel',
-      delete: 'Delete',
-      edit: 'Edit',
-      confirm: 'Confirm',
-      yes: 'Yes',
-      no: 'No',
-      ok: 'OK',
-      close: 'Close',
-      back: 'Back',
-      next: 'Next',
-      previous: 'Previous',
-      submit: 'Submit',
-      reset: 'Reset',
-      search: 'Search',
-      filter: 'Filter',
-      sort: 'Sort',
-      view: 'View',
-      download: 'Download',
-      upload: 'Upload',
-      copy: 'Copy',
-      paste: 'Paste',
-      cut: 'Cut'
-    },
-    errors: {
-      network: 'Network connection error. Please check your connection and try again.',
-      unauthorized: 'You are not authorized to access this resource.',
-      forbidden: 'Access to this resource is forbidden.',
-      notFound: 'The requested resource was not found.',
-      serverError: 'An internal server error occurred. Please try again later.',
-      validation: 'Please check your input and try again.',
-      required: 'This field is required.',
-      invalidEmail: 'Please enter a valid email address.',
-      invalidPassword: 'Password must be at least 8 characters long.',
-      sessionExpired: 'Your session has expired. Please sign in again.',
-      unknown: 'An unexpected error occurred. Please try again.'
-    },
-    notFound: {
-      title: '404',
-      message: 'It seems your soul journey has led you off the path',
-      returnButton: 'Return to Your Journey'
-    },
-    error: 'Error'
+      joinCommunity: 'Join our spiritual community'
+    }
   },
   nl: {
     nav: {
@@ -128,8 +72,7 @@ const translations: Record<Language, Translations> = {
       growth: 'Groei',
       coach: 'Coach',
       companion: 'Metgezel',
-      signIn: 'Inloggen',
-      signOut: 'Uitloggen'
+      signIn: 'Inloggen'
     },
     language: {
       english: 'English',
@@ -169,7 +112,6 @@ const translations: Record<Language, Translations> = {
       enterPassword: 'Voer je wachtwoord in',
       confirmPassword: 'Bevestig Wachtwoord',
       enterConfirmPassword: 'Bevestig je wachtwoord',
-      confirmPasswordPlaceholder: 'Bevestig je wachtwoord',
       createAccount: 'Account Aanmaken',
       signUpSuccess: 'Account succesvol aangemaakt! Controleer je e-mail om je account te verifiëren.',
       passwordsDontMatch: 'Wachtwoorden komen niet overeen',
@@ -179,62 +121,8 @@ const translations: Record<Language, Translations> = {
       signUp: 'Registreren',
       signIn: 'Inloggen',
       signUpTitle: 'Maak Je Account Aan',
-      joinCommunity: 'Word lid van onze spirituele gemeenschap',
-      startJourney: 'Begin je gepersonaliseerde reis van zelfontdekking en groei.',
-      success: 'Succes',
-      signUpFailed: 'Registratie mislukt',
-      signInFailed: 'Inloggen mislukt',
-      welcomeBackMessage: 'Welkom terug! Je bent succesvol ingelogd.',
-      signOutSuccess: 'Succesvol uitgelogd',
-      signOutSuccessDescription: 'Je bent veilig uitgelogd van je account.',
-      signOutError: 'Uitloggen mislukt',
-      signOutErrorDescription: 'Er was een fout bij het uitloggen. Probeer het opnieuw.'
-    },
-    common: {
-      loading: 'Laden...',
-      save: 'Opslaan',
-      cancel: 'Annuleren',
-      delete: 'Verwijderen',
-      edit: 'Bewerken',
-      confirm: 'Bevestigen',
-      yes: 'Ja',
-      no: 'Nee',
-      ok: 'OK',
-      close: 'Sluiten',
-      back: 'Terug',
-      next: 'Volgende',
-      previous: 'Vorige',
-      submit: 'Verzenden',
-      reset: 'Resetten',
-      search: 'Zoeken',
-      filter: 'Filteren',
-      sort: 'Sorteren',
-      view: 'Weergeven',
-      download: 'Downloaden',
-      upload: 'Uploaden',
-      copy: 'Kopiëren',
-      paste: 'Plakken',
-      cut: 'Knippen'
-    },
-    errors: {
-      network: 'Netwerkverbindingsfout. Controleer je verbinding en probeer opnieuw.',
-      unauthorized: 'Je bent niet geautoriseerd om toegang te krijgen tot deze bron.',
-      forbidden: 'Toegang tot deze bron is verboden.',
-      notFound: 'De aangevraagde bron is niet gevonden.',
-      serverError: 'Er is een interne serverfout opgetreden. Probeer het later opnieuw.',
-      validation: 'Controleer je invoer en probeer opnieuw.',
-      required: 'Dit veld is verplicht.',
-      invalidEmail: 'Voer een geldig e-mailadres in.',
-      invalidPassword: 'Wachtwoord moet minimaal 8 tekens lang zijn.',
-      sessionExpired: 'Je sessie is verlopen. Log opnieuw in.',
-      unknown: 'Er is een onverwachte fout opgetreden. Probeer het opnieuw.'
-    },
-    notFound: {
-      title: '404',
-      message: 'Het lijkt erop dat je spirituele reis je van het pad heeft geleid',
-      returnButton: 'Keer terug naar je reis'
-    },
-    error: 'Fout'
+      joinCommunity: 'Word lid van onze spirituele gemeenschap'
+    }
   }
 };
 
