@@ -97,15 +97,13 @@ const Profile = () => {
 
   if (loading) {
     return (
-      <MainLayout>
-        <div className="p-6 max-w-md mx-auto">
-          <div className="flex flex-col items-center text-center mb-6">
-            <div className="h-20 w-20 mb-4 bg-gray-200 rounded-full animate-pulse"></div>
-            <div className="h-6 w-32 bg-gray-200 rounded animate-pulse mb-2"></div>
-            <div className="h-4 w-48 bg-gray-200 rounded animate-pulse"></div>
-          </div>
+      <div className="p-6 max-w-md mx-auto">
+        <div className="flex flex-col items-center text-center mb-6">
+          <div className="h-20 w-20 mb-4 bg-gray-200 rounded-full animate-pulse"></div>
+          <div className="h-6 w-32 bg-gray-200 rounded animate-pulse mb-2"></div>
+          <div className="h-4 w-48 bg-gray-200 rounded animate-pulse"></div>
         </div>
-      </MainLayout>
+      </div>
     );
   }
 

@@ -76,25 +76,23 @@ const Tasks = () => {
 
   if (!isAuthenticated) {
     return (
-      <MainLayout>
-        <div className="min-h-screen bg-gradient-tertiary flex items-center justify-center p-component">
-          <div className="bg-surface-elevated/80 backdrop-blur-lg rounded-shape-3xl p-spacing-8 shadow-elevation border border-border-elevated/20 text-center max-w-sm w-full">
-            <div className="w-16 h-16 bg-gradient-primary rounded-shape-full mx-auto mb-spacing-6 flex items-center justify-center">
-              <Target className="h-8 w-8 text-text-inverse" />
-            </div>
-            <h1 className="text-heading-2xl font-display font-bold mb-spacing-3 gradient-text">
-              Productivity Mode
-            </h1>
-            <p className="mb-spacing-8 text-text-secondary leading-relaxed">Goal-focused achievement and task management</p>
-            <Button 
-              className="w-full bg-gradient-primary hover:shadow-elevation transition-all duration-300 rounded-shape-2xl h-12 text-text-inverse font-medium"
-              onClick={() => window.location.href = '/auth'}
-            >
-              Get Started
-            </Button>
+      <div className="min-h-screen bg-gradient-tertiary flex items-center justify-center p-component">
+        <div className="bg-surface-elevated/80 backdrop-blur-lg rounded-shape-3xl p-spacing-8 shadow-elevation border border-border-elevated/20 text-center max-w-sm w-full">
+          <div className="w-16 h-16 bg-gradient-primary rounded-shape-full mx-auto mb-spacing-6 flex items-center justify-center">
+            <Target className="h-8 w-8 text-text-inverse" />
           </div>
+          <h1 className="text-heading-2xl font-display font-bold mb-spacing-3 gradient-text">
+            Productivity Mode
+          </h1>
+          <p className="mb-spacing-8 text-text-secondary leading-relaxed">Goal-focused achievement and task management</p>
+          <Button 
+            className="w-full bg-gradient-primary hover:shadow-elevation transition-all duration-300 rounded-shape-2xl h-12 text-text-inverse font-medium"
+            onClick={() => window.location.href = '/auth'}
+          >
+            Get Started
+          </Button>
         </div>
-      </MainLayout>
+      </div>
     );
   }
 

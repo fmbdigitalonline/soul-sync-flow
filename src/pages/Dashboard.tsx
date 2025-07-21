@@ -56,48 +56,40 @@ const Dashboard = () => {
   // Show sign in required if no user
   if (!user) {
     return (
-      <MainLayout>
-        <div className="w-full min-h-[80vh] flex items-center justify-center p-component sm:p-spacing-6">
-          <div className="cosmic-card p-spacing-6 sm:p-spacing-8 text-center max-w-md w-full">
-            <h1 className="text-heading-xl sm:text-heading-2xl font-bold font-display mb-spacing-4">
-              <span className="gradient-text">Soul Dashboard</span>
-            </h1>
-            <p className="mb-spacing-6 text-body-sm sm:text-body-base">Please sign in to view your dashboard</p>
-            <Button 
-              className="bg-primary hover:bg-primary/90 w-full"
-              onClick={() => navigate('/auth')}
-            >
-              Sign In
-            </Button>
-          </div>
+      <div className="w-full min-h-[80vh] flex items-center justify-center p-component sm:p-spacing-6">
+        <div className="cosmic-card p-spacing-6 sm:p-spacing-8 text-center max-w-md w-full">
+          <h1 className="text-heading-xl sm:text-heading-2xl font-bold font-display mb-spacing-4">
+            <span className="gradient-text">Soul Dashboard</span>
+          </h1>
+          <p className="mb-spacing-6 text-body-sm sm:text-body-base">Please sign in to view your dashboard</p>
+          <Button 
+            className="bg-primary hover:bg-primary/90 w-full"
+            onClick={() => navigate('/auth')}
+          >
+            Sign In
+          </Button>
         </div>
-      </MainLayout>
+      </div>
     );
   }
 
   // Show loading while blueprint is loading
   if (loading) {
     return (
-      <MainLayout>
-        <PIENotificationSystem />
-        <div className="w-full min-h-[80vh] flex flex-col items-center justify-center p-4 sm:p-6">
-          <Loader2 className="h-8 w-8 animate-spin text-soul-purple" />
-          <p className="mt-2 text-sm sm:text-base">Loading dashboard...</p>
-        </div>
-      </MainLayout>
+      <div className="w-full min-h-[80vh] flex flex-col items-center justify-center p-4 sm:p-6">
+        <Loader2 className="h-8 w-8 animate-spin text-soul-purple" />
+        <p className="mt-2 text-sm sm:text-base">Loading dashboard...</p>
+      </div>
     );
   }
 
   // Show error if there's an error
   if (error) {
     return (
-      <MainLayout>
-        <PIENotificationSystem />
-        <div className="w-full min-h-[80vh] flex flex-col items-center justify-center p-4 sm:p-6">
-          <p className="text-red-500 mb-4">{error}</p>
-          <Button onClick={() => refetch()}>Try Again</Button>
-        </div>
-      </MainLayout>
+      <div className="w-full min-h-[80vh] flex flex-col items-center justify-center p-4 sm:p-6">
+        <p className="text-red-500 mb-4">{error}</p>
+        <Button onClick={() => refetch()}>Try Again</Button>
+      </div>
     );
   }
 
