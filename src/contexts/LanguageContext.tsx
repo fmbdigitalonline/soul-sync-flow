@@ -21,6 +21,32 @@ const translations: Record<Language, Translations> = {
       english: 'English',
       dutch: 'Nederlands'
     },
+    breadcrumbs: {
+      home: 'Home',
+      profile: 'Profile',
+      settings: 'Settings',
+      admin: 'Admin',
+      blueprint: 'Blueprint',
+      dreams: 'Dreams',
+      growth: 'Growth',
+      companion: 'Companion',
+      user360: '360° Profile'
+    },
+    forms: {
+      firstName: 'First Name',
+      lastName: 'Last Name',
+      phone: 'Phone',
+      address: 'Address',
+      city: 'City',
+      country: 'Country',
+      zipCode: 'ZIP Code',
+      dateOfBirth: 'Date of Birth',
+      gender: 'Gender',
+      title: 'Title',
+      description: 'Description',
+      name: 'Name',
+      message: 'Message'
+    },
     index: {
       welcome: 'Welcome to <span class="text-primary">SoulSync</span>',
       subtitle: 'Discover your authentic path through personalized AI guidance and spiritual growth tools.',
@@ -138,6 +164,32 @@ const translations: Record<Language, Translations> = {
     language: {
       english: 'English',
       dutch: 'Nederlands'
+    },
+    breadcrumbs: {
+      home: 'Thuis',
+      profile: 'Profiel',
+      settings: 'Instellingen',
+      admin: 'Beheer',
+      blueprint: 'Blauwdruk',
+      dreams: 'Dromen',
+      growth: 'Groei',
+      companion: 'Metgezel',
+      user360: '360° Profiel'
+    },
+    forms: {
+      firstName: 'Voornaam',
+      lastName: 'Achternaam',
+      phone: 'Telefoon',
+      address: 'Adres',
+      city: 'Stad',
+      country: 'Land',
+      zipCode: 'Postcode',
+      dateOfBirth: 'Geboortedatum',
+      gender: 'Geslacht',
+      title: 'Titel',
+      description: 'Beschrijving',
+      name: 'Naam',
+      message: 'Bericht'
     },
     index: {
       welcome: 'Welkom bij <span class="text-primary">SoulSync</span>',
