@@ -77,17 +77,17 @@ const Tasks = () => {
   if (!isAuthenticated) {
     return (
       <MainLayout>
-        <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-25 flex items-center justify-center p-4">
-          <div className="bg-white/80 backdrop-blur-lg rounded-3xl p-8 shadow-2xl border border-white/20 text-center max-w-sm w-full">
-            <div className="w-16 h-16 bg-gradient-to-br from-green-600 to-green-500 rounded-full mx-auto mb-6 flex items-center justify-center">
-              <Target className="h-8 w-8 text-white" />
+        <div className="min-h-screen bg-gradient-tertiary flex items-center justify-center p-component">
+          <div className="bg-surface-elevated/80 backdrop-blur-lg rounded-shape-3xl p-spacing-8 shadow-elevation border border-border-elevated/20 text-center max-w-sm w-full">
+            <div className="w-16 h-16 bg-gradient-primary rounded-shape-full mx-auto mb-spacing-6 flex items-center justify-center">
+              <Target className="h-8 w-8 text-text-inverse" />
             </div>
-            <h1 className="text-2xl font-bold mb-3 bg-gradient-to-r from-green-600 to-green-500 bg-clip-text text-transparent">
+            <h1 className="text-heading-2xl font-display font-bold mb-spacing-3 gradient-text">
               Productivity Mode
             </h1>
-            <p className="mb-8 text-gray-600 leading-relaxed">Goal-focused achievement and task management</p>
+            <p className="mb-spacing-8 text-text-secondary leading-relaxed">Goal-focused achievement and task management</p>
             <Button 
-              className="w-full bg-gradient-to-r from-green-600 to-green-500 hover:shadow-lg transition-all duration-300 rounded-2xl h-12 text-white font-medium"
+              className="w-full bg-gradient-primary hover:shadow-elevation transition-all duration-300 rounded-shape-2xl h-12 text-text-inverse font-medium"
               onClick={() => window.location.href = '/auth'}
             >
               Get Started
