@@ -5,11 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { SoulOrbProvider } from "@/contexts/SoulOrbContext";
-import { SupabaseProvider } from "@/contexts/SupabaseContext";
-import { Analytics } from "@/components/Analytics/Analytics";
-import { ResponseTimeProvider } from "@/contexts/ResponseTimeContext";
-import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
-import { FloatingInsights } from "@/components/Insights/FloatingInsights";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,26 +20,20 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <GlobalErrorBoundary>
+      <ErrorBoundary>
         <QueryClientProvider client={queryClient}>
-          <SupabaseProvider>
-            <LanguageProvider>
-              <AuthProvider>
-                <SoulOrbProvider>
-                  <ResponseTimeProvider>
-                    <div className="relative">
-                      <Outlet />
-                      <Analytics />
-                      <FloatingInsights />
-                    </div>
-                    <Toaster />
-                  </ResponseTimeProvider>
-                </SoulOrbProvider>
-              </AuthProvider>
-            </LanguageProvider>
-          </SupabaseProvider>
+          <LanguageProvider>
+            <AuthProvider>
+              <SoulOrbProvider>
+                <div className="relative">
+                  <Outlet />
+                </div>
+                <Toaster />
+              </SoulOrbProvider>
+            </AuthProvider>
+          </LanguageProvider>
         </QueryClientProvider>
-      </GlobalErrorBoundary>
+      </ErrorBoundary>
     </div>
   );
 }
