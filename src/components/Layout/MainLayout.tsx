@@ -1,136 +1,214 @@
 
-import React, { useState } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { MobileNavigation } from './MobileNavigation';
-import { Button } from '@/components/ui/button';
-import { Moon, Sun, Menu, X } from 'lucide-react';
-import { useTheme } from 'next-themes';
-import { cn } from '@/lib/utils';
+import React, { useState, useCallback } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { SoulOrbAvatar } from "@/components/ui/avatar";
+import { 
+  Home, 
+  Heart, 
+  MessageCircle, 
+  Sparkles, 
+  Settings, 
+  LogOut, 
+  Menu, 
+  X,
+  Star,
+  TestTube,
+  User
+} from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { cn } from "@/lib/utils";
+import { LanguageSelector } from "@/components/ui/language-selector";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { isAdminUser } from "@/utils/isAdminUser";
+import MobileNavigation from "./MobileNavigation";
+import { FloatingHACSOrb } from "@/components/hacs/FloatingHACSOrb";
 
 interface MainLayoutProps {
+  children: React.ReactNode;
   hideNav?: boolean;
-  children?: React.ReactNode;
 }
 
-export const MainLayout: React.FC<MainLayoutProps> = ({ hideNav = false, children }) => {
-  const { user } = useAuth();
+const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) => {
+  const { user, signOut } = useAuth();
+  const { toast } = useToast();
+  const { t } = useLanguage();
+  const navigate = useNavigate();
   const location = useLocation();
-  const { theme, setTheme } = useTheme();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const shouldShowDesktopNav = user && !hideNav;
-  const shouldShowMobileNav = user && !hideNav;
-
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast({
+        title: t('auth.signOutSuccess'),
+        description: t('auth.signOutSuccessDescription'),
+      });
+      navigate('/');
+    } catch (error) {
+      toast({
+        title: t('auth.signOutError'),
+        description: t('auth.signOutErrorDescription'),
+        variant: 'destructive',
+      });
+    }
   };
 
-  const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
-  };
-
-  const navigationItems = [
-    { name: 'Blueprint', href: '/blueprint' },
-    { name: 'Coach', href: '/coach' },
-    { name: 'Profile', href: '/profile' },
-    { name: 'Design Analysis', href: '/design-analysis' },
+  const baseNavItems = [
+    { to: "/", icon: Home, label: t('nav.home') },
+    { to: "/blueprint", icon: Star, label: "Blueprint" },
+    { to: "/dreams", icon: Heart, label: "Dreams" },
+    { to: "/spiritual-growth", icon: Sparkles, label: t('nav.growth') },
+    { to: "/companion", icon: MessageCircle, label: "Companion" },
   ];
+
+  // Add profile and 360° profile to navigation items for authenticated users
+  const userNavItems = user 
+    ? [
+        ...baseNavItems, 
+        { to: "/profile", icon: User, label: "Profile" },
+        { to: "/user-360", icon: User, label: "360° Profile" }
+      ]
+    : baseNavItems;
+
+  // Add Admin Dashboard and Test Environment for admin users
+  const navItems = user && isAdminUser(user) 
+    ? [
+        ...userNavItems, 
+        { to: "/admin", icon: Settings, label: "Admin Dashboard" },
+        { to: "/test-environment", icon: TestTube, label: "Test Environment" }
+      ]
+    : userNavItems;
+
+  const isActive = (path: string) => {
+    if (path === "/" && location.pathname === "/") return true;
+    if (path !== "/" && location.pathname.startsWith(path)) return true;
+    // Handle legacy /coach route redirect to /companion
+    if (path === "/companion" && location.pathname.startsWith("/coach")) return true;
+    return false;
+  };
+
+  // Only show desktop navigation for authenticated users unless explicitly hidden
+  const shouldShowDesktopNav = user && !hideNav;
+  // Only show mobile navigation for authenticated users unless explicitly hidden
+  const shouldShowMobileNav = user && !hideNav;
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Desktop Navigation */}
-      {shouldShowDesktopNav && (
-        <div className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0">
-          <div className="flex-1 flex flex-col min-h-0 bg-surface border-r border-border-default">
-            <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
-              <div className="flex items-center flex-shrink-0 px-4">
-                <h1 className="text-heading-lg font-cormorant text-primary">SoulSync</h1>
-              </div>
-              <nav className="mt-5 flex-1 px-2 space-y-1">
-                {navigationItems.map((item) => (
-                  <a
-                    key={item.name}
-                    href={item.href}
-                    className={cn(
-                      'text-text-main hover:bg-surface-elevated hover:text-primary group flex items-center px-2 py-2 text-body-md font-inter rounded-md transition-colors',
-                      location.pathname === item.href && 'bg-surface-elevated text-primary border-l-4 border-primary'
-                    )}
-                  >
-                    {item.name}
-                  </a>
-                ))}
-              </nav>
-            </div>
-            <div className="flex-shrink-0 flex bg-surface-elevated padding-md">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={toggleTheme}
-                className="text-text-main hover:text-primary"
-              >
-                {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Mobile Navigation Header */}
+      {/* Mobile Header - only show if not hiding nav and user is authenticated */}
       {shouldShowMobileNav && (
-        <div className="md:hidden bg-surface border-b border-border-default">
-          <div className="flex items-center justify-between padding-md">
-            <h1 className="text-heading-md font-cormorant text-primary">SoulSync</h1>
-            <div className="flex items-center gap-2">
+        <div className="md:hidden bg-background/80 backdrop-blur-lg border-b border-border sticky top-0 z-40 w-full">
+          <div className="flex items-center justify-between p-4 w-full">
+            <Link to="/" className="flex items-center space-x-2">
+              <SoulOrbAvatar size="sm" />
+              <span className="font-cormorant font-bold text-lg gradient-text brand-text">
+                Soul Guide
+              </span>
+            </Link>
+            {/* Theme and Language controls on mobile top right */}
+            <div className="flex items-center space-x-1">
+              <ThemeToggle size="icon" />
+              <LanguageSelector />
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={toggleTheme}
-                className="text-text-main hover:text-primary"
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="md:hidden rounded-xl"
               >
-                {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={toggleMobileMenu}
-                className="text-text-main hover:text-primary"
-              >
-                {isMobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+                {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </Button>
             </div>
           </div>
-          {isMobileMenuOpen && (
-            <nav className="border-t border-border-default bg-surface-elevated">
-              {navigationItems.map((item) => (
-                <a
-                  key={item.name}
-                  href={item.href}
-                  className={cn(
-                    'block px-4 py-3 text-body-md font-inter text-text-main hover:bg-surface-elevated hover:text-primary transition-colors',
-                    location.pathname === item.href && 'bg-surface-elevated text-primary border-l-4 border-primary'
-                  )}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  {item.name}
-                </a>
-              ))}
-            </nav>
+          
+          {/* Mobile Menu Dropdown */}
+          {isMenuOpen && (
+            <div className="border-t border-border bg-card/95 backdrop-blur-lg p-4 space-y-2 w-full">
+              <Button
+                variant="ghost"
+                onClick={handleSignOut}
+                className="w-full justify-start text-muted-foreground rounded-xl font-inter"
+              >
+                <LogOut className="h-5 w-5 mr-3" />
+                {t('nav.signOut')}
+              </Button>
+            </div>
           )}
         </div>
       )}
 
-      {/* Main Content */}
-      <div className={cn(
-        'flex flex-col min-h-screen',
-        shouldShowDesktopNav ? 'md:pl-64' : '',
-        shouldShowMobileNav ? 'pt-16 md:pt-0' : ''
-      )}>
-        <main className="flex-1">
-          {children || <Outlet />}
-        </main>
-        {shouldShowMobileNav && <MobileNavigation />}
+      <div className="flex flex-1 min-h-0">
+        {/* Desktop Sidebar - Only show for authenticated users unless hideNav is true */}
+        {shouldShowDesktopNav && (
+          <div className="hidden md:flex w-64 min-h-full bg-card/80 backdrop-blur-lg border-r border-border flex-col">
+            {/* Logo and Language Selector */}
+            <div className="p-6 border-b border-border flex items-center justify-between">
+              <Link to="/" className="flex items-center space-x-3">
+                <SoulOrbAvatar size="md" />
+                <span className="font-cormorant font-bold text-xl gradient-text brand-text">
+                  Soul Guide
+                </span>
+              </Link>
+              {/* Theme and Language controls on desktop sidebar */}
+              <div className="flex items-center space-x-1">
+                <ThemeToggle size="icon" />
+                <LanguageSelector />
+              </div>
+            </div>
+
+            {/* Navigation */}
+            <nav className="flex-1 p-4 space-y-2">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    className={cn(
+                      "flex items-center space-x-3 p-3 rounded-2xl transition-all duration-200 font-cormorant font-medium",
+                      isActive(item.to)
+                        ? "bg-gradient-to-r from-primary/10 to-accent/10 text-primary font-semibold border border-primary/20"
+                        : "text-muted-foreground hover:bg-accent/50 hover:text-primary"
+                    )}
+                  >
+                    <Icon className="h-5 w-5" />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+
+            {/* User Actions */}
+            <div className="p-4 border-t border-border space-y-2">
+              <Button
+                variant="ghost"
+                onClick={handleSignOut}
+                className="w-full justify-start text-muted-foreground rounded-xl hover:bg-accent/50 font-inter"
+              >
+                <LogOut className="h-5 w-5 mr-3" />
+                {t('nav.signOut')}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col">
+          <div className={cn(
+            "flex-1",
+            shouldShowMobileNav ? "pb-20 md:pb-0" : "pb-0"
+          )}>
+            {children}
+          </div>
+        </div>
       </div>
+
+      {/* Mobile Bottom Navigation - Only show for authenticated users unless hideNav is true */}
+      {shouldShowMobileNav && <MobileNavigation />}
+
+      {/* HACS Floating Orb - Only show for authenticated users */}
+      {user && !hideNav && <FloatingHACSOrb />}
     </div>
   );
 };
