@@ -59,18 +59,18 @@ export const AdminACSMonitoring: React.FC = () => {
 
   const getStateColor = (state: string) => {
     const colors = {
-      'NORMAL': 'bg-green-100 text-green-800',
-      'FRUSTRATED': 'bg-red-100 text-red-800',
-      'CONFUSED': 'bg-yellow-100 text-yellow-800',
-      'CLARIFICATION': 'bg-blue-100 text-blue-800'
+      'NORMAL': 'bg-success/10 text-success',
+      'FRUSTRATED': 'bg-destructive/10 text-destructive',
+      'CONFUSED': 'bg-warning/10 text-warning',
+      'CLARIFICATION': 'bg-secondary/10 text-secondary'
     };
-    return colors[state as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+    return colors[state as keyof typeof colors] || 'bg-muted text-muted-foreground';
   };
 
   const getSuccessIcon = (success: boolean) => {
     return success ? 
-      <CheckCircle className="w-4 h-4 text-green-600" /> : 
-      <AlertTriangle className="w-4 h-4 text-red-600" />;
+      <CheckCircle className="w-4 h-4 text-success" /> : 
+      <AlertTriangle className="w-4 h-4 text-destructive" />;
   };
 
   return (
@@ -78,14 +78,14 @@ export const AdminACSMonitoring: React.FC = () => {
       {/* ACS Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold flex items-center gap-2">
-            <Settings className="w-6 h-6 text-purple-600" />
+          <h2 className="text-2xl font-bold flex items-center gap-2 font-cormorant text-foreground">
+            <Settings className="w-6 h-6 text-primary" />
             ACS (Adaptive Context Scheduler) Monitoring
           </h2>
-          <p className="text-gray-600 mt-1">Real-time dialogue state management and adaptive interventions</p>
+          <p className="text-muted-foreground mt-1 font-inter">Real-time dialogue state management and adaptive interventions</p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="text-green-600">
+          <Badge variant="outline" className="text-success font-inter">
             95% Production Ready
           </Badge>
           <Button onClick={handleRefreshMetrics} variant="outline" size="sm">
@@ -197,14 +197,14 @@ export const AdminACSMonitoring: React.FC = () => {
         <CardContent>
           <div className="space-y-4">
             {stateDistribution.map((state, index) => (
-              <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div key={index} className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
                 <div className="flex items-center gap-3">
                   <Badge className={getStateColor(state.state)}>
                     {state.state}
                   </Badge>
                   <div>
-                    <p className="font-medium">{state.count} occurrences</p>
-                    <p className="text-sm text-gray-600">{state.percentage}% of total states</p>
+                    <p className="font-medium font-cormorant">{state.count} occurrences</p>
+                    <p className="text-sm text-muted-foreground font-inter">{state.percentage}% of total states</p>
                   </div>
                 </div>
                 <div className="w-32">
@@ -258,16 +258,16 @@ export const AdminACSMonitoring: React.FC = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-sm">State Detection: Active</span>
+              <div className="w-2 h-2 bg-success rounded-full"></div>
+              <span className="text-sm font-inter">State Detection: Active</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-sm">Context Analysis: Active</span>
+              <div className="w-2 h-2 bg-success rounded-full"></div>
+              <span className="text-sm font-inter">Context Analysis: Active</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-sm">Intervention Engine: Active</span>
+              <div className="w-2 h-2 bg-success rounded-full"></div>
+              <span className="text-sm font-inter">Intervention Engine: Active</span>
             </div>
           </CardContent>
         </Card>
@@ -309,7 +309,7 @@ export const AdminACSMonitoring: React.FC = () => {
                     {getSuccessIcon(intervention.success)}
                     {intervention.success ? 'Success' : 'Failed'}
                   </TableCell>
-                  <TableCell className="text-gray-500">{intervention.time}</TableCell>
+                  <TableCell className="text-muted-foreground font-inter">{intervention.time}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

@@ -59,12 +59,12 @@ export const AdminPIEMonitoring: React.FC = () => {
 
   const getInsightTypeColor = (type: string) => {
     const colors = {
-      mood: 'bg-blue-100 text-blue-800',
-      behavioral: 'bg-green-100 text-green-800',
-      predictive: 'bg-purple-100 text-purple-800',
-      productivity: 'bg-yellow-100 text-yellow-800'
+      mood: 'bg-secondary/10 text-secondary',
+      behavioral: 'bg-success/10 text-success',
+      predictive: 'bg-primary/10 text-primary',
+      productivity: 'bg-warning/10 text-warning'
     };
-    return colors[type as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+    return colors[type as keyof typeof colors] || 'bg-muted text-muted-foreground';
   };
 
   return (
@@ -72,14 +72,14 @@ export const AdminPIEMonitoring: React.FC = () => {
       {/* PIE Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold flex items-center gap-2">
-            <Brain className="w-6 h-6 text-blue-600" />
+          <h2 className="text-2xl font-bold flex items-center gap-2 font-cormorant text-foreground">
+            <Brain className="w-6 h-6 text-primary" />
             PIE (Proactive Insight Engine) Monitoring
           </h2>
-          <p className="text-gray-600 mt-1">Real-time analytics for intelligent insight generation</p>
+          <p className="text-muted-foreground mt-1 font-inter">Real-time analytics for intelligent insight generation</p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="text-green-600">
+          <Badge variant="outline" className="text-secondary font-inter">
             85% Beta Ready
           </Badge>
           <Button onClick={handleRefreshMetrics} variant="outline" size="sm">
@@ -233,16 +233,16 @@ export const AdminPIEMonitoring: React.FC = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-sm">Pattern Engine: Healthy</span>
+              <div className="w-2 h-2 bg-success rounded-full"></div>
+              <span className="text-sm font-inter">Pattern Engine: Healthy</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-sm">Data Pipeline: Healthy</span>
+              <div className="w-2 h-2 bg-success rounded-full"></div>
+              <span className="text-sm font-inter">Data Pipeline: Healthy</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-              <span className="text-sm">Scheduler: Minor Issues</span>
+              <div className="w-2 h-2 bg-warning rounded-full"></div>
+              <span className="text-sm font-inter">Scheduler: Minor Issues</span>
             </div>
           </CardContent>
         </Card>
@@ -256,24 +256,24 @@ export const AdminPIEMonitoring: React.FC = () => {
         <CardContent>
           <div className="space-y-4">
             {recentInsights.map((insight) => (
-              <div key={insight.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div key={insight.id} className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <Badge className={getInsightTypeColor(insight.type)}>
                       {insight.type}
                     </Badge>
-                    <span className="text-sm text-gray-600">{insight.user}</span>
-                    <Badge variant="outline" className="text-xs">
+                    <span className="text-sm text-muted-foreground font-inter">{insight.user}</span>
+                    <Badge variant="outline" className="text-xs font-inter">
                       {insight.confidence}% confidence
                     </Badge>
                   </div>
-                  <p className="text-sm">{insight.insight}</p>
+                  <p className="text-sm font-inter text-foreground">{insight.insight}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   {insight.delivered ? (
-                    <Badge variant="outline" className="text-green-600">Delivered</Badge>
+                    <Badge variant="outline" className="text-success font-inter">Delivered</Badge>
                   ) : (
-                    <Badge variant="outline" className="text-yellow-600">Pending</Badge>
+                    <Badge variant="outline" className="text-warning font-inter">Pending</Badge>
                   )}
                 </div>
               </div>

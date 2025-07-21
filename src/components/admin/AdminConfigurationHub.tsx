@@ -85,10 +85,10 @@ export const AdminConfigurationHub: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-green-100 text-green-800';
-      case 'draft': return 'bg-yellow-100 text-yellow-800';
-      case 'completed': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'active': return 'bg-success/10 text-success';
+      case 'draft': return 'bg-warning/10 text-warning';
+      case 'completed': return 'bg-secondary/10 text-secondary';
+      default: return 'bg-muted text-muted-foreground';
     }
   };
 
@@ -97,14 +97,14 @@ export const AdminConfigurationHub: React.FC = () => {
       {/* Configuration Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold flex items-center gap-2">
-            <Settings className="w-6 h-6 text-gray-600" />
+          <h2 className="text-2xl font-bold flex items-center gap-2 font-cormorant text-foreground">
+            <Settings className="w-6 h-6 text-muted-foreground" />
             Configuration Management Hub
           </h2>
-          <p className="text-gray-600 mt-1">Centralized configuration for all platform innovations and features</p>
+          <p className="text-muted-foreground mt-1 font-inter">Centralized configuration for all platform innovations and features</p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="text-blue-600">
+          <Badge variant="outline" className="text-secondary font-inter">
             Live Configuration
           </Badge>
         </div>
@@ -142,8 +142,8 @@ export const AdminConfigurationHub: React.FC = () => {
         <TabsContent value="pie">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Brain className="w-5 h-5 text-blue-600" />
+              <CardTitle className="flex items-center gap-2 font-cormorant">
+                <Brain className="w-5 h-5 text-primary" />
                 PIE (Proactive Insight Engine) Configuration
               </CardTitle>
             </CardHeader>
@@ -176,7 +176,7 @@ export const AdminConfigurationHub: React.FC = () => {
                       id="pie-sensitivity"
                       value={configs.pie.patternSensitivity}
                       onChange={(e) => handleConfigChange('pie', 'patternSensitivity', e.target.value)}
-                      className="w-full p-2 border rounded-md"
+                      className="w-full p-2 border rounded-md bg-background text-foreground font-inter"
                     >
                       <option value="low">Low</option>
                       <option value="moderate">Moderate</option>
@@ -238,8 +238,8 @@ export const AdminConfigurationHub: React.FC = () => {
         <TabsContent value="vfp">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Zap className="w-5 h-5 text-yellow-600" />
+              <CardTitle className="flex items-center gap-2 font-cormorant">
+                <Zap className="w-5 h-5 text-warning" />
                 VFP-Graph Configuration
               </CardTitle>
             </CardHeader>
@@ -261,7 +261,7 @@ export const AdminConfigurationHub: React.FC = () => {
                       id="vfp-dimensions"
                       value={configs.vfpGraph.vectorDimensions}
                       onChange={(e) => handleConfigChange('vfpGraph', 'vectorDimensions', parseInt(e.target.value))}
-                      className="w-full p-2 border rounded-md"
+                      className="w-full p-2 border rounded-md bg-background text-foreground font-inter"
                     >
                       <option value={64}>64 Dimensions</option>
                       <option value={96}>96 Dimensions</option>
@@ -321,8 +321,8 @@ export const AdminConfigurationHub: React.FC = () => {
         <TabsContent value="tmg">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Database className="w-5 h-5 text-green-600" />
+              <CardTitle className="flex items-center gap-2 font-cormorant">
+                <Database className="w-5 h-5 text-success" />
                 TMG (Tiered Memory Graph) Configuration
               </CardTitle>
             </CardHeader>
@@ -401,8 +401,8 @@ export const AdminConfigurationHub: React.FC = () => {
         <TabsContent value="acs">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Settings className="w-5 h-5 text-purple-600" />
+              <CardTitle className="flex items-center gap-2 font-cormorant">
+                <Settings className="w-5 h-5 text-primary" />
                 ACS (Adaptive Context Scheduler) Configuration
               </CardTitle>
             </CardHeader>
