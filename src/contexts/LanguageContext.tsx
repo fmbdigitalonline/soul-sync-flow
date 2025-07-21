@@ -115,6 +115,10 @@ const translations: Record<Language, Translations> = {
       sessionExpired: 'Your session has expired. Please sign in again.',
       unknown: 'An unexpected error occurred. Please try again.'
     },
+    profile: {
+      logoutSuccess: 'You have been successfully signed out.',
+      logoutError: 'There was an error signing you out. Please try again.'
+    },
     notFound: {
       title: '404',
       message: 'It seems your soul journey has led you off the path',
@@ -228,6 +232,10 @@ const translations: Record<Language, Translations> = {
       invalidPassword: 'Wachtwoord moet minimaal 8 tekens lang zijn.',
       sessionExpired: 'Je sessie is verlopen. Log opnieuw in.',
       unknown: 'Er is een onverwachte fout opgetreden. Probeer het opnieuw.'
+    },
+    profile: {
+      logoutSuccess: 'Je bent succesvol uitgelogd.',
+      logoutError: 'Er was een fout bij het uitloggen. Probeer het opnieuw.'
     },
     notFound: {
       title: '404',
