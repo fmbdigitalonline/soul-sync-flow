@@ -583,6 +583,32 @@
   .layout-spacing-md { padding: 32px; }
   .layout-spacing-lg { padding: 48px; }
   .layout-spacing-xl { padding: 64px; }
+  
+  /* =====================================================================
+     SEMANTIC SHAPE & ELEVATION UTILITIES - Use these instead of hardcoded values
+     ===================================================================== */
+  
+  /* Border Radius Utilities */
+  .radius-none { border-radius: 0; }
+  .radius-sm { border-radius: 2px; }
+  .radius-default { border-radius: var(--radius); }
+  .radius-md { border-radius: calc(var(--radius) - 2px); }
+  .radius-lg { border-radius: calc(var(--radius) + 4px); }
+  .radius-xl { border-radius: calc(var(--radius) + 8px); }
+  .radius-full { border-radius: 9999px; }
+  
+  /* Component-specific radius */
+  .radius-card { border-radius: var(--radius); }
+  .radius-button { border-radius: calc(var(--radius) - 2px); }
+  .radius-input { border-radius: calc(var(--radius) - 2px); }
+  .radius-badge { border-radius: calc(var(--radius) - 4px); }
+  
+  /* Shadow Utilities */
+  .shadow-card { box-shadow: 0 1px 3px 0 hsl(var(--color-shadow-default)); }
+  .shadow-card-hover { box-shadow: 0 4px 6px -1px hsl(var(--color-shadow-default)); }
+  .shadow-overlay { box-shadow: 0 10px 15px -3px hsl(var(--color-shadow-elevated)); }
+  .shadow-primary { box-shadow: 0 4px 6px -1px hsl(var(--color-shadow-primary)); }
+}
 }
 
 @keyframes float {

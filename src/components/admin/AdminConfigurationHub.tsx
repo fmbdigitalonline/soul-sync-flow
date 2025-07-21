@@ -93,46 +93,46 @@ export const AdminConfigurationHub: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-layout-sm">
       {/* Configuration Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold flex items-center gap-2 font-cormorant text-foreground">
+          <h2 className="text-heading-2xl flex items-center gap-space-sm">
             <Settings className="w-6 h-6 text-muted-foreground" />
             Configuration Management Hub
           </h2>
-          <p className="text-muted-foreground mt-1 font-inter">Centralized configuration for all platform innovations and features</p>
+          <p className="text-body-base text-muted-foreground margin-bottom-xs">Centralized configuration for all platform innovations and features</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="text-secondary font-inter">
+        <div className="flex items-center gap-space-sm">
+          <Badge variant="outline" className="text-label-sm text-secondary">
             Live Configuration
           </Badge>
         </div>
       </div>
 
-      <Tabs defaultValue="pie" className="space-y-6">
+      <Tabs defaultValue="pie" className="space-y-layout-sm">
         <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="pie" className="flex items-center gap-2">
+          <TabsTrigger value="pie" className="flex items-center gap-space-xs">
             <Brain className="w-4 h-4" />
             PIE
           </TabsTrigger>
-          <TabsTrigger value="vfp" className="flex items-center gap-2">
+          <TabsTrigger value="vfp" className="flex items-center gap-space-xs">
             <Zap className="w-4 h-4" />
             VFP-Graph
           </TabsTrigger>
-          <TabsTrigger value="tmg" className="flex items-center gap-2">
+          <TabsTrigger value="tmg" className="flex items-center gap-space-xs">
             <Database className="w-4 h-4" />
             TMG
           </TabsTrigger>
-          <TabsTrigger value="acs" className="flex items-center gap-2">
+          <TabsTrigger value="acs" className="flex items-center gap-space-xs">
             <Settings className="w-4 h-4" />
             ACS
           </TabsTrigger>
-          <TabsTrigger value="global" className="flex items-center gap-2">
+          <TabsTrigger value="global" className="flex items-center gap-space-xs">
             <Shield className="w-4 h-4" />
             Global
           </TabsTrigger>
-          <TabsTrigger value="testing" className="flex items-center gap-2">
+          <TabsTrigger value="testing" className="flex items-center gap-space-xs">
             <TestTube className="w-4 h-4" />
             A/B Tests
           </TabsTrigger>
@@ -142,16 +142,16 @@ export const AdminConfigurationHub: React.FC = () => {
         <TabsContent value="pie">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 font-cormorant">
+              <CardTitle className="flex items-center gap-space-sm text-heading-md">
                 <Brain className="w-5 h-5 text-primary" />
                 PIE (Proactive Insight Engine) Configuration
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-4">
+            <CardContent className="space-y-layout-sm">
+              <div className="grid grid-cols-2 gap-space-2xl">
+                <div className="space-y-component-lg">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="pie-enabled">Enable PIE System</Label>
+                    <Label htmlFor="pie-enabled" className="text-label-md">Enable PIE System</Label>
                     <Switch
                       id="pie-enabled"
                       checked={configs.pie.enabled}
@@ -159,8 +159,8 @@ export const AdminConfigurationHub: React.FC = () => {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>Confidence Threshold: {configs.pie.confidenceThreshold}</Label>
+                  <div className="space-y-component-sm">
+                    <Label className="text-label-md">Confidence Threshold: {configs.pie.confidenceThreshold}</Label>
                     <Slider
                       value={[configs.pie.confidenceThreshold]}
                       onValueChange={(value) => handleConfigChange('pie', 'confidenceThreshold', value[0])}
@@ -170,13 +170,13 @@ export const AdminConfigurationHub: React.FC = () => {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="pie-sensitivity">Pattern Sensitivity</Label>
+                  <div className="space-y-component-sm">
+                    <Label htmlFor="pie-sensitivity" className="text-label-md">Pattern Sensitivity</Label>
                     <select
                       id="pie-sensitivity"
                       value={configs.pie.patternSensitivity}
                       onChange={(e) => handleConfigChange('pie', 'patternSensitivity', e.target.value)}
-                      className="w-full p-2 border rounded-md bg-background text-foreground font-inter"
+                      className="w-full padding-sm border border-border-default radius-input bg-background text-foreground text-body-base"
                     >
                       <option value="low">Low</option>
                       <option value="moderate">Moderate</option>
@@ -185,9 +185,9 @@ export const AdminConfigurationHub: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="pie-retention">Data Retention (days)</Label>
+                <div className="space-y-component-lg">
+                  <div className="space-y-component-sm">
+                    <Label htmlFor="pie-retention" className="text-label-md">Data Retention (days)</Label>
                     <Input
                       id="pie-retention"
                       type="number"
@@ -196,11 +196,11 @@ export const AdminConfigurationHub: React.FC = () => {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>Delivery Methods</Label>
-                    <div className="space-y-2">
+                  <div className="space-y-component-sm">
+                    <Label className="text-label-md">Delivery Methods</Label>
+                    <div className="space-y-component-sm">
                       {['conversation', 'notification', 'email'].map((method) => (
-                        <div key={method} className="flex items-center space-x-2">
+                        <div key={method} className="flex items-center gap-space-sm">
                           <input
                             type="checkbox"
                             id={`pie-${method}`}
@@ -212,7 +212,7 @@ export const AdminConfigurationHub: React.FC = () => {
                               handleConfigChange('pie', 'deliveryMethods', methods);
                             }}
                           />
-                          <Label htmlFor={`pie-${method}`} className="capitalize">{method}</Label>
+                          <Label htmlFor={`pie-${method}`} className="capitalize text-label-md">{method}</Label>
                         </div>
                       ))}
                     </div>
@@ -220,7 +220,7 @@ export const AdminConfigurationHub: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end gap-space-sm">
                 <Button variant="outline" onClick={() => handleResetConfig('pie')}>
                   <RotateCcw className="w-4 h-4 mr-2" />
                   Reset
@@ -238,16 +238,16 @@ export const AdminConfigurationHub: React.FC = () => {
         <TabsContent value="vfp">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 font-cormorant">
+              <CardTitle className="flex items-center gap-space-sm text-heading-md">
                 <Zap className="w-5 h-5 text-warning" />
                 VFP-Graph Configuration
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-4">
+            <CardContent className="space-y-layout-sm">
+              <div className="grid grid-cols-2 gap-space-2xl">
+                <div className="space-y-component-lg">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="vfp-enabled">Enable VFP-Graph</Label>
+                    <Label htmlFor="vfp-enabled" className="text-label-md">Enable VFP-Graph</Label>
                     <Switch
                       id="vfp-enabled"
                       checked={configs.vfpGraph.enabled}
@@ -255,13 +255,13 @@ export const AdminConfigurationHub: React.FC = () => {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="vfp-dimensions">Vector Dimensions</Label>
+                  <div className="space-y-component-sm">
+                    <Label htmlFor="vfp-dimensions" className="text-label-md">Vector Dimensions</Label>
                     <select
                       id="vfp-dimensions"
                       value={configs.vfpGraph.vectorDimensions}
                       onChange={(e) => handleConfigChange('vfpGraph', 'vectorDimensions', parseInt(e.target.value))}
-                      className="w-full p-2 border rounded-md bg-background text-foreground font-inter"
+                      className="w-full padding-sm border border-border-default radius-input bg-background text-foreground text-body-base"
                     >
                       <option value={64}>64 Dimensions</option>
                       <option value={96}>96 Dimensions</option>
@@ -269,8 +269,8 @@ export const AdminConfigurationHub: React.FC = () => {
                     </select>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>Coherence Threshold: {configs.vfpGraph.coherenceThreshold}</Label>
+                  <div className="space-y-component-sm">
+                    <Label className="text-label-md">Coherence Threshold: {configs.vfpGraph.coherenceThreshold}</Label>
                     <Slider
                       value={[configs.vfpGraph.coherenceThreshold]}
                       onValueChange={(value) => handleConfigChange('vfpGraph', 'coherenceThreshold', value[0])}
@@ -281,9 +281,9 @@ export const AdminConfigurationHub: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="vfp-version">Encoder Version</Label>
+                <div className="space-y-component-lg">
+                  <div className="space-y-component-sm">
+                    <Label htmlFor="vfp-version" className="text-label-md">Encoder Version</Label>
                     <Input
                       id="vfp-version"
                       value={configs.vfpGraph.encoderVersion}
@@ -293,7 +293,7 @@ export const AdminConfigurationHub: React.FC = () => {
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="vfp-adaptive">Adaptive Weights</Label>
+                    <Label htmlFor="vfp-adaptive" className="text-label-md">Adaptive Weights</Label>
                     <Switch
                       id="vfp-adaptive"
                       checked={configs.vfpGraph.adaptiveWeights}
@@ -303,7 +303,7 @@ export const AdminConfigurationHub: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end gap-space-sm">
                 <Button variant="outline" onClick={() => handleResetConfig('vfpGraph')}>
                   <RotateCcw className="w-4 h-4 mr-2" />
                   Reset
@@ -321,16 +321,16 @@ export const AdminConfigurationHub: React.FC = () => {
         <TabsContent value="tmg">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 font-cormorant">
+              <CardTitle className="flex items-center gap-space-sm text-heading-md">
                 <Database className="w-5 h-5 text-success" />
                 TMG (Tiered Memory Graph) Configuration
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-4">
+            <CardContent className="space-y-layout-sm">
+              <div className="grid grid-cols-2 gap-space-2xl">
+                <div className="space-y-component-lg">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="tmg-enabled">Enable TMG System</Label>
+                    <Label htmlFor="tmg-enabled" className="text-label-md">Enable TMG System</Label>
                     <Switch
                       id="tmg-enabled"
                       checked={configs.tmg.enabled}
@@ -338,8 +338,8 @@ export const AdminConfigurationHub: React.FC = () => {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="tmg-hot">Hot Memory Limit</Label>
+                  <div className="space-y-component-sm">
+                    <Label htmlFor="tmg-hot" className="text-label-md">Hot Memory Limit</Label>
                     <Input
                       id="tmg-hot"
                       type="number"
@@ -348,8 +348,8 @@ export const AdminConfigurationHub: React.FC = () => {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="tmg-warm">Warm Memory Limit</Label>
+                  <div className="space-y-component-sm">
+                    <Label htmlFor="tmg-warm" className="text-label-md">Warm Memory Limit</Label>
                     <Input
                       id="tmg-warm"
                       type="number"
@@ -359,9 +359,9 @@ export const AdminConfigurationHub: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="tmg-compression">Compression Ratio</Label>
+                <div className="space-y-component-lg">
+                  <div className="space-y-component-sm">
+                    <Label htmlFor="tmg-compression" className="text-label-md">Compression Ratio</Label>
                     <Input
                       id="tmg-compression"
                       type="number"
@@ -371,8 +371,8 @@ export const AdminConfigurationHub: React.FC = () => {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="tmg-cleanup">Cleanup Interval (hours)</Label>
+                  <div className="space-y-component-sm">
+                    <Label htmlFor="tmg-cleanup" className="text-label-md">Cleanup Interval (hours)</Label>
                     <Input
                       id="tmg-cleanup"
                       type="number"
@@ -383,7 +383,7 @@ export const AdminConfigurationHub: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end gap-space-sm">
                 <Button variant="outline" onClick={() => handleResetConfig('tmg')}>
                   <RotateCcw className="w-4 h-4 mr-2" />
                   Reset
@@ -401,16 +401,16 @@ export const AdminConfigurationHub: React.FC = () => {
         <TabsContent value="acs">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 font-cormorant">
+              <CardTitle className="flex items-center gap-space-sm text-heading-md">
                 <Settings className="w-5 h-5 text-primary" />
                 ACS (Adaptive Context Scheduler) Configuration
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-4">
+            <CardContent className="space-y-layout-sm">
+              <div className="grid grid-cols-2 gap-space-2xl">
+                <div className="space-y-component-lg">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="acs-enabled">Enable ACS System</Label>
+                    <Label htmlFor="acs-enabled" className="text-label-md">Enable ACS System</Label>
                     <Switch
                       id="acs-enabled"
                       checked={configs.acs.enabled}
@@ -418,8 +418,8 @@ export const AdminConfigurationHub: React.FC = () => {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>Frustration Threshold: {configs.acs.frustrationThreshold}</Label>
+                  <div className="space-y-component-sm">
+                    <Label className="text-label-md">Frustration Threshold: {configs.acs.frustrationThreshold}</Label>
                     <Slider
                       value={[configs.acs.frustrationThreshold]}
                       onValueChange={(value) => handleConfigChange('acs', 'frustrationThreshold', value[0])}
@@ -429,8 +429,8 @@ export const AdminConfigurationHub: React.FC = () => {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>Clarification Threshold: {configs.acs.clarificationThreshold}</Label>
+                  <div className="space-y-component-sm">
+                    <Label className="text-label-md">Clarification Threshold: {configs.acs.clarificationThreshold}</Label>
                     <Slider
                       value={[configs.acs.clarificationThreshold]}
                       onValueChange={(value) => handleConfigChange('acs', 'clarificationThreshold', value[0])}
@@ -441,9 +441,9 @@ export const AdminConfigurationHub: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="acs-silent">Max Silent Time (seconds)</Label>
+                <div className="space-y-component-lg">
+                  <div className="space-y-component-sm">
+                    <Label htmlFor="acs-silent" className="text-label-md">Max Silent Time (seconds)</Label>
                     <Input
                       id="acs-silent"
                       type="number"
@@ -453,7 +453,7 @@ export const AdminConfigurationHub: React.FC = () => {
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="acs-personality">Personality Scaling</Label>
+                    <Label htmlFor="acs-personality" className="text-label-md">Personality Scaling</Label>
                     <Switch
                       id="acs-personality"
                       checked={configs.acs.personalityScaling}
@@ -463,7 +463,7 @@ export const AdminConfigurationHub: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end gap-space-sm">
                 <Button variant="outline" onClick={() => handleResetConfig('acs')}>
                   <RotateCcw className="w-4 h-4 mr-2" />
                   Reset
@@ -481,19 +481,19 @@ export const AdminConfigurationHub: React.FC = () => {
         <TabsContent value="global">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="w-5 h-5 text-gray-600" />
+              <CardTitle className="flex items-center gap-space-sm text-heading-md">
+                <Shield className="w-5 h-5 text-muted-foreground" />
                 Global System Configuration
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-4">
+            <CardContent className="space-y-layout-sm">
+              <div className="grid grid-cols-2 gap-space-2xl">
+                <div className="space-y-component-lg">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="global-maintenance">Maintenance Mode</Label>
-                    <div className="flex items-center gap-2">
+                    <Label htmlFor="global-maintenance" className="text-label-md">Maintenance Mode</Label>
+                    <div className="flex items-center gap-space-sm">
                       {configs.global.maintenanceMode && (
-                        <AlertTriangle className="w-4 h-4 text-red-500" />
+                        <AlertTriangle className="w-4 h-4 text-destructive" />
                       )}
                       <Switch
                         id="global-maintenance"
@@ -504,7 +504,7 @@ export const AdminConfigurationHub: React.FC = () => {
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="global-debug">Debug Logging</Label>
+                    <Label htmlFor="global-debug" className="text-label-md">Debug Logging</Label>
                     <Switch
                       id="global-debug"
                       checked={configs.global.debugLogging}
@@ -513,7 +513,7 @@ export const AdminConfigurationHub: React.FC = () => {
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="global-rate">Rate Limiting</Label>
+                    <Label htmlFor="global-rate" className="text-label-md">Rate Limiting</Label>
                     <Switch
                       id="global-rate"
                       checked={configs.global.rateLimiting}
@@ -522,9 +522,9 @@ export const AdminConfigurationHub: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-component-lg">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="global-analytics">Analytics Enabled</Label>
+                    <Label htmlFor="global-analytics" className="text-label-md">Analytics Enabled</Label>
                     <Switch
                       id="global-analytics"
                       checked={configs.global.analyticsEnabled}
@@ -533,12 +533,12 @@ export const AdminConfigurationHub: React.FC = () => {
                   </div>
 
                   {configs.global.maintenanceMode && (
-                    <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                      <div className="flex items-center gap-2 text-red-800">
+                    <div className="padding-lg bg-destructive/10 border border-destructive/50 radius-card">
+                      <div className="flex items-center gap-space-sm text-destructive">
                         <AlertTriangle className="w-4 h-4" />
-                        <span className="font-medium">Maintenance Mode Active</span>
+                        <span className="text-label-md">Maintenance Mode Active</span>
                       </div>
-                      <p className="text-sm text-red-600 mt-1">
+                      <p className="text-body-sm text-destructive margin-bottom-xs">
                         The platform is currently in maintenance mode. Users will see a maintenance page.
                       </p>
                     </div>
@@ -546,7 +546,7 @@ export const AdminConfigurationHub: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end gap-space-sm">
                 <Button variant="outline" onClick={() => handleResetConfig('global')}>
                   <RotateCcw className="w-4 h-4 mr-2" />
                   Reset
@@ -564,27 +564,27 @@ export const AdminConfigurationHub: React.FC = () => {
         <TabsContent value="testing">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TestTube className="w-5 h-5 text-blue-600" />
+              <CardTitle className="flex items-center gap-space-sm text-heading-md">
+                <TestTube className="w-5 h-5 text-primary" />
                 A/B Testing & Experimentation
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
+            <CardContent className="space-y-layout-sm">
+              <div className="space-y-component-lg">
                 {abTests.map((test) => (
-                  <div key={test.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div key={test.id} className="flex items-center justify-between padding-lg bg-muted/30 radius-card border border-border-default shadow-card">
                     <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <h4 className="font-medium">{test.name}</h4>
+                      <div className="flex items-center gap-space-sm">
+                        <h4 className="text-label-md">{test.name}</h4>
                         <Badge className={getStatusColor(test.status)}>
                           {test.status}
                         </Badge>
                       </div>
-                      <p className="text-sm text-gray-600 mt-1">
+                      <p className="text-body-sm text-muted-foreground margin-bottom-xs">
                         Variant: {test.variant} • Traffic: {test.traffic}%
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-space-sm">
                       <Button variant="outline" size="sm">
                         View Results
                       </Button>
