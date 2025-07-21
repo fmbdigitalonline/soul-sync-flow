@@ -346,7 +346,7 @@ export const PersonalityFusion: React.FC<PersonalityFusionProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
             <Card 
-              className="cursor-pointer border-2 hover:border-soul-purple/50 transition-colors h-full"
+              className="cursor-pointer border-2 hover:border-primary/50 transition-colors h-full"
               onClick={() => handleSwipeChoice(currentStep, 'left')}
             >
               <CardContent className="flex items-center justify-center p-6 text-center h-full">
@@ -357,7 +357,7 @@ export const PersonalityFusion: React.FC<PersonalityFusionProps> = ({
           
           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
             <Card 
-              className="cursor-pointer border-2 hover:border-soul-purple/50 transition-colors h-full"
+              className="cursor-pointer border-2 hover:border-primary/50 transition-colors h-full"
               onClick={() => handleSwipeChoice(currentStep, 'right')}
             >
               <CardContent className="flex items-center justify-center p-6 text-center h-full">
@@ -373,7 +373,7 @@ export const PersonalityFusion: React.FC<PersonalityFusionProps> = ({
             <div 
               key={index}
               className={`w-2 h-2 rounded-full ${
-                index <= currentStep ? 'bg-soul-purple' : 'bg-gray-300'
+                index <= currentStep ? 'bg-primary' : 'bg-neutral-300'
               }`}
             />
           ))}
@@ -391,12 +391,12 @@ export const PersonalityFusion: React.FC<PersonalityFusionProps> = ({
       <div className="space-y-6">
         <div className="text-center">
           <div className="flex items-center justify-center gap-2 mb-3">
-            <Sparkles className="h-5 w-5 text-soul-purple" />
+            <Sparkles className="h-5 w-5 text-primary" />
             <h3 className="text-lg font-medium">{t('personality.yourPersonalityProfile')}</h3>
           </div>
         </div>
         
-        <Card className="border-soul-purple/20">
+        <Card className="border-primary/20">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-base">
@@ -462,7 +462,7 @@ export const PersonalityFusion: React.FC<PersonalityFusionProps> = ({
           <Button 
             onClick={handleConfidenceSubmit}
             disabled={isSubmitting}
-            className="w-full bg-soul-purple hover:bg-soul-purple/90 text-white font-medium py-3 rounded-lg"
+            className="w-full bg-primary hover:bg-primary/90 text-white font-medium py-3 rounded-lg"
           >
             {isSubmitting ? (
               <div className="flex items-center gap-2">

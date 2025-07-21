@@ -21,6 +21,9 @@ This document tracks the systematic migration from legacy styling to the Golden 
 
 #### Page Components  
 - [ ] **Index.tsx**: Verify font-display for headings, font-body for descriptions
+- [x] **SimplifiedBlueprintViewer.tsx**: ✅ COMPLETE - Full Golden Standard compliance
+- [x] **PersonalityFusion.tsx**: ✅ COMPLETE - Legacy tokens replaced with semantic tokens
+- [x] **PersonalityReportViewer.tsx**: ✅ COMPLETE - Color tokens migrated to Golden Standard
 - [ ] **Blueprint pages**: Ensure semantic spacing (space-* tokens)
 - [ ] **Dreams pages**: Validate color token usage
 - [ ] **Profile pages**: Apply typography hierarchy
