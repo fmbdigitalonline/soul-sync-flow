@@ -124,7 +124,7 @@ export const MBTISelector: React.FC<MBTISelectorProps> = ({ value, onChange }) =
           {mbtiDescriptions[type]?.traits.map((trait, i) => (
             <span 
               key={i}
-              className="bg-primary/10 text-primary text-xs px-2 py-1 rounded-full"
+              className="bg-primary/10 text-primary text-xs font-inter px-2 py-1 rounded-full"
             >
               {trait}
             </span>

@@ -118,32 +118,32 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
     return (
       <Card className="w-full max-w-2xl mx-auto">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 p-3 bg-green-100 rounded-full w-fit">
-            <CheckCircle className="h-8 w-8 text-green-600" />
+          <div className="mx-auto mb-4 p-3 bg-emerald-100 dark:bg-emerald-950/20 rounded-full w-fit">
+            <CheckCircle className="h-8 w-8 text-emerald-600" />
           </div>
-          <CardTitle className="text-2xl text-green-700">Blueprint Complete!</CardTitle>
+          <CardTitle className="text-2xl font-cormorant text-emerald-700 dark:text-emerald-300">Blueprint Complete!</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="text-center space-y-2">
             <p className="text-lg">Your personalized blueprint has been created</p>
             
             {/* VFP-Graph Status Display */}
-            <div className="bg-gradient-to-r from-soul-purple/10 to-soul-teal/10 border border-soul-purple/20 rounded-lg p-4 mt-4">
+            <div className="bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20 rounded-lg p-4 mt-4">
               <div className="flex items-center justify-center gap-2 mb-2">
                 {vfpGraphGenerated ? (
                   <>
-                    <Brain className="h-5 w-5 text-soul-purple" />
-                    <span className="font-medium text-soul-purple">VFP-Graph Intelligence Activated</span>
-                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <Brain className="h-5 w-5 text-primary" />
+                    <span className="font-cormorant font-medium text-primary">VFP-Graph Intelligence Activated</span>
+                    <CheckCircle className="h-4 w-4 text-emerald-600" />
                   </>
                 ) : (
                   <>
-                    <Loader2 className="h-5 w-5 text-soul-purple animate-spin" />
-                    <span className="font-medium text-soul-purple">VFP-Graph Initializing</span>
+                    <Loader2 className="h-5 w-5 text-primary animate-spin" />
+                    <span className="font-cormorant font-medium text-primary">VFP-Graph Initializing</span>
                   </>
                 )}
               </div>
-              <p className="text-sm text-center text-muted-foreground">
+              <p className="text-sm font-inter text-center text-muted-foreground">
                 {vfpGraphGenerated 
                   ? '128-dimensional personality vector ready for enhanced AI coaching'
                   : 'Your 128D personality intelligence will be ready shortly'
@@ -183,17 +183,17 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader className="text-center">
-        <div className="mx-auto mb-4 p-3 bg-soul-purple/10 rounded-full w-fit">
+        <CardHeader className="text-center">
+        <div className="mx-auto mb-4 p-3 bg-primary/10 rounded-full w-fit">
           {currentStep === 1 ? (
-            <Sparkles className="h-8 w-8 text-soul-purple animate-pulse" />
+            <Sparkles className="h-8 w-8 text-primary animate-pulse" />
           ) : currentStep === 2 ? (
-            <Brain className="h-8 w-8 text-soul-purple animate-pulse" />
+            <Brain className="h-8 w-8 text-primary animate-pulse" />
           ) : (
-            <Loader2 className="h-8 w-8 text-soul-purple animate-spin" />
+            <Loader2 className="h-8 w-8 text-primary animate-spin" />
           )}
         </div>
-        <CardTitle className="text-2xl">
+        <CardTitle className="text-2xl font-cormorant">
           {currentStep === 1 && 'Generating Your Blueprint'}
           {currentStep === 2 && 'Creating VFP-Graph Intelligence'}
           {currentStep === 3 && 'Finalizing Setup'}
@@ -206,10 +206,10 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
             <div key={index} className="flex items-center space-x-3">
               <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${
                 index < currentStep 
-                  ? 'bg-green-500 text-white' 
+                  ? 'bg-emerald-500 text-white' 
                   : index === currentStep 
-                    ? 'bg-soul-purple text-white' 
-                    : 'bg-gray-200 text-gray-500'
+                    ? 'bg-primary text-primary-foreground' 
+                    : 'bg-muted text-muted-foreground'
               }`}>
                 {index < currentStep ? (
                   <CheckCircle className="h-4 w-4" />
@@ -220,12 +220,12 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
                 )}
               </div>
               <div className="flex-1">
-                <p className={`font-medium ${
-                  index <= currentStep ? 'text-gray-900' : 'text-gray-500'
+                <p className={`font-cormorant font-medium ${
+                  index <= currentStep ? 'text-foreground' : 'text-muted-foreground'
                 }`}>
                   {step.title}
                 </p>
-                <p className="text-sm text-gray-500">{step.description}</p>
+                <p className="text-sm font-inter text-muted-foreground">{step.description}</p>
               </div>
             </div>
           ))}
@@ -234,7 +234,7 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
         {/* Progress Bar */}
         <div className="space-y-2">
           <Progress value={(currentStep / (steps.length - 1)) * 100} className="w-full" />
-          <p className="text-sm text-center text-muted-foreground">
+          <p className="text-sm font-inter text-center text-muted-foreground">
             {currentStep === 1 && 'Creating your unique personality blueprint...'}
             {currentStep === 2 && 'Generating 128-dimensional VFP-Graph vector for enhanced AI coaching...'}
             {currentStep === 3 && 'Setting up your personalized experience...'}
@@ -243,12 +243,12 @@ export const BlueprintGenerationFlow: React.FC<BlueprintGenerationFlowProps> = (
 
         {/* Special VFP-Graph Info */}
         {currentStep === 2 && (
-          <div className="bg-gradient-to-r from-soul-purple/5 to-soul-teal/5 border border-soul-purple/20 rounded-lg p-4">
+          <div className="bg-gradient-to-r from-primary/5 to-secondary/5 border border-primary/20 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-2">
-              <Brain className="h-5 w-5 text-soul-purple" />
-              <span className="font-medium text-soul-purple">VFP-Graph Technology</span>
+              <Brain className="h-5 w-5 text-primary" />
+              <span className="font-cormorant font-medium text-primary">VFP-Graph Technology</span>
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm font-inter text-muted-foreground">
               Creating your 128-dimensional personality vector by fusing MBTI, Human Design, and Astrology data. 
               This enables the most personalized AI coaching experience possible.
             </p>

@@ -22,10 +22,10 @@ const FactsGrid: React.FC<FactsGridProps> = ({ facts, title }) => {
   return (
     <div className="mb-6">
       <h4 className="text-sm font-medium text-muted-foreground mb-3">{title} Overview</h4>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {facts.map((fact, index) => (
-          <div key={index} className="bg-gradient-to-br from-soul-purple/5 to-soul-blue/5 border border-soul-purple/20 rounded-lg p-3 text-center">
-            <span className="font-medium text-xs sm:text-sm break-words">{fact}</span>
+          <div key={index} className="bg-gradient-to-br from-primary/5 to-secondary/5 border border-primary/20 rounded-lg p-3 text-center">
+            <span className="font-inter font-medium text-xs sm:text-sm break-words">{fact}</span>
           </div>
         ))}
       </div>
@@ -42,16 +42,16 @@ interface SectionProps {
 
 const Section: React.FC<SectionProps> = ({ title, facts, narrative, depth }) => {
   const depthColors = {
-    novice: "bg-green-50 border-green-200 text-green-800",
-    amateur: "bg-blue-50 border-blue-200 text-blue-800",
-    pro: "bg-purple-50 border-purple-200 text-purple-800"
+    novice: "bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200",
+    amateur: "bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200",
+    pro: "bg-purple-50 dark:bg-purple-950/20 border-purple-200 dark:border-purple-800 text-purple-800 dark:text-purple-200"
   };
 
   // Show all facts without filtering - we want to see undefined values to debug
   return (
     <CosmicCard className="mb-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
-        <h3 className="text-lg sm:text-xl font-display font-bold">{title}</h3>
+        <h3 className="text-lg sm:text-xl font-cormorant font-bold">{title}</h3>
         <Badge className={`${depthColors[depth]} text-xs sm:text-sm self-start sm:self-center`}>
           {depth.charAt(0).toUpperCase() + depth.slice(1)}
         </Badge>
@@ -60,7 +60,7 @@ const Section: React.FC<SectionProps> = ({ title, facts, narrative, depth }) => 
       {facts.length > 0 && <FactsGrid facts={facts} title={title} />}
       
       <div className="prose prose-sm max-w-none">
-        <p className="text-gray-700 leading-relaxed text-sm sm:text-base break-words">{narrative}</p>
+        <p className="text-foreground/80 font-inter leading-relaxed text-sm sm:text-base break-words">{narrative}</p>
       </div>
     </CosmicCard>
   );
@@ -173,10 +173,10 @@ export const EnhancedBlueprintViewer: React.FC<EnhancedBlueprintViewerProps> = (
       {/* Header */}
       <div className="flex flex-col gap-4 mb-6">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold font-display break-words">
+          <h2 className="text-xl sm:text-2xl font-bold font-cormorant break-words">
             <span className="gradient-text">Soul Blueprint</span> for {blueprint.user_meta.preferred_name}
           </h2>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+          <p className="text-xs sm:text-sm font-inter text-muted-foreground mt-1">
             {blueprint.metadata.calculation_success ? 
               `Calculated using ${blueprint.metadata.engine}` : 
               "Using template data"
@@ -185,14 +185,14 @@ export const EnhancedBlueprintViewer: React.FC<EnhancedBlueprintViewerProps> = (
         </div>
         
         {/* Depth Toggle - Mobile Responsive */}
-        <div className="flex gap-1 bg-gray-100 rounded-lg p-1 w-fit mx-auto sm:mx-0">
+        <div className="flex gap-1 bg-muted rounded-lg p-1 w-fit mx-auto sm:mx-0">
           {(['novice', 'amateur', 'pro'] as ViewDepth[]).map((level) => (
             <Button
               key={level}
               variant={depth === level ? "default" : "ghost"}
               size="sm"
               onClick={() => setDepth(level)}
-              className={`${depth === level ? "bg-soul-purple text-white" : ""} text-xs sm:text-sm px-2 sm:px-3 h-8`}
+              className={`${depth === level ? "bg-primary text-primary-foreground" : ""} text-xs sm:text-sm font-cormorant px-2 sm:px-3 h-8`}
             >
               {level.charAt(0).toUpperCase() + level.slice(1)}
             </Button>
