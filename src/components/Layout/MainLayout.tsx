@@ -10,9 +10,10 @@ import { cn } from '@/lib/utils';
 
 interface MainLayoutProps {
   hideNav?: boolean;
+  children?: React.ReactNode;
 }
 
-export const MainLayout: React.FC<MainLayoutProps> = ({ hideNav = false }) => {
+export const MainLayout: React.FC<MainLayoutProps> = ({ hideNav = false, children }) => {
   const { user } = useAuth();
   const location = useLocation();
   const { theme, setTheme } = useTheme();
@@ -126,10 +127,12 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ hideNav = false }) => {
         shouldShowMobileNav ? 'pt-16 md:pt-0' : ''
       )}>
         <main className="flex-1">
-          <Outlet />
+          {children || <Outlet />}
         </main>
         {shouldShowMobileNav && <MobileNavigation />}
       </div>
     </div>
   );
 };
+
+export default MainLayout;
