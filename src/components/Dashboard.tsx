@@ -14,16 +14,16 @@ const Dashboard = () => {
   const { t } = useLanguage();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 p-6">
+    <div className="min-h-screen bg-gradient-secondary-surface p-6">
       {/* PIE Notification System */}
       <PIENotificationSystem />
       
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">
+          <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-2 font-cormorant">
             {t('dashboard.welcome')}
           </h1>
-          <p className="text-gray-600">
+          <p className="text-muted-foreground font-inter">
             {t('dashboard.subtitle')}
           </p>
         </div>
@@ -36,8 +36,8 @@ const Dashboard = () => {
 
           {/* Quick Stats with Contextual Insights */}
           <CosmicCard className="p-6 lg:col-span-2">
-            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-              <TrendingUp className="w-5 h-5" />
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 font-cormorant text-foreground">
+              <TrendingUp className="w-5 h-5 text-primary" />
               {t('dashboard.quickStats')}
             </h2>
             
@@ -48,20 +48,20 @@ const Dashboard = () => {
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600">12</div>
-                <div className="text-sm text-gray-600">{t('dashboard.tasksCompleted')}</div>
+                <div className="text-2xl font-bold text-primary font-cormorant">12</div>
+                <div className="text-sm text-muted-foreground font-inter">{t('dashboard.tasksCompleted')}</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">3</div>
-                <div className="text-sm text-gray-600">{t('dashboard.focusSessions')}</div>
+                <div className="text-2xl font-bold text-secondary font-cormorant">3</div>
+                <div className="text-sm text-muted-foreground font-inter">{t('dashboard.focusSessions')}</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">85%</div>
-                <div className="text-sm text-gray-600">{t('dashboard.productivity')}</div>
+                <div className="text-2xl font-bold text-success font-cormorant">85%</div>
+                <div className="text-sm text-muted-foreground font-inter">{t('dashboard.productivity')}</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-orange-600">7</div>
-                <div className="text-sm text-gray-600">{t('dashboard.dayStreak')}</div>
+                <div className="text-2xl font-bold text-warning font-cormorant">7</div>
+                <div className="text-sm text-muted-foreground font-inter">{t('dashboard.dayStreak')}</div>
               </div>
             </div>
           </CosmicCard>
@@ -71,10 +71,10 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <CosmicCard className="p-4">
             <div className="flex items-center space-x-3">
-              <Clock className="w-8 h-8 text-purple-600" />
+              <Clock className="w-8 h-8 text-primary" />
               <div>
-                <h3 className="font-semibold">{t('dashboard.focusTimer')}</h3>
-                <p className="text-sm text-gray-600">{t('dashboard.startFocusSession')}</p>
+                <h3 className="font-semibold font-cormorant text-foreground">{t('dashboard.focusTimer')}</h3>
+                <p className="text-sm text-muted-foreground font-inter">{t('dashboard.startFocusSession')}</p>
               </div>
             </div>
             <Button className="w-full mt-3" variant="outline">
@@ -85,10 +85,10 @@ const Dashboard = () => {
 
           <CosmicCard className="p-4">
             <div className="flex items-center space-x-3">
-              <Target className="w-8 h-8 text-blue-600" />
+              <Target className="w-8 h-8 text-secondary" />
               <div>
-                <h3 className="font-semibold">{t('dashboard.setGoal')}</h3>
-                <p className="text-sm text-gray-600">{t('dashboard.defineNewGoal')}</p>
+                <h3 className="font-semibold font-cormorant text-foreground">{t('dashboard.setGoal')}</h3>
+                <p className="text-sm text-muted-foreground font-inter">{t('dashboard.defineNewGoal')}</p>
               </div>
             </div>
             <Button className="w-full mt-3" variant="outline">
@@ -99,10 +99,10 @@ const Dashboard = () => {
 
           <CosmicCard className="p-4">
             <div className="flex items-center space-x-3">
-              <Brain className="w-8 h-8 text-green-600" />
+              <Brain className="w-8 h-8 text-success" />
               <div>
-                <h3 className="font-semibold">{t('dashboard.aiCoach')}</h3>
-                <p className="text-sm text-gray-600">{t('dashboard.getPersonalizedAdvice')}</p>
+                <h3 className="font-semibold font-cormorant text-foreground">{t('dashboard.aiCoach')}</h3>
+                <p className="text-sm text-muted-foreground font-inter">{t('dashboard.getPersonalizedAdvice')}</p>
               </div>
             </div>
             <Button className="w-full mt-3" variant="outline">
@@ -113,10 +113,10 @@ const Dashboard = () => {
 
           <CosmicCard className="p-4">
             <div className="flex items-center space-x-3">
-              <Calendar className="w-8 h-8 text-orange-600" />
+              <Calendar className="w-8 h-8 text-warning" />
               <div>
-                <h3 className="font-semibold">{t('dashboard.planning')}</h3>
-                <p className="text-sm text-gray-600">{t('dashboard.organizeYourDay')}</p>
+                <h3 className="font-semibold font-cormorant text-foreground">{t('dashboard.planning')}</h3>
+                <p className="text-sm text-muted-foreground font-inter">{t('dashboard.organizeYourDay')}</p>
               </div>
             </div>
             <Button className="w-full mt-3" variant="outline">
@@ -129,32 +129,32 @@ const Dashboard = () => {
         {/* Recent Activities with Pattern Insights */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <CosmicCard className="p-6">
-            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-              <CheckCircle className="w-5 h-5" />
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 font-cormorant text-foreground">
+              <CheckCircle className="w-5 h-5 text-primary" />
               {t('dashboard.recentActivities')}
             </h2>
             
             <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                 <div className="flex items-center space-x-3">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                  <span className="text-sm">{t('dashboard.completedMorningRoutine')}</span>
+                  <CheckCircle className="w-5 h-5 text-success" />
+                  <span className="text-sm font-inter text-foreground">{t('dashboard.completedMorningRoutine')}</span>
                 </div>
                 <Badge variant="secondary">+10 pts</Badge>
               </div>
               
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                 <div className="flex items-center space-x-3">
-                  <Clock className="w-5 h-5 text-blue-600" />
-                  <span className="text-sm">{t('dashboard.focusSession25min')}</span>
+                  <Clock className="w-5 h-5 text-secondary" />
+                  <span className="text-sm font-inter text-foreground">{t('dashboard.focusSession25min')}</span>
                 </div>
                 <Badge variant="secondary">+15 pts</Badge>
               </div>
               
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                 <div className="flex items-center space-x-3">
-                  <Brain className="w-5 h-5 text-purple-600" />
-                  <span className="text-sm">{t('dashboard.aiCoachSession')}</span>
+                  <Brain className="w-5 h-5 text-primary" />
+                  <span className="text-sm font-inter text-foreground">{t('dashboard.aiCoachSession')}</span>
                 </div>
                 <Badge variant="secondary">+5 pts</Badge>
               </div>
@@ -162,40 +162,40 @@ const Dashboard = () => {
           </CosmicCard>
 
           <CosmicCard className="p-6">
-            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-              <Star className="w-5 h-5" />
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 font-cormorant text-foreground">
+              <Star className="w-5 h-5 text-primary" />
               {t('dashboard.weeklyProgress')}
             </h2>
             
             <div className="space-y-4">
               <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span>{t('dashboard.productivity')}</span>
-                  <span>85%</span>
+                <div className="flex justify-between text-sm mb-1 font-inter">
+                  <span className="text-foreground">{t('dashboard.productivity')}</span>
+                  <span className="text-foreground">85%</span>
                 </div>
                 <Progress value={85} className="h-2" />
               </div>
               
               <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span>{t('dashboard.focusTime')}</span>
-                  <span>12h 30m</span>
+                <div className="flex justify-between text-sm mb-1 font-inter">
+                  <span className="text-foreground">{t('dashboard.focusTime')}</span>
+                  <span className="text-foreground">12h 30m</span>
                 </div>
                 <Progress value={75} className="h-2" />
               </div>
               
               <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span>{t('dashboard.goalsProgress')}</span>
-                  <span>3/4</span>
+                <div className="flex justify-between text-sm mb-1 font-inter">
+                  <span className="text-foreground">{t('dashboard.goalsProgress')}</span>
+                  <span className="text-foreground">3/4</span>
                 </div>
                 <Progress value={75} className="h-2" />
               </div>
               
               <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span>{t('dashboard.consistency')}</span>
-                  <span>7 days</span>
+                <div className="flex justify-between text-sm mb-1 font-inter">
+                  <span className="text-foreground">{t('dashboard.consistency')}</span>
+                  <span className="text-foreground">7 days</span>
                 </div>
                 <Progress value={100} className="h-2" />
               </div>

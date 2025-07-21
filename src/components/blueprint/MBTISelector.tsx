@@ -116,8 +116,8 @@ export const MBTISelector: React.FC<MBTISelectorProps> = ({ value, onChange }) =
       <div className="bg-card border border-border p-4 rounded-lg">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-medium">{type} - {mbtiDescriptions[type]?.title || "Personality Type"}</h3>
-            <p className="text-muted-foreground text-sm mt-1">{mbtiDescriptions[type]?.description}</p>
+            <h3 className="text-lg font-medium font-cormorant">{type} - {mbtiDescriptions[type]?.title || "Personality Type"}</h3>
+            <p className="text-muted-foreground text-sm mt-1 font-inter">{mbtiDescriptions[type]?.description}</p>
           </div>
         </div>
         <div className="flex gap-2 mt-3">
@@ -136,64 +136,64 @@ export const MBTISelector: React.FC<MBTISelectorProps> = ({ value, onChange }) =
       <div className="space-y-4">
         <Tabs defaultValue={iE} onValueChange={(v) => handleDimensionChange(0, v)} className="w-full">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium">Extroversion vs. Introversion</span>
+            <span className="text-sm font-medium font-inter">Extroversion vs. Introversion</span>
             <TabsList className="grid w-36 grid-cols-2">
               <TabsTrigger value="E">E</TabsTrigger>
               <TabsTrigger value="I">I</TabsTrigger>
             </TabsList>
           </div>
-          <TabsContent value="E" className="p-2 rounded text-xs text-muted-foreground">
+          <TabsContent value="E" className="p-2 rounded text-xs text-muted-foreground font-inter">
             Extroverted - Gains energy from social interaction
           </TabsContent>
-          <TabsContent value="I" className="p-2 rounded text-xs text-muted-foreground">
+          <TabsContent value="I" className="p-2 rounded text-xs text-muted-foreground font-inter">
             Introverted - Gains energy from solitary time and reflection
           </TabsContent>
         </Tabs>
         
         <Tabs defaultValue={sN} onValueChange={(v) => handleDimensionChange(1, v)} className="w-full">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium">Sensing vs. Intuition</span>
+            <span className="text-sm font-medium font-inter">Sensing vs. Intuition</span>
             <TabsList className="grid w-36 grid-cols-2">
               <TabsTrigger value="S">S</TabsTrigger>
               <TabsTrigger value="N">N</TabsTrigger>
             </TabsList>
           </div>
-          <TabsContent value="S" className="p-2 rounded text-xs text-muted-foreground">
+          <TabsContent value="S" className="p-2 rounded text-xs text-muted-foreground font-inter">
             Sensing - Focuses on concrete facts and present details
           </TabsContent>
-          <TabsContent value="N" className="p-2 rounded text-xs text-muted-foreground">
+          <TabsContent value="N" className="p-2 rounded text-xs text-muted-foreground font-inter">
             Intuition - Focuses on patterns, possibilities, and future implications
           </TabsContent>
         </Tabs>
         
         <Tabs defaultValue={tF} onValueChange={(v) => handleDimensionChange(2, v)} className="w-full">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium">Thinking vs. Feeling</span>
+            <span className="text-sm font-medium font-inter">Thinking vs. Feeling</span>
             <TabsList className="grid w-36 grid-cols-2">
               <TabsTrigger value="T">T</TabsTrigger>
               <TabsTrigger value="F">F</TabsTrigger>
             </TabsList>
           </div>
-          <TabsContent value="T" className="p-2 rounded text-xs text-muted-foreground">
+          <TabsContent value="T" className="p-2 rounded text-xs text-muted-foreground font-inter">
             Thinking - Makes decisions based on logic and objective analysis
           </TabsContent>
-          <TabsContent value="F" className="p-2 rounded text-xs text-muted-foreground">
+          <TabsContent value="F" className="p-2 rounded text-xs text-muted-foreground font-inter">
             Feeling - Makes decisions based on values and subjective impact
           </TabsContent>
         </Tabs>
         
         <Tabs defaultValue={jP} onValueChange={(v) => handleDimensionChange(3, v)} className="w-full">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium">Judging vs. Perceiving</span>
+            <span className="text-sm font-medium font-inter">Judging vs. Perceiving</span>
             <TabsList className="grid w-36 grid-cols-2">
               <TabsTrigger value="J">J</TabsTrigger>
               <TabsTrigger value="P">P</TabsTrigger>
             </TabsList>
           </div>
-          <TabsContent value="J" className="p-2 rounded text-xs text-muted-foreground">
+          <TabsContent value="J" className="p-2 rounded text-xs text-muted-foreground font-inter">
             Judging - Prefers structure, planning, and firm decisions
           </TabsContent>
-          <TabsContent value="P" className="p-2 rounded text-xs text-muted-foreground">
+          <TabsContent value="P" className="p-2 rounded text-xs text-muted-foreground font-inter">
             Perceiving - Prefers flexibility, adaptability, and keeping options open
           </TabsContent>
         </Tabs>
