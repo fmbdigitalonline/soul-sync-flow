@@ -22,9 +22,9 @@
     --color-secondary-subtle: 180 68% 95%; /* Very light teal */
     
     /* ========== Surface & Background Colors ========== */
-    --color-surface: 32 28% 98%;      /* Soul Ivory - Card/surface backgrounds */
-    --color-surface-elevated: 32 28% 96%; /* Elevated surfaces */
-    --color-surface-sunken: 32 28% 94%; /* Sunken surfaces */
+    --color-surface: 0 0% 100%;       /* Golden Standard - Pure White card backgrounds */
+    --color-surface-elevated: 0 0% 100%; /* Golden Standard - Pure White elevated surfaces */
+    --color-surface-sunken: 0 0% 100%; /* Golden Standard - Pure White sunken surfaces */
     --color-surface-overlay: 0 0% 100%; /* Modal/overlay backgrounds */
     
     /* ========== Text Colors ========== */
