@@ -55,10 +55,7 @@ export const useHACSConversation = () => {
         setConversationId(conversation.id);
         const conversationData = conversation.conversation_data;
         if (Array.isArray(conversationData)) {
-          // STEP 4: Filter out CNR questions - they're handled by FloatingHACSOrb (SoulSync Principle 1: Additive)
-          const filteredMessages = (conversationData as unknown as ConversationMessage[])
-            .filter(message => !(message.isQuestion && message.module === 'CNR'));
-          setMessages(filteredMessages);
+          setMessages(conversationData as unknown as ConversationMessage[]);
         }
       }
     } catch (error) {
@@ -73,40 +70,6 @@ export const useHACSConversation = () => {
     setIsTyping(true);
 
     try {
-      // CRITICAL: Ensure hacs_intelligence record exists with proper ID
-      const { data: existingIntelligence, error: checkError } = await supabase
-        .from('hacs_intelligence')
-        .select('id')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (checkError && checkError.code !== 'PGRST116') {
-        console.error('❌ Error checking HACS intelligence:', checkError);
-      }
-
-      // Initialize intelligence record if it doesn't exist
-      if (!existingIntelligence) {
-        console.log('🔄 Initializing HACS intelligence record for user:', user.id);
-        const { error: initError } = await supabase
-          .from('hacs_intelligence')
-          .insert({
-            id: crypto.randomUUID(),
-            user_id: user.id,
-            intelligence_level: 50,
-            interaction_count: 0,
-            module_scores: {},
-            pie_score: 0,
-            tmg_score: 0,
-            vfp_score: 0
-          });
-
-        if (initError) {
-          console.error('❌ Failed to initialize HACS intelligence:', initError);
-        } else {
-          console.log('✅ HACS intelligence record initialized');
-        }
-      }
-
       // Add user message immediately
       const userMessage: ConversationMessage = {
         id: `user_${Date.now()}`,
@@ -142,7 +105,7 @@ export const useHACSConversation = () => {
       setMessages(prev => [...prev, hacsMessage]);
       setConversationId(data.conversationId);
 
-      // Record conversation interaction for intelligence growth
+      // CRITICAL: Record conversation interaction for intelligence growth
       await recordConversationInteraction(
         content.trim(),
         determineResponseQuality(data.response, content.trim())
@@ -153,49 +116,24 @@ export const useHACSConversation = () => {
 
       // Handle generated question
       if (data.generatedQuestion) {
-        // STEP 4: Route CNR questions to floating orb instead of main conversation (SoulSync Principle 1: Additive)
-        if (data.generatedQuestion.module === 'CNR') {
-          console.log('🎯 HACS Conversation: CNR question generated - routing to floating orb');
-          
-          // Import CNR router dynamically to avoid circular dependencies
-          const { cnrMessageRouter } = await import('../services/cnr-message-router');
-          
-          // Create clarifying question from generated question
-          const clarifyingQuestion = {
-            id: data.generatedQuestion.id,
-            question: data.generatedQuestion.text,
-            context: 'personality_conflict_resolution',
-            expectedAnswerType: 'text' as const,
-            conflictId: `conflict_${Date.now()}`
-          };
-          
-          // Route to floating orb
-          cnrMessageRouter.initialize();
-          await cnrMessageRouter.routeQuestionToFloatingOrb(clarifyingQuestion);
-          
-          // Don't add CNR questions to main conversation
-          setCurrentQuestion(null);
-          
-        } else {
-          // Non-CNR questions go to main conversation as before
-          setCurrentQuestion(data.generatedQuestion);
-          
-          const questionMessage: ConversationMessage = {
-            id: `question_${Date.now()}`,
-            role: 'hacs',
-            content: data.generatedQuestion.text,
-            timestamp: new Date().toISOString(),
-            module: data.generatedQuestion.module,
-            questionId: data.generatedQuestion.id,
-            isQuestion: true
-          };
+        setCurrentQuestion(data.generatedQuestion);
+        
+        // Add question as a special message
+        const questionMessage: ConversationMessage = {
+          id: `question_${Date.now()}`,
+          role: 'hacs',
+          content: data.generatedQuestion.text,
+          timestamp: new Date().toISOString(),
+          module: data.generatedQuestion.module,
+          questionId: data.generatedQuestion.id,
+          isQuestion: true
+        };
 
-          setMessages(prev => [...prev, questionMessage]);
-        }
+        setMessages(prev => [...prev, questionMessage]);
       }
 
     } catch (error) {
-      console.error('❌ HACS CONVERSATION FAILED:', error);
+      console.error('❌ HACS CONVERSATION FAILED - NO FALLBACK:', error);
       
       // Remove user message since conversation failed
       setMessages(prev => prev.slice(0, -1));
@@ -206,7 +144,7 @@ export const useHACSConversation = () => {
       setIsLoading(false);
       setIsTyping(false);
     }
-  }, [user, messages, conversationId, recordConversationInteraction, refreshIntelligence]);
+  }, [user, messages, conversationId]);
 
   const generateQuestion = useCallback(async () => {
     if (!user) return;

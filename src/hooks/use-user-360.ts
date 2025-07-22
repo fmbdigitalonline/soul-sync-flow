@@ -1,124 +1,137 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { user360Service, User360Profile, DataAvailability } from '@/services/user-360-service';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { user360Service, type User360Profile, type DataAvailability } from '@/services/user-360-service';
+import { useUser360Sync } from './use-user-360-sync';
 
-export interface UseUser360Return {
-  profile: User360Profile | null;
-  loading: boolean;
-  error: string | null;
-  lastRefresh: Date | null;
-  completenessScore: number;
-  refreshProfile: () => Promise<void>;
-  forceRefreshWithSync: () => Promise<void>;
-  dataAvailability: DataAvailability | null;
-  dataSources: string[];
-  hasProfile: boolean;
-  syncActive: boolean;
-  lastSyncTime: Date | null;
-}
-
-export const useUser360 = (): UseUser360Return => {
+export const useUser360 = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const { syncActive, lastSyncTime, triggerSync } = useUser360Sync();
+  
   const [profile, setProfile] = useState<User360Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
-  const [syncActive, setSyncActive] = useState(false);
-  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
-  const { toast } = useToast();
 
-  const calculateCompleteness = useCallback((profile: User360Profile | null): number => {
-    if (!profile?.dataAvailability) return 0;
-    
-    const availability = profile.dataAvailability;
-    const sections = [
-      availability.blueprint.available,
-      availability.intelligence.available,
-      availability.memory.available,
-      availability.patterns.available,
-      availability.growth.available,
-      availability.activities.available,
-      availability.goals.available,
-      availability.conversations.available
-    ];
-    
-    const availableCount = sections.filter(Boolean).length;
-    return Math.round((availableCount / sections.length) * 100);
-  }, []);
+  const fetchProfile = useCallback(async () => {
+    if (!user) {
+      setProfile(null);
+      setLoading(false);
+      return;
+    }
 
-  const fetchProfile = useCallback(async (forceRefresh = false) => {
     try {
       setLoading(true);
       setError(null);
+      console.log('🔄 Fetching 360° profile for user:', user.id);
       
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setError('User not authenticated');
-        return;
-      }
-
-      console.log('🔄 360° Hook: Fetching user profile for:', user.id);
+      const userProfile = await user360Service.getUserProfile(user.id);
+      setProfile(userProfile);
+      setLastRefresh(new Date());
       
-      if (forceRefresh) {
-        setSyncActive(true);
-        setLastSyncTime(new Date());
-      }
-
-      const profile360 = await user360Service.getUserProfile(user.id);
-      
-      if (profile360) {
-        setProfile(profile360);
-        setLastRefresh(new Date());
-        console.log('✅ 360° Hook: Profile loaded successfully');
+      if (userProfile) {
+        console.log('✅ 360° Profile loaded successfully', {
+          dataSources: userProfile.dataSources.length,
+          version: userProfile.version,
+          syncActive
+        });
       } else {
-        console.log('⚠️ 360° Hook: No profile data available');
-        setProfile(null);
+        console.log('⚠️ No 360° profile data available - this is normal for new users');
       }
-      
     } catch (err) {
-      console.error('❌ 360° Hook: Error fetching profile:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load profile');
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      console.error('❌ Error fetching 360° profile:', errorMessage);
+      setError(errorMessage);
       
+      // Don't mask errors - show them transparently
       toast({
-        title: "Profile Load Error",
-        description: "Failed to load your 360° profile. Please try again.",
+        title: "Profile Loading Error",
+        description: `Unable to load complete profile: ${errorMessage}`,
         variant: "destructive"
       });
     } finally {
       setLoading(false);
-      setSyncActive(false);
     }
-  }, [toast]);
+  }, [user, toast, syncActive]);
 
   const refreshProfile = useCallback(async () => {
-    await fetchProfile(false);
-  }, [fetchProfile]);
+    if (!user) return;
+    
+    try {
+      console.log('🔄 Manually refreshing 360° profile');
+      const userProfile = await user360Service.refreshUserProfile(user.id);
+      setProfile(userProfile);
+      setLastRefresh(new Date());
+      
+      toast({
+        title: "Profile Refreshed",
+        description: "Your 360° profile has been updated with the latest data",
+      });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Refresh failed';
+      console.error('❌ Error refreshing profile:', errorMessage);
+      setError(errorMessage);
+    }
+  }, [user, toast]);
 
+  // Enhanced refresh that also triggers sync
   const forceRefreshWithSync = useCallback(async () => {
-    await fetchProfile(true);
-  }, [fetchProfile]);
+    if (!user) return;
+    
+    try {
+      console.log('🔄 Force refreshing with sync trigger');
+      
+      // Trigger sync first to ensure fresh data
+      await triggerSync();
+      
+      // Wait a moment for sync to process
+      setTimeout(async () => {
+        await refreshProfile();
+      }, 1000);
+      
+    } catch (err) {
+      console.error('❌ Error in force refresh with sync:', err);
+    }
+  }, [user, triggerSync, refreshProfile]);
 
+  // Initial load
   useEffect(() => {
     fetchProfile();
   }, [fetchProfile]);
 
-  const completenessScore = calculateCompleteness(profile);
-  const dataAvailability = profile?.dataAvailability || null;
-  const dataSources = profile?.dataSources || [];
-  const hasProfile = profile !== null;
+  // Auto-refresh when sync updates occur
+  useEffect(() => {
+    if (lastSyncTime && profile) {
+      // If sync happened after our last refresh, automatically refresh
+      if (lastRefresh && lastSyncTime > lastRefresh) {
+        console.log('🔄 Auto-refreshing profile due to sync update');
+        fetchProfile();
+      }
+    }
+  }, [lastSyncTime, lastRefresh, profile, fetchProfile]);
+
+  // Calculate data completeness score
+  const completenessScore = profile?.dataAvailability ? 
+    Object.values(profile.dataAvailability).filter(section => section.available).length / 
+    Object.keys(profile.dataAvailability).length * 100 : 0;
 
   return {
     profile,
     loading,
     error,
     lastRefresh,
-    completenessScore,
+    completenessScore: Math.round(completenessScore),
     refreshProfile,
     forceRefreshWithSync,
-    dataAvailability,
-    dataSources,
-    hasProfile,
+    // Transparent availability info
+    dataAvailability: profile?.dataAvailability || null,
+    dataSources: profile?.dataSources || [],
+    hasProfile: profile !== null,
+    isDataAvailable: (section: keyof DataAvailability) => 
+      profile?.dataAvailability?.[section]?.available || false,
+    // Sync status
     syncActive,
     lastSyncTime
   };

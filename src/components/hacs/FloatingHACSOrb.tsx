@@ -14,9 +14,6 @@ import { HACSMicroLearning } from './HACSMicroLearning';
 import { HACSChatOverlay } from './HACSChatOverlay';
 import { HACSInsightDisplay } from './HACSInsightDisplay';
 import { cn } from '@/lib/utils';
-// STEP 3: Import CNR router for clarification routing
-import { cnrMessageRouter, CNRRoutingEvent } from '@/services/cnr-message-router';
-import { ClarifyingQuestion } from '@/services/hermetic-core/conflict-navigation-resolution';
 
 interface FloatingHACSProps {
   className?: string;
@@ -30,10 +27,6 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   const [activeModule, setActiveModule] = useState<string | undefined>();
   const [moduleActivity, setModuleActivity] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
-  
-  // STEP 3: CNR Clarification state (additive - following SoulSync Principle 1)
-  const [cnrClarification, setCnrClarification] = useState<ClarifyingQuestion | null>(null);
-  const [showCnrBubble, setShowCnrBubble] = useState(false);
   
   const { intelligence, loading, refreshIntelligence } = useHacsIntelligence();
   const {
@@ -121,57 +114,6 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
 
     checkForIntroduction();
   }, [loading, shouldStartIntroduction, startIntroduction]);
-
-  // STEP 3: CNR Message Routing - Listen for CNR clarifications (additive - SoulSync Principle 1)
-  useEffect(() => {
-    const initializeCNRRouting = async () => {
-      console.log('🔄 FloatingHACSOrb: Initializing CNR message routing');
-      
-      // Initialize CNR router
-      await cnrMessageRouter.initialize();
-      
-      // Listen for CNR routing events
-      const unsubscribe = cnrMessageRouter.onCNRRouting((event: CNRRoutingEvent) => {
-        console.log('🎯 FloatingHACSOrb: Received CNR routing event:', event.type);
-        
-        if (event.type === 'clarification_generated' && event.data.question) {
-          console.log('🔔 FloatingHACSOrb: Displaying CNR clarification in floating orb');
-          
-          // Show CNR clarification in floating orb (not main conversation)
-          setCnrClarification(event.data.question);
-          setShowCnrBubble(true);
-          setActiveModule('CNR');
-          setModuleActivity(true);
-          setOrbStage('collecting');
-          
-          // Auto-dismiss after 20 seconds if no interaction
-          setTimeout(() => {
-            setShowCnrBubble(false);
-            setCnrClarification(null);
-            setModuleActivity(false);
-          }, 20000);
-        }
-        
-        if (event.type === 'conflict_resolved') {
-          console.log('✅ FloatingHACSOrb: CNR conflict resolved - clearing clarification');
-          setShowCnrBubble(false);
-          setCnrClarification(null);
-          setModuleActivity(false);
-        }
-      });
-      
-      // Check for any existing pending clarifications on mount
-      await cnrMessageRouter.checkAndRoutePendingClarifications();
-      
-      return unsubscribe;
-    };
-    
-    // Initialize and cleanup
-    initializeCNRRouting().then(unsubscribe => {
-      // Store unsubscribe function for cleanup
-      return unsubscribe;
-    });
-  }, []);
 
   // 🔒 INSIGHTS PAUSED - Feature flag for automatic insight generation
   const AUTO_INSIGHTS_ENABLED = false; // Set to true to re-enable automatic insights
@@ -355,52 +297,6 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
             )}
           </AnimatePresence>
 
-          {/* STEP 3: CNR Clarification Bubble (additive - SoulSync Principle 1) */}
-          <AnimatePresence>
-            {showCnrBubble && cnrClarification && (
-              <div 
-                className="mb-3 cursor-pointer hover:scale-105 transition-transform"
-                onClick={async () => {
-                  console.log('🔔 FloatingHACSOrb: CNR clarification clicked - opening response interface');
-                  
-                  // Simple prompt for now - this could be enhanced to a modal later
-                  const userResponse = prompt(`CNR Clarification:\n\n${cnrClarification.question}\n\nPlease provide your response:`);
-                  
-                  if (userResponse) {
-                    console.log('📝 FloatingHACSOrb: User provided CNR response');
-                    
-                    // Process the user's answer through CNR router
-                    const resolved = await cnrMessageRouter.processUserAnswer(cnrClarification.id, userResponse);
-                    
-                    if (resolved) {
-                      console.log('✅ FloatingHACSOrb: CNR clarification resolved');
-                      setShowCnrBubble(false);
-                      setCnrClarification(null);
-                      setModuleActivity(false);
-                    } else {
-                      console.log('⚠️ FloatingHACSOrb: CNR clarification could not be processed');
-                    }
-                  }
-                }}
-              >
-                <SpeechBubble
-                  position="top"
-                  isVisible={true}
-                >
-                  <div className="text-sm">
-                    <div className="font-medium text-primary mb-1">
-                      CNR Clarification
-                    </div>
-                    <div>{cnrClarification.question}</div>
-                    <div className="text-xs text-muted-foreground mt-2">
-                      Click to respond • Personality conflict resolution
-                    </div>
-                  </div>
-                </SpeechBubble>
-              </div>
-            )}
-          </AnimatePresence>
-
           {/* Floating Orb */}
           <motion.div
             whileHover={{ scale: 1.1 }}
@@ -422,8 +318,8 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
             />
           </motion.div>
 
-          {/* Pulse indicator for new questions, insights, or CNR clarifications */}
-          {(currentQuestion || (currentInsight && !currentInsight.acknowledged) || showCnrBubble) && (
+          {/* Pulse indicator for new questions or insights */}
+          {(currentQuestion || (currentInsight && !currentInsight.acknowledged)) && (
             <motion.div
               className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full"
               animate={{ scale: [1, 1.2, 1] }}

@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export interface DataAvailability {
@@ -72,30 +73,7 @@ class User360DataService {
     console.log('🔄 360° Service: Aggregating user profile data for:', userId);
     
     try {
-      // Check if user has existing 360° profile first
-      const { data: existingProfile, error: existingError } = await supabase
-        .from('user_360_profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      if (existingError) {
-        console.error('❌ 360° Service: Error checking existing profile:', existingError);
-        // Continue with fresh profile generation
-      }
-
-      // If profile exists and is recent (less than 1 hour old), return it
-      if (existingProfile && existingProfile.last_updated) {
-        const lastUpdated = new Date(existingProfile.last_updated);
-        const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-        
-        if (lastUpdated > oneHourAgo) {
-          console.log('✅ 360° Service: Using cached profile');
-          return this.mapToUser360Profile(existingProfile);
-        }
-      }
-
-      // Generate fresh profile data
+      // Real data aggregation from all silos - no mock data
       const [
         blueprintResult,
         intelligenceResult,
@@ -120,7 +98,7 @@ class User360DataService {
         this.getUserStatistics(userId)
       ]);
 
-      // Build data availability tracking
+      // Transparent data availability tracking - never mask errors
       const dataAvailability: DataAvailability = {
         blueprint: {
           available: blueprintResult.status === 'fulfilled' && blueprintResult.value !== null,
@@ -180,7 +158,7 @@ class User360DataService {
         }
       };
 
-      // Track data sources
+      // Track which data sources contributed
       const dataSources: string[] = [];
       if (dataAvailability.blueprint.available) dataSources.push('blueprints');
       if (dataAvailability.intelligence.available) dataSources.push('hacs_intelligence');
@@ -191,7 +169,7 @@ class User360DataService {
       if (dataAvailability.goals.available) dataSources.push('user_goals');
       if (dataAvailability.conversations.available) dataSources.push('conversations');
 
-      // Aggregate profile data
+      // Aggregate successful results only - don't fake missing data
       const profileData = {
         blueprint: blueprintResult.status === 'fulfilled' ? blueprintResult.value : undefined,
         intelligenceScores: intelligenceResult.status === 'fulfilled' ? intelligenceResult.value : undefined,
@@ -209,7 +187,7 @@ class User360DataService {
         conversationState: conversationsResult.status === 'fulfilled' ? conversationsResult.value : undefined
       };
 
-      // Store the profile
+      // Store or update the 360° profile
       const profile360 = await this.storeUser360Profile(userId, profileData, dataAvailability, dataSources);
       
       console.log('✅ 360° Service: Profile aggregated successfully', {
@@ -222,6 +200,7 @@ class User360DataService {
       return profile360;
     } catch (error) {
       console.error('❌ 360° Service: Error aggregating profile:', error);
+      // Don't mask errors - surface them clearly
       throw error;
     }
   }
@@ -397,12 +376,12 @@ class User360DataService {
       .from('user_360_profiles')
       .select('*')
       .eq('user_id', userId)
-      .maybeSingle();
+      .single();
 
     const profilePayload = {
       user_id: userId,
       profile_data: profileData,
-      data_availability: dataAvailability as any,
+      data_availability: dataAvailability as any, // Cast to Json for Supabase compatibility
       data_sources: dataSources,
       last_updated: new Date().toISOString(),
       version: existing ? existing.version + 1 : 1

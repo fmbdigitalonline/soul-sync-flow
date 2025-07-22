@@ -7,7 +7,6 @@ import "./index.css";
 import App from "./App";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
-import Onboarding from "./pages/Onboarding";
 import Blueprint from "./pages/Blueprint";
 import Coach from "./pages/Coach";
 import Dreams from "./pages/Dreams";
@@ -35,7 +34,6 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Index /> },
       { path: "auth", element: <Auth /> },
-      { path: "onboarding", element: <Onboarding /> },
       { path: "dreams", element: <ProtectedRoute><MainLayout><Dreams /></MainLayout></ProtectedRoute> },
       { path: "spiritual-growth", element: <ProtectedRoute><MainLayout><SpiritualGrowth /></MainLayout></ProtectedRoute> },
       { path: "companion", element: <ProtectedRoute><MainLayout><Coach /></MainLayout></ProtectedRoute> },

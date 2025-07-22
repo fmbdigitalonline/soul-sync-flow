@@ -1,5 +1,6 @@
 
 import React, { useRef, useEffect, useState } from "react";
+import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
 import { Sparkles, MessageCircle, RotateCcw, Zap } from "lucide-react";
@@ -60,23 +61,25 @@ const Coach = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <CosmicCard className="w-full max-w-md text-center space-y-6">
-          <div className="w-16 h-16 mx-auto bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center">
-            <MessageCircle className="h-8 w-8 text-white" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground mb-2">Soul Companion</h1>
-            <p className="text-muted-foreground">Your personal Soul companion for integrated support and guidance.</p>
-          </div>
-          <Button 
-            className="w-full"
-            onClick={() => window.location.href = '/auth'}
-          >
-            Get Started
-          </Button>
-        </CosmicCard>
-      </div>
+      <MainLayout>
+        <div className="min-h-screen bg-background flex items-center justify-center p-4">
+          <CosmicCard className="w-full max-w-md text-center space-y-6">
+            <div className="w-16 h-16 mx-auto bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center">
+              <MessageCircle className="h-8 w-8 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground mb-2">Soul Companion</h1>
+              <p className="text-muted-foreground">Your personal Soul companion for integrated support and guidance.</p>
+            </div>
+            <Button 
+              className="w-full"
+              onClick={() => window.location.href = '/auth'}
+            >
+              Get Started
+            </Button>
+          </CosmicCard>
+        </div>
+      </MainLayout>
     );
   }
 
@@ -137,25 +140,44 @@ const Coach = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto py-6 px-4 max-w-6xl">
-        
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold gradient-text mb-2">
-            Soul Companion
-          </h1>
-          <p className="text-muted-foreground">
-            Your integrated Soul companion combining coaching and guidance
-          </p>
-        </div>
+    <MainLayout>
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto py-6 px-4 max-w-6xl">
+          
+          <div className="text-center mb-6">
+            <h1 className="text-3xl font-bold gradient-text mb-2">
+              Soul Companion
+            </h1>
+            <p className="text-muted-foreground">
+              Your integrated Soul companion combining coaching and guidance
+            </p>
+          </div>
 
-        {/* Use MobileTogglePanel for all layouts */}
-        <MobileTogglePanel
-          chatContent={chatInterface}
-          remindersContent={remindersContent}
-        />
+          {/* Render different layouts based on screen size */}
+          {isMobile ? (
+            // Mobile: Use MobileTogglePanel
+            <MobileTogglePanel
+              chatContent={<CosmicCard className="h-full">{chatInterface}</CosmicCard>}
+              remindersContent={remindersContent}
+              activeRemindersCount={0}
+            />
+          ) : (
+            // Desktop: Use grid layout
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-12rem)]">
+              <div className="lg:col-span-1">
+                {remindersContent}
+              </div>
+
+              <div className="lg:col-span-3">
+                <CosmicCard className="h-full">
+                  {chatInterface}
+                </CosmicCard>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </MainLayout>
   );
 };
 

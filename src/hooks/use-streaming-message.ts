@@ -13,8 +13,8 @@ export function useStreamingMessage() {
     contentRef.current = '';
   }, []);
 
-  // Enhanced streaming with companion-like character display
-  const streamText = useCallback((fullText: string, speed: number = 65) => {
+  // Enhanced streaming with slow, rhythmic character-by-character display
+  const streamText = useCallback((fullText: string, speed: number = 75) => {
     setIsStreaming(true);
     contentRef.current = '';
     setStreamingContent('');
@@ -28,16 +28,14 @@ export function useStreamingMessage() {
         setStreamingContent(contentRef.current);
         currentIndex++;
         
-        // Natural companion rhythm with soul orb personality
+        // Variable speed based on punctuation for natural rhythm
         let delay = speed;
         if (char === '.' || char === '!' || char === '?') {
-          delay = speed * 3.5; // Thoughtful pause after thoughts
+          delay = speed * 3; // Longer pause after sentences
         } else if (char === ',' || char === ';') {
-          delay = speed * 2.2; // Gentle pause for breath
+          delay = speed * 2; // Medium pause after clauses
         } else if (char === ' ') {
-          delay = speed * 0.7; // Quick space flow
-        } else if (char === '\n') {
-          delay = speed * 4; // Pause between lines
+          delay = speed * 0.8; // Slightly faster for spaces
         }
         
         intervalRef.current = setTimeout(typeNextCharacter, delay);
@@ -53,9 +51,9 @@ export function useStreamingMessage() {
   }, []);
 
   const addStreamingChunk = useCallback((chunk: string) => {
-    // Convert chunk-based streaming to character-by-character with soul orb feel
+    // Convert chunk-based streaming to character-by-character
     const newContent = contentRef.current + chunk;
-    streamText(newContent, 55); // Gentle speed for soul conversations
+    streamText(newContent, 60); // Slower speed for growth conversations
   }, [streamText]);
 
   const completeStreaming = useCallback(() => {
@@ -74,12 +72,6 @@ export function useStreamingMessage() {
     }
   }, []);
 
-  const instantComplete = useCallback((fullText: string) => {
-    resetStreaming();
-    setStreamingContent(fullText);
-    contentRef.current = fullText;
-  }, [resetStreaming]);
-
   return {
     streamingContent,
     isStreaming,
@@ -87,7 +79,6 @@ export function useStreamingMessage() {
     startStreaming,
     completeStreaming,
     resetStreaming,
-    streamText,
-    instantComplete
+    streamText, // New method for direct text streaming
   };
 }
