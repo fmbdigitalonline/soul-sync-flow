@@ -13,6 +13,7 @@ import { HACSChatOverlay } from './HACSChatOverlay';
 import { HACSInsightDisplay } from './HACSInsightDisplay';
 import { cn } from '@/lib/utils';
 import { useStewardIntroductionEnhanced } from '@/hooks/use-steward-introduction-enhanced';
+import { useStewardIntroductionDatabase } from '@/hooks/use-steward-introduction-database';
 import { HACSLoadingDiagnostics } from './HACSLoadingDiagnostics';
 
 interface FloatingHACSProps {
@@ -58,6 +59,9 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     shouldStartIntroduction,
     diagnostics
   } = useStewardIntroductionEnhanced();
+
+  // Phase 2: Database-driven Steward Introduction validation
+  const stewardDatabase = useStewardIntroductionDatabase();
 
   console.log('FloatingHACSOrb render:', { 
     loading, 
@@ -111,37 +115,53 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     }
   }, [currentQuestion, currentInsight, clearCurrentQuestion]);
 
-  // ENHANCED: Check for steward introduction with better error handling
+  // Phase 2 Complete: Database-driven Steward Introduction check
   useEffect(() => {
-    const checkForIntroduction = async () => {
-      // Only check when system is ready
-      if (!isSystemReady) {
-        console.log('🎭 Enhanced Orb: System not ready for introduction check', {
-          loading,
-          diagnosticsComplete: diagnostics.diagnosticsComplete,
-          hacsExists: diagnostics.hacsIntelligenceExists
-        });
-        return;
-      }
+    // Wait for all systems to be ready including database check
+    if (!isSystemReady || stewardDatabase.loading) {
+      console.log('🎯 PHASE 2: System not ready for introduction check', {
+        loading,
+        diagnosticsComplete: diagnostics.diagnosticsComplete,
+        hacsExists: diagnostics.hacsIntelligenceExists,
+        databaseLoading: stewardDatabase.loading
+      });
+      return;
+    }
 
-      // Don't start introduction if there are critical errors
-      if (diagnostics.errors.length > 0) {
-        console.log('🎭 Enhanced Orb: Skipping introduction due to system errors:', diagnostics.errors);
-        return;
-      }
+    // Don't start introduction if there are critical errors
+    if (diagnostics.errors.length > 0) {
+      console.log('🎯 PHASE 2: Skipping introduction due to system errors:', diagnostics.errors);
+      return;
+    }
 
-      console.log('🎭 Enhanced Orb: Checking if steward introduction should start...');
-      const shouldStart = await shouldStartIntroduction();
-      if (shouldStart) {
-        console.log('🎭 Enhanced Orb: Triggering Steward Introduction...');
-        startIntroduction();
-      } else {
-        console.log('✅ Enhanced Orb: Steward Introduction already completed or not needed.');
-      }
-    };
+    // Use database validation results (Principle #2: Real Data Only)
+    if (stewardDatabase.error) {
+      console.error('🎯 PHASE 2: Database validation error:', stewardDatabase.error);
+      return;
+    }
 
-    checkForIntroduction();
-  }, [isSystemReady, shouldStartIntroduction, startIntroduction, diagnostics.errors]);
+    console.log('🎯 PHASE 2: Database validation complete:', {
+      shouldShow: stewardDatabase.shouldShow,
+      diagnostic: stewardDatabase.diagnostic,
+      introductionActive: introductionState.isActive
+    });
+
+    // Start introduction based on database validation (Principle #7: Transparent)
+    if (stewardDatabase.shouldShow && !introductionState.isActive) {
+      console.log('🚀 PHASE 2: Starting Steward Introduction (Database-validated)');
+      startIntroduction();
+    } else if (!stewardDatabase.shouldShow) {
+      console.log('✅ PHASE 2: Steward Introduction not needed:', stewardDatabase.diagnostic?.diagnosis);
+    }
+  }, [
+    isSystemReady, 
+    stewardDatabase.loading, 
+    stewardDatabase.shouldShow, 
+    stewardDatabase.error,
+    introductionState.isActive,
+    diagnostics.errors,
+    startIntroduction
+  ]);
 
   // 🔒 INSIGHTS PAUSED - Feature flag for automatic insight generation
   const AUTO_INSIGHTS_ENABLED = false; // Set to true to re-enable automatic insights

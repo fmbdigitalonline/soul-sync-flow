@@ -3156,6 +3156,10 @@ export type Database = {
         Args: { user_uuid: string }
         Returns: Json
       }
+      get_steward_introduction_diagnostic: {
+        Args: { p_user_id?: string }
+        Returns: Json
+      }
       handle_admin_check: {
         Args: Record<PropertyKey, never>
         Returns: boolean
