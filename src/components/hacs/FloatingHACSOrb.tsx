@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { IntelligentSoulOrb } from '@/components/ui/intelligent-soul-orb';
@@ -8,12 +7,13 @@ import { useHACSMicroLearning } from '@/hooks/use-hacs-micro-learning';
 import { useHACSInsights } from '@/hooks/use-hacs-insights';
 import { useAutonomousOrchestration } from '@/hooks/use-autonomous-orchestration';
 import { usePersonalityEngine } from '@/hooks/use-personality-engine';
-import { useStewardIntroduction } from '@/hooks/use-steward-introduction';
 import { VoiceTokenGenerator } from '@/services/voice-token-generator';
 import { HACSMicroLearning } from './HACSMicroLearning';
 import { HACSChatOverlay } from './HACSChatOverlay';
 import { HACSInsightDisplay } from './HACSInsightDisplay';
 import { cn } from '@/lib/utils';
+import { useStewardIntroductionEnhanced } from '@/hooks/use-steward-introduction-enhanced';
+import { HACSLoadingDiagnostics } from './HACSLoadingDiagnostics';
 
 interface FloatingHACSProps {
   className?: string;
@@ -48,19 +48,33 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   const { triggerIntelligentIntervention, generatePersonalizedInsight } = useAutonomousOrchestration();
   const { generateOraclePrompt, getOptimalTimingPreferences } = usePersonalityEngine();
   
-  // Introduction system integration
+  // ENHANCED: Use enhanced introduction system with diagnostics
   const {
     introductionState,
     isGeneratingReport,
     startIntroduction,
     continueIntroduction,
     completeIntroductionWithReport,
-    shouldStartIntroduction
-  } = useStewardIntroduction();
+    shouldStartIntroduction,
+    diagnostics
+  } = useStewardIntroductionEnhanced();
 
-  console.log('FloatingHACSOrb render:', { loading, intelligence, currentQuestion, currentInsight, isGenerating, isGeneratingInsight });
+  console.log('FloatingHACSOrb render:', { 
+    loading, 
+    intelligence, 
+    currentQuestion, 
+    currentInsight, 
+    isGenerating, 
+    isGeneratingInsight,
+    diagnosticsComplete: diagnostics.diagnosticsComplete,
+    hacsIntelligenceExists: diagnostics.hacsIntelligenceExists,
+    errors: diagnostics.errors
+  });
 
   const intelligenceLevel = intelligence?.intelligence_level || 0;
+
+  // ENHANCED: Better loading state management
+  const isSystemReady = !loading && diagnostics.diagnosticsComplete && diagnostics.hacsIntelligenceExists;
 
   // Update orb stage based on authentic HACS state
   useEffect(() => {
@@ -97,23 +111,37 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     }
   }, [currentQuestion, currentInsight, clearCurrentQuestion]);
 
-  // Check for steward introduction on mount for new users
+  // ENHANCED: Check for steward introduction with better error handling
   useEffect(() => {
     const checkForIntroduction = async () => {
-      if (!loading) {
-        console.log('🎭 Checking if steward introduction should start...');
-        const shouldStart = await shouldStartIntroduction();
-        if (shouldStart) {
-          console.log('🎭 Triggering Steward Introduction...');
-          startIntroduction();
-        } else {
-          console.log('✅ Steward Introduction already completed or not needed.');
-        }
+      // Only check when system is ready
+      if (!isSystemReady) {
+        console.log('🎭 Enhanced Orb: System not ready for introduction check', {
+          loading,
+          diagnosticsComplete: diagnostics.diagnosticsComplete,
+          hacsExists: diagnostics.hacsIntelligenceExists
+        });
+        return;
+      }
+
+      // Don't start introduction if there are critical errors
+      if (diagnostics.errors.length > 0) {
+        console.log('🎭 Enhanced Orb: Skipping introduction due to system errors:', diagnostics.errors);
+        return;
+      }
+
+      console.log('🎭 Enhanced Orb: Checking if steward introduction should start...');
+      const shouldStart = await shouldStartIntroduction();
+      if (shouldStart) {
+        console.log('🎭 Enhanced Orb: Triggering Steward Introduction...');
+        startIntroduction();
+      } else {
+        console.log('✅ Enhanced Orb: Steward Introduction already completed or not needed.');
       }
     };
 
     checkForIntroduction();
-  }, [loading, shouldStartIntroduction, startIntroduction]);
+  }, [isSystemReady, shouldStartIntroduction, startIntroduction, diagnostics.errors]);
 
   // 🔒 INSIGHTS PAUSED - Feature flag for automatic insight generation
   const AUTO_INSIGHTS_ENABLED = false; // Set to true to re-enable automatic insights
@@ -186,7 +214,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
           console.log('🔇 [INSIGHTS PAUSED] Would have triggered periodic analytics insight check here');
         }
       }, 60000);
-      return () => clearInterval(debugTimer);
+      return () => clearTimeout(debugTimer);
     }
   }, [intelligence, currentInsight, isGeneratingInsight, triggerInsightCheck, AUTO_INSIGHTS_ENABLED]);
 
@@ -253,13 +281,52 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     }
   };
 
-  console.log('FloatingHACSOrb state:', { loading, intelligence, currentQuestion, currentInsight, showBubble, showChat, showMicroLearning });
+  console.log('FloatingHACSOrb state:', { 
+    loading, 
+    intelligence, 
+    currentQuestion, 
+    currentInsight, 
+    showBubble, 
+    showChat, 
+    showMicroLearning,
+    isSystemReady,
+    diagnosticsComplete: diagnostics.diagnosticsComplete
+  });
   
-  // Show a visible debug version when loading
-  if (loading) {
+  // ENHANCED: Show loading state with diagnostics when system isn't ready
+  if (!isSystemReady) {
     return (
-      <div className="fixed bottom-6 right-6 z-50 p-4 bg-red-500 text-white rounded">
-        HACS Loading...
+      <div className="fixed bottom-6 right-6 z-50">
+        <div className="flex flex-col items-end gap-2">
+          {/* Show diagnostics if there are issues */}
+          {diagnostics.errors.length > 0 && (
+            <div className="max-w-sm">
+              <HACSLoadingDiagnostics showOnlyWhenIssues={true} />
+            </div>
+          )}
+          
+          {/* Loading orb */}
+          <div className="p-4 bg-card/95 backdrop-blur border border-border rounded-lg shadow-lg">
+            <div className="flex items-center gap-3">
+              <IntelligentSoulOrb
+                size="sm"
+                stage="welcome"
+                speaking={false}
+                intelligenceLevel={0}
+                showProgressRing={false}
+                className="animate-pulse"
+              />
+              <div className="text-sm">
+                <div className="font-medium text-card-foreground font-cormorant">
+                  {loading ? 'HACS Loading...' : 'System Initializing...'
+                </div>
+                <div className="text-muted-foreground font-inter text-xs">
+                  {!diagnostics.diagnosticsComplete ? 'Running diagnostics...' : 'Preparing intelligence...'}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
