@@ -87,6 +87,7 @@ export const useHACSConversation = () => {
         const { error: initError } = await supabase
           .from('hacs_intelligence')
           .insert({
+            id: crypto.randomUUID(),
             user_id: user.id,
             intelligence_level: 50,
             interaction_count: 0,
