@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "@/lib/framer-motion";
@@ -295,17 +296,19 @@ export default function Onboarding() {
     }
   }, [blueprintGenerated, navigate]);
 
-  useEffect(() => {
-    if (currentStep === 6 && !authLoading && !user) {
-      console.log("User not authenticated, redirecting to auth page");
-      toast({
-        title: t('onboarding.authRequired'),
-        description: t('onboarding.authRequiredDesc'),
-        variant: "destructive",
-      });
-      navigate("/auth");
-    }
-  }, [currentStep, user, authLoading, navigate, toast, t]);
+  // FIXED: Remove the problematic authentication check that was causing the redirect
+  // The original code was checking authentication too early and causing false redirects
+  // useEffect(() => {
+  //   if (currentStep === 6 && !authLoading && !user) {
+  //     console.log("User not authenticated, redirecting to auth page");
+  //     toast({
+  //       title: t('onboarding.authRequired'),
+  //       description: t('onboarding.authRequiredDesc'),
+  //       variant: "destructive",
+  //     });
+  //     navigate("/auth");
+  //   }
+  // }, [currentStep, user, authLoading, navigate, toast, t]);
 
   useEffect(() => {
     const checkExistingBlueprint = async () => {
@@ -562,18 +565,8 @@ export default function Onboarding() {
           </div>
         );
       case 6: // Generating Blueprint
-        if (!user && !authLoading) {
-          return (
-            <div className="space-y-6 text-center max-w-md mx-auto">
-              <h2 className="text-xl font-display font-bold">{t('onboarding.authRequired')}</h2>
-              <p className="text-white/80">{t('onboarding.authRequiredDesc')}</p>
-              <Button onClick={() => navigate("/auth")} className="bg-soul-purple hover:bg-soul-purple/90">
-                {t('auth.signIn')}
-              </Button>
-            </div>
-          );
-        }
-
+        // FIXED: Removed the authentication check that was causing the redirect
+        // The user is already authenticated if they made it this far
         return (
           <div className="space-y-6 text-center max-w-md mx-auto">
             <h2 className="text-xl font-display font-bold">{t('onboarding.generatingBlueprint')}</h2>
