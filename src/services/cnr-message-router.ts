@@ -34,14 +34,34 @@ export class CNRMessageRouter {
   /**
    * Initialize the router - Following SoulSync Principle 7: Build Transparently
    */
-  initialize(): void {
+  async initialize(): Promise<void> {
     if (this.isInitialized) {
       console.log('🔄 CNR Router: Already initialized');
       return;
     }
 
     console.log('🔄 CNR Router: Initializing message routing to floating orb');
+    
+    // Check for existing CNR questions in conversations and route them
+    await this.checkExistingCNRQuestions();
+    
     this.isInitialized = true;
+  }
+
+  /**
+   * Check for existing CNR questions in conversation data and route them
+   * Following SoulSync Principle 2: No Hardcoded or Simulated Data
+   */
+  private async checkExistingCNRQuestions(): Promise<void> {
+    try {
+      console.log('🔍 CNR Router: Checking for existing CNR questions in conversations');
+      
+      // This would require Supabase access - for now, just check the CNR service
+      await this.checkAndRoutePendingClarifications();
+      
+    } catch (error) {
+      console.error('❌ CNR Router: Failed to check existing CNR questions:', error);
+    }
   }
 
   /**
@@ -77,10 +97,10 @@ export class CNRMessageRouter {
   }
 
   /**
-   * Route individual question to floating orb
+   * Route individual question to floating orb - PUBLIC method for external routing
    * Following SoulSync Principle 7: Build Transparently, Not Silently
    */
-  private async routeQuestionToFloatingOrb(question: ClarifyingQuestion): Promise<void> {
+  async routeQuestionToFloatingOrb(question: ClarifyingQuestion): Promise<void> {
     try {
       console.log(`🔄 CNR Router: Routing question "${question.question.substring(0, 50)}..." to floating orb`);
 

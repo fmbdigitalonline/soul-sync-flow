@@ -53,7 +53,9 @@ export const useHACSGrowthConversation = () => {
         const conversationData = Array.isArray(conversation.conversation_data) 
           ? (conversation.conversation_data as unknown) as GrowthConversationMessage[]
           : [];
-        setMessages(conversationData);
+        // STEP 4: Filter out CNR questions - they're handled by FloatingHACSOrb (SoulSync Principle 1: Additive)
+        const filteredMessages = conversationData.filter(message => !(message.isQuestion && message.module === 'CNR'));
+        setMessages(filteredMessages);
       }
     } catch (error) {
       console.error('Error in loadConversationHistory:', error);

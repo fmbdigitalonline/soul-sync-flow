@@ -55,7 +55,10 @@ export const useHACSConversation = () => {
         setConversationId(conversation.id);
         const conversationData = conversation.conversation_data;
         if (Array.isArray(conversationData)) {
-          setMessages(conversationData as unknown as ConversationMessage[]);
+          // STEP 4: Filter out CNR questions - they're handled by FloatingHACSOrb (SoulSync Principle 1: Additive)
+          const filteredMessages = (conversationData as unknown as ConversationMessage[])
+            .filter(message => !(message.isQuestion && message.module === 'CNR'));
+          setMessages(filteredMessages);
         }
       }
     } catch (error) {
@@ -150,19 +153,45 @@ export const useHACSConversation = () => {
 
       // Handle generated question
       if (data.generatedQuestion) {
-        setCurrentQuestion(data.generatedQuestion);
-        
-        const questionMessage: ConversationMessage = {
-          id: `question_${Date.now()}`,
-          role: 'hacs',
-          content: data.generatedQuestion.text,
-          timestamp: new Date().toISOString(),
-          module: data.generatedQuestion.module,
-          questionId: data.generatedQuestion.id,
-          isQuestion: true
-        };
+        // STEP 4: Route CNR questions to floating orb instead of main conversation (SoulSync Principle 1: Additive)
+        if (data.generatedQuestion.module === 'CNR') {
+          console.log('🎯 HACS Conversation: CNR question generated - routing to floating orb');
+          
+          // Import CNR router dynamically to avoid circular dependencies
+          const { cnrMessageRouter } = await import('../services/cnr-message-router');
+          
+          // Create clarifying question from generated question
+          const clarifyingQuestion = {
+            id: data.generatedQuestion.id,
+            question: data.generatedQuestion.text,
+            context: 'personality_conflict_resolution',
+            expectedAnswerType: 'text' as const,
+            conflictId: `conflict_${Date.now()}`
+          };
+          
+          // Route to floating orb
+          cnrMessageRouter.initialize();
+          await cnrMessageRouter.routeQuestionToFloatingOrb(clarifyingQuestion);
+          
+          // Don't add CNR questions to main conversation
+          setCurrentQuestion(null);
+          
+        } else {
+          // Non-CNR questions go to main conversation as before
+          setCurrentQuestion(data.generatedQuestion);
+          
+          const questionMessage: ConversationMessage = {
+            id: `question_${Date.now()}`,
+            role: 'hacs',
+            content: data.generatedQuestion.text,
+            timestamp: new Date().toISOString(),
+            module: data.generatedQuestion.module,
+            questionId: data.generatedQuestion.id,
+            isQuestion: true
+          };
 
-        setMessages(prev => [...prev, questionMessage]);
+          setMessages(prev => [...prev, questionMessage]);
+        }
       }
 
     } catch (error) {

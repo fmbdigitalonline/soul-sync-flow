@@ -131,11 +131,12 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
                   <span className="ml-2 inline-block w-2 h-2 bg-current opacity-50 rounded-full animate-pulse" />
                 )}
               </p>
-              {message.isQuestion && (
+              {message.isQuestion && message.module !== 'CNR' && (
                 <div className="mt-2 px-2 py-1 bg-accent/50 rounded text-xs font-inter">
                   Question from: {message.module}
                 </div>
               )}
+              {/* CNR questions are handled by FloatingHACSOrb - don't display here */}
               {'isError' in message && message.isError && (
                 <div className="mt-2 text-xs text-destructive font-inter">
                   Failed to send - please try again

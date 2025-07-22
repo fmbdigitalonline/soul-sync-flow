@@ -59,7 +59,7 @@ export const useHACSConversationAdapter = (
       
       // Initialize services if not already done
       await unifiedBrainService.initialize(user.id);
-      cnrMessageRouter.initialize();
+      await cnrMessageRouter.initialize();
       
       // Process through ALL 11 Hermetic components: NIK → CPSR → HFME → DPEM → TWS → CNR → BPSC + VPG → PIE → TMG → ACS
       const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;

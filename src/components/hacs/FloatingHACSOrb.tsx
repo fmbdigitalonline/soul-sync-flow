@@ -124,45 +124,53 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
 
   // STEP 3: CNR Message Routing - Listen for CNR clarifications (additive - SoulSync Principle 1)
   useEffect(() => {
-    console.log('🔄 FloatingHACSOrb: Initializing CNR message routing');
-    
-    // Initialize CNR router
-    cnrMessageRouter.initialize();
-    
-    // Listen for CNR routing events
-    const unsubscribe = cnrMessageRouter.onCNRRouting((event: CNRRoutingEvent) => {
-      console.log('🎯 FloatingHACSOrb: Received CNR routing event:', event.type);
+    const initializeCNRRouting = async () => {
+      console.log('🔄 FloatingHACSOrb: Initializing CNR message routing');
       
-      if (event.type === 'clarification_generated' && event.data.question) {
-        console.log('🔔 FloatingHACSOrb: Displaying CNR clarification in floating orb');
+      // Initialize CNR router
+      await cnrMessageRouter.initialize();
+      
+      // Listen for CNR routing events
+      const unsubscribe = cnrMessageRouter.onCNRRouting((event: CNRRoutingEvent) => {
+        console.log('🎯 FloatingHACSOrb: Received CNR routing event:', event.type);
         
-        // Show CNR clarification in floating orb (not main conversation)
-        setCnrClarification(event.data.question);
-        setShowCnrBubble(true);
-        setActiveModule('CNR');
-        setModuleActivity(true);
-        setOrbStage('collecting');
+        if (event.type === 'clarification_generated' && event.data.question) {
+          console.log('🔔 FloatingHACSOrb: Displaying CNR clarification in floating orb');
+          
+          // Show CNR clarification in floating orb (not main conversation)
+          setCnrClarification(event.data.question);
+          setShowCnrBubble(true);
+          setActiveModule('CNR');
+          setModuleActivity(true);
+          setOrbStage('collecting');
+          
+          // Auto-dismiss after 20 seconds if no interaction
+          setTimeout(() => {
+            setShowCnrBubble(false);
+            setCnrClarification(null);
+            setModuleActivity(false);
+          }, 20000);
+        }
         
-        // Auto-dismiss after 20 seconds if no interaction
-        setTimeout(() => {
+        if (event.type === 'conflict_resolved') {
+          console.log('✅ FloatingHACSOrb: CNR conflict resolved - clearing clarification');
           setShowCnrBubble(false);
           setCnrClarification(null);
           setModuleActivity(false);
-        }, 20000);
-      }
+        }
+      });
       
-      if (event.type === 'conflict_resolved') {
-        console.log('✅ FloatingHACSOrb: CNR conflict resolved - clearing clarification');
-        setShowCnrBubble(false);
-        setCnrClarification(null);
-        setModuleActivity(false);
-      }
+      // Check for any existing pending clarifications on mount
+      await cnrMessageRouter.checkAndRoutePendingClarifications();
+      
+      return unsubscribe;
+    };
+    
+    // Initialize and cleanup
+    initializeCNRRouting().then(unsubscribe => {
+      // Store unsubscribe function for cleanup
+      return unsubscribe;
     });
-    
-    // Check for any existing pending clarifications on mount
-    cnrMessageRouter.checkAndRoutePendingClarifications();
-    
-    return unsubscribe;
   }, []);
 
   // 🔒 INSIGHTS PAUSED - Feature flag for automatic insight generation
