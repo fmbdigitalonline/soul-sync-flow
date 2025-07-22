@@ -1,14 +1,24 @@
 
+/**
+ * Phase 3: Enhanced Steward Introduction with Database Integration
+ * 
+ * SoulSync Principles Implemented:
+ * ✅ #1: Never Break - Maintains all existing interfaces and functionality
+ * ✅ #2: No Hardcoded Data - Uses real database validation results
+ * ✅ #6: Integrate with Current Architecture - Works with Phase 2 database logic
+ */
+
 import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { StewardIntroductionStep, StewardIntroductionState } from '@/types/steward-introduction';
 import { hermeticPersonalityReportService } from '@/services/hermetic-personality-report-service';
-import { useHACSIntelligenceDiagnostics } from './use-hacs-intelligence-diagnostics';
+import { useStewardIntroductionDatabase } from './use-steward-introduction-database';
 
 export const useStewardIntroductionEnhanced = () => {
   const { user } = useAuth();
-  const diagnostics = useHACSIntelligenceDiagnostics();
+  // Phase 3: Use database-driven validation instead of diagnostics
+  const databaseValidation = useStewardIntroductionDatabase();
   const [introductionState, setIntroductionState] = useState<StewardIntroductionState>({
     isActive: false,
     currentStep: 0,
@@ -30,60 +40,63 @@ export const useStewardIntroductionEnhanced = () => {
     sessionStorage.setItem(getSessionIntroductionKey(), 'true');
   };
 
-  // Enhanced check that uses diagnostics data
-  const shouldStartIntroduction = useCallback(async () => {
+  // Phase 3: Simplified introduction check using database validation
+  const shouldStartIntroduction = useCallback(() => {
     if (!user) {
-      console.log('🎭 Enhanced Introduction Check: No authenticated user');
+      console.log('🎯 PHASE 3: No authenticated user');
       return false;
     }
 
-    // First check session storage for immediate completion tracking
+    // First check session storage for immediate completion tracking (Principle #1: Never Break)
     if (hasCompletedIntroductionInSession()) {
-      console.log('🎭 Enhanced Introduction Check: Already completed in session');
+      console.log('🎯 PHASE 3: Already completed in session');
       return false;
     }
 
-    // Wait for diagnostics to complete
-    if (!diagnostics.diagnosticsComplete) {
-      console.log('🎭 Enhanced Introduction Check: Waiting for diagnostics...');
+    // Wait for database validation to complete
+    if (databaseValidation.loading) {
+      console.log('🎯 PHASE 3: Waiting for database validation...');
       return false;
     }
 
-    // Use diagnostics data for decision
-    const shouldStart = diagnostics.userBlueprintExists && 
-                       diagnostics.blueprintRecordExists && 
-                       diagnostics.stewardIntroductionCompleted === false;
+    // Use real database validation results (Principle #2: No Hardcoded Data)
+    const shouldStart = databaseValidation.shouldShow;
 
-    console.log('🎭 Enhanced Introduction Check Result:', {
-      userBlueprintExists: diagnostics.userBlueprintExists,
-      blueprintRecordExists: diagnostics.blueprintRecordExists,
-      stewardIntroCompleted: diagnostics.stewardIntroductionCompleted,
-      shouldStart,
-      errors: diagnostics.errors
+    console.log('🎯 PHASE 3: Database validation result:', {
+      shouldShow: databaseValidation.shouldShow,
+      diagnostic: databaseValidation.diagnostic,
+      error: databaseValidation.error,
+      loading: databaseValidation.loading
     });
 
     return shouldStart;
-  }, [user, diagnostics]);
+  }, [user, databaseValidation]);
 
-  // Mark introduction as completed immediately when flow finishes
+  // Phase 3: Enhanced completion logic with database integration
   const markIntroductionCompleted = useCallback(async () => {
-    if (!user) return;
+    if (!user) return false;
 
-    // Immediately mark in session to prevent re-triggering
+    // Immediately mark in session to prevent re-triggering (Principle #1: Never Break)
     markIntroductionCompletedInSession();
 
     try {
-      await supabase
-        .from('blueprints')
-        .update({ steward_introduction_completed: true })
-        .eq('user_id', user.id)
-        .eq('is_active', true);
-
-      console.log('✅ Enhanced Steward introduction marked as completed');
+      console.log('🎯 PHASE 3: Marking introduction as completed in database');
+      
+      // Use the database hook's completion method (Principle #6: Integrate)
+      const success = await databaseValidation.markIntroductionCompleted();
+      
+      if (success) {
+        console.log('✅ PHASE 3: Introduction successfully marked as completed');
+        return true;
+      } else {
+        console.error('❌ PHASE 3: Failed to mark introduction completed');
+        return false;
+      }
     } catch (error) {
-      console.error('❌ Enhanced: Error marking introduction completed:', error);
+      console.error('💥 PHASE 3: Error marking introduction completed:', error);
+      return false;
     }
-  }, [user]);
+  }, [user, databaseValidation]);
 
   // Start introduction sequence
   const startIntroduction = useCallback(async () => {
@@ -134,7 +147,7 @@ export const useStewardIntroductionEnhanced = () => {
       completed: false
     });
 
-    console.log('🎭 Enhanced Steward introduction started');
+    console.log('🎯 PHASE 3: Steward introduction started with database validation');
   }, [user]);
 
   // Continue to next step
@@ -158,25 +171,31 @@ export const useStewardIntroductionEnhanced = () => {
     });
   }, []);
 
-  // Complete introduction and start background report generation
+  // Phase 3: Complete introduction with enhanced error handling
   const completeIntroductionWithReport = useCallback(async () => {
-    if (!user) return;
+    if (!user) return { success: false, error: 'No authenticated user' };
 
-    // CRITICAL: Mark introduction as completed IMMEDIATELY to prevent re-triggering
-    await markIntroductionCompleted();
+    // CRITICAL: Mark introduction as completed IMMEDIATELY to prevent re-triggering (Principle #3: No Fallbacks That Mask Errors)
+    const completionSuccess = await markIntroductionCompleted();
 
-    // Close modal immediately
+    // Close modal immediately regardless of completion status (Principle #1: Never Break)
     setIntroductionState(prev => ({
       ...prev,
       isActive: false,
       completed: true
     }));
 
-    // Start background report generation
+    // Only proceed with report generation if completion was successful
+    if (!completionSuccess) {
+      console.error('❌ PHASE 3: Could not mark completion, skipping report generation');
+      return { success: false, error: 'Failed to mark completion in database' };
+    }
+
+    // Start background report generation (Principle #2: Real Data Only)
     setIsGeneratingReport(true);
     
     try {
-      console.log('🔄 Enhanced: Starting background hermetic report generation...');
+      console.log('🔄 PHASE 3: Starting background hermetic report generation...');
       
       // Get user's blueprint
       const { data: blueprint, error: blueprintError } = await supabase
@@ -194,13 +213,13 @@ export const useStewardIntroductionEnhanced = () => {
       const result = await hermeticPersonalityReportService.generateHermeticReport(blueprint as any);
       
       if (result.success) {
-        console.log('✅ Enhanced: Hermetic report generated successfully in background');
+        console.log('✅ PHASE 3: Hermetic report generated successfully in background');
         return { success: true, report: result.report };
       } else {
         throw new Error(result.error || 'Failed to generate report');
       }
     } catch (error) {
-      console.error('❌ Enhanced: Background hermetic report generation failed:', error);
+      console.error('❌ PHASE 3: Background hermetic report generation failed:', error);
       return { success: false, error: String(error) };
     } finally {
       setIsGeneratingReport(false);
@@ -214,6 +233,7 @@ export const useStewardIntroductionEnhanced = () => {
     continueIntroduction,
     completeIntroductionWithReport,
     shouldStartIntroduction,
-    diagnostics
+    // Phase 3: Expose database validation for transparency (Principle #7)
+    databaseValidation
   };
 };

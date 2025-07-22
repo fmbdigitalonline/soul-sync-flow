@@ -49,7 +49,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   const { triggerIntelligentIntervention, generatePersonalizedInsight } = useAutonomousOrchestration();
   const { generateOraclePrompt, getOptimalTimingPreferences } = usePersonalityEngine();
   
-  // ENHANCED: Use enhanced introduction system with diagnostics
+  // Phase 3: Enhanced introduction system with database integration
   const {
     introductionState,
     isGeneratingReport,
@@ -57,7 +57,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     continueIntroduction,
     completeIntroductionWithReport,
     shouldStartIntroduction,
-    diagnostics
+    databaseValidation
   } = useStewardIntroductionEnhanced();
 
   // Phase 2: Database-driven Steward Introduction validation
@@ -70,15 +70,17 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     currentInsight, 
     isGenerating, 
     isGeneratingInsight,
-    diagnosticsComplete: diagnostics.diagnosticsComplete,
-    hacsIntelligenceExists: diagnostics.hacsIntelligenceExists,
-    errors: diagnostics.errors
+    // Phase 3: Updated logging with database validation
+    databaseShouldShow: databaseValidation.shouldShow,
+    databaseLoading: databaseValidation.loading,
+    databaseError: databaseValidation.error,
+    introductionActive: introductionState.isActive
   });
 
   const intelligenceLevel = intelligence?.intelligence_level || 0;
 
-  // ENHANCED: Better loading state management
-  const isSystemReady = !loading && diagnostics.diagnosticsComplete && diagnostics.hacsIntelligenceExists;
+  // Phase 3: Enhanced system readiness check 
+  const isSystemReady = !loading && !databaseValidation.loading && !!intelligence;
 
   // Update orb stage based on authentic HACS state
   useEffect(() => {
@@ -115,51 +117,44 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     }
   }, [currentQuestion, currentInsight, clearCurrentQuestion]);
 
-  // Phase 2 Complete: Database-driven Steward Introduction check
+  // Phase 3 Complete: Final database-driven Steward Introduction logic
   useEffect(() => {
-    // Wait for all systems to be ready including database check
-    if (!isSystemReady || stewardDatabase.loading) {
-      console.log('🎯 PHASE 2: System not ready for introduction check', {
+    // Wait for all systems to be ready including database validation
+    if (!isSystemReady) {
+      console.log('🚀 PHASE 3: System not ready for introduction check', {
         loading,
-        diagnosticsComplete: diagnostics.diagnosticsComplete,
-        hacsExists: diagnostics.hacsIntelligenceExists,
-        databaseLoading: stewardDatabase.loading
+        databaseLoading: databaseValidation.loading,
+        intelligence: !!intelligence
       });
       return;
     }
 
-    // Don't start introduction if there are critical errors
-    if (diagnostics.errors.length > 0) {
-      console.log('🎯 PHASE 2: Skipping introduction due to system errors:', diagnostics.errors);
-      return;
-    }
-
-    // Use database validation results (Principle #2: Real Data Only)
-    if (stewardDatabase.error) {
-      console.error('🎯 PHASE 2: Database validation error:', stewardDatabase.error);
-      return;
-    }
-
-    console.log('🎯 PHASE 2: Database validation complete:', {
-      shouldShow: stewardDatabase.shouldShow,
-      diagnostic: stewardDatabase.diagnostic,
-      introductionActive: introductionState.isActive
+    // Use the enhanced introduction hook's validation (Principle #6: Integrate)
+    const shouldStart = shouldStartIntroduction();
+    
+    console.log('🚀 PHASE 3: Final introduction validation:', {
+      shouldStart,
+      introductionActive: introductionState.isActive,
+      databaseShouldShow: databaseValidation.shouldShow,
+      databaseDiagnostic: databaseValidation.diagnostic?.diagnosis,
+      databaseError: databaseValidation.error
     });
 
-    // Start introduction based on database validation (Principle #7: Transparent)
-    if (stewardDatabase.shouldShow && !introductionState.isActive) {
-      console.log('🚀 PHASE 2: Starting Steward Introduction (Database-validated)');
+    // Start introduction based on enhanced validation (Principle #7: Transparent)
+    if (shouldStart && !introductionState.isActive) {
+      console.log('🎯 PHASE 3: Starting Steward Introduction (Final Integration)');
       startIntroduction();
-    } else if (!stewardDatabase.shouldShow) {
-      console.log('✅ PHASE 2: Steward Introduction not needed:', stewardDatabase.diagnostic?.diagnosis);
+    } else if (!shouldStart) {
+      console.log('✅ PHASE 3: Steward Introduction not needed:', {
+        reason: databaseValidation.diagnostic?.diagnosis || 'Unknown',
+        completed: databaseValidation.diagnostic?.introductionCompleted
+      });
     }
   }, [
     isSystemReady, 
-    stewardDatabase.loading, 
-    stewardDatabase.shouldShow, 
-    stewardDatabase.error,
+    shouldStartIntroduction,
     introductionState.isActive,
-    diagnostics.errors,
+    databaseValidation.error,
     startIntroduction
   ]);
 
@@ -310,18 +305,23 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     showChat, 
     showMicroLearning,
     isSystemReady,
-    diagnosticsComplete: diagnostics.diagnosticsComplete
+    // Phase 3: Updated state logging
+    databaseValidation: databaseValidation.shouldShow
   });
   
-  // ENHANCED: Show loading state with diagnostics when system isn't ready
+  // Phase 3: Show loading state when system isn't ready
   if (!isSystemReady) {
     return (
       <div className="fixed bottom-6 right-6 z-50">
         <div className="flex flex-col items-end gap-2">
-          {/* Show diagnostics if there are issues */}
-          {diagnostics.errors.length > 0 && (
+          {/* Show database errors if any */}
+          {databaseValidation.error && (
             <div className="max-w-sm">
-              <HACSLoadingDiagnostics showOnlyWhenIssues={true} />
+              <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                <div className="text-xs text-destructive">
+                  Database Error: {databaseValidation.error}
+                </div>
+              </div>
             </div>
           )}
           
@@ -341,7 +341,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
                   {loading ? 'HACS Loading...' : 'System Initializing...'}
                 </div>
                 <div className="text-muted-foreground font-inter text-xs">
-                  {!diagnostics.diagnosticsComplete ? 'Running diagnostics...' : 'Preparing intelligence...'}
+                  {databaseValidation.loading ? 'Validating blueprint...' : 'Preparing intelligence...'}
                 </div>
               </div>
             </div>
