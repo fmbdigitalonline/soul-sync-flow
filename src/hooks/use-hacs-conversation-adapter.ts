@@ -48,16 +48,18 @@ export const useHACSConversationAdapter = (
     context?: any,
     agentOverride?: string
   ) => {
-    // Import Unified Brain Service dynamically to avoid circular dependencies
+    // Import services dynamically to avoid circular dependencies
     const { unifiedBrainService } = await import('../services/unified-brain-service');
+    const { cnrMessageRouter } = await import('../services/cnr-message-router');
     
     try {
       // Ensure unified brain is initialized
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
       
-      // Initialize if not already done
+      // Initialize services if not already done
       await unifiedBrainService.initialize(user.id);
+      cnrMessageRouter.initialize();
       
       // Process through ALL 11 Hermetic components: NIK → CPSR → HFME → DPEM → TWS → CNR → BPSC + VPG → PIE → TMG → ACS
       const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -74,7 +76,17 @@ export const useHACSConversationAdapter = (
       
       console.log('✅ HACS Adapter: Message processed through all 11 Hermetic components');
       
-      // Now update the HACS conversation with the processed response
+      // STEP 3: Check if response contains CNR clarifications that should route to floating orb
+      // Following SoulSync Principle 3: No Fallbacks That Mask Errors - surface routing transparently
+      const hasCNRClarification = await cnrMessageRouter.processUnifiedBrainResponse(brainResponse);
+      
+      if (hasCNRClarification) {
+        console.log('🎯 HACS Adapter: CNR clarification detected - routed to floating orb, skipping main conversation');
+        // Don't add CNR questions to main conversation - they go to floating orb
+        return;
+      }
+      
+      // Now update the HACS conversation with the processed response (only if not CNR clarification)
       // This maintains the optimistic UI while ensuring full pipeline processing
       await hacsConversation.sendMessage(content);
       
