@@ -5,10 +5,12 @@ import { useEffect } from "react";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { GradientButton } from "@/components/ui/gradient-button";
 import StarField from "@/components/ui/star-field";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const NotFound = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   useEffect(() => {
     console.error(
@@ -22,13 +24,13 @@ const NotFound = () => {
       <StarField />
       <CosmicCard className="max-w-md w-full text-center p-8" floating glow>
         <h1 className="text-6xl font-bold font-display mb-4">
-          <span className="gradient-text">404</span>
+          <span className="gradient-text">{t('notFound.title')}</span>
         </h1>
         <p className="text-xl text-muted-foreground mb-6">
-          It seems your soul journey has led you off the path
+          {t('notFound.message')}
         </p>
         <GradientButton onClick={() => navigate("/")} className="w-full">
-          Return to Your Journey
+          {t('notFound.returnButton')}
         </GradientButton>
       </CosmicCard>
     </div>
