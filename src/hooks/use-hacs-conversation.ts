@@ -70,6 +70,39 @@ export const useHACSConversation = () => {
     setIsTyping(true);
 
     try {
+      // CRITICAL: Ensure hacs_intelligence record exists with proper ID
+      const { data: existingIntelligence, error: checkError } = await supabase
+        .from('hacs_intelligence')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        console.error('❌ Error checking HACS intelligence:', checkError);
+      }
+
+      // Initialize intelligence record if it doesn't exist
+      if (!existingIntelligence) {
+        console.log('🔄 Initializing HACS intelligence record for user:', user.id);
+        const { error: initError } = await supabase
+          .from('hacs_intelligence')
+          .insert({
+            user_id: user.id,
+            intelligence_level: 50,
+            interaction_count: 0,
+            module_scores: {},
+            pie_score: 0,
+            tmg_score: 0,
+            vfp_score: 0
+          });
+
+        if (initError) {
+          console.error('❌ Failed to initialize HACS intelligence:', initError);
+        } else {
+          console.log('✅ HACS intelligence record initialized');
+        }
+      }
+
       // Add user message immediately
       const userMessage: ConversationMessage = {
         id: `user_${Date.now()}`,
@@ -105,7 +138,7 @@ export const useHACSConversation = () => {
       setMessages(prev => [...prev, hacsMessage]);
       setConversationId(data.conversationId);
 
-      // CRITICAL: Record conversation interaction for intelligence growth
+      // Record conversation interaction for intelligence growth
       await recordConversationInteraction(
         content.trim(),
         determineResponseQuality(data.response, content.trim())
@@ -118,7 +151,6 @@ export const useHACSConversation = () => {
       if (data.generatedQuestion) {
         setCurrentQuestion(data.generatedQuestion);
         
-        // Add question as a special message
         const questionMessage: ConversationMessage = {
           id: `question_${Date.now()}`,
           role: 'hacs',
@@ -133,7 +165,7 @@ export const useHACSConversation = () => {
       }
 
     } catch (error) {
-      console.error('❌ HACS CONVERSATION FAILED - NO FALLBACK:', error);
+      console.error('❌ HACS CONVERSATION FAILED:', error);
       
       // Remove user message since conversation failed
       setMessages(prev => prev.slice(0, -1));
@@ -144,7 +176,7 @@ export const useHACSConversation = () => {
       setIsLoading(false);
       setIsTyping(false);
     }
-  }, [user, messages, conversationId]);
+  }, [user, messages, conversationId, recordConversationInteraction, refreshIntelligence]);
 
   const generateQuestion = useCallback(async () => {
     if (!user) return;
