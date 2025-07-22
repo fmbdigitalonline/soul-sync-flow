@@ -97,27 +97,23 @@ const Profile = () => {
 
   if (loading) {
     return (
-      <MainLayout>
-        <div className="p-6 max-w-md mx-auto">
-          <div className="flex flex-col items-center text-center mb-6">
-            <div className="h-20 w-20 mb-4 bg-gray-200 rounded-full animate-pulse"></div>
-            <div className="h-6 w-32 bg-gray-200 rounded animate-pulse mb-2"></div>
-            <div className="h-4 w-48 bg-gray-200 rounded animate-pulse"></div>
-          </div>
+      <div className="p-6 max-w-md mx-auto">
+        <div className="flex flex-col items-center text-center mb-6">
+          <div className="h-20 w-20 mb-4 bg-gray-200 rounded-full animate-pulse"></div>
+          <div className="h-6 w-32 bg-gray-200 rounded animate-pulse mb-2"></div>
+          <div className="h-4 w-48 bg-gray-200 rounded animate-pulse"></div>
         </div>
-      </MainLayout>
+      </div>
     );
   }
 
   if (profileError) {
     return (
-      <MainLayout>
-        <div className="p-6 max-w-md mx-auto">
-          <CosmicCard className="p-6 text-center">
-            <p className="text-destructive">{t('profile.errorLoading')}: {profileError}</p>
-          </CosmicCard>
-        </div>
-      </MainLayout>
+      <div className="p-6 max-w-md mx-auto">
+        <CosmicCard className="p-6 text-center">
+          <p className="text-destructive">{t('profile.errorLoading')}: {profileError}</p>
+        </CosmicCard>
+      </div>
     );
   }
 
@@ -127,197 +123,195 @@ const Profile = () => {
   const activeGoals = goals.filter(g => g.status === 'active');
 
   return (
-    <MainLayout>
-      <div className="p-6 max-w-md mx-auto">
-        <div className="flex flex-col items-center text-center mb-6">
-          <Avatar className="h-20 w-20 mb-4 shadow-soft-ui">
-            <AvatarImage src={profile?.avatar_url || undefined} alt={displayName} />
-            <AvatarFallback>{displayName.charAt(0).toUpperCase()}</AvatarFallback>
-          </Avatar>
-          <h1 className="text-2xl font-bold font-heading mb-1">{displayName}</h1>
-          <div className="flex items-center space-x-2 mt-1">
-            {personalityTraits.map((trait, index) => (
-              <Badge key={index} variant="outline" className="bg-soul-teal bg-opacity-20">
-                {trait}
-              </Badge>
-            ))}
-          </div>
+    <div className="p-6 max-w-md mx-auto">
+      <div className="flex flex-col items-center text-center mb-6">
+        <Avatar className="h-20 w-20 mb-4 shadow-soft-ui">
+          <AvatarImage src={profile?.avatar_url || undefined} alt={displayName} />
+          <AvatarFallback>{displayName.charAt(0).toUpperCase()}</AvatarFallback>
+        </Avatar>
+        <h1 className="text-2xl font-bold font-heading mb-1">{displayName}</h1>
+        <div className="flex items-center space-x-2 mt-1">
+          {personalityTraits.map((trait, index) => (
+            <Badge key={index} variant="outline" className="bg-soul-teal bg-opacity-20">
+              {trait}
+            </Badge>
+          ))}
         </div>
-
-        <Tabs defaultValue="stats" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6 rounded-comfort">
-            <TabsTrigger value="stats" className="text-base">{t('profile.stats')}</TabsTrigger>
-            <TabsTrigger value="goals" className="text-base">{t('profile.goals')}</TabsTrigger>
-            <TabsTrigger value="settings" className="text-base">{t('profile.settings')}</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="stats" className="space-y-grid-16">
-            <CosmicCard className="p-6 rounded-comfort">
-              <h2 className="font-heading font-medium mb-4">{t('profile.growthJourney')}</h2>
-              
-              <div className="space-y-grid-16">
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-base">{t('profile.blueprintCompletion')}</span>
-                    <span className="text-base font-medium">{blueprintCompletion}%</span>
-                  </div>
-                  <Progress value={blueprintCompletion} className="h-2" />
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-base">{t('profile.activeGoals')}</span>
-                    <span className="text-base font-medium">{activeGoals.length}/{goals.length}</span>
-                  </div>
-                  <Progress value={goals.length > 0 ? (activeGoals.length / goals.length) * 100 : 0} className="h-2" />
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-base">{t('profile.tasksCompleted')}</span>
-                    <span className="text-base font-medium">{statistics?.tasks_completed || 0}</span>
-                  </div>
-                  <Progress value={Math.min((statistics?.tasks_completed || 0) * 4, 100)} className="h-2" />
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-base">{t('profile.coachConversations')}</span>
-                    <span className="text-base font-medium">{statistics?.coach_conversations || 0}</span>
-                  </div>
-                  <Progress value={Math.min((statistics?.coach_conversations || 0) * 8, 100)} className="h-2" />
-                </div>
-              </div>
-            </CosmicCard>
-            
-            <CosmicCard className="p-6 rounded-comfort">
-              <h2 className="font-heading font-medium mb-4">{t('profile.weeklyInsights')}</h2>
-              
-              <div className="space-y-grid-8">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-base font-medium">{t('profile.mostProductiveDay')}</p>
-                    <p className="text-sm text-muted-foreground">{weeklyInsights?.mostProductiveDay || t('profile.wednesday')}</p>
-                  </div>
-                  <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
-                    {weeklyInsights?.improvementTrend || '+0%'}
-                  </Badge>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-base font-medium">{t('profile.energyPeaks')}</p>
-                    <p className="text-sm text-muted-foreground">{weeklyInsights?.energyPeaks || t('profile.morningPeaks')}</p>
-                  </div>
-                  <Badge className="bg-soul-teal bg-opacity-20 text-teal-800 hover:bg-soul-teal hover:bg-opacity-20">{t('profile.aligned')}</Badge>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-base font-medium">{t('profile.focusSessions')}</p>
-                    <p className="text-sm text-muted-foreground">{weeklyInsights?.focusSessionsThisWeek || 0} {t('profile.thisWeek')}</p>
-                  </div>
-                  <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100">
-                    +{statistics?.focus_sessions_completed || 0}
-                  </Badge>
-                </div>
-              </div>
-            </CosmicCard>
-          </TabsContent>
-          
-          <TabsContent value="goals" className="space-y-grid-16">
-            {goals.length > 0 ? (
-              goals.map((goal) => (
-                <GoalCard 
-                  key={goal.id}
-                  goal={goal}
-                  onComplete={handleTaskComplete}
-                  onProgressUpdate={(progress) => updateGoalProgress(goal.id, progress)}
-                />
-              ))
-            ) : (
-              <CosmicCard className="p-6 text-center rounded-comfort">
-                <p className="text-muted-foreground mb-4">{t('profile.noGoals')}</p>
-                <p className="text-sm text-muted-foreground">{t('profile.createFirstGoal')}</p>
-              </CosmicCard>
-            )}
-            
-            <CosmicCard className="text-center p-4 rounded-comfort">
-              <Button
-                variant="ghost"
-                className="text-soul-teal w-full flex items-center justify-center interactive-element"
-              >
-                <ArrowUpRight className="mr-2 h-4 w-4" />
-                {t('profile.viewAllGoals')}
-              </Button>
-            </CosmicCard>
-          </TabsContent>
-          
-          <TabsContent value="settings" className="space-y-grid-16">
-            <CosmicCard className="p-6 rounded-comfort">
-              <h2 className="font-heading font-medium mb-4">{t('profile.appSettings')}</h2>
-              
-              <div className="space-y-grid-16">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <Bell className="h-5 w-5 text-muted-foreground" />
-                    <Label htmlFor="notifications" className="text-base">{t('profile.notifications')}</Label>
-                  </div>
-                  <Switch id="notifications" defaultChecked />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    {darkMode ? 
-                      <Moon className="h-5 w-5 text-muted-foreground" /> : 
-                      <Sun className="h-5 w-5 text-muted-foreground" />
-                    }
-                    <Label htmlFor="dark-mode" className="text-base">{t('profile.darkMode')}</Label>
-                  </div>
-                  <Switch 
-                    id="dark-mode" 
-                    checked={darkMode} 
-                    onCheckedChange={toggleDarkMode} 
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <FocusToggle />
-                </div>
-                
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="flex items-center justify-between cursor-pointer interactive-element hover:bg-muted p-2 rounded-md">
-                        <div className="flex items-center space-x-3">
-                          <Settings className="h-5 w-5 text-muted-foreground" />
-                          <span className="text-base">{t('profile.accountSettings')}</span>
-                        </div>
-                        <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{t('profile.accountSettingsTooltip')}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-            </CosmicCard>
-            
-            <CosmicCard className="text-center p-4 rounded-comfort">
-              <Button
-                variant="ghost"
-                className="text-destructive w-full flex items-center justify-center interactive-element"
-                onClick={handleLogout}
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                {t('nav.signOut')}
-              </Button>
-            </CosmicCard>
-          </TabsContent>
-        </Tabs>
       </div>
-    </MainLayout>
+
+      <Tabs defaultValue="stats" className="w-full">
+        <TabsList className="grid w-full grid-cols-3 mb-6 rounded-comfort">
+          <TabsTrigger value="stats" className="text-base">{t('profile.stats')}</TabsTrigger>
+          <TabsTrigger value="goals" className="text-base">{t('profile.goals')}</TabsTrigger>
+          <TabsTrigger value="settings" className="text-base">{t('profile.settings')}</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="stats" className="space-y-grid-16">
+          <CosmicCard className="p-6 rounded-comfort">
+            <h2 className="font-heading font-medium mb-4">{t('profile.growthJourney')}</h2>
+            
+            <div className="space-y-grid-16">
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-base">{t('profile.blueprintCompletion')}</span>
+                  <span className="text-base font-medium">{blueprintCompletion}%</span>
+                </div>
+                <Progress value={blueprintCompletion} className="h-2" />
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-base">{t('profile.activeGoals')}</span>
+                  <span className="text-base font-medium">{activeGoals.length}/{goals.length}</span>
+                </div>
+                <Progress value={goals.length > 0 ? (activeGoals.length / goals.length) * 100 : 0} className="h-2" />
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-base">{t('profile.tasksCompleted')}</span>
+                  <span className="text-base font-medium">{statistics?.tasks_completed || 0}</span>
+                </div>
+                <Progress value={Math.min((statistics?.tasks_completed || 0) * 4, 100)} className="h-2" />
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-base">{t('profile.coachConversations')}</span>
+                  <span className="text-base font-medium">{statistics?.coach_conversations || 0}</span>
+                </div>
+                <Progress value={Math.min((statistics?.coach_conversations || 0) * 8, 100)} className="h-2" />
+              </div>
+            </div>
+          </CosmicCard>
+          
+          <CosmicCard className="p-6 rounded-comfort">
+            <h2 className="font-heading font-medium mb-4">{t('profile.weeklyInsights')}</h2>
+            
+            <div className="space-y-grid-8">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-base font-medium">{t('profile.mostProductiveDay')}</p>
+                  <p className="text-sm text-muted-foreground">{weeklyInsights?.mostProductiveDay || t('profile.wednesday')}</p>
+                </div>
+                <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+                  {weeklyInsights?.improvementTrend || '+0%'}
+                </Badge>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-base font-medium">{t('profile.energyPeaks')}</p>
+                  <p className="text-sm text-muted-foreground">{weeklyInsights?.energyPeaks || t('profile.morningPeaks')}</p>
+                </div>
+                <Badge className="bg-soul-teal bg-opacity-20 text-teal-800 hover:bg-soul-teal hover:bg-opacity-20">{t('profile.aligned')}</Badge>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-base font-medium">{t('profile.focusSessions')}</p>
+                  <p className="text-sm text-muted-foreground">{weeklyInsights?.focusSessionsThisWeek || 0} {t('profile.thisWeek')}</p>
+                </div>
+                <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100">
+                  +{statistics?.focus_sessions_completed || 0}
+                </Badge>
+              </div>
+            </div>
+          </CosmicCard>
+        </TabsContent>
+        
+        <TabsContent value="goals" className="space-y-grid-16">
+          {goals.length > 0 ? (
+            goals.map((goal) => (
+              <GoalCard 
+                key={goal.id}
+                goal={goal}
+                onComplete={handleTaskComplete}
+                onProgressUpdate={(progress) => updateGoalProgress(goal.id, progress)}
+              />
+            ))
+          ) : (
+            <CosmicCard className="p-6 text-center rounded-comfort">
+              <p className="text-muted-foreground mb-4">{t('profile.noGoals')}</p>
+              <p className="text-sm text-muted-foreground">{t('profile.createFirstGoal')}</p>
+            </CosmicCard>
+          )}
+          
+          <CosmicCard className="text-center p-4 rounded-comfort">
+            <Button
+              variant="ghost"
+              className="text-soul-teal w-full flex items-center justify-center interactive-element"
+            >
+              <ArrowUpRight className="mr-2 h-4 w-4" />
+              {t('profile.viewAllGoals')}
+            </Button>
+          </CosmicCard>
+        </TabsContent>
+        
+        <TabsContent value="settings" className="space-y-grid-16">
+          <CosmicCard className="p-6 rounded-comfort">
+            <h2 className="font-heading font-medium mb-4">{t('profile.appSettings')}</h2>
+            
+            <div className="space-y-grid-16">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <Bell className="h-5 w-5 text-muted-foreground" />
+                  <Label htmlFor="notifications" className="text-base">{t('profile.notifications')}</Label>
+                </div>
+                <Switch id="notifications" defaultChecked />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  {darkMode ? 
+                    <Moon className="h-5 w-5 text-muted-foreground" /> : 
+                    <Sun className="h-5 w-5 text-muted-foreground" />
+                  }
+                  <Label htmlFor="dark-mode" className="text-base">{t('profile.darkMode')}</Label>
+                </div>
+                <Switch 
+                  id="dark-mode" 
+                  checked={darkMode} 
+                  onCheckedChange={toggleDarkMode} 
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <FocusToggle />
+              </div>
+              
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center justify-between cursor-pointer interactive-element hover:bg-muted p-2 rounded-md">
+                      <div className="flex items-center space-x-3">
+                        <Settings className="h-5 w-5 text-muted-foreground" />
+                        <span className="text-base">{t('profile.accountSettings')}</span>
+                      </div>
+                      <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{t('profile.accountSettingsTooltip')}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          </CosmicCard>
+          
+          <CosmicCard className="text-center p-4 rounded-comfort">
+            <Button
+              variant="ghost"
+              className="text-destructive w-full flex items-center justify-center interactive-element"
+              onClick={handleLogout}
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              {t('nav.signOut')}
+            </Button>
+          </CosmicCard>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };
 
