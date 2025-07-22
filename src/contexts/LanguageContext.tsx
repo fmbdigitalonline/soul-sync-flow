@@ -19,6 +19,56 @@ const translations: Record<Language, Translations> = {
       english: 'English',
       dutch: 'Nederlands'
     },
+    // Application System Messages
+    system: {
+      loading: 'Loading...',
+      authenticating: 'Checking authentication...',
+      errorOccurred: 'Something went wrong',
+      errorDescription: 'We encountered an unexpected error. Please try refreshing the page.',
+      refreshPage: 'Refresh Page',
+      unauthorized: 'Authentication required',
+      redirectingToAuth: 'Redirecting to authentication...'
+    },
+    // Common Actions
+    common: {
+      loading: 'Loading',
+      save: 'Save',
+      cancel: 'Cancel',
+      delete: 'Delete',
+      edit: 'Edit',
+      confirm: 'Confirm',
+      yes: 'Yes',
+      no: 'No',
+      ok: 'OK',
+      close: 'Close',
+      back: 'Back',
+      next: 'Next',
+      previous: 'Previous',
+      submit: 'Submit',
+      reset: 'Reset',
+      search: 'Search',
+      filter: 'Filter',
+      sort: 'Sort',
+      view: 'View',
+      download: 'Download',
+      upload: 'Upload',
+      copy: 'Copy',
+      paste: 'Paste',
+      cut: 'Cut'
+    },
+    // Error Messages
+    errors: {
+      network: 'Network connection error',
+      unauthorized: 'Unauthorized access',
+      forbidden: 'Access forbidden',
+      notFound: 'Page not found',
+      serverError: 'Internal server error',
+      validation: 'Validation error',
+      required: 'This field is required',
+      invalidEmail: 'Please enter a valid email address',
+      invalidPassword: 'Password does not meet requirements',
+      sessionExpired: 'Your session has expired'
+    },
     index: {
       welcome: 'Welcome to <span class="text-primary">SoulSync</span>',
       subtitle: 'Discover your authentic path through personalized AI guidance and spiritual growth tools.',
@@ -55,6 +105,56 @@ const translations: Record<Language, Translations> = {
     language: {
       english: 'English',
       dutch: 'Nederlands'
+    },
+    // Application System Messages
+    system: {
+      loading: 'Laden...',
+      authenticating: 'Authenticatie controleren...',
+      errorOccurred: 'Er is iets misgegaan',
+      errorDescription: 'We hebben een onverwachte fout tegengekomen. Probeer de pagina te vernieuwen.',
+      refreshPage: 'Pagina Vernieuwen',
+      unauthorized: 'Authenticatie vereist',
+      redirectingToAuth: 'Doorverwijzen naar authenticatie...'
+    },
+    // Common Actions
+    common: {
+      loading: 'Laden',
+      save: 'Opslaan',
+      cancel: 'Annuleren',
+      delete: 'Verwijderen',
+      edit: 'Bewerken',
+      confirm: 'Bevestigen',
+      yes: 'Ja',
+      no: 'Nee',
+      ok: 'OK',
+      close: 'Sluiten',
+      back: 'Terug',
+      next: 'Volgende',
+      previous: 'Vorige',
+      submit: 'Versturen',
+      reset: 'Resetten',
+      search: 'Zoeken',
+      filter: 'Filteren',
+      sort: 'Sorteren',
+      view: 'Bekijken',
+      download: 'Downloaden',
+      upload: 'Uploaden',
+      copy: 'Kopiëren',
+      paste: 'Plakken',
+      cut: 'Knippen'
+    },
+    // Error Messages
+    errors: {
+      network: 'Netwerkverbindingsfout',
+      unauthorized: 'Ongeautoriseerde toegang',
+      forbidden: 'Toegang verboden',
+      notFound: 'Pagina niet gevonden',
+      serverError: 'Interne serverfout',
+      validation: 'Validatiefout',
+      required: 'Dit veld is verplicht',
+      invalidEmail: 'Voer een geldig e-mailadres in',
+      invalidPassword: 'Wachtwoord voldoet niet aan de vereisten',
+      sessionExpired: 'Je sessie is verlopen'
     },
     index: {
       welcome: 'Welkom bij <span class="text-primary">SoulSync</span>',

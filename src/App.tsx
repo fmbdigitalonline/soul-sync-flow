@@ -1,10 +1,11 @@
 
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AuthProvider } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { ModeProvider } from './contexts/ModeContext';
 import MainLayout from './components/Layout/MainLayout';
+import ProtectedRoute from './components/ProtectedRoute';
 import Index from './pages/Index';
 import Dreams from './pages/Dreams';
 import SpiritualGrowth from './pages/SpiritualGrowth';
@@ -83,12 +84,5 @@ function App() {
   );
 }
 
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user } = useAuth();
-  if (!user) {
-    return <Navigate to="/auth" />;
-  }
-  return children;
-};
 
 export default App;
