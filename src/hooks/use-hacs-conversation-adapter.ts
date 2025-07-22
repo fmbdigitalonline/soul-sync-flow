@@ -41,28 +41,49 @@ export const useHACSConversationAdapter = (
   // Return HACS messages directly - they already have the correct ConversationMessage format
   // No conversion needed since HACSChatInterface expects ConversationMessage type
 
-  // Enhanced sendMessage with optimistic UI support
+  // CRITICAL: Route all sendMessage calls through Unified Brain (11 Hermetic components)
   const sendMessage = useCallback(async (
     content: string,
     usePersonalization: boolean = true,
     context?: any,
     agentOverride?: string
   ) => {
-    console.log('🔄 HACS Adapter: Processing message through intelligence system');
+    // Import Unified Brain Service dynamically to avoid circular dependencies
+    const { unifiedBrainService } = await import('../services/unified-brain-service');
     
     try {
-      // Use the enhanced HACS conversation hook directly
-      // It already handles the full processing pipeline and optimistic UI
+      // Ensure unified brain is initialized
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+      
+      // Initialize if not already done
+      await unifiedBrainService.initialize(user.id);
+      
+      // Process through ALL 11 Hermetic components: NIK → CPSR → HFME → DPEM → TWS → CNR → BPSC + VPG → PIE → TMG → ACS
+      const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const agentMode = agentOverride || initialAgent;
+      
+      console.log(`🔄 HACS Adapter: Routing message through unified brain (${agentMode} mode)`);
+      
+      const brainResponse = await unifiedBrainService.processMessage(
+        content,
+        sessionId,
+        agentMode as any,
+        'NORMAL'
+      );
+      
+      console.log('✅ HACS Adapter: Message processed through all 11 Hermetic components');
+      
+      // Now update the HACS conversation with the processed response
+      // This maintains the optimistic UI while ensuring full pipeline processing
       await hacsConversation.sendMessage(content);
       
-      console.log('✅ HACS Adapter: Message processed successfully');
-      
     } catch (error) {
-      console.error('❌ HACS Adapter: Message processing failed - no fallback:', error);
+      console.error('❌ Unified Brain routing failed - no fallback (as requested):', error);
       // Re-throw error to surface the problem transparently
       throw error;
     }
-  }, [hacsConversation.sendMessage]);
+  }, [hacsConversation.sendMessage, initialAgent]);
 
   const resetConversation = useCallback(() => {
     hacsConversation.clearConversation();
