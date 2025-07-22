@@ -109,6 +109,19 @@ const translations: Record<Language, Translations> = {
       connected: 'Connected',
       disconnected: 'Disconnected'
     },
+    dreams: {
+      journeyReady: '🎯 Your Dream Journey is Ready!',
+      journeyDesc: 'I\'ve transformed "{goalTitle}" into a personalized, step-by-step roadmap that honors your unique soul blueprint',
+      congratulations: '🎉 Congratulations! Your "{goalTitle}" journey is beautifully designed and ready to unfold.',
+      milestonesCreated: 'I\'ve created {count} personalized milestones that align perfectly with your soul blueprint.',
+      showRoadmap: 'Let me show you your complete roadmap! Each milestone is carefully timed and designed to work with your natural energy patterns and decision-making style.',
+      upcomingMilestones: 'Here are your upcoming milestones. Notice how they\'re sequenced to build momentum and honor your {personality} nature.',
+      specificTasks: 'I\'ve also created specific tasks for each milestone. These are optimized for your cognitive style and include blueprint-based reasoning to help you understand why each step matters.',
+      readyToBegin: 'Ready to begin? I recommend starting with this first task - it\'s perfectly aligned with your blueprint and designed to create early momentum. Shall we dive in?',
+      navigatingTo: '🎯 Navigating to {section} section',
+      selectedMilestone: '🎯 Selected milestone: {title}',
+      unique: 'unique'
+    },
     index: {
       welcome: 'Welcome to <span class="text-primary">SoulSync</span>',
       subtitle: 'Discover your authentic path through personalized AI guidance and spiritual growth tools.',
@@ -315,6 +328,19 @@ const translations: Record<Language, Translations> = {
       unavailable: 'Niet beschikbaar',
       connected: 'Verbonden',
       disconnected: 'Verbroken'
+    },
+    dreams: {
+      journeyReady: '🎯 Je Droomreis is Klaar!',
+      journeyDesc: 'Ik heb "{goalTitle}" getransformeerd in een gepersonaliseerd, stap-voor-stap roadmap dat jouw unieke ziel blauwdruk eert',
+      congratulations: '🎉 Gefeliciteerd! Je "{goalTitle}" reis is prachtig ontworpen en klaar om te ontvouwen.',
+      milestonesCreated: 'Ik heb {count} gepersonaliseerde mijlpalen gecreëerd die perfect aansluiten bij jouw ziel blauwdruk.',
+      showRoadmap: 'Laat me je complete roadmap tonen! Elke mijlpaal is zorgvuldig getimed en ontworpen om te werken met jouw natuurlijke energiepatronen en besluitvormingsstijl.',
+      upcomingMilestones: 'Hier zijn je aankomende mijlpalen. Merk op hoe ze zijn gesequenced om momentum op te bouwen en jouw {personality} natuur te eren.',
+      specificTasks: 'Ik heb ook specifieke taken voor elke mijlpaal gecreëerd. Deze zijn geoptimaliseerd voor jouw cognitieve stijl en bevatten blauwdruk-gebaseerde redenering om je te helpen begrijpen waarom elke stap belangrijk is.',
+      readyToBegin: 'Klaar om te beginnen? Ik raad aan om te starten met deze eerste taak - het is perfect afgestemd op jouw blauwdruk en ontworpen om vroege momentum te creëren. Zullen we erin duiken?',
+      navigatingTo: '🎯 Navigeren naar {section} sectie',
+      selectedMilestone: '🎯 Geselecteerde mijlpaal: {title}',
+      unique: 'uniek'
     },
     index: {
       welcome: 'Welkom bij <span class="text-primary">SoulSync</span>',
