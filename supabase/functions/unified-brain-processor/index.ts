@@ -105,6 +105,16 @@ serve(async (req) => {
 
     console.log('✅ Unified Brain: All 11 Hermetic components processed successfully');
 
+    // STEP 2: Message Type Classification (SoulSync Principle 1: Additive only)
+    // Classify the response for proper routing
+    const messageClassification = classifyUnifiedResponse(
+      unifiedResponse, 
+      hermeticResults, 
+      agentMode
+    );
+
+    console.log('🔍 Message classified:', messageClassification);
+
     return new Response(JSON.stringify({ 
       response: unifiedResponse,
       hermeticResults: hermeticResults.filter(r => r.processed),
@@ -114,7 +124,9 @@ serve(async (req) => {
         memoryStored: tmgResult.processed,
         personalityApplied: vfpResult.processed,
         synthesisApplied: bpscResult.processed
-      }
+      },
+      // NEW: Add message classification for routing (additive, backward compatible)
+      messageClassification
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
@@ -549,4 +561,72 @@ async function storeUnifiedBrainResult(supabase: any, userId: string, sessionId:
   } catch (error) {
     console.error('Failed to store unified brain result:', error);
   }
+}
+
+// STEP 2: Message Classification Function (SoulSync Principle 1: Additive Only)
+function classifyUnifiedResponse(
+  response: string, 
+  hermeticResults: HermeticModuleResult[], 
+  agentMode: string
+): any {
+  
+  console.log('🔍 Classifying unified response for routing');
+  
+  // Check if CNR generated clarifying questions
+  const cnrResult = hermeticResults.find(r => r.module === 'CNR');
+  const isCNRClarification = response.includes('help me understand') || 
+                            response.includes('which better represents') ||
+                            response.includes('can you clarify') ||
+                            (cnrResult?.data?.requiresClarification);
+  
+  if (isCNRClarification) {
+    console.log('✅ Detected CNR clarification - routing to floating orb');
+    return {
+      messageType: 'cnr_clarification',
+      targetChannel: 'floating_orb',
+      metadata: {
+        moduleSource: 'CNR',
+        priority: 'high',
+        requiresResponse: true,
+        cnrData: {
+          conflictId: `cnr_${Date.now()}`,
+          expectedAnswerType: determineClarificationAnswerType(response),
+          context: 'personality_conflict_resolution',
+          priority: 'medium'
+        }
+      }
+    };
+  }
+  
+  // Check for system insights
+  if (response.includes('I noticed') || response.includes('insight')) {
+    console.log('✅ Detected system insight');
+    return {
+      messageType: 'system_insight',
+      targetChannel: 'insight_display',
+      metadata: {
+        moduleSource: 'PIE',
+        priority: 'medium'
+      }
+    };
+  }
+  
+  // Default to conversation
+  console.log('✅ Standard conversation response');
+  return {
+    messageType: 'conversation',
+    targetChannel: 'main_conversation',
+    metadata: {
+      agentMode,
+      processedModules: hermeticResults.filter(r => r.processed).map(r => r.module)
+    }
+  };
+}
+
+// Helper function to determine CNR answer type
+function determineClarificationAnswerType(response: string): string {
+  if (response.includes('[') && response.includes(']')) return 'choice';
+  if (response.includes('scale') || response.includes('rate')) return 'scale';
+  if (response.includes('priority') || response.includes('rank')) return 'priority';
+  return 'text';
 }
