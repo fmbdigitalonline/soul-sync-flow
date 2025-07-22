@@ -318,7 +318,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
               />
               <div className="text-sm">
                 <div className="font-medium text-card-foreground font-cormorant">
-                  {loading ? 'HACS Loading...' : 'System Initializing...'
+                  {loading ? 'HACS Loading...' : 'System Initializing...'}
                 </div>
                 <div className="text-muted-foreground font-inter text-xs">
                   {!diagnostics.diagnosticsComplete ? 'Running diagnostics...' : 'Preparing intelligence...'}
