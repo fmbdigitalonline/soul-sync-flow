@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import MainLayout from "@/components/Layout/MainLayout";
 import SimplifiedBlueprintViewer from "@/components/blueprint/SimplifiedBlueprintViewer";
 import BlueprintEditor from "@/components/blueprint/BlueprintEditor";
 import { BlueprintHealthCheck } from "@/components/blueprint/BlueprintHealthCheck";
