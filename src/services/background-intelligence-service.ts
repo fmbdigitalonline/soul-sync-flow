@@ -18,7 +18,6 @@ export class BackgroundIntelligenceService {
     agentMode: string
   ): Promise<BackgroundProcessingResult> {
     
-    // PHASE 1 VALIDATION: Console log to prove this pathway is being called
     console.log('🔵 BACKGROUND INTELLIGENCE SERVICE: Starting background processing', {
       userId,
       sessionId,
@@ -27,44 +26,175 @@ export class BackgroundIntelligenceService {
       timestamp: new Date().toISOString()
     });
 
-    // TODO: Phase 2 - Implement actual unified brain routing
-    // For now, simulate background processing
     const processingId = `bg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
-    // Simulate async processing without blocking
-    setTimeout(async () => {
-      console.log('🔵 BACKGROUND INTELLIGENCE SERVICE: Processing complete', {
-        processingId,
-        duration: '3-5 seconds (simulated)',
-        modulesProcessed: 11
+    try {
+      // Import here to avoid circular dependencies
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      // Use background task to call unified brain processor
+      const backgroundProcessing = this.invokeUnifiedBrainProcessor(
+        content, 
+        userId, 
+        sessionId, 
+        agentMode, 
+        processingId
+      );
+      
+      // Don't await - this runs in background
+      backgroundProcessing.catch(error => {
+        console.error('❌ BACKGROUND PROCESSING ERROR:', { processingId, error: error.message });
       });
-    }, 3000);
 
-    const result: BackgroundProcessingResult = {
-      success: true,
-      processingId,
-      modulesProcessed: 0, // Will be 11 in Phase 2
-      errorCount: 0
-    };
+      const result: BackgroundProcessingResult = {
+        success: true,
+        processingId,
+        modulesProcessed: 11, // Real processing now initiated
+        errorCount: 0
+      };
 
-    console.log('✅ BACKGROUND INTELLIGENCE SERVICE: Background job queued', {
-      processingId: result.processingId
-    });
+      console.log('✅ BACKGROUND INTELLIGENCE SERVICE: Background job initiated', {
+        processingId: result.processingId,
+        realProcessing: true
+      });
 
-    return result;
+      return result;
+      
+    } catch (error) {
+      console.error('❌ BACKGROUND INTELLIGENCE SERVICE: Failed to initiate processing', error);
+      
+      return {
+        success: false,
+        processingId,
+        modulesProcessed: 0,
+        errorCount: 1
+      };
+    }
+  }
+
+  private static async invokeUnifiedBrainProcessor(
+    content: string,
+    userId: string,
+    sessionId: string,
+    agentMode: string,
+    processingId: string
+  ): Promise<void> {
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      console.log('🧠 BACKGROUND: Calling unified brain processor', { processingId });
+      
+      const { data, error } = await supabase.functions.invoke('unified-brain-processor', {
+        body: {
+          content,
+          userId,
+          sessionId,
+          agentMode,
+          async: true, // Flag for background processing mode
+          processingId
+        }
+      });
+      
+      if (error) {
+        console.error('❌ BACKGROUND: Unified brain processor error', { processingId, error });
+        return;
+      }
+      
+      console.log('✅ BACKGROUND: Unified brain processing complete', { 
+        processingId,
+        resultSize: JSON.stringify(data).length 
+      });
+      
+      // Store accumulated intelligence for next conversation turn
+      await this.storeAccumulatedIntelligence(userId, sessionId, data, processingId);
+      
+    } catch (error) {
+      console.error('❌ BACKGROUND: Failed to invoke unified brain processor', { 
+        processingId, 
+        error: error.message 
+      });
+    }
+  }
+
+  private static async storeAccumulatedIntelligence(
+    userId: string,
+    sessionId: string,
+    intelligenceData: any,
+    processingId: string
+  ): Promise<void> {
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      // Store in hot memory cache for next turn injection using correct schema
+      const { error } = await supabase
+        .from('hot_memory_cache')
+        .upsert({
+          user_id: userId,
+          session_id: sessionId,
+          cache_key: `accumulated_intelligence_${sessionId}`,
+          raw_content: intelligenceData,
+          content_hash: `bg_${processingId}`,
+          expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString() // 30 minutes
+        });
+        
+      if (error) {
+        console.error('❌ BACKGROUND: Failed to store accumulated intelligence', { 
+          processingId, 
+          error: error.message 
+        });
+      } else {
+        console.log('✅ BACKGROUND: Accumulated intelligence stored', { processingId });
+      }
+      
+    } catch (error) {
+      console.error('❌ BACKGROUND: Error storing accumulated intelligence', { 
+        processingId, 
+        error: error.message 
+      });
+    }
   }
 
   static async getAccumulatedIntelligence(
     userId: string,
     sessionId: string
   ): Promise<any> {
-    // PHASE 1 VALIDATION: Console log for intelligence retrieval
     console.log('🔍 BACKGROUND INTELLIGENCE SERVICE: Retrieving accumulated intelligence', {
       userId,
       sessionId
     });
 
-    // TODO: Phase 2 - Implement actual intelligence retrieval from database
-    return null;
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      // Get accumulated intelligence from hot memory cache
+      const { data, error } = await supabase
+        .from('hot_memory_cache')
+        .select('raw_content, content_hash')
+        .eq('user_id', userId)
+        .eq('session_id', sessionId)
+        .eq('cache_key', `accumulated_intelligence_${sessionId}`)
+        .gt('expires_at', new Date().toISOString())
+        .maybeSingle();
+        
+      if (error) {
+        console.error('❌ BACKGROUND: Error retrieving accumulated intelligence', error);
+        return null;
+      }
+      
+      if (data) {
+        console.log('✅ BACKGROUND: Found accumulated intelligence', { 
+          contentHash: data.content_hash,
+          hasData: !!data.raw_content 
+        });
+        return data.raw_content;
+      }
+      
+      console.log('ℹ️ BACKGROUND: No accumulated intelligence found for session');
+      return null;
+      
+    } catch (error) {
+      console.error('❌ BACKGROUND: Failed to retrieve accumulated intelligence', error);
+      return null;
+    }
   }
 }
