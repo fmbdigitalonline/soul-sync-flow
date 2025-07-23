@@ -118,15 +118,19 @@ export class ImmediateResponseService {
     if (hasDeepContext) {
       console.log('🧠 ENHANCED RESPONSE: Using accumulated intelligence for deeper context');
       
+      // CRITICAL FIX: Extract and weave in the actual intelligence content
+      const intelligenceContext = this.extractIntelligenceContext(accumulatedIntelligence);
+      
+      // Build contextual response that weaves previous insights with current message
       const contextualResponses = {
-        'INTJ': `${userName}, I've been processing our conversation patterns and I can see how this connects to your systematic approach. Let me integrate what I've learned about your thinking style.`,
-        'ENFP': `${userName}, based on our journey together, I can sense this aligns with your authentic path. There's a deeper pattern here that I'm seeing.`,
-        'ISFJ': `${userName}, drawing from our conversations, I can tell this touches on something that matters deeply to you. Let me respond with the context I've built.`,
-        'ESTP': `${userName}, knowing your action-oriented nature and what we've explored together, I can see exactly where you're going with this.`
+        'INTJ': `${userName}, I've been analyzing our conversation patterns and I notice ${intelligenceContext}. Given your systematic thinking style and considering what you just shared about "${content.slice(0, 100)}...", I can see how this connects to your broader strategic approach.`,
+        'ENFP': `${userName}, based on our journey together, I've gathered that ${intelligenceContext}. This new insight about "${content.slice(0, 100)}..." feels aligned with your authentic path and the patterns I'm seeing in your thinking.`,
+        'ISFJ': `${userName}, from our previous conversations, I understand that ${intelligenceContext}. When you mention "${content.slice(0, 100)}...", it connects to something deeper that I've been processing about your values and approach.`,
+        'ESTP': `${userName}, knowing your action-oriented nature and having learned that ${intelligenceContext}, I can see exactly where you're going with "${content.slice(0, 100)}...". Let me connect this to what I've observed about your style.`
       };
       
       return contextualResponses[mbtiType as keyof typeof contextualResponses] || 
-             `${userName}, building on our conversation history, I can see how this fits into your larger picture. Let me respond with full context.`;
+             `${userName}, building on our conversation history where I learned ${intelligenceContext}, I can see how "${content.slice(0, 100)}..." fits into your larger picture. Let me respond with the full context I've built.`;
     }
     
     // Standard responses without deep context
@@ -147,12 +151,14 @@ export class ImmediateResponseService {
     
     if (hasDeepContext) {
       console.log('🧠 ENHANCED INTELLIGENCE RESPONSE: Leveraging accumulated insights');
+      const intelligenceContext = this.extractIntelligenceContext(accumulatedIntelligence);
+      
       if (intelligenceLevel > 70) {
-        return "Drawing from the patterns I've been analyzing in our conversations, I can see deeper connections in what you're sharing. Let me respond with full context.";
+        return `Drawing from the patterns I've been analyzing in our conversations, I learned that ${intelligenceContext}. Now when you mention "${content.slice(0, 100)}...", I can see deeper connections forming. Let me respond with this full context.`;
       } else if (intelligenceLevel > 30) {
-        return "I've been building understanding from our interactions, and this connects to insights I've gathered. Let me integrate that context.";
+        return `I've been building understanding from our interactions, and I've gathered that ${intelligenceContext}. This connects to your current message about "${content.slice(0, 100)}..." in meaningful ways.`;
       } else {
-        return "Even from our brief interactions, I can see patterns forming. Let me use what I've learned to respond more meaningfully.";
+        return `Even from our brief interactions, I can see that ${intelligenceContext}. Your message about "${content.slice(0, 100)}..." builds on these patterns I'm learning.`;
       }
     }
     
@@ -168,5 +174,56 @@ export class ImmediateResponseService {
 
   private static generateFallbackResponse(content: string, agentMode: string): string {
     return "I understand you've shared something important. Let me think about this while I process your message more deeply.";
+  }
+
+  /**
+   * Extracts meaningful context from accumulated intelligence for weaving into responses
+   */
+  private static extractIntelligenceContext(accumulatedIntelligence: any): string {
+    try {
+      // Extract key insights from the accumulated intelligence structure
+      const insights = [];
+      
+      // Check for patterns in previous interactions
+      if (accumulatedIntelligence.NIK?.data?.intent) {
+        insights.push(`your primary focus tends toward ${accumulatedIntelligence.NIK.data.intent}`);
+      }
+      
+      if (accumulatedIntelligence.CPSR?.data?.internal_state) {
+        insights.push(`your internal processing state is ${accumulatedIntelligence.CPSR.data.internal_state.toLowerCase()}`);
+      }
+      
+      if (accumulatedIntelligence.VFP?.data?.personalityContext?.name) {
+        insights.push(`you prefer to be called ${accumulatedIntelligence.VFP.data.personalityContext.name}`);
+      }
+      
+      if (accumulatedIntelligence.CNR?.data?.trigger) {
+        const trigger = accumulatedIntelligence.CNR.data.trigger;
+        if (trigger && trigger.length > 10) {
+          insights.push(`you previously mentioned "${trigger.slice(0, 80)}..."`);
+        }
+      }
+      
+      if (accumulatedIntelligence.HFME?.data?.frequency?.quality) {
+        insights.push(`your current energy state reflects ${accumulatedIntelligence.HFME.data.frequency.quality}`);
+      }
+      
+      // Return a natural sentence combining the insights
+      if (insights.length > 0) {
+        if (insights.length === 1) {
+          return insights[0];
+        } else if (insights.length === 2) {
+          return `${insights[0]} and ${insights[1]}`;
+        } else {
+          return `${insights.slice(0, -1).join(', ')}, and ${insights[insights.length - 1]}`;
+        }
+      }
+      
+      return "our conversation has been building meaningful patterns";
+      
+    } catch (error) {
+      console.error('Error extracting intelligence context:', error);
+      return "our previous interaction provided valuable context";
+    }
   }
 }
