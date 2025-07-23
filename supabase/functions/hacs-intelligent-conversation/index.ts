@@ -52,7 +52,7 @@ serve(async (req) => {
       userMessage,
       messageHistory = [],
       forceQuestionGeneration = false,
-      useUnifiedBrain = false, // CRITICAL: Enable unified brain processing
+      useUnifiedBrain = true, // PHASE 1: Enable unified brain processing by default
       agentMode = 'guide'
     } = requestBody;
 

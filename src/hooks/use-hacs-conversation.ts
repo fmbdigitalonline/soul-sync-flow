@@ -66,21 +66,24 @@ export const useHACSConversation = () => {
   const sendMessage = useCallback(async (content: string) => {
     if (!user || !content.trim()) return;
 
+    // PHASE 1: Optimistic UI - Add user message immediately for instant display
+    const userMessage: ConversationMessage = {
+      id: `user_${Date.now()}`,
+      role: 'user',
+      content: content.trim(),
+      timestamp: new Date().toISOString()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    
+    // Set loading state for AI response (not user message)
     setIsLoading(true);
     setIsTyping(true);
 
     try {
-      // Add user message immediately
-      const userMessage: ConversationMessage = {
-        id: `user_${Date.now()}`,
-        role: 'user',
-        content: content.trim(),
-        timestamp: new Date().toISOString()
-      };
-
-      setMessages(prev => [...prev, userMessage]);
-
-      // Send to HACS intelligent conversation
+      console.log('🔄 HACS: Processing message through full pipeline');
+      
+      // Send to HACS intelligent conversation with complete backend processing preserved
       const { data, error } = await supabase.functions.invoke('hacs-intelligent-conversation', {
         body: {
           action: 'respond_to_user',
@@ -92,9 +95,14 @@ export const useHACSConversation = () => {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Backend processing failed:', error);
+        throw error;
+      }
 
-      // Add HACS response
+      console.log('✅ HACS: Message processed through backend pipeline');
+
+      // Add HACS response after full processing
       const hacsMessage: ConversationMessage = {
         id: `hacs_${Date.now()}`,
         role: 'hacs',
@@ -133,12 +141,12 @@ export const useHACSConversation = () => {
       }
 
     } catch (error) {
-      console.error('❌ HACS CONVERSATION FAILED - NO FALLBACK:', error);
+      console.error('❌ HACS CONVERSATION FAILED - REMOVING USER MESSAGE:', error);
       
-      // Remove user message since conversation failed
-      setMessages(prev => prev.slice(0, -1));
+      // TRANSPARENT ERROR: Remove optimistically added user message on failure
+      setMessages(prev => prev.filter(msg => msg.id !== userMessage.id));
       
-      // Re-throw error to surface the problem
+      // Re-throw error to surface the problem transparently
       throw error;
     } finally {
       setIsLoading(false);
