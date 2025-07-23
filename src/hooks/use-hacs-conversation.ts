@@ -241,13 +241,17 @@ export const useHACSConversation = () => {
 
   return {
     messages,
+    setMessages,
     isLoading,
+    setIsLoading,
     isTyping,
     conversationId,
     currentQuestion,
     sendMessage,
     generateQuestion,
     provideFeedback,
-    clearConversation
+    clearConversation,
+    recordConversationInteraction,
+    refreshIntelligence
   };
 };
