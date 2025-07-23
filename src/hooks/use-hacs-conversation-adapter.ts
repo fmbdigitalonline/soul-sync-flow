@@ -79,24 +79,22 @@ export const useHACSConversationAdapter = (
       // CRITICAL: Route through Unified Brain Service (same as Companion)
       console.log('🧠 Processing message through unified brain with layered models - Mode:', agentOverride || initialAgent, 'State: NORMAL');
       
+      // Map agent modes to valid AgentMode types
+      const agentMode = (agentOverride || initialAgent) === 'companion' ? 'blend' : 
+                       (agentOverride || initialAgent) as 'guide' | 'coach' | 'blend';
+      
       const response = await unifiedBrainService.processMessage(
         content,
         sessionIdRef.current,
-        {
-          mode: (agentOverride || initialAgent) as 'guide' | 'coach' | 'companion',
-          usePersonalization,
-          context,
-          streamCallback: (chunk: string) => {
-            setStreamingContent(prev => prev + chunk);
-          }
-        }
+        agentMode,
+        'NORMAL'
       );
 
       // Add AI response to HACS conversation
       const aiMessage: ConversationMessage = {
         id: `hacs_${Date.now()}`,
         role: 'hacs',
-        content: response.content,
+        content: response.response,
         timestamp: new Date().toISOString()
       };
 
