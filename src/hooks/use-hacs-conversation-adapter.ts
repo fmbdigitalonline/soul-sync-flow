@@ -69,10 +69,18 @@ export const useHACSConversationAdapter = (
       // ============================================================
       console.log('🟢 PATHWAY 1: Starting immediate response generation');
       
+      // INTELLIGENCE RETRIEVAL: Get accumulated intelligence from previous background processing
+      console.log('🧠 RETRIEVAL: Fetching accumulated intelligence from previous cycles');
+      const accumulatedIntelligence = await BackgroundIntelligenceService.getAccumulatedIntelligence(
+        user.id,
+        sessionId
+      );
+      
       const immediateResponsePromise = ImmediateResponseService.generateImmediateResponse(
         content,
         user.id,
-        agentMode
+        agentMode,
+        accumulatedIntelligence // INJECTION: Pass deep context to immediate response
       );
 
       // ============================================================
