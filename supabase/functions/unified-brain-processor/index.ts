@@ -32,8 +32,11 @@ serve(async (req) => {
   }
 
   try {
-    const { userId, sessionId, message, agentMode, currentState = 'NORMAL' }: UnifiedBrainRequest = await req.json();
-    console.log('🧠 Unified Brain: Processing message through all 11 Hermetic components');
+    const requestBody = await req.json();
+    const { userId, sessionId, message, agentMode, currentState = 'NORMAL', processingId, async: isAsync } = requestBody;
+    const effectiveProcessingId = processingId || `server_${Date.now()}`;
+    
+    console.log(`[${effectiveProcessingId}] 🧠 Unified Brain: Starting ${isAsync ? 'async' : 'sync'} processing through all 11 Hermetic components`);
 
     if (!userId || !sessionId || !message) {
       throw new Error('Missing required parameters: userId, sessionId, message');
@@ -42,48 +45,60 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
     const hermeticResults: HermeticModuleResult[] = [];
 
-    // Step 1: NIK - Neuro-Intent Kernel (Mentalism)
+    // Process all 11 Hermetic modules with detailed logging
+    console.log(`[${effectiveProcessingId}] 🧠 NIK: Processing intent kernel`);
     const nikResult = await processNIK(supabase, userId, sessionId, message, agentMode);
+    console.log(`[${effectiveProcessingId}] ✅ NIK: Complete - ${JSON.stringify(nikResult).substring(0, 100)}...`);
     hermeticResults.push(nikResult);
 
-    // Step 2: CPSR - Cross-Plane State Reflector (Correspondence)
+    console.log(`[${effectiveProcessingId}] 🔄 CPSR: Processing cross-plane state reflection`);
     const cpsrResult = await processCPSR(supabase, userId, sessionId, message, currentState);
+    console.log(`[${effectiveProcessingId}] ✅ CPSR: Complete - ${JSON.stringify(cpsrResult).substring(0, 100)}...`);
     hermeticResults.push(cpsrResult);
 
-    // Step 3: HFME - Harmonic Frequency Modulation Engine (Vibration)
+    console.log(`[${effectiveProcessingId}] 🎵 HFME: Processing harmonic frequency modulation`);
     const hfmeResult = await processHFME(supabase, userId, sessionId, agentMode);
+    console.log(`[${effectiveProcessingId}] ✅ HFME: Complete - ${JSON.stringify(hfmeResult).substring(0, 100)}...`);
     hermeticResults.push(hfmeResult);
 
-    // Step 4: DPEM - Dual-Pole Equilibrator Module (Polarity)
+    console.log(`[${effectiveProcessingId}] ⚖️ DPEM: Processing dynamic polarity equilibrium`);
     const dpemResult = await processDPEM(supabase, userId, message, agentMode);
+    console.log(`[${effectiveProcessingId}] ✅ DPEM: Complete - ${JSON.stringify(dpemResult).substring(0, 100)}...`);
     hermeticResults.push(dpemResult);
 
-    // Step 5: TWS - Temporal Wave Synchronizer (Rhythm)
+    console.log(`[${effectiveProcessingId}] ⏰ TWS: Processing temporal wave synchronization`);
     const twsResult = await processTWS(supabase, userId, sessionId);
+    console.log(`[${effectiveProcessingId}] ✅ TWS: Complete - ${JSON.stringify(twsResult).substring(0, 100)}...`);
     hermeticResults.push(twsResult);
 
-    // Step 6: CNR - Causal Nexus Router (Cause and Effect)
+    console.log(`[${effectiveProcessingId}] 🔗 CNR: Processing causal nexus recognition`);
     const cnrResult = await processCNR(supabase, userId, message, agentMode);
+    console.log(`[${effectiveProcessingId}] ✅ CNR: Complete - ${JSON.stringify(cnrResult).substring(0, 100)}...`);
     hermeticResults.push(cnrResult);
 
-    // Step 7: BPSC - Bi-Principle Synthesis Core (Gender/Union of Opposites)
+    console.log(`[${effectiveProcessingId}] 🔄 BPSC: Processing bipolar synthesis convergence`);
     const bpscResult = await processBPSC(message, agentMode);
+    console.log(`[${effectiveProcessingId}] ✅ BPSC: Complete - ${JSON.stringify(bpscResult).substring(0, 100)}...`);
     hermeticResults.push(bpscResult);
 
-    // Cognitive Module 1: VFP - Vector-Fusion Personality Graph
+    console.log(`[${effectiveProcessingId}] 🧬 VFP: Processing vector field projection`);
     const vfpResult = await processVFP(supabase, userId);
+    console.log(`[${effectiveProcessingId}] ✅ VFP: Complete - ${JSON.stringify(vfpResult).substring(0, 100)}...`);
     hermeticResults.push(vfpResult);
 
-    // Cognitive Module 2: ACS - Adaptive Context Scheduler
+    console.log(`[${effectiveProcessingId}] 📅 ACS: Processing adaptive context scheduling`);
     const acsResult = await processACS(supabase, userId, sessionId, message, agentMode);
+    console.log(`[${effectiveProcessingId}] ✅ ACS: Complete - ${JSON.stringify(acsResult).substring(0, 100)}...`);
     hermeticResults.push(acsResult);
 
-    // Cognitive Module 3: TMG - Tiered Memory Graph
+    console.log(`[${effectiveProcessingId}] 🧠 TMG: Processing temporal memory gridding`);
     const tmgResult = await processTMG(supabase, userId, sessionId, message, agentMode);
+    console.log(`[${effectiveProcessingId}] ✅ TMG: Complete - ${JSON.stringify(tmgResult).substring(0, 100)}...`);
     hermeticResults.push(tmgResult);
 
-    // Cognitive Module 4: PIE - Proactive Insight Engine
+    console.log(`[${effectiveProcessingId}] 💡 PIE: Processing proactive insight extraction`);
     const pieResult = await processPIE(supabase, userId, message, agentMode);
+    console.log(`[${effectiveProcessingId}] ✅ PIE: Complete - ${JSON.stringify(pieResult).substring(0, 100)}...`);
     hermeticResults.push(pieResult);
 
     // Generate final unified response by synthesizing all module outputs
@@ -103,7 +118,7 @@ serve(async (req) => {
       timestamp: new Date().toISOString()
     });
 
-    console.log('✅ Unified Brain: All 11 Hermetic components processed successfully');
+    console.log(`[${effectiveProcessingId}] ✅ Unified Brain: All 11 Hermetic components processed successfully`);
 
     return new Response(JSON.stringify({ 
       response: unifiedResponse,
