@@ -126,6 +126,7 @@ export class BackgroundIntelligenceService {
       const { supabase } = await import('@/integrations/supabase/client');
       
       // Store in hot memory cache for next turn injection using correct schema
+      // CRITICAL FIX: Use proper upsert with conflict resolution for unique constraint
       const { error } = await supabase
         .from('hot_memory_cache')
         .upsert({
@@ -135,6 +136,9 @@ export class BackgroundIntelligenceService {
           raw_content: intelligenceData,
           content_hash: `bg_${processingId}`,
           expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString() // 30 minutes
+        }, {
+          onConflict: 'user_id,session_id,cache_key',
+          ignoreDuplicates: false
         });
         
       if (error) {
