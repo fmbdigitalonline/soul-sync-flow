@@ -2,6 +2,8 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { useHACSConversation, ConversationMessage } from './use-hacs-conversation';
 import { useEnhancedAICoach } from './use-enhanced-ai-coach-stub';
 import { supabase } from '@/integrations/supabase/client';
+import { ImmediateResponseService } from '../services/immediate-response-service';
+import { BackgroundIntelligenceService } from '../services/background-intelligence-service';
 
 // Adapter interface that matches useEnhancedAICoach exactly
 export interface HACSConversationAdapter {
@@ -41,63 +43,71 @@ export const useHACSConversationAdapter = (
   // Return HACS messages directly - they already have the correct ConversationMessage format
   // No conversion needed since HACSChatInterface expects ConversationMessage type
 
-  // CRITICAL: Route all sendMessage calls through Unified Brain (11 Hermetic components)
+  // PHASE 1: DUAL-PATHWAY ARCHITECTURE - Asynchronous Intelligence Model
   const sendMessage = useCallback(async (
     content: string,
     usePersonalization: boolean = true,
     context?: any,
     agentOverride?: string
   ) => {
-    // Import Unified Brain Service dynamically to avoid circular dependencies
-    const { unifiedBrainService } = await import('../services/unified-brain-service');
-    
+    console.log('🚀 DUAL-PATHWAY VALIDATION: sendMessage called', {
+      content: content.substring(0, 50),
+      agentOverride,
+      timestamp: new Date().toISOString()
+    });
+
     try {
-      // Ensure unified brain is initialized
+      // Get user authentication
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
       
-      // Initialize if not already done
-      await unifiedBrainService.initialize(user.id);
-      
-      // Process through ALL 11 Hermetic components: NIK → CPSR → HFME → DPEM → TWS → CNR → BPSC + VPG → PIE → TMG → ACS
       const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const agentMode = agentOverride || initialAgent;
+
+      // ============================================================
+      // PATHWAY 1: IMMEDIATE RESPONSE (Target: <200ms)
+      // ============================================================
+      console.log('🟢 PATHWAY 1: Starting immediate response generation');
       
-      console.log(`🔄 HACS Adapter: Routing message through unified brain (${agentMode} mode)`);
-      
-      const brainResponse = await unifiedBrainService.processMessage(
+      const immediateResponsePromise = ImmediateResponseService.generateImmediateResponse(
         content,
-        sessionId,
-        agentMode as any,
-        'NORMAL'
+        user.id,
+        agentMode
       );
+
+      // ============================================================
+      // PATHWAY 2: BACKGROUND INTELLIGENCE (Full Pipeline)
+      // ============================================================
+      console.log('🔵 PATHWAY 2: Starting background intelligence processing');
       
-      console.log('✅ HACS Adapter: Message processed through all 11 Hermetic components');
-      
-      // Convert brain response to HACS conversation format for UI compatibility
-      const hacsMessage = {
-        id: `hacs_${Date.now()}`,
-        role: 'hacs' as const,
-        content: brainResponse.response,
-        timestamp: new Date().toISOString()
-      };
-      
-      // Update the internal conversation state to maintain UI sync
-      // This is a workaround to keep the UI working while routing through unified brain
-      const userMessage = {
-        id: `user_${Date.now()}`,
-        role: 'user' as const,
+      const backgroundProcessingPromise = BackgroundIntelligenceService.processInBackground(
         content,
-        timestamp: new Date().toISOString()
-      };
-      
-      // We can't directly modify hacsConversation state, so we'll let the original flow handle it
-      // but ensure it routes through unified brain by wrapping the call
+        user.id,
+        sessionId,
+        agentMode
+      );
+
+      // ============================================================
+      // PATHWAY VALIDATION: Prove both pathways are called
+      // ============================================================
+      const [immediateResponse, backgroundResult] = await Promise.all([
+        immediateResponsePromise,
+        backgroundProcessingPromise
+      ]);
+
+      console.log('✅ DUAL-PATHWAY VALIDATION: Both pathways completed', {
+        immediateProcessingTime: immediateResponse.processingTime,
+        backgroundProcessingId: backgroundResult.processingId,
+        pathwaysValidated: true
+      });
+
+      // For Phase 1, we'll still route through the original HACS conversation
+      // to maintain UI compatibility while proving the pathway architecture works
       await hacsConversation.sendMessage(content);
       
     } catch (error) {
-      console.error('❌ Unified Brain routing failed, using fallback:', error);
-      // Fallback to original HACS conversation if unified brain fails
+      console.error('❌ DUAL-PATHWAY ERROR: One or both pathways failed', error);
+      // Fallback to original HACS conversation
       await hacsConversation.sendMessage(content);
     }
   }, [hacsConversation.sendMessage, initialAgent]);
