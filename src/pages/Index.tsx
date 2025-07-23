@@ -11,6 +11,7 @@ import PersonalityDemo from "@/components/personality/PersonalityDemo";
 import { useOptimizedBlueprintData } from "@/hooks/use-optimized-blueprint-data";
 import { isAdminUser } from "@/utils/isAdminUser";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { safeInterpolateTranslation } from "@/utils/translation-utils";
 import { LanguageSelector } from "@/components/ui/language-selector";
 import { RotatingText } from "@/components/ui/rotating-text";
 import { PersonalizedQuoteDisplay } from "@/components/ui/personalized-quote-display";
@@ -136,10 +137,11 @@ const Index = () => {
         <div className={`w-full ${layout.maxWidth} mx-auto text-center`}>
           
           <h1 className={`font-heading ${getTextSize('text-3xl')} lg:${getTextSize('text-4xl')} font-bold mb-8 ${spacing.gap} px-4`}>
-            {user ? <>
-                Welcome to <span className="text-primary">SoulSync</span>, {
-            blueprintData?.user_meta?.preferred_name || getDisplayName || user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Friend'}
-              </> : <span dangerouslySetInnerHTML={{
+            {user ? <span dangerouslySetInnerHTML={{
+                __html: safeInterpolateTranslation(t('index.welcomeWithName'), {
+                  name: blueprintData?.user_meta?.preferred_name || getDisplayName || user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Friend'
+                })
+              }} /> : <span dangerouslySetInnerHTML={{
             __html: t('index.welcome') as string
           }} />}
           </h1>
@@ -197,14 +199,14 @@ const Index = () => {
                   </>}
               </Button>
               
-              <Button 
+                <Button 
                 size="lg" 
                 variant="outline" 
                 className={`w-full ${touchTargetSize} ${getTextSize('text-base')} backdrop-blur-sm border-border hover:bg-accent hover:text-accent-foreground font-cormorant`}
                 onClick={handleTutorialStart}
                 type="button"
               >
-                View Blueprint
+                {t("index.viewBlueprint")}
               </Button>
             </> : <>
               <Button size="lg" className={`bg-primary hover:bg-primary/90 w-full ${touchTargetSize} ${getTextSize('text-base')}`} onClick={handleGetStarted}>

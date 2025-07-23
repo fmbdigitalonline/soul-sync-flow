@@ -9,38 +9,9 @@ interface Translations {
 
 const translations: Record<Language, Translations> = {
   en: {
-    nav: {
-      home: 'Home',
-      growth: 'Growth',
-      coach: 'Coach',
-      companion: 'Companion',
-      signIn: 'Sign In'
-    },
     language: {
       english: 'English',
       dutch: 'Nederlands'
-    },
-    // Authentication Flow
-    auth: {
-      createAccount: 'Create Account',
-      welcomeBack: 'Welcome Back',
-      startJourney: 'Begin your personalized spiritual journey',
-      continueJourney: 'Continue your spiritual growth journey',
-      email: 'Email',
-      password: 'Password',
-      confirmPassword: 'Confirm Password',
-      enterEmail: 'Enter your email address',
-      enterPassword: 'Enter your password',
-      confirmPasswordPlaceholder: 'Confirm your password',
-      success: 'Success',
-      signUpSuccess: 'Account created successfully! Check your email for verification.',
-      signUpFailed: 'Failed to create account',
-      welcomeBackMessage: 'You\'re successfully signed in',
-      signInFailed: 'Failed to sign in',
-      passwordsDontMatch: 'Passwords do not match',
-      passwordTooShort: 'Password must be at least 6 characters',
-      alreadyHaveAccount: 'Already have an account? Sign in',
-      needAccount: 'Need an account? Sign up'
     },
     // Page Not Found
     notFound: {
@@ -105,8 +76,25 @@ const translations: Record<Language, Translations> = {
     },
     // Global error key
     error: 'Error',
+    // Navigation
+    nav: {
+      home: 'Home',
+      growth: 'Growth',
+      coach: 'Coach',
+      companion: 'Companion',
+      signIn: 'Sign In',
+      signOut: 'Sign Out',
+      blueprint: 'Blueprint',
+      dreams: 'Dreams',
+      profile: 'Profile',
+      profile360: '360° Profile',
+      adminDashboard: 'Admin Dashboard',
+      testEnvironment: 'Test Environment'
+    },
+    // Index Page
     index: {
       welcome: 'Welcome to <span class="text-primary">SoulSync</span>',
+      welcomeWithName: 'Welcome to <span class="text-primary">SoulSync</span>, {name}',
       subtitle: 'Discover your authentic path through personalized AI guidance and spiritual growth tools.',
       rotatingMessages: [
         'Discover your authentic path through personalized AI guidance and spiritual growth tools.',
@@ -128,42 +116,40 @@ const translations: Record<Language, Translations> = {
       takeTour: 'Take Tour',
       startJourney: 'Start Your Journey',
       getStarted: 'Get Started',
-      signIn: 'Sign In'
-    }
-  },
-  nl: {
-    nav: {
-      home: 'Thuis',
-      growth: 'Groei',
-      coach: 'Coach',
-      companion: 'Metgezel',
-      signIn: 'Inloggen'
-    },
-    language: {
-      english: 'English',
-      dutch: 'Nederlands'
+      signIn: 'Sign In',
+      viewBlueprint: 'View Blueprint'
     },
     // Authentication Flow
     auth: {
-      createAccount: 'Account Aanmaken',
-      welcomeBack: 'Welkom Terug',
-      startJourney: 'Begin je gepersonaliseerde spirituele reis',
-      continueJourney: 'Zet je spirituele groeireis voort',
-      email: 'E-mail',
-      password: 'Wachtwoord',
-      confirmPassword: 'Bevestig Wachtwoord',
-      enterEmail: 'Voer je e-mailadres in',
-      enterPassword: 'Voer je wachtwoord in',
-      confirmPasswordPlaceholder: 'Bevestig je wachtwoord',
-      success: 'Gelukt',
-      signUpSuccess: 'Account succesvol aangemaakt! Controleer je e-mail voor verificatie.',
-      signUpFailed: 'Account aanmaken mislukt',
-      welcomeBackMessage: 'Je bent succesvol ingelogd',
-      signInFailed: 'Inloggen mislukt',
-      passwordsDontMatch: 'Wachtwoorden komen niet overeen',
-      passwordTooShort: 'Wachtwoord moet minstens 6 tekens lang zijn',
-      alreadyHaveAccount: 'Heb je al een account? Log in',
-      needAccount: 'Heb je een account nodig? Meld je aan'
+      createAccount: 'Create Account',
+      welcomeBack: 'Welcome Back',
+      startJourney: 'Begin your personalized spiritual journey',
+      continueJourney: 'Continue your spiritual growth journey',
+      email: 'Email',
+      password: 'Password',
+      confirmPassword: 'Confirm Password',
+      enterEmail: 'Enter your email address',
+      enterPassword: 'Enter your password',
+      confirmPasswordPlaceholder: 'Confirm your password',
+      success: 'Success',
+      signUpSuccess: 'Account created successfully! Check your email for verification.',
+      signUpFailed: 'Failed to create account',
+      welcomeBackMessage: 'You\'re successfully signed in',
+      signInFailed: 'Failed to sign in',
+      passwordsDontMatch: 'Passwords do not match',
+      passwordTooShort: 'Password must be at least 6 characters',
+      alreadyHaveAccount: 'Already have an account? Sign in',
+      needAccount: 'Need an account? Sign up',
+      signOutSuccess: 'Signed out successfully',
+      signOutSuccessDescription: 'You have been safely signed out',
+      signOutError: 'Sign out failed',
+      signOutErrorDescription: 'Unable to sign out. Please try again.'
+    }
+  },
+  nl: {
+    language: {
+      english: 'English',
+      dutch: 'Nederlands'
     },
     // Page Not Found
     notFound: {
@@ -228,8 +214,25 @@ const translations: Record<Language, Translations> = {
     },
     // Global error key
     error: 'Fout',
+    // Navigation
+    nav: {
+      home: 'Thuis',
+      growth: 'Groei',
+      coach: 'Coach',
+      companion: 'Metgezel',
+      signIn: 'Inloggen',
+      signOut: 'Uitloggen',
+      blueprint: 'Blauwdruk',
+      dreams: 'Dromen',
+      profile: 'Profiel',
+      profile360: '360° Profiel',
+      adminDashboard: 'Admin Dashboard',
+      testEnvironment: 'Test Omgeving'
+    },
+    // Index Page
     index: {
       welcome: 'Welkom bij <span class="text-primary">SoulSync</span>',
+      welcomeWithName: 'Welkom bij <span class="text-primary">SoulSync</span>, {name}',
       subtitle: 'Ontdek je authentieke pad door gepersonaliseerde AI-begeleiding en spirituele groei-tools.',
       rotatingMessages: [
         'Ontdek je authentieke pad door gepersonaliseerde AI-begeleiding en spirituele groei-tools.',
@@ -251,7 +254,34 @@ const translations: Record<Language, Translations> = {
       takeTour: 'Tour Nemen',
       startJourney: 'Begin Je Reis',
       getStarted: 'Aan de Slag',
-      signIn: 'Inloggen'
+      signIn: 'Inloggen',
+      viewBlueprint: 'Bekijk Blauwdruk'
+    },
+    // Authentication Flow
+    auth: {
+      createAccount: 'Account Aanmaken',
+      welcomeBack: 'Welkom Terug',
+      startJourney: 'Begin je gepersonaliseerde spirituele reis',
+      continueJourney: 'Zet je spirituele groeireis voort',
+      email: 'E-mail',
+      password: 'Wachtwoord',
+      confirmPassword: 'Bevestig Wachtwoord',
+      enterEmail: 'Voer je e-mailadres in',
+      enterPassword: 'Voer je wachtwoord in',
+      confirmPasswordPlaceholder: 'Bevestig je wachtwoord',
+      success: 'Gelukt',
+      signUpSuccess: 'Account succesvol aangemaakt! Controleer je e-mail voor verificatie.',
+      signUpFailed: 'Account aanmaken mislukt',
+      welcomeBackMessage: 'Je bent succesvol ingelogd',
+      signInFailed: 'Inloggen mislukt',
+      passwordsDontMatch: 'Wachtwoorden komen niet overeen',
+      passwordTooShort: 'Wachtwoord moet minstens 6 tekens lang zijn',
+      alreadyHaveAccount: 'Heb je al een account? Log in',
+      needAccount: 'Heb je een account nodig? Meld je aan',
+      signOutSuccess: 'Succesvol uitgelogd',
+      signOutSuccessDescription: 'Je bent veilig uitgelogd',
+      signOutError: 'Uitloggen mislukt',
+      signOutErrorDescription: 'Kon niet uitloggen. Probeer het opnieuw.'
     }
   }
 };

@@ -57,18 +57,18 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
 
   const baseNavItems = [
     { to: "/", icon: Home, label: t('nav.home') },
-    { to: "/blueprint", icon: Star, label: "Blueprint" },
-    { to: "/dreams", icon: Heart, label: "Dreams" },
+    { to: "/blueprint", icon: Star, label: t('nav.blueprint') },
+    { to: "/dreams", icon: Heart, label: t('nav.dreams') },
     { to: "/spiritual-growth", icon: Sparkles, label: t('nav.growth') },
-    { to: "/companion", icon: MessageCircle, label: "Companion" },
+    { to: "/companion", icon: MessageCircle, label: t('nav.companion') },
   ];
 
   // Add profile and 360° profile to navigation items for authenticated users
   const userNavItems = user 
     ? [
         ...baseNavItems, 
-        { to: "/profile", icon: User, label: "Profile" },
-        { to: "/user-360", icon: User, label: "360° Profile" }
+        { to: "/profile", icon: User, label: t('nav.profile') },
+        { to: "/user-360", icon: User, label: t('nav.profile360') }
       ]
     : baseNavItems;
 
@@ -76,8 +76,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
   const navItems = user && isAdminUser(user) 
     ? [
         ...userNavItems, 
-        { to: "/admin", icon: Settings, label: "Admin Dashboard" },
-        { to: "/test-environment", icon: TestTube, label: "Test Environment" }
+        { to: "/admin", icon: Settings, label: t('nav.adminDashboard') },
+        { to: "/test-environment", icon: TestTube, label: t('nav.testEnvironment') }
       ]
     : userNavItems;
 
