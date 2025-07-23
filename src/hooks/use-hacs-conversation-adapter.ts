@@ -40,6 +40,18 @@ export const useHACSConversationAdapter = (
   // Keep enhanced AI coach for backwards compatibility but don't use its sendMessage
   const enhancedCoach = useEnhancedAICoach(initialAgent as any, pageContext);
   
+  // CRITICAL FIX: Persistent session ID to close intelligence loop
+  const sessionIdRef = useRef<string | null>(null);
+  
+  // Generate session ID once per conversation and persist it
+  const getOrCreateSessionId = useCallback(() => {
+    if (!sessionIdRef.current) {
+      sessionIdRef.current = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      console.log('🔑 SESSION: Created persistent session ID:', sessionIdRef.current);
+    }
+    return sessionIdRef.current;
+  }, []);
+  
   // Return HACS messages directly - they already have the correct ConversationMessage format
   // No conversion needed since HACSChatInterface expects ConversationMessage type
 
@@ -61,8 +73,11 @@ export const useHACSConversationAdapter = (
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
       
-      const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      // CRITICAL FIX: Use persistent session ID instead of regenerating
+      const sessionId = getOrCreateSessionId();
       const agentMode = agentOverride || initialAgent;
+
+      console.log('🔑 SESSION: Using persistent session ID:', sessionId);
 
       // ============================================================
       // PATHWAY 1: IMMEDIATE RESPONSE (Target: <200ms)
