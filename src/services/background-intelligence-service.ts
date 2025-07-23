@@ -86,7 +86,7 @@ export class BackgroundIntelligenceService {
       
       const { data, error } = await supabase.functions.invoke('unified-brain-processor', {
         body: {
-          content,
+          message: content, // Fixed: unified-brain-processor expects 'message', not 'content'
           userId,
           sessionId,
           agentMode,
