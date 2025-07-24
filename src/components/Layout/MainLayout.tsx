@@ -196,8 +196,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
         </div>
       </div>
 
-      {/* Mobile Bottom Navigation - Always show */}
-      <MobileNavigation />
+      {/* Mobile Bottom Navigation - Only show for authenticated users */}
+      {user && <MobileNavigation />}
 
       {/* HACS Floating Orb - Always visible when authenticated */}
       {user && <FloatingHACSOrb />}

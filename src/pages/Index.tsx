@@ -146,35 +146,55 @@ const Index = () => {
           }} />}
           </h1>
           
-          {user && hasBlueprint ? <PersonalizedQuoteDisplay className={`${getTextSize('text-sm')} mb-8 ${spacing.gap} px-4 text-muted-foreground min-h-[3.5rem] flex items-center justify-center italic`} interval={8000} fallbackQuotes={subtitleMessages} /> : <RotatingText texts={subtitleMessages} className={`${getTextSize('text-sm')} mb-8 ${spacing.gap} px-4 text-muted-foreground min-h-[3.5rem] flex items-center justify-center`} interval={8000} />}
+          {user && hasBlueprint ? (
+            <PersonalizedQuoteDisplay 
+              className={`${getTextSize('text-sm')} mb-8 ${spacing.gap} px-4 text-muted-foreground min-h-[3.5rem] flex items-center justify-center italic`} 
+              interval={8000} 
+              fallbackQuotes={subtitleMessages} 
+            />
+          ) : user ? (
+            <PersonalizedQuoteDisplay 
+              className={`${getTextSize('text-sm')} mb-8 ${spacing.gap} px-4 text-muted-foreground min-h-[3.5rem] flex items-center justify-center italic`} 
+              interval={8000} 
+              fallbackQuotes={[]} 
+            />
+          ) : (
+            <PersonalizedQuoteDisplay 
+              className={`${getTextSize('text-sm')} mb-8 ${spacing.gap} px-4 text-muted-foreground min-h-[3.5rem] flex items-center justify-center`} 
+              interval={8000} 
+              fallbackQuotes={[]} 
+            />
+          )}
 
           {user && hasBlueprint}
 
-          {user && <div className={`grid ${layout.columns} ${spacing.gap} mb-6 max-w-2xl mx-auto px-4`}>
-                <Link to="/dreams" className="block">
-                  <CosmicCard className={`${spacing.card} hover:scale-105 transition-transform cursor-pointer h-full backdrop-blur-lg border border-border`}>
-                    <Heart className={`h-6 w-6 ${isFoldDevice ? 'h-5 w-5' : 'sm:h-8 sm:w-8'} text-primary mx-auto mb-2`} />
-                    <h3 className={`font-heading font-semibold mb-1 ${getTextSize('text-base')}`}>{t("index.dreams")}</h3>
-                    <p className={`${getTextSize('text-xs')} text-muted-foreground`}>{t("index.dreamsDesc")}</p>
-                  </CosmicCard>
-                </Link>
-                
-                <Link to="/spiritual-growth" className="block">
-                  <CosmicCard className={`${spacing.card} hover:scale-105 transition-transform cursor-pointer h-full backdrop-blur-lg border border-border`}>
-                    <Sparkles className={`h-6 w-6 ${isFoldDevice ? 'h-5 w-5' : 'sm:h-8 sm:w-8'} text-accent mx-auto mb-2`} />
-                    <h3 className={`font-heading font-semibold mb-1 ${getTextSize('text-base')}`}>{t("index.growth")}</h3>
-                    <p className={`${getTextSize('text-xs')} text-muted-foreground`}>{t("index.growthDesc")}</p>
-                  </CosmicCard>
-                </Link>
-                
-                <Link to="/coach" className="block">
-                  <CosmicCard className={`${spacing.card} hover:scale-105 transition-transform cursor-pointer h-full backdrop-blur-lg border border-border`}>
-                    <Brain className={`h-6 w-6 ${isFoldDevice ? 'h-5 w-5' : 'sm:h-8 sm:w-8'} text-secondary mx-auto mb-2`} />
-                    <h3 className={`font-heading font-semibold mb-1 ${getTextSize('text-base')}`}>{t("index.companion")}</h3>
-                    <p className={`${getTextSize('text-xs')} text-muted-foreground`}>{t("index.companionDesc")}</p>
-                  </CosmicCard>
-                </Link>
-              </div>}
+          {user && hasBlueprint && (
+            <div className={`grid ${layout.columns} ${spacing.gap} mb-6 max-w-2xl mx-auto px-4`}>
+              <Link to="/dreams" className="block">
+                <CosmicCard className={`${spacing.card} hover:scale-105 transition-transform cursor-pointer h-full backdrop-blur-lg border border-border`}>
+                  <Heart className={`h-6 w-6 ${isFoldDevice ? 'h-5 w-5' : 'sm:h-8 sm:w-8'} text-primary mx-auto mb-2`} />
+                  <h3 className={`font-heading font-semibold mb-1 ${getTextSize('text-base')}`}>{t("index.dreams")}</h3>
+                  <p className={`${getTextSize('text-xs')} text-muted-foreground`}>{t("index.dreamsDesc")}</p>
+                </CosmicCard>
+              </Link>
+              
+              <Link to="/spiritual-growth" className="block">
+                <CosmicCard className={`${spacing.card} hover:scale-105 transition-transform cursor-pointer h-full backdrop-blur-lg border border-border`}>
+                  <Sparkles className={`h-6 w-6 ${isFoldDevice ? 'h-5 w-5' : 'sm:h-8 sm:w-8'} text-accent mx-auto mb-2`} />
+                  <h3 className={`font-heading font-semibold mb-1 ${getTextSize('text-base')}`}>{t("index.growth")}</h3>
+                  <p className={`${getTextSize('text-xs')} text-muted-foreground`}>{t("index.growthDesc")}</p>
+                </CosmicCard>
+              </Link>
+              
+              <Link to="/coach" className="block">
+                <CosmicCard className={`${spacing.card} hover:scale-105 transition-transform cursor-pointer h-full backdrop-blur-lg border border-border`}>
+                  <Brain className={`h-6 w-6 ${isFoldDevice ? 'h-5 w-5' : 'sm:h-8 sm:w-8'} text-secondary mx-auto mb-2`} />
+                  <h3 className={`font-heading font-semibold mb-1 ${getTextSize('text-base')}`}>{t("index.companion")}</h3>
+                  <p className={`${getTextSize('text-xs')} text-muted-foreground`}>{t("index.companionDesc")}</p>
+                </CosmicCard>
+              </Link>
+            </div>
+          )}
 
           {isAdmin && <div className={`mb-4 ${spacing.gap} px-4`}>
             <Button variant="outline" onClick={() => setShowDemo(true)} className={`mb-4 ${layout.width} ${isMobile ? 'w-full' : 'sm:w-auto'} ${getTextSize('text-sm')} ${touchTargetSize}`}>
