@@ -163,51 +163,50 @@ export const SpiritualGuideInterface: React.FC<SpiritualGuideInterfaceProps> = (
     <div className="flex flex-col h-full">
       {/* Messages Area - Takes most space and scrolls */}
       <div className="flex-1 overflow-y-auto px-4 py-4">
-        <div className="max-w-2xl mx-auto space-y-4">
+        <div className="max-w-2xl mx-auto">
           {messages.map((message) => (
             <div
               key={message.id}
-              className={`flex items-start gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              className={`${message.role === 'user' ? 'justify-end' : 'justify-start'} ${message.role === 'user' ? 'mb-4' : 'mb-6'}`}
             >
-              {/* Avatar for HACS messages */}
-              {message.role === 'hacs' && (
-                <div className="flex-shrink-0 mt-1">
-                  <IntelligentSoulOrb 
-                    size="sm"
-                    intelligenceLevel={intelligence?.intelligence_level || 0}
-                    showProgressRing={true}
-                    speaking={false}
-                    stage="complete"
-                    pulse={false}
-                  />
-                </div>
-              )}
-              
               {message.role === 'user' ? (
-                <div className="inline-block bg-primary text-primary-foreground rounded-lg p-3 max-w-[85%] sm:max-w-[70%]">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs font-medium opacity-90">{userDisplayName}</span>
-                  </div>
-                  <div className={`${getTextSize('text-sm')} leading-relaxed whitespace-pre-wrap`}>
-                    {message.content}
+                <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className="inline-block bg-primary text-primary-foreground rounded-lg p-3 max-w-[85%] sm:max-w-[70%]">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs font-medium opacity-90">{userDisplayName}</span>
+                    </div>
+                    <div className={`${getTextSize('text-sm')} leading-relaxed whitespace-pre-wrap`}>
+                      {message.content}
+                    </div>
                   </div>
                 </div>
               ) : (
-                <div className="w-full">
-                  {/* HACS label for HACS messages */}
-                  <div className="flex items-center gap-2 mb-2">
-                    <Brain className={`text-soul-purple ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
-                    <span className={`font-medium text-soul-purple ${getTextSize('text-xs')}`}>
-                      HACS {message.isQuestion ? '(Question)' : ''}
-                    </span>
-                    {message.module && (
-                      <span className={`text-xs bg-soul-teal/10 text-soul-teal px-1.5 py-0.5 rounded-full`}>
-                        {message.module}
-                      </span>
-                    )}
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 mt-1">
+                    <IntelligentSoulOrb 
+                      size="sm"
+                      intelligenceLevel={intelligence?.intelligence_level || 0}
+                      showProgressRing={true}
+                      speaking={false}
+                      stage="complete"
+                      pulse={false}
+                    />
                   </div>
-                  <div className={`${getTextSize('text-sm')} leading-relaxed whitespace-pre-wrap text-muted-foreground`}>
-                    {message.content}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Brain className={`text-soul-purple ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
+                      <span className={`font-medium text-soul-purple ${getTextSize('text-xs')}`}>
+                        HACS {message.isQuestion ? '(Question)' : ''}
+                      </span>
+                      {message.module && (
+                        <span className={`text-xs bg-soul-teal/10 text-soul-teal px-1.5 py-0.5 rounded-full`}>
+                          {message.module}
+                        </span>
+                      )}
+                    </div>
+                    <div className={`${getTextSize('text-sm')} leading-relaxed whitespace-pre-wrap text-muted-foreground`}>
+                      {message.content}
+                    </div>
                   </div>
                 </div>
               )}
