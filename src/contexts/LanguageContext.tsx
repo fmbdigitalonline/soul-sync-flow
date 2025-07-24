@@ -144,6 +144,14 @@ const translations: Record<Language, Translations> = {
       signOutSuccessDescription: 'You have been safely signed out',
       signOutError: 'Sign out failed',
       signOutErrorDescription: 'Unable to sign out. Please try again.'
+    },
+    // Dreams & Goals
+    dreams: {
+      whatsYourDream: 'What\'s your dream or goal?',
+      placeholderDream: 'Enter your dream or goal here...',
+      description: 'Transform your dreams into reality with AI-powered insights and personalized guidance.',
+      getStarted: 'Get Started',
+      trackProgress: 'Track your progress and celebrate your achievements'
     }
   },
   nl: {
@@ -282,6 +290,14 @@ const translations: Record<Language, Translations> = {
       signOutSuccessDescription: 'Je bent veilig uitgelogd',
       signOutError: 'Uitloggen mislukt',
       signOutErrorDescription: 'Kon niet uitloggen. Probeer het opnieuw.'
+    },
+    // Dreams & Goals
+    dreams: {
+      whatsYourDream: 'Wat is je droom of doel?',
+      placeholderDream: 'Voer hier je droom of doel in...',
+      description: 'Transformeer je dromen in realiteit met AI-gedreven inzichten en gepersonaliseerde begeleiding.',
+      getStarted: 'Aan de Slag',
+      trackProgress: 'Volg je voortgang en vier je prestaties'
     }
   }
 };
