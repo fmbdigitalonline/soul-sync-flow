@@ -157,7 +157,7 @@ const Coach = () => {
           {isMobile ? (
             // Mobile: Use MobileTogglePanel
             <MobileTogglePanel
-              chatContent={<CosmicCard className="h-full">{chatInterface}</CosmicCard>}
+              chatContent={<div className="h-full">{chatInterface}</div>}
               remindersContent={remindersContent}
               activeRemindersCount={0}
             />
@@ -168,10 +168,8 @@ const Coach = () => {
                 {remindersContent}
               </div>
 
-              <div className="lg:col-span-3">
-                <CosmicCard className="h-full">
-                  {chatInterface}
-                </CosmicCard>
+              <div className="lg:col-span-3 h-full">
+                {chatInterface}
               </div>
             </div>
           )}
