@@ -53,9 +53,9 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
     <div className="flex flex-col h-full">
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto px-3 py-2 space-y-3">
         {messages.length === 0 && (
-          <div className="text-center text-muted-foreground py-8">
+          <div className="text-center text-muted-foreground py-4">
             <p>Start a conversation to begin intelligence learning</p>
           </div>
         )}
@@ -101,7 +101,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
       </div>
 
       {/* Input */}
-      <div className="p-4 border-t border-border">
+      <div className="px-3 py-3">
         <div className="flex space-x-2">
           <Input
             value={inputValue}
