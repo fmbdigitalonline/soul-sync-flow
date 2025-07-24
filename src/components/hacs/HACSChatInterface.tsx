@@ -70,21 +70,27 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
                 message.role === "user" ? "text-right" : "text-left"
               )}
             >
-              <div className="w-full">
-                <p className={cn(
-                  "text-sm leading-relaxed",
-                  message.role === "user" 
-                    ? "text-foreground" 
-                    : "text-muted-foreground"
-                )}>
-                  {message.content}
-                </p>
-                {message.isQuestion && (
-                  <div className="mt-2 text-xs text-muted-foreground opacity-70">
-                    Question from: {message.module}
-                  </div>
-                )}
-              </div>
+              {message.role === "user" ? (
+                <div className="inline-block bg-primary text-primary-foreground rounded-lg p-3 max-w-[85%] sm:max-w-[70%]">
+                  <p className="text-sm">{message.content}</p>
+                  {message.isQuestion && (
+                    <div className="mt-2 text-xs opacity-70">
+                      Question from: {message.module}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="w-full">
+                  <p className="text-sm leading-relaxed text-muted-foreground">
+                    {message.content}
+                  </p>
+                  {message.isQuestion && (
+                    <div className="mt-2 text-xs text-muted-foreground opacity-70">
+                      Question from: {message.module}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           ))}
           
