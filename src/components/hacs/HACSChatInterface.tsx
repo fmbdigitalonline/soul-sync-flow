@@ -66,21 +66,21 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
             <div
               key={message.id}
               className={cn(
-                "flex",
-                message.role === "user" ? "justify-end" : "justify-start"
+                "w-full py-2",
+                message.role === "user" ? "text-right" : "text-left"
               )}
             >
-              <div
-                className={cn(
-                  "max-w-[85%] sm:max-w-[70%] rounded-lg p-3",
-                  message.role === "user"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground"
-                )}
-              >
-                <p className="text-sm">{message.content}</p>
+              <div className="w-full">
+                <p className={cn(
+                  "text-sm leading-relaxed",
+                  message.role === "user" 
+                    ? "text-foreground" 
+                    : "text-muted-foreground"
+                )}>
+                  {message.content}
+                </p>
                 {message.isQuestion && (
-                  <div className="mt-2 px-2 py-1 bg-accent/50 rounded text-xs">
+                  <div className="mt-2 text-xs text-muted-foreground opacity-70">
                     Question from: {message.module}
                   </div>
                 )}
@@ -89,12 +89,10 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
           ))}
           
           {isLoading && (
-            <div className="flex justify-start">
-              <div className="bg-muted rounded-lg p-3 max-w-[70%]">
-                <div className="flex items-center space-x-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span className="text-sm text-muted-foreground">HACS is thinking...</span>
-                </div>
+            <div className="w-full py-2 text-left">
+              <div className="flex items-center space-x-2">
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">HACS is thinking...</span>
               </div>
             </div>
           )}
