@@ -125,7 +125,7 @@ serve(async (req) => {
     }
 
     if (!conversation) {
-      const { data: newConversation } = await supabase
+      const { data: newConversation, error: conversationError } = await supabase
         .from('hacs_conversations')
         .insert({
           user_id: userId,
@@ -135,7 +135,13 @@ serve(async (req) => {
         })
         .select()
         .single();
+      
       conversation = newConversation;
+      
+      if (!conversation || conversationError) {
+        console.error('Failed to create conversation:', conversationError);
+        throw new Error(`Failed to create conversation: ${conversationError?.message || 'Unknown error'}`);
+      }
     }
 
     // Build personality context from actual blueprint data with safe access
