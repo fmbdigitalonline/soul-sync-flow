@@ -51,11 +51,6 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="p-4 border-b border-border">
-        <h2 className="text-lg font-semibold text-foreground">HACS Intelligence System</h2>
-        <p className="text-sm text-muted-foreground">Pure intelligence learning - no fallbacks</p>
-      </div>
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -75,7 +70,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
           >
             <div
               className={cn(
-                "max-w-[70%] rounded-lg p-3",
+                "max-w-[85%] sm:max-w-[70%] rounded-lg p-3",
                 message.role === "user"
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted text-muted-foreground"
@@ -114,17 +109,18 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
             onKeyPress={handleKeyPress}
             placeholder="Type your message..."
             disabled={isLoading}
-            className="flex-1"
+            className="flex-1 h-12 text-base"
           />
           <Button
             onClick={handleSendMessage}
             disabled={!inputValue.trim() || isLoading}
-            size="sm"
+            size="lg"
+            className="h-12 px-4"
           >
             {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="h-5 w-5 animate-spin" />
             ) : (
-              <SendHorizontal className="h-4 w-4" />
+              <SendHorizontal className="h-5 w-5" />
             )}
           </Button>
         </div>
