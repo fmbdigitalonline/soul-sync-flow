@@ -151,7 +151,25 @@ const translations: Record<Language, Translations> = {
       placeholderDream: 'Enter your dream or goal here...',
       description: 'Transform your dreams into reality with AI-powered insights and personalized guidance.',
       getStarted: 'Get Started',
-      trackProgress: 'Track your progress and celebrate your achievements'
+      trackProgress: 'Track your progress and celebrate your achievements',
+      whyImportant: 'Why is this important to you?',
+      placeholderWhy: 'Share what makes this dream meaningful to you...',
+      category: 'Category',
+      timeline: 'Timeline',
+      creatingJourney: 'Creating Your Journey...',
+      createJourney: 'Create My Journey',
+      viewJourney: 'View My Journey'
+    },
+    // Goals & Categories
+    goals: {
+      categoryPersonal: 'Personal Growth',
+      categoryCareer: 'Career & Professional',
+      categoryHealth: 'Health & Wellness',
+      categoryRelationships: 'Relationships',
+      categoryCreative: 'Creative & Artistic',
+      categoryFinancial: 'Financial',
+      categorySpiritual: 'Spiritual & Mindfulness',
+      targetDate: 'Target Date'
     }
   },
   nl: {
@@ -297,7 +315,25 @@ const translations: Record<Language, Translations> = {
       placeholderDream: 'Voer hier je droom of doel in...',
       description: 'Transformeer je dromen in realiteit met AI-gedreven inzichten en gepersonaliseerde begeleiding.',
       getStarted: 'Aan de Slag',
-      trackProgress: 'Volg je voortgang en vier je prestaties'
+      trackProgress: 'Volg je voortgang en vier je prestaties',
+      whyImportant: 'Waarom is dit belangrijk voor je?',
+      placeholderWhy: 'Deel wat deze droom betekenisvol voor je maakt...',
+      category: 'Categorie',
+      timeline: 'Tijdlijn',
+      creatingJourney: 'Je Reis Wordt Gemaakt...',
+      createJourney: 'Mijn Reis Creëren',
+      viewJourney: 'Mijn Reis Bekijken'
+    },
+    // Goals & Categories
+    goals: {
+      categoryPersonal: 'Persoonlijke Groei',
+      categoryCareer: 'Carrière & Professioneel',
+      categoryHealth: 'Gezondheid & Welzijn',
+      categoryRelationships: 'Relaties',
+      categoryCreative: 'Creatief & Artistiek',
+      categoryFinancial: 'Financieel',
+      categorySpiritual: 'Spiritueel & Mindfulness',
+      targetDate: 'Streefdatum'
     }
   }
 };
