@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { SendHorizontal, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ConversationMessage } from "@/hooks/use-hacs-conversation";
@@ -53,52 +54,54 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
     <div className="flex flex-col h-full">
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-3 py-2 space-y-3">
-        {messages.length === 0 && (
-          <div className="text-center text-muted-foreground py-4">
-            <p>Start a conversation to begin intelligence learning</p>
-          </div>
-        )}
-        
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={cn(
-              "flex",
-              message.role === "user" ? "justify-end" : "justify-start"
-            )}
-          >
+      <ScrollArea className="flex-1">
+        <div className="px-3 py-2 space-y-3">
+          {messages.length === 0 && (
+            <div className="text-center text-muted-foreground py-4">
+              <p>Start a conversation to begin intelligence learning</p>
+            </div>
+          )}
+          
+          {messages.map((message) => (
             <div
+              key={message.id}
               className={cn(
-                "max-w-[85%] sm:max-w-[70%] rounded-lg p-3",
-                message.role === "user"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground"
+                "flex",
+                message.role === "user" ? "justify-end" : "justify-start"
               )}
             >
-              <p className="text-sm">{message.content}</p>
-              {message.isQuestion && (
-                <div className="mt-2 px-2 py-1 bg-accent/50 rounded text-xs">
-                  Question from: {message.module}
-                </div>
-              )}
-            </div>
-          </div>
-        ))}
-        
-        {isLoading && (
-          <div className="flex justify-start">
-            <div className="bg-muted rounded-lg p-3 max-w-[70%]">
-              <div className="flex items-center space-x-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span className="text-sm text-muted-foreground">HACS is thinking...</span>
+              <div
+                className={cn(
+                  "max-w-[85%] sm:max-w-[70%] rounded-lg p-3",
+                  message.role === "user"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground"
+                )}
+              >
+                <p className="text-sm">{message.content}</p>
+                {message.isQuestion && (
+                  <div className="mt-2 px-2 py-1 bg-accent/50 rounded text-xs">
+                    Question from: {message.module}
+                  </div>
+                )}
               </div>
             </div>
-          </div>
-        )}
-        
-        <div ref={messagesEndRef} />
-      </div>
+          ))}
+          
+          {isLoading && (
+            <div className="flex justify-start">
+              <div className="bg-muted rounded-lg p-3 max-w-[70%]">
+                <div className="flex items-center space-x-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="text-sm text-muted-foreground">HACS is thinking...</span>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <div ref={messagesEndRef} />
+        </div>
+      </ScrollArea>
 
       {/* Input */}
       <div className="px-3 py-3">
