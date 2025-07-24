@@ -156,13 +156,13 @@ const SpiritualGrowth = () => {
               <div className="w-20" />
             </div>
 
-            {/* Unified Chat Interface Container */}
-            <CosmicCard className="w-full h-[calc(100vh-200px)]">
-          <SpiritualGuideInterface
-            userDisplayName={getUserDisplayName()}
-            coreTraits={getCoreTraits()}
-          />
-            </CosmicCard>
+            {/* Direct Chat Interface - Matching Coach Layout */}
+            <div className="h-[calc(100vh-200px)]">
+              <SpiritualGuideInterface
+                userDisplayName={getUserDisplayName()}
+                coreTraits={getCoreTraits()}
+              />
+            </div>
           </div>
         </div>
       </MainLayout>
