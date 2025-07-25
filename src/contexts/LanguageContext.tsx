@@ -76,6 +76,15 @@ const translations: Record<Language, Translations> = {
     },
     // Global error key
     error: 'Error',
+    // Modal translations
+    modal: {
+      readyToBegin: 'Ready to Begin?',
+      coachGuide: 'Your coach will guide you through.',
+      readyToFocus: 'Ready to focus?',
+      letsGo: "Let's Go"
+    },
+    // Cancel action (used by modal)
+    cancel: 'Cancel',
     // Navigation
     nav: {
       home: 'Home',
@@ -240,6 +249,15 @@ const translations: Record<Language, Translations> = {
     },
     // Global error key
     error: 'Fout',
+    // Modal translations
+    modal: {
+      readyToBegin: 'Klaar om te Beginnen?',
+      coachGuide: 'Je coach zal je begeleiden.',
+      readyToFocus: 'Klaar om te focussen?',
+      letsGo: "Laten we Gaan"
+    },
+    // Cancel action (used by modal)
+    cancel: 'Annuleren',
     // Navigation
     nav: {
       home: 'Thuis',
