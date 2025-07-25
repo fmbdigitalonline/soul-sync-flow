@@ -695,9 +695,9 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
                 <div className="w-16 h-16 bg-soul-purple/10 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Brain className="h-8 w-8 text-soul-purple" />
                 </div>
-                <h3 className={`font-semibold mb-2 ${getTextSize('text-xl')}`}>Ready to Focus?</h3>
+                <h3 className={`font-semibold mb-2 ${getTextSize('text-xl')}`}>Ready to Work Together?</h3>
                 <p className={`text-muted-foreground mb-6 ${getTextSize('text-sm')}`}>
-                  Start a personalized coaching session with integrated task management for "{task.title}".
+                  Your coach will collaborate with you on "{task.title}". Ready to tackle this together?
                 </p>
                 <Button 
                   onClick={handleStartSession}
@@ -705,7 +705,7 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
                   size={isMobile ? "default" : "lg"}
                 >
                   <MessageCircle className="h-4 w-4 mr-2" />
-                  Start Coaching Session
+                  Start Task Collaboration
                 </Button>
               </div>
             </div>
