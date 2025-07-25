@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useHACSConversation, ConversationMessage } from './use-hacs-conversation';
-import { useEnhancedAICoach } from './use-enhanced-ai-coach-stub';
+import { useEnhancedAICoach } from './use-enhanced-ai-coach';
 import { supabase } from '@/integrations/supabase/client';
 import { ImmediateResponseService } from '../services/immediate-response-service';
 import { BackgroundIntelligenceService } from '../services/background-intelligence-service';

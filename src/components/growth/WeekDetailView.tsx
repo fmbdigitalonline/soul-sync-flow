@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { CheckCircle, ArrowLeft, Play, Star, Target, MessageSquare, TrendingUp } from 'lucide-react';
 import { ProgramWeek } from '@/types/growth-program';
-import { useEnhancedAICoach } from '@/hooks/use-enhanced-ai-coach-stub';
+import { useEnhancedAICoach } from '@/hooks/use-enhanced-ai-coach';
 import { GuideInterface } from '@/components/coach/GuideInterface';
 import { useToast } from '@/hooks/use-toast';
 import { useMilestoneTracker } from '@/hooks/use-milestone-tracker';

@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { useEnhancedAICoach } from './use-enhanced-ai-coach-stub';
+import { useEnhancedAICoach } from './use-enhanced-ai-coach';
 import { pieService } from '@/services/pie-service';
 import { PIEInsight } from '@/types/pie-types';
 import { AgentType } from '@/services/enhanced-ai-coach-service';

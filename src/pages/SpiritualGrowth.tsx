@@ -4,7 +4,7 @@ import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Moon, BookOpen, Calendar, MessageCircle, Settings, TrendingUp, ArrowLeft, User, Heart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useEnhancedAICoach } from "@/hooks/use-enhanced-ai-coach-stub";
+import { useEnhancedAICoach } from "@/hooks/use-enhanced-ai-coach";
 import { supabase } from "@/integrations/supabase/client";
 import { SpiritualGuideInterface } from "@/components/growth/SpiritualGuideInterface";
 import { GrowthProgramInterface } from "@/components/growth/GrowthProgramInterface";
