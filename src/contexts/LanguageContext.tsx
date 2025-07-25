@@ -78,10 +78,10 @@ const translations: Record<Language, Translations> = {
     error: 'Error',
     // Modal translations
     modal: {
-      readyToBegin: 'Ready to Begin?',
-      coachGuide: 'Your coach will guide you through.',
-      readyToFocus: 'Ready to focus?',
-      letsGo: "Let's Go"
+      readyToBegin: 'Ready to Work Together?',
+      coachGuide: 'Your coach will collaborate with you on this task.',
+      readyToFocus: 'Ready to tackle this together?',
+      letsGo: "Start Task Collaboration"
     },
     // Cancel action (used by modal)
     cancel: 'Cancel',
@@ -251,10 +251,10 @@ const translations: Record<Language, Translations> = {
     error: 'Fout',
     // Modal translations
     modal: {
-      readyToBegin: 'Klaar om te Beginnen?',
-      coachGuide: 'Je coach zal je begeleiden.',
-      readyToFocus: 'Klaar om te focussen?',
-      letsGo: "Laten we Gaan"
+      readyToBegin: 'Klaar om Samen te Werken?',
+      coachGuide: 'Je coach zal met je samenwerken aan deze taak.',
+      readyToFocus: 'Klaar om dit samen aan te pakken?',
+      letsGo: "Start Taak Samenwerking"
     },
     // Cancel action (used by modal)
     cancel: 'Annuleren',
