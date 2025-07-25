@@ -4,18 +4,28 @@ import React, { useState } from "react";
 /**
  * Props:
  * - task: the task object containing breakdown, goal, description, etc.
+ * - onCreateSubTasks: callback to convert preview steps into actual subtasks
  */
 interface TaskPreviewProps {
   task: any;
+  onCreateSubTasks?: (subtasks: string[]) => void;
 }
 
-export const TaskPreview: React.FC<TaskPreviewProps> = ({ task }) => {
+export const TaskPreview: React.FC<TaskPreviewProps> = ({ task, onCreateSubTasks }) => {
   const [expanded, setExpanded] = useState(false);
 
-  // Simulate breakdown; ideally this comes from task.subtasks or similar
+  // Get breakdown from task or use defaults
   const breakdown = (task.subtasks && task.subtasks.length > 0)
-    ? task.subtasks
+    ? task.subtasks.map((st: any) => typeof st === 'string' ? st : st.title)
     : ["Define requirements", "Create designs", "First implementation"];
+
+  const hasActualSubTasks = task.subtasks && task.subtasks.length > 0;
+
+  const handleCreateSubTasks = () => {
+    if (onCreateSubTasks && !hasActualSubTasks) {
+      onCreateSubTasks(breakdown);
+    }
+  };
 
   return (
     <div className="my-2">
@@ -40,12 +50,25 @@ export const TaskPreview: React.FC<TaskPreviewProps> = ({ task }) => {
             <div className="text-sm">{task.goal || "See this task through to completion"}</div>
           </div>
           <div>
-            <strong>Mini-steps:</strong>
+            <div className="flex items-center justify-between mb-2">
+              <strong>Mini-steps:</strong>
+              {!hasActualSubTasks && onCreateSubTasks && (
+                <button
+                  onClick={handleCreateSubTasks}
+                  className="text-xs px-2 py-1 bg-soul-purple text-white rounded hover:bg-soul-purple/90 transition-colors"
+                >
+                  Create as SubTasks
+                </button>
+              )}
+            </div>
             <ol className="list-decimal ml-6 text-sm">
               {breakdown.map((b: string, i: number) => (
-                <li key={i}>{b}</li>
+                <li key={i} className={hasActualSubTasks ? "text-green-700" : ""}>{b}</li>
               ))}
             </ol>
+            {hasActualSubTasks && (
+              <p className="text-xs text-green-600 mt-1">✓ These steps are now active subtasks</p>
+            )}
           </div>
         </div>
       )}
