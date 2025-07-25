@@ -28,6 +28,7 @@ export interface SoulGeneratedGoal {
     category: string;
     optimal_timing?: string;
     blueprint_reasoning?: string;
+    prerequisites?: string[];
   }>;
   blueprint_insights: string[];
   personalization_notes: string;
@@ -41,7 +42,7 @@ class SoulGoalDecompositionService {
     category: string,
     blueprintData: any
   ): Promise<SoulGeneratedGoal> {
-    console.log('🎯 Soul Goal Decomposition Service - Starting enhanced decomposition:', {
+    console.log('🎯 Soul Goal Decomposition Service - Starting enhanced decomposition with causal analysis:', {
       title,
       description,
       timeframe,
@@ -50,6 +51,15 @@ class SoulGoalDecompositionService {
     });
 
     try {
+      // CNR Integration: Perform causal analysis for enhanced goal decomposition
+      console.log('🔗 CNR: Analyzing causal relationships for dream decomposition');
+      const causalAnalysis = await this.performCausalAnalysis(title, category, blueprintData);
+      console.log('✅ CNR: Causal analysis completed:', {
+        prerequisites: causalAnalysis.prerequisites?.length || 0,
+        dependencies: causalAnalysis.dependencies?.length || 0,
+        riskFactors: causalAnalysis.riskFactors?.length || 0,
+        accelerators: causalAnalysis.accelerators?.length || 0
+      });
       const { data, error } = await supabase.functions.invoke('ai-coach', {
         body: {
           message: `Please help me break down this dream into a comprehensive, actionable journey:
@@ -100,9 +110,9 @@ Blueprint Data: ${JSON.stringify(blueprintData, null, 2)}`,
         targetDate.setMonth(targetDate.getMonth() + 3); // Default 3 months
       }
 
-      // Generate enhanced milestones and tasks
-      const enhancedMilestones = this.generateEnhancedMilestones(title, timeframe, blueprintData);
-      const enhancedTasks = this.generateEnhancedTasks(enhancedMilestones, category, blueprintData);
+      // Generate enhanced milestones and tasks with causal analysis
+      const enhancedMilestones = this.generateEnhancedMilestones(title, timeframe, blueprintData, causalAnalysis);
+      const enhancedTasks = this.generateEnhancedTasks(enhancedMilestones, category, blueprintData, causalAnalysis);
 
       const soulGoal: SoulGeneratedGoal = {
         id: goalId,
@@ -121,8 +131,17 @@ Blueprint Data: ${JSON.stringify(blueprintData, null, 2)}`,
       console.log('✅ Enhanced soul goal decomposition completed:', {
         milestones: enhancedMilestones.length,
         tasks: enhancedTasks.length,
-        goalId: soulGoal.id
+        goalId: soulGoal.id,
+        causalFactors: {
+          prerequisites: causalAnalysis.prerequisites?.length || 0,
+          dependencies: causalAnalysis.dependencies?.length || 0,
+          risks: causalAnalysis.riskFactors?.length || 0,
+          accelerators: causalAnalysis.accelerators?.length || 0
+        }
       });
+
+      // Save enhanced goal with causal analysis to database
+      await this.saveEnhancedGoalToDatabase(soulGoal, causalAnalysis);
       
       return soulGoal;
 
@@ -132,8 +151,8 @@ Blueprint Data: ${JSON.stringify(blueprintData, null, 2)}`,
     }
   }
 
-  private generateEnhancedMilestones(title: string, timeframe: string, blueprintData: any) {
-    // Generate 5-6 milestones instead of 4
+  private generateEnhancedMilestones(title: string, timeframe: string, blueprintData: any, causalAnalysis?: any) {
+    // Generate 5-6 milestones with causal analysis integration
     const milestones = [
       {
         id: `milestone_1_${Date.now()}`,
@@ -248,11 +267,11 @@ Blueprint Data: ${JSON.stringify(blueprintData, null, 2)}`,
     return milestones;
   }
 
-  private generateEnhancedTasks(milestones: any[], category: string, blueprintData: any) {
+  private generateEnhancedTasks(milestones: any[], category: string, blueprintData: any, causalAnalysis?: any) {
     const tasks: any[] = [];
     const userType = this.getUserType(blueprintData);
     
-    // Generate 3-4 tasks per milestone (18-24 total tasks)
+    // Generate 3-4 tasks per milestone with causal prerequisites (18-24 total tasks)
     milestones.forEach((milestone, milestoneIndex) => {
       const tasksPerMilestone = 3 + (milestoneIndex % 2); // Alternate between 3 and 4 tasks
       
@@ -261,6 +280,13 @@ Blueprint Data: ${JSON.stringify(blueprintData, null, 2)}`,
         const energyLevels = ['low', 'medium', 'high'] as const;
         const categories = ['research', 'planning', 'execution', 'review', 'communication'];
         
+        // Determine causal prerequisites for this task
+        const causalPrerequisites = this.determineCausalPrerequisites(
+          categories[i % categories.length], 
+          energyLevels[i % 3], 
+          causalAnalysis
+        );
+
         tasks.push({
           id: taskId,
           title: this.generateTaskTitle(milestone.title, i, tasksPerMilestone),
@@ -271,7 +297,8 @@ Blueprint Data: ${JSON.stringify(blueprintData, null, 2)}`,
           energy_level_required: energyLevels[i % 3],
           category: categories[i % categories.length],
           optimal_timing: this.getOptimalTiming(blueprintData, energyLevels[i % 3]),
-          blueprint_reasoning: `Designed for your ${userType} preferences and ${energyLevels[i % 3]} energy periods`
+          blueprint_reasoning: `Designed for your ${userType} preferences and ${energyLevels[i % 3]} energy periods`,
+          prerequisites: causalPrerequisites
         });
       }
     });
@@ -386,6 +413,232 @@ Blueprint Data: ${JSON.stringify(blueprintData, null, 2)}`,
     }
     
     return baseTime;
+  }
+
+  // CNR Integration: Perform causal analysis for goal decomposition
+  private async performCausalAnalysis(title: string, category: string, blueprintData: any): Promise<any> {
+    console.log('🔗 CNR: Analyzing causal relationships for dream decomposition');
+    
+    const causalFactors = {
+      prerequisites: this.identifyPrerequisites(title, category),
+      dependencies: this.mapDependencies(title, blueprintData),
+      riskFactors: this.assessRiskFactors(title, category),
+      accelerators: this.findAccelerators(title, blueprintData)
+    };
+    
+    return causalFactors;
+  }
+
+  // Identify logical prerequisites for goal achievement
+  private identifyPrerequisites(title: string, category: string): string[] {
+    const lowerTitle = title.toLowerCase();
+    const prerequisites: string[] = [];
+    
+    if (lowerTitle.includes('business') || lowerTitle.includes('startup') || lowerTitle.includes('app') || lowerTitle.includes('launch')) {
+      prerequisites.push('market_research', 'financial_planning', 'skill_development', 'technical_planning');
+    } else if (lowerTitle.includes('fitness') || lowerTitle.includes('health')) {
+      prerequisites.push('baseline_assessment', 'routine_establishment', 'environment_setup');
+    } else if (lowerTitle.includes('relationship') || lowerTitle.includes('social')) {
+      prerequisites.push('self_awareness', 'communication_skills', 'emotional_intelligence');
+    } else if (lowerTitle.includes('career') || lowerTitle.includes('job')) {
+      prerequisites.push('skill_assessment', 'market_research', 'network_building');
+    } else if (lowerTitle.includes('creative') || lowerTitle.includes('art') || lowerTitle.includes('writing')) {
+      prerequisites.push('creative_practice', 'inspiration_gathering', 'skill_development');
+    } else {
+      prerequisites.push('goal_clarification', 'resource_assessment', 'commitment_evaluation');
+    }
+    
+    return prerequisites;
+  }
+
+  // Map dependencies based on blueprint personality
+  private mapDependencies(title: string, blueprintData: any): string[] {
+    const dependencies: string[] = [];
+    
+    // Add personality-based dependencies
+    if (blueprintData?.cognition_mbti?.type?.includes('I')) {
+      dependencies.push('solo_preparation_time', 'internal_processing');
+    }
+    if (blueprintData?.cognition_mbti?.type?.includes('E')) {
+      dependencies.push('social_support', 'external_feedback');
+    }
+    if (blueprintData?.cognition_mbti?.type?.includes('J')) {
+      dependencies.push('structured_planning', 'clear_deadlines');
+    }
+    if (blueprintData?.cognition_mbti?.type?.includes('P')) {
+      dependencies.push('flexible_approach', 'adaptation_space');
+    }
+    
+    // Add Human Design dependencies
+    if (blueprintData?.energy_strategy_human_design?.type === 'Manifestor') {
+      dependencies.push('independent_action', 'initiation_freedom');
+    } else if (blueprintData?.energy_strategy_human_design?.type === 'Generator') {
+      dependencies.push('response_opportunities', 'satisfaction_tracking');
+    } else if (blueprintData?.energy_strategy_human_design?.type === 'Projector') {
+      dependencies.push('recognition_invitations', 'energy_management');
+    } else if (blueprintData?.energy_strategy_human_design?.type === 'Reflector') {
+      dependencies.push('lunar_cycles', 'environmental_clarity');
+    }
+    
+    return dependencies;
+  }
+
+  // Assess risk factors that could impede progress
+  private assessRiskFactors(title: string, category: string): string[] {
+    const baseRisks = ['time_constraints', 'resource_limitations', 'motivation_fluctuation', 'external_obstacles'];
+    const lowerTitle = title.toLowerCase();
+    
+    if (lowerTitle.includes('business') || lowerTitle.includes('startup') || lowerTitle.includes('app')) {
+      baseRisks.push('market_volatility', 'technical_challenges', 'funding_gaps', 'competition');
+    } else if (lowerTitle.includes('health') || lowerTitle.includes('fitness')) {
+      baseRisks.push('injury_risk', 'plateau_periods', 'lifestyle_conflicts');
+    } else if (lowerTitle.includes('creative') || lowerTitle.includes('art')) {
+      baseRisks.push('creative_blocks', 'perfectionism', 'market_uncertainty');
+    }
+    
+    return baseRisks;
+  }
+
+  // Find accelerators that could speed up progress
+  private findAccelerators(title: string, blueprintData: any): string[] {
+    const accelerators: string[] = ['consistent_habits', 'support_system', 'clear_metrics', 'celebration_milestones'];
+    
+    // Add blueprint-specific accelerators
+    if (blueprintData?.energy_strategy_human_design?.type === 'Manifestor') {
+      accelerators.push('independent_action', 'clear_vision', 'initiation_power');
+    } else if (blueprintData?.energy_strategy_human_design?.type === 'Generator') {
+      accelerators.push('following_excitement', 'sustainable_pace', 'gut_response');
+    } else if (blueprintData?.energy_strategy_human_design?.type === 'Projector') {
+      accelerators.push('wise_guidance', 'recognition_systems', 'efficiency_focus');
+    } else if (blueprintData?.energy_strategy_human_design?.type === 'Reflector') {
+      accelerators.push('community_wisdom', 'patient_observation', 'lunar_timing');
+    }
+    
+    // Add MBTI-specific accelerators
+    if (blueprintData?.cognition_mbti?.type?.includes('N')) {
+      accelerators.push('big_picture_vision', 'innovation_opportunities');
+    }
+    if (blueprintData?.cognition_mbti?.type?.includes('S')) {
+      accelerators.push('practical_steps', 'tangible_progress');
+    }
+    if (blueprintData?.cognition_mbti?.type?.includes('T')) {
+      accelerators.push('logical_frameworks', 'objective_metrics');
+    }
+    if (blueprintData?.cognition_mbti?.type?.includes('F')) {
+      accelerators.push('value_alignment', 'personal_meaning');
+    }
+    
+    return accelerators;
+  }
+
+  // Determine causal prerequisites for tasks based on category and causal analysis
+  private determineCausalPrerequisites(taskCategory: string, energyLevel: string, causalAnalysis?: any): string[] {
+    const basePrerequisites: string[] = [];
+    
+    // Add category-specific prerequisites
+    switch (taskCategory) {
+      case 'research':
+        basePrerequisites.push('Information gathering tools', 'Research methodology');
+        break;
+      case 'planning':
+        basePrerequisites.push('Goal clarity', 'Resource assessment');
+        if (causalAnalysis?.dependencies?.includes('structured_planning')) {
+          basePrerequisites.push('Planning framework established');
+        }
+        break;
+      case 'execution':
+        basePrerequisites.push('Preparation completed', 'Resources available');
+        if (causalAnalysis?.dependencies?.includes('social_support')) {
+          basePrerequisites.push('Support system activated');
+        }
+        break;
+      case 'review':
+        basePrerequisites.push('Progress data collected', 'Evaluation criteria defined');
+        break;
+      case 'communication':
+        basePrerequisites.push('Key stakeholders identified', 'Communication plan');
+        break;
+    }
+    
+    // Add energy-level specific prerequisites
+    if (energyLevel === 'high') {
+      basePrerequisites.push('Peak energy period scheduled');
+      if (causalAnalysis?.dependencies?.includes('solo_preparation_time')) {
+        basePrerequisites.push('Uninterrupted time block secured');
+      }
+    } else if (energyLevel === 'medium') {
+      basePrerequisites.push('Moderate focus session planned');
+    } else if (energyLevel === 'low') {
+      basePrerequisites.push('Low-pressure environment established');
+    }
+    
+    // Add causal analysis prerequisites
+    if (causalAnalysis?.prerequisites) {
+      // Map general prerequisites to specific task requirements
+      if (causalAnalysis.prerequisites.includes('market_research') && taskCategory === 'research') {
+        basePrerequisites.push('Market analysis framework ready');
+      }
+      if (causalAnalysis.prerequisites.includes('skill_development') && taskCategory === 'execution') {
+        basePrerequisites.push('Required skills assessed and developed');
+      }
+      if (causalAnalysis.prerequisites.includes('financial_planning') && taskCategory === 'planning') {
+        basePrerequisites.push('Budget and financial resources planned');
+      }
+    }
+    
+    // Limit to most important prerequisites to avoid overwhelming
+    return basePrerequisites.slice(0, 3);
+  }
+
+  // Save enhanced goal with causal analysis to database
+  private async saveEnhancedGoalToDatabase(goal: SoulGeneratedGoal, causalAnalysis: any): Promise<void> {
+    try {
+      console.log('💾 Saving enhanced goal with causal analysis to database:', goal.id);
+      
+      // Get current user ID
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.log('⚠️ No authenticated user found, skipping database save');
+        return;
+      }
+      
+      const { data, error } = await supabase
+        .from('user_goals')
+        .insert({
+          user_id: user.id,
+          title: goal.title,
+          description: goal.description,
+          category: goal.category,
+          status: 'active',
+          target_date: goal.target_completion,
+          progress: 0,
+          milestones: goal.milestones,
+          aligned_traits: {
+            blueprint_insights: goal.blueprint_insights,
+            personalization_notes: goal.personalization_notes,
+            causal_analysis: causalAnalysis,
+            enhanced_features: {
+              prerequisites: causalAnalysis.prerequisites,
+              dependencies: causalAnalysis.dependencies,
+              risk_factors: causalAnalysis.riskFactors,
+              accelerators: causalAnalysis.accelerators,
+              task_count: goal.tasks.length,
+              milestone_count: goal.milestones.length
+            }
+          }
+        });
+
+      if (error) {
+        console.error('❌ Database save error:', error);
+        throw new Error(`Database save failed: ${error.message}`);
+      }
+
+      console.log('✅ Enhanced goal saved to database successfully:', data);
+    } catch (error) {
+      console.error('❌ Failed to save enhanced goal to database:', error);
+      // Don't throw - goal decomposition should still succeed even if DB save fails
+      console.log('⚠️ Continuing with goal decomposition despite database save failure');
+    }
   }
 }
 
