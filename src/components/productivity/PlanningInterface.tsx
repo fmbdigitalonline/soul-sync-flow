@@ -169,17 +169,7 @@ export const PlanningInterface = () => {
     }
   };
 
-  const TaskCard = ({ 
-    task, 
-    showGoal = false,
-    onSmartAction,
-    onCreateSubTasks 
-  }: { 
-    task: Task; 
-    showGoal?: boolean;
-    onSmartAction?: (actionId: string, message: string, task: any) => void;
-    onCreateSubTasks?: (task: any, subtasks: string[]) => void;
-  }) => {
+  const TaskCard = ({ task, showGoal = false }: { task: Task; showGoal?: boolean }) => {
     const goal = currentGoals.find(g => g.id === task.goal_id);
     
     return (
@@ -267,19 +257,7 @@ export const PlanningInterface = () => {
         onDrop={(e) => handleDrop(e, status)}
       >
         {tasks.map(task => (
-          <TaskCard 
-            key={task.id} 
-            task={task} 
-            showGoal 
-            onSmartAction={(actionId, message, task) => {
-              console.log('Smart action:', actionId, 'for task:', task.title);
-              // TODO: Integrate with coach system
-            }}
-            onCreateSubTasks={(task, subtasks) => {
-              console.log('Creating subtasks for:', task.title, subtasks);
-              // TODO: Integrate with task management system
-            }}
-          />
+          <TaskCard key={task.id} task={task} showGoal />
         ))}
         
         {tasks.length === 0 && (
@@ -436,19 +414,7 @@ export const PlanningInterface = () => {
                   </div>
                 ) : (
                   tasksForSelectedDate.map(task => (
-                    <TaskCard 
-                      key={task.id} 
-                      task={task} 
-                      showGoal 
-                      onSmartAction={(actionId, message, task) => {
-                        console.log('Smart action:', actionId, 'for task:', task.title);
-                        // TODO: Integrate with coach system
-                      }}
-                      onCreateSubTasks={(task, subtasks) => {
-                        console.log('Creating subtasks for:', task.title, subtasks);
-                        // TODO: Integrate with task management system
-                      }}
-                    />
+                    <TaskCard key={task.id} task={task} showGoal />
                   ))
                 )}
               </div>
@@ -481,18 +447,7 @@ export const PlanningInterface = () => {
                       category: task.category || 'execution',
                       optimal_time_of_day: Array.isArray(task.optimal_time_of_day) ? task.optimal_time_of_day : ['morning'],
                     };
-                    return <TaskCard 
-                      key={task.id} 
-                      task={normalizedTask} 
-                      onSmartAction={(actionId, message, task) => {
-                        console.log('Smart action:', actionId, 'for task:', task.title);
-                        // TODO: Integrate with coach system
-                      }}
-                      onCreateSubTasks={(task, subtasks) => {
-                        console.log('Creating subtasks for:', task.title, subtasks);
-                        // TODO: Integrate with task management system
-                      }}
-                    />;
+                    return <TaskCard key={task.id} task={normalizedTask} />;
                   })}
                 </div>
               </div>

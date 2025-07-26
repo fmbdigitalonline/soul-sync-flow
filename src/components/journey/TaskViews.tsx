@@ -225,14 +225,6 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
               task={task} 
               onDoubleTap={handleTaskDoubleTap}
               onSingleTap={handleTaskSingleTap}
-              onSmartAction={(actionId, message, task) => {
-                console.log('Smart action:', actionId, 'for task:', task.title);
-                // TODO: Integrate with coach system
-              }}
-              onCreateSubTasks={(task, subtasks) => {
-                console.log('Creating subtasks for:', task.title, subtasks);
-                // TODO: Integrate with task management system
-              }}
               onStatusChange={handleTaskStatusChange}
               onMarkDone={handleTaskMarkDone}
               showGoal 
@@ -439,14 +431,6 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
               key={task.id} 
               task={task} 
               onDoubleTap={handleTaskDoubleTap}
-              onSmartAction={(actionId, message, task) => {
-                console.log('Smart action:', actionId, 'for task:', task.title);
-                // TODO: Integrate with coach system
-              }}
-              onCreateSubTasks={(task, subtasks) => {
-                console.log('Creating subtasks for:', task.title, subtasks);
-                // TODO: Integrate with task management system
-              }}
               onSingleTap={handleTaskSingleTap}
               onStatusChange={handleTaskStatusChange}
               onMarkDone={handleTaskMarkDone}
@@ -490,14 +474,6 @@ export const TaskViews: React.FC<TaskViewsProps> = ({
                     key={task.id} 
                     task={task} 
                     onDoubleTap={handleTaskDoubleTap}
-                    onSmartAction={(actionId, message, task) => {
-                      console.log('Smart action:', actionId, 'for task:', task.title);
-                      // TODO: Integrate with coach system
-                    }}
-                    onCreateSubTasks={(task, subtasks) => {
-                      console.log('Creating subtasks for:', task.title, subtasks);
-                      // TODO: Integrate with task management system
-                    }}
                     onSingleTap={handleTaskSingleTap}
                     onStatusChange={handleTaskStatusChange}
                     onMarkDone={handleTaskMarkDone}

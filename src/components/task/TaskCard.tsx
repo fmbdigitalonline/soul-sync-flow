@@ -7,7 +7,6 @@ import { useDoubleTap } from "@/hooks/use-double-tap";
 import { TaskPreview } from "./TaskPreview";
 import { ReadyToBeginModal } from "./ReadyToBeginModal";
 import { TaskStatusSelector } from "./TaskStatusSelector";
-import { SmartQuickActions } from "./SmartQuickActions";
 import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 
 interface TaskCardProps {
@@ -17,8 +16,6 @@ interface TaskCardProps {
   showGoal?: boolean;
   onMarkDone?: (task: any) => void;
   onStatusChange?: (task: any, status: 'todo' | 'in_progress' | 'stuck' | 'completed') => void;
-  onSmartAction?: (actionId: string, message: string, task: any) => void;
-  onCreateSubTasks?: (task: any, subtasks: string[]) => void;
 }
 
 export const TaskCard: React.FC<TaskCardProps> = ({
@@ -27,14 +24,11 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   onSingleTap,
   showGoal = false,
   onMarkDone,
-  onStatusChange,
-  onSmartAction,
-  onCreateSubTasks
+  onStatusChange
 }) => {
   const [showModal, setShowModal] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [localStatus, setLocalStatus] = useState(task.status || 'todo');
-  const [showSmartActions, setShowSmartActions] = useState(false);
   const { spacing, getTextSize, touchTargetSize, isFoldDevice, isUltraNarrow } = useResponsiveLayout();
 
   const handleStartCoach = () => {
@@ -83,29 +77,6 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     }
   };
 
-  const handleCompletionMarkerClick = () => {
-    if (isCompleted) {
-      // If completed, just mark done
-      handleMarkDone();
-    } else {
-      // If not completed, toggle smart actions
-      setShowSmartActions(!showSmartActions);
-    }
-  };
-
-  const handleSmartAction = (actionId: string, message: string) => {
-    if (onSmartAction) {
-      onSmartAction(actionId, message, task);
-    }
-    // Keep smart actions open for now, let user decide when to close
-  };
-
-  const handleCreateSubTasks = (subtasks: string[]) => {
-    if (onCreateSubTasks) {
-      onCreateSubTasks(task, subtasks);
-    }
-  };
-
   // Use local status for optimistic updates, but fall back to task status
   const currentStatus = localStatus;
   const isCompleted = currentStatus === 'completed' || task.completed;
@@ -138,17 +109,11 @@ export const TaskCard: React.FC<TaskCardProps> = ({
         <CardContent className={`w-full max-w-full ${isFoldDevice ? 'p-2' : isUltraNarrow ? 'p-3' : 'p-4'}`}>
           {/* Header with title and icon */}
           <div className={`flex items-start gap-2 mb-3 w-full max-w-full`}>
-            <button
-              onClick={handleCompletionMarkerClick}
-              className={`flex-shrink-0 mt-0.5 transition-colors hover:scale-110 ${touchTargetSize}`}
-              disabled={isProcessing}
-            >
-              {isCompleted ? (
-                <CheckCircle2 className={`text-green-600 ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
-              ) : (
-                <Circle className={`text-gray-400 hover:text-soul-purple ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'} ${showSmartActions ? 'text-soul-purple' : ''}`} />
-              )}
-            </button>
+            {isCompleted ? (
+              <CheckCircle2 className={`text-green-600 flex-shrink-0 mt-0.5 ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
+            ) : (
+              <Circle className={`text-gray-400 flex-shrink-0 mt-0.5 ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
+            )}
             <div className="flex-1 min-w-0 max-w-full">
               <h4
                 className={`font-bold leading-tight ${
@@ -185,7 +150,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
           
           {/* Task Preview */}
           <div className="w-full max-w-full mb-3">
-            <TaskPreview task={task} onCreateSubTasks={handleCreateSubTasks} />
+            <TaskPreview task={task} />
           </div>
 
           {/* Status Selector */}
@@ -224,18 +189,6 @@ export const TaskCard: React.FC<TaskCardProps> = ({
               <span className="truncate">Get Coach</span>
             </button>
           </div>
-          
-          {/* Smart Actions - Show when completion marker is clicked */}
-          {showSmartActions && onSmartAction && !isCompleted && (
-            <div className="mt-4 border-t pt-4">
-              <SmartQuickActions
-                onAction={handleSmartAction}
-                isLoading={isProcessing}
-                currentProgress={task.progress || 0}
-                hasSubTasks={!!(task.subtasks && task.subtasks.length > 0)}
-              />
-            </div>
-          )}
         </CardContent>
       </Card>
       <ReadyToBeginModal
