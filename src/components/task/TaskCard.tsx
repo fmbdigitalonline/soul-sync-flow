@@ -8,6 +8,7 @@ import { TaskPreview } from "./TaskPreview";
 import { ReadyToBeginModal } from "./ReadyToBeginModal";
 import { TaskStatusSelector } from "./TaskStatusSelector";
 import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
+import { useTaskCompletion } from "@/hooks/use-task-completion";
 
 interface TaskCardProps {
   task: any;
@@ -30,6 +31,12 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [localStatus, setLocalStatus] = useState(task.status || 'todo');
   const { spacing, getTextSize, touchTargetSize, isFoldDevice, isUltraNarrow } = useResponsiveLayout();
+  
+  // Pillar I: Preserve existing functionality, add unified completion
+  const { completeTaskFromCard, isTaskCompleting } = useTaskCompletion({
+    showFeedback: true,
+    autoNavigate: false // Don't auto-navigate from card completion
+  });
 
   const handleStartCoach = () => {
     if (!isProcessing) {
@@ -68,12 +75,26 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     }
   };
 
-  const handleMarkDone = () => {
-    if (onMarkDone && !isProcessing) {
+  const handleMarkDone = async () => {
+    if (!isProcessing && !isTaskCompleting(task.id)) {
       setIsProcessing(true);
       setLocalStatus('completed');
-      onMarkDone(task);
-      setTimeout(() => setIsProcessing(false), 500);
+      
+      try {
+        // Pillar I: Preserve existing callback, add unified completion
+        if (onMarkDone) {
+          onMarkDone(task);
+        }
+        
+        // Use unified completion service
+        await completeTaskFromCard(task.id);
+      } catch (error) {
+        console.error('Task completion failed:', error);
+        // Pillar II: Revert on failure (no masking)
+        setLocalStatus(task.status || 'todo');
+      } finally {
+        setIsProcessing(false);
+      }
     }
   };
 
@@ -172,7 +193,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
               className={`${
                 isFoldDevice || isUltraNarrow ? 'w-full' : 'flex-1'
               } ${isFoldDevice ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${touchTargetSize} flex items-center justify-center gap-1`}
-              disabled={isCompleted || isProcessing}
+              disabled={isCompleted || isProcessing || isTaskCompleting(task.id)}
               onClick={handleMarkDone}
             >
               <span>✅</span>
