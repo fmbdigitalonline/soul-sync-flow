@@ -53,7 +53,6 @@ serve(async (req) => {
       messageHistory = [],
       forceQuestionGeneration = false,
       useUnifiedBrain = false, // CRITICAL: Enable unified brain processing
-      hermeticContext = null, // NEW: Hermetic intelligence context injection
       agentMode = 'guide'
     } = requestBody;
 
@@ -205,33 +204,25 @@ serve(async (req) => {
         break;
 
       case 'respond_to_user':
-        // CRITICAL: Route through Unified Brain if flag is enabled OR Hermetic context available
-        if (useUnifiedBrain || hermeticContext) {
-          const routingMode = hermeticContext ? `Hermetic (${hermeticContext.depth})` : 'Unified Brain';
-          console.log(`🧠 Routing through ${routingMode} processing`);
+        // CRITICAL: Route through Unified Brain if flag is enabled
+        if (useUnifiedBrain) {
+          console.log('🧠 Routing through Unified Brain (all 11 Hermetic components)');
           
           try {
-            // Build enhanced payload with Hermetic context if available
-            const unifiedBrainPayload = {
-              userId,
-              sessionId,
-              message: userMessage,
-              agentMode,
-              currentState: 'NORMAL',
-              // INJECT HERMETIC CONTEXT - Pass deep intelligence layers
-              hermeticContext: hermeticContext,
-              contextDepth: hermeticContext?.depth || 'basic',
-              personalityLayers: hermeticContext?.contextLayers || null
-            };
-            
-            // Call the unified brain processor with enhanced context
+            // Call the unified brain processor
             const unifiedBrainResponse = await fetch(`${supabaseUrl}/functions/v1/unified-brain-processor`, {
               method: 'POST',
               headers: {
                 'Authorization': `Bearer ${supabaseKey}`,
                 'Content-Type': 'application/json',
               },
-              body: JSON.stringify(unifiedBrainPayload),
+              body: JSON.stringify({
+                userId,
+                sessionId,
+                message: userMessage,
+                agentMode,
+                currentState: 'NORMAL'
+              }),
             });
 
             if (!unifiedBrainResponse.ok) {
@@ -241,36 +232,30 @@ serve(async (req) => {
             const unifiedData = await unifiedBrainResponse.json();
             response = unifiedData.response;
             
-            const processingType = hermeticContext ? 'Hermetic-Enhanced' : 'Unified Brain';
-            console.log(`✅ ${processingType} processed through ${unifiedData.processedModules}/11 components`);
+            console.log(`✅ Unified Brain processed through ${unifiedData.processedModules}/11 Hermetic components`);
             
-            // Log successful processing with Hermetic context awareness
+            // Log successful unified brain processing
             await supabase.from('dream_activity_logs').insert({
               user_id: userId,
-              activity_type: hermeticContext ? 'hermetic_enhanced_conversation' : 'unified_brain_conversation',
+              activity_type: 'unified_brain_conversation',
               activity_data: {
                 processed_modules: unifiedData.processedModules,
                 hermetic_results: unifiedData.hermeticResults?.length || 0,
-                brain_metrics: unifiedData.brainMetrics,
-                hermetic_depth: hermeticContext?.depth || null,
-                context_layers: hermeticContext ? Object.keys(hermeticContext.contextLayers).length : 0,
-                data_availability: hermeticContext?.dataAvailability || null
+                brain_metrics: unifiedData.brainMetrics
               },
               session_id: sessionId
             });
 
           } catch (error) {
-            const fallbackType = hermeticContext ? 'Hermetic-Enhanced' : 'Unified Brain';
-            console.error(`❌ ${fallbackType} routing failed, falling back to HACS:`, error);
+            console.error('❌ Unified Brain routing failed, falling back to HACS:', error);
             
-            // Fallback to original HACS processing with basic personality context
+            // Fallback to original HACS processing
             response = await generateConversationalResponse(
               userMessage,
               messageHistory,
               intelligenceData,
               personalityContext,
-              blueprint,
-              hermeticContext // PASS HERMETIC CONTEXT TO FALLBACK
+              blueprint
             );
           }
         } else {
@@ -282,8 +267,7 @@ serve(async (req) => {
             messageHistory,
             intelligenceData,
             personalityContext,
-            blueprint,
-            hermeticContext // INJECT HERMETIC CONTEXT EVEN IN LEGACY MODE
+            blueprint
           );
         }
 
@@ -582,22 +566,8 @@ async function generateConversationalResponse(
   messageHistory: ConversationMessage[],
   intelligenceData: HACSIntelligenceData,
   personalityContext: any,
-  blueprint: any,
-  hermeticContext: any = null
+  blueprint: any
 ) {
-  // HERMETIC ENHANCEMENT - Inject deep context when available
-  let hermeticEnhancement = '';
-  if (hermeticContext && hermeticContext.depth !== 'basic') {
-    hermeticEnhancement = `
-
-## HERMETIC INTELLIGENCE DEPTH: ${hermeticContext.depth.toUpperCase()}
-- Data Availability: ${JSON.stringify(hermeticContext.dataAvailability)}
-- Context Layers: ${Object.keys(hermeticContext.contextLayers).length} deep intelligence layers
-- Comprehensive Analysis: ${hermeticContext.depth === 'oracle' ? 'Full personality reports available' : 'Enhanced modeling available'}
-
-When appropriate, naturally reference insights from this deep intelligence without technical jargon.`;
-  }
-
   const systemPrompt = `You are HACS (Holistic Adaptive Cognitive System)${personalityContext?.name ? `, ${personalityContext.name}'s intelligent companion` : ', a learning companion'}.
 
 PERSONALITY CONTEXT:
@@ -608,7 +578,7 @@ ${personalityContext ? `- Name: ${personalityContext.name}
 - Life Path: ${personalityContext.lifePath} (${personalityContext.lifePath === 3 ? 'Creative expression and communication' : 'Personal growth path'})
 - Chinese Zodiac: ${personalityContext.chineseZodiac}
 - Age: ${personalityContext.birthDate ? Math.floor((Date.now() - new Date(personalityContext.birthDate).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : 'Unknown'}` : '- Working to understand your unique personality profile'}
-- Intelligence Level: ${intelligenceData.intelligence_level}%${hermeticEnhancement}
+- Intelligence Level: ${intelligenceData.intelligence_level}%
 
 RESPONSE GUIDELINES:
 - Be warm, insightful, and genuinely supportive

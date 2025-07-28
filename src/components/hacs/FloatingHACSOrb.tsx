@@ -18,10 +18,9 @@ import { HACSLoadingDiagnostics } from './HACSLoadingDiagnostics';
 
 interface FloatingHACSProps {
   className?: string;
-  hermeticDepth?: 'basic' | 'enhanced' | 'hermetic' | 'oracle';
 }
 
-export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, hermeticDepth = 'basic' }) => {
+export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   const [showBubble, setShowBubble] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [showMicroLearning, setShowMicroLearning] = useState(false);
@@ -399,7 +398,6 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, hermet
               showProgressRing={intelligenceLevel > 0}
               showIntelligenceTooltip={false}
               isThinking={isThinking}
-              
               activeModule={activeModule}
               moduleActivity={moduleActivity || isGeneratingInsight}
               onClick={handleOrbClick}

@@ -4,7 +4,6 @@ import { useEnhancedAICoach } from './use-enhanced-ai-coach';
 import { supabase } from '@/integrations/supabase/client';
 import { ImmediateResponseService } from '../services/immediate-response-service';
 import { BackgroundIntelligenceService } from '../services/background-intelligence-service';
-import { hermeticConversationContextService, HermeticConversationContext } from '../services/hermetic-conversation-context';
 
 // Adapter interface that matches useEnhancedAICoach exactly
 export interface HACSConversationAdapter {
@@ -29,7 +28,6 @@ export interface HACSConversationAdapter {
   acsEnabled: boolean;
   acsState: string;
   userName: string;
-  hermeticDepth: 'basic' | 'enhanced' | 'hermetic' | 'oracle';
 }
 
 export const useHACSConversationAdapter = (
@@ -45,10 +43,6 @@ export const useHACSConversationAdapter = (
   // CRITICAL FIX: Persistent session ID to close intelligence loop
   const sessionIdRef = useRef<string | null>(null);
   
-  // HERMETIC CONTEXT STATE - Track conversation depth
-  const [hermeticContext, setHermeticContext] = useState<HermeticConversationContext | null>(null);
-  const [hermeticDepth, setHermeticDepth] = useState<'basic' | 'enhanced' | 'hermetic' | 'oracle'>('basic');
-  
   // Generate session ID once per conversation and persist it
   const getOrCreateSessionId = useCallback(() => {
     if (!sessionIdRef.current) {
@@ -58,27 +52,6 @@ export const useHACSConversationAdapter = (
     return sessionIdRef.current;
   }, []);
   
-  // HERMETIC CONTEXT INITIALIZATION - Load context when adapter initializes
-  useEffect(() => {
-    const loadHermeticContext = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        console.log('🧠 HERMETIC ADAPTER: Loading context for user:', user.id.substring(0, 8));
-        try {
-          const context = await hermeticConversationContextService.buildConversationContext(user.id);
-          setHermeticContext(context);
-          setHermeticDepth(context.depth);
-          console.log('✅ HERMETIC ADAPTER: Context loaded with depth:', context.depth);
-        } catch (error) {
-          console.error('❌ HERMETIC ADAPTER: Context loading failed:', error);
-          setHermeticDepth('basic');
-        }
-      }
-    };
-    
-    loadHermeticContext();
-  }, []);
-
   // Return HACS messages directly - they already have the correct ConversationMessage format
   // No conversion needed since HACSChatInterface expects ConversationMessage type
 
@@ -151,72 +124,16 @@ export const useHACSConversationAdapter = (
         pathwaysValidated: true
       });
 
-      // HERMETIC-ENHANCED CONVERSATION ROUTING
-      // Instead of basic sendMessage, we now inject Hermetic context into the conversation
-      console.log('🧠 HERMETIC ROUTING: Sending message with context depth:', hermeticDepth);
-      
-      // Build enhanced message with Hermetic context
-      const enhancedMessagePayload = {
-        userMessage: content,
-        hermeticContext: hermeticContext,
-        useHermeticEnhancement: hermeticDepth !== 'basic',
-        sessionId: sessionId,
-        agentMode: agentMode
-      };
-      
-      // Send through HACS conversation with enhanced payload
-      await sendHermeticEnhancedMessage(enhancedMessagePayload);
+      // For Phase 1, we'll still route through the original HACS conversation
+      // to maintain UI compatibility while proving the pathway architecture works
+      await hacsConversation.sendMessage(content);
       
     } catch (error) {
       console.error('❌ DUAL-PATHWAY ERROR: One or both pathways failed', error);
-      // Fallback to original HACS conversation without Hermetic enhancement
+      // Fallback to original HACS conversation
       await hacsConversation.sendMessage(content);
     }
-  }, [hacsConversation.sendMessage, initialAgent, hermeticContext, hermeticDepth]);
-
-  // HERMETIC-ENHANCED MESSAGE SENDING - Fixed to properly handle responses
-  const sendHermeticEnhancedMessage = useCallback(async (payload: any) => {
-    const { userMessage, hermeticContext, useHermeticEnhancement } = payload;
-    
-    if (useHermeticEnhancement && hermeticContext) {
-      console.log('🔮 HERMETIC ENHANCEMENT: Sending enhanced conversation request');
-      
-      // Get user for edge function call
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
-      
-      // Call enhanced conversation edge function with Hermetic context
-      // CRITICAL FIX: Edge function handles adding messages - no need for duplicate call
-      const { data, error } = await supabase.functions.invoke('hacs-intelligent-conversation', {
-        body: {
-          action: 'respond_to_user',
-          userId: user.id,
-          sessionId: payload.sessionId,
-          userMessage: userMessage,
-          messageHistory: hacsConversation.messages,
-          useUnifiedBrain: true, // Enable unified brain for Hermetic processing
-          hermeticContext: hermeticContext, // INJECT HERMETIC CONTEXT
-          agentMode: payload.agentMode
-        }
-      });
-      
-      if (error) {
-        console.error('❌ HERMETIC ENHANCEMENT FAILED:', error);
-        throw error;
-      }
-      
-      console.log('✅ HERMETIC ENHANCEMENT SUCCESS: Response enhanced with', hermeticContext.depth, 'depth');
-      console.log('🔄 HERMETIC RESPONSE: Edge function returned data:', data?.response ? 'Success' : 'No response');
-      
-      // CRITICAL FIX: The edge function should handle adding the AI response to conversation
-      // This is working correctly based on the edge function logs
-      
-    } else {
-      // Fallback to standard HACS conversation
-      console.log('📡 STANDARD ROUTING: Using basic HACS conversation');
-      await hacsConversation.sendMessage(userMessage);
-    }
-  }, [hacsConversation.sendMessage, hacsConversation.messages, initialAgent]);
+  }, [hacsConversation.sendMessage, initialAgent]);
 
   const resetConversation = useCallback(() => {
     hacsConversation.clearConversation();
@@ -243,7 +160,6 @@ export const useHACSConversationAdapter = (
     recordVFPGraphFeedback: enhancedCoach.recordVFPGraphFeedback,
     acsEnabled: enhancedCoach.acsEnabled,
     acsState: enhancedCoach.acsState,
-    userName: enhancedCoach.userName,
-    hermeticDepth: hermeticDepth // EXPOSE HERMETIC DEPTH TO UI
+    userName: enhancedCoach.userName
   };
 };
