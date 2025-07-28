@@ -8,6 +8,7 @@ interface SoulOrbProps {
   className?: string;
   stage?: "welcome" | "collecting" | "generating" | "complete";
   onClick?: () => void;
+  hermeticDepth?: 'basic' | 'enhanced' | 'hermetic' | 'oracle'; // Hermetic depth level for visual indication
 }
 
 const SoulOrb: React.FC<SoulOrbProps> = ({
@@ -17,6 +18,7 @@ const SoulOrb: React.FC<SoulOrbProps> = ({
   className,
   stage = "welcome",
   onClick,
+  hermeticDepth = "basic",
 }) => {
   const orbRef = useRef<HTMLDivElement>(null);
   const [particles, setParticles] = useState<Array<{ x: number, y: number, size: number, speed: number, angle: number }>>([]);
@@ -28,12 +30,24 @@ const SoulOrb: React.FC<SoulOrbProps> = ({
     lg: "w-32 h-32",
   };
 
-  // Color mapping - changed to bright cyan for all stages to match the provided image
-  const stageColorMap = {
-    welcome: "from-cyan-400 via-cyan-300 to-cyan-200",
-    collecting: "from-cyan-400 via-cyan-300 to-cyan-200",
-    generating: "from-cyan-400 via-cyan-300 to-cyan-200",
-    complete: "from-cyan-400 via-cyan-300 to-cyan-200",
+  // Color mapping with Hermetic depth indication
+  const getOrbColors = () => {
+    const baseColors = {
+      welcome: "from-cyan-400 via-cyan-300 to-cyan-200",
+      collecting: "from-cyan-400 via-cyan-300 to-cyan-200", 
+      generating: "from-cyan-400 via-cyan-300 to-cyan-200",
+      complete: "from-cyan-400 via-cyan-300 to-cyan-200",
+    };
+    
+    // Enhanced colors based on Hermetic depth
+    const hermeticColors = {
+      basic: baseColors[stage],
+      enhanced: "from-cyan-500 via-blue-400 to-cyan-300", // Enhanced depth
+      hermetic: "from-blue-500 via-purple-400 to-cyan-400", // Hermetic depth  
+      oracle: "from-purple-500 via-pink-400 to-gold-400", // Oracle depth
+    };
+    
+    return hermeticColors[hermeticDepth] || baseColors[stage];
   };
 
   // Initialize particles
@@ -88,15 +102,25 @@ const SoulOrb: React.FC<SoulOrbProps> = ({
         className
       )}
     >
-      {/* Core orb - updated to bright cyan/turquoise */}
+      {/* Core orb with Hermetic depth coloring */}
       <div 
         className={cn(
           "absolute inset-0 rounded-full bg-gradient-to-r", 
-          stageColorMap[stage],
+          getOrbColors(),
           pulse && "animate-pulse-soft",
           speaking && "animate-pulse"
         )}
       />
+      
+      {/* Hermetic depth indicator ring */}
+      {hermeticDepth !== "basic" && (
+        <div className={cn(
+          "absolute inset-1 rounded-full border-2 opacity-60",
+          hermeticDepth === "enhanced" && "border-blue-300",
+          hermeticDepth === "hermetic" && "border-purple-300", 
+          hermeticDepth === "oracle" && "border-gold-300 shadow-lg"
+        )} />
+      )}
       
       {/* Glow effect - updated color */}
       <div className="absolute inset-0 rounded-full bg-cyan-400 opacity-20 blur-md" />
