@@ -5,10 +5,10 @@ import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
 import { Sparkles, MessageCircle, RotateCcw, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useHACSConversationAdapter } from "@/hooks/use-hacs-conversation-adapter";
+import { useCompanionOracle } from "@/hooks/use-companion-oracle";
 import { useBlueprintCache } from "@/contexts/BlueprintCacheContext";
 import { supabase } from "@/integrations/supabase/client";
-import { HACSChatInterface } from "@/components/hacs/HACSChatInterface";
+import { CompanionOracleInterface } from "@/components/companion/CompanionOracleInterface";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ActiveReminders } from "@/components/reminders/ActiveReminders";
 import { MobileTogglePanel } from "@/components/ui/mobile-toggle-panel";
@@ -20,8 +20,9 @@ const Coach = () => {
     messages,
     isLoading,
     sendMessage,
-    resetConversation
-  } = useHACSConversationAdapter("guide", "companion");
+    resetConversation,
+    oracleStatus
+  } = useCompanionOracle();
 
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const { toast } = useToast();
@@ -85,10 +86,11 @@ const Coach = () => {
 
   // Create the main chat interface component
   const chatInterface = (
-    <HACSChatInterface
+    <CompanionOracleInterface
       messages={messages}
       isLoading={isLoading}
       onSendMessage={handleSendMessage}
+      oracleStatus={oracleStatus}
     />
   );
 
@@ -131,8 +133,16 @@ const Coach = () => {
             <span className="text-primary">Companion</span>
           </div>
           <div className="flex justify-between">
-            <span>HACS:</span>
-            <span className="text-blue-600">Pure Intelligence</span>
+            <span>Oracle:</span>
+            <span className={
+              oracleStatus.mode === 'full_oracle' ? "text-purple-600" :
+              oracleStatus.mode === 'fallback_oracle' ? "text-amber-600" : 
+              "text-gray-500"
+            }>
+              {oracleStatus.mode === 'full_oracle' ? "Full Authority" :
+               oracleStatus.mode === 'fallback_oracle' ? "Developing" : 
+               "Initializing"}
+            </span>
           </div>
         </div>
       </CosmicCard>

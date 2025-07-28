@@ -137,5 +137,10 @@ verify_jwt = true
 cors = ["*"]
 methods = ["POST", "OPTIONS"]
 
+[functions.companion-oracle-conversation]
+verify_jwt = true
+cors = ["*"]
+methods = ["POST", "OPTIONS"]
+
 [analytics]
 enabled = false
