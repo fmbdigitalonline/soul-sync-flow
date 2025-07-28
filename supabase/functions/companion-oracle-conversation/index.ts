@@ -13,6 +13,7 @@ serve(async (req) => {
   }
 
   try {
+    console.log('🔮 Oracle Function Called - Starting enhanced conversation processing');
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -131,7 +132,7 @@ ${personalityContext ? `User Context: ${personalityContext.name} (${personalityC
 Respond helpfully while building rapport and understanding.`
     }
 
-    // Call OpenAI for response generation
+    // Call OpenAI for response generation using current model
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -139,7 +140,7 @@ Respond helpfully while building rapport and understanding.`
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4.1-2025-04-14',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: message }

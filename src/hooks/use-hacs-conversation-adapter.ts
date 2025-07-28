@@ -133,8 +133,8 @@ export const useHACSConversationAdapter = (
       if (isCompanionMode) {
         console.log('🔮 ORACLE MODE: Enhancing conversation with oracle capabilities');
         
-        // Call the companion oracle function while preserving HACS flow
-        const { data: oracleResponse, error } = await supabase.functions.invoke('companion-oracle-conversation', {
+        // Call the companion oracle function to get enhanced response
+        const { data: oracleResponse, error: oracleError } = await supabase.functions.invoke('companion-oracle-conversation', {
           body: {
             message: content,
             userId: user.id,
@@ -143,8 +143,8 @@ export const useHACSConversationAdapter = (
           }
         });
 
-        if (error) {
-          console.error('❌ ORACLE ERROR: Falling back to standard HACS', error);
+        if (oracleError) {
+          console.error('❌ ORACLE ERROR: Falling back to standard HACS', oracleError);
           await hacsConversation.sendMessage(content);
         } else {
           console.log('✅ ORACLE SUCCESS: Enhanced response generated', {
@@ -152,8 +152,8 @@ export const useHACSConversationAdapter = (
             semanticChunks: oracleResponse.semanticChunks
           });
           
-          // Route oracle response through HACS conversation to maintain UI compatibility
-          await hacsConversation.sendMessage(content);
+          // CRITICAL FIX: Store oracle response in HACS conversation system
+          await hacsConversation.sendOracleMessage(content, oracleResponse);
         }
       } else {
         // Standard HACS conversation for non-companion modes
@@ -165,7 +165,7 @@ export const useHACSConversationAdapter = (
       // Fallback to original HACS conversation
       await hacsConversation.sendMessage(content);
     }
-  }, [hacsConversation.sendMessage, initialAgent]);
+  }, [hacsConversation.sendMessage, hacsConversation.sendOracleMessage, initialAgent, isCompanionMode]);
 
   const resetConversation = useCallback(() => {
     hacsConversation.clearConversation();

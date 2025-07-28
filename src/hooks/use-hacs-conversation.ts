@@ -12,6 +12,11 @@ export interface ConversationMessage {
   messageType?: string;
   questionId?: string;
   isQuestion?: boolean;
+  oracleStatus?: string;
+  semanticChunks?: number;
+  personalityContext?: any;
+  intelligence_bonus?: number;
+  mode?: string;
 }
 
 export interface HACSQuestion {
@@ -30,6 +35,19 @@ export const useHACSConversation = () => {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState<HACSQuestion | null>(null);
   const sessionIdRef = useRef(`session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
+
+  // Helper function to determine conversation quality
+  const determineResponseQuality = useCallback((hacsResponse: string, userMessage: string): 'excellent' | 'good' | 'average' | 'poor' => {
+    const messageLength = userMessage.length;
+    const hasQuestions = userMessage.includes('?');
+    const isEngaged = messageLength > 50 && (hasQuestions || userMessage.split(' ').length > 10);
+    const isDeepResponse = hacsResponse.length > 100;
+    
+    if (isEngaged && isDeepResponse) return 'excellent';
+    if (isEngaged || isDeepResponse) return 'good';
+    if (messageLength > 20) return 'average';
+    return 'poor';
+  }, []);
 
   // Load conversation history on mount
   useEffect(() => {
@@ -62,6 +80,58 @@ export const useHACSConversation = () => {
       console.log('No previous conversation found, starting fresh');
     }
   }, [user]);
+
+  const saveConversation = useCallback(async (conversationData: ConversationMessage[]) => {
+    if (!user || !conversationData.length) return;
+
+    try {
+      const conversationPayload = {
+        user_id: user.id,
+        session_id: sessionIdRef.current,
+        conversation_data: conversationData as any,
+        intelligence_level_start: 50,
+        intelligence_level_end: null
+      };
+
+      if (conversationId) {
+        // Update existing conversation
+        await supabase
+          .from('hacs_conversations')
+          .update({
+            conversation_data: conversationData as any,
+            last_activity: new Date().toISOString()
+          })
+          .eq('id', conversationId);
+      } else {
+        // Create new conversation
+        const { data, error } = await supabase
+          .from('hacs_conversations')
+          .insert(conversationPayload)
+          .select('id')
+          .single();
+
+        if (error) throw error;
+        setConversationId(data.id);
+      }
+    } catch (error) {
+      console.error('Error saving conversation:', error);
+    }
+  }, [user, conversationId]);
+
+  const updateHACSIntelligence = useCallback(async (
+    intelligenceBonus: number,
+    userMessage: string,
+    response: string
+  ) => {
+    if (!user || intelligenceBonus <= 0) return;
+
+    try {
+      await recordConversationInteraction(userMessage, determineResponseQuality(response, userMessage));
+      await refreshIntelligence();
+    } catch (error) {
+      console.error('Error updating HACS intelligence:', error);
+    }
+  }, [user, recordConversationInteraction, refreshIntelligence, determineResponseQuality]);
 
   const sendMessage = useCallback(async (content: string) => {
     if (!user || !content.trim()) return;
@@ -98,53 +168,103 @@ export const useHACSConversation = () => {
       const hacsMessage: ConversationMessage = {
         id: `hacs_${Date.now()}`,
         role: 'hacs',
-        content: data.response,
-        timestamp: new Date().toISOString()
+        content: data.response || 'I understand. How can I help you further?',
+        timestamp: new Date().toISOString(),
+        module: data.module,
+        mode: data.mode,
+        intelligence_bonus: data.intelligence_bonus
       };
 
       setMessages(prev => [...prev, hacsMessage]);
-      setConversationId(data.conversationId);
 
-      // CRITICAL: Record conversation interaction for intelligence growth
-      await recordConversationInteraction(
-        content.trim(),
-        determineResponseQuality(data.response, content.trim())
-      );
+      // Save conversation to database
+      await saveConversation([...messages, userMessage, hacsMessage]);
 
-      // Refresh intelligence to update visuals
-      await refreshIntelligence();
+      // Update HACS intelligence if provided
+      if (data.intelligence_bonus && data.intelligence_bonus > 0) {
+        await updateHACSIntelligence(data.intelligence_bonus, content, data.response);
+      }
 
-      // Handle generated question
-      if (data.generatedQuestion) {
-        setCurrentQuestion(data.generatedQuestion);
-        
-        // Add question as a special message
-        const questionMessage: ConversationMessage = {
+      // Generate follow-up question if provided
+      if (data.question) {
+        setCurrentQuestion({
           id: `question_${Date.now()}`,
-          role: 'hacs',
-          content: data.generatedQuestion.text,
-          timestamp: new Date().toISOString(),
-          module: data.generatedQuestion.module,
-          questionId: data.generatedQuestion.id,
-          isQuestion: true
-        };
-
-        setMessages(prev => [...prev, questionMessage]);
+          text: data.question,
+          module: data.module || 'hacs',
+          type: 'foundational'
+        });
       }
 
     } catch (error) {
-      console.error('❌ HACS CONVERSATION FAILED - NO FALLBACK:', error);
-      
-      // Remove user message since conversation failed
-      setMessages(prev => prev.slice(0, -1));
-      
-      // Re-throw error to surface the problem
-      throw error;
+      console.error('Error in HACS conversation:', error);
+      const errorMessage: ConversationMessage = {
+        id: `error_${Date.now()}`,
+        role: 'hacs',
+        content: 'I apologize, but I encountered an issue. Please try again.',
+        timestamp: new Date().toISOString()
+      };
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
       setIsTyping(false);
     }
-  }, [user, messages, conversationId]);
+  }, [user, messages, conversationId, saveConversation, updateHACSIntelligence]);
+
+  // NEW: Send oracle message with enhanced data storage
+  const sendOracleMessage = useCallback(async (content: string, oracleResponse: any) => {
+    if (!user || !content.trim()) return;
+
+    setIsLoading(true);
+    setIsTyping(true);
+
+    try {
+      // Add user message immediately
+      const userMessage: ConversationMessage = {
+        id: `user_${Date.now()}`,
+        role: 'user',
+        content: content.trim(),
+        timestamp: new Date().toISOString()
+      };
+
+      setMessages(prev => [...prev, userMessage]);
+
+      // Add oracle response with enhanced metadata
+      const oracleMessage: ConversationMessage = {
+        id: `oracle_${Date.now()}`,
+        role: 'hacs',
+        module: 'COMPANION_ORACLE',
+        content: oracleResponse.response || 'The cosmic channels are temporarily disrupted.',
+        timestamp: new Date().toISOString(),
+        oracleStatus: oracleResponse.oracleStatus,
+        semanticChunks: oracleResponse.semanticChunks,
+        personalityContext: oracleResponse.personalityContext
+      };
+
+      setMessages(prev => [...prev, oracleMessage]);
+
+      // Save conversation to database with oracle metadata
+      await saveConversation([...messages, userMessage, oracleMessage]);
+
+      console.log('✅ ORACLE MESSAGE: Stored in conversation system', {
+        oracleStatus: oracleResponse.oracleStatus,
+        semanticChunks: oracleResponse.semanticChunks,
+        messageId: oracleMessage.id
+      });
+
+    } catch (error) {
+      console.error('❌ ORACLE MESSAGE ERROR:', error);
+      const errorMessage: ConversationMessage = {
+        id: `error_${Date.now()}`,
+        role: 'hacs',
+        content: 'The oracle channels are disrupted. Please try reaching out again.',
+        timestamp: new Date().toISOString()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+      setIsTyping(false);
+    }
+  }, [user, messages, conversationId, saveConversation]);
 
   const generateQuestion = useCallback(async () => {
     if (!user) return;
@@ -218,19 +338,6 @@ export const useHACSConversation = () => {
     setCurrentQuestion(null);
   }, []);
 
-  // Helper function to determine conversation quality
-  const determineResponseQuality = useCallback((hacsResponse: string, userMessage: string): 'excellent' | 'good' | 'average' | 'poor' => {
-    const messageLength = userMessage.length;
-    const hasQuestions = userMessage.includes('?');
-    const isEngaged = messageLength > 50 && (hasQuestions || userMessage.split(' ').length > 10);
-    const isDeepResponse = hacsResponse.length > 100;
-    
-    if (isEngaged && isDeepResponse) return 'excellent';
-    if (isEngaged || isDeepResponse) return 'good';
-    if (messageLength > 20) return 'average';
-    return 'poor';
-  }, []);
-
   return {
     messages,
     isLoading,
@@ -238,6 +345,7 @@ export const useHACSConversation = () => {
     conversationId,
     currentQuestion,
     sendMessage,
+    sendOracleMessage,
     generateQuestion,
     provideFeedback,
     clearConversation
