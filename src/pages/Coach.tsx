@@ -119,10 +119,10 @@ const Coach = () => {
       <HACSSystemStatus />
 
       {/* Hermetic Validation (Development Mode) */}
-      <HermeticValidation />
+      {process.env.NODE_ENV === 'development' && <HermeticValidation />}
       
-      {/* HACS Intelligence Fix Validation */}
-      <HACSValidationTest />
+      {/* HACS Intelligence Fix Validation - Development Only */}
+      {process.env.NODE_ENV === 'development' && <HACSValidationTest />}
 
       <CosmicCard className="p-4">
         <h3 className="font-semibold mb-3 flex items-center">

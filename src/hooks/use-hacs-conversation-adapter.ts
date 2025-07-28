@@ -232,6 +232,14 @@ export const useHACSConversationAdapter = (
     enhancedCoach.switchAgent(newAgent as any);
   }, [enhancedCoach.switchAgent]);
 
+  console.log('🔍 HACS ADAPTER DEBUG:', {
+    messagesCount: hacsConversation.messages.length,
+    isLoading: hacsConversation.isLoading || enhancedCoach.isLoading,
+    conversationId: hacsConversation.conversationId,
+    hermeticDepth: hermeticDepth,
+    lastMessage: hacsConversation.messages[hacsConversation.messages.length - 1]?.content?.substring(0, 50)
+  });
+
   return {
     messages: hacsConversation.messages,
     isLoading: hacsConversation.isLoading || enhancedCoach.isLoading,

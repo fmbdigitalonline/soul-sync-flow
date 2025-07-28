@@ -91,6 +91,12 @@ export const useHACSConversation = (persistentSessionId?: string) => {
       };
 
       setMessages(prev => [...prev, userMessage]);
+      
+      console.log('🔍 HACS CONVERSATION DEBUG: Sending message', {
+        messagesCount: messages.length + 1,
+        conversationId,
+        sessionId: sessionIdRef.current
+      });
 
       // Send to HACS intelligent conversation
       const { data, error } = await supabase.functions.invoke('hacs-intelligent-conversation', {
@@ -114,7 +120,15 @@ export const useHACSConversation = (persistentSessionId?: string) => {
         timestamp: new Date().toISOString()
       };
 
-      setMessages(prev => [...prev, hacsMessage]);
+      setMessages(prev => {
+        const newMessages = [...prev, hacsMessage];
+        console.log('🔍 HACS CONVERSATION: Messages updated', {
+          previousCount: prev.length,
+          newCount: newMessages.length,
+          lastMessage: hacsMessage.content.substring(0, 50)
+        });
+        return newMessages;
+      });
       
       // CRITICAL FIX: Always update conversation ID from response
       if (data.conversationId) {
