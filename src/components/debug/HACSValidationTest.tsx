@@ -53,6 +53,7 @@ export const HACSValidationTest = () => {
           response: lastMessage?.content || 'No response received',
           processingTime: `${processingTime}ms`,
           hermeticDepth: hacsAdapter.hermeticDepth,
+          conversationMessages: hacsAdapter.messages.length,
           error: null,
           timestamp: new Date().toISOString()
         };
@@ -142,6 +143,9 @@ export const HACSValidationTest = () => {
                   <div className="flex gap-2 mt-2">
                     <Badge variant="outline" className="text-xs">
                       Hermetic: {result.hermeticDepth}
+                    </Badge>
+                    <Badge variant="outline" className="text-xs">
+                      Messages: {result.conversationMessages || 0}
                     </Badge>
                     <Badge variant="outline" className="text-xs">
                       {result.timestamp}

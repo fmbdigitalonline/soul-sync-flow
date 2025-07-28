@@ -36,20 +36,9 @@ export const useHACSConversationAdapter = (
   initialAgent: string = "guide",
   pageContext: string = "general"
 ): HACSConversationAdapter => {
-  // Use HACS conversation for intelligence learning
-  const hacsConversation = useHACSConversation();
-  
-  // Keep enhanced AI coach for backwards compatibility but don't use its sendMessage
-  const enhancedCoach = useEnhancedAICoach(initialAgent as any, pageContext);
-  
-  // CRITICAL FIX: Persistent session ID to close intelligence loop
+  // CRITICAL FIX: Generate persistent session ID first
   const sessionIdRef = useRef<string | null>(null);
   
-  // HERMETIC CONTEXT STATE - Track conversation depth
-  const [hermeticContext, setHermeticContext] = useState<HermeticConversationContext | null>(null);
-  const [hermeticDepth, setHermeticDepth] = useState<'basic' | 'enhanced' | 'hermetic' | 'oracle'>('basic');
-  
-  // Generate session ID once per conversation and persist it
   const getOrCreateSessionId = useCallback(() => {
     if (!sessionIdRef.current) {
       sessionIdRef.current = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -57,6 +46,16 @@ export const useHACSConversationAdapter = (
     }
     return sessionIdRef.current;
   }, []);
+  
+  // Use HACS conversation with persistent session ID
+  const hacsConversation = useHACSConversation(getOrCreateSessionId());
+  
+  // Keep enhanced AI coach for backwards compatibility but don't use its sendMessage
+  const enhancedCoach = useEnhancedAICoach(initialAgent as any, pageContext);
+  
+  // HERMETIC CONTEXT STATE - Track conversation depth
+  const [hermeticContext, setHermeticContext] = useState<HermeticConversationContext | null>(null);
+  const [hermeticDepth, setHermeticDepth] = useState<'basic' | 'enhanced' | 'hermetic' | 'oracle'>('basic');
   
   // HERMETIC CONTEXT INITIALIZATION - Load context when adapter initializes
   useEffect(() => {
@@ -164,15 +163,25 @@ export const useHACSConversationAdapter = (
         agentMode: agentMode
       };
       
-      // Send through HACS conversation with enhanced payload
-      await sendHermeticEnhancedMessage(enhancedMessagePayload);
+  // Send through HACS conversation with enhanced payload
+  await sendHermeticEnhancedMessage(enhancedMessagePayload);
+  
+  // CRITICAL FIX: Synchronize conversation ID after successful response
+  console.log('🔄 CONVERSATION SYNC: Ensuring conversation ID persistence');
+  
+  // Force refresh of conversation ID to maintain persistence
+  setTimeout(() => {
+    if (hacsConversation.conversationId) {
+      console.log('✅ CONVERSATION SYNC: ID synchronized:', hacsConversation.conversationId);
+    }
+  }, 100);
       
     } catch (error) {
       console.error('❌ DUAL-PATHWAY ERROR: One or both pathways failed', error);
       // Fallback to original HACS conversation without Hermetic enhancement
       await hacsConversation.sendMessage(content);
     }
-  }, [hacsConversation.sendMessage, initialAgent, hermeticContext, hermeticDepth]);
+  }, [hacsConversation.sendMessage, hacsConversation.conversationId, getOrCreateSessionId, initialAgent, hermeticContext, hermeticDepth]);
 
   // HERMETIC-ENHANCED MESSAGE SENDING - New method for context-aware conversations
   const sendHermeticEnhancedMessage = useCallback(async (payload: any) => {
@@ -191,6 +200,7 @@ export const useHACSConversationAdapter = (
           action: 'respond_to_user',
           userId: user.id,
           sessionId: payload.sessionId,
+          conversationId: hacsConversation.conversationId, // CRITICAL FIX: Pass existing conversation ID
           userMessage: userMessage,
           messageHistory: hacsConversation.messages,
           useUnifiedBrain: true, // Enable unified brain for Hermetic processing
@@ -211,7 +221,7 @@ export const useHACSConversationAdapter = (
       console.log('📡 STANDARD ROUTING: Using basic HACS conversation');
       await hacsConversation.sendMessage(userMessage);
     }
-  }, [hacsConversation.sendMessage, initialAgent]);
+  }, [hacsConversation.sendMessage, hacsConversation.conversationId, hacsConversation.messages, initialAgent]);
 
   const resetConversation = useCallback(() => {
     hacsConversation.clearConversation();

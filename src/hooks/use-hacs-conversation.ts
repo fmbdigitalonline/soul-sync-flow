@@ -21,7 +21,7 @@ export interface HACSQuestion {
   type: 'foundational' | 'validation' | 'philosophical';
 }
 
-export const useHACSConversation = () => {
+export const useHACSConversation = (persistentSessionId?: string) => {
   const { user } = useAuth();
   const { recordConversationInteraction, refreshIntelligence } = useHacsIntelligence();
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
@@ -29,7 +29,19 @@ export const useHACSConversation = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState<HACSQuestion | null>(null);
-  const sessionIdRef = useRef(`session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
+  
+  // CRITICAL FIX: Use persistent session ID from adapter if provided
+  const sessionIdRef = useRef(
+    persistentSessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+  );
+  
+  // Update session ID if persistent one is provided
+  useEffect(() => {
+    if (persistentSessionId && sessionIdRef.current !== persistentSessionId) {
+      sessionIdRef.current = persistentSessionId;
+      console.log('🔄 SESSION SYNC: Updated session ID to:', persistentSessionId);
+    }
+  }, [persistentSessionId]);
 
   // Load conversation history on mount
   useEffect(() => {
@@ -103,7 +115,12 @@ export const useHACSConversation = () => {
       };
 
       setMessages(prev => [...prev, hacsMessage]);
-      setConversationId(data.conversationId);
+      
+      // CRITICAL FIX: Always update conversation ID from response
+      if (data.conversationId) {
+        setConversationId(data.conversationId);
+        console.log('✅ CONVERSATION ID UPDATED:', data.conversationId);
+      }
 
       // CRITICAL: Record conversation interaction for intelligence growth
       await recordConversationInteraction(
