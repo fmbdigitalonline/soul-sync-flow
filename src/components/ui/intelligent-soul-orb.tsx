@@ -16,7 +16,6 @@ interface IntelligentSoulOrbProps {
   isThinking?: boolean;
   activeModule?: string; // NIK, CPSR, TWS, HFME, DPEM, CNR, BPSC, ACS, PIE, VFP, TMG
   moduleActivity?: boolean;
-  hermeticDepth?: 'basic' | 'enhanced' | 'hermetic' | 'oracle'; // Hermetic depth level for visual indication
 }
 
 const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
@@ -32,7 +31,6 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
   isThinking = false,
   activeModule,
   moduleActivity = false,
-  hermeticDepth = "basic",
 }) => {
   const orbRef = useRef<HTMLDivElement>(null);
   const [particles, setParticles] = useState<Array<{ x: number, y: number, size: number, speed: number, angle: number }>>([]);
@@ -52,32 +50,21 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
     lg: 88, // Reduced from 136
   };
 
-  // Color combination: Intelligence + Hermetic depth
+  // Reverse color psychology: Yellow (learning) → Teal (mastery)
   const getOrbColors = useMemo(() => {
-    // Base intelligence journey: Yellow (learning) → Teal (mastery)
-    let baseColors;
+    // Intelligence Evolution Journey: Yellow → Teal
     if (intelligenceLevel >= 100) {
-      baseColors = "from-teal-400 via-teal-300 to-teal-200"; // Pure teal mastery
+      return "from-teal-400 via-teal-300 to-teal-200"; // Pure teal mastery
     } else if (intelligenceLevel >= 75) {
-      baseColors = "from-teal-300 via-cyan-300 to-cyan-200"; // Advanced - teal dominant
+      return "from-teal-300 via-cyan-300 to-cyan-200"; // Advanced - teal dominant
     } else if (intelligenceLevel >= 50) {
-      baseColors = "from-cyan-400 via-yellow-300 to-yellow-200"; // Developing - transition phase
+      return "from-cyan-400 via-yellow-300 to-yellow-200"; // Developing - transition phase
     } else if (intelligenceLevel >= 25) {
-      baseColors = "from-yellow-400 via-yellow-300 to-yellow-200"; // Learning - yellow dominant
+      return "from-yellow-400 via-yellow-300 to-yellow-200"; // Learning - yellow dominant
     } else {
-      baseColors = "from-amber-400 via-yellow-300 to-yellow-200"; // Awakening - warm yellow
+      return "from-amber-400 via-yellow-300 to-yellow-200"; // Awakening - warm yellow
     }
-    
-    // Hermetic depth overlay
-    const hermeticColors = {
-      basic: baseColors,
-      enhanced: "from-cyan-500 via-blue-400 to-cyan-300", // Enhanced depth
-      hermetic: "from-blue-500 via-purple-400 to-cyan-400", // Hermetic depth  
-      oracle: "from-purple-500 via-pink-400 to-gold-400", // Oracle depth
-    };
-    
-    return hermeticDepth !== "basic" ? hermeticColors[hermeticDepth] : baseColors;
-  }, [intelligenceLevel, hermeticDepth]);
+  }, [intelligenceLevel]);
 
   // Module-specific animation variants
   const getModuleAnimation = useMemo(() => {
@@ -240,13 +227,10 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
           )}
         />
         
-        {/* Enhanced glow effect with Hermetic depth indication */}
+        {/* Enhanced glow effect - reverse color psychology */}
         <div 
           className={cn(
             "absolute inset-0 rounded-full blur-sm", // Reduced blur for smaller orb
-            hermeticDepth === "oracle" ? "bg-purple-400 opacity-40" :
-            hermeticDepth === "hermetic" ? "bg-blue-400 opacity-35" :
-            hermeticDepth === "enhanced" ? "bg-cyan-400 opacity-30" :
             intelligenceLevel >= 100 ? "bg-teal-400 opacity-40" : // Pure teal mastery
             intelligenceLevel >= 75 ? "bg-teal-400 opacity-30" : // Advanced teal
             intelligenceLevel >= 50 ? "bg-cyan-400 opacity-25" : // Transition phase
@@ -254,16 +238,6 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
             "bg-amber-400 opacity-20" // Awakening warm yellow
           )} 
         />
-        
-        {/* Hermetic depth indicator ring */}
-        {hermeticDepth !== "basic" && (
-          <div className={cn(
-            "absolute inset-1 rounded-full border opacity-60",
-            hermeticDepth === "enhanced" && "border-blue-300",
-            hermeticDepth === "hermetic" && "border-purple-300", 
-            hermeticDepth === "oracle" && "border-gold-300"
-          )} />
-        )}
         
         {/* Star in the center - adjusted for smaller size */}
         <div className="absolute w-1/3 h-1/3 bg-white rounded-full blur-[0.5px]" />

@@ -14,17 +14,13 @@ import { ActiveReminders } from "@/components/reminders/ActiveReminders";
 import { MobileTogglePanel } from "@/components/ui/mobile-toggle-panel";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { HACSSystemStatus } from "@/components/hacs/HACSSystemStatus";
-import { HermeticValidation } from "@/components/debug/HermeticValidation";
-import { HACSValidationTest } from "@/components/debug/HACSValidationTest";
-import { cn } from "@/lib/utils";
 
 const Coach = () => {
   const {
     messages,
     isLoading,
     sendMessage,
-    resetConversation,
-    hermeticDepth
+    resetConversation
   } = useHACSConversationAdapter("guide", "companion");
 
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -118,12 +114,6 @@ const Coach = () => {
       {/* Pure HACS System Status */}
       <HACSSystemStatus />
 
-      {/* Hermetic Validation (Development Mode) */}
-      {process.env.NODE_ENV === 'development' && <HermeticValidation />}
-      
-      {/* HACS Intelligence Fix Validation - Development Only */}
-      {process.env.NODE_ENV === 'development' && <HACSValidationTest />}
-
       <CosmicCard className="p-4">
         <h3 className="font-semibold mb-3 flex items-center">
           <Sparkles className="h-4 w-4 mr-2" />
@@ -143,23 +133,6 @@ const Coach = () => {
           <div className="flex justify-between">
             <span>HACS:</span>
             <span className="text-blue-600">Pure Intelligence</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Hermetic Depth:</span>
-            <span className={cn(
-              (!hermeticDepth || hermeticDepth === "basic") && "text-muted-foreground",
-              hermeticDepth === "enhanced" && "text-blue-600",
-              hermeticDepth === "hermetic" && "text-purple-600",
-              hermeticDepth === "oracle" && "text-yellow-600"
-            )}>
-              {(() => {
-                if (!hermeticDepth || hermeticDepth === "basic") return "Basic";
-                if (hermeticDepth === "enhanced") return "Enhanced";
-                if (hermeticDepth === "hermetic") return "Hermetic";
-                if (hermeticDepth === "oracle") return "Oracle";
-                return "Unknown";
-              })()}
-            </span>
           </div>
         </div>
       </CosmicCard>

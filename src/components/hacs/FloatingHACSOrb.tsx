@@ -399,7 +399,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className, hermet
               showProgressRing={intelligenceLevel > 0}
               showIntelligenceTooltip={false}
               isThinking={isThinking}
-              hermeticDepth={hermeticDepth}
+              
               activeModule={activeModule}
               moduleActivity={moduleActivity || isGeneratingInsight}
               onClick={handleOrbClick}

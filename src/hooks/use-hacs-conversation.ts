@@ -21,7 +21,7 @@ export interface HACSQuestion {
   type: 'foundational' | 'validation' | 'philosophical';
 }
 
-export const useHACSConversation = (persistentSessionId?: string) => {
+export const useHACSConversation = () => {
   const { user } = useAuth();
   const { recordConversationInteraction, refreshIntelligence } = useHacsIntelligence();
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
@@ -29,19 +29,7 @@ export const useHACSConversation = (persistentSessionId?: string) => {
   const [isTyping, setIsTyping] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState<HACSQuestion | null>(null);
-  
-  // CRITICAL FIX: Use persistent session ID from adapter if provided
-  const sessionIdRef = useRef(
-    persistentSessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-  );
-  
-  // Update session ID if persistent one is provided
-  useEffect(() => {
-    if (persistentSessionId && sessionIdRef.current !== persistentSessionId) {
-      sessionIdRef.current = persistentSessionId;
-      console.log('🔄 SESSION SYNC: Updated session ID to:', persistentSessionId);
-    }
-  }, [persistentSessionId]);
+  const sessionIdRef = useRef(`session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
 
   // Load conversation history on mount
   useEffect(() => {
@@ -91,12 +79,6 @@ export const useHACSConversation = (persistentSessionId?: string) => {
       };
 
       setMessages(prev => [...prev, userMessage]);
-      
-      console.log('🔍 HACS CONVERSATION DEBUG: Sending message', {
-        messagesCount: messages.length + 1,
-        conversationId,
-        sessionId: sessionIdRef.current
-      });
 
       // Send to HACS intelligent conversation
       const { data, error } = await supabase.functions.invoke('hacs-intelligent-conversation', {
@@ -120,21 +102,8 @@ export const useHACSConversation = (persistentSessionId?: string) => {
         timestamp: new Date().toISOString()
       };
 
-      setMessages(prev => {
-        const newMessages = [...prev, hacsMessage];
-        console.log('🔍 HACS CONVERSATION: Messages updated', {
-          previousCount: prev.length,
-          newCount: newMessages.length,
-          lastMessage: hacsMessage.content.substring(0, 50)
-        });
-        return newMessages;
-      });
-      
-      // CRITICAL FIX: Always update conversation ID from response
-      if (data.conversationId) {
-        setConversationId(data.conversationId);
-        console.log('✅ CONVERSATION ID UPDATED:', data.conversationId);
-      }
+      setMessages(prev => [...prev, hacsMessage]);
+      setConversationId(data.conversationId);
 
       // CRITICAL: Record conversation interaction for intelligence growth
       await recordConversationInteraction(
