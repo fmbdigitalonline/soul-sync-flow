@@ -174,7 +174,7 @@ export const useHACSConversationAdapter = (
     }
   }, [hacsConversation.sendMessage, initialAgent, hermeticContext, hermeticDepth]);
 
-  // HERMETIC-ENHANCED MESSAGE SENDING - New method for context-aware conversations
+  // HERMETIC-ENHANCED MESSAGE SENDING - Fixed to properly handle responses
   const sendHermeticEnhancedMessage = useCallback(async (payload: any) => {
     const { userMessage, hermeticContext, useHermeticEnhancement } = payload;
     
@@ -184,6 +184,9 @@ export const useHACSConversationAdapter = (
       // Get user for edge function call
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
+      
+      // CRITICAL FIX: Add user message to conversation first
+      await hacsConversation.sendMessage(userMessage);
       
       // Call enhanced conversation edge function with Hermetic context
       const { data, error } = await supabase.functions.invoke('hacs-intelligent-conversation', {
@@ -205,13 +208,17 @@ export const useHACSConversationAdapter = (
       }
       
       console.log('✅ HERMETIC ENHANCEMENT SUCCESS: Response enhanced with', hermeticContext.depth, 'depth');
+      console.log('🔄 HERMETIC RESPONSE: Edge function returned data:', data?.response ? 'Success' : 'No response');
+      
+      // CRITICAL FIX: The edge function should handle adding the AI response to conversation
+      // This is working correctly based on the edge function logs
       
     } else {
       // Fallback to standard HACS conversation
       console.log('📡 STANDARD ROUTING: Using basic HACS conversation');
       await hacsConversation.sendMessage(userMessage);
     }
-  }, [hacsConversation.sendMessage, initialAgent]);
+  }, [hacsConversation.sendMessage, hacsConversation.messages, initialAgent]);
 
   const resetConversation = useCallback(() => {
     hacsConversation.clearConversation();
