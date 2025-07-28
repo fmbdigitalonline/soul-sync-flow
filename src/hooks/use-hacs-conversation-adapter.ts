@@ -129,30 +129,33 @@ export const useHACSConversationAdapter = (
         pathwaysValidated: true
       });
 
-      // ORACLE ENHANCEMENT: Use oracle conversation when in companion mode
+      // FUSION: Oracle-enhanced conversation when in companion mode
       if (isCompanionMode) {
-        console.log('🔮 ORACLE MODE: Enhancing conversation with oracle capabilities');
+        console.log('🔮 FUSION: Enhancing conversation with oracle + HACS intelligence');
         
-        // Call the companion oracle function to get enhanced response
+        // Call the companion oracle function with fusion enabled
         const { data: oracleResponse, error: oracleError } = await supabase.functions.invoke('companion-oracle-conversation', {
           body: {
             message: content,
             userId: user.id,
             sessionId,
-            useOracleMode: true
+            useOracleMode: true,
+            enableBackgroundIntelligence: true // Enable HACS intelligence fusion
           }
         });
 
         if (oracleError) {
-          console.error('❌ ORACLE ERROR: Falling back to standard HACS', oracleError);
+          console.error('❌ FUSION ERROR: Oracle call failed, falling back to standard HACS', oracleError);
           await hacsConversation.sendMessage(content);
         } else {
-          console.log('✅ ORACLE SUCCESS: Enhanced response generated', {
+          console.log('✅ FUSION SUCCESS: Oracle + HACS intelligence response generated', {
             oracleStatus: oracleResponse.oracleStatus,
-            semanticChunks: oracleResponse.semanticChunks
+            semanticChunks: oracleResponse.semanticChunks,
+            intelligenceLevel: oracleResponse.intelligenceLevel,
+            fusionEnabled: oracleResponse.fusionEnabled
           });
           
-          // CRITICAL FIX: Store oracle response in HACS conversation system
+          // Store oracle response in HACS conversation system for intelligence tracking
           await hacsConversation.sendOracleMessage(content, oracleResponse);
         }
       } else {
