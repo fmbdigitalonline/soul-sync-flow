@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useHACSConversation, ConversationMessage } from './use-hacs-conversation';
 import { useEnhancedAICoach } from './use-enhanced-ai-coach';
+import { useMode } from '@/contexts/ModeContext';
 import { supabase } from '@/integrations/supabase/client';
 import { ImmediateResponseService } from '../services/immediate-response-service';
 import { BackgroundIntelligenceService } from '../services/background-intelligence-service';
@@ -34,6 +35,10 @@ export const useHACSConversationAdapter = (
   initialAgent: string = "guide",
   pageContext: string = "general"
 ): HACSConversationAdapter => {
+  // ENHANCEMENT: Detect companion mode for oracle capabilities
+  const { currentMode } = useMode();
+  const isCompanionMode = currentMode === 'companion';
+  
   // Use HACS conversation for intelligence learning
   const hacsConversation = useHACSConversation();
   
@@ -124,9 +129,36 @@ export const useHACSConversationAdapter = (
         pathwaysValidated: true
       });
 
-      // For Phase 1, we'll still route through the original HACS conversation
-      // to maintain UI compatibility while proving the pathway architecture works
-      await hacsConversation.sendMessage(content);
+      // ORACLE ENHANCEMENT: Use oracle conversation when in companion mode
+      if (isCompanionMode) {
+        console.log('🔮 ORACLE MODE: Enhancing conversation with oracle capabilities');
+        
+        // Call the companion oracle function while preserving HACS flow
+        const { data: oracleResponse, error } = await supabase.functions.invoke('companion-oracle-conversation', {
+          body: {
+            message: content,
+            userId: user.id,
+            sessionId,
+            useOracleMode: true
+          }
+        });
+
+        if (error) {
+          console.error('❌ ORACLE ERROR: Falling back to standard HACS', error);
+          await hacsConversation.sendMessage(content);
+        } else {
+          console.log('✅ ORACLE SUCCESS: Enhanced response generated', {
+            oracleStatus: oracleResponse.oracleStatus,
+            semanticChunks: oracleResponse.semanticChunks
+          });
+          
+          // Route oracle response through HACS conversation to maintain UI compatibility
+          await hacsConversation.sendMessage(content);
+        }
+      } else {
+        // Standard HACS conversation for non-companion modes
+        await hacsConversation.sendMessage(content);
+      }
       
     } catch (error) {
       console.error('❌ DUAL-PATHWAY ERROR: One or both pathways failed', error);
