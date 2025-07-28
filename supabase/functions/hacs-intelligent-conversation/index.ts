@@ -39,9 +39,12 @@ serve(async (req) => {
 
   try {
     const requestBody = await req.json();
-    console.log('Request received:', { 
+    console.log('🚀 HACS INTELLIGENT CONVERSATION REQUEST:', { 
       action: requestBody.action, 
-      userId: requestBody.userId?.substring(0, 8) + '...' 
+      userId: requestBody.userId?.substring(0, 8) + '...',
+      hasHermeticContext: !!requestBody.hermeticContext,
+      useUnifiedBrain: requestBody.useUnifiedBrain,
+      messageLength: requestBody.userMessage?.length || 0
     });
 
     const { 
@@ -367,18 +370,42 @@ serve(async (req) => {
           messageQuality 
         });
 
-        // Generate question if needed
+        // PILLAR I: Preserve Core Intelligence - Only generate autonomous questions when appropriate
+        // PRINCIPLE #7: Build Transparently - Log the decision process
         if (shouldGenerateQuestion || forceQuestionGeneration) {
-          const questionResult = await generateAutonomousQuestion(
-            supabase,
-            userId,
-            intelligenceData,
-            blueprint,
-            personalityContext,
-            updatedHistory,
-            conversation.id
-          );
-          generatedQuestion = questionResult.question;
+          console.log('🤔 AUTONOMOUS QUESTION EVALUATION:', {
+            shouldGenerate: shouldGenerateQuestion,
+            forceGeneration: forceQuestionGeneration,
+            userMessage: userMessage.substring(0, 50) + '...',
+            intelligenceLevel: intelligenceData.intelligence_level
+          });
+          
+          try {
+            // PRINCIPLE #3: No Fallbacks That Mask Errors - Let autonomous question generation fail visibly
+            const questionResult = await generateAutonomousQuestion(
+              supabase,
+              userId,
+              intelligenceData,
+              blueprint,
+              personalityContext,
+              updatedHistory,
+              conversation.id
+            );
+            generatedQuestion = questionResult.question;
+            console.log('✅ AUTONOMOUS QUESTION GENERATED successfully');
+          } catch (questionError) {
+            // PILLAR II: Surface the gap clearly - Don't mask autonomous question generation errors
+            console.warn('⚠️ AUTONOMOUS QUESTION GENERATION FAILED:', questionError.message);
+            console.log('📊 INTELLIGENCE STATE:', {
+              moduleScores: intelligenceData.module_scores,
+              intelligenceLevel: intelligenceData.intelligence_level,
+              hasData: Object.keys(intelligenceData.module_scores || {}).length > 0
+            });
+            // Continue without autonomous question - this is not a critical failure for user responses
+            generatedQuestion = null;
+          }
+        } else {
+          console.log('ℹ️ AUTONOMOUS QUESTION SKIPPED: Not appropriate for current context');
         }
         break;
 
@@ -439,10 +466,25 @@ async function generateAutonomousQuestion(
   messageHistory: ConversationMessage[],
   conversationId: string
 ) {
-  // Identify the module with the lowest score that needs attention
+  // PILLAR II: Operate on Ground Truth - Validate real data existence before processing
   const moduleScores = intelligenceData.module_scores || {};
-  const lowestModule = Object.entries(moduleScores)
+  const moduleEntries = Object.entries(moduleScores);
+  
+  // PRINCIPLE #3: No Fallbacks That Mask Errors - Surface the gap clearly
+  if (moduleEntries.length === 0) {
+    console.warn('⚠️ TRANSPARENT STATE: No module scores available for autonomous question generation');
+    throw new Error('Cannot generate autonomous question: No intelligence module data available. User needs to interact more to build intelligence baseline.');
+  }
+  
+  // PRINCIPLE #2: No Hardcoded Data - Only proceed with real intelligence data
+  const lowestModule = moduleEntries
     .sort(([,a], [,b]) => (a as number) - (b as number))[0];
+  
+  // PILLAR II: Surface validation errors transparently  
+  if (!lowestModule || lowestModule.length < 2) {
+    console.error('🚨 VALIDATION FAILURE: Invalid module score structure', { moduleScores, lowestModule });
+    throw new Error('Cannot generate autonomous question: Invalid intelligence data structure detected.');
+  }
   
   const targetModule = lowestModule[0];
   const moduleScore = lowestModule[1] as number;

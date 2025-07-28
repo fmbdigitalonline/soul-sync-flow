@@ -15,6 +15,7 @@ import { MobileTogglePanel } from "@/components/ui/mobile-toggle-panel";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { HACSSystemStatus } from "@/components/hacs/HACSSystemStatus";
 import { HermeticValidation } from "@/components/debug/HermeticValidation";
+import { HACSValidationTest } from "@/components/debug/HACSValidationTest";
 import { cn } from "@/lib/utils";
 
 const Coach = () => {
@@ -119,6 +120,9 @@ const Coach = () => {
 
       {/* Hermetic Validation (Development Mode) */}
       <HermeticValidation />
+      
+      {/* HACS Intelligence Fix Validation */}
+      <HACSValidationTest />
 
       <CosmicCard className="p-4">
         <h3 className="font-semibold mb-3 flex items-center">
