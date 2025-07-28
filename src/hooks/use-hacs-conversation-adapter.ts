@@ -185,10 +185,8 @@ export const useHACSConversationAdapter = (
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
       
-      // CRITICAL FIX: Add user message to conversation first
-      await hacsConversation.sendMessage(userMessage);
-      
       // Call enhanced conversation edge function with Hermetic context
+      // CRITICAL FIX: Edge function handles adding messages - no need for duplicate call
       const { data, error } = await supabase.functions.invoke('hacs-intelligent-conversation', {
         body: {
           action: 'respond_to_user',
