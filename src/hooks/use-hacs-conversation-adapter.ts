@@ -35,9 +35,45 @@ export const useHACSConversationAdapter = (
   initialAgent: string = "guide",
   pageContext: string = "general"
 ): HACSConversationAdapter => {
-  // ENHANCEMENT: Detect companion mode for oracle capabilities
-  const { currentMode } = useMode();
-  const isCompanionMode = currentMode === 'companion';
+  // FUSION FIX: Use ModeContext to determine correct agent mode
+  const { currentMode, modeConfig } = useMode();
+  
+  // Map ModeContext to agent mode correctly
+  const getAgentModeFromContext = (): string => {
+    if (currentMode === 'companion') return 'companion';
+    if (currentMode === 'productivity') return 'coach';
+    if (currentMode === 'growth') return 'guide';
+    
+    // FUSION FIX: For index route with blend agent, use companion mode
+    if (currentMode === 'neutral' && modeConfig.agentType === 'blend') {
+      return 'companion'; // This enables oracle functionality on index route
+    }
+    
+    return modeConfig.agentType; // Fallback to configured agent type
+  };
+  
+  // FUSION FIX: Enhanced companion mode detection
+  // Check multiple sources to determine if we should use companion/oracle mode
+  const shouldUseCompanionMode = (): boolean => {
+    // Direct companion mode setting
+    if (currentMode === 'companion') return true;
+    
+    // Check if we're on index route with 'blend' agent type (default companion behavior)
+    if (currentMode === 'neutral' && modeConfig.agentType === 'blend') {
+      // Index route with blend agent = companion functionality
+      return true;
+    }
+    
+    return false;
+  };
+  
+  const isCompanionMode = shouldUseCompanionMode();
+  console.log('🔮 FUSION: Enhanced mode detection', { 
+    currentMode, 
+    agentType: modeConfig.agentType,
+    shouldUseCompanion: isCompanionMode,
+    routePath: window.location.pathname
+  });
   
   // Use HACS conversation for intelligence learning
   const hacsConversation = useHACSConversation();
@@ -78,11 +114,17 @@ export const useHACSConversationAdapter = (
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
       
-      // CRITICAL FIX: Use persistent session ID instead of regenerating
+      // FUSION FIX: Use context-aware agent mode instead of hardcoded 'guide'
       const sessionId = getOrCreateSessionId();
-      const agentMode = agentOverride || initialAgent;
+      const agentMode = agentOverride || getAgentModeFromContext();
 
-      console.log('🔑 SESSION: Using persistent session ID:', sessionId);
+      console.log('🔮 FUSION: Agent mode determination', { 
+        currentMode, 
+        isCompanionMode, 
+        agentOverride, 
+        finalAgentMode: agentMode,
+        sessionId 
+      });
 
       // ============================================================
       // PATHWAY 1: IMMEDIATE RESPONSE (Target: <200ms)
