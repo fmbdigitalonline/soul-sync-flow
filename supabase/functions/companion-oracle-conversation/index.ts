@@ -6,6 +6,30 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Utility function for calculating cosine similarity between embeddings
+function calculateCosineSimilarity(vecA: number[], vecB: number[]): number {
+  if (vecA.length !== vecB.length) {
+    throw new Error('Vectors must have the same length for cosine similarity')
+  }
+  
+  let dotProduct = 0
+  let normA = 0
+  let normB = 0
+  
+  for (let i = 0; i < vecA.length; i++) {
+    dotProduct += vecA[i] * vecB[i]
+    normA += vecA[i] * vecA[i]
+    normB += vecB[i] * vecB[i]
+  }
+  
+  // Avoid division by zero
+  if (normA === 0 || normB === 0) {
+    return 0
+  }
+  
+  return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB))
+}
+
 // FUSION: Background task for HACS intelligence integration
 async function fuseWithHACSIntelligence(
   userMessage: string, 
@@ -113,35 +137,109 @@ serve(async (req) => {
         .limit(3)
 
       if (reports && reports.length > 0) {
-        // Extract relevant sections based on message keywords
-        const messageKeywords = message.toLowerCase().split(' ')
+        console.log(`🔮 ORACLE RAG: Starting semantic retrieval for message: "${message.substring(0, 50)}..."`)
         
-        for (const report of reports) {
-          if (report.report_content) {
-            const sections = report.report_content.split('\n\n')
-            for (const section of sections) {
-              const sectionLower = section.toLowerCase()
-              const relevanceScore = messageKeywords.filter(keyword => 
-                keyword.length > 3 && sectionLower.includes(keyword)
-              ).length
+        try {
+          // Generate embedding for the user's message
+          const embeddingResponse = await supabase.functions.invoke('openai-embeddings', {
+            body: { query: message }
+          })
+          
+          if (embeddingResponse.error) {
+            console.error('❌ ORACLE RAG: Embedding generation failed:', embeddingResponse.error)
+            throw new Error('Failed to generate message embedding')
+          }
+          
+          const messageEmbedding = embeddingResponse.data.embedding
+          console.log(`✅ ORACLE RAG: Generated embedding with ${messageEmbedding.length} dimensions`)
+          
+          // For each personality report, chunk and find semantically similar content
+          for (const report of reports) {
+            if (report.report_content) {
+              // Split report into semantic chunks (paragraphs or larger sections)
+              const content = typeof report.report_content === 'string' 
+                ? report.report_content 
+                : JSON.stringify(report.report_content)
               
-              if (relevanceScore > 0 && section.length > 100) {
-                semanticChunks.push({
-                  content: section,
-                  relevance: relevanceScore,
-                  reportType: report.report_type,
-                  metadata: { created: report.created_at }
+              const chunks = content.split(/\n\s*\n/).filter(chunk => chunk.trim().length > 200)
+              console.log(`📊 ORACLE RAG: Processing ${chunks.length} chunks from ${report.report_type} report`)
+              
+              // Generate embeddings for each chunk and calculate similarity
+              for (const [index, chunk] of chunks.entries()) {
+                const chunkEmbeddingResponse = await supabase.functions.invoke('openai-embeddings', {
+                  body: { query: chunk }
                 })
+                
+                if (!chunkEmbeddingResponse.error && chunkEmbeddingResponse.data?.embedding) {
+                  const chunkEmbedding = chunkEmbeddingResponse.data.embedding
+                  
+                  // Calculate cosine similarity
+                  const similarity = calculateCosineSimilarity(messageEmbedding, chunkEmbedding)
+                  
+                  // Only include highly relevant chunks (similarity > 0.7)
+                  if (similarity > 0.7) {
+                    semanticChunks.push({
+                      content: chunk,
+                      relevance: similarity,
+                      reportType: report.report_type,
+                      metadata: { 
+                        created: report.created_at,
+                        chunkIndex: index,
+                        similarity: similarity
+                      }
+                    })
+                    console.log(`🎯 ORACLE RAG: High relevance chunk found (similarity: ${similarity.toFixed(3)})`)
+                  }
+                }
               }
             }
           }
+          
+          // Sort by semantic relevance and take top chunks
+          semanticChunks.sort((a, b) => b.relevance - a.relevance)
+          semanticChunks = semanticChunks.slice(0, 3) // Top 3 most semantically relevant
+          
+          oracleStatus = semanticChunks.length > 0 ? 'full_oracle' : 'developing_oracle'
+          console.log(`🧠 ORACLE RAG: Retrieved ${semanticChunks.length} semantically relevant chunks`)
+          
+          if (semanticChunks.length > 0) {
+            console.log(`🔮 ORACLE RAG: Top relevance scores: ${semanticChunks.map(c => c.relevance.toFixed(3)).join(', ')}`)
+          }
+          
+        } catch (error) {
+          console.error('❌ ORACLE RAG: Semantic retrieval failed, falling back to keyword search:', error)
+          // Fallback to original keyword search if RAG fails
+          const messageKeywords = message.toLowerCase().split(' ')
+          
+          for (const report of reports) {
+            if (report.report_content) {
+              const content = typeof report.report_content === 'string' 
+                ? report.report_content 
+                : JSON.stringify(report.report_content)
+              const sections = content.split('\n\n')
+              
+              for (const section of sections) {
+                const sectionLower = section.toLowerCase()
+                const relevanceScore = messageKeywords.filter(keyword => 
+                  keyword.length > 3 && sectionLower.includes(keyword)
+                ).length
+                
+                if (relevanceScore > 0 && section.length > 100) {
+                  semanticChunks.push({
+                    content: section,
+                    relevance: relevanceScore,
+                    reportType: report.report_type,
+                    metadata: { created: report.created_at, fallback: true }
+                  })
+                }
+              }
+            }
+          }
+          
+          semanticChunks.sort((a, b) => b.relevance - a.relevance)
+          semanticChunks = semanticChunks.slice(0, 5)
+          oracleStatus = semanticChunks.length > 0 ? 'developing_oracle' : 'initializing'
         }
-        
-        semanticChunks.sort((a, b) => b.relevance - a.relevance)
-        semanticChunks = semanticChunks.slice(0, 5) // Top 5 most relevant
-        
-        oracleStatus = semanticChunks.length > 0 ? 'full_oracle' : 'developing_oracle'
-        console.log(`🧠 Oracle Consciousness: ${semanticChunks.length} semantic chunks retrieved`)
       }
     }
 
