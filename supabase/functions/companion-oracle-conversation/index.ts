@@ -137,10 +137,10 @@ serve(async (req) => {
         .limit(3)
 
       if (reports && reports.length > 0) {
-        console.log(`🔮 ORACLE RAG: Starting text-embedding semantic retrieval for message: "${message.substring(0, 50)}..."`)
+        console.log(`🔮 ORACLE RAG: Starting optimized vector-based semantic retrieval for message: "${message.substring(0, 50)}..."`)
         
         try {
-          // Generate embedding for the user's message
+          // Generate embedding for the user's message (single API call)
           const embeddingResponse = await supabase.functions.invoke('openai-embeddings', {
             body: { query: message }
           })
@@ -153,86 +153,61 @@ serve(async (req) => {
           const messageEmbedding = embeddingResponse.data.embedding
           console.log(`✅ ORACLE RAG: Generated query embedding with ${messageEmbedding.length} dimensions`)
           
-          // Extract and embed text chunks from personality reports for semantic search
-          const textChunks = []
-          
-          for (const report of reports) {
-            if (report.report_content) {
-              const content = typeof report.report_content === 'string' 
-                ? report.report_content 
-                : JSON.stringify(report.report_content)
-              
-              // Split content into semantic chunks (paragraphs/sections)
-              const sections = content.split(/\n\s*\n/).filter(section => 
-                section.trim().length > 100 && section.trim().length < 2000
-              )
-              
-              for (const section of sections) {
-                textChunks.push({
-                  content: section.trim(),
-                  reportType: report.report_type || 'personality',
-                  reportId: report.id,
-                  created: report.created_at
-                })
-              }
+          // Use optimized vector similarity search on pre-computed embeddings
+          const { data: matchingChunks, error: searchError } = await supabase.rpc(
+            'match_blueprint_chunks',
+            {
+              query_embedding: messageEmbedding,
+              query_user_id: userId,
+              match_threshold: 0.3, // Lower threshold for more context
+              match_count: 5
             }
+          )
+          
+          if (searchError) {
+            console.error('❌ ORACLE RAG: Vector similarity search failed:', searchError)
+            throw new Error('Vector similarity search failed')
           }
           
-          console.log(`📄 ORACLE RAG: Extracted ${textChunks.length} text chunks from ${reports.length} reports`)
-          
-          // Generate embeddings for text chunks and calculate similarities
-          const chunkSimilarities = []
-          
-          for (const chunk of textChunks.slice(0, 20)) { // Limit to top 20 chunks for performance
-            try {
-              const chunkEmbeddingResponse = await supabase.functions.invoke('openai-embeddings', {
-                body: { query: chunk.content.substring(0, 1000) } // Limit chunk size for embedding
-              })
-              
-              if (!chunkEmbeddingResponse.error && chunkEmbeddingResponse.data?.embedding) {
-                const similarity = calculateCosineSimilarity(messageEmbedding, chunkEmbeddingResponse.data.embedding)
-                
-                if (similarity > 0.3) { // Higher threshold for text similarity
-                  chunkSimilarities.push({
-                    ...chunk,
-                    similarity,
-                    embedding: chunkEmbeddingResponse.data.embedding
-                  })
-                }
-              }
-            } catch (embeddingError) {
-              console.log('⚠️ ORACLE RAG: Chunk embedding failed, skipping:', embeddingError.message)
-            }
-          }
-          
-          // Sort by semantic similarity and select top chunks
-          chunkSimilarities.sort((a, b) => b.similarity - a.similarity)
-          const topChunks = chunkSimilarities.slice(0, 4)
-          
-          console.log(`🎯 ORACLE RAG: Text similarities: ${topChunks.map(c => c.similarity.toFixed(3)).join(', ')}`)
-          
-          if (topChunks.length > 0) {
-            semanticChunks = topChunks.map(chunk => ({
-              content: chunk.content,
+          if (matchingChunks && matchingChunks.length > 0) {
+            semanticChunks = matchingChunks.map((chunk: any) => ({
+              content: chunk.chunk_content,
               relevance: chunk.similarity,
-              reportType: chunk.reportType,
+              reportType: 'personality',
               metadata: {
-                created: chunk.created,
                 semanticSimilarity: chunk.similarity,
-                reportId: chunk.reportId,
-                textEmbedding: true
+                textEmbedding: true,
+                chunkId: chunk.id,
+                optimizedSearch: true
               }
             }))
             
             oracleStatus = 'full_oracle'
-            console.log(`🧠 ORACLE RAG: Retrieved ${semanticChunks.length} text-embedded semantic chunks`)
+            console.log(`🎯 ORACLE RAG: Retrieved ${semanticChunks.length} pre-computed semantic chunks with similarities: ${semanticChunks.map(c => c.relevance.toFixed(3)).join(', ')}`)
           } else {
-            console.log('⚠️ ORACLE RAG: No semantically similar text chunks found')
-            oracleStatus = 'developing_oracle'
+            console.log('📭 ORACLE RAG: No semantically similar pre-computed chunks found')
+            
+            // Check if user has any embeddings at all
+            const { data: embeddingCheck, error: checkError } = await supabase
+              .from('blueprint_text_embeddings')
+              .select('id')
+              .eq('user_id', userId)
+              .limit(1)
+              
+            if (checkError) {
+              console.error('❌ Error checking for embeddings:', checkError)
+            } else if (!embeddingCheck || embeddingCheck.length === 0) {
+              console.log('⚠️ ORACLE DIAGNOSIS: No pre-computed embeddings found for user. Need to run offline processing first.')
+              // Fallback to processing personality reports immediately (emergency mode)
+              throw new Error('No pre-computed embeddings found - falling back to emergency processing')
+            } else {
+              console.log('⚠️ ORACLE RAG: Embeddings exist but no matches above threshold')
+              oracleStatus = 'developing_oracle'
+            }
           }
           
         } catch (error) {
-          console.error('❌ ORACLE RAG: Semantic retrieval failed, falling back to keyword search:', error)
+          console.error('❌ ORACLE RAG: Optimized search failed, falling back to keyword search:', error)
           // Fallback to original keyword search if RAG fails
           const messageKeywords = message.toLowerCase().split(' ')
           
