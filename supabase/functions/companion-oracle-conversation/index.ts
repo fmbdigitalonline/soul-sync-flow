@@ -21,8 +21,9 @@ async function fuseWithHACSIntelligence(
     const { data: brainResult, error: brainError } = await supabase.functions.invoke('unified-brain-processor', {
       body: {
         userId,
-        userMessage,
+        message: userMessage,  // FUSION FIX: Use 'message' parameter expected by brain processor
         sessionId,
+        agentMode: 'companion', // FUSION FIX: Add required agentMode parameter
         agentResponse: oracleResponse.response,
         oracleMetadata: {
           personalityInsights: oracleResponse.semanticChunks,
