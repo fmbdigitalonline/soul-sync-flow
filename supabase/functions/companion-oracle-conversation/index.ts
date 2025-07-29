@@ -137,10 +137,10 @@ serve(async (req) => {
         .limit(3)
 
       if (reports && reports.length > 0) {
-        console.log(`🔮 ORACLE RAG: Starting semantic retrieval for message: "${message.substring(0, 50)}..."`)
+        console.log(`🔮 ORACLE RAG: Starting text-embedding semantic retrieval for message: "${message.substring(0, 50)}..."`)
         
         try {
-          // Generate embedding for the user's message (single API call)
+          // Generate embedding for the user's message
           const embeddingResponse = await supabase.functions.invoke('openai-embeddings', {
             body: { query: message }
           })
@@ -153,78 +153,81 @@ serve(async (req) => {
           const messageEmbedding = embeddingResponse.data.embedding
           console.log(`✅ ORACLE RAG: Generated query embedding with ${messageEmbedding.length} dimensions`)
           
-          // Query pre-computed personality fusion vectors 
-          const { data: vectorData, error: vectorError } = await supabase
-            .from('personality_fusion_vectors')
-            .select('*')
-            .eq('user_id', userId)
+          // Extract and embed text chunks from personality reports for semantic search
+          const textChunks = []
           
-          if (vectorError) {
-            console.error('❌ ORACLE RAG: Failed to fetch personality vectors:', vectorError)
-            throw new Error(`Vector fetch failed: ${vectorError.message}`)
-          }
-          
-          if (!vectorData || vectorData.length === 0) {
-            console.log('⚠️ ORACLE RAG: No personality vectors found for user')
-            throw new Error('No personality vectors available')
-          }
-          
-          console.log(`📊 ORACLE RAG: Found ${vectorData.length} pre-computed personality fusion vectors`)
-          
-          // Calculate similarity against personality fusion vectors
-          const vectorSimilarities = vectorData.map(vector => {
-            const similarity = calculateCosineSimilarity(messageEmbedding, vector.fused_vector)
-            return {
-              similarity,
-              vector,
-              metadata: vector.fusion_metadata
+          for (const report of reports) {
+            if (report.report_content) {
+              const content = typeof report.report_content === 'string' 
+                ? report.report_content 
+                : JSON.stringify(report.report_content)
+              
+              // Split content into semantic chunks (paragraphs/sections)
+              const sections = content.split(/\n\s*\n/).filter(section => 
+                section.trim().length > 100 && section.trim().length < 2000
+              )
+              
+              for (const section of sections) {
+                textChunks.push({
+                  content: section.trim(),
+                  reportType: report.report_type || 'personality',
+                  reportId: report.id,
+                  created: report.created_at
+                })
+              }
             }
-          }).filter(item => item.similarity > 0.2) // Lower threshold for fusion vectors
+          }
           
-          // Sort by similarity 
-          vectorSimilarities.sort((a, b) => b.similarity - a.similarity)
-          console.log(`🎯 ORACLE RAG: Vector similarities: ${vectorSimilarities.map(v => v.similarity.toFixed(3)).join(', ')}`)
+          console.log(`📄 ORACLE RAG: Extracted ${textChunks.length} text chunks from ${reports.length} reports`)
           
-          // Use vector-guided extraction from personality reports
-          if (vectorSimilarities.length > 0) {
-            const avgSimilarity = vectorSimilarities.reduce((sum, v) => sum + v.similarity, 0) / vectorSimilarities.length
-            console.log(`📈 ORACLE RAG: Average vector similarity: ${avgSimilarity.toFixed(3)}`)
-            
-            // Extract relevant content from personality reports guided by vector matches
-            for (const report of reports) {
-              if (report.report_content) {
-                const content = typeof report.report_content === 'string' 
-                  ? report.report_content 
-                  : JSON.stringify(report.report_content)
+          // Generate embeddings for text chunks and calculate similarities
+          const chunkSimilarities = []
+          
+          for (const chunk of textChunks.slice(0, 20)) { // Limit to top 20 chunks for performance
+            try {
+              const chunkEmbeddingResponse = await supabase.functions.invoke('openai-embeddings', {
+                body: { query: chunk.content.substring(0, 1000) } // Limit chunk size for embedding
+              })
+              
+              if (!chunkEmbeddingResponse.error && chunkEmbeddingResponse.data?.embedding) {
+                const similarity = calculateCosineSimilarity(messageEmbedding, chunkEmbeddingResponse.data.embedding)
                 
-                // Extract strategic chunks based on vector-guided relevance
-                const sections = content.split(/\n\s*\n/).filter(section => section.trim().length > 150)
-                const selectedSections = sections.slice(0, Math.min(4, Math.ceil(sections.length * 0.4)))
-                
-                for (const section of selectedSections) {
-                  semanticChunks.push({
-                    content: section.trim(),
-                    relevance: avgSimilarity,
-                    reportType: report.report_type || 'personality',
-                    metadata: { 
-                      created: report.created_at,
-                      vectorGuided: true,
-                      avgVectorSimilarity: avgSimilarity,
-                      vectorCount: vectorSimilarities.length
-                    }
+                if (similarity > 0.3) { // Higher threshold for text similarity
+                  chunkSimilarities.push({
+                    ...chunk,
+                    similarity,
+                    embedding: chunkEmbeddingResponse.data.embedding
                   })
                 }
               }
+            } catch (embeddingError) {
+              console.log('⚠️ ORACLE RAG: Chunk embedding failed, skipping:', embeddingError.message)
             }
-            
-            // Sort and limit chunks
-            semanticChunks.sort((a, b) => b.relevance - a.relevance)
-            semanticChunks = semanticChunks.slice(0, 4) // Top 4 most relevant
+          }
+          
+          // Sort by semantic similarity and select top chunks
+          chunkSimilarities.sort((a, b) => b.similarity - a.similarity)
+          const topChunks = chunkSimilarities.slice(0, 4)
+          
+          console.log(`🎯 ORACLE RAG: Text similarities: ${topChunks.map(c => c.similarity.toFixed(3)).join(', ')}`)
+          
+          if (topChunks.length > 0) {
+            semanticChunks = topChunks.map(chunk => ({
+              content: chunk.content,
+              relevance: chunk.similarity,
+              reportType: chunk.reportType,
+              metadata: {
+                created: chunk.created,
+                semanticSimilarity: chunk.similarity,
+                reportId: chunk.reportId,
+                textEmbedding: true
+              }
+            }))
             
             oracleStatus = 'full_oracle'
-            console.log(`🧠 ORACLE RAG: Retrieved ${semanticChunks.length} vector-guided semantic chunks`)
+            console.log(`🧠 ORACLE RAG: Retrieved ${semanticChunks.length} text-embedded semantic chunks`)
           } else {
-            console.log('⚠️ ORACLE RAG: No similar personality vectors found')
+            console.log('⚠️ ORACLE RAG: No semantically similar text chunks found')
             oracleStatus = 'developing_oracle'
           }
           
