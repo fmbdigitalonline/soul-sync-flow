@@ -332,6 +332,58 @@ export const useHACSConversation = () => {
     }
   }, [user, conversationId, currentQuestion]);
 
+  // NEW: Send immediate message with temporary content (for Oracle channeling)
+  const sendImmediateMessage = useCallback(async (userContent: string, temporaryResponse: string) => {
+    if (!user || !userContent.trim()) return;
+
+    setIsLoading(true);
+    setIsTyping(true);
+
+    // Add user message immediately
+    const userMessage: ConversationMessage = {
+      id: `user_${Date.now()}`,
+      role: 'user',
+      content: userContent.trim(),
+      timestamp: new Date().toISOString()
+    };
+
+    // Add temporary response message
+    const tempMessage: ConversationMessage = {
+      id: `temp_${Date.now()}`,
+      role: 'hacs',
+      content: temporaryResponse,
+      timestamp: new Date().toISOString(),
+      module: 'ORACLE_CHANNELING'
+    };
+
+    setMessages(prev => [...prev, userMessage, tempMessage]);
+  }, [user]);
+
+  // NEW: Replace the last message content (for Oracle response replacement)
+  const replaceLastMessage = useCallback(async (newContent: string) => {
+    setMessages(prev => {
+      if (prev.length === 0) return prev;
+      
+      const lastMessage = prev[prev.length - 1];
+      const updatedMessage = {
+        ...lastMessage,
+        content: newContent,
+        module: 'COMPANION_ORACLE',
+        timestamp: new Date().toISOString()
+      };
+      
+      const newMessages = [...prev.slice(0, -1), updatedMessage];
+      
+      // Save conversation with Oracle response
+      saveConversation(newMessages);
+      
+      return newMessages;
+    });
+
+    setIsLoading(false);
+    setIsTyping(false);
+  }, [saveConversation]);
+
   const clearConversation = useCallback(() => {
     setMessages([]);
     setConversationId(null);
@@ -346,6 +398,8 @@ export const useHACSConversation = () => {
     currentQuestion,
     sendMessage,
     sendOracleMessage,
+    sendImmediateMessage,
+    replaceLastMessage,
     generateQuestion,
     provideFeedback,
     clearConversation

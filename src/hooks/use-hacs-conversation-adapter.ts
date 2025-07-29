@@ -126,81 +126,99 @@ export const useHACSConversationAdapter = (
         sessionId 
       });
 
-      // ============================================================
-      // PATHWAY 1: IMMEDIATE RESPONSE (Target: <200ms)
-      // ============================================================
-      console.log('🟢 PATHWAY 1: Starting immediate response generation');
-      
-      // INTELLIGENCE RETRIEVAL: Get accumulated intelligence from previous background processing
-      console.log('🧠 RETRIEVAL: Fetching accumulated intelligence from previous cycles');
-      const accumulatedIntelligence = await BackgroundIntelligenceService.getAccumulatedIntelligence(
-        user.id,
-        sessionId
-      );
-      
-      const immediateResponsePromise = ImmediateResponseService.generateImmediateResponse(
-        content,
-        user.id,
-        agentMode,
-        accumulatedIntelligence // INJECTION: Pass deep context to immediate response
-      );
-
-      // ============================================================
-      // PATHWAY 2: BACKGROUND INTELLIGENCE (Full Pipeline)
-      // ============================================================
-      console.log('🔵 PATHWAY 2: Starting background intelligence processing');
-      
-      const backgroundProcessingPromise = BackgroundIntelligenceService.processInBackground(
-        content,
-        user.id,
-        sessionId,
-        agentMode
-      );
-
-      // ============================================================
-      // PATHWAY VALIDATION: Prove both pathways are called
-      // ============================================================
-      const [immediateResponse, backgroundResult] = await Promise.all([
-        immediateResponsePromise,
-        backgroundProcessingPromise
-      ]);
-
-      console.log('✅ DUAL-PATHWAY VALIDATION: Both pathways completed', {
-        immediateProcessingTime: immediateResponse.processingTime,
-        backgroundProcessingId: backgroundResult.processingId,
-        pathwaysValidated: true
-      });
-
-      // FUSION: Oracle-enhanced conversation when in companion mode
+      // ORACLE-FIRST FLOW: Prioritize Oracle response in companion mode
       if (isCompanionMode) {
-        console.log('🔮 FUSION: Enhancing conversation with oracle + HACS intelligence');
+        console.log('🔮 ORACLE-FIRST: Starting Oracle-prioritized conversation flow');
         
-        // Call the companion oracle function with fusion enabled
-        const { data: oracleResponse, error: oracleError } = await supabase.functions.invoke('companion-oracle-conversation', {
-          body: {
-            message: content,
-            userId: user.id,
-            sessionId,
-            useOracleMode: true,
-            enableBackgroundIntelligence: true // Enable HACS intelligence fusion
-          }
-        });
+        // Show temporary loading state for Oracle channeling
+        await hacsConversation.sendImmediateMessage(content, '✨ Channeling Oracle wisdom...');
+        
+        try {
+          // Call the companion oracle function with fusion enabled
+          const { data: oracleResponse, error: oracleError } = await supabase.functions.invoke('companion-oracle-conversation', {
+            body: {
+              message: content,
+              userId: user.id,
+              sessionId,
+              useOracleMode: true,
+              enableBackgroundIntelligence: true
+            }
+          });
 
-        if (oracleError) {
-          console.error('❌ FUSION ERROR: Oracle call failed, falling back to standard HACS', oracleError);
-          await hacsConversation.sendMessage(content);
-        } else {
-          console.log('✅ FUSION SUCCESS: Oracle + HACS intelligence response generated', {
+          if (oracleError) {
+            throw new Error(`Oracle call failed: ${oracleError.message}`);
+          }
+
+          console.log('✅ ORACLE-FIRST SUCCESS: Oracle response generated', {
             oracleStatus: oracleResponse.oracleStatus,
             semanticChunks: oracleResponse.semanticChunks,
             intelligenceLevel: oracleResponse.intelligenceLevel,
-            fusionEnabled: oracleResponse.fusionEnabled
+            responseLength: oracleResponse.response?.length || 0
           });
           
-          // Store oracle response in HACS conversation system for intelligence tracking
-          await hacsConversation.sendOracleMessage(content, oracleResponse);
+          // Replace loading message with Oracle response
+          await hacsConversation.replaceLastMessage(oracleResponse.response);
+          
+          // Background processing for future intelligence
+          BackgroundIntelligenceService.processInBackground(
+            content,
+            user.id,
+            sessionId,
+            agentMode
+          ).catch(console.error);
+          
+        } catch (error) {
+          console.error('❌ ORACLE-FIRST ERROR: Falling back to immediate response', error);
+          
+          // Fallback: Get immediate response and replace loading message
+          const accumulatedIntelligence = await BackgroundIntelligenceService.getAccumulatedIntelligence(
+            user.id,
+            sessionId
+          );
+          
+          const immediateResponse = await ImmediateResponseService.generateImmediateResponse(
+            content,
+            user.id,
+            agentMode,
+            accumulatedIntelligence
+          );
+          
+          await hacsConversation.replaceLastMessage(immediateResponse.content);
         }
+        
       } else {
+        // STANDARD FLOW: Dual-pathway for non-companion modes
+        console.log('🟢 STANDARD FLOW: Starting dual-pathway for non-companion mode');
+        
+        // Get accumulated intelligence from previous processing
+        const accumulatedIntelligence = await BackgroundIntelligenceService.getAccumulatedIntelligence(
+          user.id,
+          sessionId
+        );
+        
+        const immediateResponsePromise = ImmediateResponseService.generateImmediateResponse(
+          content,
+          user.id,
+          agentMode,
+          accumulatedIntelligence
+        );
+
+        const backgroundProcessingPromise = BackgroundIntelligenceService.processInBackground(
+          content,
+          user.id,
+          sessionId,
+          agentMode
+        );
+
+        const [immediateResponse] = await Promise.all([
+          immediateResponsePromise,
+          backgroundProcessingPromise
+        ]);
+
+        console.log('✅ STANDARD FLOW: Dual-pathway completed', {
+          immediateProcessingTime: immediateResponse.processingTime
+        });
+
         // Standard HACS conversation for non-companion modes
         await hacsConversation.sendMessage(content);
       }
