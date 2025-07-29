@@ -92,7 +92,7 @@ serve(async (req) => {
     if (blueprint?.blueprint) {
       personalityContext = {
         name: blueprint.blueprint.user_meta?.preferred_name || 'Seeker',
-        mbti: blueprint.blueprint.cognition_mbti?.type || 'Unknown',
+        mbti: blueprint.blueprint.user_meta?.personality?.likelyType || blueprint.blueprint.cognition_mbti?.type || 'Unknown',
         hdType: blueprint.blueprint.energy_strategy_human_design?.type || 'Unknown',
         sunSign: blueprint.blueprint.archetype_western?.sun_sign || 'Unknown'
       }

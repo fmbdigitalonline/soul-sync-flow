@@ -50,7 +50,7 @@ export class ImmediateResponseService {
       if (blueprint?.blueprint && !blueprintError) {
         // Use MBTI data for personalized immediate response
         const blueprintData = blueprint.blueprint as any;
-        const mbtiType = blueprintData?.cognition_mbti?.type || 'Unknown';
+        const mbtiType = blueprintData?.user_meta?.personality?.likelyType || blueprintData?.cognition_mbti?.type || 'Unknown';
         const userName = blueprintData?.user_meta?.preferred_name || 'there';
         
         responseContent = this.generatePersonalizedResponse(content, mbtiType, userName, agentMode, accumulatedIntelligence);
