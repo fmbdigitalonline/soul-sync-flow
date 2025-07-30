@@ -97,7 +97,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
                         <TypewriterText 
                           text={message.content} 
                           isStreaming={false}
-                          speed={64}
+                          speed={45}
                         />
                       ) : (
                         message.content
