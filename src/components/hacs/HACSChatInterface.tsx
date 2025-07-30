@@ -19,7 +19,15 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
   onSendMessage,
 }) => {
   const [inputValue, setInputValue] = useState("");
+  const [initialMessageCount, setInitialMessageCount] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Track initial message count to avoid animating historical messages
+  useEffect(() => {
+    if (initialMessageCount === 0 && messages.length > 0) {
+      setInitialMessageCount(messages.length);
+    }
+  }, [messages.length, initialMessageCount]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -63,41 +71,48 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
             </div>
           )}
           
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={cn(
-                "w-full py-2",
-                message.role === "user" ? "text-right" : "text-left"
-              )}
-            >
-              {message.role === "user" ? (
-                <div className="inline-block bg-primary text-primary-foreground rounded-lg p-3 max-w-[85%] sm:max-w-[70%]">
-                  <p className="text-sm">{message.content}</p>
-                  {message.isQuestion && (
-                    <div className="mt-2 text-xs opacity-70">
-                      Question from: {message.module}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="w-full">
-                  <div className="text-sm leading-relaxed text-muted-foreground">
-                    <TypewriterText 
-                      text={message.content} 
-                      isStreaming={false}
-                      speed={85}
-                    />
+          {messages.map((message, index) => {
+            const isNewMessage = index >= initialMessageCount;
+            return (
+              <div
+                key={message.id}
+                className={cn(
+                  "w-full py-2",
+                  message.role === "user" ? "text-right" : "text-left"
+                )}
+              >
+                {message.role === "user" ? (
+                  <div className="inline-block bg-primary text-primary-foreground rounded-lg p-3 max-w-[85%] sm:max-w-[70%]">
+                    <p className="text-sm">{message.content}</p>
+                    {message.isQuestion && (
+                      <div className="mt-2 text-xs opacity-70">
+                        Question from: {message.module}
+                      </div>
+                    )}
                   </div>
-                  {message.isQuestion && (
-                    <div className="mt-2 text-xs text-muted-foreground opacity-70">
-                      Question from: {message.module}
+                ) : (
+                  <div className="w-full">
+                    <div className="text-sm leading-relaxed text-muted-foreground">
+                      {isNewMessage ? (
+                        <TypewriterText 
+                          text={message.content} 
+                          isStreaming={false}
+                          speed={85}
+                        />
+                      ) : (
+                        message.content
+                      )}
                     </div>
-                  )}
-                </div>
-              )}
-            </div>
-          ))}
+                    {message.isQuestion && (
+                      <div className="mt-2 text-xs text-muted-foreground opacity-70">
+                        Question from: {message.module}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
           
           {isLoading && (
             <div className="w-full py-2 text-left">
