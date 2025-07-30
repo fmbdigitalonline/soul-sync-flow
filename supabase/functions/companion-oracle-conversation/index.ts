@@ -122,133 +122,288 @@ serve(async (req) => {
       }
     }
 
-    // Semantic chunking: Extract relevant personality report sections if oracle mode enabled
+    // ORACLE PIPELINE: Extract relevant personality sections with full debugging
     let semanticChunks = []
     let oracleStatus = 'initializing'
     
     if (useOracleMode && personalityContext) {
-      console.log('🔍 Retrieving personality reports for oracle consciousness')
+      console.log('🔮 ORACLE PIPELINE: Starting semantic retrieval with personality context:', {
+        userName: personalityContext.name,
+        mbtiType: personalityContext.mbti,
+        hdType: personalityContext.hdType,
+        sunSign: personalityContext.sunSign
+      });
       
-      const { data: reports } = await supabase
-        .from('personality_reports')
-        .select('*')
+      // STEP 1: Check for pre-computed embeddings first
+      console.log('🔮 STEP 1: Checking for pre-computed embeddings...');
+      const { data: embeddingCheck, error: embeddingError } = await supabase
+        .from('blueprint_text_embeddings')
+        .select('id, chunk_content, created_at')
         .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(3)
+        .limit(10);
+      
+      console.log('🔮 STEP 1 RESULT: Embedding availability check:', {
+        embeddingsFound: embeddingCheck?.length || 0,
+        embeddingError: embeddingError?.message || null,
+        sampleIds: embeddingCheck?.slice(0, 3).map(e => e.id) || [],
+        oldestEmbedding: embeddingCheck?.[embeddingCheck.length - 1]?.created_at || null
+      });
 
-      if (reports && reports.length > 0) {
-        console.log(`🔮 ORACLE RAG: Starting optimized vector-based semantic retrieval for message: "${message.substring(0, 50)}..."`)
+      if (embeddingCheck && embeddingCheck.length > 0) {
+        console.log('🔮 STEP 2: Pre-computed embeddings found, proceeding with vector search');
         
         try {
-          // Generate embedding for the user's message (single API call)
-          console.log('🔧 ORACLE RAG: Calling openai-embeddings function...')
+          // STEP 3: Generate embedding for user's message
+          console.log('🔮 STEP 3: Generating embedding for message:', {
+            messageText: message.substring(0, 100) + (message.length > 100 ? '...' : ''),
+            messageLength: message.length,
+            timestamp: new Date().toISOString()
+          });
+
+          const embeddingStartTime = Date.now();
           const embeddingResponse = await supabase.functions.invoke('openai-embeddings', {
             body: { query: message }
-          })
-          
-          console.log('🔧 ORACLE RAG: Embedding response received:', { 
-            hasError: !!embeddingResponse.error, 
-            hasData: !!embeddingResponse.data,
-            status: embeddingResponse.status 
-          })
+          });
+          const embeddingDuration = Date.now() - embeddingStartTime;
+
+          console.log('🔮 STEP 3 RESULT: Embedding generation completed:', {
+            success: !!embeddingResponse.data?.embedding,
+            embeddingLength: embeddingResponse.data?.embedding?.length || 0,
+            processingTime: embeddingDuration + 'ms',
+            error: embeddingResponse.error?.message || null,
+            statusCode: embeddingResponse.status,
+            responseDataKeys: Object.keys(embeddingResponse.data || {}),
+            responseErrorKeys: Object.keys(embeddingResponse.error || {})
+          });
           
           if (embeddingResponse.error) {
-            console.error('❌ ORACLE RAG: Embedding generation failed:', embeddingResponse.error)
-            throw new Error('Failed to generate message embedding')
+            console.error('❌ ORACLE FATAL: Embedding generation failed with error:', {
+              error: embeddingResponse.error,
+              status: embeddingResponse.status,
+              data: embeddingResponse.data
+            });
+            throw new Error('Failed to generate message embedding: ' + embeddingResponse.error.message);
           }
           
-          const messageEmbedding = embeddingResponse.data.embedding
-          console.log(`✅ ORACLE RAG: Generated query embedding with ${messageEmbedding.length} dimensions`)
+          const messageEmbedding = embeddingResponse.data?.embedding;
+          if (!messageEmbedding || !Array.isArray(messageEmbedding)) {
+            console.error('❌ ORACLE FATAL: Invalid embedding format received:', {
+              embeddingType: typeof messageEmbedding,
+              isArray: Array.isArray(messageEmbedding),
+              length: messageEmbedding?.length,
+              sample: messageEmbedding?.slice(0, 5)
+            });
+            throw new Error('Invalid embedding format received from OpenAI');
+          }
           
-          // Use optimized vector similarity search on pre-computed embeddings
+          console.log('✅ ORACLE SUCCESS: Generated valid query embedding:', {
+            dimensions: messageEmbedding.length,
+            firstFewValues: messageEmbedding.slice(0, 5),
+            lastFewValues: messageEmbedding.slice(-5),
+            allValuesNumeric: messageEmbedding.every(v => typeof v === 'number'),
+            hasNaN: messageEmbedding.some(v => isNaN(v)),
+            magnitude: Math.sqrt(messageEmbedding.reduce((sum, val) => sum + val * val, 0))
+          });
+          
+          // STEP 4: Perform vector similarity search
+          console.log('🔮 STEP 4: Starting vector similarity search with parameters:', {
+            queryEmbedding: {
+              dimensions: messageEmbedding.length,
+              firstValues: messageEmbedding.slice(0, 3),
+              magnitude: Math.sqrt(messageEmbedding.reduce((sum, val) => sum + val * val, 0))
+            },
+            searchParams: {
+              userId: userId.substring(0, 8) + '...',
+              matchThreshold: 0.3,
+              matchCount: 5
+            },
+            functionName: 'match_blueprint_chunks'
+          });
+
+          const searchStartTime = Date.now();
           const { data: matchingChunks, error: searchError } = await supabase.rpc(
             'match_blueprint_chunks',
             {
               query_embedding: messageEmbedding,
               query_user_id: userId,
-              match_threshold: 0.3, // Lower threshold for more context
+              match_threshold: 0.3,
               match_count: 5
             }
-          )
+          );
+          const searchDuration = Date.now() - searchStartTime;
+          
+          console.log('🔮 STEP 4 RESULT: Vector similarity search completed:', {
+            processingTime: searchDuration + 'ms',
+            chunksFound: matchingChunks?.length || 0,
+            searchError: searchError?.message || null,
+            searchErrorCode: searchError?.code || null,
+            searchErrorDetails: searchError?.details || null,
+            searchErrorHint: searchError?.hint || null,
+            rawResult: matchingChunks ? 'array' : 'null/undefined',
+            resultSample: matchingChunks?.slice(0, 2).map(c => ({
+              id: c.id,
+              similarity: c.similarity,
+              contentLength: c.chunk_content?.length || 0,
+              contentPreview: c.chunk_content?.substring(0, 50) + '...'
+            })) || []
+          });
           
           if (searchError) {
-            console.error('❌ ORACLE RAG: Vector similarity search failed:', searchError)
-            throw new Error('Vector similarity search failed')
-          }
-          
-          if (matchingChunks && matchingChunks.length > 0) {
-            semanticChunks = matchingChunks.map((chunk: any) => ({
-              content: chunk.chunk_content,
-              relevance: chunk.similarity,
-              reportType: 'personality',
-              metadata: {
-                semanticSimilarity: chunk.similarity,
-                textEmbedding: true,
-                chunkId: chunk.id,
-                optimizedSearch: true
+            console.error('❌ ORACLE FATAL: Vector similarity search failed:', {
+              error: searchError,
+              functionName: 'match_blueprint_chunks',
+              parameters: {
+                query_embedding: 'vector(' + messageEmbedding.length + ')',
+                query_user_id: userId,
+                match_threshold: 0.3,
+                match_count: 5
               }
-            }))
-            
-            oracleStatus = 'full_oracle'
-            console.log(`🎯 ORACLE RAG: Retrieved ${semanticChunks.length} pre-computed semantic chunks with similarities: ${semanticChunks.map(c => c.relevance.toFixed(3)).join(', ')}`)
-          } else {
-            console.log('📭 ORACLE RAG: No semantically similar pre-computed chunks found')
-            
-            // Check if user has any embeddings at all
-            const { data: embeddingCheck, error: checkError } = await supabase
-              .from('blueprint_text_embeddings')
-              .select('id')
-              .eq('user_id', userId)
-              .limit(1)
-              
-            if (checkError) {
-              console.error('❌ Error checking for embeddings:', checkError)
-            } else if (!embeddingCheck || embeddingCheck.length === 0) {
-              console.log('⚠️ ORACLE DIAGNOSIS: No pre-computed embeddings found for user. Need to run offline processing first.')
-              // Fallback to processing personality reports immediately (emergency mode)
-              throw new Error('No pre-computed embeddings found - falling back to emergency processing')
-            } else {
-              console.log('⚠️ ORACLE RAG: Embeddings exist but no matches above threshold')
-              oracleStatus = 'developing_oracle'
-            }
+            });
+            throw new Error('Vector similarity search failed: ' + searchError.message);
           }
           
-        } catch (error) {
-          console.error('❌ ORACLE RAG: Optimized search failed, falling back to keyword search:', error)
-          // Fallback to original keyword search if RAG fails
-          const messageKeywords = message.toLowerCase().split(' ')
-          
-          for (const report of reports) {
-            if (report.report_content) {
-              const content = typeof report.report_content === 'string' 
-                ? report.report_content 
-                : JSON.stringify(report.report_content)
-              const sections = content.split('\n\n')
+          // STEP 5: Process and validate search results
+          if (matchingChunks && matchingChunks.length > 0) {
+            console.log('🔮 STEP 5: Processing search results into semantic chunks');
+            
+            semanticChunks = matchingChunks.map((chunk: any, index: number) => {
+              console.log(`🔮 CHUNK ${index + 1}:`, {
+                id: chunk.id,
+                similarity: chunk.similarity,
+                contentLength: chunk.chunk_content?.length || 0,
+                contentStart: chunk.chunk_content?.substring(0, 100) + '...'
+              });
               
-              for (const section of sections) {
-                const sectionLower = section.toLowerCase()
-                const relevanceScore = messageKeywords.filter(keyword => 
-                  keyword.length > 3 && sectionLower.includes(keyword)
-                ).length
+              return {
+                content: chunk.chunk_content,
+                relevance: chunk.similarity,
+                reportType: 'personality',
+                metadata: {
+                  semanticSimilarity: chunk.similarity,
+                  textEmbedding: true,
+                  chunkId: chunk.id,
+                  optimizedSearch: true,
+                  searchTimestamp: new Date().toISOString()
+                }
+              };
+            });
+            
+            oracleStatus = 'full_oracle';
+            console.log('🎯 ORACLE SUCCESS: Retrieved semantic chunks:', {
+              totalChunks: semanticChunks.length,
+              similarities: semanticChunks.map(c => c.relevance.toFixed(3)),
+              avgSimilarity: (semanticChunks.reduce((sum, c) => sum + c.relevance, 0) / semanticChunks.length).toFixed(3),
+              totalContentLength: semanticChunks.reduce((sum, c) => sum + c.content.length, 0),
+              oracleStatus: oracleStatus
+            });
+          } else {
+            console.log('🔮 STEP 5: No semantic matches found above threshold');
+            console.log('🔮 DIAGNOSIS: Zero results analysis:', {
+              searchPerformed: true,
+              errorOccurred: false,
+              embeddingsExist: embeddingCheck.length,
+              threshold: 0.3,
+              possibleCauses: [
+                'User message too different from blueprint content',
+                'Embeddings may be from different model/version',
+                'Threshold too high for current content',
+                'User blueprint content not sufficiently diverse'
+              ]
+            });
+            oracleStatus = 'developing_oracle';
+          }
+          
+        } catch (vectorError) {
+          console.error('❌ ORACLE PIPELINE EXCEPTION: Vector search process failed:', {
+            error: vectorError.message,
+            stack: vectorError.stack,
+            phase: 'vector_search',
+            cause: vectorError.cause
+          });
+          
+          // EMERGENCY FALLBACK: Use personality reports directly
+          console.log('🔮 EMERGENCY FALLBACK: Attempting direct personality report search');
+          const { data: reports } = await supabase
+            .from('personality_reports')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false })
+            .limit(3);
+            
+          console.log('🔮 FALLBACK RESULT: Direct personality reports:', {
+            reportsFound: reports?.length || 0,
+            reportTypes: reports?.map(r => r.report_type) || [],
+            reportDates: reports?.map(r => r.created_at) || []
+          });
+          
+          if (reports && reports.length > 0) {
+            // Simple keyword matching as last resort
+            const messageKeywords = message.toLowerCase().split(' ').filter(w => w.length > 3);
+            console.log('🔮 FALLBACK: Using keyword matching with keywords:', messageKeywords);
+            
+            for (const report of reports) {
+              if (report.report_content) {
+                const content = typeof report.report_content === 'string' 
+                  ? report.report_content 
+                  : JSON.stringify(report.report_content);
+                const sections = content.split('\n\n');
                 
-                if (relevanceScore > 0 && section.length > 100) {
-                  semanticChunks.push({
-                    content: section,
-                    relevance: relevanceScore,
-                    reportType: report.report_type,
-                    metadata: { created: report.created_at, fallback: true }
-                  })
+                for (const section of sections) {
+                  const sectionLower = section.toLowerCase();
+                  const relevanceScore = messageKeywords.filter(keyword => 
+                    sectionLower.includes(keyword)
+                  ).length;
+                  
+                  if (relevanceScore > 0 && section.length > 100) {
+                    semanticChunks.push({
+                      content: section,
+                      relevance: relevanceScore,
+                      reportType: report.report_type,
+                      metadata: { created: report.created_at, fallback: true, keywords: relevanceScore }
+                    });
+                  }
                 }
               }
             }
+            
+            semanticChunks.sort((a, b) => b.relevance - a.relevance);
+            semanticChunks = semanticChunks.slice(0, 5);
+            oracleStatus = semanticChunks.length > 0 ? 'developing_oracle' : 'initializing';
+            
+            console.log('🔮 FALLBACK COMPLETE: Keyword matching results:', {
+              chunksFound: semanticChunks.length,
+              avgRelevance: semanticChunks.length > 0 ? (semanticChunks.reduce((sum, c) => sum + c.relevance, 0) / semanticChunks.length).toFixed(2) : 0,
+              oracleStatus: oracleStatus
+            });
           }
-          
-          semanticChunks.sort((a, b) => b.relevance - a.relevance)
-          semanticChunks = semanticChunks.slice(0, 5)
-          oracleStatus = semanticChunks.length > 0 ? 'developing_oracle' : 'initializing'
         }
+      } else {
+        console.log('❌ ORACLE ERROR: No pre-computed embeddings found for user');
+        console.log('🔮 DIAGNOSIS: Missing embeddings analysis:', {
+          userId: userId.substring(0, 8) + '...',
+          embeddingCheckError: embeddingError?.message,
+          recommendedAction: 'User needs to complete blueprint processing first',
+          tableName: 'blueprint_text_embeddings',
+          requiredProcessing: 'process-blueprint-embeddings function'
+        });
+        oracleStatus = 'initializing';
       }
+    } else {
+      console.log('🔮 ORACLE PIPELINE: Skipped - Oracle mode disabled or no personality context');
+      console.log('🔮 PIPELINE STATUS:', {
+        useOracleMode,
+        hasPersonalityContext: !!personalityContext,
+        reason: !useOracleMode ? 'Oracle mode disabled' : 'No personality context'
+      });
     }
+    
+    console.log('🔮 ORACLE PIPELINE COMPLETE: Final status summary:', {
+      oracleStatus,
+      semanticChunksFound: semanticChunks.length,
+      pipelineSuccess: semanticChunks.length > 0,
+      personalityContextAvailable: !!personalityContext,
+      processingMethod: semanticChunks.length > 0 ? (semanticChunks[0]?.metadata?.fallback ? 'keyword_fallback' : 'vector_search') : 'none'
+    });
 
     // Build oracle-enhanced system prompt when in companion mode
     let systemPrompt = ''
