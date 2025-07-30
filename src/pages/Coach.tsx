@@ -14,6 +14,7 @@ import { ActiveReminders } from "@/components/reminders/ActiveReminders";
 import { MobileTogglePanel } from "@/components/ui/mobile-toggle-panel";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { HACSSystemStatus } from "@/components/hacs/HACSSystemStatus";
+import { ManualBlueprintProcessor } from "@/components/test/ManualBlueprintProcessor";
 
 const Coach = () => {
   const {
@@ -111,6 +112,9 @@ const Coach = () => {
         </Button>
       </CosmicCard>
 
+      {/* Phase 1: Manual Blueprint Processing */}
+      <ManualBlueprintProcessor />
+      
       {/* Pure HACS System Status */}
       <HACSSystemStatus />
 
