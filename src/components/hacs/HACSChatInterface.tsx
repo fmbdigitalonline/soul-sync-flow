@@ -5,6 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { SendHorizontal, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ConversationMessage } from "@/hooks/use-hacs-conversation";
+import { TypewriterText } from "@/components/coach/TypewriterText";
 
 interface HACSChatInterfaceProps {
   messages: ConversationMessage[];
@@ -81,9 +82,13 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
                 </div>
               ) : (
                 <div className="w-full">
-                  <p className="text-sm leading-relaxed text-muted-foreground">
-                    {message.content}
-                  </p>
+                  <div className="text-sm leading-relaxed text-muted-foreground">
+                    <TypewriterText 
+                      text={message.content} 
+                      isStreaming={false}
+                      speed={85}
+                    />
+                  </div>
                   {message.isQuestion && (
                     <div className="mt-2 text-xs text-muted-foreground opacity-70">
                       Question from: {message.module}
