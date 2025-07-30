@@ -90,11 +90,12 @@ serve(async (req) => {
       }
     )
 
-    const { message, userId, sessionId, useOracleMode = false, enableBackgroundIntelligence = false } = await req.json()
+    const { message, userId, sessionId, useOracleMode = false, enableBackgroundIntelligence = false, conversationHistory = [] } = await req.json()
     console.log('🔮 FUSION: Oracle Mode Request:', { 
       useOracleMode, 
       enableBackgroundIntelligence,
-      messageLength: message.length, 
+      messageLength: message.length,
+      conversationHistoryLength: conversationHistory.length,
       userId: userId.substring(0, 8) 
     })
 
@@ -159,16 +160,21 @@ serve(async (req) => {
         console.log('🔮 STEP 2: Pre-computed embeddings found, proceeding with vector search');
         
         try {
-          // STEP 3: Generate embedding for user's message
-          console.log('🔮 STEP 3: Generating embedding for message:', {
-            messageText: message.substring(0, 100) + (message.length > 100 ? '...' : ''),
-            messageLength: message.length,
+          // Create contextual search text by combining current message with conversation context
+          const contextualSearchText = conversationHistory.length > 0 
+            ? `${conversationHistory.slice(-5).map(msg => `${msg.role}: ${msg.content}`).join(' ')} current: ${message}`
+            : message;
+
+          console.log('🔮 STEP 3: Generating embedding for contextual search:', {
+            originalMessage: message,
+            contextualSearchLength: contextualSearchText.length,
+            conversationContextUsed: conversationHistory.length > 0,
             timestamp: new Date().toISOString()
           });
 
           const embeddingStartTime = Date.now();
           const embeddingResponse = await supabase.functions.invoke('openai-embeddings', {
-            body: { query: message },
+            body: { query: contextualSearchText },
             headers: {
               Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
             }
@@ -440,7 +446,16 @@ serve(async (req) => {
           ? `\n\nPERSONAL INSIGHTS AVAILABLE:\n${semanticChunks.map(chunk => chunk.content).join('\n\n')}`
           : '\n\nBuilding deeper understanding through our conversation...';
 
-        return `You are ${userName}'s personal AI companion with deep insight into their unique personality and life patterns.
+        // Build conversation context for system prompt
+        let conversationContext = '';
+        if (conversationHistory.length > 0) {
+          const recentContext = conversationHistory.slice(-5).map(msg => 
+            `${msg.role === 'user' ? 'User' : 'You'}: ${msg.content}`
+          ).join('\n');
+          conversationContext = `\n\nRECENT CONVERSATION CONTEXT:\n${recentContext}\n`;
+        }
+
+        return `You are ${userName}'s personal AI companion with deep insight into their unique personality and life patterns.${conversationContext}
 
 PERSONALITY AWARENESS:
 - Name: ${userName}
@@ -465,6 +480,7 @@ UNIVERSAL CONVERSATIONAL RULES:
 - Provide specific, actionable insights that resonate with their patterns
 - If they seem resistant, ask deeper questions to understand the root issue
 - Never explain how you know things about them - you simply understand them well
+- MAINTAIN CONVERSATION CONTINUITY: Build naturally on the recent conversation context above
 
 RESPONSE GUIDELINES:
 1. Lead with recognition of their unique situation/question

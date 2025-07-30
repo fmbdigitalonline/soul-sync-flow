@@ -210,8 +210,8 @@ export const useHACSConversation = () => {
     }
   }, [user, messages, conversationId, saveConversation, updateHACSIntelligence]);
 
-  // NEW: Send oracle message with enhanced data storage
-  const sendOracleMessage = useCallback(async (content: string, oracleResponse: any) => {
+  // Enhanced Oracle message with conversation context
+  const sendOracleMessage = useCallback(async (content: string, oracleResponse?: any) => {
     if (!user || !content.trim()) return;
 
     setIsLoading(true);
@@ -228,16 +228,48 @@ export const useHACSConversation = () => {
 
       setMessages(prev => [...prev, userMessage]);
 
+      // If oracle response provided, use it; otherwise call Oracle with conversation context
+      let response = oracleResponse;
+      if (!response) {
+        // Get recent conversation history for context (last 10 messages)
+        const recentMessages = messages.slice(-10).map(msg => ({
+          role: msg.role,
+          content: msg.content,
+          timestamp: msg.timestamp
+        }));
+
+        console.log('🔮 ORACLE CONTEXT: Sending conversation history', {
+          messageCount: recentMessages.length,
+          currentMessage: content.trim()
+        });
+
+        response = await supabase.functions.invoke('companion-oracle-conversation', {
+          body: {
+            message: content.trim(),
+            userId: user.id,
+            sessionId: conversationId,
+            useOracleMode: true,
+            enableBackgroundIntelligence: true,
+            conversationHistory: recentMessages
+          }
+        });
+
+        if (response.error) {
+          throw new Error(`Oracle Error: ${response.error.message}`);
+        }
+        response = response.data;
+      }
+
       // Add oracle response with enhanced metadata
       const oracleMessage: ConversationMessage = {
         id: `oracle_${Date.now()}`,
         role: 'hacs',
         module: 'COMPANION_ORACLE',
-        content: oracleResponse.response || 'The cosmic channels are temporarily disrupted.',
+        content: response.response || 'The cosmic channels are temporarily disrupted.',
         timestamp: new Date().toISOString(),
-        oracleStatus: oracleResponse.oracleStatus,
-        semanticChunks: oracleResponse.semanticChunks,
-        personalityContext: oracleResponse.personalityContext
+        oracleStatus: response.oracleStatus,
+        semanticChunks: response.semanticChunks,
+        personalityContext: response.personalityContext
       };
 
       setMessages(prev => [...prev, oracleMessage]);
