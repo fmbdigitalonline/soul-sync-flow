@@ -16,6 +16,8 @@ interface IntelligentSoulOrbProps {
   isThinking?: boolean;
   activeModule?: string; // NIK, CPSR, TWS, HFME, DPEM, CNR, BPSC, ACS, PIE, VFP, TMG
   moduleActivity?: boolean;
+  hermeticProgress?: number; // 0-100 for hermetic report generation
+  showHermeticProgress?: boolean;
 }
 
 const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
@@ -31,6 +33,8 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
   isThinking = false,
   activeModule,
   moduleActivity = false,
+  hermeticProgress = 0,
+  showHermeticProgress = false,
 }) => {
   const orbRef = useRef<HTMLDivElement>(null);
   const [particles, setParticles] = useState<Array<{ x: number, y: number, size: number, speed: number, angle: number }>>([]);
@@ -87,11 +91,17 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
     return animations[activeModule as keyof typeof animations] || { animate: {}, transition: undefined };
   }, [activeModule, moduleActivity]);
 
-  // Calculate circumference for progress ring
+  // Calculate circumference for progress ring (outer - intelligence)
   const radius = (ringSize[size] - 6) / 2; // Account for stroke width
   const circumference = 2 * Math.PI * radius;
   const strokeDasharray = circumference;
   const strokeDashoffset = circumference - (intelligenceLevel / 100) * circumference;
+
+  // Calculate circumference for inner progress ring (hermetic)
+  const innerRadius = radius * 0.7; // 70% of outer radius
+  const innerCircumference = 2 * Math.PI * innerRadius;
+  const innerStrokeDasharray = innerCircumference;
+  const innerStrokeDashoffset = innerCircumference - (hermeticProgress / 100) * innerCircumference;
 
   // Initialize particles with intelligence-based count
   useEffect(() => {
@@ -156,7 +166,7 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
 
   return (
     <div className="relative flex items-center justify-center">
-      {/* Progress Ring - Made more visible */}
+      {/* Outer Progress Ring - Intelligence Level */}
       {showProgressRing && intelligenceLevel > 0 && (
         <svg
           className="absolute"
@@ -193,6 +203,44 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
             )}
             style={{
               filter: "drop-shadow(0 0 4px rgba(255, 215, 0, 0.6))" // Glow effect
+            }}
+          />
+        </svg>
+      )}
+
+      {/* Inner Progress Ring - Hermetic Report Generation */}
+      {showHermeticProgress && hermeticProgress > 0 && (
+        <svg
+          className="absolute"
+          width={ringSize[size]}
+          height={ringSize[size]}
+          style={{ transform: 'rotate(-90deg)' }}
+        >
+          {/* Inner background ring */}
+          <circle
+            cx={ringSize[size] / 2}
+            cy={ringSize[size] / 2}
+            r={innerRadius}
+            stroke="hsl(var(--soul-purple) / 0.3)" // Design system purple with transparency
+            strokeWidth="1.5"
+            fill="transparent"
+          />
+          {/* Inner progress ring - using design system purple */}
+          <motion.circle
+            cx={ringSize[size] / 2}
+            cy={ringSize[size] / 2}
+            r={innerRadius}
+            stroke="hsl(var(--soul-purple))" // Design system purple color
+            strokeWidth="1.5"
+            fill="transparent"
+            strokeDasharray={innerStrokeDasharray}
+            strokeDashoffset={innerStrokeDashoffset}
+            strokeLinecap="round"
+            initial={{ strokeDashoffset: innerCircumference }}
+            animate={{ strokeDashoffset: innerStrokeDashoffset }}
+            transition={{ duration: 0.8, ease: "easeInOut" }}
+            style={{
+              filter: "drop-shadow(0 0 3px rgba(147, 51, 234, 0.5))" // Purple glow effect
             }}
           />
         </svg>

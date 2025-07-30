@@ -416,12 +416,14 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
               size="sm"
               stage={orbStage}
               speaking={isGenerating || isGeneratingInsight || isGeneratingReport}
-              intelligenceLevel={isGeneratingReport ? hermeticProgress : intelligenceLevel}
-              showProgressRing={intelligenceLevel > 0 || isGeneratingReport}
+              intelligenceLevel={intelligenceLevel}
+              showProgressRing={intelligenceLevel > 0}
               showIntelligenceTooltip={false}
               isThinking={isThinking}
               activeModule={activeModule}
               moduleActivity={moduleActivity || isGeneratingInsight || isGeneratingReport}
+              hermeticProgress={hermeticProgress}
+              showHermeticProgress={isGeneratingReport}
               onClick={handleOrbClick}
               className="shadow-lg hover:shadow-xl transition-shadow"
             />
@@ -446,9 +448,11 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
               size="sm"
               stage="generating"
               speaking={true}
-              intelligenceLevel={hermeticProgress}
+              intelligenceLevel={intelligenceLevel}
               showProgressRing={true}
               className="animate-pulse"
+              hermeticProgress={hermeticProgress}
+              showHermeticProgress={true}
             />
             <div className="text-sm">
               <div className="font-medium text-card-foreground">Soul Alchemist Activating...</div>
