@@ -63,7 +63,7 @@ export const PureHACSInterface: React.FC<PureHACSInterfaceProps> = ({
     isUser: msg.role === 'user',
     timestamp: new Date(msg.timestamp),
     agentMode: msg.module || 'guide',
-    isStreaming: false
+    isStreaming: msg.role === 'hacs' // Enable typewriter for all HACS messages
   }));
 
   const allMessages = [...initialMessages, ...convertedMessages];
@@ -300,8 +300,12 @@ export const PureHACSInterface: React.FC<PureHACSInterfaceProps> = ({
                     }`}
                   >
                     <div className={`${getTextSize('text-sm')} break-words`}>
-                      {message.isStreaming ? (
-                        <TypewriterText text={message.content} isStreaming={true} />
+                      {!message.isUser ? (
+                        <TypewriterText 
+                          text={message.content} 
+                          isStreaming={false}
+                          speed={85}
+                        />
                       ) : (
                         message.content
                       )}

@@ -563,7 +563,10 @@ Respond helpfully while building rapport and understanding.`
       body: JSON.stringify({
         model: 'gpt-4.1-2025-04-14',
         messages: [
-          { role: 'system', content: systemPrompt },
+          { 
+            role: 'system', 
+            content: systemPrompt + '\n\nIMPORTANT: Use double line breaks (\\n\\n) between paragraphs to create natural reading pauses. Keep paragraphs to 2-3 sentences maximum for digestible, conversational flow.'
+          },
           { role: 'user', content: message }
         ],
         temperature: useOracleMode ? 0.8 : 0.7,
