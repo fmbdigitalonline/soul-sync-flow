@@ -141,8 +141,15 @@ serve(async (req) => {
         
         try {
           // Generate embedding for the user's message (single API call)
+          console.log('🔧 ORACLE RAG: Calling openai-embeddings function...')
           const embeddingResponse = await supabase.functions.invoke('openai-embeddings', {
             body: { query: message }
+          })
+          
+          console.log('🔧 ORACLE RAG: Embedding response received:', { 
+            hasError: !!embeddingResponse.error, 
+            hasData: !!embeddingResponse.data,
+            status: embeddingResponse.status 
           })
           
           if (embeddingResponse.error) {
@@ -310,7 +317,7 @@ Respond helpfully while building rapport and understanding.`
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: message }
