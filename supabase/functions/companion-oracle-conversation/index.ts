@@ -81,7 +81,13 @@ serve(async (req) => {
     console.log('🔮 Oracle Function Called - Starting enhanced conversation processing');
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
     )
 
     const { message, userId, sessionId, useOracleMode = false, enableBackgroundIntelligence = false } = await req.json()
