@@ -162,7 +162,10 @@ serve(async (req) => {
 
           const embeddingStartTime = Date.now();
           const embeddingResponse = await supabase.functions.invoke('openai-embeddings', {
-            body: { query: message }
+            body: { query: message },
+            headers: {
+              Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
+            }
           });
           const embeddingDuration = Date.now() - embeddingStartTime;
 
