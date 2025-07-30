@@ -28,6 +28,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   const [activeModule, setActiveModule] = useState<string | undefined>();
   const [moduleActivity, setModuleActivity] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
+  const [hermeticProgress, setHermeticProgress] = useState(40); // Start at 40% (blueprint completed)
   
   const { intelligence, loading, refreshIntelligence } = useHacsIntelligence();
   const {
@@ -82,9 +83,9 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   // Phase 3: Enhanced system readiness check 
   const isSystemReady = !loading && !databaseValidation.loading && !!intelligence;
 
-  // Update orb stage based on authentic HACS state
+  // Update orb stage based on authentic HACS state + hermetic generation
   useEffect(() => {
-    if (isGenerating || isGeneratingInsight) {
+    if (isGenerating || isGeneratingInsight || isGeneratingReport) {
       setOrbStage("generating");
     } else if (currentQuestion) {
       setOrbStage("collecting");
@@ -97,7 +98,28 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     } else {
       setOrbStage("welcome");
     }
-  }, [isGenerating, isGeneratingInsight, currentQuestion, currentInsight, intelligenceLevel]);
+  }, [isGenerating, isGeneratingInsight, isGeneratingReport, currentQuestion, currentInsight, intelligenceLevel]);
+
+  // Monitor hermetic report generation progress
+  useEffect(() => {
+    if (isGeneratingReport) {
+      // Simulate progress from 40% to 100% during hermetic generation
+      const progressInterval = setInterval(() => {
+        setHermeticProgress(prev => {
+          if (prev >= 100) {
+            clearInterval(progressInterval);
+            return 100;
+          }
+          return Math.min(prev + 2, 100); // Increment by 2% every interval
+        });
+      }, 1000); // Update every second
+
+      return () => clearInterval(progressInterval);
+    } else {
+      // Reset to baseline when not generating
+      setHermeticProgress(40);
+    }
+  }, [isGeneratingReport]);
 
   // Show speech bubble for questions or insights
   useEffect(() => {
@@ -393,13 +415,13 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
             <IntelligentSoulOrb
               size="sm"
               stage={orbStage}
-              speaking={isGenerating || isGeneratingInsight}
-              intelligenceLevel={intelligenceLevel}
-              showProgressRing={intelligenceLevel > 0}
+              speaking={isGenerating || isGeneratingInsight || isGeneratingReport}
+              intelligenceLevel={isGeneratingReport ? hermeticProgress : intelligenceLevel}
+              showProgressRing={intelligenceLevel > 0 || isGeneratingReport}
               showIntelligenceTooltip={false}
               isThinking={isThinking}
               activeModule={activeModule}
-              moduleActivity={moduleActivity || isGeneratingInsight}
+              moduleActivity={moduleActivity || isGeneratingInsight || isGeneratingReport}
               onClick={handleOrbClick}
               className="shadow-lg hover:shadow-xl transition-shadow"
             />
@@ -424,13 +446,15 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
               size="sm"
               stage="generating"
               speaking={true}
-              intelligenceLevel={40}
+              intelligenceLevel={hermeticProgress}
               showProgressRing={true}
               className="animate-pulse"
             />
             <div className="text-sm">
               <div className="font-medium text-card-foreground">Soul Alchemist Activating...</div>
-              <div className="text-muted-foreground">Completing deep synthesis in background</div>
+              <div className="text-muted-foreground">
+                Deep synthesis in progress ({hermeticProgress}%)
+              </div>
             </div>
           </div>
         </div>

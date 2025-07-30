@@ -18,6 +18,7 @@ import { useSoulOrb } from "@/contexts/SoulOrbContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { PersonalityFusion } from "@/components/blueprint/PersonalityFusion";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Onboarding() {
   const navigate = useNavigate();
@@ -162,6 +163,9 @@ export default function Onboarding() {
     if (newBlueprint) {
       setBlueprintData(newBlueprint);
       console.log("Blueprint data stored in state for goal selection");
+      
+      // 🔮 EARLY ORACLE ACTIVATION: Generate hermetic report immediately after blueprint
+      generateHermeticReportInBackground(newBlueprint);
     }
     
     toast({
@@ -177,7 +181,68 @@ export default function Onboarding() {
     }, 1500);
   };
 
-  // Generate personality report in background
+  // Generate hermetic report in background (EARLY ORACLE ACTIVATION)
+  const generateHermeticReportInBackground = async (blueprint: BlueprintData) => {
+    try {
+      console.log('🔮 EARLY ORACLE: Starting hermetic report generation immediately after blueprint...');
+      
+      // Import the service here to avoid circular dependencies
+      const { hermeticPersonalityReportService } = await import('@/services/hermetic-personality-report-service');
+      
+      console.log('🧙‍♂️ Generating comprehensive hermetic report with blueprint data');
+      const result = await hermeticPersonalityReportService.generateHermeticReport(blueprint);
+      
+      if (result.success) {
+        console.log('✅ EARLY ORACLE: Hermetic report generated successfully - Oracle mode now available!');
+        
+        // Trigger embedding generation immediately after report
+        await generateBlueprintEmbeddingsInBackground();
+        
+        toast({
+          title: "Oracle Mode Activated!",
+          description: "Your Soul Alchemist has completed the deep synthesis and is ready for advanced conversations.",
+        });
+      } else {
+        console.error('❌ EARLY ORACLE: Failed to generate hermetic report:', result.error);
+        // Fallback to standard personality report
+        await generatePersonalityReportInBackground();
+      }
+    } catch (error) {
+      console.error('💥 EARLY ORACLE: Error during hermetic report generation:', error);
+      // Fallback to standard personality report
+      await generatePersonalityReportInBackground();
+    }
+  };
+
+  // Generate blueprint embeddings for Oracle functionality
+  const generateBlueprintEmbeddingsInBackground = async () => {
+    try {
+      console.log('🔮 EARLY ORACLE: Generating blueprint embeddings for immediate Oracle access...');
+      
+      if (!user) {
+        console.error('❌ No user available for embedding generation');
+        return;
+      }
+
+      // Import the manual processor hook
+      const { useManualBlueprintProcessor } = await import('@/hooks/use-manual-blueprint-processor');
+      
+      // Trigger embedding processing
+      const response = await supabase.functions.invoke('trigger-blueprint-processing', {
+        body: { userId: user.id, forceReprocess: true }
+      });
+
+      if (response.error) {
+        console.error('❌ EARLY ORACLE: Failed to trigger embedding processing:', response.error);
+      } else {
+        console.log('✅ EARLY ORACLE: Blueprint embeddings generated - Oracle fully operational!', response.data);
+      }
+    } catch (error) {
+      console.error('💥 EARLY ORACLE: Error generating blueprint embeddings:', error);
+    }
+  };
+
+  // Generate standard personality report in background (fallback)
   const generatePersonalityReportInBackground = async () => {
     try {
       console.log('🎭 Starting background personality report generation...');
