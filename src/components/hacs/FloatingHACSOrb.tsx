@@ -7,6 +7,7 @@ import { useHACSMicroLearning } from '@/hooks/use-hacs-micro-learning';
 import { useHACSInsights } from '@/hooks/use-hacs-insights';
 import { useAutonomousOrchestration } from '@/hooks/use-autonomous-orchestration';
 import { usePersonalityEngine } from '@/hooks/use-personality-engine';
+import { useHermeticReportStatus } from '@/hooks/use-hermetic-report-status';
 import { VoiceTokenGenerator } from '@/services/voice-token-generator';
 import { HACSMicroLearning } from './HACSMicroLearning';
 import { HACSChatOverlay } from './HACSChatOverlay';
@@ -31,6 +32,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   const [hermeticProgress, setHermeticProgress] = useState(40); // Start at 40% (blueprint completed)
   
   const { intelligence, loading, refreshIntelligence } = useHacsIntelligence();
+  const { hasReport: hasHermeticReport, loading: hermeticLoading, refreshStatus: refreshHermeticStatus } = useHermeticReportStatus();
   const {
     currentQuestion,
     isGenerating,
@@ -81,7 +83,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   const intelligenceLevel = intelligence?.intelligence_level || 0;
 
   // Phase 3: Enhanced system readiness check 
-  const isSystemReady = !loading && !databaseValidation.loading && !!intelligence;
+  const isSystemReady = !loading && !databaseValidation.loading && !hermeticLoading && !!intelligence;
 
   // Update orb stage based on authentic HACS state + hermetic generation
   useEffect(() => {
@@ -100,7 +102,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     }
   }, [isGenerating, isGeneratingInsight, isGeneratingReport, currentQuestion, currentInsight, intelligenceLevel]);
 
-  // Monitor hermetic report generation progress
+  // Monitor hermetic report generation progress and completion status
   useEffect(() => {
     if (isGeneratingReport) {
       // Simulate progress from 40% to 100% during hermetic generation
@@ -115,11 +117,14 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
       }, 1000); // Update every second
 
       return () => clearInterval(progressInterval);
+    } else if (hasHermeticReport) {
+      // Show completed state (100%) when report exists
+      setHermeticProgress(100);
     } else {
-      // Reset to baseline when not generating
+      // Reset to baseline when not generating and no report
       setHermeticProgress(40);
     }
-  }, [isGeneratingReport]);
+  }, [isGeneratingReport, hasHermeticReport]);
 
   // Show speech bubble for questions or insights
   useEffect(() => {
@@ -310,6 +315,8 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     // CRITICAL: Refresh intelligence data to show updated levels in real-time
     console.log('🎯 Learning completed, refreshing intelligence for visual update...');
     await refreshIntelligence();
+    // Refresh hermetic report status in case report was generated during learning
+    refreshHermeticStatus();
     
     // Show module activity based on growth
     if (growth > 0) {
@@ -423,7 +430,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
               activeModule={activeModule}
               moduleActivity={moduleActivity || isGeneratingInsight || isGeneratingReport}
               hermeticProgress={hermeticProgress}
-              showHermeticProgress={isGeneratingReport}
+              showHermeticProgress={isGeneratingReport || hasHermeticReport}
               onClick={handleOrbClick}
               className="shadow-lg hover:shadow-xl transition-shadow"
             />
@@ -452,7 +459,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
               showProgressRing={true}
               className="animate-pulse"
               hermeticProgress={hermeticProgress}
-              showHermeticProgress={true}
+              showHermeticProgress={isGeneratingReport || hasHermeticReport}
             />
             <div className="text-sm">
               <div className="font-medium text-card-foreground">Soul Alchemist Activating...</div>
