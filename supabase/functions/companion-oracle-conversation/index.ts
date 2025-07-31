@@ -77,6 +77,8 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const startTime = Date.now(); // EMERGENCY FIX: Add missing startTime declaration
+
   try {
     console.log('🔮 Oracle Function Called - Starting enhanced conversation processing');
     const supabase = createClient(
@@ -201,8 +203,8 @@ serve(async (req) => {
       // STEP 2: Legacy pipeline fallback if sidecar didn't provide results
       if (semanticChunks.length === 0 && structuredFacts.length === 0) {
         console.log('🔮 STEP 2: Using legacy vector search pipeline');
-      
-      // STEP 1: Check for pre-computed embeddings first
+        
+        // STEP 1: Check for pre-computed embeddings first
       console.log('🔮 STEP 1: Checking for pre-computed embeddings...');
       const { data: embeddingCheck, error: embeddingError } = await supabase
         .from('blueprint_text_embeddings')
