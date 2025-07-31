@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { PersonalityEngine } from "./personality-engine";
 import { LayeredBlueprint, AgentMode } from "@/types/personality-modules";
 import { unifiedBrainService } from "./unified-brain-service";
+import { enhancedCompanionOrchestrator } from "./enhanced-companion-orchestrator";
 
 export type AgentType = "coach" | "guide" | "blend" | "dream";
 
@@ -72,13 +73,44 @@ class AICoachService {
       }
 
       // Fallback to regular AI coach processing with enhanced prompts
-      const systemPrompt = includeBlueprint 
-        ? (agentType === "guide" 
-            ? this.personalityEngine.generateSystemPrompt("guide", message)
-            : this.personalityEngine.generateSystemPrompt(agentType as AgentMode))
-        : this.getUniversalConversationalPrompt(agentType, userDisplayName);
-
-      console.log("Using regular AI coach service with universal conversational rules, prompt length:", systemPrompt?.length || 0);
+      // Generate enhanced prompt with memory and brutal honesty for companion mode
+      let systemPrompt: string;
+      let contextualData: any = {};
+      
+      if (agentType === "guide" && includeBlueprint) {
+        // Get current user for enhanced orchestration
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user?.id) {
+          const enhancedResponse = await enhancedCompanionOrchestrator.generateEnhancedPrompt(
+            message,
+            sessionId,
+            user.id,
+            userDisplayName,
+            '', // personalityContext - could be enhanced later
+            [] // semanticChunks - could be enhanced later
+          );
+          
+          systemPrompt = enhancedResponse.enhancedPrompt;
+          contextualData = enhancedResponse.contextualData;
+          
+          console.log("Using enhanced companion orchestration with memory and brutal honesty:", {
+            promptLength: systemPrompt.length,
+            hasMemory: contextualData.hasMemoryContext,
+            hasBrutalHonesty: contextualData.hasBrutalHonesty,
+            readinessLevel: contextualData.readinessLevel
+          });
+        } else {
+          systemPrompt = this.personalityEngine.generateSystemPrompt("guide", message);
+          console.log("Fallback to standard personality engine prompt");
+        }
+      } else {
+        systemPrompt = includeBlueprint 
+          ? this.personalityEngine.generateSystemPrompt(agentType as AgentMode)
+          : this.getUniversalConversationalPrompt(agentType, userDisplayName);
+        
+        console.log("Using standard prompting system, prompt length:", systemPrompt?.length || 0);
+      }
 
       const { data, error } = await supabase.functions.invoke("ai-coach", {
         body: {
@@ -191,13 +223,40 @@ Remember: Every response should feel like it comes from someone who truly knows 
       }
       
       // Fallback to regular streaming with enhanced prompts
-      const systemPrompt = includeBlueprint 
-        ? (agentType === "guide" 
-            ? this.personalityEngine.generateSystemPrompt("guide", message)
-            : this.personalityEngine.generateSystemPrompt(agentType as AgentMode))
-        : this.getUniversalConversationalPrompt(agentType, userDisplayName);
-
-      console.log("Using regular streaming with universal conversational rules, prompt length:", systemPrompt?.length || 0);
+      let systemPrompt: string;
+      
+      if (agentType === "guide" && includeBlueprint) {
+        // Get current user for enhanced orchestration
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user?.id) {
+          const enhancedResponse = await enhancedCompanionOrchestrator.generateEnhancedPrompt(
+            message,
+            sessionId,
+            user.id,
+            userDisplayName,
+            '', // personalityContext - could be enhanced later
+            [] // semanticChunks - could be enhanced later
+          );
+          
+          systemPrompt = enhancedResponse.enhancedPrompt;
+          
+          console.log("Using enhanced streaming orchestration with memory and brutal honesty:", {
+            promptLength: systemPrompt.length,
+            hasMemory: enhancedResponse.contextualData.hasMemoryContext,
+            hasBrutalHonesty: enhancedResponse.contextualData.hasBrutalHonesty
+          });
+        } else {
+          systemPrompt = this.personalityEngine.generateSystemPrompt("guide", message);
+          console.log("Fallback to standard personality engine streaming");
+        }
+      } else {
+        systemPrompt = includeBlueprint 
+          ? this.personalityEngine.generateSystemPrompt(agentType as AgentMode)
+          : this.getUniversalConversationalPrompt(agentType, userDisplayName);
+        
+        console.log("Using standard streaming system, prompt length:", systemPrompt?.length || 0);
+      }
       
       // Get current user session token
       const { data: { session } } = await supabase.auth.getSession();
