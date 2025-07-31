@@ -90,25 +90,22 @@ function extractBlueprintFacts(blueprint: any, userId: string): any[] {
     }
   }
   
-  // MBTI facts
-  if (blueprint.cognition_mbti?.type) {
-    facts.push({
-      user_id: userId,
-      facet: 'mbti',
-      key: 'type',
-      value_json: { value: blueprint.cognition_mbti.type, label: 'MBTI Type' },
-      confidence: 1.0
-    })
-  }
+  // MBTI facts - prioritize cognition_mbti over user_meta.personality to avoid duplicates
+  const mbtiType = blueprint.cognition_mbti?.type || blueprint.user_meta?.personality?.likelyType
+  const mbtiConfidence = blueprint.cognition_mbti?.type ? 1.0 : 0.9
+  const mbtiSource = blueprint.cognition_mbti?.type ? 'cognition_mbti' : 'user_meta_personality'
   
-  // Also check user_meta.personality for MBTI
-  if (blueprint.user_meta?.personality?.likelyType) {
+  if (mbtiType) {
     facts.push({
       user_id: userId,
       facet: 'mbti',
       key: 'type',
-      value_json: { value: blueprint.user_meta.personality.likelyType, label: 'MBTI Type' },
-      confidence: 0.9
+      value_json: { 
+        value: mbtiType, 
+        label: 'MBTI Type',
+        source: mbtiSource
+      },
+      confidence: mbtiConfidence
     })
   }
   
