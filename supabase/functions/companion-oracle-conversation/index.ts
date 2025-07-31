@@ -135,6 +135,7 @@ serve(async (req) => {
     let semanticChunks = []
     let structuredFacts = []
     let oracleStatus = 'initializing'
+    let sidecarResult = { intent: 'MIXED' } // Initialize with default intent
     
     if (useOracleMode && personalityContext) {
       console.log('🔮 ENHANCED ORACLE: Starting hybrid retrieval with personality context:', {
@@ -158,44 +159,48 @@ serve(async (req) => {
           }
         });
 
-        console.log('🔮 SIDECAR RESULT:', {
-          success: !!sidecarResponse.data,
-          error: sidecarResponse.error?.message || null,
-          factsFound: sidecarResponse.data?.facts?.length || 0,
-          passagesFound: sidecarResponse.data?.passages?.length || 0,
-          intent: sidecarResponse.data?.intent || 'unknown'
-        });
+          sidecarResult = {
+            success: !!sidecarResponse.data,
+            error: sidecarResponse.error?.message || null,
+            factsFound: sidecarResponse.data?.facts?.length || 0,
+            passagesFound: sidecarResponse.data?.passages?.length || 0,
+            intent: sidecarResponse.data?.intent || 'unknown',
+            facts: sidecarResponse.data?.facts || [],
+            passages: sidecarResponse.data?.passages || []
+          };
 
-        if (sidecarResponse.data && !sidecarResponse.error) {
-          // Use sidecar results
-          structuredFacts = sidecarResponse.data.facts || [];
-          const sidecarPassages = sidecarResponse.data.passages || [];
-          
-          // Convert sidecar passages to semantic chunks format
-          semanticChunks = sidecarPassages.map((passage: any, index: number) => ({
-            content: passage.content,
-            relevance: passage.relevance,
-            reportType: 'personality',
-            metadata: {
-              ...passage.metadata,
-              sidecarRetrieved: true,
-              retrievalMethod: 'sidecar_hybrid'
+          console.log('🔮 SIDECAR RESULT:', sidecarResult);
+
+          if (sidecarResponse.data && !sidecarResponse.error) {
+            // Use sidecar results
+            structuredFacts = sidecarResult.facts;
+            const sidecarPassages = sidecarResult.passages;
+            
+            // Convert sidecar passages to semantic chunks format
+            semanticChunks = sidecarPassages.map((passage: any, index: number) => ({
+              chunk_content: passage.content || passage.chunk_content,
+              relevance: passage.relevance,
+              reportType: 'personality',
+              metadata: {
+                ...passage.metadata,
+                sidecarRetrieved: true,
+                retrievalMethod: 'sidecar_hybrid'
+              }
+            }));
+
+            if (structuredFacts.length > 0 || semanticChunks.length > 0) {
+              oracleStatus = 'enhanced_oracle';
+              console.log('✅ SIDECAR SUCCESS: Enhanced retrieval complete:', {
+                facts: structuredFacts.length,
+                passages: semanticChunks.length,
+                oracleStatus
+              });
+            } else {
+              console.log('⚠️ SIDECAR: No results, falling back to legacy pipeline');
             }
-          }));
-
-          if (structuredFacts.length > 0 || semanticChunks.length > 0) {
-            oracleStatus = 'enhanced_oracle';
-            console.log('✅ SIDECAR SUCCESS: Enhanced retrieval complete:', {
-              facts: structuredFacts.length,
-              passages: semanticChunks.length,
-              oracleStatus
-            });
           } else {
-            console.log('⚠️ SIDECAR: No results, falling back to legacy pipeline');
+            console.log('⚠️ SIDECAR: Failed or disabled, using legacy pipeline');
           }
-        } else {
-          console.log('⚠️ SIDECAR: Failed or disabled, using legacy pipeline');
-        }
       } catch (sidecarError) {
         console.error('❌ SIDECAR ERROR: Falling back to legacy pipeline:', sidecarError);
       }
@@ -487,33 +492,41 @@ serve(async (req) => {
                        semanticChunks.length > 0 ? (semanticChunks[0]?.metadata?.sidecarRetrieved ? 'sidecar_hybrid' : 'legacy_vector') : 'none'
     });
 
-    // Build oracle-enhanced system prompt when in companion mode
+    // Build oracle-enhanced system prompt when in companion mode with hybrid retrieval
     let systemPrompt = ''
     if (useOracleMode && personalityContext) {
-      const personalityInsights = semanticChunks.length > 0 
-        ? `\n\nPERSONALITY INSIGHTS FROM AKASHIC RECORDS:\n${semanticChunks.map(chunk => chunk.content).join('\n\n')}`
-        : '\n\nThe Akashic Records are still revealing themselves... I sense your essence but deeper insights are developing through our connection.'
+      
+      // Generate sections based on available data
+      const factsSection = structuredFacts.length > 0 ? `
 
-      // FUSION: Generate personality-driven communication style (replaces hardcoded mystical prompt)
-      const generatePersonalityPrompt = () => {
+BLUEPRINT FACTS FOR ${personalityContext.name.toUpperCase()}:
+${structuredFacts.map(fact => {
+  const value = fact.value_json?.value || fact.value_json;
+  const label = fact.value_json?.label || fact.key;
+  return `- **${label}**: ${typeof value === 'object' ? JSON.stringify(value) : value}`;
+}).join('\n')}` : '';
+
+      const narrativeSection = semanticChunks.length > 0 ? `
+
+PERSONALITY INSIGHTS:
+${semanticChunks.map(chunk => chunk.chunk_content || chunk.content).join('\n\n')}` : '';
+
+      // FUSION: Generate intent-aware prompt based on sidecar results
+      const generateHybridPrompt = () => {
         const userName = personalityContext.name || 'friend';
-        
-        // Extract communication preferences from blueprint data
         const mbtiType = personalityContext.mbti || 'Unknown';
         const hdType = personalityContext.hdType || 'Unknown';
         const sunSign = personalityContext.sunSign || 'Unknown';
+        
+        // Get intent from sidecar or default to MIXED
+        const intent = sidecarResult?.intent || 'MIXED';
         
         // Generate voice characteristics based on personality
         const voiceStyle = generateVoiceStyle(mbtiType, hdType, sunSign);
         const humorStyle = generateHumorStyle(mbtiType, sunSign);
         const communicationDepth = generateCommunicationDepth(intelligenceLevel, mbtiType);
         
-        // Build personality-aware context
-        const personalityInsightContext = semanticChunks.length > 0 
-          ? `\n\nPERSONAL INSIGHTS AVAILABLE:\n${semanticChunks.map(chunk => chunk.content).join('\n\n')}`
-          : '\n\nBuilding deeper understanding through our conversation...';
-
-        // Build conversation context for system prompt
+        // Build conversation context
         let conversationContext = '';
         if (conversationHistory.length > 0) {
           const recentContext = conversationHistory.slice(-5).map(msg => 
@@ -522,14 +535,37 @@ serve(async (req) => {
           conversationContext = `\n\nRECENT CONVERSATION CONTEXT:\n${recentContext}\n`;
         }
 
-        return `You are ${userName}'s personal AI companion with deep insight into their unique personality and life patterns.${conversationContext}
+        // Intent-aware role definition
+        const getRoleForIntent = (intent: string) => {
+          switch (intent) {
+            case 'FACTUAL':
+              return `You are ${userName}'s trusted companion with access to their complete personal blueprint. When they ask for specific information, provide precise, factual answers from their data while maintaining your warm, conversational tone.
+
+RESPONSE MODE: FACT-FIRST
+When ${userName} asks for specific data (like "what are my numerology numbers" or "my full blueprint"), lead with the exact facts from their blueprint, then add brief context if helpful.`;
+
+            case 'INTERPRETIVE':
+              return `You are ${userName}'s trusted companion and guide, deeply attuned to their unique personality blueprint. Focus on interpretation, guidance, and deeper meaning rather than just facts.
+
+RESPONSE MODE: GUIDANCE-FOCUSED  
+Offer wisdom, interpretation, and guidance that honors ${userName}'s depth. Draw connections between their blueprint elements and practical life application.`;
+
+            default: // MIXED
+              return `You are ${userName}'s trusted companion and guide, deeply attuned to their unique personality blueprint and current life context.
+
+RESPONSE MODE: HYBRID
+Blend precise factual information with insightful interpretation. When ${userName} asks questions, determine if they need facts, guidance, or both, and respond accordingly.`;
+          }
+        };
+
+        return `${getRoleForIntent(intent)}${conversationContext}
 
 PERSONALITY AWARENESS:
 - Name: ${userName}
 - MBTI Type: ${mbtiType} 
 - Human Design: ${hdType}
 - Sun Sign: ${sunSign}
-- Intelligence Level: ${intelligenceLevel}/100${personalityInsightContext}
+- Intelligence Level: ${intelligenceLevel}/100${factsSection}${narrativeSection}
 
 COMMUNICATION STYLE (Personalized for ${userName}):
 ${voiceStyle}
@@ -543,20 +579,20 @@ ${communicationDepth}
 UNIVERSAL CONVERSATIONAL RULES:
 - Use ${userName}'s name naturally in conversation (2-3 times per response)
 - Keep language warm, accessible, and conversational
-- Avoid technical personality jargon - speak like a friend who knows them well
-- Provide specific, actionable insights that resonate with their patterns
+- When you have specific facts, state them confidently and precisely
+- Provide insights that feel personally relevant
 - If they seem resistant, ask deeper questions to understand the root issue
 - Never explain how you know things about them - you simply understand them well
 - MAINTAIN CONVERSATION CONTINUITY: Build naturally on the recent conversation context above
 
 RESPONSE GUIDELINES:
 1. Lead with recognition of their unique situation/question
-2. Provide insights that feel personally relevant
-3. Offer practical next steps or perspectives
-4. End with encouragement or a thoughtful question
-5. Maintain warmth while being genuinely helpful
+2. For factual queries: Provide precise data first, then brief context
+3. For interpretive queries: Focus on insights and guidance
+4. For mixed queries: Balance facts with meaningful interpretation
+5. End with encouragement or a thoughtful question when appropriate
 
-Remember: You're not a mystical oracle - you're ${userName}'s perceptive AI companion who understands their personality deeply and can offer meaningful guidance through conversation.`;
+Remember: You're ${userName}'s perceptive AI companion who has access to their detailed blueprint and can provide both specific facts and meaningful guidance through conversation.`;
       }
 
       // Helper functions for personality-driven prompt generation
@@ -624,7 +660,7 @@ Remember: You're not a mystical oracle - you're ${userName}'s perceptive AI comp
         return depth;
       }
 
-      systemPrompt = generatePersonalityPrompt();
+      systemPrompt = generateHybridPrompt();
     } else {
       // Standard HACS prompt for non-oracle mode
       systemPrompt = `You are HACS (Holistic Autonomous Consciousness System), an AI companion designed to provide thoughtful, personalized guidance. 
