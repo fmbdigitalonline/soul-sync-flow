@@ -97,6 +97,106 @@ function extractBlueprintFacts(blueprint: any, userId: string): any[] {
     console.log('⚠️ No astrology data found in blueprint')
   }
   
+  // Chinese Astrology facts
+  if (blueprint.archetype_chinese) {
+    const chinese = blueprint.archetype_chinese
+    console.log('🐉 Processing Chinese astrology data:', JSON.stringify(chinese, null, 2))
+    
+    addFact('chinese_astrology', 'animal', chinese.animal, 'Chinese Zodiac Animal')
+    addFact('chinese_astrology', 'element', chinese.element, 'Chinese Element')
+    addFact('chinese_astrology', 'yin_yang', chinese.yin_yang, 'Yin/Yang Polarity')
+    addFact('chinese_astrology', 'keyword', chinese.keyword, 'Chinese Zodiac Keyword')
+  } else {
+    console.log('⚠️ No Chinese astrology data found in blueprint')
+  }
+  
+  // Big Five Personality Traits
+  if (blueprint.user_meta?.personality?.bigFive) {
+    const bigFive = blueprint.user_meta.personality.bigFive
+    const confidence = blueprint.user_meta.personality.confidence || {}
+    console.log('🧠 Processing Big Five personality data:', JSON.stringify(bigFive, null, 2))
+    
+    addFact('big_five', 'openness', bigFive.openness, 'Openness to Experience', confidence.openness || 0.7)
+    addFact('big_five', 'conscientiousness', bigFive.conscientiousness, 'Conscientiousness', confidence.conscientiousness || 0.7)
+    addFact('big_five', 'extraversion', bigFive.extraversion, 'Extraversion', confidence.extraversion || 0.7)
+    addFact('big_five', 'agreeableness', bigFive.agreeableness, 'Agreeableness', confidence.agreeableness || 0.7)
+    addFact('big_five', 'neuroticism', bigFive.neuroticism, 'Neuroticism', confidence.neuroticism || 0.7)
+  } else {
+    console.log('⚠️ No Big Five personality data found in blueprint')
+  }
+  
+  // Enhanced MBTI with probabilities
+  if (blueprint.user_meta?.personality?.mbtiProbabilities) {
+    const probabilities = blueprint.user_meta.personality.mbtiProbabilities
+    console.log('🧠 Processing MBTI probabilities:', JSON.stringify(probabilities, null, 2))
+    
+    // Get top 3 most likely types
+    const sortedTypes = Object.entries(probabilities)
+      .sort(([,a], [,b]) => (b as number) - (a as number))
+      .slice(0, 3)
+    
+    sortedTypes.forEach(([type, probability], index) => {
+      addFact('mbti_probabilities', `top_${index + 1}_type`, type, `MBTI Top ${index + 1} Type`, probability as number)
+      addFact('mbti_probabilities', `top_${index + 1}_probability`, probability, `MBTI Top ${index + 1} Probability`, 0.9)
+    })
+  }
+  
+  // User Meta Information
+  if (blueprint.user_meta) {
+    const userMeta = blueprint.user_meta
+    console.log('👤 Processing user meta data:', JSON.stringify(userMeta, null, 2))
+    
+    addFact('user_info', 'full_name', userMeta.full_name, 'Full Name')
+    addFact('user_info', 'preferred_name', userMeta.preferred_name, 'Preferred Name')
+    addFact('user_info', 'birth_date', userMeta.birth_date, 'Birth Date')
+    addFact('user_info', 'birth_location', userMeta.birth_location, 'Birth Location')
+    addFact('user_info', 'timezone', userMeta.timezone, 'Timezone')
+    addFact('user_info', 'birth_time_local', userMeta.birth_time_local, 'Birth Time')
+  } else {
+    console.log('⚠️ No user meta data found in blueprint')
+  }
+  
+  // Enhanced Human Design Gates
+  if (blueprint.energy_strategy_human_design?.gates) {
+    const gates = blueprint.energy_strategy_human_design.gates
+    console.log('🔮 Processing Human Design gates:', JSON.stringify(gates, null, 2))
+    
+    // Conscious personality gates
+    if (gates.conscious_personality && Array.isArray(gates.conscious_personality)) {
+      gates.conscious_personality.forEach((gate, index) => {
+        addFact('human_design_gates', `conscious_${index + 1}`, gate, `Conscious Gate ${index + 1}`)
+      })
+    }
+    
+    // Unconscious design gates  
+    if (gates.unconscious_design && Array.isArray(gates.unconscious_design)) {
+      gates.unconscious_design.forEach((gate, index) => {
+        addFact('human_design_gates', `unconscious_${index + 1}`, gate, `Unconscious Gate ${index + 1}`)
+      })
+    }
+  }
+  
+  // Human Design Centers
+  if (blueprint.energy_strategy_human_design?.centers) {
+    const centers = blueprint.energy_strategy_human_design.centers
+    console.log('🔮 Processing Human Design centers:', JSON.stringify(centers, null, 2))
+    
+    Object.entries(centers).forEach(([centerName, centerData]: [string, any]) => {
+      addFact('human_design_centers', `${centerName.toLowerCase()}_defined`, centerData.defined, `${centerName} Center Defined`)
+      if (centerData.gates && Array.isArray(centerData.gates)) {
+        addFact('human_design_centers', `${centerName.toLowerCase()}_gates`, centerData.gates.join(', '), `${centerName} Center Gates`)
+      }
+    })
+  }
+  
+  // Additional Human Design Properties
+  if (blueprint.energy_strategy_human_design) {
+    const hd = blueprint.energy_strategy_human_design
+    addFact('human_design_advanced', 'strategy', hd.strategy, 'Strategy')
+    addFact('human_design_advanced', 'definition', hd.definition, 'Definition')
+    addFact('human_design_advanced', 'not_self_theme', hd.not_self_theme, 'Not-Self Theme')
+  }
+  
   return facts
 }
 
