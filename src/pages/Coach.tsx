@@ -15,6 +15,7 @@ import { MobileTogglePanel } from "@/components/ui/mobile-toggle-panel";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { HACSSystemStatus } from "@/components/hacs/HACSSystemStatus";
 import { ManualBlueprintProcessor } from "@/components/test/ManualBlueprintProcessor";
+import { BlueprintFactsBootstrap } from "@/components/testing/BlueprintFactsBootstrap";
 
 const Coach = () => {
   const {
@@ -178,6 +179,9 @@ const Coach = () => {
             </div>
           )}
         </div>
+        
+        {/* Bootstrap component for development testing */}
+        <BlueprintFactsBootstrap />
       </div>
     </MainLayout>
   );
