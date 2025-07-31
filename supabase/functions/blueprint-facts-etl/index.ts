@@ -6,142 +6,95 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Extract facts from blueprint data
+// Extract facts from blueprint data with deduplication
 function extractBlueprintFacts(blueprint: any, userId: string): any[] {
   const facts: any[] = []
+  const seenKeys = new Set<string>() // Prevent duplicates
   
-  // Numerology facts
-  if (blueprint.values_life_path) {
-    const numerology = blueprint.values_life_path
-    
-    if (numerology.lifePathNumber) {
+  function addFact(facet: string, key: string, value: any, label: string, confidence: number = 1.0) {
+    const uniqueKey = `${facet}.${key}`
+    if (!seenKeys.has(uniqueKey) && value !== null && value !== undefined && value !== '') {
       facts.push({
         user_id: userId,
-        facet: 'numerology',
-        key: 'life_path',
-        value_json: { value: numerology.lifePathNumber, label: 'Life Path Number' },
-        confidence: 1.0
+        facet,
+        key,
+        value_json: { value, label },
+        confidence
       })
+      seenKeys.add(uniqueKey)
+      console.log(`✅ Added fact: ${uniqueKey} = ${value}`)
+    } else if (seenKeys.has(uniqueKey)) {
+      console.log(`⚠️ Skipping duplicate fact: ${uniqueKey}`)
+    } else {
+      console.log(`⚠️ Skipping invalid fact: ${uniqueKey} (empty value)`)
     }
+  }
+  
+  // Numerology facts - Fixed field mapping to blueprint.numerology with snake_case
+  if (blueprint.numerology) {
+    const numerology = blueprint.numerology
+    console.log('🔢 Processing numerology data:', JSON.stringify(numerology, null, 2))
     
-    if (numerology.expressionNumber) {
-      facts.push({
-        user_id: userId,
-        facet: 'numerology', 
-        key: 'expression',
-        value_json: { value: numerology.expressionNumber, label: 'Expression Number' },
-        confidence: 1.0
-      })
-    }
-    
-    if (numerology.soulUrgeNumber) {
-      facts.push({
-        user_id: userId,
-        facet: 'numerology',
-        key: 'soul_urge', 
-        value_json: { value: numerology.soulUrgeNumber, label: 'Soul Urge Number' },
-        confidence: 1.0
-      })
-    }
-    
-    if (numerology.personalityNumber) {
-      facts.push({
-        user_id: userId,
-        facet: 'numerology',
-        key: 'personality',
-        value_json: { value: numerology.personalityNumber, label: 'Personality Number' },
-        confidence: 1.0
-      })
-    }
+    addFact('numerology', 'life_path', numerology.life_path_number, 'Life Path Number')
+    addFact('numerology', 'expression', numerology.expression_number, 'Expression Number') 
+    addFact('numerology', 'soul_urge', numerology.soul_urge_number, 'Soul Urge Number')
+    addFact('numerology', 'personality', numerology.personality_number, 'Personality Number')
+    addFact('numerology', 'birthday', numerology.birthday_number, 'Birthday Number') // Added missing field
+  } else {
+    console.log('⚠️ No numerology data found in blueprint')
   }
   
   // Human Design facts
   if (blueprint.energy_strategy_human_design) {
     const hd = blueprint.energy_strategy_human_design
+    console.log('🔮 Processing Human Design data:', JSON.stringify(hd, null, 2))
     
-    if (hd.type) {
-      facts.push({
-        user_id: userId,
-        facet: 'human_design',
-        key: 'type',
-        value_json: { value: hd.type, label: 'Human Design Type' },
-        confidence: 1.0
-      })
-    }
-    
-    if (hd.authority) {
-      facts.push({
-        user_id: userId,
-        facet: 'human_design',
-        key: 'authority',
-        value_json: { value: hd.authority, label: 'Authority' },
-        confidence: 1.0
-      })
-    }
-    
-    if (hd.profile) {
-      facts.push({
-        user_id: userId,
-        facet: 'human_design',
-        key: 'profile',
-        value_json: { value: hd.profile, label: 'Profile' },
-        confidence: 1.0
-      })
-    }
+    addFact('human_design', 'type', hd.type, 'Human Design Type')
+    addFact('human_design', 'authority', hd.authority, 'Authority')
+    addFact('human_design', 'profile', hd.profile, 'Profile')
+  } else {
+    console.log('⚠️ No Human Design data found in blueprint')
   }
   
-  // MBTI facts - prioritize cognition_mbti over user_meta.personality to avoid duplicates
-  const mbtiType = blueprint.cognition_mbti?.type || blueprint.user_meta?.personality?.likelyType
-  const mbtiConfidence = blueprint.cognition_mbti?.type ? 1.0 : 0.9
-  const mbtiSource = blueprint.cognition_mbti?.type ? 'cognition_mbti' : 'user_meta_personality'
+  // MBTI facts - Fixed to prevent "Unknown" values and duplicates
+  let mbtiType = null
+  let mbtiConfidence = 1.0
+  let mbtiSource = 'unknown'
+  
+  // Prioritize cognition_mbti first, then user_meta.personality, but filter out "Unknown"
+  if (blueprint.cognition_mbti?.type && blueprint.cognition_mbti.type !== 'Unknown') {
+    mbtiType = blueprint.cognition_mbti.type
+    mbtiSource = 'cognition_mbti'
+    mbtiConfidence = 1.0
+  } else if (blueprint.user_meta?.personality?.likelyType && blueprint.user_meta.personality.likelyType !== 'Unknown') {
+    mbtiType = blueprint.user_meta.personality.likelyType
+    mbtiSource = 'user_meta_personality'
+    mbtiConfidence = 0.9
+  }
+  
+  console.log('🧠 MBTI processing:', { 
+    cognition_mbti_type: blueprint.cognition_mbti?.type, 
+    user_meta_type: blueprint.user_meta?.personality?.likelyType,
+    selected_type: mbtiType,
+    source: mbtiSource 
+  })
   
   if (mbtiType) {
-    facts.push({
-      user_id: userId,
-      facet: 'mbti',
-      key: 'type',
-      value_json: { 
-        value: mbtiType, 
-        label: 'MBTI Type',
-        source: mbtiSource
-      },
-      confidence: mbtiConfidence
-    })
+    addFact('mbti', 'type', mbtiType, 'MBTI Type', mbtiConfidence)
+  } else {
+    console.log('⚠️ No valid MBTI type found (filtering out "Unknown" values)')
   }
   
   // Astrology facts
   if (blueprint.archetype_western) {
     const astro = blueprint.archetype_western
+    console.log('⭐ Processing astrology data:', JSON.stringify(astro, null, 2))
     
-    if (astro.sun_sign) {
-      facts.push({
-        user_id: userId,
-        facet: 'astrology',
-        key: 'sun_sign',
-        value_json: { value: astro.sun_sign, label: 'Sun Sign' },
-        confidence: 1.0
-      })
-    }
-    
-    if (astro.moon_sign) {
-      facts.push({
-        user_id: userId,
-        facet: 'astrology',
-        key: 'moon_sign',
-        value_json: { value: astro.moon_sign, label: 'Moon Sign' },
-        confidence: 1.0
-      })
-    }
-    
-    if (astro.rising_sign) {
-      facts.push({
-        user_id: userId,
-        facet: 'astrology',
-        key: 'rising_sign',
-        value_json: { value: astro.rising_sign, label: 'Rising Sign' },
-        confidence: 1.0
-      })
-    }
+    addFact('astrology', 'sun_sign', astro.sun_sign, 'Sun Sign')
+    addFact('astrology', 'moon_sign', astro.moon_sign, 'Moon Sign') 
+    addFact('astrology', 'rising_sign', astro.rising_sign, 'Rising Sign')
+  } else {
+    console.log('⚠️ No astrology data found in blueprint')
   }
   
   return facts
