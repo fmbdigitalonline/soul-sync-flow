@@ -129,17 +129,78 @@ serve(async (req) => {
       }
     }
 
-    // ORACLE PIPELINE: Extract relevant personality sections with full debugging
+    // ENHANCED ORACLE PIPELINE: Hybrid retrieval with facts + narrative
     let semanticChunks = []
+    let structuredFacts = []
     let oracleStatus = 'initializing'
     
     if (useOracleMode && personalityContext) {
-      console.log('🔮 ORACLE PIPELINE: Starting semantic retrieval with personality context:', {
+      console.log('🔮 ENHANCED ORACLE: Starting hybrid retrieval with personality context:', {
         userName: personalityContext.name,
         mbtiType: personalityContext.mbti,
         hdType: personalityContext.hdType,
         sunSign: personalityContext.sunSign
       });
+
+      // STEP 1: Try retrieval sidecar first (feature flagged)
+      console.log('🔮 STEP 1: Attempting retrieval sidecar...');
+      try {
+        const sidecarResponse = await supabase.functions.invoke('retrieval-sidecar', {
+          body: {
+            userId,
+            query: message,
+            mode: 'companion'
+          },
+          headers: {
+            Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
+          }
+        });
+
+        console.log('🔮 SIDECAR RESULT:', {
+          success: !!sidecarResponse.data,
+          error: sidecarResponse.error?.message || null,
+          factsFound: sidecarResponse.data?.facts?.length || 0,
+          passagesFound: sidecarResponse.data?.passages?.length || 0,
+          intent: sidecarResponse.data?.intent || 'unknown'
+        });
+
+        if (sidecarResponse.data && !sidecarResponse.error) {
+          // Use sidecar results
+          structuredFacts = sidecarResponse.data.facts || [];
+          const sidecarPassages = sidecarResponse.data.passages || [];
+          
+          // Convert sidecar passages to semantic chunks format
+          semanticChunks = sidecarPassages.map((passage: any, index: number) => ({
+            content: passage.content,
+            relevance: passage.relevance,
+            reportType: 'personality',
+            metadata: {
+              ...passage.metadata,
+              sidecarRetrieved: true,
+              retrievalMethod: 'sidecar_hybrid'
+            }
+          }));
+
+          if (structuredFacts.length > 0 || semanticChunks.length > 0) {
+            oracleStatus = 'enhanced_oracle';
+            console.log('✅ SIDECAR SUCCESS: Enhanced retrieval complete:', {
+              facts: structuredFacts.length,
+              passages: semanticChunks.length,
+              oracleStatus
+            });
+          } else {
+            console.log('⚠️ SIDECAR: No results, falling back to legacy pipeline');
+          }
+        } else {
+          console.log('⚠️ SIDECAR: Failed or disabled, using legacy pipeline');
+        }
+      } catch (sidecarError) {
+        console.error('❌ SIDECAR ERROR: Falling back to legacy pipeline:', sidecarError);
+      }
+
+      // STEP 2: Legacy pipeline fallback if sidecar didn't provide results
+      if (semanticChunks.length === 0 && structuredFacts.length === 0) {
+        console.log('🔮 STEP 2: Using legacy vector search pipeline');
       
       // STEP 1: Check for pre-computed embeddings first
       console.log('🔮 STEP 1: Checking for pre-computed embeddings...');
@@ -402,9 +463,10 @@ serve(async (req) => {
           requiredProcessing: 'process-blueprint-embeddings function'
         });
         oracleStatus = 'initializing';
-      }
+        }
+      } // End legacy pipeline fallback
     } else {
-      console.log('🔮 ORACLE PIPELINE: Skipped - Oracle mode disabled or no personality context');
+      console.log('🔮 ENHANCED ORACLE: Skipped - Oracle mode disabled or no personality context');
       console.log('🔮 PIPELINE STATUS:', {
         useOracleMode,
         hasPersonalityContext: !!personalityContext,
@@ -412,12 +474,15 @@ serve(async (req) => {
       });
     }
     
-    console.log('🔮 ORACLE PIPELINE COMPLETE: Final status summary:', {
+    console.log('🔮 ENHANCED ORACLE COMPLETE: Final status summary:', {
       oracleStatus,
+      structuredFactsFound: structuredFacts.length,
       semanticChunksFound: semanticChunks.length,
-      pipelineSuccess: semanticChunks.length > 0,
+      totalResultsFound: structuredFacts.length + semanticChunks.length,
+      pipelineSuccess: structuredFacts.length > 0 || semanticChunks.length > 0,
       personalityContextAvailable: !!personalityContext,
-      processingMethod: semanticChunks.length > 0 ? (semanticChunks[0]?.metadata?.fallback ? 'keyword_fallback' : 'vector_search') : 'none'
+      processingMethod: structuredFacts.length > 0 ? 'hybrid_facts_first' : 
+                       semanticChunks.length > 0 ? (semanticChunks[0]?.metadata?.sidecarRetrieved ? 'sidecar_hybrid' : 'legacy_vector') : 'none'
     });
 
     // Build oracle-enhanced system prompt when in companion mode
@@ -635,14 +700,13 @@ Respond helpfully while building rapport and understanding.`
     // FUSION STEP 4: Return immediate response (fusion happens in background)
     return new Response(JSON.stringify({
       response,
-      module: useOracleMode ? 'oracle' : 'hacs',
-      mode: 'companion',
-      oracleStatus,
-      semanticChunks: semanticChunks.length,
-      personalityContext,
-      fusionEnabled: enableBackgroundIntelligence,
-      intelligenceLevel,
-      quality: oracleResponseData.quality
+      quality: 0.85,
+      semanticChunks: semanticChunks,
+      structuredFacts: structuredFacts,
+      personalityContext: personalityContext,
+      intelligenceLevel: intelligenceLevel,
+      oracleStatus: oracleStatus,
+      processingTime: Date.now() - startTime
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })

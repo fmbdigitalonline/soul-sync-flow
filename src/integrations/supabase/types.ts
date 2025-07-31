@@ -377,6 +377,45 @@ export type Database = {
         }
         Relationships: []
       }
+      blueprint_facts: {
+        Row: {
+          confidence: number | null
+          created_at: string
+          facet: string
+          id: string
+          key: string
+          source_spans: Json | null
+          updated_at: string
+          user_id: string
+          value_json: Json
+          version: string
+        }
+        Insert: {
+          confidence?: number | null
+          created_at?: string
+          facet: string
+          id?: string
+          key: string
+          source_spans?: Json | null
+          updated_at?: string
+          user_id: string
+          value_json: Json
+          version?: string
+        }
+        Update: {
+          confidence?: number | null
+          created_at?: string
+          facet?: string
+          id?: string
+          key?: string
+          source_spans?: Json | null
+          updated_at?: string
+          user_id?: string
+          value_json?: Json
+          version?: string
+        }
+        Relationships: []
+      }
       blueprint_text_embeddings: {
         Row: {
           chunk_content: string
@@ -384,8 +423,12 @@ export type Database = {
           chunk_index: number
           created_at: string
           embedding: string
+          facet: string | null
+          heading: string | null
           id: string
+          paragraph_index: number | null
           source_report_id: string | null
+          tags: string[] | null
           updated_at: string
           user_id: string
         }
@@ -395,8 +438,12 @@ export type Database = {
           chunk_index: number
           created_at?: string
           embedding: string
+          facet?: string | null
+          heading?: string | null
           id?: string
+          paragraph_index?: number | null
           source_report_id?: string | null
+          tags?: string[] | null
           updated_at?: string
           user_id: string
         }
@@ -406,8 +453,12 @@ export type Database = {
           chunk_index?: number
           created_at?: string
           embedding?: string
+          facet?: string | null
+          heading?: string | null
           id?: string
+          paragraph_index?: number | null
           source_report_id?: string | null
+          tags?: string[] | null
           updated_at?: string
           user_id?: string
         }
@@ -2721,6 +2772,39 @@ export type Database = {
           last_activity_date?: string | null
           productivity_metrics?: Json | null
           updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      retrieval_config: {
+        Row: {
+          ann_thresholds: number[] | null
+          created_at: string
+          facts_priority: boolean | null
+          hybrid_retrieval_enabled: boolean | null
+          id: string
+          sidecar_enabled: boolean | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ann_thresholds?: number[] | null
+          created_at?: string
+          facts_priority?: boolean | null
+          hybrid_retrieval_enabled?: boolean | null
+          id?: string
+          sidecar_enabled?: boolean | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ann_thresholds?: number[] | null
+          created_at?: string
+          facts_priority?: boolean | null
+          hybrid_retrieval_enabled?: boolean | null
+          id?: string
+          sidecar_enabled?: boolean | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
