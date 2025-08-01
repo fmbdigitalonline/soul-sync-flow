@@ -499,12 +499,34 @@ serve(async (req) => {
       // Generate sections based on available data
       const factsSection = structuredFacts.length > 0 ? `
 
-BLUEPRINT FACTS FOR ${personalityContext.name.toUpperCase()}:
-${structuredFacts.map(fact => {
-  const value = fact.value_json?.value || fact.value_json;
-  const label = fact.value_json?.label || fact.key;
-  return `- **${label}**: ${typeof value === 'object' ? JSON.stringify(value) : value}`;
-}).join('\n')}` : '';
+COMPREHENSIVE BLUEPRINT FOR ${personalityContext.name.toUpperCase()} (${structuredFacts.length} Facts Available):
+${(() => {
+  // Group facts by facet for organized presentation
+  const factsByFacet = structuredFacts.reduce((groups, fact) => {
+    const facet = fact.facet || 'general';
+    if (!groups[facet]) groups[facet] = [];
+    groups[facet].push(fact);
+    return groups;
+  }, {});
+  
+  // Order facets by importance for blueprint reading
+  const facetOrder = ['numerology', 'astrology', 'mbti', 'human_design', 'big_five'];
+  const orderedFacets = facetOrder.filter(f => factsByFacet[f]).concat(
+    Object.keys(factsByFacet).filter(f => !facetOrder.includes(f))
+  );
+  
+  return orderedFacets.map(facet => {
+    const facetTitle = facet.replace(/_/g, ' ').toUpperCase();
+    const facts = factsByFacet[facet];
+    const factsList = facts.map(fact => {
+      const value = fact.value_json?.value || fact.value_json;
+      const label = fact.value_json?.label || fact.key.replace(/_/g, ' ');
+      return `  • **${label}**: ${typeof value === 'object' ? JSON.stringify(value) : value}`;
+    }).join('\n');
+    
+    return `**${facetTitle}** (${facts.length} facts):\n${factsList}`;
+  }).join('\n\n');
+})()}` : '';
 
       const narrativeSection = semanticChunks.length > 0 ? `
 
