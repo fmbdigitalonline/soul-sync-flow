@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { useStewardIntroductionEnhanced } from '@/hooks/use-steward-introduction-enhanced';
 import { useStewardIntroductionDatabase } from '@/hooks/use-steward-introduction-database';
 import { HACSLoadingDiagnostics } from './HACSLoadingDiagnostics';
+import { useGlobalChatState } from '@/hooks/use-global-chat-state';
 
 interface FloatingHACSProps {
   className?: string;
@@ -30,6 +31,10 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   const [moduleActivity, setModuleActivity] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
   const [hermeticProgress, setHermeticProgress] = useState(40); // Start at 40% (blueprint completed)
+  
+  // Global chat loading state
+  const { subscribe } = useGlobalChatState();
+  const [chatLoading, setChatLoading] = useState(false);
   
   const { intelligence, loading, refreshIntelligence } = useHacsIntelligence();
   const { hasReport: hasHermeticReport, loading: hermeticLoading, refreshStatus: refreshHermeticStatus } = useHermeticReportStatus();
@@ -84,6 +89,12 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
 
   // Phase 3: Enhanced system readiness check 
   const isSystemReady = !loading && !databaseValidation.loading && !hermeticLoading && !!intelligence;
+
+  // Subscribe to global chat loading state
+  useEffect(() => {
+    const unsubscribe = subscribe(setChatLoading);
+    return unsubscribe;
+  }, [subscribe]);
 
   // Update orb stage based on authentic HACS state + hermetic generation
   useEffect(() => {
@@ -417,7 +428,14 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
           <motion.div
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
-            className="cursor-pointer"
+            className={cn(
+              "cursor-pointer",
+              chatLoading && "animate-pulse"
+            )}
+            style={chatLoading ? {
+              animationDuration: "150ms",
+              animationTimingFunction: "ease-in-out"
+            } : {}}
           >
             <IntelligentSoulOrb
               size="sm"
@@ -426,7 +444,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
               intelligenceLevel={intelligenceLevel}
               showProgressRing={intelligenceLevel > 0}
               showIntelligenceTooltip={false}
-              isThinking={isThinking}
+              isThinking={isThinking || chatLoading}
               activeModule={activeModule}
               moduleActivity={moduleActivity || isGeneratingInsight || isGeneratingReport}
               hermeticProgress={hermeticProgress}

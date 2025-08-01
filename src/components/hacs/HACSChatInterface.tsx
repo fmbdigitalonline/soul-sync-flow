@@ -6,6 +6,8 @@ import { SendHorizontal, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ConversationMessage } from "@/hooks/use-hacs-conversation";
 import { TypewriterText } from "@/components/coach/TypewriterText";
+import { ThinkingDots } from "./ThinkingDots";
+import { useGlobalChatState } from "@/hooks/use-global-chat-state";
 
 interface HACSChatInterfaceProps {
   messages: ConversationMessage[];
@@ -21,6 +23,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
   const [inputValue, setInputValue] = useState("");
   const [initialMessageCount, setInitialMessageCount] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { updateChatLoading } = useGlobalChatState();
 
   // Track initial message count to avoid animating historical messages
   useEffect(() => {
@@ -36,6 +39,11 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Update global chat loading state
+  useEffect(() => {
+    updateChatLoading(isLoading);
+  }, [isLoading, updateChatLoading]);
 
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
@@ -116,10 +124,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
           
           {isLoading && (
             <div className="w-full py-2 text-left">
-              <div className="flex items-center space-x-2">
-                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">HACS is thinking...</span>
-              </div>
+              <ThinkingDots className="ml-2" />
             </div>
           )}
           
