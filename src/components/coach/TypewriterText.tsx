@@ -59,13 +59,14 @@ export const TypewriterText: React.FC<TypewriterTextProps> = ({
         setDisplayText(targetText.slice(0, currentIndex + 1));
         setCurrentIndex(prev => prev + 1);
       }, delay);
-    } else if (!completedRef.current && !isStreaming) {
-      // Animation complete
+    } else if (!completedRef.current && currentIndex >= targetText.length) {
+      // Animation complete - call completion regardless of isStreaming prop
       completedRef.current = true;
+      console.log('🎯 TypewriterText animation complete for message:', messageId);
       if (onComplete) {
-        setTimeout(onComplete, 300); // Small delay before calling complete
+        setTimeout(onComplete, 300);
       }
-      // Call streaming complete callback for message tracking
+      // CRITICAL: Call streaming complete to unlock UI - this is ground truth
       if (messageId && onStreamingComplete) {
         setTimeout(() => onStreamingComplete(messageId), 300);
       }
