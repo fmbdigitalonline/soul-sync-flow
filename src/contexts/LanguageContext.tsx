@@ -179,6 +179,38 @@ const translations: Record<Language, Translations> = {
       categoryFinancial: 'Financial',
       categorySpiritual: 'Spiritual & Mindfulness',
       targetDate: 'Target Date'
+    },
+    // Onboarding Flow
+    onboarding: {
+      welcome: 'Welcome to Your Spiritual Journey',
+      welcomeDesc: 'Discover your authentic path through personalized guidance and spiritual insights',
+      beginJourney: 'Begin Your Journey',
+      step: 'Step',
+      of: 'of',
+      whatsYourName: 'What\'s your name?',
+      fullName: 'Full Name',
+      fullNamePlaceholder: 'Enter your full name',
+      whenWereBorn: 'When were you born?',
+      birthDate: 'Birth Date',
+      day: 'Day',
+      month: 'Month',
+      year: 'Year',
+      selectExactDate: 'Please select your exact birth date for accurate insights',
+      whatTimeWereBorn: 'What time were you born?',
+      birthTime: 'Birth Time',
+      birthTimeDesc: 'Your birth time helps create a more precise spiritual blueprint',
+      whereWereBorn: 'Where were you born?',
+      birthLocation: 'Birth Location',
+      birthLocationPlaceholder: 'Enter your birth city and country',
+      birthLocationDesc: 'Your birth location provides important astrological context',
+      tellPersonality: 'Tell us about your personality',
+      generatingBlueprint: 'Generating your unique spiritual blueprint...',
+      choosePath: 'Choose your path',
+      authRequired: 'Authentication Required',
+      authRequiredDesc: 'Please sign in to continue your spiritual journey',
+      devMode: 'Development Mode',
+      back: 'Back',
+      continue: 'Continue'
     }
   },
   nl: {
@@ -352,6 +384,38 @@ const translations: Record<Language, Translations> = {
       categoryFinancial: 'Financieel',
       categorySpiritual: 'Spiritueel & Mindfulness',
       targetDate: 'Streefdatum'
+    },
+    // Onboarding Flow
+    onboarding: {
+      welcome: 'Welkom bij Je Spirituele Reis',
+      welcomeDesc: 'Ontdek je authentieke pad door gepersonaliseerde begeleiding en spirituele inzichten',
+      beginJourney: 'Begin Je Reis',
+      step: 'Stap',
+      of: 'van',
+      whatsYourName: 'Wat is je naam?',
+      fullName: 'Volledige Naam',
+      fullNamePlaceholder: 'Voer je volledige naam in',
+      whenWereBorn: 'Wanneer ben je geboren?',
+      birthDate: 'Geboortedatum',
+      day: 'Dag',
+      month: 'Maand',
+      year: 'Jaar',
+      selectExactDate: 'Selecteer je exacte geboortedatum voor nauwkeurige inzichten',
+      whatTimeWereBorn: 'Hoe laat ben je geboren?',
+      birthTime: 'Geboortetijd',
+      birthTimeDesc: 'Je geboortetijd helpt bij het creëren van een nauwkeurigere spirituele blauwdruk',
+      whereWereBorn: 'Waar ben je geboren?',
+      birthLocation: 'Geboorteplaats',
+      birthLocationPlaceholder: 'Voer je geboortestad en land in',
+      birthLocationDesc: 'Je geboorteplaats biedt belangrijke astrologische context',
+      tellPersonality: 'Vertel ons over je persoonlijkheid',
+      generatingBlueprint: 'Je unieke spirituele blauwdruk wordt gegenereerd...',
+      choosePath: 'Kies je pad',
+      authRequired: 'Authenticatie Vereist',
+      authRequiredDesc: 'Meld je aan om je spirituele reis voort te zetten',
+      devMode: 'Ontwikkelingsmodus',
+      back: 'Terug',
+      continue: 'Doorgaan'
     }
   }
 };
