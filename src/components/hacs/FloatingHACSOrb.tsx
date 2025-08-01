@@ -17,6 +17,7 @@ import { useStewardIntroductionEnhanced } from '@/hooks/use-steward-introduction
 import { useStewardIntroductionDatabase } from '@/hooks/use-steward-introduction-database';
 import { HACSLoadingDiagnostics } from './HACSLoadingDiagnostics';
 import { useGlobalChatState } from '@/hooks/use-global-chat-state';
+import { useStreamingSyncState } from '@/hooks/use-streaming-sync-state';
 
 interface FloatingHACSProps {
   className?: string;
@@ -32,9 +33,11 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   const [isThinking, setIsThinking] = useState(false);
   const [hermeticProgress, setHermeticProgress] = useState(40); // Start at 40% (blueprint completed)
   
-  // Global chat loading state
+  // Global chat loading state and streaming sync
   const { subscribe } = useGlobalChatState();
+  const { subscribe: subscribeStreaming } = useStreamingSyncState();
   const [chatLoading, setChatLoading] = useState(false);
+  const [streamingTiming, setStreamingTiming] = useState(75);
   
   const { intelligence, loading, refreshIntelligence } = useHacsIntelligence();
   const { hasReport: hasHermeticReport, loading: hermeticLoading, refreshStatus: refreshHermeticStatus } = useHermeticReportStatus();
@@ -90,11 +93,16 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   // Phase 3: Enhanced system readiness check 
   const isSystemReady = !loading && !databaseValidation.loading && !hermeticLoading && !!intelligence;
 
-  // Subscribe to global chat loading state
+  // Subscribe to global chat loading state and streaming timing
   useEffect(() => {
     const unsubscribe = subscribe(setChatLoading);
     return unsubscribe;
   }, [subscribe]);
+
+  useEffect(() => {
+    const unsubscribeStreaming = subscribeStreaming(setStreamingTiming);
+    return unsubscribeStreaming;
+  }, [subscribeStreaming]);
 
   // Update orb stage based on authentic HACS state + hermetic generation
   useEffect(() => {
@@ -433,7 +441,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
               chatLoading && "animate-pulse"
             )}
             style={chatLoading ? {
-              animationDuration: "150ms",
+              animationDuration: `${streamingTiming}ms`,
               animationTimingFunction: "ease-in-out"
             } : {}}
           >

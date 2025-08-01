@@ -1,11 +1,13 @@
 
 import { useState, useCallback, useRef } from 'react';
+import { useStreamingSyncState } from './use-streaming-sync-state';
 
 export function useStreamingMessage() {
   const [streamingContent, setStreamingContent] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const contentRef = useRef('');
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const { updateStreamingTiming, resetStreamingTiming } = useStreamingSyncState();
 
   const startStreaming = useCallback(() => {
     setIsStreaming(true);
@@ -38,6 +40,9 @@ export function useStreamingMessage() {
           delay = speed * 0.8; // Slightly faster for spaces
         }
         
+        // Sync timing with other components
+        updateStreamingTiming(char, speed);
+        
         intervalRef.current = setTimeout(typeNextCharacter, delay);
       } else {
         setIsStreaming(false);
@@ -67,10 +72,11 @@ export function useStreamingMessage() {
     setIsStreaming(false);
     setStreamingContent('');
     contentRef.current = '';
+    resetStreamingTiming();
     if (intervalRef.current) {
       clearTimeout(intervalRef.current);
     }
-  }, []);
+  }, [resetStreamingTiming]);
 
   return {
     streamingContent,
