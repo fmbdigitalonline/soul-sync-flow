@@ -712,6 +712,27 @@ Respond helpfully while building rapport and understanding.`
     // MODEL SELECTION: Use GPT-4.1 mini for streaming capability and enhanced reasoning  
     const selectedModel = 'gpt-4.1-mini-2025-04-14';
 
+    // CONVERSATION MEMORY: Build messages array with conversation history
+    const messages = [
+      { 
+        role: 'system', 
+        content: systemPrompt + '\n\nIMPORTANT: Use double line breaks (\\n\\n) between paragraphs to create natural reading pauses. Keep paragraphs to 2-3 sentences maximum for digestible, conversational flow.\n\nCONVERSATION CONTINUITY: Reference and build upon previous exchanges naturally. Acknowledge what has been discussed before while staying focused on the current query.'
+      }
+    ];
+
+    // Add conversation history if available (last 5 exchanges to stay within token limits)
+    if (conversationHistory && Array.isArray(conversationHistory) && conversationHistory.length > 0) {
+      const recentHistory = conversationHistory.slice(-10); // Last 10 messages (5 exchanges)
+      messages.push(...recentHistory);
+      
+      console.log(`🧠 CONVERSATION CONTEXT: Including ${recentHistory.length} previous messages in context`);
+    }
+
+    // Add current user message
+    messages.push({ role: 'user', content: message });
+
+    console.log(`🔗 MESSAGE ARRAY: Total messages: ${messages.length}, History included: ${conversationHistory?.length || 0} original messages`);
+
     // Call OpenAI for response generation using current model
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -721,13 +742,7 @@ Respond helpfully while building rapport and understanding.`
       },
       body: JSON.stringify({
         model: selectedModel,
-        messages: [
-          { 
-            role: 'system', 
-            content: systemPrompt + '\n\nIMPORTANT: Use double line breaks (\\n\\n) between paragraphs to create natural reading pauses. Keep paragraphs to 2-3 sentences maximum for digestible, conversational flow.'
-          },
-          { role: 'user', content: message }
-        ],
+        messages: messages,
         temperature: useOracleMode ? 0.8 : 0.7,
         max_tokens: maxTokens
       }),
