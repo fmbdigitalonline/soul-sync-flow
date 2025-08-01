@@ -13,6 +13,7 @@ import { useHACSConversationAdapter } from "@/hooks/use-hacs-conversation-adapte
 interface HACSChatInterfaceProps {
   messages: ConversationMessage[];
   isLoading: boolean;
+  isStreamingResponse?: boolean;
   onSendMessage: (message: string) => Promise<void>;
   onStreamingComplete?: (messageId: string) => void;
 }
@@ -20,6 +21,7 @@ interface HACSChatInterfaceProps {
 export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
   messages,
   isLoading,
+  isStreamingResponse = false,
   onSendMessage,
   onStreamingComplete,
 }) => {
@@ -127,9 +129,9 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
             );
           })}
           
-          {isLoading && (
+          {isLoading && !isStreamingResponse && (
             <div className="w-full py-2 text-left">
-              <ThinkingDots className="ml-2" isThinking={isLoading} />
+              <ThinkingDots className="ml-2" isThinking={isLoading && !isStreamingResponse} />
             </div>
           )}
           

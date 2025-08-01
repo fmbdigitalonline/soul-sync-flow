@@ -33,6 +33,7 @@ export const useHACSConversation = () => {
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [isStreamingResponse, setIsStreamingResponse] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState<HACSQuestion | null>(null);
   const sessionIdRef = useRef(`session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
@@ -359,6 +360,10 @@ export const useHACSConversation = () => {
       };
 
       setMessages(prev => [...prev, oracleMessage]);
+      
+      // PILLAR II: Transition from thinking to streaming state
+      setIsLoading(false);
+      setIsStreamingResponse(true);
 
       // Save conversation to database with oracle metadata
       await saveConversation([...messages, userMessage, oracleMessage]);
@@ -381,6 +386,7 @@ export const useHACSConversation = () => {
     } finally {
       setIsLoading(false);
       setIsTyping(false);
+      setIsStreamingResponse(false);
     }
   }, [user, messages, conversationId, saveConversation]);
 
@@ -507,10 +513,12 @@ export const useHACSConversation = () => {
     setMessages(prev => 
       prev.map(msg => 
         msg.id === messageId 
-          ? { ...msg, isStreaming: false }
+          ? { ...msg, isStreaming: false } 
           : msg
       )
     );
+    // PILLAR II: Clear streaming state when TypewriterText completes
+    setIsStreamingResponse(false);
   }, []);
 
   const clearConversation = useCallback(() => {
@@ -523,6 +531,7 @@ export const useHACSConversation = () => {
     messages,
     isLoading,
     isTyping,
+    isStreamingResponse,
     conversationId,
     currentQuestion,
     sendMessage,

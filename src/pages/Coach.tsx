@@ -18,6 +18,7 @@ const Coach = () => {
   const {
     messages,
     isLoading,
+    isStreamingResponse,
     sendMessage,
     resetConversation,
     markMessageStreamingComplete
@@ -88,6 +89,7 @@ const Coach = () => {
     <HACSChatInterface
       messages={messages}
       isLoading={isLoading}
+      isStreamingResponse={isStreamingResponse}
       onSendMessage={handleSendMessage}
       onStreamingComplete={markMessageStreamingComplete}
     />

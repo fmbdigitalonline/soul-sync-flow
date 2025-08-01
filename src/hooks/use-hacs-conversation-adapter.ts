@@ -10,6 +10,7 @@ import { BackgroundIntelligenceService } from '../services/background-intelligen
 export interface HACSConversationAdapter {
   messages: ConversationMessage[];
   isLoading: boolean;
+  isStreamingResponse: boolean;
   sendMessage: (
     content: string,
     usePersonalization?: boolean,
@@ -287,6 +288,7 @@ export const useHACSConversationAdapter = (
   return {
     messages: hacsConversation.messages,
     isLoading: hacsConversation.isLoading || enhancedCoach.isLoading || isOracleLoading,
+    isStreamingResponse: hacsConversation.isStreamingResponse,
     sendMessage,
     resetConversation,
     currentAgent: enhancedCoach.currentAgent,
