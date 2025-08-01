@@ -35,6 +35,9 @@ export const useHACSConversationAdapter = (
   initialAgent: string = "guide",
   pageContext: string = "general"
 ): HACSConversationAdapter => {
+  // Local state for Oracle loading
+  const [isOracleLoading, setIsOracleLoading] = useState(false);
+  
   // FUSION FIX: Use ModeContext to determine correct agent mode
   const { currentMode, modeConfig } = useMode();
   
@@ -130,8 +133,8 @@ export const useHACSConversationAdapter = (
       if (isCompanionMode) {
         console.log('🔮 ORACLE-FIRST: Starting Oracle-prioritized conversation flow');
         
-        // Show temporary loading state for Oracle channeling
-        await hacsConversation.sendImmediateMessage(content, '✨ Channeling Oracle wisdom...');
+        // Set local loading state to trigger thinking dots
+        setIsOracleLoading(true);
         
         try {
           // Call the companion oracle function with fusion enabled
@@ -156,8 +159,8 @@ export const useHACSConversationAdapter = (
             responseLength: oracleResponse.response?.length || 0
           });
           
-          // Replace loading message with Oracle response
-          await hacsConversation.replaceLastMessage(oracleResponse.response);
+          // Use sendOracleMessage with the response to handle proper conversation flow
+          await hacsConversation.sendOracleMessage(content, oracleResponse);
           
           // Background processing for future intelligence
           BackgroundIntelligenceService.processInBackground(
@@ -170,20 +173,10 @@ export const useHACSConversationAdapter = (
         } catch (error) {
           console.error('❌ ORACLE-FIRST ERROR: Falling back to immediate response', error);
           
-          // Fallback: Get immediate response and replace loading message
-          const accumulatedIntelligence = await BackgroundIntelligenceService.getAccumulatedIntelligence(
-            user.id,
-            sessionId
-          );
-          
-          const immediateResponse = await ImmediateResponseService.generateImmediateResponse(
-            content,
-            user.id,
-            agentMode,
-            accumulatedIntelligence
-          );
-          
-          await hacsConversation.replaceLastMessage(immediateResponse.content);
+          // Fallback: Use standard HACS conversation
+          await hacsConversation.sendMessage(content);
+        } finally {
+          setIsOracleLoading(false);
         }
         
       } else {
@@ -241,7 +234,7 @@ export const useHACSConversationAdapter = (
 
   return {
     messages: hacsConversation.messages,
-    isLoading: hacsConversation.isLoading || enhancedCoach.isLoading,
+    isLoading: hacsConversation.isLoading || enhancedCoach.isLoading || isOracleLoading,
     sendMessage,
     resetConversation,
     currentAgent: enhancedCoach.currentAgent,
