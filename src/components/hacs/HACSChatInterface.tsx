@@ -129,7 +129,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
           
           {isLoading && (
             <div className="w-full py-2 text-left">
-              <ThinkingDots className="ml-2" />
+              <ThinkingDots className="ml-2" isThinking={isLoading} />
             </div>
           )}
           

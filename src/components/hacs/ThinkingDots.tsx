@@ -8,7 +8,7 @@ interface ThinkingDotsProps {
 
 export const ThinkingDots: React.FC<ThinkingDotsProps> = ({ 
   className = "",
-  isThinking = true 
+  isThinking = false 
 }) => {
   // Steady thinking animation - not synced to character timing
   const dotVariants = {

@@ -440,12 +440,18 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
             animate={chatLoading ? {
               scale: [1, 1.05, 1],
               opacity: [0.9, 1, 0.9]
-            } : {}}
+            } : {
+              scale: 1,
+              opacity: 1
+            }}
             transition={chatLoading ? {
               duration: 2,
               repeat: Infinity,
               ease: "easeInOut"
-            } : {}}
+            } : {
+              duration: 0.3,
+              ease: "easeOut"
+            }}
           >
             <IntelligentSoulOrb
               size="sm"
