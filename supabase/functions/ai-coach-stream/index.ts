@@ -58,28 +58,41 @@ serve(async (req) => {
       userDisplayName = 'friend'
     } = await req.json();
 
+    // Detect full blueprint requests and increase token limits
+    const isFullBlueprintRequest = message.toLowerCase().includes('full blueprint') || 
+                                   message.toLowerCase().includes('complete blueprint') ||
+                                   message.toLowerCase().includes('entire blueprint');
+    
+    const finalMaxTokens = isFullBlueprintRequest ? 4000 : maxTokens;
+
     console.log(`🚀 Starting streaming chat completion (${agentType}, Blueprint: ${includeBlueprint}, Context: ${contextDepth}, User: ${user.id})`);
 
-    // Layered model selection for streaming
-    const selectStreamingModel = (agentType: string, contextDepth: string, includeBlueprint: boolean) => {
+    // Updated model selection using GPT-4.1 mini as requested
+    const selectStreamingModel = (agentType: string, contextDepth: string, includeBlueprint: boolean, isFullBlueprint: boolean) => {
+      // Full blueprint requests get premium treatment
+      if (isFullBlueprint) {
+        console.log('📋 Full Blueprint Request: gpt-4.1-mini-2025-04-14');
+        return 'gpt-4.1-mini-2025-04-14';
+      }
+      
       // Core Brain Layer - deep personality integration
       if (includeBlueprint && (contextDepth === 'deep' || agentType === 'guide')) {
-        console.log('🧠 Streaming with Core Brain Layer: gpt-4o');
-        return 'gpt-4o';
+        console.log('🧠 Streaming with Core Brain Layer: gpt-4.1-mini-2025-04-14');
+        return 'gpt-4.1-mini-2025-04-14';
       }
       
       // Exploration Coach Layer - emotional themes
       if (agentType === 'coach' && contextDepth === 'emotional') {
-        console.log('🧭 Streaming with Exploration Coach Layer: gpt-4o');
-        return 'gpt-4o';
+        console.log('🧭 Streaming with Exploration Coach Layer: gpt-4.1-mini-2025-04-14');
+        return 'gpt-4.1-mini-2025-04-14';
       }
       
       // ACS Layer - fast state switching and routine interactions
-      console.log('⚡ Streaming with ACS Layer: gpt-4o-mini');
-      return 'gpt-4o-mini';
+      console.log('⚡ Streaming with ACS Layer: gpt-4.1-mini-2025-04-14');
+      return 'gpt-4.1-mini-2025-04-14';
     };
 
-    const selectedModel = selectStreamingModel(agentType, contextDepth, includeBlueprint);
+    const selectedModel = selectStreamingModel(agentType, contextDepth, includeBlueprint, isFullBlueprintRequest);
 
     // Build messages array
     const messages = [];
@@ -106,14 +119,14 @@ serve(async (req) => {
       });
     }
 
-    // Dynamic parameters based on selected model
-    const finalTemperature = selectedModel === 'gpt-4o' ? temperature : Math.min(temperature, 0.5);
-    const finalMaxTokens = selectedModel === 'gpt-4o' ? maxTokens : Math.min(maxTokens, 1000);
+    // Dynamic parameters - use finalMaxTokens calculated earlier for blueprint requests
+    const finalTemperature = selectedModel.includes('gpt-4.1') ? temperature : Math.min(temperature, 0.5);
 
     console.log('🎯 Streaming with layered model:', {
       model: selectedModel,
       temperature: finalTemperature,
-      maxTokens: finalMaxTokens
+      maxTokens: finalMaxTokens,
+      isFullBlueprint: isFullBlueprintRequest
     });
 
     console.log('🤖 Making OpenAI streaming API request...');

@@ -121,31 +121,70 @@ HONESTY LEVEL: ${context.readinessLevel}/10 - Calibrate your directness accordin
   ): Promise<HermeticInsight[]> {
     const insights: HermeticInsight[] = [];
 
-    // Extract from shadow work section
+    // For personality_reports, access consciousness_integration_map
+    if (hermeticData.consciousness_integration_map) {
+      console.log('📊 Processing consciousness integration map for brutal honesty');
+      const consciousnessInsights = this.extractConsciousnessPatterns(hermeticData.consciousness_integration_map, context);
+      insights.push(...consciousnessInsights);
+    }
+
+    // Extract from shadow work section (legacy structure)
     if (hermeticData.shadow_work_integration) {
       const shadowInsights = this.extractShadowPatterns(hermeticData.shadow_work_integration, context);
       insights.push(...shadowInsights);
     }
 
-    // Extract from hermetic fractal analysis
+    // Extract from hermetic fractal analysis (legacy structure)
     if (hermeticData.hermetic_fractal_analysis) {
       const fractalInsights = this.extractFractalPatterns(hermeticData.hermetic_fractal_analysis, context);
       insights.push(...fractalInsights);
     }
 
-    // Extract from transformation phases
+    // Extract from transformation phases (legacy structure)
     if (hermeticData.transformation_phases) {
       const transformationInsights = this.extractTransformationPatterns(hermeticData.transformation_phases, context);
       insights.push(...transformationInsights);
     }
 
-    // Extract from polarity integration
+    // Extract from polarity integration (legacy structure)
     if (hermeticData.polarity_integration) {
       const polarityInsights = this.extractPolarityPatterns(hermeticData.polarity_integration, context);
       insights.push(...polarityInsights);
     }
 
     return insights.slice(0, 3); // Top 3 most relevant insights
+  }
+
+  private extractConsciousnessPatterns(consciousnessData: any, context: BrutalHonestyContext): HermeticInsight[] {
+    const insights: HermeticInsight[] = [];
+
+    if (typeof consciousnessData === 'string') {
+      // Extract growth edge patterns from consciousness integration
+      const growthPatterns = this.extractPatternsByKeywords(
+        consciousnessData,
+        ['challenge', 'resistance', 'avoid', 'struggle', 'pattern', 'block'],
+        'growth_edge'
+      );
+      insights.push(...growthPatterns);
+
+      // Extract shadow patterns from consciousness work
+      const shadowPatterns = this.extractPatternsByKeywords(
+        consciousnessData,
+        ['shadow', 'denied', 'suppressed', 'unconscious', 'hidden'],
+        'shadow_pattern'
+      );
+      insights.push(...shadowPatterns);
+
+      // Extract truth calling patterns
+      const truthPatterns = this.extractPatternsByKeywords(
+        consciousnessData,
+        ['authentic', 'truth', 'genuine', 'real', 'integrity'],
+        'truth_calling'
+      );
+      insights.push(...truthPatterns);
+    }
+
+    return insights;
   }
 
   private extractShadowPatterns(shadowData: any, context: BrutalHonestyContext): HermeticInsight[] {

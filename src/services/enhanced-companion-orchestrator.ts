@@ -5,7 +5,7 @@
 
 import { conversationMemoryTracker } from "./conversation-memory-tracker";
 import { hermeticBrutalHonestyEngine } from "./hermetic-brutal-honesty-engine";
-import { getCompanionOraclePrompt } from "./universal-conversational-rules";
+import { getCompanionOraclePrompt, getFullBlueprintPrompt } from "./universal-conversational-rules";
 import { memoryInformedConversationService } from "./memory-informed-conversation-service";
 
 interface CompanionResponse {
@@ -81,14 +81,24 @@ export class EnhancedCompanionOrchestrator {
       // Phase 5: Generate memory context for prompt
       const memoryContext = conversationMemoryTracker.generateMemoryContext(memoryReferences);
 
-      // Phase 6: Build enhanced companion prompt
-      const enhancedPrompt = getCompanionOraclePrompt(
-        userDisplayName,
-        personalityContext,
-        semanticChunks,
-        memoryContext,
-        brutalHonestySection
-      );
+      // Phase 6: Detect full blueprint requests and build enhanced companion prompt
+      const isFullBlueprintRequest = userMessage.toLowerCase().includes('full blueprint') || 
+                                     userMessage.toLowerCase().includes('complete blueprint') ||
+                                     userMessage.toLowerCase().includes('entire blueprint');
+
+      const enhancedPrompt = isFullBlueprintRequest 
+        ? getFullBlueprintPrompt(
+            userDisplayName,
+            memoryContext,
+            brutalHonestySection
+          )
+        : getCompanionOraclePrompt(
+            userDisplayName,
+            personalityContext,
+            semanticChunks,
+            memoryContext,
+            brutalHonestySection
+          );
 
       console.log('✅ Enhanced companion prompt generated:', {
         promptLength: enhancedPrompt.length,
