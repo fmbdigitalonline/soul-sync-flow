@@ -40,6 +40,31 @@ function classifyIntent(query: string): 'FACTUAL' | 'INTERPRETIVE' | 'MIXED' {
 async function fetchFacts(supabase: any, userId: string, query: string): Promise<any[]> {
   const queryLower = query.toLowerCase()
   
+  // COMPREHENSIVE BLUEPRINT DETECTION: Check for queries requesting complete blueprint
+  const isComprehensiveQuery = /\b(full|complete|entire|comprehensive|whole|detailed|all)\s*(blueprint|analysis|reading|profile|assessment)\b/i.test(queryLower) ||
+                               /\b(give me everything|show me all|tell me everything|full picture|complete picture)\b/i.test(queryLower) ||
+                               /\b(my full\s*(self|personality|profile|analysis|blueprint))\b/i.test(queryLower) ||
+                               queryLower.includes('blueprint') && (queryLower.includes('full') || queryLower.includes('complete') || queryLower.includes('everything'))
+  
+  // If comprehensive query detected, return facts from ALL facets
+  if (isComprehensiveQuery) {
+    console.log('🎯 COMPREHENSIVE BLUEPRINT REQUEST detected - fetching ALL facts')
+    const { data: allFacts, error } = await supabase
+      .from('blueprint_facts')
+      .select('*')
+      .eq('user_id', userId)
+      .order('facet', { ascending: true })
+      .order('key', { ascending: true })
+    
+    if (error) {
+      console.error('❌ Error fetching all blueprint facts:', error)
+      return []
+    }
+    
+    console.log(`✅ Retrieved ${allFacts?.length || 0} comprehensive facts`)
+    return allFacts || []
+  }
+  
   // Map query terms to fact keys
   const keywordMap: Record<string, string[]> = {
     'numerology': ['life_path', 'expression', 'soul_urge', 'personality'],
@@ -52,7 +77,12 @@ async function fetchFacts(supabase: any, userId: string, query: string): Promise
     'astrology': ['sun_sign', 'moon_sign', 'rising_sign'],
     'sun sign': ['sun_sign'],
     'moon sign': ['moon_sign'],
-    'rising': ['rising_sign']
+    'rising': ['rising_sign'],
+    // Enhanced keyword mappings for blueprint queries
+    'blueprint': [], // Special case - handled by comprehensive detection above
+    'full': [], // Special case - handled by comprehensive detection above
+    'complete': [], // Special case - handled by comprehensive detection above
+    'numbers': ['life_path', 'expression', 'soul_urge', 'personality']
   }
   
   // Find relevant facets and keys
@@ -61,10 +91,14 @@ async function fetchFacts(supabase: any, userId: string, query: string): Promise
   for (const [keyword, keys] of Object.entries(keywordMap)) {
     if (queryLower.includes(keyword)) {
       const facet = keyword === 'life path' || keyword === 'expression' || 
-                   keyword === 'soul urge' || keyword === 'personality' ? 'numerology' :
+                   keyword === 'soul urge' || keyword === 'personality' || keyword === 'numbers' ? 'numerology' :
                    keyword === 'human design' ? 'human_design' :
                    keyword === 'sun sign' || keyword === 'moon sign' || keyword === 'rising' ? 'astrology' :
+                   keyword === 'mbti' ? 'mbti' :
                    keyword
+      
+      // Skip empty keys arrays (used for comprehensive queries)
+      if (keys.length === 0) continue
       
       const existingQuery = relevantQueries.find(q => q.facet === facet)
       if (existingQuery) {
@@ -75,9 +109,15 @@ async function fetchFacts(supabase: any, userId: string, query: string): Promise
     }
   }
   
-  // If no specific matches, check for "numbers" query (common for numerology)
-  if (relevantQueries.length === 0 && queryLower.includes('numbers')) {
-    relevantQueries.push({ facet: 'numerology' })
+  // FALLBACK LOGIC: If no specific matches and query seems blueprint-related, get sample from each facet
+  if (relevantQueries.length === 0 && (queryLower.includes('blueprint') || queryLower.includes('reading') || queryLower.includes('analysis'))) {
+    console.log('🔄 FALLBACK: Blueprint-related query detected, sampling from major facets')
+    relevantQueries.push(
+      { facet: 'numerology', keys: ['life_path'] },
+      { facet: 'human_design', keys: ['type'] },
+      { facet: 'mbti', keys: ['type'] },
+      { facet: 'astrology', keys: ['sun_sign'] }
+    )
   }
   
   console.log('🔍 Fact lookup queries:', relevantQueries)
