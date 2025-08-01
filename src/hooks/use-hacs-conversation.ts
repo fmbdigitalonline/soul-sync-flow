@@ -386,7 +386,7 @@ export const useHACSConversation = () => {
     } finally {
       setIsLoading(false);
       setIsTyping(false);
-      setIsStreamingResponse(false);
+      // Note: isStreamingResponse will be cleared by markMessageStreamingComplete
     }
   }, [user, messages, conversationId, saveConversation]);
 
@@ -510,6 +510,7 @@ export const useHACSConversation = () => {
 
   // NEW: Mark a message as finished streaming
   const markMessageStreamingComplete = useCallback((messageId: string) => {
+    console.log('🎯 STREAMING COMPLETE:', messageId);
     setMessages(prev => 
       prev.map(msg => 
         msg.id === messageId 
@@ -520,6 +521,18 @@ export const useHACSConversation = () => {
     // PILLAR II: Clear streaming state when TypewriterText completes
     setIsStreamingResponse(false);
   }, []);
+
+  // Safety timeout to prevent stuck streaming states
+  useEffect(() => {
+    if (isStreamingResponse) {
+      const timeout = setTimeout(() => {
+        console.warn('⚠️ STREAMING TIMEOUT: Forcing completion after 30s');
+        setIsStreamingResponse(false);
+      }, 30000); // 30 second timeout
+
+      return () => clearTimeout(timeout);
+    }
+  }, [isStreamingResponse]);
 
   const clearConversation = useCallback(() => {
     setMessages([]);
