@@ -92,14 +92,25 @@ serve(async (req) => {
       }
     )
 
-    const { message, userId, sessionId, useOracleMode = false, enableBackgroundIntelligence = false, conversationHistory = [] } = await req.json()
+    const { message, userId, sessionId, useOracleMode = false, enableBackgroundIntelligence = false, conversationHistory = [], userProfile = {} } = await req.json()
     console.log('🔮 FUSION: Oracle Mode Request:', { 
       useOracleMode, 
       enableBackgroundIntelligence,
       messageLength: message.length,
       conversationHistoryLength: conversationHistory.length,
+      userProfileReceived: Object.keys(userProfile).length > 0,
       userId: userId.substring(0, 8) 
     })
+
+    // PILLAR III: Validate that we have real conversation context
+    if (conversationHistory.length === 0) {
+      console.log('⚠️ ORACLE VALIDATION: Empty conversation history detected - this may cause hallucination');
+    } else {
+      console.log('✅ ORACLE VALIDATION: Conversation history provided:', {
+        messageCount: conversationHistory.length,
+        recentContext: conversationHistory.slice(-3).map(m => `${m.role}: ${m.content.substring(0, 50)}...`)
+      });
+    }
 
     // FUSION STEP 1: Get current HACS intelligence level for response calibration
     const { data: hacsIntelligence } = await supabase
@@ -113,21 +124,31 @@ serve(async (req) => {
     
     console.log('🧠 FUSION: Current HACS intelligence level:', intelligenceLevel)
 
-    // Get user blueprint for personality context
-    const { data: blueprint } = await supabase
-      .from('user_blueprints')
-      .select('blueprint')
-      .eq('user_id', userId)
-      .eq('is_active', true)
-      .single()
-
+    // PILLAR II: Use provided userProfile if available, otherwise fetch from database
     let personalityContext = null
-    if (blueprint?.blueprint) {
-      personalityContext = {
-        name: blueprint.blueprint.user_meta?.preferred_name || 'Seeker',
-        mbti: blueprint.blueprint.user_meta?.personality?.likelyType || blueprint.blueprint.cognition_mbti?.type || 'Unknown',
-        hdType: blueprint.blueprint.energy_strategy_human_design?.type || 'Unknown',
-        sunSign: blueprint.blueprint.archetype_western?.sun_sign || 'Unknown'
+    
+    if (userProfile && Object.keys(userProfile).length > 0) {
+      // Use real userProfile data passed from client (PILLAR II: Ground Truth)
+      personalityContext = userProfile;
+      console.log('✅ ORACLE CONTEXT: Using provided user profile:', personalityContext);
+    } else {
+      // Fallback: Get user blueprint for personality context
+      console.log('🔄 ORACLE CONTEXT: No user profile provided, fetching from database');
+      const { data: blueprint } = await supabase
+        .from('user_blueprints')
+        .select('blueprint')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .single()
+
+      if (blueprint?.blueprint) {
+        personalityContext = {
+          name: blueprint.blueprint.user_meta?.preferred_name || 'Seeker',
+          mbti: blueprint.blueprint.user_meta?.personality?.likelyType || blueprint.blueprint.cognition_mbti?.type || 'Unknown',
+          hdType: blueprint.blueprint.energy_strategy_human_design?.type || 'Unknown',
+          sunSign: blueprint.blueprint.archetype_western?.sun_sign || 'Unknown'
+        }
+        console.log('✅ ORACLE CONTEXT: Fetched blueprint data:', personalityContext);
       }
     }
 
@@ -548,13 +569,22 @@ ${semanticChunks.map(chunk => chunk.chunk_content || chunk.content).join('\n\n')
         const humorStyle = generateHumorStyle(mbtiType, sunSign);
         const communicationDepth = generateCommunicationDepth(intelligenceLevel, mbtiType);
         
-        // Build conversation context
+        // Build conversation context - PILLAR II: Real conversation history
         let conversationContext = '';
         if (conversationHistory.length > 0) {
           const recentContext = conversationHistory.slice(-5).map(msg => 
             `${msg.role === 'user' ? 'User' : 'You'}: ${msg.content}`
           ).join('\n');
           conversationContext = `\n\nRECENT CONVERSATION CONTEXT:\n${recentContext}\n`;
+          
+          // PILLAR III: Validation logging
+          console.log('✅ ORACLE CONTEXT: Using real conversation history in prompt:', {
+            contextLength: recentContext.length,
+            messageCount: conversationHistory.length,
+            userName: userName
+          });
+        } else {
+          console.log('⚠️ ORACLE CONTEXT: No conversation history available - possible hallucination risk');
         }
 
         // Intent-aware role definition

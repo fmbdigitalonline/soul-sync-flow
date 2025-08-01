@@ -145,14 +145,58 @@ export const useHACSConversationAdapter = (
         setIsOracleLoading(true);
         
         try {
-          // Call the companion oracle function with fusion enabled
+          // PILLAR II: Load conversation history for Oracle context
+          const { data: conversationMemory } = await supabase
+            .from('conversation_memory')
+            .select('messages')
+            .eq('session_id', sessionId)
+            .single();
+
+          let recentMessages = [];
+          if (conversationMemory?.messages && Array.isArray(conversationMemory.messages)) {
+            const allMessages = conversationMemory.messages as any[];
+            recentMessages = allMessages.slice(-10).map(msg => ({
+              role: msg.role === 'hacs' ? 'assistant' : msg.role,
+              content: msg.content,
+              timestamp: msg.timestamp
+            }));
+          }
+
+          // PILLAR II: Load user profile for Oracle context
+          const { data: blueprint } = await supabase
+            .from('user_blueprints')
+            .select('blueprint')
+            .eq('user_id', user.id)
+            .eq('is_active', true)
+            .single();
+
+          let userProfile = {};
+          if (blueprint?.blueprint) {
+            const blueprintData = blueprint.blueprint as any;
+            userProfile = {
+              name: blueprintData.user_meta?.preferred_name || 'Seeker',
+              mbti: blueprintData.user_meta?.personality?.likelyType || 
+                    blueprintData.cognition_mbti?.type || 'Unknown',
+              hdType: blueprintData.energy_strategy_human_design?.type || 'Unknown',
+              sunSign: blueprintData.archetype_western?.sun_sign || 'Unknown'
+            };
+          }
+
+          console.log('🔮 ADAPTER ORACLE: Enhanced context loaded', {
+            conversationHistory: recentMessages.length,
+            userProfile: Object.keys(userProfile).length > 0
+          });
+
+          // Call the companion oracle function with enhanced context
           const { data: oracleResponse, error: oracleError } = await supabase.functions.invoke('companion-oracle-conversation', {
             body: {
               message: content,
               userId: user.id,
               sessionId,
               useOracleMode: true,
-              enableBackgroundIntelligence: true
+              enableBackgroundIntelligence: true,
+              conversationHistory: recentMessages,
+              userProfile: userProfile
             }
           });
 

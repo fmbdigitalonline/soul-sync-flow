@@ -86,16 +86,40 @@ export const useHACSConversation = () => {
     if (!user || !conversationData.length) return;
 
     try {
-      const conversationPayload = {
+      const sessionId = sessionIdRef.current;
+      
+      // PILLAR III: Unified conversation storage - save to conversation_memory for Oracle consistency
+      const conversationMemoryPayload = {
         user_id: user.id,
-        session_id: sessionIdRef.current,
+        session_id: sessionId,
+        messages: conversationData as any,
+        mode: 'companion',
+        conversation_stage: 'active',
+        last_activity: new Date().toISOString(),
+        recovery_context: {
+          lastOracleStatus: conversationData[conversationData.length - 1]?.oracleStatus,
+          messageCount: conversationData.length
+        }
+      };
+
+      // Upsert to conversation_memory (primary storage for Oracle conversations)
+      await supabase
+        .from('conversation_memory')
+        .upsert(conversationMemoryPayload, {
+          onConflict: 'session_id'
+        });
+
+      // PILLAR I: Preserve existing hacs_conversations for backward compatibility
+      const hacsPayload = {
+        user_id: user.id,
+        session_id: sessionId,
         conversation_data: conversationData as any,
         intelligence_level_start: 50,
         intelligence_level_end: null
       };
 
       if (conversationId) {
-        // Update existing conversation
+        // Update existing HACS conversation
         await supabase
           .from('hacs_conversations')
           .update({
@@ -104,18 +128,25 @@ export const useHACSConversation = () => {
           })
           .eq('id', conversationId);
       } else {
-        // Create new conversation
+        // Create new HACS conversation
         const { data, error } = await supabase
           .from('hacs_conversations')
-          .insert(conversationPayload)
+          .insert(hacsPayload)
           .select('id')
           .single();
 
         if (error) throw error;
         setConversationId(data.id);
       }
+
+      console.log('✅ CONVERSATION SAVED: Unified storage complete', {
+        sessionId: sessionId,
+        messageCount: conversationData.length,
+        conversationId: conversationId
+      });
+
     } catch (error) {
-      console.error('Error saving conversation:', error);
+      console.error('❌ ERROR SAVING CONVERSATION:', error);
     }
   }, [user, conversationId]);
 
@@ -232,15 +263,67 @@ export const useHACSConversation = () => {
       // If oracle response provided, use it; otherwise call Oracle with conversation context
       let response = oracleResponse;
       if (!response) {
-        // Get recent conversation history for context (last 10 messages)
-        const recentMessages = messages.slice(-10).map(msg => ({
-          role: msg.role,
-          content: msg.content,
-          timestamp: msg.timestamp
-        }));
+        // PILLAR II: Load real conversation history from conversation_memory table
+        console.log('🔮 ORACLE MEMORY: Loading conversation history from conversation_memory table');
+        
+        const { data: conversationMemory, error: memoryError } = await supabase
+          .from('conversation_memory')
+          .select('messages')
+          .eq('session_id', conversationId)
+          .single();
 
-        console.log('🔮 ORACLE CONTEXT: Sending conversation history', {
+        let recentMessages = [];
+        
+        if (conversationMemory?.messages && !memoryError) {
+          // Use persisted conversation history - safely cast JSON to our type
+          const allMessages = Array.isArray(conversationMemory.messages) 
+            ? conversationMemory.messages as any[]
+            : [];
+          recentMessages = allMessages.slice(-10).map(msg => ({
+            role: msg.role === 'hacs' ? 'assistant' : msg.role,
+            content: msg.content,
+            timestamp: msg.timestamp
+          }));
+          console.log('✅ ORACLE MEMORY: Loaded persisted history', {
+            totalMessages: allMessages.length,
+            recentCount: recentMessages.length
+          });
+        } else {
+          // Fallback to in-memory messages if conversation_memory is empty
+          recentMessages = messages.slice(-10).map(msg => ({
+            role: msg.role === 'hacs' ? 'assistant' : msg.role,
+            content: msg.content,
+            timestamp: msg.timestamp
+          }));
+          console.log('⚠️ ORACLE MEMORY: Using fallback in-memory history', {
+            messageCount: recentMessages.length,
+            memoryError: memoryError?.message
+          });
+        }
+
+        // PILLAR II: Get real user profile for Oracle context
+        const { data: blueprint } = await supabase
+          .from('user_blueprints')
+          .select('blueprint')
+          .eq('user_id', user.id)
+          .eq('is_active', true)
+          .single();
+
+        let userProfile = {};
+        if (blueprint?.blueprint) {
+          const blueprintData = blueprint.blueprint as any;
+          userProfile = {
+            name: blueprintData.user_meta?.preferred_name || 'Seeker',
+            mbti: blueprintData.user_meta?.personality?.likelyType || 
+                  blueprintData.cognition_mbti?.type || 'Unknown',
+            hdType: blueprintData.energy_strategy_human_design?.type || 'Unknown',
+            sunSign: blueprintData.archetype_western?.sun_sign || 'Unknown'
+          };
+        }
+
+        console.log('🔮 ORACLE CONTEXT: Sending enhanced context', {
           messageCount: recentMessages.length,
+          userProfile: userProfile,
           currentMessage: content.trim()
         });
 
@@ -251,7 +334,8 @@ export const useHACSConversation = () => {
             sessionId: conversationId,
             useOracleMode: true,
             enableBackgroundIntelligence: true,
-            conversationHistory: recentMessages
+            conversationHistory: recentMessages,
+            userProfile: userProfile
           }
         });
 
