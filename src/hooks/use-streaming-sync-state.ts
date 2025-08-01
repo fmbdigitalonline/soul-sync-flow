@@ -24,9 +24,12 @@ export const useStreamingSyncState = () => {
       timing = baseSpeed * 0.8; // Slightly faster for spaces
     }
     
-    globalStreamingTiming = timing;
-    lastCharRef.current = character;
-    notifyStreamingListeners(timing);
+    // Debounce rapid updates to prevent animation flicker
+    if (Math.abs(timing - globalStreamingTiming) > 20) {
+      globalStreamingTiming = timing;
+      lastCharRef.current = character;
+      notifyStreamingListeners(timing);
+    }
   }, []);
 
   const resetStreamingTiming = useCallback(() => {

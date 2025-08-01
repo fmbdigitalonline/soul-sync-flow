@@ -436,13 +436,15 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
           <motion.div
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
-            className={cn(
-              "cursor-pointer",
-              chatLoading && "animate-pulse"
-            )}
-            style={chatLoading ? {
-              animationDuration: `${streamingTiming}ms`,
-              animationTimingFunction: "ease-in-out"
+            className="cursor-pointer"
+            animate={chatLoading ? {
+              scale: [1, 1.05, 1],
+              opacity: [0.9, 1, 0.9]
+            } : {}}
+            transition={chatLoading ? {
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut"
             } : {}}
           >
             <IntelligentSoulOrb

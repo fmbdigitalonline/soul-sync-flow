@@ -1,40 +1,53 @@
-import React, { useState, useEffect } from 'react';
-import { useStreamingSyncState } from '@/hooks/use-streaming-sync-state';
+import React from 'react';
+import { motion } from 'framer-motion';
 
 interface ThinkingDotsProps {
   className?: string;
+  isThinking?: boolean;
 }
 
-export const ThinkingDots: React.FC<ThinkingDotsProps> = ({ className = "" }) => {
-  const { subscribe } = useStreamingSyncState();
-  const [streamingTiming, setStreamingTiming] = useState(75);
+export const ThinkingDots: React.FC<ThinkingDotsProps> = ({ 
+  className = "",
+  isThinking = true 
+}) => {
+  // Steady thinking animation - not synced to character timing
+  const dotVariants = {
+    thinking: {
+      opacity: [0.4, 1, 0.4],
+      scale: [1, 1.2, 1],
+      transition: {
+        duration: 1.5,
+        repeat: Infinity,
+        ease: "easeInOut"
+      }
+    },
+    idle: {
+      opacity: 0.4,
+      scale: 1
+    }
+  };
 
-  useEffect(() => {
-    const unsubscribeStreaming = subscribe(setStreamingTiming);
-    return unsubscribeStreaming;
-  }, [subscribe]);
+  if (!isThinking) return null;
+
   return (
     <div className={`flex items-center space-x-1 ${className}`}>
-      <div 
-        className="w-1 h-1 bg-muted-foreground rounded-full animate-pulse"
-        style={{
-          animationDelay: '0ms',
-          animationDuration: `${streamingTiming * 2}ms`
-        }}
+      <motion.div 
+        className="w-1 h-1 bg-muted-foreground rounded-full"
+        variants={dotVariants}
+        animate="thinking"
+        transition={{ delay: 0 }}
       />
-      <div 
-        className="w-1 h-1 bg-muted-foreground rounded-full animate-pulse"
-        style={{
-          animationDelay: `${streamingTiming * 0.5}ms`,
-          animationDuration: `${streamingTiming * 2}ms`
-        }}
+      <motion.div 
+        className="w-1 h-1 bg-muted-foreground rounded-full"
+        variants={dotVariants}
+        animate="thinking"
+        transition={{ delay: 0.5 }}
       />
-      <div 
-        className="w-1 h-1 bg-muted-foreground rounded-full animate-pulse"
-        style={{
-          animationDelay: `${streamingTiming}ms`,
-          animationDuration: `${streamingTiming * 2}ms`
-        }}
+      <motion.div 
+        className="w-1 h-1 bg-muted-foreground rounded-full"
+        variants={dotVariants}
+        animate="thinking"
+        transition={{ delay: 1 }}
       />
     </div>
   );
