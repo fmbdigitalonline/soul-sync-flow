@@ -13,9 +13,6 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { ActiveReminders } from "@/components/reminders/ActiveReminders";
 import { MobileTogglePanel } from "@/components/ui/mobile-toggle-panel";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { HACSSystemStatus } from "@/components/hacs/HACSSystemStatus";
-import { ManualBlueprintProcessor } from "@/components/test/ManualBlueprintProcessor";
-import { BlueprintFactsBootstrap } from "@/components/testing/BlueprintFactsBootstrap";
 
 const Coach = () => {
   const {
@@ -113,11 +110,6 @@ const Coach = () => {
         </Button>
       </CosmicCard>
 
-      {/* Phase 1: Manual Blueprint Processing */}
-      <ManualBlueprintProcessor />
-      
-      {/* Pure HACS System Status */}
-      <HACSSystemStatus />
 
       <CosmicCard className="p-4">
         <h3 className="font-semibold mb-3 flex items-center">
@@ -180,8 +172,6 @@ const Coach = () => {
           )}
         </div>
         
-        {/* Bootstrap component for development testing */}
-        <BlueprintFactsBootstrap />
       </div>
     </MainLayout>
   );
