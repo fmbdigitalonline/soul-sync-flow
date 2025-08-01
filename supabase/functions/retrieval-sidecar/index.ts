@@ -334,15 +334,25 @@ serve(async (req) => {
       }
     }
 
+    // CONDITIONAL LOGIC: Detect comprehensive requests
+    const isComprehensiveRequest = (intent === 'FACTUAL' || intent === 'MIXED') && facts.length > 20;
+    
+    console.log(`🧠 Comprehensive request detected: ${isComprehensiveRequest} (intent: ${intent}, facts: ${facts.length})`);
+
+    // Apply conditional truncation - full facts for comprehensive requests, limited for normal queries
+    const finalFacts = isComprehensiveRequest ? facts : facts.slice(0, 8);
+
     const result = {
       intent,
-      facts: facts.slice(0, 8),
+      facts: finalFacts,
       passages: passages.slice(0, 6),
-      citations: facts.map(f => `${f.facet}.${f.key}`),
+      citations: finalFacts.map(f => `${f.facet}.${f.key}`),
       debug: {
         factsFound: facts.length,
         passagesFound: passages.length,
+        factsReturned: finalFacts.length,
         retrievalMethod: facts.length > 0 ? 'facts_primary' : 'passages_primary',
+        isComprehensive: isComprehensiveRequest,
         timestamp: new Date().toISOString()
       }
     }
