@@ -672,6 +672,24 @@ ${personalityContext ? `User Context: ${personalityContext.name} (${personalityC
 Respond helpfully while building rapport and understanding.`
     }
 
+    // FULL BLUEPRINT DETECTION: Check if user is requesting comprehensive blueprint
+    const isFullBlueprintRequest = /\b(full|complete|entire|comprehensive|whole|detailed)\s*(blueprint|analysis|reading|profile|assessment)\b/i.test(message) ||
+                                   /\b(give me everything|show me all|tell me everything|full picture|complete picture)\b/i.test(message) ||
+                                   /\b(my full\s*(self|personality|profile|analysis|blueprint))\b/i.test(message);
+
+    // DYNAMIC TOKEN ALLOCATION: Increase max_tokens for full blueprint requests
+    const maxTokens = isFullBlueprintRequest ? 4000 : (useOracleMode ? 1500 : 500);
+    
+    console.log('🔮 TOKEN ALLOCATION:', {
+      isFullBlueprintRequest,
+      maxTokens,
+      messagePattern: message.toLowerCase().substring(0, 50) + '...',
+      oracleMode: useOracleMode
+    });
+
+    // MODEL SELECTION: Use GPT-4.1 mini for streaming capability and enhanced reasoning  
+    const selectedModel = 'gpt-4.1-mini-2025-04-14';
+
     // Call OpenAI for response generation using current model
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -680,7 +698,7 @@ Respond helpfully while building rapport and understanding.`
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: selectedModel,
         messages: [
           { 
             role: 'system', 
@@ -689,7 +707,7 @@ Respond helpfully while building rapport and understanding.`
           { role: 'user', content: message }
         ],
         temperature: useOracleMode ? 0.8 : 0.7,
-        max_tokens: 500
+        max_tokens: maxTokens
       }),
     })
 
