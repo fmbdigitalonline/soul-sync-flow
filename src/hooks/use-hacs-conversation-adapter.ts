@@ -29,6 +29,7 @@ export interface HACSConversationAdapter {
   acsEnabled: boolean;
   acsState: string;
   userName: string;
+  markMessageStreamingComplete: (messageId: string) => void;
 }
 
 export const useHACSConversationAdapter = (
@@ -80,6 +81,13 @@ export const useHACSConversationAdapter = (
   
   // Use HACS conversation for intelligence learning
   const hacsConversation = useHACSConversation();
+  const { markMessageStreamingComplete } = hacsConversation;
+  
+  // Oracle streaming completion handler
+  const handleOracleStreamingComplete = useCallback((messageId: string) => {
+    markMessageStreamingComplete(messageId);
+    setIsOracleLoading(false);
+  }, [markMessageStreamingComplete]);
   
   // Keep enhanced AI coach for backwards compatibility but don't use its sendMessage
   const enhancedCoach = useEnhancedAICoach(initialAgent as any, pageContext);
@@ -175,9 +183,9 @@ export const useHACSConversationAdapter = (
           
           // Fallback: Use standard HACS conversation
           await hacsConversation.sendMessage(content);
-        } finally {
           setIsOracleLoading(false);
         }
+        // Note: isOracleLoading will be set to false when streaming completes
         
       } else {
         // STANDARD FLOW: Dual-pathway for non-companion modes
@@ -248,6 +256,7 @@ export const useHACSConversationAdapter = (
     recordVFPGraphFeedback: enhancedCoach.recordVFPGraphFeedback,
     acsEnabled: enhancedCoach.acsEnabled,
     acsState: enhancedCoach.acsState,
-    userName: enhancedCoach.userName
+    userName: enhancedCoach.userName,
+    markMessageStreamingComplete: handleOracleStreamingComplete
   };
 };

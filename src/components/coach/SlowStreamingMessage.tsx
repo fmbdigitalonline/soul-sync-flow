@@ -9,13 +9,17 @@ interface SlowStreamingMessageProps {
   isStreaming: boolean;
   onComplete?: () => void;
   speed?: number;
+  messageId?: string;
+  onStreamingComplete?: (messageId: string) => void;
 }
 
 export const SlowStreamingMessage: React.FC<SlowStreamingMessageProps> = ({
   content,
   isStreaming,
   onComplete,
-  speed = 80 // Slow, contemplative speed for growth conversations
+  speed = 80, // Slow, contemplative speed for growth conversations
+  messageId,
+  onStreamingComplete
 }) => {
   const [showAvatar, setShowAvatar] = useState(false);
 
@@ -42,6 +46,8 @@ export const SlowStreamingMessage: React.FC<SlowStreamingMessageProps> = ({
             isStreaming={isStreaming}
             speed={speed}
             onComplete={onComplete}
+            messageId={messageId}
+            onStreamingComplete={onStreamingComplete}
           />
         </div>
       </div>

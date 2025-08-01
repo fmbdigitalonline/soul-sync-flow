@@ -17,6 +17,7 @@ export interface ConversationMessage {
   personalityContext?: any;
   intelligence_bonus?: number;
   mode?: string;
+  isStreaming?: boolean;
 }
 
 export interface HACSQuestion {
@@ -260,7 +261,7 @@ export const useHACSConversation = () => {
         response = response.data;
       }
 
-      // Add oracle response with enhanced metadata
+      // Add oracle response with enhanced metadata - mark as streaming
       const oracleMessage: ConversationMessage = {
         id: `oracle_${Date.now()}`,
         role: 'hacs',
@@ -269,7 +270,8 @@ export const useHACSConversation = () => {
         timestamp: new Date().toISOString(),
         oracleStatus: response.oracleStatus,
         semanticChunks: response.semanticChunks,
-        personalityContext: response.personalityContext
+        personalityContext: response.personalityContext,
+        isStreaming: true
       };
 
       setMessages(prev => [...prev, oracleMessage]);
@@ -416,6 +418,17 @@ export const useHACSConversation = () => {
     setIsTyping(false);
   }, [saveConversation]);
 
+  // NEW: Mark a message as finished streaming
+  const markMessageStreamingComplete = useCallback((messageId: string) => {
+    setMessages(prev => 
+      prev.map(msg => 
+        msg.id === messageId 
+          ? { ...msg, isStreaming: false }
+          : msg
+      )
+    );
+  }, []);
+
   const clearConversation = useCallback(() => {
     setMessages([]);
     setConversationId(null);
@@ -434,6 +447,7 @@ export const useHACSConversation = () => {
     replaceLastMessage,
     generateQuestion,
     provideFeedback,
-    clearConversation
+    clearConversation,
+    markMessageStreamingComplete
   };
 };

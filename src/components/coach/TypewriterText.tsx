@@ -6,13 +6,17 @@ interface TypewriterTextProps {
   isStreaming: boolean;
   speed?: number;
   onComplete?: () => void;
+  messageId?: string;
+  onStreamingComplete?: (messageId: string) => void;
 }
 
 export const TypewriterText: React.FC<TypewriterTextProps> = ({ 
   text, 
   isStreaming, 
   speed = 75, // Slower default for more feeling
-  onComplete
+  onComplete,
+  messageId,
+  onStreamingComplete
 }) => {
   const [displayText, setDisplayText] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -60,6 +64,10 @@ export const TypewriterText: React.FC<TypewriterTextProps> = ({
       completedRef.current = true;
       if (onComplete) {
         setTimeout(onComplete, 300); // Small delay before calling complete
+      }
+      // Call streaming complete callback for message tracking
+      if (messageId && onStreamingComplete) {
+        setTimeout(() => onStreamingComplete(messageId), 300);
       }
     }
 

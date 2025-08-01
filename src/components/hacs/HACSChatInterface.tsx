@@ -8,17 +8,20 @@ import { ConversationMessage } from "@/hooks/use-hacs-conversation";
 import { TypewriterText } from "@/components/coach/TypewriterText";
 import { ThinkingDots } from "./ThinkingDots";
 import { useGlobalChatState } from "@/hooks/use-global-chat-state";
+import { useHACSConversationAdapter } from "@/hooks/use-hacs-conversation-adapter";
 
 interface HACSChatInterfaceProps {
   messages: ConversationMessage[];
   isLoading: boolean;
   onSendMessage: (message: string) => Promise<void>;
+  onStreamingComplete?: (messageId: string) => void;
 }
 
 export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
   messages,
   isLoading,
   onSendMessage,
+  onStreamingComplete,
 }) => {
   const [inputValue, setInputValue] = useState("");
   const [initialMessageCount, setInitialMessageCount] = useState(0);
@@ -104,8 +107,10 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
                       {isNewMessage ? (
                         <TypewriterText 
                           text={message.content} 
-                          isStreaming={false}
+                          isStreaming={message.isStreaming || false}
                           speed={45}
+                          messageId={message.id}
+                          onStreamingComplete={onStreamingComplete}
                         />
                       ) : (
                         message.content

@@ -19,7 +19,8 @@ const Coach = () => {
     messages,
     isLoading,
     sendMessage,
-    resetConversation
+    resetConversation,
+    markMessageStreamingComplete
   } = useHACSConversationAdapter("guide", "companion");
 
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -88,6 +89,7 @@ const Coach = () => {
       messages={messages}
       isLoading={isLoading}
       onSendMessage={handleSendMessage}
+      onStreamingComplete={markMessageStreamingComplete}
     />
   );
 
