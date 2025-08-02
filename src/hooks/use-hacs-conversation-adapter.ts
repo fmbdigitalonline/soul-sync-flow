@@ -151,7 +151,7 @@ export const useHACSConversationAdapter = (
             .from('conversation_memory')
             .select('messages')
             .eq('session_id', sessionId)
-            .single();
+            .maybeSingle();
 
           let recentMessages = [];
           if (conversationMemory?.messages && Array.isArray(conversationMemory.messages)) {
@@ -169,7 +169,7 @@ export const useHACSConversationAdapter = (
             .select('blueprint')
             .eq('user_id', user.id)
             .eq('is_active', true)
-            .single();
+            .maybeSingle();
 
           let userProfile = {};
           if (blueprint?.blueprint) {
