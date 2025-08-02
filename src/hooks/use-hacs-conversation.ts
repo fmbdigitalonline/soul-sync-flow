@@ -51,13 +51,6 @@ export const useHACSConversation = () => {
     return 'poor';
   }, []);
 
-  // Load conversation history on mount
-  useEffect(() => {
-    if (user) {
-      loadConversationHistory();
-    }
-  }, [user]);
-
   const loadConversationHistory = useCallback(async () => {
     if (!user) return;
 
@@ -72,6 +65,17 @@ export const useHACSConversation = () => {
         .eq('session_id', sessionIdRef.current)
         .eq('mode', 'companion')
         .maybeSingle();
+
+      if (memoryError) {
+        console.error('❌ CONVERSATION MEMORY ERROR:', {
+          code: memoryError.code,
+          message: memoryError.message,
+          details: memoryError.details,
+          hint: memoryError.hint,
+          sessionId: sessionIdRef.current
+        });
+        // Continue to fallback instead of stopping
+      }
 
       if (companionMemory?.messages && !memoryError) {
         // Found companion conversation in memory table
@@ -91,12 +95,24 @@ export const useHACSConversation = () => {
       }
 
       // Fallback: Check hacs_conversations for existing conversations
+      console.log('🔄 FALLBACK: Checking hacs_conversations table');
       const { data: conversation, error: conversationError } = await supabase
         .from('hacs_conversations')
         .select('*')
         .eq('user_id', user.id)
         .eq('session_id', sessionIdRef.current)
         .maybeSingle();
+
+      if (conversationError) {
+        console.error('❌ HACS CONVERSATION ERROR:', {
+          code: conversationError.code,
+          message: conversationError.message,
+          details: conversationError.details,
+          hint: conversationError.hint,
+          sessionId: sessionIdRef.current
+        });
+        // Continue to fresh session instead of failing
+      }
 
       if (conversation && !conversationError) {
         setConversationId(conversation.id);
@@ -110,11 +126,40 @@ export const useHACSConversation = () => {
         }
       } else {
         console.log('🔮 FRESH SESSION: No existing conversation found, starting new companion session');
+        // Ensure clean slate
+        setMessages([]);
+        setConversationId(null);
       }
     } catch (error) {
-      console.log('🔮 FRESH SESSION: No previous conversation found, starting fresh', error);
+      console.error('❌ CRITICAL ERROR IN CONVERSATION LOADING:', error);
+      // Ensure we don't get stuck - provide clean slate
+      setMessages([]);
+      setConversationId(null);
     }
   }, [user]);
+
+  // Load conversation history on mount with timeout protection
+  useEffect(() => {
+    if (user) {
+      console.log('🔄 INITIALIZING CONVERSATION LOADING');
+      
+      // Set a timeout to prevent stuck loading states
+      const loadingTimeout = setTimeout(() => {
+        console.warn('⚠️ CONVERSATION LOADING TIMEOUT: Forcing ready state');
+        setIsLoading(false);
+        setIsTyping(false);
+        setMessages([]);
+      }, 10000); // 10 second timeout
+
+      loadConversationHistory()
+        .finally(() => {
+          clearTimeout(loadingTimeout);
+          console.log('✅ CONVERSATION LOADING COMPLETE');
+        });
+
+      return () => clearTimeout(loadingTimeout);
+    }
+  }, [user, loadConversationHistory]);
 
   const saveConversation = useCallback(async (conversationData: ConversationMessage[]) => {
     if (!user || !conversationData.length) return;
@@ -342,12 +387,16 @@ export const useHACSConversation = () => {
         }
 
         // PILLAR II: Get real user profile for Oracle context
-        const { data: blueprint } = await supabase
+        const { data: blueprint, error: blueprintError } = await supabase
           .from('user_blueprints')
           .select('blueprint')
           .eq('user_id', user.id)
           .eq('is_active', true)
           .maybeSingle();
+
+        if (blueprintError) {
+          console.error('❌ Error loading user blueprint:', blueprintError);
+        }
 
         let userProfile = {};
         if (blueprint?.blueprint) {
