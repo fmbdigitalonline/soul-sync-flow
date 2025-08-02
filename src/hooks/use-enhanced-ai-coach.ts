@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { aiCoachService } from '@/services/ai-coach-service';
 import { supabase } from '@/integrations/supabase/client';
+import { useCoordinatedLoading } from '@/hooks/use-coordinated-loading';
+import { createErrorHandler } from '@/utils/error-recovery';
 
 export interface Message {
   id: string;
@@ -26,6 +28,9 @@ interface VFPGraphStatus {
 }
 
 export const useEnhancedAICoach = (agentType?: AgentType, sessionId?: string) => {
+  // Coordinated loading for streaming operations
+  const { startLoading, completeLoading } = useCoordinatedLoading();
+  
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [currentAgent, setCurrentAgent] = useState<AgentType>(agentType || 'guide');
@@ -39,6 +44,7 @@ export const useEnhancedAICoach = (agentType?: AgentType, sessionId?: string) =>
   const [acsState] = useState('disabled');
   
   const sessionIdRef = useRef(sessionId || aiCoachService.createNewSession());
+  const streamingAbortRef = useRef<AbortController | null>(null);
   
   // Blueprint and VFP Graph status
   const [blueprintStatus, setBlueprintStatus] = useState<BlueprintStatus>({
@@ -114,9 +120,10 @@ export const useEnhancedAICoach = (agentType?: AgentType, sessionId?: string) =>
     setIsLoading(true);
     
     try {
-      // Use streaming for enhanced experience
+      // Use streaming for enhanced experience with coordinated loading
       setIsStreaming(true);
       setStreamingContent('');
+      streamingAbortRef.current = startLoading('core');
       
       const assistantMessage: Message = {
         id: `assistant-${Date.now()}`,
@@ -146,6 +153,7 @@ export const useEnhancedAICoach = (agentType?: AgentType, sessionId?: string) =>
           onComplete: (fullResponse: string) => {
             setIsStreaming(false);
             setStreamingContent('');
+            completeLoading('core');
             setMessages(prev => prev.map(msg => 
               msg.id === assistantMessage.id 
                 ? { ...msg, content: fullResponse }
@@ -155,6 +163,7 @@ export const useEnhancedAICoach = (agentType?: AgentType, sessionId?: string) =>
           onError: (error: Error) => {
             console.error('Streaming error:', error);
             setIsStreaming(false);
+            completeLoading('core');
             setMessages(prev => prev.map(msg => 
               msg.id === assistantMessage.id 
                 ? { ...msg, content: 'I encountered an error. Please try again.' }
@@ -202,6 +211,7 @@ export const useEnhancedAICoach = (agentType?: AgentType, sessionId?: string) =>
     } finally {
       setIsLoading(false);
       setIsStreaming(false);
+      completeLoading('core');
     }
   }, [currentAgent, userName]);
 

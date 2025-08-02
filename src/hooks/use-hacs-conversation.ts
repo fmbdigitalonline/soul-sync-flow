@@ -2,6 +2,8 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useHacsIntelligence } from './use-hacs-intelligence';
+import { useCoordinatedLoading } from '@/hooks/use-coordinated-loading';
+import { createErrorHandler } from '@/utils/error-recovery';
 
 export interface ConversationMessage {
   id: string;
@@ -30,6 +32,10 @@ export interface HACSQuestion {
 export const useHACSConversation = () => {
   const { user } = useAuth();
   const { recordConversationInteraction, refreshIntelligence } = useHacsIntelligence();
+  
+  // Coordinated loading for streaming operations
+  const { startLoading, completeLoading } = useCoordinatedLoading();
+  
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
@@ -37,6 +43,7 @@ export const useHACSConversation = () => {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState<HACSQuestion | null>(null);
   const sessionIdRef = useRef(`session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
+  const streamingAbortRef = useRef<AbortController | null>(null);
 
   // Helper function to determine conversation quality
   const determineResponseQuality = useCallback((hacsResponse: string, userMessage: string): 'excellent' | 'good' | 'average' | 'poor' => {
@@ -449,9 +456,10 @@ export const useHACSConversation = () => {
 
       setMessages(prev => [...prev, oracleMessage]);
       
-      // PILLAR II: Transition from thinking to streaming state
+      // PILLAR II: Transition from thinking to streaming state with coordinated loading
       setIsLoading(false);
       setIsStreamingResponse(true);
+      streamingAbortRef.current = startLoading('streaming');
 
       // Save conversation to database with oracle metadata
       await saveConversation([...messages, userMessage, oracleMessage]);
@@ -610,19 +618,17 @@ export const useHACSConversation = () => {
     );
     // PILLAR II: Clear streaming state when TypewriterText completes
     setIsStreamingResponse(false);
+    completeLoading('streaming');
   }, []);
 
-  // Safety timeout to prevent stuck streaming states
-  useEffect(() => {
-    if (isStreamingResponse) {
-      const timeout = setTimeout(() => {
-        console.warn('⚠️ STREAMING TIMEOUT: Forcing completion after 30s');
-        setIsStreamingResponse(false);
-      }, 30000); // 30 second timeout
-
-      return () => clearTimeout(timeout);
+  // Coordinated streaming error handler
+  const handleStreamingError = createErrorHandler('streaming', () => {
+    setIsStreamingResponse(false);
+    completeLoading('streaming');
+    if (streamingAbortRef.current) {
+      streamingAbortRef.current = null;
     }
-  }, [isStreamingResponse]);
+  });
 
   const clearConversation = useCallback(() => {
     setMessages([]);
