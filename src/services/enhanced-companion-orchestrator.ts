@@ -45,12 +45,20 @@ export class EnhancedCompanionOrchestrator {
       console.log('📝 Tracked', conversationElements.length, 'conversation elements');
 
       // Phase 2: Get memory references for conversation continuity
+      console.log('🧠 MEMORY RETRIEVAL: Getting references for sessionId:', sessionId, 'userId:', userId);
       const memoryReferences = await conversationMemoryTracker.getMemoryReferences(
         userMessage, 
         sessionId, 
         userId
       );
-      console.log('🧠 Retrieved', memoryReferences.length, 'memory references');
+      console.log('🧠 MEMORY RETRIEVAL: Retrieved', memoryReferences.length, 'memory references', {
+        sessionId: sessionId,
+        userId: userId,
+        references: memoryReferences.map(ref => ({
+          content: ref.content.substring(0, 50) + '...',
+          relevance: ref.relevanceScore
+        }))
+      });
 
       // Phase 3: Assess emotional state and readiness for brutal honesty
       const emotionalState = this.assessEmotionalState(userMessage);
@@ -100,11 +108,14 @@ export class EnhancedCompanionOrchestrator {
             brutalHonestySection
           );
 
-      console.log('✅ Enhanced companion prompt generated:', {
+      console.log('✅ COMPANION ORCHESTRATOR: Enhanced prompt generated:', {
+        sessionId: sessionId,
+        userId: userId,
         promptLength: enhancedPrompt.length,
         memoryReferences: memoryReferences.length,
         honestyInsights: honestyInsights.length,
-        readinessLevel
+        readinessLevel: readinessLevel,
+        memoryContextLength: memoryContext.length
       });
 
       return {

@@ -100,16 +100,41 @@ export class ConversationMemoryTracker {
    */
   async getMemoryReferences(userMessage: string, sessionId: string, userId: string): Promise<MemoryReference[]> {
     try {
-      const { data: memories, error } = await supabase
-        .from('user_session_memory')
-        .select('*')
+      console.log('🧠 MEMORY TRACKER: Retrieving references from conversation_memory for sessionId:', sessionId);
+      
+      // Get from conversation_memory table where companion conversations are stored
+      const { data: conversationMemory, error } = await supabase
+        .from('conversation_memory')
+        .select('messages, created_at, session_id')
         .eq('user_id', userId)
+        .eq('mode', 'companion')
         .order('created_at', { ascending: false })
-        .limit(10);
+        .limit(5);
       
       if (error) throw error;
       
-      return this.processMemoriesForReferences(memories || [], userMessage);
+      // Process conversation messages as memory references
+      const memories: any[] = [];
+      conversationMemory?.forEach(conv => {
+        if (Array.isArray(conv.messages)) {
+          const messages = conv.messages as any[];
+          messages.forEach((msg, index) => {
+            if (msg.role === 'user' && msg.content) {
+              memories.push({
+                id: `${conv.session_id}_${index}`,
+                created_at: msg.timestamp || conv.created_at,
+                memory_data: {
+                  content: msg.content,
+                  user_message: msg.content
+                }
+              });
+            }
+          });
+        }
+      });
+      
+      console.log('🧠 MEMORY TRACKER: Found', memories.length, 'conversation memory references');
+      return this.processMemoriesForReferences(memories, userMessage);
     } catch (error) {
       console.error('❌ Error retrieving memory references:', error);
       return [];

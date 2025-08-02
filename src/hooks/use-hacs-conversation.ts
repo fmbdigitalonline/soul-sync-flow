@@ -62,13 +62,40 @@ export const useHACSConversation = () => {
     if (!user) return;
 
     try {
-      // Get the most recent conversation
+      console.log('🔮 LOADING COMPANION HISTORY: Searching for session', sessionIdRef.current);
+      
+      // First try to load from conversation_memory (primary for companion mode)
+      const { data: companionMemory, error: memoryError } = await supabase
+        .from('conversation_memory')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('session_id', sessionIdRef.current)
+        .eq('mode', 'companion')
+        .single();
+
+      if (companionMemory?.messages && !memoryError) {
+        // Found companion conversation in memory table
+        const conversationData = Array.isArray(companionMemory.messages) 
+          ? (companionMemory.messages as unknown as ConversationMessage[])
+          : [];
+        setMessages(conversationData);
+        
+        // Set conversationId from session_id for compatibility
+        setConversationId(companionMemory.session_id);
+        
+        console.log('✅ LOADED COMPANION HISTORY: From conversation_memory', {
+          sessionId: companionMemory.session_id,
+          messageCount: conversationData.length
+        });
+        return;
+      }
+
+      // Fallback: Check hacs_conversations for existing conversations
       const { data: conversation } = await supabase
         .from('hacs_conversations')
         .select('*')
         .eq('user_id', user.id)
-        .order('last_activity', { ascending: false })
-        .limit(1)
+        .eq('session_id', sessionIdRef.current)
         .single();
 
       if (conversation) {
@@ -76,10 +103,16 @@ export const useHACSConversation = () => {
         const conversationData = conversation.conversation_data;
         if (Array.isArray(conversationData)) {
           setMessages(conversationData as unknown as ConversationMessage[]);
+          console.log('✅ LOADED COMPANION HISTORY: From hacs_conversations fallback', {
+            conversationId: conversation.id,
+            messageCount: conversationData.length
+          });
         }
+      } else {
+        console.log('🔮 FRESH SESSION: No existing conversation found, starting new companion session');
       }
     } catch (error) {
-      console.log('No previous conversation found, starting fresh');
+      console.log('🔮 FRESH SESSION: No previous conversation found, starting fresh', error);
     }
   }, [user]);
 
@@ -104,11 +137,16 @@ export const useHACSConversation = () => {
       };
 
       // Upsert to conversation_memory (primary storage for Oracle conversations)
-      await supabase
+      const { error: memoryError } = await supabase
         .from('conversation_memory')
         .upsert(conversationMemoryPayload, {
-          onConflict: 'session_id'
+          onConflict: 'session_id,user_id'
         });
+
+      if (memoryError) {
+        console.error('❌ ERROR SAVING TO CONVERSATION_MEMORY:', memoryError);
+        throw memoryError;
+      }
 
       // PILLAR I: Preserve existing hacs_conversations for backward compatibility
       const hacsPayload = {
@@ -270,7 +308,8 @@ export const useHACSConversation = () => {
         const { data: conversationMemory, error: memoryError } = await supabase
           .from('conversation_memory')
           .select('messages')
-          .eq('session_id', conversationId)
+          .eq('session_id', sessionIdRef.current)
+          .eq('mode', 'companion')
           .single();
 
         let recentMessages = [];
@@ -332,7 +371,7 @@ export const useHACSConversation = () => {
           body: {
             message: content.trim(),
             userId: user.id,
-            sessionId: conversationId,
+            sessionId: sessionIdRef.current,
             useOracleMode: true,
             enableBackgroundIntelligence: true,
             conversationHistory: recentMessages,
@@ -369,8 +408,10 @@ export const useHACSConversation = () => {
       await saveConversation([...messages, userMessage, oracleMessage]);
 
       console.log('✅ ORACLE MESSAGE: Stored in conversation system', {
-        oracleStatus: oracleResponse.oracleStatus,
-        semanticChunks: oracleResponse.semanticChunks,
+        sessionId: sessionIdRef.current,
+        messageCount: [...messages, userMessage, oracleMessage].length,
+        oracleStatus: response.oracleStatus,
+        semanticChunks: response.semanticChunks,
         messageId: oracleMessage.id
       });
 
