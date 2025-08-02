@@ -71,7 +71,7 @@ export const useHACSConversation = () => {
         .eq('user_id', user.id)
         .eq('session_id', sessionIdRef.current)
         .eq('mode', 'companion')
-        .single();
+        .maybeSingle();
 
       if (companionMemory?.messages && !memoryError) {
         // Found companion conversation in memory table
@@ -310,7 +310,7 @@ export const useHACSConversation = () => {
           .select('messages')
           .eq('session_id', sessionIdRef.current)
           .eq('mode', 'companion')
-          .single();
+          .maybeSingle();
 
         let recentMessages = [];
         
