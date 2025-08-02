@@ -91,14 +91,14 @@ export const useHACSConversation = () => {
       }
 
       // Fallback: Check hacs_conversations for existing conversations
-      const { data: conversation } = await supabase
+      const { data: conversation, error: conversationError } = await supabase
         .from('hacs_conversations')
         .select('*')
         .eq('user_id', user.id)
         .eq('session_id', sessionIdRef.current)
-        .single();
+        .maybeSingle();
 
-      if (conversation) {
+      if (conversation && !conversationError) {
         setConversationId(conversation.id);
         const conversationData = conversation.conversation_data;
         if (Array.isArray(conversationData)) {
@@ -347,7 +347,7 @@ export const useHACSConversation = () => {
           .select('blueprint')
           .eq('user_id', user.id)
           .eq('is_active', true)
-          .single();
+          .maybeSingle();
 
         let userProfile = {};
         if (blueprint?.blueprint) {
