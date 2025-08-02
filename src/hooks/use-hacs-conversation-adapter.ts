@@ -37,8 +37,9 @@ export const useHACSConversationAdapter = (
   initialAgent: string = "guide",
   pageContext: string = "general"
 ): HACSConversationAdapter => {
-  // Local state for Oracle loading
+  // Local state for Oracle loading with timeout protection
   const [isOracleLoading, setIsOracleLoading] = useState(false);
+  const oracleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // FUSION FIX: Use ModeContext to determine correct agent mode
   const { currentMode, modeConfig } = useMode();
@@ -86,9 +87,42 @@ export const useHACSConversationAdapter = (
   
   // Oracle streaming completion handler
   const handleOracleStreamingComplete = useCallback((messageId: string) => {
+    console.log('🔮 Oracle streaming complete for message:', messageId);
     markMessageStreamingComplete(messageId);
     setIsOracleLoading(false);
+    
+    // Clear timeout if streaming completes normally
+    if (oracleTimeoutRef.current) {
+      clearTimeout(oracleTimeoutRef.current);
+      oracleTimeoutRef.current = null;
+    }
   }, [markMessageStreamingComplete]);
+
+  // Timeout protection for Oracle loading state
+  const setOracleLoadingWithTimeout = useCallback((loading: boolean) => {
+    console.log('🔮 Oracle loading state change:', loading);
+    setIsOracleLoading(loading);
+    
+    if (loading) {
+      // Clear any existing timeout
+      if (oracleTimeoutRef.current) {
+        clearTimeout(oracleTimeoutRef.current);
+      }
+      
+      // Set timeout to prevent infinite loading (30 seconds)
+      oracleTimeoutRef.current = setTimeout(() => {
+        console.warn('⚠️ Oracle loading timeout - forcing state reset');
+        setIsOracleLoading(false);
+        oracleTimeoutRef.current = null;
+      }, 30000);
+    } else {
+      // Clear timeout when loading ends
+      if (oracleTimeoutRef.current) {
+        clearTimeout(oracleTimeoutRef.current);
+        oracleTimeoutRef.current = null;
+      }
+    }
+  }, []);
   
   // Keep enhanced AI coach for backwards compatibility but don't use its sendMessage
   const enhancedCoach = useEnhancedAICoach(initialAgent as any, pageContext);
@@ -142,8 +176,8 @@ export const useHACSConversationAdapter = (
       if (isCompanionMode) {
         console.log('🔮 ORACLE-FIRST: Starting Oracle-prioritized conversation flow');
         
-        // Set local loading state to trigger thinking dots
-        setIsOracleLoading(true);
+        // Set local loading state to trigger thinking dots with timeout protection
+        setOracleLoadingWithTimeout(true);
         
         try {
           // PILLAR II: Load conversation history for Oracle context
@@ -228,7 +262,7 @@ export const useHACSConversationAdapter = (
           
           // Fallback: Use standard HACS conversation
           await hacsConversation.sendMessage(content);
-          setIsOracleLoading(false);
+          setOracleLoadingWithTimeout(false);
         }
         // Note: isOracleLoading will be set to false when streaming completes
         
@@ -271,10 +305,12 @@ export const useHACSConversationAdapter = (
       
     } catch (error) {
       console.error('❌ DUAL-PATHWAY ERROR: One or both pathways failed', error);
+      // Ensure Oracle loading state is cleared on any error
+      setOracleLoadingWithTimeout(false);
       // Fallback to original HACS conversation
       await hacsConversation.sendMessage(content);
     }
-  }, [hacsConversation.sendMessage, hacsConversation.sendOracleMessage, initialAgent, isCompanionMode]);
+  }, [hacsConversation.sendMessage, hacsConversation.sendOracleMessage, initialAgent, isCompanionMode, setOracleLoadingWithTimeout]);
 
   const resetConversation = useCallback(() => {
     hacsConversation.clearConversation();
@@ -284,6 +320,15 @@ export const useHACSConversationAdapter = (
     // Keep agent switching functionality but route through HACS
     enhancedCoach.switchAgent(newAgent as any);
   }, [enhancedCoach.switchAgent]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (oracleTimeoutRef.current) {
+        clearTimeout(oracleTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return {
     messages: hacsConversation.messages,
