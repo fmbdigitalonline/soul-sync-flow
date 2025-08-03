@@ -667,6 +667,42 @@ export type Database = {
         }
         Relationships: []
       }
+      conversation_threads: {
+        Row: {
+          context_fingerprint: string | null
+          created_at: string
+          id: string
+          last_activity: string
+          mode: string
+          status: string
+          updated_at: string
+          user_id: string
+          version: number
+        }
+        Insert: {
+          context_fingerprint?: string | null
+          created_at?: string
+          id?: string
+          last_activity?: string
+          mode: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          version?: number
+        }
+        Update: {
+          context_fingerprint?: string | null
+          created_at?: string
+          id?: string
+          last_activity?: string
+          mode?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          version?: number
+        }
+        Relationships: []
+      }
       domain_interdependencies: {
         Row: {
           created_at: string
@@ -3287,6 +3323,20 @@ export type Database = {
       get_active_user_blueprint: {
         Args: { user_uuid: string }
         Returns: Json
+      }
+      get_or_create_conversation_thread: {
+        Args: { p_user_id: string; p_mode?: string }
+        Returns: {
+          context_fingerprint: string | null
+          created_at: string
+          id: string
+          last_activity: string
+          mode: string
+          status: string
+          updated_at: string
+          user_id: string
+          version: number
+        }
       }
       get_steward_introduction_diagnostic: {
         Args: { p_user_id?: string }
