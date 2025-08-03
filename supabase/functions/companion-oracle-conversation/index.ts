@@ -837,12 +837,32 @@ Respond helpfully while building rapport and understanding.`
     // Add conversation history if available (last 5 exchanges to stay within token limits)
     if (finalHistory && Array.isArray(finalHistory) && finalHistory.length > 0) {
       const recentHistory = finalHistory.slice(-10); // Last 10 messages (5 exchanges)
-      messages.push(...recentHistory);
       
-      console.log(`🧠 CONVERSATION CONTEXT: Including ${recentHistory.length} previous messages in context`);
+      // Validate each message before adding to context
+      const validatedHistory = recentHistory.filter(msg => {
+        if (!msg || typeof msg !== 'object') {
+          console.warn('⚠️ Invalid message object found in history:', msg);
+          return false;
+        }
+        if (!msg.role || !['system', 'user', 'assistant'].includes(msg.role)) {
+          console.warn('⚠️ Invalid message role found:', msg.role);
+          return false;
+        }
+        if (!msg.content || typeof msg.content !== 'string' || msg.content.trim() === '') {
+          console.warn('⚠️ Invalid message content found:', msg.content);
+          return false;
+        }
+        return true;
+      });
+      
+      messages.push(...validatedHistory);
+      console.log(`🧠 CONVERSATION CONTEXT: Including ${validatedHistory.length} validated messages (${recentHistory.length - validatedHistory.length} filtered out)`);
     }
 
-    // Add current user message
+    // Add current user message with validation
+    if (!message || typeof message !== 'string' || message.trim() === '') {
+      throw new Error('Invalid user message: message must be a non-empty string');
+    }
     messages.push({ role: 'user', content: message });
 
     console.log(`🔗 MESSAGE ARRAY: Total messages: ${messages.length}, History included: ${conversationHistory?.length || 0} original messages`);
@@ -862,9 +882,34 @@ Respond helpfully while building rapport and understanding.`
       }),
     })
 
+    // Enhanced error handling with full response details
+    const responseText = await openAIResponse.text();
     if (!openAIResponse.ok) {
-      throw new Error(`OpenAI API error: ${openAIResponse.status}`)
+      let parsedError;
+      try {
+        parsedError = JSON.parse(responseText);
+      } catch (parseErr) {
+        console.error('❌ Failed to parse OpenAI error response:', parseErr);
+      }
+      
+      console.error('❌ OpenAI API error details:', {
+        status: openAIResponse.status,
+        statusText: openAIResponse.statusText,
+        headers: Object.fromEntries(openAIResponse.headers.entries()),
+        body: parsedError || responseText,
+        requestContext: {
+          model: selectedModel,
+          messageCount: messages.length,
+          estimatedTokens: messages.reduce((acc, msg) => acc + (msg.content?.length || 0), 0) / 4, // Rough estimation
+          oracleMode: useOracleMode
+        }
+      });
+      
+      const errorMessage = parsedError?.error?.message || responseText || `HTTP ${openAIResponse.status}`;
+      throw new Error(`OpenAI API error: ${errorMessage}`);
     }
+    
+    const aiResponse = JSON.parse(responseText);
 
     const aiResponse = await openAIResponse.json()
     const response = aiResponse.choices[0]?.message?.content || 'I sense a disturbance in our connection. Please try reaching out again.'
