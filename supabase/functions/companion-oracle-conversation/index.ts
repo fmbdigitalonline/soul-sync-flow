@@ -106,25 +106,52 @@ serve(async (req) => {
     // PHASE 2 FIX: Oracle Context Reconciliation - Load authoritative conversation history first
     console.log('🧠 ORACLE: Loading authoritative conversation history from database')
     let authoritativeHistory = []
+    let contextSource = 'none'
     
     if (threadId) {
-      // Use stable thread ID to fetch conversation memory
+      // STEP 1: Try to fetch by stable thread ID
       const { data: memoryData, error: memoryError } = await supabase
         .from('conversation_memory')
-        .select('messages, updated_at')
+        .select('messages, updated_at, session_id')
         .eq('user_id', userId)
         .eq('session_id', threadId)
         .eq('mode', 'companion')
         .maybeSingle()
       
       if (memoryError) {
-        console.warn('⚠️ ORACLE: Failed to fetch conversation memory:', memoryError)
+        console.warn('⚠️ ORACLE: Failed to fetch conversation memory by thread ID:', memoryError)
       } else if (memoryData && memoryData.messages) {
         authoritativeHistory = Array.isArray(memoryData.messages) ? memoryData.messages : []
-        console.log('✅ ORACLE: Loaded authoritative history', { 
+        contextSource = 'thread_id'
+        console.log('✅ ORACLE: Loaded authoritative history via thread ID', { 
           count: authoritativeHistory.length,
-          lastUpdate: memoryData.updated_at 
+          lastUpdate: memoryData.updated_at,
+          sessionId: memoryData.session_id 
         })
+      } else {
+        // STEP 2: Fallback - Search by user ID + mode for recent conversations
+        console.log('🔄 ORACLE: No memory found for thread ID, trying fallback by user+mode')
+        const { data: fallbackMemory, error: fallbackError } = await supabase
+          .from('conversation_memory')
+          .select('messages, updated_at, session_id, last_activity')
+          .eq('user_id', userId)
+          .eq('mode', 'companion')
+          .order('last_activity', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+        
+        if (fallbackError) {
+          console.warn('⚠️ ORACLE: Fallback memory query failed:', fallbackError)
+        } else if (fallbackMemory && fallbackMemory.messages) {
+          authoritativeHistory = Array.isArray(fallbackMemory.messages) ? fallbackMemory.messages : []
+          contextSource = 'user_mode_fallback'
+          console.log('✅ ORACLE: Loaded authoritative history via fallback', { 
+            count: authoritativeHistory.length,
+            lastUpdate: fallbackMemory.updated_at,
+            sessionId: fallbackMemory.session_id,
+            lastActivity: fallbackMemory.last_activity
+          })
+        }
       }
     } else {
       console.warn('⚠️ ORACLE: No thread ID provided - cannot load persistent context')
@@ -138,15 +165,33 @@ serve(async (req) => {
       console.log('🔄 ORACLE: Merged new client messages', { count: newClientMessages.length })
     }
 
-    // PILLAR III: Validate final context (never proceed with empty context)
+    // PHASE 1: Graceful degradation instead of fatal rejection
     if (finalHistory.length === 0) {
-      console.error('🚨 ORACLE VALIDATION: No conversation context available - refusing to proceed')
-      throw new Error('Oracle requires conversation context to provide meaningful responses')
+      console.warn('🚨 ORACLE VALIDATION: No persistent context found - proceeding with cold start')
+      // Create minimal cold-start context using current message and user profile
+      const coldStartContext = [
+        {
+          role: 'user',
+          content: message,
+          timestamp: new Date().toISOString(),
+          isColdStart: true
+        }
+      ]
+      
+      finalHistory.push(...coldStartContext)
+      contextSource = 'cold_start'
+      
+      console.log('⚠️ ORACLE: Created cold-start context', {
+        contextSource,
+        contextLength: finalHistory.length,
+        degradedMode: true
+      })
     } else {
       console.log('✅ ORACLE VALIDATION: Final conversation context ready:', {
         authoritativeCount: authoritativeHistory.length,
         clientCount: conversationHistory.length,
         finalCount: finalHistory.length,
+        contextSource,
         recentContext: finalHistory.slice(-3).map(m => `${m.role}: ${m.content?.substring(0, 50) || ''}...`)
       })
     }

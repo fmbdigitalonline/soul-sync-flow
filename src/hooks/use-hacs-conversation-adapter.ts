@@ -296,8 +296,36 @@ export const useHACSConversationAdapter = (
             responseLength: oracleResponse.response?.length || 0
           });
           
-          // Use sendOracleMessage with the response to handle proper conversation flow
+          // PHASE 2 FIX: Use sendOracleMessage and ensure conversation memory uses stable thread ID
           await hacsConversation.sendOracleMessage(content, oracleResponse);
+          
+          // CRITICAL: Update conversation memory to use stable thread ID as session_id
+          try {
+            const { error: memoryError } = await supabase
+              .from('conversation_memory')
+              .upsert({
+                user_id: user.id,
+                session_id: stableThreadId!, // Use stable thread ID for consistency
+                mode: 'companion',
+                messages: JSON.parse(JSON.stringify(hacsConversation.messages)), // Convert to JSON-compatible format
+                last_activity: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+                conversation_stage: 'active'
+              }, { 
+                onConflict: 'user_id,session_id,mode' 
+              });
+            
+            if (memoryError) {
+              console.warn('⚠️ ADAPTER: Failed to update conversation memory with thread ID:', memoryError);
+            } else {
+              console.log('✅ ADAPTER: Updated conversation memory with stable thread ID:', {
+                threadId: stableThreadId,
+                messageCount: hacsConversation.messages.length
+              });
+            }
+          } catch (error) {
+            console.error('❌ ADAPTER: Memory update error:', error);
+          }
           
           // Background processing for future intelligence
           BackgroundIntelligenceService.processInBackground(
