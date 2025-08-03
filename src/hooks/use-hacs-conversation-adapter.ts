@@ -128,17 +128,65 @@ export const useHACSConversationAdapter = (
   // Keep enhanced AI coach for backwards compatibility but don't use its sendMessage
   const enhancedCoach = useEnhancedAICoach(initialAgent as any, pageContext);
   
-  // CRITICAL FIX: Persistent session ID to close intelligence loop
-  const sessionIdRef = useRef<string | null>(null);
+  // PHASE 1 FIX: Server-managed thread lifecycle (stable conversation threads)
+  const [stableThreadId, setStableThreadId] = useState<string | null>(null);
+  const [threadLoading, setThreadLoading] = useState(true);
   
-  // Generate session ID once per conversation and persist it
+  // Get or create stable conversation thread
+  const initializeStableThread = useCallback(async () => {
+    // Get current user authentication state
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+    
+    try {
+      console.log('🧵 THREAD: Initializing stable conversation thread');
+      
+      const { data, error } = await supabase.functions.invoke('conversation-thread-manager', {
+        body: { 
+          mode: isCompanionMode ? 'companion' : 'guide' 
+        }
+      });
+      
+      if (error) {
+        console.error('🚨 THREAD: Failed to initialize thread:', error);
+        return null;
+      }
+      
+      console.log('✅ THREAD: Stable thread ready:', data.thread);
+      return data.thread.id;
+    } catch (error) {
+      console.error('🚨 THREAD: Thread initialization failed:', error);
+      return null;
+    }
+  }, [isCompanionMode]);
+  
+  // Initialize thread on mount or mode change
+  useEffect(() => {
+    const initThread = async () => {
+      const threadId = await initializeStableThread();
+      if (threadId) {
+        setStableThreadId(threadId);
+        localStorage.setItem('stable_thread_id', threadId);
+      } else {
+        // Fallback to legacy session ID
+        const fallbackId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        setStableThreadId(fallbackId);
+      }
+      setThreadLoading(false);
+    };
+    
+    initThread();
+  }, [initializeStableThread]);
+  
+  // Legacy fallback for backward compatibility
+  const sessionIdRef = useRef<string | null>(null);
   const getOrCreateSessionId = useCallback(() => {
     if (!sessionIdRef.current) {
-      sessionIdRef.current = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      console.log('🔑 SESSION: Created persistent session ID:', sessionIdRef.current);
+      sessionIdRef.current = stableThreadId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      console.log('🔑 SESSION: Using session ID:', sessionIdRef.current);
     }
     return sessionIdRef.current;
-  }, []);
+  }, [stableThreadId]);
   
   // Return HACS messages directly - they already have the correct ConversationMessage format
   // No conversion needed since HACSChatInterface expects ConversationMessage type
@@ -229,6 +277,7 @@ export const useHACSConversationAdapter = (
               message: content,
               userId: user.id,
               sessionId,
+              threadId: stableThreadId, // PHASE 2 FIX: Pass stable thread ID for Oracle context reconciliation
               useOracleMode: true,
               enableBackgroundIntelligence: true,
               conversationHistory: recentMessages,

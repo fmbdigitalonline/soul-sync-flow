@@ -92,24 +92,63 @@ serve(async (req) => {
       }
     )
 
-    const { message, userId, sessionId, useOracleMode = false, enableBackgroundIntelligence = false, conversationHistory = [], userProfile = {} } = await req.json()
+    const { message, userId, sessionId, useOracleMode = false, enableBackgroundIntelligence = false, conversationHistory = [], userProfile = {}, threadId } = await req.json()
     console.log('🔮 FUSION: Oracle Mode Request:', { 
       useOracleMode, 
       enableBackgroundIntelligence,
       messageLength: message.length,
       conversationHistoryLength: conversationHistory.length,
       userProfileReceived: Object.keys(userProfile).length > 0,
-      userId: userId.substring(0, 8) 
+      userId: userId.substring(0, 8),
+      threadId 
     })
 
-    // PILLAR III: Validate that we have real conversation context
-    if (conversationHistory.length === 0) {
-      console.log('⚠️ ORACLE VALIDATION: Empty conversation history detected - this may cause hallucination');
+    // PHASE 2 FIX: Oracle Context Reconciliation - Load authoritative conversation history first
+    console.log('🧠 ORACLE: Loading authoritative conversation history from database')
+    let authoritativeHistory = []
+    
+    if (threadId) {
+      // Use stable thread ID to fetch conversation memory
+      const { data: memoryData, error: memoryError } = await supabase
+        .from('conversation_memory')
+        .select('messages, updated_at')
+        .eq('user_id', userId)
+        .eq('session_id', threadId)
+        .eq('mode', 'companion')
+        .maybeSingle()
+      
+      if (memoryError) {
+        console.warn('⚠️ ORACLE: Failed to fetch conversation memory:', memoryError)
+      } else if (memoryData && memoryData.messages) {
+        authoritativeHistory = Array.isArray(memoryData.messages) ? memoryData.messages : []
+        console.log('✅ ORACLE: Loaded authoritative history', { 
+          count: authoritativeHistory.length,
+          lastUpdate: memoryData.updated_at 
+        })
+      }
     } else {
-      console.log('✅ ORACLE VALIDATION: Conversation history provided:', {
-        messageCount: conversationHistory.length,
-        recentContext: conversationHistory.slice(-3).map(m => `${m.role}: ${m.content.substring(0, 50)}...`)
-      });
+      console.warn('⚠️ ORACLE: No thread ID provided - cannot load persistent context')
+    }
+
+    // Merge histories: server authoritative + new client messages
+    const finalHistory = [...authoritativeHistory]
+    if (conversationHistory && conversationHistory.length > authoritativeHistory.length) {
+      const newClientMessages = conversationHistory.slice(authoritativeHistory.length)
+      finalHistory.push(...newClientMessages)
+      console.log('🔄 ORACLE: Merged new client messages', { count: newClientMessages.length })
+    }
+
+    // PILLAR III: Validate final context (never proceed with empty context)
+    if (finalHistory.length === 0) {
+      console.error('🚨 ORACLE VALIDATION: No conversation context available - refusing to proceed')
+      throw new Error('Oracle requires conversation context to provide meaningful responses')
+    } else {
+      console.log('✅ ORACLE VALIDATION: Final conversation context ready:', {
+        authoritativeCount: authoritativeHistory.length,
+        clientCount: conversationHistory.length,
+        finalCount: finalHistory.length,
+        recentContext: finalHistory.slice(-3).map(m => `${m.role}: ${m.content?.substring(0, 50) || ''}...`)
+      })
     }
 
     // FUSION STEP 1: Get current HACS intelligence level for response calibration
@@ -751,8 +790,8 @@ Respond helpfully while building rapport and understanding.`
     ];
 
     // Add conversation history if available (last 5 exchanges to stay within token limits)
-    if (conversationHistory && Array.isArray(conversationHistory) && conversationHistory.length > 0) {
-      const recentHistory = conversationHistory.slice(-10); // Last 10 messages (5 exchanges)
+    if (finalHistory && Array.isArray(finalHistory) && finalHistory.length > 0) {
+      const recentHistory = finalHistory.slice(-10); // Last 10 messages (5 exchanges)
       messages.push(...recentHistory);
       
       console.log(`🧠 CONVERSATION CONTEXT: Including ${recentHistory.length} previous messages in context`);
