@@ -3326,17 +3326,7 @@ export type Database = {
       }
       get_or_create_conversation_thread: {
         Args: { p_user_id: string; p_mode?: string }
-        Returns: {
-          context_fingerprint: string | null
-          created_at: string
-          id: string
-          last_activity: string
-          mode: string
-          status: string
-          updated_at: string
-          user_id: string
-          version: number
-        }
+        Returns: Json
       }
       get_steward_introduction_diagnostic: {
         Args: { p_user_id?: string }
