@@ -312,7 +312,7 @@ export const useHACSConversationAdapter = (
                 updated_at: new Date().toISOString(),
                 conversation_stage: 'active'
               }, { 
-                onConflict: 'user_id,session_id,mode' 
+                onConflict: 'user_id,session_id' 
               });
             
             if (memoryError) {
