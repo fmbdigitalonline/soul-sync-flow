@@ -233,7 +233,7 @@ export const useHACSConversationAdapter = (
           const { data: conversationMemory } = await supabase
             .from('conversation_memory')
             .select('messages')
-            .eq('session_id', sessionId)
+            .eq('session_id', stableThreadId)
             .maybeSingle();
 
           let recentMessages = [];
