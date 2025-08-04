@@ -910,8 +910,6 @@ Respond helpfully while building rapport and understanding.`
     }
     
     const aiResponse = JSON.parse(responseText);
-
-    const aiResponse = await openAIResponse.json()
     const response = aiResponse.choices[0]?.message?.content || 'I sense a disturbance in our connection. Please try reaching out again.'
 
     // FUSION STEP 2: Prepare oracle response data for HACS intelligence integration
