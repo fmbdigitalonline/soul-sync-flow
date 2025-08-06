@@ -18,6 +18,9 @@ import { useStewardIntroductionDatabase } from '@/hooks/use-steward-introduction
 import { HACSLoadingDiagnostics } from './HACSLoadingDiagnostics';
 import { useGlobalChatState } from '@/hooks/use-global-chat-state';
 import { useStreamingSyncState } from '@/hooks/use-streaming-sync-state';
+import { useUser360 } from '@/hooks/use-user-360';
+import { useBlueprintData } from '@/hooks/use-blueprint-data';
+import { useUserProfile } from '@/hooks/use-user-profile';
 
 interface FloatingHACSProps {
   className?: string;
@@ -73,6 +76,29 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
 
   // Phase 2: Database-driven Steward Introduction validation
   const stewardDatabase = useStewardIntroductionDatabase();
+  
+  // Phase 1: Comprehensive data integration (addresses 60% missing data)
+  const { 
+    profile: user360Profile, 
+    loading: user360Loading, 
+    completenessScore,
+    dataAvailability 
+  } = useUser360();
+  
+  const { 
+    blueprintData, 
+    loading: blueprintLoading, 
+    getPersonalityTraits,
+    getDisplayName,
+    getBlueprintCompletionPercentage 
+  } = useBlueprintData();
+  
+  const { 
+    profile: userProfile, 
+    statistics: userStatistics, 
+    goals: userGoals,
+    loading: userProfileLoading 
+  } = useUserProfile();
 
   console.log('FloatingHACSOrb render:', { 
     loading, 
