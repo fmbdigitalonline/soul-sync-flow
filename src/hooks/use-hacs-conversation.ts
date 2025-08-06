@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useHacsIntelligence } from './use-hacs-intelligence';
 import { useCoordinatedLoading } from '@/hooks/use-coordinated-loading';
 import { createErrorHandler } from '@/utils/error-recovery';
+import { conversationMemoryService } from '@/services/conversation-memory-service';
 
 export interface ConversationMessage {
   id: string;
@@ -367,30 +368,47 @@ export const useHACSConversation = () => {
         let recentMessages = [];
         
         if (conversationMemory?.messages && !memoryError) {
-          // Use persisted conversation history - safely cast JSON to our type
-          const allMessages = Array.isArray(conversationMemory.messages) 
-            ? conversationMemory.messages as any[]
-            : [];
-          recentMessages = allMessages.slice(-10).map(msg => ({
-            role: msg.role === 'hacs' ? 'assistant' : msg.role,
-            content: msg.content,
-            timestamp: msg.timestamp
-          }));
-          console.log('✅ ORACLE MEMORY: Loaded persisted history', {
-            totalMessages: allMessages.length,
-            recentCount: recentMessages.length
+          // PILLAR I & II: Use ConversationMemoryService for intelligent context
+          const conversationContext = await conversationMemoryService.getConversationContext(sessionIdRef.current);
+          
+          if (conversationContext?.messages) {
+            // Use intelligent context selection instead of crude slice(-10)
+            const intelligentMessages = conversationMemoryService.getIntelligentContext(
+              conversationContext.messages,
+              3000 // Oracle context token limit
+            );
+            
+            recentMessages = intelligentMessages.map(msg => ({
+              role: msg.role === 'assistant' ? 'assistant' : msg.role,
+              content: msg.content,
+              timestamp: msg.timestamp
+            }));
+            
+            console.log('✅ ORACLE MEMORY: Intelligent context loaded', {
+              totalMessages: conversationContext.messages.length,
+              selectedCount: recentMessages.length,
+              intelligentSelection: true
+            });
+          } else {
+            // PILLAR II: Use validated in-memory messages as fallback
+            const validatedMessages = messages
+              .filter(msg => msg.content?.trim()) // Remove empty messages
+              .slice(-5) // Smaller fallback for performance
+              .map(msg => ({
+                role: msg.role === 'hacs' ? 'assistant' : msg.role,
+                content: msg.content,
+                timestamp: msg.timestamp
+              }));
+            
+            recentMessages = validatedMessages;
+          }
+          console.log('⚠️ ORACLE MEMORY: Using validated fallback in-memory history', {
+            messageCount: recentMessages.length,
+            intelligentSelection: false
           });
         } else {
-          // Fallback to in-memory messages if conversation_memory is empty
-          recentMessages = messages.slice(-10).map(msg => ({
-            role: msg.role === 'hacs' ? 'assistant' : msg.role,
-            content: msg.content,
-            timestamp: msg.timestamp
-          }));
-          console.log('⚠️ ORACLE MEMORY: Using fallback in-memory history', {
-            messageCount: recentMessages.length,
-            memoryError: memoryError?.message
-          });
+          console.log('🔍 ORACLE MEMORY: No conversation memory found, using empty context');
+          recentMessages = [];
         }
 
         // PILLAR II: Get real user profile for Oracle context

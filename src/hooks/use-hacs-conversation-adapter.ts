@@ -7,6 +7,7 @@ import { ImmediateResponseService } from '../services/immediate-response-service
 import { BackgroundIntelligenceService } from '../services/background-intelligence-service';
 import { useCoordinatedLoading } from '@/hooks/use-coordinated-loading';
 import { createErrorHandler } from '@/utils/error-recovery';
+import { conversationMemoryService } from '@/services/conversation-memory-service';
 
 // Adapter interface that matches useEnhancedAICoach exactly
 export interface HACSConversationAdapter {
@@ -229,18 +230,19 @@ export const useHACSConversationAdapter = (
         const abortController = startOracleOperation();
         
         try {
-          // PILLAR II: Load conversation history for Oracle context
-          const { data: conversationMemory } = await supabase
-            .from('conversation_memory')
-            .select('messages')
-            .eq('session_id', stableThreadId)
-            .maybeSingle();
-
+          // PILLAR II: Load conversation context with intelligent selection
+          const conversationContext = await conversationMemoryService.getConversationContext(stableThreadId!);
+          
           let recentMessages = [];
-          if (conversationMemory?.messages && Array.isArray(conversationMemory.messages)) {
-            const allMessages = conversationMemory.messages as any[];
-            recentMessages = allMessages.slice(-10).map(msg => ({
-              role: msg.role === 'hacs' ? 'assistant' : msg.role,
+          if (conversationContext?.messages) {
+            // Use intelligent context selection instead of crude slice(-10)
+            const intelligentMessages = conversationMemoryService.getIntelligentContext(
+              conversationContext.messages, 
+              4000 // Max tokens for Oracle context
+            );
+            
+            recentMessages = intelligentMessages.map(msg => ({
+              role: msg.role === 'assistant' ? 'assistant' : msg.role,
               content: msg.content,
               timestamp: msg.timestamp
             }));
@@ -299,32 +301,30 @@ export const useHACSConversationAdapter = (
           // PHASE 2 FIX: Use sendOracleMessage and ensure conversation memory uses stable thread ID
           await hacsConversation.sendOracleMessage(content, oracleResponse);
           
-          // CRITICAL: Update conversation memory to use stable thread ID as session_id
+          // PILLAR I & II: Store messages using validated ConversationMemoryService
           try {
-            const { error: memoryError } = await supabase
-              .from('conversation_memory')
-              .upsert({
-                user_id: user.id,
-                session_id: stableThreadId!, // Use stable thread ID for consistency
-                mode: 'companion',
-                messages: JSON.parse(JSON.stringify(hacsConversation.messages)), // Convert to JSON-compatible format
-                last_activity: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-                conversation_stage: 'active'
-              }, { 
-                onConflict: 'user_id,session_id' 
-              });
+            // Store user message
+            await conversationMemoryService.storeMessage(stableThreadId!, {
+              role: 'user',
+              content: content,
+              timestamp: new Date(),
+              id: `user_${Date.now()}`
+            }, user.id);
             
-            if (memoryError) {
-              console.warn('⚠️ ADAPTER: Failed to update conversation memory with thread ID:', memoryError);
-            } else {
-              console.log('✅ ADAPTER: Updated conversation memory with stable thread ID:', {
-                threadId: stableThreadId,
-                messageCount: hacsConversation.messages.length
-              });
+            // Store Oracle response
+            if (oracleResponse?.response) {
+              await conversationMemoryService.storeMessage(stableThreadId!, {
+                role: 'assistant',
+                content: oracleResponse.response,
+                timestamp: new Date(),
+                id: `oracle_${Date.now()}`,
+                agent_mode: 'companion'
+              }, user.id);
             }
+            
+            console.log('✅ ADAPTER: Messages stored with ConversationMemoryService validation');
           } catch (error) {
-            console.error('❌ ADAPTER: Memory update error:', error);
+            console.error('❌ ADAPTER: ConversationMemoryService storage error:', error);
           }
           
           // Background processing for future intelligence
