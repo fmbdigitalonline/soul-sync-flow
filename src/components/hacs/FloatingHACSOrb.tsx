@@ -21,6 +21,10 @@ import { useStreamingSyncState } from '@/hooks/use-streaming-sync-state';
 import { useUser360 } from '@/hooks/use-user-360';
 import { useBlueprintData } from '@/hooks/use-blueprint-data';
 import { useUserProfile } from '@/hooks/use-user-profile';
+// Phase 3: Advanced Intelligence Integration
+import { useConversationRecovery } from '@/hooks/use-conversation-recovery';
+import { useTieredMemory } from '@/hooks/use-tiered-memory';
+import { usePIEEnhancedCoach } from '@/hooks/use-pie-enhanced-coach';
 
 interface FloatingHACSProps {
   className?: string;
@@ -99,6 +103,11 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     goals: userGoals,
     loading: userProfileLoading 
   } = useUserProfile();
+
+  // Phase 3: Advanced Intelligence Integration (60% → 80%+ database coverage)
+  const conversationRecovery = useConversationRecovery();
+  const tieredMemory = useTieredMemory(userProfile?.id || '', 'hacs-orb-session');
+  const pieEnhancedCoach = usePIEEnhancedCoach('guide');
 
   console.log('FloatingHACSOrb render:', { 
     loading, 
@@ -233,7 +242,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   // 🔒 INSIGHTS PAUSED - Feature flag for automatic insight generation
   const AUTO_INSIGHTS_ENABLED = false; // Set to true to re-enable automatic insights
   
-  // Authentic triggers for both learning and insights
+  // Phase 3: Enhanced autonomous triggers with advanced intelligence integration
   useEffect(() => {
     // Gate autonomous behaviors during introduction OR during background report generation
     if (introductionState.isActive || isGeneratingReport) {
@@ -250,62 +259,118 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
           setModuleActivity(true);
           
           setTimeout(async () => {
-            // Balanced choice between learning and insight generation
-            const shouldGenerateInsight = Math.random() < 0.6; // 60% chance for insight
-            
-            if (shouldGenerateInsight) {
-              // Phase 2: Generate context-aware insights with personality data
-              const personalityContext = {
-                blueprint: blueprintData,
-                communicationStyle: blueprintData?.personality?.userConfidence || 'professional',
-                preferredTone: getPersonalityTraits().includes('Intuitive') ? 'mystic' : 'analytical',
-                timingPattern: userStatistics?.most_productive_day || 'morning',
-                mbtiType: blueprintData?.personality?.likelyType,
-                goals: userGoals,
-                completenessScore,
-                moduleScores: intelligence?.module_scores
-              };
+            // Phase 3: Build comprehensive intelligence context with proper data handling
+            try {
+              // Load conversation recoveries (returns void from the hook, so use availableRecoveries)
+              await conversationRecovery.loadAvailableRecoveries();
+              const conversationContext = conversationRecovery.availableRecoveries || [];
               
-              console.log('🔮 Autonomous insight generation with personality context:', {
-                mbtiType: personalityContext.mbtiType,
-                communicationStyle: personalityContext.communicationStyle,
-                goalsCount: personalityContext.goals?.length || 0
-              });
+              const memoryMetrics = tieredMemory.metrics || { hotHits: 0, warmHits: 0, coldHits: 0, avgLatency: {} };
+              const pieInsights = pieEnhancedCoach.pieInsights || [];
               
-              await triggerInsightCheck('periodic_activity', { 
-                source: 'autonomous_trigger',
-                personalityContext 
-              });
-              await refreshIntelligence();
-            } else {
-              // Phase 2: Generate context-aware micro-learning
-              const userContext = {
+              // Balanced choice between learning and insight generation
+              const shouldGenerateInsight = Math.random() < 0.6; // 60% chance for insight
+              
+              if (shouldGenerateInsight) {
+                // Phase 3: Generate context-aware insights with advanced intelligence
+                const advancedContext = {
+                  blueprint: blueprintData,
+                  communicationStyle: blueprintData?.personality?.userConfidence || 'professional',
+                  preferredTone: getPersonalityTraits().includes('Intuitive') ? 'mystic' : 'analytical',
+                  timingPattern: userStatistics?.most_productive_day || 'morning',
+                  mbtiType: blueprintData?.personality?.likelyType,
+                  goals: userGoals,
+                  completenessScore,
+                  moduleScores: intelligence?.module_scores,
+                  // Phase 3: Advanced intelligence context
+                  conversationHistory: conversationContext.slice(0, 3), // Last 3 conversations
+                  memoryMetrics: {
+                    hotHits: memoryMetrics.hotHits || 0,
+                    warmHits: memoryMetrics.warmHits || 0,
+                    coldHits: memoryMetrics.coldHits || 0,
+                    avgLatency: memoryMetrics.avgLatency || {}
+                  },
+                  pieInsights: pieInsights.filter((insight: any) => insight.priority === 'high').slice(0, 2),
+                  personalityEngine: {
+                    oraclePromptAvailable: !!generateOraclePrompt,
+                    timingPreferences: getOptimalTimingPreferences()
+                  }
+                };
+                
+                console.log('🔮 Phase 3: Advanced autonomous insight generation:', {
+                  mbtiType: advancedContext.mbtiType,
+                  conversationHistory: advancedContext.conversationHistory.length,
+                  memoryHits: advancedContext.memoryMetrics.hotHits,
+                  pieInsightsCount: advancedContext.pieInsights.length
+                });
+                
+                await triggerInsightCheck('periodic_activity', { 
+                  source: 'autonomous_trigger',
+                  advancedContext 
+                });
+                await refreshIntelligence();
+              } else {
+                // Phase 3: Generate context-aware micro-learning with advanced intelligence
+                const comprehensiveContext = {
+                  personality: {
+                    traits: getPersonalityTraits(),
+                    mbtiType: blueprintData?.personality?.likelyType || 'Unknown',
+                    communicationStyle: blueprintData?.personality?.userConfidence || 'neutral',
+                    blueprint: blueprintData
+                  },
+                  goals: userGoals,
+                  statistics: userStatistics,
+                  profile: userProfile,
+                  user360: {
+                    completenessScore,
+                    dataAvailability,
+                    profile: user360Profile
+                  },
+                  moduleScores: intelligence?.module_scores,
+                  intelligenceLevel: intelligence?.intelligence_level,
+                  // Phase 3: Advanced context integration
+                  conversationMemory: {
+                    recentConversations: conversationContext.slice(0, 2),
+                    totalConversations: conversationContext.length
+                  },
+                  tieredMemory: {
+                    hotHits: memoryMetrics.hotHits || 0,
+                    warmHits: memoryMetrics.warmHits || 0,
+                    avgLatency: memoryMetrics.avgLatency || {},
+                    isLoaded: tieredMemory.isInitialized || false
+                  },
+                  pieIntelligence: {
+                    insights: pieInsights.slice(0, 3),
+                    enabled: pieEnhancedCoach.pieEnabled || false,
+                    initialized: pieEnhancedCoach.pieInitialized || false
+                  }
+                };
+                
+                console.log('🎯 Phase 3: Advanced autonomous micro-learning:', {
+                  personalityTraits: comprehensiveContext.personality.traits,
+                  mbtiType: comprehensiveContext.personality.mbtiType,
+                  conversationMemorySize: comprehensiveContext.conversationMemory.totalConversations,
+                  tieredMemoryHits: comprehensiveContext.tieredMemory.hotHits,
+                  pieInsightsCount: comprehensiveContext.pieIntelligence.insights.length,
+                  intelligenceLevel: comprehensiveContext.intelligenceLevel
+                });
+                
+                await triggerMicroLearning(JSON.stringify(comprehensiveContext));
+                await refreshIntelligence();
+              }
+            } catch (error) {
+              console.error('🚨 Phase 3: Error in advanced intelligence integration:', error);
+              // Fallback to basic context on error
+              const basicContext = {
                 personality: {
                   traits: getPersonalityTraits(),
-                  mbtiType: blueprintData?.personality?.likelyType || 'Unknown',
-                  communicationStyle: blueprintData?.personality?.userConfidence || 'neutral',
-                  blueprint: blueprintData
+                  mbtiType: blueprintData?.personality?.likelyType || 'Unknown'
                 },
                 goals: userGoals,
                 statistics: userStatistics,
-                profile: userProfile,
-                user360: {
-                  completenessScore,
-                  dataAvailability,
-                  profile: user360Profile
-                },
-                moduleScores: intelligence?.module_scores,
                 intelligenceLevel: intelligence?.intelligence_level
               };
-              
-              console.log('🎯 Autonomous micro-learning with user context:', {
-                personalityTraits: userContext.personality.traits,
-                mbtiType: userContext.personality.mbtiType,
-                goalsCount: userContext.goals?.length || 0,
-                intelligenceLevel: userContext.intelligenceLevel
-              });
-              
-              await triggerMicroLearning(JSON.stringify(userContext));
+              await triggerMicroLearning(JSON.stringify(basicContext));
               await refreshIntelligence();
             }
             
@@ -324,7 +389,22 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
       }, 2000);
       return () => clearTimeout(debugTimer);
     }
-  }, [introductionState.isActive, isGeneratingReport, currentQuestion, currentInsight, loading, isGenerating, isGeneratingInsight, triggerMicroLearning, triggerInsightCheck, AUTO_INSIGHTS_ENABLED]);
+  }, [
+    introductionState.isActive, 
+    isGeneratingReport, 
+    currentQuestion, 
+    currentInsight, 
+    loading, 
+    isGenerating, 
+    isGeneratingInsight, 
+    triggerMicroLearning, 
+    triggerInsightCheck, 
+    AUTO_INSIGHTS_ENABLED,
+    // Phase 3: Advanced dependencies
+    conversationRecovery,
+    tieredMemory,
+    pieEnhancedCoach
+  ]);
 
   // 🔒 INSIGHTS PAUSED - Periodic analytics check (every 60 seconds when active)
   useEffect(() => {
