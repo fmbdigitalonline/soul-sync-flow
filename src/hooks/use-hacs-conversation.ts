@@ -92,8 +92,8 @@ export const useHACSConversation = () => {
           : [];
         setMessages(conversationData);
         
-        // Set conversationId from session_id for compatibility
-        setConversationId(companionMemory.session_id);
+        // Keep conversationId null - will create new record with session_id
+        setConversationId(null);
         
         console.log('✅ LOADED COMPANION HISTORY: From conversation_memory', {
           sessionId: companionMemory.session_id,
