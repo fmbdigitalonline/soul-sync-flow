@@ -186,6 +186,80 @@ export class ConversationMemoryService {
   }
 
   /**
+   * PHASE 2 UPGRADE: Semantic-enhanced intelligent context selection
+   * Combines recency with semantic similarity for optimal context
+   */
+  async getSemanticIntelligentContext(
+    messages: ValidatedMessage[], 
+    query?: string,
+    maxTokens: number = 4000
+  ): Promise<ValidatedMessage[]> {
+    if (messages.length === 0) return [];
+    
+    // If no query provided, fall back to recency-based selection
+    if (!query) {
+      return this.getIntelligentContext(messages, maxTokens);
+    }
+
+    try {
+      // Import semantic service dynamically to avoid circular dependencies
+      const { semanticMemoryService } = await import('./semantic-memory-service');
+      
+      // Get semantic context for the query
+      const semanticContext = await semanticMemoryService.getSemanticContext(
+        query, 
+        Math.floor(maxTokens * 0.7) // Reserve 30% for recent messages
+      );
+
+      const estimateTokens = (text: string) => Math.ceil(text.length / 4);
+      let totalTokens = semanticContext.totalTokens;
+      const selectedMessages: ValidatedMessage[] = [];
+
+      // Add semantically relevant messages first
+      for (const semanticMsg of semanticContext.semanticMessages) {
+        const matchingMessage = messages.find(msg => 
+          msg.content === semanticMsg.content && 
+          msg.role === semanticMsg.message_role
+        );
+        
+        if (matchingMessage && !selectedMessages.find(m => m.id === matchingMessage.id)) {
+          selectedMessages.push(matchingMessage);
+        }
+      }
+
+      // Fill remaining token budget with recent messages
+      const recentMessages = messages.slice(-5);
+      for (let i = recentMessages.length - 1; i >= 0; i--) {
+        const message = recentMessages[i];
+        
+        // Skip if already included from semantic search
+        if (selectedMessages.find(m => m.id === message.id)) continue;
+        
+        const messageTokens = estimateTokens(message.content);
+        if (totalTokens + messageTokens > maxTokens) break;
+        
+        selectedMessages.push(message);
+        totalTokens += messageTokens;
+      }
+
+      // Sort by timestamp to maintain conversation flow
+      selectedMessages.sort((a, b) => 
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+      );
+
+      BlueprintHealthChecker.logValidation('ConversationMemory', 
+        `SEMANTIC: Selected ${selectedMessages.length} messages (~${totalTokens} tokens) using ${semanticContext.selectionMethod}`);
+      
+      return selectedMessages;
+      
+    } catch (error) {
+      console.error('❌ SEMANTIC CONTEXT: Error, falling back to recency-based:', error);
+      return this.getIntelligentContext(messages, maxTokens);
+    }
+  }
+
+  /**
+   * Legacy method - kept for backward compatibility
    * Pillar III: Intentional craft - intelligent context selection
    */
   getIntelligentContext(messages: ValidatedMessage[], maxTokens: number = 4000): ValidatedMessage[] {
@@ -213,9 +287,51 @@ export class ConversationMemoryService {
     }
     
     BlueprintHealthChecker.logValidation('ConversationMemory', 
-      `Selected ${selectedMessages.length} messages (~${totalTokens} tokens)`);
+      `LEGACY: Selected ${selectedMessages.length} messages (~${totalTokens} tokens)`);
     
     return selectedMessages;
+  }
+
+  /**
+   * PHASE 2: Store message with optional embedding generation
+   * Enables semantic search for future conversations
+   */
+  async storeMessageWithEmbedding(
+    threadId: string, 
+    message: any, 
+    userId?: string,
+    generateEmbedding: boolean = true
+  ): Promise<boolean> {
+    try {
+      // Store message using existing validation logic
+      const stored = await this.storeMessage(threadId, message, userId);
+      
+      if (!stored || !generateEmbedding) return stored;
+
+      // Generate embedding for semantic search
+      const { semanticMemoryService } = await import('./semantic-memory-service');
+      
+      const validated = this.validateMessage(message);
+      if (!validated) return stored;
+
+      // Store embedding asynchronously to avoid blocking
+      semanticMemoryService.storeMessageEmbedding(
+        validated.id,
+        threadId,
+        validated.content,
+        validated.role,
+        validated.agent_mode
+      ).catch(error => {
+        console.error('❌ SEMANTIC: Background embedding storage failed:', error);
+      });
+
+      console.log('✅ CONVERSATION MEMORY: Message stored with semantic enhancement');
+      return stored;
+      
+    } catch (error) {
+      console.error('❌ CONVERSATION MEMORY: Enhanced storage error:', error);
+      return false;
+    }
   }
 }
 

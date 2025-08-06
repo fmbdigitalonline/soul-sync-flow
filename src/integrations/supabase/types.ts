@@ -2146,6 +2146,45 @@ export type Database = {
         }
         Relationships: []
       }
+      message_embeddings: {
+        Row: {
+          agent_mode: string | null
+          content: string
+          created_at: string
+          embedding: string | null
+          id: string
+          message_id: string
+          message_role: string
+          session_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          agent_mode?: string | null
+          content: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          message_id: string
+          message_role: string
+          session_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          agent_mode?: string | null
+          content?: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          message_id?: string
+          message_role?: string
+          session_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       micro_action_reminders: {
         Row: {
           action_description: string | null
