@@ -254,12 +254,58 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
             const shouldGenerateInsight = Math.random() < 0.6; // 60% chance for insight
             
             if (shouldGenerateInsight) {
-              await triggerInsightCheck('periodic_activity', { source: 'autonomous_trigger' });
-              // Refresh intelligence after insight generation
+              // Phase 2: Generate context-aware insights with personality data
+              const personalityContext = {
+                blueprint: blueprintData,
+                communicationStyle: blueprintData?.personality?.userConfidence || 'professional',
+                preferredTone: getPersonalityTraits().includes('Intuitive') ? 'mystic' : 'analytical',
+                timingPattern: userStatistics?.most_productive_day || 'morning',
+                mbtiType: blueprintData?.personality?.likelyType,
+                goals: userGoals,
+                completenessScore,
+                moduleScores: intelligence?.module_scores
+              };
+              
+              console.log('🔮 Autonomous insight generation with personality context:', {
+                mbtiType: personalityContext.mbtiType,
+                communicationStyle: personalityContext.communicationStyle,
+                goalsCount: personalityContext.goals?.length || 0
+              });
+              
+              await triggerInsightCheck('periodic_activity', { 
+                source: 'autonomous_trigger',
+                personalityContext 
+              });
               await refreshIntelligence();
             } else {
-              await triggerMicroLearning();
-              // Refresh intelligence after micro-learning
+              // Phase 2: Generate context-aware micro-learning
+              const userContext = {
+                personality: {
+                  traits: getPersonalityTraits(),
+                  mbtiType: blueprintData?.personality?.likelyType || 'Unknown',
+                  communicationStyle: blueprintData?.personality?.userConfidence || 'neutral',
+                  blueprint: blueprintData
+                },
+                goals: userGoals,
+                statistics: userStatistics,
+                profile: userProfile,
+                user360: {
+                  completenessScore,
+                  dataAvailability,
+                  profile: user360Profile
+                },
+                moduleScores: intelligence?.module_scores,
+                intelligenceLevel: intelligence?.intelligence_level
+              };
+              
+              console.log('🎯 Autonomous micro-learning with user context:', {
+                personalityTraits: userContext.personality.traits,
+                mbtiType: userContext.personality.mbtiType,
+                goalsCount: userContext.goals?.length || 0,
+                intelligenceLevel: userContext.intelligenceLevel
+              });
+              
+              await triggerMicroLearning(JSON.stringify(userContext));
               await refreshIntelligence();
             }
             
@@ -285,9 +331,23 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     if (AUTO_INSIGHTS_ENABLED && intelligence && intelligence.interaction_count > 0) {
       const analyticsTimer = setInterval(async () => {
         if (!currentInsight && !isGeneratingInsight) {
-          console.log('🔍 Triggering periodic analytics insight check...');
+          console.log('🔍 Triggering periodic analytics insight check with personality context...');
+          
+          // Phase 2: Enhanced analytics with personality context
+          const personalityContext = {
+            blueprint: blueprintData,
+            communicationStyle: blueprintData?.personality?.userConfidence || 'professional',
+            preferredTone: getPersonalityTraits().includes('Intuitive') ? 'mystic' : 'analytical',
+            timingPattern: userStatistics?.most_productive_day || 'morning',
+            mbtiType: blueprintData?.personality?.likelyType,
+            goals: userGoals,
+            completenessScore,
+            moduleScores: intelligence?.module_scores
+          };
+          
           await triggerInsightCheck('intelligence_check', { 
             trigger: 'periodic_analytics',
+            personalityContext,
             intelligence_level: intelligence.intelligence_level 
           });
         }
