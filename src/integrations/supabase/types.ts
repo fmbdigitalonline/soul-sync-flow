@@ -739,6 +739,7 @@ export type Database = {
           summary_content: string
           summary_embedding: string | null
           summary_level: number
+          summary_type: string | null
           thread_id: string
           topic_id: string | null
           updated_at: string
@@ -755,6 +756,7 @@ export type Database = {
           summary_content: string
           summary_embedding?: string | null
           summary_level: number
+          summary_type?: string | null
           thread_id: string
           topic_id?: string | null
           updated_at?: string
@@ -771,6 +773,7 @@ export type Database = {
           summary_content?: string
           summary_embedding?: string | null
           summary_level?: number
+          summary_type?: string | null
           thread_id?: string
           topic_id?: string | null
           updated_at?: string
