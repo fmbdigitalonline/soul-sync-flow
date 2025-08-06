@@ -304,6 +304,15 @@ export const useHACSConversationAdapter = (
           
           // PILLAR I & II: Store messages using enhanced ConversationMemoryService with semantic embeddings
           try {
+            // PHASE 4: Check conversation state and detect closure signals
+            const { conversationStateService } = await import('@/services/conversation-state-service');
+            const conversationState = conversationStateService.detectConversationState(content);
+            
+            console.log('🎯 CONVERSATION STATE DETECTED:', conversationState);
+
+            // Store conversation state in progressive memory
+            await conversationStateService.storeConversationState(stableThreadId!, user.id, conversationState, content);
+
             // Store user message with progressive memory features
             await conversationMemoryService.storeMessageWithProgressiveMemory(stableThreadId!, {
               role: 'user',

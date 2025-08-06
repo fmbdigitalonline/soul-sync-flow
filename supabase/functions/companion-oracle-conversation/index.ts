@@ -1,6 +1,66 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
+// PHASE 4: Conversation state detection function
+function detectConversationState(message: string, conversationHistory: any[]) {
+  const cleanMessage = message.trim().toLowerCase();
+  
+  // Gratitude patterns - strong signal for satisfaction
+  const gratitudePatterns = [
+    /\b(thank\s*you|thanks|thx|appreciate)\b/i,
+    /\b(grateful|perfect|great|excellent)\b/i,
+    /\b(exactly what i needed|that helps)\b/i
+  ];
+
+  // Closure patterns - direct signals for ending
+  const closurePatterns = [
+    /\b(that'?s\s*(it|all)|that is it)\b/i,
+    /\b(for now|good for now)\b/i,
+    /\b(no more|nothing else|i'?m done)\b/i,
+    /\b(bye|goodbye|talk later|see you)\b/i,
+    /\b(end|stop|enough)\b/i
+  ];
+
+  // Continuation patterns - signals for more interaction
+  const continuationPatterns = [
+    /\b(what about|how|why|when|where|can you|could you)\b/i,
+    /\b(tell me more|explain|help me|show me)\b/i,
+    /\b(but|however|also|and|next)\b/i,
+    /[?]$/  // Ends with question mark
+  ];
+
+  const hasGratitude = gratitudePatterns.some(pattern => pattern.test(cleanMessage));
+  const hasClosure = closurePatterns.some(pattern => pattern.test(cleanMessage));
+  const hasContinuation = continuationPatterns.some(pattern => pattern.test(cleanMessage));
+
+  // Determine interaction type based on strongest signal
+  let lastInteractionType = 'continuation';
+  
+  if (hasGratitude && hasClosure) {
+    lastInteractionType = 'closure';
+  } else if (hasGratitude) {
+    lastInteractionType = 'gratitude';
+  } else if (hasClosure) {
+    lastInteractionType = 'closure';
+  } else if (hasContinuation) {
+    lastInteractionType = 'continuation';
+  }
+
+  // Calculate state flags
+  const closureSignalDetected = hasGratitude || hasClosure;
+  const userSatisfied = hasGratitude || (hasClosure && !hasContinuation);
+  const isActive = !closureSignalDetected || hasContinuation;
+  const shouldAskQuestion = isActive && lastInteractionType !== 'closure';
+
+  return {
+    isActive,
+    userSatisfied,
+    closureSignalDetected,
+    lastInteractionType,
+    shouldAskQuestion
+  };
+}
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -235,6 +295,10 @@ serve(async (req) => {
         console.log('✅ ORACLE CONTEXT: Fetched blueprint data:', personalityContext);
       }
     }
+
+    // PHASE 4: CONVERSATION STATE DETECTION
+    const conversationState = detectConversationState(message, finalHistory);
+    console.log('🎯 CONVERSATION STATE:', conversationState);
 
     // ENHANCED ORACLE PIPELINE: Hybrid retrieval with facts + narrative
     let semanticChunks = []
@@ -726,7 +790,7 @@ RESPONSE GUIDELINES:
 2. For factual queries: Provide precise data first, then brief context
 3. For interpretive queries: Focus on insights and guidance
 4. For mixed queries: Balance facts with meaningful interpretation
-5. End with encouragement or a thoughtful question when appropriate
+5. CONVERSATION FLOW INTELLIGENCE: Only ask follow-up questions when the conversation is naturally active. If the user shows gratitude, satisfaction, or closure signals (like "thank you", "that's it for now", "perfect"), respond warmly but do NOT ask another question. Let them end the conversation gracefully.
 
 Remember: You're ${userName}'s perceptive AI companion who has access to their detailed blueprint and can provide both specific facts and meaningful guidance through conversation.`;
       }
