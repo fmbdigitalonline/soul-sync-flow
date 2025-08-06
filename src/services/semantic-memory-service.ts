@@ -106,7 +106,10 @@ class SemanticMemoryService {
         return false;
       }
 
-      // Store in database
+      // Convert embedding array to string format for pgvector
+      const embeddingString = `[${embedding.join(',')}]`;
+
+      // Store in database with correct column mapping
       const { error } = await supabase
         .from('message_embeddings')
         .insert({
@@ -114,7 +117,7 @@ class SemanticMemoryService {
           session_id: sessionId,
           user_id: user.id,
           content: content,
-          embedding: embedding,
+          embedding: embeddingString,
           message_role: role,
           agent_mode: agentMode
         });
@@ -135,6 +138,7 @@ class SemanticMemoryService {
   /**
    * PILLAR III: Semantic similarity search using vector cosine similarity
    * Returns contextually relevant messages based on query content
+   * PHASE 2: Simplified approach for TypeScript compatibility
    */
   async searchSimilarMessages(
     query: string,
@@ -169,12 +173,14 @@ class SemanticMemoryService {
         timeWeighting
       });
 
-      // Semantic similarity search using pgvector
-      const { data, error } = await supabase.rpc('search_similar_messages', {
-        query_embedding: queryEmbedding,
-        user_id_param: user.id,
-        max_results: maxResults,
-        similarity_threshold: similarityThreshold
+      // PHASE 2: Use the search_similar_messages function directly
+      const { data, error } = await supabase.functions.invoke('search-similar-messages', {
+        body: {
+          query_embedding: queryEmbedding,
+          user_id_param: user.id,
+          max_results: maxResults,
+          similarity_threshold: similarityThreshold
+        }
       });
 
       if (error) {

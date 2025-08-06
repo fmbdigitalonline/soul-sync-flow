@@ -235,9 +235,10 @@ export const useHACSConversationAdapter = (
           
           let recentMessages = [];
           if (conversationContext?.messages) {
-            // Use intelligent context selection instead of crude slice(-10)
-            const intelligentMessages = conversationMemoryService.getIntelligentContext(
+            // PHASE 2 UPGRADE: Use semantic-enhanced context selection
+            const intelligentMessages = await conversationMemoryService.getSemanticIntelligentContext(
               conversationContext.messages, 
+              content, // Pass user query for semantic similarity
               4000 // Max tokens for Oracle context
             );
             
@@ -301,30 +302,30 @@ export const useHACSConversationAdapter = (
           // PHASE 2 FIX: Use sendOracleMessage and ensure conversation memory uses stable thread ID
           await hacsConversation.sendOracleMessage(content, oracleResponse);
           
-          // PILLAR I & II: Store messages using validated ConversationMemoryService
+          // PILLAR I & II: Store messages using enhanced ConversationMemoryService with semantic embeddings
           try {
-            // Store user message
-            await conversationMemoryService.storeMessage(stableThreadId!, {
+            // Store user message with embedding generation
+            await conversationMemoryService.storeMessageWithEmbedding(stableThreadId!, {
               role: 'user',
               content: content,
               timestamp: new Date(),
               id: `user_${Date.now()}`
-            }, user.id);
+            }, user.id, true); // Enable embedding generation
             
-            // Store Oracle response
+            // Store Oracle response with embedding generation
             if (oracleResponse?.response) {
-              await conversationMemoryService.storeMessage(stableThreadId!, {
+              await conversationMemoryService.storeMessageWithEmbedding(stableThreadId!, {
                 role: 'assistant',
                 content: oracleResponse.response,
                 timestamp: new Date(),
                 id: `oracle_${Date.now()}`,
                 agent_mode: 'companion'
-              }, user.id);
+              }, user.id, true); // Enable embedding generation
             }
             
-            console.log('✅ ADAPTER: Messages stored with ConversationMemoryService validation');
+            console.log('✅ ADAPTER: Messages stored with semantic enhancement');
           } catch (error) {
-            console.error('❌ ADAPTER: ConversationMemoryService storage error:', error);
+            console.error('❌ ADAPTER: Enhanced storage error:', error);
           }
           
           // Background processing for future intelligence

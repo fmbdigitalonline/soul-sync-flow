@@ -3444,6 +3444,22 @@ export type Database = {
           similarity: number
         }[]
       }
+      search_similar_messages: {
+        Args: {
+          query_embedding: string
+          user_id_param: string
+          max_results?: number
+          similarity_threshold?: number
+        }
+        Returns: {
+          content: string
+          message_role: string
+          created_at: string
+          session_id: string
+          agent_mode: string
+          similarity: number
+        }[]
+      }
       sparsevec_out: {
         Args: { "": unknown }
         Returns: unknown
