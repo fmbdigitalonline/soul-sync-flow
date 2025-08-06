@@ -235,9 +235,9 @@ export const useHACSConversationAdapter = (
           
           let recentMessages = [];
           if (conversationContext?.messages) {
-            // PHASE 2 UPGRADE: Use semantic-enhanced context selection
-            const intelligentMessages = await conversationMemoryService.getSemanticIntelligentContext(
-              conversationContext.messages, 
+            // PHASE 3 UPGRADE: Use progressive context with multi-level summarization
+            const intelligentMessages = await conversationMemoryService.getProgressiveIntelligentContext(
+              stableThreadId!, 
               content, // Pass user query for semantic similarity
               4000 // Max tokens for Oracle context
             );
@@ -304,23 +304,23 @@ export const useHACSConversationAdapter = (
           
           // PILLAR I & II: Store messages using enhanced ConversationMemoryService with semantic embeddings
           try {
-            // Store user message with embedding generation
-            await conversationMemoryService.storeMessageWithEmbedding(stableThreadId!, {
+            // Store user message with progressive memory features
+            await conversationMemoryService.storeMessageWithProgressiveMemory(stableThreadId!, {
               role: 'user',
               content: content,
               timestamp: new Date(),
               id: `user_${Date.now()}`
-            }, user.id, true); // Enable embedding generation
+            }, user.id);
             
-            // Store Oracle response with embedding generation
+            // Store Oracle response with progressive memory features
             if (oracleResponse?.response) {
-              await conversationMemoryService.storeMessageWithEmbedding(stableThreadId!, {
+              await conversationMemoryService.storeMessageWithProgressiveMemory(stableThreadId!, {
                 role: 'assistant',
                 content: oracleResponse.response,
                 timestamp: new Date(),
                 id: `oracle_${Date.now()}`,
                 agent_mode: 'companion'
-              }, user.id, true); // Enable embedding generation
+              }, user.id);
             }
             
             console.log('✅ ADAPTER: Messages stored with semantic enhancement');

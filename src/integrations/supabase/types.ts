@@ -667,6 +667,125 @@ export type Database = {
         }
         Relationships: []
       }
+      conversation_messages: {
+        Row: {
+          agent_mode: string | null
+          content: string
+          created_at: string
+          emotional_tone: string | null
+          id: string
+          importance_score: number | null
+          is_summary: boolean | null
+          message_id: string
+          parent_message_id: string | null
+          role: string
+          semantic_embedding: string | null
+          summary_level: number | null
+          thread_id: string
+          tokens_count: number | null
+          topic_tags: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          agent_mode?: string | null
+          content: string
+          created_at?: string
+          emotional_tone?: string | null
+          id?: string
+          importance_score?: number | null
+          is_summary?: boolean | null
+          message_id: string
+          parent_message_id?: string | null
+          role: string
+          semantic_embedding?: string | null
+          summary_level?: number | null
+          thread_id: string
+          tokens_count?: number | null
+          topic_tags?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          agent_mode?: string | null
+          content?: string
+          created_at?: string
+          emotional_tone?: string | null
+          id?: string
+          importance_score?: number | null
+          is_summary?: boolean | null
+          message_id?: string
+          parent_message_id?: string | null
+          role?: string
+          semantic_embedding?: string | null
+          summary_level?: number | null
+          thread_id?: string
+          tokens_count?: number | null
+          topic_tags?: string[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      conversation_summaries: {
+        Row: {
+          compression_ratio: number | null
+          created_at: string
+          emotional_arc: string | null
+          id: string
+          key_insights: string[] | null
+          message_range_end: string
+          message_range_start: string
+          summary_content: string
+          summary_embedding: string | null
+          summary_level: number
+          thread_id: string
+          topic_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          compression_ratio?: number | null
+          created_at?: string
+          emotional_arc?: string | null
+          id?: string
+          key_insights?: string[] | null
+          message_range_end: string
+          message_range_start: string
+          summary_content: string
+          summary_embedding?: string | null
+          summary_level: number
+          thread_id: string
+          topic_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          compression_ratio?: number | null
+          created_at?: string
+          emotional_arc?: string | null
+          id?: string
+          key_insights?: string[] | null
+          message_range_end?: string
+          message_range_start?: string
+          summary_content?: string
+          summary_embedding?: string | null
+          summary_level?: number
+          thread_id?: string
+          topic_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_summaries_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "conversation_topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversation_threads: {
         Row: {
           context_fingerprint: string | null
@@ -700,6 +819,54 @@ export type Database = {
           updated_at?: string
           user_id?: string
           version?: number
+        }
+        Relationships: []
+      }
+      conversation_topics: {
+        Row: {
+          confidence_score: number | null
+          created_at: string
+          end_message_id: string | null
+          id: string
+          is_active: boolean | null
+          message_count: number | null
+          start_message_id: string
+          thread_id: string
+          topic_description: string | null
+          topic_embedding: string | null
+          topic_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          confidence_score?: number | null
+          created_at?: string
+          end_message_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          message_count?: number | null
+          start_message_id: string
+          thread_id: string
+          topic_description?: string | null
+          topic_embedding?: string | null
+          topic_name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          confidence_score?: number | null
+          created_at?: string
+          end_message_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          message_count?: number | null
+          start_message_id?: string
+          thread_id?: string
+          topic_description?: string | null
+          topic_embedding?: string | null
+          topic_name?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

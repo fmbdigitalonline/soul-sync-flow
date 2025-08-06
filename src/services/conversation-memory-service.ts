@@ -7,6 +7,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { BlueprintHealthChecker } from './blueprint-health-checker';
+import { progressiveMemoryService } from './progressive-memory-service';
 
 export interface ValidatedMessage {
   id: string;
@@ -186,6 +187,51 @@ export class ConversationMemoryService {
   }
 
   /**
+   * PHASE 3: Progressive context retrieval with multi-level summarization
+   * Integrates structured storage, topic awareness, and semantic intelligence
+   */
+  async getProgressiveIntelligentContext(
+    threadId: string,
+    userMessage: string,
+    maxTokens: number = 4000
+  ): Promise<ValidatedMessage[]> {
+    try {
+      // Get progressive context from Phase 3 service
+      const progressiveContext = await progressiveMemoryService.getProgressiveContext(
+        threadId,
+        maxTokens,
+        true // Include topic context
+      );
+
+      // Convert structured messages to ValidatedMessage format for compatibility
+      const messages: ValidatedMessage[] = progressiveContext.messages.map(msg => ({
+        id: msg.message_id,
+        role: msg.role,
+        content: msg.content,
+        timestamp: new Date(msg.created_at),
+        agent_mode: msg.agent_mode
+      }));
+
+      // Add summary context as system messages if available
+      progressiveContext.summaries.forEach(summary => {
+        messages.unshift({
+          id: `summary_${summary.id}`,
+          role: 'system',
+          content: `[Summary] ${summary.summary_content}`,
+          timestamp: new Date(summary.created_at),
+          agent_mode: 'summary'
+        });
+      });
+
+      console.log(`✅ PROGRESSIVE CONTEXT: Retrieved ${messages.length} messages using ${progressiveContext.contextStrategy} strategy`);
+      return messages.slice(0, 20); // Reasonable limit
+    } catch (error) {
+      console.error('❌ PROGRESSIVE CONTEXT: Error, falling back to semantic context:', error);
+      return this.getSemanticIntelligentContext([], userMessage, maxTokens);
+    }
+  }
+
+  /**
    * PHASE 2 UPGRADE: Semantic-enhanced intelligent context selection
    * Combines recency with semantic similarity for optimal context
    */
@@ -290,6 +336,48 @@ export class ConversationMemoryService {
       `LEGACY: Selected ${selectedMessages.length} messages (~${totalTokens} tokens)`);
     
     return selectedMessages;
+  }
+
+  /**
+   * PHASE 3: Store message with progressive memory features
+   * Includes structured storage, topic detection, and embedding generation
+   */
+  async storeMessageWithProgressiveMemory(
+    threadId: string,
+    message: any,
+    userId?: string
+  ): Promise<boolean> {
+    try {
+      const validatedMessage = this.validateMessage(message);
+      if (!validatedMessage) {
+        console.error('❌ PROGRESSIVE STORAGE: Invalid message format');
+        return false;
+      }
+
+      // Store in progressive memory system (Phase 3)
+      const structuredMessage = await progressiveMemoryService.storeStructuredMessage(
+        threadId,
+        validatedMessage.id,
+        validatedMessage.role,
+        validatedMessage.content,
+        validatedMessage.agent_mode
+      );
+
+      if (!structuredMessage) {
+        console.error('❌ PROGRESSIVE STORAGE: Failed to store in structured format');
+        // Fall back to legacy storage
+        return this.storeMessageWithEmbedding(threadId, message, userId);
+      }
+
+      // Also store in legacy format for backwards compatibility
+      const legacyStored = await this.storeMessage(threadId, message, userId);
+      
+      console.log('✅ PROGRESSIVE STORAGE: Message stored in both progressive and legacy formats');
+      return legacyStored;
+    } catch (error) {
+      console.error('❌ PROGRESSIVE STORAGE: Error, falling back to embedding storage:', error);
+      return this.storeMessageWithEmbedding(threadId, message, userId);
+    }
   }
 
   /**
