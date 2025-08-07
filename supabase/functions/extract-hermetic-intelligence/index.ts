@@ -165,16 +165,30 @@ async function extractIntelligenceFromReport(report: any) {
 
     const reportContent = report.report_content;
     
-    // Extract key sections
+    // Extract key sections with proper type safety
+    const extractTextSafely = (content: any): string => {
+      if (typeof content === 'string') {
+        return content;
+      } else if (content && typeof content === 'object') {
+        return JSON.stringify(content);
+      } else if (content !== null && content !== undefined) {
+        return String(content);
+      }
+      return '';
+    };
+
     const sections = [
-      reportContent?.core_personality_synthesis || '',
-      reportContent?.consciousness_integration_map || '',
-      reportContent?.shadow_work_integration || '',
-      reportContent?.seven_laws_integration || '',
-      Array.isArray(reportContent?.gate_analyses) ? reportContent.gate_analyses.join(' ') : '',
-      JSON.stringify(reportContent?.fractal_analysis || {}),
-      JSON.stringify(reportContent?.transformative_insights || {})
-    ].filter(section => section && section.trim().length > 0);
+      extractTextSafely(reportContent?.core_personality_synthesis),
+      extractTextSafely(reportContent?.consciousness_integration_map),
+      extractTextSafely(reportContent?.shadow_work_integration), 
+      extractTextSafely(reportContent?.seven_laws_integration),
+      Array.isArray(reportContent?.gate_analyses) ? reportContent.gate_analyses.join(' ') : extractTextSafely(reportContent?.gate_analyses),
+      extractTextSafely(reportContent?.fractal_analysis),
+      extractTextSafely(reportContent?.transformative_insights)
+    ].filter(section => {
+      const text = typeof section === 'string' ? section : String(section);
+      return text && text.trim().length > 0;
+    });
 
     const combinedText = sections.join('\n\n').substring(0, 12000); // Limit for OpenAI
 
