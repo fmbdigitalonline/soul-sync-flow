@@ -54,6 +54,21 @@ export interface HermeticPersonalityReport {
       hermetic_depth_score: number;
       gates_analyzed: number[]; // NEW: Track which gates were analyzed
     };
+    structured_intelligence?: {
+      identity_constructs: any;
+      behavioral_triggers: any;
+      execution_bias: any;
+      internal_conflicts: any;
+      spiritual_dimension: any;
+      adaptive_feedback: any;
+      temporal_biology: any;
+      metacognitive_biases: any;
+      attachment_style: any;
+      goal_archetypes: any;
+      crisis_handling: any;
+      identity_flexibility: any;
+      linguistic_fingerprint: any;
+    };
   };
   generated_at: string;
   blueprint_version: string;
@@ -207,7 +222,8 @@ class HermeticPersonalityReportService {
           total_processing_time: 0, // Will be calculated
           hermetic_depth_score: 10, // Maximum depth achieved
           gates_analyzed: analyzedGates // NEW: Track analyzed gates
-        }
+        },
+        structured_intelligence: hermeticResult.structured_intelligence
       },
       generated_at: hermeticResult.generated_at,
       blueprint_version: '2.0'

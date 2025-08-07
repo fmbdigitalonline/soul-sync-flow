@@ -17,6 +17,21 @@ export interface HermeticReportResult {
   blueprint_signature: string;
   total_word_count: number;
   generated_at: string;
+  structured_intelligence?: {
+    identity_constructs: any;
+    behavioral_triggers: any;
+    execution_bias: any;
+    internal_conflicts: any;
+    spiritual_dimension: any;
+    adaptive_feedback: any;
+    temporal_biology: any;
+    metacognitive_biases: any;
+    attachment_style: any;
+    goal_archetypes: any;
+    crisis_handling: any;
+    identity_flexibility: any;
+    linguistic_fingerprint: any;
+  };
 }
 
 const HERMETIC_AGENTS = [
@@ -27,6 +42,22 @@ const HERMETIC_AGENTS = [
   'rhythm_analyst',
   'causation_analyst',
   'gender_analyst'
+];
+
+const INTELLIGENCE_EXTRACTION_AGENTS = [
+  'identity_constructs_analyst',
+  'behavioral_triggers_analyst',
+  'execution_bias_analyst',
+  'internal_conflicts_analyst',
+  'spiritual_dimension_analyst',
+  'adaptive_feedback_analyst',
+  'temporal_biology_analyst',
+  'metacognitive_biases_analyst',
+  'attachment_style_analyst',
+  'goal_archetypes_analyst',
+  'crisis_handling_analyst',
+  'identity_flexibility_analyst',
+  'linguistic_fingerprint_analyst'
 ];
 
 const SYSTEM_TRANSLATORS = [
@@ -336,8 +367,12 @@ Generate 1,200+ words of deep, integrated analysis.`
         console.log('⚠️ Blueprint HD data:', blueprint.energy_strategy_human_design);
       }
 
-      // Phase 4: Synthesis & Integration (4,500+ words)
-      console.log('🌀 Phase 4: Synthesis and Integration...');
+      // Phase 4: Intelligence Extraction (NEW)
+      console.log('🧠 Phase 4: Structured Intelligence Extraction...');
+      const structuredIntelligence = await this.generateIntelligenceExtraction(blueprint, sections);
+
+      // Phase 5: Synthesis & Integration (4,500+ words)
+      console.log('🌀 Phase 5: Synthesis and Integration...');
       const synthesis = await this.generateFractalSynthesis(blueprint, sections);
       const consciousnessMap = await this.generateConsciousnessMap(blueprint, sections);
       const practicalApplications = await this.generatePracticalApplications(blueprint, sections);
@@ -356,7 +391,8 @@ Generate 1,200+ words of deep, integrated analysis.`
         practical_applications: practicalApplications,
         blueprint_signature: this.generateBlueprintSignature(blueprint),
         total_word_count: Math.floor(totalCharCount / 5), // Rough word estimate
-        generated_at: new Date().toISOString()
+        generated_at: new Date().toISOString(),
+        structured_intelligence: structuredIntelligence
       };
 
     } catch (error) {
@@ -477,6 +513,174 @@ Focus on your specific system expertise.`
     }
 
     return sections;
+  }
+
+  private async generateIntelligenceExtraction(blueprint: BlueprintData, sections: HermeticAnalysisSection[]): Promise<any> {
+    console.log('🧠 Generating structured intelligence extraction...');
+    const intelligence: any = {};
+
+    // Combine all section content for analysis
+    const combinedContent = sections.map(s => `${s.agent_type}: ${s.content}`).join('\n\n');
+
+    for (const agent of INTELLIGENCE_EXTRACTION_AGENTS) {
+      const dimensionName = agent.replace('_analyst', '');
+      
+      try {
+        console.log(`🧠 Extracting ${dimensionName}...`);
+
+        const { data, error } = await supabase.functions.invoke('openai-agent', {
+          body: {
+            messages: [
+              {
+                role: 'system',
+                content: `You are the ${agent}. Extract structured data for the ${dimensionName} dimension from the provided hermetic analysis content.
+
+You must return ONLY a valid JSON object in exactly this format:
+{
+  "dimension_name": "${dimensionName}",
+  "extracted_data": {
+    // Specific fields based on dimension type
+  },
+  "confidence_score": 0.85,
+  "source_insights": ["insight1", "insight2"]
+}
+
+For ${dimensionName}, extract according to this structure:
+${this.getDimensionSchema(dimensionName)}
+
+Focus on extracting concrete patterns, behaviors, and insights from the analysis content.`
+              },
+              {
+                role: 'user',
+                content: `Extract ${dimensionName} intelligence from this hermetic analysis:
+
+BLUEPRINT CONTEXT:
+${JSON.stringify(blueprint, null, 2)}
+
+ANALYSIS CONTENT:
+${combinedContent.substring(0, 8000)}
+
+Return only the JSON object with extracted structured data.`
+              }
+            ],
+            model: 'gpt-4o-mini',
+            temperature: 0.3
+          }
+        });
+
+        if (error) {
+          console.error(`❌ Error extracting ${dimensionName}:`, error);
+          continue;
+        }
+
+        const result = this.parseIntelligenceResult(data, dimensionName);
+        if (result) {
+          intelligence[dimensionName] = result.extracted_data;
+        }
+
+      } catch (error) {
+        console.error(`❌ Failed to extract ${dimensionName}:`, error);
+      }
+    }
+
+    return intelligence;
+  }
+
+  private getDimensionSchema(dimensionName: string): string {
+    const schemas: Record<string, string> = {
+      identity_constructs: `{
+        "core_narratives": ["narrative1", "narrative2"],
+        "role_archetypes": ["archetype1", "archetype2"],
+        "impostor_loops": ["loop1", "loop2"],
+        "heros_journey_stage": "stage"
+      }`,
+      behavioral_triggers: `{
+        "energy_dips": ["trigger1", "trigger2"],
+        "avoidance_patterns": ["pattern1", "pattern2"],
+        "thought_loops": ["loop1", "loop2"],
+        "activation_rituals": ["ritual1", "ritual2"]
+      }`,
+      execution_bias: `{
+        "preferred_style": "style",
+        "completion_patterns": "pattern",
+        "momentum_triggers": ["trigger1", "trigger2"],
+        "risk_tolerance": "tolerance_level"
+      }`,
+      internal_conflicts: `{
+        "belief_contradictions": ["contradiction1", "contradiction2"],
+        "emotional_double_binds": ["bind1", "bind2"],
+        "identity_splits": ["split1", "split2"]
+      }`,
+      spiritual_dimension: `{
+        "philosophical_filters": ["filter1", "filter2"],
+        "life_meaning_themes": ["theme1", "theme2"],
+        "faith_model": "model",
+        "integration_themes": ["theme1", "theme2"]
+      }`,
+      adaptive_feedback: `{
+        "reflection_style": ["style1", "style2"],
+        "feedback_receptivity": "receptivity_level",
+        "change_resistance_profile": "profile"
+      }`,
+      temporal_biology: `{
+        "cognitive_peaks": ["peak1", "peak2"],
+        "vulnerable_times": ["time1", "time2"],
+        "biological_rhythms": ["rhythm1", "rhythm2"]
+      }`,
+      metacognitive_biases: `{
+        "dominant_biases": ["bias1", "bias2"],
+        "self_judgment_heuristics": ["heuristic1", "heuristic2"],
+        "perception_filters": ["filter1", "filter2"]
+      }`,
+      attachment_style: `{
+        "pattern": "pattern_type",
+        "repair_tendencies": ["tendency1", "tendency2"],
+        "authority_archetypes": ["archetype1", "archetype2"]
+      }`,
+      goal_archetypes: `{
+        "orientation": ["orientation1", "orientation2"],
+        "motivation_structure": "structure",
+        "friction_points": ["point1", "point2"]
+      }`,
+      crisis_handling: `{
+        "default_response": "response_type",
+        "bounce_back_rituals": ["ritual1", "ritual2"],
+        "threshold_triggers": ["trigger1", "trigger2"]
+      }`,
+      identity_flexibility: `{
+        "narrative_rigidity": "rigidity_level",
+        "reinvention_patterns": ["pattern1", "pattern2"],
+        "fragmentation_signs": ["sign1", "sign2"]
+      }`,
+      linguistic_fingerprint: `{
+        "signature_metaphors": ["metaphor1", "metaphor2"],
+        "motivational_verbs": ["verb1", "verb2"],
+        "emotional_syntax": ["syntax1", "syntax2"]
+      }`
+    };
+
+    return schemas[dimensionName] || '{}';
+  }
+
+  private parseIntelligenceResult(data: any, dimensionName: string): any {
+    try {
+      const content = this.safeExtractContent(data, dimensionName);
+      
+      // Clean content - remove markdown formatting
+      const cleanContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      
+      const parsed = JSON.parse(cleanContent);
+      
+      if (parsed.extracted_data) {
+        return parsed;
+      } else {
+        console.warn(`⚠️ No extracted_data field in ${dimensionName} result`);
+        return null;
+      }
+    } catch (error) {
+      console.error(`❌ Failed to parse ${dimensionName} result:`, error);
+      return null;
+    }
   }
 
   private async generateFractalSynthesis(blueprint: BlueprintData, sections: HermeticAnalysisSection[]): Promise<string> {
