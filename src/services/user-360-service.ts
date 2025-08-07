@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { user360EmergencyService } from './user-360-emergency-mode';
 
 export interface DataAvailability {
   blueprint: { 
@@ -71,6 +72,13 @@ export interface User360Profile {
 class User360DataService {
   async getUserProfile(userId: string): Promise<User360Profile | null> {
     console.log('🔄 360° Service: Aggregating user profile data for:', userId);
+    
+    // EMERGENCY I/O PROTECTION: Check if we should use emergency mode
+    const emergencyStatus = user360EmergencyService.getEmergencyStatus();
+    if (emergencyStatus.isEmergencyMode) {
+      console.log('🚨 Emergency Mode: Using minimal I/O profile fetch');
+      return user360EmergencyService.getEmergencySafeProfile(userId) as Promise<User360Profile | null>;
+    }
     
     try {
       // Real data aggregation from all silos - no mock data
@@ -372,16 +380,22 @@ class User360DataService {
     dataAvailability: DataAvailability,
     dataSources: string[]
   ): Promise<User360Profile> {
+    // EMERGENCY I/O OPTIMIZATION: Only fetch latest profile to reduce disk reads
     const { data: existing } = await supabase
       .from('user_360_profiles')
-      .select('*')
+      .select('id, version, updated_at')  // Only select minimal fields needed
       .eq('user_id', userId)
-      .single();
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    // OPTIMIZATION: Compress profile data for storage
+    const compressedProfileData = this.compressProfileData(profileData);
 
     const profilePayload = {
       user_id: userId,
-      profile_data: profileData,
-      data_availability: dataAvailability as any, // Cast to Json for Supabase compatibility
+      profile_data: compressedProfileData,
+      data_availability: dataAvailability as any,
       data_sources: dataSources,
       last_updated: new Date().toISOString(),
       version: existing ? existing.version + 1 : 1
@@ -392,6 +406,7 @@ class User360DataService {
         .from('user_360_profiles')
         .update(profilePayload)
         .eq('user_id', userId)
+        .eq('id', existing.id)  // Use specific ID to avoid race conditions
         .select()
         .single();
 
@@ -407,6 +422,28 @@ class User360DataService {
       if (error) throw error;
       return this.mapToUser360Profile(data);
     }
+  }
+
+  // EMERGENCY I/O OPTIMIZATION: Compress profile data before storage
+  private compressProfileData(profileData: any): any {
+    const compressed: any = {};
+    
+    // Only store essential data, skip undefined/null values
+    for (const [key, value] of Object.entries(profileData)) {
+      if (value !== undefined && value !== null) {
+        if (typeof value === 'object' && value !== null) {
+          // For objects, only store if they have meaningful content
+          const hasContent = Object.keys(value).length > 0;
+          if (hasContent) {
+            compressed[key] = value;
+          }
+        } else {
+          compressed[key] = value;
+        }
+      }
+    }
+    
+    return compressed;
   }
 
   private mapToUser360Profile(data: any): User360Profile {

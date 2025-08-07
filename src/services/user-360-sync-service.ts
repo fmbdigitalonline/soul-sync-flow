@@ -130,7 +130,7 @@ class User360SyncService {
     }
   }
 
-  // Debounced profile refresh to prevent excessive updates
+  // EMERGENCY I/O OPTIMIZATION: Increased debounce from 2s to 30s to reduce disk load
   private refreshTimeouts: Map<string, NodeJS.Timeout> = new Map();
   
   private async debouncedProfileRefresh(userId: string): Promise<void> {
@@ -140,16 +140,16 @@ class User360SyncService {
       clearTimeout(existingTimeout);
     }
 
-    // Set new timeout for 2 seconds
+    // EMERGENCY: Extended timeout to 30 seconds to reduce I/O pressure
     const timeout = setTimeout(async () => {
       try {
-        console.log(`🔄 Refreshing 360° profile for user: ${userId}`);
+        console.log(`🔄 Emergency I/O Mode: Refreshing 360° profile for user: ${userId}`);
         await user360Service.refreshUserProfile(userId);
         this.refreshTimeouts.delete(userId);
       } catch (error) {
         console.error(`❌ Failed to refresh 360° profile for user ${userId}:`, error);
       }
-    }, 2000);
+    }, 30000); // Changed from 2000ms to 30000ms
 
     this.refreshTimeouts.set(userId, timeout);
   }

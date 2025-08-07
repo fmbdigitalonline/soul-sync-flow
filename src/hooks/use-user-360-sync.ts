@@ -2,11 +2,13 @@
 import { useEffect, useCallback, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { user360SyncService } from '@/services/user-360-sync-service';
+import { user360EmergencyService } from '@/services/user-360-emergency-mode';
 
 export const useUser360Sync = () => {
   const { user } = useAuth();
   const [syncActive, setSyncActive] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
+  const [emergencyMode, setEmergencyMode] = useState(false);
 
   // Start sync when user is available
   useEffect(() => {
@@ -17,6 +19,16 @@ export const useUser360Sync = () => {
 
     const startSync = async () => {
       try {
+        // EMERGENCY I/O PROTECTION: Check system health before starting sync
+        const emergencyStatus = await user360EmergencyService.checkSystemHealth();
+        setEmergencyMode(emergencyStatus.isEmergencyMode);
+        
+        if (emergencyStatus.isEmergencyMode) {
+          console.log('🚨 Emergency Mode: Sync disabled due to high I/O:', emergencyStatus.reason);
+          setSyncActive(false);
+          return;
+        }
+
         await user360SyncService.startSync(user.id);
         setSyncActive(true);
         setLastSyncTime(new Date());
@@ -64,6 +76,7 @@ export const useUser360Sync = () => {
     lastSyncTime,
     triggerSync,
     getSyncStatus,
-    isUserLoggedIn: !!user?.id
+    isUserLoggedIn: !!user?.id,
+    emergencyMode // Expose emergency mode status
   };
 };
