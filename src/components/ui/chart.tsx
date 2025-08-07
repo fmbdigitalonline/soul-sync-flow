@@ -1,5 +1,8 @@
+"use client"
+
 import * as React from "react"
 import * as RechartsPrimitive from "recharts"
+import { createSafeStyleString } from "@/utils/sanitize"
 
 import { cn } from "@/lib/utils"
 
@@ -74,28 +77,25 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
     return null
   }
 
-  return (
-    <style
-      dangerouslySetInnerHTML={{
-        __html: Object.entries(THEMES)
-          .map(
-            ([theme, prefix]) => `
-${prefix} [data-chart=${id}] {
-${colorConfig
-  .map(([key, itemConfig]) => {
-    const color =
-      itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
-      itemConfig.color
-    return color ? `  --color-${key}: ${color};` : null
-  })
-  .join("\n")}
-}
-`
-          )
-          .join("\n"),
-      }}
-    />
-  )
+  // Create safe CSS instead of using dangerouslySetInnerHTML
+  const safeCssContent = createSafeStyleString(id, colorConfig, THEMES);
+  
+  // Create style element safely
+  React.useEffect(() => {
+    const styleEl = document.createElement('style');
+    styleEl.textContent = safeCssContent;
+    styleEl.setAttribute('data-chart-theme', id);
+    document.head.appendChild(styleEl);
+    
+    return () => {
+      const existingStyle = document.querySelector(`style[data-chart-theme="${id}"]`);
+      if (existingStyle) {
+        existingStyle.remove();
+      }
+    };
+  }, [safeCssContent, id]);
+
+  return null; // Styles are injected via useEffect
 }
 
 const ChartTooltip = RechartsPrimitive.Tooltip

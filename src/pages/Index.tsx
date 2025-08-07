@@ -1,24 +1,11 @@
-import React, { useEffect, useState, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
-import { SoulOrbAvatar } from "@/components/ui/avatar";
-import { ArrowRight, LogIn, Heart, Sparkles, Brain, BookOpen } from "lucide-react";
-import { Link } from "react-router-dom";
-import { useSoulOrb } from "@/contexts/SoulOrbContext";
-import { useNavigate } from "react-router-dom";
-import { CosmicCard } from "@/components/ui/cosmic-card";
-import PersonalityDemo from "@/components/personality/PersonalityDemo";
-import { useOptimizedBlueprintData } from "@/hooks/use-optimized-blueprint-data";
-import { isAdminUser } from "@/utils/isAdminUser";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { safeInterpolateTranslation } from "@/utils/translation-utils";
-import { LanguageSelector } from "@/components/ui/language-selector";
-import { RotatingText } from "@/components/ui/rotating-text";
-import { PersonalizedQuoteDisplay } from "@/components/ui/personalized-quote-display";
-import MainLayout from "@/components/Layout/MainLayout";
-import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
-import { useTutorialFlow } from "@/hooks/use-tutorial-flow";
-import { TutorialModal } from "@/components/tutorial/TutorialModal";
+import { useUser360 } from "@/hooks/use-user-360";
+import { safeInterpolateTranslation } from "@/utils/sanitize";
+import { MainLayout } from "@/components/layouts/MainLayout";
+import { PersonalizedQuoteDisplay } from "@/components/PersonalizedQuoteDisplay";
+import { Blueprint360Card } from "@/components/Blueprint360Card";
 
 const Index = () => {
   const { user } = useAuth();
@@ -137,13 +124,13 @@ const Index = () => {
         <div className={`w-full ${layout.maxWidth} mx-auto text-center`}>
           
           <h1 className={`font-heading ${getTextSize('text-3xl')} lg:${getTextSize('text-4xl')} font-bold mb-8 ${spacing.gap} px-4`}>
-            {user ? <span dangerouslySetInnerHTML={{
-                __html: safeInterpolateTranslation(t('index.welcomeWithName'), {
-                  name: blueprintData?.user_meta?.preferred_name || getDisplayName || user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Friend'
-                })
-              }} /> : <span dangerouslySetInnerHTML={{
-            __html: t('index.welcome') as string
-          }} />}
+            {user ? (
+              <span>{safeInterpolateTranslation(t('index.welcomeWithName'), {
+                name: blueprintData?.user_meta?.preferred_name || getDisplayName || user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Friend'
+              })}</span>
+            ) : (
+              <span>{t('index.welcome')}</span>
+            )}
           </h1>
           
           {user && hasBlueprint ? (
