@@ -24,6 +24,7 @@ import Phase3MemoryTestPage from "./pages/Phase3MemoryTest";
 import TestEnvironmentPage from "./pages/TestEnvironmentPage";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
+import HermeticIntelligenceTest from "./pages/HermeticIntelligenceTest";
 import { AuthProvider } from "./contexts/AuthContext";
 import { BlueprintCacheProvider } from "./contexts/BlueprintCacheContext";
 import { SoulOrbProvider } from "./contexts/SoulOrbContext";
@@ -85,6 +86,7 @@ const router = createBrowserRouter([
       { path: "seven-layer-test", element: <ProtectedRoute><SevenLayerTest /></ProtectedRoute> },
       { path: "phase3-memory-test", element: <ProtectedRoute><Phase3MemoryTestPage /></ProtectedRoute> },
       { path: "test-environment", element: <ProtectedRoute><TestEnvironmentPage /></ProtectedRoute> },
+      { path: "test-hermetic-intelligence", element: <ProtectedRoute><HermeticIntelligenceTest /></ProtectedRoute> },
       { path: "*", element: <NotFound /> }
     ]
   }
