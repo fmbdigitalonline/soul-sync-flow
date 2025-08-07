@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { safeInterpolateTranslation } from "@/utils/sanitize";
 import MainLayout from "@/components/Layout/MainLayout";
+import { PageContainer, PageHeader, PageSection } from "@/components/Layout/PageContainer";
 import { PersonalizedQuoteDisplay } from "@/components/ui/personalized-quote-display";
 import { Button } from "@/components/ui/button";
 import { CosmicCard } from "@/components/ui/cosmic-card";
@@ -69,6 +70,14 @@ const Index = () => {
     return [t("index.subtitle") || "Discover your authentic path through personalized AI guidance and spiritual growth tools."];
   }, [t, language, user, hasBlueprint]);
 
+  const userName = useMemo(() => {
+    return blueprintData?.user_meta?.preferred_name || getDisplayName || user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'Friend';
+  }, [blueprintData, getDisplayName, user]);
+
+  const currentSubtitle = useMemo(() => {
+    return subtitleMessages[0] || t("index.subtitle") || "Welcome to your spiritual journey";
+  }, [subtitleMessages, t]);
+
   useEffect(() => {
     if (user && !loading && welcomeMessage) {
       const timer = setTimeout(() => {
@@ -117,142 +126,167 @@ const Index = () => {
   };
 
   if (showDemo) {
-    return <MainLayout>
-        <div className={`w-full min-h-screen ${spacing.container} ${isMobile ? 'pb-20' : ''}`}>
-          <div className={`mb-4 ${spacing.gap}`}>
-            <Button variant="ghost" onClick={() => setShowDemo(false)} className={`mb-4 ${getTextSize('text-sm')} ${touchTargetSize}`}>
-              {t("index.backToHome")}
-            </Button>
-          </div>
+    return (
+      <MainLayout>
+        <PageContainer>
+          <Button variant="ghost" onClick={() => setShowDemo(false)} className="mb-4">
+            {t("index.backToHome")}
+          </Button>
           <PersonalityDemo />
-        </div>
-      </MainLayout>;
+        </PageContainer>
+      </MainLayout>
+    );
   }
 
-  return <MainLayout>
-      <div className={`w-full min-h-[90vh] flex flex-col justify-center ${spacing.container} ${isMobile ? 'pb-24' : 'pb-6'}`}>
-        <div className={`w-full ${layout.maxWidth} mx-auto text-center`}>
-          
-          <h1 className={`font-heading ${getTextSize('text-3xl')} lg:${getTextSize('text-4xl')} font-bold mb-8 ${spacing.gap} px-4`}>
-            {user ? (
-              <span>{safeInterpolateTranslation(t('index.welcomeWithName'), {
-                name: blueprintData?.user_meta?.preferred_name || getDisplayName || user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Friend'
-              })}</span>
-            ) : (
-              <span>{t('index.welcome')}</span>
-            )}
-          </h1>
-          
-          {user && hasBlueprint ? (
-            <PersonalizedQuoteDisplay 
-              className={`${getTextSize('text-sm')} mb-8 ${spacing.gap} px-4 text-muted-foreground min-h-[3.5rem] flex items-center justify-center italic`} 
-              interval={8000} 
-              fallbackQuotes={subtitleMessages} 
-            />
-          ) : user ? (
-            <PersonalizedQuoteDisplay 
-              className={`${getTextSize('text-sm')} mb-8 ${spacing.gap} px-4 text-muted-foreground min-h-[3.5rem] flex items-center justify-center italic`} 
-              interval={8000} 
-              fallbackQuotes={[]} 
-            />
-          ) : (
-            <PersonalizedQuoteDisplay 
-              className={`${getTextSize('text-sm')} mb-8 ${spacing.gap} px-4 text-muted-foreground min-h-[3.5rem] flex items-center justify-center`} 
-              interval={8000} 
-              fallbackQuotes={[]} 
-            />
-          )}
+  return (
+    <MainLayout>
+      <PageContainer maxWidth="saas" className="min-h-screen flex flex-col justify-center bg-gradient-to-br from-background via-accent/5 to-primary/5">
+        {/* Hero Section */}
+        <PageSection className="text-center">
+          <div className="space-y-6 mb-12">
+            <h1 className="text-4xl sm:text-5xl font-bold font-cormorant gradient-text">
+              {safeInterpolateTranslation(welcomeMessage, { userName: userName })}
+            </h1>
+            <div className="h-16 flex items-center justify-center">
+              <p className="text-xl text-muted-foreground font-inter">
+                {safeInterpolateTranslation(currentSubtitle, { userName: userName })}
+              </p>
+            </div>
+          </div>
+        </PageSection>
 
-          {user && hasBlueprint}
-
-          {user && hasBlueprint && (
-            <div className={`grid ${layout.columns} ${spacing.gap} mb-6 max-w-2xl mx-auto px-4`}>
-              <Link to="/dreams" className="block">
-                <CosmicCard className={`${spacing.card} hover:scale-105 transition-transform cursor-pointer h-full backdrop-blur-lg border border-border`}>
-                  <Heart className={`h-6 w-6 ${isFoldDevice ? 'h-5 w-5' : 'sm:h-8 sm:w-8'} text-primary mx-auto mb-2`} />
-                  <h3 className={`font-heading font-semibold mb-1 ${getTextSize('text-base')}`}>{t("index.dreams")}</h3>
-                  <p className={`${getTextSize('text-xs')} text-muted-foreground`}>{t("index.dreamsDesc")}</p>
+        {/* Navigation Cards - Modern 12-column grid */}
+        {hasBlueprint && (
+          <PageSection>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+              <Link to="/dreams" className="group">
+                <CosmicCard variant="interactive" size="lg" floating className="h-full">
+                  <div className="text-center space-y-4">
+                    <Heart className="h-12 w-12 text-primary mx-auto group-hover:text-accent transition-colors" />
+                    <div>
+                      <h3 className="text-xl font-semibold font-cormorant text-foreground">{t('index.dreams')}</h3>
+                      <p className="text-muted-foreground font-inter mt-2">{t('index.dreamsDesc')}</p>
+                    </div>
+                  </div>
                 </CosmicCard>
               </Link>
-              
-              <Link to="/spiritual-growth" className="block">
-                <CosmicCard className={`${spacing.card} hover:scale-105 transition-transform cursor-pointer h-full backdrop-blur-lg border border-border`}>
-                  <Sparkles className={`h-6 w-6 ${isFoldDevice ? 'h-5 w-5' : 'sm:h-8 sm:w-8'} text-accent mx-auto mb-2`} />
-                  <h3 className={`font-heading font-semibold mb-1 ${getTextSize('text-base')}`}>{t("index.growth")}</h3>
-                  <p className={`${getTextSize('text-xs')} text-muted-foreground`}>{t("index.growthDesc")}</p>
+              <Link to="/spiritual-growth" className="group">
+                <CosmicCard variant="interactive" size="lg" floating className="h-full">
+                  <div className="text-center space-y-4">
+                    <Sparkles className="h-12 w-12 text-primary mx-auto group-hover:text-accent transition-colors" />
+                    <div>
+                      <h3 className="text-xl font-semibold font-cormorant text-foreground">{t('index.growth')}</h3>
+                      <p className="text-muted-foreground font-inter mt-2">{t('index.growthDesc')}</p>
+                    </div>
+                  </div>
                 </CosmicCard>
               </Link>
-              
-              <Link to="/coach" className="block">
-                <CosmicCard className={`${spacing.card} hover:scale-105 transition-transform cursor-pointer h-full backdrop-blur-lg border border-border`}>
-                  <Brain className={`h-6 w-6 ${isFoldDevice ? 'h-5 w-5' : 'sm:h-8 sm:w-8'} text-secondary mx-auto mb-2`} />
-                  <h3 className={`font-heading font-semibold mb-1 ${getTextSize('text-base')}`}>{t("index.companion")}</h3>
-                  <p className={`${getTextSize('text-xs')} text-muted-foreground`}>{t("index.companionDesc")}</p>
+              <Link to="/companion" className="group">
+                <CosmicCard variant="interactive" size="lg" floating className="h-full">
+                  <div className="text-center space-y-4">
+                    <Brain className="h-12 w-12 text-primary mx-auto group-hover:text-accent transition-colors" />
+                    <div>
+                      <h3 className="text-xl font-semibold font-cormorant text-foreground">{t('index.companion')}</h3>
+                      <p className="text-muted-foreground font-inter mt-2">{t('index.companionDesc')}</p>
+                    </div>
+                  </div>
                 </CosmicCard>
               </Link>
             </div>
-          )}
+          </PageSection>
+        )}
 
-          {isAdmin && <div className={`mb-4 ${spacing.gap} px-4`}>
-            <Button variant="outline" onClick={() => setShowDemo(true)} className={`mb-4 ${layout.width} ${isMobile ? 'w-full' : 'sm:w-auto'} ${getTextSize('text-sm')} ${touchTargetSize}`}>
-              <Brain className={`mr-2 h-4 w-4 ${isFoldDevice ? 'h-3 w-3' : ''}`} />
-              {t("index.demo")}
+        {/* Admin Demo Button */}
+        {user && isAdminUser(user) && (
+          <div className="flex justify-center mb-8">
+            <Button
+              onClick={() => setShowDemo(true)}
+              variant="outline"
+              className="font-inter h-touch"
+            >
+              <Brain className="h-5 w-5 mr-2" />
+              {t('index.demoButton')}
             </Button>
-          </div>}
-          
-          <div className={`flex justify-center mb-6 px-4`}>
-            <LanguageSelector />
           </div>
-          
-          <div className={`flex flex-col ${spacing.gap} px-4 max-w-md mx-auto`}>
-            {user ? <>
-              <Button size="lg" className={`bg-primary hover:bg-primary/90 w-full ${touchTargetSize} ${getTextSize('text-base')}`} onClick={handleGetStarted}>
-                {hasBlueprint ? <>
-                    <BookOpen className={`mr-2 h-4 w-4 ${isFoldDevice ? 'h-3 w-3' : ''}`} />
-                    {t("index.takeTour")}
-                  </> : <>
-                    {t("index.startJourney")}
-                    <ArrowRight className={`ml-2 h-4 w-4 ${isFoldDevice ? 'h-3 w-3' : ''}`} />
-                  </>}
-              </Button>
-              
-                <Button 
-                size="lg" 
-                variant="outline" 
-                className={`w-full ${touchTargetSize} ${getTextSize('text-base')} backdrop-blur-sm border-border hover:bg-accent hover:text-accent-foreground font-cormorant`}
-                onClick={handleTutorialStart}
-                type="button"
-              >
-                {t("index.viewBlueprint")}
-              </Button>
-            </> : <>
-              <Button size="lg" className={`bg-primary hover:bg-primary/90 w-full ${touchTargetSize} ${getTextSize('text-base')}`} onClick={handleGetStarted}>
-                {t("index.getStarted")}
-                <ArrowRight className={`ml-2 h-4 w-4 ${isFoldDevice ? 'h-3 w-3' : ''}`} />
-              </Button>
-              
-              <Link to="/auth" className="block">
-                <Button size="lg" variant="outline" className={`w-full ${touchTargetSize} ${getTextSize('text-base')} backdrop-blur-sm border-border hover:bg-accent hover:text-accent-foreground`}>
-                  {t("index.signIn")}
-                  <LogIn className={`ml-2 h-4 w-4 ${isFoldDevice ? 'h-3 w-3' : ''}`} />
-                </Button>
-              </Link>
-            </>}
-          </div>
-        </div>
-      </div>
+        )}
 
-      <TutorialModal 
-        isOpen={showTutorial}
-        onClose={() => {
-          console.log('🎭 Closing tutorial modal');
-          setShowTutorial(false);
-        }}
-        tutorialState={tutorialState}
-        onContinue={continueTutorial}
-        onComplete={completeTutorial}
-      />
-    </MainLayout>;
+        {/* Language Selector */}
+        <div className="flex justify-center mb-12">
+          <LanguageSelector />
+        </div>
+
+        {/* Action Buttons - Modern CTA section */}
+        <PageSection className="text-center">
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+            {user && hasBlueprint && (
+              <Button
+                onClick={() => navigate('/blueprint')}
+                size="lg"
+                className="font-inter group h-touch px-8"
+              >
+                <BookOpen className="h-5 w-5 mr-2 group-hover:rotate-3 transition-transform" />
+                {t('index.viewBlueprint')}
+                <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            )}
+            {user && !hasBlueprint && (
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button
+                  onClick={() => navigate('/onboarding')}
+                  size="lg"
+                  className="font-inter h-touch px-8"
+                >
+                  {t('index.getStarted')}
+                </Button>
+                <Button
+                  onClick={handleTutorialStart}
+                  variant="outline"
+                  size="lg"
+                  className="font-inter h-touch px-8"
+                >
+                  <BookOpen className="h-5 w-5 mr-2" />
+                  {t('index.takeTour')}
+                </Button>
+              </div>
+            )}
+            {!user && (
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button
+                  onClick={() => navigate('/onboarding')}
+                  size="lg"
+                  className="font-inter h-touch px-8"
+                >
+                  <ArrowRight className="h-5 w-5 mr-2" />
+                  {t('index.getStarted')}
+                </Button>
+                <Button
+                  asChild
+                  variant="outline"
+                  size="lg"
+                  className="font-inter h-touch px-8"
+                >
+                  <Link to="/auth">
+                    <LogIn className="h-5 w-5 mr-2" />
+                    {t('auth.signIn')}
+                  </Link>
+                </Button>
+              </div>
+            )}
+          </div>
+        </PageSection>
+      </PageContainer>
+
+      {showTutorial && (
+        <TutorialModal
+          isOpen={showTutorial}
+          onClose={() => setShowTutorial(false)}
+          tutorialState={tutorialState}
+          onContinue={continueTutorial}
+          onComplete={completeTutorial}
+        />
+      )}
+    </MainLayout>
+  );
 };
 
 export default Index;

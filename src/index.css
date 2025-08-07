@@ -53,6 +53,21 @@
     --font-cormorant: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
     --font-ui: 'IBM Plex Sans', 'Inter', sans-serif;
     --font-focus: 'Lexend', 'Inter', sans-serif;
+
+    /* Modern SaaS spacing system */
+    --spacing-xs: 4px;     /* 1 unit */
+    --spacing-sm: 8px;     /* 2 units */
+    --spacing-md: 16px;    /* 4 units */
+    --spacing-lg: 24px;    /* 6 units */
+    --spacing-xl: 32px;    /* 8 units */
+    --spacing-2xl: 48px;   /* 12 units */
+    --spacing-3xl: 64px;   /* 16 units */
+    
+    /* Semantic spacing */
+    --spacing-section: 48px;
+    --spacing-card: 24px;
+    --spacing-element: 16px;
+    --spacing-touch: 48px;
   }
 
   .dark {

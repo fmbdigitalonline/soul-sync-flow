@@ -13,10 +13,31 @@ export default {
 	theme: {
 		container: {
 			center: true,
-			padding: '2rem',
+			padding: {
+				DEFAULT: '1rem',
+				sm: '1.5rem',
+				lg: '2rem',
+				xl: '2rem',
+				'2xl': '2rem'
+			},
 			screens: {
-				'2xl': '1400px'
+				sm: '640px',
+				md: '768px',
+				lg: '1024px',
+				xl: '1280px',
+				'2xl': '1440px'
 			}
+		},
+		// 12-Column Grid System
+		columns: {
+			'4': '4',
+			'8': '8',
+			'12': '12'
+		},
+		screens: {
+			'mobile': {'max': '640px'},
+			'tablet': {'min': '641px', 'max': '1024px'},
+			'desktop': {'min': '1025px'}
 		},
 		extend: {
 			colors: {
@@ -150,9 +171,35 @@ export default {
 				focus: ['Lexend', 'Inter', 'sans-serif'], // Reading mode, focused content
 			},
 			spacing: {
+				// Modern SaaS spacing system (4/8px increments)
+				'1': '4px',   // 4px
+				'2': '8px',   // 8px
+				'3': '12px',  // 12px
+				'4': '16px',  // 16px
+				'6': '24px',  // 24px
+				'8': '32px',  // 32px
+				'12': '48px', // 48px
+				'16': '64px', // 64px
+				'20': '80px', // 80px
+				'24': '96px', // 96px
+				// Semantic spacing
+				'section': '48px',     // Section padding
+				'card': '24px',        // Card padding
+				'element': '16px',     // Element spacing
+				'touch': '48px',       // Touch target height
+				// Grid spacing
+				'grid-4': '4px',
 				'grid-8': '8px',
 				'grid-16': '16px',
 				'grid-24': '24px',
+				'grid-32': '32px',
+			},
+			// Modern container max-widths
+			maxWidth: {
+				'saas': '1280px',
+				'saas-wide': '1440px',
+				'content': '768px',
+				'prose': '65ch'
 			},
 			boxShadow: {
 				'soft-ui': '4px 4px 10px rgba(155, 135, 245, 0.1)', // soul-purple based

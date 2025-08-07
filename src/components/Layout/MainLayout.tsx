@@ -24,6 +24,8 @@ import { LanguageSelector } from "@/components/ui/language-selector";
 import { isAdminUser } from "@/utils/isAdminUser";
 import MobileNavigation from "./MobileNavigation";
 import { FloatingHACSOrb } from "@/components/hacs/FloatingHACSOrb";
+import { TopBar } from "./TopBar";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -37,6 +39,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
   const navigate = useNavigate();
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { isMobile } = useIsMobile();
 
   const handleSignOut = async () => {
     try {
@@ -93,111 +96,119 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
   const shouldShowDesktopNav = user && !hideNav;
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Mobile Header */}
-      <div className="md:hidden bg-white/80 backdrop-blur-lg border-b border-border sticky top-0 z-40 w-full">
-        <div className="flex items-center justify-between p-4 w-full">
-          <Link to="/" className="flex items-center space-x-2">
-            <SoulOrbAvatar size="sm" />
-            <span className="font-cormorant font-bold text-lg gradient-text brand-text">
-              Soul Guide
-            </span>
-          </Link>
-          {/* Language selector on mobile top right */}
-          <div className="flex items-center space-x-2">
-            <LanguageSelector />
-            {user && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="md:hidden rounded-xl"
-              >
-                {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-              </Button>
-            )}
-          </div>
-        </div>
-        
-        {/* Mobile Menu Dropdown */}
-        {isMenuOpen && user && (
-          <div className="border-t border-border bg-card/95 backdrop-blur-lg p-4 space-y-2 w-full">
-            <Button
-              variant="ghost"
-              onClick={handleSignOut}
-              className="w-full justify-start text-muted-foreground rounded-xl font-inter"
-            >
-              <LogOut className="h-5 w-5 mr-3" />
-              {t('nav.signOut')}
-            </Button>
-          </div>
-        )}
-      </div>
-
-      <div className="flex flex-1 min-h-0">
-        {/* Desktop Sidebar - Always show for authenticated users unless hideNav is true */}
-        {shouldShowDesktopNav && (
-          <div className="hidden md:flex w-64 min-h-full bg-card/80 backdrop-blur-lg border-r border-border flex-col">
-            {/* Logo and Language Selector */}
-            <div className="p-6 border-b border-border flex items-center justify-between">
-              <Link to="/" className="flex items-center space-x-3">
-                <SoulOrbAvatar size="md" />
-                <span className="font-cormorant font-bold text-xl gradient-text brand-text">
+    <div className="min-h-screen bg-background w-full">
+      {isMobile ? (
+        <>
+          {/* Mobile Header */}
+          <div className="bg-white/80 backdrop-blur-lg border-b border-border sticky top-0 z-40 w-full">
+            <div className="flex items-center justify-between p-4 w-full">
+              <Link to="/" className="flex items-center space-x-2">
+                <SoulOrbAvatar size="sm" />
+                <span className="font-cormorant font-bold text-lg gradient-text brand-text">
                   Soul Guide
                 </span>
               </Link>
-              {/* Language Selector on desktop, top right of sidebar */}
-              <div className="ml-2">
+              {/* Language selector on mobile top right */}
+              <div className="flex items-center space-x-2">
                 <LanguageSelector />
+                {user && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    className="rounded-xl"
+                  >
+                    {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                  </Button>
+                )}
               </div>
             </div>
-
-            {/* Navigation */}
-            <nav className="flex-1 p-4 space-y-2">
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.to}
-                    to={item.to}
-                    className={cn(
-                      "flex items-center space-x-3 p-3 rounded-2xl transition-all duration-200 font-cormorant font-medium",
-                      isActive(item.to)
-                        ? "bg-gradient-to-r from-primary/10 to-accent/10 text-primary font-semibold border border-primary/20"
-                        : "text-muted-foreground hover:bg-accent/50 hover:text-primary"
-                    )}
-                  >
-                    <Icon className="h-5 w-5" />
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              })}
-            </nav>
-
-            {/* User Actions */}
-            <div className="p-4 border-t border-border space-y-2">
-              <Button
-                variant="ghost"
-                onClick={handleSignOut}
-                className="w-full justify-start text-muted-foreground rounded-xl hover:bg-accent/50 font-inter"
-              >
-                <LogOut className="h-5 w-5 mr-3" />
-                {t('nav.signOut')}
-              </Button>
-            </div>
+            
+            {/* Mobile Menu Dropdown */}
+            {isMenuOpen && user && (
+              <div className="border-t border-border bg-card/95 backdrop-blur-lg p-4 space-y-2 w-full">
+                <Button
+                  variant="ghost"
+                  onClick={handleSignOut}
+                  className="w-full justify-start text-muted-foreground rounded-xl font-inter"
+                >
+                  <LogOut className="h-5 w-5 mr-3" />
+                  {t('nav.signOut')}
+                </Button>
+              </div>
+            )}
           </div>
-        )}
 
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col">
-          <div className="flex-1 pb-20 md:pb-0">
+          {/* Mobile Main Content */}
+          <main className="flex-1 pb-20">
             {children}
-          </div>
-        </div>
-      </div>
+          </main>
 
-      {/* Mobile Bottom Navigation - Only show for authenticated users */}
-      {user && <MobileNavigation />}
+          {/* Mobile Bottom Navigation */}
+          {user && <MobileNavigation />}
+        </>
+      ) : (
+        <>
+          {/* Desktop Global Top Bar */}
+          {user && !hideNav && <TopBar />}
+          
+          <div className="flex flex-1 min-h-0">
+            {/* Desktop Sidebar */}
+            {shouldShowDesktopNav && (
+              <aside className="w-64 min-h-full bg-card/80 backdrop-blur-lg border-r border-border flex-col flex">
+                {/* Logo Section */}
+                <div className="p-6 border-b border-border">
+                  <Link to="/" className="flex items-center space-x-3">
+                    <SoulOrbAvatar size="md" />
+                    <span className="font-cormorant font-bold text-xl gradient-text brand-text">
+                      Soul Guide
+                    </span>
+                  </Link>
+                </div>
+
+                {/* Navigation */}
+                <nav className="flex-1 p-4 space-y-2">
+                  {navItems.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <Link
+                        key={item.to}
+                        to={item.to}
+                        className={cn(
+                          "flex items-center space-x-3 p-3 rounded-2xl transition-all duration-200 font-cormorant font-medium",
+                          isActive(item.to)
+                            ? "bg-gradient-to-r from-primary/10 to-accent/10 text-primary font-semibold border border-primary/20"
+                            : "text-muted-foreground hover:bg-accent/50 hover:text-primary"
+                        )}
+                      >
+                        <Icon className="h-5 w-5" />
+                        <span>{item.label}</span>
+                      </Link>
+                    );
+                  })}
+                </nav>
+
+                {/* User Actions */}
+                <div className="p-4 border-t border-border space-y-2">
+                  <Button
+                    variant="ghost"
+                    onClick={handleSignOut}
+                    className="w-full justify-start text-muted-foreground rounded-xl hover:bg-accent/50 font-inter"
+                  >
+                    <LogOut className="h-5 w-5 mr-3" />
+                    {t('nav.signOut')}
+                  </Button>
+                </div>
+              </aside>
+            )}
+
+            {/* Desktop Main Content */}
+            <main className="flex-1 flex flex-col">
+              {children}
+            </main>
+          </div>
+        </>
+      )}
 
       {/* HACS Floating Orb - Always visible when authenticated */}
       {user && <FloatingHACSOrb />}
