@@ -17,6 +17,7 @@ import TestEnvironmentPage from './pages/TestEnvironmentPage';
 import { TestFunctionsPage } from './pages/TestFunctionsPage';
 import DesignAnalysisPage from './pages/DesignAnalysisPage';
 import User360Page from './pages/User360Page';
+import HermeticIntelligenceTest from './pages/HermeticIntelligenceTest';
 import NotFound from './pages/NotFound';
 import { Toaster } from '@/components/ui/toaster';
 import { SoulOrbProvider } from './contexts/SoulOrbContext';
@@ -64,6 +65,7 @@ function App() {
                       <Route path="/auth" element={<Auth />} />
                       <Route path="/test-environment" element={<ProtectedRoute><MainLayout><TestEnvironmentPage /></MainLayout></ProtectedRoute>} />
                       <Route path="/test-functions" element={<ProtectedRoute><MainLayout><TestFunctionsPage /></MainLayout></ProtectedRoute>} />
+                      <Route path="/test-hermetic-intelligence" element={<ProtectedRoute><MainLayout><HermeticIntelligenceTest /></MainLayout></ProtectedRoute>} />
                       <Route path="/design-analysis" element={<ProtectedRoute><DesignAnalysisPage /></ProtectedRoute>} />
                       <Route 
                         path="/admin" 
