@@ -10,6 +10,7 @@ import { ServiceTester } from '@/components/hermetic-test/ServiceTester';
 import { ValidationDashboard } from '@/components/hermetic-test/ValidationDashboard';
 
 const HermeticIntelligenceTest: React.FC = () => {
+  console.log('HermeticIntelligenceTest component loaded successfully');
   const [activeTab, setActiveTab] = useState('extraction');
 
   const testCategories = [
