@@ -350,13 +350,17 @@ export class IntelligenceReportOrchestrator {
 
   private async storeIntelligenceReport(userId: string, report: IntelligenceReport): Promise<void> {
     try {
+      // Store in user_activities for now since intelligence_reports table doesn't exist yet
       const { error } = await supabase
-        .from('intelligence_reports')
+        .from('user_activities')
         .insert({
           user_id: userId,
-          report_content: report,
-          generated_at: new Date().toISOString(),
-          report_version: '1.0'
+          activity_type: 'intelligence_report_generated',
+          activity_data: {
+            report_content: report,
+            generated_at: new Date().toISOString(),
+            report_version: '1.0'
+          }
         });
 
       if (error) {
