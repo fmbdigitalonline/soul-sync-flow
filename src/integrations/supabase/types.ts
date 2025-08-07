@@ -2046,6 +2046,86 @@ export type Database = {
           },
         ]
       }
+      hermetic_structured_intelligence: {
+        Row: {
+          adaptive_feedback: Json
+          attachment_style: Json
+          behavioral_triggers: Json
+          created_at: string
+          crisis_handling: Json
+          execution_bias: Json
+          extraction_confidence: number
+          extraction_version: string
+          goal_archetypes: Json
+          id: string
+          identity_constructs: Json
+          identity_flexibility: Json
+          internal_conflicts: Json
+          linguistic_fingerprint: Json
+          metacognitive_biases: Json
+          personality_report_id: string | null
+          processing_notes: Json | null
+          spiritual_dimension: Json
+          temporal_biology: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          adaptive_feedback?: Json
+          attachment_style?: Json
+          behavioral_triggers?: Json
+          created_at?: string
+          crisis_handling?: Json
+          execution_bias?: Json
+          extraction_confidence?: number
+          extraction_version?: string
+          goal_archetypes?: Json
+          id?: string
+          identity_constructs?: Json
+          identity_flexibility?: Json
+          internal_conflicts?: Json
+          linguistic_fingerprint?: Json
+          metacognitive_biases?: Json
+          personality_report_id?: string | null
+          processing_notes?: Json | null
+          spiritual_dimension?: Json
+          temporal_biology?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          adaptive_feedback?: Json
+          attachment_style?: Json
+          behavioral_triggers?: Json
+          created_at?: string
+          crisis_handling?: Json
+          execution_bias?: Json
+          extraction_confidence?: number
+          extraction_version?: string
+          goal_archetypes?: Json
+          id?: string
+          identity_constructs?: Json
+          identity_flexibility?: Json
+          internal_conflicts?: Json
+          linguistic_fingerprint?: Json
+          metacognitive_biases?: Json
+          personality_report_id?: string | null
+          processing_notes?: Json | null
+          spiritual_dimension?: Json
+          temporal_biology?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hermetic_structured_intelligence_personality_report_id_fkey"
+            columns: ["personality_report_id"]
+            isOneToOne: false
+            referencedRelation: "personality_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hot_memory_cache: {
         Row: {
           access_count: number
