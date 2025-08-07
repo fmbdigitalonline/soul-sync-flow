@@ -69,6 +69,8 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
         setHermeticReport(hermeticResult.report);
         console.log('🌟 Hermetic report loaded successfully');
         console.log('📊 Hermetic word count:', hermeticResult.report.report_content.word_count);
+        console.log('📅 Hermetic report generated:', hermeticResult.report.generated_at);
+        console.log('🆔 Hermetic report ID:', hermeticResult.report.id);
       }
       
       // Determine error state
@@ -152,14 +154,25 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
       const result = await hermeticPersonalityReportService.generateHermeticReport(blueprintResult.data);
       
       if (result.success && result.report) {
+        // Clear current report state to show loading
+        console.log('🔄 Clearing current hermetic report state for refresh...');
+        setHermeticReport(null);
+        
+        // Set initial report from generation
         setHermeticReport(result.report);
         setReportType('hermetic'); // Switch to view the new report
+        
+        // Force fresh data load from database to ensure UI consistency
+        console.log('🔄 Force-refreshing hermetic report from database...');
+        await loadReport();
+        
         toast({
           title: "Hermetic Report Generated",
           description: `Your comprehensive ${result.report.report_content.word_count}+ word Hermetic Blueprint report has been created!`,
         });
         console.log('🌟 Hermetic report generated successfully');
         console.log('📊 Hermetic report word count:', result.report.report_content.word_count);
+        console.log('✅ UI refreshed with latest database state');
       } else {
         throw new Error(result.error || 'Failed to generate Hermetic personality report');
       }
