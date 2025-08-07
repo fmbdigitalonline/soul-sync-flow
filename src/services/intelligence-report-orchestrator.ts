@@ -357,7 +357,7 @@ export class IntelligenceReportOrchestrator {
           user_id: userId,
           activity_type: 'intelligence_report_generated',
           activity_data: {
-            report_content: report,
+            report_content: report as any,
             generated_at: new Date().toISOString(),
             report_version: '1.0'
           }
