@@ -1,11 +1,21 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useUser360 } from "@/hooks/use-user-360";
 import { safeInterpolateTranslation } from "@/utils/sanitize";
-import { MainLayout } from "@/components/layouts/MainLayout";
-import { PersonalizedQuoteDisplay } from "@/components/PersonalizedQuoteDisplay";
-import { Blueprint360Card } from "@/components/Blueprint360Card";
+import MainLayout from "@/components/Layout/MainLayout";
+import { PersonalizedQuoteDisplay } from "@/components/ui/personalized-quote-display";
+import { Button } from "@/components/ui/button";
+import { CosmicCard } from "@/components/ui/cosmic-card";
+import { TutorialModal } from "@/components/tutorial/TutorialModal";
+import PersonalityDemo from "@/components/personality/PersonalityDemo";
+import { LanguageSelector } from "@/components/ui/language-selector";
+import { useSoulOrb } from "@/contexts/SoulOrbContext";
+import { useOptimizedBlueprintData } from "@/hooks/use-optimized-blueprint-data";
+import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
+import { useTutorialFlow } from "@/hooks/use-tutorial-flow";
+import { isAdminUser } from "@/utils/isAdminUser";
+import { Heart, Sparkles, Brain, BookOpen, ArrowRight, LogIn } from "lucide-react";
 
 const Index = () => {
   const { user } = useAuth();
