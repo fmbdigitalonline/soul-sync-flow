@@ -489,10 +489,26 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
           </p>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto mt-3 sm:mt-0">
-          <Badge variant="outline" className="bg-soul-purple/10 text-soul-purple border-soul-purple/20 justify-center sm:justify-start">
-            <Sparkles className="h-3 w-3 mr-1 flex-shrink-0" />
-            <span className="truncate">Soul Generated</span>
-          </Badge>
+          <div className="flex gap-2 flex-wrap justify-center sm:justify-start">
+            <Badge variant="outline" className="bg-soul-purple/10 text-soul-purple border-soul-purple/20">
+              <Sparkles className="h-3 w-3 mr-1 flex-shrink-0" />
+              <span className="truncate">Soul Generated</span>
+            </Badge>
+            {currentReport && (
+              <Badge 
+                variant="outline" 
+                className={
+                  reportType === 'hermetic' 
+                    ? "bg-gradient-to-r from-purple-100 to-blue-100 text-purple-800 border-purple-300" 
+                    : "bg-blue-50 text-blue-700 border-blue-200"
+                }
+              >
+                <span className="truncate">
+                  Version {(currentReport as any).blueprint_version || '1.0'}
+                </span>
+              </Badge>
+            )}
+          </div>
           <div className="flex gap-2 w-full sm:w-auto">
             <Button 
               onClick={handleRegenerate} 
