@@ -322,7 +322,7 @@ const Dreams = () => {
   if (currentView === 'task-coach' && selectedTask) {
     return (
       <MainLayout>
-        <div className={`min-h-screen bg-white w-full ${isMobile ? 'pb-20' : ''}`}>
+        <div className={`min-h-screen bg-background w-full ${isMobile ? 'pb-20' : ''}`}>
           <TaskCoachInterface
             task={selectedTask}
             onBack={handleBackFromTaskCoach}
@@ -408,7 +408,7 @@ const Dreams = () => {
   if (currentView === 'journey') {
     return (
       <MainLayout>
-        <div className={`min-h-screen bg-white w-full ${isMobile ? 'pb-20' : ''}`}>
+        <div className={`min-h-screen bg-background w-full ${isMobile ? 'pb-20' : ''}`}>
           <div className={`w-full max-w-4xl mx-auto py-3 ${isMobile ? 'px-3 pb-24' : 'px-6 pb-20'}`}>
             
             {/* Mobile Optimized Header */}
@@ -625,7 +625,7 @@ const Dreams = () => {
     return (
       <MainLayout>
         <ErrorBoundary>
-          <div className={`min-h-screen bg-white w-full ${isMobile ? 'pb-20' : ''}`}>
+          <div className={`min-h-screen bg-background w-full ${isMobile ? 'pb-20' : ''}`}>
             <div className={`w-full max-w-lg mx-auto py-4 px-3 ${isMobile ? 'pb-24' : 'pb-20'}`}>
               {/* Enhanced Mobile Optimized Hero Section with Better Title Visibility */}
               <div className={`text-center mb-6 px-2`}>
@@ -772,7 +772,7 @@ const Dreams = () => {
   return (
     <MainLayout>
       <ErrorBoundary>
-        <div className={`min-h-screen bg-white w-full ${isMobile ? 'pb-20' : ''}`}>
+        <div className={`min-h-screen bg-background w-full ${isMobile ? 'pb-20' : ''}`}>
           {/* Dream mode starting hub */}
           <div className="w-full max-w-5xl mx-auto px-3 pt-4 pb-2">
             <DreamMenuGrid
