@@ -17,6 +17,9 @@ import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 import { useTutorialFlow } from "@/hooks/use-tutorial-flow";
 import { isAdminUser } from "@/utils/isAdminUser";
 import { Heart, Sparkles, Brain, BookOpen, ArrowRight, LogIn } from "lucide-react";
+import SEOHead from "@/components/seo/SEOHead";
+import { BackgroundAurora } from "@/components/home/BackgroundAurora";
+import HeroSection from "@/components/home/HeroSection";
 const Index = () => {
   const {
     user
@@ -130,20 +133,17 @@ const Index = () => {
   }
   return <MainLayout>
       <PageContainer maxWidth="saas" className="min-h-screen flex flex-col justify-center bg-gradient-to-br from-background via-accent/5 to-primary/5">
-        {/* Hero Section */}
-        <PageSection className="text-center">
-          <div className="space-y-6 mb-12">
-            <h1 className="text-4xl sm:text-5xl font-bold font-cormorant gradient-text">
-              {safeInterpolateTranslation(user ? "Welcome to SoulSync, {name}" : "Welcome to SoulSync", {
-              name: userName
-            })}
-            </h1>
-            
-            <div className="flex items-center justify-center">
-              <PersonalizedQuoteDisplay className="text-lg text-muted-foreground font-inter" interval={4000} />
-            </div>
-          </div>
-        </PageSection>
+        {/* Background + SEO */}
+        <BackgroundAurora />
+        <SEOHead 
+          title="SoulSync Home — Personalized Spiritual Guidance"
+          description="Discover your authentic path with personalized AI guidance, dreams, spiritual growth tools, and your SoulSync companion."
+        />
+
+        {/* Hero */}
+        <HeroSection
+          greeting={safeInterpolateTranslation(user ? "Welcome to SoulSync, {name}" : "Welcome to SoulSync", { name: userName })}
+        />
 
         {/* Navigation Cards - Modern 12-column grid */}
         {hasBlueprint && <PageSection>
