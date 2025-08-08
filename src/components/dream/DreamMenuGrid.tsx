@@ -19,7 +19,7 @@ interface DreamMenuGridProps extends React.HTMLAttributes<HTMLDivElement> {
 export function DreamMenuGrid({ items, className, ...props }: DreamMenuGridProps) {
   return (
     <section aria-label="Dream mode starting hub" className={cn("w-full", className)} {...props}>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-3 gap-6 mb-12">
         {items.map(({ key, title, description, Icon, image, onClick }) => (
           <button key={key} type="button" onClick={onClick} className="group block text-left" aria-label={title}>
             <CosmicCard variant="interactive" size="lg" floating className="h-full p-0 overflow-hidden">
