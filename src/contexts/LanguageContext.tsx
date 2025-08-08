@@ -211,6 +211,13 @@ const translations: Record<Language, Translations> = {
       devMode: 'Development Mode',
       back: 'Back',
       continue: 'Continue'
+    },
+    // Spiritual Growth
+    spiritualGrowth: {
+      title: 'Spiritual Growth',
+      subtitle: 'Choose how you want to engage today—coach, Life OS, program, or tools.',
+      description: 'Unlock your spiritual growth journey with personalized guidance and tools.',
+      getStarted: 'Get Started'
     }
   },
   nl: {
@@ -416,6 +423,13 @@ const translations: Record<Language, Translations> = {
       devMode: 'Ontwikkelingsmodus',
       back: 'Terug',
       continue: 'Doorgaan'
+    },
+    // Spirituele Groei
+    spiritualGrowth: {
+      title: 'Spirituele Groei',
+      subtitle: 'Kies hoe je vandaag wilt werken—coach, Life OS, programma of tools.',
+      description: 'Ontgrendel je groeireis met gepersonaliseerde begeleiding en tools.',
+      getStarted: 'Aan de slag'
     }
   }
 };
