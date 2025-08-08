@@ -50,7 +50,19 @@ export function DreamMenuGrid({ items, className, ...props }: DreamMenuGridProps
             </div>
           ) : (
             <div key={key} className="rounded-3xl bg-card p-3 shadow-sm ring-1 ring-border/40 transition-shadow hover:shadow-md">
-              <button type="button" onClick={onClick} className="group block text-left" aria-label={title}>
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={onClick}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onClick?.();
+                  }
+                }}
+                className="group block text-left cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
+                aria-label={title}
+              >
                 <CosmicCard variant="minimal" size="lg" floating className="h-full p-0 overflow-hidden rounded-2xl">
                   <article className="relative w-full aspect-square">
                     <img
@@ -71,7 +83,7 @@ export function DreamMenuGrid({ items, className, ...props }: DreamMenuGridProps
                     </div>
                   </article>
                 </CosmicCard>
-              </button>
+              </div>
             </div>
           )
         ))}

@@ -26,11 +26,11 @@ import { LifeDomain } from "@/types/growth-program";
 
 // Consistent 3-column square grid
 import DreamMenuGrid, { type DreamMenuItem } from "@/components/dream/DreamMenuGrid";
-// Tile images
-import coachImg from "@/assets/spiritual-growth/coach.jpg";
-import lifeOsImg from "@/assets/spiritual-growth/life-os.jpg";
-import programImg from "@/assets/spiritual-growth/program.jpg";
-import toolsImg from "@/assets/spiritual-growth/tools.jpg";
+// Tile images - use shared home assets for consistency
+const coachImg = '/assets/home/companion.jpg';
+const lifeOsImg = '/assets/home/dashboard.jpg';
+const programImg = '/assets/home/growth.jpg';
+const toolsImg = '/assets/home/dreams.jpg';
 
 type ActiveView = 'welcome' | 'immediate_chat' | 'growth_program' | 'tools' | 'mood' | 'reflection' | 'insight' | 'weekly' | 'life_os_choices' | 'life_os_quick_focus' | 'life_os_full' | 'life_os_guided' | 'life_os_progressive' | null;
 
