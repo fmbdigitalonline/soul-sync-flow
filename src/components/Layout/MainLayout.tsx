@@ -13,6 +13,7 @@ import MobileNavigation from "./MobileNavigation";
 import { FloatingHACSOrb } from "@/components/hacs/FloatingHACSOrb";
 import { TopBar } from "./TopBar";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { PageContainer } from "./PageContainer";
 interface MainLayoutProps {
   children: React.ReactNode;
   hideNav?: boolean;
@@ -135,9 +136,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({
               </div>}
           </div>
 
-          {/* Mobile Main Content */}
           <main className="flex-1 pb-20">
-            {children}
+            <PageContainer>
+              {children}
+            </PageContainer>
           </main>
 
           {/* Mobile Bottom Navigation */}
@@ -174,7 +176,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({
 
             {/* Desktop Main Content */}
             <main className="flex-1 flex flex-col">
-              {children}
+              <PageContainer className="flex-1">
+                {children}
+              </PageContainer>
             </main>
           </div>
         </>}

@@ -3,14 +3,31 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: "default" | "elevated" | "interactive" | "minimal";
+  size?: "sm" | "md" | "lg";
+}
+
 const Card = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
+  CardProps
+>(({ className, variant = "default", size = "md", ...props }, ref) => (
   <div
     ref={ref}
     className={cn(
-      "bg-card rounded-3xl text-card-foreground transition-colors duration-300 hover:bg-accent/5 shadow-sm hover:shadow-md",
+      // Variants
+      {
+        default: "bg-card rounded-3xl text-card-foreground transition-colors duration-300 hover:bg-accent/5 shadow-sm hover:shadow-md",
+        elevated: "bg-card rounded-3xl text-card-foreground shadow-lg hover:shadow-xl transition-colors duration-300 hover:bg-accent/5",
+        interactive: "bg-card rounded-3xl text-card-foreground hover:bg-accent/10 hover:shadow-md transition-all duration-300 cursor-pointer active:scale-[0.98]",
+        minimal: "bg-transparent rounded-3xl text-card-foreground hover:bg-accent/5"
+      }[variant],
+      // Sizes
+      {
+        sm: "p-4",
+        md: "p-6",
+        lg: "p-8"
+      }[size],
       className
     )}
     {...props}

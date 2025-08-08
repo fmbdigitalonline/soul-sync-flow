@@ -20,7 +20,7 @@ export const TopBar: React.FC<TopBarProps> = ({ className }) => {
       "h-16 bg-card/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm",
       className
     )}>
-      <div className="px-8 w-full h-full grid grid-cols-3 items-center">
+      <div className="px-4 md:px-6 lg:px-8 w-full h-full grid grid-cols-3 items-center">
         {/* Left: Brand */}
         <div className="flex items-center gap-3">
           <Link to="/" className="flex items-center gap-3">

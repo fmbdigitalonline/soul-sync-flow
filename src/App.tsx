@@ -52,35 +52,37 @@ function App() {
               <ModeProvider>
                 <SoulOrbProvider>
                   <BlueprintCacheProvider>
-                    <Routes>
-                      <Route path="/" element={<Index />} />
-                      <Route path="/dreams" element={<ProtectedRoute><MainLayout><Dreams /></MainLayout></ProtectedRoute>} />
-                      <Route path="/spiritual-growth" element={<ProtectedRoute><MainLayout><SpiritualGrowth /></MainLayout></ProtectedRoute>} />
-                      <Route path="/companion" element={<ProtectedRoute><MainLayout><Coach /></MainLayout></ProtectedRoute>} />
-                      {/* Legacy redirect from /coach to /companion */}
-                      <Route path="/coach" element={<Navigate to="/companion" replace />} />
-                      <Route path="/blueprint" element={<ProtectedRoute><MainLayout><Blueprint /></MainLayout></ProtectedRoute>} />
-                      <Route path="/profile" element={<ProtectedRoute><MainLayout><Profile /></MainLayout></ProtectedRoute>} />
-                      <Route path="/user-360" element={<ProtectedRoute><MainLayout><User360Page /></MainLayout></ProtectedRoute>} />
-                      <Route path="/auth" element={<Auth />} />
-                      <Route path="/test-environment" element={<ProtectedRoute><MainLayout><TestEnvironmentPage /></MainLayout></ProtectedRoute>} />
-                      <Route path="/test-functions" element={<ProtectedRoute><MainLayout><TestFunctionsPage /></MainLayout></ProtectedRoute>} />
-                      <Route path="/test-hermetic-intelligence" element={<ProtectedRoute><MainLayout><HermeticIntelligenceTest /></MainLayout></ProtectedRoute>} />
-                      <Route path="/design-analysis" element={<ProtectedRoute><DesignAnalysisPage /></ProtectedRoute>} />
-                      <Route 
-                        path="/admin" 
-                        element={
-                          <ProtectedRoute>
-                            <MainLayout>
-                              <AdminDashboard />
-                            </MainLayout>
-                          </ProtectedRoute>
-                        } 
-                      />
-                      {/* Catch-all route for 404s - MUST be last */}
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                    <Toaster />
+                    <div className="min-h-screen bg-background">
+                      <Routes>
+                        <Route path="/" element={<Index />} />
+                        <Route path="/dreams" element={<ProtectedRoute><MainLayout><Dreams /></MainLayout></ProtectedRoute>} />
+                        <Route path="/spiritual-growth" element={<ProtectedRoute><MainLayout><SpiritualGrowth /></MainLayout></ProtectedRoute>} />
+                        <Route path="/companion" element={<ProtectedRoute><MainLayout><Coach /></MainLayout></ProtectedRoute>} />
+                        {/* Legacy redirect from /coach to /companion */}
+                        <Route path="/coach" element={<Navigate to="/companion" replace />} />
+                        <Route path="/blueprint" element={<ProtectedRoute><MainLayout><Blueprint /></MainLayout></ProtectedRoute>} />
+                        <Route path="/profile" element={<ProtectedRoute><MainLayout><Profile /></MainLayout></ProtectedRoute>} />
+                        <Route path="/user-360" element={<ProtectedRoute><MainLayout><User360Page /></MainLayout></ProtectedRoute>} />
+                        <Route path="/auth" element={<Auth />} />
+                        <Route path="/test-environment" element={<ProtectedRoute><MainLayout><TestEnvironmentPage /></MainLayout></ProtectedRoute>} />
+                        <Route path="/test-functions" element={<ProtectedRoute><MainLayout><TestFunctionsPage /></MainLayout></ProtectedRoute>} />
+                        <Route path="/test-hermetic-intelligence" element={<ProtectedRoute><MainLayout><HermeticIntelligenceTest /></MainLayout></ProtectedRoute>} />
+                        <Route path="/design-analysis" element={<ProtectedRoute><DesignAnalysisPage /></ProtectedRoute>} />
+                        <Route 
+                          path="/admin" 
+                          element={
+                            <ProtectedRoute>
+                              <MainLayout>
+                                <AdminDashboard />
+                              </MainLayout>
+                            </ProtectedRoute>
+                          } 
+                        />
+                        {/* Catch-all route for 404s - MUST be last */}
+                        <Route path="*" element={<NotFound />} />
+                      </Routes>
+                      <Toaster />
+                    </div>
                   </BlueprintCacheProvider>
                 </SoulOrbProvider>
               </ModeProvider>

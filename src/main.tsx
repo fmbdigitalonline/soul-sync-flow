@@ -45,7 +45,7 @@ const queryClient = new QueryClient({
 // Root layout component with consistent provider nesting order
 const RootLayout = () => {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       <ErrorBoundary>
         <AuthProvider>
           <LanguageProvider>
