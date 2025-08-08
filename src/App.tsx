@@ -55,7 +55,7 @@ function App() {
                     <div className="min-h-screen bg-background">
                       <Routes>
                         <Route path="/" element={<Index />} />
-                        <Route path="/dreams" element={<ProtectedRoute><MainLayout><Dreams /></MainLayout></ProtectedRoute>} />
+                        <Route path="/dreams/*" element={<ProtectedRoute><MainLayout><Dreams /></MainLayout></ProtectedRoute>} />
                         <Route path="/spiritual-growth" element={<ProtectedRoute><MainLayout><SpiritualGrowth /></MainLayout></ProtectedRoute>} />
                         <Route path="/companion" element={<ProtectedRoute><MainLayout><Coach /></MainLayout></ProtectedRoute>} />
                         {/* Legacy redirect from /coach to /companion */}
