@@ -20,7 +20,7 @@ export const JourneyOverview: React.FC<JourneyOverviewProps> = ({
     mainGoal.milestones?.find((m: any) => !m.completed) || null;
 
   return (
-    <div className="bg-white/80 backdrop-blur-lg rounded-2xl p-6 shadow-lg border border-white/20">
+    <div className="bg-card/80 backdrop-blur-lg rounded-3xl p-6 shadow-sm hover:shadow-md border border-border">
       <h2 className="text-lg font-semibold mb-4">Milestones</h2>
       <div className="space-y-6">
         {mainGoal.milestones?.map((milestone: any, idx: number) => {
@@ -30,18 +30,18 @@ export const JourneyOverview: React.FC<JourneyOverviewProps> = ({
           return (
             <div
               key={milestone.id}
-              className={`flex items-center justify-between p-4 rounded-xl border transition-all duration-200 ${isCompleted
-                  ? "bg-slate-50 border-slate-200 text-muted-foreground opacity-60"
+              className={`flex items-center justify-between p-4 rounded-2xl border transition-all duration-200 ${isCompleted
+                  ? "bg-muted border-border text-muted-foreground opacity-60"
                   : isCurrent
-                    ? "bg-soul-purple/10 border-soul-purple"
-                    : "bg-white border-gray-200"
-                }`}
+                    ? "bg-primary/10 border-primary"
+                    : "bg-card border-border"
+                  }`}
             >
               <div
                 className="flex items-center gap-3 cursor-pointer"
                 onClick={() => onMilestoneClick?.(milestone)}
               >
-                <span className="w-8 h-8 rounded-full flex items-center justify-center bg-soul-purple/20 text-soul-purple text-lg font-bold">
+                <span className="w-8 h-8 rounded-full flex items-center justify-center bg-primary/20 text-primary text-lg font-bold">
                   {idx + 1}
                 </span>
                 <div>
@@ -49,7 +49,7 @@ export const JourneyOverview: React.FC<JourneyOverviewProps> = ({
                     {milestone.title}
                     {isCurrent && (
                       <span className="ml-2 inline-block align-middle">
-                        <Star className="inline h-4 w-4 text-soul-purple" />
+                        <Star className="inline h-4 w-4 text-primary" />
                       </span>
                     )}
                   </div>
@@ -72,7 +72,7 @@ export const JourneyOverview: React.FC<JourneyOverviewProps> = ({
                       }
                     }}
                   >
-                    <Focus className="h-4 w-4 text-soul-purple" />
+                    <Focus className="h-4 w-4 text-primary" />
                     Focus
                   </Button>
                 )}

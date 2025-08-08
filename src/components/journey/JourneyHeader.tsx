@@ -20,19 +20,19 @@ export const JourneyHeader: React.FC<JourneyHeaderProps> = ({
   setSelectedView
 }) => {
   return (
-    <div className="p-4 bg-gradient-to-r from-soul-purple/10 to-blue-500/10 rounded-lg border">
+    <div className="p-4 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-3xl border border-border">
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
           <h2 className="text-xl font-bold mb-2 flex items-center">
-            <Heart className="h-5 w-5 mr-2 text-soul-purple" />
+            <Heart className="h-5 w-5 mr-2 text-primary" />
             {mainGoal.title}
           </h2>
           <p className="text-muted-foreground text-sm mb-2">{mainGoal.description}</p>
-          <p className="text-xs text-soul-purple font-medium">{getBlueprintInsight()}</p>
+          <p className="text-xs text-primary font-medium">{getBlueprintInsight()}</p>
         </div>
         
         <div className="text-right ml-4">
-          <div className="text-2xl font-bold text-soul-purple mb-1">{progress}%</div>
+          <div className="text-2xl font-bold text-primary mb-1">{progress}%</div>
           <div className="text-xs text-muted-foreground">Complete</div>
         </div>
       </div>
