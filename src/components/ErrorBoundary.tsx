@@ -11,7 +11,22 @@ interface ErrorBoundaryState {
 
 // Functional wrapper to use hooks in class component
 const ErrorBoundaryContent: React.FC = () => {
-  const { t } = useLanguage();
+  // Safely try to use useLanguage, fallback to English if not available
+  let t: (key: string) => string;
+  try {
+    const { t: translationFn } = useLanguage();
+    t = translationFn;
+  } catch {
+    // Fallback translations if LanguageProvider is not available
+    t = (key: string) => {
+      const fallbacks: Record<string, string> = {
+        'system.errorOccurred': 'Something went wrong',
+        'system.errorDescription': 'An unexpected error occurred. Please try refreshing the page.',
+        'system.refreshPage': 'Refresh Page'
+      };
+      return fallbacks[key] || key;
+    };
+  }
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-soul-purple/10 via-white to-soul-teal/5 flex items-center justify-center p-4">

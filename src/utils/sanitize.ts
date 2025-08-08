@@ -13,10 +13,14 @@ export function safeInterpolateTranslation(
 ): string {
   // Escape HTML entities to prevent XSS
   const escapeHtml = (text: string): string => {
+    if (!text) return '';
     const div = document.createElement('div');
     div.textContent = text;
-    return div.innerHTML;
+    return div.innerHTML || '';
   };
+
+  // Handle null or undefined template
+  if (!template) return '';
 
   // Replace variables in template with escaped versions
   return Object.entries(variables).reduce((result, [key, value]) => {
