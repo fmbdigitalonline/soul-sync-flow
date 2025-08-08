@@ -635,7 +635,7 @@ const Dreams = () => {
                   description: 'Chat with your Dream Guide to uncover what matters.',
                   Icon: MessageCircle,
                   image: '/assets/home/companion.jpg',
-                  onClick: () => navigate("/dreams/discover")
+                  to: "/dreams/discover",
                 },
                 {
                   key: 'suggestions',
@@ -643,7 +643,7 @@ const Dreams = () => {
                   description: 'See ideas aligned with your blueprint.',
                   Icon: Sparkles,
                   image: '/assets/home/blueprint.jpg',
-                  onClick: () => navigate("/dreams/discover")
+                  to: "/dreams/discover",
                 },
                 {
                   key: 'create',
@@ -651,7 +651,7 @@ const Dreams = () => {
                   description: 'Turn a dream into a clear, soul-aligned journey.',
                   Icon: Target,
                   image: '/assets/home/dreams.jpg',
-                  onClick: () => navigate("/dreams/create")
+                  to: "/dreams/create",
                 },
                 {
                   key: 'journey',
@@ -659,7 +659,7 @@ const Dreams = () => {
                   description: 'See milestones and navigate your path.',
                   Icon: MapPin,
                   image: '/assets/home/growth.jpg',
-                  onClick: () => navigate("/dreams/journey")
+                  to: "/dreams/journey",
                 },
                 {
                   key: 'tasks',
@@ -667,7 +667,7 @@ const Dreams = () => {
                   description: 'Work on prioritized, actionable steps.',
                   Icon: Target,
                   image: '/assets/home/tasks.jpg',
-                  onClick: () => navigate("/dreams/tasks")
+                  to: "/dreams/tasks",
                 },
                 {
                   key: 'focus',
@@ -675,7 +675,7 @@ const Dreams = () => {
                   description: 'Stay in flow with focused work.',
                   Icon: Clock,
                   image: '/assets/home/dashboard.jpg',
-                  onClick: () => navigate("/dreams/focus")
+                  to: "/dreams/focus",
                 },
                 {
                   key: 'habits',
@@ -683,7 +683,7 @@ const Dreams = () => {
                   description: 'Build supportive, sustainable routines.',
                   Icon: CheckCircle,
                   image: '/assets/home/growth.jpg',
-                  onClick: () => navigate("/dreams/habits")
+                  to: "/dreams/habits",
                 },
                 {
                   key: 'success',
