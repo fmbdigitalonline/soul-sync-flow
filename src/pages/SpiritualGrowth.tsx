@@ -23,6 +23,7 @@ import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 import { useBlueprintData } from "@/hooks/use-blueprint-data";
 import { useAuth } from "@/contexts/AuthContext";
 import { LifeDomain } from "@/types/growth-program";
+import { DreamMenuGrid } from "@/components/dream/DreamMenuGrid";
 
 type ActiveView = 'welcome' | 'immediate_chat' | 'growth_program' | 'tools' | 'mood' | 'reflection' | 'insight' | 'weekly' | 'life_os_choices' | 'life_os_quick_focus' | 'life_os_full' | 'life_os_guided' | 'life_os_progressive' | null;
 
@@ -520,69 +521,42 @@ const SpiritualGrowth = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            
-            {/* Heart-Centered Coaching Option */}
-            <div className="rounded-3xl bg-card p-3 ring-1 ring-border/40 shadow-sm transition-shadow hover:shadow-md">
-              <CosmicCard variant="minimal" size="lg" className="relative p-0 overflow-hidden rounded-2xl cursor-pointer pb-[100%]" onClick={handleStartSpiritualGrowth}>
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-center space-y-3 p-4">
-                <Sparkles className="h-6 w-6 text-primary" />
-                <div>
-                  <h3 className="text-lg font-semibold text-foreground mb-1">Heart-Centered Coach</h3>
-                  <p className="text-muted-foreground text-sm">
-                    Immediate personalized spiritual guidance.
-                  </p>
-                </div>
-              </div>
-            </CosmicCard>
-            </div>
-
-            {/* Life Operating System */}
-            <div className="rounded-3xl bg-card p-3 ring-1 ring-border/40 shadow-sm transition-shadow hover:shadow-md">
-              <CosmicCard variant="minimal" size="lg" className="relative p-0 overflow-hidden rounded-2xl cursor-pointer pb-[100%]" onClick={() => setActiveView('life_os_choices')}>
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-center space-y-3 p-4">
-                <Settings className="h-6 w-6 text-secondary" />
-                <div>
-                  <h3 className="text-lg font-semibold text-foreground mb-1">Life Operating System</h3>
-                  <p className="text-muted-foreground text-sm">
-                    Holistic life assessment and growth coordination.
-                  </p>
-                </div>
-              </div>
-            </CosmicCard>
-            </div>
-
-            {/* Growth Program Option */}
-            <div className="rounded-3xl bg-card p-3 ring-1 ring-border/40 shadow-sm transition-shadow hover:shadow-md">
-              <CosmicCard variant="minimal" size="lg" className="relative p-0 overflow-hidden rounded-2xl cursor-pointer pb-[100%]" onClick={() => setActiveView('growth_program')}>
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-center space-y-3 p-4">
-                <TrendingUp className="h-6 w-6 text-accent" />
-                <div>
-                  <h3 className="text-lg font-semibold text-foreground mb-1">Structured Program</h3>
-                  <p className="text-muted-foreground text-sm">
-                    12-week journey for deep transformation.
-                  </p>
-                </div>
-              </div>
-            </CosmicCard>
-            </div>
-
-            {/* Tools & Practices */}
-            <div className="rounded-3xl bg-card p-3 ring-1 ring-border/40 shadow-sm transition-shadow hover:shadow-md">
-              <CosmicCard variant="minimal" size="lg" className="relative p-0 overflow-hidden rounded-2xl cursor-pointer pb-[100%]" onClick={() => setActiveView('tools')}>
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center space-y-3 p-4">
-                <BookOpen className="h-6 w-6 text-primary" />
-                <div>
-                  <h3 className="text-lg font-semibold text-foreground mb-1">Spiritual Tools</h3>
-                  <p className="text-muted-foreground text-sm">
-                    Mood tracking and reflection practices.
-                  </p>
-                </div>
-              </div>
-            </CosmicCard>
-            </div>
-
-          </div>
+            <DreamMenuGrid
+              items={[
+                {
+                  key: 'coach',
+                  title: 'Heart-Centered Coach',
+                  description: 'Immediate personalized spiritual guidance.',
+                  Icon: Sparkles,
+                  image: '/assets/home/companion.jpg',
+                  onClick: handleStartSpiritualGrowth,
+                },
+                {
+                  key: 'los',
+                  title: 'Life Operating System',
+                  description: 'Holistic life assessment and growth coordination.',
+                  Icon: Settings,
+                  image: '/assets/home/blueprint.jpg',
+                  onClick: () => setActiveView('life_os_choices'),
+                },
+                {
+                  key: 'program',
+                  title: 'Structured Program',
+                  description: '12-week journey for deep transformation.',
+                  Icon: TrendingUp,
+                  image: '/assets/home/growth.jpg',
+                  onClick: () => setActiveView('growth_program'),
+                },
+                {
+                  key: 'tools',
+                  title: 'Spiritual Tools',
+                  description: 'Mood tracking and reflection practices.',
+                  Icon: BookOpen,
+                  image: '/assets/home/tasks.jpg',
+                  onClick: () => setActiveView('tools'),
+                },
+              ]}
+            />
         </div>
       </div>
     </MainLayout>
