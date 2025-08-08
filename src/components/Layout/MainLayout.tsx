@@ -1,21 +1,8 @@
-
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { SoulOrbAvatar } from "@/components/ui/avatar";
-import { 
-  Home, 
-  Heart, 
-  MessageCircle, 
-  Sparkles, 
-  Settings, 
-  LogOut, 
-  Menu, 
-  X,
-  Star,
-  TestTube,
-  User
-} from "lucide-react";
+import { Home, Heart, MessageCircle, Sparkles, Settings, LogOut, Menu, X, Star, TestTube, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -26,64 +13,89 @@ import MobileNavigation from "./MobileNavigation";
 import { FloatingHACSOrb } from "@/components/hacs/FloatingHACSOrb";
 import { TopBar } from "./TopBar";
 import { useIsMobile } from "@/hooks/use-mobile";
-
 interface MainLayoutProps {
   children: React.ReactNode;
   hideNav?: boolean;
 }
-
-const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) => {
-  const { user, signOut } = useAuth();
-  const { toast } = useToast();
-  const { t } = useLanguage();
+const MainLayout: React.FC<MainLayoutProps> = ({
+  children,
+  hideNav = false
+}) => {
+  const {
+    user,
+    signOut
+  } = useAuth();
+  const {
+    toast
+  } = useToast();
+  const {
+    t
+  } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { isMobile } = useIsMobile();
-
+  const {
+    isMobile
+  } = useIsMobile();
   const handleSignOut = async () => {
     try {
       await signOut();
       toast({
         title: t('auth.signOutSuccess'),
-        description: t('auth.signOutSuccessDescription'),
+        description: t('auth.signOutSuccessDescription')
       });
       navigate('/');
     } catch (error) {
       toast({
         title: t('auth.signOutError'),
         description: t('auth.signOutErrorDescription'),
-        variant: 'destructive',
+        variant: 'destructive'
       });
     }
   };
-
-  const baseNavItems = [
-    { to: "/", icon: Home, label: t('nav.home') },
-    { to: "/blueprint", icon: Star, label: t('nav.blueprint') },
-    { to: "/dreams", icon: Heart, label: t('nav.dreams') },
-    { to: "/spiritual-growth", icon: Sparkles, label: t('nav.growth') },
-    { to: "/companion", icon: MessageCircle, label: t('nav.companion') },
-  ];
+  const baseNavItems = [{
+    to: "/",
+    icon: Home,
+    label: t('nav.home')
+  }, {
+    to: "/blueprint",
+    icon: Star,
+    label: t('nav.blueprint')
+  }, {
+    to: "/dreams",
+    icon: Heart,
+    label: t('nav.dreams')
+  }, {
+    to: "/spiritual-growth",
+    icon: Sparkles,
+    label: t('nav.growth')
+  }, {
+    to: "/companion",
+    icon: MessageCircle,
+    label: t('nav.companion')
+  }];
 
   // Add profile and 360° profile to navigation items for authenticated users
-  const userNavItems = user 
-    ? [
-        ...baseNavItems, 
-        { to: "/profile", icon: User, label: t('nav.profile') },
-        { to: "/user-360", icon: User, label: t('nav.profile360') }
-      ]
-    : baseNavItems;
+  const userNavItems = user ? [...baseNavItems, {
+    to: "/profile",
+    icon: User,
+    label: t('nav.profile')
+  }, {
+    to: "/user-360",
+    icon: User,
+    label: t('nav.profile360')
+  }] : baseNavItems;
 
   // Add Admin Dashboard and Test Environment for admin users
-  const navItems = user && isAdminUser(user) 
-    ? [
-        ...userNavItems, 
-        { to: "/admin", icon: Settings, label: t('nav.adminDashboard') },
-        { to: "/test-environment", icon: TestTube, label: t('nav.testEnvironment') }
-      ]
-    : userNavItems;
-
+  const navItems = user && isAdminUser(user) ? [...userNavItems, {
+    to: "/admin",
+    icon: Settings,
+    label: t('nav.adminDashboard')
+  }, {
+    to: "/test-environment",
+    icon: TestTube,
+    label: t('nav.testEnvironment')
+  }] : userNavItems;
   const isActive = (path: string) => {
     if (path === "/" && location.pathname === "/") return true;
     if (path !== "/" && location.pathname.startsWith(path)) return true;
@@ -94,49 +106,33 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
 
   // Force desktop navigation to always show for authenticated users unless explicitly hidden
   const shouldShowDesktopNav = user && !hideNav;
-
-  return (
-    <div className="min-h-screen bg-background w-full">
-      {isMobile ? (
-        <>
+  return <div className="min-h-screen bg-background w-full">
+      {isMobile ? <>
           {/* Mobile Header */}
           <div className="bg-white/80 backdrop-blur-lg border-b border-border sticky top-0 z-40 w-full">
             <div className="flex items-center justify-between p-4 w-full">
               <Link to="/" className="flex items-center space-x-2">
-                <SoulOrbAvatar size="xs" />
+                <SoulOrbAvatar size="sm" />
                 <span className="font-cormorant font-bold text-lg gradient-text brand-text">
-                  Soul Sync
+                  Soul Guide
                 </span>
               </Link>
               {/* Language selector on mobile top right */}
               <div className="flex items-center space-x-2">
                 <LanguageSelector />
-                {user && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setIsMenuOpen(!isMenuOpen)}
-                    className="rounded-xl"
-                  >
+                {user && <Button variant="ghost" size="icon" onClick={() => setIsMenuOpen(!isMenuOpen)} className="rounded-xl">
                     {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-                  </Button>
-                )}
+                  </Button>}
               </div>
             </div>
             
             {/* Mobile Menu Dropdown */}
-            {isMenuOpen && user && (
-              <div className="border-t border-border bg-card/95 backdrop-blur-lg p-4 space-y-2 w-full">
-                <Button
-                  variant="ghost"
-                  onClick={handleSignOut}
-                  className="w-full justify-start text-muted-foreground rounded-xl font-inter"
-                >
+            {isMenuOpen && user && <div className="border-t border-border bg-card/95 backdrop-blur-lg p-4 space-y-2 w-full">
+                <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start text-muted-foreground rounded-xl font-inter">
                   <LogOut className="h-5 w-5 mr-3" />
                   {t('nav.signOut')}
                 </Button>
-              </div>
-            )}
+              </div>}
           </div>
 
           {/* Mobile Main Content */}
@@ -146,74 +142,45 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
 
           {/* Mobile Bottom Navigation */}
           {user && <MobileNavigation />}
-        </>
-      ) : (
-        <>
+        </> : <>
           {/* Desktop Global Top Bar */}
           {user && !hideNav && <TopBar />}
           
           <div className="flex flex-1 min-h-0">
             {/* Desktop Sidebar */}
-            {shouldShowDesktopNav && (
-              <aside className="w-64 min-h-full bg-card/80 backdrop-blur-lg border-r border-border flex-col flex">
+            {shouldShowDesktopNav && <aside className="w-64 min-h-full bg-card/80 backdrop-blur-lg border-r border-border flex-col flex">
                 {/* Logo Section */}
-                <div className="p-6 border-b border-border">
-                  <Link to="/" className="flex items-center space-x-3">
-                    <SoulOrbAvatar size="md" />
-                    <span className="font-cormorant font-bold text-xl gradient-text brand-text">
-                      Soul Sync
-                    </span>
-                  </Link>
-                </div>
+                
 
                 {/* Navigation */}
                 <nav className="flex-1 p-4 space-y-2">
-                  {navItems.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <Link
-                        key={item.to}
-                        to={item.to}
-                        className={cn(
-                          "flex items-center space-x-3 p-3 rounded-2xl transition-all duration-200 font-cormorant font-medium",
-                          isActive(item.to)
-                            ? "bg-gradient-to-r from-primary/10 to-accent/10 text-primary font-semibold border border-primary/20"
-                            : "text-muted-foreground hover:bg-accent/50 hover:text-primary"
-                        )}
-                      >
+                  {navItems.map(item => {
+              const Icon = item.icon;
+              return <Link key={item.to} to={item.to} className={cn("flex items-center space-x-3 p-3 rounded-2xl transition-all duration-200 font-cormorant font-medium", isActive(item.to) ? "bg-gradient-to-r from-primary/10 to-accent/10 text-primary font-semibold border border-primary/20" : "text-muted-foreground hover:bg-accent/50 hover:text-primary")}>
                         <Icon className="h-5 w-5" />
                         <span>{item.label}</span>
-                      </Link>
-                    );
-                  })}
+                      </Link>;
+            })}
                 </nav>
 
                 {/* User Actions */}
                 <div className="p-4 border-t border-border space-y-2">
-                  <Button
-                    variant="ghost"
-                    onClick={handleSignOut}
-                    className="w-full justify-start text-muted-foreground rounded-xl hover:bg-accent/50 font-inter"
-                  >
+                  <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start text-muted-foreground rounded-xl hover:bg-accent/50 font-inter">
                     <LogOut className="h-5 w-5 mr-3" />
                     {t('nav.signOut')}
                   </Button>
                 </div>
-              </aside>
-            )}
+              </aside>}
 
             {/* Desktop Main Content */}
             <main className="flex-1 flex flex-col">
               {children}
             </main>
           </div>
-        </>
-      )}
+        </>}
 
       {/* HACS Floating Orb - Always visible when authenticated */}
       {user && <FloatingHACSOrb />}
-    </div>
-  );
+    </div>;
 };
-
 export default MainLayout;
