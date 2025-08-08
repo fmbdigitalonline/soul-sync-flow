@@ -17,7 +17,7 @@ export const TopBar: React.FC<TopBarProps> = ({ className }) => {
 
   return (
     <header className={cn(
-      "h-16 bg-white/80 backdrop-blur-lg border-b border-border sticky top-0 z-50",
+      "h-16 bg-white/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm",
       className
     )}>
       <div className="px-8 w-full h-full grid grid-cols-3 items-center">
@@ -45,7 +45,7 @@ export const TopBar: React.FC<TopBarProps> = ({ className }) => {
           <LanguageSelector />
           
           {/* Notifications */}
-          <Button aria-label="Notifications" variant="ghost" size="icon" className="relative rounded-xl h-10 w-10">
+          <Button aria-label="Notifications" variant="ghost" size="icon" className="relative rounded-xl h-10 w-10 transition-shadow hover:shadow-sm">
             <Bell className="h-5 w-5" />
             <span className="absolute -top-1 -right-1 h-3 w-3 bg-primary rounded-full"></span>
           </Button>
