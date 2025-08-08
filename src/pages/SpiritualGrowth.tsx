@@ -523,8 +523,9 @@ const SpiritualGrowth = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             
             {/* Heart-Centered Coaching Option */}
-            <CosmicCard className="group hover:shadow-md transition-all duration-300 cursor-pointer transform hover:-translate-y-1 p-4" onClick={handleStartSpiritualGrowth}>
-              <div className="flex flex-col items-center text-center space-y-3">
+            <div className="rounded-3xl bg-card p-3 ring-1 ring-border/40 shadow-sm transition-shadow hover:shadow-md">
+              <CosmicCard variant="minimal" size="lg" className="h-full p-0 overflow-hidden rounded-2xl cursor-pointer" onClick={handleStartSpiritualGrowth}>
+              <div className="flex flex-col items-center text-center space-y-3 p-4">
                 <Sparkles className="h-6 w-6 text-primary" />
                 <div>
                   <h3 className="text-lg font-semibold text-foreground mb-1">Heart-Centered Coach</h3>
@@ -534,10 +535,12 @@ const SpiritualGrowth = () => {
                 </div>
               </div>
             </CosmicCard>
+            </div>
 
             {/* Life Operating System */}
-            <CosmicCard className="group hover:shadow-md transition-all duration-300 cursor-pointer transform hover:-translate-y-1 p-4" onClick={() => setActiveView('life_os_choices')}>
-              <div className="flex flex-col items-center text-center space-y-3">
+            <div className="rounded-3xl bg-card p-3 ring-1 ring-border/40 shadow-sm transition-shadow hover:shadow-md">
+              <CosmicCard variant="minimal" size="lg" className="h-full p-0 overflow-hidden rounded-2xl cursor-pointer" onClick={() => setActiveView('life_os_choices')}>
+              <div className="flex flex-col items-center text-center space-y-3 p-4">
                 <Settings className="h-6 w-6 text-secondary" />
                 <div>
                   <h3 className="text-lg font-semibold text-foreground mb-1">Life Operating System</h3>
@@ -547,10 +550,12 @@ const SpiritualGrowth = () => {
                 </div>
               </div>
             </CosmicCard>
+            </div>
 
             {/* Growth Program Option */}
-            <CosmicCard className="group hover:shadow-md transition-all duration-300 cursor-pointer transform hover:-translate-y-1 p-4" onClick={() => setActiveView('growth_program')}>
-              <div className="flex flex-col items-center text-center space-y-3">
+            <div className="rounded-3xl bg-card p-3 ring-1 ring-border/40 shadow-sm transition-shadow hover:shadow-md">
+              <CosmicCard variant="minimal" size="lg" className="h-full p-0 overflow-hidden rounded-2xl cursor-pointer" onClick={() => setActiveView('growth_program')}>
+              <div className="flex flex-col items-center text-center space-y-3 p-4">
                 <TrendingUp className="h-6 w-6 text-accent" />
                 <div>
                   <h3 className="text-lg font-semibold text-foreground mb-1">Structured Program</h3>
@@ -560,10 +565,12 @@ const SpiritualGrowth = () => {
                 </div>
               </div>
             </CosmicCard>
+            </div>
 
             {/* Tools & Practices */}
-            <CosmicCard className="group hover:shadow-md transition-all duration-300 cursor-pointer transform hover:-translate-y-1 p-4" onClick={() => setActiveView('tools')}>
-              <div className="flex flex-col items-center text-center space-y-3">
+            <div className="rounded-3xl bg-card p-3 ring-1 ring-border/40 shadow-sm transition-shadow hover:shadow-md">
+              <CosmicCard variant="minimal" size="lg" className="h-full p-0 overflow-hidden rounded-2xl cursor-pointer" onClick={() => setActiveView('tools')}>
+              <div className="flex flex-col items-center text-center space-y-3 p-4">
                 <BookOpen className="h-6 w-6 text-primary" />
                 <div>
                   <h3 className="text-lg font-semibold text-foreground mb-1">Spiritual Tools</h3>
@@ -573,6 +580,7 @@ const SpiritualGrowth = () => {
                 </div>
               </div>
             </CosmicCard>
+            </div>
 
           </div>
         </div>
