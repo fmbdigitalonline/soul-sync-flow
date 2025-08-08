@@ -846,7 +846,6 @@ const Dreams = () => {
             />
           </div>
           </div>
-        </div>
       </ErrorBoundary>
     </MainLayout>
   );
