@@ -39,6 +39,7 @@ import { DreamDecompositionPage } from "@/components/dream/DreamDecompositionPag
 import { DreamSuccessPage } from "@/components/dream/DreamSuccessPage";
 import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 import { DreamDiscoveryChat } from "@/components/dream/DreamDiscoveryChat";
+import { DreamMenuGrid } from "@/components/dream/DreamMenuGrid";
 
 interface Task {
   id: string;
@@ -87,6 +88,10 @@ const Dreams = () => {
     timeframe: '3 months'
   });
 
+  const formRef = useRef<HTMLDivElement>(null);
+  const scrollToForm = useCallback(() => {
+    formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
   // Memoize handlers to prevent unnecessary re-renders
   const handleCreateDream = useCallback(async () => {
     if (!dreamForm.title.trim()) {
@@ -572,6 +577,78 @@ const Dreams = () => {
     <MainLayout>
       <ErrorBoundary>
         <div className={`min-h-screen bg-white w-full ${isMobile ? 'pb-20' : ''}`}>
+          {/* Dream mode starting hub */}
+          <div className="w-full max-w-5xl mx-auto px-3 pt-4 pb-2">
+            <DreamMenuGrid
+              items={[
+                {
+                  key: 'discover',
+                  title: 'Discover Your Dream',
+                  description: 'Chat with your Dream Guide to uncover what matters.',
+                  Icon: MessageCircle,
+                  image: '/assets/home/companion.jpg',
+                  onClick: () => handleStartAIGuidance()
+                },
+                {
+                  key: 'suggestions',
+                  title: 'Blueprint Suggestions',
+                  description: 'See ideas aligned with your blueprint.',
+                  Icon: Sparkles,
+                  image: '/assets/home/blueprint.jpg',
+                  onClick: () => setCurrentView('chat')
+                },
+                {
+                  key: 'create',
+                  title: 'Create & Decompose',
+                  description: 'Turn a dream into a clear, soul-aligned journey.',
+                  Icon: Target,
+                  image: '/assets/home/dreams.jpg',
+                  onClick: () => dreamForm.title.trim() ? handleCreateDream() : scrollToForm()
+                },
+                {
+                  key: 'journey',
+                  title: 'Journey Map',
+                  description: 'See milestones and navigate your path.',
+                  Icon: MapPin,
+                  image: '/assets/home/growth.jpg',
+                  onClick: () => { setCurrentView('journey'); setActiveTab('journey'); }
+                },
+                {
+                  key: 'tasks',
+                  title: 'Your Tasks',
+                  description: 'Work on prioritized, actionable steps.',
+                  Icon: Target,
+                  image: '/assets/home/tasks.jpg',
+                  onClick: () => { setCurrentView('journey'); setActiveTab('tasks'); }
+                },
+                {
+                  key: 'focus',
+                  title: 'Focus Session',
+                  description: 'Stay in flow with focused work.',
+                  Icon: Clock,
+                  image: '/assets/home/dashboard.jpg',
+                  onClick: () => { setCurrentView('journey'); setActiveTab('focus'); }
+                },
+                {
+                  key: 'habits',
+                  title: 'Habits',
+                  description: 'Build supportive, sustainable routines.',
+                  Icon: CheckCircle,
+                  image: '/assets/home/growth.jpg',
+                  onClick: () => { setCurrentView('journey'); setActiveTab('habits'); }
+                },
+                {
+                  key: 'success',
+                  title: 'Success View',
+                  description: 'Review your generated journey and insights.',
+                  Icon: Sparkles,
+                  image: '/assets/home/dreams.jpg',
+                  onClick: () => { createdGoal ? setCurrentView('success') : toast({ title: 'Coming soon', description: 'Available after creating a dream.' }); }
+                }
+              ]}
+              className="mb-6"
+            />
+          </div>
           <div className={`w-full max-w-lg mx-auto py-4 px-3 ${isMobile ? 'pb-24' : 'pb-20'}`}>
             
             {/* Enhanced Mobile Optimized Hero Section with Better Title Visibility */}
@@ -598,7 +675,7 @@ const Dreams = () => {
             </div>
 
             {/* Mobile Optimized Dream Creation Form - Updated with consistent 1px border */}
-            <div className={`cosmic-card w-full p-4`}>
+            <div ref={formRef} className={`cosmic-card w-full p-4`}>
               <div className={`space-y-4`}>
                 {/* Dream Input */}
                 <div className="space-y-2">
