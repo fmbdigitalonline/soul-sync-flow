@@ -1,5 +1,5 @@
 import React from "react";
-import { Search, Bell, User } from "lucide-react";
+import { Search, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SoulOrbAvatar } from "@/components/ui/avatar";

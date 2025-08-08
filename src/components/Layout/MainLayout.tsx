@@ -103,9 +103,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
           <div className="bg-white/80 backdrop-blur-lg border-b border-border sticky top-0 z-40 w-full">
             <div className="flex items-center justify-between p-4 w-full">
               <Link to="/" className="flex items-center space-x-2">
-                <SoulOrbAvatar size="sm" />
+                <SoulOrbAvatar size="xs" />
                 <span className="font-cormorant font-bold text-lg gradient-text brand-text">
-                  Soul Guide
+                  Soul Sync
                 </span>
               </Link>
               {/* Language selector on mobile top right */}
@@ -161,7 +161,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false }) =>
                   <Link to="/" className="flex items-center space-x-3">
                     <SoulOrbAvatar size="md" />
                     <span className="font-cormorant font-bold text-xl gradient-text brand-text">
-                      Soul Guide
+                      Soul Sync
                     </span>
                   </Link>
                 </div>

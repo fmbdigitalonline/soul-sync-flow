@@ -51,16 +51,19 @@ const SoulOrbAvatar = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & {
     speaking?: boolean;
-    size?: "sm" | "md" | "lg";
+    size?: "xs" | "sm" | "md" | "lg";
     stage?: "welcome" | "collecting" | "generating" | "complete";
   }
 >(({ className, speaking = false, size = "sm", stage = "welcome", ...props }, ref) => {
   // Size mapping for square containers to maintain aspect ratio
   const containerSizeMap = {
+    xs: "w-12 h-12", // 48px x 48px
     sm: "w-20 h-20", // 80px x 80px
     md: "w-28 h-28", // 112px x 112px  
     lg: "w-36 h-36", // 144px x 144px
   };
+
+  const orbSize: 'sm' | 'md' | 'lg' = (size === 'xs' ? 'sm' : size) as 'sm' | 'md' | 'lg';
 
   return (
     <div
