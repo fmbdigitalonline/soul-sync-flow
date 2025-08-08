@@ -34,6 +34,11 @@ export default {
 			'8': '8',
 			'12': '12'
 		},
+		screens: {
+			'mobile': {'max': '640px'},
+			'tablet': {'min': '641px', 'max': '1024px'},
+			'desktop': {'min': '1025px'}
+		},
 		extend: {
 			colors: {
 				border: 'hsl(var(--border))',
@@ -210,11 +215,6 @@ export default {
 				'2xl': '24px',
 				'3xl': '32px',
 				'4xl': '32px',
-			},
-			screens: {
-				'mobile': {'max': '640px'},
-				'tablet': {'min': '641px', 'max': '1024px'},
-				'desktop': {'min': '1025px'}
 			},
 		}
 	},
