@@ -83,10 +83,10 @@ export const TasksBreakdown: React.FC<TasksBreakdownProps> = ({
       
       <div className={`space-y-4 ${isFoldDevice ? 'space-y-2' : ''}`}>
         {Object.entries(tasksByMilestone).map(([milestoneId, milestoneTasks]) => (
-          <div key={milestoneId} className="border border-gray-200 rounded-lg overflow-hidden">
+          <div key={milestoneId} className="bg-card rounded-lg shadow-sm overflow-hidden">
             <button
               onClick={() => toggleMilestone(milestoneId)}
-              className={`w-full bg-gray-50 hover:bg-gray-100 transition-colors flex items-center justify-between ${spacing.card} ${touchTargetSize}`}
+              className={`w-full bg-accent hover:bg-accent/70 transition-colors flex items-center justify-between ${spacing.card} ${touchTargetSize}`}
             >
               <div className={`flex items-center ${spacing.gap}`}>
                 <Target className={`text-soul-purple ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
@@ -105,13 +105,13 @@ export const TasksBreakdown: React.FC<TasksBreakdownProps> = ({
             </button>
             
             {expandedMilestone === milestoneId && Array.isArray(milestoneTasks) && (
-              <div className={`bg-white ${spacing.card} ${spacing.gap}`}>
+              <div className={`bg-card ${spacing.card} ${spacing.gap}`}>
                 <div className={`space-y-2 ${isFoldDevice ? 'space-y-1' : ''}`}>
                   {milestoneTasks.map((task: any, index: number) => (
                     <button
                       key={task.id || index}
                       onClick={() => handleTaskClick(task)}
-                      className={`w-full border border-gray-200 rounded-lg hover:border-soul-purple/30 hover:bg-soul-purple/5 transition-all duration-200 text-left ${spacing.card} ${touchTargetSize}`}
+                      className={`w-full border border-border rounded-lg hover:border-soul-purple/30 hover:bg-soul-purple/5 transition-all duration-200 text-left ${spacing.card} ${touchTargetSize}`}
                     >
                       <div className={`flex items-start ${spacing.gap}`}>
                         <div className={`bg-soul-purple/20 rounded-full flex items-center justify-center text-soul-purple font-medium flex-shrink-0 mt-0.5 ${getTextSize('text-xs')} ${isFoldDevice ? 'w-5 h-5' : 'w-6 h-6'}`}>
@@ -177,7 +177,7 @@ export const TasksBreakdown: React.FC<TasksBreakdownProps> = ({
       </div>
       
       {displayTasks.length > 0 && (
-        <div className={`mt-4 pt-4 border-t border-gray-200 ${isFoldDevice ? 'mt-2 pt-2' : ''}`}>
+        <div className={`mt-4 pt-4 border-t border-border ${isFoldDevice ? 'mt-2 pt-2' : ''}`}>
           <Button
             variant="outline"
             size="sm"

@@ -97,7 +97,7 @@ export const DreamDiscoveryChat: React.FC<DreamDiscoveryChatProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-br from-soul-purple/5 via-white to-soul-teal/5">
+    <div className="flex flex-col h-full bg-background">
       {/* Progress Indicator */}
       {conversationPhase !== 'blueprint_analysis' && (
         <div className={`bg-card/80 backdrop-blur-lg ${spacing.container} py-2`}>

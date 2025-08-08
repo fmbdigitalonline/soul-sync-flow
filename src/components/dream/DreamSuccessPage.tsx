@@ -126,7 +126,7 @@ export const DreamSuccessPage: React.FC<DreamSuccessPageProps> = ({
 
   if (currentView === 'tasks') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-soul-purple/5 via-white to-soul-teal/5">
+      <div className="min-h-screen bg-background">
         <div className="w-full max-w-full mx-auto p-3 sm:p-4 overflow-x-hidden">
           <TaskViews
             focusedMilestone={null}
@@ -152,7 +152,7 @@ export const DreamSuccessPage: React.FC<DreamSuccessPageProps> = ({
 
   // Default overview view - Fixed container width and overflow
   return (
-    <div className="min-h-screen bg-gradient-to-br from-soul-purple/5 via-white to-soul-teal/5 w-full overflow-x-hidden">
+    <div className="min-h-screen bg-background w-full overflow-x-hidden">
       <div className="w-full max-w-full mx-auto p-3 sm:p-4 space-y-4 sm:space-y-6">
         
         <CelebrationHeader

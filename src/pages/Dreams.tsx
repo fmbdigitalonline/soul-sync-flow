@@ -284,7 +284,7 @@ const Dreams = () => {
   if (currentView === 'chat') {
     return (
       <MainLayout>
-        <div className={`min-h-screen flex flex-col bg-white w-full ${isMobile ? 'pb-20' : ''}`}>
+        <div className={`min-h-screen flex flex-col bg-background w-full ${isMobile ? 'pb-20' : ''}`}>
           {/* Mobile Optimized Header */}
           <div className={`bg-card/80 border-b border-border sticky top-0 z-10 w-full ${isMobile ? 'px-3 py-2' : 'px-4 py-3'}`}>
             <div className={`flex items-center justify-between w-full max-w-4xl mx-auto`}>

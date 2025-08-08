@@ -53,7 +53,7 @@ export const DreamDecompositionPage: React.FC<DreamDecompositionPageProps> = ({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
-      className="min-h-screen bg-gradient-to-br from-soul-purple/10 via-white to-soul-teal/5 flex items-center justify-center p-4"
+      className="min-h-screen bg-background flex items-center justify-center p-4"
     >
       <div className="max-w-md w-full text-center space-y-8">
         
