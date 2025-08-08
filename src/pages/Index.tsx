@@ -7,16 +7,17 @@ import MainLayout from "@/components/Layout/MainLayout";
 import { PageContainer, PageHeader, PageSection } from "@/components/Layout/PageContainer";
 import { PersonalizedQuoteDisplay } from "@/components/ui/personalized-quote-display";
 import { Button } from "@/components/ui/button";
-import { CosmicCard } from "@/components/ui/cosmic-card";
+
 import { TutorialModal } from "@/components/tutorial/TutorialModal";
 import PersonalityDemo from "@/components/personality/PersonalityDemo";
 import { LanguageSelector } from "@/components/ui/language-selector";
+import { HomeMenuGrid, type HomeMenuItem } from "@/components/home/HomeMenuGrid";
 import { useSoulOrb } from "@/contexts/SoulOrbContext";
 import { useOptimizedBlueprintData } from "@/hooks/use-optimized-blueprint-data";
 import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 import { useTutorialFlow } from "@/hooks/use-tutorial-flow";
 import { isAdminUser } from "@/utils/isAdminUser";
-import { Heart, Sparkles, Brain, BookOpen, ArrowRight, LogIn } from "lucide-react";
+import { Heart, Sparkles, Brain, BookOpen, ArrowRight, LogIn, LayoutDashboard, ListTodo, User } from "lucide-react";
 const Index = () => {
   const {
     user
@@ -33,7 +34,6 @@ const Index = () => {
     loading,
     getDisplayName
   } = useOptimizedBlueprintData();
-  const isAdmin = isAdminUser(user);
   const {
     t,
     language
@@ -145,44 +145,62 @@ const Index = () => {
           </div>
         </PageSection>
 
-        {/* Navigation Cards - Modern 12-column grid */}
-        {hasBlueprint && <PageSection>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-              <Link to="/dreams" className="group">
-                <CosmicCard variant="interactive" size="lg" floating className="h-full">
-                  <div className="text-center space-y-4">
-                    <Heart className="h-12 w-12 text-primary mx-auto group-hover:text-accent transition-colors" />
-                    <div>
-                      <h3 className="text-xl font-semibold font-cormorant text-foreground">{t('index.dreams')}</h3>
-                      <p className="text-muted-foreground font-inter mt-2">{t('index.dreamsDesc')}</p>
-                    </div>
-                  </div>
-                </CosmicCard>
-              </Link>
-              <Link to="/spiritual-growth" className="group">
-                <CosmicCard variant="interactive" size="lg" floating className="h-full">
-                  <div className="text-center space-y-4">
-                    <Sparkles className="h-12 w-12 text-primary mx-auto group-hover:text-accent transition-colors" />
-                    <div>
-                      <h3 className="text-xl font-semibold font-cormorant text-foreground">{t('index.growth')}</h3>
-                      <p className="text-muted-foreground font-inter mt-2">{t('index.growthDesc')}</p>
-                    </div>
-                  </div>
-                </CosmicCard>
-              </Link>
-              <Link to="/companion" className="group">
-                <CosmicCard variant="interactive" size="lg" floating className="h-full">
-                  <div className="text-center space-y-4">
-                    <Brain className="h-12 w-12 text-primary mx-auto group-hover:text-accent transition-colors" />
-                    <div>
-                      <h3 className="text-xl font-semibold font-cormorant text-foreground">{t('index.companion')}</h3>
-                      <p className="text-muted-foreground font-inter mt-2">{t('index.companionDesc')}</p>
-                    </div>
-                  </div>
-                </CosmicCard>
-              </Link>
-            </div>
-          </PageSection>}
+        {/* Navigation Cards - Starting Hub */}
+        <PageSection>
+            <HomeMenuGrid
+              items={useMemo<HomeMenuItem[]>(() => [
+                {
+                  key: 'dashboard',
+                  to: '/dashboard',
+                  title: t('index.dashboard') || 'Dashboard',
+                  description: t('index.dashboardDesc') || 'Overview of your progress and insights.',
+                  Icon: LayoutDashboard,
+                },
+                {
+                  key: 'blueprint',
+                  to: '/blueprint',
+                  title: t('index.blueprint') || 'Soul Blueprint',
+                  description: t('index.blueprintDesc') || 'Explore your personal cosmic blueprint.',
+                  Icon: BookOpen,
+                },
+                {
+                  key: 'companion',
+                  to: '/companion',
+                  title: t('index.companion') || 'Companion',
+                  description: t('index.companionDesc') || 'Your AI guide for daily support and clarity.',
+                  Icon: Brain,
+                },
+                {
+                  key: 'tasks',
+                  to: '/tasks',
+                  title: t('index.tasks') || 'Tasks',
+                  description: t('index.tasksDesc') || 'Focus on what matters with guided tasks.',
+                  Icon: ListTodo,
+                },
+                {
+                  key: 'dreams',
+                  to: '/dreams',
+                  title: t('index.dreams') || 'Dreams',
+                  description: t('index.dreamsDesc') || 'Track, decode, and reflect on your dreams.',
+                  Icon: Heart,
+                },
+                {
+                  key: 'growth',
+                  to: '/spiritual-growth',
+                  title: t('index.growth') || 'Spiritual Growth',
+                  description: t('index.growthDesc') || 'Deepen your practice with curated exercises.',
+                  Icon: Sparkles,
+                },
+                {
+                  key: 'profile',
+                  to: '/profile',
+                  title: t('index.profile') || 'Profile',
+                  description: t('index.profileDesc') || 'Manage your information and preferences.',
+                  Icon: User,
+                },
+              ], [t])}
+            />
+        </PageSection>
 
         {/* Admin Demo Button */}
         {user && isAdminUser(user) && <div className="flex justify-center mb-8">
