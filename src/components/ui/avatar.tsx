@@ -75,7 +75,7 @@ const SoulOrbAvatar = React.forwardRef<
       )}
       {...props}
     >
-      <SoulOrb speaking={speaking} size={size} stage={stage} />
+      <SoulOrb speaking={speaking} size={orbSize} stage={stage} />
     </div>
   )
 })
