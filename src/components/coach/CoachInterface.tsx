@@ -243,7 +243,7 @@ export const CoachInterface: React.FC<CoachInterfaceProps> = ({
 
         {isLoading && (
           <div className="flex justify-start">
-            <div className={cn("cosmic-card border border-green-200/20 max-w-[80%] rounded-2xl", isMobile ? "p-3" : "p-4")}>
+            <div className={cn("cosmic-card max-w-[80%] rounded-2xl", isMobile ? "p-3" : "p-4")}>
               <div className="flex items-center space-x-2">
                 <ArrowRight className="h-4 w-4 text-green-400" />
                 <p className="text-xs font-medium">{t('coach.soulCoach')}</p>

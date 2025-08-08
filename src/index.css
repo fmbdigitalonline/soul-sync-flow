@@ -11,7 +11,7 @@
     --soul-ivory: 32 28% 98%; /* #FCF8F6 */
     --soul-black: 219 24% 15%; /* #1A1F2C */
 
-    --background: 0 0% 100%; /* Pure White */
+    --background: 210 20% 98%; /* Soft Light Gray */
     --foreground: 219 24% 15%; /* soul-black #1A1F2C */
 
     --card: 0 0% 100%; /* Pure White */
@@ -179,7 +179,7 @@
 
 @layer components {
   .cosmic-card {
-    @apply bg-card border border-border rounded-3xl transition-colors duration-300 hover:bg-accent/5;
+    @apply bg-card rounded-3xl transition-colors duration-300 hover:bg-accent/5 shadow-sm hover:shadow-md;
   }
   
   .cosmic-bg {

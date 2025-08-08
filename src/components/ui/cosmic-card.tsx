@@ -13,10 +13,10 @@ interface CosmicCardProps extends React.HTMLAttributes<HTMLDivElement> {
 const CosmicCard = React.forwardRef<HTMLDivElement, CosmicCardProps>(
   ({ className, floating = false, glow = false, variant = "default", size = "md", ...props }, ref) => {
     const variants = {
-      default: "bg-card border border-border hover:bg-accent/5",
-      elevated: "bg-card border border-border shadow-lg hover:shadow-xl hover:bg-accent/5",
-      interactive: "bg-card border border-border hover:bg-accent/10 hover:border-primary/20 hover:shadow-md cursor-pointer active:scale-[0.98]",
-      minimal: "bg-transparent border-0 hover:bg-accent/5"
+      default: "bg-card shadow-sm hover:shadow-md hover:bg-accent/5",
+      elevated: "bg-card shadow-lg hover:shadow-xl hover:bg-accent/5",
+      interactive: "bg-card hover:bg-accent/10 hover:shadow-md cursor-pointer active:scale-[0.98]",
+      minimal: "bg-transparent hover:bg-accent/5"
     };
 
     const sizes = {
