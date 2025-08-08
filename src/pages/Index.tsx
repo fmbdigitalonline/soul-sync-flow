@@ -145,12 +145,15 @@ const Index = () => {
         <PageSection className="text-center">
           <div className="space-y-6 mb-12">
             <h1 className="text-4xl sm:text-5xl font-bold font-cormorant gradient-text">
-              {safeInterpolateTranslation(welcomeMessage, { userName: userName })}
+              {safeInterpolateTranslation(user ? "Welcome to SoulSync, {name}" : "Welcome to SoulSync", { name: userName })}
             </h1>
             <div className="h-16 flex items-center justify-center">
               <p className="text-xl text-muted-foreground font-inter">
-                {safeInterpolateTranslation(currentSubtitle, { userName: userName })}
+                {safeInterpolateTranslation(currentSubtitle, { name: userName })}
               </p>
+            </div>
+            <div className="flex items-center justify-center">
+              <PersonalizedQuoteDisplay className="text-lg text-muted-foreground font-inter" interval={4000} />
             </div>
           </div>
         </PageSection>
