@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, MessageCircle, RefreshCw, ToggleLeft, ToggleRight, Activity, ArrowLeft, Plus, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { BlueprintData, blueprintService } from "@/services/blueprint-service";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { BlueprintGenerator } from "@/components/blueprint/BlueprintGenerationFlow";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSoulOrb } from "@/contexts/SoulOrbContext";
@@ -154,6 +154,54 @@ const Dreams = () => {
     }
   }, [isReadyForDecomposition, intakeData]);
 
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const path = location.pathname;
+    if (path === "/dreams" || path === "/dreams/") {
+      setCurrentView("create");
+      return;
+    }
+    if (path.startsWith("/dreams/discover")) {
+      setCurrentView("chat");
+      return;
+    }
+    if (path.startsWith("/dreams/create")) {
+      setCurrentView("create");
+      return;
+    }
+    if (path.startsWith("/dreams/journey")) {
+      setCurrentView("journey");
+      setActiveTab("journey");
+      return;
+    }
+    if (path.startsWith("/dreams/tasks")) {
+      setCurrentView("journey");
+      setActiveTab("tasks");
+      return;
+    }
+    if (path.startsWith("/dreams/focus")) {
+      setCurrentView("journey");
+      setActiveTab("focus");
+      return;
+    }
+    if (path.startsWith("/dreams/habits")) {
+      setCurrentView("journey");
+      setActiveTab("habits");
+      return;
+    }
+    if (path.startsWith("/dreams/success")) {
+      if (createdGoal) {
+        setCurrentView("success");
+      } else {
+        toast({ title: "Not available", description: "Available after creating a dream." });
+        navigate("/dreams", { replace: true });
+      }
+      return;
+    }
+  }, [location.pathname, createdGoal, navigate, toast]);
+
   const getBlueprintInsight = useCallback(() => {
     if (!blueprintData) return "Your journey will be personalized once your blueprint is complete";
     
@@ -296,7 +344,7 @@ const Dreams = () => {
               <Button 
                 variant="ghost" 
                 size="sm" 
-                onClick={() => setCurrentView('create')}
+                onClick={() => navigate('/dreams')}
                 className={`flex items-center gap-2 text-muted-foreground hover:text-primary rounded-xl font-ui ${isFoldDevice ? 'px-1 py-1' : 'px-2 py-1'} ${getTextSize('text-sm')} ${touchTargetSize}`}
               >
                 <ArrowLeft className={`h-4 w-4 ${isFoldDevice ? 'h-3 w-3' : ''}`} />
@@ -368,7 +416,7 @@ const Dreams = () => {
               <Button 
                 variant="ghost" 
                 size="sm" 
-                onClick={() => setCurrentView('create')}
+                onClick={() => navigate('/dreams')}
                 className={`flex items-center gap-2 text-muted-foreground hover:text-primary rounded-xl font-ui ${isFoldDevice ? 'px-1 py-1' : 'px-2 py-1'} ${getTextSize('text-sm')} ${touchTargetSize}`}
               >
                 <ArrowLeft className={`h-4 w-4 ${isFoldDevice ? 'h-3 w-3' : ''}`} />
@@ -587,7 +635,7 @@ const Dreams = () => {
                   description: 'Chat with your Dream Guide to uncover what matters.',
                   Icon: MessageCircle,
                   image: '/assets/home/companion.jpg',
-                  onClick: () => handleStartAIGuidance()
+                  onClick: () => navigate("/dreams/discover")
                 },
                 {
                   key: 'suggestions',
@@ -595,7 +643,7 @@ const Dreams = () => {
                   description: 'See ideas aligned with your blueprint.',
                   Icon: Sparkles,
                   image: '/assets/home/blueprint.jpg',
-                  onClick: () => setCurrentView('chat')
+                  onClick: () => navigate("/dreams/discover")
                 },
                 {
                   key: 'create',
@@ -603,7 +651,7 @@ const Dreams = () => {
                   description: 'Turn a dream into a clear, soul-aligned journey.',
                   Icon: Target,
                   image: '/assets/home/dreams.jpg',
-                  onClick: () => dreamForm.title.trim() ? handleCreateDream() : scrollToForm()
+                  onClick: () => navigate("/dreams/create")
                 },
                 {
                   key: 'journey',
@@ -611,7 +659,7 @@ const Dreams = () => {
                   description: 'See milestones and navigate your path.',
                   Icon: MapPin,
                   image: '/assets/home/growth.jpg',
-                  onClick: () => { setCurrentView('journey'); setActiveTab('journey'); }
+                  onClick: () => navigate("/dreams/journey")
                 },
                 {
                   key: 'tasks',
@@ -619,7 +667,7 @@ const Dreams = () => {
                   description: 'Work on prioritized, actionable steps.',
                   Icon: Target,
                   image: '/assets/home/tasks.jpg',
-                  onClick: () => { setCurrentView('journey'); setActiveTab('tasks'); }
+                  onClick: () => navigate("/dreams/tasks")
                 },
                 {
                   key: 'focus',
@@ -627,7 +675,7 @@ const Dreams = () => {
                   description: 'Stay in flow with focused work.',
                   Icon: Clock,
                   image: '/assets/home/dashboard.jpg',
-                  onClick: () => { setCurrentView('journey'); setActiveTab('focus'); }
+                  onClick: () => navigate("/dreams/focus")
                 },
                 {
                   key: 'habits',
@@ -635,7 +683,7 @@ const Dreams = () => {
                   description: 'Build supportive, sustainable routines.',
                   Icon: CheckCircle,
                   image: '/assets/home/growth.jpg',
-                  onClick: () => { setCurrentView('journey'); setActiveTab('habits'); }
+                  onClick: () => navigate("/dreams/habits")
                 },
                 {
                   key: 'success',
@@ -643,7 +691,7 @@ const Dreams = () => {
                   description: 'Review your generated journey and insights.',
                   Icon: Sparkles,
                   image: '/assets/home/dreams.jpg',
-                  onClick: () => { createdGoal ? setCurrentView('success') : toast({ title: 'Coming soon', description: 'Available after creating a dream.' }); }
+                  onClick: () => { createdGoal ? navigate("/dreams/success") : toast({ title: "Coming soon", description: "Available after creating a dream." }); }
                 }
               ]}
               className="mb-6"
