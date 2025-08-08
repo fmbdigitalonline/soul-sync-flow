@@ -200,11 +200,19 @@ const Index = () => {
         {/* Action Buttons - Modern CTA section */}
         <PageSection className="text-center">
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
-            {user && hasBlueprint && <Button onClick={() => navigate('/blueprint')} size="lg" className="font-inter group h-touch px-8">
-                <BookOpen className="h-5 w-5 mr-2 group-hover:rotate-3 transition-transform" />
-                {t('index.viewBlueprint')}
-                <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
-              </Button>}
+            {user && hasBlueprint && (
+              <>
+                <Button onClick={() => navigate('/blueprint')} size="lg" className="font-inter group h-touch px-8">
+                  <BookOpen className="h-5 w-5 mr-2 group-hover:rotate-3 transition-transform" />
+                  {t('index.viewBlueprint')}
+                  <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                </Button>
+                <Button onClick={handleTutorialStart} variant="outline" size="lg" className="font-inter h-touch px-8">
+                  <BookOpen className="h-5 w-5 mr-2" />
+                  {t('index.takeTour')}
+                </Button>
+              </>
+            )}
             {user && !hasBlueprint && <div className="flex flex-col sm:flex-row gap-4">
                 <Button onClick={() => navigate('/onboarding')} size="lg" className="font-inter h-touch px-8">
                   {t('index.getStarted')}
