@@ -107,3 +107,5 @@ export const PageSection: React.FC<PageSectionProps> = ({
     </section>
   );
 };
+
+export default PageContainer;
