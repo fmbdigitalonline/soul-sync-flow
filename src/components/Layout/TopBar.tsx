@@ -17,7 +17,7 @@ export const TopBar: React.FC<TopBarProps> = ({ className }) => {
 
   return (
     <header className={cn(
-      "h-16 bg-white/80 backdrop-blur-lg border-b border-border sticky top-0 z-50",
+      "h-16 bg-card/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm",
       className
     )}>
       <div className="px-8 w-full h-full grid grid-cols-3 items-center">

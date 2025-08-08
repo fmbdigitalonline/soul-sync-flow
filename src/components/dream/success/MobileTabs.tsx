@@ -20,7 +20,7 @@ export const MobileTabs: React.FC<MobileTabsProps> = ({
   // For very narrow screens, use a different approach
   if (isFoldDevice) {
     return (
-      <div className="w-full bg-white/50 backdrop-blur-sm rounded-xl p-1 mb-6">
+      <div className="w-full bg-card/50 backdrop-blur-sm rounded-xl p-1 mb-6">
         <div className="flex flex-col w-full space-y-1">
           <button
             onClick={() => onTabChange('overview')}
@@ -66,7 +66,7 @@ export const MobileTabs: React.FC<MobileTabsProps> = ({
   // For ultra-narrow but not fold devices
   if (isUltraNarrow) {
     return (
-      <div className="w-full bg-white/50 backdrop-blur-sm rounded-xl p-1 mb-6">
+      <div className="w-full bg-card/50 backdrop-blur-sm rounded-xl p-1 mb-6">
         <div className="grid grid-cols-3 gap-1 w-full">
           <button
             onClick={() => onTabChange('overview')}
@@ -111,7 +111,7 @@ export const MobileTabs: React.FC<MobileTabsProps> = ({
 
   // Default mobile layout for larger mobile screens
   return (
-    <div className="w-full bg-white/50 backdrop-blur-sm rounded-xl p-1 mb-6">
+    <div className="w-full bg-card/50 backdrop-blur-sm rounded-xl p-1 mb-6">
       <div className="flex w-full">
         <button
           onClick={() => onTabChange('overview')}

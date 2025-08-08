@@ -49,7 +49,7 @@ export const MilestonesRoadmap: React.FC<MilestonesRoadmapProps> = ({
   };
 
   return (
-    <div className={`bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg border border-white/20 transition-all duration-500 w-full overflow-hidden ${spacing.card} ${
+    <div className={`bg-card/80 backdrop-blur-lg rounded-2xl shadow-lg transition-all duration-500 w-full overflow-hidden ${spacing.card} ${
       isHighlighted ? 'ring-2 ring-soul-purple shadow-soul-purple/20 transform scale-[1.01]' : ''
     }`}>
       <h3 className={`font-semibold mb-4 flex items-center gap-2 flex-wrap ${getTextSize('text-base')}`}>

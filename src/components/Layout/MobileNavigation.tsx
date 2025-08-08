@@ -35,7 +35,7 @@ const MobileNavigation: React.FC = () => {
 
   return (
     <div 
-      className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-gray-100 px-2 py-2 shadow-lg safe-area-inset-bottom"
+      className="md:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-lg px-2 py-2 shadow-lg safe-area-inset-bottom"
       style={{ 
         zIndex: 9999,
         position: 'fixed',

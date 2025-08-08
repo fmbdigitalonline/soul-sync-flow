@@ -70,7 +70,7 @@ export const TasksBreakdown: React.FC<TasksBreakdownProps> = ({
   };
 
   return (
-    <div className={`bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg border border-white/20 transition-all duration-500 w-full max-w-full ${spacing.card} ${
+    <div className={`bg-card/80 backdrop-blur-lg rounded-2xl shadow-lg transition-all duration-500 w-full max-w-full ${spacing.card} ${
       isHighlighted ? 'ring-2 ring-soul-purple shadow-soul-purple/20 transform scale-[1.02]' : ''
     }`}>
       <h3 className={`font-semibold mb-4 flex items-center flex-wrap ${getTextSize('text-base')} ${spacing.gap} ${isFoldDevice ? 'mb-2' : ''}`}>

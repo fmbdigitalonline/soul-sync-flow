@@ -16,7 +16,7 @@ export const JourneyOverview: React.FC<JourneyOverviewProps> = ({
   isHighlighted
 }) => {
   return (
-    <div className={`bg-white/80 backdrop-blur-lg rounded-2xl p-6 shadow-lg border border-white/20 transition-all duration-500 ${
+    <div className={`bg-card/80 backdrop-blur-lg rounded-2xl p-6 shadow-lg transition-all duration-500 ${
       isHighlighted ? 'ring-2 ring-soul-purple shadow-soul-purple/20 transform scale-[1.02]' : ''
     }`}>
       <div className="text-center mb-6">

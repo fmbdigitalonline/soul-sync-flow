@@ -243,7 +243,7 @@ const Dreams = () => {
     return (
       <MainLayout>
         <ErrorBoundary>
-          <div className={`min-h-screen bg-white flex items-center justify-center p-3 ${isMobile ? 'pb-20' : ''}`}>
+          <div className={`min-h-screen bg-background flex items-center justify-center p-3 ${isMobile ? 'pb-20' : ''}`}>
             <div className={`bg-card rounded-2xl border border-border text-center w-full max-w-sm mx-auto ${spacing.card}`}>
               <div className={`w-10 h-10 mx-auto bg-primary rounded-full mb-4 flex items-center justify-center ${isFoldDevice ? 'w-8 h-8' : ''}`}>
                 <Heart className={`h-5 w-5 text-primary-foreground ${isFoldDevice ? 'h-4 w-4' : ''}`} />

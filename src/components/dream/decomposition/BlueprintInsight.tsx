@@ -15,7 +15,7 @@ export const BlueprintInsight: React.FC<BlueprintInsightProps> = ({
 
   return (
     <motion.div 
-      className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-white/20"
+      className="bg-card/60 backdrop-blur-sm rounded-xl p-4"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}

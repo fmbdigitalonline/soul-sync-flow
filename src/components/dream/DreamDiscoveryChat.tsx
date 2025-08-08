@@ -100,7 +100,7 @@ export const DreamDiscoveryChat: React.FC<DreamDiscoveryChatProps> = ({
     <div className="flex flex-col h-full bg-gradient-to-br from-soul-purple/5 via-white to-soul-teal/5">
       {/* Progress Indicator */}
       {conversationPhase !== 'blueprint_analysis' && (
-        <div className={`bg-white/80 backdrop-blur-lg border-b border-gray-100 ${spacing.container} py-2`}>
+        <div className={`bg-card/80 backdrop-blur-lg ${spacing.container} py-2`}>
           <div className="max-w-2xl mx-auto">
             <div className="flex items-center gap-2">
               <div className={`flex items-center gap-1 text-xs ${getTextSize('text-xs')}`}>
@@ -130,7 +130,7 @@ export const DreamDiscoveryChat: React.FC<DreamDiscoveryChatProps> = ({
           
           {isLoading && (
             <div className="flex justify-center py-6">
-              <div className="bg-white/80 backdrop-blur-lg rounded-2xl px-6 py-4 shadow-lg border border-soul-purple/10">
+              <div className="bg-card/80 backdrop-blur-lg rounded-2xl px-6 py-4 shadow-lg">
                 <div className="flex items-center gap-3">
                   <Sparkles className="h-5 w-5 text-soul-purple animate-pulse" />
                   <span className={`text-gray-600 ${getTextSize('text-sm')}`}>
@@ -163,7 +163,7 @@ export const DreamDiscoveryChat: React.FC<DreamDiscoveryChatProps> = ({
       </div>
 
       {/* Input Area */}
-      <div className={`border-t border-gray-100 bg-white/80 backdrop-blur-lg ${spacing.container}`}>
+      <div className={`${spacing.container} bg-card/80 backdrop-blur-lg`}>
         <div className="max-w-2xl mx-auto">
           <div className="flex gap-2 items-end">
             <div className="flex-1">
@@ -223,7 +223,7 @@ const DreamMessageRenderer: React.FC<DreamMessageRendererProps> = ({
   return (
     <div className="flex justify-start">
       <div className="max-w-md">
-        <Card className="bg-white/90 backdrop-blur-lg border-soul-purple/10 shadow-lg rounded-2xl p-4">
+        <Card className="bg-card/90 backdrop-blur-lg shadow-lg rounded-2xl p-4">
           <div className="flex items-center gap-2 mb-3">
             <div className={`bg-gradient-to-br from-soul-purple to-soul-teal rounded-full flex items-center justify-center ${isFoldDevice ? 'w-5 h-5' : 'w-6 h-6'}`}>
               <Sparkles className={`text-white ${isFoldDevice ? 'h-2 w-2' : 'h-3 w-3'}`} />

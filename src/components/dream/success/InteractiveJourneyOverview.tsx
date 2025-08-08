@@ -21,7 +21,7 @@ export const InteractiveJourneyOverview: React.FC<InteractiveJourneyOverviewProp
   const { spacing, touchTargetSize, getTextSize, isFoldDevice, isUltraNarrow } = useResponsiveLayout();
 
   return (
-    <div className={`bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg border border-white/20 transition-all duration-500 w-full max-w-full ${spacing.card} ${
+    <div className={`bg-card/80 backdrop-blur-lg rounded-2xl shadow-lg transition-all duration-500 w-full max-w-full ${spacing.card} ${
       isHighlighted ? 'ring-2 ring-soul-purple shadow-soul-purple/20 transform scale-[1.02]' : ''
     }`}>
       <div className={`text-center mb-4 w-full max-w-full ${isFoldDevice ? 'mb-2' : ''}`}>

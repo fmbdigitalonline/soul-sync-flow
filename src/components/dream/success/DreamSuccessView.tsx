@@ -59,7 +59,7 @@ export const DreamSuccessView: React.FC<DreamSuccessViewProps> = ({
             Your Dream Journey is Ready! ✨
           </h1>
           
-          <div className="bg-white/80 backdrop-blur-lg rounded-xl p-4 border border-white/20 max-w-2xl mx-auto">
+          <div className="bg-card/80 backdrop-blur-lg rounded-xl p-4 max-w-2xl mx-auto shadow-sm">
             <h2 className="text-lg font-semibold text-gray-800 mb-2">{dream?.title}</h2>
             <p className="text-sm text-gray-600 mb-4">{dream?.description}</p>
             
@@ -101,7 +101,7 @@ export const DreamSuccessView: React.FC<DreamSuccessViewProps> = ({
 
         {/* Enhanced Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-white/50 backdrop-blur">
+          <TabsList className="grid w-full grid-cols-3 bg-card/50 backdrop-blur">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <Sparkles className="h-4 w-4" />
               <span className="hidden sm:inline">Overview</span>
@@ -139,7 +139,7 @@ export const DreamSuccessView: React.FC<DreamSuccessViewProps> = ({
             
             {/* Blueprint Insights */}
             {insights.length > 0 && (
-              <div className="bg-white/80 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+              <div className="bg-card/80 backdrop-blur-lg rounded-xl p-6 shadow-sm">
                 <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                   <Sparkles className="h-5 w-5 text-soul-purple" />
                   Personalized Insights
@@ -178,7 +178,7 @@ export const DreamSuccessView: React.FC<DreamSuccessViewProps> = ({
 
         {/* Personalization Note */}
         <div className="text-center">
-          <p className="text-sm text-gray-600 bg-white/60 rounded-lg p-4 max-w-2xl mx-auto">
+          <p className="text-sm text-gray-600 bg-card/60 rounded-lg p-4 max-w-2xl mx-auto">
             ✨ {dream?.personalization_notes || 
               `This journey has been crafted specifically for your unique blueprint, 
               with ${milestones.length} milestones and ${tasks.length} tasks optimized for your energy type and cognitive style.`}

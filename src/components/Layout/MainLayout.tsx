@@ -109,7 +109,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   return <div className="min-h-screen bg-background w-full">
       {isMobile ? <>
           {/* Mobile Header */}
-          <div className="bg-white/80 backdrop-blur-lg border-b border-border sticky top-0 z-40 w-full">
+          <div className="bg-card/80 backdrop-blur-lg sticky top-0 z-40 w-full shadow-sm">
             <div className="flex items-center justify-between p-4 w-full">
               <Link to="/" className="flex items-center space-x-2">
                 <SoulOrbAvatar size="sm" />
@@ -127,7 +127,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
             </div>
             
             {/* Mobile Menu Dropdown */}
-            {isMenuOpen && user && <div className="border-t border-border bg-card/95 backdrop-blur-lg p-4 space-y-2 w-full">
+            {isMenuOpen && user && <div className="bg-card/95 backdrop-blur-lg p-4 space-y-2 w-full shadow-sm">
                 <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start text-muted-foreground rounded-xl font-inter">
                   <LogOut className="h-5 w-5 mr-3" />
                   {t('nav.signOut')}
@@ -148,7 +148,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           
           <div className="flex flex-1 min-h-0">
             {/* Desktop Sidebar */}
-            {shouldShowDesktopNav && <aside className="w-64 min-h-full bg-card/80 backdrop-blur-lg border-r border-border flex-col flex">
+            {shouldShowDesktopNav && <aside className="w-64 min-h-full bg-card/80 backdrop-blur-lg flex-col flex shadow-lg">
                 {/* Logo Section */}
                 
 
@@ -156,7 +156,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                 <nav className="flex-1 p-4 space-y-2">
                   {navItems.map(item => {
               const Icon = item.icon;
-              return <Link key={item.to} to={item.to} className={cn("flex items-center space-x-3 p-3 rounded-2xl transition-all duration-200 font-cormorant font-medium", isActive(item.to) ? "bg-gradient-to-r from-primary/10 to-accent/10 text-primary font-semibold border border-primary/20" : "text-muted-foreground hover:bg-accent/50 hover:text-primary")}>
+              return <Link key={item.to} to={item.to} className={cn("flex items-center space-x-3 p-3 rounded-2xl transition-all duration-200 font-cormorant font-medium", isActive(item.to) ? "bg-gradient-to-r from-primary/10 to-accent/10 text-primary font-semibold" : "text-muted-foreground hover:bg-accent/50 hover:text-primary")}>
                         <Icon className="h-5 w-5" />
                         <span>{item.label}</span>
                       </Link>;
@@ -164,7 +164,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                 </nav>
 
                 {/* User Actions */}
-                <div className="p-4 border-t border-border space-y-2">
+                <div className="p-4 space-y-2">
                   <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start text-muted-foreground rounded-xl hover:bg-accent/50 font-inter">
                     <LogOut className="h-5 w-5 mr-3" />
                     {t('nav.signOut')}
