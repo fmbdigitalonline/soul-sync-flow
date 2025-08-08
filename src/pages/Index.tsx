@@ -155,6 +155,7 @@ const Index = () => {
                   title: t('index.dashboard') || 'Dashboard',
                   description: t('index.dashboardDesc') || 'Overview of your progress and insights.',
                   Icon: LayoutDashboard,
+                  image: '/assets/home/dashboard.jpg',
                 },
                 {
                   key: 'blueprint',
@@ -162,6 +163,7 @@ const Index = () => {
                   title: t('index.blueprint') || 'Soul Blueprint',
                   description: t('index.blueprintDesc') || 'Explore your personal cosmic blueprint.',
                   Icon: BookOpen,
+                  image: '/assets/home/blueprint.jpg',
                 },
                 {
                   key: 'companion',
@@ -169,6 +171,7 @@ const Index = () => {
                   title: t('index.companion') || 'Companion',
                   description: t('index.companionDesc') || 'Your AI guide for daily support and clarity.',
                   Icon: Brain,
+                  image: '/assets/home/companion.jpg',
                 },
                 {
                   key: 'tasks',
@@ -176,6 +179,7 @@ const Index = () => {
                   title: t('index.tasks') || 'Tasks',
                   description: t('index.tasksDesc') || 'Focus on what matters with guided tasks.',
                   Icon: ListTodo,
+                  image: '/assets/home/tasks.jpg',
                 },
                 {
                   key: 'dreams',
@@ -183,6 +187,7 @@ const Index = () => {
                   title: t('index.dreams') || 'Dreams',
                   description: t('index.dreamsDesc') || 'Track, decode, and reflect on your dreams.',
                   Icon: Heart,
+                  image: '/assets/home/dreams.jpg',
                 },
                 {
                   key: 'growth',
@@ -190,6 +195,7 @@ const Index = () => {
                   title: t('index.growth') || 'Spiritual Growth',
                   description: t('index.growthDesc') || 'Deepen your practice with curated exercises.',
                   Icon: Sparkles,
+                  image: '/assets/home/growth.jpg',
                 },
                 {
                   key: 'profile',
@@ -197,6 +203,7 @@ const Index = () => {
                   title: t('index.profile') || 'Profile',
                   description: t('index.profileDesc') || 'Manage your information and preferences.',
                   Icon: User,
+                  image: '/assets/home/profile.jpg',
                 },
               ], [t])}
             />
