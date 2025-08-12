@@ -257,6 +257,8 @@ const translations: Record<Language, Translations> = {
     },
     // Bedtime
     bedtime: {
+      title: 'Bedtime Routine',
+      description: 'Your next scheduled bedtime action to help you wind down for better sleep',
       loadingTitle: 'Finding Your Bedtime Action...',
       noActionsTitle: 'No Bedtime Actions Scheduled',
       noUpcoming: 'No upcoming bedtime routines found',
@@ -343,6 +345,67 @@ const translations: Record<Language, Translations> = {
       qa4: 'Plan my most productive work blocks',
       generalCoaching: 'General Coaching'
     },
+    // User 360
+    user360: {
+      title: '360° Profile',
+      subtitle: 'Unified view of your complete soul data ecosystem',
+      loadingTitle: 'Loading Your Soul Profile',
+      loadingDesc: 'Aggregating data from all systems...',
+      errorTitle: 'Profile Loading Error',
+      errorLead: 'Unable to load your 360° profile:',
+      tryAgain: 'Try Again',
+      forceSync: 'Force Sync',
+      noProfileTitle: 'No Profile Data Available',
+      noProfileLead: "Your 360° soul profile hasn't been generated yet. This usually happens when:",
+      bulletNewUser: "You're a new user",
+      bulletNoData: 'No data has been collected yet',
+      bulletBlueprintProgress: 'Blueprint creation is still in progress',
+      checkAgain: 'Check Again',
+      updatedAt: 'Updated {time}',
+      refresh: 'Refresh',
+      sync: {
+        live: 'Live Sync',
+        offline: 'Offline'
+      },
+      availability: {
+        title: 'Data Availability',
+        desc: 'Real-time status of your soul data across all systems',
+        overall: 'Overall Completeness',
+        available: 'Available',
+        noData: 'No Data'
+      },
+      cards: {
+        sources: {
+          title: 'Active Data Sources',
+          desc: 'Systems contributing to your profile',
+          none: 'No active data sources'
+        },
+        version: {
+          title: 'Profile Version',
+          desc: 'Current profile iteration',
+          never: 'Never updated'
+        },
+        completeness: {
+          title: 'Data Completeness',
+          desc: 'Overall profile completeness',
+          complete: 'Complete',
+          partial: 'Partial',
+          incomplete: 'Incomplete'
+        },
+        sync: {
+          title: 'Real-Time Sync',
+          desc: 'Live data synchronization status',
+          active: 'Active',
+          offline: 'Offline',
+          last: 'Last sync: {time}'
+        },
+        summary: {
+          title: 'Profile Data Summary',
+          desc: 'Raw data aggregated from all systems (for debugging and transparency)'
+        }
+      }
+    },
+
     // Spiritual Growth
     spiritualGrowth: {
       title: 'Spiritual Growth',
@@ -612,6 +675,8 @@ const translations: Record<Language, Translations> = {
     },
     // Bedtijd
     bedtime: {
+      title: 'Bedtijdroutine',
+      description: 'Je volgende geplande bedtijd-actie om rustig af te bouwen voor betere slaap',
       loadingTitle: 'Je bedtijd-actie wordt opgehaald...',
       noActionsTitle: 'Geen bedtijd-acties gepland',
       noUpcoming: 'Geen aankomende bedtijdroutines gevonden',
@@ -632,6 +697,67 @@ const translations: Record<Language, Translations> = {
         onDateAt: '{date} om {time}'
       }
     },
+    // User 360
+    user360: {
+      title: '360° Profiel',
+      subtitle: 'Geünificeerd overzicht van je complete zielsdata-ecosysteem',
+      loadingTitle: 'Je profiel wordt geladen',
+      loadingDesc: 'Data verzamelen uit alle systemen...',
+      errorTitle: 'Fout bij laden van profiel',
+      errorLead: 'Je 360°-profiel kan niet worden geladen:',
+      tryAgain: 'Opnieuw proberen',
+      forceSync: 'Forceer synchronisatie',
+      noProfileTitle: 'Geen Profielgegevens Beschikbaar',
+      noProfileLead: 'Je 360°-profiel is nog niet gegenereerd. Dit gebeurt meestal wanneer:',
+      bulletNewUser: 'Je een nieuwe gebruiker bent',
+      bulletNoData: 'Er nog geen gegevens zijn verzameld',
+      bulletBlueprintProgress: 'De blauwdruk nog wordt aangemaakt',
+      checkAgain: 'Opnieuw controleren',
+      updatedAt: 'Bijgewerkt om {time}',
+      refresh: 'Vernieuwen',
+      sync: {
+        live: 'Live synchronisatie',
+        offline: 'Offline'
+      },
+      availability: {
+        title: 'Databeschikbaarheid',
+        desc: 'Realtime status van je zielsdata in alle systemen',
+        overall: 'Algemene volledigheid',
+        available: 'Beschikbaar',
+        noData: 'Geen data'
+      },
+      cards: {
+        sources: {
+          title: 'Actieve databronnen',
+          desc: 'Systemen die bijdragen aan je profiel',
+          none: 'Geen actieve databronnen'
+        },
+        version: {
+          title: 'Profielversie',
+          desc: 'Huidige profieliteratie',
+          never: 'Nooit bijgewerkt'
+        },
+        completeness: {
+          title: 'Datavolledigheid',
+          desc: 'Algemene volledigheid van het profiel',
+          complete: 'Volledig',
+          partial: 'Gedeeltelijk',
+          incomplete: 'Onvolledig'
+        },
+        sync: {
+          title: 'Realtime synchronisatie',
+          desc: 'Status van live datasynchronisatie',
+          active: 'Actief',
+          offline: 'Offline',
+          last: 'Laatste sync: {time}'
+        },
+        summary: {
+          title: 'Samenvatting profieldata',
+          desc: 'Ruwe data samengebracht uit alle systemen (voor debugging en transparantie)'
+        }
+      }
+    },
+
     // Spirituele Groei
     spiritualGrowth: {
       title: 'Spirituele Groei',

@@ -8,6 +8,8 @@ import { Separator } from '@/components/ui/separator';
 import { RefreshCw, Brain, Target, TrendingUp, MessageSquare, Activity, Zap, Heart, Wifi, WifiOff } from 'lucide-react';
 import { useUser360 } from '@/hooks/use-user-360';
 import { DataAvailability } from '@/services/user-360-service';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { safeInterpolateTranslation } from '@/utils/translation-utils';
 
 interface DataAvailabilityIndicatorProps {
   availability: DataAvailability;
@@ -18,6 +20,7 @@ const DataAvailabilityIndicator: React.FC<DataAvailabilityIndicatorProps> = ({
   availability,
   completenessScore
 }) => {
+  const { t } = useLanguage();
   const sections = [
     { key: 'blueprint', label: 'Soul Blueprint', icon: Heart, color: 'bg-purple-500' },
     { key: 'intelligence', label: 'HACS Intelligence', icon: Brain, color: 'bg-blue-500' },
@@ -34,15 +37,15 @@ const DataAvailabilityIndicator: React.FC<DataAvailabilityIndicatorProps> = ({
       <CardHeader>
         <CardTitle className="font-cormorant text-xl flex items-center gap-2">
           <Activity className="h-5 w-5" />
-          Data Availability
+          {t('user360.availability.title')}
         </CardTitle>
         <CardDescription className="font-inter">
-          Real-time status of your soul data across all systems
+          {t('user360.availability.desc')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between">
-          <span className="font-cormorant text-lg">Overall Completeness</span>
+          <span className="font-cormorant text-lg">{t('user360.availability.overall')}</span>
           <Badge variant={completenessScore > 70 ? 'default' : completenessScore > 40 ? 'secondary' : 'outline'}>
             {completenessScore}%
           </Badge>
@@ -77,7 +80,7 @@ const DataAvailabilityIndicator: React.FC<DataAvailabilityIndicatorProps> = ({
                     variant={isAvailable ? 'default' : 'outline'} 
                     className="text-xs"
                   >
-                    {isAvailable ? 'Available' : 'No Data'}
+                    {isAvailable ? t('user360.availability.available') : t('user360.availability.noData')}
                   </Badge>
                   
                   {/* Show specific metrics when available */}
@@ -154,9 +157,9 @@ const User360Dashboard: React.FC = () => {
         <Card className="w-full max-w-md">
           <CardContent className="p-6 text-center">
             <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-            <h2 className="font-cormorant text-xl mb-2">Loading Your Soul Profile</h2>
+            <h2 className="font-cormorant text-xl mb-2">{t('user360.loadingTitle')}</h2>
             <p className="font-inter text-sm text-muted-foreground">
-              Aggregating data from all systems...
+              {t('user360.loadingDesc')}
             </p>
           </CardContent>
         </Card>
@@ -170,12 +173,12 @@ const User360Dashboard: React.FC = () => {
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle className="font-cormorant text-xl text-destructive">
-              Profile Loading Error
+              {t('user360.errorTitle')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="font-inter text-sm text-muted-foreground">
-              Unable to load your 360° profile:
+              {t('user360.errorLead')}
             </p>
             <p className="font-inter text-sm bg-destructive/10 p-3 rounded border">
               {error}
@@ -183,11 +186,11 @@ const User360Dashboard: React.FC = () => {
             <div className="flex gap-2">
               <Button onClick={refreshProfile} className="flex-1 font-cormorant">
                 <RefreshCw className="h-4 w-4 mr-2" />
-                Try Again
+                {t('user360.tryAgain')}
               </Button>
               <Button onClick={forceRefreshWithSync} variant="outline" className="flex-1 font-cormorant">
                 <Wifi className="h-4 w-4 mr-2" />
-                Force Sync
+                {t('user360.forceSync')}
               </Button>
             </div>
           </CardContent>
@@ -202,26 +205,26 @@ const User360Dashboard: React.FC = () => {
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle className="font-cormorant text-xl">
-              No Profile Data Available
+              {t('user360.noProfileTitle')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="font-inter text-sm text-muted-foreground">
-              Your 360° soul profile hasn't been generated yet. This usually happens when:
+              {t('user360.noProfileLead')}
             </p>
             <ul className="font-inter text-sm text-muted-foreground space-y-1 list-disc pl-5">
-              <li>You're a new user</li>
-              <li>No data has been collected yet</li>
-              <li>Blueprint creation is still in progress</li>
+              <li>{t('user360.bulletNewUser')}</li>
+              <li>{t('user360.bulletNoData')}</li>
+              <li>{t('user360.bulletBlueprintProgress')}</li>
             </ul>
             <div className="flex gap-2">
               <Button onClick={refreshProfile} className="flex-1 font-cormorant">
                 <RefreshCw className="h-4 w-4 mr-2" />
-                Check Again
+                {t('user360.checkAgain')}
               </Button>
               <Button onClick={forceRefreshWithSync} variant="outline" className="flex-1 font-cormorant">
                 <Wifi className="h-4 w-4 mr-2" />
-                Force Sync
+                {t('user360.forceSync')}
               </Button>
             </div>
           </CardContent>
@@ -237,10 +240,10 @@ const User360Dashboard: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="font-cormorant text-3xl lg:text-4xl font-bold">
-              360° Soul Profile
+              {t('nav.profile360')}
             </h1>
             <p className="font-inter text-muted-foreground mt-1">
-              Unified view of your complete soul data ecosystem
+              {t('user360.subtitle')}
             </p>
           </div>
           
@@ -250,19 +253,19 @@ const User360Dashboard: React.FC = () => {
               {syncActive ? (
                 <div className="flex items-center gap-1 text-green-600">
                   <Wifi className="h-4 w-4" />
-                  <span className="font-inter text-xs">Live Sync</span>
+                  <span className="font-inter text-xs">{t('user360.sync.live')}</span>
                 </div>
               ) : (
                 <div className="flex items-center gap-1 text-muted-foreground">
                   <WifiOff className="h-4 w-4" />
-                  <span className="font-inter text-xs">Offline</span>
+                  <span className="font-inter text-xs">{t('user360.sync.offline')}</span>
                 </div>
               )}
             </div>
             
             {lastRefresh && (
               <p className="font-inter text-xs text-muted-foreground">
-                Updated {lastRefresh.toLocaleTimeString()}
+                {safeInterpolateTranslation(t('user360.updatedAt'), { time: lastRefresh.toLocaleTimeString() })}
               </p>
             )}
             
@@ -274,7 +277,7 @@ const User360Dashboard: React.FC = () => {
                 className="font-cormorant"
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
-                Refresh
+                {t('user360.refresh')}
               </Button>
               
               <Button 
@@ -284,7 +287,7 @@ const User360Dashboard: React.FC = () => {
                 className="font-cormorant"
               >
                 <Wifi className="h-4 w-4 mr-2" />
-                Force Sync
+                {t('user360.forceSync')}
               </Button>
             </div>
           </div>
@@ -306,9 +309,9 @@ const User360Dashboard: React.FC = () => {
           {/* Data Sources */}
           <Card>
             <CardHeader>
-              <CardTitle className="font-cormorant text-lg">Active Data Sources</CardTitle>
+              <CardTitle className="font-cormorant text-lg">{t('user360.cards.sources.title')}</CardTitle>
               <CardDescription className="font-inter">
-                Systems contributing to your profile
+                {t('user360.cards.sources.desc')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -321,7 +324,7 @@ const User360Dashboard: React.FC = () => {
                   ))
                 ) : (
                   <p className="font-inter text-sm text-muted-foreground">
-                    No active data sources
+                    {t('user360.cards.sources.none')}
                   </p>
                 )}
               </div>
@@ -331,9 +334,9 @@ const User360Dashboard: React.FC = () => {
           {/* Profile Version */}
           <Card>
             <CardHeader>
-              <CardTitle className="font-cormorant text-lg">Profile Version</CardTitle>
+              <CardTitle className="font-cormorant text-lg">{t('user360.cards.version.title')}</CardTitle>
               <CardDescription className="font-inter">
-                Current profile iteration
+                {t('user360.cards.version.desc')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -344,7 +347,7 @@ const User360Dashboard: React.FC = () => {
                 <Badge variant="outline" className="font-inter">
                   {profile?.lastUpdated ? 
                     new Date(profile.lastUpdated).toLocaleDateString() : 
-                    'Never updated'
+                    t('user360.cards.version.never')
                   }
                 </Badge>
               </div>
@@ -354,9 +357,9 @@ const User360Dashboard: React.FC = () => {
           {/* Completeness Score */}
           <Card>
             <CardHeader>
-              <CardTitle className="font-cormorant text-lg">Data Completeness</CardTitle>
+              <CardTitle className="font-cormorant text-lg">{t('user360.cards.completeness.title')}</CardTitle>
               <CardDescription className="font-inter">
-                Overall profile completeness
+                {t('user360.cards.completeness.desc')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -369,7 +372,7 @@ const User360Dashboard: React.FC = () => {
                     variant={completenessScore > 70 ? 'default' : completenessScore > 40 ? 'secondary' : 'outline'}
                     className="font-inter"
                   >
-                    {completenessScore > 70 ? 'Complete' : completenessScore > 40 ? 'Partial' : 'Incomplete'}
+                    {completenessScore > 70 ? t('user360.cards.completeness.complete') : completenessScore > 40 ? t('user360.cards.completeness.partial') : t('user360.cards.completeness.incomplete')}
                   </Badge>
                 </div>
                 <Progress value={completenessScore} className="w-full" />
@@ -380,9 +383,9 @@ const User360Dashboard: React.FC = () => {
           {/* Sync Status */}
           <Card>
             <CardHeader>
-              <CardTitle className="font-cormorant text-lg">Real-Time Sync</CardTitle>
+              <CardTitle className="font-cormorant text-lg">{t('user360.cards.sync.title')}</CardTitle>
               <CardDescription className="font-inter">
-                Live data synchronization status
+                {t('user360.cards.sync.desc')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -391,18 +394,18 @@ const User360Dashboard: React.FC = () => {
                   {syncActive ? (
                     <div className="flex items-center gap-2 text-green-600">
                       <Wifi className="h-5 w-5" />
-                      <span className="font-cormorant text-lg font-bold">Active</span>
+                      <span className="font-cormorant text-lg font-bold">{t('user360.cards.sync.active')}</span>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <WifiOff className="h-5 w-5" />
-                      <span className="font-cormorant text-lg font-bold">Offline</span>
+                      <span className="font-cormorant text-lg font-bold">{t('user360.cards.sync.offline')}</span>
                     </div>
                   )}
                 </div>
                 {lastSyncTime && (
                   <p className="font-inter text-xs text-muted-foreground">
-                    Last sync: {lastSyncTime.toLocaleTimeString()}
+                    {lastSyncTime && safeInterpolateTranslation(t('user360.cards.sync.last'), { time: lastSyncTime.toLocaleTimeString() })}
                   </p>
                 )}
               </div>
@@ -414,9 +417,9 @@ const User360Dashboard: React.FC = () => {
         {profile?.profileData && (
           <Card>
             <CardHeader>
-              <CardTitle className="font-cormorant text-xl">Profile Data Summary</CardTitle>
+              <CardTitle className="font-cormorant text-xl">{t('user360.cards.summary.title')}</CardTitle>
               <CardDescription className="font-inter">
-                Raw data aggregated from all systems (for debugging and transparency)
+                {t('user360.cards.summary.desc')}
               </CardDescription>
             </CardHeader>
             <CardContent>
