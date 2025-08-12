@@ -277,12 +277,90 @@ const translations: Record<Language, Translations> = {
         onDateAt: '{date} at {time}'
       }
     },
+    // Months
+    months: {
+      january: 'January',
+      february: 'February',
+      march: 'March',
+      april: 'April',
+      may: 'May',
+      june: 'June',
+      july: 'July',
+      august: 'August',
+      september: 'September',
+      october: 'October',
+      november: 'November',
+      december: 'December'
+    },
+    // Dashboard Page
+    dashboardPage: {
+      title: 'Soul Dashboard',
+      signInPrompt: 'Please sign in to view your dashboard',
+      signIn: 'Sign In',
+      loading: 'Loading...',
+      loadingDashboard: 'Loading dashboard...',
+      overview: 'Overview',
+      productivity: 'Productivity',
+      growth: 'Growth',
+      blueprint: 'Blueprint',
+      user360: '360° Profile',
+      pieHub: 'PIE Hub',
+      welcomeTitle: 'Welcome to your Soul Dashboard',
+      welcomeDesc: 'This is your personalized space to track your progress, gain insights, and connect with your inner self.',
+      quickActions: 'Quick Actions',
+      chatWithCoach: 'Chat with Coach',
+      viewJourney: 'View Journey',
+      view360Profile: 'View 360° Profile'
+    },
+    // Tasks Page
+    tasks: {
+      title: 'Productivity Mode',
+      subtitle: 'Goal-focused achievement and task management',
+      getStarted: 'Get Started',
+      todaysFocus: "Today's Focus",
+      aiGoals: 'AI Goals',
+      planning: 'Planning',
+      focus: 'Focus',
+      habits: 'Habits',
+      goals: 'Goals',
+      coach: 'Coach',
+      aiGoalAchievement: 'AI Goal Achievement',
+      smartTracking: 'Smart goal tracking and progress',
+      planningInterface: 'Planning Interface',
+      organizeYourDay: 'Organize and structure your goals',
+      focusTimer: 'Focus Timer',
+      pomodoroDescription: 'Pomodoro technique for productivity',
+      habitTracker: 'Habit Tracker',
+      habitDesc: 'Build consistent daily routines',
+      goalSetting: 'Goal Setting',
+      goalDesc: 'Define and structure your objectives',
+      productivityCoach: 'Productivity Coach',
+      productivityCoachDesc: 'AI-powered goal achievement guidance',
+      quickStart: 'Quick Start',
+      qa1: 'Help me break down my biggest goal into actionable steps',
+      qa2: 'Create a morning routine that aligns with my energy',
+      qa3: 'Set up accountability for my weekly targets',
+      qa4: 'Plan my most productive work blocks',
+      generalCoaching: 'General Coaching'
+    },
     // Spiritual Growth
     spiritualGrowth: {
       title: 'Spiritual Growth',
       subtitle: 'Choose how you want to engage today—coach, Life OS, program, or tools.',
       description: 'Unlock your spiritual growth journey with personalized guidance and tools.',
-      getStarted: 'Get Started'
+      getStarted: 'Get Started',
+      ui: {
+        backToOptions: 'Back to Options',
+        heartCenteredCoach: 'Heart-Centered Coach',
+        connectedReady: 'Connected & Ready',
+        backToGrowthCoach: 'Back to Growth Coach',
+        growthTools: 'Growth Tools',
+        moodTracker: 'Mood Tracker',
+        reflection: 'Reflection',
+        insights: 'Insights',
+        weeklyReview: 'Weekly Review',
+        backToTools: 'Back to Tools'
+      }
     }
     },
   nl: {
