@@ -634,9 +634,18 @@ export const useHACSConversation = () => {
           : msg
       )
     );
-    // PILLAR II: Clear streaming state when TypewriterText completes
+    // Clear streaming/loading state when TypewriterText completes
     setIsStreamingResponse(false);
+    setIsTyping(false);
+    setIsLoading(false);
     completeLoading('streaming');
+
+    // Safety: ensure no lingering streaming state after 1.2s
+    setTimeout(() => {
+      console.log('🧹 STREAMING SAFETY CHECK (post-complete)');
+      setIsStreamingResponse(false);
+      completeLoading('streaming');
+    }, 1200);
   }, []);
 
   // Coordinated streaming error handler

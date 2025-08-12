@@ -42,10 +42,12 @@ export const useHACSConversationAdapter = (
 ): HACSConversationAdapter => {
   // Coordinated loading state management
   const { 
+    loadingState,
     isLoading: coordinatedLoading, 
     startLoading, 
     completeLoading, 
-    forceRecovery 
+    forceRecovery,
+    getActiveOperations 
   } = useCoordinatedLoading();
   
   // Local Oracle abort controller for coordinated cancellation
@@ -97,13 +99,23 @@ export const useHACSConversationAdapter = (
   
   // Oracle streaming completion handler
   const handleOracleStreamingComplete = useCallback((messageId: string) => {
-    console.log('🔮 Oracle streaming complete for message:', messageId);
+    console.log('🔮 Oracle streaming complete for message:', messageId, { loadingState });
     markMessageStreamingComplete(messageId);
     
-    // Complete both Oracle and streaming operations
+    // Complete both Oracle and streaming operations on adapter coordinator
     completeLoading('oracle');
     completeLoading('streaming');
-  }, [markMessageStreamingComplete, completeLoading]);
+
+    // Safety: if anything remains active after 1.2s, force recovery
+    setTimeout(() => {
+      const active = getActiveOperations();
+      const stillActive = active.length > 0;
+      if (stillActive) {
+        console.warn('🛠️ Recovery: Active operations remain after streaming complete', { active });
+        forceRecovery();
+      }
+    }, 1200);
+  }, [markMessageStreamingComplete, completeLoading, getActiveOperations, forceRecovery, loadingState]);
 
   // Coordinated Oracle operation management
   const startOracleOperation = useCallback(() => {
@@ -420,7 +432,7 @@ export const useHACSConversationAdapter = (
 
   return {
     messages: hacsConversation.messages,
-    isLoading: coordinatedLoading || hacsConversation.isLoading || enhancedCoach.isLoading,
+    isLoading: coordinatedLoading || hacsConversation.isLoading,
     isStreamingResponse: hacsConversation.isStreamingResponse,
     sendMessage,
     resetConversation,
