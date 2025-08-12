@@ -151,6 +151,8 @@ const User360Dashboard: React.FC = () => {
     lastSyncTime
   } = useUser360();
 
+  const { t } = useLanguage();
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
