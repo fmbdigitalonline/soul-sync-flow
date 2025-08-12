@@ -101,11 +101,23 @@ serve(async (req) => {
       console.log(`📝 Using custom system prompt (length: ${systemPrompt.length})`);
       messages.push({ role: 'system', content: systemPrompt });
     } else {
-      // Fallback system prompt based on agent type with user name
+      // Fallback system prompt based on agent type with user name, localized when needed
+      const isNL = (language || 'en') === 'nl';
       const fallbackPrompt = agentType === 'coach' 
-        ? `You are a helpful AI coach for ${userDisplayName} focused on productivity and goal achievement. Use ${userDisplayName}'s name naturally in conversation and provide thoughtful, actionable responses.`
-        : `You are a helpful AI guide for ${userDisplayName} focused on personal growth and guidance. Use ${userDisplayName}'s name naturally in conversation and provide thoughtful, complete responses.`;
+        ? (isNL
+            ? `Je bent een behulpzame AI coach voor ${userDisplayName}, gericht op productiviteit en het behalen van doelen. Gebruik ${userDisplayName} hun naam natuurlijk en geef concrete, bruikbare adviezen.`
+            : `You are a helpful AI coach for ${userDisplayName} focused on productivity and goal achievement. Use ${userDisplayName}'s name naturally in conversation and provide thoughtful, actionable responses.`)
+        : (isNL
+            ? `Je bent een behulpzame AI gids voor ${userDisplayName}, gericht op persoonlijke groei en begeleiding. Gebruik ${userDisplayName} hun naam natuurlijk en geef doordachte, complete antwoorden.`
+            : `You are a helpful AI guide for ${userDisplayName} focused on personal growth and guidance. Use ${userDisplayName}'s name naturally in conversation and provide thoughtful, complete responses.`);
       messages.push({ role: 'system', content: fallbackPrompt });
+    }
+
+    // Language enforcement guard to prevent mixed-language replies
+    if ((language || 'en') === 'nl') {
+      messages.push({ role: 'system', content: 'BELANGRIJK: Reageer ALTIJD in het Nederlands. Gebruik natuurlijke, warme Nederlandse zinnen en toon.' });
+    } else {
+      messages.push({ role: 'system', content: 'IMPORTANT: Always respond in English unless explicitly instructed otherwise.' });
     }
 
     messages.push({ role: 'user', content: message });
