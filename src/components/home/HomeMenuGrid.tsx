@@ -24,7 +24,7 @@ export function HomeMenuGrid({ items, className, ...props }: HomeMenuGridProps) 
       className={cn("w-full", className)}
       {...props}
     >
-      <div className="grid grid-cols-3 gap-6 mb-12">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 mb-12 max-[360px]:grid-cols-1">
         {items.map(({ key, to, title, description, Icon, image }) => (
           <div key={key} className="rounded-3xl bg-card p-3 shadow-sm ring-1 ring-border/40 transition-shadow hover:shadow-md">
             <Link to={to} className="group block" aria-label={title}>

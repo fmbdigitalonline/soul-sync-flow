@@ -21,7 +21,7 @@ interface DreamMenuGridProps extends React.HTMLAttributes<HTMLDivElement> {
 export function DreamMenuGrid({ items, className, ...props }: DreamMenuGridProps) {
   return (
     <section aria-label="Dream mode starting hub" className={cn("w-full", className)} {...props}>
-      <div className="grid grid-cols-3 gap-6 mb-12">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 mb-12 max-[360px]:grid-cols-1">
         {items.map(({ key, title, description, Icon, image, to, onClick }) => (
           to ? (
             <div key={key} className="rounded-3xl bg-card p-3 shadow-sm ring-1 ring-border/40 transition-shadow hover:shadow-md">
