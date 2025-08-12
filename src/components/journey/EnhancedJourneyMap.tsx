@@ -19,6 +19,7 @@ import { useJourneyTracking } from "@/hooks/use-journey-tracking";
 import { useOptimizedBlueprintData } from "@/hooks/use-optimized-blueprint-data";
 import { MilestoneDetailPopup } from "./MilestoneDetailPopup";
 import { useDoubleTap } from "@/hooks/use-double-tap";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface EnhancedJourneyMapProps {
   onTaskClick?: (taskId: string) => void;
@@ -31,6 +32,7 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({ onTaskCl
   const [selectedView, setSelectedView] = useState<'overview' | 'detailed'>('overview');
   const [selectedMilestone, setSelectedMilestone] = useState<any>(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const { t } = useLanguage();
   
   const currentGoals = (productivityJourney?.current_goals || []) as any[];
   const mainGoal = currentGoals[0];
@@ -39,9 +41,9 @@ export const EnhancedJourneyMap: React.FC<EnhancedJourneyMapProps> = ({ onTaskCl
     return (
       <div className="p-6 text-center w-full">
         <Target className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-        <h3 className="text-lg font-semibold mb-2">No Active Dream Journey</h3>
+        <h3 className="text-lg font-semibold mb-2">{t('journey.empty.title')}</h3>
         <p className="text-muted-foreground text-sm">
-          Create your first dream to see your personalized journey map
+          {t('journey.empty.description')}
         </p>
       </div>
     );

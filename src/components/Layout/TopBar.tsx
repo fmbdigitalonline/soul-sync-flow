@@ -6,15 +6,15 @@ import { Input } from "@/components/ui/input";
 import { SoulOrbAvatar } from "@/components/ui/avatar";
 import { LanguageSelector } from "@/components/ui/language-selector";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
-
 interface TopBarProps {
   className?: string;
 }
 
 export const TopBar: React.FC<TopBarProps> = ({ className }) => {
   const { user } = useAuth();
-
+  const { t } = useLanguage();
   return (
     <header className={cn(
       "h-16 bg-card/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm",
@@ -34,7 +34,7 @@ export const TopBar: React.FC<TopBarProps> = ({ className }) => {
           <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input 
-              placeholder="Search..."
+              placeholder={t('common.search')}
               className="pl-10 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary/50 h-10 rounded-xl"
             />
           </div>
@@ -45,7 +45,7 @@ export const TopBar: React.FC<TopBarProps> = ({ className }) => {
           <LanguageSelector />
           
           {/* Notifications */}
-          <Button aria-label="Notifications" variant="ghost" size="icon" className="relative rounded-xl h-10 w-10">
+          <Button aria-label={t('common.notifications')} variant="ghost" size="icon" className="relative rounded-xl h-10 w-10">
             <Bell className="h-5 w-5" />
             <span className="absolute -top-1 -right-1 h-3 w-3 bg-primary rounded-full"></span>
           </Button>

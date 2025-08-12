@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,10 +12,13 @@ import {
 import { memoryService, MicroActionReminder } from '@/services/memory-service';
 import { toast } from 'sonner';
 import { format, isToday, isTomorrow } from 'date-fns';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { safeInterpolateTranslation } from '@/utils/sanitize';
 
 export const NextBedtimeAction: React.FC = () => {
   const [bedtimeAction, setBedtimeAction] = useState<MicroActionReminder | null>(null);
   const [loading, setLoading] = useState(true);
+  const { t } = useLanguage();
 
   useEffect(() => {
     loadNextBedtimeAction();
@@ -29,7 +31,7 @@ export const NextBedtimeAction: React.FC = () => {
       setBedtimeAction(action);
     } catch (error) {
       console.error('Error loading bedtime action:', error);
-      toast.error('Failed to load bedtime action');
+      toast.error(t('bedtime.toast.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -41,26 +43,28 @@ export const NextBedtimeAction: React.FC = () => {
     const success = await memoryService.updateReminderStatus(
       bedtimeAction.id, 
       'completed', 
-      'Completed bedtime routine'
+      t('bedtime.completedNote')
     );
     
     if (success) {
-      toast.success('Bedtime action completed! Sweet dreams! 🌙');
+      toast.success(t('bedtime.toast.completed'));
       setBedtimeAction(null);
     } else {
-      toast.error('Failed to mark action as completed');
+      toast.error(t('bedtime.toast.completeFailed'));
     }
   };
 
   const getTimeDisplay = (scheduledFor: string) => {
     const date = new Date(scheduledFor);
-    
+    const timeStr = format(date, 'h:mm a');
+
     if (isToday(date)) {
-      return `Today at ${format(date, 'h:mm a')}`;
+      return safeInterpolateTranslation(t('bedtime.time.todayAt'), { time: timeStr });
     } else if (isTomorrow(date)) {
-      return `Tomorrow at ${format(date, 'h:mm a')}`;
+      return safeInterpolateTranslation(t('bedtime.time.tomorrowAt'), { time: timeStr });
     } else {
-      return format(date, 'MMM dd at h:mm a');
+      const dateStr = format(date, 'MMM dd');
+      return safeInterpolateTranslation(t('bedtime.time.onDateAt'), { date: dateStr, time: timeStr });
     }
   };
 
@@ -70,7 +74,7 @@ export const NextBedtimeAction: React.FC = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Moon className="h-5 w-5 text-indigo-600" />
-            Finding Your Bedtime Action...
+            {t('bedtime.loadingTitle')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -113,19 +117,19 @@ export const NextBedtimeAction: React.FC = () => {
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Moon className="h-5 w-5 text-indigo-600" />
-            Next Bedtime Action
-          </div>
-          {isOverdue ? (
-            <Badge variant="destructive" className="flex items-center gap-1">
-              <AlertCircle className="h-3 w-3" />
-              Overdue
-            </Badge>
-          ) : (
-            <Badge variant="outline" className="bg-white border-indigo-200 text-indigo-700">
-              <Clock className="h-3 w-3 mr-1" />
-              Scheduled
-            </Badge>
-          )}
+          {t('bedtime.nextActionTitle')}
+        </div>
+        {isOverdue ? (
+          <Badge variant="destructive" className="flex items-center gap-1">
+            <AlertCircle className="h-3 w-3" />
+            {t('bedtime.overdue')}
+          </Badge>
+        ) : (
+          <Badge variant="outline" className="bg-white border-indigo-200 text-indigo-700">
+            <Clock className="h-3 w-3 mr-1" />
+            {t('bedtime.scheduled')}
+          </Badge>
+        )}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -150,7 +154,7 @@ export const NextBedtimeAction: React.FC = () => {
             className="bg-indigo-600 hover:bg-indigo-700 text-white flex-1"
           >
             <CheckCircle className="h-4 w-4 mr-2" />
-            Mark Complete
+            {t('bedtime.markComplete')}
           </Button>
         </div>
       </CardContent>

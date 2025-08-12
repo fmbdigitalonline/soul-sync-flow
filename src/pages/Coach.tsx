@@ -55,8 +55,8 @@ const Coach = () => {
   const handleReset = () => {
     resetConversation();
     toast({
-      title: "Conversation Reset",
-      description: "Your companion conversation has been cleared.",
+      title: t('companion.resetToast.title'),
+      description: t('companion.resetToast.description'),
     });
   };
 
@@ -69,14 +69,14 @@ const Coach = () => {
               <MessageCircle className="h-8 w-8 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-foreground mb-2">Soul Companion</h1>
-              <p className="text-muted-foreground">Your personal Soul companion for integrated support and guidance.</p>
+              <h1 className="text-2xl font-bold text-foreground mb-2">{t('companion.unauthTitle')}</h1>
+              <p className="text-muted-foreground">{t('companion.unauthSubtitle')}</p>
             </div>
             <Button 
               className="w-full"
               onClick={() => window.location.href = '/auth'}
             >
-              Get Started
+              {t('companion.getStarted')}
             </Button>
           </CosmicCard>
         </div>
@@ -102,7 +102,7 @@ const Coach = () => {
       <CosmicCard className="p-4">
         <h3 className="font-semibold mb-3 flex items-center">
           <RotateCcw className="h-4 w-4 mr-2" />
-          Reset Chat
+          {t('companion.resetTitle')}
         </h3>
         <Button
           onClick={handleReset}
@@ -110,7 +110,7 @@ const Coach = () => {
           size="sm"
           className="w-full"
         >
-          Clear Conversation
+          {t('companion.clearConversation')}
         </Button>
       </CosmicCard>
 
@@ -118,22 +118,22 @@ const Coach = () => {
       <CosmicCard className="p-4">
         <h3 className="font-semibold mb-3 flex items-center">
           <Sparkles className="h-4 w-4 mr-2" />
-          System Status
+          {t('companion.systemStatus')}
         </h3>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span>Blueprint:</span>
+            <span>{t('companion.system.blueprint')}:</span>
             <span className={hasBlueprint ? "text-green-600" : "text-amber-600"}>
-              {hasBlueprint ? "Ready" : "Partial"}
+              {hasBlueprint ? t('companion.system.ready') : t('companion.system.partial')}
             </span>
           </div>
           <div className="flex justify-between">
-            <span>Mode:</span>
-            <span className="text-primary">Companion</span>
+            <span>{t('companion.system.mode')}:</span>
+            <span className="text-primary">{t('companion.system.companion')}</span>
           </div>
           <div className="flex justify-between">
-            <span>HACS:</span>
-            <span className="text-blue-600">Pure Intelligence</span>
+            <span>{t('companion.system.hacs')}:</span>
+            <span className="text-blue-600">{t('companion.system.pureIntelligence')}</span>
           </div>
         </div>
       </CosmicCard>
@@ -147,10 +147,10 @@ const Coach = () => {
           
           <div className="text-center mb-6">
             <h1 className="text-3xl font-bold gradient-text mb-2">
-              Soul Companion
+              {t('companion.pageTitle')}
             </h1>
             <p className="text-muted-foreground">
-              Your integrated Soul companion combining coaching and guidance
+              {t('companion.pageSubtitle')}
             </p>
           </div>
 

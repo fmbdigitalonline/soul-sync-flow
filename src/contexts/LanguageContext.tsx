@@ -59,7 +59,8 @@ const translations: Record<Language, Translations> = {
       upload: 'Upload',
       copy: 'Copy',
       paste: 'Paste',
-      cut: 'Cut'
+      cut: 'Cut',
+      notifications: 'Notifications'
     },
     // Error Messages
     errors: {
@@ -104,6 +105,8 @@ const translations: Record<Language, Translations> = {
     index: {
       welcome: 'Welcome to <span class="text-primary">SoulSync</span>',
       welcomeWithName: 'Welcome to <span class="text-primary">SoulSync</span>, {name}',
+      welcomePlain: 'Welcome to SoulSync',
+      welcomePlainWithName: 'Welcome to SoulSync, {name}',
       subtitle: 'Discover your authentic path through personalized AI guidance and spiritual growth tools.',
       rotatingMessages: [
         'Discover your authentic path through personalized AI guidance and spiritual growth tools.',
@@ -122,11 +125,20 @@ const translations: Record<Language, Translations> = {
       companion: 'Companion', 
       companionDesc: 'AI-powered guidance and support',
       demo: 'View Demo',
+      demoButton: 'View Demo',
       takeTour: 'Take Tour',
       startJourney: 'Start Your Journey',
       getStarted: 'Get Started',
       signIn: 'Sign In',
-      viewBlueprint: 'View Blueprint'
+      viewBlueprint: 'View Blueprint',
+      dashboard: 'Dashboard',
+      dashboardDesc: 'Overview of your progress and insights.',
+      blueprint: 'Soul Blueprint',
+      blueprintDesc: 'Explore your personal cosmic blueprint.',
+      tasks: 'Tasks',
+      tasksDesc: 'Focus on what matters with guided tasks.',
+      profile: 'Profile',
+      profileDesc: 'Manage your information and preferences.'
     },
     // Authentication Flow
     auth: {
@@ -212,6 +224,59 @@ const translations: Record<Language, Translations> = {
       back: 'Back',
       continue: 'Continue'
     },
+    // Companion
+    companion: {
+      unauthTitle: 'Soul Companion',
+      unauthSubtitle: 'Your personal Soul companion for integrated support and guidance.',
+      getStarted: 'Get Started',
+      pageTitle: 'Soul Companion',
+      pageSubtitle: 'Your integrated Soul companion combining coaching and guidance',
+      resetTitle: 'Reset Chat',
+      clearConversation: 'Clear Conversation',
+      systemStatus: 'System Status',
+      resetToast: {
+        title: 'Conversation Reset',
+        description: 'Your companion conversation has been cleared.'
+      },
+      system: {
+        blueprint: 'Blueprint',
+        ready: 'Ready',
+        partial: 'Partial',
+        mode: 'Mode',
+        companion: 'Companion',
+        hacs: 'HACS',
+        pureIntelligence: 'Pure Intelligence'
+      }
+    },
+    // Journey
+    journey: {
+      empty: {
+        title: 'No Active Dream Journey',
+        description: 'Create your first dream to see your personalized journey map'
+      }
+    },
+    // Bedtime
+    bedtime: {
+      loadingTitle: 'Finding Your Bedtime Action...',
+      noActionsTitle: 'No Bedtime Actions Scheduled',
+      noUpcoming: 'No upcoming bedtime routines found',
+      suggestSetup: 'Consider setting up a bedtime routine to improve your sleep quality',
+      nextActionTitle: 'Next Bedtime Action',
+      overdue: 'Overdue',
+      scheduled: 'Scheduled',
+      markComplete: 'Mark Complete',
+      completedNote: 'Completed bedtime routine',
+      toast: {
+        loadFailed: 'Failed to load bedtime action',
+        completed: 'Bedtime action completed! Sweet dreams! 🌙',
+        completeFailed: 'Failed to mark action as completed'
+      },
+      time: {
+        todayAt: 'Today at {time}',
+        tomorrowAt: 'Tomorrow at {time}',
+        onDateAt: '{date} at {time}'
+      }
+    },
     // Spiritual Growth
     spiritualGrowth: {
       title: 'Spiritual Growth',
@@ -219,7 +284,7 @@ const translations: Record<Language, Translations> = {
       description: 'Unlock your spiritual growth journey with personalized guidance and tools.',
       getStarted: 'Get Started'
     }
-  },
+    },
   nl: {
     language: {
       english: 'English',
@@ -271,7 +336,8 @@ const translations: Record<Language, Translations> = {
       upload: 'Uploaden',
       copy: 'Kopiëren',
       paste: 'Plakken',
-      cut: 'Knippen'
+      cut: 'Knippen',
+      notifications: 'Meldingen'
     },
     // Error Messages
     errors: {
@@ -316,6 +382,8 @@ const translations: Record<Language, Translations> = {
     index: {
       welcome: 'Welkom bij <span class="text-primary">SoulSync</span>',
       welcomeWithName: 'Welkom bij <span class="text-primary">SoulSync</span>, {name}',
+      welcomePlain: 'Welkom bij SoulSync',
+      welcomePlainWithName: 'Welkom bij SoulSync, {name}',
       subtitle: 'Ontdek je authentieke pad door gepersonaliseerde AI-begeleiding en spirituele groei-tools.',
       rotatingMessages: [
         'Ontdek je authentieke pad door gepersonaliseerde AI-begeleiding en spirituele groei-tools.',
@@ -334,11 +402,20 @@ const translations: Record<Language, Translations> = {
       companion: 'Metgezel',
       companionDesc: 'AI-gedreven begeleiding en ondersteuning',
       demo: 'Bekijk Demo',
+      demoButton: 'Bekijk Demo',
       takeTour: 'Tour Nemen',
       startJourney: 'Begin Je Reis',
       getStarted: 'Aan de Slag',
       signIn: 'Inloggen',
-      viewBlueprint: 'Bekijk Blauwdruk'
+      viewBlueprint: 'Bekijk Blauwdruk',
+      dashboard: 'Dashboard',
+      dashboardDesc: 'Overzicht van je voortgang en inzichten.',
+      blueprint: 'Blauwdruk',
+      blueprintDesc: 'Verken je persoonlijke kosmische blauwdruk.',
+      tasks: 'Taken',
+      tasksDesc: 'Focus op wat belangrijk is met begeleide taken.',
+      profile: 'Profiel',
+      profileDesc: 'Beheer je informatie en voorkeuren.'
     },
     // Authentication Flow
     auth: {
@@ -423,6 +500,59 @@ const translations: Record<Language, Translations> = {
       devMode: 'Ontwikkelingsmodus',
       back: 'Terug',
       continue: 'Doorgaan'
+    },
+    // Metgezel
+    companion: {
+      unauthTitle: 'Metgezel',
+      unauthSubtitle: 'Je persoonlijke metgezel voor integrale steun en begeleiding.',
+      getStarted: 'Aan de Slag',
+      pageTitle: 'Metgezel',
+      pageSubtitle: 'Je geïntegreerde metgezel die coaching en begeleiding combineert',
+      resetTitle: 'Chat resetten',
+      clearConversation: 'Gesprek wissen',
+      systemStatus: 'Systeemstatus',
+      resetToast: {
+        title: 'Gesprek gereset',
+        description: 'Je metgezelgesprek is gewist.'
+      },
+      system: {
+        blueprint: 'Blauwdruk',
+        ready: 'Klaar',
+        partial: 'Gedeeltelijk',
+        mode: 'Modus',
+        companion: 'Metgezel',
+        hacs: 'HACS',
+        pureIntelligence: 'Pure Intelligentie'
+      }
+    },
+    // Reis
+    journey: {
+      empty: {
+        title: 'Geen Actieve Droomreis',
+        description: 'Maak je eerste droom aan om je persoonlijke routekaart te zien'
+      }
+    },
+    // Bedtijd
+    bedtime: {
+      loadingTitle: 'Je bedtijd-actie wordt opgehaald...',
+      noActionsTitle: 'Geen bedtijd-acties gepland',
+      noUpcoming: 'Geen aankomende bedtijdroutines gevonden',
+      suggestSetup: 'Overweeg een bedtijdroutine in te stellen om je slaapkwaliteit te verbeteren',
+      nextActionTitle: 'Volgende bedtijd-actie',
+      overdue: 'Te laat',
+      scheduled: 'Gepland',
+      markComplete: 'Markeer als voltooid',
+      completedNote: 'Bedtijdroutine voltooid',
+      toast: {
+        loadFailed: 'Kan bedtijd-actie niet laden',
+        completed: 'Bedtijd-actie voltooid! Slaap lekker! 🌙',
+        completeFailed: 'Kan actie niet als voltooid markeren'
+      },
+      time: {
+        todayAt: 'Vandaag om {time}',
+        tomorrowAt: 'Morgen om {time}',
+        onDateAt: '{date} om {time}'
+      }
     },
     // Spirituele Groei
     spiritualGrowth: {
