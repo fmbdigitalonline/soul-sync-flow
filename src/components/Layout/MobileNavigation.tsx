@@ -18,11 +18,11 @@ const MobileNavigation: React.FC = () => {
 
   const navItems = [
     { to: "/", icon: Home, label: t('nav.home') },
-    { to: "/blueprint", icon: Star, label: "Blueprint" },
-    { to: "/dreams", icon: Heart, label: "Dreams" },
+    { to: "/blueprint", icon: Star, label: t('nav.blueprint') },
+    { to: "/dreams", icon: Heart, label: t('nav.dreams') },
     { to: "/spiritual-growth", icon: Sparkles, label: t('nav.growth') },
-    { to: "/companion", icon: MessageCircle, label: "Companion" },
-    { to: "/user-360", icon: User, label: "360° Profile" },
+    { to: "/companion", icon: MessageCircle, label: t('nav.companion') },
+    { to: "/user-360", icon: User, label: t('nav.profile360') },
   ];
 
   const isActive = (path: string) => {

@@ -39,6 +39,18 @@ export const LanguageSelector: React.FC = () => {
           <span className="hidden sm:inline">{currentLanguageLabel}</span>
         </Button>
       </DropdownMenuTrigger>
-      
+      <DropdownMenuContent align="end" className="w-44">
+        {languages.map((lang) => (
+          <DropdownMenuItem
+            key={lang.code}
+            onClick={() => setLanguage(lang.code)}
+            aria-label={getLanguageLabel(lang.code)}
+          >
+            <span className="mr-2">{lang.flag}</span>
+            <span className="flex-1">{getLanguageLabel(lang.code)}</span>
+            {language === lang.code ? <span aria-hidden="true">✓</span> : null}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
     </DropdownMenu>;
 };
