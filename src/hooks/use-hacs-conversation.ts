@@ -639,14 +639,16 @@ export const useHACSConversation = () => {
     setIsTyping(false);
     setIsLoading(false);
     completeLoading('streaming');
+    completeLoading('oracle');
 
     // Safety: ensure no lingering streaming state after 1.2s
     setTimeout(() => {
       console.log('🧹 STREAMING SAFETY CHECK (post-complete)');
       setIsStreamingResponse(false);
       completeLoading('streaming');
+      completeLoading('oracle');
     }, 1200);
-  }, []);
+  }, [completeLoading]);
 
   // Coordinated streaming error handler
   const handleStreamingError = createErrorHandler('streaming', () => {

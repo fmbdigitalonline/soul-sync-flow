@@ -65,6 +65,7 @@ export class LoadingCoordinator {
     }
     
     this.updateState();
+    console.log('📊 LoadingCoordinator: Active operations after start', this.getActiveOperations());
     return abortController;
   }
 
@@ -73,6 +74,7 @@ export class LoadingCoordinator {
     console.log(`✅ LoadingCoordinator: Completing ${source} operation`);
     this.clearOperation(source);
     this.updateState();
+    console.log('📊 LoadingCoordinator: Active operations after complete', this.getActiveOperations());
   }
 
   // Handle timeout for a specific source
@@ -192,6 +194,9 @@ export class LoadingCoordinator {
 }
 
 // Create singleton instance with default configuration
+// HMR-safe singleton factory
+let __loadingCoordinatorSingleton: LoadingCoordinator | null = (globalThis as any).__loadingCoordinatorSingleton ?? null;
+
 export const createLoadingCoordinator = (overrides?: Partial<LoadingCoordinatorOptions>): LoadingCoordinator => {
   const defaultOptions: LoadingCoordinatorOptions = {
     globalMaxDuration: 45000, // 45 seconds global max
@@ -203,5 +208,10 @@ export const createLoadingCoordinator = (overrides?: Partial<LoadingCoordinatorO
     }
   };
 
-  return new LoadingCoordinator({ ...defaultOptions, ...overrides });
+  if (__loadingCoordinatorSingleton) {
+    return __loadingCoordinatorSingleton;
+  }
+  __loadingCoordinatorSingleton = new LoadingCoordinator({ ...defaultOptions, ...overrides });
+  (globalThis as any).__loadingCoordinatorSingleton = __loadingCoordinatorSingleton;
+  return __loadingCoordinatorSingleton;
 };

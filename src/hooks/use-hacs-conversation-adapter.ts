@@ -217,6 +217,15 @@ export const useHACSConversationAdapter = (
       timestamp: new Date().toISOString()
     });
 
+    // Post-send guard: if any operations still active after 9s, force recovery
+    setTimeout(() => {
+      const active = getActiveOperations();
+      if (active.length > 0) {
+        console.warn('⏱️ Post-send guard forcing recovery due to lingering operations', { active });
+        forceRecovery();
+      }
+    }, 9000);
+
     try {
       // Get user authentication
       const { data: { user } } = await supabase.auth.getUser();
