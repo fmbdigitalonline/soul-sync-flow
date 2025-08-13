@@ -60,7 +60,8 @@ const translations: Record<Language, Translations> = {
       copy: 'Copy',
       paste: 'Paste',
       cut: 'Cut',
-      notifications: 'Notifications'
+      notifications: 'Notifications',
+      tryAgain: 'Try Again'
     },
     // Error Messages
     errors: {
@@ -190,7 +191,14 @@ const translations: Record<Language, Translations> = {
       categoryCreative: 'Creative & Artistic',
       categoryFinancial: 'Financial',
       categorySpiritual: 'Spiritual & Mindfulness',
-      targetDate: 'Target Date'
+      targetDate: 'Target Date',
+      timeframe: {
+        oneMonth: '1 Month',
+        threeMonths: '3 Months',
+        sixMonths: '6 Months',
+        oneYear: '1 Year',
+        twoPlusYears: '2+ Years'
+      }
     },
     // Onboarding Flow
     onboarding: {
@@ -318,8 +326,12 @@ const translations: Record<Language, Translations> = {
     tasks: {
       title: 'Productivity Mode',
       subtitle: 'Goal-focused achievement and task management',
+      subtitleShort: 'Goal-focused achievement',
       getStarted: 'Get Started',
       todaysFocus: "Today's Focus",
+      dailyGoals: 'Daily Goals',
+      streakExample: 'Day 3 Streak',
+      completeExample: '2 of 3 complete',
       aiGoals: 'AI Goals',
       planning: 'Planning',
       focus: 'Focus',
@@ -343,7 +355,10 @@ const translations: Record<Language, Translations> = {
       qa2: 'Create a morning routine that aligns with my energy',
       qa3: 'Set up accountability for my weekly targets',
       qa4: 'Plan my most productive work blocks',
-      generalCoaching: 'General Coaching'
+      generalCoaching: 'General Coaching',
+      newConversation: 'New Conversation',
+      newConversationStartedWith: 'New conversation started with {coach}',
+      soulCoach: 'Soul Coach'
     },
     // User 360
     user360: {
@@ -608,7 +623,14 @@ const translations: Record<Language, Translations> = {
       categoryCreative: 'Creatief & Artistiek',
       categoryFinancial: 'Financieel',
       categorySpiritual: 'Spiritueel & Mindfulness',
-      targetDate: 'Streefdatum'
+      targetDate: 'Streefdatum',
+      timeframe: {
+        oneMonth: '1 maand',
+        threeMonths: '3 maanden',
+        sixMonths: '6 maanden',
+        oneYear: '1 jaar',
+        twoPlusYears: '2+ jaar'
+      }
     },
     // Onboarding Flow
     onboarding: {
@@ -763,7 +785,77 @@ const translations: Record<Language, Translations> = {
       title: 'Spirituele Groei',
       subtitle: 'Kies hoe je vandaag wilt werken—coach, Life OS, programma of tools.',
       description: 'Ontgrendel je groeireis met gepersonaliseerde begeleiding en tools.',
-      getStarted: 'Aan de slag'
+      getStarted: 'Aan de slag',
+      ui: {
+        backToOptions: 'Terug naar opties',
+        heartCenteredCoach: 'Hartgedragen Coach',
+        connectedReady: 'Verbonden & Klaar',
+        backToGrowthCoach: 'Terug naar Groei-coach',
+        growthTools: 'Groeitools',
+        moodTracker: 'Stemmingsmeter',
+        reflection: 'Reflectie',
+        insights: 'Inzichten',
+        weeklyReview: 'Wekelijkse review',
+        backToTools: 'Terug naar tools'
+      }
+    },
+    // Dashboard Pagina
+    dashboardPage: {
+      title: 'Ziels Dashboard',
+      signInPrompt: 'Log in om je dashboard te bekijken',
+      signIn: 'Inloggen',
+      loading: 'Laden...',
+      loadingDashboard: 'Dashboard laden...',
+      overview: 'Overzicht',
+      productivity: 'Productiviteit',
+      growth: 'Groei',
+      blueprint: 'Blauwdruk',
+      user360: '360° Profiel',
+      pieHub: 'PIE Hub',
+      welcomeTitle: 'Welkom bij je Ziels Dashboard',
+      welcomeDesc: 'Dit is jouw persoonlijke plek om je voortgang te volgen, inzichten te krijgen en te verbinden met je innerlijke zelf.',
+      quickActions: 'Snelle acties',
+      chatWithCoach: 'Chat met Coach',
+      viewJourney: 'Bekijk Reis',
+      view360Profile: 'Bekijk 360° Profiel'
+    },
+    // Taken Pagina
+    tasks: {
+      title: 'Productiviteitsmodus',
+      subtitle: 'Doelgerichte resultaten en taakbeheer',
+      subtitleShort: 'Doelgerichte resultaten',
+      getStarted: 'Aan de slag',
+      todaysFocus: 'Focus van vandaag',
+      dailyGoals: 'Dagelijkse doelen',
+      streakExample: 'Dag 3 reeks',
+      completeExample: '2 van 3 voltooid',
+      aiGoals: 'AI Doelen',
+      planning: 'Planning',
+      focus: 'Focus',
+      habits: 'Gewoonten',
+      goals: 'Doelen',
+      coach: 'Coach',
+      aiGoalAchievement: 'AI Doelrealisatie',
+      smartTracking: 'Slimme doeltracking en voortgang',
+      planningInterface: 'Planningsinterface',
+      organizeYourDay: 'Organiseer en structureer je doelen',
+      focusTimer: 'Focus Timer',
+      pomodoroDescription: 'Pomodoro-techniek voor productiviteit',
+      habitTracker: 'Gewoonten Tracker',
+      habitDesc: 'Bouw consistente dagelijkse routines',
+      goalSetting: 'Doelen stellen',
+      goalDesc: 'Definieer en structureer je doelstellingen',
+      productivityCoach: 'Productiviteitscoach',
+      productivityCoachDesc: 'AI-ondersteunde begeleiding voor doelrealisatie',
+      quickStart: 'Snelle start',
+      qa1: 'Help me mijn grootste doel opdelen in concrete stappen',
+      qa2: 'Maak een ochtendroutine die past bij mijn energie',
+      qa3: 'Zorg voor accountability voor mijn wekelijkse doelen',
+      qa4: 'Plan mijn meest productieve werkblokken',
+      generalCoaching: 'Algemene coaching',
+      newConversation: 'Nieuw gesprek',
+      newConversationStartedWith: 'Nieuw gesprek gestart met {coach}',
+      soulCoach: 'Zielscoach'
     }
   }
 };
