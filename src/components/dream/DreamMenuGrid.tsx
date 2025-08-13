@@ -28,22 +28,25 @@ export function DreamMenuGrid({ items, className, ...props }: DreamMenuGridProps
               <Link to={to} className="group block text-left" aria-label={title}>
                 <CosmicCard variant="minimal" size="lg" floating className="h-full p-0 overflow-hidden rounded-2xl">
                   <article className="relative w-full aspect-square">
-                    <img
-                      src={image || "/placeholder.svg"}
-                      alt={`${title} background`}
-                      className="absolute inset-0 w-full h-full object-cover"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/30 to-transparent" aria-hidden="true" />
-                    <div className="absolute inset-0 ring-1 ring-border/30 pointer-events-none rounded-2xl" aria-hidden="true" />
-                    <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5">
-                      <div className="flex items-center gap-2 text-foreground/90">
-                        <Icon className="h-5 w-5 text-primary" aria-hidden="true" />
-                        <h3 className="text-lg font-semibold font-cormorant">{title}</h3>
+                    <div className="absolute inset-0 flex flex-col gap-3 p-4 sm:p-5">
+                      <div className="relative basis-2/3 overflow-hidden rounded-xl">
+                        <img
+                          src={image || "/placeholder.svg"}
+                          alt={`${title} background`}
+                          className="absolute inset-0 w-full h-full object-cover"
+                          loading="lazy"
+                          decoding="async"
+                        />
                       </div>
-                      <p className="mt-2 text-sm text-muted-foreground font-inter">{description}</p>
+                      <div className="basis-1/3 rounded-xl ring-1 ring-border/30 bg-background/60 backdrop-blur supports-[backdrop-filter]:bg-background/40 p-4 flex flex-col justify-center">
+                        <div className="flex items-center gap-2 text-foreground/90">
+                          <Icon className="h-5 w-5 text-primary" aria-hidden="true" />
+                          <h3 className="text-lg font-semibold font-cormorant">{title}</h3>
+                        </div>
+                        <p className="mt-2 text-sm text-muted-foreground font-inter line-clamp-2">{description}</p>
+                      </div>
                     </div>
+                    <div className="absolute inset-0 ring-1 ring-border/30 pointer-events-none rounded-2xl" aria-hidden="true" />
                   </article>
                 </CosmicCard>
               </Link>
@@ -65,22 +68,25 @@ export function DreamMenuGrid({ items, className, ...props }: DreamMenuGridProps
               >
                 <CosmicCard variant="minimal" size="lg" floating className="h-full p-0 overflow-hidden rounded-2xl">
                   <article className="relative w-full aspect-square">
-                    <img
-                      src={image || "/placeholder.svg"}
-                      alt={`${title} background`}
-                      className="absolute inset-0 w-full h-full object-cover"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/30 to-transparent" aria-hidden="true" />
-                    <div className="absolute inset-0 ring-1 ring-border/30 pointer-events-none rounded-2xl" aria-hidden="true" />
-                    <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5">
-                      <div className="flex items-center gap-2 text-foreground/90">
-                        <Icon className="h-5 w-5 text-primary" aria-hidden="true" />
-                        <h3 className="text-lg font-semibold font-cormorant">{title}</h3>
+                    <div className="absolute inset-0 flex flex-col gap-3 p-4 sm:p-5">
+                      <div className="relative basis-2/3 overflow-hidden rounded-xl">
+                        <img
+                          src={image || "/placeholder.svg"}
+                          alt={`${title} background`}
+                          className="absolute inset-0 w-full h-full object-cover"
+                          loading="lazy"
+                          decoding="async"
+                        />
                       </div>
-                      <p className="mt-2 text-sm text-muted-foreground font-inter">{description}</p>
+                      <div className="basis-1/3 rounded-xl ring-1 ring-border/30 bg-background/60 backdrop-blur supports-[backdrop-filter]:bg-background/40 p-4 flex flex-col justify-center">
+                        <div className="flex items-center gap-2 text-foreground/90">
+                          <Icon className="h-5 w-5 text-primary" aria-hidden="true" />
+                          <h3 className="text-lg font-semibold font-cormorant">{title}</h3>
+                        </div>
+                        <p className="mt-2 text-sm text-muted-foreground font-inter line-clamp-2">{description}</p>
+                      </div>
                     </div>
+                    <div className="absolute inset-0 ring-1 ring-border/30 pointer-events-none rounded-2xl" aria-hidden="true" />
                   </article>
                 </CosmicCard>
               </div>
