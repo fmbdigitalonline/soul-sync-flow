@@ -157,18 +157,16 @@ export default {
 				'200': '200%'
 			},
 			fontFamily: {
-				// Primary font system - Inter for body text and UI
-				sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
-				inter: ['Inter', 'system-ui', 'sans-serif'], // Primary body font
+				// System-native font stack
+				sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+				primary: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+				system: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
 				
-				// Secondary font system - Cormorant Garamond for headings and branding
-				cormorant: ['Cormorant Garamond', 'Georgia', 'Times New Roman', 'serif'], // Elegant headings
-				
-				// Legacy font mappings (preserved for backward compatibility)
-				body: ['Inter', 'system-ui', 'sans-serif'], // Primary body text
-				ui: ['IBM Plex Sans', 'Inter', 'sans-serif'], // UI elements, buttons, forms
-				heading: ['Cormorant Garamond', 'Inter', 'serif'], // Headlines, titles (now uses Cormorant)
-				focus: ['Lexend', 'Inter', 'sans-serif'], // Reading mode, focused content
+				// Legacy mappings updated to use system fonts
+				body: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+				ui: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+				heading: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+				focus: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
 			},
 			spacing: {
 				// Modern SaaS spacing system (4/8px increments)

@@ -47,9 +47,9 @@ export function DreamMenuGrid({ items, className, ...props }: DreamMenuGridProps
                       <div className="flex-shrink-0 rounded-xl ring-1 ring-border/30 bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/80 p-2 sm:p-3">
                         <div className="flex items-center gap-1.5 sm:gap-2 text-foreground/90 mb-1">
                           <Icon className="h-3 w-3 sm:h-4 sm:w-4 text-primary flex-shrink-0" aria-hidden="true" />
-                          <h3 className="text-sm sm:text-base font-semibold font-cormorant leading-tight truncate">{title}</h3>
-                        </div>
-                        <p className="text-xs sm:text-sm text-muted-foreground font-inter line-clamp-2 leading-snug">{description}</p>
+                           <h3 className="text-sm sm:text-base font-semibold font-system leading-tight truncate">{title}</h3>
+                         </div>
+                         <p className="text-xs sm:text-sm text-muted-foreground font-system line-clamp-2 leading-snug">{description}</p>
                       </div>
                     </div>
                     <div className="absolute inset-0 ring-1 ring-border/30 pointer-events-none rounded-2xl" aria-hidden="true" />
@@ -93,9 +93,9 @@ export function DreamMenuGrid({ items, className, ...props }: DreamMenuGridProps
                       <div className="flex-shrink-0 rounded-xl ring-1 ring-border/30 bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/80 p-2 sm:p-3">
                         <div className="flex items-center gap-1.5 sm:gap-2 text-foreground/90 mb-1">
                           <Icon className="h-3 w-3 sm:h-4 sm:w-4 text-primary flex-shrink-0" aria-hidden="true" />
-                          <h3 className="text-sm sm:text-base font-semibold font-cormorant leading-tight truncate">{title}</h3>
-                        </div>
-                        <p className="text-xs sm:text-sm text-muted-foreground font-inter line-clamp-2 leading-snug">{description}</p>
+                           <h3 className="text-sm sm:text-base font-semibold font-system leading-tight truncate">{title}</h3>
+                         </div>
+                         <p className="text-xs sm:text-sm text-muted-foreground font-system line-clamp-2 leading-snug">{description}</p>
                       </div>
                     </div>
                     <div className="absolute inset-0 ring-1 ring-border/30 pointer-events-none rounded-2xl" aria-hidden="true" />
