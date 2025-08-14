@@ -27,13 +27,13 @@ export function HomeMenuGrid({ items, className, ...props }: HomeMenuGridProps) 
       {...props}
     >
       {/* Full-width on mobile, grid on larger screens */}
-      <div className="flex flex-col gap-3 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:gap-4 lg:gap-6 mb-12">
+      <div className="flex flex-col gap-2 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:gap-4 lg:gap-6 mb-12">
         {items.map(({ key, to, title, description, Icon, image }) => (
-          <article key={key} className="bg-card rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden h-full group">
-            {/* Mobile: Horizontal layout, Desktop: Vertical layout */}
+          <article key={key} className="bg-card rounded-lg sm:rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden group">
+            {/* Mobile: Compact horizontal layout, Desktop: Vertical layout */}
             <div className="flex sm:flex-col h-full">
-              {/* Image container */}
-              <div className="w-20 h-20 sm:w-full sm:aspect-[4/3] relative overflow-hidden flex-shrink-0">
+              {/* Image container - smaller on mobile */}
+              <div className="w-12 h-12 sm:w-full sm:aspect-[4/3] relative overflow-hidden flex-shrink-0 rounded-md sm:rounded-none">
                 {image ? (
                   <img
                     src={image}
@@ -44,30 +44,30 @@ export function HomeMenuGrid({ items, className, ...props }: HomeMenuGridProps) 
                   />
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
-                    <Icon className="h-8 w-8 sm:h-12 sm:w-12 text-primary/50" aria-hidden="true" />
+                    <Icon className="h-5 w-5 sm:h-12 sm:w-12 text-primary/50" aria-hidden="true" />
                   </div>
                 )}
               </div>
               
-              {/* Text container with CTA space */}
-              <div className="flex-1 p-3 sm:p-4 bg-card flex flex-col justify-between min-h-[80px] sm:min-h-[120px]">
-                {/* Content section */}
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1 sm:mb-2">
-                    <Icon className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" aria-hidden="true" />
-                    <h3 className="text-sm sm:text-base font-semibold text-foreground leading-tight">{title}</h3>
+              {/* Text container - compact on mobile */}
+              <div className="flex-1 p-2 sm:p-4 bg-card flex items-center sm:flex-col sm:items-start justify-between sm:justify-start">
+                {/* Content section - horizontal on mobile */}
+                <div className="flex-1 sm:w-full">
+                  <div className="flex items-center gap-1.5 sm:gap-2 mb-0.5 sm:mb-2">
+                    <Icon className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-primary flex-shrink-0" aria-hidden="true" />
+                    <h3 className="text-xs sm:text-base font-semibold text-foreground leading-tight">{title}</h3>
                   </div>
-                  <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed line-clamp-2 sm:line-clamp-3">{description}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground leading-tight sm:leading-relaxed line-clamp-1 sm:line-clamp-3">{description}</p>
                 </div>
                 
-                {/* Action area with CTA button */}
-                <div className="mt-2 sm:mt-3 flex items-end justify-start">
+                {/* Action button - inline on mobile */}
+                <div className="ml-2 sm:ml-0 sm:mt-3 sm:w-full flex justify-end sm:justify-start">
                   <Button 
                     size="sm" 
-                    variant="outline"
+                    variant="ghost"
                     onClick={() => navigate(to)}
                     aria-label={`Navigate to ${title}`}
-                    className="text-xs"
+                    className="text-xs h-6 px-2 sm:h-8 sm:px-3 text-primary hover:bg-primary/10"
                   >
                     Open
                   </Button>
