@@ -46,13 +46,21 @@ export function HomeMenuGrid({ items, className, ...props }: HomeMenuGridProps) 
                   )}
                 </div>
                 
-                {/* Text container */}
-                <div className="flex-1 p-3 sm:p-4 bg-card flex flex-col justify-center sm:justify-start">
-                  <div className="flex items-center gap-2 mb-1 sm:mb-2">
-                    <Icon className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" aria-hidden="true" />
-                    <h3 className="text-sm sm:text-base font-semibold text-foreground leading-tight">{title}</h3>
+                {/* Text container with CTA space */}
+                <div className="flex-1 p-3 sm:p-4 bg-card flex flex-col justify-between min-h-[80px] sm:min-h-[120px]">
+                  {/* Content section */}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1 sm:mb-2">
+                      <Icon className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" aria-hidden="true" />
+                      <h3 className="text-sm sm:text-base font-semibold text-foreground leading-tight">{title}</h3>
+                    </div>
+                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed line-clamp-2 sm:line-clamp-3">{description}</p>
                   </div>
-                  <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed line-clamp-2 sm:line-clamp-none">{description}</p>
+                  
+                  {/* Action area - reserved space for CTA buttons */}
+                  <div className="mt-2 sm:mt-3 h-6 sm:h-8 flex items-end">
+                    {/* CTA button space - ready for button integration */}
+                  </div>
                 </div>
               </div>
             </article>
