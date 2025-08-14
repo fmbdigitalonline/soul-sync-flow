@@ -423,13 +423,29 @@ async function generateAutonomousQuestion(
   messageHistory: ConversationMessage[],
   conversationId: string
 ) {
-  // Identify the module with the lowest score that needs attention
-  const moduleScores = intelligenceData.module_scores || {};
-  const lowestModule = Object.entries(moduleScores)
-    .sort(([,a], [,b]) => (a as number) - (b as number))[0];
-  
-  const targetModule = lowestModule[0];
-  const moduleScore = lowestModule[1] as number;
+  try {
+    // CRITICAL FIX: Safely handle module scores with null reference protection
+    const moduleScores = intelligenceData.module_scores || {};
+    const moduleEntries = Object.entries(moduleScores);
+    
+    // Safety check: ensure we have module scores to work with
+    if (moduleEntries.length === 0) {
+      console.warn('No module scores available, using default HACS modules');
+      // Initialize with default module scores if none exist
+      const defaultModules = HACS_MODULES.reduce((acc, module) => ({ ...acc, [module]: 0 }), {});
+      moduleEntries.push(...Object.entries(defaultModules));
+    }
+    
+    const lowestModule = moduleEntries
+      .sort(([,a], [,b]) => (a as number) - (b as number))[0];
+    
+    // CRITICAL FIX: Null safety check for lowestModule
+    if (!lowestModule || !lowestModule[0]) {
+      throw new Error('Unable to determine target module for question generation');
+    }
+    
+    const targetModule = lowestModule[0];
+    const moduleScore = lowestModule[1] as number;
 
   // Determine question type based on intelligence level
   let questionType = 'foundational';

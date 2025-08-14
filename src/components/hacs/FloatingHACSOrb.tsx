@@ -28,6 +28,13 @@ import { usePIEEnhancedCoach } from '@/hooks/use-pie-enhanced-coach';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useEnhancedFeedbackSystem } from '@/hooks/use-enhanced-feedback-system';
 import { EnhancedFeedbackModal } from '@/components/feedback/EnhancedFeedbackModal';
+// Phase 1: Critical Error Recovery
+import { 
+  HACSErrorBoundary, 
+  HACSChatErrorBoundary, 
+  HACSInsightErrorBoundary, 
+  HACSLearningErrorBoundary 
+} from './HACSErrorBoundary';
 
 interface FloatingHACSProps {
   className?: string;
@@ -594,13 +601,14 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   }
 
   return (
-    <>
-      {/* Fixed positioning container */}
-      <div className={cn(
-        "fixed top-32 right-4 z-50 pointer-events-none",
-        className
-      )}>
-        <div className="relative pointer-events-auto">
+    <HACSErrorBoundary source="FloatingHACSOrb-Main">
+      <>
+        {/* Fixed positioning container */}
+        <div className={cn(
+          "fixed top-32 right-4 z-50 pointer-events-none",
+          className
+        )}>
+          <div className="relative pointer-events-auto">
           {/* Speech Bubble */}
           <AnimatePresence>
             {showBubble && currentQuestion && (
@@ -732,10 +740,18 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
         <HACSInsightDisplay
           insight={currentInsight}
           onAcknowledge={() => {
+            console.log('🎯 FloatingHACSOrb: Acknowledging insight and clearing display');
             acknowledgeInsight(currentInsight.id);
             setShowInsightDisplay(false);
+            // CRITICAL FIX: Force clear current insight to enable chat
+            setTimeout(() => {
+              if (currentInsight && currentInsight.acknowledged) {
+                console.log('🎯 FloatingHACSOrb: Insight acknowledged, enabling chat interactions');
+              }
+            }, 100);
           }}
           onDismiss={() => {
+            console.log('🎯 FloatingHACSOrb: Dismissing insight and clearing display');
             dismissInsight();
             setShowInsightDisplay(false);
           }}
@@ -856,6 +872,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
           </motion.div>
         </div>
       )}
-    </>
+      </>
+    </HACSErrorBoundary>
   );
 };

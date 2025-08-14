@@ -595,8 +595,11 @@ export const useHACSInsights = () => {
     }
   }, [user, isGenerating, lastInsightTime, generateAnalyticsInsight, generateEnhancedInsights]);
 
-  // Acknowledge an insight
+  // CRITICAL FIX: Acknowledge an insight and properly clear it from current display
   const acknowledgeInsight = useCallback((insightId: string) => {
+    console.log('🎯 Acknowledging insight:', insightId);
+    
+    // Update both queue and history to mark as acknowledged
     setInsightQueue(prev => 
       prev.map(insight => 
         insight.id === insightId ? { ...insight, acknowledged: true } : insight
@@ -607,6 +610,20 @@ export const useHACSInsights = () => {
         insight.id === insightId ? { ...insight, acknowledged: true } : insight
       )
     );
+    
+    // CRITICAL FIX: Clear the current insight by removing from queue
+    setInsightQueue(prevQueue => {
+      if (prevQueue.length > 0 && prevQueue[currentInsightIndex]?.id === insightId) {
+        console.log('🎯 Clearing current acknowledged insight from queue');
+        const newQueue = prevQueue.filter(insight => insight.id !== insightId);
+        // Adjust current index if needed
+        if (currentInsightIndex >= newQueue.length && newQueue.length > 0) {
+          setCurrentInsightIndex(0);
+        }
+        return newQueue;
+      }
+      return prevQueue;
+    });
   }, []);
 
   // Dismiss current insight
