@@ -29,8 +29,8 @@ export function HomeMenuGrid({ items, className, ...props }: HomeMenuGridProps) 
           <div key={key} className="rounded-3xl bg-card p-3 shadow-sm ring-1 ring-border/40 transition-shadow hover:shadow-md">
             <Link to={to} className="group block" aria-label={title}>
                 <CosmicCard variant="minimal" size="lg" floating className="h-full p-0 overflow-hidden rounded-2xl">
-                  <article className="relative w-full aspect-square">
-                    <div className="absolute inset-0 flex flex-col gap-2 sm:gap-3 p-3 sm:p-4">
+                  <article className="relative w-full min-h-[200px] sm:min-h-[240px] lg:min-h-[280px]">
+                    <div className="absolute inset-0 flex flex-col gap-3 sm:gap-4 p-4 sm:p-5">
                       <div className="relative flex-1 overflow-hidden rounded-xl bg-muted/50">
                         {image ? (
                           <img
