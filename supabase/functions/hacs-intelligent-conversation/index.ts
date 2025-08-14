@@ -568,13 +568,30 @@ Generate a ${questionType} question for the ${targetModule} module to help me le
 
   return {
     question: {
-      id: questionRecord.id,
+      id: questionRecord?.id,
       text: questionText,
       module: targetModule,
       type: questionType
     },
     response: questionText
   };
+  
+  } catch (error) {
+    console.error('Error generating autonomous question:', error);
+    
+    // Fallback question generation
+    const fallbackQuestion = `I'd love to learn more about you. How would you describe your approach to personal growth?`;
+    
+    return {
+      question: {
+        id: null,
+        text: fallbackQuestion,
+        module: 'ADAPT',
+        type: 'foundational'
+      },
+      response: fallbackQuestion
+    };
+  }
 }
 
 async function generateConversationalResponse(
