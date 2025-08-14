@@ -8,6 +8,10 @@ import { useHACSInsights } from './use-hacs-insights';
 import { useHACSMicroLearning } from './use-hacs-micro-learning';
 import { usePersonalityEngine } from './use-personality-engine';
 import { useAuth } from '@/contexts/AuthContext';
+// Phase 1 & 2 Intelligence Enhancements
+import { enhancedMemoryIntelligence } from '@/services/enhanced-memory-intelligence';
+import { behavioralPatternIntelligence } from '@/services/behavioral-pattern-intelligence';
+import { predictiveIntelligenceEngine } from '@/services/predictive-intelligence-engine';
 
 export interface AutonomousOrchestrationState {
   isOrchestrating: boolean;
@@ -88,41 +92,167 @@ export const useAutonomousOrchestration = () => {
     }
   }, [user, orchestrator, orchestrationState.isOrchestrating]);
 
-  // Enhanced insight generation with personality coordination
-  const generatePersonalizedInsight = useCallback(async (
+  // PHASE 1: Enhanced Memory Pattern Analysis
+  const generateMemoryEnhancedInsight = useCallback(async (
     trigger: string,
     context?: any
   ) => {
     if (!user) return null;
 
-    console.log('🎭 Orchestration: Generating personalized insight');
+    console.log('🧠 Memory-Enhanced: Generating deep memory insight');
 
     try {
-      // Use orchestrator to decide if insight should be generated
-      const decision = await orchestrator.decideOptimalIntervention(user.id);
+      // Get memory-based insights with personality weighting
+      const memoryInsights = await enhancedMemoryIntelligence.generateMemoryInsights(user.id);
       
-      if (decision.shouldIntervene && decision.interventionType === 'insight') {
-        // Route through existing insights system but with personality enhancement
-        const insight = await insights.generateInsight(trigger);
-        
-        if (insight) {
-          // Enhance with personality-aware timing for next insight
-          const timingPrefs = personality.getOptimalTimingPreferences();
-          console.log('🎭 Orchestration: Insight enhanced with personality timing');
-        }
-        
-        return insight;
+      if (memoryInsights.length > 0) {
+        const topInsight = memoryInsights[0];
+        console.log('✅ Memory insight generated:', topInsight.insight);
+        return {
+          id: `memory_${Date.now()}`,
+          text: topInsight.insight,
+          module: 'Enhanced Memory',
+          type: 'learning',
+          confidence: topInsight.confidence,
+          evidence: [topInsight.suggestedAction],
+          timestamp: new Date(),
+          acknowledged: false
+        };
       }
 
       // Fall back to existing insights generation
       return await insights.generateInsight(trigger);
 
     } catch (error) {
-      console.error('❌ Personalized insight error:', error);
+      console.error('❌ Memory-enhanced insight error:', error);
+      return await insights.generateInsight(trigger);
+    }
+  }, [user, insights]);
+
+  // PHASE 1: Enhanced Behavioral Pattern Analysis
+  const generateBehavioralEnhancedInsight = useCallback(async (
+    trigger: string,
+    context?: any
+  ) => {
+    if (!user) return null;
+
+    console.log('📊 Behavioral-Enhanced: Generating pattern insight');
+
+    try {
+      // Get behavioral insights with PIE integration
+      const behavioralInsights = await behavioralPatternIntelligence.generateBehavioralInsights(user.id);
+      
+      if (behavioralInsights.length > 0) {
+        const topInsight = behavioralInsights[0];
+        console.log('✅ Behavioral insight generated:', topInsight.insight);
+        return {
+          id: `behavioral_${Date.now()}`,
+          text: topInsight.insight,
+          module: 'Behavioral Intelligence',
+          type: 'behavioral',
+          confidence: topInsight.confidence,
+          evidence: [topInsight.recommendedAction],
+          timestamp: new Date(),
+          acknowledged: false
+        };
+      }
+
+      // Fall back to existing insights generation
+      return await insights.generateInsight(trigger);
+
+    } catch (error) {
+      console.error('❌ Behavioral-enhanced insight error:', error);
+      return await insights.generateInsight(trigger);
+    }
+  }, [user, insights]);
+
+  // PHASE 2: Predictive Intelligence Generation
+  const generatePredictiveInsight = useCallback(async (
+    trigger: string,
+    context?: any
+  ) => {
+    if (!user) return null;
+
+    console.log('🔮 Predictive: Generating predictive insight');
+
+    try {
+      // Get predictive insights from cross-module synthesis
+      const predictiveInsights = await predictiveIntelligenceEngine.generatePredictiveInsights(user.id);
+      
+      if (predictiveInsights.length > 0) {
+        const topInsight = predictiveInsights[0];
+        console.log('✅ Predictive insight generated:', topInsight.text);
+        return {
+          id: topInsight.id,
+          text: topInsight.text,
+          module: `Predictive (${topInsight.synthesizedModules.join(', ')})`,
+          type: topInsight.type,
+          confidence: topInsight.confidence,
+          evidence: topInsight.evidence.behavioralIndicators,
+          timestamp: new Date(),
+          acknowledged: false
+        };
+      }
+
+      // Fall back to existing insights generation
+      return await insights.generateInsight(trigger);
+
+    } catch (error) {
+      console.error('❌ Predictive insight error:', error);
+      return await insights.generateInsight(trigger);
+    }
+  }, [user, insights]);
+
+  // Enhanced insight generation with personality coordination (upgraded)
+  const generatePersonalizedInsight = useCallback(async (
+    trigger: string,
+    context?: any
+  ) => {
+    if (!user) return null;
+
+    console.log('🎭 Orchestration: Generating enhanced personalized insight');
+
+    try {
+      // Use orchestrator to decide if insight should be generated
+      const decision = await orchestrator.decideOptimalIntervention(user.id);
+      
+      if (decision.shouldIntervene) {
+        // Route through enhanced intelligence based on intervention type
+        switch (decision.interventionType) {
+          case 'insight':
+            // Use predictive intelligence for deep insights
+            return await generatePredictiveInsight(trigger, context);
+          
+          case 'micro_learning':
+            // Use memory intelligence for learning opportunities
+            return await generateMemoryEnhancedInsight(trigger, context);
+          
+          case 'guidance':
+            // Use behavioral intelligence for guidance
+            return await generateBehavioralEnhancedInsight(trigger, context);
+          
+          default:
+            // Fall back to existing system
+            return await insights.generateInsight(trigger);
+        }
+      }
+
+      // If no intervention needed, still try enhanced insights at lower priority
+      const randomSelector = Math.random();
+      if (randomSelector < 0.33) {
+        return await generateMemoryEnhancedInsight(trigger, context);
+      } else if (randomSelector < 0.66) {
+        return await generateBehavioralEnhancedInsight(trigger, context);
+      } else {
+        return await generatePredictiveInsight(trigger, context);
+      }
+
+    } catch (error) {
+      console.error('❌ Enhanced personalized insight error:', error);
       // Graceful fallback to existing system
       return await insights.generateInsight(trigger);
     }
-  }, [user, orchestrator, insights, personality]);
+  }, [user, orchestrator, insights, generateMemoryEnhancedInsight, generateBehavioralEnhancedInsight, generatePredictiveInsight]);
 
   // Smart learning question generation
   const generateSmartLearningQuestion = useCallback(async (
@@ -180,6 +310,11 @@ export const useAutonomousOrchestration = () => {
     generatePersonalizedInsight,
     generateSmartLearningQuestion,
     enhanceConversationIntelligence,
+    
+    // PHASE 1 & 2: Enhanced Intelligence Methods
+    generateMemoryEnhancedInsight,
+    generateBehavioralEnhancedInsight,
+    generatePredictiveInsight,
     
     // Orchestration state
     orchestrationState,
