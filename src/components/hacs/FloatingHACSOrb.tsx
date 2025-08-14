@@ -61,7 +61,13 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     isGenerating: isGeneratingInsight,
     acknowledgeInsight,
     dismissInsight,
-    triggerInsightCheck
+    triggerInsightCheck,
+    // Phase 1: Queue Management
+    insightQueue,
+    currentInsightIndex,
+    nextInsight,
+    previousInsight,
+    removeCurrentInsight
   } = useHACSInsights();
   
   // NEW: Add autonomous orchestration

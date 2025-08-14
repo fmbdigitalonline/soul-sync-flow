@@ -15,18 +15,23 @@ import { useHacsIntelligence } from './use-hacs-intelligence';
 import { translateAnalyticsToOracle, PersonalityContext } from '@/utils/oracle-insight-translator';
 import { usePersonalityEngine } from './use-personality-engine';
 import { useStewardIntroduction } from './use-steward-introduction';
+// Phase 1: Enhanced Intelligence Services Integration
+import { enhancedMemoryIntelligence } from '@/services/enhanced-memory-intelligence';
+import { behavioralPatternIntelligence } from '@/services/behavioral-pattern-intelligence';
+import { unifiedBrainContext } from '@/services/unified-brain-context';
 
 export interface HACSInsight {
   id: string;
   text: string;
   module: string;
-  type: 'productivity' | 'behavioral' | 'growth' | 'learning' | 'intelligence_trend' | 'learning_streak' | 'performance_trend' | 'peak_times' | 'activity_frequency' | 'module_performance' | 'memory_patterns' | 'difficulty_progression' | 'steward_introduction';
+  type: 'productivity' | 'behavioral' | 'growth' | 'learning' | 'intelligence_trend' | 'learning_streak' | 'performance_trend' | 'peak_times' | 'activity_frequency' | 'module_performance' | 'memory_patterns' | 'difficulty_progression' | 'steward_introduction' | 'memory_enhanced' | 'behavioral_enhanced' | 'predictive';
   confidence: number;
   evidence: string[];
   timestamp: Date;
   acknowledged: boolean;
   showContinue?: boolean;
   onContinue?: () => void;
+  priority?: 'low' | 'medium' | 'high' | 'critical';
 }
 
 export const useHACSInsights = () => {
@@ -41,10 +46,69 @@ export const useHACSInsights = () => {
     shouldStartIntroduction,
     startIntroduction 
   } = useStewardIntroduction();
-  const [currentInsight, setCurrentInsight] = useState<HACSInsight | null>(null);
+  
+  // Phase 1: Insight Queue System (max 3 insights)
+  const [insightQueue, setInsightQueue] = useState<HACSInsight[]>([]);
+  const [currentInsightIndex, setCurrentInsightIndex] = useState<number>(0);
   const [isGenerating, setIsGenerating] = useState(false);
   const [insightHistory, setInsightHistory] = useState<HACSInsight[]>([]);
   const [lastInsightTime, setLastInsightTime] = useState<number>(0);
+  
+  // Computed current insight from queue
+  const currentInsight = insightQueue.length > 0 ? insightQueue[currentInsightIndex] : null;
+  
+  // Phase 1: Queue Management Functions
+  const addInsightToQueue = useCallback((insight: HACSInsight) => {
+    setInsightQueue(prev => {
+      // Remove duplicates and limit to 3 insights
+      const filtered = prev.filter(existing => existing.id !== insight.id);
+      const newQueue = [insight, ...filtered].slice(0, 3);
+      
+      // Reset index if needed
+      if (newQueue.length > 0) {
+        setCurrentInsightIndex(0);
+      }
+      
+      console.log('📋 Added insight to queue:', { 
+        insightId: insight.id, 
+        queueLength: newQueue.length, 
+        type: insight.type 
+      });
+      
+      return newQueue;
+    });
+  }, []);
+  
+  const nextInsight = useCallback(() => {
+    if (insightQueue.length > 1) {
+      setCurrentInsightIndex(prev => 
+        prev < insightQueue.length - 1 ? prev + 1 : 0
+      );
+    }
+  }, [insightQueue.length]);
+  
+  const previousInsight = useCallback(() => {
+    if (insightQueue.length > 1) {
+      setCurrentInsightIndex(prev => 
+        prev > 0 ? prev - 1 : insightQueue.length - 1
+      );
+    }
+  }, [insightQueue.length]);
+  
+  const removeCurrentInsight = useCallback(() => {
+    if (insightQueue.length > 0) {
+      const currentId = insightQueue[currentInsightIndex]?.id;
+      setInsightQueue(prev => prev.filter(insight => insight.id !== currentId));
+      
+      // Adjust index if needed
+      setCurrentInsightIndex(prev => {
+        const newLength = insightQueue.length - 1;
+        if (newLength === 0) return 0;
+        if (prev >= newLength) return newLength - 1;
+        return prev;
+      });
+    }
+  }, [insightQueue, currentInsightIndex]);
 
   // Track user activity for insight generation
   const trackActivity = useCallback(async (activityType: string, activityData?: any) => {
@@ -231,6 +295,65 @@ export const useHACSInsights = () => {
     }
   }, [user, intelligence]);
 
+  // Phase 1: Generate Enhanced Intelligence Insights
+  const generateEnhancedInsights = useCallback(async (): Promise<HACSInsight[]> => {
+    if (!user) return [];
+    
+    console.log('🧠 Generating enhanced intelligence insights...');
+    const insights: HACSInsight[] = [];
+    
+    try {
+      // 1. Memory-Enhanced Insights
+      const memoryInsights = await enhancedMemoryIntelligence.generateMemoryInsights(user.id);
+      for (const memoryInsight of memoryInsights || []) {
+        insights.push({
+          id: `memory_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          text: memoryInsight.insight,
+          module: 'Enhanced Memory',
+          type: 'memory_enhanced',
+          confidence: memoryInsight.confidence || 0.8,
+          evidence: [memoryInsight.pattern.theme, `Frequency: ${memoryInsight.pattern.frequency}`],
+          timestamp: new Date(),
+          acknowledged: false,
+          priority: memoryInsight.personalityAlignment > 0.8 ? 'high' : 'medium'
+        });
+      }
+      
+      // 2. Behavioral Pattern Insights
+      const behavioralInsights = await behavioralPatternIntelligence.generateBehavioralInsights(user.id);
+      for (const behavioralInsight of behavioralInsights || []) {
+        insights.push({
+          id: `behavioral_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          text: behavioralInsight.insight,
+          module: 'Behavioral Intelligence',
+          type: 'behavioral_enhanced',
+          confidence: behavioralInsight.confidence || 0.75,
+          evidence: [
+            behavioralInsight.pattern.patternType,
+            `Strength: ${behavioralInsight.pattern.strength.toFixed(1)}`
+          ],
+          timestamp: new Date(),
+          acknowledged: false,
+          priority: behavioralInsight.personalityAlignment > 0.8 ? 'high' : 'medium'
+        });
+      }
+      
+      // 3. Predictive Insights (Future enhancement)
+      // const predictiveInsights = await predictiveIntelligence.generatePredictiveInsights(user.id);
+      
+      console.log('🧠 Enhanced insights generated:', {
+        memory: memoryInsights?.length || 0,
+        behavioral: behavioralInsights?.length || 0,
+        total: insights.length
+      });
+      
+      return insights;
+    } catch (error) {
+      console.error('🚨 Error generating enhanced insights:', error);
+      return [];
+    }
+  }, [user]);
+
   // Create steward introduction insight
   const createStewardIntroductionInsight = useCallback(() => {
     if (!introductionState.isActive || !introductionState.steps[introductionState.currentStep]) {
@@ -264,7 +387,7 @@ export const useHACSInsights = () => {
     if (introductionState.isActive) {
       const introInsight = createStewardIntroductionInsight();
       if (introInsight) {
-        setCurrentInsight(introInsight);
+        addInsightToQueue(introInsight);
         setInsightHistory(prev => [introInsight, ...prev].slice(0, 20));
         console.log('✅ Steward introduction insight created:', introInsight.text);
         return introInsight;
@@ -282,10 +405,26 @@ export const useHACSInsights = () => {
     setIsGenerating(true);
     
     try {
-      // First try analytics-based insights (fast, local analysis)
+      // Phase 1: Try enhanced intelligence services first (priority insights)
+      const enhancedInsights = await generateEnhancedInsights();
+      if (enhancedInsights.length > 0) {
+        // Add all enhanced insights to queue, prioritizing by confidence
+        const sortedInsights = enhancedInsights.sort((a, b) => (b.confidence || 0) - (a.confidence || 0));
+        
+        for (const insight of sortedInsights.slice(0, 2)) { // Max 2 enhanced insights
+          addInsightToQueue(insight);
+          setInsightHistory(prev => [insight, ...prev].slice(0, 20));
+        }
+        
+        setLastInsightTime(now);
+        console.log('✅ Enhanced intelligence insights generated:', enhancedInsights.length);
+        return sortedInsights[0];
+      }
+      
+      // Fallback: Try analytics-based insights (fast, local analysis)
       const analyticsInsight = await generateAnalyticsInsight();
       if (analyticsInsight) {
-        setCurrentInsight(analyticsInsight);
+        addInsightToQueue(analyticsInsight);
         setInsightHistory(prev => [analyticsInsight, ...prev].slice(0, 20));
         setLastInsightTime(now);
         
@@ -322,7 +461,7 @@ export const useHACSInsights = () => {
           acknowledged: false
         };
 
-        setCurrentInsight(insight);
+        addInsightToQueue(insight);
         setInsightHistory(prev => [insight, ...prev].slice(0, 20)); // Keep last 20 insights
         setLastInsightTime(now);
 
@@ -345,12 +484,14 @@ export const useHACSInsights = () => {
     } finally {
       setIsGenerating(false);
     }
-  }, [user, isGenerating, lastInsightTime, generateAnalyticsInsight]);
+  }, [user, isGenerating, lastInsightTime, generateAnalyticsInsight, generateEnhancedInsights]);
 
   // Acknowledge an insight
   const acknowledgeInsight = useCallback((insightId: string) => {
-    setCurrentInsight(prev => 
-      prev?.id === insightId ? { ...prev, acknowledged: true } : prev
+    setInsightQueue(prev => 
+      prev.map(insight => 
+        insight.id === insightId ? { ...insight, acknowledged: true } : insight
+      )
     );
     setInsightHistory(prev => 
       prev.map(insight => 
@@ -363,9 +504,9 @@ export const useHACSInsights = () => {
   const dismissInsight = useCallback(() => {
     if (currentInsight) {
       acknowledgeInsight(currentInsight.id);
-      setCurrentInsight(null);
+      removeCurrentInsight();
     }
-  }, [currentInsight, acknowledgeInsight]);
+  }, [currentInsight, acknowledgeInsight, removeCurrentInsight]);
 
   // Smart insight triggers based on real activity patterns
   const triggerInsightCheck = useCallback(async (activityType: string, context?: any) => {
@@ -391,7 +532,7 @@ export const useHACSInsights = () => {
         console.log('🎭 Created introduction insight:', !!introInsight);
         
         if (introInsight) {
-          setCurrentInsight(introInsight);
+          addInsightToQueue(introInsight);
           setInsightHistory(prev => [introInsight, ...prev].slice(0, 20));
           console.log('✅ Steward introduction triggered successfully');
           return introInsight;
@@ -456,6 +597,12 @@ export const useHACSInsights = () => {
     dismissInsight,
     triggerInsightCheck,
     trackActivity,
+    // Phase 1: Queue Management API
+    insightQueue,
+    currentInsightIndex,
+    nextInsight,
+    previousInsight,
+    removeCurrentInsight,
     // Steward introduction state
     introductionState,
     isGeneratingReport
