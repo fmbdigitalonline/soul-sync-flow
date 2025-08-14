@@ -30,8 +30,8 @@ export class RichIntelligenceBridge {
         return [];
       }
       
-      // 2. Fetch blueprint for personalization
-      const blueprint = await this.fetchBlueprint(userId);
+      // 2. Fetch blueprint for personalization (from User 360)
+      const blueprint = await this.fetchBlueprintFromUser360(userId);
       const config = this.extractPersonalizationConfig(blueprint);
       
       console.log('🌟 Personalization config:', config);
@@ -92,57 +92,124 @@ export class RichIntelligenceBridge {
   }
   
   /**
-   * Fetch blueprint data for personalization
+   * Fetch blueprint data from User 360 service (proper architecture)
+   * This respects the data flow and uses the aggregated profile
    */
-  private static async fetchBlueprint(userId: string): Promise<LayeredBlueprint | null> {
-    const { data, error } = await supabase
-      .from('user_blueprints')
-      .select('blueprint')
-      .eq('user_id', userId)
-      .eq('is_active', true)
-      .maybeSingle();
+  private static async fetchBlueprintFromUser360(userId: string): Promise<LayeredBlueprint | null> {
+    try {
+      // Get from User 360 profiles first (proper architecture)
+      const { data: profile360, error: profileError } = await supabase
+        .from('user_360_profiles')
+        .select('profile_data')
+        .eq('user_id', userId)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+        
+      if (!profileError && profile360?.profile_data && typeof profile360.profile_data === 'object') {
+        const profileData = profile360.profile_data as any;
+        if (profileData.blueprint) {
+          console.log('🌟 Using User 360 aggregated blueprint data');
+          return profileData.blueprint as unknown as LayeredBlueprint;
+        }
+      }
       
-    if (error) {
-      console.error('🚨 Error fetching blueprint:', error);
+      // Fallback to direct blueprint fetch if User 360 not available
+      console.log('🔄 Falling back to direct blueprint fetch');
+      const { data, error } = await supabase
+        .from('blueprints')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .maybeSingle();
+        
+      if (error) {
+        console.error('🚨 Error fetching blueprint:', error);
+        return null;
+      }
+      
+      if (!data) return null;
+      
+      // Transform blueprints table structure to match User 360 format
+      return {
+        user_meta: data.user_meta,
+        cognition_mbti: data.cognition_mbti,
+        human_design: data.energy_strategy_human_design,
+        astrology: data.archetype_western,
+        energy_strategy_human_design: data.energy_strategy_human_design,
+        archetype_western: data.archetype_western,
+        archetype_chinese: data.archetype_chinese,
+        values_life_path: data.values_life_path,
+        timing_overlays: data.timing_overlays,
+        bashar_suite: data.bashar_suite
+      } as unknown as LayeredBlueprint;
+      
+    } catch (error) {
+      console.error('🚨 Rich Intelligence Bridge blueprint fetch error:', error);
       return null;
     }
-    
-    if (!data?.blueprint) return null;
-    
-    // Parse blueprint safely as LayeredBlueprint
-    return data.blueprint as unknown as LayeredBlueprint;
   }
   
   /**
    * Extract personalization configuration from blueprint
+   * Fixed to match actual User 360 blueprint structure
    */
   private static extractPersonalizationConfig(blueprint: LayeredBlueprint | null): WarmInsightConfig {
     if (!blueprint) {
       return { userName: 'friend', communicationPreference: 'encouraging' };
     }
     
+    // Extract MBTI from actual blueprint structure
+    const mbtiType = (blueprint as any).user_meta?.personality?.likelyType || 
+                     (blueprint as any).cognition_mbti?.type ||
+                     (blueprint as any).mbti?.type;
+    
+    // Extract Human Design type from actual structure  
+    const humanDesignType = (blueprint as any).human_design?.type ||
+                           (blueprint as any).energy_strategy_human_design?.type;
+    
+    // Extract sun sign from actual astrology structure
+    const sunSign = (blueprint as any).astrology?.sun_sign ||
+                    (blueprint as any).archetype_western?.sun_sign;
+    
+    console.log('🔬 Blueprint extraction results:', {
+      mbtiType,
+      humanDesignType, 
+      sunSign,
+      userName: (blueprint as any).user_meta?.preferred_name
+    });
+    
     return {
-      userName: blueprint.user_meta?.preferred_name || 
-                blueprint.user_meta?.full_name?.split(' ')[0] || 
+      userName: (blueprint as any).user_meta?.preferred_name || 
+                (blueprint as any).user_meta?.full_name?.split(' ')[0] || 
                 'friend',
-      mbtiType: blueprint.cognitiveTemperamental?.mbtiType,
-      humanDesignType: blueprint.energyDecisionStrategy?.humanDesignType,
-      sunSign: blueprint.publicArchetype?.sunSign,
-      communicationPreference: this.determineCommunicationStyle(blueprint)
+      mbtiType,
+      humanDesignType,
+      sunSign,
+      communicationPreference: this.determineCommunicationStyle(blueprint, mbtiType, humanDesignType)
     };
   }
   
   /**
    * Determine communication style based on personality traits
+   * Enhanced with proper data extraction
    */
-  private static determineCommunicationStyle(blueprint: LayeredBlueprint): 'encouraging' | 'direct' | 'mystical' | 'practical' {
-    const mbti = blueprint.cognitiveTemperamental?.mbtiType;
-    const hdType = blueprint.energyDecisionStrategy?.humanDesignType;
+  private static determineCommunicationStyle(
+    blueprint: LayeredBlueprint, 
+    mbtiType?: string, 
+    humanDesignType?: string
+  ): 'encouraging' | 'direct' | 'mystical' | 'practical' {
+    
+    // Use extracted MBTI type or fallback to blueprint access
+    const mbti = mbtiType || (blueprint as any).user_meta?.personality?.likelyType;
+    const hdType = humanDesignType || (blueprint as any).human_design?.type;
+    
+    console.log('🎯 Communication style determination:', { mbti, hdType });
     
     // Feeling types prefer encouraging
     if (mbti?.includes('F')) return 'encouraging';
     
-    // Thinking types prefer direct
+    // Thinking types prefer direct  
     if (mbti?.includes('T')) return 'direct';
     
     // Projectors often resonate with mystical
