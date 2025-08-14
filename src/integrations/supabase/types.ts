@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -3713,7 +3713,7 @@ export type Database = {
         Returns: Json
       }
       get_or_create_conversation_thread: {
-        Args: { p_user_id: string; p_mode?: string }
+        Args: { p_mode?: string; p_user_id: string }
         Returns: Json
       }
       get_steward_introduction_diagnostic: {
@@ -3782,30 +3782,30 @@ export type Database = {
       }
       match_blueprint_chunks: {
         Args: {
+          match_count?: number
+          match_threshold?: number
           query_embedding: string
           query_user_id: string
-          match_threshold?: number
-          match_count?: number
         }
         Returns: {
-          id: string
           chunk_content: string
+          id: string
           similarity: number
         }[]
       }
       search_similar_messages: {
         Args: {
-          query_embedding: string
-          user_id_param: string
           max_results?: number
+          query_embedding: string
           similarity_threshold?: number
+          user_id_param: string
         }
         Returns: {
-          content: string
-          message_role: string
-          created_at: string
-          session_id: string
           agent_mode: string
+          content: string
+          created_at: string
+          message_role: string
+          session_id: string
           similarity: number
         }[]
       }
