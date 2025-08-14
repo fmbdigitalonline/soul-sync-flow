@@ -45,7 +45,7 @@ export class BehavioralPatternIntelligence {
       // Get PIE insights (fallback to empty array if service unavailable)
       let pieInsights: any[] = [];
       try {
-        const insights = await this.pieService.getCurrentInsights(userId);
+        const insights = await this.pieService.getCurrentInsights();
         pieInsights = insights || [];
       } catch (error) {
         console.log('PIE service unavailable, using fallback pattern analysis');
@@ -183,8 +183,8 @@ export class BehavioralPatternIntelligence {
         .from('dream_activity_logs')
         .select('*')
         .eq('user_id', userId)
-        .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()) // Last 7 days
-        .order('created_at', { ascending: false });
+        .gte('timestamp', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()) // Last 7 days
+        .order('timestamp', { ascending: false });
 
       if (!activityLogs || activityLogs.length < 5) {
         return null;
@@ -263,8 +263,8 @@ export class BehavioralPatternIntelligence {
           .from('dream_activity_logs')
           .select('*')
           .eq('user_id', userId)
-          .gte('created_at', new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString())
-          .order('created_at', { ascending: false });
+          .gte('timestamp', new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString())
+          .order('timestamp', { ascending: false });
         moodEntries = data || [];
       } catch (error) {
         console.log('Mood data unavailable, using activity-based emotional analysis');
@@ -385,7 +385,7 @@ export class BehavioralPatternIntelligence {
     const groups = new Map();
     
     logs.forEach(log => {
-      const date = new Date(log.created_at).toDateString();
+      const date = new Date(log.timestamp).toDateString();
       groups.set(date, (groups.get(date) || 0) + 1);
     });
     
@@ -642,7 +642,7 @@ export class BehavioralPatternIntelligence {
     const hourly = new Array(24).fill(0);
     
     logs.forEach(log => {
-      const hour = new Date(log.created_at).getHours();
+      const hour = new Date(log.timestamp).getHours();
       hourly[hour]++;
     });
     

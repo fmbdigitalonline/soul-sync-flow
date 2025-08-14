@@ -39,7 +39,7 @@ export class EnhancedMemoryIntelligence {
         .from('dream_activity_logs')
         .select('*')
         .eq('user_id', userId)
-        .order('created_at', { ascending: false })
+        .order('timestamp', { ascending: false })
         .limit(500);
 
       if (error) {
@@ -130,10 +130,10 @@ export class EnhancedMemoryIntelligence {
     try {
       const { data: accessLogs, error } = await supabase
         .from('dream_activity_logs')
-        .select('created_at, activity_data')
+        .select('timestamp, activity_data')
         .eq('user_id', userId)
-        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
-        .order('created_at', { ascending: false });
+        .gte('timestamp', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+        .order('timestamp', { ascending: false });
 
       if (error || !accessLogs || accessLogs.length < 10) {
         return null;
@@ -144,7 +144,7 @@ export class EnhancedMemoryIntelligence {
       const dailyPerformance = new Array(7).fill(0).map(() => ({ count: 0, totalLatency: 0, successRate: 0 }));
 
       accessLogs.forEach(log => {
-        const date = new Date(log.created_at);
+        const date = new Date(log.timestamp);
         const hour = date.getHours();
         const day = date.getDay();
         const simulatedLatency = Math.random() * 500 + 100;
@@ -224,7 +224,7 @@ export class EnhancedMemoryIntelligence {
           themeMap.set(keyword, {
             name: keyword,
             frequency: 0,
-            lastAccessed: new Date(log.accessed_at),
+            lastAccessed: new Date(log.timestamp),
             relevance: 0
           });
         }
@@ -232,7 +232,7 @@ export class EnhancedMemoryIntelligence {
         const theme = themeMap.get(keyword);
         theme.frequency++;
         
-        const accessDate = new Date(log.accessed_at);
+        const accessDate = new Date(log.timestamp);
         if (accessDate > theme.lastAccessed) {
           theme.lastAccessed = accessDate;
         }
