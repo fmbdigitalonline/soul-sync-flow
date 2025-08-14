@@ -26,8 +26,8 @@ export function HomeMenuGrid({ items, className, ...props }: HomeMenuGridProps) 
       className={cn("w-full", className)}
       {...props}
     >
-      {/* Full-width on mobile, grid on larger screens */}
-      <div className="flex flex-col gap-2 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:gap-4 lg:gap-6 mb-12">
+      {/* Constrained width on mobile to match button, grid on larger screens */}
+      <div className="flex flex-col gap-2 max-w-md mx-auto sm:max-w-none sm:mx-0 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:gap-4 lg:gap-6 mb-12">
         {items.map(({ key, to, title, description, Icon, image }) => (
           <article key={key} className="bg-card rounded-lg sm:rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden group">
             {/* Mobile: Compact horizontal layout, Desktop: Vertical layout */}
