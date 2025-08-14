@@ -34,6 +34,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   const [showBubble, setShowBubble] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [showMicroLearning, setShowMicroLearning] = useState(false);
+  const [showInsightDisplay, setShowInsightDisplay] = useState(false);
   const [orbStage, setOrbStage] = useState<"welcome" | "collecting" | "generating" | "complete">("welcome");
   const [activeModule, setActiveModule] = useState<string | undefined>();
   const [moduleActivity, setModuleActivity] = useState(false);
@@ -471,12 +472,29 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   }, [currentQuestion, currentInsight]);
 
   const handleOrbClick = () => {
+    console.log('🎯 FloatingHACSOrb: Orb clicked', {
+      hasCurrentQuestion: !!currentQuestion,
+      hasUnacknowledgedInsight: !!(currentInsight && !currentInsight.acknowledged)
+    });
+
+    // Priority 1: Show unacknowledged insight if available
+    if (currentInsight && !currentInsight.acknowledged) {
+      console.log('🎯 FloatingHACSOrb: Showing pending insight');
+      setShowInsightDisplay(true);
+      return;
+    }
+
+    // Priority 2: Show micro learning for pending questions
     if (currentQuestion) {
+      console.log('🎯 FloatingHACSOrb: Opening micro learning for question');
       setShowMicroLearning(true);
       setShowBubble(false);
-    } else {
-      setShowChat(true);
+      return;
     }
+
+    // Priority 3: Default to chat interface
+    console.log('🎯 FloatingHACSOrb: Opening chat interface');
+    setShowChat(true);
   };
 
   const handleBubbleClick = () => {
@@ -636,19 +654,24 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
             />
           </motion.div>
 
-          {/* Blue pulse indicator for questions */}
+          {/* Blue pulse indicator for questions - clickable */}
           {currentQuestion && (
             <motion.div
-              className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full"
+              className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full cursor-pointer"
               animate={{ scale: [1, 1.2, 1] }}
               transition={{ duration: 1, repeat: Infinity }}
+              onClick={(e) => {
+                e.stopPropagation();
+                console.log('🔵 Blue pulse clicked - showing micro learning');
+                setShowMicroLearning(true);
+              }}
             />
           )}
 
-          {/* Red exclamation mark for unacknowledged insights */}
+          {/* Red exclamation mark for unacknowledged insights - clickable */}
           {currentInsight && !currentInsight.acknowledged && (
             <motion.div
-              className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center shadow-lg"
+              className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center shadow-lg cursor-pointer"
               animate={{ 
                 scale: [1, 1.15, 1],
                 boxShadow: [
@@ -658,6 +681,11 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
                 ]
               }}
               transition={{ duration: 1.5, repeat: Infinity }}
+              onClick={(e) => {
+                e.stopPropagation();
+                console.log('🔴 Red exclamation clicked - showing insight');
+                setShowInsightDisplay(true);
+              }}
             >
               <span className="text-white text-[10px] font-bold leading-none">!</span>
             </motion.div>
@@ -689,12 +717,18 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
         </div>
       )}
 
-      {/* Insight Display */}
-      {currentInsight && !currentInsight.acknowledged && (
+      {/* Insight Display - Click-triggered only */}
+      {showInsightDisplay && currentInsight && (
         <HACSInsightDisplay
           insight={currentInsight}
-          onAcknowledge={() => acknowledgeInsight(currentInsight.id)}
-          onDismiss={dismissInsight}
+          onAcknowledge={() => {
+            acknowledgeInsight(currentInsight.id);
+            setShowInsightDisplay(false);
+          }}
+          onDismiss={() => {
+            dismissInsight();
+            setShowInsightDisplay(false);
+          }}
           position="bottom-right"
         />
       )}
