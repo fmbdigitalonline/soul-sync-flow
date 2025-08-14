@@ -11,7 +11,9 @@ import {
   CheckCircle, 
   X, 
   Eye,
-  BarChart3
+  BarChart3,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { HACSInsight } from '@/hooks/use-hacs-insights';
 
@@ -20,13 +22,23 @@ interface HACSInsightDisplayProps {
   onAcknowledge: () => void;
   onDismiss: () => void;
   position?: 'bottom-right' | 'top-center';
+  // Step 3: Queue navigation props
+  currentIndex?: number;
+  totalInsights?: number;
+  onNext?: () => void;
+  onPrevious?: () => void;
 }
 
 export const HACSInsightDisplay: React.FC<HACSInsightDisplayProps> = ({
   insight,
   onAcknowledge,
   onDismiss,
-  position = 'bottom-right'
+  position = 'bottom-right',
+  // Step 3: Queue navigation props
+  currentIndex = 0,
+  totalInsights = 1,
+  onNext,
+  onPrevious
 }) => {
   const [showEvidence, setShowEvidence] = useState(false);
 
@@ -107,6 +119,33 @@ export const HACSInsightDisplay: React.FC<HACSInsightDisplayProps> = ({
               <X className="h-3 w-3" />
             </Button>
           </div>
+
+          {/* Step 3: Queue Navigation */}
+          {totalInsights > 1 && (
+            <div className="mb-3 flex items-center justify-between">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0"
+                onClick={onPrevious}
+                disabled={!onPrevious}
+              >
+                <ChevronLeft className="h-3 w-3" />
+              </Button>
+              <span className="text-xs text-muted-foreground">
+                {currentIndex + 1} of {totalInsights} insights
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0"
+                onClick={onNext}
+                disabled={!onNext}
+              >
+                <ChevronRight className="h-3 w-3" />
+              </Button>
+            </div>
+          )}
 
           {/* Confidence Indicator */}
           <div className="mb-3">

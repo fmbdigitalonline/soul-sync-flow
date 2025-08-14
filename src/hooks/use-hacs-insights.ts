@@ -110,6 +110,62 @@ export const useHACSInsights = () => {
     }
   }, [insightQueue, currentInsightIndex]);
 
+  // Step 1: Load Historical Database Insights
+  const loadHistoricalInsights = useCallback(async (): Promise<HACSInsight[]> => {
+    if (!user) return [];
+    
+    console.log('📚 Loading historical insights from database...');
+    
+    try {
+      const { data: historicalInsights, error } = await supabase
+        .from('hacs_module_insights')
+        .select('*')
+        .eq('user_id', user.id)
+        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()) // Last 30 days
+        .gte('confidence_score', 0.7) // Only high-confidence insights
+        .order('confidence_score', { ascending: false })
+        .limit(5);
+
+      if (error) {
+        console.error('🚨 Error loading historical insights:', error);
+        return [];
+      }
+
+      if (!historicalInsights || historicalInsights.length === 0) {
+        console.log('📚 No historical insights found');
+        return [];
+      }
+
+      console.log('📚 Historical insights loaded:', historicalInsights.length);
+
+      // Convert database format to HACSInsight format
+      const convertedInsights: HACSInsight[] = historicalInsights.map(dbInsight => {
+        // Parse insight_data as JSON
+        const insightData = typeof dbInsight.insight_data === 'string' 
+          ? JSON.parse(dbInsight.insight_data) 
+          : dbInsight.insight_data;
+          
+        return {
+          id: `historical_${dbInsight.id}`,
+          text: insightData?.insight_text || 'Historical insight',
+          module: dbInsight.hacs_module || 'Historical',
+          type: dbInsight.insight_type === 'behavioral' ? 'behavioral' : 'productivity',
+          confidence: dbInsight.confidence_score || 0.8,
+          evidence: Array.isArray(insightData?.evidence) ? insightData.evidence : [],
+          timestamp: new Date(dbInsight.created_at),
+          acknowledged: false,
+          priority: dbInsight.confidence_score > 0.9 ? 'high' : 'medium'
+        };
+      });
+
+      console.log('📚 Converted historical insights:', convertedInsights.length);
+      return convertedInsights;
+    } catch (error) {
+      console.error('🚨 Error in loadHistoricalInsights:', error);
+      return [];
+    }
+  }, [user]);
+
   // Track user activity for insight generation
   const trackActivity = useCallback(async (activityType: string, activityData?: any) => {
     if (!user) return;
@@ -295,61 +351,84 @@ export const useHACSInsights = () => {
     }
   }, [user, intelligence]);
 
-  // Phase 1: Generate Enhanced Intelligence Insights
+  // Phase 1: Generate Enhanced Intelligence Insights (Step 2: Add debugging)
   const generateEnhancedInsights = useCallback(async (): Promise<HACSInsight[]> => {
-    if (!user) return [];
+    if (!user) {
+      console.log('🧠 No user available for enhanced insights');
+      return [];
+    }
     
-    console.log('🧠 Generating enhanced intelligence insights...');
+    console.log('🧠 Starting enhanced intelligence insights generation...');
     const insights: HACSInsight[] = [];
     
     try {
+      console.log('🧠 Calling enhanced memory intelligence service...');
       // 1. Memory-Enhanced Insights
-      const memoryInsights = await enhancedMemoryIntelligence.generateMemoryInsights(user.id);
-      for (const memoryInsight of memoryInsights || []) {
-        insights.push({
-          id: `memory_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          text: memoryInsight.insight,
-          module: 'Enhanced Memory',
-          type: 'memory_enhanced',
-          confidence: memoryInsight.confidence || 0.8,
-          evidence: [memoryInsight.pattern.theme, `Frequency: ${memoryInsight.pattern.frequency}`],
-          timestamp: new Date(),
-          acknowledged: false,
-          priority: memoryInsight.personalityAlignment > 0.8 ? 'high' : 'medium'
+      try {
+        const memoryInsights = await enhancedMemoryIntelligence.generateMemoryInsights(user.id);
+        console.log('🧠 Memory insights result:', { 
+          count: memoryInsights?.length || 0,
+          insights: memoryInsights?.map(i => ({ theme: i.pattern.theme, confidence: i.confidence })) || []
         });
+        
+        for (const memoryInsight of memoryInsights || []) {
+          insights.push({
+            id: `memory_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            text: memoryInsight.insight,
+            module: 'Enhanced Memory',
+            type: 'memory_enhanced',
+            confidence: memoryInsight.confidence || 0.8,
+            evidence: [memoryInsight.pattern.theme, `Frequency: ${memoryInsight.pattern.frequency}`],
+            timestamp: new Date(),
+            acknowledged: false,
+            priority: memoryInsight.personalityAlignment > 0.8 ? 'high' : 'medium'
+          });
+        }
+      } catch (memoryError) {
+        console.error('🚨 Memory intelligence service error:', memoryError);
       }
       
+      console.log('🧠 Calling behavioral pattern intelligence service...');
       // 2. Behavioral Pattern Insights
-      const behavioralInsights = await behavioralPatternIntelligence.generateBehavioralInsights(user.id);
-      for (const behavioralInsight of behavioralInsights || []) {
-        insights.push({
-          id: `behavioral_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          text: behavioralInsight.insight,
-          module: 'Behavioral Intelligence',
-          type: 'behavioral_enhanced',
-          confidence: behavioralInsight.confidence || 0.75,
-          evidence: [
-            behavioralInsight.pattern.patternType,
-            `Strength: ${behavioralInsight.pattern.strength.toFixed(1)}`
-          ],
-          timestamp: new Date(),
-          acknowledged: false,
-          priority: behavioralInsight.personalityAlignment > 0.8 ? 'high' : 'medium'
+      try {
+        const behavioralInsights = await behavioralPatternIntelligence.generateBehavioralInsights(user.id);
+        console.log('🧠 Behavioral insights result:', { 
+          count: behavioralInsights?.length || 0,
+          insights: behavioralInsights?.map(i => ({ type: i.pattern.patternType, confidence: i.confidence })) || []
         });
+        
+        for (const behavioralInsight of behavioralInsights || []) {
+          insights.push({
+            id: `behavioral_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            text: behavioralInsight.insight,
+            module: 'Behavioral Intelligence',
+            type: 'behavioral_enhanced',
+            confidence: behavioralInsight.confidence || 0.75,
+            evidence: [
+              behavioralInsight.pattern.patternType,
+              `Strength: ${behavioralInsight.pattern.strength.toFixed(1)}`
+            ],
+            timestamp: new Date(),
+            acknowledged: false,
+            priority: behavioralInsight.personalityAlignment > 0.8 ? 'high' : 'medium'
+          });
+        }
+      } catch (behavioralError) {
+        console.error('🚨 Behavioral intelligence service error:', behavioralError);
       }
       
       // 3. Predictive Insights (Future enhancement)
       // const predictiveInsights = await predictiveIntelligence.generatePredictiveInsights(user.id);
       
-      console.log('🧠 Enhanced insights generated:', {
-        memory: memoryInsights?.length || 0,
-        behavioral: behavioralInsights?.length || 0,
-        total: insights.length
+      console.log('🧠 Enhanced insights generation complete:', {
+        totalGenerated: insights.length,
+        memoryInsights: insights.filter(i => i.type === 'memory_enhanced').length,
+        behavioralInsights: insights.filter(i => i.type === 'behavioral_enhanced').length
       });
       
       return insights;
     } catch (error) {
-      console.error('🚨 Error generating enhanced insights:', error);
+      console.error('🚨 Critical error in generateEnhancedInsights:', error);
       return [];
     }
   }, [user]);
@@ -405,6 +484,19 @@ export const useHACSInsights = () => {
     setIsGenerating(true);
     
     try {
+      // Step 1: Load historical insights on first run (if queue is empty)
+      if (insightQueue.length === 0) {
+        console.log('🔍 Queue empty, loading historical insights...');
+        const historicalInsights = await loadHistoricalInsights();
+        if (historicalInsights.length > 0) {
+          for (const insight of historicalInsights.slice(0, 2)) { // Max 2 historical insights
+            addInsightToQueue(insight);
+            setInsightHistory(prev => [insight, ...prev].slice(0, 20));
+          }
+          console.log('✅ Historical insights loaded into queue:', historicalInsights.length);
+        }
+      }
+      
       // Phase 1: Try enhanced intelligence services first (priority insights)
       const enhancedInsights = await generateEnhancedInsights();
       if (enhancedInsights.length > 0) {
@@ -605,6 +697,8 @@ export const useHACSInsights = () => {
     removeCurrentInsight,
     // Steward introduction state
     introductionState,
-    isGeneratingReport
+    isGeneratingReport,
+    // Step 1: Historical insights loader
+    loadHistoricalInsights
   };
 };

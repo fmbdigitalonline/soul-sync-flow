@@ -736,6 +736,11 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
             setShowInsightDisplay(false);
           }}
           position="bottom-right"
+          // Step 3: Pass navigation props
+          currentIndex={currentInsightIndex}
+          totalInsights={insightQueue.length}
+          onNext={insightQueue.length > 1 ? nextInsight : undefined}
+          onPrevious={insightQueue.length > 1 ? previousInsight : undefined}
         />
       )}
 
