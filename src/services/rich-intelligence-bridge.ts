@@ -2,6 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { HACSInsight } from '@/hooks/use-hacs-insights';
 import { HacsIntelligence, ModuleScores } from '@/hooks/use-hacs-intelligence';
 import { LayeredBlueprint } from '@/types/personality-modules';
+import { Language } from '@/contexts/LanguageContext';
 
 export interface WarmInsightConfig {
   userName?: string;
@@ -9,6 +10,7 @@ export interface WarmInsightConfig {
   humanDesignType?: string;
   sunSign?: string;
   communicationPreference?: 'encouraging' | 'direct' | 'mystical' | 'practical';
+  language?: Language;
 }
 
 /**
@@ -19,7 +21,7 @@ export class RichIntelligenceBridge {
   /**
    * Generate warm, personalized insights from HACS intelligence data
    */
-  static async generateWarmInsights(userId: string): Promise<HACSInsight[]> {
+  static async generateWarmInsights(userId: string, language: Language = 'en'): Promise<HACSInsight[]> {
     try {
       console.log('🌟 Rich Intelligence Bridge: Starting warm insight generation...');
       
@@ -32,7 +34,7 @@ export class RichIntelligenceBridge {
       
       // 2. Fetch blueprint for personalization (from User 360)
       const blueprint = await this.fetchBlueprintFromUser360(userId);
-      const config = this.extractPersonalizationConfig(blueprint);
+      const config = this.extractPersonalizationConfig(blueprint, language);
       
       console.log('🌟 Personalization config:', config);
       
@@ -154,9 +156,9 @@ export class RichIntelligenceBridge {
    * Extract personalization configuration from blueprint
    * Fixed to match actual User 360 blueprint structure
    */
-  private static extractPersonalizationConfig(blueprint: LayeredBlueprint | null): WarmInsightConfig {
+  private static extractPersonalizationConfig(blueprint: LayeredBlueprint | null, language: Language = 'en'): WarmInsightConfig {
     if (!blueprint) {
-      return { userName: 'friend', communicationPreference: 'encouraging' };
+      return { userName: language === 'nl' ? 'vriend' : 'friend', communicationPreference: 'encouraging', language };
     }
     
     // Extract MBTI from actual blueprint structure
@@ -182,11 +184,12 @@ export class RichIntelligenceBridge {
     return {
       userName: (blueprint as any).user_meta?.preferred_name || 
                 (blueprint as any).user_meta?.full_name?.split(' ')[0] || 
-                'friend',
+                (language === 'nl' ? 'vriend' : 'friend'),
       mbtiType,
       humanDesignType,
       sunSign,
-      communicationPreference: this.determineCommunicationStyle(blueprint, mbtiType, humanDesignType)
+      communicationPreference: this.determineCommunicationStyle(blueprint, mbtiType, humanDesignType),
+      language
     };
   }
   
@@ -267,29 +270,48 @@ export class RichIntelligenceBridge {
     config: WarmInsightConfig
   ): HACSInsight {
     const [moduleKey, score] = module;
-    const moduleName = this.getWarmModuleName(moduleKey);
-    const userName = config.userName || 'friend';
+    const moduleName = this.getWarmModuleName(moduleKey, config.language);
+    const userName = config.userName || (config.language === 'nl' ? 'vriend' : 'friend');
+    
+    const isDutch = config.language === 'nl';
+    const strengthAction = this.getModuleStrength(moduleKey, config.language);
     
     const strengthMessages = {
-      encouraging: [
-        `${userName}, your ${moduleName} is beautifully developing. I see how naturally you ${this.getModuleStrength(moduleKey)}.`,
-        `I've noticed something wonderful about you, ${userName} - your ${moduleName} has a special quality. You ${this.getModuleStrength(moduleKey)} with such grace.`,
-        `${userName}, there's something remarkable about how you ${this.getModuleStrength(moduleKey)}. Your ${moduleName} is becoming quite refined.`
+      encouraging: isDutch ? [
+        `${userName}, je ${moduleName} ontwikkelt zich prachtig. Ik zie hoe natuurlijk je ${strengthAction}.`,
+        `Ik heb iets wonderbaarlijks aan je opgemerkt, ${userName} - je ${moduleName} heeft een bijzondere kwaliteit. Je ${strengthAction} met zoveel gratie.`,
+        `${userName}, er is iets opmerkelijks aan hoe je ${strengthAction}. Je ${moduleName} wordt steeds verfijnder.`
+      ] : [
+        `${userName}, your ${moduleName} is beautifully developing. I see how naturally you ${strengthAction}.`,
+        `I've noticed something wonderful about you, ${userName} - your ${moduleName} has a special quality. You ${strengthAction} with such grace.`,
+        `${userName}, there's something remarkable about how you ${strengthAction}. Your ${moduleName} is becoming quite refined.`
       ],
-      direct: [
-        `${userName}, your ${moduleName} is your strongest asset. You consistently ${this.getModuleStrength(moduleKey)}.`,
-        `Your ${moduleName} stands out, ${userName}. You ${this.getModuleStrength(moduleKey)} better than most.`,
-        `${userName}, you excel at ${moduleName}. Keep leveraging how you ${this.getModuleStrength(moduleKey)}.`
+      direct: isDutch ? [
+        `${userName}, je ${moduleName} is je sterkste troef. Je ${strengthAction} consequent.`,
+        `Je ${moduleName} valt op, ${userName}. Je ${strengthAction} beter dan de meesten.`,
+        `${userName}, je excelleert in ${moduleName}. Blijf gebruikmaken van hoe je ${strengthAction}.`
+      ] : [
+        `${userName}, your ${moduleName} is your strongest asset. You consistently ${strengthAction}.`,
+        `Your ${moduleName} stands out, ${userName}. You ${strengthAction} better than most.`,
+        `${userName}, you excel at ${moduleName}. Keep leveraging how you ${strengthAction}.`
       ],
-      mystical: [
-        `${userName}, the universe has gifted you with profound ${moduleName}. I sense how deeply you ${this.getModuleStrength(moduleKey)}.`,
-        `There's an ancient wisdom in your ${moduleName}, ${userName}. The way you ${this.getModuleStrength(moduleKey)} connects to something timeless.`,
-        `${userName}, your ${moduleName} carries cosmic insight. You ${this.getModuleStrength(moduleKey)} with intuitive knowing.`
+      mystical: isDutch ? [
+        `${userName}, het universum heeft je begiftigd met diepgaande ${moduleName}. Ik voel hoe diep je ${strengthAction}.`,
+        `Er is een eeuwenoude wijsheid in je ${moduleName}, ${userName}. De manier waarop je ${strengthAction} verbindt met iets tijdloos.`,
+        `${userName}, je ${moduleName} draagt kosmisch inzicht. Je ${strengthAction} met intuïtieve kennis.`
+      ] : [
+        `${userName}, the universe has gifted you with profound ${moduleName}. I sense how deeply you ${strengthAction}.`,
+        `There's an ancient wisdom in your ${moduleName}, ${userName}. The way you ${strengthAction} connects to something timeless.`,
+        `${userName}, your ${moduleName} carries cosmic insight. You ${strengthAction} with intuitive knowing.`
       ],
-      practical: [
-        `${userName}, your ${moduleName} is a reliable strength. You consistently ${this.getModuleStrength(moduleKey)}.`,
-        `Your ${moduleName} works well for you, ${userName}. You ${this.getModuleStrength(moduleKey)} effectively.`,
-        `${userName}, you've developed solid ${moduleName}. The way you ${this.getModuleStrength(moduleKey)} serves you well.`
+      practical: isDutch ? [
+        `${userName}, je ${moduleName} is een betrouwbare kracht. Je ${strengthAction} consistent.`,
+        `Je ${moduleName} werkt goed voor je, ${userName}. Je ${strengthAction} effectief.`,
+        `${userName}, je hebt solide ${moduleName} ontwikkeld. De manier waarop je ${strengthAction} dient je goed.`
+      ] : [
+        `${userName}, your ${moduleName} is a reliable strength. You consistently ${strengthAction}.`,
+        `Your ${moduleName} works well for you, ${userName}. You ${strengthAction} effectively.`,
+        `${userName}, you've developed solid ${moduleName}. The way you ${strengthAction} serves you well.`
       ]
     };
     
@@ -300,10 +322,10 @@ export class RichIntelligenceBridge {
     return {
       id: `strength_${moduleKey}_${Date.now()}`,
       text: selectedMessage,
-      module: 'Intelligence Strength',
+      module: isDutch ? 'Intelligentie Kracht' : 'Intelligence Strength',
       type: 'growth',
       confidence: 0.9,
-      evidence: [`Your ${moduleName} shows consistent development`],
+      evidence: [isDutch ? `Je ${moduleName} toont consistente ontwikkeling` : `Your ${moduleName} shows consistent development`],
       timestamp: new Date(),
       acknowledged: false,
       priority: 'medium'
@@ -426,8 +448,20 @@ export class RichIntelligenceBridge {
   /**
    * Get warm, human-readable module names
    */
-  private static getWarmModuleName(moduleKey: keyof ModuleScores): string {
-    const moduleNames = {
+  private static getWarmModuleName(moduleKey: keyof ModuleScores, language: Language = 'en'): string {
+    const moduleNames = language === 'nl' ? {
+      NIK: 'leerintegration',
+      CPSR: 'patroonherkenning',
+      TWS: 'wijsheidssynthese',
+      HFME: 'systeemdenken',
+      DPEM: 'authentieke expressie',
+      CNR: 'harmonienavigatie',
+      BPSC: 'zelf-afstemming',
+      ACS: 'gespreksflow',
+      PIE: 'intuïtieve inzichten',
+      VFP: 'informatieverwerking',
+      TMG: 'geheugenverbindingen'
+    } : {
       NIK: 'learning integration',
       CPSR: 'pattern recognition',
       TWS: 'wisdom synthesis',
@@ -441,13 +475,13 @@ export class RichIntelligenceBridge {
       TMG: 'memory connections'
     };
     
-    return moduleNames[moduleKey] || 'intelligence';
+    return moduleNames[moduleKey] || (language === 'nl' ? 'intelligentie' : 'intelligence');
   }
   
   /**
    * Get what the user excels at for each module
    */
-  private static getModuleStrength(moduleKey: keyof ModuleScores): string {
+  private static getModuleStrength(moduleKey: keyof ModuleScores, language: Language = 'en'): string {
     const strengths = {
       NIK: 'connect ideas and integrate new learning',
       CPSR: 'recognize patterns and spot meaningful connections',

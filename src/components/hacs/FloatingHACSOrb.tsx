@@ -25,6 +25,9 @@ import { useUserProfile } from '@/hooks/use-user-profile';
 import { useConversationRecovery } from '@/hooks/use-conversation-recovery';
 import { useTieredMemory } from '@/hooks/use-tiered-memory';
 import { usePIEEnhancedCoach } from '@/hooks/use-pie-enhanced-coach';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useEnhancedFeedbackSystem } from '@/hooks/use-enhanced-feedback-system';
+import { EnhancedFeedbackModal } from '@/components/feedback/EnhancedFeedbackModal';
 
 interface FloatingHACSProps {
   className?: string;
@@ -40,6 +43,11 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   const [moduleActivity, setModuleActivity] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
   const [hermeticProgress, setHermeticProgress] = useState(40); // Start at 40% (blueprint completed)
+  
+  // Enhanced feedback system
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [feedbackMessageId, setFeedbackMessageId] = useState<string>('');
+  const [feedbackType, setFeedbackType] = useState<'insight' | 'question' | 'conversation'>('insight');
   
   // Global chat loading state and streaming sync
   const { subscribe } = useGlobalChatState();
@@ -115,6 +123,10 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   const conversationRecovery = useConversationRecovery();
   const tieredMemory = useTieredMemory(userProfile?.id || '', 'hacs-orb-session');
   const pieEnhancedCoach = usePIEEnhancedCoach('guide');
+  
+  // Language and feedback integration
+  const { language } = useLanguage();
+  const enhancedFeedback = useEnhancedFeedbackSystem();
 
   console.log('FloatingHACSOrb render:', { 
     loading, 
@@ -279,30 +291,14 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
               const shouldGenerateInsight = Math.random() < 0.6; // 60% chance for insight
               
               if (shouldGenerateInsight) {
-                // Phase 3: Generate context-aware insights with advanced intelligence
-                const advancedContext = {
-                  blueprint: blueprintData,
-                  communicationStyle: blueprintData?.personality?.userConfidence || 'professional',
-                  preferredTone: getPersonalityTraits().includes('Intuitive') ? 'mystic' : 'analytical',
-                  timingPattern: userStatistics?.most_productive_day || 'morning',
-                  mbtiType: blueprintData?.personality?.likelyType,
-                  goals: userGoals,
-                  completenessScore,
-                  moduleScores: intelligence?.module_scores,
-                  // Phase 3: Advanced intelligence context
-                  conversationHistory: conversationContext.slice(0, 3), // Last 3 conversations
-                  memoryMetrics: {
-                    hotHits: memoryMetrics.hotHits || 0,
-                    warmHits: memoryMetrics.warmHits || 0,
-                    coldHits: memoryMetrics.coldHits || 0,
-                    avgLatency: memoryMetrics.avgLatency || {}
-                  },
-                  pieInsights: pieInsights.filter((insight: any) => insight.priority === 'high').slice(0, 2),
-                  personalityEngine: {
-                    oraclePromptAvailable: !!generateOraclePrompt,
-                    timingPreferences: getOptimalTimingPreferences()
-                  }
-                };
+                // Phase 3: Generate language-aware insights using Rich Intelligence Bridge
+                console.log('🔮 Phase 3: Generating language-aware insights in:', language);
+                
+                await triggerInsightCheck('periodic_activity', { 
+                  source: 'autonomous_trigger',
+                  language,
+                  enhancedPersonalization: true
+                });
                 
                 console.log('🔮 Phase 3: Advanced autonomous insight generation:', {
                   mbtiType: advancedContext.mbtiType,

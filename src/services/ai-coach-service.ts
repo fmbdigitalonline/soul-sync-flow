@@ -343,6 +343,11 @@ Remember: Every response should feel like it comes from someone who truly knows 
       callbacks.onError(error as Error);
     }
   }
+
+  setLanguage(language: string) {
+    console.log(`🌍 AI Coach Service language set to: ${language}`);
+    // Language is now passed directly to methods rather than stored
+  }
 }
 
 export const aiCoachService = new AICoachService();
