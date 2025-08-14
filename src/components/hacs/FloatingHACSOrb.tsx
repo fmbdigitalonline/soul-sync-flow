@@ -294,6 +294,14 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
                 // Phase 3: Generate language-aware insights using Rich Intelligence Bridge
                 console.log('🔮 Phase 3: Generating language-aware insights in:', language);
                 
+                // Build advanced context from available data
+                const advancedContext = {
+                  mbtiType: blueprintData?.personality?.likelyType || 'Unknown',
+                  conversationHistory: conversationContext,
+                  memoryMetrics,
+                  pieInsights
+                };
+                
                 await triggerInsightCheck('periodic_activity', { 
                   source: 'autonomous_trigger',
                   language,
