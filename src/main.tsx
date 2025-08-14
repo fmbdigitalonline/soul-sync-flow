@@ -22,6 +22,7 @@ import PersonaTest from "./pages/PersonaTest";
 import SevenLayerTest from "./pages/SevenLayerTest";
 import Phase3MemoryTestPage from "./pages/Phase3MemoryTest";
 import TestEnvironmentPage from "./pages/TestEnvironmentPage";
+import User360Page from "./pages/User360Page";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import HermeticIntelligenceTest from "./pages/HermeticIntelligenceTest";
@@ -87,6 +88,7 @@ const router = createBrowserRouter([
       { path: "dreams/success", element: <ProtectedRoute><Dreams /></ProtectedRoute> },
       { path: "spiritual-growth", element: <ProtectedRoute><SpiritualGrowth /></ProtectedRoute> },
       { path: "profile", element: <ProtectedRoute><Profile /></ProtectedRoute> },
+      { path: "user-360", element: <ProtectedRoute><User360Page /></ProtectedRoute> },
       { path: "test-ephemeris", element: <TestEphemeris /> },
       { path: "human-design-debug", element: <HumanDesignDebug /> },
       { path: "persona-test", element: <PersonaTest /> },
