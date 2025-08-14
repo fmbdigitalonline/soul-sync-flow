@@ -7,7 +7,6 @@ import MainLayout from "@/components/Layout/MainLayout";
 import { PageContainer, PageHeader, PageSection } from "@/components/Layout/PageContainer";
 import { PersonalizedQuoteDisplay } from "@/components/ui/personalized-quote-display";
 import { Button } from "@/components/ui/button";
-
 import { TutorialModal } from "@/components/tutorial/TutorialModal";
 import PersonalityDemo from "@/components/personality/PersonalityDemo";
 import { LanguageSelector } from "@/components/ui/language-selector";
@@ -134,10 +133,9 @@ const Index = () => {
         <PageSection className="text-center">
           <div className="space-y-6 mb-12">
             <h1 className="text-4xl sm:text-5xl font-bold font-cormorant gradient-text">
-              {safeInterpolateTranslation(
-                user ? t("index.welcomePlainWithName") : t("index.welcomePlain"),
-                { name: userName }
-              )}
+              {safeInterpolateTranslation(user ? t("index.welcomePlainWithName") : t("index.welcomePlain"), {
+              name: userName
+            })}
             </h1>
             
             <div className="flex items-center justify-center">
@@ -148,66 +146,56 @@ const Index = () => {
 
         {/* Navigation Cards - Starting Hub */}
         <PageSection>
-            <HomeMenuGrid
-              items={useMemo<HomeMenuItem[]>(() => [
-                {
-                  key: 'dashboard',
-                  to: '/dashboard',
-                  title: t('index.dashboard'),
-                  description: t('index.dashboardDesc'),
-                  Icon: LayoutDashboard,
-                  image: '/assets/home/dashboard.jpg',
-                },
-                {
-                  key: 'blueprint',
-                  to: '/blueprint',
-                  title: t('index.blueprint'),
-                  description: t('index.blueprintDesc'),
-                  Icon: BookOpen,
-                  image: '/assets/home/blueprint.jpg',
-                },
-                {
-                  key: 'companion',
-                  to: '/companion',
-                  title: t('index.companion'),
-                  description: t('index.companionDesc'),
-                  Icon: Brain,
-                  image: '/assets/home/companion.jpg',
-                },
-                {
-                  key: 'tasks',
-                  to: '/tasks',
-                  title: t('index.tasks'),
-                  description: t('index.tasksDesc'),
-                  Icon: ListTodo,
-                  image: '/assets/home/tasks.jpg',
-                },
-                {
-                  key: 'dreams',
-                  to: '/dreams',
-                  title: t('index.dreams'),
-                  description: t('index.dreamsDesc'),
-                  Icon: Heart,
-                  image: '/assets/home/dreams.jpg',
-                },
-                {
-                  key: 'growth',
-                  to: '/spiritual-growth',
-                  title: t('index.growth'),
-                  description: t('index.growthDesc'),
-                  Icon: Sparkles,
-                  image: '/assets/home/growth.jpg',
-                },
-                {
-                  key: 'profile',
-                  to: '/profile',
-                  title: t('index.profile'),
-                  description: t('index.profileDesc'),
-                  Icon: User,
-                  image: '/assets/home/profile.jpg',
-                },
-              ], [t])}
-            />
+            <HomeMenuGrid items={useMemo<HomeMenuItem[]>(() => [{
+          key: 'dashboard',
+          to: '/dashboard',
+          title: t('index.dashboard'),
+          description: t('index.dashboardDesc'),
+          Icon: LayoutDashboard,
+          image: '/assets/home/dashboard.jpg'
+        }, {
+          key: 'blueprint',
+          to: '/blueprint',
+          title: t('index.blueprint'),
+          description: t('index.blueprintDesc'),
+          Icon: BookOpen,
+          image: '/assets/home/blueprint.jpg'
+        }, {
+          key: 'companion',
+          to: '/companion',
+          title: t('index.companion'),
+          description: t('index.companionDesc'),
+          Icon: Brain,
+          image: '/assets/home/companion.jpg'
+        }, {
+          key: 'tasks',
+          to: '/tasks',
+          title: t('index.tasks'),
+          description: t('index.tasksDesc'),
+          Icon: ListTodo,
+          image: '/assets/home/tasks.jpg'
+        }, {
+          key: 'dreams',
+          to: '/dreams',
+          title: t('index.dreams'),
+          description: t('index.dreamsDesc'),
+          Icon: Heart,
+          image: '/assets/home/dreams.jpg'
+        }, {
+          key: 'growth',
+          to: '/spiritual-growth',
+          title: t('index.growth'),
+          description: t('index.growthDesc'),
+          Icon: Sparkles,
+          image: '/assets/home/growth.jpg'
+        }, {
+          key: 'profile',
+          to: '/profile',
+          title: t('index.profile'),
+          description: t('index.profileDesc'),
+          Icon: User,
+          image: '/assets/home/profile.jpg'
+        }], [t])} />
         </PageSection>
 
         {/* Admin Demo Button */}
@@ -219,15 +207,12 @@ const Index = () => {
           </div>}
 
         {/* Language Selector */}
-        <div className="flex justify-center mb-12">
-          <LanguageSelector />
-        </div>
+        
 
         {/* Action Buttons - Modern CTA section */}
         <PageSection className="text-center">
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
-            {user && hasBlueprint && (
-              <>
+            {user && hasBlueprint && <>
                 <Button onClick={() => navigate('/blueprint')} size="lg" className="font-inter group h-touch px-8">
                   <BookOpen className="h-5 w-5 mr-2 group-hover:rotate-3 transition-transform" />
                   {t('index.viewBlueprint')}
@@ -237,8 +222,7 @@ const Index = () => {
                   <BookOpen className="h-5 w-5 mr-2" />
                   {t('index.takeTour')}
                 </Button>
-              </>
-            )}
+              </>}
             {user && !hasBlueprint && <div className="flex flex-col sm:flex-row gap-4">
                 <Button onClick={() => navigate('/onboarding')} size="lg" className="font-inter h-touch px-8">
                   {t('index.getStarted')}
