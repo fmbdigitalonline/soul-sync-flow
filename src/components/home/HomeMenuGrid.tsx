@@ -24,41 +24,38 @@ export function HomeMenuGrid({ items, className, ...props }: HomeMenuGridProps) 
       className={cn("w-full", className)}
       {...props}
     >
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 mb-12 max-[360px]:grid-cols-1">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mb-12 max-[360px]:grid-cols-1">
         {items.map(({ key, to, title, description, Icon, image }) => (
-          <div key={key} className="rounded-3xl bg-card p-3 shadow-sm ring-1 ring-border/40 transition-shadow hover:shadow-md">
-            <Link to={to} className="group block" aria-label={title}>
-                <CosmicCard variant="minimal" size="lg" floating className="h-full p-0 overflow-hidden rounded-2xl">
-                  <article className="relative w-full min-h-[200px] sm:min-h-[240px] lg:min-h-[280px]">
-                    <div className="absolute inset-0 flex flex-col gap-3 sm:gap-4 p-4 sm:p-5">
-                      <div className="relative flex-1 overflow-hidden rounded-xl bg-muted/50">
-                        {image ? (
-                          <img
-                            src={image}
-                            alt={`${title} background`}
-                            className="absolute inset-0 w-full h-full object-cover"
-                            loading="lazy"
-                            decoding="async"
-                          />
-                        ) : (
-                          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
-                            <Icon className="h-8 w-8 sm:h-12 sm:w-12 text-primary/40" aria-hidden="true" />
-                          </div>
-                        )}
+          <Link key={key} to={to} className="group block" aria-label={title}>
+            <CosmicCard variant="elevated" size="lg" floating className="h-full overflow-hidden rounded-2xl transition-all duration-300 hover:scale-[1.02]">
+              <article className="relative w-full min-h-[220px] sm:min-h-[260px] lg:min-h-[300px]">
+                <div className="absolute inset-0 flex flex-col gap-3 sm:gap-4 p-3 sm:p-4">
+                  <div className="relative flex-1 overflow-hidden rounded-xl bg-muted/50">
+                    {image ? (
+                      <img
+                        src={image}
+                        alt={`${title} background`}
+                        className="absolute inset-0 w-full h-full object-cover"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
+                        <Icon className="h-8 w-8 sm:h-12 sm:w-12 text-primary/40" aria-hidden="true" />
                       </div>
-                      <div className="flex-shrink-0 rounded-xl ring-1 ring-border/30 bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/80 p-2 sm:p-3">
-                        <div className="flex items-center gap-1.5 sm:gap-2 text-foreground/90 mb-1">
-                          <Icon className="h-3 w-3 sm:h-4 sm:w-4 text-primary flex-shrink-0" aria-hidden="true" />
-                           <h3 className="text-sm sm:text-base font-semibold font-system leading-tight truncate">{title}</h3>
-                        </div>
-                         <p className="text-xs sm:text-sm text-muted-foreground font-system line-clamp-2 leading-snug">{description}</p>
-                      </div>
+                    )}
+                  </div>
+                  <div className="flex-shrink-0 rounded-xl ring-1 ring-border/30 bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/80 p-3 sm:p-4 min-h-[44px]">
+                    <div className="flex items-center gap-2 text-foreground/90 mb-1.5">
+                      <Icon className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" aria-hidden="true" />
+                      <h3 className="text-sm sm:text-base font-semibold font-system leading-tight truncate">{title}</h3>
                     </div>
-                    <div className="absolute inset-0 ring-1 ring-border/30 pointer-events-none rounded-2xl" aria-hidden="true" />
-                  </article>
-                </CosmicCard>
-            </Link>
-          </div>
+                    <p className="text-xs sm:text-sm text-muted-foreground font-system line-clamp-2 leading-snug">{description}</p>
+                  </div>
+                </div>
+              </article>
+            </CosmicCard>
+          </Link>
         ))}
       </div>
     </section>
