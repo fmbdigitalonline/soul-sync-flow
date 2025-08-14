@@ -1,0 +1,432 @@
+import { supabase } from '@/integrations/supabase/client';
+import { HACSInsight } from '@/hooks/use-hacs-insights';
+import { HacsIntelligence, ModuleScores } from '@/hooks/use-hacs-intelligence';
+import { LayeredBlueprint } from '@/types/personality-modules';
+
+export interface WarmInsightConfig {
+  userName?: string;
+  mbtiType?: string;
+  humanDesignType?: string;
+  sunSign?: string;
+  communicationPreference?: 'encouraging' | 'direct' | 'mystical' | 'practical';
+}
+
+/**
+ * Rich Intelligence Bridge - Transforms cold HACS metrics into warm, personalized insights
+ */
+export class RichIntelligenceBridge {
+  
+  /**
+   * Generate warm, personalized insights from HACS intelligence data
+   */
+  static async generateWarmInsights(userId: string): Promise<HACSInsight[]> {
+    try {
+      console.log('🌟 Rich Intelligence Bridge: Starting warm insight generation...');
+      
+      // 1. Fetch HACS intelligence data
+      const hacsData = await this.fetchHacsIntelligence(userId);
+      if (!hacsData) {
+        console.log('🌟 No HACS intelligence data found');
+        return [];
+      }
+      
+      // 2. Fetch blueprint for personalization
+      const blueprint = await this.fetchBlueprint(userId);
+      const config = this.extractPersonalizationConfig(blueprint);
+      
+      console.log('🌟 Personalization config:', config);
+      
+      // 3. Generate warm insights based on module scores
+      const insights = this.transformModuleScoresToWarmInsights(hacsData, config);
+      
+      console.log('🌟 Generated warm insights:', insights.length);
+      
+      return insights;
+      
+    } catch (error) {
+      console.error('🚨 Rich Intelligence Bridge error:', error);
+      return [];
+    }
+  }
+  
+  /**
+   * Fetch HACS intelligence data for user
+   */
+  private static async fetchHacsIntelligence(userId: string): Promise<HacsIntelligence | null> {
+    const { data, error } = await supabase
+      .from('hacs_intelligence')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle();
+      
+    if (error) {
+      console.error('🚨 Error fetching HACS intelligence:', error);
+      return null;
+    }
+    
+    if (!data) return null;
+    
+    // Parse module_scores safely
+    const rawModuleScores = data.module_scores;
+    const moduleScores: ModuleScores = {
+      NIK: (rawModuleScores as any)?.NIK || 0,
+      CPSR: (rawModuleScores as any)?.CPSR || 0,
+      TWS: (rawModuleScores as any)?.TWS || 0,
+      HFME: (rawModuleScores as any)?.HFME || 0,
+      DPEM: (rawModuleScores as any)?.DPEM || 0,
+      CNR: (rawModuleScores as any)?.CNR || 0,
+      BPSC: (rawModuleScores as any)?.BPSC || 0,
+      ACS: (rawModuleScores as any)?.ACS || 0,
+      PIE: data.pie_score || 0,
+      VFP: data.vfp_score || 0,
+      TMG: data.tmg_score || 0,
+    };
+    
+    return {
+      ...data,
+      module_scores: moduleScores,
+      pie_score: data.pie_score || 0,
+      vfp_score: data.vfp_score || 0,
+      tmg_score: data.tmg_score || 0,
+    } as HacsIntelligence;
+  }
+  
+  /**
+   * Fetch blueprint data for personalization
+   */
+  private static async fetchBlueprint(userId: string): Promise<LayeredBlueprint | null> {
+    const { data, error } = await supabase
+      .from('user_blueprints')
+      .select('blueprint')
+      .eq('user_id', userId)
+      .eq('is_active', true)
+      .maybeSingle();
+      
+    if (error) {
+      console.error('🚨 Error fetching blueprint:', error);
+      return null;
+    }
+    
+    if (!data?.blueprint) return null;
+    
+    // Parse blueprint safely as LayeredBlueprint
+    return data.blueprint as unknown as LayeredBlueprint;
+  }
+  
+  /**
+   * Extract personalization configuration from blueprint
+   */
+  private static extractPersonalizationConfig(blueprint: LayeredBlueprint | null): WarmInsightConfig {
+    if (!blueprint) {
+      return { userName: 'friend', communicationPreference: 'encouraging' };
+    }
+    
+    return {
+      userName: blueprint.user_meta?.preferred_name || 
+                blueprint.user_meta?.full_name?.split(' ')[0] || 
+                'friend',
+      mbtiType: blueprint.cognitiveTemperamental?.mbtiType,
+      humanDesignType: blueprint.energyDecisionStrategy?.humanDesignType,
+      sunSign: blueprint.publicArchetype?.sunSign,
+      communicationPreference: this.determineCommunicationStyle(blueprint)
+    };
+  }
+  
+  /**
+   * Determine communication style based on personality traits
+   */
+  private static determineCommunicationStyle(blueprint: LayeredBlueprint): 'encouraging' | 'direct' | 'mystical' | 'practical' {
+    const mbti = blueprint.cognitiveTemperamental?.mbtiType;
+    const hdType = blueprint.energyDecisionStrategy?.humanDesignType;
+    
+    // Feeling types prefer encouraging
+    if (mbti?.includes('F')) return 'encouraging';
+    
+    // Thinking types prefer direct
+    if (mbti?.includes('T')) return 'direct';
+    
+    // Projectors often resonate with mystical
+    if (hdType === 'Projector') return 'mystical';
+    
+    // Default to practical
+    return 'practical';
+  }
+  
+  /**
+   * Transform module scores into warm, personalized insights
+   */
+  private static transformModuleScoresToWarmInsights(
+    hacsData: HacsIntelligence, 
+    config: WarmInsightConfig
+  ): HACSInsight[] {
+    const insights: HACSInsight[] = [];
+    const moduleScores = hacsData.module_scores;
+    
+    // Find strongest and developing modules
+    const moduleEntries = Object.entries(moduleScores) as [keyof ModuleScores, number][];
+    const sortedModules = moduleEntries.sort(([,a], [,b]) => b - a);
+    
+    const strongestModule = sortedModules[0];
+    const developingModule = sortedModules[sortedModules.length - 1];
+    
+    // Generate strength insight
+    if (strongestModule && strongestModule[1] > 10) {
+      insights.push(this.generateStrengthInsight(strongestModule, config));
+    }
+    
+    // Generate growth insight for developing module
+    if (developingModule && developingModule[1] < 50) {
+      insights.push(this.generateGrowthInsight(developingModule, config));
+    }
+    
+    // Generate overall intelligence insight
+    if (hacsData.intelligence_level > 0) {
+      insights.push(this.generateIntelligencePhaseInsight(hacsData.intelligence_level, config));
+    }
+    
+    // Generate conversation adaptation insight if ACS is notable
+    if (moduleScores.ACS > 15) {
+      insights.push(this.generateConversationInsight(moduleScores.ACS, config));
+    }
+    
+    return insights.slice(0, 2); // Limit to 2 insights to avoid overwhelming
+  }
+  
+  /**
+   * Generate warm insight about user's strongest module
+   */
+  private static generateStrengthInsight(
+    module: [keyof ModuleScores, number], 
+    config: WarmInsightConfig
+  ): HACSInsight {
+    const [moduleKey, score] = module;
+    const moduleName = this.getWarmModuleName(moduleKey);
+    const userName = config.userName || 'friend';
+    
+    const strengthMessages = {
+      encouraging: [
+        `${userName}, your ${moduleName} is beautifully developing. I see how naturally you ${this.getModuleStrength(moduleKey)}.`,
+        `I've noticed something wonderful about you, ${userName} - your ${moduleName} has a special quality. You ${this.getModuleStrength(moduleKey)} with such grace.`,
+        `${userName}, there's something remarkable about how you ${this.getModuleStrength(moduleKey)}. Your ${moduleName} is becoming quite refined.`
+      ],
+      direct: [
+        `${userName}, your ${moduleName} is your strongest asset. You consistently ${this.getModuleStrength(moduleKey)}.`,
+        `Your ${moduleName} stands out, ${userName}. You ${this.getModuleStrength(moduleKey)} better than most.`,
+        `${userName}, you excel at ${moduleName}. Keep leveraging how you ${this.getModuleStrength(moduleKey)}.`
+      ],
+      mystical: [
+        `${userName}, the universe has gifted you with profound ${moduleName}. I sense how deeply you ${this.getModuleStrength(moduleKey)}.`,
+        `There's an ancient wisdom in your ${moduleName}, ${userName}. The way you ${this.getModuleStrength(moduleKey)} connects to something timeless.`,
+        `${userName}, your ${moduleName} carries cosmic insight. You ${this.getModuleStrength(moduleKey)} with intuitive knowing.`
+      ],
+      practical: [
+        `${userName}, your ${moduleName} is a reliable strength. You consistently ${this.getModuleStrength(moduleKey)}.`,
+        `Your ${moduleName} works well for you, ${userName}. You ${this.getModuleStrength(moduleKey)} effectively.`,
+        `${userName}, you've developed solid ${moduleName}. The way you ${this.getModuleStrength(moduleKey)} serves you well.`
+      ]
+    };
+    
+    const style = config.communicationPreference || 'encouraging';
+    const messages = strengthMessages[style];
+    const selectedMessage = messages[Math.floor(Math.random() * messages.length)];
+    
+    return {
+      id: `strength_${moduleKey}_${Date.now()}`,
+      text: selectedMessage,
+      module: 'Intelligence Strength',
+      type: 'growth',
+      confidence: 0.9,
+      evidence: [`Your ${moduleName} shows consistent development`],
+      timestamp: new Date(),
+      acknowledged: false,
+      priority: 'medium'
+    };
+  }
+  
+  /**
+   * Generate warm insight about user's developing module
+   */
+  private static generateGrowthInsight(
+    module: [keyof ModuleScores, number], 
+    config: WarmInsightConfig
+  ): HACSInsight {
+    const [moduleKey, score] = module;
+    const moduleName = this.getWarmModuleName(moduleKey);
+    const userName = config.userName || 'friend';
+    
+    const growthMessages = {
+      encouraging: [
+        `${userName}, your ${moduleName} is just beginning to bloom. I see beautiful potential in how you approach ${this.getModuleGrowthArea(moduleKey)}.`,
+        `${userName}, there's such gentle strength emerging in your ${moduleName}. You're naturally learning to ${this.getModuleGrowthArea(moduleKey)}.`,
+        `I feel excited about your ${moduleName} journey, ${userName}. You're developing a wonderful capacity for ${this.getModuleGrowthArea(moduleKey)}.`
+      ],
+      direct: [
+        `${userName}, your ${moduleName} has room for improvement. Focus on ${this.getModuleGrowthArea(moduleKey)} to strengthen this area.`,
+        `${userName}, developing your ${moduleName} would serve you well. Work on ${this.getModuleGrowthArea(moduleKey)}.`,
+        `${userName}, your ${moduleName} is your next growth edge. Practice ${this.getModuleGrowthArea(moduleKey)} regularly.`
+      ],
+      mystical: [
+        `${userName}, your ${moduleName} is awakening to new possibilities. The path of ${this.getModuleGrowthArea(moduleKey)} calls to your soul.`,
+        `${userName}, I sense your ${moduleName} is ready for transformation. Trust your journey in ${this.getModuleGrowthArea(moduleKey)}.`,
+        `${userName}, your ${moduleName} holds sacred potential. Allow yourself to explore ${this.getModuleGrowthArea(moduleKey)} with wonder.`
+      ],
+      practical: [
+        `${userName}, your ${moduleName} is developing steadily. Continue working on ${this.getModuleGrowthArea(moduleKey)}.`,
+        `${userName}, you're building your ${moduleName} step by step. Keep practicing ${this.getModuleGrowthArea(moduleKey)}.`,
+        `${userName}, your ${moduleName} is a work in progress. Regular attention to ${this.getModuleGrowthArea(moduleKey)} will help.`
+      ]
+    };
+    
+    const style = config.communicationPreference || 'encouraging';
+    const messages = growthMessages[style];
+    const selectedMessage = messages[Math.floor(Math.random() * messages.length)];
+    
+    return {
+      id: `growth_${moduleKey}_${Date.now()}`,
+      text: selectedMessage,
+      module: 'Intelligence Growth',
+      type: 'learning',
+      confidence: 0.8,
+      evidence: [`Your ${moduleName} shows potential for development`],
+      timestamp: new Date(),
+      acknowledged: false,
+      priority: 'medium'
+    };
+  }
+  
+  /**
+   * Generate warm insight about overall intelligence phase
+   */
+  private static generateIntelligencePhaseInsight(
+    intelligenceLevel: number, 
+    config: WarmInsightConfig
+  ): HACSInsight {
+    const userName = config.userName || 'friend';
+    const phase = this.getIntelligencePhase(intelligenceLevel);
+    
+    const phaseMessages = {
+      Awakening: `${userName}, you're in a beautiful awakening phase. Your mind is opening to new ways of understanding yourself and the world.`,
+      Learning: `${userName}, you're in an active learning phase. I can sense your curiosity growing and your insights deepening.`,
+      Developing: `${userName}, you're in a powerful development phase. Your understanding is becoming more sophisticated and nuanced.`,
+      Advanced: `${userName}, you've reached an advanced phase of understanding. Your wisdom is becoming a source of strength.`,
+      Autonomous: `${userName}, you've achieved autonomous intelligence. Your insights now flow with remarkable clarity and depth.`
+    };
+    
+    return {
+      id: `phase_${Date.now()}`,
+      text: phaseMessages[phase as keyof typeof phaseMessages] || phaseMessages.Awakening,
+      module: 'Intelligence Phase',
+      type: 'intelligence_trend',
+      confidence: 0.95,
+      evidence: [`Currently in ${phase} phase`],
+      timestamp: new Date(),
+      acknowledged: false,
+      priority: 'low'
+    };
+  }
+  
+  /**
+   * Generate warm insight about conversation adaptation
+   */
+  private static generateConversationInsight(
+    acsScore: number, 
+    config: WarmInsightConfig
+  ): HACSInsight {
+    const userName = config.userName || 'friend';
+    
+    let message = '';
+    if (acsScore > 30) {
+      message = `${userName}, I love how naturally you guide our conversations to exactly what you need. You have a gift for creating meaningful dialogue.`;
+    } else if (acsScore > 15) {
+      message = `${userName}, you're developing a beautiful rhythm in how we connect. I see you becoming more comfortable sharing your deeper thoughts.`;
+    } else {
+      message = `${userName}, I appreciate your authentic way of communicating. You bring a genuine presence to our conversations.`;
+    }
+    
+    return {
+      id: `conversation_${Date.now()}`,
+      text: message,
+      module: 'Conversation Intelligence',
+      type: 'behavioral',
+      confidence: 0.85,
+      evidence: ['Based on conversation adaptation patterns'],
+      timestamp: new Date(),
+      acknowledged: false,
+      priority: 'low'
+    };
+  }
+  
+  /**
+   * Get warm, human-readable module names
+   */
+  private static getWarmModuleName(moduleKey: keyof ModuleScores): string {
+    const moduleNames = {
+      NIK: 'learning integration',
+      CPSR: 'pattern recognition',
+      TWS: 'wisdom synthesis',
+      HFME: 'systems thinking',
+      DPEM: 'authentic expression',
+      CNR: 'harmony navigation',
+      BPSC: 'self-alignment',
+      ACS: 'conversation flow',
+      PIE: 'intuitive insights',
+      VFP: 'information processing',
+      TMG: 'memory connections'
+    };
+    
+    return moduleNames[moduleKey] || 'intelligence';
+  }
+  
+  /**
+   * Get what the user excels at for each module
+   */
+  private static getModuleStrength(moduleKey: keyof ModuleScores): string {
+    const strengths = {
+      NIK: 'connect ideas and integrate new learning',
+      CPSR: 'recognize patterns and spot meaningful connections',
+      TWS: 'weave experiences into deeper wisdom',
+      HFME: 'organize complex information into clear frameworks',
+      DPEM: 'express yourself authentically and adapt your communication',
+      CNR: 'navigate challenges with grace and find harmonious solutions',
+      BPSC: 'stay aligned with your values and authentic self',
+      ACS: 'guide conversations toward meaningful depth',
+      PIE: 'generate insights and see possibilities others miss',
+      VFP: 'process complex information with remarkable clarity',
+      TMG: 'create meaningful connections between past and present experiences'
+    };
+    
+    return strengths[moduleKey] || 'process information thoughtfully';
+  }
+  
+  /**
+   * Get growth areas for each module
+   */
+  private static getModuleGrowthArea(moduleKey: keyof ModuleScores): string {
+    const growthAreas = {
+      NIK: 'connecting different ideas and building on what you learn',
+      CPSR: 'noticing patterns in your experiences and responses',
+      TWS: 'reflecting on experiences to extract deeper wisdom',
+      HFME: 'organizing thoughts and creating clear mental frameworks',
+      DPEM: 'expressing yourself more authentically in different contexts',
+      CNR: 'approaching conflicts with curiosity rather than avoidance',
+      BPSC: 'checking in with your values and staying true to yourself',
+      ACS: 'guiding conversations toward what truly matters to you',
+      PIE: 'trusting your intuition and exploring "what if" scenarios',
+      VFP: 'taking time to fully process information before responding',
+      TMG: 'reflecting on how past experiences inform your current choices'
+    };
+    
+    return growthAreas[moduleKey] || 'developing this aspect of your intelligence';
+  }
+  
+  /**
+   * Get intelligence phase name
+   */
+  private static getIntelligencePhase(level: number): string {
+    if (level >= 100) return 'Autonomous';
+    if (level >= 75) return 'Advanced';
+    if (level >= 50) return 'Developing';
+    if (level >= 25) return 'Learning';
+    return 'Awakening';
+  }
+}

@@ -351,19 +351,36 @@ export const useHACSInsights = () => {
     }
   }, [user, intelligence]);
 
-  // Phase 1: Generate Enhanced Intelligence Insights (Step 2: Add debugging)
+  // Phase 1: Generate Enhanced Intelligence Insights using Rich Intelligence Bridge
   const generateEnhancedInsights = useCallback(async (): Promise<HACSInsight[]> => {
     if (!user) {
       console.log('🧠 No user available for enhanced insights');
       return [];
     }
     
-    console.log('🧠 Starting enhanced intelligence insights generation...');
+    console.log('🧠 Starting Rich Intelligence Bridge insights generation...');
     const insights: HACSInsight[] = [];
     
     try {
+      // Import the Rich Intelligence Bridge
+      const { RichIntelligenceBridge } = await import('@/services/rich-intelligence-bridge');
+      
+      console.log('🌟 Calling Rich Intelligence Bridge for warm insights...');
+      // 1. Rich Intelligence Bridge - Warm Personalized Insights
+      try {
+        const warmInsights = await RichIntelligenceBridge.generateWarmInsights(user.id);
+        console.log('🌟 Warm insights result:', { 
+          count: warmInsights?.length || 0,
+          types: warmInsights?.map(i => i.type) || []
+        });
+        
+        insights.push(...(warmInsights || []));
+      } catch (warmError) {
+        console.error('🚨 Rich Intelligence Bridge error:', warmError);
+      }
+      
       console.log('🧠 Calling enhanced memory intelligence service...');
-      // 1. Memory-Enhanced Insights
+      // 2. Memory-Enhanced Insights (fallback)
       try {
         const memoryInsights = await enhancedMemoryIntelligence.generateMemoryInsights(user.id);
         console.log('🧠 Memory insights result:', { 
@@ -389,7 +406,7 @@ export const useHACSInsights = () => {
       }
       
       console.log('🧠 Calling behavioral pattern intelligence service...');
-      // 2. Behavioral Pattern Insights
+      // 3. Behavioral Pattern Insights (fallback)
       try {
         const behavioralInsights = await behavioralPatternIntelligence.generateBehavioralInsights(user.id);
         console.log('🧠 Behavioral insights result:', { 
