@@ -3740,6 +3740,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      has_any_admin_users: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       hnsw_bit_support: {
         Args: { "": unknown }
         Returns: unknown
