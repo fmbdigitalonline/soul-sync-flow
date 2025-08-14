@@ -3197,6 +3197,42 @@ export type Database = {
         }
         Relationships: []
       }
+      security_audit_log: {
+        Row: {
+          action: string
+          error_message: string | null
+          id: string
+          ip_address: unknown | null
+          resource: string
+          success: boolean
+          timestamp: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          error_message?: string | null
+          id?: string
+          ip_address?: unknown | null
+          resource: string
+          success?: boolean
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          error_message?: string | null
+          id?: string
+          ip_address?: unknown | null
+          resource?: string
+          success?: boolean
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       session_feedback: {
         Row: {
           created_at: string
@@ -3783,6 +3819,16 @@ export type Database = {
       l2_normalize: {
         Args: { "": string } | { "": unknown } | { "": unknown }
         Returns: string
+      }
+      log_admin_access: {
+        Args: {
+          p_action: string
+          p_error_message?: string
+          p_resource: string
+          p_success?: boolean
+          p_user_id?: string
+        }
+        Returns: undefined
       }
       match_blueprint_chunks: {
         Args: {
