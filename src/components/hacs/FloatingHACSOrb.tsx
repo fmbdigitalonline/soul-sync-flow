@@ -239,8 +239,8 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     startIntroduction
   ]);
 
-  // 🔒 INSIGHTS PAUSED - Feature flag for automatic insight generation
-  const AUTO_INSIGHTS_ENABLED = false; // Set to true to re-enable automatic insights
+  // ✅ INSIGHTS ACTIVATED - Feature flag for automatic insight generation
+  const AUTO_INSIGHTS_ENABLED = true; // Activated to enable red exclamation notifications
   
   // Phase 3: Enhanced autonomous triggers with advanced intelligence integration
   useEffect(() => {
@@ -636,13 +636,31 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
             />
           </motion.div>
 
-          {/* Pulse indicator for new questions or insights */}
-          {(currentQuestion || (currentInsight && !currentInsight.acknowledged)) && (
+          {/* Blue pulse indicator for questions */}
+          {currentQuestion && (
             <motion.div
-              className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full"
+              className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full"
               animate={{ scale: [1, 1.2, 1] }}
               transition={{ duration: 1, repeat: Infinity }}
             />
+          )}
+
+          {/* Red exclamation mark for unacknowledged insights */}
+          {currentInsight && !currentInsight.acknowledged && (
+            <motion.div
+              className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center shadow-lg"
+              animate={{ 
+                scale: [1, 1.15, 1],
+                boxShadow: [
+                  "0 0 0 0 rgba(239, 68, 68, 0.7)",
+                  "0 0 0 4px rgba(239, 68, 68, 0)",
+                  "0 0 0 0 rgba(239, 68, 68, 0)"
+                ]
+              }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+            >
+              <span className="text-white text-[10px] font-bold leading-none">!</span>
+            </motion.div>
           )}
         </div>
       </div>
