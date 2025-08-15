@@ -32,13 +32,20 @@ export class RichIntelligenceBridge {
         return [];
       }
       
-      // 2. Fetch blueprint for personalization (from User 360)
+      // 2. Validate user has meaningful activity before generating insights
+      const hasRealActivity = await this.validateUserActivity(userId, hacsData);
+      if (!hasRealActivity) {
+        console.log('🌟 User lacks meaningful activity - no insights generated');
+        return [];
+      }
+      
+      // 3. Fetch blueprint for personalization (from User 360)
       const blueprint = await this.fetchBlueprintFromUser360(userId);
       const config = this.extractPersonalizationConfig(blueprint, language);
       
       console.log('🌟 Personalization config:', config);
       
-      // 3. Generate warm insights based on module scores
+      // 4. Generate warm insights based on module scores
       const insights = this.transformModuleScoresToWarmInsights(hacsData, config);
       
       console.log('🌟 Generated warm insights:', insights.length);
@@ -51,6 +58,62 @@ export class RichIntelligenceBridge {
     }
   }
   
+  /**
+   * Validate user has meaningful activity before generating insights
+   * This prevents artificial insights for new users who haven't actually used the system
+   */
+  private static async validateUserActivity(userId: string, hacsData: HacsIntelligence): Promise<boolean> {
+    try {
+      // Check 1: Must have meaningful interaction count
+      if (hacsData.interaction_count < 5) {
+        console.log('🚫 Insufficient interactions:', hacsData.interaction_count);
+        return false;
+      }
+      
+      // Check 2: Must have at least one module score > 5 (showing real growth)
+      const moduleScores = Object.values(hacsData.module_scores);
+      const hasRealGrowth = moduleScores.some(score => score > 5);
+      if (!hasRealGrowth) {
+        console.log('🚫 No real module growth detected');
+        return false;
+      }
+      
+      // Check 3: Must have actual conversation history or activity
+      const { data: conversations } = await supabase
+        .from('hacs_conversations')
+        .select('id')
+        .eq('user_id', userId)
+        .limit(3);
+        
+      const { data: activities } = await supabase
+        .from('user_activities') 
+        .select('id')
+        .eq('user_id', userId)
+        .limit(3);
+      
+      const hasConversations = conversations && conversations.length > 0;
+      const hasActivities = activities && activities.length > 0;
+      
+      if (!hasConversations && !hasActivities) {
+        console.log('🚫 No conversation or activity history');
+        return false;
+      }
+      
+      console.log('✅ User has meaningful activity - insights approved', {
+        interactions: hacsData.interaction_count,
+        hasRealGrowth,
+        conversationCount: conversations?.length || 0,
+        activityCount: activities?.length || 0
+      });
+      
+      return true;
+      
+    } catch (error) {
+      console.error('🚨 Error validating user activity:', error);
+      return false; // Fail safely - no insights if we can't validate
+    }
+  }
+
   /**
    * Fetch HACS intelligence data for user
    */
@@ -239,13 +302,13 @@ export class RichIntelligenceBridge {
     const strongestModule = sortedModules[0];
     const developingModule = sortedModules[sortedModules.length - 1];
     
-    // Generate strength insight
-    if (strongestModule && strongestModule[1] > 10) {
+    // Generate strength insight (only for users with real progress)
+    if (strongestModule && strongestModule[1] > 15) {
       insights.push(this.generateStrengthInsight(strongestModule, config));
     }
     
-    // Generate growth insight for developing module
-    if (developingModule && developingModule[1] < 50) {
+    // Generate growth insight for developing module (only if user has some baseline activity)
+    if (developingModule && developingModule[1] < 40 && hacsData.interaction_count > 8) {
       insights.push(this.generateGrowthInsight(developingModule, config));
     }
     
