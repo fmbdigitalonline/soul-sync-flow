@@ -136,7 +136,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
               </div>}
           </div>
 
-          <main className="flex-1 pb-20">
+          <main className={cn("flex-1", location.pathname === "/companion" ? "pb-0" : "pb-20")}>
             <PageContainer>
               {children}
             </PageContainer>

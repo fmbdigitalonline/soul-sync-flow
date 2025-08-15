@@ -13,6 +13,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { ActiveReminders } from "@/components/reminders/ActiveReminders";
 import { MobileTogglePanel } from "@/components/ui/mobile-toggle-panel";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 
 const Coach = () => {
   const {
@@ -143,7 +144,7 @@ const Coach = () => {
   return (
     <MainLayout>
       <div className="min-h-screen bg-background">
-        <div className="container mx-auto py-2 px-4 max-w-6xl">
+        <div className={cn("container mx-auto px-4 max-w-6xl", isMobile ? "py-0" : "py-2")}>
           
           {messages.length === 0 && (
             <div className="text-center mb-6">
