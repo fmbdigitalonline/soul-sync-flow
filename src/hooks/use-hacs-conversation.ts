@@ -43,7 +43,7 @@ export const useHACSConversation = () => {
   const [isStreamingResponse, setIsStreamingResponse] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState<HACSQuestion | null>(null);
-  const sessionIdRef = useRef(`session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
+  const [currentSessionId, setCurrentSessionId] = useState<string>('');
   const streamingAbortRef = useRef<AbortController | null>(null);
 
   // Helper function to determine conversation quality
@@ -63,14 +63,20 @@ export const useHACSConversation = () => {
     if (!user) return;
 
     try {
-      console.log('🔮 LOADING COMPANION HISTORY: Searching for session', sessionIdRef.current);
+      // Generate predictable session ID for companion conversations
+      const sessionId = currentSessionId || `companion_${user.id}`;
+      if (!currentSessionId) {
+        setCurrentSessionId(sessionId);
+      }
+
+      console.log('🔮 LOADING COMPANION HISTORY: Searching for session', sessionId);
       
       // First try to load from conversation_memory (primary for companion mode)
       const { data: companionMemory, error: memoryError } = await supabase
         .from('conversation_memory')
         .select('*')
         .eq('user_id', user.id)
-        .eq('session_id', sessionIdRef.current)
+        .eq('session_id', sessionId)
         .eq('mode', 'companion')
         .maybeSingle();
 
@@ -80,7 +86,7 @@ export const useHACSConversation = () => {
           message: memoryError.message,
           details: memoryError.details,
           hint: memoryError.hint,
-          sessionId: sessionIdRef.current
+          sessionId: sessionId
         });
         // Continue to fallback instead of stopping
       }
@@ -108,7 +114,7 @@ export const useHACSConversation = () => {
         .from('hacs_conversations')
         .select('*')
         .eq('user_id', user.id)
-        .eq('session_id', sessionIdRef.current)
+        .eq('session_id', sessionId)
         .maybeSingle();
 
       if (conversationError) {
@@ -117,7 +123,7 @@ export const useHACSConversation = () => {
           message: conversationError.message,
           details: conversationError.details,
           hint: conversationError.hint,
-          sessionId: sessionIdRef.current
+          sessionId: sessionId
         });
         // Continue to fresh session instead of failing
       }
@@ -144,7 +150,7 @@ export const useHACSConversation = () => {
       setMessages([]);
       setConversationId(null);
     }
-  }, [user]);
+  }, [user, currentSessionId]);
 
   // Load conversation history on mount with timeout protection
   useEffect(() => {
@@ -173,7 +179,7 @@ export const useHACSConversation = () => {
     if (!user || !conversationData.length) return;
 
     try {
-      const sessionId = sessionIdRef.current;
+      const sessionId = currentSessionId || `companion_${user.id}`;
       
       // PILLAR III: Unified conversation storage - save to conversation_memory for Oracle consistency
       const conversationMemoryPayload = {
@@ -279,7 +285,7 @@ export const useHACSConversation = () => {
         body: {
           action: 'respond_to_user',
           userId: user.id,
-          sessionId: sessionIdRef.current,
+          sessionId: currentSessionId || `companion_${user.id}`,
           conversationId,
           userMessage: content.trim(),
           messageHistory: [...messages, userMessage]
@@ -361,7 +367,7 @@ export const useHACSConversation = () => {
         const { data: conversationMemory, error: memoryError } = await supabase
           .from('conversation_memory')
           .select('messages')
-          .eq('session_id', sessionIdRef.current)
+          .eq('session_id', currentSessionId || `companion_${user.id}`)
           .eq('mode', 'companion')
           .maybeSingle();
 
@@ -369,7 +375,7 @@ export const useHACSConversation = () => {
         
         if (conversationMemory?.messages && !memoryError) {
           // PILLAR I & II: Use ConversationMemoryService for intelligent context
-          const conversationContext = await conversationMemoryService.getConversationContext(sessionIdRef.current);
+          const conversationContext = await conversationMemoryService.getConversationContext(currentSessionId || `companion_${user.id}`);
           
           if (conversationContext?.messages) {
             // Use intelligent context selection instead of crude slice(-10)
@@ -445,7 +451,7 @@ export const useHACSConversation = () => {
           body: {
             message: content.trim(),
             userId: user.id,
-            sessionId: sessionIdRef.current,
+            sessionId: currentSessionId || `companion_${user.id}`,
             useOracleMode: true,
             enableBackgroundIntelligence: true,
             conversationHistory: recentMessages,
@@ -483,7 +489,7 @@ export const useHACSConversation = () => {
       await saveConversation([...messages, userMessage, oracleMessage]);
 
       console.log('✅ ORACLE MESSAGE: Stored in conversation system', {
-        sessionId: sessionIdRef.current,
+        sessionId: currentSessionId || `companion_${user.id}`,
         messageCount: [...messages, userMessage, oracleMessage].length,
         oracleStatus: response.oracleStatus,
         semanticChunks: response.semanticChunks,
@@ -515,7 +521,7 @@ export const useHACSConversation = () => {
         body: {
           action: 'generate_question',
           userId: user.id,
-          sessionId: sessionIdRef.current,
+          sessionId: currentSessionId || `companion_${user.id}`,
           conversationId,
           messageHistory: messages
         }
