@@ -35,7 +35,7 @@ export const MobileTogglePanel: React.FC<MobileTogglePanelProps> = ({
 
   // Mobile: Toggle between panels with coordinated spacing for mobile nav
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)] w-full max-w-full overflow-hidden">
+    <div className="flex flex-col h-[calc(100dvh-6rem)] w-full max-w-full overflow-hidden">
       {/* Toggle Header */}
       <div className="flex-shrink-0 p-3 border-b bg-background">
         <div className="flex gap-1 bg-gray-100 rounded-lg p-1 max-w-full">
@@ -75,7 +75,7 @@ export const MobileTogglePanel: React.FC<MobileTogglePanelProps> = ({
             {chatContent}
           </div>
         ) : (
-          <div className="h-full p-3 bg-gray-50/50 overflow-y-auto w-full max-w-full mb-20">
+          <div className="h-full p-3 bg-gray-50/50 overflow-y-auto w-full max-w-full">
             {remindersContent}
           </div>
         )}
