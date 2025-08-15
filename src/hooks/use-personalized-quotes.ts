@@ -1,10 +1,12 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { personalizedQuotesService, PersonalityQuote } from '@/services/personalized-quotes-service';
 
 export const usePersonalizedQuotes = (count: number = 3) => {
   const { user } = useAuth();
+  const { language } = useLanguage();
   const [quotes, setQuotes] = useState<PersonalityQuote[]>([]);
   const [defaultQuotes, setDefaultQuotes] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,14 +42,14 @@ export const usePersonalizedQuotes = (count: number = 3) => {
             console.log('🎭 usePersonalizedQuotes: Set personalized quotes:', result.quotes.length);
           } else {
             console.log('🎭 usePersonalizedQuotes: Failed to get rotating quotes, using defaults');
-            const defaults = personalizedQuotesService.getDefaultQuotes();
+            const defaults = personalizedQuotesService.getDefaultQuotes(language);
             const shuffled = defaults.sort(() => 0.5 - Math.random()).slice(0, count);
             setDefaultQuotes(shuffled);
           }
         } else {
           // Use default quotes
           console.log('🎭 usePersonalizedQuotes: No personalized quotes, using defaults');
-          const defaults = personalizedQuotesService.getDefaultQuotes();
+          const defaults = personalizedQuotesService.getDefaultQuotes(language);
           const shuffled = defaults.sort(() => 0.5 - Math.random()).slice(0, count);
           setDefaultQuotes(shuffled);
           console.log('🎭 usePersonalizedQuotes: Set default quotes:', shuffled);
@@ -55,7 +57,7 @@ export const usePersonalizedQuotes = (count: number = 3) => {
       } catch (error) {
         console.error('🎭 usePersonalizedQuotes: Error fetching quotes:', error);
         // Fallback to default quotes
-        const defaults = personalizedQuotesService.getDefaultQuotes();
+        const defaults = personalizedQuotesService.getDefaultQuotes(language);
         const shuffled = defaults.sort(() => 0.5 - Math.random()).slice(0, count);
         setDefaultQuotes(shuffled);
         console.log('🎭 usePersonalizedQuotes: Error fallback, set default quotes:', shuffled);
@@ -66,7 +68,7 @@ export const usePersonalizedQuotes = (count: number = 3) => {
     };
 
     fetchQuotes();
-  }, [user, count]);
+  }, [user, count, language]);
 
   const refreshQuotes = async () => {
     if (!user) return;
@@ -79,7 +81,7 @@ export const usePersonalizedQuotes = (count: number = 3) => {
           setQuotes(result.quotes);
         }
       } else {
-        const defaults = personalizedQuotesService.getDefaultQuotes();
+        const defaults = personalizedQuotesService.getDefaultQuotes(language);
         const shuffled = defaults.sort(() => 0.5 - Math.random()).slice(0, count);
         setDefaultQuotes(shuffled);
       }

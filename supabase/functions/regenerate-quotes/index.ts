@@ -23,13 +23,13 @@ serve(async (req) => {
       }
     )
 
-    const { userId } = await req.json();
+    const { userId, language = 'en' } = await req.json();
     
     if (!userId) {
       throw new Error('UserId is required');
     }
 
-    console.log('🔄 Regenerating quotes for user:', userId);
+    console.log('🔄 Regenerating quotes for user:', userId, 'in language:', language);
 
     // Get the user's latest personality report and blueprint
     const { data: reportData, error: reportError } = await supabaseClient
@@ -79,7 +79,13 @@ serve(async (req) => {
     const integratedSummary = reportContent.integrated_summary || '';
 
     // Generate 10 personalized quotes using OpenAI with deep context
+    const languageInstruction = language === 'nl' ? 
+      'Generate all quotes in DUTCH (Nederlands). Use natural, flowing Dutch language that feels authentic and inspiring.' :
+      'Generate all quotes in English.';
+    
     const systemPrompt = `You are a master personality analyst creating deeply personalized, emotionally resonant quotes. Generate exactly 10 unique quotes that feel like they were written specifically for this person's soul journey.
+
+LANGUAGE REQUIREMENT: ${languageInstruction}
 
 DEEP PERSONALITY INSIGHTS:
 ${integratedSummary}

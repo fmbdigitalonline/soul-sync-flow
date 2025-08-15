@@ -134,17 +134,31 @@ class PersonalizedQuotesService {
   }
 
   // Default quotes for users without personalized ones
-  getDefaultQuotes(): string[] {
-    return [
-      "Your authentic self is your greatest gift to the world.",
-      "Growth happens when you honor your natural energy patterns.",
-      "Trust your inner wisdom—it knows the path forward.",
-      "Every challenge is an opportunity to discover your strength.",
-      "You are exactly where you need to be in your journey.",
-      "Your unique perspective adds beauty to the collective tapestry.",
-      "Embrace your complexities—they make you magnificently human.",
-      "Your intuition is a compass pointing toward your highest good."
-    ];
+  getDefaultQuotes(language: string = 'en'): string[] {
+    const quotes = {
+      en: [
+        "Your authentic self is your greatest gift to the world.",
+        "Growth happens when you honor your natural energy patterns.",
+        "Trust your inner wisdom—it knows the path forward.",
+        "Every challenge is an opportunity to discover your strength.",
+        "You are exactly where you need to be in your journey.",
+        "Your unique perspective adds beauty to the collective tapestry.",
+        "Embrace your complexities—they make you magnificently human.",
+        "Your intuition is a compass pointing toward your highest good."
+      ],
+      nl: [
+        "Je authentieke zelf is je grootste geschenk aan de wereld.",
+        "Groei gebeurt wanneer je je natuurlijke energiepatronen eert.",
+        "Vertrouw op je innerlijke wijsheid—het kent de weg vooruit.",
+        "Elke uitdaging is een kans om je kracht te ontdekken.",
+        "Je bent precies waar je moet zijn in je reis.",
+        "Jouw unieke perspectief voegt schoonheid toe aan het collectieve tapijt.",
+        "Omarm je complexiteit—het maakt je prachtig menselijk.",
+        "Je intuïtie is een kompas dat naar je hoogste goed wijst."
+      ]
+    };
+    
+    return quotes[language as keyof typeof quotes] || quotes.en;
   }
 }
 

@@ -20,7 +20,7 @@ export const PersonalizedQuoteDisplay: React.FC<PersonalizedQuoteDisplayProps> =
   const {
     user
   } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const {
     quotes,
     hasPersonalizedQuotes,
@@ -31,7 +31,7 @@ export const PersonalizedQuoteDisplay: React.FC<PersonalizedQuoteDisplayProps> =
     if (!user?.id) return;
     try {
       toast.loading(t('personalizedQuotes.regenerating'));
-      const result = await quoteRegenerationService.regenerateQuotes(user.id);
+      const result = await quoteRegenerationService.regenerateQuotes(user.id, language);
       if (result.success) {
         toast.success(interpolateTranslation(t('personalizedQuotes.regenerationSuccess'), {
           count: result.quotesGenerated?.toString() || '0'

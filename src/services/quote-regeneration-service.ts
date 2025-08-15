@@ -1,12 +1,12 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export class QuoteRegenerationService {
-  async regenerateQuotes(userId: string): Promise<{ success: boolean; error?: string; quotesGenerated?: number }> {
+  async regenerateQuotes(userId: string, language: string = 'en'): Promise<{ success: boolean; error?: string; quotesGenerated?: number }> {
     try {
-      console.log('🔄 Calling quote regeneration for user:', userId);
+      console.log('🔄 Calling quote regeneration for user:', userId, 'in language:', language);
       
       const { data, error } = await supabase.functions.invoke('regenerate-quotes', {
-        body: { userId }
+        body: { userId, language }
       });
 
       if (error) {
