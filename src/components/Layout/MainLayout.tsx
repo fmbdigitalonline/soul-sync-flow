@@ -183,6 +183,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           </div>
         </>}
 
+      {/* HACS Floating Orb - Always visible when authenticated */}
+      {user && <FloatingHACSOrb />}
     </div>;
 };
 export default MainLayout;
