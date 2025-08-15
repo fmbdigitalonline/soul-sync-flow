@@ -140,7 +140,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
       </ScrollArea>
 
       {/* Input */}
-      <div className="px-3 py-2 bg-white/95 backdrop-blur-sm border-t">
+      <div className="px-3 py-1">
         <div className="flex space-x-2">
           <Input
             value={inputValue}
