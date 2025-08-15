@@ -70,7 +70,15 @@ export const PersonalizedQuoteDisplay: React.FC<PersonalizedQuoteDisplayProps> =
       {hasPersonalizedQuotes ? <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
           <Sparkles className="h-3 w-3 text-soul-purple" />
           <span className="py-[10px]">Personalized for your unique blueprint</span>
-          {quotes.length < 5}
+          {quotes.length < 5 && (
+            <button 
+              onClick={handleRegenerateQuotes}
+              className="ml-2 p-1 rounded-full hover:bg-muted/50 transition-colors"
+              title="Generate more quotes"
+            >
+              <RefreshCw className="h-3 w-3" />
+            </button>
+          )}
         </div> : displayQuotes.length > 0 && <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
           <span>Default inspiration quotes</span>
         </div>}
