@@ -38,7 +38,12 @@ const translations: Record<Language, Translations> = {
       soulSystemDiagnostics: 'Soul System Diagnostics',
       soulActive: 'Soul Active',
       soulProcessing: 'Soul Intelligence processing...',
-      messageSoul: 'Message Soul Intelligence...'
+      messageSoul: 'Message Soul Intelligence...',
+      soulCompanion: 'Soul Companion',
+      soulLearningSession: 'Soul Learning Session',
+      holisticSoulSystem: 'Holistic Soul Intelligence System',
+      soulCompanionReady: 'Your Soul companion is ready to assist with insights and guidance.',
+      soulCompanionConversation: 'Your Soul companion is ready for conversation'
     },
     // Common Actions
     common: {
@@ -543,7 +548,12 @@ const translations: Record<Language, Translations> = {
       soulSystemDiagnostics: 'Ziel Systeem Diagnostiek',
       soulActive: 'Ziel Actief',
       soulProcessing: 'Ziel Intelligentie verwerkt...',
-      messageSoul: 'Bericht Ziel Intelligentie...'
+      messageSoul: 'Bericht Ziel Intelligentie...',
+      soulCompanion: 'Ziel Begeleider',
+      soulLearningSession: 'Ziel Leersessie',
+      holisticSoulSystem: 'Holistisch Ziel Intelligentie Systeem',
+      soulCompanionReady: 'Je Ziel begeleider is klaar om te helpen met inzichten en begeleiding.',
+      soulCompanionConversation: 'Je Ziel begeleider is klaar voor gesprek'
     },
     // Common Actions
     common: {
@@ -942,6 +952,11 @@ const translations: Record<Language, Translations> = {
         weeklyReview: 'Wekelijkse review',
         backToTools: 'Terug naar tools'
       }
+    },
+    // Learning
+    learning: {
+      responseRecorded: 'Reactie Opgenomen',
+      keepExploring: 'Blijf verkennen om diepere inzichten te ontgrendelen'
     },
     // Dashboard Pagina
     dashboardPage: {

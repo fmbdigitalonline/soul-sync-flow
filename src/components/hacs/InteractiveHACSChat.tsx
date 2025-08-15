@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useHACSConversation, type ConversationMessage } from '@/hooks/use-hacs-conversation';
 import { useHacsIntelligence } from '@/hooks/use-hacs-intelligence';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 
 interface InteractiveHACSChatProps {
@@ -37,6 +38,7 @@ export const InteractiveHACSChat: React.FC<InteractiveHACSChatProps> = ({
 
   const { intelligence, loading: intelligenceLoading } = useHacsIntelligence();
   const intelligenceLevel = intelligence?.intelligence_level || 0; // Use 0 as fallback, not fake data
+  const { t } = useLanguage();
 
   // Add initial message to conversation if provided
   useEffect(() => {
@@ -132,7 +134,7 @@ export const InteractiveHACSChat: React.FC<InteractiveHACSChatProps> = ({
                   <div>
                     <h3 className="text-lg font-semibold flex items-center gap-2">
                       <Brain className="h-5 w-5 text-primary" />
-                      HACS Companion
+                      {t('system.soulCompanion')}
                     </h3>
                     <p className="text-sm text-muted-foreground">
                       Adaptive Intelligence: {intelligenceLevel}%
@@ -167,7 +169,7 @@ export const InteractiveHACSChat: React.FC<InteractiveHACSChatProps> = ({
                   {messages.length === 0 && (
                     <div className="text-center space-y-4 mt-8">
                       <div className="text-muted-foreground">
-                        Your HACS companion is ready for conversation
+                        {t('system.soulCompanionConversation')}
                       </div>
                       <div className="flex justify-center">
                         <Button onClick={generateQuestion} disabled={isLoading}>
@@ -308,7 +310,7 @@ export const InteractiveHACSChat: React.FC<InteractiveHACSChatProps> = ({
                       value={inputValue}
                       onChange={(e) => setInputValue(e.target.value)}
                       onKeyPress={handleKeyPress}
-                      placeholder="Share your thoughts with HACS..."
+                      placeholder={t('system.messageSoul')}
                       className="min-h-[60px] resize-none pr-12"
                       disabled={isLoading}
                     />

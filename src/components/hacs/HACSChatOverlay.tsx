@@ -78,9 +78,9 @@ export const HACSChatOverlay: React.FC<HACSChatOverlayProps> = ({
                     pulse={false}
                   />
                   <div>
-                    <h3 className="text-lg font-semibold">HACS Companion</h3>
+                    <h3 className="text-lg font-semibold">{t('system.soulCompanion')}</h3>
                     <p className="text-sm text-muted-foreground">
-                      Holistic Adaptive Cognitive System
+                      {t('system.holisticSoulSystem')}
                     </p>
                   </div>
                 </div>
@@ -155,7 +155,7 @@ export const HACSChatOverlay: React.FC<HACSChatOverlayProps> = ({
                 ) : (
                   <div className="text-center space-y-4">
                     <div className="text-muted-foreground">
-                      Your HACS companion is ready to assist with insights and guidance.
+                      {t('system.soulCompanionReady')}
                     </div>
                     <div className="flex items-center justify-center">
                       <div className="w-48 h-2 bg-muted rounded-full overflow-hidden">

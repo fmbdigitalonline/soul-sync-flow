@@ -8,6 +8,7 @@ import { Brain, CheckCircle, X, ArrowRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface HACSQuestion {
   id: string;
@@ -39,6 +40,7 @@ export const HACSMicroLearning: React.FC<HACSMicroLearningProps> = ({
   
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const handleSubmitResponse = async () => {
     if (!userResponse.trim() || !question || !user) return;
@@ -153,7 +155,7 @@ export const HACSMicroLearning: React.FC<HACSMicroLearningProps> = ({
                 <Brain className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h3 className="font-semibold">HACS Learning Session</h3>
+                <h3 className="font-semibold">{t('system.soulLearningSession')}</h3>
                 <p className={`text-sm font-medium ${getModuleColor(question.module)}`}>
                   {question.module} Module • {question.type}
                 </p>
@@ -259,10 +261,10 @@ export const HACSMicroLearning: React.FC<HACSMicroLearningProps> = ({
                     <div className="p-4 rounded-lg bg-orange-50 dark:bg-orange-950/20">
                       <Brain className="h-8 w-8 text-orange-500 mx-auto mb-2" />
                       <h4 className="font-semibold text-orange-700 dark:text-orange-400">
-                        Response Recorded
+                        {t('learning.responseRecorded')}
                       </h4>
                       <p className="text-sm text-orange-600 dark:text-orange-400 mt-1">
-                        Keep exploring to unlock deeper insights
+                        {t('learning.keepExploring')}
                       </p>
                     </div>
                   )}

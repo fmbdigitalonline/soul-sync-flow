@@ -825,7 +825,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
               
               <div className="mb-6">
                 <h1 className="text-2xl font-bold mb-2 text-card-foreground">Soul Alchemist</h1>
-                <p className="text-sm text-muted-foreground mb-4">Holistic Adaptive Cognitive System</p>
+                <p className="text-sm text-muted-foreground mb-4">{t('system.holisticSoulSystem')}</p>
                 
                 {/* Current step content */}
                 {introductionState.steps && introductionState.steps[introductionState.currentStep] && (
