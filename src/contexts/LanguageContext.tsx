@@ -164,6 +164,7 @@ const translations: Record<Language, Translations> = {
       needAccount: 'Need an account? Sign up',
       signOutSuccess: 'Signed out successfully',
       signOutSuccessDescription: 'You have been safely signed out',
+      signIn: 'Sign In',
       signOutError: 'Sign out failed',
       signOutErrorDescription: 'Unable to sign out. Please try again.'
     },
@@ -199,6 +200,8 @@ const translations: Record<Language, Translations> = {
         oneYear: '1 Year',
         twoPlusYears: '2+ Years'
       },
+      welcomeComplete: 'Welcome to Your Soul Journey!',
+      welcomeCompleteDesc: 'Your personalized spiritual path is ready. Your Soul companion will guide you through insights, growth tools, and personalized recommendations.',
       // Onboarding goal selection
       primaryFocus: 'Personal Growth',
       exploring: 'Exploring my purpose and direction',
@@ -634,6 +637,7 @@ const translations: Record<Language, Translations> = {
       needAccount: 'Heb je een account nodig? Meld je aan',
       signOutSuccess: 'Succesvol uitgelogd',
       signOutSuccessDescription: 'Je bent veilig uitgelogd',
+      signIn: 'Inloggen',
       signOutError: 'Uitloggen mislukt',
       signOutErrorDescription: 'Kon niet uitloggen. Probeer het opnieuw.'
     },
@@ -669,6 +673,8 @@ const translations: Record<Language, Translations> = {
         oneYear: '1 jaar',
         twoPlusYears: '2+ jaar'
       },
+      welcomeComplete: 'Welkom bij Je Spirituele Reis!',
+      welcomeCompleteDesc: 'Je gepersonaliseerde spirituele pad is klaar. Je Soul metgezel zal je begeleiden door inzichten, groei-tools en gepersonaliseerde aanbevelingen.',
       // Onboarding doelselectie
       primaryFocus: 'Persoonlijke Groei',
       exploring: 'Mijn doel en richting verkennen',
