@@ -5,7 +5,7 @@ interface PageContainerProps {
   children: React.ReactNode;
   className?: string;
   maxWidth?: "saas" | "saas-wide" | "content" | "full";
-  padding?: "none" | "sm" | "md" | "lg";
+  padding?: "none" | "xs" | "sm" | "md" | "lg";
 }
 
 interface PageHeaderProps {
@@ -37,6 +37,7 @@ export const PageContainer: React.FC<PageContainerProps> = ({
 
   const paddingClasses = {
     none: "",
+    xs: "px-2 py-1",
     sm: "px-4 py-2 sm:py-6",
     md: "px-4 py-2 sm:px-8 sm:py-section",
     lg: "px-6 py-4 sm:px-12 sm:py-20"
