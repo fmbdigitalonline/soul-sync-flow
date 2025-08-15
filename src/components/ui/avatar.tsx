@@ -55,12 +55,12 @@ const SoulOrbAvatar = React.forwardRef<
     stage?: "welcome" | "collecting" | "generating" | "complete";
   }
 >(({ className, speaking = false, size = "sm", stage = "welcome", ...props }, ref) => {
-  // Size mapping for square containers to maintain aspect ratio
+  // Size mapping to exactly match SoulOrb dimensions for perfect roundness
   const containerSizeMap = {
-    xs: "w-12 h-12", // 48px x 48px
-    sm: "w-20 h-20", // 80px x 80px
-    md: "w-28 h-28", // 112px x 112px  
-    lg: "w-36 h-36", // 144px x 144px
+    xs: "w-16 h-16", // 64px x 64px - matches SoulOrb "sm"
+    sm: "w-24 h-24", // 96px x 96px - matches SoulOrb "md"
+    md: "w-32 h-32", // 128px x 128px - matches SoulOrb "lg"
+    lg: "w-32 h-32", // 128px x 128px - matches SoulOrb "lg"
   };
 
   const orbSize: 'sm' | 'md' | 'lg' = (size === 'xs' ? 'sm' : size) as 'sm' | 'md' | 'lg';
