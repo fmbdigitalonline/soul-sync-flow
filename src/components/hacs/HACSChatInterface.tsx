@@ -77,7 +77,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
 
       {/* Messages */}
       <ScrollArea className="flex-1">
-        <div className="px-3 py-2 space-y-3">
+        <div className="px-3 py-4 space-y-4 pb-6">
           {messages.length === 0 && (
             <div className="text-center text-muted-foreground py-4">
               <p>Start a conversation to begin intelligence learning</p>
@@ -140,21 +140,21 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
       </ScrollArea>
 
       {/* Input */}
-      <div className="px-3 py-3">
-        <div className="flex space-x-2">
+      <div className="px-3 py-4 bg-background/95 backdrop-blur-sm border-t">
+        <div className="flex space-x-3">
           <Input
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Type your message..."
             disabled={isLoading}
-            className="flex-1 h-12 text-base"
+            className="flex-1 h-14 text-base min-h-[3.5rem] resize-none"
           />
           <Button
             onClick={handleSendMessage}
             disabled={!inputValue.trim() || isLoading}
             size="lg"
-            className="h-12 px-4"
+            className="h-14 px-4 min-w-[3.5rem]"
           >
             {isLoading ? (
               <Loader2 className="h-5 w-5 animate-spin" />
