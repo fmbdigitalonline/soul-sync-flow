@@ -37,9 +37,9 @@ export const PageContainer: React.FC<PageContainerProps> = ({
 
   const paddingClasses = {
     none: "",
-    sm: "px-4 py-6",
-    md: "px-8 py-section",
-    lg: "px-12 py-20"
+    sm: "px-4 py-2 sm:py-6",
+    md: "px-4 py-2 sm:px-8 sm:py-section",
+    lg: "px-6 py-4 sm:px-12 sm:py-20"
   };
 
   return (
