@@ -740,16 +740,16 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
               showHermeticProgress={isGeneratingReport || hasHermeticReport}
               showRainbowCelebration={showRainbowCelebration}
             />
-            <div className="text-sm">
-              <div className="font-medium text-card-foreground">
-                {isGeneratingReport ? "Soul Alchemist Activating..." : "Hermetic Report Complete!"}
+            {isGeneratingReport && (
+              <div className="text-sm">
+                <div className="font-medium text-card-foreground">
+                  Soul Alchemist Activating...
+                </div>
+                <div className="text-muted-foreground">
+                  Deep synthesis in progress ({hermeticProgress}%)
+                </div>
               </div>
-              <div className="text-muted-foreground">
-                {isGeneratingReport 
-                  ? `Deep synthesis in progress (${hermeticProgress}%)` 
-                  : "Your hermetic report is ready to explore"}
-              </div>
-            </div>
+            )}
           </div>
         </div>
       )}
