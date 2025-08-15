@@ -88,7 +88,6 @@ const Profile = () => {
     toast({
       title: t('profile.taskCompleted'),
       description: t('profile.taskCompletedDescription'),
-      icon: <Check className="h-4 w-4 text-green-500" />,
       duration: 2000,
     });
   };
