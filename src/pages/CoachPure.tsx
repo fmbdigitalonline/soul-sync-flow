@@ -43,7 +43,7 @@ const CoachPure = () => {
   const handleReset = () => {
     toast({
       title: "System Status",
-      description: "Pure HACS Intelligence - No fallbacks active",
+      description: t('system.pureSoulIntelligence') + " - No fallbacks active",
     });
   };
 
@@ -56,7 +56,7 @@ const CoachPure = () => {
               <MessageCircle className="h-8 w-8 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-foreground mb-2">Pure HACS Intelligence</h1>
+              <h1 className="text-2xl font-bold text-foreground mb-2">{t('system.pureSoulIntelligence')}</h1>
               <p className="text-muted-foreground">Advanced intelligence learning without fallbacks.</p>
             </div>
             <Button 
@@ -117,7 +117,7 @@ const CoachPure = () => {
           </div>
           <div className="flex justify-between">
             <span>Mode:</span>
-            <span className="text-blue-600">Pure HACS</span>
+            <span className="text-blue-600">{t('system.pureSoulIntelligence')}</span>
           </div>
         </div>
       </CosmicCard>
@@ -131,7 +131,7 @@ const CoachPure = () => {
           
           <div className="text-center mb-6">
             <h1 className="text-3xl font-bold gradient-text mb-2">
-              Pure HACS Intelligence
+              {t('system.pureSoulIntelligence')}
             </h1>
             <p className="text-muted-foreground">
               Advanced intelligence learning without fallbacks

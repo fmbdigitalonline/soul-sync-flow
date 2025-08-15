@@ -216,13 +216,13 @@ export const useHacsIntelligence = () => {
         if (newIntelligenceLevel >= 100) {
           toast({
             title: "🎉 Autonomous Intelligence Unlocked!",
-            description: "Your HACS system has achieved full autonomous capability across all 11 modules.",
+            description: "Your Soul Intelligence system has achieved full autonomous capability across all 11 modules.",
             duration: 5000,
           });
         } else if (phases[newLevel]) {
           toast({
             title: `🧠 Intelligence Level Up!`,
-            description: `Your HACS has evolved to the ${phases[newLevel]} phase across all neural pathways.`,
+            description: `Your Soul Intelligence has evolved to the ${phases[newLevel]} phase across all neural pathways.`,
             duration: 3000,
           });
         }

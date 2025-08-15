@@ -14,6 +14,7 @@ import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Message {
   id: string;
@@ -38,6 +39,7 @@ export const PureHACSInterface: React.FC<PureHACSInterfaceProps> = ({
   const { isMobile, isUltraNarrow, spacing, getTextSize, touchTargetSize } = useResponsiveLayout();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user } = useAuth();
+  const { t } = useLanguage();
   
   // Pure HACS conversation hook
   const {
@@ -154,7 +156,7 @@ export const PureHACSInterface: React.FC<PureHACSInterfaceProps> = ({
         overflow-y-auto
       `}>
         <div className="p-4 border-b flex items-center justify-between">
-          <h3 className="font-semibold">HACS Intelligence</h3>
+          <h3 className="font-semibold">{t('system.soulIntelligence')}</h3>
           <Button
             variant="ghost"
             size="sm"
@@ -212,7 +214,7 @@ export const PureHACSInterface: React.FC<PureHACSInterfaceProps> = ({
             </Button>
             
             <h2 className={`font-semibold ${getTextSize('text-lg')}`}>
-              Pure HACS Intelligence
+              {t('system.pureSoulIntelligence')}
             </h2>
             <Badge variant="default" className="text-xs">
               Level {intelligence?.intelligence_level || 0}
@@ -274,7 +276,7 @@ export const PureHACSInterface: React.FC<PureHACSInterfaceProps> = ({
             <CardContent className="p-4">
               <h4 className="font-medium mb-2">System Status</h4>
               <div className="space-y-1 text-sm text-muted-foreground">
-                <div className="text-green-600">✓ Pure HACS Active</div>
+                <div className="text-green-600">✓ {t('system.soulActive')}</div>
                 <div className="text-green-600">✓ Intelligence Learning</div>
                 <div className="text-green-600">✓ No Fallbacks</div>
               </div>
@@ -328,7 +330,7 @@ export const PureHACSInterface: React.FC<PureHACSInterfaceProps> = ({
               {/* Loading indicator */}
               {isLoading && (
                 <div className="flex justify-start">
-                  <CoachLoadingMessage message="HACS Intelligence processing..." />
+                  <CoachLoadingMessage message={t('system.soulProcessing')} />
                 </div>
               )}
               
@@ -344,7 +346,7 @@ export const PureHACSInterface: React.FC<PureHACSInterfaceProps> = ({
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Message HACS Intelligence..."
+                placeholder={t('system.messageSoul')}
                 disabled={isLoading}
                 className={`flex-1 ${getTextSize('text-sm')}`}
               />

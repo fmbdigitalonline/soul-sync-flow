@@ -32,7 +32,13 @@ const translations: Record<Language, Translations> = {
       errorDescription: 'We encountered an unexpected error. Please try refreshing the page.',
       refreshPage: 'Refresh Page',
       unauthorized: 'Authentication required',
-      redirectingToAuth: 'Redirecting to authentication...'
+      redirectingToAuth: 'Redirecting to authentication...',
+      soulIntelligence: 'Soul Intelligence',
+      pureSoulIntelligence: 'Pure Soul Intelligence',
+      soulSystemDiagnostics: 'Soul System Diagnostics',
+      soulActive: 'Soul Active',
+      soulProcessing: 'Soul Intelligence processing...',
+      messageSoul: 'Message Soul Intelligence...'
     },
     // Common Actions
     common: {
@@ -531,7 +537,13 @@ const translations: Record<Language, Translations> = {
       errorDescription: 'We hebben een onverwachte fout tegengekomen. Probeer de pagina te vernieuwen.',
       refreshPage: 'Pagina Vernieuwen',
       unauthorized: 'Authenticatie vereist',
-      redirectingToAuth: 'Doorverwijzen naar authenticatie...'
+      redirectingToAuth: 'Doorverwijzen naar authenticatie...',
+      soulIntelligence: 'Ziel Intelligentie',
+      pureSoulIntelligence: 'Pure Ziel Intelligentie',
+      soulSystemDiagnostics: 'Ziel Systeem Diagnostiek',
+      soulActive: 'Ziel Actief',
+      soulProcessing: 'Ziel Intelligentie verwerkt...',
+      messageSoul: 'Bericht Ziel Intelligentie...'
     },
     // Common Actions
     common: {

@@ -7,6 +7,7 @@ import { IntelligentSoulOrb } from '@/components/ui/intelligent-soul-orb';
 import { InteractiveHACSChat } from './InteractiveHACSChat';
 import { type HACSMessage } from '@/hooks/use-hacs-autonomy';
 import { type ConversationMessage } from '@/hooks/use-hacs-conversation';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface HACSChatOverlayProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ export const HACSChatOverlay: React.FC<HACSChatOverlayProps> = ({
   intelligenceLevel
 }) => {
   const [showInteractiveChat, setShowInteractiveChat] = useState(false);
+  const { t } = useLanguage();
 
   // Convert HACSMessage to ConversationMessage if needed
   const initialMessage: ConversationMessage | null = currentMessage ? {
@@ -115,7 +117,7 @@ export const HACSChatOverlay: React.FC<HACSChatOverlayProps> = ({
                     {/* Intelligence Level Display */}
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">
-                        HACS Intelligence Level
+                        {t('system.soulIntelligence')} Level
                       </span>
                       <div className="flex items-center space-x-2">
                         <div className="w-32 h-2 bg-muted rounded-full overflow-hidden">

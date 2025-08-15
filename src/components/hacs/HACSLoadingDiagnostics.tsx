@@ -3,6 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { useHACSIntelligenceDiagnostics } from '@/hooks/use-hacs-intelligence-diagnostics';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface HACSLoadingDiagnosticsProps {
   showOnlyWhenIssues?: boolean;
@@ -12,6 +13,7 @@ export const HACSLoadingDiagnostics: React.FC<HACSLoadingDiagnosticsProps> = ({
   showOnlyWhenIssues = true 
 }) => {
   const diagnostics = useHACSIntelligenceDiagnostics();
+  const { t } = useLanguage();
 
   // Only show if there are issues and showOnlyWhenIssues is true
   if (showOnlyWhenIssues && diagnostics.errors.length === 0 && diagnostics.diagnosticsComplete) {
@@ -28,13 +30,13 @@ export const HACSLoadingDiagnostics: React.FC<HACSLoadingDiagnosticsProps> = ({
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg font-cormorant">
           <AlertTriangle className="h-5 w-5 text-orange-500" />
-          HACS System Diagnostics
+          {t('system.soulSystemDiagnostics')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
           <div className="flex items-center justify-between p-2 rounded bg-white/60">
-            <span className="font-inter">HACS Intelligence</span>
+            <span className="font-inter">{t('system.soulIntelligence')}</span>
             {getStatusIcon(diagnostics.hacsIntelligenceExists, diagnostics.hacsIntelligenceLoading)}
           </div>
           <div className="flex items-center justify-between p-2 rounded bg-white/60">

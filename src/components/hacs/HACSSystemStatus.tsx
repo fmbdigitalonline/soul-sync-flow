@@ -4,16 +4,18 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Brain, Zap, MessageSquare, TrendingUp } from 'lucide-react';
 import { useHacsIntelligence } from '@/hooks/use-hacs-intelligence';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export const HACSSystemStatus: React.FC = () => {
   const { intelligence } = useHacsIntelligence();
+  const { t } = useLanguage();
 
   return (
     <Card>
       <CardContent className="p-4">
         <h4 className="font-medium mb-3 flex items-center">
           <Brain className="h-4 w-4 mr-2" />
-          Pure HACS Intelligence
+          {t('system.pureSoulIntelligence')}
         </h4>
         
         <div className="space-y-3">
@@ -63,7 +65,7 @@ export const HACSSystemStatus: React.FC = () => {
             <div className="flex items-center justify-between text-xs">
               <span className="text-green-600 flex items-center">
                 <Zap className="h-3 w-3 mr-1" />
-                Pure HACS Active
+                {t('system.soulActive')}
               </span>
               <span className="text-green-600">No Fallbacks</span>
             </div>

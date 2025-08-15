@@ -23,7 +23,7 @@ const DataAvailabilityIndicator: React.FC<DataAvailabilityIndicatorProps> = ({
   const { t } = useLanguage();
   const sections = [
     { key: 'blueprint', label: 'Soul Blueprint', icon: Heart, color: 'bg-purple-500' },
-    { key: 'intelligence', label: 'HACS Intelligence', icon: Brain, color: 'bg-blue-500' },
+    { key: 'intelligence', label: t('system.soulIntelligence'), icon: Brain, color: 'bg-blue-500' },
     { key: 'memory', label: 'Memory Graph', icon: Zap, color: 'bg-yellow-500' },
     { key: 'patterns', label: 'Behavioral Patterns', icon: TrendingUp, color: 'bg-green-500' },
     { key: 'growth', label: 'Growth Journey', icon: Target, color: 'bg-indigo-500' },

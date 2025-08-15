@@ -7,12 +7,14 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { hacsMonitorService } from '@/services/hacs-monitor-service';
 import { hacsFallbackService } from '@/services/hacs-fallback-service';
 import type { HACSSystemHealth, HACSConfig } from '@/services/hacs-monitor-service';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export const HACSHealthMonitor: React.FC = () => {
   const [health, setHealth] = useState<HACSSystemHealth | null>(null);
   const [config, setConfig] = useState<HACSConfig | null>(null);
   const [testing, setTesting] = useState(false);
   const [testResults, setTestResults] = useState<string[]>([]);
+  const { t } = useLanguage();
 
   useEffect(() => {
     // Initialize monitoring
@@ -72,7 +74,7 @@ export const HACSHealthMonitor: React.FC = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            HACS System Health
+            {t('system.soulSystemDiagnostics')}
             <Badge className={getStatusColor(health.overall)}>
               {health.overall.toUpperCase()}
             </Badge>
