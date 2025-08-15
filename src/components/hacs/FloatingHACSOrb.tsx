@@ -221,11 +221,10 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     }
   }, [isGeneratingReport, hasHermeticReport, showCompletionIndicator]);
 
-  // Show speech bubble for questions or insights
+  // Show speech bubble for questions or insights - click to show only
   useEffect(() => {
-    if (currentQuestion) {
-      setShowBubble(true);
-      // Auto-dismiss bubble after 15 seconds for questions
+    if (currentQuestion && showBubble) {
+      // Auto-dismiss bubble after 15 seconds only when it's shown
       const timer = setTimeout(() => {
         setShowBubble(false);
         clearCurrentQuestion();
@@ -234,10 +233,10 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     } else if (currentInsight && !currentInsight.acknowledged) {
       // Insights show in their own display component, no bubble needed
       setShowBubble(false);
-    } else {
+    } else if (!currentQuestion) {
       setShowBubble(false);
     }
-  }, [currentQuestion, currentInsight, clearCurrentQuestion]);
+  }, [currentQuestion, currentInsight, showBubble, clearCurrentQuestion]);
 
   // Phase 3 Complete: Final database-driven Steward Introduction logic
   useEffect(() => {
@@ -632,7 +631,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
                 onClick={handleBubbleClick}
               >
                 <SpeechBubble
-                  position="top"
+                  position="left"
                   isVisible={true}
                 >
                 <div className="text-sm">
@@ -687,19 +686,19 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
             />
           </motion.div>
 
-          {/* Blue pulse indicator for questions - clickable */}
-          {currentQuestion && (
-            <motion.div
-              className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full cursor-pointer"
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 1, repeat: Infinity }}
-              onClick={(e) => {
-                e.stopPropagation();
-                console.log('🔵 Blue pulse clicked - showing micro learning');
-                setShowMicroLearning(true);
-              }}
-            />
-          )}
+           {/* Blue pulse indicator for questions - clickable */}
+           {currentQuestion && (
+             <motion.div
+               className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full cursor-pointer"
+               animate={{ scale: [1, 1.2, 1] }}
+               transition={{ duration: 1, repeat: Infinity }}
+               onClick={(e) => {
+                 e.stopPropagation();
+                 console.log('🔵 Blue pulse clicked - showing speech bubble');
+                 setShowBubble(true);
+               }}
+             />
+           )}
 
           {/* Red exclamation mark for unacknowledged insights - clickable */}
           {currentInsight && !currentInsight.acknowledged && (
