@@ -197,11 +197,6 @@ export default function Onboarding() {
         
         // Trigger embedding generation immediately after report
         await generateBlueprintEmbeddingsInBackground();
-        
-        toast({
-          title: "Oracle Mode Activated!",
-          description: "Your Soul Alchemist has completed the deep synthesis and is ready for advanced conversations.",
-        });
       } else {
         console.error('❌ EARLY ORACLE: Failed to generate hermetic report:', result.error);
         // Fallback to standard personality report
