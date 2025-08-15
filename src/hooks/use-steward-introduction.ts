@@ -5,6 +5,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { StewardIntroductionStep, StewardIntroductionState } from '@/types/steward-introduction';
 import { hermeticPersonalityReportService } from '@/services/hermetic-personality-report-service';
 
+/**
+ * @deprecated Use useStewardIntroductionEnhanced instead
+ * This hook is kept for backward compatibility but will be removed in future versions.
+ * Migration: Replace useStewardIntroduction with useStewardIntroductionEnhanced
+ */
 export const useStewardIntroduction = () => {
   const { user } = useAuth();
   const [introductionState, setIntroductionState] = useState<StewardIntroductionState>({

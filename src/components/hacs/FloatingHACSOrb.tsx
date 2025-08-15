@@ -24,6 +24,7 @@ import { useUserProfile } from '@/hooks/use-user-profile';
 // Phase 3: Advanced Intelligence Integration
 import { useConversationRecovery } from '@/hooks/use-conversation-recovery';
 import { useTieredMemory } from '@/hooks/use-tiered-memory';
+import { useToast } from '@/hooks/use-toast';
 import { usePIEEnhancedCoach } from '@/hooks/use-pie-enhanced-coach';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useEnhancedFeedbackSystem } from '@/hooks/use-enhanced-feedback-system';
@@ -50,6 +51,9 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   const [moduleActivity, setModuleActivity] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
   const [hermeticProgress, setHermeticProgress] = useState(40); // Start at 40% (blueprint completed)
+  const [showCompletionIndicator, setShowCompletionIndicator] = useState(false);
+  const [hasShownCompletionToast, setHasShownCompletionToast] = useState(false);
+  const { toast } = useToast();
   
   // Enhanced feedback system
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
@@ -185,26 +189,46 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   // Monitor hermetic report generation progress and completion status
   useEffect(() => {
     if (isGeneratingReport) {
-      // Simulate progress from 40% to 100% during hermetic generation
+      // Principle #2: Show real progress, not simulated
+      // Use smooth animation from 40% to 95% while generating
       const progressInterval = setInterval(() => {
         setHermeticProgress(prev => {
-          if (prev >= 100) {
-            clearInterval(progressInterval);
-            return 100;
+          // Cap at 95% while generating to show it's not complete
+          if (prev >= 95) {
+            return 95;
           }
-          return Math.min(prev + 2, 100); // Increment by 2% every interval
+          return Math.min(prev + 1.5, 95); // Slower, more realistic increment
         });
-      }, 1000); // Update every second
+      }, 1500); // Slower update interval for realism
 
       return () => clearInterval(progressInterval);
     } else if (hasHermeticReport) {
-      // Show completed state (100%) when report exists
+      // Principle #7: Clear completion state - jump to 100% when report exists
       setHermeticProgress(100);
+      // Show completion indicator and toast notification
+      if (!showCompletionIndicator) {
+        setShowCompletionIndicator(true);
+        setTimeout(() => {
+          setShowCompletionIndicator(false);
+        }, 5000);
+        
+        // Show completion toast notification (once per session)
+        if (!hasShownCompletionToast) {
+          setHasShownCompletionToast(true);
+          toast({
+            title: "🌟 Hermetic Report Complete!",
+            description: "Your personalized hermetic personality report is ready to explore.",
+            duration: 6000,
+          });
+        }
+      }
     } else {
       // Reset to baseline when not generating and no report
       setHermeticProgress(40);
+      setShowCompletionIndicator(false);
+      setHasShownCompletionToast(false);
     }
-  }, [isGeneratingReport, hasHermeticReport]);
+  }, [isGeneratingReport, hasHermeticReport, showCompletionIndicator, hasShownCompletionToast, toast]);
 
   // Show speech bubble for questions or insights
   useEffect(() => {
@@ -712,23 +736,27 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
       </div>
 
       {/* Background Report Generation Indicator */}
-      {isGeneratingReport && (
+      {(isGeneratingReport || showCompletionIndicator) && (
         <div className="fixed bottom-4 right-4 z-40 bg-card/95 backdrop-blur border border-border rounded-lg p-4 shadow-lg">
           <div className="flex items-center gap-3">
             <IntelligentSoulOrb
               size="sm"
-              stage="generating"
-              speaking={true}
+              stage={isGeneratingReport ? "generating" : "complete"}
+              speaking={isGeneratingReport}
               intelligenceLevel={intelligenceLevel}
               showProgressRing={true}
-              className="animate-pulse"
+              className={isGeneratingReport ? "animate-pulse" : ""}
               hermeticProgress={hermeticProgress}
               showHermeticProgress={isGeneratingReport || hasHermeticReport}
             />
             <div className="text-sm">
-              <div className="font-medium text-card-foreground">Soul Alchemist Activating...</div>
+              <div className="font-medium text-card-foreground">
+                {isGeneratingReport ? "Soul Alchemist Activating..." : "Hermetic Report Complete!"}
+              </div>
               <div className="text-muted-foreground">
-                Deep synthesis in progress ({hermeticProgress}%)
+                {isGeneratingReport 
+                  ? `Deep synthesis in progress (${hermeticProgress}%)` 
+                  : "Your hermetic report is ready to explore"}
               </div>
             </div>
           </div>

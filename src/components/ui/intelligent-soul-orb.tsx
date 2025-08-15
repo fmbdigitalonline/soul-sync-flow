@@ -225,19 +225,22 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
             strokeWidth="1.5"
             fill="transparent"
           />
-          {/* Inner progress ring - using design system purple */}
+          {/* Inner progress ring - using design system purple with completion indicator */}
           <motion.circle
             cx={ringSize[size] / 2}
             cy={ringSize[size] / 2}
             r={innerRadius}
-            stroke="hsl(var(--soul-purple))" // Design system purple color
+            stroke={hermeticProgress === 100 ? "hsl(var(--soul-teal))" : "hsl(var(--soul-purple))"} // Teal when complete
             strokeWidth="1.5"
             fill="transparent"
             strokeDasharray={innerStrokeDasharray}
             strokeDashoffset={innerStrokeDashoffset}
             strokeLinecap="round"
             initial={{ strokeDashoffset: innerCircumference }}
-            animate={{ strokeDashoffset: innerStrokeDashoffset }}
+            animate={{ 
+              strokeDashoffset: innerStrokeDashoffset,
+              stroke: hermeticProgress === 100 ? "hsl(var(--soul-teal))" : "hsl(var(--soul-purple))"
+            }}
             transition={{ duration: 0.8, ease: "easeInOut" }}
             style={{
               filter: "drop-shadow(0 0 3px rgba(147, 51, 234, 0.5))" // Purple glow effect
