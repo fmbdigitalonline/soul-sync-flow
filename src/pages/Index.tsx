@@ -180,7 +180,7 @@ const Index = () => {
       </MainLayout>;
   }
   return <MainLayout>
-      <PageContainer maxWidth="saas" className="min-h-screen flex flex-col justify-start sm:justify-center bg-gradient-to-br from-background via-accent/5 to-primary/5 px-4 sm:px-0">
+      <PageContainer maxWidth="saas" className="sm:min-h-screen flex flex-col justify-start sm:justify-center bg-gradient-to-br from-background via-accent/5 to-primary/5 px-4 sm:px-0">
         {/* Hero Section */}
         <PageSection className="text-center mb-0 sm:mb-6">
           <div className="space-y-1 mb-0 sm:space-y-6 sm:mb-6">
