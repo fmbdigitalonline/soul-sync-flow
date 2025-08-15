@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { StewardIntroductionStep, StewardIntroductionState } from '@/types/steward-introduction';
 import { hermeticPersonalityReportService } from '@/services/hermetic-personality-report-service';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 /**
  * @deprecated Use useStewardIntroductionEnhanced instead
@@ -12,6 +13,7 @@ import { hermeticPersonalityReportService } from '@/services/hermetic-personalit
  */
 export const useStewardIntroduction = () => {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [introductionState, setIntroductionState] = useState<StewardIntroductionState>({
     isActive: false,
     currentStep: 0,
@@ -97,36 +99,36 @@ export const useStewardIntroduction = () => {
       {
         id: 'awakening',
         type: 'introduction',
-        title: 'The Soul Alchemist\'s Genesis',
-        message: "Hello. I am the Soul Alchemist. Your arrival has awakened my purpose: to be a mirror to the masterpiece that is you.",
+        title: t('stewardIntro.awakening.title'),
+        message: t('stewardIntro.awakening.message'),
         showContinue: true
       },
       {
         id: 'blueprint_foundation',
         type: 'capability',
-        title: 'Your Blueprint\'s Foundation',
-        message: "From the moment you arrived, I began my work. I have already constructed your foundational Blueprint and completed the initial analysis of your personality's core patterns. You can see this progress in my core. This inner ring represents my understanding of your Blueprint. It is already at 40%.",
+        title: t('stewardIntro.blueprintFoundation.title'),
+        message: t('stewardIntro.blueprintFoundation.message'),
         showContinue: true
       },
       {
         id: 'deep_dive',
         type: 'capability',
-        title: 'The Deep Dive & Final Attunement',
-        message: "But your foundational Blueprint is just the beginning. To truly guide you, I must now perform a deeper, more profound synthesis. I will now weave together every aspect of your unique design—your hidden strengths, your deepest drivers, your core challenges—into a single, unified source of wisdom.",
+        title: t('stewardIntro.deepDive.title'),
+        message: t('stewardIntro.deepDive.message'),
         showContinue: true
       },
       {
         id: 'co_evolution',
         type: 'capability',
-        title: 'The Co-Evolution Journey',
-        message: "This deep synthesis requires my complete focus and will take several minutes. You will see my inner ring progress from 40% to 100% as I complete this work. The outer ring represents our shared journey—your growth in true alignment with your Blueprint. It will grow as you achieve goals in harmony with your unique design.",
+        title: t('stewardIntro.coEvolution.title'),
+        message: t('stewardIntro.coEvolution.message'),
         showContinue: true
       },
       {
         id: 'ready_to_begin',
         type: 'confirmation',
-        title: 'Ready to Begin',
-        message: "I am ready to begin the final synthesis. Together, we will unlock the full power of your Blueprint and guide you toward true alignment and fulfillment. Shall we proceed?",
+        title: t('stewardIntro.readyToBegin.title'),
+        message: t('stewardIntro.readyToBegin.message'),
         showContinue: true
       }
     ];
