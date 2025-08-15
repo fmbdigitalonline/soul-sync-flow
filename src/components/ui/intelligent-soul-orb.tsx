@@ -18,6 +18,7 @@ interface IntelligentSoulOrbProps {
   moduleActivity?: boolean;
   hermeticProgress?: number; // 0-100 for hermetic report generation
   showHermeticProgress?: boolean;
+  showRainbowCelebration?: boolean;
 }
 
 const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
@@ -35,10 +36,12 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
   moduleActivity = false,
   hermeticProgress = 0,
   showHermeticProgress = false,
+  showRainbowCelebration = false,
 }) => {
   const orbRef = useRef<HTMLDivElement>(null);
-  const [particles, setParticles] = useState<Array<{ x: number, y: number, size: number, speed: number, angle: number }>>([]);
+  const [particles, setParticles] = useState<Array<{ x: number, y: number, size: number, speed: number, angle: number, hue?: number }>>([]);
   const [isLevelingUp, setIsLevelingUp] = useState(false);
+  const [rainbowPhase, setRainbowPhase] = useState(0);
   
   // Size mapping - made smaller for more conversation space
   const sizeMap = {
@@ -117,12 +120,13 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
         size: Math.random() * 2 + 1 + (intelligenceLevel / 150), // Smaller particles
         speed: Math.random() * 0.25 + 0.25 + (intelligenceLevel / 250), // Adjusted speed
         angle: (Math.PI * 2 / particleCount) * i,
+        hue: i * (360 / particleCount), // Rainbow hue for each particle
       });
     }
     
     setParticles(newParticles);
   }, [intelligenceLevel]);
-  
+   
   // Animation loop for particles
   useEffect(() => {
     if (!orbRef.current) return;
@@ -137,6 +141,11 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
         }))
       );
       
+      // Rainbow celebration animation
+      if (showRainbowCelebration) {
+        setRainbowPhase(prev => (prev + 4) % 360);
+      }
+      
       animationId = requestAnimationFrame(animate);
     };
     
@@ -145,7 +154,7 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
     return () => {
       cancelAnimationFrame(animationId);
     };
-  }, [intelligenceLevel]);
+  }, [intelligenceLevel, showRainbowCelebration]);
 
   // Level up animation trigger
   useEffect(() => {
@@ -225,12 +234,18 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
             strokeWidth="1.5"
             fill="transparent"
           />
-          {/* Inner progress ring - using design system purple with completion indicator */}
+          {/* Inner progress ring - with rainbow celebration and teal completion */}
           <motion.circle
             cx={ringSize[size] / 2}
             cy={ringSize[size] / 2}
             r={innerRadius}
-            stroke={hermeticProgress === 100 ? "hsl(var(--soul-teal))" : "hsl(var(--soul-purple))"} // Teal when complete
+            stroke={
+              showRainbowCelebration 
+                ? `hsl(${rainbowPhase}, 70%, 60%)` 
+                : hermeticProgress === 100 
+                  ? "hsl(var(--soul-teal))" 
+                  : "hsl(var(--soul-purple))"
+            }
             strokeWidth="1.5"
             fill="transparent"
             strokeDasharray={innerStrokeDasharray}
@@ -239,11 +254,22 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
             initial={{ strokeDashoffset: innerCircumference }}
             animate={{ 
               strokeDashoffset: innerStrokeDashoffset,
-              stroke: hermeticProgress === 100 ? "hsl(var(--soul-teal))" : "hsl(var(--soul-purple))"
+              stroke: showRainbowCelebration 
+                ? `hsl(${rainbowPhase}, 70%, 60%)` 
+                : hermeticProgress === 100 
+                  ? "hsl(var(--soul-teal))" 
+                  : "hsl(var(--soul-purple))",
+              scale: showRainbowCelebration ? [1, 1.1, 1] : 1
             }}
-            transition={{ duration: 0.8, ease: "easeInOut" }}
+            transition={{ 
+              duration: 0.8, 
+              ease: "easeInOut",
+              scale: showRainbowCelebration ? { duration: 0.3, repeat: Infinity } : {}
+            }}
             style={{
-              filter: "drop-shadow(0 0 3px rgba(147, 51, 234, 0.5))" // Purple glow effect
+              filter: showRainbowCelebration 
+                ? `drop-shadow(0 0 8px hsl(${rainbowPhase}, 70%, 60%))`
+                : "drop-shadow(0 0 3px rgba(147, 51, 234, 0.5))"
             }}
           />
         </svg>
@@ -268,15 +294,26 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
           ease: "easeInOut"
         }}
       >
-        {/* Core orb */}
+        {/* Core orb with rainbow celebration */}
         <div 
           className={cn(
-            "absolute inset-0 rounded-full bg-gradient-to-r", 
-            getOrbColors,
+            "absolute inset-0 rounded-full", 
             speaking && "animate-pulse",
             isLevelingUp && "animate-ping"
           )}
-        />
+          style={{
+            background: showRainbowCelebration 
+              ? `linear-gradient(${rainbowPhase}deg, 
+                  hsl(${rainbowPhase}, 70%, 60%), 
+                  hsl(${(rainbowPhase + 120) % 360}, 70%, 60%), 
+                  hsl(${(rainbowPhase + 240) % 360}, 70%, 60%))`
+              : undefined
+          }}
+        >
+          {!showRainbowCelebration && (
+            <div className={cn("absolute inset-0 rounded-full bg-gradient-to-r", getOrbColors)} />
+          )}
+        </div>
         
         {/* Enhanced glow effect - reverse color psychology */}
         <div 
@@ -299,25 +336,31 @@ const IntelligentSoulOrb: React.FC<IntelligentSoulOrbProps> = ({
           <div className="absolute left-[45%] top-0 w-[10%] h-[100%] bg-white transform rotate-[135deg]" />
         </div>
         
-        {/* Intelligence-enhanced orbital particles */}
+        {/* Intelligence-enhanced orbital particles with rainbow celebration */}
         {particles.map((particle, index) => {
-          const x = 50 + Math.cos(particle.angle) * 28; // Slightly reduced orbit
-          const y = 50 + Math.sin(particle.angle) * 28;
+          const x = 50 + Math.cos(particle.angle) * (showRainbowCelebration ? 35 : 28); // Expanded orbit during celebration
+          const y = 50 + Math.sin(particle.angle) * (showRainbowCelebration ? 35 : 28);
           
           return (
             <div 
               key={index}
               className={cn(
-                "absolute rounded-full",
-                intelligenceLevel >= 90 ? "bg-amber-200" : "bg-white"
+                "absolute rounded-full transition-all duration-200",
+                !showRainbowCelebration && (intelligenceLevel >= 90 ? "bg-amber-200" : "bg-white")
               )}
               style={{
                 left: `${x}%`,
                 top: `${y}%`,
-                width: `${particle.size}px`,
-                height: `${particle.size}px`,
-                opacity: 0.7 + (intelligenceLevel / 200),
+                width: `${showRainbowCelebration ? particle.size * 1.5 : particle.size}px`,
+                height: `${showRainbowCelebration ? particle.size * 1.5 : particle.size}px`,
+                opacity: showRainbowCelebration ? 0.9 : 0.7 + (intelligenceLevel / 200),
                 transform: `translate(-50%, -50%)`,
+                background: showRainbowCelebration 
+                  ? `hsl(${(particle.hue! + rainbowPhase) % 360}, 70%, 60%)`
+                  : undefined,
+                boxShadow: showRainbowCelebration 
+                  ? `0 0 6px hsl(${(particle.hue! + rainbowPhase) % 360}, 70%, 60%)`
+                  : undefined
               }}
             />
           );

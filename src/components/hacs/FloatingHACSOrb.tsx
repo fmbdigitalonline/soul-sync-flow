@@ -52,8 +52,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   const [isThinking, setIsThinking] = useState(false);
   const [hermeticProgress, setHermeticProgress] = useState(40); // Start at 40% (blueprint completed)
   const [showCompletionIndicator, setShowCompletionIndicator] = useState(false);
-  const [hasShownCompletionToast, setHasShownCompletionToast] = useState(false);
-  const { toast } = useToast();
+  const [showRainbowCelebration, setShowRainbowCelebration] = useState(false);
   
   // Enhanced feedback system
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
@@ -205,30 +204,22 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     } else if (hasHermeticReport) {
       // Principle #7: Clear completion state - jump to 100% when report exists
       setHermeticProgress(100);
-      // Show completion indicator and toast notification
+      // Trigger dramatic rainbow celebration
       if (!showCompletionIndicator) {
         setShowCompletionIndicator(true);
+        setShowRainbowCelebration(true);
         setTimeout(() => {
           setShowCompletionIndicator(false);
-        }, 5000);
-        
-        // Show completion toast notification (once per session)
-        if (!hasShownCompletionToast) {
-          setHasShownCompletionToast(true);
-          toast({
-            title: "🌟 Hermetic Report Complete!",
-            description: "Your personalized hermetic personality report is ready to explore.",
-            duration: 6000,
-          });
-        }
+          setShowRainbowCelebration(false);
+        }, 4000); // 4 seconds for full rainbow celebration
       }
     } else {
       // Reset to baseline when not generating and no report
       setHermeticProgress(40);
       setShowCompletionIndicator(false);
-      setHasShownCompletionToast(false);
+      setShowRainbowCelebration(false);
     }
-  }, [isGeneratingReport, hasHermeticReport, showCompletionIndicator, hasShownCompletionToast, toast]);
+  }, [isGeneratingReport, hasHermeticReport, showCompletionIndicator]);
 
   // Show speech bubble for questions or insights
   useEffect(() => {
@@ -748,6 +739,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
               className={isGeneratingReport ? "animate-pulse" : ""}
               hermeticProgress={hermeticProgress}
               showHermeticProgress={isGeneratingReport || hasHermeticReport}
+              showRainbowCelebration={showRainbowCelebration}
             />
             <div className="text-sm">
               <div className="font-medium text-card-foreground">
