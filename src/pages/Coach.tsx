@@ -149,9 +149,11 @@ const Coach = () => {
             <h1 className="text-3xl font-bold gradient-text mb-2">
               {t('companion.pageTitle')}
             </h1>
-            <p className="text-muted-foreground">
-              {t('companion.pageSubtitle')}
-            </p>
+            {messages.length === 0 && (
+              <p className="text-muted-foreground">
+                {t('companion.pageSubtitle')}
+              </p>
+            )}
           </div>
 
           {/* Render different layouts based on screen size */}
