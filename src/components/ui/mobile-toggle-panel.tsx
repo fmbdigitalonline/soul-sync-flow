@@ -37,7 +37,7 @@ export const MobileTogglePanel: React.FC<MobileTogglePanelProps> = ({
   return (
     <div className="flex flex-col h-[calc(100dvh-6rem)] w-full max-w-full overflow-hidden">
       {/* Toggle Header */}
-      <div className="flex-shrink-0 p-3 border-b bg-background">
+      <div className="flex-shrink-0 p-2 bg-background">
         <div className="flex gap-1 bg-gray-100 rounded-lg p-1 max-w-full">
           <Button
             variant={activePanel === 'chat' ? 'default' : 'ghost'}

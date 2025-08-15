@@ -143,18 +143,18 @@ const Coach = () => {
   return (
     <MainLayout>
       <div className="min-h-screen bg-background">
-        <div className="container mx-auto py-6 px-4 max-w-6xl">
+        <div className="container mx-auto py-2 px-4 max-w-6xl">
           
-          <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold gradient-text mb-2">
-              {t('companion.pageTitle')}
-            </h1>
-            {messages.length === 0 && (
+          {messages.length === 0 && (
+            <div className="text-center mb-6">
+              <h1 className="text-3xl font-bold gradient-text mb-2">
+                {t('companion.pageTitle')}
+              </h1>
               <p className="text-muted-foreground">
                 {t('companion.pageSubtitle')}
               </p>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Render different layouts based on screen size */}
           {isMobile ? (
