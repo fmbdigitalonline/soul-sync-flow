@@ -618,9 +618,9 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   return (
     <HACSErrorBoundary source="FloatingHACSOrb-Main">
       <>
-        {/* Fixed positioning container - mobile centered, desktop right */}
+        {/* Fixed positioning container */}
         <div className={cn(
-          "fixed top-32 z-50 pointer-events-none left-1/2 transform -translate-x-1/2 md:left-auto md:right-4 md:transform-none",
+          "fixed top-32 right-4 z-50 pointer-events-none",
           className
         )}>
           <div className="relative pointer-events-auto">
