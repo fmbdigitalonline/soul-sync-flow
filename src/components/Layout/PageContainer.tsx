@@ -29,9 +29,9 @@ export const PageContainer: React.FC<PageContainerProps> = ({
   padding = "md"
 }) => {
   const maxWidthClasses = {
-    saas: "max-w-saas",
-    "saas-wide": "max-w-saas-wide", 
-    content: "max-w-content",
+    saas: "w-full max-w-none sm:max-w-saas",
+    "saas-wide": "w-full max-w-none sm:max-w-saas-wide", 
+    content: "w-full max-w-none sm:max-w-content",
     full: "max-w-full"
   };
 
