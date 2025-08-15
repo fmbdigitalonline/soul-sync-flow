@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,9 +9,10 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Loader2, Eye, EyeOff } from "lucide-react";
+import { Loader2, Eye, EyeOff, Sparkles } from "lucide-react";
 import { SoulOrbAvatar } from "@/components/ui/avatar";
 import { LanguageSelector } from "@/components/ui/language-selector";
+import { getFunnelData, clearFunnelData, getFunnelSummary } from "@/utils/funnel-data";
 
 export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
@@ -23,16 +24,24 @@ export default function Auth() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { user, loading: authLoading } = useAuth();
   const { t } = useLanguage();
 
   const from = location.state?.from?.pathname || "/";
+  const fromFunnel = searchParams.get('from') === 'funnel';
+  const funnelData = getFunnelData();
 
   useEffect(() => {
     if (!authLoading && user) {
-      navigate(from, { replace: true });
+      // If user came from funnel and has funnel data, go to onboarding to personalize experience
+      if (fromFunnel && funnelData) {
+        navigate("/onboarding", { replace: true });
+      } else {
+        navigate(from, { replace: true });
+      }
     }
-  }, [user, authLoading, navigate, from]);
+  }, [user, authLoading, navigate, from, fromFunnel, funnelData]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,7 +81,9 @@ export default function Auth() {
 
       toast({
         title: t('auth.success'),
-        description: t('auth.signUpSuccess'),
+        description: fromFunnel && funnelData 
+          ? "Account created! Let's build your personalized blueprint based on your assessment."
+          : t('auth.signUpSuccess'),
       });
 
       navigate("/onboarding", { replace: true });
@@ -106,6 +117,10 @@ export default function Auth() {
         description: t('auth.welcomeBackMessage'),
       });
 
+      // Clear funnel data on successful sign in (they're already a user)
+      if (fromFunnel) {
+        clearFunnelData();
+      }
       navigate(from, { replace: true });
       
     } catch (error: any) {
@@ -136,15 +151,31 @@ export default function Auth() {
             <LanguageSelector />
           </div>
           
+          {fromFunnel && funnelData && (
+            <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 mb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium text-primary">Your Life Clarity Report is Ready!</span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Complete your account to access your personalized insights and blueprint.
+              </p>
+            </div>
+          )}
+          
           <div className="flex justify-center">
             <SoulOrbAvatar size="md" />
           </div>
           <div>
             <CardTitle className="text-2xl font-display">
-              {isSignUp ? t('auth.createAccount') : t('auth.welcomeBack')}
+              {fromFunnel && funnelData && isSignUp 
+                ? "Create Your Account" 
+                : isSignUp ? t('auth.createAccount') : t('auth.welcomeBack')}
             </CardTitle>
             <CardDescription>
-              {isSignUp ? t('auth.startJourney') : t('auth.continueJourney')}
+              {fromFunnel && funnelData && isSignUp
+                ? "Access your personalized life transformation blueprint"
+                : isSignUp ? t('auth.startJourney') : t('auth.continueJourney')}
             </CardDescription>
           </div>
         </CardHeader>

@@ -24,6 +24,7 @@ import { SoulOrbProvider } from './contexts/SoulOrbContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BlueprintCacheProvider } from './contexts/BlueprintCacheContext';
 import AdminDashboard from "@/pages/AdminDashboard";
+import LifeClarityFunnel from "@/pages/LifeClarityFunnel";
 import { user360Cleanup } from '@/utils/user-360-cleanup';
 import { useBlueprintFactsAutomation } from '@/hooks/use-blueprint-facts-automation';
 import { useAuth } from '@/contexts/AuthContext';
@@ -55,6 +56,7 @@ function App() {
                     <div className="min-h-screen bg-background">
                       <Routes>
                         <Route path="/" element={<Index />} />
+                        <Route path="/get-started" element={<LifeClarityFunnel />} />
                         <Route path="/dreams/*" element={<ProtectedRoute><MainLayout><Dreams /></MainLayout></ProtectedRoute>} />
                         <Route path="/spiritual-growth" element={<ProtectedRoute><MainLayout><SpiritualGrowth /></MainLayout></ProtectedRoute>} />
                         <Route path="/companion" element={<ProtectedRoute><MainLayout><Coach /></MainLayout></ProtectedRoute>} />

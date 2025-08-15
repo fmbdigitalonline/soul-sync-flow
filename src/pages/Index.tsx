@@ -238,7 +238,7 @@ const Index = () => {
                 </Button>
               </div>}
             {!user && <div className="flex flex-col sm:flex-row gap-4">
-                <Button onClick={() => navigate('/onboarding')} size="lg" className="font-inter h-touch px-8">
+                <Button onClick={() => navigate('/get-started')} size="lg" className="font-inter h-touch px-8">
                   <ArrowRight className="h-5 w-5 mr-2" />
                   {t('index.getStarted')}
                 </Button>
