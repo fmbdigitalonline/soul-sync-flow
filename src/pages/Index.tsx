@@ -180,10 +180,10 @@ const Index = () => {
       </MainLayout>;
   }
   return <MainLayout>
-      <PageContainer maxWidth="saas" className="min-h-screen flex flex-col justify-center bg-gradient-to-br from-background via-accent/5 to-primary/5">
+      <PageContainer maxWidth="saas" className="min-h-screen flex flex-col justify-start sm:justify-center bg-gradient-to-br from-background via-accent/5 to-primary/5 px-4 sm:px-0">
         {/* Hero Section */}
-        <PageSection className="text-center mb-2 sm:mb-6">
-          <div className="space-y-3 mb-3 sm:space-y-6 sm:mb-6">
+        <PageSection className="text-center mb-0 sm:mb-6">
+          <div className="space-y-1 mb-0 sm:space-y-6 sm:mb-6">
             <h1 className="text-4xl sm:text-5xl font-bold font-cormorant gradient-text">
               {safeInterpolateTranslation(user ? t("index.welcomePlainWithName") : t("index.welcomePlain"), {
               name: userName
@@ -198,7 +198,7 @@ const Index = () => {
 
         {/* Navigation Cards - Starting Hub - Only show when authenticated */}
         {user && (
-          <PageSection className="mb-2 sm:mb-6">
+          <PageSection className="mb-0 sm:mb-6">
             <HomeMenuGrid items={homeMenuItems} />
           </PageSection>
         )}
