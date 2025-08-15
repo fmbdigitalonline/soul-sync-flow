@@ -198,7 +198,45 @@ const translations: Record<Language, Translations> = {
         sixMonths: '6 Months',
         oneYear: '1 Year',
         twoPlusYears: '2+ Years'
-      }
+      },
+      // Onboarding goal selection
+      primaryFocus: 'Personal Growth',
+      exploring: 'Exploring my purpose and direction',
+      personalGrowth: 'Personal growth and self-discovery',
+      careerSuccess: 'Career development and success',
+      relationships: 'Relationships and connections',
+      healthWellness: 'Health and wellness',
+      creativity: 'Creativity and self-expression',
+      spiritualDevelopment: 'Spiritual development',
+      guidanceLevel: 'How much guidance would you like?',
+      lightTouch: 'Light touch - occasional insights',
+      structuredGuidance: 'Structured guidance - regular support',
+      completeSetup: 'Complete my setup'
+    },
+    // Personality Assessment
+    personality: {
+      energySource: 'Where do you get your energy?',
+      workspaceStyle: 'What\'s your ideal workspace?',
+      planningStyle: 'How do you prefer to plan?',
+      beingAlone: 'Being alone to recharge',
+      beingWithPeople: 'Being with people and socializing',
+      tidyOrganized: 'Tidy and organized',
+      creativeChaos: 'Creative chaos',
+      bookInAdvance: 'Book everything in advance',
+      seeWhatHappens: 'See what happens in the moment',
+      yourPersonalityProfile: 'Your Personality Profile',
+      likelyStyle: 'Based on your responses, your likely style is:',
+      topMbtiMatches: 'Top MBTI personality matches:',
+      howAccurate: 'How accurate does this feel?',
+      notQuiteRight: 'Not quite right',
+      spotOn: 'Spot on!',
+      continueWithProfile: 'Continue with this profile',
+      keepRefining: 'Keep refining'
+    },
+    // Blueprint section
+    blueprint: {
+      generated: 'Blueprint Generated',
+      generatedDesc: 'Your personalized soul blueprint has been created'
     },
     // Onboarding Flow
     onboarding: {
@@ -630,7 +668,45 @@ const translations: Record<Language, Translations> = {
         sixMonths: '6 maanden',
         oneYear: '1 jaar',
         twoPlusYears: '2+ jaar'
-      }
+      },
+      // Onboarding doelselectie
+      primaryFocus: 'Persoonlijke Groei',
+      exploring: 'Mijn doel en richting verkennen',
+      personalGrowth: 'Persoonlijke groei en zelfontdekking',
+      careerSuccess: 'Carrièreontwikkeling en succes',
+      relationships: 'Relaties en verbindingen',
+      healthWellness: 'Gezondheid en welzijn',
+      creativity: 'Creativiteit en zelfexpressie',
+      spiritualDevelopment: 'Spirituele ontwikkeling',
+      guidanceLevel: 'Hoeveel begeleiding wil je?',
+      lightTouch: 'Lichte aanraking - incidentele inzichten',
+      structuredGuidance: 'Gestructureerde begeleiding - regelmatige ondersteuning',
+      completeSetup: 'Voltooi mijn setup'
+    },
+    // Persoonlijkheidsbeoordeling
+    personality: {
+      energySource: 'Waar haal je je energie vandaan?',
+      workspaceStyle: 'Wat is jouw ideale werkplek?',
+      planningStyle: 'Hoe plan je het liefst?',
+      beingAlone: 'Alleen zijn om bij te tanken',
+      beingWithPeople: 'Bij mensen zijn en socialiseren',
+      tidyOrganized: 'Netjes en georganiseerd',
+      creativeChaos: 'Creatieve chaos',
+      bookInAdvance: 'Alles van tevoren plannen',
+      seeWhatHappens: 'Kijken wat er gebeurt in het moment',
+      yourPersonalityProfile: 'Je Persoonlijkheidsprofiel',
+      likelyStyle: 'Op basis van je antwoorden is je waarschijnlijke stijl:',
+      topMbtiMatches: 'Top MBTI persoonlijkheidsmatches:',
+      howAccurate: 'Hoe accuraat voelt dit?',
+      notQuiteRight: 'Niet helemaal juist',
+      spotOn: 'Helemaal goed!',
+      continueWithProfile: 'Doorgaan met dit profiel',
+      keepRefining: 'Blijf verfijnen'
+    },
+    // Blauwdruk sectie
+    blueprint: {
+      generated: 'Blauwdruk Gegenereerd',
+      generatedDesc: 'Je gepersonaliseerde zielblauwdruk is gemaakt'
     },
     // Onboarding Flow
     onboarding: {
