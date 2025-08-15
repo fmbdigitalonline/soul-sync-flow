@@ -55,27 +55,33 @@ const SoulOrbAvatar = React.forwardRef<
     stage?: "welcome" | "collecting" | "generating" | "complete";
   }
 >(({ className, speaking = false, size = "sm", stage = "welcome", ...props }, ref) => {
-  // Size mapping for square containers to maintain aspect ratio
+  // Size mapping for perfect square containers to ensure round orb
   const containerSizeMap = {
-    xs: "w-12 h-12", // 48px x 48px
-    sm: "w-20 h-20", // 80px x 80px
-    md: "w-28 h-28", // 112px x 112px  
-    lg: "w-36 h-36", // 144px x 144px
+    xs: "w-10 h-10", // 40px x 40px - matches SoulOrb sm size
+    sm: "w-16 h-16", // 64px x 64px - matches SoulOrb md size  
+    md: "w-20 h-20", // 80px x 80px - matches SoulOrb lg size
+    lg: "w-24 h-24", // 96px x 96px - larger for special cases
   };
 
-  const orbSize: 'sm' | 'md' | 'lg' = (size === 'xs' ? 'sm' : size) as 'sm' | 'md' | 'lg';
+  // Map avatar sizes to orb sizes for consistency
+  const orbSizeMap = {
+    xs: 'sm' as const,
+    sm: 'md' as const, 
+    md: 'lg' as const,
+    lg: 'lg' as const,
+  };
 
   return (
     <div
       ref={ref}
       className={cn(
-        "relative flex items-center justify-center",
+        "relative flex items-center justify-center rounded-full",
         containerSizeMap[size],
         className
       )}
       {...props}
     >
-      <SoulOrb speaking={speaking} size={orbSize} stage={stage} />
+      <SoulOrb speaking={speaking} size={orbSizeMap[size]} stage={stage} />
     </div>
   )
 })
