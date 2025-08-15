@@ -76,18 +76,14 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     label: t('nav.companion')
   }];
 
-  // Add profile and 360° profile to navigation items for authenticated users
+  // Add profile to navigation items for authenticated users
   const userNavItems = user ? [...baseNavItems, {
     to: "/profile",
     icon: User,
     label: t('nav.profile')
-  }, {
-    to: "/user-360",
-    icon: User,
-    label: t('nav.profile360')
   }] : baseNavItems;
 
-  // Add Admin Dashboard and Test Environment for admin users
+  // Add Admin Dashboard, Test Environment, and 360° Profile for admin users
   const navItems = user && isAdminUser(user) ? [...userNavItems, {
     to: "/admin",
     icon: Settings,
@@ -96,6 +92,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     to: "/test-environment",
     icon: TestTube,
     label: t('nav.testEnvironment')
+  }, {
+    to: "/user-360",
+    icon: User,
+    label: t('nav.profile360')
   }] : userNavItems;
   const isActive = (path: string) => {
     if (path === "/" && location.pathname === "/") return true;
