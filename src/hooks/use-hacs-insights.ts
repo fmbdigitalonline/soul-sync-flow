@@ -19,6 +19,8 @@ import { useStewardIntroduction } from './use-steward-introduction';
 import { enhancedMemoryIntelligence } from '@/services/enhanced-memory-intelligence';
 import { behavioralPatternIntelligence } from '@/services/behavioral-pattern-intelligence';
 import { unifiedBrainContext } from '@/services/unified-brain-context';
+import { hermeticInsightExtractor } from '@/services/hermetic-insight-extractor';
+import { useHermeticReportStatus } from './use-hermetic-report-status';
 
 export interface HACSInsight {
   id: string;
@@ -46,6 +48,7 @@ export const useHACSInsights = () => {
     shouldStartIntroduction,
     startIntroduction 
   } = useStewardIntroduction();
+  const { hasReport: hasHermeticReport } = useHermeticReportStatus();
   
   // Phase 1: Insight Queue System (max 3 insights)
   const [insightQueue, setInsightQueue] = useState<HACSInsight[]>([]);
@@ -450,6 +453,24 @@ export const useHACSInsights = () => {
     }
   }, [user]);
 
+  // Generate insights from completed hermetic report
+  const generateHermeticReportInsights = useCallback(async (): Promise<HACSInsight[]> => {
+    if (!user || !hasHermeticReport) {
+      console.log('📄 No hermetic report available for insights');
+      return [];
+    }
+
+    console.log('🔮 Generating insights from hermetic report...');
+    try {
+      const hermeticInsights = await hermeticInsightExtractor.generateHermeticReportInsights(user.id);
+      console.log('✨ Hermetic insights generated:', hermeticInsights.length);
+      return hermeticInsights;
+    } catch (error) {
+      console.error('🚨 Error generating hermetic insights:', error);
+      return [];
+    }
+  }, [user, hasHermeticReport]);
+
   // Create steward introduction insight
   const createStewardIntroductionInsight = useCallback(() => {
     if (!introductionState.isActive || !introductionState.steps[introductionState.currentStep]) {
@@ -501,6 +522,35 @@ export const useHACSInsights = () => {
     setIsGenerating(true);
     
     try {
+      // PRIORITY 1: Hermetic report insights (immediate after completion)
+      if (hasHermeticReport) {
+        console.log('🔮 Prioritizing hermetic report insights...');
+        const hermeticInsights = await generateHermeticReportInsights();
+        
+        if (hermeticInsights && hermeticInsights.length > 0) {
+          // Sort by priority and confidence
+          const sortedInsights = hermeticInsights.sort((a, b) => {
+            const priorityWeight = { critical: 4, high: 3, medium: 2, low: 1 };
+            const aPriority = priorityWeight[a.priority || 'medium'];
+            const bPriority = priorityWeight[b.priority || 'medium'];
+            
+            if (aPriority !== bPriority) return bPriority - aPriority;
+            return b.confidence - a.confidence;
+          });
+          
+          // Add the best hermetic insight to queue
+          const insight = sortedInsights[0];
+          addInsightToQueue(insight);
+          
+          // Store in history
+          setInsightHistory(prev => [insight, ...prev].slice(0, 20));
+          setLastInsightTime(now);
+          
+          console.log('✅ Hermetic insight generated:', insight.type);
+          return insight;
+        }
+      }
+
       // Step 1: Load historical insights on first run (if queue is empty)
       if (insightQueue.length === 0) {
         console.log('🔍 Queue empty, loading historical insights...');
@@ -514,7 +564,7 @@ export const useHACSInsights = () => {
         }
       }
       
-      // Phase 1: Try enhanced intelligence services first (priority insights)
+      // PRIORITY 2: Enhanced intelligence services (rich, personalized)
       const enhancedInsights = await generateEnhancedInsights();
       if (enhancedInsights.length > 0) {
         // Add all enhanced insights to queue, prioritizing by confidence
@@ -530,7 +580,7 @@ export const useHACSInsights = () => {
         return sortedInsights[0];
       }
       
-      // Fallback: Try analytics-based insights (fast, local analysis)
+      // PRIORITY 3: Analytics-based insights (fast, local analysis)
       const analyticsInsight = await generateAnalyticsInsight();
       if (analyticsInsight) {
         addInsightToQueue(analyticsInsight);
@@ -593,7 +643,7 @@ export const useHACSInsights = () => {
     } finally {
       setIsGenerating(false);
     }
-  }, [user, isGenerating, lastInsightTime, generateAnalyticsInsight, generateEnhancedInsights]);
+  }, [user, isGenerating, lastInsightTime, generateAnalyticsInsight, generateEnhancedInsights, generateHermeticReportInsights, hasHermeticReport, addInsightToQueue, setInsightHistory, setLastInsightTime, introductionState, createStewardIntroductionInsight, loadHistoricalInsights, insightQueue, currentInsightIndex]);
 
   // CRITICAL FIX: Acknowledge an insight and properly clear it from current display
   const acknowledgeInsight = useCallback((insightId: string) => {
@@ -719,6 +769,7 @@ export const useHACSInsights = () => {
     isGenerating: isGenerating || isGeneratingReport,
     generateInsight,
     generateAnalyticsInsight,
+    generateHermeticReportInsights,
     acknowledgeInsight,
     dismissInsight,
     triggerInsightCheck,
