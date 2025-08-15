@@ -140,7 +140,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
       </ScrollArea>
 
       {/* Input - Sticky to bottom */}
-      <div className="absolute bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t px-2 py-2 pb-[env(safe-area-inset-bottom)]">
+      <div className="absolute bottom-0 left-0 right-0 bg-background px-2 py-1">
         <div className="flex space-x-2">
           <Input
             value={inputValue}
@@ -148,7 +148,7 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
             onKeyPress={handleKeyPress}
             placeholder="Type your message..."
             disabled={isLoading}
-            className="flex-1 text-base"
+            className="flex-1 text-base pb-[env(safe-area-inset-bottom)]"
           />
           <Button
             onClick={handleSendMessage}
