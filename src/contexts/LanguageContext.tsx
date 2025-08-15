@@ -297,6 +297,31 @@ const translations: Record<Language, Translations> = {
         pureIntelligence: 'Pure Intelligence'
       }
     },
+    // HACS
+    hacs: {
+      insight: 'HACS Insight',
+      confidence: 'Confidence',
+      showEvidence: 'Show Evidence',
+      hideEvidence: 'Hide Evidence',
+      dismiss: 'Dismiss',
+      continue: 'Continue',
+      gotIt: 'Got It',
+      generated: 'Generated',
+      loading: 'HACS Loading...',
+      systemInitializing: 'System Initializing...',
+      insightsQueue: '{current} of {total} insights'
+    },
+    // Personalized Quotes
+    personalizedQuotes: {
+      loading: 'Loading your personalized inspiration...',
+      fallbackMessage: 'Your unique journey is unfolding perfectly.',
+      personalizedText: 'Personalized for your unique blueprint',
+      defaultText: 'Default inspiration quotes',
+      generateMoreTitle: 'Generate more quotes',
+      regenerating: 'Regenerating your personalized quotes...',
+      regenerationSuccess: 'Generated {count} new personalized quotes!',
+      regenerationError: 'Failed to regenerate quotes'
+    },
     // Journey
     journey: {
       empty: {
@@ -769,6 +794,31 @@ const translations: Record<Language, Translations> = {
         hacs: 'HACS',
         pureIntelligence: 'Pure Intelligentie'
       }
+    },
+    // HACS
+    hacs: {
+      insight: 'HACS Inzicht',
+      confidence: 'Vertrouwen',
+      showEvidence: 'Toon Bewijs',
+      hideEvidence: 'Verberg Bewijs',
+      dismiss: 'Wegwijzen',
+      continue: 'Doorgaan',
+      gotIt: 'Begrepen',
+      generated: 'Gegenereerd',
+      loading: 'HACS Laden...',
+      systemInitializing: 'Systeem initialiseren...',
+      insightsQueue: '{current} van {total} inzichten'
+    },
+    // Gepersonaliseerde Citaten
+    personalizedQuotes: {
+      loading: 'Je gepersonaliseerde inspiratie laden...',
+      fallbackMessage: 'Je unieke reis ontvouwt zich perfect.',
+      personalizedText: 'Gepersonaliseerd voor je unieke blauwdruk',
+      defaultText: 'Standaard inspiratiecitaten',
+      generateMoreTitle: 'Genereer meer citaten',
+      regenerating: 'Je gepersonaliseerde citaten worden opnieuw gegenereerd...',
+      regenerationSuccess: '{count} nieuwe gepersonaliseerde citaten gegenereerd!',
+      regenerationError: 'Kon citaten niet opnieuw genereren'
     },
     // Reis
     journey: {

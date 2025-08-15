@@ -16,6 +16,8 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { HACSInsight } from '@/hooks/use-hacs-insights';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { interpolateTranslation } from '@/utils/translation-utils';
 
 interface HACSInsightDisplayProps {
   insight: HACSInsight;
@@ -41,6 +43,7 @@ export const HACSInsightDisplay: React.FC<HACSInsightDisplayProps> = ({
   onPrevious
 }) => {
   const [showEvidence, setShowEvidence] = useState(false);
+  const { t } = useLanguage();
 
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -104,7 +107,7 @@ export const HACSInsightDisplay: React.FC<HACSInsightDisplayProps> = ({
                 <TypeIcon className={`h-4 w-4 ${getTypeColor(insight.type)}`} />
               </div>
               <div>
-                <h4 className="font-semibold text-sm">HACS Insight</h4>
+                <h4 className="font-semibold text-sm">{t('hacs.insight')}</h4>
                 <p className={`text-xs font-medium ${getModuleColor(insight.module)}`}>
                   {insight.module} • {insight.type}
                 </p>
@@ -133,7 +136,10 @@ export const HACSInsightDisplay: React.FC<HACSInsightDisplayProps> = ({
                 <ChevronLeft className="h-3 w-3" />
               </Button>
               <span className="text-xs text-muted-foreground">
-                {currentIndex + 1} of {totalInsights} insights
+                {interpolateTranslation(t('hacs.insightsQueue'), {
+                  current: (currentIndex + 1).toString(),
+                  total: totalInsights.toString()
+                })}
               </span>
               <Button
                 variant="ghost"
@@ -150,7 +156,7 @@ export const HACSInsightDisplay: React.FC<HACSInsightDisplayProps> = ({
           {/* Confidence Indicator */}
           <div className="mb-3">
             <div className="flex justify-between text-xs text-muted-foreground mb-1">
-              <span>Confidence</span>
+              <span>{t('hacs.confidence')}</span>
               <span>{Math.round(insight.confidence * 100)}%</span>
             </div>
             <Progress value={insight.confidence * 100} className="h-1" />
@@ -171,7 +177,7 @@ export const HACSInsightDisplay: React.FC<HACSInsightDisplayProps> = ({
                 onClick={() => setShowEvidence(!showEvidence)}
               >
                 <Eye className="h-3 w-3 mr-1" />
-                {showEvidence ? 'Hide' : 'Show'} Evidence
+                {showEvidence ? t('hacs.hideEvidence') : t('hacs.showEvidence')}
               </Button>
               
               <AnimatePresence>
@@ -206,7 +212,7 @@ export const HACSInsightDisplay: React.FC<HACSInsightDisplayProps> = ({
                   onClick={onDismiss}
                   className="flex-1 h-8 text-xs"
                 >
-                  Dismiss
+                  {t('hacs.dismiss')}
                 </Button>
                 <Button
                   size="sm"
@@ -218,7 +224,7 @@ export const HACSInsightDisplay: React.FC<HACSInsightDisplayProps> = ({
                   }}
                   className="flex-1 h-8 text-xs"
                 >
-                  Continue
+                  {t('hacs.continue')}
                 </Button>
               </>
             ) : (
@@ -229,7 +235,7 @@ export const HACSInsightDisplay: React.FC<HACSInsightDisplayProps> = ({
                   onClick={onDismiss}
                   className="flex-1 h-8 text-xs"
                 >
-                  Dismiss
+                  {t('hacs.dismiss')}
                 </Button>
                 <Button
                   size="sm"
@@ -237,7 +243,7 @@ export const HACSInsightDisplay: React.FC<HACSInsightDisplayProps> = ({
                   className="flex-1 h-8 text-xs"
                 >
                   <CheckCircle className="h-3 w-3 mr-1" />
-                  Got It
+                  {t('hacs.gotIt')}
                 </Button>
               </>
             )}
@@ -245,7 +251,7 @@ export const HACSInsightDisplay: React.FC<HACSInsightDisplayProps> = ({
 
           {/* Timestamp */}
           <div className="mt-2 text-xs text-muted-foreground text-center">
-            Generated {insight.timestamp.toLocaleTimeString()}
+            {t('hacs.generated')} {insight.timestamp.toLocaleTimeString()}
           </div>
         </Card>
       </motion.div>

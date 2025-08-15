@@ -135,7 +135,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
   const pieEnhancedCoach = usePIEEnhancedCoach('guide');
   
   // Language and feedback integration
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const enhancedFeedback = useEnhancedFeedbackSystem();
 
   console.log('FloatingHACSOrb render:', { 
@@ -601,7 +601,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
               />
               <div className="text-sm">
                 <div className="font-medium text-card-foreground font-cormorant">
-                  {loading ? 'HACS Loading...' : 'System Initializing...'}
+                  {loading ? t('hacs.loading') : t('hacs.systemInitializing')}
                 </div>
                 <div className="text-muted-foreground font-inter text-xs">
                   {databaseValidation.loading ? 'Validating blueprint...' : 'Preparing intelligence...'}

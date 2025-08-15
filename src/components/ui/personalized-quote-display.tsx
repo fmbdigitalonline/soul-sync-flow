@@ -5,6 +5,8 @@ import { Sparkles, RefreshCw } from 'lucide-react';
 import { quoteRegenerationService } from '@/services/quote-regeneration-service';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { interpolateTranslation } from '@/utils/translation-utils';
 interface PersonalizedQuoteDisplayProps {
   className?: string;
   interval?: number;
@@ -18,6 +20,7 @@ export const PersonalizedQuoteDisplay: React.FC<PersonalizedQuoteDisplayProps> =
   const {
     user
   } = useAuth();
+  const { t } = useLanguage();
   const {
     quotes,
     hasPersonalizedQuotes,
@@ -27,16 +30,18 @@ export const PersonalizedQuoteDisplay: React.FC<PersonalizedQuoteDisplayProps> =
   const handleRegenerateQuotes = async () => {
     if (!user?.id) return;
     try {
-      toast.loading('Regenerating your personalized quotes...');
+      toast.loading(t('personalizedQuotes.regenerating'));
       const result = await quoteRegenerationService.regenerateQuotes(user.id);
       if (result.success) {
-        toast.success(`Generated ${result.quotesGenerated} new personalized quotes!`);
+        toast.success(interpolateTranslation(t('personalizedQuotes.regenerationSuccess'), {
+          count: result.quotesGenerated?.toString() || '0'
+        }));
         await refreshQuotes();
       } else {
-        toast.error(result.error || 'Failed to regenerate quotes');
+        toast.error(result.error || t('personalizedQuotes.regenerationError'));
       }
     } catch (error) {
-      toast.error('Failed to regenerate quotes');
+      toast.error(t('personalizedQuotes.regenerationError'));
     }
   };
   console.log('🎭 PersonalizedQuoteDisplay state:', {
@@ -50,7 +55,7 @@ export const PersonalizedQuoteDisplay: React.FC<PersonalizedQuoteDisplayProps> =
     return <div className={className}>
         <div className="flex items-center justify-center gap-2 text-muted-foreground">
           <Sparkles className="h-4 w-4 animate-pulse" />
-          <span className="text-sm">Loading your personalized inspiration...</span>
+          <span className="text-sm">{t('personalizedQuotes.loading')}</span>
         </div>
       </div>;
   }
@@ -61,7 +66,7 @@ export const PersonalizedQuoteDisplay: React.FC<PersonalizedQuoteDisplayProps> =
   if (displayQuotes.length === 0) {
     return <div className={className}>
         <span className="text-muted-foreground">
-          "Your unique journey is unfolding perfectly."
+          "{t('personalizedQuotes.fallbackMessage')}"
         </span>
       </div>;
   }
@@ -69,18 +74,18 @@ export const PersonalizedQuoteDisplay: React.FC<PersonalizedQuoteDisplayProps> =
       <RotatingText texts={displayQuotes} className={className} interval={interval} />
       {hasPersonalizedQuotes ? <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
           <Sparkles className="h-3 w-3 text-soul-purple" />
-          <span className="py-[10px]">Personalized for your unique blueprint</span>
+          <span className="py-[10px]">{t('personalizedQuotes.personalizedText')}</span>
           {quotes.length < 5 && (
             <button 
               onClick={handleRegenerateQuotes}
               className="ml-2 p-1 rounded-full hover:bg-muted/50 transition-colors"
-              title="Generate more quotes"
+              title={t('personalizedQuotes.generateMoreTitle')}
             >
               <RefreshCw className="h-3 w-3" />
             </button>
           )}
         </div> : displayQuotes.length > 0 && <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
-          <span>Default inspiration quotes</span>
+          <span>{t('personalizedQuotes.defaultText')}</span>
         </div>}
     </div>;
 };
