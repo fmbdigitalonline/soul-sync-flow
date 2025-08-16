@@ -21,28 +21,29 @@ function detectConversationState(message: string, conversationHistory: any[]) {
     /\b(end|stop|enough)\b/i
   ];
 
-  // Continuation patterns - signals for more interaction
-  const continuationPatterns = [
-    /\b(what about|how|why|when|where|can you|could you)\b/i,
-    /\b(tell me more|explain|help me|show me)\b/i,
-    /\b(but|however|also|and|next)\b/i,
-    /[?]$/  // Ends with question mark
-  ];
-
   // Explicit suggestion request patterns - signals user wants guidance/suggestions
   const suggestionRequestPatterns = [
     /\b(what should i|what do you think i should|any suggestions|any advice)\b/i,
     /\b(recommend|suggest|what would you|what next|where do i go)\b/i,
-    /\b(help me understand|guide me|show me the way)\b/i
+    /\b(help me understand|guide me|show me the way)\b/i,
+    /\b(please advise|your thoughts|what's your take)\b/i,
+    /\b(any ideas|thoughts on|what do you suggest)\b/i
+  ];
+
+  // Explicit continuation patterns - only for clear requests for more info
+  const explicitContinuationPatterns = [
+    /\b(tell me more|explain further|elaborate|go deeper)\b/i,
+    /\b(what else|anything else|more about)\b/i,
+    /\b(i want to know more|can you expand|give me more details)\b/i
   ];
 
   const hasGratitude = gratitudePatterns.some(pattern => pattern.test(cleanMessage));
   const hasClosure = closurePatterns.some(pattern => pattern.test(cleanMessage));
-  const hasContinuation = continuationPatterns.some(pattern => pattern.test(cleanMessage));
   const hasSuggestionRequest = suggestionRequestPatterns.some(pattern => pattern.test(cleanMessage));
+  const hasExplicitContinuation = explicitContinuationPatterns.some(pattern => pattern.test(cleanMessage));
 
-  // Determine interaction type based on strongest signal
-  let lastInteractionType = 'continuation';
+  // Determine interaction type based on strongest signal - default to neutral
+  let lastInteractionType = 'neutral';
   
   if (hasGratitude && hasClosure) {
     lastInteractionType = 'closure';
@@ -50,16 +51,16 @@ function detectConversationState(message: string, conversationHistory: any[]) {
     lastInteractionType = 'gratitude';
   } else if (hasClosure) {
     lastInteractionType = 'closure';
-  } else if (hasContinuation) {
+  } else if (hasSuggestionRequest || hasExplicitContinuation) {
     lastInteractionType = 'continuation';
   }
 
-  // Calculate state flags
+  // Calculate state flags - default to conservative approach
   const closureSignalDetected = hasGratitude || hasClosure;
-  const userSatisfied = hasGratitude || (hasClosure && !hasContinuation);
-  const isActive = !closureSignalDetected || hasContinuation;
-  // CRITICAL: Only ask questions when explicitly requested or conversation clearly continues
-  const shouldAskQuestion = hasSuggestionRequest || (hasContinuation && !hasGratitude && !hasClosure);
+  const userSatisfied = hasGratitude || (hasClosure && !hasSuggestionRequest);
+  const isActive = hasSuggestionRequest || hasExplicitContinuation;
+  // CRITICAL: Default to FALSE - only ask questions when explicitly requested
+  const shouldAskQuestion = hasSuggestionRequest || hasExplicitContinuation;
 
   return {
     isActive,
@@ -800,10 +801,10 @@ RESPONSE GUIDELINES:
 3. For interpretive queries: Focus on insights and guidance
 4. For mixed queries: Balance facts with meaningful interpretation
 5. CONVERSATION FLOW INTELLIGENCE: ${conversationState.shouldAskQuestion ? 
-  'The user is actively engaging and seeking more information. Feel free to ask thoughtful follow-up questions that deepen understanding.' : 
+  'The user has explicitly requested suggestions or asked for more information. You may provide thoughtful guidance and ask follow-up questions.' : 
   conversationState.userSatisfied || conversationState.closureSignalDetected ? 
-    'The user appears satisfied or has indicated closure. Respond warmly with a simple satisfaction check like "Does this help clarify things for you?" or "I hope this gives you what you were looking for!" Do NOT ask additional questions or provide suggestions unless explicitly requested.' :
-    'Focus on directly answering their question. Only ask follow-up questions if they explicitly request suggestions or guidance.'
+    'The user appears satisfied or has indicated closure. Respond warmly with a gentle satisfaction check like "Does this help clarify things for you?" or "I hope this gives you the clarity you were looking for." Do NOT add suggestions or additional questions.' :
+    'Provide a direct, helpful response and end with a simple satisfaction check like "Does this help clarify what you were looking for?" or "Is there anything about this you\'d like me to explore further?" Do NOT automatically provide suggestions unless explicitly requested.'
 }
 
 Remember: You're ${userName}'s perceptive AI companion who has access to their detailed blueprint and can provide both specific facts and meaningful guidance through conversation.`;
