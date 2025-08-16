@@ -38,7 +38,7 @@ export function HomeMenuGrid({ items, className, ...props }: HomeMenuGridProps) 
                   <img
                     src={image}
                     alt={`${title} background`}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
                     loading="lazy"
                     decoding="async"
                   />
