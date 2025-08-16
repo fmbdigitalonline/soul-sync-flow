@@ -26,6 +26,7 @@ import User360Page from "./pages/User360Page";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import HermeticIntelligenceTest from "./pages/HermeticIntelligenceTest";
+import LifeClarityFunnel from "./pages/LifeClarityFunnel";
 import { AuthProvider } from "./contexts/AuthContext";
 import { BlueprintCacheProvider } from "./contexts/BlueprintCacheContext";
 import { SoulOrbProvider } from "./contexts/SoulOrbContext";
@@ -71,6 +72,7 @@ const router = createBrowserRouter([
     element: <RootLayout />,
     children: [
       { index: true, element: <Index /> },
+      { path: "get-started", element: <LifeClarityFunnel /> },
       { path: "auth", element: <Auth /> },
       { path: "onboarding", element: <ProtectedRoute><Onboarding /></ProtectedRoute> },
       { path: "dashboard", element: <ProtectedRoute><Dashboard /></ProtectedRoute> },
