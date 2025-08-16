@@ -170,58 +170,69 @@ export const LifeClarityGuide: React.FC<LifeClarityGuideProps> = ({
   }, [messageType, isStreaming]);
 
   return (
-    <div className={cn("fixed bottom-6 right-6 z-50", className)}>
-      <AnimatePresence>
-        {showBubble && currentMessage && (
-          <div onClick={handleBubbleClick}>
-            <SpeechBubble
-              position="top"
-              isVisible={true}
-              className="mb-4 cursor-pointer"
+    <div className={cn("fixed top-6 right-6 z-50", className)}>
+      <div className="flex items-start gap-4">
+        {/* Speech bubble on the left side */}
+        <AnimatePresence>
+          {showBubble && currentMessage && (
+            <motion.div 
+              onClick={handleBubbleClick}
+              initial={{ opacity: 0, scale: 0.9, x: 20 }}
+              animate={{ opacity: 1, scale: 1, x: 0 }}
+              exit={{ opacity: 0, scale: 0.9, x: 20 }}
+              transition={{ duration: 0.3 }}
+              className="cursor-pointer"
             >
-              <div className="text-sm leading-relaxed">
-                {isStreaming ? streamingContent : currentMessage}
-                {isStreaming && (
-                  <motion.span
-                    animate={{ opacity: [1, 0, 1] }}
-                    transition={{ duration: 1, repeat: Infinity }}
-                    className="ml-1"
-                  >
-                    ▊
-                  </motion.span>
-                )}
+              <div className={cn(
+                "relative w-64 max-w-sm px-4 py-3 cosmic-card",
+                "before:content-[''] before:absolute before:right-[-8px] before:top-1/2 before:-translate-y-1/2",
+                "before:w-0 before:h-0 before:border-[8px] before:border-transparent before:border-l-card"
+              )}>
+                <div className="text-sm leading-relaxed text-foreground">
+                  {isStreaming ? streamingContent : currentMessage}
+                  {isStreaming && (
+                    <motion.span
+                      animate={{ opacity: [1, 0, 1] }}
+                      transition={{ duration: 1, repeat: Infinity }}
+                      className="ml-1"
+                    >
+                      ▊
+                    </motion.span>
+                  )}
+                </div>
               </div>
-            </SpeechBubble>
-          </div>
-        )}
-      </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-      <motion.div
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        className="relative"
-      >
-        <IntelligentSoulOrb
-          speaking={isStreaming}
-          pulse={!isStreaming}
-          size="lg"
-          stage={orbStage}
-          onClick={handleOrbClick}
-          intelligenceLevel={progress}
-          showProgressRing={true}
-          isThinking={isThinking}
-          className="cursor-pointer shadow-lg hover:shadow-xl transition-shadow duration-300"
-        />
-        
-        {/* Step indicator */}
+        {/* Orb on the right side */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="relative flex-shrink-0"
         >
-          {currentStep}
+          <IntelligentSoulOrb
+            speaking={isStreaming}
+            pulse={!isStreaming}
+            size="lg"
+            stage={orbStage}
+            onClick={handleOrbClick}
+            intelligenceLevel={progress}
+            showProgressRing={true}
+            isThinking={isThinking}
+            className="cursor-pointer shadow-lg hover:shadow-xl transition-shadow duration-300"
+          />
+          
+          {/* Step indicator */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center"
+          >
+            {currentStep}
+          </motion.div>
         </motion.div>
-      </motion.div>
+      </div>
     </div>
   );
 };
