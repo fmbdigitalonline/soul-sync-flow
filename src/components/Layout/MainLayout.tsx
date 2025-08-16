@@ -136,7 +136,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
               </div>}
           </div>
 
-          <main className={cn("flex-1", location.pathname === "/companion" ? "pb-0" : isMobile ? "pb-4" : "pb-20")}>
+          <main className={cn("flex-1", isMobile ? "pb-4" : "pb-20")}>
             <PageContainer padding={isMobile ? "xs" : "sm"}>
               {children}
             </PageContainer>
