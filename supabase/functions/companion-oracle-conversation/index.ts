@@ -29,9 +29,17 @@ function detectConversationState(message: string, conversationHistory: any[]) {
     /[?]$/  // Ends with question mark
   ];
 
+  // Explicit suggestion request patterns - signals user wants guidance/suggestions
+  const suggestionRequestPatterns = [
+    /\b(what should i|what do you think i should|any suggestions|any advice)\b/i,
+    /\b(recommend|suggest|what would you|what next|where do i go)\b/i,
+    /\b(help me understand|guide me|show me the way)\b/i
+  ];
+
   const hasGratitude = gratitudePatterns.some(pattern => pattern.test(cleanMessage));
   const hasClosure = closurePatterns.some(pattern => pattern.test(cleanMessage));
   const hasContinuation = continuationPatterns.some(pattern => pattern.test(cleanMessage));
+  const hasSuggestionRequest = suggestionRequestPatterns.some(pattern => pattern.test(cleanMessage));
 
   // Determine interaction type based on strongest signal
   let lastInteractionType = 'continuation';
@@ -50,7 +58,8 @@ function detectConversationState(message: string, conversationHistory: any[]) {
   const closureSignalDetected = hasGratitude || hasClosure;
   const userSatisfied = hasGratitude || (hasClosure && !hasContinuation);
   const isActive = !closureSignalDetected || hasContinuation;
-  const shouldAskQuestion = isActive && lastInteractionType !== 'closure';
+  // CRITICAL: Only ask questions when explicitly requested or conversation clearly continues
+  const shouldAskQuestion = hasSuggestionRequest || (hasContinuation && !hasGratitude && !hasClosure);
 
   return {
     isActive,
@@ -790,7 +799,12 @@ RESPONSE GUIDELINES:
 2. For factual queries: Provide precise data first, then brief context
 3. For interpretive queries: Focus on insights and guidance
 4. For mixed queries: Balance facts with meaningful interpretation
-5. CONVERSATION FLOW INTELLIGENCE: Only ask follow-up questions when the conversation is naturally active. If the user shows gratitude, satisfaction, or closure signals (like "thank you", "that's it for now", "perfect"), respond warmly but do NOT ask another question. Let them end the conversation gracefully.
+5. CONVERSATION FLOW INTELLIGENCE: ${conversationState.shouldAskQuestion ? 
+  'The user is actively engaging and seeking more information. Feel free to ask thoughtful follow-up questions that deepen understanding.' : 
+  conversationState.userSatisfied || conversationState.closureSignalDetected ? 
+    'The user appears satisfied or has indicated closure. Respond warmly with a simple satisfaction check like "Does this help clarify things for you?" or "I hope this gives you what you were looking for!" Do NOT ask additional questions or provide suggestions unless explicitly requested.' :
+    'Focus on directly answering their question. Only ask follow-up questions if they explicitly request suggestions or guidance.'
+}
 
 Remember: You're ${userName}'s perceptive AI companion who has access to their detailed blueprint and can provide both specific facts and meaningful guidance through conversation.`;
       }
