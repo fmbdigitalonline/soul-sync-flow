@@ -115,7 +115,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
               <Link to="/" className="flex items-center space-x-2">
                 
                 <span className="font-cormorant font-bold text-lg gradient-text brand-text">
-                  Soul Guide
+                  SoulSync
                 </span>
               </Link>
               {/* Language selector on mobile top right */}
