@@ -34,7 +34,7 @@ export const RotatingText: React.FC<RotatingTextProps> = ({
   if (texts.length === 0) return null;
 
   return (
-    <div className={cn("transition-opacity duration-200", className)}>
+    <div className={cn("transition-opacity duration-200 mt-6", className)}>
       <span 
         className={cn(
           "transition-opacity duration-200",
