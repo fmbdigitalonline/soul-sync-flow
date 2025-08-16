@@ -17,7 +17,11 @@ export const usePersonalizedQuotes = (count: number = 3) => {
       console.log('🎭 usePersonalizedQuotes: Starting fetch for user:', user?.id);
       
       if (!user) {
-        console.log('🎭 usePersonalizedQuotes: No user, setting loading false');
+        console.log('🎭 usePersonalizedQuotes: No user, clearing all state');
+        // Clear all quote state when user logs out
+        setQuotes([]);
+        setDefaultQuotes([]);
+        setHasPersonalizedQuotes(false);
         setLoading(false);
         return;
       }
