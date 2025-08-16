@@ -50,7 +50,7 @@ export function HomeMenuGrid({ items, className, ...props }: HomeMenuGridProps) 
               </div>
               
               {/* Text container - compact on mobile */}
-              <div className="flex-1 p-2 sm:p-4 bg-card flex items-center sm:flex-col sm:items-start justify-between sm:justify-start">
+              <div className="flex-1 p-4 sm:p-6 bg-card flex items-center sm:flex-col sm:items-start justify-between sm:justify-start">
                 {/* Content section - horizontal on mobile */}
                 <div className="flex-1 sm:w-full">
                   <div className="flex items-center gap-1.5 sm:gap-2 mb-0.5 sm:mb-2">
