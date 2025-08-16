@@ -113,7 +113,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           <div className="bg-card/80 backdrop-blur-lg sticky top-0 z-40 w-full shadow-sm">
             <div className="flex items-center justify-between p-4 w-full">
               <Link to="/" className="flex items-center space-x-2">
-                <SoulOrbAvatar size="sm" />
+                
                 <span className="font-cormorant font-bold text-lg gradient-text brand-text">
                   Soul Guide
                 </span>
