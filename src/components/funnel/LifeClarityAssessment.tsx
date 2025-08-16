@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ArrowLeft, ArrowRight, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { LifeClarityGuide } from "./LifeClarityGuide";
 
 interface FunnelData {
   painPoint: string;
@@ -250,7 +251,7 @@ export const LifeClarityAssessment: React.FC<LifeClarityAssessmentProps> = ({ on
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-accent/5 to-primary/5 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-background via-accent/5 to-primary/5 flex items-center justify-center p-4 relative">
       <div className="w-full max-w-2xl">
         <Card className="w-full">
           <CardHeader>
@@ -281,6 +282,14 @@ export const LifeClarityAssessment: React.FC<LifeClarityAssessmentProps> = ({ on
           </CardContent>
         </Card>
       </div>
+
+      {/* Interactive Life Clarity Guide */}
+      <LifeClarityGuide
+        currentStep={currentStep}
+        totalSteps={totalSteps}
+        funnelData={funnelData}
+        isStepValid={isStepValid()}
+      />
     </div>
   );
 };
