@@ -40,6 +40,7 @@ import { DreamSuccessPage } from "@/components/dream/DreamSuccessPage";
 import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 import { DreamDiscoveryChat } from "@/components/dream/DreamDiscoveryChat";
 import { DreamMenuGrid } from "@/components/dream/DreamMenuGrid";
+import { HomeMenuGrid } from "@/components/home/HomeMenuGrid";
 
 interface Task {
   id: string;
@@ -775,75 +776,115 @@ const Dreams = () => {
         <div className={`min-h-screen bg-background w-full ${isMobile ? 'pb-20' : ''}`}>
           {/* Dream mode starting hub */}
           <div className="w-full max-w-5xl mx-auto px-3 pt-4 pb-2">
-            <DreamMenuGrid
-              items={[
-                {
-                  key: 'discover',
-                  title: 'Discover Your Dream',
-                  description: 'Chat with your Dream Guide to uncover what matters.',
-                  Icon: MessageCircle,
-                  image: '/assets/home/companion.jpg',
-                  to: "/dreams/discover",
-                },
-                {
-                  key: 'suggestions',
-                  title: 'Blueprint Suggestions',
-                  description: 'See ideas aligned with your blueprint.',
-                  Icon: Sparkles,
-                  image: '/assets/home/blueprint.jpg',
-                  to: "/dreams/discover",
-                },
-                {
-                  key: 'create',
-                  title: 'Create & Decompose',
-                  description: 'Turn a dream into a clear, soul-aligned journey.',
-                  Icon: Target,
-                  image: '/assets/home/dreams.jpg',
-                  to: "/dreams/create",
-                },
-                {
-                  key: 'journey',
-                  title: 'Journey Map',
-                  description: 'See milestones and navigate your path.',
-                  Icon: MapPin,
-                  image: '/assets/home/growth.jpg',
-                  to: "/dreams/journey",
-                },
-                {
-                  key: 'tasks',
-                  title: 'Your Tasks',
-                  description: 'Work on prioritized, actionable steps.',
-                  Icon: Target,
-                  image: '/assets/home/tasks.jpg',
-                  to: "/dreams/tasks",
-                },
-                {
-                  key: 'focus',
-                  title: 'Focus Session',
-                  description: 'Stay in flow with focused work.',
-                  Icon: Clock,
-                  image: '/assets/home/dashboard.jpg',
-                  to: "/dreams/focus",
-                },
-                {
-                  key: 'habits',
-                  title: 'Habits',
-                  description: 'Build supportive, sustainable routines.',
-                  Icon: CheckCircle,
-                  image: '/assets/home/growth.jpg',
-                  to: "/dreams/habits",
-                },
-                {
-                  key: 'success',
-                  title: 'Success View',
-                  description: 'Review your generated journey and insights.',
-                  Icon: Sparkles,
-                  image: '/assets/home/dreams.jpg',
-                  onClick: () => { createdGoal ? navigate("/dreams/success") : toast({ title: "Coming soon", description: "Available after creating a dream." }); }
-                }
-              ]}
-              className="mb-6"
-            />
+            {isMobile ? (
+              <HomeMenuGrid
+                items={[
+                  {
+                    key: 'discover',
+                    title: 'Discover Your Dream',
+                    description: 'Chat with your Dream Guide to uncover what matters.',
+                    Icon: MessageCircle,
+                    image: '/assets/home/companion.jpg',
+                    to: "/dreams/discover",
+                  },
+                  {
+                    key: 'create',
+                    title: 'Create & Decompose',
+                    description: 'Turn a dream into a clear, soul-aligned journey.',
+                    Icon: Target,
+                    image: '/assets/home/dreams.jpg',
+                    to: "/dreams/create",
+                  },
+                  {
+                    key: 'journey',
+                    title: 'Journey Map',
+                    description: 'See milestones and navigate your path.',
+                    Icon: MapPin,
+                    image: '/assets/home/growth.jpg',
+                    to: "/dreams/journey",
+                  },
+                  {
+                    key: 'tasks',
+                    title: 'Your Tasks',
+                    description: 'Work on prioritized, actionable steps.',
+                    Icon: Target,
+                    image: '/assets/home/tasks.jpg',
+                    to: "/dreams/tasks",
+                  }
+                ]}
+                className="mb-6"
+              />
+            ) : (
+              <DreamMenuGrid
+                items={[
+                  {
+                    key: 'discover',
+                    title: 'Discover Your Dream',
+                    description: 'Chat with your Dream Guide to uncover what matters.',
+                    Icon: MessageCircle,
+                    image: '/assets/home/companion.jpg',
+                    to: "/dreams/discover",
+                  },
+                  {
+                    key: 'suggestions',
+                    title: 'Blueprint Suggestions',
+                    description: 'See ideas aligned with your blueprint.',
+                    Icon: Sparkles,
+                    image: '/assets/home/blueprint.jpg',
+                    to: "/dreams/discover",
+                  },
+                  {
+                    key: 'create',
+                    title: 'Create & Decompose',
+                    description: 'Turn a dream into a clear, soul-aligned journey.',
+                    Icon: Target,
+                    image: '/assets/home/dreams.jpg',
+                    to: "/dreams/create",
+                  },
+                  {
+                    key: 'journey',
+                    title: 'Journey Map',
+                    description: 'See milestones and navigate your path.',
+                    Icon: MapPin,
+                    image: '/assets/home/growth.jpg',
+                    to: "/dreams/journey",
+                  },
+                  {
+                    key: 'tasks',
+                    title: 'Your Tasks',
+                    description: 'Work on prioritized, actionable steps.',
+                    Icon: Target,
+                    image: '/assets/home/tasks.jpg',
+                    to: "/dreams/tasks",
+                  },
+                  {
+                    key: 'focus',
+                    title: 'Focus Session',
+                    description: 'Stay in flow with focused work.',
+                    Icon: Clock,
+                    image: '/assets/home/dashboard.jpg',
+                    to: "/dreams/focus",
+                  },
+                  {
+                    key: 'habits',
+                    title: 'Habits',
+                    description: 'Build supportive, sustainable routines.',
+                    Icon: CheckCircle,
+                    image: '/assets/home/growth.jpg',
+                    to: "/dreams/habits",
+                  },
+                  {
+                    key: 'success',
+                    title: 'Success View',
+                    description: 'Review your generated journey and insights.',
+                    Icon: Sparkles,
+                    image: '/assets/home/dreams.jpg',
+                    onClick: () => { createdGoal ? navigate("/dreams/success") : toast({ title: "Coming soon", description: "Available after creating a dream." }); }
+                  }
+                ]}
+                className="mb-6"
+              />
+            )}
           </div>
           </div>
       </ErrorBoundary>

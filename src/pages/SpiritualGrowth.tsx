@@ -26,6 +26,8 @@ import { LifeDomain } from "@/types/growth-program";
 
 // Consistent 3-column square grid
 import DreamMenuGrid, { type DreamMenuItem } from "@/components/dream/DreamMenuGrid";
+import { HomeMenuGrid } from "@/components/home/HomeMenuGrid";
+import { useIsMobile } from "@/hooks/use-mobile";
 // Tile images - use shared home assets for consistency
 const coachImg = '/assets/home/companion.jpg';
 const lifeOsImg = '/assets/home/dashboard.jpg';
@@ -43,6 +45,7 @@ const SpiritualGrowth = () => {
   const { t } = useLanguage();
   const { blueprintData } = useBlueprintData();
   const { user } = useAuth();
+  const { isMobile } = useIsMobile();
   
   const { growthJourney, addMoodEntry, addReflectionEntry, addInsightEntry } = useJourneyTracking();
 
@@ -563,6 +566,63 @@ const SpiritualGrowth = () => {
                 onClick: () => setActiveView('tools'),
               },
             ];
+            
+            if (isMobile) {
+              const homeMenuItems = items.map(item => ({
+                key: item.key,
+                to: '', // No navigation needed for onClick items
+                title: item.title,
+                description: item.description,
+                Icon: item.Icon,
+                image: item.image
+              }));
+              
+              return (
+                <div className="space-y-4">
+                  {homeMenuItems.map(item => {
+                    const originalItem = items.find(i => i.key === item.key);
+                    return (
+                      <article key={item.key} className="bg-card rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden group cursor-pointer" onClick={originalItem?.onClick}>
+                        <div className="flex h-full pl-4">
+                          <div className="w-12 h-12 relative overflow-hidden flex-shrink-0 rounded-md mt-2">
+                            {item.image ? (
+                              <img
+                                src={item.image}
+                                alt={`${item.title} background`}
+                                className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
+                                loading="lazy"
+                                decoding="async"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
+                                <item.Icon className="h-5 w-5 text-primary/50" aria-hidden="true" />
+                              </div>
+                            )}
+                          </div>
+                          
+                          <div className="flex-1 p-4 bg-card flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-1.5 mb-0.5">
+                                <item.Icon className="h-3.5 w-3.5 text-primary flex-shrink-0" aria-hidden="true" />
+                                <h3 className="text-xs font-semibold text-foreground leading-tight">{item.title}</h3>
+                              </div>
+                              <p className="text-xs text-muted-foreground leading-tight line-clamp-1">{item.description}</p>
+                            </div>
+                            
+                            <div className="ml-2 flex justify-end">
+                              <div className="text-xs h-6 px-2 text-primary hover:bg-primary/10 rounded flex items-center">
+                                Open
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              );
+            }
+            
             return <DreamMenuGrid items={items} />;
           })()}
 
