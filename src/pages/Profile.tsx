@@ -14,7 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useUserProfile } from "@/hooks/use-user-profile";
-import { useBlueprintData } from "@/hooks/use-blueprint-data";
+import { useOptimizedBlueprintData } from "@/hooks/use-optimized-blueprint-data";
 import { calculateWeeklyInsights, WeeklyInsights } from "@/services/insights-service";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,7 +41,7 @@ const Profile = () => {
     getPersonalityTraits,
     getDisplayName,
     getBlueprintCompletionPercentage 
-  } = useBlueprintData();
+  } = useOptimizedBlueprintData();
 
   useEffect(() => {
     const fetchInsights = async () => {
@@ -120,9 +120,9 @@ const Profile = () => {
     );
   }
 
-  const displayName = profile?.display_name || getDisplayName();
-  const personalityTraits = getPersonalityTraits();
-  const blueprintCompletion = getBlueprintCompletionPercentage();
+  const displayName = profile?.display_name || getDisplayName;
+  const personalityTraits = getPersonalityTraits;
+  const blueprintCompletion = getBlueprintCompletionPercentage;
   const activeGoals = goals.filter(g => g.status === 'active');
 
   return (
