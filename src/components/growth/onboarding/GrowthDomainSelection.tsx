@@ -3,11 +3,10 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Heart, TrendingUp, DollarSign, Palette, Sparkles, Home, Users } from 'lucide-react';
 import { LifeDomain } from '@/types/growth-program';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface DomainCard {
   domain: LifeDomain;
-  title: string;
-  description: string;
   icon: React.ComponentType<any>;
   emoji: string;
 }
@@ -15,50 +14,36 @@ interface DomainCard {
 const domainCards: DomainCard[] = [
   {
     domain: 'career',
-    title: 'Career & Purpose',
-    description: 'Work, calling, professional growth',
     icon: TrendingUp,
     emoji: '🏢'
   },
   {
     domain: 'relationships',
-    title: 'Relationships & Love',
-    description: 'Romantic, friendships, family connections',
     icon: Users,
     emoji: '💕'
   },
   {
     domain: 'wellbeing',
-    title: 'Health & Wellbeing',
-    description: 'Physical, mental, emotional health',
     icon: Heart,
     emoji: '🌱'
   },
   {
     domain: 'finances',
-    title: 'Money & Abundance',
-    description: 'Finances, wealth, prosperity mindset',
     icon: DollarSign,
     emoji: '💰'
   },
   {
     domain: 'creativity',
-    title: 'Creativity & Expression',
-    description: 'Artistic, innovative, creative pursuits',
     icon: Palette,
     emoji: '🎨'
   },
   {
     domain: 'spirituality',
-    title: 'Spirituality & Meaning',
-    description: 'Consciousness, purpose, spiritual growth',
     icon: Sparkles,
     emoji: '✨'
   },
   {
     domain: 'home_family',
-    title: 'Home & Family',
-    description: 'Domestic life, family relationships, living environment',
     icon: Home,
     emoji: '🏠'
   }
@@ -73,6 +58,8 @@ export const GrowthDomainSelection: React.FC<GrowthDomainSelectionProps> = ({
   onDomainSelect,
   selectedDomain
 }) => {
+  const { t } = useLanguage();
+
   return (
     <div className="p-8 space-y-6">
       {/* Header */}
@@ -83,10 +70,10 @@ export const GrowthDomainSelection: React.FC<GrowthDomainSelectionProps> = ({
         
         <div>
           <h1 className="text-2xl font-bold gradient-text mb-2">
-            Welcome to Your Growth Journey
+            {t('growth.onboarding.welcomeTitle')}
           </h1>
           <p className="text-muted-foreground max-w-md mx-auto">
-            I'm your Growth Coach, here to guide you step by step. Which area of your life feels most alive or challenging for you right now?
+            {t('growth.onboarding.welcomeDescription')}
           </p>
         </div>
       </div>
@@ -113,14 +100,14 @@ export const GrowthDomainSelection: React.FC<GrowthDomainSelectionProps> = ({
                   </div>
                   
                   <div>
-                    <h3 className="font-semibold text-lg">{card.title}</h3>
+                    <h3 className="font-semibold text-lg">{t(`growth.domains.${card.domain}.title`)}</h3>
                     <p className="text-sm text-muted-foreground mt-1">
-                      {card.description}
+                      {t(`growth.domains.${card.domain}.description`)}
                     </p>
                   </div>
                   
                   <div className="text-xs text-soul-purple font-medium">
-                    Click to explore →
+                    {t('growth.onboarding.clickToExplore')}
                   </div>
                 </div>
               </CardContent>
@@ -131,7 +118,7 @@ export const GrowthDomainSelection: React.FC<GrowthDomainSelectionProps> = ({
 
       <div className="text-center">
         <p className="text-xs text-muted-foreground">
-          Choose the area where you sense the most energy for growth right now
+          {t('growth.onboarding.chooseAreaPrompt')}
         </p>
       </div>
     </div>

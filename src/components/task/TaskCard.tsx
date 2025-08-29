@@ -9,6 +9,7 @@ import { ReadyToBeginModal } from "./ReadyToBeginModal";
 import { TaskStatusSelector } from "./TaskStatusSelector";
 import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 import { useTaskCompletion } from "@/hooks/use-task-completion";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface TaskCardProps {
   task: any;
@@ -31,6 +32,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [localStatus, setLocalStatus] = useState(task.status || 'todo');
   const { spacing, getTextSize, touchTargetSize, isFoldDevice, isUltraNarrow } = useResponsiveLayout();
+  const { t } = useLanguage();
   
   // Pillar I: Preserve existing functionality, add unified completion
   const { completeTaskFromCard, isTaskCompleting } = useTaskCompletion({
@@ -157,7 +159,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
           {/* Badges - improved wrapping */}
           <div className={`flex flex-wrap gap-1 mb-3 w-full max-w-full ${isFoldDevice ? 'gap-0.5' : ''}`}>
             <Badge variant="secondary" className={`bg-soul-purple/20 text-soul-purple text-[10px] px-1 py-0 h-5 leading-tight flex-shrink-0`}>
-              🧩 Blueprint
+              {t('tasks.badges.blueprint')}
             </Badge>
             <Badge variant="outline" className={`${getEnergyColor(task.energy_level_required)} text-[10px] px-1 py-0 h-5 leading-tight flex-shrink-0`}>
               <Zap className={`mr-0.5 ${isFoldDevice ? 'h-2 w-2' : 'h-2.5 w-2.5'}`} />
@@ -197,7 +199,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
               onClick={handleMarkDone}
             >
               <span>✅</span>
-              <span className="truncate">Mark Done</span>
+              <span>{t('tasks.actions.markDone')}</span>
             </button>
             <button
               className={`${
@@ -207,7 +209,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
               disabled={isCompleted || isProcessing}
             >
               <span>🔮</span>
-              <span className="truncate">Get Coach</span>
+              <span>{t('tasks.actions.getCoach')}</span>
             </button>
           </div>
         </CardContent>

@@ -1,5 +1,5 @@
-
 import React, { useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 /**
  * Props:
@@ -11,6 +11,7 @@ interface TaskPreviewProps {
 
 export const TaskPreview: React.FC<TaskPreviewProps> = ({ task }) => {
   const [expanded, setExpanded] = useState(false);
+  const { t } = useLanguage();
 
   // Simulate breakdown; ideally this comes from task.subtasks or similar
   const breakdown = (task.subtasks && task.subtasks.length > 0)
@@ -24,23 +25,23 @@ export const TaskPreview: React.FC<TaskPreviewProps> = ({ task }) => {
         onClick={() => setExpanded((e) => !e)}
         aria-expanded={expanded}
       >
-        <span className="mr-2">{expanded ? "Hide Info" : "Preview / More Info"}</span>
+        <span className="mr-2">{expanded ? t('tasks.preview.hideInfo') : t('tasks.preview.showInfo')}</span>
         <span className="text-xl">{expanded ? "−" : "+"}</span>
       </button>
       {expanded && (
         <div className="bg-slate-50 rounded-xl p-4 mt-2 animate-fade-in border border-slate-200">
           <div className="mb-2">
-            <strong>What happens next:</strong>
+            <strong>{t('tasks.preview.whatHappensNext')}</strong>
             <div className="text-sm text-muted-foreground mt-1">
-              You’ll work side-by-side with your Soul Coach to break this task into manageable, motivating mini-steps.
+              {t('tasks.preview.nextDescription')}
             </div>
           </div>
           <div className="mb-2">
-            <strong>Outcome / Goal:</strong>
-            <div className="text-sm">{task.goal || "See this task through to completion"}</div>
+            <strong>{t('tasks.preview.outcomeGoal')}</strong>
+            <div className="text-sm">{task.goal || t('tasks.preview.defaultGoal')}</div>
           </div>
           <div>
-            <strong>Mini-steps:</strong>
+            <strong>{t('tasks.preview.miniSteps')}</strong>
             <ol className="list-decimal ml-6 text-sm">
               {breakdown.map((b: string, i: number) => (
                 <li key={i}>{b}</li>

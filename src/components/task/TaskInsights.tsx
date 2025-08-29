@@ -3,6 +3,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Zap, TrendingUp, Target, CheckCircle2 } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface TaskInsightsProps {
   task: {
@@ -22,6 +23,7 @@ export const TaskInsights: React.FC<TaskInsightsProps> = ({
   insights = [],
   onClose
 }) => {
+  const { t } = useLanguage();
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -43,7 +45,7 @@ export const TaskInsights: React.FC<TaskInsightsProps> = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <CheckCircle2 className="h-5 w-5 text-green-600" />
-          Task Completed!
+          {t('tasks.status.completed')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -51,31 +53,31 @@ export const TaskInsights: React.FC<TaskInsightsProps> = ({
           <h4 className="font-medium text-sm text-gray-800 mb-2">{task.title}</h4>
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">Estimated:</span>
+              <span className="text-xs text-muted-foreground">{t('tasks.status.estimated')}</span>
               <Badge variant="outline" className="text-xs">
                 <Clock className="h-3 w-3 mr-1" />
                 {task.estimated_duration}
               </Badge>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">Actual:</span>
+              <span className="text-xs text-muted-foreground">{t('tasks.status.actual')}</span>
               <Badge variant="outline" className="text-xs">
                 <Clock className="h-3 w-3 mr-1" />
                 {formatTime(actualDuration)}
               </Badge>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">Timing:</span>
+              <span className="text-xs text-muted-foreground">{t('tasks.status.timing')}</span>
               <Badge 
                 variant={isOnTime ? "default" : isUnderTime ? "secondary" : "destructive"}
                 className="text-xs"
               >
                 <TrendingUp className="h-3 w-3 mr-1" />
-                {isOnTime ? "On Time" : isUnderTime ? "Under Time" : "Over Time"}
+                {isOnTime ? t('tasks.status.onTime') : isUnderTime ? t('tasks.status.underTime') : t('tasks.status.overTime')}
               </Badge>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">Energy:</span>
+              <span className="text-xs text-muted-foreground">{t('tasks.status.energy')}</span>
               <Badge variant="outline" className="text-xs">
                 <Zap className="h-3 w-3 mr-1" />
                 {task.energy_level_required}
@@ -86,7 +88,7 @@ export const TaskInsights: React.FC<TaskInsightsProps> = ({
 
         {insights.length > 0 && (
           <div>
-            <h5 className="font-medium text-sm text-gray-800 mb-2">Key Insights:</h5>
+            <h5 className="font-medium text-sm text-gray-800 mb-2">{t('tasks.status.keyInsights')}</h5>
             <ul className="space-y-1">
               {insights.map((insight, index) => (
                 <li key={index} className="text-xs text-muted-foreground flex items-start gap-2">
@@ -103,7 +105,7 @@ export const TaskInsights: React.FC<TaskInsightsProps> = ({
             onClick={onClose}
             className="w-full px-3 py-2 bg-soul-purple hover:bg-soul-purple/90 text-white rounded-lg font-medium transition-colors text-sm"
           >
-            Continue Journey
+            {t('tasks.actions.continueJourney')}
           </button>
         )}
       </CardContent>

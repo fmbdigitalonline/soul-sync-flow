@@ -593,7 +593,36 @@ const translations: Record<Language, Translations> = {
       generalCoaching: 'General Coaching',
       newConversation: 'New Conversation',
       newConversationStartedWith: 'New conversation started with {coach}',
-      soulCoach: 'Soul Coach'
+      soulCoach: 'Soul Coach',
+      // Task Management
+      actions: {
+        markDone: 'Mark Done',
+        getCoach: 'Get Coach',
+        continueJourney: 'Continue Journey'
+      },
+      status: {
+        completed: 'Task Completed!',
+        estimated: 'Estimated:',
+        actual: 'Actual:',
+        timing: 'Timing:',
+        energy: 'Energy:',
+        onTime: 'On Time',
+        underTime: 'Under Time',
+        overTime: 'Over Time',
+        keyInsights: 'Key Insights:'
+      },
+      preview: {
+        hideInfo: 'Hide Info',
+        showInfo: 'Preview / More Info',
+        whatHappensNext: 'What happens next:',
+        nextDescription: "You'll work side-by-side with your Soul Coach to break this task into manageable, motivating mini-steps.",
+        outcomeGoal: 'Outcome / Goal:',
+        defaultGoal: 'See this task through to completion',
+        miniSteps: 'Mini-steps:'
+      },
+      badges: {
+        blueprint: '🧩 Blueprint'
+      }
     },
     // User 360
     user360: {
@@ -673,6 +702,64 @@ const translations: Record<Language, Translations> = {
         insights: 'Insights',
         weeklyReview: 'Weekly Review',
         backToTools: 'Back to Tools'
+      }
+    },
+
+    // Growth Program & Domains
+    growth: {
+      domains: {
+        career: {
+          title: 'Career & Purpose',
+          description: 'Work, calling, professional growth'
+        },
+        relationships: {
+          title: 'Relationships & Love',
+          description: 'Romantic, friendships, family connections'
+        },
+        wellbeing: {
+          title: 'Health & Wellbeing',
+          description: 'Physical, mental, emotional health'
+        },
+        finances: {
+          title: 'Money & Abundance',
+          description: 'Finances, wealth, prosperity mindset'
+        },
+        creativity: {
+          title: 'Creativity & Expression',
+          description: 'Artistic, innovative, creative pursuits'
+        },
+        spirituality: {
+          title: 'Spirituality & Meaning',
+          description: 'Consciousness, purpose, spiritual growth'
+        },
+        home_family: {
+          title: 'Home & Family',
+          description: 'Domestic life, family relationships, living environment'
+        }
+      },
+      onboarding: {
+        welcomeTitle: 'Welcome to Your Growth Journey',
+        welcomeDescription: "I'm your Growth Coach, here to guide you step by step. Which area of your life feels most alive or challenging for you right now?",
+        clickToExplore: 'Click to explore →',
+        chooseAreaPrompt: 'Choose the area where you sense the most energy for growth right now'
+      }
+    },
+
+
+    // Form Placeholders
+    forms: {
+      placeholders: {
+        searchUsers: 'Search users...',
+        typeMessage: 'Type your message...',
+        enterFullName: 'Enter your full name',
+        enterPreferredName: 'What you\'d like to be called',
+        enterBirthLocation: 'City, Country (e.g., Paramaribo, Suriname)',
+        enterTimezone: 'e.g., America/New_York',
+        shareThoughts: 'Share what\'s on your heart...',
+        shareReflection: 'Share your reflection or response...',
+        shareInsights: 'Share your thoughts and insights...',
+        testMessage: 'Type a message to test...',
+        askCoach: 'Ask about your task, request actions, or get guidance...'
       }
     }
     },
@@ -1330,7 +1417,93 @@ const translations: Record<Language, Translations> = {
       generalCoaching: 'Algemene coaching',
       newConversation: 'Nieuw gesprek',
       newConversationStartedWith: 'Nieuw gesprek gestart met {coach}',
-      soulCoach: 'Zielscoach'
+      soulCoach: 'Zielscoach',
+      // Task Management
+      actions: {
+        markDone: 'Markeer als Klaar',
+        getCoach: 'Krijg Coach',
+        continueJourney: 'Reis Voortzetten'
+      },
+      status: {
+        completed: 'Taak Voltooid!',
+        estimated: 'Geschat:',
+        actual: 'Werkelijk:',
+        timing: 'Timing:',
+        energy: 'Energie:',
+        onTime: 'Op Tijd',
+        underTime: 'Onder Tijd',
+        overTime: 'Over Tijd',
+        keyInsights: 'Belangrijke Inzichten:'
+      },
+      preview: {
+        hideInfo: 'Verberg Info',
+        showInfo: 'Voorbeeld / Meer Info',
+        whatHappensNext: 'Wat gebeurt er hierna:',
+        nextDescription: 'Je werkt zij aan zij met je Ziel Coach om deze taak op te delen in hanteerbare, motiverende mini-stappen.',
+        outcomeGoal: 'Uitkomst / Doel:',
+        defaultGoal: 'Zie deze taak door tot voltooiing',
+        miniSteps: 'Mini-stappen:'
+      },
+      badges: {
+        blueprint: '🧩 Blauwdruk'
+      }
+    },
+
+    // Growth Program & Domains
+    growth: {
+      domains: {
+        career: {
+          title: 'Carrière & Doel',
+          description: 'Werk, roeping, professionele groei'
+        },
+        relationships: {
+          title: 'Relaties & Liefde',
+          description: 'Romantisch, vriendschappen, familieverbindingen'
+        },
+        wellbeing: {
+          title: 'Gezondheid & Welzijn',
+          description: 'Fysieke, mentale, emotionele gezondheid'
+        },
+        finances: {
+          title: 'Geld & Overvloed',
+          description: 'Financiën, rijkdom, welvaart mindset'
+        },
+        creativity: {
+          title: 'Creativiteit & Expressie',
+          description: 'Artistiek, innovatief, creatieve bezigheden'
+        },
+        spirituality: {
+          title: 'Spiritualiteit & Betekenis',
+          description: 'Bewustzijn, doel, spirituele groei'
+        },
+        home_family: {
+          title: 'Thuis & Familie',
+          description: 'Huiselijk leven, familierelaties, leefomgeving'
+        }
+      },
+      onboarding: {
+        welcomeTitle: 'Welkom bij Je Groeireis',
+        welcomeDescription: 'Ik ben je Groei Coach, hier om je stap voor stap te begeleiden. Welk gebied van je leven voelt nu het meest levendig of uitdagend voor je?',
+        clickToExplore: 'Klik om te verkennen →',
+        chooseAreaPrompt: 'Kies het gebied waar je nu de meeste energie voor groei voelt'
+      }
+    },
+
+    // Form Placeholders
+    forms: {
+      placeholders: {
+        searchUsers: 'Zoek gebruikers...',
+        typeMessage: 'Typ je bericht...',
+        enterFullName: 'Voer je volledige naam in',
+        enterPreferredName: 'Hoe je genoemd wilt worden',
+        enterBirthLocation: 'Stad, Land (bijv. Amsterdam, Nederland)',
+        enterTimezone: 'bijv. Europe/Amsterdam',
+        shareThoughts: 'Deel wat er in je hart leeft...',
+        shareReflection: 'Deel je reflectie of reactie...',
+        shareInsights: 'Deel je gedachten en inzichten...',
+        testMessage: 'Typ een bericht om te testen...',
+        askCoach: 'Vraag over je taak, verzoek acties, of krijg begeleiding...'
+      }
     }
   }
 };
