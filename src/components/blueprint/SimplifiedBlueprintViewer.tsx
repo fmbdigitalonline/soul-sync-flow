@@ -190,15 +190,15 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
+                <div className="p-3 bg-soul-purple/5 rounded-3xl">
                   <h5 className={`font-cormorant font-semibold text-gray-700 mb-1 ${getTextSize('text-sm')} break-words`}>Task Approach</h5>
                   <p className={`${getTextSize('text-sm')} font-inter text-gray-600 capitalize break-words`}>{taskApproach}</p>
                 </div>
-                <div>
+                <div className="p-3 bg-soul-purple/5 rounded-3xl">
                   <h5 className={`font-cormorant font-semibold text-gray-700 mb-1 ${getTextSize('text-sm')} break-words`}>Communication</h5>
                   <p className={`${getTextSize('text-sm')} font-inter text-gray-600 capitalize break-words`}>{communicationStyle}</p>
                 </div>
-                <div>
+                <div className="p-3 bg-soul-purple/5 rounded-3xl">
                   <h5 className={`font-cormorant font-semibold text-gray-700 mb-1 ${getTextSize('text-sm')} break-words`}>Decision Making</h5>
                   <p className={`${getTextSize('text-sm')} font-inter text-gray-600 capitalize break-words`}>{decisionMaking}</p>
                 </div>
@@ -234,15 +234,15 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
+                <div className="p-3 bg-soul-purple/5 rounded-3xl">
                   <h5 className={`font-cormorant font-semibold text-gray-700 mb-1 ${getTextSize('text-sm')} break-words`}>Strategy</h5>
                   <p className={`${getTextSize('text-sm')} font-inter text-gray-600 capitalize break-words`}>{strategy}</p>
                 </div>
-                <div>
+                <div className="p-3 bg-soul-purple/5 rounded-3xl">
                   <h5 className={`font-cormorant font-semibold text-gray-700 mb-1 ${getTextSize('text-sm')} break-words`}>Profile</h5>
                   <p className={`${getTextSize('text-sm')} font-inter text-gray-600 break-words`}>{profile}</p>
                 </div>
-                <div>
+                <div className="p-3 bg-soul-purple/5 rounded-3xl">
                   <h5 className={`font-cormorant font-semibold text-gray-700 mb-1 ${getTextSize('text-sm')} break-words`}>Pacing</h5>
                   <p className={`${getTextSize('text-sm')} font-inter text-gray-600 capitalize break-words`}>{pacing}</p>
                 </div>
