@@ -8,6 +8,7 @@ import { PersonalityReport, aiPersonalityReportService } from "@/services/ai-per
 import { BlueprintData } from "@/services/blueprint-service";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface AIPersonalityReportProps {
   blueprint: BlueprintData;
@@ -25,6 +26,7 @@ export const AIPersonalityReport: React.FC<AIPersonalityReportProps> = ({
   const [generating, setGenerating] = useState(false);
   const [hasExisting, setHasExisting] = useState(false);
   const { toast } = useToast();
+  const { language } = useLanguage();
 
   useEffect(() => {
     checkForExistingReport();
@@ -58,7 +60,7 @@ export const AIPersonalityReport: React.FC<AIPersonalityReportProps> = ({
         description: "This may take 30-60 seconds as we analyze your complete blueprint...",
       });
 
-      const result = await aiPersonalityReportService.generatePersonalityReport(blueprint);
+      const result = await aiPersonalityReportService.generatePersonalityReport(blueprint, language);
       
       if (result.success && result.report) {
         setReport(result.report);

@@ -27,7 +27,7 @@ export interface PersonalityReportWithQuotes {
 }
 
 class AIPersonalityReportService {
-  async generatePersonalityReport(blueprint: BlueprintData): Promise<{ success: boolean; report?: PersonalityReport; quotes?: any[]; error?: string }> {
+  async generatePersonalityReport(blueprint: BlueprintData, language: string = 'en'): Promise<{ success: boolean; report?: PersonalityReport; quotes?: any[]; error?: string }> {
     try {
       console.log('🎭 Generating comprehensive personality report with personalized quotes...');
       console.log('📋 Blueprint data structure:', {
@@ -57,6 +57,7 @@ class AIPersonalityReportService {
         body: {
           blueprint: transformedBlueprint,
           userId: transformedBlueprint.user_meta?.user_id || transformedBlueprint.user_meta?.id,
+          language: language,
         },
       });
 

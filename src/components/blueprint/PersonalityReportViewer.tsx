@@ -20,7 +20,7 @@ interface PersonalityReportViewerProps {
 
 export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = ({ className }) => {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { toast } = useToast();
   const { spacing, getTextSize, isMobile, isUltraNarrow, isFoldDevice } = useResponsiveLayout();
   const [report, setReport] = useState<PersonalityReport | null>(null);
@@ -108,7 +108,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
       console.log('📋 Blueprint found, generating standard report...');
       
       // Generate the personality report
-      const result = await aiPersonalityReportService.generatePersonalityReport(blueprintResult.data);
+      const result = await aiPersonalityReportService.generatePersonalityReport(blueprintResult.data, language);
       
       if (result.success && result.report) {
         setReport(result.report);
@@ -153,7 +153,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
       console.log('📋 Blueprint found, generating Hermetic report...');
       
       // Generate the Hermetic personality report
-      const result = await hermeticPersonalityReportService.generateHermeticReport(blueprintResult.data);
+      const result = await hermeticPersonalityReportService.generateHermeticReport(blueprintResult.data, language);
       
       if (result.success && result.report) {
         // Clear current report state to show loading

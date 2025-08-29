@@ -25,7 +25,7 @@ export default function Onboarding() {
   const { toast } = useToast();
   const { speak } = useSoulOrb();
   const { user, loading: authLoading } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   
   // Detect development mode
   const isDevelopment = import.meta.env.DEV;
@@ -190,7 +190,7 @@ export default function Onboarding() {
       const { hermeticPersonalityReportService } = await import('@/services/hermetic-personality-report-service');
       
       console.log('🧙‍♂️ Generating comprehensive hermetic report with blueprint data');
-      const result = await hermeticPersonalityReportService.generateHermeticReport(blueprint);
+      const result = await hermeticPersonalityReportService.generateHermeticReport(blueprint, language);
       
       if (result.success) {
         console.log('✅ EARLY ORACLE: Hermetic report generated successfully - Oracle mode now available!');
@@ -251,7 +251,7 @@ export default function Onboarding() {
       }
       
       console.log('📋 Generating personality report with blueprint data');
-      const result = await aiPersonalityReportService.generatePersonalityReport(latestBlueprint);
+      const result = await aiPersonalityReportService.generatePersonalityReport(latestBlueprint, language);
       
       if (result.success) {
         console.log('✅ Personality report generated successfully in background');

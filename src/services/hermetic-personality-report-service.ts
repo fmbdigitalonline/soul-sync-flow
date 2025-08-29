@@ -85,7 +85,7 @@ export interface HermeticReportWithQuotes {
 }
 
 class HermeticPersonalityReportService {
-  async generateHermeticReport(blueprint: BlueprintData): Promise<{ 
+  async generateHermeticReport(blueprint: BlueprintData, language: string = 'en'): Promise<{ 
     success: boolean; 
     report?: HermeticPersonalityReport; 
     quotes?: any[]; 
@@ -113,7 +113,7 @@ class HermeticPersonalityReportService {
       const storedReport = await this.storeHermeticReport(report);
       
       // Generate personalized quotes aligned with Hermetic laws
-      const quotes = await this.generateHermeticQuotes(blueprint, hermeticResult);
+      const quotes = await this.generateHermeticQuotes(blueprint, hermeticResult, language);
       
       const endTime = Date.now();
       console.log(`✅ Hermetic Report generated: ${hermeticResult.total_word_count} words in ${endTime - startTime}ms`);
@@ -344,13 +344,14 @@ Vibrational energy patterns: ${vibrationAnalysis.substring(0, 250)}...`;
     return data as unknown as HermeticPersonalityReport;
   }
 
-  private async generateHermeticQuotes(blueprint: BlueprintData, hermeticResult: any): Promise<any[]> {
+  private async generateHermeticQuotes(blueprint: BlueprintData, hermeticResult: any, language: string = 'en'): Promise<any[]> {
     try {
       // Call existing quote generation but with Hermetic alignment
       const { data, error } = await supabase.functions.invoke("regenerate-quotes", {
         body: {
           blueprint: blueprint,
           userId: blueprint.user_id,
+          language: language,
           hermeticContext: {
             blueprint_signature: hermeticResult.blueprint_signature,
             seven_laws_themes: hermeticResult.sections

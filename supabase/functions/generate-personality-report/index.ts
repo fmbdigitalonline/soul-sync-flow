@@ -25,12 +25,14 @@ serve(async (req) => {
       }
     )
 
-    const { blueprint, userId } = await req.json();
+    const { blueprint, userId, language = 'en' } = await req.json();
     
     if (!blueprint || !userId) {
       console.error('❌ Missing required parameters:', { hasBlueprint: !!blueprint, hasUserId: !!userId });
       throw new Error('Blueprint and userId are required');
     }
+
+    console.log('🌍 Report generation language:', language);
 
     console.log('🎭 Generating comprehensive personality report and quotes for user:', userId);
     console.log('📋 Received blueprint structure:', {
@@ -75,11 +77,45 @@ serve(async (req) => {
       unconsciousGates: humanDesign.gates?.unconscious_design?.length || 0
     });
 
-    // FIXED: Separate system prompts for personality reports vs conversations
-    // This system prompt is ONLY for personality report generation - uses "you" as requested
-    const personalityReportSystemPrompt = `You are a master Human Design and personality analyst creating a comprehensive personality report. You MUST follow the EXACT format specified below.
+    // Language-aware system prompts
+    const getLanguagePrompts = (language: string) => {
+      const prompts = {
+        en: {
+          systemPrompt: `You are a master Human Design and personality analyst creating a comprehensive personality report. You MUST follow the EXACT format specified below.
 
-CRITICAL FORMAT REQUIREMENT: You must create exactly 6 detailed sections followed by 10 quotes. Each section must be substantial analysis (300-400 words), NOT inspirational quotes. Always address the person as "you" throughout the report.
+CRITICAL FORMAT REQUIREMENT: You must create exactly 6 detailed sections followed by 10 quotes. Each section must be substantial analysis (300-400 words), NOT inspirational quotes. Always address the person as "you" throughout the report.`,
+          sectionsIntro: 'EXACT OUTPUT FORMAT REQUIRED:',
+          quotesIntro: 'PERSONALIZED QUOTES:',
+          sections: {
+            core: '1. CORE PERSONALITY ARCHITECTURE\n[Write 300-400 words of detailed personality analysis integrating Big Five scores, MBTI probabilities, and Chinese astrology traits. Analyze how these systems create your core personality structure.]',
+            decision: '2. DECISION-MAKING & COGNITIVE STYLE\n[Write 300-400 words analyzing your decision-making process using Human Design Authority, MBTI cognitive functions, and Chinese astrology decision patterns.]',
+            relationship: '3. RELATIONSHIP & SOCIAL DYNAMICS\n[Write 300-400 words on relationship patterns using Human Design Profile, Big Five Extraversion/Agreeableness scores, and Chinese astrology compatibility.]',
+            purpose: '4. LIFE PURPOSE & SPIRITUAL PATH\n[Write 300-400 words connecting Human Design Strategy, numerology Life Path/Expression numbers, and Chinese astrology life themes to your purpose.]',
+            energy: '5. ENERGY PATTERNS & TIMING\n[Write 300-400 words on energy management using Human Design centers, Chinese astrology cycles, and gate activations.]',
+            synthesis: '6. INTEGRATED BLUEPRINT SYNTHESIS\n[Write 300-400 words synthesizing all systems to show your unique personality blueprint.]'
+          }
+        },
+        nl: {
+          systemPrompt: `Je bent een meester Human Design en persoonlijkheidsanalist die een uitgebreid persoonlijkheidsrapport maakt. Je MOET de EXACTE indeling volgen zoals hieronder aangegeven.
+
+KRITIEKE INDELING VEREISTE: Je moet precies 6 gedetailleerde secties maken gevolgd door 10 quotes. Elke sectie moet uitgebreide analyse zijn (300-400 woorden), GEEN inspirerende quotes. Spreek de persoon altijd aan met "je" door het hele rapport.`,
+          sectionsIntro: 'EXACTE UITVOER INDELING VEREIST:',
+          quotesIntro: 'GEPERSONALISEERDE QUOTES:',
+          sections: {
+            core: '1. KERN PERSOONLIJKHEIDSARCHITECTUUR\n[Schrijf 300-400 woorden gedetailleerde persoonlijkheidsanalyse waarin Big Five scores, MBTI kansen, en Chinese astrologie eigenschappen worden geïntegreerd. Analyseer hoe deze systemen je kernpersoonlijkheidsstructuur creëren.]',
+            decision: '2. BESLUITVORMING & COGNITIEVE STIJL\n[Schrijf 300-400 woorden waarin je besluitvormingsproces wordt geanalyseerd met Human Design Autoriteit, MBTI cognitieve functies, en Chinese astrologie beslissingspatronen.]',
+            relationship: '3. RELATIE & SOCIALE DYNAMIEK\n[Schrijf 300-400 woorden over relatiepatronen met Human Design Profiel, Big Five Extraversie/Vriendelijkheid scores, en Chinese astrologie compatibiliteit.]',
+            purpose: '4. LEVENSDOEL & SPIRITUEEL PAD\n[Schrijf 300-400 woorden waarin Human Design Strategie, numerologie Levenspad/Expressie nummers, en Chinese astrologie levensthema\'s worden verbonden met je doel.]',
+            energy: '5. ENERGIEPATRONEN & TIMING\n[Schrijf 300-400 woorden over energiebeheer met Human Design centra, Chinese astrologie cycli, en poort activeringen.]',
+            synthesis: '6. GEÏNTEGREERDE BLAUWDRUK SYNTHESE\n[Schrijf 300-400 woorden waarin alle systemen worden gesynthetiseerd om je unieke persoonlijkheidsblauwdruk te tonen.]'
+          }
+        }
+      };
+      return prompts[language] || prompts.en;
+    };
+
+    const languagePrompts = getLanguagePrompts(language);
+    const personalityReportSystemPrompt = `${languagePrompts.systemPrompt}
 
 USER PROFILE:
 Birth Date: ${userMeta.birth_date || 'Unknown'}
@@ -108,35 +144,33 @@ NUMEROLOGY:
 - Life Path: ${numerology.life_path_number || 'Unknown'}, Soul Urge: ${numerology.soul_urge_number || 'Unknown'}
 - Expression: ${numerology.expression_number || 'Unknown'}
 
-EXACT OUTPUT FORMAT REQUIRED:
+${languagePrompts.sectionsIntro}
 
-1. CORE PERSONALITY ARCHITECTURE
-[Write 300-400 words of detailed personality analysis integrating Big Five scores, MBTI probabilities, and Chinese astrology traits. Analyze how these systems create your core personality structure.]
+${languagePrompts.sections.core}
 
-2. DECISION-MAKING & COGNITIVE STYLE  
-[Write 300-400 words analyzing your decision-making process using Human Design Authority, MBTI cognitive functions, and Chinese astrology decision patterns.]
+${languagePrompts.sections.decision}
 
-3. RELATIONSHIP & SOCIAL DYNAMICS
-[Write 300-400 words on relationship patterns using Human Design Profile, Big Five Extraversion/Agreeableness scores, and Chinese astrology compatibility.]
+${languagePrompts.sections.relationship}
 
-4. LIFE PURPOSE & SPIRITUAL PATH
-[Write 300-400 words connecting Human Design Strategy, numerology Life Path/Expression numbers, and Chinese astrology life themes to your purpose.]
+${languagePrompts.sections.purpose}
 
-5. ENERGY PATTERNS & TIMING
-[Write 300-400 words on energy management using Human Design centers, Chinese astrology cycles, and gate activations.]
+${languagePrompts.sections.energy}
 
-6. INTEGRATED BLUEPRINT SYNTHESIS
-[Write 300-400 words synthesizing all systems to show your unique personality blueprint.]
+${languagePrompts.sections.synthesis}
 
-PERSONALIZED QUOTES:
+${languagePrompts.quotesIntro}
 
 1. "Quote text" - Category: inspiration - Why it resonates: Brief explanation
 2. "Quote text" - Category: growth - Why it resonates: Brief explanation
 [Continue for exactly 10 quotes]
 
-CRITICAL: Each numbered section (1-6) MUST contain detailed analysis, not quotes. Quotes come only at the end after "PERSONALIZED QUOTES:". This prompt is ONLY for personality report generation and should use "you" throughout.`;
+CRITICAL: Each numbered section (1-6) MUST contain detailed analysis, not quotes. Quotes come only at the end after "${languagePrompts.quotesIntro}". This prompt is ONLY for personality report generation and should use "${language === 'nl' ? 'je' : 'you'}" throughout.`;
 
-    console.log('🎯 Using personality report system prompt (uses "you" as requested for reports only)');
+    console.log(`🎯 Using ${language} personality report system prompt`);
+
+    const userPrompt = language === 'nl' 
+      ? `Genereer een uitgebreid persoonlijkheidsonderzoek dat ALLE blauwdruk data integreert: Big Five scores, MBTI kansen, Chinese astrologie (${chineseAstrology.animal} ${chineseAstrology.element}), Human Design poorten, en numerologie. Spreek de persoon aan met "je" door het hele rapport. Voeg 10 warme, inspirerende quotes toe die de unieke persoonlijkheidsmix weerspiegelen.`
+      : `Generate a comprehensive personality reading that integrates ALL the blueprint data: Big Five scores, MBTI probabilities, Chinese astrology (${chineseAstrology.animal} ${chineseAstrology.element}), Human Design gates, and numerology. Address the person as "you" throughout. Include 10 warm, inspiring quotes that reflect the unique personality blend.`;
 
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -148,10 +182,7 @@ CRITICAL: Each numbered section (1-6) MUST contain detailed analysis, not quotes
         model: 'gpt-4o',
         messages: [
           { role: 'system', content: personalityReportSystemPrompt },
-           { 
-             role: 'user', 
-             content: `Generate a comprehensive personality reading that integrates ALL the blueprint data: Big Five scores, MBTI probabilities, Chinese astrology (${chineseAstrology.animal} ${chineseAstrology.element}), Human Design gates, and numerology. Address the person as "you" throughout. Include 10 warm, inspiring quotes that reflect the unique personality blend.` 
-           }
+          { role: 'user', content: userPrompt }
         ],
         temperature: 0.7,
         max_tokens: 4000,
@@ -169,8 +200,9 @@ CRITICAL: Each numbered section (1-6) MUST contain detailed analysis, not quotes
     console.log('🔍 Generated content length:', generatedContent.length);
     console.log('🔍 Content preview:', generatedContent.substring(0, 300));
 
-    // Enhanced content parsing with validation
-    const [reportPart, quotesPart] = generatedContent.split('PERSONALIZED QUOTES:');
+    // Enhanced content parsing with validation - language aware
+    const quotesSeparator = language === 'nl' ? 'GEPERSONALISEERDE QUOTES:' : 'PERSONALIZED QUOTES:';
+    const [reportPart, quotesPart] = generatedContent.split(quotesSeparator);
     
     console.log('🔍 Report part exists:', !!reportPart);
     console.log('🔍 Quotes part exists:', !!quotesPart);
