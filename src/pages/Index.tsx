@@ -119,7 +119,7 @@ const Index = () => {
     title: t('index.growth'),
     description: t('index.growthDesc'),
     Icon: Sparkles,
-    image: '/lovable-uploads/f9f8e20a-0b17-4433-81d4-71ac9d17476a.png'
+    image: '/lovable-uploads/bea17e2a-7b41-43b0-a24d-7d3405de2679.png'
   }, {
     key: 'profile',
     to: '/profile',
