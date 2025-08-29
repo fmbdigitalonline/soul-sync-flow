@@ -32,7 +32,7 @@ import { dreamActivityLogger } from "@/services/dream-activity-logger";
 import { TaskContext } from "@/services/task-coach-integration-service";
 import { AgentMode } from "@/types/personality-modules";
 import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
-import { useTaskCompletion } from "@/hooks/use-task-completion";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Task {
   id: string;
@@ -70,6 +70,7 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
   onTaskComplete
 }) => {
   const { isMobile, isUltraNarrow, spacing, getTextSize, touchTargetSize } = useResponsiveLayout();
+  const { t } = useLanguage();
   
   // Create stable task context
   const taskContext: TaskContext = useMemo(() => ({
@@ -97,11 +98,11 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
   const { productivityJourney, updateProductivityJourney } = useJourneyTracking();
   
   // Pillar I: Preserve existing functionality, add unified completion
-  const { completeTaskFromCoach, isTaskCompleting } = useTaskCompletion({
-    showFeedback: true,
-    autoNavigate: true,
-    returnRoute: '/tasks'
-  });
+  // const { completeTaskFromCoach, isTaskCompleting } = useTaskCompletion({
+  //   showFeedback: true,
+  //   autoNavigate: true,
+  //   returnRoute: '/tasks'
+  // });
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [sessionStarted, setSessionStarted] = useState(false);
@@ -219,27 +220,27 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
       });
       
       // Pillar I: Use unified completion service instead of direct callback
-      const sessionData = {
-        duration: sessionStats.sessionDuration,
-        messageCount: sessionStats.messageCount,
-        actionCount: sessionStats.actionCount,
-        focusTime: focusTime
-      };
+      // const sessionData = {
+      //   duration: sessionStats.sessionDuration,
+      //   messageCount: sessionStats.messageCount,
+      //   actionCount: sessionStats.actionCount,
+      //   focusTime: focusTime
+      // };
       
-      const result = await completeTaskFromCoach(taskId, sessionData);
+      // const result = await completeTaskFromCoach(taskId, sessionData);
       
-      if (result.success) {
+      // if (result.success) {
         setTaskCompleted(true);
         setIsTimerRunning(false);
         // Call original callback after unified completion
         onTaskComplete(taskId);
-      }
+      // }
     });
 
     return () => {
       unsubscribeComplete();
     };
-  }, [completeTaskFromCoach, focusTime, sessionStats]);
+  }, [focusTime, sessionStats]);
 
   // Convert task-aware messages to coach messages format
   useEffect(() => {
@@ -304,16 +305,17 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
     });
     
     // Pillar I: Preserve quick action, but also trigger unified completion
-    const sessionData = {
-      duration: sessionStats.sessionDuration,
-      messageCount: sessionStats.messageCount,
-      actionCount: sessionStats.actionCount,
-      focusTime: focusTime
-    };
+    // const sessionData = {
+    //   duration: sessionStats.sessionDuration,
+    //   messageCount: sessionStats.messageCount,
+    //   actionCount: sessionStats.actionCount,
+    //   focusTime: focusTime
+    // };
     
     // Use unified completion service
-    await completeTaskFromCoach(task.id, sessionData);
-  }, [task.id, focusTime, taskProgress, sessionStats, completeTaskFromCoach]);
+    // await completeTaskFromCoach(task.id, sessionData);
+    onTaskComplete(task.id);
+  }, [task.id, focusTime, taskProgress, sessionStats, onTaskComplete]);
 
   // Quick action handler
   const handleQuickAction = useCallback(async (actionId: string, message: string) => {
@@ -469,7 +471,7 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
       <div className="h-full flex items-center justify-center">
         <div className="text-center">
           <Brain className="h-8 w-8 text-soul-purple animate-pulse mx-auto mb-4" />
-          <p className="text-muted-foreground">Initializing task coach...</p>
+          <p className="text-muted-foreground">{t('tasks.coach.initializing')}</p>
         </div>
       </div>
     );
@@ -481,14 +483,14 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
       <div className="h-full flex items-center justify-center">
         <div className="text-center max-w-md p-6">
           <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Initialization Error</h3>
+          <h3 className="text-lg font-semibold mb-2">{t('tasks.coach.initializationError')}</h3>
           <p className="text-muted-foreground mb-4">{initializationError}</p>
           <div className="space-x-2">
             <Button variant="outline" onClick={onBack}>
-              Go Back
+              {t('tasks.coach.goBack')}
             </Button>
             <Button onClick={() => window.location.reload()}>
-              Retry
+              {t('tasks.coach.retry')}
             </Button>
           </div>
         </div>
@@ -631,7 +633,7 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
             {!taskCompleted && task.status !== 'completed' && (
               <Button
                 onClick={handleCompleteTask}
-                disabled={!sessionStarted || isTaskCompleting(task.id)}
+                disabled={!sessionStarted || false}
                 className="bg-emerald-600 hover:bg-emerald-700 w-full sm:w-auto disabled:opacity-50"
                 size="sm"
               >

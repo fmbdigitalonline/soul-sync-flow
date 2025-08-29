@@ -82,7 +82,7 @@ export default function Auth() {
       toast({
         title: t('auth.success'),
         description: fromFunnel && funnelData 
-          ? "Account created! Let's build your personalized blueprint based on your assessment."
+          ? t('auth.accountCreatedWithBlueprint')
           : t('auth.signUpSuccess'),
       });
 
@@ -155,7 +155,7 @@ export default function Auth() {
             <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 mb-4">
               <div className="flex items-center gap-2 mb-2">
                 <Sparkles className="h-4 w-4 text-primary" />
-                <span className="text-sm font-medium text-primary">Your Life Clarity Report is Ready!</span>
+                <span className="text-sm font-medium text-primary">{t('auth.funnelReportReady')}</span>
               </div>
               <p className="text-xs text-muted-foreground">
                 Complete your account to access your personalized insights and blueprint.
@@ -169,12 +169,12 @@ export default function Auth() {
           <div>
             <CardTitle className="text-2xl font-display">
               {fromFunnel && funnelData && isSignUp 
-                ? "Create Your Account" 
+                ? t('auth.createYourAccount')
                 : isSignUp ? t('auth.createAccount') : t('auth.welcomeBack')}
             </CardTitle>
             <CardDescription>
               {fromFunnel && funnelData && isSignUp
-                ? "Access your personalized life transformation blueprint"
+                ? t('auth.accessPersonalizedBlueprint')
                 : isSignUp ? t('auth.startJourney') : t('auth.continueJourney')}
             </CardDescription>
           </div>
