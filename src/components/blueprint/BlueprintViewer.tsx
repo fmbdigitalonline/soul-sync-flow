@@ -1,6 +1,5 @@
 
 import React, { useState, useMemo } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -9,6 +8,8 @@ import { CosmicCard } from "@/components/ui/cosmic-card";
 import { EnhancedBlueprintData } from "@/types/blueprint-enhanced";
 import { BlueprintEnhancementService } from "@/services/blueprint-enhancement-service";
 import EnhancedBlueprintViewer from "./EnhancedBlueprintViewer";
+import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
+import { ChevronDown, ChevronRight, User, Brain, Heart, Compass, Star, Calculator, Globe } from "lucide-react";
 
 interface BlueprintViewerProps {
   blueprint: BlueprintData;
@@ -16,7 +17,17 @@ interface BlueprintViewerProps {
 
 export const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint }) => {
   const [useEnhanced, setUseEnhanced] = useState(true);
-  const [activeTab, setActiveTab] = useState("overview");
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    overview: true,
+    mbti: false,
+    humanDesign: false,
+    bashar: false,
+    numerology: false,
+    western: false,
+    chinese: false
+  });
+  
+  const { spacing, getTextSize, isMobile } = useResponsiveLayout();
   
   const enhancedBlueprint = useMemo(() => {
     if (!useEnhanced) return null;
@@ -105,13 +116,41 @@ export const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint }) =
     yin_yang: "Yang",
     keyword: "Powerful"
   };
+
+  const toggleSection = (sectionKey: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [sectionKey]: !prev[sectionKey]
+    }));
+  };
+
+  const SectionHeader = ({ title, isExpanded, onClick, icon: Icon }: { 
+    title: string; 
+    isExpanded: boolean; 
+    onClick: () => void;
+    icon?: any;
+  }) => (
+    <button
+      onClick={onClick}
+      className={`w-full flex items-center justify-between ${spacing.button} ${getTextSize('text-lg')} font-semibold text-left hover:bg-muted/50 rounded-lg transition-colors`}
+    >
+      <div className="flex items-center gap-3">
+        {Icon && <Icon className="h-5 w-5 text-soul-purple flex-shrink-0" />}
+        <span>{title}</span>
+      </div>
+      {isExpanded ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+    </button>
+  );
   
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h2 className="text-2xl font-bold">Soul Blueprint for {blueprint.user_meta.preferred_name}</h2>
-          <p className="text-sm text-muted-foreground">
+    <div className={`space-y-4 w-full max-w-full overflow-hidden ${spacing.container}`}>
+      {/* Header */}
+      <div className="flex flex-col gap-3 mb-6 w-full max-w-full">
+        <div className="w-full max-w-full">
+          <h2 className={`${getTextSize('text-2xl')} font-bold break-words gradient-text`}>
+            Soul Blueprint for {blueprint.user_meta.preferred_name}
+          </h2>
+          <p className={`${getTextSize('text-sm')} text-muted-foreground break-words`}>
             {isRealCalculation ? 
               <>Calculated on {new Date(calculationDate).toLocaleDateString()} using {calculationEngine}</> : 
               "Using default template data"
@@ -119,258 +158,317 @@ export const BlueprintViewer: React.FC<BlueprintViewerProps> = ({ blueprint }) =
           </p>
         </div>
         
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 w-full max-w-full">
           {isRealCalculation && (
-            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs flex-shrink-0">
               ✅ Real Calculations
             </Badge>
           )}
           {metadata.partial_calculation && (
-            <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+            <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 text-xs flex-shrink-0">
               ⚠️ Partial Data
             </Badge>
           )}
           {!isRealCalculation && (
-            <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
+            <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200 text-xs flex-shrink-0">
               📋 Template Data
             </Badge>
           )}
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="w-full">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="mbti">MBTI</TabsTrigger>
-          <TabsTrigger value="humanDesign">Human Design</TabsTrigger>
-          <TabsTrigger value="bashar">Bashar Suite</TabsTrigger>
-          <TabsTrigger value="numerology">Numerology</TabsTrigger>
-          <TabsTrigger value="western">Western Astrology</TabsTrigger>
-          <TabsTrigger value="chinese">Chinese Astrology</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="overview" className="mt-6">
+      <ScrollArea className={`${isMobile ? 'h-[60vh]' : 'h-[70vh]'} w-full`}>
+        <div className={`space-y-4 pr-2 ${spacing.gap}`}>
+          {/* Overview Section */}
           <Card>
-            <CardHeader>
-              <CardTitle>Overview</CardTitle>
-              <CardDescription>A summary of your Soul Blueprint.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <p>Welcome to your Soul Blueprint, {blueprint.user_meta.preferred_name}!</p>
-                
-                {isRealCalculation ? (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <h4 className="font-semibold text-green-800 mb-2">✅ Accurate Calculations</h4>
-                    <p className="text-green-700">Your blueprint was generated using precise astronomical calculations from the Swiss Ephemeris, taking into account your exact birth time, location, and historical timezone data.</p>
+            <div className={spacing.card}>
+              <SectionHeader
+                title="Overview"
+                isExpanded={expandedSections.overview}
+                onClick={() => toggleSection('overview')}
+                icon={Star}
+              />
+              
+              {expandedSections.overview && (
+                <div className={`mt-4 space-y-4`}>
+                  <p className={getTextSize('text-base')}>Welcome to your Soul Blueprint, {blueprint.user_meta.preferred_name}!</p>
+                  
+                  {isRealCalculation ? (
+                    <div className="bg-green-50 border border-green-200 rounded-3xl p-4">
+                      <h4 className={`font-semibold text-green-800 mb-2 ${getTextSize('text-sm')}`}>✅ Accurate Calculations</h4>
+                      <p className={`text-green-700 ${getTextSize('text-sm')}`}>Your blueprint was generated using precise astronomical calculations from the Swiss Ephemeris, taking into account your exact birth time, location, and historical timezone data.</p>
+                    </div>
+                  ) : (
+                    <div className="bg-gray-50 border border-gray-200 rounded-3xl p-4">
+                      <h4 className={`font-semibold text-gray-800 mb-2 ${getTextSize('text-sm')}`}>📋 Template Data</h4>
+                      <p className={`text-gray-700 ${getTextSize('text-sm')}`}>This blueprint uses template data. For accurate calculations based on your birth details, please regenerate your blueprint.</p>
+                    </div>
+                  )}
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                    <div className="text-center bg-soul-purple/5 rounded-3xl p-4">
+                      <h4 className={`font-semibold ${getTextSize('text-sm')}`}>Sun Sign</h4>
+                      <p className={`text-soul-purple font-bold ${getTextSize('text-lg')}`}>{westernData.sun_sign}</p>
+                      <p className={`text-gray-600 ${getTextSize('text-xs')}`}>{westernData.sun_keyword}</p>
+                    </div>
+                    <div className="text-center bg-soul-purple/5 rounded-3xl p-4">
+                      <h4 className={`font-semibold ${getTextSize('text-sm')}`}>Moon Sign</h4>
+                      <p className={`text-soul-purple font-bold ${getTextSize('text-lg')}`}>{westernData.moon_sign}</p>
+                      <p className={`text-gray-600 ${getTextSize('text-xs')}`}>{westernData.moon_keyword}</p>
+                    </div>
+                    <div className="text-center bg-soul-purple/5 rounded-3xl p-4">
+                      <h4 className={`font-semibold ${getTextSize('text-sm')}`}>Life Path</h4>
+                      <p className={`text-soul-purple font-bold ${getTextSize('text-lg')}`}>{numerologyData.lifePathNumber}</p>
+                      <p className={`text-gray-600 ${getTextSize('text-xs')}`}>Your spiritual journey</p>
+                    </div>
                   </div>
-                ) : (
-                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                    <h4 className="font-semibold text-gray-800 mb-2">📋 Template Data</h4>
-                    <p className="text-gray-700">This blueprint uses template data. For accurate calculations based on your birth details, please regenerate your blueprint.</p>
-                  </div>
-                )}
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                  <div className="text-center">
-                    <h4 className="font-semibold">Sun Sign</h4>
-                    <p className="text-lg text-soul-purple">{westernData.sun_sign}</p>
-                    <p className="text-sm text-gray-600">{westernData.sun_keyword}</p>
-                  </div>
-                  <div className="text-center">
-                    <h4 className="font-semibold">Moon Sign</h4>
-                    <p className="text-lg text-soul-purple">{westernData.moon_sign}</p>
-                    <p className="text-sm text-gray-600">{westernData.moon_keyword}</p>
-                  </div>
-                  <div className="text-center">
-                    <h4 className="font-semibold">Life Path</h4>
-                    <p className="text-lg text-soul-purple">{numerologyData.lifePathNumber}</p>
-                    <p className="text-sm text-gray-600">Your spiritual journey</p>
-                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="mbti" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>MBTI</CardTitle>
-              <CardDescription>Understanding your cognitive functions.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div>
-                  <span className="font-semibold">Type:</span> {mbtiData.type}
-                </div>
-                <div>
-                  <span className="font-semibold">Core Keywords:</span> {mbtiData.core_keywords?.join(", ")}
-                </div>
-                <div>
-                  <span className="font-semibold">Dominant Function:</span> {mbtiData.dominant_function}
-                </div>
-                <div>
-                  <span className="font-semibold">Auxiliary Function:</span> {mbtiData.auxiliary_function}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="humanDesign" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Human Design</CardTitle>
-              <CardDescription>Your energy type and strategy.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div>
-                  <span className="font-semibold">Type:</span> {humanDesignData.type}
-                </div>
-                <div>
-                  <span className="font-semibold">Profile:</span> {humanDesignData.profile}
-                </div>
-                <div>
-                  <span className="font-semibold">Authority:</span> {humanDesignData.authority}
-                </div>
-                <div>
-                  <span className="font-semibold">Strategy:</span> {humanDesignData.strategy}
-                </div>
-                <div>
-                  <span className="font-semibold">Definition:</span> {humanDesignData.definition}
-                </div>
-                <div>
-                  <span className="font-semibold">Not-Self Theme:</span> {humanDesignData.not_self_theme}
-                </div>
-                <div>
-                  <span className="font-semibold">Life Purpose:</span> {humanDesignData.life_purpose}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="bashar" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Bashar Suite</CardTitle>
-              <CardDescription>Tools for shifting your reality.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <h4 className="font-semibold">Excitement Compass</h4>
-                  <p className="text-sm text-gray-600">{basharData.excitement_compass?.principle}</p>
-                </div>
-                <div>
-                  <h4 className="font-semibold">Belief Interface</h4>
-                  <p className="text-sm text-gray-600">{basharData.belief_interface?.principle}</p>
-                  <p className="text-xs text-gray-500 mt-1">Reframe: {basharData.belief_interface?.reframe_prompt}</p>
-                </div>
-                <div>
-                  <h4 className="font-semibold">Frequency Alignment</h4>
-                  <p className="text-sm text-gray-600">{basharData.frequency_alignment?.quick_ritual}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="numerology" className="mt-6">
-          <CosmicCard>
-            <h3 className="text-xl font-display font-bold mb-4">Numerology Profile</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div>
-                  <h4 className="font-semibold text-soul-purple">Life Path Number</h4>
-                  <p className="text-3xl font-bold text-soul-purple">{numerologyData.lifePathNumber}</p>
-                  <p className="text-sm text-gray-600">{numerologyData.lifePathKeyword || "Your life's purpose and journey"}</p>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-soul-purple">Expression Number</h4>
-                  <p className="text-3xl font-bold text-soul-purple">{numerologyData.expressionNumber}</p>
-                  <p className="text-sm text-gray-600">{numerologyData.expressionKeyword || "Your natural talents and abilities"}</p>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-soul-purple">Soul Urge Number</h4>
-                  <p className="text-3xl font-bold text-soul-purple">{numerologyData.soulUrgeNumber}</p>
-                  <p className="text-sm text-gray-600">{numerologyData.soulUrgeKeyword || "Your inner desires and motivations"}</p>
-                </div>
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <h4 className="font-semibold text-soul-purple">Birthday Number</h4>
-                  <p className="text-3xl font-bold text-soul-purple">{numerologyData.birthdayNumber}</p>
-                  <p className="text-sm text-gray-600">{numerologyData.birthdayKeyword || "Special talents from your birth day"}</p>
-                </div>
-              </div>
+              )}
             </div>
-            <div className="mt-6 pt-4 border-t border-gray-200">
-              <p className="text-sm text-gray-500">
-                Calculated from: {blueprint.user_meta.full_name} • Born: {new Date(blueprint.user_meta.birth_date).toLocaleDateString()}
-              </p>
+          </Card>
+
+          {/* MBTI Section */}
+          <Card>
+            <div className={spacing.card}>
+              <SectionHeader
+                title="MBTI Cognitive Profile"
+                isExpanded={expandedSections.mbti}
+                onClick={() => toggleSection('mbti')}
+                icon={Brain}
+              />
+              
+              {expandedSections.mbti && (
+                <div className={`mt-4 space-y-4`}>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="bg-soul-purple/5 rounded-3xl p-4 text-center">
+                      <span className={`font-semibold ${getTextSize('text-sm')}`}>Type</span>
+                      <p className={`text-soul-purple font-bold ${getTextSize('text-lg')}`}>{mbtiData.type}</p>
+                    </div>
+                    <div className="bg-soul-purple/5 rounded-3xl p-4 text-center">
+                      <span className={`font-semibold ${getTextSize('text-sm')}`}>Keywords</span>
+                      <p className={`text-soul-purple font-bold ${getTextSize('text-sm')}`}>{mbtiData.core_keywords?.join(", ")}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="bg-gray-50 rounded-3xl p-4">
+                      <span className={`font-semibold ${getTextSize('text-sm')}`}>Dominant Function: </span>
+                      <span className={getTextSize('text-sm')}>{mbtiData.dominant_function}</span>
+                    </div>
+                    <div className="bg-gray-50 rounded-3xl p-4">
+                      <span className={`font-semibold ${getTextSize('text-sm')}`}>Auxiliary Function: </span>
+                      <span className={getTextSize('text-sm')}>{mbtiData.auxiliary_function}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-          </CosmicCard>
-        </TabsContent>
-
-        <TabsContent value="western" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Western Astrology</CardTitle>
-              <CardDescription>Planetary positions and aspects.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div>
-                  <span className="font-semibold">Sun Sign:</span> {westernData.sun_sign}
-                </div>
-                <div>
-                  <span className="font-semibold">Sun Keyword:</span> {westernData.sun_keyword}
-                </div>
-                <div>
-                  <span className="font-semibold">Moon Sign:</span> {westernData.moon_sign}
-                </div>
-                <div>
-                  <span className="font-semibold">Moon Keyword:</span> {westernData.moon_keyword}
-                </div>
-                <div>
-                  <span className="font-semibold">Rising Sign:</span> {westernData.rising_sign}
-                </div>
-                <div>
-                  <span className="font-semibold">Source:</span> {westernData.source}
-                </div>
-              </div>
-            </CardContent>
           </Card>
-        </TabsContent>
 
-        <TabsContent value="chinese" className="mt-6">
+          {/* Human Design Section */}
           <Card>
-            <CardHeader>
-              <CardTitle>Chinese Astrology</CardTitle>
-              <CardDescription>Your animal and element.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div>
-                  <span className="font-semibold">Animal:</span> {chineseData.animal}
+            <div className={spacing.card}>
+              <SectionHeader
+                title="Human Design"
+                isExpanded={expandedSections.humanDesign}
+                onClick={() => toggleSection('humanDesign')}
+                icon={Compass}
+              />
+              
+              {expandedSections.humanDesign && (
+                <div className={`mt-4 space-y-4`}>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div className="bg-soul-purple/5 rounded-3xl p-4 text-center">
+                      <span className={`font-semibold text-xs ${getTextSize('text-xs')}`}>Type</span>
+                      <p className={`text-soul-purple font-bold ${getTextSize('text-sm')}`}>{humanDesignData.type}</p>
+                    </div>
+                    <div className="bg-soul-purple/5 rounded-3xl p-4 text-center">
+                      <span className={`font-semibold text-xs ${getTextSize('text-xs')}`}>Profile</span>
+                      <p className={`text-soul-purple font-bold ${getTextSize('text-sm')}`}>{humanDesignData.profile}</p>
+                    </div>
+                    <div className="bg-soul-purple/5 rounded-3xl p-4 text-center">
+                      <span className={`font-semibold text-xs ${getTextSize('text-xs')}`}>Authority</span>
+                      <p className={`text-soul-purple font-bold ${getTextSize('text-sm')}`}>{humanDesignData.authority}</p>
+                    </div>
+                    <div className="bg-soul-purple/5 rounded-3xl p-4 text-center">
+                      <span className={`font-semibold text-xs ${getTextSize('text-xs')}`}>Strategy</span>
+                      <p className={`text-soul-purple font-bold ${getTextSize('text-sm')}`}>{humanDesignData.strategy}</p>
+                    </div>
+                    <div className="bg-soul-purple/5 rounded-3xl p-4 text-center">
+                      <span className={`font-semibold text-xs ${getTextSize('text-xs')}`}>Definition</span>
+                      <p className={`text-soul-purple font-bold ${getTextSize('text-sm')}`}>{humanDesignData.definition}</p>
+                    </div>
+                    <div className="bg-soul-purple/5 rounded-3xl p-4 text-center">
+                      <span className={`font-semibold text-xs ${getTextSize('text-xs')}`}>Not-Self Theme</span>
+                      <p className={`text-soul-purple font-bold ${getTextSize('text-sm')}`}>{humanDesignData.not_self_theme}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-50 rounded-3xl p-4">
+                    <span className={`font-semibold ${getTextSize('text-sm')}`}>Life Purpose: </span>
+                    <span className={getTextSize('text-sm')}>{humanDesignData.life_purpose}</span>
+                  </div>
                 </div>
-                <div>
-                  <span className="font-semibold">Element:</span> {chineseData.element}
-                </div>
-                <div>
-                  <span className="font-semibold">Yin Yang:</span> {chineseData.yin_yang}
-                </div>
-                <div>
-                  <span className="font-semibold">Keyword:</span> {chineseData.keyword}
-                </div>
-              </div>
-            </CardContent>
+              )}
+            </div>
           </Card>
-        </TabsContent>
-      </Tabs>
+
+          {/* Bashar Suite Section */}
+          <Card>
+            <div className={spacing.card}>
+              <SectionHeader
+                title="Bashar Suite"
+                isExpanded={expandedSections.bashar}
+                onClick={() => toggleSection('bashar')}
+                icon={Heart}
+              />
+              
+              {expandedSections.bashar && (
+                <div className={`mt-4 space-y-4`}>
+                  <div className="bg-soul-purple/5 rounded-3xl p-4">
+                    <h4 className={`font-semibold ${getTextSize('text-sm')}`}>Excitement Compass</h4>
+                    <p className={`text-gray-700 ${getTextSize('text-sm')}`}>{basharData.excitement_compass?.principle}</p>
+                  </div>
+                  <div className="bg-soul-purple/5 rounded-3xl p-4">
+                    <h4 className={`font-semibold ${getTextSize('text-sm')}`}>Belief Interface</h4>
+                    <p className={`text-gray-700 ${getTextSize('text-sm')}`}>{basharData.belief_interface?.principle}</p>
+                    <p className={`text-gray-500 mt-1 ${getTextSize('text-xs')}`}>Reframe: {basharData.belief_interface?.reframe_prompt}</p>
+                  </div>
+                  <div className="bg-soul-purple/5 rounded-3xl p-4">
+                    <h4 className={`font-semibold ${getTextSize('text-sm')}`}>Frequency Alignment</h4>
+                    <p className={`text-gray-700 ${getTextSize('text-sm')}`}>{basharData.frequency_alignment?.quick_ritual}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </Card>
+
+          {/* Numerology Section */}
+          <Card>
+            <div className={spacing.card}>
+              <SectionHeader
+                title="Numerology Profile"
+                isExpanded={expandedSections.numerology}
+                onClick={() => toggleSection('numerology')}
+                icon={Calculator}
+              />
+              
+              {expandedSections.numerology && (
+                <div className={`mt-4 space-y-4`}>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="bg-soul-purple/5 rounded-3xl p-4 text-center">
+                      <h4 className={`font-semibold text-soul-purple ${getTextSize('text-sm')}`}>Life Path Number</h4>
+                      <p className={`font-bold text-soul-purple ${getTextSize('text-2xl')}`}>{numerologyData.lifePathNumber}</p>
+                      <p className={`text-gray-600 ${getTextSize('text-xs')}`}>{numerologyData.lifePathKeyword || "Your life's purpose and journey"}</p>
+                    </div>
+                    <div className="bg-soul-purple/5 rounded-3xl p-4 text-center">
+                      <h4 className={`font-semibold text-soul-purple ${getTextSize('text-sm')}`}>Expression Number</h4>
+                      <p className={`font-bold text-soul-purple ${getTextSize('text-2xl')}`}>{numerologyData.expressionNumber}</p>
+                      <p className={`text-gray-600 ${getTextSize('text-xs')}`}>{numerologyData.expressionKeyword || "Your natural talents and abilities"}</p>
+                    </div>
+                    <div className="bg-soul-purple/5 rounded-3xl p-4 text-center">
+                      <h4 className={`font-semibold text-soul-purple ${getTextSize('text-sm')}`}>Soul Urge Number</h4>
+                      <p className={`font-bold text-soul-purple ${getTextSize('text-2xl')}`}>{numerologyData.soulUrgeNumber}</p>
+                      <p className={`text-gray-600 ${getTextSize('text-xs')}`}>{numerologyData.soulUrgeKeyword || "Your inner desires and motivations"}</p>
+                    </div>
+                    <div className="bg-soul-purple/5 rounded-3xl p-4 text-center">
+                      <h4 className={`font-semibold text-soul-purple ${getTextSize('text-sm')}`}>Birthday Number</h4>
+                      <p className={`font-bold text-soul-purple ${getTextSize('text-2xl')}`}>{numerologyData.birthdayNumber}</p>
+                      <p className={`text-gray-600 ${getTextSize('text-xs')}`}>{numerologyData.birthdayKeyword || "Special talents from your birth day"}</p>
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 rounded-3xl p-4">
+                    <p className={`text-gray-500 ${getTextSize('text-xs')}`}>
+                      Calculated from: {blueprint.user_meta.full_name} • Born: {new Date(blueprint.user_meta.birth_date).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </Card>
+
+          {/* Western Astrology Section */}
+          <Card>
+            <div className={spacing.card}>
+              <SectionHeader
+                title="Western Astrology"
+                isExpanded={expandedSections.western}
+                onClick={() => toggleSection('western')}
+                icon={Globe}
+              />
+              
+              {expandedSections.western && (
+                <div className={`mt-4 space-y-4`}>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div className="bg-soul-purple/5 rounded-3xl p-4 text-center">
+                      <span className={`font-semibold text-xs ${getTextSize('text-xs')}`}>Sun Sign</span>
+                      <p className={`text-soul-purple font-bold ${getTextSize('text-sm')}`}>{westernData.sun_sign}</p>
+                    </div>
+                    <div className="bg-soul-purple/5 rounded-3xl p-4 text-center">
+                      <span className={`font-semibold text-xs ${getTextSize('text-xs')}`}>Moon Sign</span>
+                      <p className={`text-soul-purple font-bold ${getTextSize('text-sm')}`}>{westernData.moon_sign}</p>
+                    </div>
+                    <div className="bg-soul-purple/5 rounded-3xl p-4 text-center">
+                      <span className={`font-semibold text-xs ${getTextSize('text-xs')}`}>Rising Sign</span>
+                      <p className={`text-soul-purple font-bold ${getTextSize('text-sm')}`}>{westernData.rising_sign}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="bg-gray-50 rounded-3xl p-4">
+                      <span className={`font-semibold ${getTextSize('text-sm')}`}>Sun Keyword: </span>
+                      <span className={getTextSize('text-sm')}>{westernData.sun_keyword}</span>
+                    </div>
+                    <div className="bg-gray-50 rounded-3xl p-4">
+                      <span className={`font-semibold ${getTextSize('text-sm')}`}>Moon Keyword: </span>
+                      <span className={getTextSize('text-sm')}>{westernData.moon_keyword}</span>
+                    </div>
+                    <div className="bg-gray-50 rounded-3xl p-4">
+                      <span className={`font-semibold ${getTextSize('text-sm')}`}>Source: </span>
+                      <span className={getTextSize('text-sm')}>{westernData.source}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </Card>
+
+          {/* Chinese Astrology Section */}
+          <Card>
+            <div className={spacing.card}>
+              <SectionHeader
+                title="Chinese Astrology"
+                isExpanded={expandedSections.chinese}
+                onClick={() => toggleSection('chinese')}
+                icon={Star}
+              />
+              
+              {expandedSections.chinese && (
+                <div className={`mt-4 space-y-4`}>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div className="bg-soul-purple/5 rounded-3xl p-4 text-center">
+                      <span className={`font-semibold text-xs ${getTextSize('text-xs')}`}>Animal</span>
+                      <p className={`text-soul-purple font-bold ${getTextSize('text-sm')}`}>{chineseData.animal}</p>
+                    </div>
+                    <div className="bg-soul-purple/5 rounded-3xl p-4 text-center">
+                      <span className={`font-semibold text-xs ${getTextSize('text-xs')}`}>Element</span>
+                      <p className={`text-soul-purple font-bold ${getTextSize('text-sm')}`}>{chineseData.element}</p>
+                    </div>
+                    <div className="bg-soul-purple/5 rounded-3xl p-4 text-center">
+                      <span className={`font-semibold text-xs ${getTextSize('text-xs')}`}>Yin Yang</span>
+                      <p className={`text-soul-purple font-bold ${getTextSize('text-sm')}`}>{chineseData.yin_yang}</p>
+                    </div>
+                    <div className="bg-soul-purple/5 rounded-3xl p-4 text-center">
+                      <span className={`font-semibold text-xs ${getTextSize('text-xs')}`}>Keyword</span>
+                      <p className={`text-soul-purple font-bold ${getTextSize('text-sm')}`}>{chineseData.keyword}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </Card>
+        </div>
+      </ScrollArea>
     </div>
   );
 };
