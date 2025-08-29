@@ -184,8 +184,8 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                 </div>
                 <div>
                   <h4 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-base')} break-words`}>Cognitive Functions</h4>
-                  <p className={`${getTextSize('text-sm')} font-inter break-words`}><strong>Dominant:</strong> {dominantFunction}</p>
-                  <p className={`${getTextSize('text-sm')} font-inter break-words`}><strong>Auxiliary:</strong> {auxiliaryFunction}</p>
+                  <p className={`${getTextSize('text-sm')} font-inter text-soul-purple break-words`}><strong>Dominant:</strong> {dominantFunction}</p>
+                  <p className={`${getTextSize('text-sm')} font-inter text-soul-purple break-words`}><strong>Auxiliary:</strong> {auxiliaryFunction}</p>
                 </div>
               </div>
               
@@ -224,12 +224,12 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
                 <div>
                   <h4 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-base')} break-words`}>Energy Type</h4>
                   <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple break-words`}>{hdType}</p>
-                  <p className={`${getTextSize('text-sm')} font-inter text-gray-600 break-words`}>{energyType} energy</p>
+                  <p className={`${getTextSize('text-sm')} font-inter text-soul-purple break-words`}>{energyType} energy</p>
                 </div>
                 <div>
                   <h4 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-base')} break-words`}>Decision Authority</h4>
                   <p className={`${getTextSize('text-xl')} font-cormorant font-bold text-soul-purple break-words`}>{authority}</p>
-                  <p className={`${getTextSize('text-sm')} font-inter text-gray-600 break-words`}>Inner authority</p>
+                  <p className={`${getTextSize('text-sm')} font-inter text-soul-purple break-words`}>Inner authority</p>
                 </div>
               </div>
               
