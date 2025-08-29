@@ -572,8 +572,8 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
     databaseValidation: databaseValidation.shouldShow
   });
   
-  // Phase 3: Show loading state when system isn't ready
-  if (!isSystemReady) {
+  // Phase 3: Show loading state when system isn't ready (disabled)
+  if (false) {
     return (
       <div className="fixed bottom-6 right-6 z-50">
         <div className="flex flex-col items-end gap-2">
