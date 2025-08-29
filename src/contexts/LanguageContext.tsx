@@ -181,6 +181,11 @@ const translations: Record<Language, Translations> = {
       welcomeBack: 'Welcome Back',
       startJourney: 'Begin your personalized spiritual journey',
       continueJourney: 'Continue your spiritual growth journey',
+      funnelReportReady: 'Your Life Clarity Report is Ready!',
+      createYourAccount: 'Create Your Account',
+      accessPersonalizedBlueprint: 'Access your personalized life transformation blueprint',
+      completeAccountMessage: 'Complete your account to access your personalized insights and blueprint.',
+      accountCreatedWithBlueprint: 'Account created! Let\'s build your personalized blueprint based on your assessment.',
       email: 'Email',
       password: 'Password',
       confirmPassword: 'Confirm Password',
@@ -216,6 +221,11 @@ const translations: Record<Language, Translations> = {
       creatingJourney: 'Creating Your Journey...',
       createJourney: 'Create My Journey',
       viewJourney: 'View My Journey'
+    },
+    // Funnel Assessment  
+    funnel: {
+      personalizedRoadmap: 'Everyone\'s path is different. To create your personalized roadmap, we need to understand your unique blueprint.',
+      reportAwaits: 'Your Life Clarity Report awaits'
     },
     // Goals & Categories
     goals: {
@@ -568,6 +578,13 @@ const translations: Record<Language, Translations> = {
       streakExample: 'Day 3 Streak',
       completeExample: '2 of 3 complete',
       aiGoals: 'AI Goals',
+      backToJourney: 'Back to Journey',
+      sessionProgress: 'Session Progress',
+      focusTime: 'Focus Time',
+      duration: 'Duration',
+      energy: 'Energy',
+      multiDayProgress: 'Multi-day Progress',
+      taskCompletion: 'Task Completion',
       planning: 'Planning',
       focus: 'Focus',
       habits: 'Habits',
@@ -970,6 +987,11 @@ const translations: Record<Language, Translations> = {
       creatingJourney: 'Je Reis Wordt Gemaakt...',
       createJourney: 'Mijn Reis Creëren',
       viewJourney: 'Mijn Reis Bekijken'
+    },
+    // Funnel Assessment
+    funnel: {
+      personalizedRoadmap: 'Ieders pad is anders. Om je gepersonaliseerde routekaart te maken, moeten we je unieke blauwdruk begrijpen.',
+      reportAwaits: 'Je Levenshelderheid Rapport wacht op je'
     },
     // Goals & Categories
     goals: {
@@ -1392,6 +1414,13 @@ const translations: Record<Language, Translations> = {
       streakExample: 'Dag 3 reeks',
       completeExample: '2 van 3 voltooid',
       aiGoals: 'AI Doelen',
+      backToJourney: 'Terug naar Reis',
+      sessionProgress: 'Sessie Voortgang',
+      focusTime: 'Focus Tijd',
+      duration: 'Duur',
+      energy: 'Energie',
+      multiDayProgress: 'Meerdaagse Voortgang',
+      taskCompletion: 'Taak Voltooiing',
       planning: 'Planning',
       focus: 'Focus',
       habits: 'Gewoonten',

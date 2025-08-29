@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from "react"
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { 
   ArrowLeft, 
   MessageCircle, 
@@ -69,6 +70,7 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
   onBack,
   onTaskComplete
 }) => {
+  const { t } = useLanguage();
   const { isMobile, isUltraNarrow, spacing, getTextSize, touchTargetSize } = useResponsiveLayout();
   
   // Create stable task context
@@ -579,7 +581,7 @@ export const TaskCoachInterface: React.FC<TaskCoachInterfaceProps> = ({
               className="flex items-center gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
-              <span className="hidden sm:inline">Back to Journey</span>
+              <span className="hidden sm:inline">{t('tasks.backToJourney')}</span>
               <span className="sm:hidden">Back</span>
             </Button>
             

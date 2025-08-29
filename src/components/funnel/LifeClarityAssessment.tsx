@@ -234,11 +234,11 @@ export const LifeClarityAssessment: React.FC<LifeClarityAssessmentProps> = ({ on
             />
             <div className="text-center">
               <p className="text-sm text-muted-foreground mb-4">
-                Everyone's path is different. To create your personalized roadmap, we need to understand your unique blueprint.
+                {t('funnel.personalizedRoadmap')}
               </p>
               <div className="flex items-center justify-center gap-2 text-primary">
                 <Sparkles className="h-5 w-5" />
-                <span className="font-medium">Your Life Clarity Report awaits</span>
+                <span className="font-medium">{t('funnel.reportAwaits')}</span>
                 <Sparkles className="h-5 w-5" />
               </div>
             </div>

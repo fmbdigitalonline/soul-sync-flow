@@ -2,6 +2,7 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { 
   Clock, 
   Target, 
@@ -28,6 +29,7 @@ export const SessionProgress: React.FC<SessionProgressProps> = ({
   dayOfTask = 1,
   totalDays = 1
 }) => {
+  const { t } = useLanguage();
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
@@ -72,7 +74,7 @@ export const SessionProgress: React.FC<SessionProgressProps> = ({
       <div className="flex items-center justify-between">
         <h3 className="font-medium text-sm flex items-center gap-2">
           <TrendingUp className="h-4 w-4 text-soul-purple" />
-          Session Progress
+          {t('tasks.sessionProgress')}
         </h3>
         <Badge variant="outline" className="text-xs">
           Day {dayOfTask} of {totalDays}
@@ -83,7 +85,7 @@ export const SessionProgress: React.FC<SessionProgressProps> = ({
         <div className="text-center">
           <div className="flex items-center justify-center gap-1 mb-1">
             <Clock className="h-3 w-3 text-blue-600" />
-            <span className="text-xs font-medium">Focus Time</span>
+            <span className="text-xs font-medium">{t('tasks.focusTime')}</span>
           </div>
           <div className="text-sm font-semibold text-blue-600">
             {formatTime(focusTime)}
@@ -93,7 +95,7 @@ export const SessionProgress: React.FC<SessionProgressProps> = ({
         <div className="text-center">
           <div className="flex items-center justify-center gap-1 mb-1">
             <Target className="h-3 w-3 text-emerald-600" />
-            <span className="text-xs font-medium">Duration</span>
+            <span className="text-xs font-medium">{t('tasks.duration')}</span>
           </div>
           <div className="text-sm font-semibold text-emerald-600">
             {estimatedDuration}
@@ -103,7 +105,7 @@ export const SessionProgress: React.FC<SessionProgressProps> = ({
         <div className="text-center">
           <div className="flex items-center justify-center gap-1 mb-1">
             <Battery className="h-3 w-3" />
-            <span className="text-xs font-medium">Energy</span>
+            <span className="text-xs font-medium">{t('tasks.energy')}</span>
           </div>
           <Badge variant="outline" className={`text-xs ${getEnergyColor(energyLevel)}`}>
             <span className="mr-1">{getEnergyIcon()}</span>
@@ -115,7 +117,7 @@ export const SessionProgress: React.FC<SessionProgressProps> = ({
       {totalDays > 1 && (
         <div className="space-y-2">
           <div className="flex justify-between text-xs">
-            <span>Multi-day Progress</span>
+            <span>{t('tasks.multiDayProgress')}</span>
             <span>{Math.round(dayProgress)}%</span>
           </div>
           <Progress value={dayProgress} className="h-1.5" />
@@ -125,7 +127,7 @@ export const SessionProgress: React.FC<SessionProgressProps> = ({
       {taskProgress > 0 && (
         <div className="space-y-2">
           <div className="flex justify-between text-xs">
-            <span>Task Completion</span>
+            <span>{t('tasks.taskCompletion')}</span>
             <span>{Math.round(taskProgress)}%</span>
           </div>
           <Progress value={taskProgress} className="h-1.5" />
