@@ -432,6 +432,65 @@ const translations: Record<Language, Translations> = {
       regenerationSuccess: 'Generated {count} new personalized quotes!',
       regenerationError: 'Failed to regenerate quotes'
     },
+    // Profile Page
+    profile: {
+      // Tab Labels
+      stats: 'Stats',
+      goals: 'Goals', 
+      settings: 'Settings',
+      
+      // Growth Journey Section
+      growthJourney: 'Growth Journey',
+      blueprintCompletion: 'Blueprint Completion',
+      activeGoals: 'Active Goals',
+      tasksCompleted: 'Tasks Completed',
+      coachConversations: 'Coach Conversations',
+      
+      // Weekly Insights
+      weeklyInsights: 'Weekly Insights',
+      mostProductiveDay: 'Most Productive Day',
+      energyPeaks: 'Energy Peaks',
+      focusSessions: 'Focus Sessions',
+      wednesday: 'Wednesday',
+      morningPeaks: 'Morning peaks',
+      aligned: 'Aligned',
+      thisWeek: 'this week',
+      
+      // Goals Section
+      noGoals: 'No goals yet',
+      createFirstGoal: 'Create your first goal to start tracking your progress.',
+      viewAllGoals: 'View All Goals',
+      onTrack: 'On Track',
+      progress: 'Progress',
+      complete: 'Complete',
+      
+      // Settings Section
+      appSettings: 'App Settings',
+      notifications: 'Notifications',
+      darkMode: 'Dark Mode',
+      accountSettings: 'Account Settings',
+      accountSettingsTooltip: 'Manage your account preferences',
+      
+      // Status Messages
+      errorLoading: 'Error loading profile',
+      logoutSuccess: 'Successfully logged out',
+      logoutError: 'Failed to log out',
+      darkModeEnabled: 'Dark mode enabled',
+      lightModeEnabled: 'Light mode enabled',
+      darkModeDescription: 'Your interface is now in dark mode',
+      lightModeDescription: 'Your interface is now in light mode',
+      
+      // Task Actions
+      taskCompleted: 'Task Completed!',
+      taskCompletedDescription: 'Great work! You\'ve completed a task.',
+      
+      // Goal Status
+      status: {
+        active: 'Active',
+        completed: 'Completed',
+        paused: 'Paused'
+      }
+    },
     // Journey
     journey: {
       empty: {
@@ -1039,6 +1098,65 @@ const translations: Record<Language, Translations> = {
       regenerating: 'Je gepersonaliseerde citaten worden opnieuw gegenereerd...',
       regenerationSuccess: '{count} nieuwe gepersonaliseerde citaten gegenereerd!',
       regenerationError: 'Kon citaten niet opnieuw genereren'
+    },
+    // Profiel Pagina
+    profile: {
+      // Tab Labels
+      stats: 'Statistieken',
+      goals: 'Doelen',
+      settings: 'Instellingen',
+      
+      // Growth Journey Section
+      growthJourney: 'Groeireis',
+      blueprintCompletion: 'Blauwdruk Voltooiing',
+      activeGoals: 'Actieve Doelen',
+      tasksCompleted: 'Taken Voltooid',
+      coachConversations: 'Coach Gesprekken',
+      
+      // Weekly Insights
+      weeklyInsights: 'Wekelijkse Inzichten',
+      mostProductiveDay: 'Meest Productieve Dag',
+      energyPeaks: 'Energiepieken',
+      focusSessions: 'Focus Sessies',
+      wednesday: 'Woensdag',
+      morningPeaks: 'Ochtend pieken',
+      aligned: 'Uitgelijnd',
+      thisWeek: 'deze week',
+      
+      // Goals Section
+      noGoals: 'Nog geen doelen',
+      createFirstGoal: 'Creëer je eerste doel om je voortgang te volgen.',
+      viewAllGoals: 'Bekijk Alle Doelen',
+      onTrack: 'Op Schema',
+      progress: 'Voortgang',
+      complete: 'Voltooien',
+      
+      // Settings Section
+      appSettings: 'App Instellingen',
+      notifications: 'Meldingen',
+      darkMode: 'Donkere Modus',
+      accountSettings: 'Account Instellingen',
+      accountSettingsTooltip: 'Beheer je account voorkeuren',
+      
+      // Status Messages
+      errorLoading: 'Fout bij laden profiel',
+      logoutSuccess: 'Succesvol uitgelogd',
+      logoutError: 'Uitloggen mislukt',
+      darkModeEnabled: 'Donkere modus ingeschakeld',
+      lightModeEnabled: 'Lichte modus ingeschakeld',
+      darkModeDescription: 'Je interface is nu in donkere modus',
+      lightModeDescription: 'Je interface is nu in lichte modus',
+      
+      // Task Actions
+      taskCompleted: 'Taak Voltooid!',
+      taskCompletedDescription: 'Goed gedaan! Je hebt een taak voltooid.',
+      
+      // Goal Status
+      status: {
+        active: 'Actief',
+        completed: 'Voltooid',
+        paused: 'Gepauzeerd'
+      }
     },
     // Reis
     journey: {
