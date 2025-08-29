@@ -272,8 +272,84 @@ const translations: Record<Language, Translations> = {
     },
     // Blueprint section
     blueprint: {
+      // Tabs
+      tab: 'Blueprint',
+      reportTab: 'Report',
+      editTab: 'Edit',
+      healthTab: 'Health',
+      generatingTab: 'Generating',
+      
+      // Loading states
+      loading: 'Loading...',
+      loadingBlueprint: 'Loading blueprint...',
+      
+      // Auth messages
+      signInRequired: 'Please sign in to view your blueprint',
+      signIn: 'Sign In',
+      
+      // Blueprint creation
+      createTitle: 'Create Your Blueprint',
+      createDescription: 'You haven\'t created your soul blueprint yet. Let\'s get started!',
+      createButton: 'Create Blueprint',
+      checkAgain: 'Check Again',
+      
+      // Completion
+      completeTitle: 'Complete Your Blueprint',
+      completeDescription: 'Your blueprint needs more information to be complete.',
+      missing: 'Missing',
+      completion: 'Completion',
+      completeButton: 'Complete Blueprint',
+      refresh: 'Refresh',
+      
+      // Actions
+      regenerating: 'Regenerating...',
+      regenerate: 'Regenerate',
+      
+      // Error states
+      blueprintError: 'Blueprint Error',
+      tryAgain: 'Try Again',
+      createNew: 'Create New Blueprint',
+      
+      // Toast messages
+      saved: 'Blueprint Saved',
+      savedDescription: 'Your blueprint has been updated successfully',
+      saveError: 'Error Saving Blueprint',
+      saveErrorDescription: 'Failed to save blueprint',
+      regeneratingTitle: 'Regenerating Blueprint',
+      regeneratingDescription: 'Your blueprint is being recalculated with fresh data',
+      dataNotLoaded: 'Blueprint data not loaded',
+      generationFailed: 'Failed to generate new blueprint',
       generated: 'Blueprint Generated',
-      generatedDesc: 'Your personalized soul blueprint has been created'
+      generatedDescription: 'Your new blueprint has been generated successfully',
+      generationError: 'Error Generating Blueprint',
+      generationErrorDescription: 'Failed to generate blueprint'
+    },
+    
+    // Report section
+    report: {
+      // Button labels
+      standardReport: 'Standard Report',
+      hermeticReport: 'Hermetic Report',
+      hermeticReportLong: 'Hermetic Report (10,000+ words)',
+      generateStandard: 'Generate Standard',
+      generateHermetic: 'Generate Hermetic',
+      regenerate: 'Regenerate',
+      refresh: 'Refresh',
+      
+      // Loading states
+      loading: 'Loading your personality report...',
+      generating: 'Generating...',
+      
+      // Content
+      title: 'Personality Report',
+      noReports: 'No personality reports available',
+      
+      // Toast messages
+      standardGenerated: 'Standard Report Generated',
+      standardGeneratedDescription: 'Your standard personality report has been created successfully!',
+      hermeticGenerated: 'Hermetic Report Generated',
+      generationFailed: 'Generation Failed',
+      hermeticGenerationFailed: 'Hermetic Generation Failed'
     },
     // Onboarding Flow
     onboarding: {
@@ -804,8 +880,84 @@ const translations: Record<Language, Translations> = {
     },
     // Blauwdruk sectie
     blueprint: {
+      // Tabs
+      tab: 'Blauwdruk',
+      reportTab: 'Rapport',
+      editTab: 'Bewerken', 
+      healthTab: 'Gezondheid',
+      generatingTab: 'Genereren',
+      
+      // Loading states
+      loading: 'Laden...',
+      loadingBlueprint: 'Blauwdruk laden...',
+      
+      // Auth messages
+      signInRequired: 'Log in om je blauwdruk te bekijken',
+      signIn: 'Inloggen',
+      
+      // Blueprint creation
+      createTitle: 'Creëer je Blauwdruk',
+      createDescription: 'Je hebt nog geen zielblauwdruk gemaakt. Laten we beginnen!',
+      createButton: 'Blauwdruk Maken',
+      checkAgain: 'Opnieuw Controleren',
+      
+      // Completion
+      completeTitle: 'Voltooi je Blauwdruk',
+      completeDescription: 'Je blauwdruk heeft meer informatie nodig om compleet te zijn.',
+      missing: 'Ontbrekend',
+      completion: 'Voltooiing',
+      completeButton: 'Blauwdruk Voltooien',
+      refresh: 'Vernieuwen',
+      
+      // Actions
+      regenerating: 'Regenereren...',
+      regenerate: 'Regenereren',
+      
+      // Error states
+      blueprintError: 'Blauwdruk Fout',
+      tryAgain: 'Probeer Opnieuw',
+      createNew: 'Nieuwe Blauwdruk Maken',
+      
+      // Toast messages
+      saved: 'Blauwdruk Opgeslagen',
+      savedDescription: 'Je blauwdruk is succesvol bijgewerkt',
+      saveError: 'Fout bij Opslaan Blauwdruk',
+      saveErrorDescription: 'Blauwdruk opslaan mislukt',
+      regeneratingTitle: 'Blauwdruk Regenereren',
+      regeneratingDescription: 'Je blauwdruk wordt herberekend met nieuwe gegevens',
+      dataNotLoaded: 'Blauwdruk gegevens niet geladen',
+      generationFailed: 'Nieuwe blauwdruk genereren mislukt',
       generated: 'Blauwdruk Gegenereerd',
-      generatedDesc: 'Je gepersonaliseerde zielblauwdruk is gemaakt'
+      generatedDescription: 'Je nieuwe blauwdruk is succesvol gegenereerd',
+      generationError: 'Fout bij Genereren Blauwdruk',
+      generationErrorDescription: 'Blauwdruk genereren mislukt'
+    },
+    
+    // Rapport sectie
+    report: {
+      // Button labels
+      standardReport: 'Standaard Rapport',
+      hermeticReport: 'Hermetisch Rapport',
+      hermeticReportLong: 'Hermetisch Rapport (10.000+ woorden)',
+      generateStandard: 'Genereer Standaard',
+      generateHermetic: 'Genereer Hermetisch',
+      regenerate: 'Regenereren',
+      refresh: 'Vernieuwen',
+      
+      // Loading states
+      loading: 'Je persoonlijkheidsrapport laden...',
+      generating: 'Genereren...',
+      
+      // Content
+      title: 'Persoonlijkheidsrapport',
+      noReports: 'Geen persoonlijkheidsrapporten beschikbaar',
+      
+      // Toast messages
+      standardGenerated: 'Standaard Rapport Gegenereerd',
+      standardGeneratedDescription: 'Je standaard persoonlijkheidsrapport is succesvol aangemaakt!',
+      hermeticGenerated: 'Hermetisch Rapport Gegenereerd',
+      generationFailed: 'Genereren Mislukt',
+      hermeticGenerationFailed: 'Hermetisch Genereren Mislukt'
     },
     // Onboarding Flow
     onboarding: {

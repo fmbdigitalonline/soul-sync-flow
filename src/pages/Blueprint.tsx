@@ -73,7 +73,7 @@ const Blueprint = () => {
     return <MainLayout>
         <div className={`w-full min-h-[80vh] flex flex-col items-center justify-center ${spacing.container} mobile-container`}>
           <Loader2 className="h-8 w-8 animate-spin text-soul-purple" />
-          <p className={`mt-2 ${getTextSize('text-sm')} font-inter`}>Loading...</p>
+          <p className={`mt-2 ${getTextSize('text-sm')} font-inter`}>{t('blueprint.loading')}</p>
         </div>
       </MainLayout>;
   }
@@ -86,9 +86,9 @@ const Blueprint = () => {
             <h1 className={`${getTextSize('text-xl')} font-bold font-cormorant mb-4 break-words`}>
               <span className="gradient-text">Soul Blueprint</span>
             </h1>
-            <p className={`mb-6 ${getTextSize('text-sm')} break-words font-inter`}>Please sign in to view your blueprint</p>
+            <p className={`mb-6 ${getTextSize('text-sm')} break-words font-inter`}>{t('blueprint.signInRequired')}</p>
             <Button className="bg-soul-purple hover:bg-soul-purple/90 w-full max-w-full rounded-2xl font-inter font-medium" onClick={() => navigate('/auth')}>
-              Sign In
+              {t('blueprint.signIn')}
             </Button>
           </div>
         </div>
@@ -100,7 +100,7 @@ const Blueprint = () => {
     return <MainLayout>
         <div className={`w-full min-h-[80vh] flex flex-col items-center justify-center ${spacing.container} mobile-container`}>
           <Loader2 className="h-8 w-8 animate-spin text-soul-purple" />
-          <p className={`mt-2 ${getTextSize('text-sm')} break-words font-inter`}>Loading blueprint...</p>
+          <p className={`mt-2 ${getTextSize('text-sm')} break-words font-inter`}>{t('blueprint.loadingBlueprint')}</p>
         </div>
       </MainLayout>;
   }
@@ -115,18 +115,18 @@ const Blueprint = () => {
             <div className={`cosmic-card ${spacing.card} text-center w-full ${layout.maxWidth}`}>
               <AlertCircle className="h-12 w-12 text-soul-purple mx-auto mb-4" />
               <h2 className={`${getTextSize('text-lg')} font-semibold mb-4 break-words font-cormorant`}>
-                <span className="gradient-text">Create Your Blueprint</span>
+                <span className="gradient-text">{t('blueprint.createTitle')}</span>
               </h2>
               <p className={`${getTextSize('text-sm')} mb-6 break-words text-muted-foreground font-inter`}>
-                You haven't created your soul blueprint yet. Let's get started!
+                {t('blueprint.createDescription')}
               </p>
               <div className={`space-y-2 ${spacing.gap}`}>
                 <Button className="bg-soul-purple hover:bg-soul-purple/90 w-full rounded-2xl font-inter font-medium" onClick={() => navigate('/onboarding')}>
-                  Create Blueprint
+                  {t('blueprint.createButton')}
                 </Button>
                 <Button variant="outline" onClick={() => refetch()} className="w-full rounded-2xl font-inter">
                   <RefreshCw className="mr-2 h-4 w-4" />
-                  Check Again
+                  {t('blueprint.checkAgain')}
                 </Button>
               </div>
             </div>
@@ -139,15 +139,15 @@ const Blueprint = () => {
         <div className={`w-full min-h-[80vh] flex flex-col items-center justify-center ${spacing.container} mobile-container`}>
           <div className={`cosmic-card ${spacing.card} text-center w-full ${layout.maxWidth}`}>
             <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h2 className={`${getTextSize('text-lg')} font-semibold mb-4 text-red-500 break-words font-cormorant`}>Blueprint Error</h2>
+            <h2 className={`${getTextSize('text-lg')} font-semibold mb-4 text-red-500 break-words font-cormorant`}>{t('blueprint.blueprintError')}</h2>
             <p className={`text-red-500 mb-4 ${getTextSize('text-sm')} break-words font-inter`}>{error}</p>
             <div className={`space-y-2 ${spacing.gap}`}>
               <Button onClick={() => refetch()} className="w-full rounded-2xl font-inter font-medium">
                 <RefreshCw className="mr-2 h-4 w-4" />
-                Try Again
+                {t('blueprint.tryAgain')}
               </Button>
               <Button variant="outline" onClick={() => navigate('/onboarding')} className="w-full rounded-2xl font-inter">
-                Create New Blueprint
+                {t('blueprint.createNew')}
               </Button>
             </div>
           </div>
@@ -163,17 +163,17 @@ const Blueprint = () => {
           <div className={`cosmic-card ${spacing.card} text-center w-full ${layout.maxWidth}`}>
             <AlertCircle className="h-12 w-12 text-soul-purple mx-auto mb-4" />
             <h2 className={`${getTextSize('text-lg')} font-semibold mb-4 break-words font-cormorant`}>
-              <span className="gradient-text">Complete Your Blueprint</span>
+              <span className="gradient-text">{t('blueprint.completeTitle')}</span>
             </h2>
             <p className={`${getTextSize('text-sm')} mb-4 break-words text-muted-foreground font-inter`}>
-              Your blueprint needs more information to be complete. 
+              {t('blueprint.completeDescription')}
               {blueprintValidation.missingFields.length > 0 && <span className={`block mt-2 ${getTextSize('text-xs')} font-inter`}>
-                  Missing: {blueprintValidation.missingFields.join(', ')}
+                  {t('blueprint.missing')}: {blueprintValidation.missingFields.join(', ')}
                 </span>}
             </p>
             <div className="mb-4">
               <div className={`${getTextSize('text-xs')} text-muted-foreground mb-1 font-inter`}>
-                Completion: {getBlueprintCompletionPercentage}%
+                {t('blueprint.completion')}: {getBlueprintCompletionPercentage}%
               </div>
               <div className="w-full bg-muted rounded-full h-2">
                 <div className="bg-soul-purple h-2 rounded-full transition-all duration-300" style={{
@@ -183,11 +183,11 @@ const Blueprint = () => {
             </div>
             <div className={`space-y-2 ${spacing.gap}`}>
               <Button className="bg-soul-purple hover:bg-soul-purple/90 w-full rounded-2xl font-inter font-medium" onClick={() => navigate('/onboarding')}>
-                Complete Blueprint
+                {t('blueprint.completeButton')}
               </Button>
               <Button variant="outline" onClick={() => refetch()} className="w-full rounded-2xl font-inter">
                 <RefreshCw className="mr-2 h-4 w-4" />
-                Refresh
+                {t('blueprint.refresh')}
               </Button>
             </div>
           </div>
@@ -235,15 +235,15 @@ const Blueprint = () => {
       const result = await blueprintService.saveBlueprintData(saveFormat);
       if (result.success) {
         toast({
-          title: "Blueprint Saved",
-          description: "Your blueprint has been updated successfully"
+          title: t('blueprint.saved'),
+          description: t('blueprint.savedDescription')
         });
         await refetch();
         setActiveTab("view");
       } else {
         toast({
-          title: "Error Saving Blueprint",
-          description: result.error || "Failed to save blueprint",
+          title: t('blueprint.saveError'),
+          description: result.error || t('blueprint.saveErrorDescription'),
           variant: "destructive"
         });
       }
@@ -251,7 +251,7 @@ const Blueprint = () => {
     } catch (err) {
       console.error("Error in save handler:", err);
       toast({
-        title: "Error",
+        title: t('system.error'),
         description: String(err),
         variant: "destructive"
       });
@@ -266,14 +266,14 @@ const Blueprint = () => {
       setIsGenerating(true);
       setActiveTab("generating");
       toast({
-        title: "Regenerating Blueprint",
-        description: "Your blueprint is being recalculated with fresh data"
+        title: t('blueprint.regeneratingTitle'),
+        description: t('blueprint.regeneratingDescription')
       });
       speak("Your blueprint is being recalculated with fresh data");
     } else {
       toast({
-        title: "Error",
-        description: "Blueprint data not loaded",
+        title: t('system.error'),
+        description: t('blueprint.dataNotLoaded'),
         variant: "destructive"
       });
     }
@@ -282,8 +282,8 @@ const Blueprint = () => {
     try {
       if (!newBlueprint) {
         toast({
-          title: "Error",
-          description: "Failed to generate new blueprint",
+          title: t('system.error'),
+          description: t('blueprint.generationFailed'),
           variant: "destructive"
         });
         setIsGenerating(false);
@@ -296,21 +296,21 @@ const Blueprint = () => {
       if (result.success) {
         await refetch();
         toast({
-          title: "Blueprint Generated",
-          description: "Your new blueprint has been generated successfully"
+          title: t('blueprint.generated'),
+          description: t('blueprint.generatedDescription')
         });
         speak("Your new blueprint has been generated successfully");
       } else {
         toast({
-          title: "Error Generating Blueprint",
-          description: result.error || "Failed to generate blueprint",
+          title: t('blueprint.generationError'),
+          description: result.error || t('blueprint.generationErrorDescription'),
           variant: "destructive"
         });
       }
     } catch (error) {
       console.error("Error handling generation completion:", error);
       toast({
-        title: "Error",
+        title: t('system.error'),
         description: String(error),
         variant: "destructive"
       });
@@ -335,7 +335,7 @@ const Blueprint = () => {
           <div className={`flex flex-col ${spacing.gap} w-full max-w-full`}>
             {isAdmin && <Button variant="outline" className={`flex items-center justify-center ${getTextSize('text-sm')} h-12 w-full max-w-full rounded-2xl font-inter font-medium`} onClick={handleRegenerateBlueprint} disabled={isGenerating}>
                 <RefreshCw className="mr-2 h-4 w-4 flex-shrink-0" />
-                <span className="truncate">{isGenerating ? "Generating..." : "Regenerate"}</span>
+                <span className="truncate">{isGenerating ? t('blueprint.regenerating') : t('blueprint.regenerate')}</span>
               </Button>}
             
           </div>
@@ -345,22 +345,22 @@ const Blueprint = () => {
           {/* Tabs with Inter font */}
           <TabsList className={`w-full max-w-full h-auto ${spacing.button} grid ${isAdmin ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-2'} !rounded-2xl font-inter`}>
             <TabsTrigger value="view" className={`${getTextSize('text-sm')} py-2 px-1 truncate !rounded-2xl font-medium`}>
-              Blueprint
+              {t('blueprint.tab')}
             </TabsTrigger>
             <TabsTrigger value="report" className={`${getTextSize('text-sm')} py-2 px-1 truncate !rounded-2xl font-medium`}>
-              Report
+              {t('blueprint.reportTab')}
             </TabsTrigger>
             {isAdmin && <>
                 <TabsTrigger value="edit" className={`${getTextSize('text-sm')} py-2 px-1 truncate !rounded-2xl font-medium`}>
-                  Edit
+                  {t('blueprint.editTab')}
                 </TabsTrigger>
                 <TabsTrigger value="health-check" className={`${getTextSize('text-sm')} py-2 px-1 flex items-center gap-1 min-w-0 !rounded-2xl font-medium`}>
                   <Activity className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                  <span className={`${isMobile ? 'hidden sm:inline' : 'inline'} truncate`}>Health</span>
+                  <span className={`${isMobile ? 'hidden sm:inline' : 'inline'} truncate`}>{t('blueprint.healthTab')}</span>
                 </TabsTrigger>
               </>}
             <TabsTrigger value="generating" disabled={!isGenerating} className={`${getTextSize('text-sm')} py-2 px-1 truncate !rounded-2xl font-medium ${!isAdmin ? 'hidden' : ''}`}>
-              Generating
+              {t('blueprint.generatingTab')}
             </TabsTrigger>
           </TabsList>
           

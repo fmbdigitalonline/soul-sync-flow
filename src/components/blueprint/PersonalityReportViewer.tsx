@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Loader2, RefreshCw, Sparkles, User, Heart, Brain, Compass, Zap, Plus, Trash2, Star, ChevronDown, ChevronRight, Target, Moon } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { aiPersonalityReportService, PersonalityReport } from '@/services/ai-personality-report-service';
 import { hermeticPersonalityReportService, HermeticPersonalityReport } from '@/services/hermetic-personality-report-service';
 import { blueprintService } from '@/services/blueprint-service';
@@ -19,6 +20,7 @@ interface PersonalityReportViewerProps {
 
 export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = ({ className }) => {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { toast } = useToast();
   const { spacing, getTextSize, isMobile, isUltraNarrow, isFoldDevice } = useResponsiveLayout();
   const [report, setReport] = useState<PersonalityReport | null>(null);
@@ -111,8 +113,8 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
       if (result.success && result.report) {
         setReport(result.report);
         toast({
-          title: "Standard Report Generated",
-          description: "Your standard personality report has been created successfully!",
+          title: t('report.standardGenerated'),
+          description: t('report.standardGeneratedDescription'),
         });
         console.log('✅ Standard report generated successfully');
       } else {
@@ -122,7 +124,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
       const errorMessage = err instanceof Error ? err.message : 'Failed to generate standard personality report';
       setError(errorMessage);
       toast({
-        title: "Generation Failed",
+        title: t('report.generationFailed'),
         description: errorMessage,
         variant: "destructive"
       });
@@ -167,7 +169,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
         await loadReport();
         
         toast({
-          title: "Hermetic Report Generated",
+          title: t('report.hermeticGenerated'),
           description: `Your comprehensive ${result.report.report_content.word_count}+ word Hermetic Blueprint report has been created!`,
         });
         console.log('🌟 Hermetic report generated successfully');
@@ -180,7 +182,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
       const errorMessage = err instanceof Error ? err.message : 'Failed to generate Hermetic personality report';
       setError(errorMessage);
       toast({
-        title: "Hermetic Generation Failed",
+        title: t('report.hermeticGenerationFailed'),
         description: errorMessage,
         variant: "destructive"
       });
@@ -236,7 +238,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
       <div className={`flex items-center justify-center ${spacing.container} ${className}`}>
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin text-soul-purple mx-auto mb-2" />
-          <p className={`text-muted-foreground ${getTextSize('text-sm')}`}>Loading your personality report...</p>
+          <p className={`text-muted-foreground ${getTextSize('text-sm')}`}>{t('report.loading')}</p>
         </div>
       </div>
     );
@@ -249,9 +251,9 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
           <CardContent className={`${spacing.card} text-center`}>
             <div className="mb-4">
               <Sparkles className="h-12 w-12 text-soul-purple mx-auto mb-4" />
-              <h3 className={`font-semibold mb-2 ${getTextSize('text-lg')}`}>Personality Report</h3>
+              <h3 className={`font-semibold mb-2 ${getTextSize('text-lg')}`}>{t('report.title')}</h3>
               <p className={`text-muted-foreground mb-4 ${getTextSize('text-sm')} break-words`}>
-                {error || 'No personality reports available'}
+                {error || t('report.noReports')}
               </p>
             </div>
             <div className="flex flex-col gap-4 justify-center w-full">
@@ -265,12 +267,12 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                   {generating ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Generating...
+                      {t('report.generating')}
                     </>
                   ) : (
                     <>
                       <Sparkles className="h-4 w-4 mr-2" />
-                      Standard Report
+                      {t('report.standardReport')}
                     </>
                   )}
                 </Button>
@@ -283,19 +285,19 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                   {generating ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Generating...
+                      {t('report.generating')}
                     </>
                   ) : (
                     <>
                       <Star className="h-4 w-4 mr-2" />
-                      Hermetic Report (10,000+ words)
+                      {t('report.hermeticReportLong')}
                     </>
                   )}
                 </Button>
               </div>
               <Button onClick={handleRefresh} variant="outline" className="w-full sm:w-auto mx-auto">
                 <RefreshCw className="h-4 w-4 mr-2" />
-                Refresh
+                {t('report.refresh')}
               </Button>
             </div>
           </CardContent>
@@ -423,7 +425,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
               className="rounded-md px-3"
             >
               <Sparkles className="h-4 w-4 mr-2" />
-              Standard Report
+              {t('report.standardReport')}
             </Button>
             <Button
               variant={reportType === 'hermetic' ? 'default' : 'ghost'}
@@ -433,7 +435,7 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
               className="rounded-md px-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-blue-600"
             >
               <Star className="h-4 w-4 mr-2" />
-              Hermetic Report
+              {t('report.hermeticReport')}
               {hermeticReport && (
                 <Badge variant="outline" className="ml-2 bg-white/20 text-white border-white/30">
                   {hermeticReport.report_content.word_count}+ words
