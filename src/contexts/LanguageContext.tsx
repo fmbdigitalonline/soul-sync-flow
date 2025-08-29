@@ -200,11 +200,7 @@ const translations: Record<Language, Translations> = {
       signOutSuccessDescription: 'You have been safely signed out',
       signIn: 'Sign In',
       signOutError: 'Sign out failed',
-      signOutErrorDescription: 'Unable to sign out. Please try again.',
-      funnelReportReady: 'Your Life Clarity Report is Ready!',
-      createYourAccount: 'Create Your Account',
-      accessPersonalizedBlueprint: 'Access your personalized life transformation blueprint',
-      accountCreatedWithBlueprint: 'Account created! Let\'s build your personalized blueprint based on your assessment.'
+      signOutErrorDescription: 'Unable to sign out. Please try again.'
     },
     // Dreams & Goals
     dreams: {
@@ -598,14 +594,11 @@ const translations: Record<Language, Translations> = {
       newConversation: 'New Conversation',
       newConversationStartedWith: 'New conversation started with {coach}',
       soulCoach: 'Soul Coach',
+      // Task Management
       actions: {
         markDone: 'Mark Done',
-        markAsDone: 'Mark as Done',
         getCoach: 'Get Coach',
-        getCoaching: 'Get Coaching',
-        continueJourney: 'Continue Journey',
-        ready: 'Ready',
-        readyGo: 'Ready? Go!'
+        continueJourney: 'Continue Journey'
       },
       status: {
         completed: 'Task Completed!',
@@ -616,35 +609,7 @@ const translations: Record<Language, Translations> = {
         onTime: 'On Time',
         underTime: 'Under Time',
         overTime: 'Over Time',
-        keyInsights: 'Key Insights:',
-        todo: 'To Do',
-        inProgress: 'In Progress', 
-        stuck: 'Stuck'
-      },
-      coach: {
-        initializing: 'Initializing task coach...',
-        initializationError: 'Initialization Error',
-        goBack: 'Go Back',
-        retry: 'Retry',
-        backToJourney: 'Back to Journey',
-        sessionProgress: 'Session Progress',
-        focusTime: 'Focus Time',
-        duration: 'Duration',
-        energy: 'Energy',
-        multiDayProgress: 'Multi-day Progress',
-        taskCompletion: 'Task Completion'
-      },
-      insights: {
-        title: 'Task Complete! 🎉',
-        estimatedVsActual: 'Estimated vs Actual Duration',
-        timing: {
-          onTime: 'On Time! 🎯',
-          underTime: 'Finished Early! ⚡',
-          overTime: 'Took Extra Time 📈'
-        },
-        energyLevel: 'Energy Level Required',
-        keyInsights: 'Key Insights',
-        continueJourney: 'Continue Journey'
+        keyInsights: 'Key Insights:'
       },
       preview: {
         hideInfo: 'Hide Info',
@@ -658,44 +623,6 @@ const translations: Record<Language, Translations> = {
       badges: {
         blueprint: '🧩 Blueprint'
       }
-    },
-    // Authentication
-    auth: {
-      createAccount: 'Create Account',
-      welcomeBack: 'Welcome Back',
-      startJourney: 'Begin your personalized spiritual journey',
-      continueJourney: 'Continue your spiritual growth journey',
-      email: 'Email',
-      password: 'Password',
-      confirmPassword: 'Confirm Password',
-      enterEmail: 'Enter your email address',
-      enterPassword: 'Enter your password',
-      confirmPasswordPlaceholder: 'Confirm your password',
-      success: 'Success',
-      signUpSuccess: 'Account created successfully! Check your email for verification.',
-      signUpFailed: 'Failed to create account',
-      welcomeBackMessage: 'You\'re successfully signed in',
-      signInFailed: 'Failed to sign in',
-      passwordsDontMatch: 'Passwords do not match',
-      passwordTooShort: 'Password must be at least 6 characters',
-      alreadyHaveAccount: 'Already have an account? Sign in',
-      needAccount: 'Need an account? Sign up',
-      signOutSuccess: 'Signed out successfully',
-      signOutSuccessDescription: 'You have been safely signed out',
-      signIn: 'Sign In',
-      signOutError: 'Sign out failed',
-      signOutErrorDescription: 'Unable to sign out. Please try again.',
-      funnelReportReady: 'Your Life Clarity Report is Ready!',
-      createYourAccount: 'Create Your Account',
-      accessPersonalizedBlueprint: 'Access your personalized life transformation blueprint',
-      accountCreatedWithBlueprint: 'Account created! Let\'s build your personalized blueprint based on your assessment.'
-    },
-    
-    // Funnel
-    funnel: {
-      reportAwaits: 'Your Life Clarity Report awaits',
-      personalizedRoadmap: 'Everyone\'s path is different. To create your personalized roadmap, we need to understand your unique blueprint.',
-      back: 'Back'
     },
     // User 360
     user360: {
@@ -1494,12 +1421,8 @@ const translations: Record<Language, Translations> = {
       // Task Management
       actions: {
         markDone: 'Markeer als Klaar',
-        markAsDone: 'Markeren als klaar',
         getCoach: 'Krijg Coach',
-        getCoaching: 'Coaching krijgen',
-        continueJourney: 'Reis Voortzetten',
-        ready: 'Klaar',
-        readyGo: 'Klaar? Ga!'
+        continueJourney: 'Reis Voortzetten'
       },
       status: {
         completed: 'Taak Voltooid!',
@@ -1510,35 +1433,7 @@ const translations: Record<Language, Translations> = {
         onTime: 'Op Tijd',
         underTime: 'Onder Tijd',
         overTime: 'Over Tijd',
-        keyInsights: 'Belangrijke Inzichten:',
-        todo: 'Te doen',
-        inProgress: 'Bezig',
-        stuck: 'Vastgelopen'
-      },
-      coach: {
-        initializing: 'Taakcoach initialiseren...',
-        initializationError: 'Initialisatiefout',
-        goBack: 'Terug gaan',
-        retry: 'Opnieuw proberen',
-        backToJourney: 'Terug naar reis',
-        sessionProgress: 'Sessie voortgang',
-        focusTime: 'Focustijd',
-        duration: 'Duur',
-        energy: 'Energie',
-        multiDayProgress: 'Meerdaagse voortgang',
-        taskCompletion: 'Taak voltooiing'
-      },
-      insights: {
-        title: 'Taak voltooid! 🎉',
-        estimatedVsActual: 'Geschatte vs werkelijke duur',
-        timing: {
-          onTime: 'Op tijd! 🎯',
-          underTime: 'Eerder klaar! ⚡',
-          overTime: 'Extra tijd nodig 📈'
-        },
-        energyLevel: 'Vereist energieniveau',
-        keyInsights: 'Belangrijke inzichten',
-        continueJourney: 'Reis voortzetten'
+        keyInsights: 'Belangrijke Inzichten:'
       },
       preview: {
         hideInfo: 'Verberg Info',
@@ -1552,45 +1447,6 @@ const translations: Record<Language, Translations> = {
       badges: {
         blueprint: '🧩 Blauwdruk'
       }
-    },
-
-    // Authenticatie
-    auth: {
-      createAccount: 'Account Aanmaken',
-      welcomeBack: 'Welkom Terug',
-      startJourney: 'Begin je gepersonaliseerde spirituele reis',
-      continueJourney: 'Zet je spirituele groeireis voort',
-      email: 'E-mail',
-      password: 'Wachtwoord',
-      confirmPassword: 'Bevestig Wachtwoord',
-      enterEmail: 'Voer je e-mailadres in',
-      enterPassword: 'Voer je wachtwoord in',
-      confirmPasswordPlaceholder: 'Bevestig je wachtwoord',
-      success: 'Succes',
-      signUpSuccess: 'Account succesvol aangemaakt! Controleer je e-mail voor verificatie.',
-      signUpFailed: 'Account aanmaken mislukt',
-      welcomeBackMessage: 'Je bent succesvol ingelogd',
-      signInFailed: 'Inloggen mislukt',
-      passwordsDontMatch: 'Wachtwoorden komen niet overeen',
-      passwordTooShort: 'Wachtwoord moet minimaal 6 tekens zijn',
-      alreadyHaveAccount: 'Al een account? Log in',
-      needAccount: 'Account nodig? Registreer',
-      signOutSuccess: 'Succesvol uitgelogd',
-      signOutSuccessDescription: 'Je bent veilig uitgelogd',
-      signIn: 'Inloggen',
-      signOutError: 'Uitloggen mislukt',
-      signOutErrorDescription: 'Kan niet uitloggen. Probeer opnieuw.',
-      funnelReportReady: 'Je Levenshelderheid Rapport is klaar!',
-      createYourAccount: 'Maak je account aan',
-      accessPersonalizedBlueprint: 'Toegang tot je gepersonaliseerde levenstransformatie blauwdruk',
-      accountCreatedWithBlueprint: 'Account aangemaakt! Laten we je gepersonaliseerde blauwdruk bouwen op basis van je assessment.'
-    },
-
-    // Funnel 
-    funnel: {
-      reportAwaits: 'Je Levenshelderheid Rapport wacht op je',
-      personalizedRoadmap: 'Ieders pad is anders. Om je gepersonaliseerde routekaart te maken, moeten we je unieke blauwdruk begrijpen.',
-      back: 'Terug'
     },
 
     // Growth Program & Domains
