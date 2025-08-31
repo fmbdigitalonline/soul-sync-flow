@@ -799,55 +799,21 @@ const translations: Record<Language, Translations> = {
         timing: 'Timing:',
         energy: 'Energy:',
         onTime: 'On Time',
-        underTime: 'Under Time', 
+        underTime: 'Under Time',
         overTime: 'Over Time',
-        keyInsights: 'Key Insights'
-      },
-      badges: {
-        blueprint: 'Blueprint'
+        keyInsights: 'Key Insights:'
       },
       preview: {
-        showInfo: 'Show Info',
         hideInfo: 'Hide Info',
-        whatHappensNext: 'What happens next?',
-        nextDescription: 'You\'ll work with your AI coach to complete this task step by step',
-        outcomeGoal: 'Outcome/Goal:',
-        defaultGoal: 'Complete this task successfully',
+        showInfo: 'Preview / More Info',
+        whatHappensNext: 'What happens next:',
+        nextDescription: "You'll work side-by-side with your Soul Coach to break this task into manageable, motivating mini-steps.",
+        outcomeGoal: 'Outcome / Goal:',
+        defaultGoal: 'See this task through to completion',
         miniSteps: 'Mini-steps:'
       },
-      breakdown: {
-        title: 'Complete Task Breakdown',
-        titleShort: 'Tasks',
-        generalTasks: 'General Tasks',
-        noTasksYet: 'No tasks generated yet',
-        collapseAll: 'Collapse All',
-        expandTasks: 'Expand Tasks',
-        expandAllTasks: 'Expand All Tasks',
-        optimizedNote: '✨ Each task is optimized for your energy patterns and cognitive style'
-      },
-      statusLabels: {
-        todo: 'To Do',
-        inProgress: 'In Progress',
-        stuck: 'Stuck',
-        completed: 'Completed'
-      }
-    },
-    // User 360
-      breakdown: {
-        title: 'Complete Task Breakdown',
-        titleShort: 'Tasks',
-        generalTasks: 'General Tasks',
-        noTasksYet: 'No tasks generated yet',
-        collapseAll: 'Collapse All',
-        expandTasks: 'Expand Tasks',
-        expandAllTasks: 'Expand All Tasks',
-        optimizedNote: '✨ Each task is optimized for your energy patterns and cognitive style'
-      },
-      statusLabels: {
-        todo: 'To Do',
-        inProgress: 'In Progress',
-        stuck: 'Stuck',
-        completed: 'Completed'
+      badges: {
+        blueprint: '🧩 Blueprint'
       }
     },
     // User 360
@@ -988,7 +954,7 @@ const translations: Record<Language, Translations> = {
         askCoach: 'Ask about your task, request actions, or get guidance...'
       }
     }
-  },
+    },
   nl: {
     language: {
       english: 'English',
@@ -1559,195 +1525,11 @@ const translations: Record<Language, Translations> = {
         paused: 'Gepauzeerd'
       }
     },
-    
-    // Journey views
+    // Reis
     journey: {
       empty: {
-        title: 'Geen Actieve Droom Reis',
-        description: 'Maak je eerste droom om je gepersonaliseerde reis kaart te zien'
-      }
-    },
-
-    // Success flow components
-    guidedTour: {
-      soulCoach: 'Ziel Coach Begeleiding',
-      stepOf: 'Stap {tourStep} van {totalSteps}',
-      orientation: 'Je wordt wegwijs gemaakt in je gepersonaliseerde reis...',
-      skipTour: 'Rondleiding Overslaan',
-      next: 'Volgende',
-      gotIt: 'Begrepen!'
-    },
-
-    journeyOverview: {
-      title: 'Je Volledige Reis Overzicht',
-      titleShort: 'Reis Overzicht',
-      subtitle: 'Speciaal ontworpen voor jouw blauwdruk',
-      milestones: 'Mijlpalen',
-      milestonesDesc: 'Belangrijke prestatie fasen',
-      actionTasks: 'Actie Taken',
-      tasks: 'Taken',
-      tasksDesc: 'Blauwdruk-geoptimaliseerde stappen',
-      timeline: 'Tijdlijn',
-      timelineDesc: 'Tot voltooiing'
-    },
-
-    milestonesRoadmap: {
-      title: 'Je Reis Routekaart',
-      dateTbd: 'Datum TBB',
-      milestone: 'mijlpaal',
-      noMilestones: 'Nog geen mijlpalen gegenereerd',
-      tapToView: 'Tik',
-      clickToView: 'Klik',
-      personalizedNote: '✨ Elke mijlpaal is gepersonaliseerd voor jouw unieke blauwdruk en energie type'
-    },
-
-    recommendedTask: {
-      perfectFirst: '🎯 Perfecte Eerste Taak Voor Jou',
-      blueprintOptimized: 'Blauwdruk Geoptimaliseerd',
-      whyPerfect: '💡 Waarom deze taak perfect voor jou is:',
-      startTask: 'Start Deze Taak',
-      energy: 'energie'
-    },
-
-    mobileTabs: {
-      overview: 'Overzicht',
-      roadmap: 'Routekaart',
-      nextTask: 'Volgende Taak',
-      task: 'Taak'
-    },
-
-    // Decomposition process
-    decomposition: {
-      errors: {
-        creationFailed: 'Creatie Mislukt',
-        tryAgain: 'Probeer Opnieuw'
-      },
-      processing: {
-        initializing: 'Initialiseren...',
-        preparingAnalysis: 'Je droom analyse voorbereiden...'
-      },
-      loading: {
-        interpretingSymbolism: 'De diepere symboliek interpreteren...',
-        connectingThemes: 'Thema\'s verbinden met je blauwdruk...',
-        weavingInsights: 'Inzichten samenweven...',
-        discoveringPatterns: 'Verborgen patronen ontdekken...',
-        aligningSoul: 'Afstemmen op je zielritme...',
-        craftingPathway: 'Je gepersonaliseerde pad creëren...',
-        processingAI: 'Verwerken via AI coach...',
-        generatingStructure: 'Mijlpaal structuur genereren...',
-        creatingBreakdowns: 'Taak indelingen maken...',
-        applyingInsights: 'Blauwdruk inzichten toepassen...'
-      },
-      reassurance: {
-        beautiful: '"{dreamTitle}" is een prachtige droom - diepe dromen hebben tijd nodig om te ontvouwen',
-        richBlueprint: 'Je blauwdruk is rijk aan wijsheid... we eren elk detail',
-        greatDreams: 'Geweldige dromen verdienen doordachte planning - bijna klaar!',
-        universe: 'Het universum werkt samen om je te helpen slagen... geduld, lieve ziel',
-        complexGoals: 'Complexe doelen vereisen diepere AI analyse - dit zorgt voor betere resultaten',
-        extraCare: 'Je gepersonaliseerde reis wordt met extra zorg gecreëerd'
-      },
-      processingTime: 'Verwerken gedurende {seconds}s',
-      aiTime: 'AI: {seconds}s',
-      complexDream: 'Complexe droom gedetecteerd',
-      richGoals: 'Rijke doelen vereisen diepere AI analyse. We zorgen voor de hoogste kwaliteit personalisatie voor jou.',
-      deeperDream: '💫 Hoe dieper de droom, hoe rijker de reis die voor je ligt',
-      processingDetails: 'Verwerkingsdetails',
-      totalTime: 'Totale tijd: {seconds}s',
-      aiProcessing: 'AI verwerking: {status}',
-      stage: 'Fase: {current}/{total}',
-      status: 'Status: {status}',
-      inProgress: 'Bezig...',
-      aiCompleted: 'AI voltooid, afronden...'
-    },
-
-    // Tasks Page - Dutch
-    tasks: {
-      title: 'Productiviteitsmodus',
-      subtitle: 'Doelgerichte prestatie en taakbeheer',
-      subtitleShort: 'Doelgerichte prestatie',
-      getStarted: 'Beginnen',
-      todaysFocus: "Focus van Vandaag",
-      dailyGoals: 'Dagelijkse Doelen',
-      streakExample: 'Dag 3 Reeks',
-      completeExample: '2 van 3 voltooid',
-      aiGoals: 'AI Doelen',
-      backToJourney: 'Terug naar Reis',
-      sessionProgress: 'Sessie Voortgang',
-      focusTime: 'Focus Tijd',
-      duration: 'Duur',
-      energy: 'Energie',
-      multiDayProgress: 'Meerdaagse Voortgang',
-      taskCompletion: 'Taak Voltooiing',
-      planning: 'Planning',
-      focus: 'Focus',
-      habits: 'Gewoontes',
-      goals: 'Doelen',
-      coach: 'Coach',
-      aiGoalAchievement: 'AI Doel Prestatie',
-      smartTracking: 'Slimme doel tracking en voortgang',
-      planningInterface: 'Planning Interface',
-      organizeYourDay: 'Organiseer en structureer je doelen',
-      focusTimer: 'Focus Timer',
-      pomodoroDescription: 'Pomodoro techniek voor productiviteit',
-      habitTracker: 'Gewoonte Tracker',
-      habitDesc: 'Bouw consistente dagelijkse routines',
-      goalSetting: 'Doel Stelling',
-      goalDesc: 'Definieer en structureer je doelstellingen',
-      productivityCoach: 'Productiviteits Coach',
-      productivityCoachDesc: 'AI-aangedreven doel prestatie begeleiding',
-      quickStart: 'Snelle Start',
-      qa1: 'Help me mijn grootste doel op te splitsen in uitvoerbare stappen',
-      qa2: 'Creëer een ochtendroutine die aansluit bij mijn energie',
-      qa3: 'Stel verantwoording in voor mijn wekelijkse doelen',
-      qa4: 'Plan mijn meest productieve werkblokken',
-      generalCoaching: 'Algemene Coaching',
-      newConversation: 'Nieuw Gesprek',
-      newConversationStartedWith: 'Nieuw gesprek gestart met {coach}',
-      soulCoach: 'Ziel Coach',
-      // Task Management
-      actions: {
-        markDone: 'Taak Voltooien',
-        getCoach: 'Coach Krijgen', 
-        continueJourney: 'Reis Voortzetten'
-      },
-      status: {
-        completed: 'Taak Voltooid!',
-        estimated: 'Geschat:',
-        actual: 'Werkelijk:',
-        timing: 'Timing:',
-        energy: 'Energie:',
-        onTime: 'Op Tijd',
-        underTime: 'Onder Tijd',
-        overTime: 'Over Tijd',
-        keyInsights: 'Belangrijke Inzichten'
-      },
-      badges: {
-        blueprint: 'Blauwdruk'
-      },
-      preview: {
-        showInfo: 'Info Tonen',
-        hideInfo: 'Info Verbergen',
-        whatHappensNext: 'Wat gebeurt er hierna?',
-        nextDescription: 'Je werkt samen met je AI coach om deze taak stap voor stap te voltooien',
-        outcomeGoal: 'Uitkomst/Doel:',
-        defaultGoal: 'Deze taak succesvol voltooien',
-        miniSteps: 'Mini-stappen:'
-      },
-      breakdown: {
-        title: 'Volledige Taak Uitsplitsing',
-        titleShort: 'Taken',
-        generalTasks: 'Algemene Taken',
-        noTasksYet: 'Nog geen taken gegenereerd',
-        collapseAll: 'Alles Inklappen',
-        expandTasks: 'Taken Uitklappen',
-        expandAllTasks: 'Alle Taken Uitklappen',
-        optimizedNote: '✨ Elke taak is geoptimaliseerd voor je energiepatronen en cognitieve stijl'
-      },
-      statusLabels: {
-        todo: 'Te Doen',
-        inProgress: 'Bezig',
-        stuck: 'Vastgelopen',
-        completed: 'Voltooid'
+        title: 'Geen Actieve Droomreis',
+        description: 'Maak je eerste droom aan om je persoonlijke routekaart te zien'
       }
     },
     // Bedtijd
@@ -1879,41 +1661,11 @@ const translations: Record<Language, Translations> = {
       viewJourney: 'Bekijk Reis',
       view360Profile: 'Bekijk 360° Profiel'
     },
-    // User 360 - Dutch
-    user360: {
-      title: '360° Profiel',
-      subtitle: 'Geünificeerd overzicht van je complete zielsdata-ecosysteem',
-      loadingTitle: 'Je profiel wordt geladen',
-      loadingDesc: 'Data verzamelen uit alle systemen...',
-      errorTitle: 'Fout bij laden van profiel',
-      errorLead: 'Je 360°-profiel kan niet worden geladen:',
-      tryAgain: 'Opnieuw proberen',
-      forceSync: 'Forceer synchronisatie',
-      noProfileTitle: 'Geen Profielgegevens Beschikbaar',
-      noProfileLead: 'Je 360°-profiel is nog niet gegenereerd. Dit gebeurt meestal wanneer:',
-      bulletNewUser: 'Je een nieuwe gebruiker bent',
-      bulletNoData: 'Er nog geen gegevens zijn verzameld',
-      bulletBlueprintProgress: 'De blauwdruk nog wordt aangemaakt',
-      checkAgain: 'Opnieuw controleren',
-      updatedAt: 'Bijgewerkt om {time}',
-      refresh: 'Vernieuwen',
-      sync: {
-        live: 'Live synchronisatie',
-        offline: 'Offline'
-      },
-      availability: {
-        title: 'Databeschikbaarheid',
-        desc: 'Realtime status van je zielsdata in alle systemen',
-        overall: 'Algemene volledigheid',
-        available: 'Beschikbaar',
-        noData: 'Geen data'
-      }
-    },
-
-    // Growth Program & Domains  
-    growth: {
+    // Taken Pagina
+    tasks: {
+      title: 'Productiviteitsmodus',
       subtitle: 'Doelgerichte resultaten en taakbeheer',
-      subtitleShort: 'Doelgerichte resultaten', 
+      subtitleShort: 'Doelgerichte resultaten',
       getStarted: 'Aan de slag',
       todaysFocus: 'Focus van vandaag',
       dailyGoals: 'Dagelijkse doelen',
@@ -1981,7 +1733,11 @@ const translations: Record<Language, Translations> = {
       },
       badges: {
         blueprint: '🧩 Blauwdruk'
-      },
+      }
+    },
+
+    // Growth Program & Domains
+    growth: {
       domains: {
         career: {
           title: 'Carrière & Doel',

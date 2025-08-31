@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Circle, Play, Pause, CheckCircle2 } from "lucide-react";
-import { useLanguage } from "@/contexts/LanguageContext";
 
 interface TaskStatusSelectorProps {
   currentStatus: 'todo' | 'in_progress' | 'stuck' | 'completed';
@@ -22,7 +21,6 @@ export const TaskStatusSelector: React.FC<TaskStatusSelectorProps> = ({
   onStatusChange,
   disabled = false
 }) => {
-  const { t } = useLanguage();
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'todo': return <Circle className="h-3 w-3" />;
@@ -35,11 +33,11 @@ export const TaskStatusSelector: React.FC<TaskStatusSelectorProps> = ({
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'todo': return t('tasks.statusLabels.todo');
-      case 'in_progress': return t('tasks.statusLabels.inProgress');
-      case 'stuck': return t('tasks.statusLabels.stuck');
-      case 'completed': return t('tasks.statusLabels.completed');
-      default: return t('tasks.statusLabels.todo');
+      case 'todo': return 'To Do';
+      case 'in_progress': return 'In Progress';
+      case 'stuck': return 'Stuck';
+      case 'completed': return 'Completed';
+      default: return 'To Do';
     }
   };
 
@@ -68,25 +66,25 @@ export const TaskStatusSelector: React.FC<TaskStatusSelectorProps> = ({
         <SelectItem value="todo">
           <div className="flex items-center gap-2">
             <Circle className="h-3 w-3 text-slate-600" />
-            <span>{t('tasks.statusLabels.todo')}</span>
+            <span>To Do</span>
           </div>
         </SelectItem>
         <SelectItem value="in_progress">
           <div className="flex items-center gap-2">
             <Play className="h-3 w-3 text-blue-600" />
-            <span>{t('tasks.statusLabels.inProgress')}</span>
+            <span>In Progress</span>
           </div>
         </SelectItem>
         <SelectItem value="stuck">
           <div className="flex items-center gap-2">
             <Pause className="h-3 w-3 text-amber-600" />
-            <span>{t('tasks.statusLabels.stuck')}</span>
+            <span>Stuck</span>
           </div>
         </SelectItem>
         <SelectItem value="completed">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="h-3 w-3 text-emerald-600" />
-            <span>{t('tasks.statusLabels.completed')}</span>
+            <span>Completed</span>
           </div>
         </SelectItem>
       </SelectContent>
