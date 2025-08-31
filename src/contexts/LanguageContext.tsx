@@ -799,21 +799,55 @@ const translations: Record<Language, Translations> = {
         timing: 'Timing:',
         energy: 'Energy:',
         onTime: 'On Time',
-        underTime: 'Under Time',
+        underTime: 'Under Time', 
         overTime: 'Over Time',
-        keyInsights: 'Key Insights:'
-      },
-      preview: {
-        hideInfo: 'Hide Info',
-        showInfo: 'Preview / More Info',
-        whatHappensNext: 'What happens next:',
-        nextDescription: "You'll work side-by-side with your Soul Coach to break this task into manageable, motivating mini-steps.",
-        outcomeGoal: 'Outcome / Goal:',
-        defaultGoal: 'See this task through to completion',
-        miniSteps: 'Mini-steps:'
+        keyInsights: 'Key Insights'
       },
       badges: {
-        blueprint: '🧩 Blueprint'
+        blueprint: 'Blueprint'
+      },
+      preview: {
+        showInfo: 'Show Info',
+        hideInfo: 'Hide Info',
+        whatHappensNext: 'What happens next?',
+        nextDescription: 'You\'ll work with your AI coach to complete this task step by step',
+        outcomeGoal: 'Outcome/Goal:',
+        defaultGoal: 'Complete this task successfully',
+        miniSteps: 'Mini-steps:'
+      },
+      breakdown: {
+        title: 'Complete Task Breakdown',
+        titleShort: 'Tasks',
+        generalTasks: 'General Tasks',
+        noTasksYet: 'No tasks generated yet',
+        collapseAll: 'Collapse All',
+        expandTasks: 'Expand Tasks',
+        expandAllTasks: 'Expand All Tasks',
+        optimizedNote: '✨ Each task is optimized for your energy patterns and cognitive style'
+      },
+      statusLabels: {
+        todo: 'To Do',
+        inProgress: 'In Progress',
+        stuck: 'Stuck',
+        completed: 'Completed'
+      }
+    },
+    // User 360
+      breakdown: {
+        title: 'Complete Task Breakdown',
+        titleShort: 'Tasks',
+        generalTasks: 'General Tasks',
+        noTasksYet: 'No tasks generated yet',
+        collapseAll: 'Collapse All',
+        expandTasks: 'Expand Tasks',
+        expandAllTasks: 'Expand All Tasks',
+        optimizedNote: '✨ Each task is optimized for your energy patterns and cognitive style'
+      },
+      statusLabels: {
+        todo: 'To Do',
+        inProgress: 'In Progress',
+        stuck: 'Stuck',
+        completed: 'Completed'
       }
     },
     // User 360
@@ -953,8 +987,8 @@ const translations: Record<Language, Translations> = {
         testMessage: 'Type a message to test...',
         askCoach: 'Ask about your task, request actions, or get guidance...'
       }
-    }
     },
+  },
   nl: {
     language: {
       english: 'English',
@@ -1525,11 +1559,93 @@ const translations: Record<Language, Translations> = {
         paused: 'Gepauzeerd'
       }
     },
-    // Reis
-    journey: {
-      empty: {
-        title: 'Geen Actieve Droomreis',
-        description: 'Maak je eerste droom aan om je persoonlijke routekaart te zien'
+    tasks: {
+      title: 'Productiviteitsmodus',
+      subtitle: 'Doelgerichte prestatie en taakbeheer',
+      subtitleShort: 'Doelgerichte prestatie',
+      getStarted: 'Beginnen',
+      todaysFocus: "Focus van Vandaag",
+      dailyGoals: 'Dagelijkse Doelen',
+      streakExample: 'Dag 3 Reeks',
+      completeExample: '2 van 3 voltooid',
+      aiGoals: 'AI Doelen',
+      backToJourney: 'Terug naar Reis',
+      sessionProgress: 'Sessie Voortgang',
+      focusTime: 'Focus Tijd',
+      duration: 'Duur',
+      energy: 'Energie',
+      multiDayProgress: 'Meerdaagse Voortgang',
+      taskCompletion: 'Taak Voltooiing',
+      planning: 'Planning',
+      focus: 'Focus',
+      habits: 'Gewoontes',
+      goals: 'Doelen',
+      coach: 'Coach',
+      aiGoalAchievement: 'AI Doel Prestatie',
+      smartTracking: 'Slimme doel tracking en voortgang',
+      planningInterface: 'Planning Interface',
+      organizeYourDay: 'Organiseer en structureer je doelen',
+      focusTimer: 'Focus Timer',
+      pomodoroDescription: 'Pomodoro techniek voor productiviteit',
+      habitTracker: 'Gewoonte Tracker',
+      habitDesc: 'Bouw consistente dagelijkse routines',
+      goalSetting: 'Doel Stelling',
+      goalDesc: 'Definieer en structureer je doelstellingen',
+      productivityCoach: 'Productiviteits Coach',
+      productivityCoachDesc: 'AI-aangedreven doel prestatie begeleiding',
+      quickStart: 'Snelle Start',
+      qa1: 'Help me mijn grootste doel op te splitsen in uitvoerbare stappen',
+      qa2: 'Creëer een ochtendroutine die aansluit bij mijn energie',
+      qa3: 'Stel verantwoording in voor mijn wekelijkse doelen',
+      qa4: 'Plan mijn meest productieve werkblokken',
+      generalCoaching: 'Algemene Coaching',
+      newConversation: 'Nieuw Gesprek',
+      newConversationStartedWith: 'Nieuw gesprek gestart met {coach}',
+      soulCoach: 'Ziel Coach',
+      // Task Management
+      actions: {
+        markDone: 'Taak Voltooien',
+        getCoach: 'Coach Krijgen', 
+        continueJourney: 'Reis Voortzetten'
+      },
+      status: {
+        completed: 'Taak Voltooid!',
+        estimated: 'Geschat:',
+        actual: 'Werkelijk:',
+        timing: 'Timing:',
+        energy: 'Energie:',
+        onTime: 'Op Tijd',
+        underTime: 'Onder Tijd',
+        overTime: 'Over Tijd',
+        keyInsights: 'Belangrijke Inzichten'
+      },
+      badges: {
+        blueprint: 'Blauwdruk'
+      },
+      preview: {
+        showInfo: 'Info Tonen',
+        hideInfo: 'Info Verbergen',
+        whatHappensNext: 'Wat gebeurt er hierna?',
+        nextDescription: 'Je werkt samen met je AI coach om deze taak stap voor stap te voltooien',
+        outcomeGoal: 'Uitkomst/Doel:',
+        defaultGoal: 'Deze taak succesvol voltooien',
+        miniSteps: 'Mini-stappen:'
+      },
+      breakdown: {
+        title: 'Volledige Taak Uitsplitsing',
+        titleShort: 'Taken',
+        generalTasks: 'Algemene Taken',
+        noTasksYet: 'Nog geen taken gegenereerd',
+        collapseAll: 'Alles Inklappen',
+        expandTasks: 'Taken Uitklappen',
+        expandAllTasks: 'Alle Taken Uitklappen',
+        optimizedNote: '✨ Elke taak is geoptimaliseerd voor je energiepatronen en cognitieve stijl'
+      },
+      statusLabels: {
+        todo: 'Te Doen',
+        inProgress: 'Bezig',
+        stuck: 'Vastgelopen',
+        completed: 'Voltooid'
       }
     },
     // Bedtijd
@@ -1661,7 +1777,7 @@ const translations: Record<Language, Translations> = {
       viewJourney: 'Bekijk Reis',
       view360Profile: 'Bekijk 360° Profiel'
     },
-    // Taken Pagina
+    // User 360 - Dutch
     tasks: {
       title: 'Productiviteitsmodus',
       subtitle: 'Doelgerichte resultaten en taakbeheer',

@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CheckSquare, Clock, Zap, ChevronDown, ChevronUp, Target } from 'lucide-react';
 import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface TasksBreakdownProps {
   tasks: any[];
@@ -19,6 +20,7 @@ export const TasksBreakdown: React.FC<TasksBreakdownProps> = ({
   onTaskClick
 }) => {
   const { spacing, layout, touchTargetSize, getTextSize, isFoldDevice, isUltraNarrow } = useResponsiveLayout();
+  const { t } = useLanguage();
   const [expandedMilestone, setExpandedMilestone] = useState<string | null>(null);
   
   // Ensure tasks and milestones are arrays and provide defaults
@@ -60,7 +62,7 @@ export const TasksBreakdown: React.FC<TasksBreakdownProps> = ({
   }, {} as Record<string, any[]>);
 
   const getMilestoneTitle = (milestoneId: string) => {
-    if (milestoneId === 'unassigned') return 'General Tasks';
+    if (milestoneId === 'unassigned') return t('tasks.breakdown.generalTasks');
     const milestone = displayMilestones.find(m => m.id === milestoneId);
     return milestone?.title || `Milestone ${milestoneId.slice(-4)}`;
   };
@@ -75,9 +77,9 @@ export const TasksBreakdown: React.FC<TasksBreakdownProps> = ({
     }`}>
       <h3 className={`font-semibold mb-4 flex items-center flex-wrap ${getTextSize('text-base')} ${spacing.gap} ${isFoldDevice ? 'mb-2' : ''}`}>
         <CheckSquare className={`text-soul-purple flex-shrink-0 ${isFoldDevice ? 'h-4 w-4' : 'h-5 w-5'}`} />
-        <span className="flex-1 min-w-0">{isFoldDevice ? 'Tasks' : 'Complete Task Breakdown'}</span>
+        <span className="flex-1 min-w-0">{isFoldDevice ? t('tasks.breakdown.titleShort') : t('tasks.breakdown.title')}</span>
         <Badge className={`bg-soul-purple/10 text-soul-purple border-0 flex-shrink-0 ${getTextSize('text-xs')}`}>
-          {displayTasks.length} {isFoldDevice ? '' : 'Tasks'}
+          {displayTasks.length} {isFoldDevice ? '' : t('tasks.breakdown.titleShort')}
         </Badge>
       </h3>
       
@@ -171,7 +173,7 @@ export const TasksBreakdown: React.FC<TasksBreakdownProps> = ({
         {displayTasks.length === 0 && (
           <div className={`text-center py-6 text-gray-500 ${isFoldDevice ? 'py-4' : ''}`}>
             <CheckSquare className={`mx-auto mb-2 opacity-50 ${isFoldDevice ? 'h-6 w-6' : 'h-8 w-8'}`} />
-            <p className={getTextSize('text-sm')}>No tasks generated yet</p>
+            <p className={getTextSize('text-sm')}>{t('tasks.breakdown.noTasksYet')}</p>
           </div>
         )}
       </div>
@@ -184,11 +186,11 @@ export const TasksBreakdown: React.FC<TasksBreakdownProps> = ({
             onClick={() => setExpandedMilestone(expandedMilestone ? null : Object.keys(tasksByMilestone)[0])}
             className={`w-full ${getTextSize('text-xs')} ${touchTargetSize}`}
           >
-            {expandedMilestone ? 'Collapse All' : isFoldDevice ? 'Expand Tasks' : 'Expand All Tasks'}
+            {expandedMilestone ? t('tasks.breakdown.collapseAll') : isFoldDevice ? t('tasks.breakdown.expandTasks') : t('tasks.breakdown.expandAllTasks')}
           </Button>
           {!isFoldDevice && (
             <p className={`text-center text-gray-500 mt-2 ${getTextSize('text-xs')}`}>
-              ✨ Each task is optimized for your energy patterns and cognitive style
+              {t('tasks.breakdown.optimizedNote')}
             </p>
           )}
         </div>
