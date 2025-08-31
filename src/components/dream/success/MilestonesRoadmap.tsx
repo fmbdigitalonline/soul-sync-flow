@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MapPin, ChevronRight, Calendar, Target, CheckCircle2 } from 'lucide-react';
 import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface MilestonesRoadmapProps {
   milestones: any[];
@@ -17,6 +18,7 @@ export const MilestonesRoadmap: React.FC<MilestonesRoadmapProps> = ({
   onMilestoneClick
 }) => {
   const { spacing, getTextSize, touchTargetSize, isFoldDevice, isMobile } = useResponsiveLayout();
+  const { t } = useLanguage();
   
   // Show ALL milestones instead of limiting to 3
   const displayMilestones = milestones || [];
@@ -34,7 +36,7 @@ export const MilestonesRoadmap: React.FC<MilestonesRoadmapProps> = ({
         day: 'numeric'
       });
     } catch {
-      return 'Date TBD';
+      return t('milestonesRoadmap.dateTbd');
     }
   };
 
@@ -54,7 +56,7 @@ export const MilestonesRoadmap: React.FC<MilestonesRoadmapProps> = ({
     }`}>
       <h3 className={`font-semibold mb-4 flex items-center gap-2 flex-wrap ${getTextSize('text-base')}`}>
         <MapPin className={`text-soul-purple flex-shrink-0 ${isFoldDevice ? 'h-4 w-4' : 'h-5 w-5'}`} />
-        <span className="flex-1 min-w-0 truncate">Your Journey Roadmap</span>
+        <span className="flex-1 min-w-0 truncate">{t('milestonesRoadmap.title')}</span>
         <Badge className={`bg-soul-purple/10 text-soul-purple border-0 flex-shrink-0 ${getTextSize('text-xs')}`}>
           {displayMilestones.length}
         </Badge>
@@ -79,7 +81,7 @@ export const MilestonesRoadmap: React.FC<MilestonesRoadmapProps> = ({
                   {milestone.title}
                 </h4>
                 <Badge variant="outline" className={`flex-shrink-0 ${getTextSize('text-xs')}`}>
-                  {milestone.blueprint_alignment?.phase || 'milestone'}
+                  {milestone.blueprint_alignment?.phase || t('milestonesRoadmap.milestone')}
                 </Badge>
               </div>
               
@@ -113,7 +115,7 @@ export const MilestonesRoadmap: React.FC<MilestonesRoadmapProps> = ({
                 
                 <div className="flex items-center gap-1 text-soul-purple flex-shrink-0">
                   <span className={`font-medium ${getTextSize('text-xs')}`}>
-                    {isMobile ? 'Tap' : 'Click'}
+                    {isMobile ? t('milestonesRoadmap.tapToView') : t('milestonesRoadmap.clickToView')}
                   </span>
                   <ChevronRight className={isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'} />
                 </div>
@@ -125,7 +127,7 @@ export const MilestonesRoadmap: React.FC<MilestonesRoadmapProps> = ({
         {displayMilestones.length === 0 && (
           <div className="text-center py-6 text-gray-500">
             <MapPin className={`mx-auto mb-2 opacity-50 ${isFoldDevice ? 'h-6 w-6' : 'h-8 w-8'}`} />
-            <p className={getTextSize('text-sm')}>No milestones generated yet</p>
+            <p className={getTextSize('text-sm')}>{t('milestonesRoadmap.noMilestones')}</p>
           </div>
         )}
       </div>
@@ -133,7 +135,7 @@ export const MilestonesRoadmap: React.FC<MilestonesRoadmapProps> = ({
       {displayMilestones.length > 0 && (
         <div className="mt-4 pt-4 border-t border-gray-200">
           <p className={`text-center text-gray-500 ${getTextSize('text-xs')}`}>
-            ✨ Each milestone is personalized to your unique blueprint and energy type
+            {t('milestonesRoadmap.personalizedNote')}
           </p>
         </div>
       )}

@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight } from 'lucide-react';
 import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { safeInterpolateTranslation } from '@/utils/translation-utils';
 
 interface GuidedTourPanelProps {
   showTour: boolean;
@@ -23,6 +25,7 @@ export const GuidedTourPanel: React.FC<GuidedTourPanelProps> = ({
   onSkipTour
 }) => {
   const { spacing, getTextSize, touchTargetSize, isFoldDevice, isUltraNarrow } = useResponsiveLayout();
+  const { t } = useLanguage();
 
   if (!showTour) return null;
 
@@ -40,14 +43,14 @@ export const GuidedTourPanel: React.FC<GuidedTourPanelProps> = ({
           <div className="flex-1 min-w-0 w-full max-w-full">
             <div className={`flex items-center gap-2 mb-2 w-full max-w-full ${isFoldDevice ? 'flex-col' : 'flex-wrap'}`}>
               <h3 className={`font-semibold text-gray-800 flex-shrink-0 ${getTextSize('text-sm')}`}>
-                Soul Coach Guidance
+                {t('guidedTour.soulCoach')}
               </h3>
               <Badge variant="outline" className={`flex-shrink-0 ${getTextSize('text-xs')}`}>
-                Step {tourStep + 1} of {totalSteps}
+                {safeInterpolateTranslation(t('guidedTour.stepOf'), { tourStep: (tourStep + 1).toString(), totalSteps: totalSteps.toString() })}
               </Badge>
             </div>
             <p className={`text-gray-700 leading-relaxed mb-3 w-full max-w-full break-words ${getTextSize('text-xs')}`}>
-              Getting you oriented with your personalized journey...
+              {t('guidedTour.orientation')}
             </p>
             <div className={`flex w-full max-w-full gap-2 ${isFoldDevice || isUltraNarrow ? 'flex-col' : 'justify-end'}`}>
               <Button 
@@ -56,14 +59,14 @@ export const GuidedTourPanel: React.FC<GuidedTourPanelProps> = ({
                 size="sm"
                 className={`text-gray-500 hover:text-gray-700 rounded-xl flex-shrink-0 ${getTextSize('text-xs')} ${touchTargetSize} ${isFoldDevice || isUltraNarrow ? 'w-full' : ''}`}
               >
-                Skip Tour
+                {t('guidedTour.skipTour')}
               </Button>
               <Button 
                 onClick={onNextStep}
                 size="sm"
                 className={`bg-soul-purple hover:bg-soul-purple/90 text-white rounded-xl flex-shrink-0 ${getTextSize('text-xs')} ${touchTargetSize} ${isFoldDevice || isUltraNarrow ? 'w-full' : ''}`}
               >
-                <span>{tourStep < totalSteps - 1 ? 'Next' : 'Got it!'}</span>
+                <span>{tourStep < totalSteps - 1 ? t('guidedTour.next') : t('guidedTour.gotIt')}</span>
                 <ArrowRight className={`ml-1 ${isFoldDevice ? 'h-2 w-2' : 'h-3 w-3'}`} />
               </Button>
             </div>

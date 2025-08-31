@@ -4,6 +4,7 @@ import { SoulOrb } from '@/components/ui/soul-orb';
 import { CheckCircle, Brain } from 'lucide-react';
 import { DynamicLoadingStages } from './DynamicLoadingStages';
 import { useEnhancedLoadingLogic } from './useEnhancedLoadingLogic';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface DecompositionStage {
   id: string;
@@ -35,6 +36,7 @@ export const DecompositionStageDisplay: React.FC<DecompositionStageDisplayProps>
     currentStageIndex,
     totalStages
   });
+  const { t } = useLanguage();
 
   // Fallback state when currentStage is undefined
   if (!currentStage) {
@@ -56,11 +58,11 @@ export const DecompositionStageDisplay: React.FC<DecompositionStageDisplayProps>
               <Brain className="h-4 w-4" />
             </div>
             <h2 className="text-lg font-bold text-gray-800 animate-fade-in">
-              Initializing...
+              {t('decomposition.processing.initializing')}
             </h2>
           </div>
           <p className="text-gray-600 leading-relaxed px-4 text-center animate-fade-in text-sm">
-            Preparing your dream analysis...
+            {t('decomposition.processing.preparingAnalysis')}
           </p>
         </div>
       </div>

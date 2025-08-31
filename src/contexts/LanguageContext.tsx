@@ -584,12 +584,104 @@ const translations: Record<Language, Translations> = {
         paused: 'Paused'
       }
     },
-    // Journey
+    // Journey views
     journey: {
       empty: {
         title: 'No Active Dream Journey',
         description: 'Create your first dream to see your personalized journey map'
       }
+    },
+
+    // Success flow components
+    guidedTour: {
+      soulCoach: 'Soul Coach Guidance',
+      stepOf: 'Step {tourStep} of {totalSteps}',
+      orientation: 'Getting you oriented with your personalized journey...',
+      skipTour: 'Skip Tour',
+      next: 'Next',
+      gotIt: 'Got it!'
+    },
+
+    journeyOverview: {
+      title: 'Your Complete Journey Overview',
+      titleShort: 'Journey Overview',
+      subtitle: 'Designed specifically for your blueprint',
+      milestones: 'Milestones',
+      milestonesDesc: 'Key achievement phases',
+      actionTasks: 'Action Tasks',
+      tasks: 'Tasks',
+      tasksDesc: 'Blueprint-optimized steps',
+      timeline: 'Timeline',
+      timelineDesc: 'To completion'
+    },
+
+    milestonesRoadmap: {
+      title: 'Your Journey Roadmap',
+      dateTbd: 'Date TBD',
+      milestone: 'milestone',
+      noMilestones: 'No milestones generated yet',
+      tapToView: 'Tap',
+      clickToView: 'Click',
+      personalizedNote: '✨ Each milestone is personalized to your unique blueprint and energy type'
+    },
+
+    recommendedTask: {
+      perfectFirst: '🎯 Perfect First Task for You',
+      blueprintOptimized: 'Blueprint Optimized',
+      whyPerfect: '💡 Why this task is perfect for you:',
+      startTask: 'Start This Task',
+      energy: 'energy'
+    },
+
+    mobileTabs: {
+      overview: 'Overview',
+      roadmap: 'Roadmap',
+      nextTask: 'Next Task',
+      task: 'Task'
+    },
+
+    // Decomposition process
+    decomposition: {
+      errors: {
+        creationFailed: 'Creation Failed',
+        tryAgain: 'Try Again'
+      },
+      processing: {
+        initializing: 'Initializing...',
+        preparingAnalysis: 'Preparing your dream analysis...'
+      },
+      loading: {
+        interpretingSymbolism: 'Interpreting the deeper symbolism...',
+        connectingThemes: 'Connecting themes to your blueprint...',
+        weavingInsights: 'Weaving insights together...',
+        discoveringPatterns: 'Discovering hidden patterns...',
+        aligningSoul: "Aligning with your soul's rhythm...",
+        craftingPathway: 'Crafting your personalized pathway...',
+        processingAI: 'Processing through AI coach...',
+        generatingStructure: 'Generating milestone structure...',
+        creatingBreakdowns: 'Creating task breakdowns...',
+        applyingInsights: 'Applying blueprint insights...'
+      },
+      reassurance: {
+        beautiful: '"{dreamTitle}" is a beautiful dream - deep ones take a moment to unfold',
+        richBlueprint: 'Your blueprint is rich with wisdom... we\'re honoring every detail',
+        greatDreams: 'Great dreams deserve thoughtful planning - almost there!',
+        universe: 'The universe is conspiring to help you succeed... patience, dear soul',
+        complexGoals: 'Complex goals require deeper AI analysis - this ensures better results',
+        extraCare: 'Your personalized journey is being crafted with extra care'
+      },
+      processingTime: 'Processing for {seconds}s',
+      aiTime: 'AI: {seconds}s',
+      complexDream: 'Complex dream detected',
+      richGoals: 'Rich goals require deeper AI analysis. We\'re ensuring the highest quality personalization for you.',
+      deeperDream: '💫 The deeper the dream, the richer the journey ahead',
+      processingDetails: 'Processing details',
+      totalTime: 'Total time: {seconds}s',
+      aiProcessing: 'AI processing: {status}',
+      stage: 'Stage: {current}/{total}',
+      status: 'Status: {status}',
+      inProgress: 'In progress...',
+      aiCompleted: 'AI completed, finalizing...'
     },
     // Bedtime
     bedtime: {

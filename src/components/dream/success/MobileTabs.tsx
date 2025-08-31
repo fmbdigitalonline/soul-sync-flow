@@ -3,6 +3,7 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Sparkles, Target, CheckCircle } from 'lucide-react';
 import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface MobileTabsProps {
   activeTab: string;
@@ -16,6 +17,7 @@ export const MobileTabs: React.FC<MobileTabsProps> = ({
   milestonesCount
 }) => {
   const { isFoldDevice, isUltraNarrow, getTextSize } = useResponsiveLayout();
+  const { t } = useLanguage();
 
   // For very narrow screens, use a different approach
   if (isFoldDevice) {
@@ -31,7 +33,7 @@ export const MobileTabs: React.FC<MobileTabsProps> = ({
             }`}
           >
             <Sparkles className="h-3 w-3 flex-shrink-0" />
-            <span className={`${getTextSize('text-xs')} truncate`}>Overview</span>
+            <span className={`${getTextSize('text-xs')} truncate`}>{t('mobileTabs.overview')}</span>
           </button>
           <button
             onClick={() => onTabChange('roadmap')}
@@ -42,7 +44,7 @@ export const MobileTabs: React.FC<MobileTabsProps> = ({
             }`}
           >
             <Target className="h-3 w-3 flex-shrink-0" />
-            <span className={`${getTextSize('text-xs')} truncate`}>Roadmap</span>
+            <span className={`${getTextSize('text-xs')} truncate`}>{t('mobileTabs.roadmap')}</span>
             <Badge variant="secondary" className="text-[10px] px-1 py-0 h-4 min-w-0">
               {milestonesCount}
             </Badge>
@@ -56,7 +58,7 @@ export const MobileTabs: React.FC<MobileTabsProps> = ({
             }`}
           >
             <CheckCircle className="h-3 w-3 flex-shrink-0" />
-            <span className={`${getTextSize('text-xs')} truncate`}>Next Task</span>
+            <span className={`${getTextSize('text-xs')} truncate`}>{t('mobileTabs.nextTask')}</span>
           </button>
         </div>
       </div>
@@ -77,7 +79,7 @@ export const MobileTabs: React.FC<MobileTabsProps> = ({
             }`}
           >
             <Sparkles className="h-3 w-3 flex-shrink-0" />
-            <span className="text-[10px] truncate w-full text-center">Overview</span>
+            <span className="text-[10px] truncate w-full text-center">{t('mobileTabs.overview')}</span>
           </button>
           <button
             onClick={() => onTabChange('roadmap')}
@@ -88,7 +90,7 @@ export const MobileTabs: React.FC<MobileTabsProps> = ({
             }`}
           >
             <Target className="h-3 w-3 flex-shrink-0" />
-            <span className="text-[10px] truncate w-full text-center">Roadmap</span>
+            <span className="text-[10px] truncate w-full text-center">{t('mobileTabs.roadmap')}</span>
             <Badge variant="secondary" className="absolute -top-1 -right-1 text-[8px] px-1 py-0 h-3 min-w-0 leading-none">
               {milestonesCount}
             </Badge>
@@ -102,7 +104,7 @@ export const MobileTabs: React.FC<MobileTabsProps> = ({
             }`}
           >
             <CheckCircle className="h-3 w-3 flex-shrink-0" />
-            <span className="text-[10px] truncate w-full text-center">Task</span>
+            <span className="text-[10px] truncate w-full text-center">{t('mobileTabs.task')}</span>
           </button>
         </div>
       </div>
@@ -122,7 +124,7 @@ export const MobileTabs: React.FC<MobileTabsProps> = ({
           }`}
         >
           <Sparkles className="h-4 w-4 flex-shrink-0" />
-          <span className={`${getTextSize('text-sm')} truncate`}>Overview</span>
+          <span className={`${getTextSize('text-sm')} truncate`}>{t('mobileTabs.overview')}</span>
         </button>
         <button
           onClick={() => onTabChange('roadmap')}
@@ -133,7 +135,7 @@ export const MobileTabs: React.FC<MobileTabsProps> = ({
           }`}
         >
           <Target className="h-4 w-4 flex-shrink-0" />
-          <span className={`${getTextSize('text-sm')} truncate`}>Roadmap</span>
+          <span className={`${getTextSize('text-sm')} truncate`}>{t('mobileTabs.roadmap')}</span>
           <Badge variant="secondary" className="text-xs ml-1 flex-shrink-0">
             {milestonesCount}
           </Badge>
@@ -147,7 +149,7 @@ export const MobileTabs: React.FC<MobileTabsProps> = ({
           }`}
         >
           <CheckCircle className="h-4 w-4 flex-shrink-0" />
-          <span className={`${getTextSize('text-sm')} truncate`}>Task</span>
+          <span className={`${getTextSize('text-sm')} truncate`}>{t('mobileTabs.task')}</span>
         </button>
       </div>
     </div>

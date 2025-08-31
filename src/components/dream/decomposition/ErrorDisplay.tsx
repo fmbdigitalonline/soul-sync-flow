@@ -2,12 +2,14 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Brain } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ErrorDisplayProps {
   error: string;
 }
 
 export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ error }) => {
+  const { t } = useLanguage();
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="max-w-md w-full text-center space-y-6">
@@ -15,13 +17,13 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ error }) => {
           <Brain className="h-8 w-8 text-red-500" />
         </div>
         <div>
-          <h2 className="text-xl font-bold text-gray-800 mb-2">Creation Failed</h2>
+          <h2 className="text-xl font-bold text-gray-800 mb-2">{t('decomposition.errors.creationFailed')}</h2>
           <p className="text-gray-600 mb-4">{error}</p>
           <Button 
             onClick={() => window.location.reload()}
             className="bg-gradient-to-r from-soul-purple to-soul-teal text-white"
           >
-            Try Again
+            {t('decomposition.errors.tryAgain')}
           </Button>
         </div>
       </div>

@@ -2,6 +2,7 @@
 import React from 'react';
 import { Target, CheckCircle, Calendar } from 'lucide-react';
 import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface InteractiveJourneyOverviewProps {
   milestonesCount: number;
@@ -19,6 +20,7 @@ export const InteractiveJourneyOverview: React.FC<InteractiveJourneyOverviewProp
   onNavigateToSection
 }) => {
   const { spacing, touchTargetSize, getTextSize, isFoldDevice, isUltraNarrow } = useResponsiveLayout();
+  const { t } = useLanguage();
 
   return (
     <div className={`bg-card/80 backdrop-blur-lg rounded-2xl shadow-lg transition-all duration-500 w-full max-w-full ${spacing.card} ${
@@ -26,11 +28,11 @@ export const InteractiveJourneyOverview: React.FC<InteractiveJourneyOverviewProp
     }`}>
       <div className={`text-center mb-4 w-full max-w-full ${isFoldDevice ? 'mb-2' : ''}`}>
         <h2 className={`font-bold text-gray-800 mb-2 leading-tight break-words ${getTextSize('text-lg')} ${isFoldDevice ? 'mb-1' : ''}`}>
-          {isFoldDevice ? 'Journey Overview' : 'Your Complete Journey Overview'}
+          {isFoldDevice ? t('journeyOverview.titleShort') : t('journeyOverview.title')}
         </h2>
         {!isFoldDevice && (
           <p className={`text-gray-600 leading-relaxed break-words ${getTextSize('text-sm')}`}>
-            Designed specifically for your blueprint
+            {t('journeyOverview.subtitle')}
           </p>
         )}
       </div>
@@ -45,15 +47,15 @@ export const InteractiveJourneyOverview: React.FC<InteractiveJourneyOverviewProp
               <Target className={`text-white ${isFoldDevice ? 'h-3 w-3' : 'h-6 w-6'}`} />
             </div>
             <div className="flex-1 text-left min-w-0 w-full max-w-full">
-              <h3 className={`font-semibold mb-1 text-gray-800 group-hover:text-soul-purple transition-colors w-full truncate ${getTextSize('text-base')}`}>
-                Milestones
+            <h3 className={`font-semibold mb-1 text-gray-800 group-hover:text-soul-purple transition-colors w-full truncate ${getTextSize('text-base')}`}>
+                {t('journeyOverview.milestones')}
               </h3>
               <p className={`font-bold text-soul-purple mb-1 group-hover:scale-110 transition-transform ${getTextSize('text-2xl')} ${isFoldDevice ? getTextSize('text-xl') : ''}`}>
                 {milestonesCount}
               </p>
               {!isFoldDevice && !isUltraNarrow && (
                 <p className={`text-gray-500 w-full truncate ${getTextSize('text-xs')}`}>
-                  Key achievement phases
+                  {t('journeyOverview.milestonesDesc')}
                 </p>
               )}
             </div>
@@ -72,15 +74,15 @@ export const InteractiveJourneyOverview: React.FC<InteractiveJourneyOverviewProp
               <CheckCircle className={`text-white ${isFoldDevice ? 'h-3 w-3' : 'h-6 w-6'}`} />
             </div>
             <div className="flex-1 text-left min-w-0 w-full max-w-full">
-              <h3 className={`font-semibold mb-1 text-gray-800 group-hover:text-soul-teal transition-colors w-full truncate ${getTextSize('text-base')}`}>
-                {isFoldDevice ? 'Tasks' : 'Action Tasks'}
+            <h3 className={`font-semibold mb-1 text-gray-800 group-hover:text-soul-teal transition-colors w-full truncate ${getTextSize('text-base')}`}>
+                {isFoldDevice ? t('journeyOverview.tasks') : t('journeyOverview.actionTasks')}
               </h3>
               <p className={`font-bold text-soul-teal mb-1 group-hover:scale-110 transition-transform ${getTextSize('text-2xl')} ${isFoldDevice ? getTextSize('text-xl') : ''}`}>
                 {tasksCount}
               </p>
               {!isFoldDevice && !isUltraNarrow && (
                 <p className={`text-gray-500 w-full truncate ${getTextSize('text-xs')}`}>
-                  Blueprint-optimized steps
+                  {t('journeyOverview.tasksDesc')}
                 </p>
               )}
             </div>
@@ -99,15 +101,15 @@ export const InteractiveJourneyOverview: React.FC<InteractiveJourneyOverviewProp
               <Calendar className={`text-white ${isFoldDevice ? 'h-3 w-3' : 'h-6 w-6'}`} />
             </div>
             <div className="flex-1 text-left min-w-0 w-full max-w-full">
-              <h3 className={`font-semibold mb-1 text-gray-800 group-hover:text-soul-blue transition-colors w-full truncate ${getTextSize('text-base')}`}>
-                Timeline
+            <h3 className={`font-semibold mb-1 text-gray-800 group-hover:text-soul-blue transition-colors w-full truncate ${getTextSize('text-base')}`}>
+                {t('journeyOverview.timeline')}
               </h3>
               <p className={`font-bold text-soul-blue mb-1 group-hover:scale-110 transition-transform ${getTextSize('text-2xl')} ${isFoldDevice ? getTextSize('text-xl') : ''}`}>
                 {timeframe}
               </p>
               {!isFoldDevice && !isUltraNarrow && (
                 <p className={`text-gray-500 w-full truncate ${getTextSize('text-xs')}`}>
-                  To completion
+                  {t('journeyOverview.timelineDesc')}
                 </p>
               )}
             </div>

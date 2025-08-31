@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Play, Clock, ArrowRight } from 'lucide-react';
 import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface RecommendedTaskProps {
   task: any;
@@ -17,6 +18,7 @@ export const RecommendedTask: React.FC<RecommendedTaskProps> = ({
   onStartTask
 }) => {
   const { spacing, getTextSize, touchTargetSize, isFoldDevice, isMobile } = useResponsiveLayout();
+  const { t } = useLanguage();
 
   if (!task) return null;
 
@@ -46,10 +48,10 @@ export const RecommendedTask: React.FC<RecommendedTaskProps> = ({
           <div className="flex-1 w-full min-w-0 overflow-hidden">
             <div className="flex flex-col gap-2 mb-3">
               <h3 className={`font-bold text-gray-800 leading-tight ${getTextSize('text-lg')}`}>
-                🎯 Perfect First Task for You
+                {t('recommendedTask.perfectFirst')}
               </h3>
               <Badge className={`bg-gradient-to-r from-soul-purple to-soul-teal text-white self-start ${getTextSize('text-xs')}`}>
-                Blueprint Optimized
+                {t('recommendedTask.blueprintOptimized')}
               </Badge>
             </div>
             
@@ -66,14 +68,14 @@ export const RecommendedTask: React.FC<RecommendedTaskProps> = ({
                 {formatDuration(task.estimated_duration)}
               </Badge>
               <Badge className={`border ${getEnergyColor(task.energy_level_required)} ${getTextSize('text-xs')}`}>
-                {task.energy_level_required} energy
+                {task.energy_level_required} {t('recommendedTask.energy')}
               </Badge>
             </div>
             
             {task.blueprint_reasoning && (
               <div className={`bg-soul-purple/10 rounded-xl mb-4 overflow-hidden ${spacing.card}`}>
                 <p className={`text-soul-purple font-medium mb-1 leading-tight ${getTextSize('text-xs')}`}>
-                  💡 Why this task is perfect for you:
+                  {t('recommendedTask.whyPerfect')}
                 </p>
                 <p className={`text-gray-700 leading-relaxed line-clamp-4 ${getTextSize('text-xs')}`}>
                   {task.blueprint_reasoning}
@@ -85,7 +87,7 @@ export const RecommendedTask: React.FC<RecommendedTaskProps> = ({
               onClick={() => onStartTask(task)}
               className={`bg-gradient-to-r from-soul-purple to-soul-teal hover:shadow-lg text-white rounded-xl font-semibold transition-all duration-300 active:scale-95 w-full ${spacing.button} ${touchTargetSize}`}
             >
-              <span className={getTextSize('text-sm')}>Start This Task</span>
+              <span className={getTextSize('text-sm')}>{t('recommendedTask.startTask')}</span>
               <ArrowRight className={`ml-2 ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
             </Button>
           </div>

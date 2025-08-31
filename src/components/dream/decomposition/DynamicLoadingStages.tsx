@@ -1,6 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Brain, Sparkles, Heart, Zap, Target, MapPin, Clock, AlertCircle } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { safeInterpolateTranslation } from '@/utils/translation-utils';
 
 interface LoadingStage {
   id: string;
@@ -27,6 +29,7 @@ export const DynamicLoadingStages: React.FC<DynamicLoadingStagesProps> = ({
 }) => {
   const [dynamicTextIndex, setDynamicTextIndex] = useState(0);
   const [currentTime, setCurrentTime] = useState(Date.now());
+  const { t } = useLanguage();
 
   // Update current time every second for real-time duration display
   useEffect(() => {
@@ -38,25 +41,25 @@ export const DynamicLoadingStages: React.FC<DynamicLoadingStagesProps> = ({
 
   // Dynamic sub-messages that cycle within each stage
   const dynamicMessages = [
-    "Interpreting the deeper symbolism...",
-    "Connecting themes to your blueprint...", 
-    "Weaving insights together...",
-    "Discovering hidden patterns...",
-    "Aligning with your soul's rhythm...",
-    "Crafting your personalized pathway...",
-    "Processing through AI coach...",
-    "Generating milestone structure...",
-    "Creating task breakdowns...",
-    "Applying blueprint insights..."
+    t('decomposition.loading.interpretingSymbolism'),
+    t('decomposition.loading.connectingThemes'),
+    t('decomposition.loading.weavingInsights'),
+    t('decomposition.loading.discoveringPatterns'),
+    t('decomposition.loading.aligningSoul'),
+    t('decomposition.loading.craftingPathway'),
+    t('decomposition.loading.processingAI'),
+    t('decomposition.loading.generatingStructure'),
+    t('decomposition.loading.creatingBreakdowns'),
+    t('decomposition.loading.applyingInsights')
   ];
 
   const reassuranceMessages = [
-    `"${dreamTitle}" is a beautiful dream - deep ones take a moment to unfold`,
-    "Your blueprint is rich with wisdom... we're honoring every detail",
-    "Great dreams deserve thoughtful planning - almost there!",
-    "The universe is conspiring to help you succeed... patience, dear soul",
-    "Complex goals require deeper AI analysis - this ensures better results",
-    "Your personalized journey is being crafted with extra care"
+    safeInterpolateTranslation(t('decomposition.reassurance.beautiful'), { dreamTitle }),
+    t('decomposition.reassurance.richBlueprint'),
+    t('decomposition.reassurance.greatDreams'),
+    t('decomposition.reassurance.universe'),
+    t('decomposition.reassurance.complexGoals'),
+    t('decomposition.reassurance.extraCare')
   ];
 
   // More frequent cycling for better perceived progress
@@ -78,9 +81,9 @@ export const DynamicLoadingStages: React.FC<DynamicLoadingStagesProps> = ({
       {processingStartTime && (
         <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
           <Clock className="h-3 w-3" />
-          <span>Processing for {processingDuration}s</span>
+          <span>{safeInterpolateTranslation(t('decomposition.processingTime'), { seconds: processingDuration.toString() })}</span>
           {aiProcessingTime && (
-            <span className="text-soul-purple">• AI: {Math.floor(aiProcessingTime / 1000)}s</span>
+            <span className="text-soul-purple">• {safeInterpolateTranslation(t('decomposition.aiTime'), { seconds: Math.floor(aiProcessingTime / 1000).toString() })}</span>
           )}
         </div>
       )}
@@ -123,9 +126,9 @@ export const DynamicLoadingStages: React.FC<DynamicLoadingStagesProps> = ({
           <div className="flex items-center gap-3">
             <AlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0" />
             <div className="text-sm">
-              <p className="text-amber-800 font-medium">Complex dream detected</p>
+              <p className="text-amber-800 font-medium">{t('decomposition.complexDream')}</p>
               <p className="text-amber-700 text-xs mt-1">
-                Rich goals require deeper AI analysis. We're ensuring the highest quality personalization for you.
+                {t('decomposition.richGoals')}
               </p>
             </div>
           </div>
@@ -147,7 +150,7 @@ export const DynamicLoadingStages: React.FC<DynamicLoadingStagesProps> = ({
       {/* Dream Insight Tip */}
       <div className="text-center mt-4">
         <p className="text-xs text-gray-500 italic">
-          💫 The deeper the dream, the richer the journey ahead
+          {t('decomposition.deeperDream')}
         </p>
       </div>
 
@@ -155,12 +158,12 @@ export const DynamicLoadingStages: React.FC<DynamicLoadingStagesProps> = ({
       {isLongProcessing && processingDuration > 120 && (
         <div className="mt-4 p-2 bg-gray-50 rounded-lg">
           <details className="text-xs text-gray-600">
-            <summary className="cursor-pointer hover:text-gray-800">Processing details</summary>
+            <summary className="cursor-pointer hover:text-gray-800">{t('decomposition.processingDetails')}</summary>
             <div className="mt-2 space-y-1">
-              <p>Total time: {processingDuration}s</p>
-              <p>AI processing: {aiProcessingTime ? `${Math.floor(aiProcessingTime / 1000)}s` : 'In progress...'}</p>
-              <p>Stage: {currentStageIndex + 1}/4</p>
-              <p>Status: {aiProcessingTime ? 'AI completed, finalizing...' : 'AI processing...'}</p>
+              <p>{safeInterpolateTranslation(t('decomposition.totalTime'), { seconds: processingDuration.toString() })}</p>
+              <p>{safeInterpolateTranslation(t('decomposition.aiProcessing'), { status: aiProcessingTime ? `${Math.floor(aiProcessingTime / 1000).toString()}s` : t('decomposition.inProgress') })}</p>
+              <p>{safeInterpolateTranslation(t('decomposition.stage'), { current: (currentStageIndex + 1).toString(), total: '4' })}</p>
+              <p>{safeInterpolateTranslation(t('decomposition.status'), { status: aiProcessingTime ? t('decomposition.aiCompleted') : 'AI processing...' })}</p>
             </div>
           </details>
         </div>
