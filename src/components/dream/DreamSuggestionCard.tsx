@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Sparkles, Heart, Target, Lightbulb } from 'lucide-react';
 import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface DreamSuggestion {
   id: string;
@@ -48,6 +49,7 @@ export const DreamSuggestionCard: React.FC<DreamSuggestionCardProps> = ({
   isSelected = false
 }) => {
   const { getTextSize, touchTargetSize, isFoldDevice } = useResponsiveLayout();
+  const { t } = useLanguage();
   const CategoryIcon = getCategoryIcon(suggestion.category);
   const categoryColor = getCategoryColor(suggestion.category);
 
@@ -66,7 +68,7 @@ export const DreamSuggestionCard: React.FC<DreamSuggestionCardProps> = ({
           </div>
           <div className={`flex items-center gap-1 text-soul-purple ${getTextSize('text-xs')}`}>
             <Sparkles className={`${isFoldDevice ? 'h-2 w-2' : 'h-3 w-3'}`} />
-            <span className="font-medium">{Math.round(suggestion.confidence * 100)}% match</span>
+            <span className="font-medium">{Math.round(suggestion.confidence * 100)}{t('dreamSuggestions.match')}</span>
           </div>
         </div>
 
@@ -84,7 +86,7 @@ export const DreamSuggestionCard: React.FC<DreamSuggestionCardProps> = ({
         <div className={`bg-soul-purple/5 rounded-lg p-3 mb-4 border-l-4 border-soul-purple ${isFoldDevice ? 'p-2' : ''}`}>
           <p className={`text-soul-purple font-medium ${getTextSize('text-xs')}`}>
             <Lightbulb className={`inline mr-1 ${isFoldDevice ? 'h-2 w-2' : 'h-3 w-3'}`} />
-            Why this fits you:
+            {t('dreamSuggestions.whyFits')}
           </p>
           <p className={`text-gray-700 mt-1 leading-relaxed ${getTextSize('text-xs')}`}>
             {suggestion.blueprintReason}
@@ -97,7 +99,7 @@ export const DreamSuggestionCard: React.FC<DreamSuggestionCardProps> = ({
           className={`w-full bg-gradient-to-r from-soul-purple to-soul-teal text-white rounded-xl font-medium transition-colors duration-300 ${getTextSize('text-sm')} ${touchTargetSize}`}
         >
           <Heart className={`mr-2 ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
-          Explore This Dream
+          {t('dreamSuggestions.exploreDream')}
         </Button>
       </div>
     </Card>

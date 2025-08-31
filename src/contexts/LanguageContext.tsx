@@ -209,9 +209,14 @@ const translations: Record<Language, Translations> = {
     },
     // Dreams & Goals
     dreams: {
+      // Main page
+      title: 'Dreams & Goals',
+      creator: 'Dreams & Goals Creator',
       whatsYourDream: 'What\'s your dream or goal?',
       placeholderDream: 'Enter your dream or goal here...',
       description: 'Transform your dreams into reality with AI-powered insights and personalized guidance.',
+      inspiration: 'Share your deepest aspirations and let\'s discover what truly lights up your soul',
+      altGuide: 'Or explore with your dream guide',
       getStarted: 'Get Started',
       trackProgress: 'Track your progress and celebrate your achievements',
       whyImportant: 'Why is this important to you?',
@@ -220,8 +225,86 @@ const translations: Record<Language, Translations> = {
       timeline: 'Timeline',
       creatingJourney: 'Creating Your Journey...',
       createJourney: 'Create My Journey',
-      viewJourney: 'View My Journey'
+      viewJourney: 'View My Journey',
+      
+      // Validation & errors
+      dreamRequired: 'Dream Required',
+      dreamRequiredDesc: 'Please enter your dream or goal',
+      notAvailable: 'Not available',
+      notAvailableDesc: 'Available after creating a dream.',
+      
+      // Navigation
+      newDream: 'New Dream',
+      journey: 'Journey',
+      tasks: 'Tasks',
+      focus: 'Focus',
+      habits: 'Habits',
+      
+      // Sections
+      journeyMap: 'Journey Map',
+      yourTasks: 'Your Tasks',
+      focusSession: 'Focus Session',
+      habitsSection: 'Habits'
     },
+    // Dream Discovery & Suggestions
+    dreamDiscovery: {
+      // Placeholders
+      placeholders: {
+        aspirations: 'Tell me about your dreams and aspirations...',
+        resonates: 'Which suggestion resonates with you?',
+        excites: 'What excites you most about this direction?',
+        details: 'Help me understand the details...',
+        heart: 'Share what\'s in your heart...'
+      },
+      
+      // Status messages
+      status: {
+        analyzing: 'Analyzing Your Blueprint',
+        presenting: 'Presenting Dream Suggestions',
+        exploring: 'Exploring Your Dream',
+        refining: 'Refining Into Action',
+        ready: 'Ready to Create Journey',
+        discovery: 'Dream Discovery'
+      },
+      
+      // Loading messages
+      loading: {
+        blueprint: 'Analyzing your unique blueprint...',
+        suggestions: 'Generating personalized suggestions...',
+        deeper: 'Exploring your dream deeper...',
+        vision: 'Refining your vision...',
+        journey: 'Creating your personalized journey...'
+      },
+      
+      // UI elements
+      blueprintAnalyzed: 'Blueprint Analyzed',
+      dreamGuide: 'Dream Guide',
+      createJourney: 'Create My Dream Journey',
+      chooseResonates: 'Choose what resonates with you:',
+      reflect: 'Take a moment to reflect...',
+      presentingSuggestions: '• Presenting Suggestions',
+      exploringDreams: '• Exploring Dreams',
+      refiningVision: '• Refining Vision'
+    },
+    
+    // Dream Suggestions
+    dreamSuggestions: {
+      exploreDream: 'Explore This Dream',
+      match: '% match',
+      whyFits: 'Why this fits you:',
+      dreamsAligned: 'Dreams Aligned with Your Blueprint',
+      basedOnPersonality: 'Based on your personality, here are some dreams that might resonate with you:'
+    },
+    
+    // Dream Success Flow
+    dreamSuccess: {
+      congratulations: 'Congratulations! Your "{goalTitle}" journey is beautifully designed and ready to unfold. I\'ve created {milestonesCount} personalized milestones that align perfectly with your soul blueprint.',
+      showRoadmap: 'Let me show you your complete roadmap! Each milestone is carefully timed and designed to work with your natural energy patterns and decision-making style.',
+      upcomingMilestones: 'Here are your upcoming milestones. Notice how they\'re sequenced to build momentum and honor your {personality} nature.',
+      specificTasks: 'I\'ve also created specific tasks for each milestone. These are optimized for your cognitive style and include blueprint-based reasoning to help you understand why each step matters.',
+      readyToBegin: 'Ready to begin? I recommend starting with this first task - it\'s perfectly aligned with your blueprint and designed to create early momentum. Shall we dive in?'
+    },
+    
     // Funnel Assessment  
     funnel: {
       personalizedRoadmap: 'Everyone\'s path is different. To create your personalized roadmap, we need to understand your unique blueprint.',
@@ -975,9 +1058,14 @@ const translations: Record<Language, Translations> = {
     },
     // Dreams & Goals
     dreams: {
+      // Main page
+      title: 'Dromen & Doelen',
+      creator: 'Dromen & Doelen Creator',
       whatsYourDream: 'Wat is je droom of doel?',
       placeholderDream: 'Voer hier je droom of doel in...',
       description: 'Transformeer je dromen in realiteit met AI-gedreven inzichten en gepersonaliseerde begeleiding.',
+      inspiration: 'Deel je diepste aspiraties en laten we ontdekken wat je ziel echt doet oplichten',
+      altGuide: 'Of verken met je droomgids',
       getStarted: 'Aan de Slag',
       trackProgress: 'Volg je voortgang en vier je prestaties',
       whyImportant: 'Waarom is dit belangrijk voor je?',
@@ -986,8 +1074,86 @@ const translations: Record<Language, Translations> = {
       timeline: 'Tijdlijn',
       creatingJourney: 'Je Reis Wordt Gemaakt...',
       createJourney: 'Mijn Reis Creëren',
-      viewJourney: 'Mijn Reis Bekijken'
+      viewJourney: 'Mijn Reis Bekijken',
+      
+      // Validation & errors
+      dreamRequired: 'Droom Vereist',
+      dreamRequiredDesc: 'Voer je droom of doel in alsjeblieft',
+      notAvailable: 'Niet beschikbaar',
+      notAvailableDesc: 'Beschikbaar na het maken van een droom.',
+      
+      // Navigation
+      newDream: 'Nieuwe Droom',
+      journey: 'Reis',
+      tasks: 'Taken',
+      focus: 'Focus',
+      habits: 'Gewoontes',
+      
+      // Sections
+      journeyMap: 'Reiskaart',
+      yourTasks: 'Je Taken',
+      focusSession: 'Focus Sessie',
+      habitsSection: 'Gewoontes'
     },
+    // Dream Discovery & Suggestions
+    dreamDiscovery: {
+      // Placeholders
+      placeholders: {
+        aspirations: 'Vertel me over je dromen en aspiraties...',
+        resonates: 'Welke suggestie resoneert met je?',
+        excites: 'Wat maakt je het meest enthousiast over deze richting?',
+        details: 'Help me de details begrijpen...',
+        heart: 'Deel wat in je hart leeft...'
+      },
+      
+      // Status messages
+      status: {
+        analyzing: 'Je Blauwdruk Analyseren',
+        presenting: 'Droomsuggesties Presenteren',
+        exploring: 'Je Droom Verkennen',
+        refining: 'Verfijnen Tot Actie',
+        ready: 'Klaar om Reis Te Maken',
+        discovery: 'Droomontdekking'
+      },
+      
+      // Loading messages
+      loading: {
+        blueprint: 'Je unieke blauwdruk analyseren...',
+        suggestions: 'Gepersonaliseerde suggesties genereren...',
+        deeper: 'Je droom dieper verkennen...',
+        vision: 'Je visie verfijnen...',
+        journey: 'Je gepersonaliseerde reis maken...'
+      },
+      
+      // UI elements
+      blueprintAnalyzed: 'Blauwdruk Geanalyseerd',
+      dreamGuide: 'Droomgids',
+      createJourney: 'Maak Mijn Droomreis',
+      chooseResonates: 'Kies wat met je resoneert:',
+      reflect: 'Neem een moment om te reflecteren...',
+      presentingSuggestions: '• Suggesties Presenteren',
+      exploringDreams: '• Dromen Verkennen',
+      refiningVision: '• Visie Verfijnen'
+    },
+    
+    // Dream Suggestions
+    dreamSuggestions: {
+      exploreDream: 'Verken Deze Droom',
+      match: '% match',
+      whyFits: 'Waarom dit bij je past:',
+      dreamsAligned: 'Dromen Afgestemd op Je Blauwdruk',
+      basedOnPersonality: 'Gebaseerd op je persoonlijkheid, hier zijn enkele dromen die misschien met je resoneren:'
+    },
+    
+    // Dream Success Flow
+    dreamSuccess: {
+      congratulations: 'Gefeliciteerd! Je "{goalTitle}" reis is prachtig ontworpen en klaar om zich te ontvouwen. Ik heb {milestonesCount} gepersonaliseerde mijlpalen gemaakt die perfect aansluiten bij je zielblauwdruk.',
+      showRoadmap: 'Laat me je complete routekaart laten zien! Elke mijlpaal is zorgvuldig getimed en ontworpen om te werken met je natuurlijke energiepatronen en besluitvormingsstijl.',
+      upcomingMilestones: 'Hier zijn je aankomende mijlpalen. Let op hoe ze zijn gesequenced om momentum op te bouwen en je {personality} natuur te eren.',
+      specificTasks: 'Ik heb ook specifieke taken voor elke mijlpaal gemaakt. Deze zijn geoptimaliseerd voor je cognitieve stijl en bevatten blauwdruk-gebaseerde redenering om je te helpen begrijpen waarom elke stap belangrijk is.',
+      readyToBegin: 'Klaar om te beginnen? Ik raad aan om te beginnen met deze eerste taak - het is perfect afgestemd op je blauwdruk en ontworpen om vroeg momentum te creëren. Zullen we erin duiken?'
+    },
+    
     // Funnel Assessment
     funnel: {
       personalizedRoadmap: 'Ieders pad is anders. Om je gepersonaliseerde routekaart te maken, moeten we je unieke blauwdruk begrijpen.',

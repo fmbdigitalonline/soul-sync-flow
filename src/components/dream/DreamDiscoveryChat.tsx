@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Send, Heart, Sparkles, ArrowRight, CheckCircle } from 'lucide-react';
 import { DreamMessageParser, ParsedDreamMessage, DreamChoice } from '@/services/dream-message-parser';
 import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Message {
   id: string;
@@ -39,6 +40,7 @@ export const DreamDiscoveryChat: React.FC<DreamDiscoveryChatProps> = ({
 }) => {
   const [inputValue, setInputValue] = useState('');
   const { spacing, getTextSize, touchTargetSize, isFoldDevice } = useResponsiveLayout();
+  const { t } = useLanguage();
 
   const handleSendMessage = () => {
     if (inputValue.trim() && !isLoading) {
@@ -66,15 +68,15 @@ export const DreamDiscoveryChat: React.FC<DreamDiscoveryChatProps> = ({
   const getPlaceholderText = () => {
     switch (conversationPhase) {
       case 'blueprint_analysis':
-        return "Tell me about your dreams and aspirations...";
+        return t('dreamDiscovery.placeholders.aspirations');
       case 'suggestion_presentation':
-        return "Which suggestion resonates with you?";
+        return t('dreamDiscovery.placeholders.resonates');
       case 'exploration':
-        return "What excites you most about this direction?";
+        return t('dreamDiscovery.placeholders.excites');
       case 'refinement':
-        return "Help me understand the details...";
+        return t('dreamDiscovery.placeholders.details');
       default:
-        return "Share what's in your heart...";
+        return t('dreamDiscovery.placeholders.heart');
     }
   };
 
@@ -82,17 +84,17 @@ export const DreamDiscoveryChat: React.FC<DreamDiscoveryChatProps> = ({
   const getPhaseStatusText = () => {
     switch (conversationPhase) {
       case 'blueprint_analysis':
-        return 'Analyzing Your Blueprint';
+        return t('dreamDiscovery.status.analyzing');
       case 'suggestion_presentation':
-        return 'Presenting Dream Suggestions';
+        return t('dreamDiscovery.status.presenting');
       case 'exploration':
-        return 'Exploring Your Dream';
+        return t('dreamDiscovery.status.exploring');
       case 'refinement':
-        return 'Refining Into Action';
+        return t('dreamDiscovery.status.refining');
       case 'ready_for_decomposition':
-        return 'Ready to Create Journey';
+        return t('dreamDiscovery.status.ready');
       default:
-        return 'Dream Discovery';
+        return t('dreamDiscovery.status.discovery');
     }
   };
 
@@ -105,7 +107,7 @@ export const DreamDiscoveryChat: React.FC<DreamDiscoveryChatProps> = ({
             <div className="flex items-center gap-2">
               <div className={`flex items-center gap-1 text-xs ${getTextSize('text-xs')}`}>
                 <CheckCircle className={`h-3 w-3 text-green-500`} />
-                <span className="text-green-600">Blueprint Analyzed</span>
+                <span className="text-green-600">{t('dreamDiscovery.blueprintAnalyzed')}</span>
               </div>
               <div className={`flex items-center gap-1 text-xs ${getTextSize('text-xs')}`}>
                 <ArrowRight className="h-3 w-3 text-soul-purple" />
@@ -134,11 +136,11 @@ export const DreamDiscoveryChat: React.FC<DreamDiscoveryChatProps> = ({
                 <div className="flex items-center gap-3">
                   <Sparkles className="h-5 w-5 text-soul-purple animate-pulse" />
                   <span className={`text-gray-600 ${getTextSize('text-sm')}`}>
-                    {conversationPhase === 'blueprint_analysis' ? 'Analyzing your unique blueprint...' : 
-                     conversationPhase === 'suggestion_presentation' ? 'Generating personalized suggestions...' :
-                     conversationPhase === 'exploration' ? 'Exploring your dream deeper...' :
-                     conversationPhase === 'refinement' ? 'Refining your vision...' :
-                     'Creating your personalized journey...'}
+                    {conversationPhase === 'blueprint_analysis' ? t('dreamDiscovery.loading.blueprint') : 
+                     conversationPhase === 'suggestion_presentation' ? t('dreamDiscovery.loading.suggestions') :
+                     conversationPhase === 'exploration' ? t('dreamDiscovery.loading.deeper') :
+                     conversationPhase === 'refinement' ? t('dreamDiscovery.loading.vision') :
+                     t('dreamDiscovery.loading.journey')}
                   </span>
                 </div>
               </div>
@@ -153,7 +155,7 @@ export const DreamDiscoveryChat: React.FC<DreamDiscoveryChatProps> = ({
                 className={`bg-gradient-to-r from-soul-purple to-soul-teal hover:shadow-lg text-white font-semibold rounded-2xl px-8 py-4 transition-all duration-300 ${getTextSize('text-sm')} ${touchTargetSize}`}
               >
                 <Sparkles className={`mr-2 ${isFoldDevice ? 'h-3 w-3' : 'h-4 w-4'}`} />
-                Create My Dream Journey
+                {t('dreamDiscovery.createJourney')}
               </Button>
             </div>
           )}
@@ -202,6 +204,7 @@ const DreamMessageRenderer: React.FC<DreamMessageRendererProps> = ({
   conversationPhase = 'blueprint_analysis'
 }) => {
   const { getTextSize, touchTargetSize, isFoldDevice } = useResponsiveLayout();
+  const { t } = useLanguage();
   const parsedMessage: ParsedDreamMessage = DreamMessageParser.parseMessage(message.content);
 
   if (message.sender === 'user') {
@@ -229,15 +232,15 @@ const DreamMessageRenderer: React.FC<DreamMessageRendererProps> = ({
               <Sparkles className={`text-white ${isFoldDevice ? 'h-2 w-2' : 'h-3 w-3'}`} />
             </div>
             <span className={`font-medium text-gray-800 ${getTextSize('text-xs')}`}>
-              Dream Guide
+              {t('dreamDiscovery.dreamGuide')}
               {conversationPhase === 'suggestion_presentation' && (
-                <span className="ml-2 text-soul-purple text-xs">• Presenting Suggestions</span>
+                <span className="ml-2 text-soul-purple text-xs">{t('dreamDiscovery.presentingSuggestions')}</span>
               )}
               {conversationPhase === 'exploration' && (
-                <span className="ml-2 text-soul-purple text-xs">• Exploring Dreams</span>
+                <span className="ml-2 text-soul-purple text-xs">{t('dreamDiscovery.exploringDreams')}</span>
               )}
               {conversationPhase === 'refinement' && (
-                <span className="ml-2 text-soul-purple text-xs">• Refining Vision</span>
+                <span className="ml-2 text-soul-purple text-xs">{t('dreamDiscovery.refiningVision')}</span>
               )}
             </span>
           </div>
@@ -249,7 +252,7 @@ const DreamMessageRenderer: React.FC<DreamMessageRendererProps> = ({
           {parsedMessage.type === 'choices' && parsedMessage.choices && (
             <div className="space-y-2">
               <p className={`text-gray-600 font-medium mb-3 ${getTextSize('text-xs')}`}>
-                Choose what resonates with you:
+                {t('dreamDiscovery.chooseResonates')}
               </p>
               <div className="grid gap-2">
                 {parsedMessage.choices.map((choice) => (
@@ -280,7 +283,7 @@ const DreamMessageRenderer: React.FC<DreamMessageRendererProps> = ({
           {parsedMessage.type === 'reflection' && (
             <div className="bg-soul-teal/5 rounded-xl p-3 border-l-4 border-soul-teal">
               <p className={`text-soul-teal font-medium ${getTextSize('text-sm')}`}>
-                Take a moment to reflect...
+                {t('dreamDiscovery.reflect')}
               </p>
             </div>
           )}
