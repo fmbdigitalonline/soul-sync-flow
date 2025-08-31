@@ -987,7 +987,7 @@ const translations: Record<Language, Translations> = {
         testMessage: 'Type a message to test...',
         askCoach: 'Ask about your task, request actions, or get guidance...'
       }
-    },
+    }
   },
   nl: {
     language: {
@@ -1910,10 +1910,10 @@ const translations: Record<Language, Translations> = {
       }
     },
 
-    // Growth Page - Dutch
+    // Growth Program & Domains  
     growth: {
       subtitle: 'Doelgerichte resultaten en taakbeheer',
-      subtitleShort: 'Doelgerichte resultaten',
+      subtitleShort: 'Doelgerichte resultaten', 
       getStarted: 'Aan de slag',
       todaysFocus: 'Focus van vandaag',
       dailyGoals: 'Dagelijkse doelen',
@@ -1981,11 +1981,7 @@ const translations: Record<Language, Translations> = {
       },
       badges: {
         blueprint: '🧩 Blauwdruk'
-      }
-    },
-
-    // Growth Program & Domains
-    growth: {
+      },
       domains: {
         career: {
           title: 'Carrière & Doel',

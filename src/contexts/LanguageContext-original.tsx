@@ -987,7 +987,7 @@ const translations: Record<Language, Translations> = {
         testMessage: 'Type a message to test...',
         askCoach: 'Ask about your task, request actions, or get guidance...'
       }
-    },
+    }
   },
   nl: {
     language: {
