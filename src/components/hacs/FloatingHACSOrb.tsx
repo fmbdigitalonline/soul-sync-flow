@@ -410,7 +410,7 @@ export const FloatingHACSOrb: React.FC<FloatingHACSProps> = ({ className }) => {
             setModuleActivity(false);
           }, 1500);
         }
-      }, 2000); // Every 2 seconds check for triggers
+      }, 300000); // Every 5 minutes check for triggers
       return () => clearTimeout(activityTimer);
     } else {
       // 🔒 INSIGHTS PAUSED - Log when automatic triggers would have fired

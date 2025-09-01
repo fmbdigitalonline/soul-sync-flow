@@ -12,7 +12,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useOptimizedBlueprintData } from "@/hooks/use-optimized-blueprint-data";
 import { isAdminUser } from "@/utils/isAdminUser";
 import { EnhancedProductivityDashboard } from "@/components/productivity/EnhancedProductivityDashboard";
-import { PIENotificationSystem } from "@/components/pie/PIENotificationSystem";
+
 import { PIEContextualInsights } from "@/components/pie/PIEContextualInsights";
 import { PIEUserExperienceHub } from "@/components/pie/PIEUserExperienceHub";
 import User360Dashboard from "@/components/User360Dashboard";
@@ -47,7 +47,6 @@ const Dashboard = () => {
   if (authLoading) {
     return (
       <MainLayout>
-        <PIENotificationSystem />
         <div className="w-full min-h-[80vh] flex flex-col items-center justify-center p-4 sm:p-6">
           <Loader2 className="h-8 w-8 animate-spin text-soul-purple" />
           <p className="mt-2 text-sm sm:text-base">Loading...</p>
@@ -82,7 +81,6 @@ const Dashboard = () => {
   if (loading) {
     return (
       <MainLayout>
-        <PIENotificationSystem />
         <div className="w-full min-h-[80vh] flex flex-col items-center justify-center p-4 sm:p-6">
           <Loader2 className="h-8 w-8 animate-spin text-soul-purple" />
           <p className="mt-2 text-sm sm:text-base">Loading dashboard...</p>
@@ -95,7 +93,6 @@ const Dashboard = () => {
   if (error) {
     return (
       <MainLayout>
-        <PIENotificationSystem />
         <div className="w-full min-h-[80vh] flex flex-col items-center justify-center p-4 sm:p-6">
           <p className="text-red-500 mb-4">{error}</p>
           <Button onClick={() => refetch()}>Try Again</Button>
@@ -114,7 +111,6 @@ const Dashboard = () => {
 
   return (
     <MainLayout>
-      <PIENotificationSystem />
       <div className="w-full p-4 sm:p-6 pb-20">
         <div className="flex flex-col gap-4 mb-6">
           <h1 className="text-2xl sm:text-3xl font-bold font-display">

@@ -71,6 +71,12 @@ export class SmartInsightController {
   // Check if user should receive analytical insights (max 1 per day)
   static canDeliverAnalyticalInsight(userId: string): boolean {
     const log = this.insightLogs.get(`${userId}_analytical`);
+    
+    // Check global cooldown - no insights of any type in last 30 minutes
+    if (!this.checkGlobalCooldown(userId)) {
+      return false;
+    }
+    
     if (!log) return true;
 
     const now = new Date();
@@ -81,10 +87,27 @@ export class SmartInsightController {
     return hoursSinceLastDelivery >= 24;
   }
 
-  // Check if user should receive conversation insights (no limit, but respect timing)
+  // Check if user should receive conversation insights (limited frequency)
   static canDeliverConversationInsight(userId: string): boolean {
     const activity = this.activityTracker.get(userId);
     if (!activity) return false;
+
+    // Check global cooldown - no insights of any type in last 30 minutes
+    if (!this.checkGlobalCooldown(userId)) {
+      return false;
+    }
+
+    // Check conversation insight specific cooldown - max 1 per 2 hours
+    const conversationLog = this.insightLogs.get(`${userId}_conversation`);
+    if (conversationLog) {
+      const now = new Date();
+      const lastDelivery = new Date(conversationLog.lastDelivery);
+      const hoursSinceLastConversationInsight = (now.getTime() - lastDelivery.getTime()) / (1000 * 60 * 60);
+      
+      if (hoursSinceLastConversationInsight < 2) {
+        return false;
+      }
+    }
 
     const now = new Date();
     const hoursSinceLastConversation = (now.getTime() - activity.lastConversation.getTime()) / (1000 * 60 * 60);
@@ -94,9 +117,38 @@ export class SmartInsightController {
     // 1. User had a conversation and then left/returned to app, OR
     // 2. User has been idle for 1+ hours and returns
     return (
-      (hoursSinceLastConversation < 24 && hoursSinceLastSeen > 0.1) || // Had conversation, then left/returned
-      (activity.isIdle === false && hoursSinceLastSeen > 1) // Returned after 1+ hour idle
+      (hoursSinceLastConversation < 24 && hoursSinceLastSeen > 0.5) || // Had conversation, then left/returned (increased from 0.1 to 0.5 hours)
+      (activity.isIdle === false && hoursSinceLastSeen > 2) // Returned after 2+ hour idle (increased from 1 to 2 hours)
     );
+  }
+
+  // Global cooldown check - prevents any insight delivery within 30 minutes of last insight
+  static checkGlobalCooldown(userId: string): boolean {
+    const analyticalLog = this.insightLogs.get(`${userId}_analytical`);
+    const conversationLog = this.insightLogs.get(`${userId}_conversation`);
+    
+    const now = new Date();
+    const cooldownMinutes = 30;
+    
+    // Check if analytical insight was delivered recently
+    if (analyticalLog) {
+      const minutesSinceAnalytical = (now.getTime() - analyticalLog.lastDelivery.getTime()) / (1000 * 60);
+      if (minutesSinceAnalytical < cooldownMinutes) {
+        console.log(`⏰ Global cooldown active: ${Math.round(cooldownMinutes - minutesSinceAnalytical)} minutes remaining`);
+        return false;
+      }
+    }
+    
+    // Check if conversation insight was delivered recently
+    if (conversationLog) {
+      const minutesSinceConversation = (now.getTime() - conversationLog.lastDelivery.getTime()) / (1000 * 60);
+      if (minutesSinceConversation < cooldownMinutes) {
+        console.log(`⏰ Global cooldown active: ${Math.round(cooldownMinutes - minutesSinceConversation)} minutes remaining`);
+        return false;
+      }
+    }
+    
+    return true;
   }
 
   // Generate conversation-derived insights

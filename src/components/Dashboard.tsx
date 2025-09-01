@@ -8,15 +8,13 @@ import { Clock, Target, Calendar, TrendingUp, Star, Play, CheckCircle, Brain } f
 import { useLanguage } from "@/contexts/LanguageContext";
 import { PIEDashboardPanel } from "@/components/pie/PIEDashboardPanel";
 import { PIEContextualInsights } from "@/components/pie/PIEContextualInsights";
-import { PIENotificationSystem } from "@/components/pie/PIENotificationSystem";
+
 
 const Dashboard = () => {
   const { t } = useLanguage();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 p-6">
-      {/* PIE Notification System */}
-      <PIENotificationSystem />
       
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-8">
