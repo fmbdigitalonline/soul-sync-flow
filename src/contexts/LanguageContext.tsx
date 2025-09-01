@@ -244,7 +244,43 @@ const translations: Record<Language, Translations> = {
       journeyMap: 'Journey Map',
       yourTasks: 'Your Tasks',
       focusSession: 'Focus Session',
-      habitsSection: 'Habits'
+      habitsSection: 'Habits',
+      
+      // Dream Cards
+      cards: {
+        discoverYourDream: {
+          title: 'Discover Your Dream',
+          description: 'Chat with your Dream Guide to uncover what matters.'
+        },
+        createDecompose: {
+          title: 'Create & Decompose',
+          description: 'Turn a dream into a clear, soul-aligned journey.'
+        },
+        journeyMap: {
+          title: 'Journey Map',
+          description: 'See milestones and navigate your path.'
+        },
+        yourTasks: {
+          title: 'Your Tasks',
+          description: 'Work on prioritized, actionable steps.'
+        },
+        blueprintSuggestions: {
+          title: 'Blueprint Suggestions',
+          description: 'See ideas aligned with your blueprint.'
+        },
+        focusSession: {
+          title: 'Focus Session',
+          description: 'Stay in flow with focused work.'
+        },
+        habits: {
+          title: 'Habits',
+          description: 'Build supportive, sustainable routines.'
+        },
+        successView: {
+          title: 'Success View',
+          description: 'Review your generated journey and insights.'
+        }
+      }
     },
     // Dream Discovery & Suggestions
     dreamDiscovery: {
@@ -296,41 +332,6 @@ const translations: Record<Language, Translations> = {
       basedOnPersonality: 'Based on your personality, here are some dreams that might resonate with you:'
     },
     
-    // Dream Cards
-    cards: {
-      discoverYourDream: {
-        title: 'Discover Your Dream',
-        description: 'Chat with your Dream Guide to uncover what matters.'
-      },
-      createDecompose: {
-        title: 'Create & Decompose',
-        description: 'Turn a dream into a clear, soul-aligned journey.'
-      },
-      journeyMap: {
-        title: 'Journey Map',
-        description: 'See milestones and navigate your path.'
-      },
-      yourTasks: {
-        title: 'Your Tasks',
-        description: 'Work on prioritized, actionable steps.'
-      },
-      blueprintSuggestions: {
-        title: 'Blueprint Suggestions',
-        description: 'See ideas aligned with your blueprint.'
-      },
-      focusSession: {
-        title: 'Focus Session',
-        description: 'Stay in flow with focused work.'
-      },
-      habits: {
-        title: 'Habits',
-        description: 'Build supportive, sustainable routines.'
-      },
-      successView: {
-        title: 'Success View',
-        description: 'Review your generated journey and insights.'
-      }
-    },
     
     // Dream Success Flow
     dreamSuccess: {
@@ -951,7 +952,7 @@ const translations: Record<Language, Translations> = {
         available: 'Available',
         noData: 'No Data'
       },
-      cards: {
+      profileCards: {
         sources: {
           title: 'Active Data Sources',
           desc: 'Systems contributing to your profile',
@@ -1291,7 +1292,43 @@ const translations: Record<Language, Translations> = {
       journeyMap: 'Reiskaart',
       yourTasks: 'Je Taken',
       focusSession: 'Focus Sessie',
-      habitsSection: 'Gewoontes'
+      habitsSection: 'Gewoontes',
+      
+      // Dream Cards
+      cards: {
+        discoverYourDream: {
+          title: 'Ontdek Je Droom',
+          description: 'Chat met je Droom Gids om te ontdekken wat belangrijk is.'
+        },
+        createDecompose: {
+          title: 'Creëer & Ontleed',
+          description: 'Verander een droom in een heldere, ziel-gerichte reis.'
+        },
+        journeyMap: {
+          title: 'Reiskaart',
+          description: 'Zie mijlpalen en navigeer je pad.'
+        },
+        yourTasks: {
+          title: 'Jouw Taken',
+          description: 'Werk aan geprioriteerde, uitvoerbare stappen.'
+        },
+        blueprintSuggestions: {
+          title: 'Blauwdruk Suggesties',
+          description: 'Zie ideeën afgestemd op je blauwdruk.'
+        },
+        focusSession: {
+          title: 'Focus Sessie',
+          description: 'Blijf in flow met gefocust werk.'
+        },
+        habits: {
+          title: 'Gewoontes',
+          description: 'Bouw ondersteunende, duurzame routines.'
+        },
+        successView: {
+          title: 'Succes Weergave',
+          description: 'Bekijk je gegenereerde reis en inzichten.'
+        }
+      }
     },
     // Dream Discovery & Suggestions
     dreamDiscovery: {
@@ -1341,42 +1378,6 @@ const translations: Record<Language, Translations> = {
       whyFits: 'Waarom dit bij je past:',
       dreamsAligned: 'Dromen Afgestemd op Je Blauwdruk',
       basedOnPersonality: 'Gebaseerd op je persoonlijkheid, hier zijn enkele dromen die misschien met je resoneren:'
-    },
-    
-    // Dream Cards
-    cards: {
-      discoverYourDream: {
-        title: 'Ontdek Je Droom',
-        description: 'Chat met je Droom Gids om te ontdekken wat belangrijk is.'
-      },
-      createDecompose: {
-        title: 'Creëer & Ontleed',
-        description: 'Verander een droom in een heldere, ziel-gerichte reis.'
-      },
-      journeyMap: {
-        title: 'Reis Kaart',
-        description: 'Zie mijlpalen en navigeer je pad.'
-      },
-      yourTasks: {
-        title: 'Je Taken',
-        description: 'Werk aan geprioriteerde, uitvoerbare stappen.'
-      },
-      blueprintSuggestions: {
-        title: 'Blauwdruk Suggesties',
-        description: 'Zie ideeën die afgestemd zijn op je blauwdruk.'
-      },
-      focusSession: {
-        title: 'Focus Sessie',
-        description: 'Blijf in flow met gefocust werk.'
-      },
-      habits: {
-        title: 'Gewoontes',
-        description: 'Bouw ondersteunende, duurzame routines.'
-      },
-      successView: {
-        title: 'Succes Overzicht',
-        description: 'Bekijk je gegenereerde reis en inzichten.'
-      }
     },
     
     // Dream Success Flow
@@ -1797,7 +1798,7 @@ const translations: Record<Language, Translations> = {
         available: 'Beschikbaar',
         noData: 'Geen data'
       },
-      cards: {
+      profileCards: {
         sources: {
           title: 'Actieve databronnen',
           desc: 'Systemen die bijdragen aan je profiel',

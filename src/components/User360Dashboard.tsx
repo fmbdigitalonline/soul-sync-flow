@@ -311,9 +311,9 @@ const User360Dashboard: React.FC = () => {
           {/* Data Sources */}
           <Card>
             <CardHeader>
-              <CardTitle className="font-cormorant text-lg">{t('user360.cards.sources.title')}</CardTitle>
+              <CardTitle className="font-cormorant text-lg">{t('user360.profileCards.sources.title')}</CardTitle>
               <CardDescription className="font-inter">
-                {t('user360.cards.sources.desc')}
+                {t('user360.profileCards.sources.desc')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -326,7 +326,7 @@ const User360Dashboard: React.FC = () => {
                   ))
                 ) : (
                   <p className="font-inter text-sm text-muted-foreground">
-                    {t('user360.cards.sources.none')}
+                    {t('user360.profileCards.sources.none')}
                   </p>
                 )}
               </div>
@@ -336,9 +336,9 @@ const User360Dashboard: React.FC = () => {
           {/* Profile Version */}
           <Card>
             <CardHeader>
-              <CardTitle className="font-cormorant text-lg">{t('user360.cards.version.title')}</CardTitle>
+              <CardTitle className="font-cormorant text-lg">{t('user360.profileCards.version.title')}</CardTitle>
               <CardDescription className="font-inter">
-                {t('user360.cards.version.desc')}
+                {t('user360.profileCards.version.desc')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -349,7 +349,7 @@ const User360Dashboard: React.FC = () => {
                 <Badge variant="outline" className="font-inter">
                   {profile?.lastUpdated ? 
                     new Date(profile.lastUpdated).toLocaleDateString() : 
-                    t('user360.cards.version.never')
+                    t('user360.profileCards.version.never')
                   }
                 </Badge>
               </div>
