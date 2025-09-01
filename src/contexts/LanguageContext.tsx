@@ -2183,7 +2183,7 @@ const translations: Record<Language, Translations> = {
     // Journey Overview
     journeyOverview: {
       title: 'Je Volledige Reis Overzicht',
-      titleShort: 'Reis Overzicht',
+      titleShort: 'Reis Overzicht', 
       subtitle: 'Speciaal ontworpen voor jouw blauwdruk',
       milestones: 'Mijlpalen',
       milestonesDesc: 'Belangrijke prestatiefasen',
@@ -2206,37 +2206,23 @@ const translations: Record<Language, Translations> = {
       yourHabits: 'Jouw Gewoontes',
       doubleTapForDetails: 'Dubbeltik voor details',
       addNewHabit: 'Nieuwe Gewoonte Toevoegen'
-     },
+    },
 
-     // Habits
-     habits: {
-       dailyHabits: 'Dagelijkse Gewoontes',
-       today: 'vandaag',
-       completedToday: '% voltooid vandaag',
-       dayBestStreak: 'dagen beste reeks',
-       todayLabel: 'Vandaag',
-       bestStreak: 'Beste Reeks',
-       totalHabits: 'Totaal Gewoontes',
-       yourHabits: 'Jouw Gewoontes',
-       doubleTapForDetails: 'Dubbeltik voor details',
-       addNewHabit: 'Nieuwe Gewoonte Toevoegen'
-     },
-
-     // Focus Mode
-     focusMode: {
-       youAreInFocusMode: 'Je bent nu in Focus Modus',
-       target: 'Doel:',
-       focusedTasks: 'gefocuste taken',
-       blueprintAlignment: 'Blauwdruk Afstemming',
-       tasksForMilestone: 'Taken voor Deze Mijlpaal',
-       noSpecificTasks: 'Geen specifieke taken gevonden voor deze mijlpaal.',
-       tasksDistributed: 'Taken kunnen verspreid zijn over mijlpalen.',
-       completionCriteria: 'Voltooiingscriteria'
-      }
+    // Focus Mode
+    focusMode: {
+      youAreInFocusMode: 'Je bent nu in Focus Modus',
+      target: 'Doel:',
+      focusedTasks: 'gefocuste taken',
+      blueprintAlignment: 'Blauwdruk Afstemming',
+      tasksForMilestone: 'Taken voor Deze Mijlpaal',
+      noSpecificTasks: 'Geen specifieke taken gevonden voor deze mijlpaal.',
+      tasksDistributed: 'Taken kunnen verspreid zijn over mijlpalen.',
+      completionCriteria: 'Voltooiingscriteria'
     }
-  };
+  }
+};
 
-  interface LanguageContextType {
+interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
   t: (key: string) => string;
