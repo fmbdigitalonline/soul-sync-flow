@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Loader2, RefreshCw, Sparkles, User, Heart, Brain, Compass, Zap, Plus, Trash2, Star, ChevronDown, ChevronRight, Target, Moon } from 'lucide-react';
+import { Loader2, RefreshCw, Sparkles, User, Heart, Brain, Compass, Zap, Plus, Trash2, Star, ChevronDown, ChevronRight, Target, Moon, Shield, Lightbulb, Settings, MessageSquare, Users, Layers, TrendingUp, Activity, UserCheck, Palette, Gauge } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { aiPersonalityReportService, PersonalityReport } from '@/services/ai-personality-report-service';
@@ -35,7 +35,8 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
     gate_analyses: false,
     shadow_work: false,
     system_translations: false,
-    practical_framework: false
+    practical_framework: false,
+    intelligence_analysis: false
   });
 
   useEffect(() => {
@@ -336,6 +337,37 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
 
   // Get the current report based on type
   const currentReport = reportType === 'hermetic' ? hermeticReport : report;
+  
+  // Intelligence Analysis section mappings for 12 dimensions
+  const intelligenceIcons = {
+    identity_constructs: Shield,
+    behavioral_triggers: Lightbulb,
+    execution_bias: Settings,
+    linguistic_fingerprint: MessageSquare,
+    relationship_dynamics: Users,
+    decision_architecture: Layers,
+    value_hierarchy_mapping: TrendingUp,
+    life_energy_flow: Activity,
+    psychographic_profiling: UserCheck,
+    shadow_integration_analysis: Moon,
+    cognitive_bias_mapping: Palette,
+    transformation_readiness_index: Gauge
+  };
+
+  const intelligenceTitles = {
+    identity_constructs: 'Identity Constructs',
+    behavioral_triggers: 'Behavioral Triggers',
+    execution_bias: 'Execution Bias',
+    linguistic_fingerprint: 'Linguistic Fingerprint',
+    relationship_dynamics: 'Relationship Dynamics',
+    decision_architecture: 'Decision Architecture', 
+    value_hierarchy_mapping: 'Value Hierarchy Mapping',
+    life_energy_flow: 'Life Energy Flow',
+    psychographic_profiling: 'Psychographic Profiling',
+    shadow_integration_analysis: 'Shadow Integration Analysis',
+    cognitive_bias_mapping: 'Cognitive Bias Mapping',
+    transformation_readiness_index: 'Transformation Readiness Index'
+  };
   
   // Hermetic section mappings
   const hermeticSectionIcons = {
@@ -746,6 +778,65 @@ export const PersonalityReportViewer: React.FC<PersonalityReportViewerProps> = (
                       )}
                     </div>
                   </Card>
+
+                  {/* Intelligence Analysis Section - 12 Dimensions */}
+                  {hermeticContent.structured_intelligence && (
+                    <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-secondary/5">
+                      <div className={spacing.card}>
+                        <SectionHeader
+                          title="Enhanced Intelligence Analysis"
+                          isExpanded={expandedSections.intelligence_analysis}
+                          onClick={() => toggleSection('intelligence_analysis')}
+                          icon={Brain}
+                          badge={`${Object.keys(hermeticContent.structured_intelligence).length} Dimensions`}
+                        />
+                        
+                        {expandedSections.intelligence_analysis && (
+                          <div className="mt-4 space-y-4">
+                            {Object.entries(hermeticContent.structured_intelligence)
+                              .filter(([key]) => key !== 'id' && key !== 'user_id' && key !== 'personality_report_id' && key !== 'extraction_confidence' && key !== 'extraction_version' && key !== 'processing_notes' && key !== 'created_at' && key !== 'updated_at')
+                              .map(([dimensionKey, dimensionContent]) => {
+                                const IconComponent = intelligenceIcons[dimensionKey as keyof typeof intelligenceIcons] || Brain;
+                                const title = intelligenceTitles[dimensionKey as keyof typeof intelligenceTitles] || dimensionKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                                
+                                return (
+                                  <CosmicCard key={dimensionKey} className="border-primary/10 hover:border-primary/20 transition-colors">
+                                    <CardHeader>
+                                      <CardTitle className="flex items-center gap-2">
+                                        <IconComponent className="h-5 w-5 text-primary" />
+                                        <h3>{title}</h3>
+                                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
+                                          {Array.isArray(dimensionContent) ? `${dimensionContent.length} items` : 
+                                           typeof dimensionContent === 'string' ? `${dimensionContent.length} chars` : 
+                                           typeof dimensionContent === 'object' && dimensionContent ? `${Object.keys(dimensionContent).length} fields` : 'Data'}
+                                        </Badge>
+                                      </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                      <div className="prose prose-sm max-w-none">
+                                        {Array.isArray(dimensionContent) ? (
+                                          <div className="space-y-2">
+                                            {dimensionContent.map((item, index) => (
+                                              <div key={index} className="p-3 bg-muted/30 rounded-lg border">
+                                                <p className="text-card-foreground leading-relaxed whitespace-pre-wrap break-words">
+                                                  {typeof item === 'string' ? item : JSON.stringify(item, null, 2)}
+                                                </p>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        ) : (
+                                          renderSafeContent(dimensionContent, title)
+                                        )}
+                                      </div>
+                                    </CardContent>
+                                  </CosmicCard>
+                                );
+                              })}
+                          </div>
+                        )}
+                      </div>
+                    </Card>
+                  )}
                 </div>
               );
             }
