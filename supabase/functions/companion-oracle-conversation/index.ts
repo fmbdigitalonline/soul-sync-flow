@@ -1,6 +1,66 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
+// Helper function to detect if user wants technical personality details
+function detectTechnicalDetailRequest(message: string): boolean {
+  const technicalKeywords = /\b(mbti|human design|personality type|what.*type|technical|specific|sun sign|projector|enfp|intj|generator|manifestor|manifesting generator|reflector)\b/i;
+  return technicalKeywords.test(message);
+}
+
+// Helper function to convert MBTI types to natural descriptions
+function getThinkingStyleDescription(mbtiType: string): string {
+  const descriptions: Record<string, string> = {
+    'ENFP': 'creative and inspiring explorer',
+    'INTJ': 'strategic and analytical architect', 
+    'INFP': 'values-driven and empathetic idealist',
+    'ENTP': 'innovative and enthusiastic debater',
+    'INFJ': 'insightful and visionary advocate',
+    'ENTJ': 'confident and natural-born leader',
+    'ISFP': 'gentle and harmonious artist',
+    'ESFP': 'spontaneous and enthusiastic entertainer',
+    'ISFJ': 'warm and dedicated protector',
+    'ESFJ': 'caring and social connector',
+    'ISTP': 'practical and adaptable craftsperson',
+    'ESTP': 'bold and perceptive entrepreneur',
+    'INTP': 'logical and innovative thinker',
+    'ENTP': 'quick-witted and clever innovator',
+    'ISTJ': 'practical and fact-minded logistician',
+    'ESTJ': 'efficient and hardworking executive'
+  };
+  return descriptions[mbtiType] || 'unique and individual thinker';
+}
+
+// Helper function to convert Human Design types to natural descriptions
+function getEnergyDescription(hdType: string): string {
+  const descriptions: Record<string, string> = {
+    'Projector': 'invitation-based wisdom sharing',
+    'Generator': 'sustained creative energy flow',
+    'Manifestor': 'independent action and initiation',
+    'Manifesting Generator': 'dynamic multi-passionate energy',
+    'Reflector': 'environment-sensitive reflection and wisdom'
+  };
+  return descriptions[hdType] || 'unique energy expression';
+}
+
+// Helper function to convert sun signs to natural descriptions  
+function getArchetypalDescription(sunSign: string): string {
+  const descriptions: Record<string, string> = {
+    'Aries': 'pioneering and courageous spirit',
+    'Taurus': 'stable and nurturing presence',
+    'Gemini': 'curious and communicative nature',
+    'Cancer': 'intuitive and protective instinct',
+    'Leo': 'creative and confident expression',
+    'Virgo': 'analytical and helpful approach',
+    'Libra': 'harmonious and balanced perspective',
+    'Scorpio': 'intense and transformative depth',
+    'Sagittarius': 'adventurous and philosophical outlook',
+    'Capricorn': 'ambitious and structured methodology',
+    'Aquarius': 'innovative and humanitarian vision',
+    'Pisces': 'empathetic and imaginative flow'
+  };
+  return descriptions[sunSign] || 'individual archetypal influence';
+}
+
 // PHASE 4: Conversation state detection function
 function detectConversationState(message: string, conversationHistory: any[]) {
   const cleanMessage = message.trim().toLowerCase();
@@ -745,8 +805,68 @@ ${semanticChunks.map(chunk => chunk.chunk_content || chunk.content).join('\n\n')
           console.log('⚠️ ORACLE CONTEXT: No conversation history available - possible hallucination risk');
         }
 
-        // Intent-aware role definition
-        const getRoleForIntent = (intent: string) => {
+// Helper function to detect if user wants technical personality details
+function detectTechnicalDetailRequest(message: string): boolean {
+  const technicalKeywords = /\b(mbti|human design|personality type|what.*type|technical|specific|sun sign|projector|enfp|intj|generator|manifestor|manifesting generator|reflector)\b/i;
+  return technicalKeywords.test(message);
+}
+
+// Helper function to convert MBTI types to natural descriptions
+function getThinkingStyleDescription(mbtiType: string): string {
+  const descriptions: Record<string, string> = {
+    'ENFP': 'creative and inspiring explorer',
+    'INTJ': 'strategic and analytical architect', 
+    'INFP': 'values-driven and empathetic idealist',
+    'ENTP': 'innovative and enthusiastic debater',
+    'INFJ': 'insightful and visionary advocate',
+    'ENTJ': 'confident and natural-born leader',
+    'ISFP': 'gentle and harmonious artist',
+    'ESFP': 'spontaneous and enthusiastic entertainer',
+    'ISFJ': 'warm and dedicated protector',
+    'ESFJ': 'caring and social connector',
+    'ISTP': 'practical and adaptable craftsperson',
+    'ESTP': 'bold and perceptive entrepreneur',
+    'INTP': 'logical and innovative thinker',
+    'ENTP': 'quick-witted and clever innovator',
+    'ISTJ': 'practical and fact-minded logistician',
+    'ESTJ': 'efficient and hardworking executive'
+  };
+  return descriptions[mbtiType] || 'unique and individual thinker';
+}
+
+// Helper function to convert Human Design types to natural descriptions
+function getEnergyDescription(hdType: string): string {
+  const descriptions: Record<string, string> = {
+    'Projector': 'invitation-based wisdom sharing',
+    'Generator': 'sustained creative energy flow',
+    'Manifestor': 'independent action and initiation',
+    'Manifesting Generator': 'dynamic multi-passionate energy',
+    'Reflector': 'environment-sensitive reflection and wisdom'
+  };
+  return descriptions[hdType] || 'unique energy expression';
+}
+
+// Helper function to convert sun signs to natural descriptions  
+function getArchetypalDescription(sunSign: string): string {
+  const descriptions: Record<string, string> = {
+    'Aries': 'pioneering and courageous spirit',
+    'Taurus': 'stable and nurturing presence',
+    'Gemini': 'curious and communicative nature',
+    'Cancer': 'intuitive and protective instinct',
+    'Leo': 'creative and confident expression',
+    'Virgo': 'analytical and helpful approach',
+    'Libra': 'harmonious and balanced perspective',
+    'Scorpio': 'intense and transformative depth',
+    'Sagittarius': 'adventurous and philosophical outlook',
+    'Capricorn': 'ambitious and structured methodology',
+    'Aquarius': 'innovative and humanitarian vision',
+    'Pisces': 'empathetic and imaginative flow'
+  };
+  return descriptions[sunSign] || 'individual archetypal influence';
+}
+
+// Helper function to get role based on intent
+function getRoleForIntent(intent: string): string {
           switch (intent) {
             case 'FACTUAL':
               return `You are ${userName}'s trusted companion with access to their complete personal blueprint. When they ask for specific information, provide precise, factual answers from their data while maintaining your warm, conversational tone.
@@ -768,13 +888,16 @@ Blend precise factual information with insightful interpretation. When ${userNam
           }
         };
 
+        // Check if user explicitly wants technical details
+        const wantsTechnicalDetails = detectTechnicalDetailRequest(message);
+        
         return `${getRoleForIntent(intent)}${conversationContext}
 
 PERSONALITY AWARENESS:
 - Name: ${userName}
-- MBTI Type: ${mbtiType} 
-- Human Design: ${hdType}
-- Sun Sign: ${sunSign}
+- Natural thinking style: ${getThinkingStyleDescription(mbtiType)}${wantsTechnicalDetails ? ` (MBTI: ${mbtiType})` : ''}
+- Energy approach: ${getEnergyDescription(hdType)}${wantsTechnicalDetails ? ` (Human Design: ${hdType})` : ''}
+- Archetypal influence: ${getArchetypalDescription(sunSign)}${wantsTechnicalDetails ? ` (Sun Sign: ${sunSign})` : ''}
 - Intelligence Level: ${intelligenceLevel}/100${factsSection}${narrativeSection}
 
 COMMUNICATION STYLE (Personalized for ${userName}):

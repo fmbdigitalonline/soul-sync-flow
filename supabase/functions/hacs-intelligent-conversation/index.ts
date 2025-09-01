@@ -12,6 +12,79 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Helper function to convert life path numbers to natural descriptions
+function getLifePathDescription(lifePath: number): string {
+  const descriptions: Record<number, string> = {
+    1: 'leadership and pioneering independence',
+    2: 'cooperation and diplomatic harmony',
+    3: 'creative expression and communication',
+    4: 'practical building and systematic approach',
+    5: 'freedom-seeking and adventurous change',
+    6: 'nurturing service and responsibility',
+    7: 'spiritual seeking and analytical depth',
+    8: 'material mastery and ambitious achievement',
+    9: 'humanitarian service and universal wisdom',
+    11: 'intuitive illumination and inspired teaching',
+    22: 'master building and visionary manifestation',
+    33: 'compassionate healing and spiritual service'
+  };
+  return descriptions[lifePath] || 'individual growth and purpose';
+}
+
+// Helper function to convert MBTI types to natural descriptions
+function getThinkingStyleDescription(mbtiType: string): string {
+  const descriptions: Record<string, string> = {
+    'ENFP': 'creative and inspiring explorer',
+    'INTJ': 'strategic and analytical architect', 
+    'INFP': 'values-driven and empathetic idealist',
+    'ENTP': 'innovative and enthusiastic debater',
+    'INFJ': 'insightful and visionary advocate',
+    'ENTJ': 'confident and natural-born leader',
+    'ISFP': 'gentle and harmonious artist',
+    'ESFP': 'spontaneous and enthusiastic entertainer',
+    'ISFJ': 'warm and dedicated protector',
+    'ESFJ': 'caring and social connector',
+    'ISTP': 'practical and adaptable craftsperson',
+    'ESTP': 'bold and perceptive entrepreneur',
+    'INTP': 'logical and innovative thinker',
+    'ENTP': 'quick-witted and clever innovator',
+    'ISTJ': 'practical and fact-minded logistician',
+    'ESTJ': 'efficient and hardworking executive'
+  };
+  return descriptions[mbtiType] || 'unique and individual thinker';
+}
+
+// Helper function to convert Human Design types to natural descriptions
+function getEnergyDescription(hdType: string): string {
+  const descriptions: Record<string, string> = {
+    'Projector': 'invitation-based wisdom sharing',
+    'Generator': 'sustained creative energy flow',
+    'Manifestor': 'independent action and initiation',
+    'Manifesting Generator': 'dynamic multi-passionate energy',
+    'Reflector': 'environment-sensitive reflection and wisdom'
+  };
+  return descriptions[hdType] || 'unique energy expression';
+}
+
+// Helper function to convert sun signs to natural descriptions  
+function getArchetypalDescription(sunSign: string): string {
+  const descriptions: Record<string, string> = {
+    'Aries': 'pioneering and courageous spirit',
+    'Taurus': 'stable and nurturing presence',
+    'Gemini': 'curious and communicative nature',
+    'Cancer': 'intuitive and protective instinct',
+    'Leo': 'creative and confident expression',
+    'Virgo': 'analytical and helpful approach',
+    'Libra': 'harmonious and balanced perspective',
+    'Scorpio': 'intense and transformative depth',
+    'Sagittarius': 'adventurous and philosophical outlook',
+    'Capricorn': 'ambitious and structured methodology',
+    'Aquarius': 'innovative and humanitarian vision',
+    'Pisces': 'empathetic and imaginative flow'
+  };
+  return descriptions[sunSign] || 'individual archetypal influence';
+}
+
 // HACS module configuration
 const HACS_MODULES = [
   'PIE', 'CNR', 'TMG', 'DPEM', 'ACS', 'VFP', 'ECHO', 'FLUX', 'SYNC', 'ADAPT', 'EVOLVE'
@@ -605,11 +678,11 @@ async function generateConversationalResponse(
 
 PERSONALITY CONTEXT:
 ${personalityContext ? `- Name: ${personalityContext.name}
-- MBTI Type: ${personalityContext.mbti} (${personalityContext.mbti === 'ENFP' ? 'Enthusiastic, creative, and inspiring' : 'Unique personality type'})
-- Sun Sign: ${personalityContext.sunSign} (${personalityContext.sunSign?.includes('Aquarius') ? 'Independent innovator' : 'Astrological influence'})
-- Human Design: ${personalityContext.hdType} - ${personalityContext.hdStrategy} | Authority: ${personalityContext.hdAuthority}
-- Life Path: ${personalityContext.lifePath} (${personalityContext.lifePath === 3 ? 'Creative expression and communication' : 'Personal growth path'})
-- Chinese Zodiac: ${personalityContext.chineseZodiac}
+- Natural thinking style: ${getThinkingStyleDescription(personalityContext.mbti)}
+- Archetypal influence: ${getArchetypalDescription(personalityContext.sunSign)}
+- Energy approach: ${getEnergyDescription(personalityContext.hdType)} with ${personalityContext.hdStrategy} strategy
+- Life path focus: ${getLifePathDescription(personalityContext.lifePath)}
+- Cultural archetype: ${personalityContext.chineseZodiac}
 - Age: ${personalityContext.birthDate ? Math.floor((Date.now() - new Date(personalityContext.birthDate).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : 'Unknown'}` : '- Working to understand your unique personality profile'}
 - Intelligence Level: ${intelligenceData.intelligence_level}%
 
