@@ -990,6 +990,24 @@ const translations: Record<Language, Translations> = {
       subtitle: 'Choose how you want to engage today—coach, Life OS, program, or tools.',
       description: 'Unlock your spiritual growth journey with personalized guidance and tools.',
       getStarted: 'Get Started',
+      cards: {
+        heartCentered: {
+          title: 'Heart-Centered Coach',
+          description: 'Immediate personalized spiritual guidance.'
+        },
+        lifeOperatingSystem: {
+          title: 'Life Operating System',
+          description: 'Holistic life assessment and growth coordination.'
+        },
+        structuredProgram: {
+          title: 'Structured Program',
+          description: '12-week journey for deep transformation.'
+        },
+        spiritualTools: {
+          title: 'Spiritual Tools',
+          description: 'Mood tracking and reflection practices.'
+        }
+      },
       ui: {
         backToOptions: 'Back to Options',
         heartCenteredCoach: 'Heart-Centered Coach',
@@ -1836,6 +1854,24 @@ const translations: Record<Language, Translations> = {
       subtitle: 'Kies hoe je vandaag wilt werken—coach, Life OS, programma of tools.',
       description: 'Ontgrendel je groeireis met gepersonaliseerde begeleiding en tools.',
       getStarted: 'Aan de slag',
+      cards: {
+        heartCentered: {
+          title: 'Hartgedreven Coach',
+          description: 'Directe gepersonaliseerde spirituele begeleiding.'
+        },
+        lifeOperatingSystem: {
+          title: 'Levensbesturingssysteem',
+          description: 'Holistische levensbeoordeling en groeicoördinatie.'
+        },
+        structuredProgram: {
+          title: 'Gestructureerd Programma',
+          description: '12-weekse reis voor diepe transformatie.'
+        },
+        spiritualTools: {
+          title: 'Spirituele Tools',
+          description: 'Stemmingstracking en reflectiepraktijken.'
+        }
+      },
       ui: {
         backToOptions: 'Terug naar opties',
         heartCenteredCoach: 'Hartgedragen Coach',
