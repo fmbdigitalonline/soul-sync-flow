@@ -26,11 +26,24 @@ import { ACSIntegrationTestSuite } from './ACSIntegrationTestSuite';
 import { ACSPerformanceOptimizer } from './ACSPerformanceOptimizer';
 import { ACSDocumentationHub } from './ACSDocumentationHub';
 
+// Import hermetic intelligence pipeline validator
+import { HermeticPipelineValidator } from '../hermetic-test/HermeticPipelineValidator';
+
 export const TestingDashboard: React.FC = () => {
-  // Set ACS Integration as the default active tab (highest priority)
-  const [activeTab, setActiveTab] = useState('acs-integration');
+  // Set Hermetic Pipeline as the default active tab (highest priority for validation)
+  const [activeTab, setActiveTab] = useState('hermetic-pipeline');
 
   const testCategories = [
+    {
+      id: 'hermetic-pipeline',
+      title: 'Hermetic Intelligence Pipeline',
+      description: 'End-to-end validation of hermetic report generation and automatic intelligence extraction',
+      icon: Brain,
+      status: 'production',
+      priority: 'critical',
+      testCount: 7,
+      component: HermeticPipelineValidator
+    },
     {
       id: 'acs-integration',
       title: 'ACS Integration Suite',
@@ -152,7 +165,7 @@ export const TestingDashboard: React.FC = () => {
           </p>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
             {testCategories.map((category) => {
               const IconComponent = category.icon;
               return (
@@ -194,7 +207,18 @@ export const TestingDashboard: React.FC = () => {
       </Card>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-8 gap-4">
+        <Card className="border-purple-200 bg-purple-50/30">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <Brain className="w-5 h-5 text-purple-500" />
+              <div>
+                <p className="text-2xl font-bold text-purple-700">7</p>
+                <p className="text-sm text-purple-600">Hermetic Pipeline</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
         <Card className="border-blue-200 bg-blue-50/30">
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
@@ -263,7 +287,7 @@ export const TestingDashboard: React.FC = () => {
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-7">
+            <TabsList className="grid w-full grid-cols-8">
               {testCategories.map((category) => (
                 <TabsTrigger 
                   key={category.id} 
