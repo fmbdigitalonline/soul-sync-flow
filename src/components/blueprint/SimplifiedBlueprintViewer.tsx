@@ -327,41 +327,41 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
             <div className="space-y-4 w-full max-w-full">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="text-center p-3 bg-soul-purple/5 rounded-3xl">
-                  <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>Sun Sign</h4>
+                  <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.sunSign')}</h4>
                   <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple break-words`}>{sunSign}</p>
-                  <p className={`${getTextSize('text-sm')} font-inter text-gray-600 break-words`}>Core identity & ego</p>
+                  <p className={`${getTextSize('text-sm')} font-inter text-gray-600 break-words`}>{t('blueprint.descriptions.coreIdentityEgo')}</p>
                 </div>
                 <div className="text-center p-3 bg-soul-purple/5 rounded-3xl">
-                  <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>Moon Sign</h4>
+                  <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.moonSign')}</h4>
                   <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple break-words`}>{moonSign}</p>
-                  <p className={`${getTextSize('text-sm')} font-inter text-gray-600 break-words`}>Emotional nature</p>
+                  <p className={`${getTextSize('text-sm')} font-inter text-gray-600 break-words`}>{t('blueprint.descriptions.emotionalNature')}</p>
                 </div>
                 <div className="text-center p-3 bg-soul-purple/5 rounded-3xl">
-                  <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>Rising Sign</h4>
+                  <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.risingSign')}</h4>
                   <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple break-words`}>{risingSign}</p>
-                  <p className={`${getTextSize('text-sm')} font-inter text-gray-600 break-words`}>First impression</p>
+                  <p className={`${getTextSize('text-sm')} font-inter text-gray-600 break-words`}>{t('blueprint.descriptions.firstImpression')}</p>
                 </div>
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6">
                 <div>
-                  <h5 className={`font-cormorant font-semibold text-gray-700 mb-1 ${getTextSize('text-sm')} break-words`}>Social Style</h5>
-                  <p className={`${getTextSize('text-sm')} font-inter text-gray-600 capitalize break-words`}>{socialStyle}</p>
+                  <h5 className={`font-cormorant font-semibold text-gray-700 mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.socialStyle')}</h5>
+                  <p className={`${getTextSize('text-sm')} font-inter text-gray-600 capitalize break-words`}>{t('blueprint.descriptions.warm')}</p>
                 </div>
                 <div>
-                  <h5 className={`font-cormorant font-semibold text-gray-700 mb-1 ${getTextSize('text-sm')} break-words`}>Public Vibe</h5>
-                  <p className={`${getTextSize('text-sm')} font-inter text-gray-600 capitalize break-words`}>{publicVibe}</p>
+                  <h5 className={`font-cormorant font-semibold text-gray-700 mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.publicVibe')}</h5>
+                  <p className={`${getTextSize('text-sm')} font-inter text-gray-600 capitalize break-words`}>{t('blueprint.descriptions.approachable')}</p>
                 </div>
                 <div>
-                  <h5 className={`font-cormorant font-semibold text-gray-700 mb-1 ${getTextSize('text-sm')} break-words`}>Leadership Style</h5>
-                  <p className={`${getTextSize('text-sm')} font-inter text-gray-600 capitalize break-words`}>{leadershipStyle}</p>
+                  <h5 className={`font-cormorant font-semibold text-gray-700 mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.leadershipStyle')}</h5>
+                  <p className={`${getTextSize('text-sm')} font-inter text-gray-600 capitalize break-words`}>{t('blueprint.descriptions.collaborative')}</p>
                 </div>
               </div>
 
               <div className="mt-4 p-3 bg-soul-purple/5 rounded-3xl">
-                <h5 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-sm')} break-words`}>Generational Influence</h5>
+                <h5 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.generationalInfluence')}</h5>
                 <p className={`${getTextSize('text-lg')} font-cormorant font-bold text-soul-purple break-words`}>{chineseZodiac} {element}</p>
-                <p className={`${getTextSize('text-sm')} font-inter text-gray-600 break-words`}>Chinese astrology adds generational wisdom to your profile</p>
+                <p className={`${getTextSize('text-sm')} font-inter text-gray-600 break-words`}>{t('blueprint.descriptions.chineseAstrologyAdds')} wisdom to your profile</p>
               </div>
             </div>
           </CardContent>

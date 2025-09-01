@@ -440,6 +440,8 @@ const translations: Record<Language, Translations> = {
         mbtiType: "MBTI Type",
         lifePath: "Life Path",
         sunSign: "Sun Sign",
+        moonSign: "Moon Sign",
+        risingSign: "Rising Sign",
         humanDesign: "Human Design",
         chineseZodiac: "Chinese Zodiac",
         personalityType: "Personality Type",
@@ -456,7 +458,10 @@ const translations: Record<Language, Translations> = {
         expressionNumber: "Expression Number",
         soulUrgeNumber: "Soul Urge Number",
         personalityNumber: "Personality Number",
-        birthdayNumber: "Birthday Number"
+        socialStyle: "Social Style",
+        publicVibe: "Public Vibe",
+        leadershipStyle: "Leadership Style",
+        generationalInfluence: "Generational Influence"
       },
       
       // Descriptions
@@ -472,7 +477,14 @@ const translations: Record<Language, Translations> = {
         naturalTalents: "Your natural talents and abilities",
         heartDesires: "Your heart's deepest desires",
         howOthersPerceive: "How others perceive you",
-        specialTalents: "Special talents from birth date"
+        specialTalents: "Special talents from birth date",
+        coreIdentityEgo: "Core identity & ego",
+        emotionalNature: "Emotional nature", 
+        firstImpression: "First impression",
+        warm: "Warm",
+        approachable: "Approachable",
+        collaborative: "Collaborative",
+        chineseAstrologyAdds: "Chinese astrology adds generational"
       }
     },
     
@@ -1439,6 +1451,8 @@ const translations: Record<Language, Translations> = {
         mbtiType: "MBTI Type",
         lifePath: "Levenspad",
         sunSign: "Zonneteken",
+        moonSign: "Maanteken",
+        risingSign: "Rijzend Teken",
         humanDesign: "Human Design",
         chineseZodiac: "Chinese Dierenriem",
         personalityType: "Persoonlijkheidstype",
@@ -1455,7 +1469,10 @@ const translations: Record<Language, Translations> = {
         expressionNumber: "Expressie Nummer",
         soulUrgeNumber: "Zieldrang Nummer",
         personalityNumber: "Persoonlijkheid Nummer",
-        birthdayNumber: "Verjaardag Nummer"
+        socialStyle: "Sociale Stijl",
+        publicVibe: "Publieke Uitstraling",
+        leadershipStyle: "Leiderschapsstijl", 
+        generationalInfluence: "Generationele Invloed"
       },
       
       // Descriptions
@@ -1471,7 +1488,14 @@ const translations: Record<Language, Translations> = {
         naturalTalents: "Je natuurlijke talenten en vaardigheden",
         heartDesires: "Je diepste hartswensen",
         howOthersPerceive: "Hoe anderen je zien",
-        specialTalents: "Speciale talenten van geboortedatum"
+        specialTalents: "Speciale talenten van geboortedatum",
+        coreIdentityEgo: "Kern identiteit & ego",
+        emotionalNature: "Emotionele natuur",
+        firstImpression: "Eerste indruk",
+        warm: "Warm",
+        approachable: "Benaderbaar",
+        collaborative: "Samenwerkend",
+        chineseAstrologyAdds: "Chinese astrologie voegt generationele toe"
       }
     },
     
