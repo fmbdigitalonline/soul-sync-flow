@@ -115,6 +115,9 @@ class HermeticPersonalityReportService {
       // Generate personalized quotes aligned with Hermetic laws
       const quotes = await this.generateHermeticQuotes(blueprint, hermeticResult, language);
       
+      // Automatically trigger structured intelligence extraction and storage
+      await this.triggerIntelligenceExtraction(blueprint.user_id || blueprint.user_meta?.user_id);
+      
       const endTime = Date.now();
       console.log(`✅ Hermetic Report generated: ${hermeticResult.total_word_count} words in ${endTime - startTime}ms`);
       
@@ -475,6 +478,27 @@ Vibrational energy patterns: ${vibrationAnalysis.substring(0, 250)}...`;
     } catch (error) {
       console.error('❌ Service error checking Hermetic report:', error);
       return false;
+    }
+  }
+
+  private async triggerIntelligenceExtraction(userId: string): Promise<void> {
+    try {
+      console.log('🧠 Triggering automatic intelligence extraction for user:', userId);
+      
+      const { data, error } = await supabase.functions.invoke('extract-hermetic-intelligence', {
+        body: { userId, forceReprocess: false }
+      });
+
+      if (error) {
+        console.warn('⚠️ Intelligence extraction trigger failed (non-critical):', error);
+        return;
+      }
+
+      console.log('✅ Intelligence extraction triggered successfully:', data);
+      
+    } catch (error) {
+      console.warn('⚠️ Intelligence extraction trigger error (non-critical):', error);
+      // Don't throw - intelligence extraction failure should not break report generation
     }
   }
 }
