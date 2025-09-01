@@ -106,8 +106,17 @@ class HermeticPersonalityReportService {
       // Use the Hermetic Report Orchestrator for multi-agent generation
       const hermeticResult = await hermeticReportOrchestrator.generateHermeticReport(blueprint);
       
+      // Generate Intelligence Analysis (12 analysts)
+      console.log('🧠 Generating 12 Intelligence Analysts Analysis...');
+      const { intelligenceReportOrchestrator } = await import('./intelligence-report-orchestrator');
+      const intelligenceReport = await intelligenceReportOrchestrator.generateIntelligenceReport(
+        blueprint.user_id || blueprint.user_meta?.user_id || '',
+        hermeticResult,
+        blueprint
+      );
+      
       // Transform orchestrator result into report format
-      const report = await this.buildHermeticReport(blueprint, hermeticResult);
+      const report = await this.buildHermeticReport(blueprint, hermeticResult, intelligenceReport);
       
       // Store the report in the database
       const storedReport = await this.storeHermeticReport(report);
@@ -135,7 +144,8 @@ class HermeticPersonalityReportService {
 
   private async buildHermeticReport(
     blueprint: BlueprintData, 
-    hermeticResult: any
+    hermeticResult: any,
+    intelligenceReport?: any
   ): Promise<HermeticPersonalityReport> {
     
     // Extract sections by agent type
@@ -226,7 +236,7 @@ class HermeticPersonalityReportService {
           hermetic_depth_score: 10, // Maximum depth achieved
           gates_analyzed: analyzedGates // NEW: Track analyzed gates
         },
-        structured_intelligence: hermeticResult.structured_intelligence
+        structured_intelligence: intelligenceReport || hermeticResult.structured_intelligence
       },
       generated_at: hermeticResult.generated_at,
       blueprint_version: '2.0'
