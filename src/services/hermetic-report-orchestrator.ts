@@ -7,6 +7,7 @@ export interface HermeticAnalysisSection {
   word_count: number;
   hermetic_law?: string;
   gate_number?: number;
+  intelligence_dimension?: string;
 }
 
 export interface HermeticReportResult {
@@ -347,8 +348,8 @@ Generate 1,200+ words of deep, integrated analysis.`
       sections.push(...systemSections);
       console.log(`📋 Phase 1 complete: ${systemSections.length} sections added`);
 
-      // Phase 2: Enhanced Hermetic Laws (1,500+ words each = 10,500+ words)
-      console.log('🔮 Phase 2: Enhanced Hermetic Law Analysis...');
+      // Phase 2: Enhanced Hermetic Laws + Intelligence Dimensions (21,000+ words total)
+      console.log('🔮 Phase 2: Enhanced Hermetic Law + Intelligence Analysis...');
       const hermeticSections = await this.generateHermeticLawAnalysis(blueprint);
       sections.push(...hermeticSections);
       console.log(`🔮 Phase 2 complete: ${hermeticSections.length} sections added`);
@@ -405,6 +406,8 @@ Generate 1,200+ words of deep, integrated analysis.`
     console.log('🔮 Generating enhanced Hermetic Law analysis...');
     const sections: HermeticAnalysisSection[] = [];
 
+    // Phase A: Hermetic Laws Analysis (7 agents - existing functionality)
+    console.log('🔮 Phase A: Processing 7 Hermetic Law agents...');
     for (const agent of HERMETIC_AGENTS) {
       try {
         const { data, error } = await supabase.functions.invoke('openai-agent', {
@@ -451,11 +454,78 @@ Generate comprehensive analysis with practical applications.`
           hermetic_law: agent.replace('_analyst', '')
         });
 
+        console.log(`✅ ${agent} complete: ${content.length} characters`);
+
       } catch (error) {
         console.error(`❌ Failed to generate ${agent}:`, error);
       }
     }
 
+    // Phase B: Intelligence Dimension Analysis (12 agents - NEW ENHANCEMENT)
+    console.log('🧠 Phase B: Processing 12 Intelligence Extraction agents for comprehensive analysis...');
+    for (const agent of INTELLIGENCE_EXTRACTION_AGENTS) {
+      const dimensionName = agent.replace('_analyst', '');
+      
+      try {
+        console.log(`🧠 Generating ${dimensionName} intelligence analysis...`);
+
+        const { data, error } = await supabase.functions.invoke('openai-agent', {
+          body: {
+            messages: [
+              {
+                role: 'system',
+                content: `You are the ${agent}. Generate a comprehensive 800+ word analysis focused on the ${dimensionName} dimension of this person's psychological and spiritual blueprint.
+
+Your analysis should explore:
+
+1. Core patterns and structures in the ${dimensionName} dimension
+2. How this dimension manifests in daily life and decision-making
+3. Shadow aspects and unconscious expressions of this dimension
+4. Light aspects and conscious mastery potential
+5. Integration practices and development opportunities
+6. How this dimension interacts with other aspects of their blueprint
+7. Practical applications for conscious evolution in this area
+
+Provide deep, actionable insights that help the person understand and consciously work with their ${dimensionName} patterns for growth and transformation.
+
+Focus specifically on the ${dimensionName} dimension while maintaining awareness of the whole person.`
+              },
+              {
+                role: 'user',
+                content: `Generate comprehensive ${dimensionName} analysis for this blueprint:
+
+${JSON.stringify(blueprint, null, 2)}
+
+Provide 800+ words of deep analysis focused specifically on the ${dimensionName} dimension with practical applications for conscious development.`
+              }
+            ],
+            model: 'gpt-4o-mini',
+            temperature: 0.7
+          }
+        });
+
+        if (error) {
+          console.error(`❌ Error with ${agent}:`, error);
+          continue;
+        }
+
+        const content = this.safeExtractContent(data, agent);
+        
+        sections.push({
+          agent_type: agent,
+          content: content,
+          word_count: content.length,
+          intelligence_dimension: dimensionName
+        });
+
+        console.log(`✅ ${agent} complete: ${content.length} characters`);
+
+      } catch (error) {
+        console.error(`❌ Failed to generate ${agent}:`, error);
+      }
+    }
+
+    console.log(`✅ Hermetic Law Analysis complete: ${sections.length} total sections (${sections.filter(s => s.hermetic_law).length} hermetic laws, ${sections.filter(s => s.intelligence_dimension).length} intelligence dimensions)`);
     return sections;
   }
 
@@ -516,24 +586,33 @@ Focus on your specific system expertise.`
   }
 
   private async generateIntelligenceExtraction(blueprint: BlueprintData, sections: HermeticAnalysisSection[]): Promise<any> {
-    console.log('🧠 Generating structured intelligence extraction...');
+    console.log('🧠 Generating structured intelligence extraction from enhanced content...');
     const intelligence: any = {};
 
-    // Combine all section content for analysis
-    const combinedContent = sections.map(s => `${s.agent_type}: ${s.content}`).join('\n\n');
+    // Separate intelligence sections for enhanced extraction
+    const intelligenceSections = sections.filter(s => s.intelligence_dimension);
+    const hermetic_sections = sections.filter(s => s.hermetic_law || s.gate_number);
+    
+    console.log(`📊 Processing ${intelligenceSections.length} intelligence sections + ${hermetic_sections.length} hermetic sections for extraction`);
+
+    // Combine enhanced content - prioritize intelligence sections, supplement with hermetic
+    const enhancedContent = [
+      ...intelligenceSections.map(s => `${s.agent_type} (${s.intelligence_dimension}): ${s.content}`),
+      ...hermetic_sections.map(s => `${s.agent_type}: ${s.content.substring(0, 2000)}`)
+    ].join('\n\n');
 
     for (const agent of INTELLIGENCE_EXTRACTION_AGENTS) {
       const dimensionName = agent.replace('_analyst', '');
       
       try {
-        console.log(`🧠 Extracting ${dimensionName}...`);
+        console.log(`🧠 Extracting structured ${dimensionName} intelligence...`);
 
         const { data, error } = await supabase.functions.invoke('openai-agent', {
           body: {
             messages: [
               {
                 role: 'system',
-                content: `You are the ${agent}. Extract structured data for the ${dimensionName} dimension from the provided hermetic analysis content.
+                content: `You are the ${agent}. Extract structured data for the ${dimensionName} dimension from the comprehensive hermetic and intelligence analysis content.
 
 You must return ONLY a valid JSON object in exactly this format:
 {
@@ -542,25 +621,25 @@ You must return ONLY a valid JSON object in exactly this format:
     // Specific fields based on dimension type
   },
   "confidence_score": 0.85,
-  "source_insights": ["insight1", "insight2"]
+  "source_insights": ["insight1", "insight2", "insight3"]
 }
 
 For ${dimensionName}, extract according to this structure:
 ${this.getDimensionSchema(dimensionName)}
 
-Focus on extracting concrete patterns, behaviors, and insights from the analysis content.`
+You have access to both the dedicated ${dimensionName} analysis AND the broader hermetic content. Extract the most comprehensive and accurate patterns from this rich source material.`
               },
               {
                 role: 'user',
-                content: `Extract ${dimensionName} intelligence from this hermetic analysis:
+                content: `Extract ${dimensionName} intelligence from this comprehensive analysis:
 
 BLUEPRINT CONTEXT:
 ${JSON.stringify(blueprint, null, 2)}
 
-ANALYSIS CONTENT:
-${combinedContent.substring(0, 8000)}
+ENHANCED ANALYSIS CONTENT:
+${enhancedContent.substring(0, 12000)}
 
-Return only the JSON object with extracted structured data.`
+Focus on extracting the most detailed and accurate ${dimensionName} patterns from the comprehensive content. Return only the JSON object with extracted structured data.`
               }
             ],
             model: 'gpt-4o-mini',
@@ -576,6 +655,7 @@ Return only the JSON object with extracted structured data.`
         const result = this.parseIntelligenceResult(data, dimensionName);
         if (result) {
           intelligence[dimensionName] = result.extracted_data;
+          console.log(`✅ ${dimensionName} extraction complete (confidence: ${result.confidence_score})`);
         }
 
       } catch (error) {
@@ -583,6 +663,7 @@ Return only the JSON object with extracted structured data.`
       }
     }
 
+    console.log(`🧠 Intelligence extraction complete: ${Object.keys(intelligence).length} dimensions extracted`);
     return intelligence;
   }
 
