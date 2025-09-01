@@ -3,10 +3,10 @@ import React, { useRef, useEffect, useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, MessageCircle, RotateCcw, Zap } from "lucide-react";
+import { MessageCircle, RotateCcw, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useHACSConversationAdapter } from "@/hooks/use-hacs-conversation-adapter";
-import { useBlueprintCache } from "@/contexts/BlueprintCacheContext";
+
 import { supabase } from "@/integrations/supabase/client";
 import { HACSChatInterface } from "@/components/hacs/HACSChatInterface";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -28,7 +28,7 @@ const Coach = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const { toast } = useToast();
   const { t } = useLanguage();
-  const { hasBlueprint } = useBlueprintCache();
+  
   const { isMobile } = useIsMobile();
   
   // Check authentication status
@@ -116,28 +116,6 @@ const Coach = () => {
       </CosmicCard>
 
 
-      <CosmicCard className="p-4">
-        <h3 className="font-semibold mb-3 flex items-center">
-          <Sparkles className="h-4 w-4 mr-2" />
-          {t('companion.systemStatus')}
-        </h3>
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between">
-            <span>{t('companion.system.blueprint')}:</span>
-            <span className={hasBlueprint ? "text-green-600" : "text-amber-600"}>
-              {hasBlueprint ? t('companion.system.ready') : t('companion.system.partial')}
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span>{t('companion.system.mode')}:</span>
-            <span className="text-primary">{t('companion.system.companion')}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>{t('companion.system.hacs')}:</span>
-            <span className="text-blue-600">{t('companion.system.pureIntelligence')}</span>
-          </div>
-        </div>
-      </CosmicCard>
     </div>
   );
 

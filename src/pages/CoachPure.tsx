@@ -3,24 +3,22 @@ import React, { useRef, useEffect, useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { CosmicCard } from "@/components/ui/cosmic-card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, MessageCircle, RotateCcw, Zap } from "lucide-react";
+import { MessageCircle, RotateCcw, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useBlueprintCache } from "@/contexts/BlueprintCacheContext";
+
 import { supabase } from "@/integrations/supabase/client";
 import { PureHACSInterface } from "@/components/hacs/PureHACSInterface";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ActiveReminders } from "@/components/reminders/ActiveReminders";
 import { MobileTogglePanel } from "@/components/ui/mobile-toggle-panel";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useHacsIntelligence } from "@/hooks/use-hacs-intelligence";
+
 
 const CoachPure = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const { toast } = useToast();
   const { t } = useLanguage();
-  const { hasBlueprint } = useBlueprintCache();
   const { isMobile } = useIsMobile();
-  const { intelligence } = useHacsIntelligence();
   
   // Check authentication status
   useEffect(() => {
@@ -95,32 +93,6 @@ const CoachPure = () => {
         </Button>
       </CosmicCard>
 
-      <CosmicCard className="p-4">
-        <h3 className="font-semibold mb-3 flex items-center">
-          <Sparkles className="h-4 w-4 mr-2" />
-          Intelligence Status
-        </h3>
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between">
-            <span>Level:</span>
-            <span className="text-primary">{intelligence?.intelligence_level || 0}%</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Interactions:</span>
-            <span className="text-primary">{intelligence?.interaction_count || 0}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Blueprint:</span>
-            <span className={hasBlueprint ? "text-green-600" : "text-amber-600"}>
-              {hasBlueprint ? "Ready" : "Partial"}
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span>Mode:</span>
-            <span className="text-blue-600">{t('system.pureSoulIntelligence')}</span>
-          </div>
-        </div>
-      </CosmicCard>
     </div>
   );
 
