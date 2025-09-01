@@ -405,14 +405,26 @@ export const useHACSInsights = () => {
       return [];
     }
     
-    console.log('🧠 Starting Rich Intelligence Bridge insights generation...');
+    console.log('🧠 Starting Enhanced Intelligence Pipeline with conversation insights...');
     const insights: HACSInsight[] = [];
     
     try {
-      // Import the Rich Intelligence Bridge
+      // PRIORITY 1: Conversation-Derived Insights (highest priority, no daily limit)
+      console.log('🎯 Phase 1: Generating conversation-derived insights...');
+      try {
+        const conversationInsights = await generateConversationInsights();
+        console.log('🎯 Conversation insights result:', { 
+          count: conversationInsights?.length || 0,
+          types: conversationInsights?.map(i => i.type) || []
+        });
+        insights.push(...(conversationInsights || []));
+      } catch (conversationError) {
+        console.error('🚨 Conversation insights error:', conversationError);
+      }
+
+      // PRIORITY 2: Rich Intelligence Bridge - Warm Personalized Insights
+      console.log('🌟 Phase 2: Calling Rich Intelligence Bridge for warm insights...');
       const { RichIntelligenceBridge } = await import('@/services/rich-intelligence-bridge');
-      
-      console.log('🌟 Calling Rich Intelligence Bridge for warm insights...');
       // 1. Rich Intelligence Bridge - Warm Personalized Insights
       try {
         const warmInsights = await RichIntelligenceBridge.generateWarmInsights(user.id);
@@ -426,8 +438,8 @@ export const useHACSInsights = () => {
         console.error('🚨 Rich Intelligence Bridge error:', warmError);
       }
       
-      console.log('🧠 Calling enhanced memory intelligence service...');
-      // 2. Memory-Enhanced Insights (fallback)
+      // PRIORITY 3: Memory-Enhanced Insights (fallback)
+      console.log('🧠 Phase 3: Calling enhanced memory intelligence service...');
       try {
         const memoryInsights = await enhancedMemoryIntelligence.generateMemoryInsights(user.id);
         console.log('🧠 Memory insights result:', { 
@@ -452,8 +464,8 @@ export const useHACSInsights = () => {
         console.error('🚨 Memory intelligence service error:', memoryError);
       }
       
-      console.log('🧠 Calling behavioral pattern intelligence service...');
-      // 3. Behavioral Pattern Insights (fallback)
+      // PRIORITY 4: Behavioral Pattern Insights (fallback)  
+      console.log('🧠 Phase 4: Calling behavioral pattern intelligence service...');
       try {
         const behavioralInsights = await behavioralPatternIntelligence.generateBehavioralInsights(user.id);
         console.log('🧠 Behavioral insights result:', { 
@@ -484,10 +496,28 @@ export const useHACSInsights = () => {
       // 3. Predictive Insights (Future enhancement)
       // const predictiveInsights = await predictiveIntelligence.generatePredictiveInsights(user.id);
       
+      // Sort insights by priority: conversation > intelligence > memory > behavioral
+      const priorityOrder = {
+        'conversation_shadow': 1,
+        'conversation_nullification': 2,
+        'predictive': 3,
+        'memory_enhanced': 4,
+        'behavioral_enhanced': 5
+      };
+
+      insights.sort((a, b) => {
+        const aPriority = priorityOrder[a.type as keyof typeof priorityOrder] || 10;
+        const bPriority = priorityOrder[b.type as keyof typeof priorityOrder] || 10;
+        if (aPriority !== bPriority) return aPriority - bPriority;
+        return b.confidence - a.confidence; // Higher confidence first within same priority
+      });
+
       console.log('🧠 Enhanced insights generation complete:', {
         totalGenerated: insights.length,
+        conversationInsights: insights.filter(i => i.type.includes('conversation')).length,
         memoryInsights: insights.filter(i => i.type === 'memory_enhanced').length,
-        behavioralInsights: insights.filter(i => i.type === 'behavioral_enhanced').length
+        behavioralInsights: insights.filter(i => i.type === 'behavioral_enhanced').length,
+        priorityOrder: insights.map(i => ({ type: i.type, confidence: i.confidence }))
       });
       
       return insights;

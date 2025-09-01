@@ -119,6 +119,17 @@ export const useEnhancedAICoach = (agentType?: AgentType, sessionId?: string) =>
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
     
+    // Track conversation activity for smart insights
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (user?.id) {
+        const { SmartInsightController } = await import('@/services/smart-insight-controller');
+        SmartInsightController.trackUserActivity(user.id, 'conversation');
+      }
+    } catch (error) {
+      console.error('Error tracking conversation activity:', error);
+    }
+    
     try {
       // Use streaming for enhanced experience with coordinated loading
       setIsStreaming(true);
