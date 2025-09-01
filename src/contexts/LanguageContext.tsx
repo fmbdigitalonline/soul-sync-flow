@@ -619,7 +619,41 @@ const translations: Record<Language, Translations> = {
       generated: 'Generated',
       loading: 'HACS Loading...',
       systemInitializing: 'System Initializing...',
-      insightsQueue: '{current} of {total} insights'
+      insightsQueue: '{current} of {total} insights',
+      microLearning: {
+        progress: {
+          question: 'Question',
+          response: 'Response',
+          analysis: 'Analysis'
+        },
+        moduleTypes: {
+          foundational: 'foundational',
+          validation: 'validation',
+          philosophical: 'philosophical'
+        },
+        interface: {
+          questionLabel: 'Question:',
+          yourResponse: 'Your Response:',
+          skipForNow: 'Skip for Now',
+          submit: 'Submit',
+          continueButton: 'Continue Learning'
+        },
+        placeholder: 'Share your thoughts and insights...',
+        helperText: 'Take your time to reflect. Quality responses help HACS learn about you.',
+        analyzing: {
+          title: 'Analyzing Your Response',
+          description: 'HACS is evaluating your insights for comprehension and learning evidence...'
+        },
+        results: {
+          learningValidated: 'Learning Validated!',
+          responseRecorded: 'Response Recorded',
+          genuineUnderstanding: 'Your response shows genuine understanding',
+          keepExploring: 'Keep exploring to unlock new insights!',
+          comprehensionScore: 'Comprehension Score:',
+          intelligenceGrowth: 'Intelligence Growth:',
+          learningEvidence: 'Learning Evidence:'
+        }
+      }
     },
     // Personalized Quotes
     personalizedQuotes: {
@@ -1684,7 +1718,41 @@ const translations: Record<Language, Translations> = {
       generated: 'Gegenereerd',
       loading: 'HACS Laden...',
       systemInitializing: 'Systeem initialiseren...',
-      insightsQueue: '{current} van {total} inzichten'
+      insightsQueue: '{current} van {total} inzichten',
+      microLearning: {
+        progress: {
+          question: 'Vraag',
+          response: 'Antwoord',
+          analysis: 'Analyse'
+        },
+        moduleTypes: {
+          foundational: 'fundamenteel',
+          validation: 'validatie',
+          philosophical: 'filosofisch'
+        },
+        interface: {
+          questionLabel: 'Vraag:',
+          yourResponse: 'Jouw Antwoord:',
+          skipForNow: 'Sla Nu Over',
+          submit: 'Verstuur',
+          continueButton: 'Doorgaan met Leren'
+        },
+        placeholder: 'Deel je gedachten en inzichten...',
+        helperText: 'Neem de tijd om na te denken. Kwaliteitsantwoorden helpen HACS om meer over je te leren.',
+        analyzing: {
+          title: 'Je Antwoord Analyseren',
+          description: 'HACS evalueert je inzichten voor begrip en leerevidentie...'
+        },
+        results: {
+          learningValidated: 'Leren Gevalideerd!',
+          responseRecorded: 'Antwoord Opgeslagen',
+          genuineUnderstanding: 'Je antwoord toont oprecht begrip',
+          keepExploring: 'Blijf verkennen om nieuwe inzichten te ontgrendelen!',
+          comprehensionScore: 'Begripscore:',
+          intelligenceGrowth: 'Intelligentiegroei:',
+          learningEvidence: 'Leerevidentie:'
+        }
+      }
     },
     // Gepersonaliseerde Citaten
     personalizedQuotes: {

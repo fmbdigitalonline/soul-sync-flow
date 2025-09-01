@@ -165,9 +165,9 @@ export const HACSMicroLearning: React.FC<HACSMicroLearningProps> = ({
             {/* Progress indicator */}
             <div className="mb-4">
               <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                <span>Question</span>
-                <span>Response</span>
-                <span>Analysis</span>
+                <span>{t('hacs.microLearning.progress.question')}</span>
+                <span>{t('hacs.microLearning.progress.response')}</span>
+                <span>{t('hacs.microLearning.progress.analysis')}</span>
               </div>
               <Progress 
                 value={stage === 'question' ? 33 : stage === 'analyzing' ? 66 : 100} 
@@ -183,34 +183,34 @@ export const HACSMicroLearning: React.FC<HACSMicroLearningProps> = ({
                 className="space-y-4"
               >
                 <div className="p-4 rounded-lg bg-muted/50">
-                  <p className="font-medium mb-2">Question:</p>
+                  <p className="font-medium mb-2">{t('hacs.microLearning.interface.questionLabel')}</p>
                   <p className="text-sm">{question.text}</p>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Your Response:</label>
+                  <label className="text-sm font-medium">{t('hacs.microLearning.interface.yourResponse')}</label>
                   <Textarea
                     value={userResponse}
                     onChange={(e) => setUserResponse(e.target.value)}
-                    placeholder="Share your thoughts and insights..."
+                    placeholder={t('hacs.microLearning.placeholder')}
                     rows={4}
                     className="resize-none"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Take your time to reflect. Quality responses help HACS learn about you.
+                    {t('hacs.microLearning.helperText')}
                   </p>
                 </div>
 
                 <div className="flex gap-2">
                   <Button variant="outline" onClick={handleClose} className="flex-1">
-                    Skip for Now
+                    {t('hacs.microLearning.interface.skipForNow')}
                   </Button>
                   <Button 
                     onClick={handleSubmitResponse}
                     disabled={!userResponse.trim()}
                     className="flex-1"
                   >
-                    Submit <ArrowRight className="h-4 w-4 ml-1" />
+                    {t('common.submit')} <ArrowRight className="h-4 w-4 ml-1" />
                   </Button>
                 </div>
               </motion.div>
