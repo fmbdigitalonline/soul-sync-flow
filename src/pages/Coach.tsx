@@ -21,8 +21,10 @@ const Coach = () => {
     isLoading,
     isStreamingResponse,
     sendMessage,
+    stopStreaming,
     resetConversation,
-    markMessageStreamingComplete
+    markMessageStreamingComplete,
+    recordVFPGraphFeedback
   } = useHACSConversationAdapter("guide", "companion");
 
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -51,6 +53,14 @@ const Coach = () => {
 
   const handleSendMessage = async (message: string) => {
     await sendMessage(message);
+  };
+
+  const handleStopStreaming = () => {
+    stopStreaming();
+  };
+
+  const handleFeedback = (messageId: string, isPositive: boolean) => {
+    recordVFPGraphFeedback(messageId, isPositive);
   };
 
   const handleReset = () => {
@@ -93,6 +103,8 @@ const Coach = () => {
       isStreamingResponse={isStreamingResponse}
       onSendMessage={handleSendMessage}
       onStreamingComplete={markMessageStreamingComplete}
+      onStopStreaming={handleStopStreaming}
+      onFeedback={handleFeedback}
     />
   );
 

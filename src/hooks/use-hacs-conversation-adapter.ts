@@ -20,6 +20,7 @@ export interface HACSConversationAdapter {
     context?: any,
     agentOverride?: string
   ) => Promise<void>;
+  stopStreaming: () => void;
   resetConversation: () => void;
   currentAgent: string;
   switchAgent: (newAgent: string) => void;
@@ -424,6 +425,22 @@ export const useHACSConversationAdapter = (
     hacsConversation.clearConversation();
   }, [hacsConversation.clearConversation]);
 
+  const stopStreaming = useCallback(() => {
+    console.log('🛑 STOP: User requested streaming stop');
+    
+    // Abort Oracle operation if active
+    if (oracleAbortRef.current) {
+      oracleAbortRef.current.abort();
+      oracleAbortRef.current = null;
+    }
+    
+    // Force recovery to clean up all operations
+    forceRecovery();
+    
+    // Stop HACS streaming
+    hacsConversation.stopStreaming();
+  }, [forceRecovery, hacsConversation.stopStreaming]);
+
   const switchAgent = useCallback((newAgent: string) => {
     // Keep agent switching functionality but route through HACS
     enhancedCoach.switchAgent(newAgent as any);
@@ -444,6 +461,7 @@ export const useHACSConversationAdapter = (
     isLoading: coordinatedLoading || hacsConversation.isLoading,
     isStreamingResponse: hacsConversation.isStreamingResponse,
     sendMessage,
+    stopStreaming,
     resetConversation,
     currentAgent: enhancedCoach.currentAgent,
     switchAgent,

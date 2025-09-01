@@ -665,6 +665,24 @@ export const useHACSConversation = () => {
     }
   });
 
+  const stopStreaming = useCallback(() => {
+    console.log('🛑 HACS: User requested streaming stop');
+    
+    // Abort current streaming operation
+    if (streamingAbortRef.current) {
+      streamingAbortRef.current.abort();
+      streamingAbortRef.current = null;
+    }
+    
+    // Reset streaming states
+    setIsStreamingResponse(false);
+    setIsLoading(false);
+    
+    // Complete coordinated loading
+    completeLoading('streaming');
+    completeLoading('oracle');
+  }, [completeLoading]);
+
   const clearConversation = useCallback(() => {
     setMessages([]);
     setConversationId(null);
@@ -684,6 +702,7 @@ export const useHACSConversation = () => {
     replaceLastMessage,
     generateQuestion,
     provideFeedback,
+    stopStreaming,
     clearConversation,
     markMessageStreamingComplete
   };

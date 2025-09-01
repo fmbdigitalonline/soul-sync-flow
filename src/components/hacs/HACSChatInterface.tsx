@@ -2,13 +2,14 @@ import React, { useRef, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { SendHorizontal, Loader2 } from "lucide-react";
+import { SendHorizontal, Loader2, Square } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ConversationMessage } from "@/hooks/use-hacs-conversation";
 import { TypewriterText } from "@/components/coach/TypewriterText";
 import { ThinkingDots } from "./ThinkingDots";
 import { useGlobalChatState } from "@/hooks/use-global-chat-state";
 import { useHACSConversationAdapter } from "@/hooks/use-hacs-conversation-adapter";
+import { VFPGraphFeedback } from "@/components/coach/VFPGraphFeedback";
 
 interface HACSChatInterfaceProps {
   messages: ConversationMessage[];
@@ -16,6 +17,8 @@ interface HACSChatInterfaceProps {
   isStreamingResponse?: boolean;
   onSendMessage: (message: string) => Promise<void>;
   onStreamingComplete?: (messageId: string) => void;
+  onStopStreaming?: () => void;
+  onFeedback?: (messageId: string, isPositive: boolean) => void;
 }
 
 export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
@@ -24,6 +27,8 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
   isStreamingResponse = false,
   onSendMessage,
   onStreamingComplete,
+  onStopStreaming,
+  onFeedback,
 }) => {
   const [inputValue, setInputValue] = useState("");
   const [initialMessageCount, setInitialMessageCount] = useState(0);
@@ -62,6 +67,20 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
       console.error('Failed to send message:', error);
       // Put the message back if it failed
       setInputValue(messageToSend);
+    }
+  };
+
+  const handleStopStreaming = () => {
+    if (onStopStreaming) {
+      onStopStreaming();
+    }
+  };
+
+  const handleButtonClick = () => {
+    if (isStreamingResponse) {
+      handleStopStreaming();
+    } else {
+      handleSendMessage();
     }
   };
 
@@ -123,6 +142,13 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
                         Question from: {message.module}
                       </div>
                     )}
+                    {/* Add feedback for AI messages */}
+                    {!message.isQuestion && onFeedback && (
+                      <VFPGraphFeedback
+                        messageId={message.id}
+                        onFeedbackGiven={(isPositive) => onFeedback(message.id, isPositive)}
+                      />
+                    )}
                   </div>
                 )}
               </div>
@@ -151,12 +177,14 @@ export const HACSChatInterface: React.FC<HACSChatInterfaceProps> = ({
             className="flex-1 text-base pb-[env(safe-area-inset-bottom)]"
           />
           <Button
-            onClick={handleSendMessage}
-            disabled={!inputValue.trim() || isLoading}
+            onClick={handleButtonClick}
+            disabled={!inputValue.trim() && !isStreamingResponse}
             size="lg"
             className="h-14 px-4"
           >
-            {isLoading ? (
+            {isStreamingResponse ? (
+              <Square className="h-5 w-5" />
+            ) : isLoading ? (
               <Loader2 className="h-5 w-5 animate-spin" />
             ) : (
               <SendHorizontal className="h-5 w-5" />
