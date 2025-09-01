@@ -4,6 +4,268 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
+// Intelligence Report Orchestrator Integration
+interface IntelligenceAnalyst {
+  name: string;
+  dimension: string;
+  generateReport(hermeticChunk: string, previousInsights: string, blueprintContext: any): Promise<string>;
+}
+
+interface IntelligenceReport {
+  identity_constructs: string;
+  behavioral_triggers: string;
+  execution_bias: string;
+  somatic_markers: string;
+  relational_dynamics: string;
+  consciousness_integration: string;
+  shadow_work_integration: string;
+  hermetic_fractal_analysis: string;
+  transformation_phases: string;
+  polarity_integration: string;
+  gate_analysis: string;
+  spiritual_psychology: string;
+  metamorphosis_patterns: string;
+}
+
+// Copy Intelligence Analyst classes directly into Edge Function
+class IdentityConstructsAnalyst implements IntelligenceAnalyst {
+  name = "Identity Constructs Analyst";
+  dimension = "identity_constructs";
+
+  async generateReport(hermeticChunk: string, previousInsights: string, blueprintContext: any): Promise<string> {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: [{ role: 'user', content: `
+As the Identity Constructs Analyst, generate a comprehensive 3,000-4,000 word analysis of identity formation patterns from:
+
+HERMETIC REPORT: ${hermeticChunk}
+PREVIOUS INSIGHTS: ${previousInsights}
+BLUEPRINT: MBTI: ${blueprintContext.cognition_mbti?.type}, HD: ${blueprintContext.energy_strategy_human_design?.type}, Life Path: ${blueprintContext.values_life_path?.lifePathNumber}
+
+Cover: Core Identity Architecture, Identity Defense Mechanisms, Identity Evolution Patterns, Identity Integration Opportunities, and Practical Recommendations.` }],
+        temperature: 0.7,
+        max_tokens: 4000,
+      }),
+    });
+    const data = await response.json();
+    return data.choices[0].message.content;
+  }
+}
+
+class BehavioralTriggersAnalyst implements IntelligenceAnalyst {
+  name = "Behavioral Triggers Analyst"; 
+  dimension = "behavioral_triggers";
+
+  async generateReport(hermeticChunk: string, previousInsights: string, blueprintContext: any): Promise<string> {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: [{ role: 'user', content: `
+As the Behavioral Triggers Analyst, generate a comprehensive 3,000-4,000 word analysis of behavioral patterns from:
+
+HERMETIC REPORT: ${hermeticChunk}
+PREVIOUS INSIGHTS: ${previousInsights}
+BLUEPRINT: Authority: ${blueprintContext.energy_strategy_human_design?.authority}, MBTI: ${blueprintContext.cognition_mbti?.type}
+
+Cover: Trigger Identification & Mapping, Automatic Response Systems, Trigger Transformation Pathways, Behavioral Recalibration Methods, and Mastery Practices.` }],
+        temperature: 0.7,
+        max_tokens: 4000,
+      }),
+    });
+    const data = await response.json();
+    return data.choices[0].message.content;
+  }
+}
+
+// Add remaining 10 analysts with same pattern but focused prompts
+class ExecutionBiasAnalyst implements IntelligenceAnalyst {
+  name = "Execution Bias Analyst";
+  dimension = "execution_bias";
+  async generateReport(hermeticChunk: string, previousInsights: string, blueprintContext: any): Promise<string> {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST', headers: { 'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'gpt-4o', messages: [{ role: 'user', content: `As the Execution Bias Analyst, generate 3,000-4,000 words on decision-making patterns and action-taking biases. HERMETIC: ${hermeticChunk} INSIGHTS: ${previousInsights} BLUEPRINT: ${JSON.stringify(blueprintContext)}` }],
+        temperature: 0.7, max_tokens: 4000
+      })
+    });
+    return (await response.json()).choices[0].message.content;
+  }
+}
+
+class SomaticMarkersAnalyst implements IntelligenceAnalyst {
+  name = "Somatic Markers Analyst"; dimension = "somatic_markers";
+  async generateReport(hermeticChunk: string, previousInsights: string, blueprintContext: any): Promise<string> {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST', headers: { 'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'gpt-4o', messages: [{ role: 'user', content: `As the Somatic Markers Analyst, generate 3,000-4,000 words on body wisdom and embodied intelligence patterns. HERMETIC: ${hermeticChunk} INSIGHTS: ${previousInsights}` }], temperature: 0.7, max_tokens: 4000 })
+    });
+    return (await response.json()).choices[0].message.content;
+  }
+}
+
+class RelationalDynamicsAnalyst implements IntelligenceAnalyst {
+  name = "Relational Dynamics Analyst"; dimension = "relational_dynamics";
+  async generateReport(hermeticChunk: string, previousInsights: string, blueprintContext: any): Promise<string> {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST', headers: { 'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'gpt-4o', messages: [{ role: 'user', content: `As the Relational Dynamics Analyst, generate 3,000-4,000 words on relationship patterns and social intelligence.` }], temperature: 0.7, max_tokens: 4000 })
+    });
+    return (await response.json()).choices[0].message.content;
+  }
+}
+
+class ConsciousnessIntegrationAnalyst implements IntelligenceAnalyst {
+  name = "Consciousness Integration Analyst"; dimension = "consciousness_integration";
+  async generateReport(hermeticChunk: string, previousInsights: string, blueprintContext: any): Promise<string> {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST', headers: { 'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'gpt-4o', messages: [{ role: 'user', content: `As the Consciousness Integration Analyst, generate 3,000-4,000 words on consciousness development and integration patterns.` }], temperature: 0.7, max_tokens: 4000 })
+    });
+    return (await response.json()).choices[0].message.content;
+  }
+}
+
+class ShadowWorkIntegrationAnalyst implements IntelligenceAnalyst {
+  name = "Shadow Work Integration Analyst"; dimension = "shadow_work_integration";
+  async generateReport(hermeticChunk: string, previousInsights: string, blueprintContext: any): Promise<string> {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST', headers: { 'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'gpt-4o', messages: [{ role: 'user', content: `As the Shadow Work Integration Analyst, generate 3,000-4,000 words on shadow patterns and integration practices.` }], temperature: 0.7, max_tokens: 4000 })
+    });
+    return (await response.json()).choices[0].message.content;
+  }
+}
+
+class HermeticFractalAnalyst implements IntelligenceAnalyst {
+  name = "Hermetic Fractal Analyst"; dimension = "hermetic_fractal_analysis";
+  async generateReport(hermeticChunk: string, previousInsights: string, blueprintContext: any): Promise<string> {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST', headers: { 'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'gpt-4o', messages: [{ role: 'user', content: `As the Hermetic Fractal Analyst, generate 3,000-4,000 words on fractal patterns and hermetic principles integration.` }], temperature: 0.7, max_tokens: 4000 })
+    });
+    return (await response.json()).choices[0].message.content;
+  }
+}
+
+class TransformationPhasesAnalyst implements IntelligenceAnalyst {
+  name = "Transformation Phases Analyst"; dimension = "transformation_phases";
+  async generateReport(hermeticChunk: string, previousInsights: string, blueprintContext: any): Promise<string> {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST', headers: { 'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'gpt-4o', messages: [{ role: 'user', content: `As the Transformation Phases Analyst, generate 3,000-4,000 words on transformation stages and evolution phases.` }], temperature: 0.7, max_tokens: 4000 })
+    });
+    return (await response.json()).choices[0].message.content;
+  }
+}
+
+class PolarityIntegrationAnalyst implements IntelligenceAnalyst {
+  name = "Polarity Integration Analyst"; dimension = "polarity_integration";
+  async generateReport(hermeticChunk: string, previousInsights: string, blueprintContext: any): Promise<string> {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST', headers: { 'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'gpt-4o', messages: [{ role: 'user', content: `As the Polarity Integration Analyst, generate 3,000-4,000 words on polarity integration and balance patterns.` }], temperature: 0.7, max_tokens: 4000 })
+    });
+    return (await response.json()).choices[0].message.content;
+  }
+}
+
+class GateAnalysisAnalyst implements IntelligenceAnalyst {
+  name = "Gate Analysis Analyst"; dimension = "gate_analysis";
+  async generateReport(hermeticChunk: string, previousInsights: string, blueprintContext: any): Promise<string> {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST', headers: { 'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'gpt-4o', messages: [{ role: 'user', content: `As the Gate Analysis Analyst, generate 3,000-4,000 words on Human Design gates and their deep psychological significance.` }], temperature: 0.7, max_tokens: 4000 })
+    });
+    return (await response.json()).choices[0].message.content;
+  }
+}
+
+class SpiritualPsychologyAnalyst implements IntelligenceAnalyst {
+  name = "Spiritual Psychology Analyst"; dimension = "spiritual_psychology";
+  async generateReport(hermeticChunk: string, previousInsights: string, blueprintContext: any): Promise<string> {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST', headers: { 'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'gpt-4o', messages: [{ role: 'user', content: `As the Spiritual Psychology Analyst, generate 3,000-4,000 words on spiritual development and psychological integration.` }], temperature: 0.7, max_tokens: 4000 })
+    });
+    return (await response.json()).choices[0].message.content;
+  }
+}
+
+class MetamorphosisPatternsAnalyst implements IntelligenceAnalyst {
+  name = "Metamorphosis Patterns Analyst"; dimension = "metamorphosis_patterns";
+  async generateReport(hermeticChunk: string, previousInsights: string, blueprintContext: any): Promise<string> {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST', headers: { 'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'gpt-4o', messages: [{ role: 'user', content: `As the Metamorphosis Patterns Analyst, generate 3,000-4,000 words on transformation patterns and evolutionary development.` }], temperature: 0.7, max_tokens: 4000 })
+    });
+    return (await response.json()).choices[0].message.content;
+  }
+}
+
+// Intelligence Report Orchestrator
+class IntelligenceReportOrchestrator {
+  private analysts: IntelligenceAnalyst[] = [
+    new IdentityConstructsAnalyst(),
+    new BehavioralTriggersAnalyst(),
+    new ExecutionBiasAnalyst(),
+    new SomaticMarkersAnalyst(),
+    new RelationalDynamicsAnalyst(),
+    new ConsciousnessIntegrationAnalyst(),
+    new ShadowWorkIntegrationAnalyst(),
+    new HermeticFractalAnalyst(),
+    new TransformationPhasesAnalyst(),
+    new PolarityIntegrationAnalyst(),
+    new GateAnalysisAnalyst(),
+    new SpiritualPsychologyAnalyst(),
+    new MetamorphosisPatternsAnalyst()
+  ];
+
+  async generateIntelligenceReport(userId: string, hermeticReport: any, blueprintData: any): Promise<IntelligenceReport> {
+    console.log('🧠 Starting Intelligence Report Generation with', this.analysts.length, 'analysts');
+    
+    const report: Partial<IntelligenceReport> = {};
+    let cumulativeInsights = "";
+
+    for (const analyst of this.analysts) {
+      try {
+        console.log(`🔍 Processing ${analyst.name}...`);
+        
+        const hermeticChunk = this.extractRelevantHermeticChunk(hermeticReport, analyst.dimension);
+        const analysisReport = await analyst.generateReport(hermeticChunk, cumulativeInsights, blueprintData);
+
+        report[analyst.dimension as keyof IntelligenceReport] = analysisReport;
+        cumulativeInsights += `\n\n${analyst.name} Key Insights:\n${analysisReport.substring(0, 500)}...`;
+        
+        console.log(`✅ Completed ${analyst.name} - ${analysisReport.length} characters`);
+        
+      } catch (error) {
+        console.error(`❌ Error in ${analyst.name}:`, error);
+        report[analyst.dimension as keyof IntelligenceReport] = `Error generating ${analyst.name} analysis: ${error.message}`;
+      }
+    }
+
+    console.log('🎉 Intelligence Report Generation Complete');
+    return report as IntelligenceReport;
+  }
+
+  private extractRelevantHermeticChunk(hermeticReport: any, dimension: string): string {
+    const sections = Object.values(hermeticReport).join('\n\n');
+    return sections.substring(0, 2000);
+  }
+}
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -334,14 +596,37 @@ CRITICAL: Each numbered section (1-6) MUST contain detailed analysis, not quotes
     
     console.log('💾 Storing report with blueprint_id:', blueprintId);
 
-    // Store the report in the database
+    // 🧠 INTEGRATION: Generate Intelligence Report with 12 Specialists
+    console.log('🧠 Generating comprehensive intelligence analysis with 12 specialists...');
+    const orchestrator = new IntelligenceReportOrchestrator();
+    
+    let intelligenceReport: IntelligenceReport | null = null;
+    try {
+      intelligenceReport = await orchestrator.generateIntelligenceReport(
+        userId,
+        reportContent,
+        blueprint
+      );
+      console.log('✅ Intelligence report generated successfully');
+    } catch (error) {
+      console.error('⚠️ Intelligence report generation failed, continuing with basic report:', error);
+    }
+
+    // Enhanced report content with intelligence sections
+    const enhancedReportContent = {
+      ...reportContent,
+      // 🧠 NEW: Add 12 intelligence analyst sections
+      intelligence_analysis: intelligenceReport || null
+    };
+
+    // Store the enhanced report in the database
     const { data: reportData, error: insertError } = await supabaseClient
       .from('personality_reports')
       .insert({
         user_id: userId,
         blueprint_id: blueprintId,
-        report_content: reportContent,
-        blueprint_version: '1.0'
+        report_content: enhancedReportContent,
+        blueprint_version: '1.1' // Updated version to indicate enhanced content
       })
       .select()
       .single();
@@ -375,12 +660,28 @@ CRITICAL: Each numbered section (1-6) MUST contain detailed analysis, not quotes
       }
     }
 
+    // Final report summary
+    const totalContentSize = JSON.stringify(enhancedReportContent).length;
+    const intelligenceSections = intelligenceReport ? Object.keys(intelligenceReport).length : 0;
+    
+    console.log('📊 Final Report Summary:');
+    console.log(`  - Total content size: ${totalContentSize} bytes`);
+    console.log(`  - Intelligence sections: ${intelligenceSections}/12`);
+    console.log(`  - Quotes generated: ${quotesToInsert.length}`);
+    console.log(`  - Blueprint version: 1.1 (Enhanced with Intelligence)`);
+
     console.log('✅ Personality report and quotes generated successfully');
 
     return new Response(JSON.stringify({ 
       success: true, 
       report: reportData,
-      quotes: quotesToInsert
+      quotes: quotesToInsert,
+      enhancement_metadata: {
+        intelligence_sections_generated: intelligenceSections,
+        total_analysts_attempted: 12,
+        content_size_bytes: totalContentSize,
+        enhanced_version: '1.1'
+      }
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
