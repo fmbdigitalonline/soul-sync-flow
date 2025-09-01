@@ -415,7 +415,65 @@ const translations: Record<Language, Translations> = {
       generated: 'Blueprint Generated',
       generatedDescription: 'Your new blueprint has been generated successfully',
       generationError: 'Error Generating Blueprint',
-      generationErrorDescription: 'Failed to generate blueprint'
+      generationErrorDescription: 'Failed to generate blueprint',
+      
+      // Profile Section
+      profile: {
+        title: "{userName}'s Profile",
+        calculatedDescription: "Calculated using advanced personality analysis",
+        templateDescription: "Using template data - create your profile for personalized results",
+        personalizedData: "Personalized Data",
+        templateData: "Template Data"
+      },
+      
+      // Section Titles
+      sections: {
+        personalityOverview: "Personality Overview",
+        mbtiProfile: "MBTI Cognitive Profile", 
+        humanDesignProfile: "Human Design Profile",
+        numerologyProfile: "Complete Numerology Profile",
+        astrologicalProfile: "Astrological Profile"
+      },
+      
+      // Field Labels
+      labels: {
+        mbtiType: "MBTI Type",
+        lifePath: "Life Path",
+        sunSign: "Sun Sign",
+        humanDesign: "Human Design",
+        chineseZodiac: "Chinese Zodiac",
+        personalityType: "Personality Type",
+        cognitiveFunctions: "Cognitive Functions",
+        taskApproach: "Task Approach",
+        communication: "Communication", 
+        decisionMaking: "Decision Making",
+        energyType: "Energy Type",
+        decisionAuthority: "Decision Authority",
+        strategy: "Strategy",
+        profile: "Profile",
+        pacing: "Pacing",
+        lifePathNumber: "Life Path Number",
+        expressionNumber: "Expression Number",
+        soulUrgeNumber: "Soul Urge Number",
+        personalityNumber: "Personality Number",
+        birthdayNumber: "Birthday Number"
+      },
+      
+      // Descriptions
+      descriptions: {
+        coreIdentity: "Core identity",
+        authority: "Authority",
+        element: "Element",
+        dominant: "Dominant:",
+        auxiliary: "Auxiliary:",
+        sustainableEnergy: "sustainable energy",
+        innerAuthority: "Inner authority",
+        coreLifePurpose: "Your life's core purpose and direction",
+        naturalTalents: "Your natural talents and abilities",
+        heartDesires: "Your heart's deepest desires",
+        howOthersPerceive: "How others perceive you",
+        specialTalents: "Special talents from birth date"
+      }
     },
     
     // Report section
@@ -1356,7 +1414,65 @@ const translations: Record<Language, Translations> = {
       generated: 'Blauwdruk Gegenereerd',
       generatedDescription: 'Je nieuwe blauwdruk is succesvol gegenereerd',
       generationError: 'Fout bij Genereren Blauwdruk',
-      generationErrorDescription: 'Blauwdruk genereren mislukt'
+      generationErrorDescription: 'Blauwdruk genereren mislukt',
+      
+      // Profile Section
+      profile: {
+        title: "{userName}'s Profiel",
+        calculatedDescription: "Berekend met geavanceerde persoonlijkheidsanalyse",
+        templateDescription: "Gebruikt sjabloongegevens - maak je profiel voor gepersonaliseerde resultaten",
+        personalizedData: "Gepersonaliseerde Gegevens",
+        templateData: "Sjabloon Gegevens"
+      },
+      
+      // Section Titles
+      sections: {
+        personalityOverview: "Persoonlijkheidsoverzicht",
+        mbtiProfile: "MBTI Cognitief Profiel", 
+        humanDesignProfile: "Human Design Profiel",
+        numerologyProfile: "Volledig Numerologie Profiel",
+        astrologicalProfile: "Astrologisch Profiel"
+      },
+      
+      // Field Labels
+      labels: {
+        mbtiType: "MBTI Type",
+        lifePath: "Levenspad",
+        sunSign: "Zonneteken",
+        humanDesign: "Human Design",
+        chineseZodiac: "Chinese Dierenriem",
+        personalityType: "Persoonlijkheidstype",
+        cognitiveFunctions: "Cognitieve Functies",
+        taskApproach: "Taak Benadering",
+        communication: "Communicatie", 
+        decisionMaking: "Besluitvorming",
+        energyType: "Energie Type",
+        decisionAuthority: "Beslissingsautoriteit",
+        strategy: "Strategie",
+        profile: "Profiel",
+        pacing: "Tempo",
+        lifePathNumber: "Levenspad Nummer",
+        expressionNumber: "Expressie Nummer",
+        soulUrgeNumber: "Zieldrang Nummer",
+        personalityNumber: "Persoonlijkheid Nummer",
+        birthdayNumber: "Verjaardag Nummer"
+      },
+      
+      // Descriptions
+      descriptions: {
+        coreIdentity: "Kern identiteit",
+        authority: "Autoriteit",
+        element: "Element",
+        dominant: "Dominant:",
+        auxiliary: "Hulp:",
+        sustainableEnergy: "duurzame energie",
+        innerAuthority: "Innerlijke autoriteit",
+        coreLifePurpose: "Je levens kerndoel en richting",
+        naturalTalents: "Je natuurlijke talenten en vaardigheden",
+        heartDesires: "Je diepste hartswensen",
+        howOthersPerceive: "Hoe anderen je zien",
+        specialTalents: "Speciale talenten van geboortedatum"
+      }
     },
     
     // Rapport sectie

@@ -6,6 +6,8 @@ import { CosmicCard } from "@/components/ui/cosmic-card";
 import { LayeredBlueprint } from "@/types/personality-modules";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { interpolateTranslation } from "@/utils/translation-utils";
 
 interface SimplifiedBlueprintViewerProps {
   blueprint: LayeredBlueprint;
@@ -14,6 +16,7 @@ interface SimplifiedBlueprintViewerProps {
 const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ blueprint }) => {
   console.log('🎯 SimplifiedBlueprintViewer received LayeredBlueprint:', blueprint);
   const { spacing, getTextSize } = useResponsiveLayout();
+  const { t } = useLanguage();
   
   // State for expandable sections
   const [expandedSections, setExpandedSections] = useState<{[key: string]: boolean}>({
@@ -94,12 +97,12 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
       <div className="flex flex-col gap-3 mb-6 w-full max-w-full">
         <div className="w-full max-w-full">
           <h2 className={`${getTextSize('text-2xl')} font-cormorant font-bold break-words`}>
-            {userName}'s Profile
+            {interpolateTranslation(t('blueprint.profile.title'), { userName })}
           </h2>
           <p className={`${getTextSize('text-sm')} font-inter text-muted-foreground break-words`}>
             {hasRealData ? 
-              "Calculated using advanced personality analysis" : 
-              "Using template data - create your profile for personalized results"
+              t('blueprint.profile.calculatedDescription') : 
+              t('blueprint.profile.templateDescription')
             }
           </p>
         </div>
@@ -107,12 +110,12 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
         <div className="flex flex-wrap gap-2 w-full max-w-full">
           {hasRealData && (
             <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs flex-shrink-0 font-inter">
-              ✅ Personalized Data
+              ✅ {t('blueprint.profile.personalizedData')}
             </Badge>
           )}
           {!hasRealData && (
             <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200 text-xs flex-shrink-0 font-inter">
-              📋 Template Data
+              📋 {t('blueprint.profile.templateData')}
             </Badge>
           )}
         </div>
@@ -122,7 +125,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
       <Card className="w-full max-w-full overflow-hidden">
         <CardHeader className={spacing.card}>
           <SectionHeader 
-            title="Personality Overview" 
+            title={t('blueprint.sections.personalityOverview')} 
             isExpanded={expandedSections.overview}
             onClick={() => toggleSection('overview')}
           />
@@ -132,32 +135,32 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
             <div className="grid grid-cols-1 gap-4 w-full max-w-full">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="text-center p-3 bg-soul-purple/5 rounded-3xl">
-                  <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>MBTI Type</h4>
+                  <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.mbtiType')}</h4>
                   <p className={`${getTextSize('text-2xl')} font-cormorant font-bold text-soul-purple break-words`}>{mbtiType}</p>
                   <p className={`${getTextSize('text-xs')} font-inter text-gray-600 break-words`}>{dominantFunction}</p>
                 </div>
                 <div className="text-center p-3 bg-soul-purple/5 rounded-3xl">
-                  <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>Life Path</h4>
+                  <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.lifePath')}</h4>
                   <p className={`${getTextSize('text-2xl')} font-cormorant font-bold text-soul-purple`}>{lifePath}</p>
                   <p className={`${getTextSize('text-xs')} font-inter text-gray-600 break-words`}>{lifePathKeyword}</p>
                 </div>
                 <div className="text-center p-3 bg-soul-purple/5 rounded-3xl">
-                  <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>Sun Sign</h4>
+                  <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.sunSign')}</h4>
                   <p className={`${getTextSize('text-2xl')} font-cormorant font-bold text-soul-purple break-words`}>{sunSign}</p>
-                  <p className={`${getTextSize('text-xs')} font-inter text-gray-600 break-words`}>Core identity</p>
+                  <p className={`${getTextSize('text-xs')} font-inter text-gray-600 break-words`}>{t('blueprint.descriptions.coreIdentity')}</p>
                 </div>
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                 <div className="text-center p-3 bg-soul-purple/5 rounded-3xl">
-                  <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>Human Design</h4>
+                  <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.humanDesign')}</h4>
                   <p className={`${getTextSize('text-lg')} font-cormorant font-bold text-soul-purple break-words`}>{hdType}</p>
-                  <p className={`${getTextSize('text-xs')} font-inter text-gray-600 break-words`}>{authority} Authority</p>
+                  <p className={`${getTextSize('text-xs')} font-inter text-gray-600 break-words`}>{authority} {t('blueprint.descriptions.authority')}</p>
                 </div>
                 <div className="text-center p-3 bg-soul-purple/5 rounded-3xl">
-                  <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>Chinese Zodiac</h4>
+                  <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.chineseZodiac')}</h4>
                   <p className={`${getTextSize('text-lg')} font-cormorant font-bold text-soul-purple break-words`}>{chineseZodiac}</p>
-                  <p className={`${getTextSize('text-xs')} font-inter text-gray-600 break-words`}>{element} Element</p>
+                  <p className={`${getTextSize('text-xs')} font-inter text-gray-600 break-words`}>{element} {t('blueprint.descriptions.element')}</p>
                 </div>
               </div>
             </div>
@@ -169,7 +172,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
       <Card className="w-full max-w-full overflow-hidden">
         <CardHeader className={spacing.card}>
           <SectionHeader 
-            title="MBTI Cognitive Profile" 
+            title={t('blueprint.sections.mbtiProfile')} 
             isExpanded={expandedSections.mbti}
             onClick={() => toggleSection('mbti')}
           />
@@ -179,27 +182,27 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
             <div className="space-y-4 w-full max-w-full">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <h4 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-base')} break-words`}>Personality Type</h4>
+                  <h4 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-base')} break-words`}>{t('blueprint.labels.personalityType')}</h4>
                   <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple break-words`}>{mbtiType}</p>
                 </div>
                 <div>
-                  <h4 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-base')} break-words`}>Cognitive Functions</h4>
-                  <p className={`${getTextSize('text-sm')} font-inter text-soul-purple break-words`}><strong>Dominant:</strong> {dominantFunction}</p>
-                  <p className={`${getTextSize('text-sm')} font-inter text-soul-purple break-words`}><strong>Auxiliary:</strong> {auxiliaryFunction}</p>
+                  <h4 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-base')} break-words`}>{t('blueprint.labels.cognitiveFunctions')}</h4>
+                  <p className={`${getTextSize('text-sm')} font-inter text-soul-purple break-words`}><strong>{t('blueprint.descriptions.dominant')}</strong> {dominantFunction}</p>
+                  <p className={`${getTextSize('text-sm')} font-inter text-soul-purple break-words`}><strong>{t('blueprint.descriptions.auxiliary')}</strong> {auxiliaryFunction}</p>
                 </div>
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
-                  <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>Task Approach</h5>
+                  <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.taskApproach')}</h5>
                   <p className={`${getTextSize('text-lg')} font-inter font-bold text-soul-purple capitalize break-words`}>{taskApproach}</p>
                 </div>
                 <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
-                  <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>Communication</h5>
+                  <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.communication')}</h5>
                   <p className={`${getTextSize('text-lg')} font-inter font-bold text-soul-purple capitalize break-words`}>{communicationStyle}</p>
                 </div>
                 <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
-                  <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>Decision Making</h5>
+                  <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.decisionMaking')}</h5>
                   <p className={`${getTextSize('text-lg')} font-inter font-bold text-soul-purple capitalize break-words`}>{decisionMaking}</p>
                 </div>
               </div>
@@ -212,7 +215,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
       <Card className="w-full max-w-full overflow-hidden">
         <CardHeader className={spacing.card}>
           <SectionHeader 
-            title="Human Design Profile" 
+            title={t('blueprint.sections.humanDesignProfile')} 
             isExpanded={expandedSections.humanDesign}
             onClick={() => toggleSection('humanDesign')}
           />
@@ -222,28 +225,28 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
             <div className="space-y-4 w-full max-w-full">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <h4 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-base')} break-words`}>Energy Type</h4>
+                  <h4 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-base')} break-words`}>{t('blueprint.labels.energyType')}</h4>
                   <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple break-words`}>{hdType}</p>
-                  <p className={`${getTextSize('text-sm')} font-inter text-soul-purple break-words`}>{energyType} energy</p>
+                  <p className={`${getTextSize('text-sm')} font-inter text-soul-purple break-words`}>{t('blueprint.descriptions.sustainableEnergy')}</p>
                 </div>
                 <div>
-                  <h4 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-base')} break-words`}>Decision Authority</h4>
+                  <h4 className={`font-cormorant font-semibold text-soul-purple mb-2 ${getTextSize('text-base')} break-words`}>{t('blueprint.labels.decisionAuthority')}</h4>
                   <p className={`${getTextSize('text-xl')} font-cormorant font-bold text-soul-purple break-words`}>{authority}</p>
-                  <p className={`${getTextSize('text-sm')} font-inter text-soul-purple break-words`}>Inner authority</p>
+                  <p className={`${getTextSize('text-sm')} font-inter text-soul-purple break-words`}>{t('blueprint.descriptions.innerAuthority')}</p>
                 </div>
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
-                  <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>Strategy</h5>
+                  <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.strategy')}</h5>
                   <p className={`${getTextSize('text-lg')} font-inter font-bold text-soul-purple capitalize break-words`}>{strategy}</p>
                 </div>
                 <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
-                  <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>Profile</h5>
+                  <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.profile')}</h5>
                   <p className={`${getTextSize('text-lg')} font-inter font-bold text-soul-purple break-words`}>{profile}</p>
                 </div>
                 <div className="p-3 bg-soul-purple/5 rounded-3xl text-center">
-                  <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>Pacing</h5>
+                  <h5 className={`font-cormorant font-semibold text-soul-purple mb-1 ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.pacing')}</h5>
                   <p className={`${getTextSize('text-lg')} font-inter font-bold text-soul-purple capitalize break-words`}>{pacing}</p>
                 </div>
               </div>
@@ -256,7 +259,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
       <CosmicCard className="w-full max-w-full overflow-hidden">
         <div className={spacing.card}>
           <SectionHeader 
-            title="Complete Numerology Profile" 
+            title={t('blueprint.sections.numerologyProfile')} 
             isExpanded={expandedSections.numerology}
             onClick={() => toggleSection('numerology')}
           />
@@ -266,37 +269,37 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
             <div className="grid grid-cols-1 gap-6 w-full max-w-full">
               <div className="space-y-4">
                 <div className="p-3 bg-soul-purple/5 rounded-3xl">
-                  <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-base')} break-words`}>Life Path Number</h4>
+                  <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-base')} break-words`}>{t('blueprint.labels.lifePathNumber')}</h4>
                   <p className={`${getTextSize('text-4xl')} font-cormorant font-bold text-soul-purple`}>{lifePath}</p>
                   <p className={`${getTextSize('text-sm')} font-inter text-gray-600 font-medium break-words`}>{lifePathKeyword}</p>
-                  <p className={`${getTextSize('text-xs')} font-inter text-gray-500 break-words`}>Your life's core purpose and direction</p>
+                  <p className={`${getTextSize('text-xs')} font-inter text-gray-500 break-words`}>{t('blueprint.descriptions.coreLifePurpose')}</p>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="p-3 bg-soul-purple/5 rounded-3xl">
-                    <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>Expression Number</h4>
+                    <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.expressionNumber')}</h4>
                     <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple`}>{expressionNumber}</p>
                     <p className={`${getTextSize('text-sm')} font-inter text-gray-600 font-medium break-words`}>{expressionKeyword}</p>
-                    <p className={`${getTextSize('text-xs')} font-inter text-gray-500 break-words`}>Your natural talents and abilities</p>
+                    <p className={`${getTextSize('text-xs')} font-inter text-gray-500 break-words`}>{t('blueprint.descriptions.naturalTalents')}</p>
                   </div>
                   <div className="p-3 bg-soul-purple/5 rounded-3xl">
-                    <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>Soul Urge Number</h4>
+                    <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.soulUrgeNumber')}</h4>
                     <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple`}>{soulUrgeNumber}</p>
                     <p className={`${getTextSize('text-sm')} font-inter text-gray-600 font-medium break-words`}>{soulUrgeKeyword}</p>
-                    <p className={`${getTextSize('text-xs')} font-inter text-gray-500 break-words`}>Your heart's deepest desires</p>
+                    <p className={`${getTextSize('text-xs')} font-inter text-gray-500 break-words`}>{t('blueprint.descriptions.heartDesires')}</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="p-3 bg-soul-purple/5 rounded-3xl">
-                    <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>Personality Number</h4>
+                    <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.personalityNumber')}</h4>
                     <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple`}>{personalityNumber}</p>
                     <p className={`${getTextSize('text-sm')} font-inter text-gray-600 font-medium break-words`}>{personalityKeyword}</p>
-                    <p className={`${getTextSize('text-xs')} font-inter text-gray-500 break-words`}>How others perceive you</p>
+                    <p className={`${getTextSize('text-xs')} font-inter text-gray-500 break-words`}>{t('blueprint.descriptions.howOthersPerceive')}</p>
                   </div>
                   <div className="p-3 bg-soul-purple/5 rounded-3xl">
-                    <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>Birthday Number</h4>
+                    <h4 className={`font-cormorant font-semibold text-soul-purple ${getTextSize('text-sm')} break-words`}>{t('blueprint.labels.birthdayNumber')}</h4>
                     <p className={`${getTextSize('text-3xl')} font-cormorant font-bold text-soul-purple`}>{birthdayNumber}</p>
                     <p className={`${getTextSize('text-sm')} font-inter text-gray-600 font-medium break-words`}>{birthdayKeyword}</p>
-                    <p className={`${getTextSize('text-xs')} font-inter text-gray-500 break-words`}>Special talents from birth date</p>
+                    <p className={`${getTextSize('text-xs')} font-inter text-gray-500 break-words`}>{t('blueprint.descriptions.specialTalents')}</p>
                   </div>
                 </div>
               </div>
@@ -314,7 +317,7 @@ const SimplifiedBlueprintViewer: React.FC<SimplifiedBlueprintViewerProps> = ({ b
       <Card className="w-full max-w-full overflow-hidden">
         <CardHeader className={spacing.card}>
           <SectionHeader 
-            title="Astrological Profile" 
+            title={t('blueprint.sections.astrologicalProfile')} 
             isExpanded={expandedSections.astrology}
             onClick={() => toggleSection('astrology')}
           />
