@@ -16,6 +16,7 @@ import { translateAnalyticsToOracle, PersonalityContext } from '@/utils/oracle-i
 import { usePersonalityEngine } from './use-personality-engine';
 import { useStewardIntroduction } from './use-steward-introduction';
 // Phase 1: Enhanced Intelligence Services Integration
+import { SmartInsightController } from '@/services/smart-insight-controller';
 import { enhancedMemoryIntelligence } from '@/services/enhanced-memory-intelligence';
 import { behavioralPatternIntelligence } from '@/services/behavioral-pattern-intelligence';
 import { unifiedBrainContext } from '@/services/unified-brain-context';
@@ -26,7 +27,7 @@ export interface HACSInsight {
   id: string;
   text: string;
   module: string;
-  type: 'productivity' | 'behavioral' | 'growth' | 'learning' | 'intelligence_trend' | 'learning_streak' | 'performance_trend' | 'peak_times' | 'activity_frequency' | 'module_performance' | 'memory_patterns' | 'difficulty_progression' | 'steward_introduction' | 'memory_enhanced' | 'behavioral_enhanced' | 'predictive';
+  type: 'productivity' | 'behavioral' | 'growth' | 'learning' | 'intelligence_trend' | 'learning_streak' | 'performance_trend' | 'peak_times' | 'activity_frequency' | 'module_performance' | 'memory_patterns' | 'difficulty_progression' | 'steward_introduction' | 'memory_enhanced' | 'behavioral_enhanced' | 'predictive' | 'conversation_shadow' | 'conversation_nullification';
   confidence: number;
   evidence: string[];
   timestamp: Date;
@@ -180,14 +181,57 @@ export const useHACSInsights = () => {
         activity_data: activityData || {},
         session_id: `activity_${Date.now()}`
       });
+      
+      // Also track with smart insight controller
+      if (activityType.includes('conversation')) {
+        SmartInsightController.trackUserActivity(user.id, 'conversation');
+      }
     } catch (error) {
       console.error('Error tracking activity:', error);
     }
   }, [user]);
 
-  // Generate analytics-based insights using real user data
+  // Generate conversation-derived insights (priority)
+  const generateConversationInsights = useCallback(async (): Promise<HACSInsight[]> => {
+    if (!user) return [];
+
+    try {
+      console.log('🎯 Generating conversation-derived insights...');
+      const conversationInsights = await SmartInsightController.generateConversationInsights(user.id);
+      
+      return conversationInsights.map(insight => ({
+        id: insight.id,
+        text: `${insight.message}\n\nActionable steps:\n${insight.actionableSteps.map(step => `• ${step}`).join('\n')}`,
+        module: 'Conversation',
+        type: insight.type === 'shadow_work' ? 'conversation_shadow' : 'conversation_nullification',
+        confidence: insight.confidence,
+        evidence: [insight.conversationContext, `Pattern frequency: ${insight.shadowPattern.frequency}`],
+        timestamp: new Date(),
+        acknowledged: false,
+        priority: insight.priority
+      }));
+    } catch (error) {
+      console.error('Error generating conversation insights:', error);
+      return [];
+    }
+  }, [user]);
+
+  // Generate analytics-based insights using real user data (secondary priority)
   const generateAnalyticsInsight = useCallback(async (personalityContext?: PersonalityContext): Promise<HACSInsight | null> => {
     if (!user || !intelligence) return null;
+
+    // Check if we can deliver analytical insights (max 1 per day)
+    if (!SmartInsightController.canDeliverAnalyticalInsight(user.id)) {
+      console.log('📊 Analytics insight delivery limit reached');
+      return null;
+    }
+
+    // Check if there's sufficient data
+    const hasSufficientData = await SmartInsightController.hasSufficientDataForAnalytics(user.id);
+    if (!hasSufficientData) {
+      console.log('📊 Insufficient data for analytics insights');
+      return null;
+    }
 
     try {
       // Get user blueprint for personality-aware insights
