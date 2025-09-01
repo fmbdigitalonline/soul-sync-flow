@@ -1113,7 +1113,7 @@ const translations: Record<Language, Translations> = {
         askCoach: 'Ask about your task, request actions, or get guidance...'
       }
     }
-    },
+   },
   nl: {
     language: {
       english: 'English',
@@ -2108,6 +2108,30 @@ const translations: Record<Language, Translations> = {
         testMessage: 'Typ een bericht om te testen...',
         askCoach: 'Vraag over je taak, verzoek acties, of krijg begeleiding...'
       }
+    },
+
+    // Guided Tour
+    guidedTour: {
+      soulCoach: 'Ziel Coach Begeleiding',
+      stepOf: 'Stap {tourStep} van {totalSteps}',
+      orientation: 'Je wordt wegwijs gemaakt in je gepersonaliseerde reis om te helpen begrijpen hoe alles samenwerkt.',
+      skipTour: 'Tour Overslaan',
+      next: 'Volgende',
+      gotIt: 'Begrepen!'
+    },
+
+    // Journey Overview
+    journeyOverview: {
+      title: 'Je Volledige Reis Overzicht',
+      titleShort: 'Reis Overzicht',
+      subtitle: 'Speciaal ontworpen voor jouw blauwdruk',
+      milestones: 'Mijlpalen',
+      milestonesDesc: 'Belangrijke prestatiefasen',
+      actionTasks: 'Actie Taken',
+      tasks: 'Taken',
+      tasksDesc: 'Blauwdruk-geoptimaliseerde stappen',
+      timeline: 'Tijdlijn',
+      timelineDesc: 'Naar voltooiing'
     }
   }
 };
